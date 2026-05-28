@@ -63,11 +63,11 @@ function Hero() {
       />
       <div className="relative mx-auto max-w-6xl px-6 py-24 md:py-32">
         <p className="mb-6 text-sm uppercase tracking-[0.2em] text-white/80">
-          One day. One founder. One real business.
+          One day. One founder. One real, revenue-ready business.
         </p>
         <h1 className="max-w-3xl text-5xl font-semibold leading-[1.05] tracking-tight text-white md:text-7xl">
           Walk in with an idea. <br />
-          Walk out <span className="italic">a business owner</span>.
+          Walk out <span className="italic">with a business built to earn</span>.
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-white/90">
           Seven focused hours at the IGNITE Center in Norcross, GA.{" "}
@@ -77,6 +77,10 @@ function Hero() {
           By 4:30 PM you'll have a real business on paper, a simple way to deliver it,
           a website ready to publish, your full marketing kit, and a 90-day plan with
           your next ten moves already on the calendar.
+        </p>
+        <p className="mt-4 max-w-2xl text-base text-white/85">
+          The fastest path we know from idea to a viable, profit-ready business — in one
+          focused day, with paying customers in the 90-day plan you take home.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
