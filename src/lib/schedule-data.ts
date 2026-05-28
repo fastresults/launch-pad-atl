@@ -73,7 +73,7 @@ export const SCHEDULE: Session[] = [
     time: "4:30 PM",
     duration: "—",
     title: "Close — signed launch plan in hand",
-    description: "You walk out with a formed business and a 30/60/90 plan.",
+    description: "You walk out with a formed business and a signed 90-day plan.",
     kind: "break",
   },
 ];

@@ -81,11 +81,12 @@ export const STAGES: Stage[] = [
     summary: "Who you serve, what they'll pay for, and how you beat the competition.",
     oneLiner: "Demand & proof",
     duration: "60 min",
-    covers: ["Beachhead persona", "Validation script", "Competitive analysis", "Positioning gap"],
+    covers: ["Your first customer", "Validation script", "3-competitor look", "What makes you different"],
     tasks: [
       {
-        title: "Pick one beachhead customer",
-        deliverable: "One-page customer profile with top-3 pains and $ figures",
+        title: "Pick your first real customer",
+        deliverable:
+          "A one-page profile of one specific buyer, their top 3 problems, and what each problem costs them in dollars.",
         tool: "Customer profile worksheet",
         details: [
           "Name one specific buyer (role, industry, company size, location)",
@@ -95,27 +96,27 @@ export const STAGES: Stage[] = [
         ],
       },
       {
-        title: "Market size + validation script",
+        title: "Estimate the market + write a short script you'll send",
         deliverable:
-          "TAM/SAM estimate + 25-name prospect list + personalized validation script ready to send",
+          "A real-world estimate of how many buyers exist + a 25-name list + a short script you'll send them.",
         tool: "Market snapshot template + validation script",
         details: [
-          "Estimate TAM, SAM, and your realistic SOM in 12 months",
+          "Estimate how many buyers exist, how many you can realistically reach, and how many you'll win in year one (TAM/SAM/SOM)",
           "Pull a 25-name prospect list from LinkedIn, local groups, or referrals",
-          "Customize the problem-discovery script for your beachhead",
+          "Customize the problem-discovery script for your first customer",
           "Pick a scoring rubric: pain confirmed, willingness to pay, intro to others",
         ],
         followUp:
           "Send the script to your 25 prospects and run 5 discovery calls within the next 2 weeks; score each one.",
       },
       {
-        title: "Competitive analysis & positioning",
-        deliverable: "3-competitor grid + your positioning gap",
+        title: "Look at 3 competitors and find your edge",
+        deliverable: "A simple grid comparing 3 competitors + one sentence on what makes you different.",
         tool: "Competitive grid template",
         details: [
           "Identify 3 real competitors (2 direct + 1 substitute)",
           "Score each on offer, price, channel, proof, and weakness",
-          "Find the gap they all miss — your wedge",
+          "Find the gap they all miss — your edge",
           "Write a one-line positioning statement: For X, who Y, we are Z because…",
         ],
       },
@@ -127,27 +128,27 @@ export const STAGES: Stage[] = [
     title: "Offer & product",
     shortTitle: "offer",
     summary: "What you actually sell, how it's delivered, and the price tag.",
-    oneLiner: "Offer & pricing",
+    oneLiner: "What you sell & what it costs",
     duration: "60 min",
-    covers: ["Offer sentence", "V1 scope + SOP", "Pricing & break-even"],
+    covers: ["Offer in one sentence", "What's in V1", "Pricing & break-even"],
     tasks: [
       {
         title: "Write the offer in one sentence",
-        deliverable: "Signed-off offer sentence",
+        deliverable: "An offer written in one clear sentence a buyer can say yes or no to.",
         tool: "Offer-builder template",
         details: [
           "Use the formula: We help [who] achieve [outcome] in [time] without [pain]",
-          "Test it against your beachhead customer profile",
+          "Test it against your first-customer profile",
           "Strip jargon — read it aloud to a partner",
           "Lock the final sentence; it feeds your website and pitch",
         ],
       },
       {
-        title: "Define the V1 deliverable & fulfillment SOP",
-        deliverable: "V1 scope + 1-page standard operating procedure",
-        tool: "MVP scope canvas + fulfillment SOP",
+        title: "Decide what your first version actually includes",
+        deliverable: "A one-page 'how we deliver this' that lists every step from sale to handoff.",
+        tool: "First-version scope + delivery steps",
         details: [
-          "List what's IN scope for V1 — and what's explicitly OUT",
+          "List what's IN scope for the first version — and what's explicitly OUT",
           "Map the 5–8 steps from sale to delivery",
           "Identify tools, suppliers, or contractors needed",
           "Estimate time-to-fulfill so pricing covers your hours",
@@ -155,10 +156,10 @@ export const STAGES: Stage[] = [
       },
       {
         title: "Set price, margin & payment terms",
-        deliverable: "Pricing sheet + break-even units",
+        deliverable: "A pricing sheet + how many sales you need to cover your costs.",
         tool: "Pricing & margin calculator",
         details: [
-          "Compute COGS or delivery cost per unit",
+          "Compute what each sale actually costs you to make",
           "Set price using value, cost-plus, and competitor anchors",
           "Calculate units/month to break even and to hit a target income",
           "Define deposit, milestones, refund policy, and accepted payment methods",
@@ -169,55 +170,55 @@ export const STAGES: Stage[] = [
   {
     n: 4,
     slug: "build",
-    title: "Build the operational MVP",
+    title: "Build the first working version",
     shortTitle: "build",
     summary:
-      "Stand up how you actually deliver. Pick your archetype, assemble the toolkit, and draft the V1 artifact your first customer receives.",
-    oneLiner: "Operational V1",
+      "Set up how you'll actually deliver. Pick what kind of business you're building, set up your free apps, and draft what your first customer will get.",
+    oneLiner: "Your first working version",
     duration: "60 min",
-    covers: ["Archetype + V1 workflow", "Tool stack", "Delivery artifact drafts"],
+    covers: ["Service / online / product", "Your free app setup", "What the customer receives"],
     tasks: [
       {
-        title: "Pick your build archetype & lock the V1 workflow",
+        title: "Pick what kind of business you're building and map the steps",
         deliverable:
-          "Archetype selected (Service / Digital / Physical) + 1-page V1 workflow diagram (sale → intake → delivery → handoff) with named tools at each step",
-        tool: "Build archetype picker + workflow canvas",
+          "A one-page picture of how a sale becomes a happy customer (sale → intake → delivery → handoff) with the app you'll use at each step.",
+        tool: "Build type picker + step-by-step map",
         details: [
           "Service: intake → kickoff → delivery template → recap loop",
-          "Digital: pick a no-code/template stack (Lovable, Notion, Framer, Webflow, Shopify, GHL) and name the first screen",
-          "Physical: supplier/manufacturer shortlist + sample-order checklist + packaging decision",
+          "Online: pick a no-code stack (Lovable, Notion, Framer, Webflow, Shopify, GHL) and name the first screen",
+          "Physical product: supplier/manufacturer shortlist + sample-order checklist + packaging decision",
           "Mark every step that depends on a vendor, contractor, or sample order",
         ],
         followUp:
-          "Run the workflow end-to-end with one test buyer (or sample order) in the first 2 weeks and revise the diagram.",
+          "Run the steps end-to-end with one test buyer (or sample order) in the first 2 weeks and revise the map.",
       },
       {
-        title: "Assemble the operational toolkit",
+        title: "Set up your free apps",
         deliverable:
-          "Tool stack chosen + free-tier accounts created + 1-page integration map (no paid plans signed in-session)",
-        tool: "Ops stack checklist",
+          "Free accounts created for the apps you'll run the business on, plus a one-page picture of how they connect (no paid plans signed today).",
+        tool: "Free-app checklist",
         details: [
-          "Project / ops hub: seed a Notion / ClickUp / Trello workspace from a V1 template",
+          "Project hub: seed a Notion / ClickUp / Trello workspace from a starter template",
           "Files & assets: create your Drive / Dropbox folder structure",
           "Comms: set up scheduling (Cal.com / Calendly free) + business email alias",
-          "Archetype tool: Loom (service) / Figma (digital) / supplier portal accounts (physical)",
+          "Build-type tool: Loom (service) / Figma (online) / supplier portal accounts (physical)",
         ],
         followUp:
           "Upgrade to paid tiers as revenue justifies and connect any integrations that require billing.",
       },
       {
-        title: "Draft your V1 customer-delivery artifact",
+        title: "Draft what your first customer will actually receive",
         deliverable:
-          "Three drafted artifacts saved to your workspace + 5-point QA checklist you can run before delivering to a real customer",
-        tool: "Delivery artifact templates (per archetype)",
+          "Three drafted pieces saved to your folder + a 5-point checklist you can run before you send anything to a real customer.",
+        tool: "Customer-delivery templates (per build type)",
         details: [
           "Service: kickoff doc + delivery template + recap email — all three drafted",
-          "Digital: landing/demo screen wireframed in your builder + onboarding flow outlined + first email drafted",
+          "Online: landing/demo screen sketched in your builder + onboarding flow outlined + first email drafted",
           "Physical: product spec sheet + unboxing/insert-card draft + first-customer thank-you note",
-          "Write a 5-point QA checklist (quality, accuracy, timing, tone, follow-up)",
+          "Write a 5-point quality checklist (quality, accuracy, timing, tone, follow-up)",
         ],
         followUp:
-          "Run the artifacts past your first paying customer and iterate after their feedback.",
+          "Run the drafts past your first paying customer and iterate after their feedback.",
       },
     ],
   },
@@ -227,9 +228,9 @@ export const STAGES: Stage[] = [
     title: "Brand & website",
     shortTitle: "brand",
     summary: "Identity plus website drafts ready to publish when your domain is live.",
-    oneLiner: "Identity & website",
+    oneLiner: "Brand & website",
     duration: "75 min",
-    covers: ["Brand kit", "Website drafts", "On-page SEO", "Payments checklist"],
+    covers: ["Brand kit", "Website drafts", "Make Google find each page", "Payments checklist"],
     tasks: [
       {
         title: "Name, domain & brand kit",
@@ -248,7 +249,7 @@ export const STAGES: Stage[] = [
       {
         title: "Build the website drafts (Home / Offer / About / Contact)",
         deliverable:
-          "Site template selected; Home + Offer drafted in builder; About + Contact outlined; on-page SEO checklist filled per page",
+          "Site template selected; Home + Offer drafted in builder; About + Contact outlined; each page set up so Google can find it.",
         tool: "Site builder + on-page SEO checklist",
         details: [
           "Pick a starter template and apply your brand kit",
@@ -298,22 +299,22 @@ export const STAGES: Stage[] = [
         ],
       },
       {
-        title: "Print & social creatives",
+        title: "Your print and social kit",
         deliverable:
-          "Business-card draft + flyer / one-pager draft + social profiles claimed with copy & banner + 6 post drafts + 1 short-form video script",
+          "Business-card draft + flyer / one-pager draft + social profiles claimed with copy & banner + 6 post drafts + 1 sixty-second video script",
         tool: "Creative kit templates (print + social)",
         details: [
           "Draft a business card (front/back) in your brand kit",
           "Draft a 1-page flyer / one-pager for events, walk-ins, and partner shelves",
           "Claim handles on Instagram, LinkedIn, and one of TikTok / YouTube / X — fill profile copy, link-in-bio, banner",
-          "Draft 6 posts (hooks, proof, offer) + 1 short-form video script you can record this week",
+          "Draft 6 posts (hooks, proof, offer) + 1 sixty-second video script you can record this week",
         ],
         followUp:
           "Send the print files to your printer and schedule the 6 posts in Buffer / Later / Meta Business Suite; record the video.",
       },
       {
         title: "1-page marketing plan",
-        deliverable: "Plan covering channels, budget, 30-day calendar, and 3 KPIs",
+        deliverable: "A 1-page plan: channels, budget, 30-day calendar, and 3 numbers to check every week.",
         tool: "Marketing plan template",
         details: [
           "Pick your top-2 acquisition channels (1 organic, 1 outbound or paid)",
@@ -329,13 +330,13 @@ export const STAGES: Stage[] = [
     slug: "launch",
     title: "Launch plan",
     shortTitle: "launch",
-    summary: "The dated 30/60/90, the launch-day checklist, and your accountability rhythm.",
-    oneLiner: "30 / 60 / 90 plan",
+    summary: "Your dated 90-day plan, your launch-day checklist, and the weekly check-in that keeps you moving.",
+    oneLiner: "90-day plan",
     duration: "45 min",
-    covers: ["30/60/90 plan", "Launch-day checklist", "Outreach drafts", "Accountability"],
+    covers: ["90-day plan", "Launch-day checklist", "Outreach drafts", "Accountability"],
     tasks: [
       {
-        title: "Sign the 30 / 60 / 90 plan",
+        title: "Sign your 90-day plan (30 / 60 / 90)",
         deliverable: "Signed PDF: first 3 customers → 10 → repeatable channel",
         tool: "Launch plan template",
         details: [

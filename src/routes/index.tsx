@@ -2,11 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { EVENT, FLOW_STAGES } from "@/lib/schedule-data";
-import { MapPin, Calendar, Users, ArrowRight, Award } from "lucide-react";
+import { MapPin, Calendar, Users, ArrowRight, Award, FileCheck2, Target, Globe2, Rocket, X, Check } from "lucide-react";
 
 export const FACILITATOR_NAME = "Adam Anderson";
 export const FACILITATOR_TITLE =
-  "Co-Founder, OPEN Interactive · 18+ years shipping for Fortune 500s, sovereign governments, and early-stage ventures.";
+  "Co-Founder, OPEN Interactive · 18+ years building for Fortune 500 companies, a country's government, and first-time founders.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -33,10 +33,12 @@ function HomePage() {
     <div className="min-h-screen">
       <SiteHeader />
       <Hero />
+      <WalkInWalkOut />
       <FlowStrip />
+      <WhatYouLeaveWith />
+      <ValueByTheNumbers />
       <FacilitatorSection />
       <FacilitatorProof />
-      <Deliverables />
       <VenueCard />
       <BottomCTA />
       <SiteFooter />
@@ -65,9 +67,10 @@ function Hero() {
           Walk out <span className="italic">a business owner</span>.
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-white/90">
-          Seven focused hours in Norcross, GA. By 4:30 PM you'll have a formed business,
-          an operational delivery workflow, a website ready to publish, a complete creative
-          kit, and a signed 30/60/90 plan with your next ten moves already on the calendar.
+          Seven focused hours in Norcross, GA. By 4:30 PM you'll have a real business on
+          paper, a simple way to deliver it, a website ready to publish, your full
+          marketing kit, and a 90-day plan with your next ten moves already on the
+          calendar.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -185,21 +188,19 @@ function FacilitatorSection() {
               {FACILITATOR_TITLE}
             </p>
             <p className="mt-5 text-muted-foreground">
-              Co-Founder of OPEN Interactive. Delivered enterprise digital work for
-              Citigroup, Mayo Clinic, 3M, and Disney. Engineered national digital
-              infrastructure — eGovernment portal, tax portal, and case-management
-              systems — for the Federation of St. Kitts &amp; Nevis. Co-originated the
-              Caribbean Investment Summit franchise across five jurisdictions.
+              Adam has spent 18+ years building real things for real customers — websites
+              and apps for big companies like Citigroup, Mayo Clinic, 3M, and Disney; full
+              digital systems for a Caribbean country's government; and a five-year run
+              producing one of the region's biggest business summits.
             </p>
             <p className="mt-3 text-muted-foreground">
-              This isn't a seminar. You're not getting slides. You're getting an
-              operator who has stood up the entity, shipped the platform, branded
-              the nation, and run the summit — sitting next to you while you do it.
+              He's sat in your seat. He knows what it takes to go from idea to a business
+              that actually opens its doors.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Chip>Fortune 500 delivery</Chip>
-              <Chip>National GovTech platforms</Chip>
-              <Chip>5× investment summit producer</Chip>
+              <Chip>Built for Fortune 500 companies</Chip>
+              <Chip>Built systems for a whole country</Chip>
+              <Chip>Produced 5 major business summits</Chip>
             </div>
           </div>
         </div>
@@ -220,51 +221,52 @@ const PROOF_ROWS = [
   {
     n: 1,
     stage: "Form",
-    deliverable: "Legal entity + operating shell",
+    deliverable: "Your business, legally on paper.",
     proof:
-      "Co-founded OPEN Interactive in the US (2009) and the Caribbean entity in St. Kitts & Nevis (2014); structured the region's largest public-private technology partnership.",
+      "Started two of his own companies (Florida in 2009, Caribbean in 2014). Knows the paperwork inside out.",
   },
   {
     n: 2,
     stage: "Customer & offer",
-    deliverable: "Validated offer + pricing",
+    deliverable: "An offer real people will pay for.",
     proof:
-      "18 years productizing services for Fortune 500 buyers — Citigroup, Mayo Clinic, 3M, Disney — and government ministries.",
+      "18 years selling work to Fortune 500 buyers and government teams. Knows what makes a buyer say yes.",
   },
   {
     n: 3,
     stage: "Market & positioning",
-    deliverable: "Sovereign-grade narrative & positioning doc",
+    deliverable: "A clear story of who you help and why you're different.",
     proof:
-      "Led sovereign branding and national narrative for the St. Kitts & Nevis CBI program; advised on the Expo 2020 Dubai pavilion.",
+      "Wrote the national story for a Caribbean country's investor program. Advised on its pavilion at Expo 2020 Dubai.",
   },
   {
     n: 4,
-    stage: "Build the MVP",
-    deliverable: "V1 delivery workflow + operational toolkit",
+    stage: "Build your first version",
+    deliverable: "A simple, working way to deliver to your first customer.",
     proof:
-      "Engineered the national eGovernment Portal, Inland Revenue tax portal, child-protective-services case system, and AI-powered SaaS platforms.",
+      "Built a whole country's government websites, tax portal, and case-management system from scratch.",
   },
   {
     n: 5,
-    stage: "Brand",
-    deliverable: "Brand kit + website ready to publish",
+    stage: "Brand & website",
+    deliverable: "A brand kit and a website ready to publish.",
     proof:
-      "Directed the Mayo Clinic Mall of America and 3M HIS Division Experience Centers; produced the St. Kitts-Nevis Citizen publication.",
+      "Designed Mayo Clinic and 3M brand experiences seen by thousands of visitors. Published a national magazine.",
   },
   {
     n: 6,
     stage: "Marketing plan & creatives",
-    deliverable: "Print + social kit: card, flyer, profiles, 6 posts, 1 video script",
+    deliverable:
+      "Your business card, flyer, social profiles, 6 posts, and a video script — ready to print and post.",
     proof:
-      "Ran PR, media production, and strategic communications — including pro-bono COVID-19 PSAs and recovery messaging for the SKN Ministry of Health.",
+      "Ran PR, ads, and crisis messaging — including COVID-19 public-service campaigns for a national Ministry of Health.",
   },
   {
     n: 7,
-    stage: "Launch",
-    deliverable: "Signed 30/60/90 plan + the next 10 moves on the calendar",
+    stage: "Launch plan",
+    deliverable: "A signed 90-day plan with your next 10 moves already on the calendar.",
     proof:
-      "Executive Producer for five Caribbean Investment Summits (CIS18 → CIS26) — run-of-show, delegate ops, sponsorship architecture, VIP protocols.",
+      "Ran five major investor summits start-to-finish. Knows how to take a plan from paper to launch day.",
   },
 ];
 
@@ -273,17 +275,16 @@ function FacilitatorProof() {
     <section className="py-20">
       <div className="mx-auto max-w-6xl px-6">
         <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-          Receipts, not résumé lines
+          Proof, not promises
         </h2>
         <p className="mb-4 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
           Your facilitator has{" "}
-          <span className="text-gradient-brand">actually shipped every stage</span> you'll
+          <span className="text-gradient-brand">actually built every stage</span> you'll
           work through.
         </p>
         <p className="mb-10 max-w-2xl text-muted-foreground">
-          Each of the seven stages of your day maps to work {FACILITATOR_NAME} has
-          delivered at national, enterprise, or venture scale. You're not being
-          coached on theory — you're being coached on the moves.
+          Every stage of your day matches something Adam has actually built and shipped.
+          You'll be coached on the real moves — by someone who's made them.
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           {PROOF_ROWS.map((r) => (
@@ -307,12 +308,12 @@ function FacilitatorProof() {
           ))}
         </div>
         <p className="mx-auto mt-10 max-w-3xl text-center text-lg text-foreground/90 md:text-xl">
-          You're not getting a coach with a deck. You're getting an operator who has
+          You're not getting a coach with a slideshow. You're getting someone who's
           <span className="text-gradient-brand">
-            {" "}built the entity, shipped the platform, branded the nation, and run
-            the summit
+            {" "}built the business, shipped the website, designed the brand, and run
+            the launch
           </span>{" "}
-          — sitting at your table for the day.
+          — sitting at your table, helping you do the same.
         </p>
       </div>
     </section>
@@ -320,45 +321,212 @@ function FacilitatorProof() {
 }
 
 
-function Deliverables() {
-  const items = [
-    "A beachhead customer profile with named pains and dollar costs — the page that ends “I think they'll buy” forever.",
-    "A filing-ready GA LLC packet, EIN in hand, and a legal kit drafted to your business.",
-    "An operational V1 workflow — the exact way you'll deliver to your first paying customer next week.",
-    "A domain in your cart, a brand kit folder, and a website drafted page-by-page in your builder.",
-    "A complete creative kit — business card, flyer, social profiles, 6 posts, and a video script — ready for the printer and the scheduler.",
-    "A 25-name announcement list with 10 personalized outreach messages already written.",
-    "A signed, dated 30/60/90 plan with three weekly metrics and an accountability partner locked in.",
+function WalkInWalkOut() {
+  const walkIn = [
+    "An idea you've been turning over for months (or years)",
+    "A notebook full of \"someday\" notes",
+    "Questions about LLCs, EINs, websites, pricing, and where to even start",
+    "No clear first customer",
+    "No structure, no kit, no plan you can actually follow Monday morning",
+  ];
+  const walkOut = [
+    "A real business on paper — name, structure, EIN in hand, Georgia LLC packet ready to file",
+    "A one-page profile of your first paying customer, in their words, with the dollar cost of their problem",
+    "An offer written in one sentence that a buyer can say yes or no to",
+    "The step-by-step way you'll deliver to that first customer next week",
+    "A brand kit folder (logo, colors, fonts) and a website drafted page by page in your builder",
+    "Your full marketing kit — business card, flyer, social profiles, 6 posts, and a 60-second video script",
+    "A 25-name list of people to tell first, plus 10 personal messages already written for you to send",
+    "A signed, dated 90-day plan with your first 3 customers → 10 → repeatable channel mapped out",
+    "An accountability partner and a weekly check-in already on the calendar",
   ];
   return (
     <section className="py-20">
       <div className="mx-auto max-w-6xl px-6">
         <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-          What you carry out the door
+          The transformation
         </h2>
-        <p className="mb-4 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
-          Not slides. Not theory.{" "}
-          <span className="text-gradient-brand">Artifacts a customer can touch.</span>
+        <p className="mb-10 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
+          What changes between{" "}
+          <span className="text-gradient-brand">8:00 AM and 4:30 PM</span>.
         </p>
-        <p className="mb-10 max-w-2xl text-muted-foreground">
-          Every stage produces something a printer can run, a calendar can hold, or a
-          customer can sign. You'll leave with a stack of them.
-        </p>
-        <ul className="grid gap-3 md:grid-cols-2">
-          {items.map((i) => (
-            <li
-              key={i}
-              className="flex items-start gap-3 rounded-xl border border-white/10 bg-card p-4"
-            >
-              <span className="mt-1 inline-block size-2 shrink-0 rounded-full bg-hero-gradient" />
-              <span className="text-foreground">{i}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="grid gap-6 md:grid-cols-[1fr_1.4fr]">
+          <div className="rounded-3xl border border-white/10 bg-card/50 p-7 md:p-8">
+            <div className="mb-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              8:00 AM
+            </div>
+            <div className="text-2xl font-semibold tracking-tight text-foreground/80">
+              What you walk in with
+            </div>
+            <ul className="mt-6 space-y-3">
+              {walkIn.map((i) => (
+                <li key={i} className="flex items-start gap-3 text-foreground/70">
+                  <X className="mt-1 size-4 shrink-0 text-foreground/40" />
+                  <span>{i}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-card p-7 md:p-8">
+            <div className="pointer-events-none absolute inset-0 bg-hero-gradient opacity-[0.08]" />
+            <div className="relative">
+              <div className="mb-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                4:30 PM
+              </div>
+              <div className="text-2xl font-semibold tracking-tight">
+                <span className="text-gradient-brand">What you walk out with</span>
+              </div>
+              <ul className="mt-6 space-y-3">
+                {walkOut.map((i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="mt-1 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-hero-gradient">
+                      <Check className="size-3 text-white" />
+                    </span>
+                    <span className="text-foreground">{i}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
+
+type Bucket = {
+  icon: React.ReactNode;
+  title: string;
+  subhead: string;
+  items: string[];
+};
+
+function WhatYouLeaveWith() {
+  const buckets: Bucket[] = [
+    {
+      icon: <FileCheck2 className="size-5 text-white" />,
+      title: "The Business",
+      subhead: "Filed, registered, legal — not a wish list.",
+      items: [
+        "Georgia LLC packet ready to file + EIN in hand",
+        "Terms of service, privacy policy, and a 1-page service agreement drafted to your business",
+        "Business bank application checklist completed",
+      ],
+    },
+    {
+      icon: <Target className="size-5 text-white" />,
+      title: "The Customer & The Offer",
+      subhead: "Someone real, ready to buy something specific.",
+      items: [
+        "One-page profile of your first paying customer with the dollar cost of their problem",
+        "Your offer written in one clear sentence",
+        "Pricing sheet + how many sales it takes to cover your costs",
+      ],
+    },
+    {
+      icon: <Globe2 className="size-5 text-white" />,
+      title: "The Brand & The Website",
+      subhead: "A business people can find, recognize, and trust.",
+      items: [
+        "Domain in your cart + brand kit folder (logo, colors, fonts)",
+        "Home and Offer pages drafted in your website builder, About and Contact outlined",
+        "Payments, business email, and analytics setup checklists ready to finish at home",
+      ],
+    },
+    {
+      icon: <Rocket className="size-5 text-white" />,
+      title: "The Launch Plan",
+      subhead: "Monday morning, you know exactly what to do.",
+      items: [
+        "Your full marketing kit (card, flyer, social profiles, 6 posts, 60-second video script)",
+        "25-name announcement list + 10 personal outreach messages already written",
+        "Signed, dated 90-day plan with 3 weekly numbers and an accountability partner locked in",
+      ],
+    },
+  ];
+  return (
+    <section className="py-20">
+      <div className="mx-auto max-w-6xl px-6">
+        <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+          What you take home
+        </h2>
+        <p className="mb-4 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
+          Not slides. Not theory.{" "}
+          <span className="text-gradient-brand">
+            A complete starter kit you can hold, send, and sign.
+          </span>
+        </p>
+        <p className="mb-10 max-w-2xl text-muted-foreground">
+          Every stage makes something a printer can print, a calendar can hold, or a
+          customer can sign. You'll leave with a stack of them, organized into four
+          packs.
+        </p>
+        <div className="grid gap-5 md:grid-cols-2">
+          {buckets.map((b) => (
+            <div
+              key={b.title}
+              className="rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-white/25 md:p-7"
+            >
+              <div className="flex items-center gap-3">
+                <span className="inline-flex size-10 items-center justify-center rounded-xl bg-hero-gradient">
+                  {b.icon}
+                </span>
+                <div>
+                  <div className="text-lg font-semibold tracking-tight">{b.title}</div>
+                  <div className="text-sm text-muted-foreground">{b.subhead}</div>
+                </div>
+              </div>
+              <ul className="mt-5 space-y-2.5">
+                {b.items.map((it) => (
+                  <li
+                    key={it}
+                    className="flex items-start gap-3 text-sm text-foreground/90"
+                  >
+                    <span className="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-hero-gradient" />
+                    <span>{it}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p className="mt-10 text-center text-base text-muted-foreground md:text-lg">
+          Print this list. Cross items off Monday. By Friday, you have a business.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function ValueByTheNumbers() {
+  const stats: { n: string; label: string }[] = [
+    { n: "1", label: "real business formed" },
+    { n: "9", label: "concrete take-home pieces" },
+    { n: "25", label: "prospects on your launch list" },
+    { n: "90", label: "days mapped, signed, and dated" },
+  ];
+  return (
+    <section className="pb-20">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="grid gap-4 rounded-3xl border border-white/10 bg-card p-6 sm:grid-cols-2 md:p-8 lg:grid-cols-4">
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              className="flex flex-col items-start gap-1 rounded-2xl px-4 py-4"
+            >
+              <div className="text-5xl font-semibold leading-none tracking-tight md:text-6xl">
+                <span className="text-gradient-brand">{s.n}</span>
+              </div>
+              <div className="mt-2 text-sm text-muted-foreground">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
 
 function VenueCard() {
   return (
