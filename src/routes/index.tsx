@@ -57,7 +57,7 @@ function Hero() {
         </h1>
         <p className="mt-6 max-w-xl text-lg text-white/90">
           Walk in with an idea. Walk out with a <span className="font-medium">formed business</span>,
-          a live web presence, marketing materials, and a dated 30/60/90 launch plan.
+          a website ready to publish, marketing materials drafted, and a dated 30/60/90 launch plan.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
