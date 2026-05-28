@@ -881,52 +881,46 @@ function TheArtOfThePossible() {
   );
 }
 
-type GeneratorItem = { name: string; desc: string; usage: "workshop" | "scale" };
-type Phase = { n: number; title: string; intro: string; items: GeneratorItem[] };
+type WalkoutItem = { name: string; desc: string };
+type WalkoutPhase = { n: number; title: string; intro: string; items: WalkoutItem[] };
 
-const AI_PHASES: Phase[] = [
+const WALKOUT_PHASES: WalkoutPhase[] = [
   {
     n: 1,
-    title: "Build Your Unshakeable Foundation",
-    intro:
-      "Stop second-guessing and establish the bulletproof foundation that turns scattered ideas into investor-ready ventures.",
+    title: "Foundation — legally yours, ready to sell",
+    intro: "By lunch, your business legally exists and has a buyer in mind.",
     items: [
-      { name: "Concept Brief Generator", desc: "Define your startup's core DNA with surgical precision.", usage: "workshop" },
-      { name: "Vision & Mission Generator", desc: "Craft compelling vision statements that magnetize stakeholders.", usage: "workshop" },
-      { name: "Legal Checklist Generator", desc: "Navigate legal requirements with bulletproof compliance.", usage: "workshop" },
-      { name: "Brand Builder Generator", desc: "Create brand identity that commands premium pricing.", usage: "workshop" },
-      { name: "Business Model Canvas Generator", desc: "Map your path to profitability with proven frameworks.", usage: "workshop" },
+      { name: "Georgia LLC filing packet", desc: "Articles pre-filled, registered agent set, EIN application ready — submit Monday." },
+      { name: "Signed legal kit", desc: "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business." },
+      { name: "Your first customer profile", desc: "One named buyer, their problems priced in dollars, and where to find them." },
+      { name: "25-name prospect list + outreach script", desc: "A CSV you can start messaging tonight." },
+      { name: "Competitor grid + positioning", desc: "Three competitors compared and one sentence on what makes you different." },
     ],
   },
   {
     n: 2,
-    title: "Craft Your Winning Strategy",
-    intro:
-      "While others debate business models, deploy proven tactics that fast-track you from research to revenue.",
+    title: "Offer & build — what you sell, how you deliver",
+    intro: "By mid-afternoon, the offer is locked, priced, and rehearsed.",
     items: [
-      { name: "Competitive Analysis Generator", desc: "Expose market gaps where competitors fear to tread.", usage: "workshop" },
-      { name: "Pricing & Packaging Generator", desc: "Engineer pricing that maximizes profit margins.", usage: "workshop" },
-      { name: "Business Plan Generator", desc: "Build investor-grade frameworks that secure funding.", usage: "scale" },
-      { name: "Market Analysis Generator", desc: "Decode market dynamics with strategic intelligence.", usage: "workshop" },
-      { name: "Financial Projections Generator", desc: "Create forecasts that convince the most skeptical investors.", usage: "scale" },
+      { name: "One-sentence offer", desc: "The line you'll use on your website, in pitches, and in DMs." },
+      { name: "Pricing sheet + break-even number", desc: "Real costs, real margin, and the exact number of sales to break even." },
+      { name: "Delivery map", desc: "Your business mapped sale-to-happy-customer, with the app you'll use at each step." },
+      { name: "Free-app stack set up", desc: "Project hub, files, scheduling, comms — accounts created in your name." },
+      { name: "First customer's deliverable", desc: "Drafted and rehearsed end-to-end with a 5-point quality checklist." },
     ],
   },
   {
     n: 3,
-    title: "Launch With Professional Power",
-    intro:
-      "Turn your corporate expertise into entrepreneurial action — no more endless planning, just profitable execution.",
+    title: "Brand, marketing & launch — everything ready to go live",
+    intro: "By the end of the day, you have a bespoke website, a printable brand kit, and a 90-day plan.",
     items: [
-      { name: "Launch Plan Generator", desc: "Orchestrate launches that capture market attention.", usage: "workshop" },
-      { name: "Social Launch Generator", desc: "Command social platforms for maximum impact.", usage: "workshop" },
-      { name: "Website Copy Generator", desc: "Write web copy that converts visitors into customers.", usage: "workshop" },
-      { name: "Marketing Strategy Generator", desc: "Deploy marketing that dominates your category.", usage: "workshop" },
-      { name: "Sales Strategy Generator", desc: "Build sales systems that scale exponentially.", usage: "workshop" },
-      { name: "Customer Research Generator", desc: "Decode customer psychology for perfect product-market fit.", usage: "workshop" },
-      { name: "Product Development Generator", desc: "Engineer products customers can't resist.", usage: "workshop" },
-      { name: "Operations Plan Generator", desc: "Design operations that run like Swiss clockwork.", usage: "workshop" },
-      { name: "Funding Strategy Generator", desc: "Secure capital with strategies that impress investors.", usage: "scale" },
-      { name: "Growth Hacking Generator", desc: "Unlock rapid growth with unconventional tactics.", usage: "workshop" },
+      { name: "Brand identity", desc: "Logo, color palette, and font pairing generated from your business name." },
+      { name: "A bespoke website", desc: "Home, Offer, About, and Contact pages built in your brand kit, written in your voice, SEO-configured — ready to host." },
+      { name: "Payments, business email & analytics", desc: "Stripe, email-on-domain, and GA4 set up and queued for one-click activation." },
+      { name: "Printable business card + flyer", desc: "Designed in your brand and ready to send to a printer." },
+      { name: "Social channels claimed and branded", desc: "Profile copy, link-in-bio, banner — ready to configure on Instagram, LinkedIn, and one more." },
+      { name: "6 on-brand posts + 60-second video script", desc: "Ready to publish and record this week." },
+      { name: "Signed 90-day plan + launch-day kit", desc: "Dated 30/60/90 plan, 10 personalized outreach drafts, starter CRM, accountability partner on the calendar." },
     ],
   },
 ];
@@ -936,19 +930,19 @@ function AIToolkit() {
     <section className="border-y border-white/5 py-20">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-          Your AI toolkit
+          What you walk out with
         </p>
         <h2 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
-          Twenty AI generators. One day to use them in the same room with the operator.
+          A full business in your hands by Saturday night.
         </h2>
         <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
-          Every deliverable in the workshop is the output of a productized AI generator —
-          the same engine you keep using long after you walk out. Seventeen ship in the
-          room on July 23. Three more wait for you when you're ready to scale.
+          Every artifact below is finished in the room and tailored to your business.
+          A few — domain DNS, bank approval, printer turnaround — need you to push
+          the button after you leave. We mark exactly which.
         </p>
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {AI_PHASES.map((p) => (
+          {WALKOUT_PHASES.map((p) => (
             <div
               key={p.n}
               className="rounded-2xl border border-white/10 bg-card p-6 md:p-7"
@@ -961,24 +955,9 @@ function AIToolkit() {
               <ul className="mt-5 space-y-3">
                 {p.items.map((g) => (
                   <li key={g.name} className="flex items-start gap-2">
-                    <span
-                      className={`mt-1.5 inline-block size-1.5 shrink-0 rounded-full ${
-                        g.usage === "workshop" ? "bg-hero-gradient" : "bg-white/30"
-                      }`}
-                    />
+                    <span className="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-hero-gradient" />
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-baseline gap-x-2">
-                        <span className="text-sm font-medium text-foreground">{g.name}</span>
-                        <span
-                          className={`text-[10px] uppercase tracking-[0.18em] ${
-                            g.usage === "workshop"
-                              ? "text-foreground/70"
-                              : "text-muted-foreground"
-                          }`}
-                        >
-                          {g.usage === "workshop" ? "→ in the workshop" : "→ after the workshop"}
-                        </span>
-                      </div>
+                      <div className="text-sm font-medium text-foreground">{g.name}</div>
                       <div className="text-[12px] leading-snug text-muted-foreground">
                         {g.desc}
                       </div>
@@ -989,19 +968,9 @@ function AIToolkit() {
             </div>
           ))}
         </div>
-
-        <div className="mt-8 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-2">
-            <span className="inline-block size-1.5 rounded-full bg-hero-gradient" />
-            In the workshop (17)
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <span className="inline-block size-1.5 rounded-full bg-white/30" />
-            Scale toolkit, for after the workshop (3)
-          </span>
-        </div>
       </div>
     </section>
   );
 }
+
 
