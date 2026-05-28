@@ -236,6 +236,16 @@ export const STAGES: Stage[] = [
     oneLiner: "Your first working version",
     takeHome:
       "Your delivery process mapped step-by-step, the free apps that run it set up with your accounts, and your first customer's deliverable drafted and rehearsed — before a real customer ever sees it.",
+    walkOut: [
+      "Sale-to-happy-customer map with the app you'll use at each step",
+      "Free-app accounts created in your name: project hub, files, scheduling, business email alias",
+      "Your first customer's deliverable drafted and rehearsed end-to-end",
+      "5-point quality checklist for anything that goes to a real customer",
+    ],
+    afterWorkshop: [
+      "Run the rehearsed deliverable past your first paying customer and iterate",
+      "Upgrade to paid app tiers as revenue justifies",
+    ],
     duration: "60 min",
     covers: ["Service / online / product", "Your free app setup", "What the customer receives"],
     tasks: [
