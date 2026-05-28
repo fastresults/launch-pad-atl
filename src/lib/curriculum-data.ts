@@ -290,6 +290,7 @@ export const STAGES: Stage[] = [
     summary:
       "A 1-page marketing plan plus your full creative kit — printed flyers, business cards, social profiles, and post drafts — ready to take to a printer or scheduler.",
     oneLiner: "Plan & creatives",
+    takeHome: "A printable business card, a flyer, claimed social profiles, six post drafts, and a 60-second video script — your whole launch kit, done.",
     duration: "60 min",
     covers: ["Messaging kit", "Print creatives", "Social kit", "30-day plan"],
     tasks: [
