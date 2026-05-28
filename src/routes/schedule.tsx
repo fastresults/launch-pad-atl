@@ -124,11 +124,22 @@ function SchedulePage() {
                                       </li>
                                     ))}
                                   </ul>
-                                  <div className="mt-2">
+                                  <div className="mt-2 flex flex-wrap items-center gap-2">
                                     <span className="inline-block rounded-full border border-white/15 px-2.5 py-0.5 text-[11px] text-muted-foreground">
                                       {t.tool}
                                     </span>
                                   </div>
+                                  {t.followUp && (
+                                    <div className="mt-2 flex items-start gap-1.5 rounded-md border border-dashed border-white/15 bg-white/[0.02] p-2.5 text-[12px] italic text-muted-foreground">
+                                      <Clock className="mt-0.5 size-3.5 shrink-0 text-foreground/60" />
+                                      <span>
+                                        <span className="font-medium not-italic text-foreground/80">
+                                          Take home:
+                                        </span>{" "}
+                                        {t.followUp}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               </li>
                             ))}
