@@ -129,6 +129,7 @@ function Deliverables() {
   const items = [
     "A validated customer profile with pains and $ figures",
     "A filing-ready GA LLC packet + EIN + legal kit drafts",
+    "An operational V1 workflow + tool stack + delivery artifacts drafted",
     "A domain in cart and brand kit folder ready to go",
     "Website drafts ready to publish + payments setup checklist",
     "A 25-name outreach list with 10 messages drafted",
