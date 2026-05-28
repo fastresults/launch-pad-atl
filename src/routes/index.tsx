@@ -188,21 +188,19 @@ function FacilitatorSection() {
               {FACILITATOR_TITLE}
             </p>
             <p className="mt-5 text-muted-foreground">
-              Co-Founder of OPEN Interactive. Delivered enterprise digital work for
-              Citigroup, Mayo Clinic, 3M, and Disney. Engineered national digital
-              infrastructure — eGovernment portal, tax portal, and case-management
-              systems — for the Federation of St. Kitts &amp; Nevis. Co-originated the
-              Caribbean Investment Summit franchise across five jurisdictions.
+              Adam has spent 18+ years building real things for real customers — websites
+              and apps for big companies like Citigroup, Mayo Clinic, 3M, and Disney; full
+              digital systems for a Caribbean country's government; and a five-year run
+              producing one of the region's biggest business summits.
             </p>
             <p className="mt-3 text-muted-foreground">
-              This isn't a seminar. You're not getting slides. You're getting an
-              operator who has stood up the entity, shipped the platform, branded
-              the nation, and run the summit — sitting next to you while you do it.
+              He's sat in your seat. He knows what it takes to go from idea to a business
+              that actually opens its doors.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Chip>Fortune 500 delivery</Chip>
-              <Chip>National GovTech platforms</Chip>
-              <Chip>5× investment summit producer</Chip>
+              <Chip>Built for Fortune 500 companies</Chip>
+              <Chip>Built systems for a whole country</Chip>
+              <Chip>Produced 5 major business summits</Chip>
             </div>
           </div>
         </div>
