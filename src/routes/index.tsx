@@ -4,7 +4,9 @@ import { SiteFooter } from "@/components/site/Footer";
 import { EVENT, FLOW_STAGES } from "@/lib/schedule-data";
 import { MapPin, Calendar, Users, ArrowRight, Award } from "lucide-react";
 
-export const FACILITATOR_NAME = "Your facilitator"; // TODO: replace with real name
+export const FACILITATOR_NAME = "Adam Anderson";
+export const FACILITATOR_TITLE =
+  "Co-Founder, OPEN Interactive · 18+ years shipping for Fortune 500s, sovereign governments, and early-stage ventures.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -33,6 +35,7 @@ function HomePage() {
       <Hero />
       <FlowStrip />
       <FacilitatorSection />
+      <FacilitatorProof />
       <Deliverables />
       <VenueCard />
       <BottomCTA />
@@ -152,7 +155,20 @@ function FacilitatorSection() {
               <div className="text-sm uppercase tracking-[0.2em] opacity-80">
                 Your facilitator
               </div>
-              <div className="mt-1 text-3xl font-semibold leading-tight">
+              <div className="mt-1 flex items-center gap-3">
+                <div className="flex size-12 items-center justify-center rounded-full bg-white/15 text-lg font-semibold backdrop-blur">
+                  AA
+                </div>
+                <div>
+                  <div className="text-2xl font-semibold leading-tight">
+                    {FACILITATOR_NAME}
+                  </div>
+                  <div className="text-xs uppercase tracking-[0.18em] opacity-80">
+                    Operator · Producer · Builder
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 text-base leading-snug opacity-95">
                 30 years of starting businesses. One day with yours.
               </div>
             </div>
@@ -162,23 +178,28 @@ function FacilitatorSection() {
               Who's in the room with you
             </h2>
             <p className="text-3xl font-semibold tracking-tight md:text-4xl">
-              Three decades of starting, scaling, and shipping —{" "}
+              {FACILITATOR_NAME} —{" "}
               <span className="text-gradient-brand">at your table for the day.</span>
             </p>
+            <p className="mt-3 text-sm uppercase tracking-[0.15em] text-muted-foreground">
+              {FACILITATOR_TITLE}
+            </p>
             <p className="mt-5 text-muted-foreground">
-              Thirty years building startups across services, software, and physical
-              products. Founded, scaled, and exited companies. Coached hundreds of
-              first-time founders through the exact moves you'll make today.
+              Co-Founder of OPEN Interactive. Delivered enterprise digital work for
+              Citigroup, Mayo Clinic, 3M, and Disney. Engineered national digital
+              infrastructure — eGovernment portal, tax portal, and case-management
+              systems — for the Federation of St. Kitts &amp; Nevis. Co-originated the
+              Caribbean Investment Summit franchise across five jurisdictions.
             </p>
             <p className="mt-3 text-muted-foreground">
-              This isn't a seminar. You're not getting slides. You're getting a working
-              session with an operator who has stood up the things you're trying to stand
-              up — sitting next to you while you do it.
+              This isn't a seminar. You're not getting slides. You're getting an
+              operator who has stood up the entity, shipped the platform, branded
+              the nation, and run the summit — sitting next to you while you do it.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Chip>30+ years operating</Chip>
-              <Chip>Hundreds of founders coached</Chip>
-              <Chip>Service · digital · physical builds</Chip>
+              <Chip>Fortune 500 delivery</Chip>
+              <Chip>National GovTech platforms</Chip>
+              <Chip>5× investment summit producer</Chip>
             </div>
           </div>
         </div>
@@ -194,6 +215,110 @@ function Chip({ children }: { children: React.ReactNode }) {
     </span>
   );
 }
+
+const PROOF_ROWS = [
+  {
+    n: 1,
+    stage: "Form",
+    deliverable: "Legal entity + operating shell",
+    proof:
+      "Co-founded OPEN Interactive in the US (2009) and the Caribbean entity in St. Kitts & Nevis (2014); structured the region's largest public-private technology partnership.",
+  },
+  {
+    n: 2,
+    stage: "Customer & offer",
+    deliverable: "Validated offer + pricing",
+    proof:
+      "18 years productizing services for Fortune 500 buyers — Citigroup, Mayo Clinic, 3M, Disney — and government ministries.",
+  },
+  {
+    n: 3,
+    stage: "Market & positioning",
+    deliverable: "Sovereign-grade narrative & positioning doc",
+    proof:
+      "Led sovereign branding and national narrative for the St. Kitts & Nevis CBI program; advised on the Expo 2020 Dubai pavilion.",
+  },
+  {
+    n: 4,
+    stage: "Build the MVP",
+    deliverable: "V1 delivery workflow + operational toolkit",
+    proof:
+      "Engineered the national eGovernment Portal, Inland Revenue tax portal, child-protective-services case system, and AI-powered SaaS platforms.",
+  },
+  {
+    n: 5,
+    stage: "Brand",
+    deliverable: "Brand kit + website ready to publish",
+    proof:
+      "Directed the Mayo Clinic Mall of America and 3M HIS Division Experience Centers; produced the St. Kitts-Nevis Citizen publication.",
+  },
+  {
+    n: 6,
+    stage: "Marketing plan & creatives",
+    deliverable: "Print + social kit: card, flyer, profiles, 6 posts, 1 video script",
+    proof:
+      "Ran PR, media production, and strategic communications — including pro-bono COVID-19 PSAs and recovery messaging for the SKN Ministry of Health.",
+  },
+  {
+    n: 7,
+    stage: "Launch",
+    deliverable: "Signed 30/60/90 plan + the next 10 moves on the calendar",
+    proof:
+      "Executive Producer for five Caribbean Investment Summits (CIS18 → CIS26) — run-of-show, delegate ops, sponsorship architecture, VIP protocols.",
+  },
+];
+
+function FacilitatorProof() {
+  return (
+    <section className="py-20">
+      <div className="mx-auto max-w-6xl px-6">
+        <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+          Receipts, not résumé lines
+        </h2>
+        <p className="mb-4 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
+          Your facilitator has{" "}
+          <span className="text-gradient-brand">actually shipped every stage</span> you'll
+          work through.
+        </p>
+        <p className="mb-10 max-w-2xl text-muted-foreground">
+          Each of the seven stages of your day maps to work {FACILITATOR_NAME} has
+          delivered at national, enterprise, or venture scale. You're not being
+          coached on theory — you're being coached on the moves.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2">
+          {PROOF_ROWS.map((r) => (
+            <div
+              key={r.n}
+              className="rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-white/20"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex size-9 items-center justify-center rounded-full bg-hero-gradient text-sm font-semibold text-white">
+                  {r.n}
+                </div>
+                <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                  Stage {r.n} · {r.stage}
+                </div>
+              </div>
+              <div className="mt-4 text-lg font-semibold leading-snug">
+                {r.deliverable}
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">{r.proof}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mx-auto mt-10 max-w-3xl text-center text-lg text-foreground/90 md:text-xl">
+          You're not getting a coach with a deck. You're getting an operator who has
+          <span className="text-gradient-brand">
+            {" "}built the entity, shipped the platform, branded the nation, and run
+            the summit
+          </span>{" "}
+          — sitting at your table for the day.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 
 function Deliverables() {
   const items = [
