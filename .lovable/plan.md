@@ -1,43 +1,60 @@
-## What's confusing today
+## Two passes, one turn
 
-One line in the "What others are starting in 2026" section reads:
+### Pass A — Adam Anderson as serial entrepreneur (unchanged from prior plan)
 
-> …using the same seven stages. **Under $10,000 to start.** A focused 90 days to launch.
+`src/routes/index.tsx`:
 
-Sitting right next to the workshop pitch, that "$10,000" reads like a workshop price tag. It needs to go. The workshop fee and whatever a founder later spends to launch *their* business are two different conversations, and the website shouldn't mix them.
+1. **`FACILITATOR_TITLE`** (lines 10–11) → "Serial entrepreneur · Co-Founder, OPEN Interactive · Has helped launch dozens of modern-economy businesses across tech, services, and Main Street."
+2. **Card kicker over Adam's name** (lines 175–177) → "Serial Entrepreneur · Operator · Builder"
+3. **Lead bio paragraph** (lines 196–205) → opens with "Adam is a serial entrepreneur who has personally started multiple companies and helped launch dozens more — the kind of lean, modern businesses people are actually building in 2026: online services, AI-powered shops, productized expertise, and Main Street operators…"
+4. **Chips** (lines 207–210) → add "Helped launch dozens of modern businesses" as the first chip.
 
-## Plan
+### Pass B — Balanced revenue / profit tone, hero down
 
-### 1. Remove the section-level capital line (`src/routes/index.tsx`, ~line 769)
+Right now the homepage promises a *formed* business — legally on paper, with a website and a plan. What's missing is the why: attendees are coming to **make money, fast**. The tone fix is to make sure the reader sees the words **revenue, paying customers, profit, fastest path** at the moments that matter — without spraying them everywhere. Six targeted touches. No new sections, no new components.
 
-Rewrite the lead paragraph under the section headline so the only promise is the workshop's deliverable — a built business and a 90-day plan. No dollar number attached.
+**B1. Hero eyebrow** (line 65–66)
+- Before: "One day. One founder. One real business."
+- After: "One day. One founder. One real, **revenue-ready** business."
 
-Before:
-> Scroll through for inspiration. **Yours doesn't have to be on this list — it shouldn't be.** You walk in with your idea, and we build the business around it using the same seven stages. Under $10,000 to start. A focused 90 days to launch.
+**B2. Hero H1** (lines 68–71) — keep almost as-is, swap the kicker
+- Before: "Walk in with an idea. Walk out *a business owner*."
+- After: "Walk in with an idea. Walk out *with a business built to earn*."
 
-After:
-> Scroll through for inspiration. **Yours doesn't have to be on this list — it shouldn't be.** You walk in with your idea, and we build the business around it using the same seven stages — so you leave with a formed business and a 90-day plan you can run on Monday.
+**B3. Hero body — add a closing sentence after the existing paragraph** (after line 79)
+- Append: "The fastest path we know from idea to a viable, profit-ready business — in one focused day, with paying customers in the 90-day plan you take home."
 
-### 2. Audit the rest of the funnel for the same conflation
+**B4. FlowStrip subhead** (lines 123–126)
+- Before: "Seven stages. One working day. *A business that exists by dinner.*"
+- After: "Seven stages. One working day. *A business built to make money — not just one that exists.*"
 
-I searched the codebase for "$10,000", "ten thousand", "under $", "to start", "capital", and "invest" across `src/routes/`, `src/components/site/`, and the schedule/register pages. The only workshop-adjacent capital reference is the line above. The hero, schedule, register form, footer, and value-by-the-numbers section don't bundle startup capital with workshop messaging — no other edits needed there.
+**B5. WhatYouLeaveWith lead paragraph** (lines 465–469)
+- Before: "Every stage makes something a printer can print, a calendar can hold, or a customer can sign. You'll leave with a stack of them, organized into four packs."
+- After: "Every stage makes something a printer can print, a calendar can hold, or **a customer can pay for**. You'll leave with a stack of them, organized into four packs — every piece pointed at revenue in the first 90 days."
 
-### 3. The per-card "Starts under $X" line — recommend KEEP, flagging for your call
+**B6. WhatYouLeaveWith closing line** (line 500)
+- Before: "Print this list. Cross items off Monday. By Friday, you have a business."
+- After: "Print this list. Cross items off Monday. By Friday, you have a business — **and your first paying customer in sight.**"
 
-Each idea card shows two stat lines together:
-- **Monthly income potential** — e.g., "$10k–$25k / mo"
-- **Starts under $X** — e.g., "Starts under $1,500" (idea-specific; ranges from $100 to $9,500 across the 60 cards — none say "$10,000")
+**B7. ValueByTheNumbers** (lines 508–513) — swap one stat label to surface revenue framing
+- "25 prospects on your launch list" → "25 **revenue prospects** on your launch list"
 
-These are factual data points *about each business idea*, the way a real-estate card shows beds and baths. Income without a cost anchor is hard to read — "$10k/mo" means very different things if it takes $100 vs. $9,500 to launch. None of these labels reference $10,000 or imply the workshop costs anything.
+**B8. BottomCTA body** (lines 613–617)
+- Before: "If you've been waiting for the right week to start, this is the day you stop waiting. Bring the idea. We'll bring the operator, the room, and every template you need."
+- After: "If you've been waiting for the right week to start earning, this is the day you stop waiting. Bring the idea. We'll bring the operator, the room, and every template you need to turn it into a business that actually brings in money."
 
-**Recommendation:** keep the per-card "Starts under $X" — it's per-idea context, not a workshop claim. If you'd rather remove or relabel them too (e.g., move to a hover/expanded view, or drop them entirely), say so and I'll do that pass in the same turn.
+### What stays the same (on purpose, to keep the tone *balanced*)
+
+- The "What others are starting in 2026" cards already carry monthly income potential — those are the loudest revenue signal on the page; piling more "$$$" language around them would feel like a get-rich-quick pitch.
+- Schedule page, register page, footer, and venue card are untouched.
+- The facilitator proof grid keeps its existing copy — the revenue tone belongs in the *what you'll get* sections, not in Adam's bio.
 
 ## Files touched
 
-- `src/routes/index.tsx` — one paragraph in `TheArtOfThePossible` (lines ~760–770).
+- `src/routes/index.tsx` only — copy-only edits in `FACILITATOR_TITLE`, `Hero`, `FlowStrip`, `FacilitatorSection`, `WhatYouLeaveWith`, `ValueByTheNumbers`, and `BottomCTA`. No layout, no new components, no CSS.
 
 ## Verification
 
-- Reload `/`, scroll to "What others are starting in 2026," read the lead paragraph: no dollar amount appears.
-- Grep the repo for `10,000` and `to start` — only matches should be the per-card "Starts under $X" labels (which are idea-specific, not workshop-adjacent).
-- Hero, register page, schedule page, and footer remain unchanged.
+- Reload `/` and scan top to bottom. The words *revenue*, *paying customers*, *profit-ready*, *earn*, and *make money* should appear roughly 6–8 times total — present at every major beat, but never two sentences in a row.
+- The facilitator section now leads with "Serial entrepreneur" in both the title line and the bio.
+- No mention of "$10,000 to start" returns anywhere.

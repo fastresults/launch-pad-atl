@@ -8,7 +8,7 @@ import { MapPin, Calendar, Users, ArrowRight, Award, FileCheck2, Target, Globe2,
 
 export const FACILITATOR_NAME = "Adam Anderson";
 export const FACILITATOR_TITLE =
-  "Co-Founder, OPEN Interactive · 18+ years building for Fortune 500 companies, a country's government, and first-time founders.";
+  "Serial entrepreneur · Co-Founder, OPEN Interactive · Has helped launch dozens of modern-economy businesses across tech, services, and Main Street.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
