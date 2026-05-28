@@ -221,51 +221,52 @@ const PROOF_ROWS = [
   {
     n: 1,
     stage: "Form",
-    deliverable: "Legal entity + operating shell",
+    deliverable: "Your business, legally on paper.",
     proof:
-      "Co-founded OPEN Interactive in the US (2009) and the Caribbean entity in St. Kitts & Nevis (2014); structured the region's largest public-private technology partnership.",
+      "Started two of his own companies (Florida in 2009, Caribbean in 2014). Knows the paperwork inside out.",
   },
   {
     n: 2,
     stage: "Customer & offer",
-    deliverable: "Validated offer + pricing",
+    deliverable: "An offer real people will pay for.",
     proof:
-      "18 years productizing services for Fortune 500 buyers — Citigroup, Mayo Clinic, 3M, Disney — and government ministries.",
+      "18 years selling work to Fortune 500 buyers and government teams. Knows what makes a buyer say yes.",
   },
   {
     n: 3,
     stage: "Market & positioning",
-    deliverable: "Sovereign-grade narrative & positioning doc",
+    deliverable: "A clear story of who you help and why you're different.",
     proof:
-      "Led sovereign branding and national narrative for the St. Kitts & Nevis CBI program; advised on the Expo 2020 Dubai pavilion.",
+      "Wrote the national story for a Caribbean country's investor program. Advised on its pavilion at Expo 2020 Dubai.",
   },
   {
     n: 4,
-    stage: "Build the MVP",
-    deliverable: "V1 delivery workflow + operational toolkit",
+    stage: "Build your first version",
+    deliverable: "A simple, working way to deliver to your first customer.",
     proof:
-      "Engineered the national eGovernment Portal, Inland Revenue tax portal, child-protective-services case system, and AI-powered SaaS platforms.",
+      "Built a whole country's government websites, tax portal, and case-management system from scratch.",
   },
   {
     n: 5,
-    stage: "Brand",
-    deliverable: "Brand kit + website ready to publish",
+    stage: "Brand & website",
+    deliverable: "A brand kit and a website ready to publish.",
     proof:
-      "Directed the Mayo Clinic Mall of America and 3M HIS Division Experience Centers; produced the St. Kitts-Nevis Citizen publication.",
+      "Designed Mayo Clinic and 3M brand experiences seen by thousands of visitors. Published a national magazine.",
   },
   {
     n: 6,
     stage: "Marketing plan & creatives",
-    deliverable: "Print + social kit: card, flyer, profiles, 6 posts, 1 video script",
+    deliverable:
+      "Your business card, flyer, social profiles, 6 posts, and a video script — ready to print and post.",
     proof:
-      "Ran PR, media production, and strategic communications — including pro-bono COVID-19 PSAs and recovery messaging for the SKN Ministry of Health.",
+      "Ran PR, ads, and crisis messaging — including COVID-19 public-service campaigns for a national Ministry of Health.",
   },
   {
     n: 7,
-    stage: "Launch",
-    deliverable: "Signed 30/60/90 plan + the next 10 moves on the calendar",
+    stage: "Launch plan",
+    deliverable: "A signed 90-day plan with your next 10 moves already on the calendar.",
     proof:
-      "Executive Producer for five Caribbean Investment Summits (CIS18 → CIS26) — run-of-show, delegate ops, sponsorship architecture, VIP protocols.",
+      "Ran five major investor summits start-to-finish. Knows how to take a plan from paper to launch day.",
   },
 ];
 
