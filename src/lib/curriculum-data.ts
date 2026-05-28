@@ -32,6 +32,18 @@ export const STAGES: Stage[] = [
     oneLiner: "Legal foundation",
     takeHome:
       "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit. File Monday, start taking money the same week.",
+    walkOut: [
+      "Articles of Organization pre-filled in your GA Secretary of State account",
+      "EIN application completed and submitted — number issued in the session",
+      "Business-bank shortlist + bank application checklist filled for your business",
+      "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business",
+      "Local license + sales-tax requirements documented for your county",
+    ],
+    afterWorkshop: [
+      "Submit the Articles + filing fee from home (about 10 minutes)",
+      "Open the business bank account (1–7 days after you apply)",
+      "File local business license and sales-tax registration once the entity is approved",
+    ],
     duration: "60 min",
     covers: ["GA LLC packet", "EIN", "T&Cs / privacy", "Service agreement"],
     tasks: [
