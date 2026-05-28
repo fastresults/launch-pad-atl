@@ -29,9 +29,9 @@ export function SiteHeader() {
         </nav>
         <Link
           to="/register"
-          className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          className="rounded-full bg-hero-gradient px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
         >
-          Reserve seat
+          Reserve seat — from $679
         </Link>
       </div>
     </header>

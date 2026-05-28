@@ -1,54 +1,74 @@
-# Goal
+# Value Justification Grid + Registration Page
 
-The "Seven stages. One working day." cards on `/` currently show one prose paragraph per stage labeled "You walk out with." The user is right — prose blurs the line between *finished in the room* and *still needs filing / hosting / configuring*. We need to separate those two things on every card, name each artifact precisely, and cut anything that isn't honestly completable in the seven hours.
+Build a single, conversion-focused page that proves the workshop's value line-by-line, then closes with tiered pricing and the existing registration form.
 
-## What changes
+## Page structure (rebuild `/register`)
 
-Each of the 7 stage cards gets two clearly labeled lists instead of one paragraph:
+1. **Hero** — "Walk in with an idea. Walk out with a business." + cohort date + seats-left framing.
+2. **The Value Grid** (centerpiece — see below).
+3. **Totals bar** — *Market value: ~$X,XXX · Time to DIY: ~XX weeks · Your price today: from $679*.
+4. **Pricing tier cards** — Founders ($679, first 7) vs Cohort ($997, next 13).
+5. **Registration form** (existing form, unchanged logic, plus tier-interest field).
+6. **FAQ / guarantee strip**.
 
-1. **DONE IN THE ROOM** — concrete artifacts finished during the workshop, named precisely.
-2. **YOU FINISH AT HOME** — the exact follow-up action and a realistic time window (file, host, configure, print, send).
+## The Value Grid — conservative estimates (pulled back ~25% on cost and time)
 
-This same structure replaces the prose "You walk out with" block on the `/schedule` stage headers too, so the message is identical everywhere.
+One row per deliverable, grouped by stage. Columns: Stage · Deliverable · Typical market cost · DIY time · Included.
 
-## Per-stage rewrite
+| Stage | Deliverable | Market cost | DIY time |
+|---|---|---|---|
+| 1. Form | GA LLC filing packet (Articles pre-filled) | $225–$600 | 3–6 hrs |
+| 1. Form | EIN issued | $0–$185 | 1–1.5 hrs |
+| 1. Form | Terms / Privacy / Service Agreement | $300–$1,125 | 4.5–7.5 hrs |
+| 1. Form | Bank + license + sales-tax checklist | $110 | 2 hrs |
+| 2. Customer | 1-page ICP + 25-name prospect list | $375 | 4.5 hrs |
+| 2. Customer | Outreach script + 3-competitor grid | $225 | 3 hrs |
+| 3. Offer | One-sentence offer + scope + pricing sheet | $560 | 6 hrs |
+| 4. Build | Sale-to-delivery workflow map | $300 | 3.5 hrs |
+| 4. Build | First customer's deliverable + 5-pt QA checklist | $375 | 4.5 hrs |
+| 5. Brand | Logo + 4-color palette + font pairing | $375–$1,875 | 7.5–15 hrs |
+| 5. Brand | Complete website built (4 pages, branded, written, SEO-set) | $1,500–$4,500 | 15–30 hrs |
+| 5. Brand | Stripe/Square + GA4 + business email | $225 | 3 hrs |
+| 6. Marketing | Headline, 3 value props, 30-sec pitch | $300 | 3.5 hrs |
+| 6. Marketing | Business card + flyer print files | $185 | 3 hrs |
+| 6. Marketing | 6 social posts + 60-sec video script + 30-day plan | $450 | 6 hrs |
+| 7. Launch | 30/60/90 plan + 25-name launch list + 10 drafts | $375 | 4.5 hrs |
+| 7. Launch | Day-of timeline + CRM + 3 KPIs | $225 | 2 hrs |
 
-### 1. Form
-- **In the room:** Articles of Organization pre-filled in your GA SOS account · EIN application completed and submitted (number issued in-session) · Business-bank shortlist + bank application checklist filled · Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business · Local license and sales-tax requirements documented
-- **At home:** Submit Articles + filing fee (10 min) · Open the bank account (1–7 days) · File local business license / sales-tax registration once entity is approved
+**Totals row (highlighted):** Market value ≈ **$6,130–$11,440** · DIY time ≈ **76–106 hours** · **Your price: $679 (first 7) / $997 (cohort).**
 
-### 2. Customer
-- **In the room:** 1-page profile of your first named buyer with their top 3 problems priced in dollars · 25-name prospect list exported to CSV · Outreach script customized to that buyer · 3-competitor grid + your one-sentence positioning
-- **At home:** Send the script to your 25 prospects and run 5 discovery calls within 2 weeks
+Data lives in `src/lib/value-grid.ts` (typed array with `marketCostMin`, `marketCostMax`, `diyHoursMin`, `diyHoursMax` per row). Home page and schedule page untouched.
 
-### 3. Offer
-- **In the room:** Your one-sentence offer locked · First-version scope mapped sale-to-handoff · Pricing sheet with real cost per sale, break-even number, and payment terms
-- **At home:** Nothing — Stage 3 finishes in the room
+## Pricing tier cards (side-by-side)
 
-### 4. Build
-- **In the room:** Sale-to-happy-customer map with the app at each step · Free-app accounts created (project hub, files, scheduling, business email alias) · Your first customer's deliverable drafted and rehearsed end-to-end · 5-point quality checklist
-- **At home:** Run the rehearsed deliverable past your first paying customer · Upgrade to paid app tiers as revenue justifies
+- **Founders Seat — $679** · "First 7 to register" · badge: "X of 7 left" · all deliverables.
+- **Cohort Seat — $997** · "Next 13 seats" · all deliverables.
 
-### 5. Brand (most important to clarify)
-- **In the room:** Logo, 4-color palette, and font pairing in your brand-kit folder · A complete website built in your site builder — Home, Offer, About, Contact pages designed in your brand, written in your voice, mobile-checked, on-page SEO filled (title, meta, H1, image alts) · Stripe (or Square) application filled out · GA4 property created with tracking snippet copied · Business-email provider chosen with MX setup steps documented
-- **At home:** Buy the domain and point DNS (15 min + propagation) · Click Publish on the website (under an hour once DNS resolves) · Finish Stripe KYC (1–3 days) · Install the GA4 snippet on the published site · Verify business email on your domain
+Both cards list: 8-hour build day, lunch, all 17 deliverables above, take-home packet, 30-day follow-up. CTA scrolls to the form.
 
-### 6. Marketing
-- **In the room:** Headline, 3 value props, 30-second pitch, 100-word founder bio · Print-ready business card (front/back) designed in your brand · Print-ready 1-page flyer · Instagram, LinkedIn, and one of TikTok/YouTube/X — handles claimed, profile copy, link-in-bio, and banner filled in · 6 on-brand post drafts · 60-second founder video script · 30-day marketing plan (2 channels, weekly budget, calendar, 3 KPIs)
-- **At home:** Send print files to your printer · Schedule the 6 posts in Buffer / Later / Meta Business Suite · Record the 60-second video
+Pricing is **display-only** in this plan — no Stripe/checkout. Add a `tier_interest` field (enum: `founders` / `cohort`) to the registration form so we capture intent.
 
-### 7. Launch
-- **In the room:** Signed, dated 30/60/90 plan (first 3 paying customers → 10 → repeatable channel) · 25-name announcement list · 10 personalized outreach drafts saved · Day-of timeline locked · Starter CRM seeded · 3 weekly metrics defined · Accountability partner paired with cadence agreed
-- **At home:** Pick your launch date and send the drafts that morning · Both partners put 4 weekly check-ins on each other's calendars
+## Visual style
 
-## Files touched
+- Dark theme, consistent with `/` and `/schedule`.
+- Grid: alternating row tint by stage, sticky header on scroll; mobile = accordion per stage.
+- Totals row: gradient background using existing `--gradient-brand` tokens.
+- Founders card: gradient border. Cohort card: muted variant.
+- Icons: `Check` for included, `Clock` for DIY time, `DollarSign` for market cost (lucide-react).
 
-- `src/lib/curriculum-data.ts` — add two fields to `Stage`: `walkOut: string[]` (done in the room) and `afterWorkshop: string[]` (follow-up). Populate per stage above. Drop the now-redundant prose `takeHome` field everywhere, OR keep `takeHome` for fallback and stop rendering it — I'll drop it cleanly to avoid drift. Per-task `deliverable`, `takeaway`, `details`, `followUp` stay as-is (already rewritten last turn).
-- `src/routes/index.tsx` — `FlowStrip` cards: replace the single "You walk out with" paragraph with two labeled stacks: "Done in the room" (checkmark bullets in `text-foreground/90`) and "You finish at home" (clock-icon bullets in `text-muted-foreground italic`). Same `Link` to `/schedule#stage-N`. Update the section subhead from "Here's exactly what's in your hands when you stand up at 4:30 PM." to "What's finished in the room — and the exact handful of things you'll file, host, or configure after."
-- `src/routes/schedule.tsx` — replace the "You walk out with" block on each stage header with the same two-list pattern, reading from the new fields.
+## Files to touch
 
-## What does NOT change
+- **New:** `src/lib/value-grid.ts`
+- **New:** `src/components/value/ValueGrid.tsx`, `PricingTiers.tsx`, `TotalsBar.tsx`
+- **Edit:** `src/routes/register.tsx` — insert hero, grid, totals, pricing tiers above the existing form; add `tier_interest` select
+- **Edit:** `src/lib/registrations.functions.ts` + Zod schema — accept optional `tier_interest`
+- **Migration:** `alter table workshop_registrations add column tier_interest text`
+- **Edit:** `src/components/site/Header.tsx` — primary CTA "Reserve seat — from $679"
 
-- No new components, routes, dependencies, tokens, or layout.
-- Task-level rendering (the 3 essential tasks per stage with their per-task Take-home and "After the workshop" lines) is untouched — those were already rewritten last turn and they remain the most granular view on `/schedule`.
-- Visual style of cards (border, padding, gradient number badge) is unchanged.
+## Out of scope (ask if you want any of these)
+
+- Actual payment collection / Stripe checkout
+- Live seat-count from the database (the "X left" badge will be a static prop for now)
+- Changes to `/` or `/schedule`
+
+Confirm and I'll build it.

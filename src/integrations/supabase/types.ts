@@ -26,6 +26,7 @@ export type Database = {
           referral_source: string | null
           stage: string
           status: string
+          tier_interest: string | null
         }
         Insert: {
           business_idea: string
@@ -38,6 +39,7 @@ export type Database = {
           referral_source?: string | null
           stage: string
           status?: string
+          tier_interest?: string | null
         }
         Update: {
           business_idea?: string
@@ -50,6 +52,7 @@ export type Database = {
           referral_source?: string | null
           stage?: string
           status?: string
+          tier_interest?: string | null
         }
         Relationships: []
       }
