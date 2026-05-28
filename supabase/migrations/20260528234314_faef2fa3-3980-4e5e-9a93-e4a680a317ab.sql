@@ -1,0 +1,1 @@
+ALTER TABLE public.workshop_registrations ADD COLUMN IF NOT EXISTS tier_interest TEXT;
