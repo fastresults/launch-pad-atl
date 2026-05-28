@@ -127,12 +127,12 @@ function FlowStrip() {
 
 function Deliverables() {
   const items = [
-    "A validated business idea & customer profile",
-    "A registered domain and basic brand kit",
-    "A live landing page with a working checkout",
-    "An outreach list and first-customer playbook",
-    "A 30-day plan with metrics that matter",
-    "An accountability partner from the cohort",
+    "A validated customer profile with pains and $ figures",
+    "A filing-ready GA LLC packet + EIN + legal kit drafts",
+    "A domain in cart and brand kit folder ready to go",
+    "Website drafts ready to publish + payments setup checklist",
+    "A 25-name outreach list with 10 messages drafted",
+    "A signed 30/60/90 plan with 3 weekly metrics and an accountability partner",
   ];
   return (
     <section className="py-20">
