@@ -1,69 +1,86 @@
+# Add "Build" as a first-class stage
 
-## Goal
+The current curriculum covers Form → Customer → Offer → Brand → Marketing → Launch, but skips the operational work of actually assembling the thing the attendee will sell. We'll add **Stage 4: Build** (operational MVP), shift Brand/Marketing/Launch down one slot, and rebalance times to stay inside the 6-hour window. Same strict, conservative posture: in-session = drafts, decisions, and ready-to-run artifacts; anything requiring outside vendors/time moves to `followUp`.
 
-Close the gaps you flagged — website, social media, marketing plan, competitive analysis, launch plan — without adding a 7th stage (we'd blow the 6-hour budget). Instead, **sharpen the 3 tasks inside each stage** so every gap has a named owner, a concrete deliverable, and time on the agenda.
+## New stage map (still 6 hours total)
 
-## Gap audit (current → fix)
+| # | Stage | Duration | Change |
+|---|---|---|---|
+| 1 | Form the business | 50 min | −10 |
+| 2 | Customer & market | 55 min | −5 |
+| 3 | Offer & product | 50 min | −10 |
+| **4** | **Build (operational MVP)** | **60 min** | **NEW** |
+| 5 | Brand & website | 65 min | −10 |
+| 6 | Marketing plan & materials | 50 min | −10 |
+| 7 | Launch plan | 40 min | −5 |
+| — | Breaks / transitions | ~10 min | unchanged |
+| **Total** | | **~370 min** | fits the 6-hour day |
 
-| Topic | Today | Fix |
+The Offer stage already touches a "fulfillment SOP." Build picks that up and goes deeper into the *operational stack* the attendee will actually run on day one — without promising a finished product.
+
+## Stage 4: Build — three tasks (each conservative, in-seat)
+
+The stage is **archetype-aware** because attendees will fall into one of three buckets. Each task offers the same deliverable shape, branched by archetype: **Service**, **Digital product / software**, **Physical product**.
+
+### 4.1 Pick your build archetype & lock the V1 workflow (20 min)
+- **Deliverable:** Archetype selected + a 1-page V1 workflow diagram (sale → intake → delivery → handoff) with named tools at each step.
+- **In-session:**
+  - Service: intake → kickoff → delivery template → recap loop.
+  - Digital: no-code/template/scaffold choice (e.g. Lovable, Notion, Framer, Webflow, Shopify, GHL) + the first screen/page identified.
+  - Physical: supplier/manufacturer shortlist + sample-order checklist + packaging decision.
+- **followUp:** Run the workflow end-to-end with one test buyer (or sample order) in the first 2 weeks.
+
+### 4.2 Assemble the operational toolkit (20 min)
+- **Deliverable:** Tool stack chosen and accounts created where free + integration map drawn (no paid plans signed in-session).
+- **In-session:**
+  - Project/ops hub (Notion / ClickUp / Trello) — workspace seeded with V1 templates.
+  - Files & assets (Drive / Dropbox) — folder structure created.
+  - Comms (business email alias + scheduling link — Cal.com / Calendly free tier).
+  - Service-delivery or production tool specific to the archetype (e.g. Loom for service walk-throughs, Figma for digital, supplier portal accounts for physical).
+- **followUp:** Upgrade to paid tiers as revenue justifies; connect any integrations that require billing.
+
+### 4.3 Draft your V1 customer-delivery artifact (20 min)
+The single tangible thing the customer will receive in week one — drafted in-session, not shipped.
+- **Service:** Kickoff doc + delivery template + recap email — all three drafted.
+- **Digital:** Landing/demo screen wireframed in the chosen builder + onboarding flow outlined + first email drafted.
+- **Physical:** Product spec sheet + unboxing/insert-card draft + first-customer thank-you note.
+- **Deliverable:** Three drafted artifacts saved to the attendee's workspace, plus a 5-point QA checklist they can run before delivering to a real customer.
+- **followUp:** Run the artifacts past your first paying customer; iterate after their feedback.
+
+## How this threads through the existing plan
+
+- **Curriculum data (`src/lib/curriculum-data.ts`):** Insert the new Build stage as `n: 4`, renumber Brand → 5, Marketing → 6, Launch → 7. Adjust `duration` strings on the four affected stages.
+- **Schedule (`src/lib/schedule-data.ts`):** Recompute session start/end times so the day still ends at 4:30 PM ET. Add a Build session block between Offer and Brand.
+- **Homepage (`src/routes/index.tsx`):** Update the "6 stages" line to "7 stages" (or "Form → Build → Launch in one day"); add Build to the "What you leave with" list as "an operational V1 workflow with the artifact your first customer receives."
+- **Schedule route (`src/routes/schedule.tsx`):** No structural changes — it renders whatever is in `STAGES`. Verify the `followUp` rendering and stage-card grid still look right with 7 stages on desktop and mobile.
+- **Intake form (Phase 1 of the app plan):** Add three fields so the Build stage can branch correctly the day-of:
+  - `build_archetype` enum: `service | digital | physical`
+  - `existing_tools` jsonb (what they already use)
+  - `delivery_format_detail` text (already partially captured — extend, don't duplicate)
+- **AI prompts (Phase 3 of the app plan):** Add three Build-stage prompts (one per task), each branching on `build_archetype` so the AI assist generates the right workflow diagram, tool-stack recommendation, and delivery artifact drafts.
+- **Admin/facilitator view:** Add Build to the progress grid (7 columns instead of 6).
+
+## Conservative-promise audit for the new stage
+
+| Activity | In-session? | Why it's safe |
 |---|---|---|
-| Competitive analysis | Squeezed into "Size the market & map 3 competitors" (half a task) | Promote to its **own** Stage 2 task: 3-row grid + positioning gap |
-| Website setup | One task ("Publish a one-page sales site"), light on specifics | Expand deliverable: pages (Home, Offer, About, Contact), mobile pass, on-page SEO basics, lead form |
-| Social media | One line inside "Sales assets pack" | Promote to its **own** Stage 5 task: claim handles, profile copy, banner, 2-week content cadence |
-| Marketing plan | Implicit across stages, no single artifact | New Stage 5 task: **1-page marketing plan** (channels, budget, 30-day calendar, KPIs) |
-| Launch plan | Already Stage 6 — keep | Add launch-day checklist + announcement list (press, partners, network) |
-| Other gaps closed | — | Legal basics (T&Cs / privacy / contract template) added to Stage 1; analytics/KPIs explicit in Stage 4; sales pipeline / CRM seed in Stage 6 |
+| Pick archetype + draw V1 workflow | ✅ | Pure decision + diagram |
+| Create free-tier accounts | ✅ | Instant, attendee-controlled |
+| Draft delivery artifacts | ✅ | Drafts only, not sent to a real customer |
+| Sample order from supplier | ❌ (followUp) | Requires payment + shipping |
+| Paid tool subscriptions | ❌ (followUp) | Requires billing decision |
+| Real end-to-end test with a buyer | ❌ (followUp) | Requires a real customer |
+| Shipping a production digital build | ❌ (followUp) | Beyond 60 min |
 
-## Re-shaped curriculum (still 6 stages, ~6 hrs)
+## Out of scope (intentionally not added)
 
-**Stage 1 — Form the business (60 min)**
-1. Choose structure & register the GA LLC
-2. EIN + business bank account
-3. Compliance & legal kit — registered agent, GA license, sales tax, **T&Cs + privacy policy + 1-page service agreement**, bookkeeping
+- A second "Build day" or post-workshop sprint.
+- Live coding / live manufacturing in-session.
+- Per-archetype certification or vendor partnerships.
+- Replacing the existing Offer-stage SOP task — Offer stays focused on *what* you sell and *price*; Build owns *how you operate*.
 
-**Stage 2 — Customer & market (60 min)**
-1. Beachhead customer profile + top-3 pains (with $ figures)
-2. Market size + 5-call demand test
-3. **Competitive analysis** — 3-competitor grid (offer, price, channel, weakness) + your positioning gap
+## Open question
 
-**Stage 3 — Offer & product (60 min)** *(unchanged)*
-1. One-sentence offer
-2. V1 scope + fulfillment SOP
-3. Pricing, margin, break-even
+1. **Archetype branching depth in v1:** Should we ship Stage 4 with full per-archetype templates (3× the content for each task), or start with a shared template plus a one-page archetype-specific addendum and expand after the first cohort? Recommendation: ship the addendum approach first — faster to build, easier to iterate.
 
-**Stage 4 — Brand & website (75 min)**
-1. Name, domain, brand kit (logo, colors, type)
-2. **Website build** — Home / Offer / About / Contact, mobile pass, on-page SEO (title, meta, H1, alt), lead form
-3. Wire email, payments, analytics — test lead + test $1 transaction + GA4/Plausible event
-
-**Stage 5 — Marketing plan & materials (60 min, +15)**
-1. Messaging kit — headline, 3 value props, 30-sec pitch, bio
-2. **Social media kit** — claim handles, profile copy + banner, 2-week content cadence (3 posts/wk), 1 video script
-3. **1-page marketing plan** — top-2 channels, weekly budget, 30-day content & outreach calendar, 3 KPIs
-
-**Stage 6 — Launch plan (45 min, +15)**
-1. 30 / 60 / 90 plan (first 3 → 10 → repeatable channel) — signed PDF
-2. **Launch-day checklist + announcement list** — 25-name list, 10 outreach drafts, press/partner asks, day-of timeline
-3. Sales pipeline + accountability — CRM seeded, 3 weekly metrics, 4 check-ins booked
-
-Total: ~6 hrs + breaks. Stage 5 grows 15 min (the marketing plan deserves it), Stage 6 grows 15 min, Stage 4 holds at 75 min.
-
-## Technical plan
-
-- `src/lib/curriculum-data.ts`
-  - Extend `Task` with `details: string[]` (3–5 concrete bullets — the "how" inside each task).
-  - Rewrite the 6 stages per the table above; update `duration` for stages 5 and 6.
-- `src/lib/schedule-data.ts` — re-derive session blocks from the new durations so the timeline stays in sync.
-- `src/routes/schedule.tsx` — render `task.details` as a compact bulleted sub-list under each task; add a small "Also covered" chip-row per stage listing the gap topics it closes (e.g. *Competitive analysis*, *SEO basics*, *Social cadence*).
-- `src/routes/index.tsx` — no structural change; refresh the FlowStrip blurb for Stage 5 to "Marketing plan & assets".
-
-## Out of scope (Phase 2)
-
-- A standalone `/curriculum` page or printable workbook
-- Funding / investor track, full legal contract library, paid-ads playbook
-- Per-attendee task checklists with progress tracking
-
-## Open questions
-
-1. **Marketing plan depth** — keep it as a 1-page artifact (channels + calendar + KPIs), or go deeper into paid vs organic budget allocation? (Deeper = trim Stage 3 by 15 min.)
-2. **Social platforms** — default to Instagram + LinkedIn + one of (TikTok / YouTube / X), or let each attendee pick their 3 during the session?
+Want me to proceed with this enhancement?
