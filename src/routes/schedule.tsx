@@ -104,19 +104,27 @@ function SchedulePage() {
                           <div className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">
                             3 essential tasks
                           </div>
-                          <ul className="space-y-4">
+                          <ul className="space-y-5">
                             {stage.tasks.map((t, idx) => (
                               <li key={idx} className="flex items-start gap-3">
                                 <span className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-hero-gradient text-[11px] font-semibold text-white">
                                   {idx + 1}
                                 </span>
-                                <div className="min-w-0">
+                                <div className="min-w-0 flex-1">
                                   <div className="font-medium text-foreground">{t.title}</div>
                                   <div className="mt-0.5 flex items-start gap-1.5 text-sm text-muted-foreground">
                                     <Check className="mt-0.5 size-3.5 shrink-0 text-foreground/70" />
                                     <span>{t.deliverable}</span>
                                   </div>
-                                  <div className="mt-1.5">
+                                  <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                                    {t.details.map((d, di) => (
+                                      <li key={di} className="flex items-start gap-2">
+                                        <span className="mt-1.5 inline-block size-1 shrink-0 rounded-full bg-foreground/40" />
+                                        <span>{d}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                  <div className="mt-2">
                                     <span className="inline-block rounded-full border border-white/15 px-2.5 py-0.5 text-[11px] text-muted-foreground">
                                       {t.tool}
                                     </span>
@@ -125,6 +133,23 @@ function SchedulePage() {
                               </li>
                             ))}
                           </ul>
+                          {stage.covers?.length ? (
+                            <div className="mt-5 border-t border-white/10 pt-4">
+                              <div className="mb-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                                Also covered
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {stage.covers.map((c) => (
+                                  <span
+                                    key={c}
+                                    className="rounded-full bg-white/5 px-2.5 py-0.5 text-[11px] text-foreground/80"
+                                  >
+                                    {c}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
                         </div>
                       )}
                     </div>

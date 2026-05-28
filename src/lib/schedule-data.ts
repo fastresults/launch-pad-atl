@@ -11,7 +11,7 @@ export type Session = {
 
 export const EVENT = {
   dateLabel: "Thursday, July 23, 2026",
-  timeLabel: "9:00 AM – 4:00 PM ET",
+  timeLabel: "9:00 AM – 4:30 PM ET",
   venueName: "Workshop venue",
   address: "1500 Indian Trail Lilburn Rd NW, Norcross, GA 30093",
   capacity: 20,
@@ -67,9 +67,9 @@ export const SCHEDULE: Session[] = [
     kind: "break",
   },
   stageBlock(5, "2:45 PM"),
-  stageBlock(6, "3:30 PM"),
+  stageBlock(6, "3:45 PM"),
   {
-    time: "4:00 PM",
+    time: "4:30 PM",
     duration: "—",
     title: "Close — signed launch plan in hand",
     description: "You walk out with a formed business and a 30/60/90 plan.",
