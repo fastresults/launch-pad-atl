@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "July 23, 2026 · IGNITE Center at Greater Atlanta Christian School, Norcross, GA. Seven hours, seven stages, one real business by dinner. Led by a 30-year startup operator.",
+          "July 23, 2026 · IGNITE Center at Greater Atlanta Christian School, Norcross, GA. Seven hours, seven stages, one filing-ready business by dinner. Led by a 30-year startup operator.",
       },
     ],
   }),
@@ -74,7 +74,7 @@ function Hero() {
           <span className="font-medium text-white">
             You bring the idea — even a rough one. We build <em>your</em> business, not a template.
           </span>{" "}
-          By 4:30 PM you'll have a real business on paper, a simple way to deliver it,
+          By 4:30 PM you'll have a business formed and filing-ready, a simple way to deliver it,
           a website ready to publish, your full marketing kit, and a 90-day plan with
           your next ten moves already on the calendar.
         </p>
@@ -243,7 +243,7 @@ const PROOF_ROWS = [
   {
     n: 1,
     stage: "Form",
-    deliverable: "Your business, legally on paper.",
+    deliverable: "Your business, formed and filing-ready.",
     proof:
       "Started two of his own companies (Florida in 2009, Caribbean in 2014). Knows the paperwork inside out.",
   },
@@ -352,7 +352,7 @@ function WalkInWalkOut() {
     "No structure, no kit, no plan you can actually follow Monday morning",
   ];
   const walkOut = [
-    "A real business on paper — name, structure, EIN in hand, Georgia LLC packet ready to file",
+    "A formation-ready business — name, structure, EIN in hand, Georgia LLC packet ready to file",
     "A one-page profile of your first paying customer, in their words, with the dollar cost of their problem",
     "An offer written in one sentence that a buyer can say yes or no to",
     "The step-by-step way you'll deliver to that first customer next week",
@@ -522,7 +522,7 @@ function WhatYouLeaveWith() {
 
 function ValueByTheNumbers() {
   const stats: { n: string; label: string }[] = [
-    { n: "1", label: "real business formed" },
+    { n: "1", label: "filing-ready business" },
     { n: "9", label: "concrete take-home pieces" },
     { n: "25", label: "revenue prospects on your launch list" },
     { n: "90", label: "days mapped, signed, and dated" },

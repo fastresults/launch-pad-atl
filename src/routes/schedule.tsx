@@ -49,7 +49,7 @@ function SchedulePage() {
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
             Seven working hours, seven stages, one outcome. Every hour produces something
-            the next hour builds on. By 4:30 PM you have a real business and a signed,
+            the next hour builds on. By 4:30 PM you have a filing-ready business and a signed,
             dated 90-day launch plan.
           </p>
         </div>
