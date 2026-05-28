@@ -766,7 +766,8 @@ function TheArtOfThePossible() {
             Yours doesn't have to be on this list — it shouldn't be.
           </span>{" "}
           You walk in with your idea, and we build the business around it using the
-          same seven stages. Under $10,000 to start. A focused 90 days to launch.
+          same seven stages — so you leave with a formed business and a 90-day plan
+          you can run on Monday.
         </p>
         <p className="mt-3 max-w-2xl text-xs text-muted-foreground/80 md:text-sm">
           Income ranges are realistic year-one numbers for a solo operator who works

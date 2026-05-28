@@ -1,48 +1,43 @@
-## What's off today
+## What's confusing today
 
-Two spots on the homepage accidentally suggest the workshop hands you an idea:
+One line in the "What others are starting in 2026" section reads:
 
-1. **Hero subhead** ("Walk in with an idea") is good, but the body copy never reinforces *your* idea is the one that gets built.
-2. **"The art of the possible"** opens with **"Pick yours."** — that reads like a menu. The cards look like options to choose from, not proof of what other founders are launching in 2026.
+> …using the same seven stages. **Under $10,000 to start.** A focused 90 days to launch.
 
-The fix is copy-only, in two places. No layout changes, no new sections, no logic changes.
+Sitting right next to the workshop pitch, that "$10,000" reads like a workshop price tag. It needs to go. The workshop fee and whatever a founder later spends to launch *their* business are two different conversations, and the website shouldn't mix them.
 
 ## Plan
 
-### 1. Hero — add one reinforcing line (`src/routes/index.tsx`, hero body)
+### 1. Remove the section-level capital line (`src/routes/index.tsx`, ~line 769)
 
-Keep the existing subhead. Add a short sentence right after it so the promise is unmistakable:
+Rewrite the lead paragraph under the section headline so the only promise is the workshop's deliverable — a built business and a 90-day plan. No dollar number attached.
 
-> Seven focused hours at the IGNITE Center in Norcross, GA. **You bring the idea — even a rough one. We build *your* business, not a template.** By 4:30 PM you'll have a real business on paper, a simple way to deliver it, a website ready to publish, your full marketing kit, and a 90-day plan with your next ten moves already on the calendar.
+Before:
+> Scroll through for inspiration. **Yours doesn't have to be on this list — it shouldn't be.** You walk in with your idea, and we build the business around it using the same seven stages. Under $10,000 to start. A focused 90 days to launch.
 
-One sentence, woven into the existing paragraph. No new element.
+After:
+> Scroll through for inspiration. **Yours doesn't have to be on this list — it shouldn't be.** You walk in with your idea, and we build the business around it using the same seven stages — so you leave with a formed business and a 90-day plan you can run on Monday.
 
-### 2. "The art of the possible" — reframe the section header
+### 2. Audit the rest of the funnel for the same conflation
 
-Change the eyebrow, headline, and lead paragraph so the section reads as *evidence*, not a *catalog*.
+I searched the codebase for "$10,000", "ten thousand", "under $", "to start", "capital", and "invest" across `src/routes/`, `src/components/site/`, and the schedule/register pages. The only workshop-adjacent capital reference is the line above. The hero, schedule, register form, footer, and value-by-the-numbers section don't bundle startup capital with workshop messaging — no other edits needed there.
 
-- **Eyebrow** (unchanged tag, new words): `What others are starting in 2026`
-- **Headline:** Replace **"Pick yours."** with something like:
-  > **Proof, not a menu.** *These are the kinds of businesses real people are launching in 2026 — online, on a street corner, out of a kitchen, off a phone, or built around AI.*
-- **Lead paragraph** (replaces today's "Pick yours…" copy):
-  > Scroll through for inspiration. **Yours doesn't have to be on this list — it shouldn't be.** You walk in with your idea, and we build the business around it using the same seven stages. Under $10,000 to start. A focused 90 days to launch.
+### 3. The per-card "Starts under $X" line — recommend KEEP, flagging for your call
 
-### 3. Bridge card at the bottom of the section — tighten the handoff
+Each idea card shows two stat lines together:
+- **Monthly income potential** — e.g., "$10k–$25k / mo"
+- **Starts under $X** — e.g., "Starts under $1,500" (idea-specific; ranges from $100 to $9,500 across the 60 cards — none say "$10,000")
 
-Today it says: *"Every business above gets built with the same seven stages — in one day, in this room."*
+These are factual data points *about each business idea*, the way a real-estate card shows beds and baths. Income without a cost anchor is hard to read — "$10k/mo" means very different things if it takes $100 vs. $9,500 to launch. None of these labels reference $10,000 or imply the workshop costs anything.
 
-Update to make the *your-idea* point land one more time:
-
-> Whether your idea looks like one of these or nothing like them, **it gets built the same way** — the same seven stages, in one day, in this room.
-
-That's the whole change. No new components, no new files, no animation or layout edits.
+**Recommendation:** keep the per-card "Starts under $X" — it's per-idea context, not a workshop claim. If you'd rather remove or relabel them too (e.g., move to a hover/expanded view, or drop them entirely), say so and I'll do that pass in the same turn.
 
 ## Files touched
 
-- `src/routes/index.tsx` — hero paragraph (around line 72–77), `TheArtOfThePossible` header block (lines ~750–768), and the bridge card paragraph (~802–806).
+- `src/routes/index.tsx` — one paragraph in `TheArtOfThePossible` (lines ~760–770).
 
 ## Verification
 
-- Reload `/`, read the hero out loud — the words "you bring the idea" or "your business, not a template" appear above the fold.
-- Scroll to "The art of the possible" — the first thing the eye lands on is *"Proof, not a menu"* (or the agreed phrasing), not *"Pick yours."*
-- The bridge card under the marquee ends on the same message: your idea, our stages.
+- Reload `/`, scroll to "What others are starting in 2026," read the lead paragraph: no dollar amount appears.
+- Grep the repo for `10,000` and `to start` — only matches should be the per-card "Starts under $X" labels (which are idea-specific, not workshop-adjacent).
+- Hero, register page, schedule page, and footer remain unchanged.
