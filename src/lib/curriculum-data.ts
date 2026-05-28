@@ -309,6 +309,21 @@ export const STAGES: Stage[] = [
     oneLiner: "Brand & website",
     takeHome:
       "Your logo, color palette, and font pairing generated from your business name; a complete website tailored to your business — Home, Offer, About, and Contact pages built in your site builder and ready to host the moment your domain resolves; payments, business email, and analytics queued for one-click activation.",
+    walkOut: [
+      "Logo, 4-color palette, and font pairing saved to your brand-kit folder",
+      "A complete website built in your site builder — Home, Offer, About, Contact pages designed in your brand, written in your voice, mobile-checked",
+      "On-page SEO filled per page (title, meta, single H1, image alts)",
+      "Stripe (or Square) application filled out for your business",
+      "GA4 property created with your tracking snippet copied",
+      "Business-email provider chosen with MX setup steps documented",
+    ],
+    afterWorkshop: [
+      "Buy your domain and point DNS to your site builder (15 minutes + propagation)",
+      "Click Publish on the website (under an hour once DNS resolves)",
+      "Finish Stripe KYC (1–3 days)",
+      "Install the GA4 tracking snippet on the published site",
+      "Verify business email on your domain",
+    ],
     duration: "75 min",
     covers: ["Brand kit", "Bespoke website", "SEO per page", "Payments / email / analytics"],
     tasks: [
