@@ -1,42 +1,83 @@
 ## Goal
-Rewrite the seven `takeHome` lines so each one reads as the **output of a distinct, productized, AI-facilitated process** — not a generic outcome. Every line names the artifact(s), the format they arrive in, and what the attendee can do with them immediately. The seven lines should read as a coherent suite, not seven unrelated promises.
+Replace the abstract "framework" labels from the prior plan with the **real productized AI Generator names** from your catalog. Each of the 21 workshop tasks gets a named take-home artifact attributed to the specific Generator that produces it in the room. The full 20-generator catalog is also surfaced on the home page (grouped in your 3 phases — Foundation / Strategy / Launch) so prospects see the underlying AI product, not just the day's schedule.
 
-## Scope (deliberately narrow)
-- Edit only the `takeHome` string on each of the 7 stages in **`src/lib/curriculum-data.ts`**.
-- Do NOT touch `tasks[]`, `tool`, `deliverable`, `followUp`, `summary`, or `oneLiner` — the underlying process descriptions stay accurate to what the backend will deliver.
-- No component / layout / token changes. The `/` FlowStrip cards and the `/schedule` "You walk out with" strips both already pull `stage.takeHome`, so the rewrite cascades automatically.
+## Mapping — 20 Generators → 21 workshop tasks
+Some Generators power multiple artifacts (one Generator = one productized surface, several outputs). Three Generators (Business Plan, Financial Projections, Funding Strategy) are post-launch / fundraising tools and don't fit the one-day workshop arc — they live in the catalog section on the home page as "after the workshop" scale tools.
 
-## Voice formula (applied to all 7)
-`[Named artifact(s) the productized process generates]` · `[the format / where it lives]` · `[what the attendee does with it Monday / tonight]`
+**Stage 1 — Form** · *Powered by Legal Checklist Generator*
+- 1.1 → GA LLC Entity Pack — entity decision tree + filing-ready Articles of Organization *(Legal Checklist Generator)*
+- 1.2 → EIN & Banking Setup — EIN application queued + business-bank shortlist *(Legal Checklist Generator)*
+- 1.3 → Contract Pack — signed Terms, Privacy Policy, Master Service Agreement *(Legal Checklist Generator)*
 
-- Mention the **process / generator / engine / walk-through / AI** that produced the artifact (subtle, not gimmicky — referenced 1×, never twice in the same line).
-- Keep prior-approved tone: empathetic, concrete, conversion-grade. No "transformation," "journey," or hype words.
-- Stays consistent with the existing `tasks[].tool` names (legal walk-through, brand-kit AI, build-type generator, creative-kit AI, etc.) so the take-home actually corresponds to a real product surface.
+**Stage 2 — Customer & market** · *Powered by Customer Research, Market Analysis, Competitive Analysis Generators*
+- 2.1 → Ideal Customer Profile (ICP) — 1-page profile: demographics, jobs-to-be-done, willingness-to-pay *(Customer Research Generator)*
+- 2.2 → Market Sizing + Validation Script — TAM/SAM/SOM snapshot + Mom-Test-style interview script *(Market Analysis Generator)*
+- 2.3 → Competitive Positioning Matrix — 3-competitor grid + 1-sentence differentiation statement *(Competitive Analysis Generator)*
 
-## New `takeHome` copy
+**Stage 3 — Offer & product** · *Powered by Concept Brief, Product Development, Pricing & Packaging Generators*
+- 3.1 → Concept Brief — one-sentence value proposition + startup DNA card *(Concept Brief Generator)*
+- 3.2 → MVP Scope & Service Blueprint — first-version deliverable mapped from sale to handoff *(Product Development Generator)*
+- 3.3 → Pricing & Margin Model — pricing sheet + exact break-even number *(Pricing & Packaging Generator)*
 
-1. **Form** → "A filing-ready Georgia LLC packet (Articles pre-filled, registered agent set, EIN application queued) plus signed Terms, Privacy, and Service Agreement — auto-assembled by the legal walk-through and exported as a single PDF bundle. Submit Monday and start legally taking money the same week."
+**Stage 4 — Build the working version** · *Powered by Business Model Canvas, Operations Plan Generators*
+- 4.1 → Business Model Canvas — chosen build type + 9-block canvas *(Business Model Canvas Generator)*
+- 4.2 → Operations Stack — free-app accounts provisioned and mapped to the canvas *(Operations Plan Generator)*
+- 4.3 → Delivery Rehearsal — first customer's deliverable drafted and rehearsed end-to-end *(Operations Plan Generator)*
 
-2. **Customer** → "One named first customer with their pain priced in dollars, a 25-name prospect list the targeting engine pulled from your niche and zip, and a validated outreach script — exported as a CSV you can start messaging tonight."
+**Stage 5 — Brand & website** · *Powered by Brand Builder, Vision & Mission, Website Copy, Operations Plan Generators*
+- 5.1 → Brand Identity + Vision/Mission — logo, palette, fonts, claimed domain + one-line vision and mission anchoring the brand *(Brand Builder Generator + Vision & Mission Generator)*
+- 5.2 → Website Copy Pack — Home, Offer, About, Contact drafted directly in your site builder *(Website Copy Generator)*
+- 5.3 → RevOps Stack — Stripe, email-on-domain, analytics application checklists complete *(Operations Plan Generator)*
 
-3. **Offer** → "A one-sentence offer a buyer can say yes or no to, a price the margin calculator backed into from your real costs, and the exact number of sales you need to break even — locked into a one-page offer sheet."
+**Stage 6 — Marketing plan & creatives** · *Powered by Marketing Strategy, Social Launch Generators*
+- 6.1 → Messaging House — headline, 3 value props, 30-second pitch, founder bio *(Marketing Strategy Generator)*
+- 6.2 → Launch Creative Kit — business card + flyer + 6 on-brand post drafts + 60-second video script *(Social Launch Generator)*
+- 6.3 → 30-Day GTM Plan — channel calendar + budget + 3 weekly KPIs *(Marketing Strategy Generator)*
 
-4. **Build** → "Your delivery process mapped step-by-step by the build-type generator, the free apps that run it provisioned with starter accounts, and your first customer's deliverable drafted and rehearsed — before a real customer ever sees it."
+**Stage 7 — Launch plan** · *Powered by Launch Plan, Sales Strategy, Growth Hacking Generators*
+- 7.1 → 30/60/90 Launch Roadmap — signed dated plan: first 3 paying customers → 10 → repeatable channel *(Launch Plan Generator)*
+- 7.2 → Launch Sequence Playbook — launch-day checklist + 5 outreach drafts ready to send *(Sales Strategy Generator)*
+- 7.3 → Sales Pipeline + Growth Loop — starter CRM populated, first repeatable acquisition loop, accountability partner on the calendar *(Sales Strategy Generator + Growth Hacking Generator)*
 
-5. **Brand** → "Logo, color palette, and font pairing generated by the brand-kit AI from your business name; a Home page and Offer page drafted directly inside your site builder; payments, email, and analytics queued for one-click connection the moment your domain resolves."
+**Not surfaced in the workshop hour-by-hour** (live in the home-page catalog as the "Scale toolkit — for after the workshop"):
+- Business Plan Generator — investor-grade frameworks
+- Financial Projections Generator — forecasts for investors
+- Funding Strategy Generator — capital strategy
 
-6. **Marketing** → "A printable business card and flyer rendered by the creative-kit AI, claimed handles on the three channels your customer actually uses, six on-brand post drafts queued in your scheduler, and a 60-second founder video script — your full launch kit, done."
+## Edits
 
-7. **Launch** → "A signed, dated 90-day plan (first 3 paying customers → 10 → repeatable channel) generated from your offer, customer list, and marketing kit; a launch-day checklist with outreach drafts ready to send; and an accountability partner already on next Monday's calendar."
+### 1. Data — `src/lib/curriculum-data.ts`
+- Add `takeaway?: string` to `Task` type. Populate on all 21 tasks with the strings above, formatted as: `"[Artifact] — [format] · [Generator(s)]"`. Generator attribution goes after a middot so it can render as a chip.
+- Add `generators?: string[]` to `Stage`. Populate per stage with the Generator names listed above.
+- Leave `deliverable`, `tool`, `details`, `followUp`, and stage-level `takeHome` unchanged.
 
-## Why these work
-- **Distinct.** Each one names artifacts you can't confuse with another stage (PDF legal bundle vs. CSV prospect list vs. offer sheet vs. delivery map vs. brand kit vs. launch kit vs. 90-day plan).
-- **Process-driven.** Each references the specific productized surface that produces it (walk-through, targeting engine, margin calculator, build-type generator, brand-kit AI, creative-kit AI, plan generator).
-- **Tangible.** Every line says either the **file format** ("PDF bundle," "CSV," "one-page sheet"), the **place it lives** ("inside your site builder," "queued in your scheduler"), or the **next action** ("submit Monday," "message tonight," "next Monday's calendar").
-- **Cohesive suite.** Read top-to-bottom, they describe one AI-facilitated assembly line — legal → customer → offer → delivery → brand → marketing → launch — each stage's output feeding the next.
+### 2. UI — `src/routes/schedule.tsx`
+- **Per stage card header**: under the Stage title, add a single line `Powered by · [Generator chip] [Generator chip] …` using the existing chip style (`rounded-full bg-white/5 px-2.5 py-0.5 text-[11px]`).
+- **Per task**: between the deliverable + tool row and the detail bullets, render the take-home strip:
+  ```
+  TAKE-HOME · Ideal Customer Profile (ICP) — 1-page profile · [Customer Research Generator]
+  ```
+  Container: `mt-2 rounded-md border-l-2 border-hero-gradient bg-white/[0.03] px-3 py-2`. Eyebrow: `text-[10px] uppercase tracking-[0.22em] text-muted-foreground`. Body: `text-[13px] font-medium leading-snug text-foreground/90` with the artifact name in `text-foreground`. The trailing generator name renders as a small inline chip.
+- The existing italic `followUp` block (Take home: homework action) stays directly beneath, unchanged.
+
+### 3. New section on `/` — "Your AI Toolkit · 20 Generators"
+Add a new section between the existing `FlowStrip` and `WhatYouLeaveWith` (or wherever flows best — placement to be confirmed in implementation). Three grouped cards mirroring your phase structure:
+
+- **Phase 1 · Build Your Unshakeable Foundation** (5 generators)
+- **Phase 2 · Craft Your Winning Strategy** (5 generators)
+- **Phase 3 · Launch With Professional Power** (10 generators)
+
+Each phase card lists its Generators with the one-line description from your message. Visual style matches the existing `FlowStrip` cards: `rounded-2xl border border-white/10 bg-card p-6`, small "PHASE N" eyebrow, phase title, intro sentence, then a tight 2-column list of Generators with name + 1-line description. Generators that appear in the workshop get a subtle "→ in the workshop" tag; the 3 Scale generators get "→ after the workshop." No new colors, no new tokens.
+
+Section heading: "Twenty AI generators. One day to use them in the same room with the operator."
+
+## What stays the same
+- 7-stage hour-by-hour schedule, all existing task titles, deliverables, tools, details, followUp lines.
+- Stage-level `takeHome` lines (the AI-process-driven suite outputs).
+- All navigation, anchors, tokens, components.
 
 ## Verification
-- `rg -n "takeHome" src/lib/curriculum-data.ts` shows the new strings in stages 1–7.
-- `/` FlowStrip cards under "YOU WALK OUT WITH" render the new copy.
-- `/schedule` "You walk out with" strip inside each stage card renders the new copy.
-- No other strings or layouts change.
+- `rg -n "takeaway:" src/lib/curriculum-data.ts` shows 21 entries; `rg -n "generators:" src/lib/curriculum-data.ts` shows 7.
+- `/schedule`: each stage card header shows Generator chips; each of the 21 tasks shows a TAKE-HOME strip with the artifact name and its Generator chip.
+- `/`: new "Your AI Toolkit" section lists all 20 Generators grouped under the 3 phases, with workshop vs. scale tagging.
+- Mobile: take-home strip wraps cleanly; phase cards stack 1-column.
