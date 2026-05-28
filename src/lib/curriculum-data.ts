@@ -3,6 +3,8 @@ export type Task = {
   deliverable: string;
   tool: string;
   details: string[];
+  takeaway?: string;
+  takeawayGenerator?: string;
   followUp?: string;
 };
 
@@ -16,6 +18,7 @@ export type Stage = {
   takeHome: string;
   duration: string;
   covers: string[];
+  generators?: string[];
   tasks: [Task, Task, Task];
 };
 
@@ -30,6 +33,7 @@ export const STAGES: Stage[] = [
     takeHome: "A filing-ready Georgia LLC packet (Articles pre-filled, registered agent set, EIN application queued) plus signed Terms, Privacy, and Service Agreement — auto-assembled by the legal walk-through and exported as a single PDF bundle. Submit Monday and start legally taking money the same week.",
     duration: "60 min",
     covers: ["GA LLC packet", "EIN", "T&Cs / privacy", "Service agreement"],
+    generators: ["Legal Checklist Generator"],
     tasks: [
       {
         title: "Choose structure & prepare the GA LLC filing",
@@ -42,6 +46,8 @@ export const STAGES: Stage[] = [
           "Decide registered agent (you, partner, or paid service)",
           "Create your GA SOS account and pre-fill the Articles of Organization",
         ],
+        takeaway: "GA LLC Entity Pack — entity decision tree + filing-ready Articles of Organization",
+        takeawayGenerator: "Legal Checklist Generator",
         followUp:
           "Submit the Articles of Organization and pay the filing fee from home — typically a 10-minute step once you're ready.",
       },
@@ -56,6 +62,8 @@ export const STAGES: Stage[] = [
           "Pick your bank and complete the application checklist (docs needed)",
           "Pick a bookkeeping tool (Wave / QuickBooks) and bookmark the signup",
         ],
+        takeaway: "EIN & Banking Setup — EIN application queued + business-bank shortlist + bookkeeping starter",
+        takeawayGenerator: "Legal Checklist Generator",
         followUp:
           "Submit the bank application with your documents — most banks open the account in 1–7 days.",
       },
@@ -70,6 +78,8 @@ export const STAGES: Stage[] = [
           "Customize Terms of Service and Privacy Policy from vetted templates",
           "Customize a 1-page service agreement / SOW for your first sale",
         ],
+        takeaway: "Contract Pack — signed Terms of Service, Privacy Policy, and 1-page Master Service Agreement",
+        takeawayGenerator: "Legal Checklist Generator",
         followUp:
           "File the local business license and (if applicable) sales-tax registration once your entity is approved.",
       },
@@ -85,6 +95,7 @@ export const STAGES: Stage[] = [
     takeHome: "One named first customer with their pain priced in dollars, a 25-name prospect list the targeting engine pulled from your niche and zip, and a validated outreach script — exported as a CSV you can start messaging tonight.",
     duration: "60 min",
     covers: ["Your first customer", "Validation script", "3-competitor look", "What makes you different"],
+    generators: ["Customer Research Generator", "Market Analysis Generator", "Competitive Analysis Generator"],
     tasks: [
       {
         title: "Pick your first real customer",
@@ -97,6 +108,8 @@ export const STAGES: Stage[] = [
           "Attach a dollar cost to each pain (time, lost revenue, risk)",
           "Map where they already hang out — online and offline",
         ],
+        takeaway: "Ideal Customer Profile (ICP) — 1-page profile: demographics, jobs-to-be-done, willingness-to-pay",
+        takeawayGenerator: "Customer Research Generator",
       },
       {
         title: "Estimate the market + write a short script you'll send",
@@ -107,8 +120,10 @@ export const STAGES: Stage[] = [
           "Estimate how many buyers exist, how many you can realistically reach, and how many you'll win in year one (TAM/SAM/SOM)",
           "Pull a 25-name prospect list from LinkedIn, local groups, or referrals",
           "Customize the problem-discovery script for your first customer",
-          "Pick a scoring rubric: pain confirmed, willingness to pay, intro to others",
+          "Pick a scoring rubric: pain confirmed, willingness to pay, intow to others",
         ],
+        takeaway: "Market Sizing + Validation Script — TAM/SAM/SOM snapshot + Mom-Test-style interview script + 25-name CSV",
+        takeawayGenerator: "Market Analysis Generator",
         followUp:
           "Send the script to your 25 prospects and run 5 discovery calls within the next 2 weeks; score each one.",
       },
@@ -122,6 +137,8 @@ export const STAGES: Stage[] = [
           "Find the gap they all miss — your edge",
           "Write a one-line positioning statement: For X, who Y, we are Z because…",
         ],
+        takeaway: "Competitive Positioning Matrix — 3-competitor grid + 1-sentence differentiation statement",
+        takeawayGenerator: "Competitive Analysis Generator",
       },
     ],
   },
@@ -135,6 +152,7 @@ export const STAGES: Stage[] = [
     takeHome: "A one-sentence offer a buyer can say yes or no to, a price the margin calculator backed into from your real costs, and the exact number of sales you need to break even — locked into a one-page offer sheet.",
     duration: "60 min",
     covers: ["Offer in one sentence", "What's in V1", "Pricing & break-even"],
+    generators: ["Concept Brief Generator", "Product Development Generator", "Pricing & Packaging Generator"],
     tasks: [
       {
         title: "Write the offer in one sentence",
@@ -146,6 +164,8 @@ export const STAGES: Stage[] = [
           "Strip jargon — read it aloud to a partner",
           "Lock the final sentence; it feeds your website and pitch",
         ],
+        takeaway: "Concept Brief — one-sentence value proposition + startup DNA card",
+        takeawayGenerator: "Concept Brief Generator",
       },
       {
         title: "Decide what your first version actually includes",
@@ -157,6 +177,8 @@ export const STAGES: Stage[] = [
           "Identify tools, suppliers, or contractors needed",
           "Estimate time-to-fulfill so pricing covers your hours",
         ],
+        takeaway: "MVP Scope & Service Blueprint — first-version deliverable mapped from sale to handoff",
+        takeawayGenerator: "Product Development Generator",
       },
       {
         title: "Set price, margin & payment terms",
@@ -168,6 +190,8 @@ export const STAGES: Stage[] = [
           "Calculate units/month to break even and to hit a target income",
           "Define deposit, milestones, refund policy, and accepted payment methods",
         ],
+        takeaway: "Pricing & Margin Model — pricing sheet + exact break-even number + payment terms",
+        takeawayGenerator: "Pricing & Packaging Generator",
       },
     ],
   },
@@ -182,6 +206,7 @@ export const STAGES: Stage[] = [
     takeHome: "Your delivery process mapped step-by-step by the build-type generator, the free apps that run it provisioned with starter accounts, and your first customer's deliverable drafted and rehearsed — before a real customer ever sees it.",
     duration: "60 min",
     covers: ["Service / online / product", "Your free app setup", "What the customer receives"],
+    generators: ["Business Model Canvas Generator", "Operations Plan Generator"],
     tasks: [
       {
         title: "Pick what kind of business you're building and map the steps",
@@ -194,6 +219,8 @@ export const STAGES: Stage[] = [
           "Physical product: supplier/manufacturer shortlist + sample-order checklist + packaging decision",
           "Mark every step that depends on a vendor, contractor, or sample order",
         ],
+        takeaway: "Business Model Canvas — chosen build type + 9-block canvas of how your business runs",
+        takeawayGenerator: "Business Model Canvas Generator",
         followUp:
           "Run the steps end-to-end with one test buyer (or sample order) in the first 2 weeks and revise the map.",
       },
@@ -208,6 +235,8 @@ export const STAGES: Stage[] = [
           "Comms: set up scheduling (Cal.com / Calendly free) + business email alias",
           "Build-type tool: Loom (service) / Figma (online) / supplier portal accounts (physical)",
         ],
+        takeaway: "Operations Stack — free-app accounts provisioned and mapped to your canvas",
+        takeawayGenerator: "Operations Plan Generator",
         followUp:
           "Upgrade to paid tiers as revenue justifies and connect any integrations that require billing.",
       },
@@ -222,6 +251,8 @@ export const STAGES: Stage[] = [
           "Physical: product spec sheet + unboxing/insert-card draft + first-customer thank-you note",
           "Write a 5-point quality checklist (quality, accuracy, timing, tone, follow-up)",
         ],
+        takeaway: "Delivery Rehearsal — first customer's deliverable drafted and rehearsed end-to-end + 5-point quality checklist",
+        takeawayGenerator: "Operations Plan Generator",
         followUp:
           "Run the drafts past your first paying customer and iterate after their feedback.",
       },
@@ -237,6 +268,7 @@ export const STAGES: Stage[] = [
     takeHome: "Logo, color palette, and font pairing generated by the brand-kit AI from your business name; a Home page and Offer page drafted directly inside your site builder; payments, email, and analytics queued for one-click connection the moment your domain resolves.",
     duration: "75 min",
     covers: ["Brand kit", "Website drafts", "Make Google find each page", "Payments checklist"],
+    generators: ["Brand Builder Generator", "Vision & Mission Generator", "Website Copy Generator", "Operations Plan Generator"],
     tasks: [
       {
         title: "Name, domain & brand kit",
@@ -249,6 +281,8 @@ export const STAGES: Stage[] = [
           "Generate logo + 4-color palette + 2 fonts in your brand kit",
           "Save brand assets to a shared folder (Drive / Notion)",
         ],
+        takeaway: "Brand Identity + Vision/Mission — logo, palette, fonts, claimed domain + one-line vision and mission anchoring the brand",
+        takeawayGenerator: "Brand Builder Generator + Vision & Mission Generator",
         followUp:
           "Complete the domain purchase and point DNS to your site builder — usually 15 minutes plus propagation.",
       },
@@ -263,6 +297,8 @@ export const STAGES: Stage[] = [
           "Outline About and Contact pages (headline + sections)",
           "Fill on-page SEO per page: title, meta, single H1, image alts",
         ],
+        takeaway: "Website Copy Pack — Home, Offer, About, Contact drafted directly inside your site builder with on-page SEO",
+        takeawayGenerator: "Website Copy Generator",
         followUp:
           "Connect your domain, do a final mobile pass, and click Publish — usually under an hour once DNS resolves.",
       },
@@ -277,6 +313,8 @@ export const STAGES: Stage[] = [
           "Pick an email provider (Google Workspace / Zoho) and document MX steps",
           "Decide your welcome-email copy for new leads",
         ],
+        takeaway: "RevOps Stack — Stripe, email-on-domain, and GA4 application checklists complete and queued",
+        takeawayGenerator: "Operations Plan Generator",
         followUp:
           "Finish payments KYC, install the GA4 snippet on the published site, and verify your business email — typically 1–3 days.",
       },
@@ -293,6 +331,7 @@ export const STAGES: Stage[] = [
     takeHome: "A printable business card and flyer rendered by the creative-kit AI, claimed handles on the three channels your customer actually uses, six on-brand post drafts queued in your scheduler, and a 60-second founder video script — your full launch kit, done.",
     duration: "60 min",
     covers: ["Messaging kit", "Print creatives", "Social kit", "30-day plan"],
+    generators: ["Marketing Strategy Generator", "Social Launch Generator"],
     tasks: [
       {
         title: "Core messaging kit",
@@ -304,6 +343,8 @@ export const STAGES: Stage[] = [
           "Rehearse a 30-second verbal pitch",
           "Write a 100-word founder bio for site, social, and outreach",
         ],
+        takeaway: "Messaging House — headline, 3 value props, 30-second pitch, 100-word founder bio",
+        takeawayGenerator: "Marketing Strategy Generator",
       },
       {
         title: "Your print and social kit",
@@ -316,6 +357,8 @@ export const STAGES: Stage[] = [
           "Claim handles on Instagram, LinkedIn, and one of TikTok / YouTube / X — fill profile copy, link-in-bio, banner",
           "Draft 6 posts (hooks, proof, offer) + 1 sixty-second video script you can record this week",
         ],
+        takeaway: "Launch Creative Kit — printable business card + flyer + claimed handles + 6 on-brand post drafts + 60-second video script",
+        takeawayGenerator: "Social Launch Generator",
         followUp:
           "Send the print files to your printer and schedule the 6 posts in Buffer / Later / Meta Business Suite; record the video.",
       },
@@ -329,6 +372,8 @@ export const STAGES: Stage[] = [
           "Build a 30-day content + outreach calendar (publish dates locked)",
           "Define 3 KPIs: leads/week, reply rate, conversion to sale",
         ],
+        takeaway: "30-Day GTM Plan — 2-channel calendar + budget + 3 weekly KPIs",
+        takeawayGenerator: "Marketing Strategy Generator",
       },
     ],
   },
@@ -342,6 +387,7 @@ export const STAGES: Stage[] = [
     takeHome: "A signed, dated 90-day plan (first 3 paying customers → 10 → repeatable channel) generated from your offer, customer list, and marketing kit; a launch-day checklist with outreach drafts ready to send; and an accountability partner already on next Monday's calendar.",
     duration: "45 min",
     covers: ["90-day plan", "Launch-day checklist", "Outreach drafts", "Accountability"],
+    generators: ["Launch Plan Generator", "Sales Strategy Generator", "Growth Hacking Generator"],
     tasks: [
       {
         title: "Sign your 90-day plan (30 / 60 / 90)",
@@ -353,6 +399,8 @@ export const STAGES: Stage[] = [
           "Day 61–90: double down on the channel that worked, kill what didn't",
           "Sign and date it — print copy goes on the wall",
         ],
+        takeaway: "30/60/90 Launch Roadmap — signed, dated plan: first 3 paying customers → 10 → repeatable channel",
+        takeawayGenerator: "Launch Plan Generator",
       },
       {
         title: "Launch-day checklist & outreach drafts",
@@ -365,6 +413,8 @@ export const STAGES: Stage[] = [
           "Identify 3 partner / press / community asks for a co-launch boost",
           "Lock a day-of timeline: 8 AM post → 10 AM email → 2 PM follow-ups",
         ],
+        takeaway: "Launch Sequence Playbook — launch-day checklist + 10 personalized outreach drafts ready to send",
+        takeawayGenerator: "Sales Strategy Generator",
         followUp:
           "Pick your launch date, send the drafts that morning, and work the day-of timeline.",
       },
@@ -379,6 +429,8 @@ export const STAGES: Stage[] = [
           "Pair with a cohort accountability partner",
           "Agree on a weekly 20-min check-in cadence and channel",
         ],
+        takeaway: "Sales Pipeline + Growth Loop — starter CRM populated + first repeatable acquisition loop + accountability partner on the calendar",
+        takeawayGenerator: "Sales Strategy Generator + Growth Hacking Generator",
         followUp:
           "Both partners put the 4 weekly check-ins on each other's calendars after the workshop.",
       },
