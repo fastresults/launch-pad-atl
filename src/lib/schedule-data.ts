@@ -11,7 +11,7 @@ export type Session = {
 
 export const EVENT = {
   dateLabel: "Thursday, July 23, 2026",
-  timeLabel: "9:00 AM – 4:30 PM ET",
+  timeLabel: "8:00 AM – 4:30 PM ET",
   venueName: "Workshop venue",
   address: "1500 Indian Trail Lilburn Rd NW, Norcross, GA 30093",
   capacity: 20,
