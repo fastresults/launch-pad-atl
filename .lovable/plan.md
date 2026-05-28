@@ -1,86 +1,114 @@
-# Add "Build" as a first-class stage
+# Stretch to 7 hours, sharpen the copy, introduce the facilitator
 
-The current curriculum covers Form → Customer → Offer → Brand → Marketing → Launch, but skips the operational work of actually assembling the thing the attendee will sell. We'll add **Stage 4: Build** (operational MVP), shift Brand/Marketing/Launch down one slot, and rebalance times to stay inside the 6-hour window. Same strict, conservative posture: in-session = drafts, decisions, and ready-to-run artifacts; anything requiring outside vendors/time moves to `followUp`.
+Three things change: the workshop becomes a **7-hour working day** so each of the 7 stages gets the time it deserves; the homepage is **rewritten with conversion-grade copy** in a seasoned startup voice; and an **experienced facilitator** is introduced as a trust anchor.
 
-## New stage map (still 6 hours total)
+## 1. Rebalance to a 7-hour flow
 
-| # | Stage | Duration | Change |
+Working time grows from 360 → 420 min so every stage has breathing room. Day still ends at 4:30 PM ET; we start 30 min earlier and trim the lunch slot slightly.
+
+| # | Stage | Was | Now |
 |---|---|---|---|
-| 1 | Form the business | 50 min | −10 |
-| 2 | Customer & market | 55 min | −5 |
-| 3 | Offer & product | 50 min | −10 |
-| **4** | **Build (operational MVP)** | **60 min** | **NEW** |
-| 5 | Brand & website | 65 min | −10 |
-| 6 | Marketing plan & materials | 50 min | −10 |
-| 7 | Launch plan | 40 min | −5 |
-| — | Breaks / transitions | ~10 min | unchanged |
-| **Total** | | **~370 min** | fits the 6-hour day |
+| 1 | Form the business | 50 | 60 |
+| 2 | Customer & market | 55 | 60 |
+| 3 | Offer & product | 50 | 60 |
+| 4 | Build (operational MVP) | 60 | 60 |
+| 5 | Brand & website | 60 | 75 |
+| 6 | Marketing plan & materials | 45 | 60 |
+| 7 | Launch plan | 40 | 45 |
+| **Working** | | **360** | **420** |
+| Check-in | 30 | 30 |
+| Lunch | 45 | 30 |
+| Coffee reset | 15 | 15 |
+| **Total day** | 8:30 → 4:30 | **8:00 → 4:30** |
 
-The Offer stage already touches a "fulfillment SOP." Build picks that up and goes deeper into the *operational stack* the attendee will actually run on day one — without promising a finished product.
+New schedule rhythm: 8:00 check-in · 8:30 Stage 1 · 9:30 Stage 2 · 10:30 Stage 3 · 11:30 lunch · 12:00 Stage 4 · 1:00 Stage 5 · 2:15 coffee · 2:30 Stage 6 · 3:30 Stage 7 (45 min) · 4:30 close.
 
-## Stage 4: Build — three tasks (each conservative, in-seat)
+Files: `src/lib/curriculum-data.ts` (update `duration`), `src/lib/schedule-data.ts` (rebalance times + `EVENT.timeLabel` → "8:00 AM – 4:30 PM ET"), `src/routes/index.tsx` ("See the 6-hour flow" → "See the 7-hour flow"; "Seven stages. One day." stays).
 
-The stage is **archetype-aware** because attendees will fall into one of three buckets. Each task offers the same deliverable shape, branched by archetype: **Service**, **Digital product / software**, **Physical product**.
+## 2. Clarify "marketing materials" everywhere
 
-### 4.1 Pick your build archetype & lock the V1 workflow (20 min)
-- **Deliverable:** Archetype selected + a 1-page V1 workflow diagram (sale → intake → delivery → handoff) with named tools at each step.
-- **In-session:**
-  - Service: intake → kickoff → delivery template → recap loop.
-  - Digital: no-code/template/scaffold choice (e.g. Lovable, Notion, Framer, Webflow, Shopify, GHL) + the first screen/page identified.
-  - Physical: supplier/manufacturer shortlist + sample-order checklist + packaging decision.
-- **followUp:** Run the workflow end-to-end with one test buyer (or sample order) in the first 2 weeks.
+Stage 6 is renamed and rewritten so attendees know it covers **all printed creatives and social**, not just a plan document.
 
-### 4.2 Assemble the operational toolkit (20 min)
-- **Deliverable:** Tool stack chosen and accounts created where free + integration map drawn (no paid plans signed in-session).
-- **In-session:**
-  - Project/ops hub (Notion / ClickUp / Trello) — workspace seeded with V1 templates.
-  - Files & assets (Drive / Dropbox) — folder structure created.
-  - Comms (business email alias + scheduling link — Cal.com / Calendly free tier).
-  - Service-delivery or production tool specific to the archetype (e.g. Loom for service walk-throughs, Figma for digital, supplier portal accounts for physical).
-- **followUp:** Upgrade to paid tiers as revenue justifies; connect any integrations that require billing.
+- **Stage title:** "Marketing plan & creatives" (was "Marketing plan & materials").
+- **Summary:** "A 1-page marketing plan plus your full creative kit — printed flyers, business cards, social profiles, and post drafts — ready to take to a printer or scheduler."
+- **Covers chips:** "Messaging kit · Print creatives · Social kit · 30-day plan".
+- **Task 6.2 ("Social media kit & content drafts") expands** to a combined **"Print & social creatives"** task with deliverables: business-card draft, flyer / one-pager draft, social profile copy + banner asset, 6 post drafts, 1 short-form video script. `followUp` keeps the "send to a printer / schedule the posts" hand-off.
 
-### 4.3 Draft your V1 customer-delivery artifact (20 min)
-The single tangible thing the customer will receive in week one — drafted in-session, not shipped.
-- **Service:** Kickoff doc + delivery template + recap email — all three drafted.
-- **Digital:** Landing/demo screen wireframed in the chosen builder + onboarding flow outlined + first email drafted.
-- **Physical:** Product spec sheet + unboxing/insert-card draft + first-customer thank-you note.
-- **Deliverable:** Three drafted artifacts saved to the attendee's workspace, plus a 5-point QA checklist they can run before delivering to a real customer.
-- **followUp:** Run the artifacts past your first paying customer; iterate after their feedback.
+Files: `src/lib/curriculum-data.ts` (stage 6 title, summary, covers, task 6.2 deliverable + details + followUp), `src/routes/index.tsx` deliverables bullet rewrite.
 
-## How this threads through the existing plan
+## 3. Conversion-grade copy rewrite (homepage)
 
-- **Curriculum data (`src/lib/curriculum-data.ts`):** Insert the new Build stage as `n: 4`, renumber Brand → 5, Marketing → 6, Launch → 7. Adjust `duration` strings on the four affected stages.
-- **Schedule (`src/lib/schedule-data.ts`):** Recompute session start/end times so the day still ends at 4:30 PM ET. Add a Build session block between Offer and Brand.
-- **Homepage (`src/routes/index.tsx`):** Update the "6 stages" line to "7 stages" (or "Form → Build → Launch in one day"); add Build to the "What you leave with" list as "an operational V1 workflow with the artifact your first customer receives."
-- **Schedule route (`src/routes/schedule.tsx`):** No structural changes — it renders whatever is in `STAGES`. Verify the `followUp` rendering and stage-card grid still look right with 7 stages on desktop and mobile.
-- **Intake form (Phase 1 of the app plan):** Add three fields so the Build stage can branch correctly the day-of:
-  - `build_archetype` enum: `service | digital | physical`
-  - `existing_tools` jsonb (what they already use)
-  - `delivery_format_detail` text (already partially captured — extend, don't duplicate)
-- **AI prompts (Phase 3 of the app plan):** Add three Build-stage prompts (one per task), each branching on `build_archetype` so the AI assist generates the right workflow diagram, tool-stack recommendation, and delivery artifact drafts.
-- **Admin/facilitator view:** Add Build to the progress grid (7 columns instead of 6).
+Voice: 20-year startup copywriter. Direct, confident, specific. Outcome-led headlines, concrete proof, zero fluff, zero hedging. Every paragraph earns the next scroll.
 
-## Conservative-promise audit for the new stage
+### Hero
+- **Eyebrow:** "One day. One founder. One real business."
+- **H1:** "Walk in with an idea. Walk out a business owner."
+- **Sub:** "Seven focused hours in Norcross, GA. By 4:30 PM you'll have a formed business, an operational workflow, a website ready to publish, a complete creative kit, and a signed 30/60/90 plan with the next 10 moves already on the calendar."
+- **Primary CTA:** "Claim one of 20 seats →"
+- **Secondary:** "See the 7-hour flow"
+- **Meta chips:** date · Norcross, GA · 20 seats · *new:* "Led by a 30-year startup operator"
 
-| Activity | In-session? | Why it's safe |
-|---|---|---|
-| Pick archetype + draw V1 workflow | ✅ | Pure decision + diagram |
-| Create free-tier accounts | ✅ | Instant, attendee-controlled |
-| Draft delivery artifacts | ✅ | Drafts only, not sent to a real customer |
-| Sample order from supplier | ❌ (followUp) | Requires payment + shipping |
-| Paid tool subscriptions | ❌ (followUp) | Requires billing decision |
-| Real end-to-end test with a buyer | ❌ (followUp) | Requires a real customer |
-| Shipping a production digital build | ❌ (followUp) | Beyond 60 min |
+### New "Your facilitator" section (between Flow and Deliverables)
+- Eyebrow: "Who's in the room with you"
+- Headline: "Three decades of starting, scaling, and shipping — at your table for the day."
+- Body: 30 years building startups across services, software, and physical products. Founded, scaled, and exited companies. Coached hundreds of first-time founders through the exact moves you'll make today. You're not getting a slide deck — you're getting a working session with someone who has done this many times.
+- Three proof chips: "30+ years operating" · "Hundreds of founders coached" · "Service, digital, and physical builds"
 
-## Out of scope (intentionally not added)
+(Facilitator name/photo intentionally left as a placeholder — see Open Question.)
 
-- A second "Build day" or post-workshop sprint.
-- Live coding / live manufacturing in-session.
-- Per-archetype certification or vendor partnerships.
-- Replacing the existing Offer-stage SOP task — Offer stays focused on *what* you sell and *price*; Build owns *how you operate*.
+### Flow strip — rewrite the heading
+- Eyebrow: "The day, hour by hour"
+- Headline: "Seven stages. One working day. A business that exists by dinner."
+
+### Deliverables rewrite — outcome-first, 7 bullets
+Replace the current 6 with these 7, each in the voice of a closed loop:
+1. A beachhead customer profile with named pains and dollar costs — the page that ends "I think they'll buy" forever.
+2. A filing-ready GA LLC packet, EIN in hand, and a legal kit drafted to your business.
+3. An operational V1 workflow — the exact way you'll deliver to your first paying customer next week.
+4. A domain in your cart, a brand kit folder, and a website drafted page-by-page in your builder.
+5. A complete creative kit — business card, flyer, social profiles, 6 posts, and a video script — ready for the printer and the scheduler.
+6. A 25-name announcement list with 10 personalized outreach messages already written.
+7. A signed, dated 30/60/90 plan with three weekly metrics and an accountability partner locked in.
+
+Headline above the list: "What you carry out the door."
+Sub: "Not slides. Not theory. Artifacts a customer can touch, a printer can run, and a calendar can hold."
+
+### Venue card — tighter copy
+- Eyebrow stays "Where it happens"
+- Add a short trust line under the address: "Small cohort by design — 20 founders, one operator, no audience."
+
+### Bottom CTA band (new, just above footer)
+- Headline: "Twenty seats. One date. One door from idea to business."
+- Sub: "If you've been waiting for the right week to start, this is the day you stop waiting."
+- CTA: "Reserve your seat for July 23 →"
+
+Files: `src/routes/index.tsx` (Hero, FlowStrip, new `FacilitatorSection`, Deliverables, VenueCard tweak, new `BottomCTA`), `head()` meta — title + description + og:* rewritten to match new hero.
+
+## 4. Register page — light alignment
+
+Carry the new voice into the register intro: replace any "6-hour" mention with "7-hour" and use a single confident line ("Reserve one of 20 seats for the working day that gets your business stood up.") if the page currently hedges. No structural change.
+
+Files: `src/routes/register.tsx` (copy-only pass — verified during implementation).
+
+## 5. Schedule page — alignment only
+
+Already renders from `STAGES` + `SCHEDULE`; only needs the rebalanced times to flow through. Verify the page header copy mentions "7 hours" not "6 hours" if hard-coded, and verify the `EVENT.timeLabel` updates display correctly.
+
+Files: `src/routes/schedule.tsx` (search for "6-hour" / "6 hours" / hard-coded times — replace if present).
+
+## Conservative-promise audit (re-checked for the expanded time)
+
+The extra 60 min goes to **deeper drafting and per-attendee coaching**, not to new external commitments. No new "we'll send / publish / submit" promises. Every new minute lives inside the seat. Marketing-creatives task explicitly says "draft" and "ready for printer/scheduler" — printer runs and post scheduling stay in `followUp`.
+
+## Out of scope (intentionally)
+
+- No new pages (facilitator gets a homepage section, not a dedicated bio route — can add later).
+- No facilitator headshot / generated portrait yet — placeholder block with name TBD.
+- No testimonial section yet — we don't have real quotes to use; adding fake ones would undercut the rest of the copy.
+- No price/refund/FAQ section — separate ask if you want it.
 
 ## Open question
 
-1. **Archetype branching depth in v1:** Should we ship Stage 4 with full per-archetype templates (3× the content for each task), or start with a shared template plus a one-page archetype-specific addendum and expand after the first cohort? Recommendation: ship the addendum approach first — faster to build, easier to iterate.
+1. **Facilitator identity.** Should I (a) use a generic "Your facilitator — 30 years operating experience" block with a stylized silhouette placeholder, (b) leave a clearly-marked `FACILITATOR_NAME` constant for you to fill in, or (c) wait for you to send name + bio + headshot before I build the section? Default if you don't answer: option (b) — ship the section with a `FACILITATOR_NAME` placeholder so the layout is locked and you drop the name in later.
 
-Want me to proceed with this enhancement?
+Approve and I'll implement.

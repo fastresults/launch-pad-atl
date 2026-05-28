@@ -11,7 +11,7 @@ export type Session = {
 
 export const EVENT = {
   dateLabel: "Thursday, July 23, 2026",
-  timeLabel: "9:00 AM – 4:30 PM ET",
+  timeLabel: "8:00 AM – 4:30 PM ET",
   venueName: "Workshop venue",
   address: "1500 Indian Trail Lilburn Rd NW, Norcross, GA 30093",
   capacity: 20,
@@ -42,33 +42,33 @@ const stageBlock = (n: number, time: string): Session => {
 
 export const SCHEDULE: Session[] = [
   {
-    time: "9:00 AM",
+    time: "8:00 AM",
     duration: "30 min",
     title: "Check-in & kickoff",
     description: "Coffee, intros, set up your laptop, share your idea in one sentence.",
     kind: "session",
   },
-  stageBlock(1, "9:30 AM"),
-  stageBlock(2, "10:20 AM"),
+  stageBlock(1, "8:30 AM"),
+  stageBlock(2, "9:30 AM"),
+  stageBlock(3, "10:30 AM"),
   {
-    time: "11:15 AM",
-    duration: "45 min",
+    time: "11:30 AM",
+    duration: "30 min",
     title: "Lunch break",
     description: "Lunch provided. Working tables open for questions.",
     kind: "break",
   },
-  stageBlock(3, "12:00 PM"),
-  stageBlock(4, "12:50 PM"),
-  stageBlock(5, "1:50 PM"),
+  stageBlock(4, "12:00 PM"),
+  stageBlock(5, "1:00 PM"),
   {
-    time: "2:50 PM",
+    time: "2:15 PM",
     duration: "15 min",
     title: "Coffee reset",
     description: "Quick stretch, refill, regroup.",
     kind: "break",
   },
-  stageBlock(6, "3:05 PM"),
-  stageBlock(7, "3:50 PM"),
+  stageBlock(6, "2:30 PM"),
+  stageBlock(7, "3:30 PM"),
   {
     time: "4:30 PM",
     duration: "—",

@@ -26,7 +26,7 @@ export const STAGES: Stage[] = [
     shortTitle: "form",
     summary: "The legal foundation. Leave with a filing-ready packet and the legal kit you need to sell.",
     oneLiner: "Legal foundation",
-    duration: "50 min",
+    duration: "60 min",
     covers: ["GA LLC packet", "EIN", "T&Cs / privacy", "Service agreement"],
     tasks: [
       {
@@ -80,7 +80,7 @@ export const STAGES: Stage[] = [
     shortTitle: "customer",
     summary: "Who you serve, what they'll pay for, and how you beat the competition.",
     oneLiner: "Demand & proof",
-    duration: "55 min",
+    duration: "60 min",
     covers: ["Beachhead persona", "Validation script", "Competitive analysis", "Positioning gap"],
     tasks: [
       {
@@ -128,7 +128,7 @@ export const STAGES: Stage[] = [
     shortTitle: "offer",
     summary: "What you actually sell, how it's delivered, and the price tag.",
     oneLiner: "Offer & pricing",
-    duration: "50 min",
+    duration: "60 min",
     covers: ["Offer sentence", "V1 scope + SOP", "Pricing & break-even"],
     tasks: [
       {
@@ -228,7 +228,7 @@ export const STAGES: Stage[] = [
     shortTitle: "brand",
     summary: "Identity plus website drafts ready to publish when your domain is live.",
     oneLiner: "Identity & website",
-    duration: "60 min",
+    duration: "75 min",
     covers: ["Brand kit", "Website drafts", "On-page SEO", "Payments checklist"],
     tasks: [
       {
@@ -278,12 +278,13 @@ export const STAGES: Stage[] = [
   {
     n: 6,
     slug: "marketing",
-    title: "Marketing plan & materials",
+    title: "Marketing plan & creatives",
     shortTitle: "marketing",
-    summary: "Messaging, social presence drafted, and a 1-page marketing plan to run the next 30 days.",
-    oneLiner: "Plan & assets",
-    duration: "45 min",
-    covers: ["Messaging kit", "Social profiles", "Content drafts", "1-page marketing plan"],
+    summary:
+      "A 1-page marketing plan plus your full creative kit — printed flyers, business cards, social profiles, and post drafts — ready to take to a printer or scheduler.",
+    oneLiner: "Plan & creatives",
+    duration: "60 min",
+    covers: ["Messaging kit", "Print creatives", "Social kit", "30-day plan"],
     tasks: [
       {
         title: "Core messaging kit",
@@ -297,18 +298,18 @@ export const STAGES: Stage[] = [
         ],
       },
       {
-        title: "Social media kit & content drafts",
+        title: "Print & social creatives",
         deliverable:
-          "Handles claimed (instant) + profile copy + banner asset + 6 posts and 1 video script drafted",
-        tool: "Social setup checklist + content templates",
+          "Business-card draft + flyer / one-pager draft + social profiles claimed with copy & banner + 6 post drafts + 1 short-form video script",
+        tool: "Creative kit templates (print + social)",
         details: [
-          "Claim handles on Instagram, LinkedIn, and one of TikTok / YouTube / X",
-          "Fill profile copy, link-in-bio, and a banner asset",
-          "Draft 6 posts (mix of hooks, proof, offer) for the next 2 weeks",
-          "Draft 1 short-form video script you can record this week",
+          "Draft a business card (front/back) in your brand kit",
+          "Draft a 1-page flyer / one-pager for events, walk-ins, and partner shelves",
+          "Claim handles on Instagram, LinkedIn, and one of TikTok / YouTube / X — fill profile copy, link-in-bio, banner",
+          "Draft 6 posts (hooks, proof, offer) + 1 short-form video script you can record this week",
         ],
         followUp:
-          "Schedule the 6 posts in Buffer / Later / Meta Business Suite and record the video.",
+          "Send the print files to your printer and schedule the 6 posts in Buffer / Later / Meta Business Suite; record the video.",
       },
       {
         title: "1-page marketing plan",
@@ -330,7 +331,7 @@ export const STAGES: Stage[] = [
     shortTitle: "launch",
     summary: "The dated 30/60/90, the launch-day checklist, and your accountability rhythm.",
     oneLiner: "30 / 60 / 90 plan",
-    duration: "40 min",
+    duration: "45 min",
     covers: ["30/60/90 plan", "Launch-day checklist", "Outreach drafts", "Accountability"],
     tasks: [
       {
