@@ -321,42 +321,211 @@ function FacilitatorProof() {
 }
 
 
-function Deliverables() {
-  const items = [
-    "A beachhead customer profile with named pains and dollar costs — the page that ends “I think they'll buy” forever.",
-    "A filing-ready GA LLC packet, EIN in hand, and a legal kit drafted to your business.",
-    "An operational V1 workflow — the exact way you'll deliver to your first paying customer next week.",
-    "A domain in your cart, a brand kit folder, and a website drafted page-by-page in your builder.",
-    "A complete creative kit — business card, flyer, social profiles, 6 posts, and a video script — ready for the printer and the scheduler.",
-    "A 25-name announcement list with 10 personalized outreach messages already written.",
-    "A signed, dated 30/60/90 plan with three weekly metrics and an accountability partner locked in.",
+function WalkInWalkOut() {
+  const walkIn = [
+    "An idea you've been turning over for months (or years)",
+    "A notebook full of \"someday\" notes",
+    "Questions about LLCs, EINs, websites, pricing, and where to even start",
+    "No clear first customer",
+    "No structure, no kit, no plan you can actually follow Monday morning",
+  ];
+  const walkOut = [
+    "A real business on paper — name, structure, EIN in hand, Georgia LLC packet ready to file",
+    "A one-page profile of your first paying customer, in their words, with the dollar cost of their problem",
+    "An offer written in one sentence that a buyer can say yes or no to",
+    "The step-by-step way you'll deliver to that first customer next week",
+    "A brand kit folder (logo, colors, fonts) and a website drafted page by page in your builder",
+    "Your full marketing kit — business card, flyer, social profiles, 6 posts, and a 60-second video script",
+    "A 25-name list of people to tell first, plus 10 personal messages already written for you to send",
+    "A signed, dated 90-day plan with your first 3 customers → 10 → repeatable channel mapped out",
+    "An accountability partner and a weekly check-in already on the calendar",
   ];
   return (
     <section className="py-20">
       <div className="mx-auto max-w-6xl px-6">
         <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-          What you carry out the door
+          The transformation
+        </h2>
+        <p className="mb-10 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
+          What changes between{" "}
+          <span className="text-gradient-brand">8:00 AM and 4:30 PM</span>.
+        </p>
+        <div className="grid gap-6 md:grid-cols-[1fr_1.4fr]">
+          <div className="rounded-3xl border border-white/10 bg-card/50 p-7 md:p-8">
+            <div className="mb-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              8:00 AM
+            </div>
+            <div className="text-2xl font-semibold tracking-tight text-foreground/80">
+              What you walk in with
+            </div>
+            <ul className="mt-6 space-y-3">
+              {walkIn.map((i) => (
+                <li key={i} className="flex items-start gap-3 text-foreground/70">
+                  <X className="mt-1 size-4 shrink-0 text-foreground/40" />
+                  <span>{i}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-card p-7 md:p-8">
+            <div className="pointer-events-none absolute inset-0 bg-hero-gradient opacity-[0.08]" />
+            <div className="relative">
+              <div className="mb-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                4:30 PM
+              </div>
+              <div className="text-2xl font-semibold tracking-tight">
+                <span className="text-gradient-brand">What you walk out with</span>
+              </div>
+              <ul className="mt-6 space-y-3">
+                {walkOut.map((i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="mt-1 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-hero-gradient">
+                      <Check className="size-3 text-white" />
+                    </span>
+                    <span className="text-foreground">{i}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+type Bucket = {
+  icon: React.ReactNode;
+  title: string;
+  subhead: string;
+  items: string[];
+};
+
+function WhatYouLeaveWith() {
+  const buckets: Bucket[] = [
+    {
+      icon: <FileCheck2 className="size-5 text-white" />,
+      title: "The Business",
+      subhead: "Filed, registered, legal — not a wish list.",
+      items: [
+        "Georgia LLC packet ready to file + EIN in hand",
+        "Terms of service, privacy policy, and a 1-page service agreement drafted to your business",
+        "Business bank application checklist completed",
+      ],
+    },
+    {
+      icon: <Target className="size-5 text-white" />,
+      title: "The Customer & The Offer",
+      subhead: "Someone real, ready to buy something specific.",
+      items: [
+        "One-page profile of your first paying customer with the dollar cost of their problem",
+        "Your offer written in one clear sentence",
+        "Pricing sheet + how many sales it takes to cover your costs",
+      ],
+    },
+    {
+      icon: <Globe2 className="size-5 text-white" />,
+      title: "The Brand & The Website",
+      subhead: "A business people can find, recognize, and trust.",
+      items: [
+        "Domain in your cart + brand kit folder (logo, colors, fonts)",
+        "Home and Offer pages drafted in your website builder, About and Contact outlined",
+        "Payments, business email, and analytics setup checklists ready to finish at home",
+      ],
+    },
+    {
+      icon: <Rocket className="size-5 text-white" />,
+      title: "The Launch Plan",
+      subhead: "Monday morning, you know exactly what to do.",
+      items: [
+        "Your full marketing kit (card, flyer, social profiles, 6 posts, 60-second video script)",
+        "25-name announcement list + 10 personal outreach messages already written",
+        "Signed, dated 90-day plan with 3 weekly numbers and an accountability partner locked in",
+      ],
+    },
+  ];
+  return (
+    <section className="py-20">
+      <div className="mx-auto max-w-6xl px-6">
+        <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+          What you take home
         </h2>
         <p className="mb-4 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
           Not slides. Not theory.{" "}
-          <span className="text-gradient-brand">Artifacts a customer can touch.</span>
+          <span className="text-gradient-brand">
+            A complete starter kit you can hold, send, and sign.
+          </span>
         </p>
         <p className="mb-10 max-w-2xl text-muted-foreground">
-          Every stage produces something a printer can run, a calendar can hold, or a
-          customer can sign. You'll leave with a stack of them.
+          Every stage makes something a printer can print, a calendar can hold, or a
+          customer can sign. You'll leave with a stack of them, organized into four
+          packs.
         </p>
-        <ul className="grid gap-3 md:grid-cols-2">
-          {items.map((i) => (
-            <li
-              key={i}
-              className="flex items-start gap-3 rounded-xl border border-white/10 bg-card p-4"
+        <div className="grid gap-5 md:grid-cols-2">
+          {buckets.map((b) => (
+            <div
+              key={b.title}
+              className="rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-white/25 md:p-7"
             >
-              <span className="mt-1 inline-block size-2 shrink-0 rounded-full bg-hero-gradient" />
-              <span className="text-foreground">{i}</span>
-            </li>
+              <div className="flex items-center gap-3">
+                <span className="inline-flex size-10 items-center justify-center rounded-xl bg-hero-gradient">
+                  {b.icon}
+                </span>
+                <div>
+                  <div className="text-lg font-semibold tracking-tight">{b.title}</div>
+                  <div className="text-sm text-muted-foreground">{b.subhead}</div>
+                </div>
+              </div>
+              <ul className="mt-5 space-y-2.5">
+                {b.items.map((it) => (
+                  <li
+                    key={it}
+                    className="flex items-start gap-3 text-sm text-foreground/90"
+                  >
+                    <span className="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-hero-gradient" />
+                    <span>{it}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
+        <p className="mt-10 text-center text-base text-muted-foreground md:text-lg">
+          Print this list. Cross items off Monday. By Friday, you have a business.
+        </p>
       </div>
+    </section>
+  );
+}
+
+function ValueByTheNumbers() {
+  const stats: { n: string; label: string }[] = [
+    { n: "1", label: "real business formed" },
+    { n: "9", label: "concrete take-home pieces" },
+    { n: "25", label: "prospects on your launch list" },
+    { n: "90", label: "days mapped, signed, and dated" },
+  ];
+  return (
+    <section className="pb-20">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="grid gap-4 rounded-3xl border border-white/10 bg-card p-6 sm:grid-cols-2 md:p-8 lg:grid-cols-4">
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              className="flex flex-col items-start gap-1 rounded-2xl px-4 py-4"
+            >
+              <div className="text-5xl font-semibold leading-none tracking-tight md:text-6xl">
+                <span className="text-gradient-brand">{s.n}</span>
+              </div>
+              <div className="mt-2 text-sm text-muted-foreground">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
     </section>
   );
 }
