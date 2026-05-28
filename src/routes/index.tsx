@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { EVENT, FLOW_STAGES } from "@/lib/schedule-data";
 import { BUSINESS_IDEAS, BUSINESS_CATEGORIES, type BusinessCategory, type BusinessIdea } from "@/lib/business-ideas";
-import { MapPin, Calendar, Users, ArrowRight, Award, FileCheck2, Target, Globe2, Rocket, X, Check, Laptop, Store, Wrench, ChefHat, Sun, Home as HomeIcon, Sparkles, DollarSign, UserPlus } from "lucide-react";
+import { MapPin, Calendar, Users, ArrowRight, Award, FileCheck2, Target, Globe2, Rocket, X, Check, Clock, Laptop, Store, Wrench, ChefHat, Sun, Home as HomeIcon, Sparkles, DollarSign, UserPlus } from "lucide-react";
 
 export const FACILITATOR_NAME = "Adam Anderson";
 export const FACILITATOR_TITLE =
@@ -130,7 +130,7 @@ function FlowStrip() {
           <span className="text-gradient-brand">A business built to make money — not just one that exists.</span>
         </p>
         <p className="mb-12 max-w-2xl text-base text-muted-foreground md:text-lg">
-          Here's exactly what's in your hands when you stand up at 4:30 PM.
+          What's finished in the room — and the exact handful of things you'll file, host, or configure after.
         </p>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {FLOW_STAGES.map((s) => (
@@ -144,12 +144,38 @@ function FlowStrip() {
                 {s.n}
               </div>
               <div className="text-lg font-semibold capitalize tracking-tight">{s.title}</div>
-              <div className="mt-4 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                You walk out with
+
+              <div className="mt-5 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                Done in the room
               </div>
-              <p className="mt-1.5 text-sm leading-snug text-foreground/90">
-                {s.takeHome}
-              </p>
+              <ul className="mt-2 space-y-1.5">
+                {s.walkOut.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-[13px] leading-snug text-foreground/90">
+                    <Check className="mt-0.5 size-3.5 shrink-0 text-foreground/80" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {s.afterWorkshop.length > 0 ? (
+                <>
+                  <div className="mt-5 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                    You finish at home
+                  </div>
+                  <ul className="mt-2 space-y-1.5">
+                    {s.afterWorkshop.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-[12px] italic leading-snug text-muted-foreground">
+                        <Clock className="mt-0.5 size-3.5 shrink-0 text-foreground/60" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <div className="mt-5 text-[11px] uppercase tracking-[0.18em] text-foreground/70">
+                  Nothing left for home — this stage is done.
+                </div>
+              )}
             </Link>
           ))}
         </div>

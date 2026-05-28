@@ -15,6 +15,8 @@ export type Stage = {
   summary: string;
   oneLiner: string;
   takeHome: string;
+  walkOut: string[];
+  afterWorkshop: string[];
   duration: string;
   covers: string[];
   tasks: [Task, Task, Task];
@@ -30,6 +32,18 @@ export const STAGES: Stage[] = [
     oneLiner: "Legal foundation",
     takeHome:
       "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit. File Monday, start taking money the same week.",
+    walkOut: [
+      "Articles of Organization pre-filled in your GA Secretary of State account",
+      "EIN application completed and submitted — number issued in the session",
+      "Business-bank shortlist + bank application checklist filled for your business",
+      "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business",
+      "Local license + sales-tax requirements documented for your county",
+    ],
+    afterWorkshop: [
+      "Submit the Articles + filing fee from home (about 10 minutes)",
+      "Open the business bank account (1–7 days after you apply)",
+      "File local business license and sales-tax registration once the entity is approved",
+    ],
     duration: "60 min",
     covers: ["GA LLC packet", "EIN", "T&Cs / privacy", "Service agreement"],
     tasks: [
@@ -92,6 +106,15 @@ export const STAGES: Stage[] = [
     oneLiner: "Demand & proof",
     takeHome:
       "One named first customer with their problems priced in dollars, a 25-name prospect list pulled for your niche and zip, and a validated outreach script — exported as a CSV you can start messaging tonight.",
+    walkOut: [
+      "1-page profile of your first named buyer with their top 3 problems priced in dollars",
+      "25-name prospect list pulled for your niche and zip — exported as a CSV",
+      "Outreach script customized to that specific buyer",
+      "3-competitor grid + your one-sentence positioning",
+    ],
+    afterWorkshop: [
+      "Send the script to your 25 prospects and run 5 discovery calls within 2 weeks",
+    ],
     duration: "60 min",
     covers: ["Your first customer", "Validation script", "3-competitor look", "What makes you different"],
     tasks: [
@@ -150,6 +173,12 @@ export const STAGES: Stage[] = [
     oneLiner: "What you sell & what it costs",
     takeHome:
       "Your offer written in one sentence a buyer can say yes or no to, your price backed into from your real costs, and the exact number of sales you need to break even — on a one-page offer sheet.",
+    walkOut: [
+      "Your one-sentence offer locked",
+      "First-version scope mapped step-by-step from sale to handoff",
+      "Pricing sheet with real cost per sale, break-even number, and payment terms",
+    ],
+    afterWorkshop: [],
     duration: "60 min",
     covers: ["Offer in one sentence", "What's in V1", "Pricing & break-even"],
     tasks: [
@@ -207,6 +236,16 @@ export const STAGES: Stage[] = [
     oneLiner: "Your first working version",
     takeHome:
       "Your delivery process mapped step-by-step, the free apps that run it set up with your accounts, and your first customer's deliverable drafted and rehearsed — before a real customer ever sees it.",
+    walkOut: [
+      "Sale-to-happy-customer map with the app you'll use at each step",
+      "Free-app accounts created in your name: project hub, files, scheduling, business email alias",
+      "Your first customer's deliverable drafted and rehearsed end-to-end",
+      "5-point quality checklist for anything that goes to a real customer",
+    ],
+    afterWorkshop: [
+      "Run the rehearsed deliverable past your first paying customer and iterate",
+      "Upgrade to paid app tiers as revenue justifies",
+    ],
     duration: "60 min",
     covers: ["Service / online / product", "Your free app setup", "What the customer receives"],
     tasks: [
@@ -270,6 +309,21 @@ export const STAGES: Stage[] = [
     oneLiner: "Brand & website",
     takeHome:
       "Your logo, color palette, and font pairing generated from your business name; a complete website tailored to your business — Home, Offer, About, and Contact pages built in your site builder and ready to host the moment your domain resolves; payments, business email, and analytics queued for one-click activation.",
+    walkOut: [
+      "Logo, 4-color palette, and font pairing saved to your brand-kit folder",
+      "A complete website built in your site builder — Home, Offer, About, Contact pages designed in your brand, written in your voice, mobile-checked",
+      "On-page SEO filled per page (title, meta, single H1, image alts)",
+      "Stripe (or Square) application filled out for your business",
+      "GA4 property created with your tracking snippet copied",
+      "Business-email provider chosen with MX setup steps documented",
+    ],
+    afterWorkshop: [
+      "Buy your domain and point DNS to your site builder (15 minutes + propagation)",
+      "Click Publish on the website (under an hour once DNS resolves)",
+      "Finish Stripe KYC (1–3 days)",
+      "Install the GA4 tracking snippet on the published site",
+      "Verify business email on your domain",
+    ],
     duration: "75 min",
     covers: ["Brand kit", "Bespoke website", "SEO per page", "Payments / email / analytics"],
     tasks: [
@@ -333,6 +387,19 @@ export const STAGES: Stage[] = [
     oneLiner: "Plan & creatives",
     takeHome:
       "A printable business card and flyer designed in your brand, your social channels claimed and branded (profile copy, banner, link-in-bio), six on-brand posts and a 60-second founder video script — your full launch kit, ready to print and configure.",
+    walkOut: [
+      "Headline, 3 value props, 30-second pitch, and 100-word founder bio",
+      "Print-ready business card (front/back) designed in your brand",
+      "Print-ready 1-page flyer designed in your brand",
+      "Instagram, LinkedIn, and one of TikTok/YouTube/X — handles claimed, profile copy, link-in-bio, and banner filled in",
+      "6 on-brand post drafts + 60-second founder video script",
+      "30-day marketing plan: 2 channels, weekly budget, content calendar, 3 weekly KPIs",
+    ],
+    afterWorkshop: [
+      "Send the print files to your printer",
+      "Schedule the 6 posts in Buffer / Later / Meta Business Suite",
+      "Record the 60-second founder video",
+    ],
     duration: "60 min",
     covers: ["Messaging kit", "Print creatives", "Social channels branded", "30-day plan"],
     tasks: [
@@ -392,6 +459,18 @@ export const STAGES: Stage[] = [
     oneLiner: "90-day plan",
     takeHome:
       "Your signed, dated 90-day plan (first 3 paying customers → 10 → repeatable channel), your launch-day checklist with personalized outreach drafts ready to send, and an accountability partner on next Monday's calendar.",
+    walkOut: [
+      "Signed, dated 30/60/90 plan: first 3 paying customers → 10 → repeatable channel",
+      "25-name personal announcement list",
+      "10 personalized outreach drafts saved (DM, email, voice note)",
+      "Day-of launch timeline locked",
+      "Starter CRM seeded with your announcement list",
+      "3 weekly metrics defined + accountability partner paired with cadence agreed",
+    ],
+    afterWorkshop: [
+      "Pick your launch date and send the drafts that morning",
+      "Both partners put the 4 weekly check-ins on each other's calendars",
+    ],
     duration: "45 min",
     covers: ["90-day plan", "Launch-day checklist", "Outreach drafts", "Accountability"],
     tasks: [

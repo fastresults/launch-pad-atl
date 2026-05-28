@@ -74,6 +74,8 @@ export const FLOW_STAGES = STAGES.map((s) => ({
   title: s.shortTitle,
   blurb: s.oneLiner,
   takeHome: s.takeHome,
+  walkOut: s.walkOut,
+  afterWorkshop: s.afterWorkshop,
 }));
 
 // Schedule = check-in + 6 stages + 2 breaks, working time = 360 min.
