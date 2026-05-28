@@ -8,7 +8,7 @@ import { MapPin, Calendar, Users, ArrowRight, Award, FileCheck2, Target, Globe2,
 
 export const FACILITATOR_NAME = "Adam Anderson";
 export const FACILITATOR_TITLE =
-  "Co-Founder, OPEN Interactive · 18+ years building for Fortune 500 companies, a country's government, and first-time founders.";
+  "Serial entrepreneur · Co-Founder, OPEN Interactive · Has helped launch dozens of modern-economy businesses across tech, services, and Main Street.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -63,11 +63,11 @@ function Hero() {
       />
       <div className="relative mx-auto max-w-6xl px-6 py-24 md:py-32">
         <p className="mb-6 text-sm uppercase tracking-[0.2em] text-white/80">
-          One day. One founder. One real business.
+          One day. One founder. One real, revenue-ready business.
         </p>
         <h1 className="max-w-3xl text-5xl font-semibold leading-[1.05] tracking-tight text-white md:text-7xl">
           Walk in with an idea. <br />
-          Walk out <span className="italic">a business owner</span>.
+          Walk out <span className="italic">with a business built to earn</span>.
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-white/90">
           Seven focused hours at the IGNITE Center in Norcross, GA.{" "}
@@ -77,6 +77,10 @@ function Hero() {
           By 4:30 PM you'll have a real business on paper, a simple way to deliver it,
           a website ready to publish, your full marketing kit, and a 90-day plan with
           your next ten moves already on the calendar.
+        </p>
+        <p className="mt-4 max-w-2xl text-base text-white/85">
+          The fastest path we know from idea to a viable, profit-ready business — in one
+          focused day, with paying customers in the 90-day plan you take home.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -122,7 +126,7 @@ function FlowStrip() {
         </h2>
         <p className="mb-12 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
           Seven stages. One working day.{" "}
-          <span className="text-gradient-brand">A business that exists by dinner.</span>
+          <span className="text-gradient-brand">A business built to make money — not just one that exists.</span>
         </p>
         <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           {FLOW_STAGES.map((s) => (
@@ -173,7 +177,7 @@ function FacilitatorSection() {
                     {FACILITATOR_NAME}
                   </div>
                   <div className="text-xs uppercase tracking-[0.18em] opacity-80">
-                    Operator · Producer · Builder
+                    Serial Entrepreneur · Operator · Builder
                   </div>
                 </div>
               </div>
@@ -194,16 +198,20 @@ function FacilitatorSection() {
               {FACILITATOR_TITLE}
             </p>
             <p className="mt-5 text-muted-foreground">
-              Adam has spent 18+ years building real things for real customers — websites
-              and apps for big companies like Citigroup, Mayo Clinic, 3M, and Disney; full
-              digital systems for a Caribbean country's government; and a five-year run
+              Adam is a serial entrepreneur who has personally started multiple companies
+              and helped launch dozens more — the kind of lean, modern businesses people
+              are actually building in 2026: online services, AI-powered shops,
+              productized expertise, and Main Street operators. Along the way he's
+              shipped work for Citigroup, Mayo Clinic, 3M, and Disney, built full
+              digital systems for a Caribbean country's government, and spent five years
               producing one of the region's biggest business summits.
             </p>
             <p className="mt-3 text-muted-foreground">
-              He's sat in your seat. He knows what it takes to go from idea to a business
-              that actually opens its doors.
+              He's sat in your seat — more than once. He knows exactly what it takes to
+              go from a half-formed idea to a business that actually opens its doors.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
+              <Chip>Helped launch dozens of modern businesses</Chip>
               <Chip>Built for Fortune 500 companies</Chip>
               <Chip>Built systems for a whole country</Chip>
               <Chip>Produced 5 major business summits</Chip>
@@ -464,8 +472,8 @@ function WhatYouLeaveWith() {
         </p>
         <p className="mb-10 max-w-2xl text-muted-foreground">
           Every stage makes something a printer can print, a calendar can hold, or a
-          customer can sign. You'll leave with a stack of them, organized into four
-          packs.
+          customer can pay for. You'll leave with a stack of them, organized into four
+          packs — every piece pointed at revenue in the first 90 days.
         </p>
         <div className="grid gap-5 md:grid-cols-2">
           {buckets.map((b) => (
@@ -497,7 +505,7 @@ function WhatYouLeaveWith() {
           ))}
         </div>
         <p className="mt-10 text-center text-base text-muted-foreground md:text-lg">
-          Print this list. Cross items off Monday. By Friday, you have a business.
+          Print this list. Cross items off Monday. By Friday, you have a business — and your first paying customer in sight.
         </p>
       </div>
     </section>
@@ -508,7 +516,7 @@ function ValueByTheNumbers() {
   const stats: { n: string; label: string }[] = [
     { n: "1", label: "real business formed" },
     { n: "9", label: "concrete take-home pieces" },
-    { n: "25", label: "prospects on your launch list" },
+    { n: "25", label: "revenue prospects on your launch list" },
     { n: "90", label: "days mapped, signed, and dated" },
   ];
   return (
@@ -611,9 +619,9 @@ function BottomCTA() {
               Twenty seats. One date. One door from idea to business.
             </h2>
             <p className="mt-5 text-lg text-white/90">
-              If you've been waiting for the right week to start, this is the day you stop
-              waiting. Bring the idea. We'll bring the operator, the room, and every
-              template you need.
+              If you've been waiting for the right week to start earning, this is the day
+              you stop waiting. Bring the idea. We'll bring the operator, the room, and
+              every template you need to turn it into a business that actually brings in money.
             </p>
             <div className="mt-8">
               <Link
