@@ -82,6 +82,7 @@ export const STAGES: Stage[] = [
     shortTitle: "customer",
     summary: "Who you serve, what they'll pay for, and how you beat the competition.",
     oneLiner: "Demand & proof",
+    takeHome: "A named, real first customer with their pain priced in dollars — plus a 25-name prospect list you can start messaging tonight.",
     duration: "60 min",
     covers: ["Your first customer", "Validation script", "3-competitor look", "What makes you different"],
     tasks: [
