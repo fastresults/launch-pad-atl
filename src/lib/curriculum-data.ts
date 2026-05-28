@@ -26,7 +26,7 @@ export const STAGES: Stage[] = [
     shortTitle: "form",
     summary: "The legal foundation. Leave with a filing-ready packet and the legal kit you need to sell.",
     oneLiner: "Legal foundation",
-    duration: "60 min",
+    duration: "50 min",
     covers: ["GA LLC packet", "EIN", "T&Cs / privacy", "Service agreement"],
     tasks: [
       {
@@ -80,7 +80,7 @@ export const STAGES: Stage[] = [
     shortTitle: "customer",
     summary: "Who you serve, what they'll pay for, and how you beat the competition.",
     oneLiner: "Demand & proof",
-    duration: "60 min",
+    duration: "55 min",
     covers: ["Beachhead persona", "Validation script", "Competitive analysis", "Positioning gap"],
     tasks: [
       {
@@ -128,7 +128,7 @@ export const STAGES: Stage[] = [
     shortTitle: "offer",
     summary: "What you actually sell, how it's delivered, and the price tag.",
     oneLiner: "Offer & pricing",
-    duration: "60 min",
+    duration: "50 min",
     covers: ["Offer sentence", "V1 scope + SOP", "Pricing & break-even"],
     tasks: [
       {
@@ -168,12 +168,67 @@ export const STAGES: Stage[] = [
   },
   {
     n: 4,
+    slug: "build",
+    title: "Build the operational MVP",
+    shortTitle: "build",
+    summary:
+      "Stand up how you actually deliver. Pick your archetype, assemble the toolkit, and draft the V1 artifact your first customer receives.",
+    oneLiner: "Operational V1",
+    duration: "60 min",
+    covers: ["Archetype + V1 workflow", "Tool stack", "Delivery artifact drafts"],
+    tasks: [
+      {
+        title: "Pick your build archetype & lock the V1 workflow",
+        deliverable:
+          "Archetype selected (Service / Digital / Physical) + 1-page V1 workflow diagram (sale → intake → delivery → handoff) with named tools at each step",
+        tool: "Build archetype picker + workflow canvas",
+        details: [
+          "Service: intake → kickoff → delivery template → recap loop",
+          "Digital: pick a no-code/template stack (Lovable, Notion, Framer, Webflow, Shopify, GHL) and name the first screen",
+          "Physical: supplier/manufacturer shortlist + sample-order checklist + packaging decision",
+          "Mark every step that depends on a vendor, contractor, or sample order",
+        ],
+        followUp:
+          "Run the workflow end-to-end with one test buyer (or sample order) in the first 2 weeks and revise the diagram.",
+      },
+      {
+        title: "Assemble the operational toolkit",
+        deliverable:
+          "Tool stack chosen + free-tier accounts created + 1-page integration map (no paid plans signed in-session)",
+        tool: "Ops stack checklist",
+        details: [
+          "Project / ops hub: seed a Notion / ClickUp / Trello workspace from a V1 template",
+          "Files & assets: create your Drive / Dropbox folder structure",
+          "Comms: set up scheduling (Cal.com / Calendly free) + business email alias",
+          "Archetype tool: Loom (service) / Figma (digital) / supplier portal accounts (physical)",
+        ],
+        followUp:
+          "Upgrade to paid tiers as revenue justifies and connect any integrations that require billing.",
+      },
+      {
+        title: "Draft your V1 customer-delivery artifact",
+        deliverable:
+          "Three drafted artifacts saved to your workspace + 5-point QA checklist you can run before delivering to a real customer",
+        tool: "Delivery artifact templates (per archetype)",
+        details: [
+          "Service: kickoff doc + delivery template + recap email — all three drafted",
+          "Digital: landing/demo screen wireframed in your builder + onboarding flow outlined + first email drafted",
+          "Physical: product spec sheet + unboxing/insert-card draft + first-customer thank-you note",
+          "Write a 5-point QA checklist (quality, accuracy, timing, tone, follow-up)",
+        ],
+        followUp:
+          "Run the artifacts past your first paying customer and iterate after their feedback.",
+      },
+    ],
+  },
+  {
+    n: 5,
     slug: "brand",
     title: "Brand & website",
     shortTitle: "brand",
     summary: "Identity plus website drafts ready to publish when your domain is live.",
     oneLiner: "Identity & website",
-    duration: "75 min",
+    duration: "60 min",
     covers: ["Brand kit", "Website drafts", "On-page SEO", "Payments checklist"],
     tasks: [
       {
@@ -221,13 +276,13 @@ export const STAGES: Stage[] = [
     ],
   },
   {
-    n: 5,
+    n: 6,
     slug: "marketing",
     title: "Marketing plan & materials",
     shortTitle: "marketing",
     summary: "Messaging, social presence drafted, and a 1-page marketing plan to run the next 30 days.",
     oneLiner: "Plan & assets",
-    duration: "60 min",
+    duration: "45 min",
     covers: ["Messaging kit", "Social profiles", "Content drafts", "1-page marketing plan"],
     tasks: [
       {
@@ -269,13 +324,13 @@ export const STAGES: Stage[] = [
     ],
   },
   {
-    n: 6,
+    n: 7,
     slug: "launch",
     title: "Launch plan",
     shortTitle: "launch",
     summary: "The dated 30/60/90, the launch-day checklist, and your accountability rhythm.",
     oneLiner: "30 / 60 / 90 plan",
-    duration: "45 min",
+    duration: "40 min",
     covers: ["30/60/90 plan", "Launch-day checklist", "Outreach drafts", "Accountability"],
     tasks: [
       {

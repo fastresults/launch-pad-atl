@@ -57,7 +57,7 @@ function Hero() {
         </h1>
         <p className="mt-6 max-w-xl text-lg text-white/90">
           Walk in with an idea. Walk out with a <span className="font-medium">formed business</span>,
-          a website ready to publish, marketing materials drafted, and a dated 30/60/90 launch plan.
+          an operational V1 workflow, a website ready to publish, marketing materials drafted, and a dated 30/60/90 launch plan.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -101,9 +101,9 @@ function FlowStrip() {
           The flow
         </h2>
         <p className="mb-12 max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
-          Six stages. One day. <span className="text-gradient-brand">A real business.</span>
+          Seven stages. One day. <span className="text-gradient-brand">A real business.</span>
         </p>
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           {FLOW_STAGES.map((s) => (
             <Link
               key={s.slug}
@@ -129,6 +129,7 @@ function Deliverables() {
   const items = [
     "A validated customer profile with pains and $ figures",
     "A filing-ready GA LLC packet + EIN + legal kit drafts",
+    "An operational V1 workflow + tool stack + delivery artifacts drafted",
     "A domain in cart and brand kit folder ready to go",
     "Website drafts ready to publish + payments setup checklist",
     "A 25-name outreach list with 10 messages drafted",
