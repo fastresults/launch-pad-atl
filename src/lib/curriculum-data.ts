@@ -331,7 +331,7 @@ export const STAGES: Stage[] = [
     shortTitle: "launch",
     summary: "The dated 30/60/90, the launch-day checklist, and your accountability rhythm.",
     oneLiner: "30 / 60 / 90 plan",
-    duration: "40 min",
+    duration: "45 min",
     covers: ["30/60/90 plan", "Launch-day checklist", "Outreach drafts", "Accountability"],
     tasks: [
       {
