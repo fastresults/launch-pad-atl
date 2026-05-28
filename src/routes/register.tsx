@@ -75,7 +75,7 @@ function RegisterPage() {
       <section className="border-b border-white/5 py-16">
         <div className="mx-auto max-w-2xl px-6">
           <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-            {EVENT.dateLabel} · Norcross, GA
+            {EVENT.dateLabel} · IGNITE Center at Greater Atlanta Christian School, Norcross, GA
           </p>
           <h1 className="text-5xl font-semibold tracking-tight md:text-6xl">
             Reserve <span className="text-gradient-brand">your seat</span>.
