@@ -666,7 +666,7 @@ function BottomCTA() {
             <div className="mt-8">
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-base font-medium text-foreground transition-opacity hover:opacity-90"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-base font-medium text-neutral-900 transition-opacity hover:opacity-90 hover:text-neutral-900"
               >
                 Reserve your seat for July 23 <ArrowRight className="size-4" />
               </Link>
