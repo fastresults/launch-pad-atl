@@ -173,6 +173,12 @@ export const STAGES: Stage[] = [
     oneLiner: "What you sell & what it costs",
     takeHome:
       "Your offer written in one sentence a buyer can say yes or no to, your price backed into from your real costs, and the exact number of sales you need to break even — on a one-page offer sheet.",
+    walkOut: [
+      "Your one-sentence offer locked",
+      "First-version scope mapped step-by-step from sale to handoff",
+      "Pricing sheet with real cost per sale, break-even number, and payment terms",
+    ],
+    afterWorkshop: [],
     duration: "60 min",
     covers: ["Offer in one sentence", "What's in V1", "Pricing & break-even"],
     tasks: [
