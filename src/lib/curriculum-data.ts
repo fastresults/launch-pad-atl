@@ -27,6 +27,7 @@ export const STAGES: Stage[] = [
     shortTitle: "form",
     summary: "The legal foundation. Leave with a filing-ready packet and the legal kit you need to sell.",
     oneLiner: "Legal foundation",
+    takeHome: "Your LLC packet ready to file, your EIN in hand, and the two contracts that let you legally take money on Monday.",
     duration: "60 min",
     covers: ["GA LLC packet", "EIN", "T&Cs / privacy", "Service agreement"],
     tasks: [
