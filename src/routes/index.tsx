@@ -516,7 +516,7 @@ function ValueByTheNumbers() {
   const stats: { n: string; label: string }[] = [
     { n: "1", label: "real business formed" },
     { n: "9", label: "concrete take-home pieces" },
-    { n: "25", label: "prospects on your launch list" },
+    { n: "25", label: "revenue prospects on your launch list" },
     { n: "90", label: "days mapped, signed, and dated" },
   ];
   return (
