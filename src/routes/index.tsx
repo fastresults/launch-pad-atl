@@ -352,7 +352,7 @@ function WalkInWalkOut() {
     "No structure, no kit, no plan you can actually follow Monday morning",
   ];
   const walkOut = [
-    "A real business on paper — name, structure, EIN in hand, Georgia LLC packet ready to file",
+    "A formation-ready business — name, structure, EIN in hand, Georgia LLC packet ready to file",
     "A one-page profile of your first paying customer, in their words, with the dollar cost of their problem",
     "An offer written in one sentence that a buyer can say yes or no to",
     "The step-by-step way you'll deliver to that first customer next week",
