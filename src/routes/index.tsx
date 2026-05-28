@@ -4,7 +4,9 @@ import { SiteFooter } from "@/components/site/Footer";
 import { EVENT, FLOW_STAGES } from "@/lib/schedule-data";
 import { MapPin, Calendar, Users, ArrowRight, Award } from "lucide-react";
 
-export const FACILITATOR_NAME = "Your facilitator"; // TODO: replace with real name
+export const FACILITATOR_NAME = "Adam Anderson";
+export const FACILITATOR_TITLE =
+  "Co-Founder, OPEN Interactive · 18+ years shipping for Fortune 500s, sovereign governments, and early-stage ventures.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
