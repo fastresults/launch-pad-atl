@@ -179,6 +179,7 @@ export const STAGES: Stage[] = [
     summary:
       "Set up how you'll actually deliver. Pick what kind of business you're building, set up your free apps, and draft what your first customer will get.",
     oneLiner: "Your first working version",
+    takeHome: "The step-by-step way you'll deliver your first sale — set up in free apps, drafted, and rehearsed before a real customer sees it.",
     duration: "60 min",
     covers: ["Service / online / product", "Your free app setup", "What the customer receives"],
     tasks: [
