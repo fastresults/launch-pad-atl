@@ -74,7 +74,7 @@ function Hero() {
           <span className="font-medium text-white">
             You bring the idea — even a rough one. We build <em>your</em> business, not a template.
           </span>{" "}
-          By 4:30 PM you'll have a real business on paper, a simple way to deliver it,
+          By 4:30 PM you'll have a business formed and filing-ready, a simple way to deliver it,
           a website ready to publish, your full marketing kit, and a 90-day plan with
           your next ten moves already on the calendar.
         </p>
