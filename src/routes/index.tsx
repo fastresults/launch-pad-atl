@@ -33,10 +33,12 @@ function HomePage() {
     <div className="min-h-screen">
       <SiteHeader />
       <Hero />
+      <WalkInWalkOut />
       <FlowStrip />
+      <WhatYouLeaveWith />
+      <ValueByTheNumbers />
       <FacilitatorSection />
       <FacilitatorProof />
-      <Deliverables />
       <VenueCard />
       <BottomCTA />
       <SiteFooter />
