@@ -120,7 +120,7 @@ export const STAGES: Stage[] = [
           "Estimate how many buyers exist, how many you can realistically reach, and how many you'll win in year one (TAM/SAM/SOM)",
           "Pull a 25-name prospect list from LinkedIn, local groups, or referrals",
           "Customize the problem-discovery script for your first customer",
-          "Pick a scoring rubric: pain confirmed, willingness to pay, intow to others",
+          "Pick a scoring rubric: pain confirmed, willingness to pay, intro to others",
         ],
         takeaway: "Market Sizing + Validation Script — TAM/SAM/SOM snapshot + Mom-Test-style interview script + 25-name CSV",
         takeawayGenerator: "Market Analysis Generator",
