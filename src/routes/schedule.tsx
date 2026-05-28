@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { SCHEDULE, EVENT } from "@/lib/schedule-data";
 import { STAGES } from "@/lib/curriculum-data";
-import { ArrowRight, Coffee, Check } from "lucide-react";
+import { ArrowRight, Coffee, Check, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/schedule")({
   head: () => ({
