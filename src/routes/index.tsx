@@ -626,3 +626,167 @@ function BottomCTA() {
     </section>
   );
 }
+
+const CATEGORY_ICON: Record<BusinessCategory, typeof Laptop> = {
+  online: Laptop,
+  "main-street": Store,
+  service: Wrench,
+  food: ChefHat,
+  side: Sun,
+  family: HomeIcon,
+};
+
+const CATEGORY_LABEL: Record<BusinessCategory, string> = {
+  online: "Online",
+  "main-street": "Main Street",
+  service: "Service",
+  food: "Food & Hands",
+  side: "Side hustle",
+  family: "Family-run",
+};
+
+function IdeaCard({ idea }: { idea: BusinessIdea }) {
+  const Icon = CATEGORY_ICON[idea.category];
+  return (
+    <article className="group relative flex w-[320px] shrink-0 flex-col gap-3 rounded-2xl border border-white/10 bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-white/30 hover:shadow-[0_10px_40px_-15px_rgba(255,80,180,0.35)] md:w-[360px]">
+      <div className="flex items-center justify-between">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[10px] uppercase tracking-[0.15em]">
+          <Icon className="size-3 text-foreground/70" />
+          <span className="text-gradient-brand font-semibold">{CATEGORY_LABEL[idea.category]}</span>
+        </span>
+        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-foreground/70">
+          <DollarSign className="size-3" />
+          {idea.startupCost}
+        </span>
+      </div>
+      <h3 className="text-lg font-semibold leading-tight tracking-tight">{idea.name}</h3>
+      <p className="text-sm text-foreground/80">{idea.offer}</p>
+      <div className="mt-auto space-y-2 border-t border-white/5 pt-3">
+        <div className="flex items-start gap-2 text-xs text-muted-foreground">
+          <UserPlus className="mt-0.5 size-3.5 shrink-0 text-foreground/60" />
+          <span>
+            <span className="text-foreground/80">First 10 from:</span> {idea.firstCustomers}
+          </span>
+        </div>
+        <div className="flex items-start gap-2 text-xs text-foreground/70 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <Sparkles className="mt-0.5 size-3.5 shrink-0" />
+          <span className="text-gradient-brand font-medium">{idea.stageHint}</span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function MarqueeRow({ ideas, direction }: { ideas: BusinessIdea[]; direction: "left" | "right" }) {
+  if (ideas.length === 0) return null;
+  // Duplicate the row so the loop seams seamlessly.
+  const doubled = [...ideas, ...ideas];
+  return (
+    <div className="group relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-background to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-background to-transparent" />
+      <div
+        className={`marquee-track flex w-max gap-4 ${direction === "left" ? "animate-marquee-left" : "animate-marquee-right"}`}
+      >
+        {doubled.map((idea, i) => (
+          <IdeaCard key={`${idea.name}-${i}`} idea={idea} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MobileScroller({ ideas }: { ideas: BusinessIdea[] }) {
+  return (
+    <div className="-mx-6 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex w-max gap-4 snap-x snap-mandatory">
+        {ideas.map((idea) => (
+          <div key={idea.name} className="snap-start">
+            <IdeaCard idea={idea} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TheArtOfThePossible() {
+  const [active, setActive] = useState<BusinessCategory | "all">("all");
+  const filtered = active === "all" ? BUSINESS_IDEAS : BUSINESS_IDEAS.filter((i) => i.category === active);
+  // Split for two rows; alternate by index.
+  const rowA = filtered.filter((_, i) => i % 2 === 0);
+  const rowB = filtered.filter((_, i) => i % 2 === 1);
+
+  return (
+    <section className="border-y border-white/5 py-20">
+      <div className="mx-auto mb-10 max-w-6xl px-6">
+        <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+          The art of the possible
+        </h2>
+        <p className="max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl">
+          Pick yours.{" "}
+          <span className="text-gradient-brand">
+            Online, on a street corner, out of your kitchen, off your phone.
+          </span>
+        </p>
+        <p className="mt-4 max-w-2xl text-muted-foreground md:text-lg">
+          Real businesses real people start with under $5,000 and a weekend. Scroll
+          through. Tap one. That could be you on Monday.
+        </p>
+        <div className="mt-8 -mx-6 flex gap-2 overflow-x-auto px-6 pb-2 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0 [&::-webkit-scrollbar]:hidden">
+          {BUSINESS_CATEGORIES.map((c) => {
+            const isActive = active === c.id;
+            return (
+              <button
+                key={c.id}
+                onClick={() => setActive(c.id)}
+                className={`shrink-0 rounded-full border px-4 py-2 text-sm transition-all ${
+                  isActive
+                    ? "border-transparent bg-hero-gradient text-white shadow-[0_8px_24px_-12px_rgba(255,80,180,0.6)]"
+                    : "border-white/15 bg-white/[0.02] text-foreground/80 hover:border-white/30 hover:text-foreground"
+                }`}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Desktop / tablet: two auto-scrolling rows */}
+      <div className="hidden space-y-4 md:block">
+        <MarqueeRow ideas={rowA} direction="left" />
+        <MarqueeRow ideas={rowB} direction="right" />
+      </div>
+
+      {/* Mobile: swipe rail */}
+      <div className="md:hidden">
+        <MobileScroller ideas={filtered} />
+      </div>
+
+      <div className="mx-auto mt-12 max-w-6xl px-6">
+        <div className="rounded-2xl border border-white/10 bg-card/60 p-6 md:p-8">
+          <p className="text-lg md:text-xl">
+            Every business above gets built with{" "}
+            <span className="text-gradient-brand font-semibold">the same seven stages</span> —
+            in one day, in this room.
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <a
+              href="#flow-stages"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-medium transition-colors hover:border-white/40"
+            >
+              See the seven stages <ArrowRight className="size-4" />
+            </a>
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-2 rounded-full bg-hero-gradient px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
+            >
+              Save your seat — only {EVENT.seats} spots <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
