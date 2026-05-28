@@ -39,7 +39,7 @@ function HomePage() {
       <TheArtOfThePossible />
       <FlowStrip />
       <AIToolkit />
-      <WhatYouLeaveWith />
+      
       <ValueByTheNumbers />
       <FacilitatorSection />
       <FacilitatorProof />
