@@ -505,7 +505,7 @@ function WhatYouLeaveWith() {
           ))}
         </div>
         <p className="mt-10 text-center text-base text-muted-foreground md:text-lg">
-          Print this list. Cross items off Monday. By Friday, you have a business.
+          Print this list. Cross items off Monday. By Friday, you have a business — and your first paying customer in sight.
         </p>
       </div>
     </section>
