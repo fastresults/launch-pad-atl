@@ -48,8 +48,7 @@ function SchedulePage() {
             Idea in. <span className="text-gradient-brand">Launch plan out.</span>
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
-            Six working hours. Each hour produces an asset the next one builds on. By 4 PM
-            you have a formed business and a dated 30/60/90 launch plan.
+            Seven working hours, seven stages, one outcome. Every hour produces an asset the next hour builds on. By 4:30 PM you have a formed business and a dated 30/60/90 launch plan.
           </p>
         </div>
       </section>
