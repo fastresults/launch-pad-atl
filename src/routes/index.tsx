@@ -718,10 +718,29 @@ function MobileScroller({ ideas }: { ideas: BusinessIdea[] }) {
   );
 }
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function TheArtOfThePossible() {
   const [active, setActive] = useState<BusinessCategory | "all">("all");
-  const filtered = active === "all" ? BUSINESS_IDEAS : BUSINESS_IDEAS.filter((i) => i.category === active);
-  // Split for two rows; alternate by index.
+  // Client-only seed bumps on mount + filter change so SSR/CSR markup matches first,
+  // then we reshuffle in the browser (no hydration mismatch).
+  const [seed, setSeed] = useState(0);
+  useEffect(() => {
+    setSeed((s) => s + 1);
+  }, [active]);
+
+  const filtered = useMemo(() => {
+    const base = active === "all" ? BUSINESS_IDEAS : BUSINESS_IDEAS.filter((i) => i.category === active);
+    return seed === 0 ? base : shuffle(base);
+  }, [active, seed]);
+
   const rowA = filtered.filter((_, i) => i % 2 === 0);
   const rowB = filtered.filter((_, i) => i % 2 === 1);
 
@@ -734,12 +753,13 @@ function TheArtOfThePossible() {
         <p className="max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl">
           Pick yours.{" "}
           <span className="text-gradient-brand">
-            Online, on a street corner, out of your kitchen, off your phone.
+            Online, on a street corner, out of your kitchen, off your phone — or built
+            around AI in 2026.
           </span>
         </p>
         <p className="mt-4 max-w-2xl text-muted-foreground md:text-lg">
-          Real businesses real people start with under $5,000 and a weekend. Scroll
-          through. Tap one. That could be you on Monday.
+          Real businesses real people start with under $10,000 and a focused 90 days.
+          Scroll through. Tap one. That could be you on Monday.
         </p>
         <p className="mt-3 max-w-2xl text-xs text-muted-foreground/80 md:text-sm">
           Income ranges are realistic year-one numbers for a solo operator who works
