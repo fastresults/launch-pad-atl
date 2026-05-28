@@ -619,9 +619,9 @@ function BottomCTA() {
               Twenty seats. One date. One door from idea to business.
             </h2>
             <p className="mt-5 text-lg text-white/90">
-              If you've been waiting for the right week to start, this is the day you stop
-              waiting. Bring the idea. We'll bring the operator, the room, and every
-              template you need.
+              If you've been waiting for the right week to start earning, this is the day
+              you stop waiting. Bring the idea. We'll bring the operator, the room, and
+              every template you need to turn it into a business that actually brings in money.
             </p>
             <div className="mt-8">
               <Link
