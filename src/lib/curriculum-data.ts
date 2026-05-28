@@ -234,6 +234,7 @@ export const STAGES: Stage[] = [
     shortTitle: "brand",
     summary: "Identity plus website drafts ready to publish when your domain is live.",
     oneLiner: "Brand & website",
+    takeHome: "A logo, color palette, fonts, and a Home + Offer page drafted in your website builder — ready to publish the moment your domain resolves.",
     duration: "75 min",
     covers: ["Brand kit", "Website drafts", "Make Google find each page", "Payments checklist"],
     tasks: [
