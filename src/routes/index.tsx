@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "July 23, 2026 · Norcross, GA. Seven hours, seven stages, one real business by dinner. Led by a 30-year startup operator.",
+          "July 23, 2026 · IGNITE Center at Greater Atlanta Christian School, Norcross, GA. Seven hours, seven stages, one real business by dinner. Led by a 30-year startup operator.",
       },
     ],
   }),
