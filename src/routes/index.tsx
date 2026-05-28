@@ -654,10 +654,18 @@ function IdeaCard({ idea }: { idea: BusinessIdea }) {
           <Icon className="size-3 text-foreground/70" />
           <span className="text-gradient-brand font-semibold">{CATEGORY_LABEL[idea.category]}</span>
         </span>
-        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-foreground/70">
+      </div>
+      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+        <div className="text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground">
+          Monthly income potential
+        </div>
+        <div className="mt-0.5 text-2xl font-bold leading-tight tracking-tight">
+          <span className="text-gradient-brand">{idea.incomePotential}</span>
+        </div>
+        <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
           <DollarSign className="size-3" />
           {idea.startupCost}
-        </span>
+        </div>
       </div>
       <h3 className="text-lg font-semibold leading-tight tracking-tight">{idea.name}</h3>
       <p className="text-sm text-foreground/80">{idea.offer}</p>
