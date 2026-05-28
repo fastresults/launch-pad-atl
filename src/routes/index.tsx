@@ -56,9 +56,10 @@ function Hero() {
           Start your business <br /> in <span className="italic">one day</span>.
         </h1>
         <p className="mt-6 max-w-xl text-lg text-white/90">
-          A hands-on workshop for 20 people. Bring your laptop and an idea — leave with a
-          launched business, a brand, a landing page, and a 30-day plan.
+          Walk in with an idea. Walk out with a <span className="font-medium">formed business</span>,
+          a live web presence, marketing materials, and a dated 30/60/90 launch plan.
         </p>
+
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <Link
             to="/register"
@@ -104,18 +105,21 @@ function FlowStrip() {
         </p>
         <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
           {FLOW_STAGES.map((s) => (
-            <div
-              key={s.key}
-              className="rounded-2xl border border-white/10 bg-card p-5 transition-colors hover:border-white/25"
+            <Link
+              key={s.slug}
+              to="/schedule"
+              hash={`stage-${s.n}`}
+              className="group rounded-2xl border border-white/10 bg-card p-5 transition-colors hover:border-white/25"
             >
               <div className="mb-3 inline-flex size-8 items-center justify-center rounded-full bg-hero-gradient text-sm font-semibold text-white">
                 {s.n}
               </div>
               <div className="text-base font-medium">{s.title}</div>
               <p className="mt-1 text-sm text-muted-foreground">{s.blurb}</p>
-            </div>
+            </Link>
           ))}
         </div>
+
       </div>
     </section>
   );

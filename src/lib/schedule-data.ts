@@ -1,10 +1,11 @@
+import { STAGES } from "./curriculum-data";
+
 export type Session = {
   time: string;
   duration: string;
   stage?: number;
   title: string;
   description: string;
-  tools?: string[];
   kind?: "session" | "break";
 };
 
@@ -18,14 +19,26 @@ export const EVENT = {
     "https://www.google.com/maps/search/?api=1&query=1500+Indian+Trail+Lilburn+Rd+NW%2C+Norcross%2C+GA+30093",
 };
 
-export const FLOW_STAGES = [
-  { n: 1, key: "ideate", title: "ideate", blurb: "Sharpen the idea & target customer." },
-  { n: 2, key: "plan", title: "plan", blurb: "Validate, position, price." },
-  { n: 3, key: "develop", title: "develop", blurb: "Brand, web presence, MVP." },
-  { n: 4, key: "launch", title: "launch", blurb: "Go-to-market & first customers." },
-  { n: 5, key: "grow", title: "grow", blurb: "Channels, retention, metrics." },
-  { n: 6, key: "next", title: "next steps", blurb: "Your 30-day action plan." },
-] as const;
+// Flow strip on the home page mirrors the curriculum.
+export const FLOW_STAGES = STAGES.map((s) => ({
+  n: s.n,
+  slug: s.slug,
+  title: s.shortTitle,
+  blurb: s.oneLiner,
+}));
+
+// Schedule = check-in + 6 stages + 2 breaks, working time = 360 min.
+const stageBlock = (n: number, time: string): Session => {
+  const s = STAGES[n - 1];
+  return {
+    time,
+    duration: s.duration,
+    stage: s.n,
+    title: `${s.title}`,
+    description: s.summary,
+    kind: "session",
+  };
+};
 
 export const SCHEDULE: Session[] = [
   {
@@ -35,24 +48,8 @@ export const SCHEDULE: Session[] = [
     description: "Coffee, intros, set up your laptop, share your idea in one sentence.",
     kind: "session",
   },
-  {
-    time: "9:30 AM",
-    duration: "60 min",
-    stage: 1,
-    title: "Ideate — sharpen the idea",
-    description:
-      "Pin down the customer, the problem, and the smallest first version of your business worth building.",
-    tools: ["Problem/solution canvas", "Customer profile worksheet"],
-  },
-  {
-    time: "10:30 AM",
-    duration: "60 min",
-    stage: 2,
-    title: "Plan — validate & price",
-    description:
-      "Test demand fast, draft your one-page business plan, decide pricing and unit economics.",
-    tools: ["Lean canvas", "ROI / pricing calculator"],
-  },
+  stageBlock(1, "9:30 AM"),
+  stageBlock(2, "10:30 AM"),
   {
     time: "11:30 AM",
     duration: "45 min",
@@ -60,24 +57,8 @@ export const SCHEDULE: Session[] = [
     description: "Lunch provided. Working tables open for questions.",
     kind: "break",
   },
-  {
-    time: "12:15 PM",
-    duration: "75 min",
-    stage: 3,
-    title: "Develop — brand & web presence",
-    description:
-      "Pick a name, secure the domain, generate logo + brand kit, and stand up a landing page.",
-    tools: ["Domain check", "AI brand kit", "Landing page builder"],
-  },
-  {
-    time: "1:30 PM",
-    duration: "60 min",
-    stage: 4,
-    title: "Launch — first customers",
-    description:
-      "Build your launch list, write outreach that converts, prep your offer & checkout.",
-    tools: ["Outreach templates", "Stripe / payments setup"],
-  },
+  stageBlock(3, "12:15 PM"),
+  stageBlock(4, "1:15 PM"),
   {
     time: "2:30 PM",
     duration: "15 min",
@@ -85,21 +66,13 @@ export const SCHEDULE: Session[] = [
     description: "Quick stretch, refill, regroup.",
     kind: "break",
   },
+  stageBlock(5, "2:45 PM"),
+  stageBlock(6, "3:30 PM"),
   {
-    time: "2:45 PM",
-    duration: "45 min",
-    stage: 5,
-    title: "Grow — channels & metrics",
-    description: "Pick 2 acquisition channels, define the metrics that matter for week 1.",
-    tools: ["Channel scorecard", "Weekly metrics sheet"],
-  },
-  {
-    time: "3:30 PM",
-    duration: "30 min",
-    stage: 6,
-    title: "Next steps — 30-day plan",
-    description:
-      "Leave with a dated 30-day plan, accountability partner, and a follow-up check-in.",
-    tools: ["30-day plan", "Accountability pairing"],
+    time: "4:00 PM",
+    duration: "—",
+    title: "Close — signed launch plan in hand",
+    description: "You walk out with a formed business and a 30/60/90 plan.",
+    kind: "break",
   },
 ];
