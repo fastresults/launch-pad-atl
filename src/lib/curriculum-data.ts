@@ -330,13 +330,13 @@ export const STAGES: Stage[] = [
     slug: "launch",
     title: "Launch plan",
     shortTitle: "launch",
-    summary: "The dated 30/60/90, the launch-day checklist, and your accountability rhythm.",
-    oneLiner: "30 / 60 / 90 plan",
+    summary: "Your dated 90-day plan, your launch-day checklist, and the weekly check-in that keeps you moving.",
+    oneLiner: "90-day plan",
     duration: "45 min",
-    covers: ["30/60/90 plan", "Launch-day checklist", "Outreach drafts", "Accountability"],
+    covers: ["90-day plan", "Launch-day checklist", "Outreach drafts", "Accountability"],
     tasks: [
       {
-        title: "Sign the 30 / 60 / 90 plan",
+        title: "Sign your 90-day plan (30 / 60 / 90)",
         deliverable: "Signed PDF: first 3 customers → 10 → repeatable channel",
         tool: "Launch plan template",
         details: [
