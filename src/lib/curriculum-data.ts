@@ -80,7 +80,7 @@ export const STAGES: Stage[] = [
     shortTitle: "customer",
     summary: "Who you serve, what they'll pay for, and how you beat the competition.",
     oneLiner: "Demand & proof",
-    duration: "55 min",
+    duration: "60 min",
     covers: ["Beachhead persona", "Validation script", "Competitive analysis", "Positioning gap"],
     tasks: [
       {
