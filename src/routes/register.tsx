@@ -8,20 +8,25 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { createRegistration } from "@/lib/registrations.functions";
 import { EVENT } from "@/lib/schedule-data";
-import { CheckCircle2, ArrowRight } from "lucide-react";
+import { ValueGrid } from "@/components/value/ValueGrid";
+import { TotalsBar } from "@/components/value/TotalsBar";
+import { PricingTiers } from "@/components/value/PricingTiers";
+import { PRICING, type TierKey } from "@/lib/value-grid";
+import { CheckCircle2, ArrowRight, ShieldCheck, Users, CalendarDays } from "lucide-react";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Register — Atlanta Startup Workshop" },
+      { title: "Reserve your seat — Ignite Business Launch Workshop" },
       {
         name: "description",
-        content: "Reserve one of 20 seats for the Atlanta Startup Workshop on July 23, 2026.",
+        content:
+          "One day. A formed business, a built website, a printed marketing kit, and a signed 90-day launch plan. From $679 for the first 7 seats.",
       },
-      { property: "og:title", content: "Register — Atlanta Startup Workshop" },
+      { property: "og:title", content: "Reserve your seat — Ignite Business Launch Workshop" },
       {
         property: "og:description",
-        content: "Tell us about your idea and lock in your seat.",
+        content: "Walk in with an idea. Walk out with a business. From $679.",
       },
     ],
   }),
@@ -40,6 +45,7 @@ const FormSchema = z.object({
   industry: z.string().trim().min(1, "Pick an industry"),
   stage: z.enum(["idea", "early", "existing"]),
   referral_source: z.string().trim().max(120).optional().or(z.literal("")),
+  tier_interest: z.enum(["founders", "cohort"]),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
@@ -47,16 +53,23 @@ type FormValues = z.infer<typeof FormSchema>;
 function RegisterPage() {
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [tier, setTier] = useState<TierKey>("founders");
   const submit = useServerFn(createRegistration);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
-    defaultValues: { stage: "idea", industry: "" },
+    defaultValues: { stage: "idea", industry: "", tier_interest: "founders" },
   });
+
+  const selectTier = (t: TierKey) => {
+    setTier(t);
+    setValue("tier_interest", t, { shouldValidate: true });
+  };
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
@@ -72,37 +85,92 @@ function RegisterPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <section className="border-b border-white/5 py-16">
-        <div className="mx-auto max-w-2xl px-6">
+
+      {/* Hero */}
+      <section className="border-b border-white/5 py-16 md:py-20">
+        <div className="mx-auto max-w-5xl px-6">
           <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-            {EVENT.dateLabel} · IGNITE Center at Greater Atlanta Christian School, Norcross, GA
+            {EVENT.dateLabel} · IGNITE Center at Greater Atlanta Christian School, Norcross GA
           </p>
           <h1 className="text-5xl font-semibold tracking-tight md:text-6xl">
-            Reserve <span className="text-gradient-brand">your seat</span>.
+            Walk in with an idea.{" "}
+            <span className="text-gradient-brand">Walk out with a business.</span>
           </h1>
-          <p className="mt-4 text-muted-foreground">
-            20 seats, first-come. Tell us a little about what you want to build so we can
-            tailor the workshop to your cohort.
+          <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
+            One 8-hour build day. 17 finished deliverables. A formed business, a built website,
+            a printed marketing kit, and a signed 90-day launch plan — all done in the room.
           </p>
+          <div className="mt-6 flex flex-wrap gap-4 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-2">
+              <Users className="size-4" /> 20 seats total
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <CalendarDays className="size-4" /> {EVENT.timeLabel}
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <ShieldCheck className="size-4" /> Founder-led, build-as-you-go
+            </span>
+          </div>
         </div>
       </section>
 
+      {/* Value Grid */}
       <section className="py-16">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mb-8 max-w-2xl">
+            <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+              What you actually walk out with
+            </p>
+            <h2 className="text-4xl font-semibold tracking-tight md:text-5xl">
+              Every deliverable. <span className="text-muted-foreground">What it would cost. What it would take.</span>
+            </h2>
+            <p className="mt-3 text-muted-foreground">
+              Conservative market rates and DIY hours, deliverable by deliverable. No fluff.
+            </p>
+          </div>
+          <ValueGrid />
+          <div className="mt-8">
+            <TotalsBar />
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="border-y border-white/5 bg-white/[0.02] py-16">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mb-8 text-center">
+            <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+              Pick your seat
+            </p>
+            <h2 className="text-4xl font-semibold tracking-tight md:text-5xl">
+              From <span className="text-gradient-brand">${PRICING.founders.price}</span>.
+              All 17 deliverables included.
+            </h2>
+          </div>
+          <PricingTiers selected={tier} onSelect={selectTier} scrollTargetId="register-form" />
+        </div>
+      </section>
+
+      {/* Form */}
+      <section className="py-16" id="register-form">
         <div className="mx-auto max-w-2xl px-6">
+          <div className="mb-6 text-center">
+            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
+              Reserve your seat
+            </h2>
+            <p className="mt-2 text-muted-foreground">
+              Tell us a bit about your idea so we can tailor the day to your cohort.
+            </p>
+          </div>
           {submitted ? (
-            <SuccessCard />
+            <SuccessCard tier={tier} />
           ) : (
             <form
               onSubmit={onSubmit}
               className="space-y-5 rounded-2xl border border-white/10 bg-card p-6 md:p-8"
             >
               <Field label="Full name" error={errors.name?.message}>
-                <input
-                  {...register("name")}
-                  className="input"
-                  placeholder="Your name"
-                  autoComplete="name"
-                />
+                <input {...register("name")} className="input" placeholder="Your name" autoComplete="name" />
               </Field>
               <Field label="Email" error={errors.email?.message}>
                 <input
@@ -114,12 +182,7 @@ function RegisterPage() {
                 />
               </Field>
               <Field label="Phone (optional)" error={errors.phone?.message}>
-                <input
-                  {...register("phone")}
-                  className="input"
-                  placeholder="+1 (404) 555-0123"
-                  autoComplete="tel"
-                />
+                <input {...register("phone")} className="input" placeholder="+1 (404) 555-0123" autoComplete="tel" />
               </Field>
               <Field label="What business do you want to start?" error={errors.business_idea?.message}>
                 <textarea
@@ -144,9 +207,7 @@ function RegisterPage() {
                       "Real estate",
                       "Other",
                     ].map((o) => (
-                      <option key={o} value={o}>
-                        {o}
-                      </option>
+                      <option key={o} value={o}>{o}</option>
                     ))}
                   </select>
                 </Field>
@@ -158,12 +219,37 @@ function RegisterPage() {
                   </select>
                 </Field>
               </div>
+
+              <Field label="Seat tier" error={errors.tier_interest?.message}>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {(["founders", "cohort"] as const).map((t) => {
+                    const p = PRICING[t];
+                    const isOn = tier === t;
+                    return (
+                      <button
+                        type="button"
+                        key={t}
+                        onClick={() => selectTier(t)}
+                        className={`text-left rounded-xl border p-4 transition ${
+                          isOn
+                            ? "border-primary bg-primary/10"
+                            : "border-white/10 hover:border-white/20"
+                        }`}
+                      >
+                        <div className="flex items-baseline justify-between">
+                          <span className="font-medium">{p.label}</span>
+                          <span className="tabular-nums font-semibold">${p.price}</span>
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground">{p.subtitle}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+                <input type="hidden" {...register("tier_interest")} />
+              </Field>
+
               <Field label="How did you hear about us? (optional)" error={errors.referral_source?.message}>
-                <input
-                  {...register("referral_source")}
-                  className="input"
-                  placeholder="Friend, Instagram, search…"
-                />
+                <input {...register("referral_source")} className="input" placeholder="Friend, Instagram, search…" />
               </Field>
 
               {serverError && (
@@ -175,19 +261,21 @@ function RegisterPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
               >
-                {isSubmitting ? "Reserving…" : "Reserve my seat"}
+                {isSubmitting ? "Reserving…" : `Reserve my ${PRICING[tier].label} — $${PRICING[tier].price}`}
                 {!isSubmitting && <ArrowRight className="size-4" />}
               </button>
               <p className="text-center text-xs text-muted-foreground">
-                We&apos;ll follow up with confirmation and what to bring.
+                We&apos;ll follow up with confirmation, payment instructions, and what to bring.
               </p>
             </form>
           )}
         </div>
       </section>
+
       <SiteFooter />
+
       <style>{`
         .input {
           width: 100%;
@@ -225,7 +313,7 @@ function Field({
   );
 }
 
-function SuccessCard() {
+function SuccessCard({ tier }: { tier: TierKey }) {
   const bring = [
     "Your laptop and charger",
     "Headphones (optional)",
@@ -239,7 +327,7 @@ function SuccessCard() {
       </div>
       <h2 className="text-2xl font-semibold tracking-tight">You&apos;re in.</h2>
       <p className="mt-2 text-muted-foreground">
-        Seat reserved for {EVENT.dateLabel}. Check your email for a follow-up shortly.
+        {PRICING[tier].label} reserved for {EVENT.dateLabel}. Check your email for confirmation and payment instructions shortly.
       </p>
       <div className="mt-8 rounded-xl border border-white/10 p-5 text-left">
         <div className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
