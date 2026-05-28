@@ -124,23 +124,31 @@ function FlowStrip() {
         <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
           The day, hour by hour
         </h2>
-        <p className="mb-12 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
+        <p className="mb-3 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
           Seven stages. One working day.{" "}
           <span className="text-gradient-brand">A business built to make money — not just one that exists.</span>
         </p>
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        <p className="mb-12 max-w-2xl text-base text-muted-foreground md:text-lg">
+          Here's exactly what's in your hands when you stand up at 4:30 PM.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {FLOW_STAGES.map((s) => (
             <Link
               key={s.slug}
               to="/schedule"
               hash={`stage-${s.n}`}
-              className="group rounded-2xl border border-white/10 bg-card p-5 transition-colors hover:border-white/25"
+              className="group flex flex-col rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-white/25"
             >
               <div className="mb-3 inline-flex size-8 items-center justify-center rounded-full bg-hero-gradient text-sm font-semibold text-white">
                 {s.n}
               </div>
-              <div className="text-base font-medium capitalize">{s.title}</div>
-              <p className="mt-1 text-sm text-muted-foreground">{s.blurb}</p>
+              <div className="text-lg font-semibold capitalize tracking-tight">{s.title}</div>
+              <div className="mt-4 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                You walk out with
+              </div>
+              <p className="mt-1.5 text-sm leading-snug text-foreground/90">
+                {s.takeHome}
+              </p>
             </Link>
           ))}
         </div>
@@ -546,8 +554,8 @@ function VenueCard() {
   return (
     <section className="pb-24">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="overflow-hidden rounded-3xl border border-white/10 bg-card">
-          <div className="grid gap-8 p-8 md:grid-cols-[1.2fr_1fr] md:p-12">
+        <div className="overflow-hidden rounded-3xl border border-white/10 bg-card p-8 md:p-12">
+          <div className="grid gap-10 md:grid-cols-[1.05fr_1fr]">
             <div>
               <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
                 Where it happens
@@ -559,18 +567,54 @@ function VenueCard() {
               <p className="mt-1 text-muted-foreground">
                 {EVENT.dateLabel} · {EVENT.timeLabel}
               </p>
-              <p className="mt-4 text-sm text-foreground/80">
-                Small cohort by design — 20 founders, one operator, no audience.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Chip>Free on-site parking</Chip>
+                <Chip>{EVENT.capacity} seats</Chip>
+                <Chip>Small cohort · no audience</Chip>
+              </div>
+
+              <div className="mt-7 flex flex-wrap items-start gap-3">
                 <a
                   href={EVENT.mapsUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm transition-colors hover:bg-white/10"
                 >
-                  <MapPin className="size-4" /> Open in maps
+                  <MapPin className="size-4" /> Get directions
                 </a>
+
+                <details className="group relative">
+                  <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm transition-colors hover:bg-white/10 [&::-webkit-details-marker]:hidden">
+                    <Calendar className="size-4" /> Add to calendar
+                    <ArrowRight className="size-3 rotate-90 transition-transform group-open:-rotate-90" />
+                  </summary>
+                  <div className="absolute left-0 z-10 mt-2 w-60 overflow-hidden rounded-2xl border border-white/15 bg-card shadow-xl">
+                    <a
+                      href={EVENT.googleCalendarUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block px-4 py-3 text-sm transition-colors hover:bg-white/5"
+                    >
+                      Google Calendar
+                    </a>
+                    <a
+                      href={EVENT.icsHref}
+                      download={EVENT.icsFilename}
+                      className="block border-t border-white/10 px-4 py-3 text-sm transition-colors hover:bg-white/5"
+                    >
+                      Apple Calendar (.ics)
+                    </a>
+                    <a
+                      href={EVENT.icsHref}
+                      download={EVENT.icsFilename}
+                      className="block border-t border-white/10 px-4 py-3 text-sm transition-colors hover:bg-white/5"
+                    >
+                      Outlook (.ics)
+                    </a>
+                  </div>
+                </details>
+
                 <Link
                   to="/register"
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
@@ -579,20 +623,16 @@ function VenueCard() {
                 </Link>
               </div>
             </div>
-            <div className="relative min-h-[220px] overflow-hidden rounded-2xl bg-hero-gradient">
-              <div
-                className="absolute inset-0 mix-blend-overlay opacity-30"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)",
-                  backgroundSize: "18px 18px",
-                }}
+
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-black/40 md:aspect-auto md:min-h-[320px]">
+              <iframe
+                title={`Map of ${EVENT.venueName}`}
+                aria-label={`Map of ${EVENT.venueName}`}
+                src={EVENT.mapsEmbedUrl}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="absolute inset-0 h-full w-full border-0"
               />
-              <div className="relative flex h-full flex-col justify-end p-6 text-white">
-                <div className="text-sm uppercase tracking-[0.2em] opacity-80">Capacity</div>
-                <div className="text-5xl font-semibold">{EVENT.capacity} seats</div>
-                <div className="mt-1 text-sm opacity-80">Small cohort, high attention.</div>
-              </div>
             </div>
           </div>
         </div>

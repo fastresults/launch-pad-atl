@@ -13,6 +13,7 @@ export type Stage = {
   shortTitle: string;
   summary: string;
   oneLiner: string;
+  takeHome: string;
   duration: string;
   covers: string[];
   tasks: [Task, Task, Task];
@@ -26,6 +27,7 @@ export const STAGES: Stage[] = [
     shortTitle: "form",
     summary: "The legal foundation. Leave with a filing-ready packet and the legal kit you need to sell.",
     oneLiner: "Legal foundation",
+    takeHome: "Your LLC packet ready to file, your EIN in hand, and the two contracts that let you legally take money on Monday.",
     duration: "60 min",
     covers: ["GA LLC packet", "EIN", "T&Cs / privacy", "Service agreement"],
     tasks: [
@@ -80,6 +82,7 @@ export const STAGES: Stage[] = [
     shortTitle: "customer",
     summary: "Who you serve, what they'll pay for, and how you beat the competition.",
     oneLiner: "Demand & proof",
+    takeHome: "A named, real first customer with their pain priced in dollars — plus a 25-name prospect list you can start messaging tonight.",
     duration: "60 min",
     covers: ["Your first customer", "Validation script", "3-competitor look", "What makes you different"],
     tasks: [
@@ -129,6 +132,7 @@ export const STAGES: Stage[] = [
     shortTitle: "offer",
     summary: "What you actually sell, how it's delivered, and the price tag.",
     oneLiner: "What you sell & what it costs",
+    takeHome: "One sentence a buyer can say yes or no to, a price that actually pays you, and the exact number of sales you need to break even.",
     duration: "60 min",
     covers: ["Offer in one sentence", "What's in V1", "Pricing & break-even"],
     tasks: [
@@ -175,6 +179,7 @@ export const STAGES: Stage[] = [
     summary:
       "Set up how you'll actually deliver. Pick what kind of business you're building, set up your free apps, and draft what your first customer will get.",
     oneLiner: "Your first working version",
+    takeHome: "The step-by-step way you'll deliver your first sale — set up in free apps, drafted, and rehearsed before a real customer sees it.",
     duration: "60 min",
     covers: ["Service / online / product", "Your free app setup", "What the customer receives"],
     tasks: [
@@ -229,6 +234,7 @@ export const STAGES: Stage[] = [
     shortTitle: "brand",
     summary: "Identity plus website drafts ready to publish when your domain is live.",
     oneLiner: "Brand & website",
+    takeHome: "A logo, color palette, fonts, and a Home + Offer page drafted in your website builder — ready to publish the moment your domain resolves.",
     duration: "75 min",
     covers: ["Brand kit", "Website drafts", "Make Google find each page", "Payments checklist"],
     tasks: [
@@ -284,6 +290,7 @@ export const STAGES: Stage[] = [
     summary:
       "A 1-page marketing plan plus your full creative kit — printed flyers, business cards, social profiles, and post drafts — ready to take to a printer or scheduler.",
     oneLiner: "Plan & creatives",
+    takeHome: "A printable business card, a flyer, claimed social profiles, six post drafts, and a 60-second video script — your whole launch kit, done.",
     duration: "60 min",
     covers: ["Messaging kit", "Print creatives", "Social kit", "30-day plan"],
     tasks: [
@@ -332,6 +339,7 @@ export const STAGES: Stage[] = [
     shortTitle: "launch",
     summary: "Your dated 90-day plan, your launch-day checklist, and the weekly check-in that keeps you moving.",
     oneLiner: "90-day plan",
+    takeHome: "A signed, dated 90-day plan with your first 3 paying customers → 10 → repeatable channel — and an accountability partner already on the calendar.",
     duration: "45 min",
     covers: ["90-day plan", "Launch-day checklist", "Outreach drafts", "Accountability"],
     tasks: [
