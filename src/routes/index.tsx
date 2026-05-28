@@ -101,9 +101,9 @@ function FlowStrip() {
           The flow
         </h2>
         <p className="mb-12 max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
-          Six stages. One day. <span className="text-gradient-brand">A real business.</span>
+          Seven stages. One day. <span className="text-gradient-brand">A real business.</span>
         </p>
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           {FLOW_STAGES.map((s) => (
             <Link
               key={s.slug}
