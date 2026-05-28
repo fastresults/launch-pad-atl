@@ -81,11 +81,12 @@ export const STAGES: Stage[] = [
     summary: "Who you serve, what they'll pay for, and how you beat the competition.",
     oneLiner: "Demand & proof",
     duration: "60 min",
-    covers: ["Beachhead persona", "Validation script", "Competitive analysis", "Positioning gap"],
+    covers: ["Your first customer", "Validation script", "3-competitor look", "What makes you different"],
     tasks: [
       {
-        title: "Pick one beachhead customer",
-        deliverable: "One-page customer profile with top-3 pains and $ figures",
+        title: "Pick your first real customer",
+        deliverable:
+          "A one-page profile of one specific buyer, their top 3 problems, and what each problem costs them in dollars.",
         tool: "Customer profile worksheet",
         details: [
           "Name one specific buyer (role, industry, company size, location)",
@@ -95,27 +96,27 @@ export const STAGES: Stage[] = [
         ],
       },
       {
-        title: "Market size + validation script",
+        title: "Estimate the market + write a short script you'll send",
         deliverable:
-          "TAM/SAM estimate + 25-name prospect list + personalized validation script ready to send",
+          "A real-world estimate of how many buyers exist + a 25-name list + a short script you'll send them.",
         tool: "Market snapshot template + validation script",
         details: [
-          "Estimate TAM, SAM, and your realistic SOM in 12 months",
+          "Estimate how many buyers exist, how many you can realistically reach, and how many you'll win in year one (TAM/SAM/SOM)",
           "Pull a 25-name prospect list from LinkedIn, local groups, or referrals",
-          "Customize the problem-discovery script for your beachhead",
+          "Customize the problem-discovery script for your first customer",
           "Pick a scoring rubric: pain confirmed, willingness to pay, intro to others",
         ],
         followUp:
           "Send the script to your 25 prospects and run 5 discovery calls within the next 2 weeks; score each one.",
       },
       {
-        title: "Competitive analysis & positioning",
-        deliverable: "3-competitor grid + your positioning gap",
+        title: "Look at 3 competitors and find your edge",
+        deliverable: "A simple grid comparing 3 competitors + one sentence on what makes you different.",
         tool: "Competitive grid template",
         details: [
           "Identify 3 real competitors (2 direct + 1 substitute)",
           "Score each on offer, price, channel, proof, and weakness",
-          "Find the gap they all miss — your wedge",
+          "Find the gap they all miss — your edge",
           "Write a one-line positioning statement: For X, who Y, we are Z because…",
         ],
       },
