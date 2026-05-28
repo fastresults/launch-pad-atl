@@ -526,9 +526,7 @@ function ValueByTheNumbers() {
   );
 }
 
-    </section>
-  );
-}
+
 
 function VenueCard() {
   return (
