@@ -1,73 +1,42 @@
 ## Goal
-Tighten the `/schedule` page so the day reads as a single confident arc: stronger hero hierarchy, a scannable rail of "where you are in the day," and denser, more disciplined session cards. Conservative — no new pages, no new colors, no animations beyond what already exists.
+Rewrite the seven `takeHome` lines so each one reads as the **output of a distinct, productized, AI-facilitated process** — not a generic outcome. Every line names the artifact(s), the format they arrive in, and what the attendee can do with them immediately. The seven lines should read as a coherent suite, not seven unrelated promises.
 
-## Diagnosis (what's hurting impact today)
+## Scope (deliberately narrow)
+- Edit only the `takeHome` string on each of the 7 stages in **`src/lib/curriculum-data.ts`**.
+- Do NOT touch `tasks[]`, `tool`, `deliverable`, `followUp`, `summary`, or `oneLiner` — the underlying process descriptions stay accurate to what the backend will deliver.
+- No component / layout / token changes. The `/` FlowStrip cards and the `/schedule` "You walk out with" strips both already pull `stage.takeHome`, so the rewrite cascades automatically.
 
-1. **Hero is text-only and timid.** Date pill, headline, paragraph — then a long scroll with no orienting summary. The reader doesn't know how big a commitment they're previewing.
-2. **No "at-a-glance" map of the day.** The timeline forces sequential reading; a prospective attendee can't jump-scan the 7 stages + 2 breaks before committing to the deep read.
-3. **Stage cards lean visually flat.** Time, duration, "Stage N" pill, title, summary all sit on the same baseline row. The "YOU WALK OUT WITH" promise from the home page is missing here — the highest-converting line is hidden on the wrong page.
-4. **Inner task block is dense but unstructured.** Numbered list works, but `tool` chip + `Take home` callout + "Also covered" pills stack as four different visual systems inside one card.
-5. **Bottom CTA is a lone button.** No reinforcement of the outcome right where the decision happens.
+## Voice formula (applied to all 7)
+`[Named artifact(s) the productized process generates]` · `[the format / where it lives]` · `[what the attendee does with it Monday / tonight]`
 
-## Edits (all in `src/routes/schedule.tsx` — no data shape changes)
+- Mention the **process / generator / engine / walk-through / AI** that produced the artifact (subtle, not gimmicky — referenced 1×, never twice in the same line).
+- Keep prior-approved tone: empathetic, concrete, conversion-grade. No "transformation," "journey," or hype words.
+- Stays consistent with the existing `tasks[].tool` names (legal walk-through, brand-kit AI, build-type generator, creative-kit AI, etc.) so the take-home actually corresponds to a real product surface.
 
-### 1. Hero — add a 3-stat ribbon under the paragraph
-Below the existing paragraph, add a single row of three stat tiles (border + muted bg, no gradients):
-- `7 hrs` · working time
-- `7 stages` · idea → launch
-- `9 deliverables` · in hand by 4:30
-Border-top divider, simple `grid-cols-3` on md+, stacked on mobile. Reinforces scope without redesigning the hero.
+## New `takeHome` copy
 
-### 2. New "Day at a glance" rail (between hero and timeline)
-A single horizontal strip listing the 9 sessions in order (`Check-in → S1 → S2 → S3 → Lunch → S4 → S5 → Coffee → S6 → S7`), each item showing `time` over `short label`. Items are anchor links to the matching `#stage-N` below. Renders as a `flex flex-wrap` row on desktop, horizontal scroll on mobile (`overflow-x-auto snap-x`). Uses existing tokens (`border-white/10`, `text-muted-foreground`, `bg-hero-gradient` dot for stages, `bg-white/20` dot for breaks). Gives the prospect a one-screen map before they commit to reading.
+1. **Form** → "A filing-ready Georgia LLC packet (Articles pre-filled, registered agent set, EIN application queued) plus signed Terms, Privacy, and Service Agreement — auto-assembled by the legal walk-through and exported as a single PDF bundle. Submit Monday and start legally taking money the same week."
 
-### 3. Timeline rail — minor polish, no restructure
-- Change `space-y-4` → `space-y-6` so session cards breathe.
-- Promote the rail color from `border-white/10` to `border-white/15` for stronger spine continuity.
-- Increase stage dots from `size-4` → `size-5` and add a faint ring (`ring-2 ring-background`) so they read as real waypoints over the line.
+2. **Customer** → "One named first customer with their pain priced in dollars, a 25-name prospect list the targeting engine pulled from your niche and zip, and a validated outreach script — exported as a CSV you can start messaging tonight."
 
-### 4. Session card header — clearer hierarchy
-Re-stack the meta row so time is the anchor:
-```
-[ 8:30 AM ]  ── thin divider ──  60 min   · Stage 1 pill (right-aligned on md)
-Stage title (text-2xl, was text-xl)
-1-line summary
-```
-- Bump title to `text-2xl md:text-3xl` so the stage name carries the card.
-- Move the `Stage N` pill to the right side of the meta row (justify-between) so it acts as a tab marker, not competing with the time.
-- Keep all existing classes, colors, and the gradient pill.
+3. **Offer** → "A one-sentence offer a buyer can say yes or no to, a price the margin calculator backed into from your real costs, and the exact number of sales you need to break even — locked into a one-page offer sheet."
 
-### 5. Add a "You walk out with" strip inside each stage card
-Above the "3 essential tasks" block, add a single-line band:
-```
-YOU WALK OUT WITH   ·   {stage.takeHome}
-```
-Styling: `rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3`, micro-eyebrow in `text-[10px] uppercase tracking-[0.22em] text-muted-foreground`, then the take-home in `text-sm text-foreground/90`. Pulls the home page's strongest line onto the deep-read page exactly when the reader is considering the hour.
+4. **Build** → "Your delivery process mapped step-by-step by the build-type generator, the free apps that run it provisioned with starter accounts, and your first customer's deliverable drafted and rehearsed — before a real customer ever sees it."
 
-### 6. Tasks block — quiet the visual noise
-- The `tool` chip and the "Take home" follow-up box currently stack vertically and read as two separate systems. Move the `tool` chip to sit **inline at the end of the deliverable row** (so: `✓ deliverable line  ·  [Notion]`), freeing vertical rhythm.
-- Reduce the dashed border on the follow-up box to a left-accent bar (`border-l-2 border-white/15`, no full border, same italic copy) — calmer, still distinct.
-- Replace the "Also covered" header underline (`border-t border-white/10 pt-4`) with `mt-4` only; the pills already read as a separate group.
+5. **Brand** → "Logo, color palette, and font pairing generated by the brand-kit AI from your business name; a Home page and Offer page drafted directly inside your site builder; payments, email, and analytics queued for one-click connection the moment your domain resolves."
 
-### 7. Break cards — match the rhythm
-- Bump padding `p-5 → p-6`, add `gap-4`, and right-align a small `time` pill so breaks read as deliberate beats, not afterthoughts.
+6. **Marketing** → "A printable business card and flyer rendered by the creative-kit AI, claimed handles on the three channels your customer actually uses, six on-brand post drafts queued in your scheduler, and a 60-second founder video script — your full launch kit, done."
 
-### 8. Footer CTA block — replace the lone button
-Replace the single centered button with a compact 3-line outcome reminder + button on a bordered tile:
-```
-Headline: One day. One door. Twenty seats.
-Subline:  Idea in at 8 AM. Filing-ready business + signed 90-day plan out at 4:30 PM.
-[ Reserve your seat → ]
-```
-Uses existing `rounded-2xl border border-white/10 bg-card p-8 text-center` pattern from elsewhere on the site. No new tokens.
+7. **Launch** → "A signed, dated 90-day plan (first 3 paying customers → 10 → repeatable channel) generated from your offer, customer list, and marketing kit; a launch-day checklist with outreach drafts ready to send; and an accountability partner already on next Monday's calendar."
 
-## What stays the same
-- Route file location, data shape (`SCHEDULE`, `STAGES`, `EVENT`), all copy from `curriculum-data.ts`, all icons, all existing color tokens. No edits to `src/lib/*`.
-- `#stage-N` anchors, smooth-scroll behavior, FlowStrip link targets from `/`.
-- No new dependencies, no new components, no animation libraries.
+## Why these work
+- **Distinct.** Each one names artifacts you can't confuse with another stage (PDF legal bundle vs. CSV prospect list vs. offer sheet vs. delivery map vs. brand kit vs. launch kit vs. 90-day plan).
+- **Process-driven.** Each references the specific productized surface that produces it (walk-through, targeting engine, margin calculator, build-type generator, brand-kit AI, creative-kit AI, plan generator).
+- **Tangible.** Every line says either the **file format** ("PDF bundle," "CSV," "one-page sheet"), the **place it lives** ("inside your site builder," "queued in your scheduler"), or the **next action** ("submit Monday," "message tonight," "next Monday's calendar").
+- **Cohesive suite.** Read top-to-bottom, they describe one AI-facilitated assembly line — legal → customer → offer → delivery → brand → marketing → launch — each stage's output feeding the next.
 
 ## Verification
-- Reload `/schedule`: hero shows 3 stat tiles; "Day at a glance" rail under it; clicking a rail item scrolls to that session.
-- Each of the 7 stage cards displays the `YOU WALK OUT WITH` strip with the correct take-home from `curriculum-data.ts`.
-- Mobile (≤640): stat ribbon stacks, rail scrolls horizontally with snap, cards remain full-width.
-- Coming from `/` → flow strip card click still lands on the correct `#stage-N` mid-card.
+- `rg -n "takeHome" src/lib/curriculum-data.ts` shows the new strings in stages 1–7.
+- `/` FlowStrip cards under "YOU WALK OUT WITH" render the new copy.
+- `/schedule` "You walk out with" strip inside each stage card renders the new copy.
+- No other strings or layouts change.
