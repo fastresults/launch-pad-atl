@@ -106,6 +106,15 @@ export const STAGES: Stage[] = [
     oneLiner: "Demand & proof",
     takeHome:
       "One named first customer with their problems priced in dollars, a 25-name prospect list pulled for your niche and zip, and a validated outreach script — exported as a CSV you can start messaging tonight.",
+    walkOut: [
+      "1-page profile of your first named buyer with their top 3 problems priced in dollars",
+      "25-name prospect list pulled for your niche and zip — exported as a CSV",
+      "Outreach script customized to that specific buyer",
+      "3-competitor grid + your one-sentence positioning",
+    ],
+    afterWorkshop: [
+      "Send the script to your 25 prospects and run 5 discovery calls within 2 weeks",
+    ],
     duration: "60 min",
     covers: ["Your first customer", "Validation script", "3-competitor look", "What makes you different"],
     tasks: [
