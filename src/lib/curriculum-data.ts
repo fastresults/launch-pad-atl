@@ -128,27 +128,27 @@ export const STAGES: Stage[] = [
     title: "Offer & product",
     shortTitle: "offer",
     summary: "What you actually sell, how it's delivered, and the price tag.",
-    oneLiner: "Offer & pricing",
+    oneLiner: "What you sell & what it costs",
     duration: "60 min",
-    covers: ["Offer sentence", "V1 scope + SOP", "Pricing & break-even"],
+    covers: ["Offer in one sentence", "What's in V1", "Pricing & break-even"],
     tasks: [
       {
         title: "Write the offer in one sentence",
-        deliverable: "Signed-off offer sentence",
+        deliverable: "An offer written in one clear sentence a buyer can say yes or no to.",
         tool: "Offer-builder template",
         details: [
           "Use the formula: We help [who] achieve [outcome] in [time] without [pain]",
-          "Test it against your beachhead customer profile",
+          "Test it against your first-customer profile",
           "Strip jargon — read it aloud to a partner",
           "Lock the final sentence; it feeds your website and pitch",
         ],
       },
       {
-        title: "Define the V1 deliverable & fulfillment SOP",
-        deliverable: "V1 scope + 1-page standard operating procedure",
-        tool: "MVP scope canvas + fulfillment SOP",
+        title: "Decide what your first version actually includes",
+        deliverable: "A one-page 'how we deliver this' that lists every step from sale to handoff.",
+        tool: "First-version scope + delivery steps",
         details: [
-          "List what's IN scope for V1 — and what's explicitly OUT",
+          "List what's IN scope for the first version — and what's explicitly OUT",
           "Map the 5–8 steps from sale to delivery",
           "Identify tools, suppliers, or contractors needed",
           "Estimate time-to-fulfill so pricing covers your hours",
@@ -156,10 +156,10 @@ export const STAGES: Stage[] = [
       },
       {
         title: "Set price, margin & payment terms",
-        deliverable: "Pricing sheet + break-even units",
+        deliverable: "A pricing sheet + how many sales you need to cover your costs.",
         tool: "Pricing & margin calculator",
         details: [
-          "Compute COGS or delivery cost per unit",
+          "Compute what each sale actually costs you to make",
           "Set price using value, cost-plus, and competitor anchors",
           "Calculate units/month to break even and to hit a target income",
           "Define deposit, milestones, refund policy, and accepted payment methods",
