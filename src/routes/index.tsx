@@ -38,6 +38,7 @@ function HomePage() {
       <WalkInWalkOut />
       <TheArtOfThePossible />
       <FlowStrip />
+      <AIToolkit />
       <WhatYouLeaveWith />
       <ValueByTheNumbers />
       <FacilitatorSection />
@@ -879,3 +880,128 @@ function TheArtOfThePossible() {
     </section>
   );
 }
+
+type GeneratorItem = { name: string; desc: string; usage: "workshop" | "scale" };
+type Phase = { n: number; title: string; intro: string; items: GeneratorItem[] };
+
+const AI_PHASES: Phase[] = [
+  {
+    n: 1,
+    title: "Build Your Unshakeable Foundation",
+    intro:
+      "Stop second-guessing and establish the bulletproof foundation that turns scattered ideas into investor-ready ventures.",
+    items: [
+      { name: "Concept Brief Generator", desc: "Define your startup's core DNA with surgical precision.", usage: "workshop" },
+      { name: "Vision & Mission Generator", desc: "Craft compelling vision statements that magnetize stakeholders.", usage: "workshop" },
+      { name: "Legal Checklist Generator", desc: "Navigate legal requirements with bulletproof compliance.", usage: "workshop" },
+      { name: "Brand Builder Generator", desc: "Create brand identity that commands premium pricing.", usage: "workshop" },
+      { name: "Business Model Canvas Generator", desc: "Map your path to profitability with proven frameworks.", usage: "workshop" },
+    ],
+  },
+  {
+    n: 2,
+    title: "Craft Your Winning Strategy",
+    intro:
+      "While others debate business models, deploy proven tactics that fast-track you from research to revenue.",
+    items: [
+      { name: "Competitive Analysis Generator", desc: "Expose market gaps where competitors fear to tread.", usage: "workshop" },
+      { name: "Pricing & Packaging Generator", desc: "Engineer pricing that maximizes profit margins.", usage: "workshop" },
+      { name: "Business Plan Generator", desc: "Build investor-grade frameworks that secure funding.", usage: "scale" },
+      { name: "Market Analysis Generator", desc: "Decode market dynamics with strategic intelligence.", usage: "workshop" },
+      { name: "Financial Projections Generator", desc: "Create forecasts that convince the most skeptical investors.", usage: "scale" },
+    ],
+  },
+  {
+    n: 3,
+    title: "Launch With Professional Power",
+    intro:
+      "Turn your corporate expertise into entrepreneurial action — no more endless planning, just profitable execution.",
+    items: [
+      { name: "Launch Plan Generator", desc: "Orchestrate launches that capture market attention.", usage: "workshop" },
+      { name: "Social Launch Generator", desc: "Command social platforms for maximum impact.", usage: "workshop" },
+      { name: "Website Copy Generator", desc: "Write web copy that converts visitors into customers.", usage: "workshop" },
+      { name: "Marketing Strategy Generator", desc: "Deploy marketing that dominates your category.", usage: "workshop" },
+      { name: "Sales Strategy Generator", desc: "Build sales systems that scale exponentially.", usage: "workshop" },
+      { name: "Customer Research Generator", desc: "Decode customer psychology for perfect product-market fit.", usage: "workshop" },
+      { name: "Product Development Generator", desc: "Engineer products customers can't resist.", usage: "workshop" },
+      { name: "Operations Plan Generator", desc: "Design operations that run like Swiss clockwork.", usage: "workshop" },
+      { name: "Funding Strategy Generator", desc: "Secure capital with strategies that impress investors.", usage: "scale" },
+      { name: "Growth Hacking Generator", desc: "Unlock rapid growth with unconventional tactics.", usage: "workshop" },
+    ],
+  },
+];
+
+function AIToolkit() {
+  return (
+    <section className="border-y border-white/5 py-20">
+      <div className="mx-auto max-w-6xl px-6">
+        <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+          Your AI toolkit
+        </p>
+        <h2 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
+          Twenty AI generators. One day to use them in the same room with the operator.
+        </h2>
+        <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
+          Every deliverable in the workshop is the output of a productized AI generator —
+          the same engine you keep using long after you walk out. Seventeen ship in the
+          room on July 23. Three more wait for you when you're ready to scale.
+        </p>
+
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          {AI_PHASES.map((p) => (
+            <div
+              key={p.n}
+              className="rounded-2xl border border-white/10 bg-card p-6 md:p-7"
+            >
+              <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                Phase {p.n}
+              </div>
+              <h3 className="mt-2 text-xl font-semibold tracking-tight">{p.title}</h3>
+              <p className="mt-2 text-sm leading-snug text-muted-foreground">{p.intro}</p>
+              <ul className="mt-5 space-y-3">
+                {p.items.map((g) => (
+                  <li key={g.name} className="flex items-start gap-2">
+                    <span
+                      className={`mt-1.5 inline-block size-1.5 shrink-0 rounded-full ${
+                        g.usage === "workshop" ? "bg-hero-gradient" : "bg-white/30"
+                      }`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-baseline gap-x-2">
+                        <span className="text-sm font-medium text-foreground">{g.name}</span>
+                        <span
+                          className={`text-[10px] uppercase tracking-[0.18em] ${
+                            g.usage === "workshop"
+                              ? "text-foreground/70"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {g.usage === "workshop" ? "→ in the workshop" : "→ after the workshop"}
+                        </span>
+                      </div>
+                      <div className="text-[12px] leading-snug text-muted-foreground">
+                        {g.desc}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-2">
+            <span className="inline-block size-1.5 rounded-full bg-hero-gradient" />
+            In the workshop (17)
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <span className="inline-block size-1.5 rounded-full bg-white/30" />
+            Scale toolkit, for after the workshop (3)
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
