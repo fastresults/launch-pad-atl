@@ -459,6 +459,18 @@ export const STAGES: Stage[] = [
     oneLiner: "90-day plan",
     takeHome:
       "Your signed, dated 90-day plan (first 3 paying customers → 10 → repeatable channel), your launch-day checklist with personalized outreach drafts ready to send, and an accountability partner on next Monday's calendar.",
+    walkOut: [
+      "Signed, dated 30/60/90 plan: first 3 paying customers → 10 → repeatable channel",
+      "25-name personal announcement list",
+      "10 personalized outreach drafts saved (DM, email, voice note)",
+      "Day-of launch timeline locked",
+      "Starter CRM seeded with your announcement list",
+      "3 weekly metrics defined + accountability partner paired with cadence agreed",
+    ],
+    afterWorkshop: [
+      "Pick your launch date and send the drafts that morning",
+      "Both partners put the 4 weekly check-ins on each other's calendars",
+    ],
     duration: "45 min",
     covers: ["90-day plan", "Launch-day checklist", "Outreach drafts", "Accountability"],
     tasks: [
