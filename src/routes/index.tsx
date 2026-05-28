@@ -112,7 +112,7 @@ function Meta({ icon, label }: { icon: React.ReactNode; label: string }) {
 
 function FlowStrip() {
   return (
-    <section className="border-y border-white/5 py-20">
+    <section id="flow-stages" className="border-y border-white/5 py-20 scroll-mt-20">
       <div className="mx-auto max-w-6xl px-6">
         <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
           The day, hour by hour
