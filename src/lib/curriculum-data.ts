@@ -387,6 +387,19 @@ export const STAGES: Stage[] = [
     oneLiner: "Plan & creatives",
     takeHome:
       "A printable business card and flyer designed in your brand, your social channels claimed and branded (profile copy, banner, link-in-bio), six on-brand posts and a 60-second founder video script — your full launch kit, ready to print and configure.",
+    walkOut: [
+      "Headline, 3 value props, 30-second pitch, and 100-word founder bio",
+      "Print-ready business card (front/back) designed in your brand",
+      "Print-ready 1-page flyer designed in your brand",
+      "Instagram, LinkedIn, and one of TikTok/YouTube/X — handles claimed, profile copy, link-in-bio, and banner filled in",
+      "6 on-brand post drafts + 60-second founder video script",
+      "30-day marketing plan: 2 channels, weekly budget, content calendar, 3 weekly KPIs",
+    ],
+    afterWorkshop: [
+      "Send the print files to your printer",
+      "Schedule the 6 posts in Buffer / Later / Meta Business Suite",
+      "Record the 60-second founder video",
+    ],
     duration: "60 min",
     covers: ["Messaging kit", "Print creatives", "Social channels branded", "30-day plan"],
     tasks: [
