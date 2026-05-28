@@ -56,9 +56,10 @@ function Hero() {
           Start your business <br /> in <span className="italic">one day</span>.
         </h1>
         <p className="mt-6 max-w-xl text-lg text-white/90">
-          A hands-on workshop for 20 people. Bring your laptop and an idea — leave with a
-          launched business, a brand, a landing page, and a 30-day plan.
+          Walk in with an idea. Walk out with a <span className="font-medium">formed business</span>,
+          a live web presence, marketing materials, and a dated 30/60/90 launch plan.
         </p>
+
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <Link
             to="/register"
