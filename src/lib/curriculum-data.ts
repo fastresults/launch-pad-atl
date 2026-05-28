@@ -132,6 +132,7 @@ export const STAGES: Stage[] = [
     shortTitle: "offer",
     summary: "What you actually sell, how it's delivered, and the price tag.",
     oneLiner: "What you sell & what it costs",
+    takeHome: "One sentence a buyer can say yes or no to, a price that actually pays you, and the exact number of sales you need to break even.",
     duration: "60 min",
     covers: ["Offer in one sentence", "What's in V1", "Pricing & break-even"],
     tasks: [
