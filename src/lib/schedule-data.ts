@@ -67,9 +67,9 @@ export const SCHEDULE: Session[] = [
     kind: "break",
   },
   stageBlock(5, "2:45 PM"),
-  stageBlock(6, "3:30 PM"),
+  stageBlock(6, "3:45 PM"),
   {
-    time: "4:00 PM",
+    time: "4:30 PM",
     duration: "—",
     title: "Close — signed launch plan in hand",
     description: "You walk out with a formed business and a 30/60/90 plan.",
