@@ -198,16 +198,20 @@ function FacilitatorSection() {
               {FACILITATOR_TITLE}
             </p>
             <p className="mt-5 text-muted-foreground">
-              Adam has spent 18+ years building real things for real customers — websites
-              and apps for big companies like Citigroup, Mayo Clinic, 3M, and Disney; full
-              digital systems for a Caribbean country's government; and a five-year run
+              Adam is a serial entrepreneur who has personally started multiple companies
+              and helped launch dozens more — the kind of lean, modern businesses people
+              are actually building in 2026: online services, AI-powered shops,
+              productized expertise, and Main Street operators. Along the way he's
+              shipped work for Citigroup, Mayo Clinic, 3M, and Disney, built full
+              digital systems for a Caribbean country's government, and spent five years
               producing one of the region's biggest business summits.
             </p>
             <p className="mt-3 text-muted-foreground">
-              He's sat in your seat. He knows what it takes to go from idea to a business
-              that actually opens its doors.
+              He's sat in your seat — more than once. He knows exactly what it takes to
+              go from a half-formed idea to a business that actually opens its doors.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
+              <Chip>Helped launch dozens of modern businesses</Chip>
               <Chip>Built for Fortune 500 companies</Chip>
               <Chip>Built systems for a whole country</Chip>
               <Chip>Produced 5 major business summits</Chip>
