@@ -13,7 +13,7 @@ export const Route = createFileRoute("/schedule")({
       {
         name: "description",
         content:
-          "The full 8 AM – 4:30 PM curriculum: form, customer, offer, build, brand, marketing, launch plan.",
+          "The full 8 AM – 4:30 PM workshop: form, customer, offer, build, brand, marketing, and your 90-day launch plan.",
       },
       { property: "og:title", content: "Schedule — Atlanta Startup Workshop" },
       {
