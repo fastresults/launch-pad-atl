@@ -36,6 +36,7 @@ function HomePage() {
       <SiteHeader />
       <Hero />
       <WalkInWalkOut />
+      <TheArtOfThePossible />
       <FlowStrip />
       <WhatYouLeaveWith />
       <ValueByTheNumbers />
