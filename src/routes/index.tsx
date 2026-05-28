@@ -126,7 +126,7 @@ function FlowStrip() {
         </h2>
         <p className="mb-12 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
           Seven stages. One working day.{" "}
-          <span className="text-gradient-brand">A business that exists by dinner.</span>
+          <span className="text-gradient-brand">A business built to make money — not just one that exists.</span>
         </p>
         <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           {FLOW_STAGES.map((s) => (
