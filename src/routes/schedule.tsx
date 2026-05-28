@@ -163,21 +163,6 @@ function SchedulePage() {
                       </h3>
                       <p className="mt-2 text-muted-foreground">{s.description}</p>
 
-                      {stage?.generators?.length ? (
-                        <div className="mt-4 flex flex-wrap items-center gap-1.5">
-                          <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                            Powered by
-                          </span>
-                          {stage.generators.map((g) => (
-                            <span
-                              key={g}
-                              className="rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-0.5 text-[11px] text-foreground/90"
-                            >
-                              {g}
-                            </span>
-                          ))}
-                        </div>
-                      ) : null}
 
                       {stage && (
                         <>
