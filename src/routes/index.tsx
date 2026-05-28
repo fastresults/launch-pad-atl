@@ -70,10 +70,13 @@ function Hero() {
           Walk out <span className="italic">a business owner</span>.
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-white/90">
-          Seven focused hours in Norcross, GA. By 4:30 PM you'll have a real business on
-          paper, a simple way to deliver it, a website ready to publish, your full
-          marketing kit, and a 90-day plan with your next ten moves already on the
-          calendar.
+          Seven focused hours at the IGNITE Center in Norcross, GA.{" "}
+          <span className="font-medium text-white">
+            You bring the idea — even a rough one. We build <em>your</em> business, not a template.
+          </span>{" "}
+          By 4:30 PM you'll have a real business on paper, a simple way to deliver it,
+          a website ready to publish, your full marketing kit, and a 90-day plan with
+          your next ten moves already on the calendar.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -748,18 +751,22 @@ function TheArtOfThePossible() {
     <section className="border-y border-white/5 py-20">
       <div className="mx-auto mb-10 max-w-6xl px-6">
         <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-          The art of the possible
+          What others are starting in 2026
         </h2>
         <p className="max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl">
-          Pick yours.{" "}
+          Proof, not a menu.{" "}
           <span className="text-gradient-brand">
-            Online, on a street corner, out of your kitchen, off your phone — or built
-            around AI in 2026.
+            These are the kinds of businesses real people are launching in 2026 —
+            online, on a street corner, out of a kitchen, off a phone, or built around AI.
           </span>
         </p>
         <p className="mt-4 max-w-2xl text-muted-foreground md:text-lg">
-          Real businesses real people start with under $10,000 and a focused 90 days.
-          Scroll through. Tap one. That could be you on Monday.
+          Scroll through for inspiration.{" "}
+          <span className="font-medium text-foreground">
+            Yours doesn't have to be on this list — it shouldn't be.
+          </span>{" "}
+          You walk in with your idea, and we build the business around it using the
+          same seven stages. Under $10,000 to start. A focused 90 days to launch.
         </p>
         <p className="mt-3 max-w-2xl text-xs text-muted-foreground/80 md:text-sm">
           Income ranges are realistic year-one numbers for a solo operator who works
@@ -800,9 +807,9 @@ function TheArtOfThePossible() {
       <div className="mx-auto mt-12 max-w-6xl px-6">
         <div className="rounded-2xl border border-white/10 bg-card/60 p-6 md:p-8">
           <p className="text-lg md:text-xl">
-            Every business above gets built with{" "}
-            <span className="text-gradient-brand font-semibold">the same seven stages</span> —
-            in one day, in this room.
+            Whether your idea looks like one of these or nothing like them,{" "}
+            <span className="text-gradient-brand font-semibold">it gets built the same way</span> —
+            the same seven stages, in one day, in this room.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
