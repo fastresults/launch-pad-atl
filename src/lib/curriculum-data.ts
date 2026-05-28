@@ -339,6 +339,7 @@ export const STAGES: Stage[] = [
     shortTitle: "launch",
     summary: "Your dated 90-day plan, your launch-day checklist, and the weekly check-in that keeps you moving.",
     oneLiner: "90-day plan",
+    takeHome: "A signed, dated 90-day plan with your first 3 paying customers → 10 → repeatable channel — and an accountability partner already on the calendar.",
     duration: "45 min",
     covers: ["90-day plan", "Launch-day checklist", "Outreach drafts", "Accountability"],
     tasks: [
