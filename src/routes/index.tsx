@@ -38,6 +38,7 @@ function HomePage() {
       <WalkInWalkOut />
       <TheArtOfThePossible />
       <FlowStrip />
+      <AIToolkit />
       <WhatYouLeaveWith />
       <ValueByTheNumbers />
       <FacilitatorSection />
