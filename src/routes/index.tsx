@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "July 23, 2026 · Norcross, GA. Seven hours, seven stages, one real business by dinner. Led by a 30-year startup operator.",
+          "July 23, 2026 · IGNITE Center at Greater Atlanta Christian School, Norcross, GA. Seven hours, seven stages, one real business by dinner. Led by a 30-year startup operator.",
       },
     ],
   }),
@@ -92,7 +92,7 @@ function Hero() {
         </div>
         <div className="mt-12 grid max-w-3xl grid-cols-1 gap-4 text-white/90 sm:grid-cols-2 lg:grid-cols-4">
           <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
-          <Meta icon={<MapPin className="size-4" />} label="Norcross, GA" />
+          <Meta icon={<MapPin className="size-4" />} label="IGNITE Center · Greater Atlanta Christian School" />
           <Meta icon={<Users className="size-4" />} label={`${EVENT.capacity} seats`} />
           <Meta icon={<Award className="size-4" />} label="30-year startup operator" />
         </div>
