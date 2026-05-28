@@ -472,8 +472,8 @@ function WhatYouLeaveWith() {
         </p>
         <p className="mb-10 max-w-2xl text-muted-foreground">
           Every stage makes something a printer can print, a calendar can hold, or a
-          customer can sign. You'll leave with a stack of them, organized into four
-          packs.
+          customer can pay for. You'll leave with a stack of them, organized into four
+          packs — every piece pointed at revenue in the first 90 days.
         </p>
         <div className="grid gap-5 md:grid-cols-2">
           {buckets.map((b) => (
