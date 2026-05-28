@@ -155,7 +155,20 @@ function FacilitatorSection() {
               <div className="text-sm uppercase tracking-[0.2em] opacity-80">
                 Your facilitator
               </div>
-              <div className="mt-1 text-3xl font-semibold leading-tight">
+              <div className="mt-1 flex items-center gap-3">
+                <div className="flex size-12 items-center justify-center rounded-full bg-white/15 text-lg font-semibold backdrop-blur">
+                  AA
+                </div>
+                <div>
+                  <div className="text-2xl font-semibold leading-tight">
+                    {FACILITATOR_NAME}
+                  </div>
+                  <div className="text-xs uppercase tracking-[0.18em] opacity-80">
+                    Operator · Producer · Builder
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 text-base leading-snug opacity-95">
                 30 years of starting businesses. One day with yours.
               </div>
             </div>
@@ -165,23 +178,28 @@ function FacilitatorSection() {
               Who's in the room with you
             </h2>
             <p className="text-3xl font-semibold tracking-tight md:text-4xl">
-              Three decades of starting, scaling, and shipping —{" "}
+              {FACILITATOR_NAME} —{" "}
               <span className="text-gradient-brand">at your table for the day.</span>
             </p>
+            <p className="mt-3 text-sm uppercase tracking-[0.15em] text-muted-foreground">
+              {FACILITATOR_TITLE}
+            </p>
             <p className="mt-5 text-muted-foreground">
-              Thirty years building startups across services, software, and physical
-              products. Founded, scaled, and exited companies. Coached hundreds of
-              first-time founders through the exact moves you'll make today.
+              Co-Founder of OPEN Interactive. Delivered enterprise digital work for
+              Citigroup, Mayo Clinic, 3M, and Disney. Engineered national digital
+              infrastructure — eGovernment portal, tax portal, and case-management
+              systems — for the Federation of St. Kitts &amp; Nevis. Co-originated the
+              Caribbean Investment Summit franchise across five jurisdictions.
             </p>
             <p className="mt-3 text-muted-foreground">
-              This isn't a seminar. You're not getting slides. You're getting a working
-              session with an operator who has stood up the things you're trying to stand
-              up — sitting next to you while you do it.
+              This isn't a seminar. You're not getting slides. You're getting an
+              operator who has stood up the entity, shipped the platform, branded
+              the nation, and run the summit — sitting next to you while you do it.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Chip>30+ years operating</Chip>
-              <Chip>Hundreds of founders coached</Chip>
-              <Chip>Service · digital · physical builds</Chip>
+              <Chip>Fortune 500 delivery</Chip>
+              <Chip>National GovTech platforms</Chip>
+              <Chip>5× investment summit producer</Chip>
             </div>
           </div>
         </div>
