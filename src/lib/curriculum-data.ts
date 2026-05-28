@@ -249,7 +249,7 @@ export const STAGES: Stage[] = [
       {
         title: "Build the website drafts (Home / Offer / About / Contact)",
         deliverable:
-          "Site template selected; Home + Offer drafted in builder; About + Contact outlined; on-page SEO checklist filled per page",
+          "Site template selected; Home + Offer drafted in builder; About + Contact outlined; each page set up so Google can find it.",
         tool: "Site builder + on-page SEO checklist",
         details: [
           "Pick a starter template and apply your brand kit",
