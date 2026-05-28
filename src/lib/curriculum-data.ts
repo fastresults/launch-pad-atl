@@ -278,12 +278,13 @@ export const STAGES: Stage[] = [
   {
     n: 6,
     slug: "marketing",
-    title: "Marketing plan & materials",
+    title: "Marketing plan & creatives",
     shortTitle: "marketing",
-    summary: "Messaging, social presence drafted, and a 1-page marketing plan to run the next 30 days.",
-    oneLiner: "Plan & assets",
-    duration: "45 min",
-    covers: ["Messaging kit", "Social profiles", "Content drafts", "1-page marketing plan"],
+    summary:
+      "A 1-page marketing plan plus your full creative kit — printed flyers, business cards, social profiles, and post drafts — ready to take to a printer or scheduler.",
+    oneLiner: "Plan & creatives",
+    duration: "60 min",
+    covers: ["Messaging kit", "Print creatives", "Social kit", "30-day plan"],
     tasks: [
       {
         title: "Core messaging kit",
