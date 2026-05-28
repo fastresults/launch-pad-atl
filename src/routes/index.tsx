@@ -67,9 +67,10 @@ function Hero() {
           Walk out <span className="italic">a business owner</span>.
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-white/90">
-          Seven focused hours in Norcross, GA. By 4:30 PM you'll have a formed business,
-          an operational delivery workflow, a website ready to publish, a complete creative
-          kit, and a signed 30/60/90 plan with your next ten moves already on the calendar.
+          Seven focused hours in Norcross, GA. By 4:30 PM you'll have a real business on
+          paper, a simple way to deliver it, a website ready to publish, your full
+          marketing kit, and a 90-day plan with your next ten moves already on the
+          calendar.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
