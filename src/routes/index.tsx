@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { EVENT, FLOW_STAGES } from "@/lib/schedule-data";
-import { MapPin, Calendar, Users, ArrowRight, Award } from "lucide-react";
+import { MapPin, Calendar, Users, ArrowRight, Award, FileCheck2, Target, Globe2, Rocket, X, Check } from "lucide-react";
 
 export const FACILITATOR_NAME = "Adam Anderson";
 export const FACILITATOR_TITLE =
