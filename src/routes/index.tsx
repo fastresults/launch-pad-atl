@@ -741,6 +741,11 @@ function TheArtOfThePossible() {
           Real businesses real people start with under $5,000 and a weekend. Scroll
           through. Tap one. That could be you on Monday.
         </p>
+        <p className="mt-3 max-w-2xl text-xs text-muted-foreground/80 md:text-sm">
+          Income ranges are realistic year-one numbers for a solo operator who works
+          the seven-stage plan. What you make will depend on your hours, your prices,
+          and how many customers you keep.
+        </p>
         <div className="mt-8 -mx-6 flex gap-2 overflow-x-auto px-6 pb-2 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0 [&::-webkit-scrollbar]:hidden">
           {BUSINESS_CATEGORIES.map((c) => {
             const isActive = active === c.id;
