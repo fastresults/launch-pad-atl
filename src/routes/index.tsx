@@ -751,18 +751,22 @@ function TheArtOfThePossible() {
     <section className="border-y border-white/5 py-20">
       <div className="mx-auto mb-10 max-w-6xl px-6">
         <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-          The art of the possible
+          What others are starting in 2026
         </h2>
         <p className="max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl">
-          Pick yours.{" "}
+          Proof, not a menu.{" "}
           <span className="text-gradient-brand">
-            Online, on a street corner, out of your kitchen, off your phone — or built
-            around AI in 2026.
+            These are the kinds of businesses real people are launching in 2026 —
+            online, on a street corner, out of a kitchen, off a phone, or built around AI.
           </span>
         </p>
         <p className="mt-4 max-w-2xl text-muted-foreground md:text-lg">
-          Real businesses real people start with under $10,000 and a focused 90 days.
-          Scroll through. Tap one. That could be you on Monday.
+          Scroll through for inspiration.{" "}
+          <span className="font-medium text-foreground">
+            Yours doesn't have to be on this list — it shouldn't be.
+          </span>{" "}
+          You walk in with your idea, and we build the business around it using the
+          same seven stages. Under $10,000 to start. A focused 90 days to launch.
         </p>
         <p className="mt-3 max-w-2xl text-xs text-muted-foreground/80 md:text-sm">
           Income ranges are realistic year-one numbers for a solo operator who works
