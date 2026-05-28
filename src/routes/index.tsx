@@ -124,23 +124,31 @@ function FlowStrip() {
         <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
           The day, hour by hour
         </h2>
-        <p className="mb-12 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
+        <p className="mb-3 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
           Seven stages. One working day.{" "}
           <span className="text-gradient-brand">A business built to make money — not just one that exists.</span>
         </p>
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        <p className="mb-12 max-w-2xl text-base text-muted-foreground md:text-lg">
+          Here's exactly what's in your hands when you stand up at 4:30 PM.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {FLOW_STAGES.map((s) => (
             <Link
               key={s.slug}
               to="/schedule"
               hash={`stage-${s.n}`}
-              className="group rounded-2xl border border-white/10 bg-card p-5 transition-colors hover:border-white/25"
+              className="group flex flex-col rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-white/25"
             >
               <div className="mb-3 inline-flex size-8 items-center justify-center rounded-full bg-hero-gradient text-sm font-semibold text-white">
                 {s.n}
               </div>
-              <div className="text-base font-medium capitalize">{s.title}</div>
-              <p className="mt-1 text-sm text-muted-foreground">{s.blurb}</p>
+              <div className="text-lg font-semibold capitalize tracking-tight">{s.title}</div>
+              <div className="mt-4 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                You walk out with
+              </div>
+              <p className="mt-1.5 text-sm leading-snug text-foreground/90">
+                {s.takeHome}
+              </p>
             </Link>
           ))}
         </div>
