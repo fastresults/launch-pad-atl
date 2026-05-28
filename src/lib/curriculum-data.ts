@@ -128,7 +128,7 @@ export const STAGES: Stage[] = [
     shortTitle: "offer",
     summary: "What you actually sell, how it's delivered, and the price tag.",
     oneLiner: "Offer & pricing",
-    duration: "50 min",
+    duration: "60 min",
     covers: ["Offer sentence", "V1 scope + SOP", "Pricing & break-even"],
     tasks: [
       {
