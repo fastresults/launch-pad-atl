@@ -782,7 +782,7 @@ function TheArtOfThePossible() {
               to="/register"
               className="inline-flex items-center gap-2 rounded-full bg-hero-gradient px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
             >
-              Save your seat — only {EVENT.seats} spots <ArrowRight className="size-4" />
+              Save your seat — only {EVENT.capacity} spots <ArrowRight className="size-4" />
             </Link>
           </div>
         </div>
