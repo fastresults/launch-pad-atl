@@ -807,9 +807,9 @@ function TheArtOfThePossible() {
       <div className="mx-auto mt-12 max-w-6xl px-6">
         <div className="rounded-2xl border border-white/10 bg-card/60 p-6 md:p-8">
           <p className="text-lg md:text-xl">
-            Every business above gets built with{" "}
-            <span className="text-gradient-brand font-semibold">the same seven stages</span> —
-            in one day, in this room.
+            Whether your idea looks like one of these or nothing like them,{" "}
+            <span className="text-gradient-brand font-semibold">it gets built the same way</span> —
+            the same seven stages, in one day, in this room.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
