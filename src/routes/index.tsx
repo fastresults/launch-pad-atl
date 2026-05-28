@@ -243,7 +243,7 @@ const PROOF_ROWS = [
   {
     n: 1,
     stage: "Form",
-    deliverable: "Your business, legally on paper.",
+    deliverable: "Your business, formed and filing-ready.",
     proof:
       "Started two of his own companies (Florida in 2009, Caribbean in 2014). Knows the paperwork inside out.",
   },
