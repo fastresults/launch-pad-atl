@@ -92,7 +92,7 @@ function Hero() {
         </div>
         <div className="mt-12 grid max-w-3xl grid-cols-1 gap-4 text-white/90 sm:grid-cols-2 lg:grid-cols-4">
           <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
-          <Meta icon={<MapPin className="size-4" />} label="Norcross, GA" />
+          <Meta icon={<MapPin className="size-4" />} label="IGNITE Center · Greater Atlanta Christian School" />
           <Meta icon={<Users className="size-4" />} label={`${EVENT.capacity} seats`} />
           <Meta icon={<Award className="size-4" />} label="30-year startup operator" />
         </div>
