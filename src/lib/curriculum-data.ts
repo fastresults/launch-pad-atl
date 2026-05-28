@@ -13,6 +13,7 @@ export type Stage = {
   shortTitle: string;
   summary: string;
   oneLiner: string;
+  takeHome: string;
   duration: string;
   covers: string[];
   tasks: [Task, Task, Task];
