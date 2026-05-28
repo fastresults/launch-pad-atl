@@ -177,7 +177,7 @@ function FacilitatorSection() {
                     {FACILITATOR_NAME}
                   </div>
                   <div className="text-xs uppercase tracking-[0.18em] opacity-80">
-                    Operator · Producer · Builder
+                    Serial Entrepreneur · Operator · Builder
                   </div>
                 </div>
               </div>
