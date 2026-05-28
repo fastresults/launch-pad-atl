@@ -35,6 +35,7 @@ function HomePage() {
       <Hero />
       <FlowStrip />
       <FacilitatorSection />
+      <FacilitatorProof />
       <Deliverables />
       <VenueCard />
       <BottomCTA />
