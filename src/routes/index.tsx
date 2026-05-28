@@ -39,7 +39,7 @@ function HomePage() {
       <TheArtOfThePossible />
       <FlowStrip />
       <AIToolkit />
-      <WhatYouLeaveWith />
+      
       <ValueByTheNumbers />
       <FacilitatorSection />
       <FacilitatorProof />
@@ -443,109 +443,6 @@ function WalkInWalkOut() {
   );
 }
 
-type Bucket = {
-  icon: React.ReactNode;
-  title: string;
-  subhead: string;
-  items: string[];
-};
-
-function WhatYouLeaveWith() {
-  const buckets: Bucket[] = [
-    {
-      icon: <FileCheck2 className="size-5 text-white" />,
-      title: "The Business",
-      subhead: "Filed, registered, legal — not a wish list.",
-      items: [
-        "Georgia LLC packet ready to file + EIN in hand",
-        "Terms of service, privacy policy, and a 1-page service agreement drafted to your business",
-        "Business bank application checklist completed",
-      ],
-    },
-    {
-      icon: <Target className="size-5 text-white" />,
-      title: "The Customer & The Offer",
-      subhead: "Someone real, ready to buy something specific.",
-      items: [
-        "One-page profile of your first paying customer with the dollar cost of their problem",
-        "Your offer written in one clear sentence",
-        "Pricing sheet + how many sales it takes to cover your costs",
-      ],
-    },
-    {
-      icon: <Globe2 className="size-5 text-white" />,
-      title: "The Brand & The Website",
-      subhead: "A business people can find, recognize, and trust.",
-      items: [
-        "Domain in your cart + brand kit folder (logo, colors, fonts)",
-        "Home and Offer pages drafted in your website builder, About and Contact outlined",
-        "Payments, business email, and analytics setup checklists ready to finish at home",
-      ],
-    },
-    {
-      icon: <Rocket className="size-5 text-white" />,
-      title: "The Launch Plan",
-      subhead: "Monday morning, you know exactly what to do.",
-      items: [
-        "Your full marketing kit (card, flyer, social profiles, 6 posts, 60-second video script)",
-        "25-name announcement list + 10 personal outreach messages already written",
-        "Signed, dated 90-day plan with 3 weekly numbers and an accountability partner locked in",
-      ],
-    },
-  ];
-  return (
-    <section className="py-20">
-      <div className="mx-auto max-w-6xl px-6">
-        <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-          What you take home
-        </h2>
-        <p className="mb-4 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
-          Not slides. Not theory.{" "}
-          <span className="text-gradient-brand">
-            A complete starter kit you can hold, send, and sign.
-          </span>
-        </p>
-        <p className="mb-10 max-w-2xl text-muted-foreground">
-          Every stage makes something a printer can print, a calendar can hold, or a
-          customer can pay for. You'll leave with a stack of them, organized into four
-          packs — every piece pointed at revenue in the first 90 days.
-        </p>
-        <div className="grid gap-5 md:grid-cols-2">
-          {buckets.map((b) => (
-            <div
-              key={b.title}
-              className="rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-white/25 md:p-7"
-            >
-              <div className="flex items-center gap-3">
-                <span className="inline-flex size-10 items-center justify-center rounded-xl bg-hero-gradient">
-                  {b.icon}
-                </span>
-                <div>
-                  <div className="text-lg font-semibold tracking-tight">{b.title}</div>
-                  <div className="text-sm text-muted-foreground">{b.subhead}</div>
-                </div>
-              </div>
-              <ul className="mt-5 space-y-2.5">
-                {b.items.map((it) => (
-                  <li
-                    key={it}
-                    className="flex items-start gap-3 text-sm text-foreground/90"
-                  >
-                    <span className="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-hero-gradient" />
-                    <span>{it}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-        <p className="mt-10 text-center text-base text-muted-foreground md:text-lg">
-          Print this list. Cross items off Monday. By Friday, you have a business — and your first paying customer in sight.
-        </p>
-      </div>
-    </section>
-  );
-}
 
 function ValueByTheNumbers() {
   const stats: { n: string; label: string }[] = [
