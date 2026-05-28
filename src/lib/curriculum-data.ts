@@ -299,22 +299,22 @@ export const STAGES: Stage[] = [
         ],
       },
       {
-        title: "Print & social creatives",
+        title: "Your print and social kit",
         deliverable:
-          "Business-card draft + flyer / one-pager draft + social profiles claimed with copy & banner + 6 post drafts + 1 short-form video script",
+          "Business-card draft + flyer / one-pager draft + social profiles claimed with copy & banner + 6 post drafts + 1 sixty-second video script",
         tool: "Creative kit templates (print + social)",
         details: [
           "Draft a business card (front/back) in your brand kit",
           "Draft a 1-page flyer / one-pager for events, walk-ins, and partner shelves",
           "Claim handles on Instagram, LinkedIn, and one of TikTok / YouTube / X — fill profile copy, link-in-bio, banner",
-          "Draft 6 posts (hooks, proof, offer) + 1 short-form video script you can record this week",
+          "Draft 6 posts (hooks, proof, offer) + 1 sixty-second video script you can record this week",
         ],
         followUp:
           "Send the print files to your printer and schedule the 6 posts in Buffer / Later / Meta Business Suite; record the video.",
       },
       {
         title: "1-page marketing plan",
-        deliverable: "Plan covering channels, budget, 30-day calendar, and 3 KPIs",
+        deliverable: "A 1-page plan: channels, budget, 30-day calendar, and 3 numbers to check every week.",
         tool: "Marketing plan template",
         details: [
           "Pick your top-2 acquisition channels (1 organic, 1 outbound or paid)",
