@@ -170,55 +170,55 @@ export const STAGES: Stage[] = [
   {
     n: 4,
     slug: "build",
-    title: "Build the operational MVP",
+    title: "Build the first working version",
     shortTitle: "build",
     summary:
-      "Stand up how you actually deliver. Pick your archetype, assemble the toolkit, and draft the V1 artifact your first customer receives.",
-    oneLiner: "Operational V1",
+      "Set up how you'll actually deliver. Pick what kind of business you're building, set up your free apps, and draft what your first customer will get.",
+    oneLiner: "Your first working version",
     duration: "60 min",
-    covers: ["Archetype + V1 workflow", "Tool stack", "Delivery artifact drafts"],
+    covers: ["Service / online / product", "Your free app setup", "What the customer receives"],
     tasks: [
       {
-        title: "Pick your build archetype & lock the V1 workflow",
+        title: "Pick what kind of business you're building and map the steps",
         deliverable:
-          "Archetype selected (Service / Digital / Physical) + 1-page V1 workflow diagram (sale → intake → delivery → handoff) with named tools at each step",
-        tool: "Build archetype picker + workflow canvas",
+          "A one-page picture of how a sale becomes a happy customer (sale → intake → delivery → handoff) with the app you'll use at each step.",
+        tool: "Build type picker + step-by-step map",
         details: [
           "Service: intake → kickoff → delivery template → recap loop",
-          "Digital: pick a no-code/template stack (Lovable, Notion, Framer, Webflow, Shopify, GHL) and name the first screen",
-          "Physical: supplier/manufacturer shortlist + sample-order checklist + packaging decision",
+          "Online: pick a no-code stack (Lovable, Notion, Framer, Webflow, Shopify, GHL) and name the first screen",
+          "Physical product: supplier/manufacturer shortlist + sample-order checklist + packaging decision",
           "Mark every step that depends on a vendor, contractor, or sample order",
         ],
         followUp:
-          "Run the workflow end-to-end with one test buyer (or sample order) in the first 2 weeks and revise the diagram.",
+          "Run the steps end-to-end with one test buyer (or sample order) in the first 2 weeks and revise the map.",
       },
       {
-        title: "Assemble the operational toolkit",
+        title: "Set up your free apps",
         deliverable:
-          "Tool stack chosen + free-tier accounts created + 1-page integration map (no paid plans signed in-session)",
-        tool: "Ops stack checklist",
+          "Free accounts created for the apps you'll run the business on, plus a one-page picture of how they connect (no paid plans signed today).",
+        tool: "Free-app checklist",
         details: [
-          "Project / ops hub: seed a Notion / ClickUp / Trello workspace from a V1 template",
+          "Project hub: seed a Notion / ClickUp / Trello workspace from a starter template",
           "Files & assets: create your Drive / Dropbox folder structure",
           "Comms: set up scheduling (Cal.com / Calendly free) + business email alias",
-          "Archetype tool: Loom (service) / Figma (digital) / supplier portal accounts (physical)",
+          "Build-type tool: Loom (service) / Figma (online) / supplier portal accounts (physical)",
         ],
         followUp:
           "Upgrade to paid tiers as revenue justifies and connect any integrations that require billing.",
       },
       {
-        title: "Draft your V1 customer-delivery artifact",
+        title: "Draft what your first customer will actually receive",
         deliverable:
-          "Three drafted artifacts saved to your workspace + 5-point QA checklist you can run before delivering to a real customer",
-        tool: "Delivery artifact templates (per archetype)",
+          "Three drafted pieces saved to your folder + a 5-point checklist you can run before you send anything to a real customer.",
+        tool: "Customer-delivery templates (per build type)",
         details: [
           "Service: kickoff doc + delivery template + recap email — all three drafted",
-          "Digital: landing/demo screen wireframed in your builder + onboarding flow outlined + first email drafted",
+          "Online: landing/demo screen sketched in your builder + onboarding flow outlined + first email drafted",
           "Physical: product spec sheet + unboxing/insert-card draft + first-customer thank-you note",
-          "Write a 5-point QA checklist (quality, accuracy, timing, tone, follow-up)",
+          "Write a 5-point quality checklist (quality, accuracy, timing, tone, follow-up)",
         ],
         followUp:
-          "Run the artifacts past your first paying customer and iterate after their feedback.",
+          "Run the drafts past your first paying customer and iterate after their feedback.",
       },
     ],
   },
