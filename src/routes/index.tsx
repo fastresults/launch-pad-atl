@@ -275,17 +275,16 @@ function FacilitatorProof() {
     <section className="py-20">
       <div className="mx-auto max-w-6xl px-6">
         <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-          Receipts, not résumé lines
+          Proof, not promises
         </h2>
         <p className="mb-4 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
           Your facilitator has{" "}
-          <span className="text-gradient-brand">actually shipped every stage</span> you'll
+          <span className="text-gradient-brand">actually built every stage</span> you'll
           work through.
         </p>
         <p className="mb-10 max-w-2xl text-muted-foreground">
-          Each of the seven stages of your day maps to work {FACILITATOR_NAME} has
-          delivered at national, enterprise, or venture scale. You're not being
-          coached on theory — you're being coached on the moves.
+          Every stage of your day matches something Adam has actually built and shipped.
+          You'll be coached on the real moves — by someone who's made them.
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           {PROOF_ROWS.map((r) => (
@@ -309,12 +308,12 @@ function FacilitatorProof() {
           ))}
         </div>
         <p className="mx-auto mt-10 max-w-3xl text-center text-lg text-foreground/90 md:text-xl">
-          You're not getting a coach with a deck. You're getting an operator who has
+          You're not getting a coach with a slideshow. You're getting someone who's
           <span className="text-gradient-brand">
-            {" "}built the entity, shipped the platform, branded the nation, and run
-            the summit
+            {" "}built the business, shipped the website, designed the brand, and run
+            the launch
           </span>{" "}
-          — sitting at your table for the day.
+          — sitting at your table, helping you do the same.
         </p>
       </div>
     </section>
