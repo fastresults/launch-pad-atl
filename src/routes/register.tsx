@@ -301,7 +301,7 @@ function RegisterPage() {
               </div>
               <h3 className="text-xl font-semibold">This cohort is sold out</h3>
               <p className="mt-2 text-muted-foreground">
-                All {selectedCohort.totalSeats} seats for {selectedCohort.dateLabel} are claimed.
+                All {displayedSeats} seats for {selectedCohort.dateLabel} are claimed.
                 Pick another date above to reserve your seat.
               </p>
             </div>
