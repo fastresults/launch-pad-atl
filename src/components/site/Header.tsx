@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import logoUrl from "@/assets/startuplabs-logo.svg";
+import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 import {
   Sheet,
   SheetContent,
