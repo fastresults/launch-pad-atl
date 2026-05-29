@@ -14,14 +14,18 @@ export const VALUE_ROWS: ValueRow[] = [
   { stageN: 1, stageLabel: "Form", deliverable: "EIN issued in-session", marketCostMin: 0, marketCostMax: 185, diyHoursMin: 1, diyHoursMax: 1.5 },
   { stageN: 1, stageLabel: "Form", deliverable: "Terms of Service, Privacy Policy & Service Agreement — customized", marketCostMin: 168, marketCostMax: 630, diyHoursMin: 2.5, diyHoursMax: 4, postWorkshop: "Save the 3 PDFs to Google Drive. Link Terms + Privacy in your website footer. Email the Service Agreement to your first customer to sign." },
   { stageN: 1, stageLabel: "Form", deliverable: "Business bank + local license + sales-tax checklist", marketCostMin: 62, marketCostMax: 62, diyHoursMin: 1, diyHoursMax: 1, postWorkshop: "Walk into your bank with your EIN letter + LLC packet to open the business account. Apply for your city business license online ($50–$75). Register for sales tax at dor.georgia.gov if you sell products." },
+  { stageN: 1, stageLabel: "Form", deliverable: "Funding model & 12-month runway — costs, margin, break-even, monthly cash plan", marketCostMin: 600, marketCostMax: 1500, diyHoursMin: 6, diyHoursMax: 10 },
+  { stageN: 1, stageLabel: "Form", deliverable: "Investor-ready pitch deck — 10 slides in your brand", marketCostMin: 750, marketCostMax: 2500, diyHoursMin: 6, diyHoursMax: 12 },
+  { stageN: 1, stageLabel: "Form", deliverable: "Fundraising kit — 1-page raise summary, funder outreach plan + email template, grants/microloans/SBA path", marketCostMin: 400, marketCostMax: 1200, diyHoursMin: 4, diyHoursMax: 8 },
 
   { stageN: 2, stageLabel: "Customer", deliverable: "1-page Ideal Customer Profile + 25-name prospect list", marketCostMin: 375, marketCostMax: 375, diyHoursMin: 4.5, diyHoursMax: 4.5 },
-  { stageN: 2, stageLabel: "Customer", deliverable: "Outreach script + 3-competitor positioning grid", marketCostMin: 225, marketCostMax: 225, diyHoursMin: 3, diyHoursMax: 3 },
+  { stageN: 2, stageLabel: "Customer", deliverable: "Competitive research pack — 3 competitors on offer/price/positioning, customer quotes, and a 'what makes you different' one-pager", marketCostMin: 225, marketCostMax: 225, diyHoursMin: 3, diyHoursMax: 3 },
 
   { stageN: 3, stageLabel: "Offer", deliverable: "One-sentence offer + scope of work + pricing sheet", marketCostMin: 560, marketCostMax: 560, diyHoursMin: 6, diyHoursMax: 6 },
 
   { stageN: 4, stageLabel: "Build", deliverable: "Sale-to-delivery workflow map + tooling set up", marketCostMin: 300, marketCostMax: 300, diyHoursMin: 3.5, diyHoursMax: 3.5 },
   { stageN: 4, stageLabel: "Build", deliverable: "First customer's deliverable drafted + 5-point QA checklist", marketCostMin: 375, marketCostMax: 375, diyHoursMin: 4.5, diyHoursMax: 4.5 },
+  { stageN: 4, stageLabel: "Build", deliverable: "Operations & workflow — 3 SOPs (intake, fulfillment, onboarding) + 1-page weekly operating rhythm", marketCostMin: 450, marketCostMax: 900, diyHoursMin: 5, diyHoursMax: 8 },
 
   { stageN: 5, stageLabel: "Brand", deliverable: "Logo + 4-color palette + font pairing", marketCostMin: 210, marketCostMax: 1050, diyHoursMin: 4, diyHoursMax: 8.5, postWorkshop: "Download the logo ZIP. Upload it to your website, email signature, and social profiles. Keep the brand sheet PDF — hand it to anyone making things for you." },
   { stageN: 5, stageLabel: "Brand", deliverable: "Complete 4-page website — branded, written, SEO-configured", marketCostMin: 840, marketCostMax: 2520, diyHoursMin: 8.5, diyHoursMax: 17, postWorkshop: "Click Publish in the site builder. Buy your domain (~$12/yr) and connect it — the builder walks you through it step by step. Site goes live in about 30 minutes." },
@@ -29,10 +33,11 @@ export const VALUE_ROWS: ValueRow[] = [
 
   { stageN: 6, stageLabel: "Marketing", deliverable: "Headline, 3 value props, 30-second pitch", marketCostMin: 300, marketCostMax: 300, diyHoursMin: 3.5, diyHoursMax: 3.5 },
   { stageN: 6, stageLabel: "Marketing", deliverable: "Business card + flyer — print-ready files", marketCostMin: 104, marketCostMax: 104, diyHoursMin: 1.5, diyHoursMax: 1.5, postWorkshop: "Upload the print-ready PDFs to Vistaprint or Moo. 500 business cards ≈ $25, 100 flyers ≈ $40. Arrives in 5–7 days." },
-  { stageN: 6, stageLabel: "Marketing", deliverable: "6 social posts + 60-second video script + 30-day plan", marketCostMin: 252, marketCostMax: 252, diyHoursMin: 3, diyHoursMax: 3, postWorkshop: "Post one item every 2 days using the schedule we built. Film the 60-second video on your phone using the script — one take is fine. Done beats perfect." },
+  { stageN: 6, stageLabel: "Marketing", deliverable: "Marketing & communications — audience, channels, messaging pillars, 30-day content calendar, 6 posts + 60s video script", marketCostMin: 252, marketCostMax: 252, diyHoursMin: 3, diyHoursMax: 3, postWorkshop: "Post one item every 2 days using the schedule we built. Film the 60-second video on your phone using the script — one take is fine. Done beats perfect." },
 
-  { stageN: 7, stageLabel: "Launch", deliverable: "30/60/90 launch plan + 25-name list + 10 outreach drafts", marketCostMin: 375, marketCostMax: 375, diyHoursMin: 4.5, diyHoursMax: 4.5 },
+  { stageN: 7, stageLabel: "Launch", deliverable: "Go-to-market — target segment, channel mix, week-by-week tactics, 30/60/90 plan, 25-name list + 10 outreach drafts", marketCostMin: 375, marketCostMax: 375, diyHoursMin: 4.5, diyHoursMax: 4.5 },
   { stageN: 7, stageLabel: "Launch", deliverable: "Day-of timeline + CRM set up + 3 KPIs to track", marketCostMin: 126, marketCostMax: 126, diyHoursMin: 1, diyHoursMax: 1, postWorkshop: "Log in to the CRM each Monday and add every new lead. Check your 3 KPIs every Friday — that's it." },
+
 ];
 
 export const VALUE_TOTALS = VALUE_ROWS.reduce(
