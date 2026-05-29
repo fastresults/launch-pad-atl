@@ -526,8 +526,9 @@ export const STAGES: Stage[] = [
       "Your dated 90-day plan, your launch-day checklist, and the weekly check-in that keeps you moving.",
     oneLiner: "90-day plan",
     takeHome:
-      "Your signed, dated 90-day plan (first 3 paying customers → 10 → repeatable channel), your launch-day checklist with personal outreach drafts ready to send, and an accountability partner on next Monday's calendar.",
+      "Your signed, dated 90-day plan with a go-to-market feeding it (first 3 paying customers → 10 → repeatable channel), your launch-day checklist with personal outreach drafts ready to send, and an accountability partner on next Monday's calendar.",
     walkOut: [
+      "Go-to-market: target segment, offer, pricing, channel mix, week-by-week tactics, and KPIs that prove it's working",
       "Signed, dated 30/60/90 plan: first 3 paying customers → 10 → repeatable channel",
       "Personal announcement list started in-session",
       "Personal outreach drafts saved (DM, email, voice note)",
