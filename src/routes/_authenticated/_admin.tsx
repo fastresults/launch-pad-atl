@@ -6,6 +6,14 @@ export const Route = createFileRoute("/_authenticated/_admin")({
   component: AdminLayout,
 });
 
+const NAV = [
+  { to: "/admin", label: "Dashboard", super: false },
+  { to: "/admin/registrations", label: "Registrations", super: false },
+  { to: "/admin/attendees", label: "Attendees", super: false },
+  { to: "/admin/review", label: "Review queue", super: true },
+  { to: "/admin/users", label: "Users", super: true },
+] as const;
+
 function AdminLayout() {
   const { isAdmin, loading, signOut, user, isSuperAdmin } = useAuth();
   const { location } = useRouterState();
@@ -31,15 +39,15 @@ function AdminLayout() {
               Admin
             </Link>
             <nav className="flex items-center gap-5 text-sm text-muted-foreground">
-              <AdminNavLink to="/admin" label="Dashboard" current={location.pathname} />
-              <AdminNavLink
-                to="/admin/registrations"
-                label="Registrations"
-                current={location.pathname}
-              />
-              {isSuperAdmin && (
-                <AdminNavLink to="/admin/users" label="Users" current={location.pathname} />
-              )}
+              {NAV.filter((n) => !n.super || isSuperAdmin).map((n) => (
+                <Link
+                  key={n.to}
+                  to={n.to}
+                  className={location.pathname === n.to ? "text-foreground" : "hover:text-foreground"}
+                >
+                  {n.label}
+                </Link>
+              ))}
               <Link to="/" className="hover:text-foreground">
                 View site
               </Link>
@@ -57,22 +65,5 @@ function AdminLayout() {
         <Outlet />
       </main>
     </div>
-  );
-}
-
-function AdminNavLink({
-  to,
-  label,
-  current,
-}: {
-  to: "/admin" | "/admin/registrations" | "/admin/users";
-  label: string;
-  current: string;
-}) {
-  const active = current === to;
-  return (
-    <Link to={to} className={active ? "text-foreground" : "hover:text-foreground"}>
-      {label}
-    </Link>
   );
 }

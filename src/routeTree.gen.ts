@@ -16,10 +16,21 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/_admin'
+import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as AuthenticatedDashboardProfileRouteImport } from './routes/_authenticated/dashboard.profile'
+import { Route as AuthenticatedDashboardGoalsRouteImport } from './routes/_authenticated/dashboard.goals'
+import { Route as AuthenticatedDashboardDocumentsRouteImport } from './routes/_authenticated/dashboard.documents'
+import { Route as AuthenticatedDashboardDeliverablesRouteImport } from './routes/_authenticated/dashboard.deliverables'
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
+import { Route as ApiPublicHooksPublishDueDeliverablesRouteImport } from './routes/api/public/hooks/publish-due-deliverables'
 import { Route as AuthenticatedAdminAdminUsersRouteImport } from './routes/_authenticated/_admin/admin.users'
+import { Route as AuthenticatedAdminAdminReviewRouteImport } from './routes/_authenticated/_admin/admin.review'
 import { Route as AuthenticatedAdminAdminRegistrationsRouteImport } from './routes/_authenticated/_admin/admin.registrations'
+import { Route as AuthenticatedAdminAdminAttendeesRouteImport } from './routes/_authenticated/_admin/admin.attendees'
+import { Route as AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.index'
+import { Route as AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.deliverables.$key'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -55,15 +66,56 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/_admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedDashboardIndexRoute =
+  AuthenticatedDashboardIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardProfileRoute =
+  AuthenticatedDashboardProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardGoalsRoute =
+  AuthenticatedDashboardGoalsRouteImport.update({
+    id: '/goals',
+    path: '/goals',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardDocumentsRoute =
+  AuthenticatedDashboardDocumentsRouteImport.update({
+    id: '/documents',
+    path: '/documents',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardDeliverablesRoute =
+  AuthenticatedDashboardDeliverablesRouteImport.update({
+    id: '/deliverables',
+    path: '/deliverables',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedAdminAdminIndexRoute =
   AuthenticatedAdminAdminIndexRouteImport.update({
     id: '/admin/',
     path: '/admin/',
     getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const ApiPublicHooksPublishDueDeliverablesRoute =
+  ApiPublicHooksPublishDueDeliverablesRouteImport.update({
+    id: '/api/public/hooks/publish-due-deliverables',
+    path: '/api/public/hooks/publish-due-deliverables',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const AuthenticatedAdminAdminUsersRoute =
   AuthenticatedAdminAdminUsersRouteImport.update({
@@ -71,11 +123,35 @@ const AuthenticatedAdminAdminUsersRoute =
     path: '/admin/users',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAdminReviewRoute =
+  AuthenticatedAdminAdminReviewRouteImport.update({
+    id: '/admin/review',
+    path: '/admin/review',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAdminRegistrationsRoute =
   AuthenticatedAdminAdminRegistrationsRouteImport.update({
     id: '/admin/registrations',
     path: '/admin/registrations',
     getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminAdminAttendeesRoute =
+  AuthenticatedAdminAdminAttendeesRouteImport.update({
+    id: '/admin/attendees',
+    path: '/admin/attendees',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminAdminAttendeesUserIdIndexRoute =
+  AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport.update({
+    id: '/$userId/',
+    path: '/$userId/',
+    getParentRoute: () => AuthenticatedAdminAdminAttendeesRoute,
+  } as any)
+const AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute =
+  AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRouteImport.update({
+    id: '/$userId/deliverables/$key',
+    path: '/$userId/deliverables/$key',
+    getParentRoute: () => AuthenticatedAdminAdminAttendeesRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -85,9 +161,20 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
   '/signup': typeof SignupRoute
+  '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/dashboard/deliverables': typeof AuthenticatedDashboardDeliverablesRoute
+  '/dashboard/documents': typeof AuthenticatedDashboardDocumentsRoute
+  '/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
+  '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
+  '/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
+  '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
+  '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
+  '/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
+  '/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -96,9 +183,19 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
   '/signup': typeof SignupRoute
+  '/dashboard/deliverables': typeof AuthenticatedDashboardDeliverablesRoute
+  '/dashboard/documents': typeof AuthenticatedDashboardDocumentsRoute
+  '/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
+  '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
+  '/dashboard': typeof AuthenticatedDashboardIndexRoute
+  '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
+  '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
+  '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
+  '/admin/attendees/$userId': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
+  '/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -110,9 +207,20 @@ export interface FileRoutesById {
   '/schedule': typeof ScheduleRoute
   '/signup': typeof SignupRoute
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/_authenticated/dashboard/deliverables': typeof AuthenticatedDashboardDeliverablesRoute
+  '/_authenticated/dashboard/documents': typeof AuthenticatedDashboardDocumentsRoute
+  '/_authenticated/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
+  '/_authenticated/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
+  '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/_authenticated/_admin/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/_authenticated/_admin/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
+  '/_authenticated/_admin/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/_authenticated/_admin/admin/users': typeof AuthenticatedAdminAdminUsersRoute
+  '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
+  '/_authenticated/_admin/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
+  '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -123,9 +231,20 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/schedule'
     | '/signup'
+    | '/dashboard'
+    | '/dashboard/deliverables'
+    | '/dashboard/documents'
+    | '/dashboard/goals'
+    | '/dashboard/profile'
+    | '/dashboard/'
+    | '/admin/attendees'
     | '/admin/registrations'
+    | '/admin/review'
     | '/admin/users'
+    | '/api/public/hooks/publish-due-deliverables'
     | '/admin/'
+    | '/admin/attendees/$userId/'
+    | '/admin/attendees/$userId/deliverables/$key'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -134,9 +253,19 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/schedule'
     | '/signup'
+    | '/dashboard/deliverables'
+    | '/dashboard/documents'
+    | '/dashboard/goals'
+    | '/dashboard/profile'
+    | '/dashboard'
+    | '/admin/attendees'
     | '/admin/registrations'
+    | '/admin/review'
     | '/admin/users'
+    | '/api/public/hooks/publish-due-deliverables'
     | '/admin'
+    | '/admin/attendees/$userId'
+    | '/admin/attendees/$userId/deliverables/$key'
   id:
     | '__root__'
     | '/'
@@ -147,9 +276,20 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/signup'
     | '/_authenticated/_admin'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/dashboard/deliverables'
+    | '/_authenticated/dashboard/documents'
+    | '/_authenticated/dashboard/goals'
+    | '/_authenticated/dashboard/profile'
+    | '/_authenticated/dashboard/'
+    | '/_authenticated/_admin/admin/attendees'
     | '/_authenticated/_admin/admin/registrations'
+    | '/_authenticated/_admin/admin/review'
     | '/_authenticated/_admin/admin/users'
+    | '/api/public/hooks/publish-due-deliverables'
     | '/_authenticated/_admin/admin/'
+    | '/_authenticated/_admin/admin/attendees/$userId/'
+    | '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -160,6 +300,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ScheduleRoute: typeof ScheduleRoute
   SignupRoute: typeof SignupRoute
+  ApiPublicHooksPublishDueDeliverablesRoute: typeof ApiPublicHooksPublishDueDeliverablesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -213,12 +354,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/_admin': {
       id: '/_authenticated/_admin'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard/': {
+      id: '/_authenticated/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/profile': {
+      id: '/_authenticated/dashboard/profile'
+      path: '/profile'
+      fullPath: '/dashboard/profile'
+      preLoaderRoute: typeof AuthenticatedDashboardProfileRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/goals': {
+      id: '/_authenticated/dashboard/goals'
+      path: '/goals'
+      fullPath: '/dashboard/goals'
+      preLoaderRoute: typeof AuthenticatedDashboardGoalsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/documents': {
+      id: '/_authenticated/dashboard/documents'
+      path: '/documents'
+      fullPath: '/dashboard/documents'
+      preLoaderRoute: typeof AuthenticatedDashboardDocumentsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/deliverables': {
+      id: '/_authenticated/dashboard/deliverables'
+      path: '/deliverables'
+      fullPath: '/dashboard/deliverables'
+      preLoaderRoute: typeof AuthenticatedDashboardDeliverablesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/_admin/admin/': {
       id: '/_authenticated/_admin/admin/'
@@ -227,11 +410,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/api/public/hooks/publish-due-deliverables': {
+      id: '/api/public/hooks/publish-due-deliverables'
+      path: '/api/public/hooks/publish-due-deliverables'
+      fullPath: '/api/public/hooks/publish-due-deliverables'
+      preLoaderRoute: typeof ApiPublicHooksPublishDueDeliverablesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/_admin/admin/users': {
       id: '/_authenticated/_admin/admin/users'
       path: '/admin/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AuthenticatedAdminAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/_admin/admin/review': {
+      id: '/_authenticated/_admin/admin/review'
+      path: '/admin/review'
+      fullPath: '/admin/review'
+      preLoaderRoute: typeof AuthenticatedAdminAdminReviewRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/_admin/admin/registrations': {
@@ -241,18 +438,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminRegistrationsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/_admin/admin/attendees': {
+      id: '/_authenticated/_admin/admin/attendees'
+      path: '/admin/attendees'
+      fullPath: '/admin/attendees'
+      preLoaderRoute: typeof AuthenticatedAdminAdminAttendeesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/_admin/admin/attendees/$userId/': {
+      id: '/_authenticated/_admin/admin/attendees/$userId/'
+      path: '/$userId'
+      fullPath: '/admin/attendees/$userId/'
+      preLoaderRoute: typeof AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminAttendeesRoute
+    }
+    '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key': {
+      id: '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key'
+      path: '/$userId/deliverables/$key'
+      fullPath: '/admin/attendees/$userId/deliverables/$key'
+      preLoaderRoute: typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminAttendeesRoute
+    }
   }
 }
 
+interface AuthenticatedAdminAdminAttendeesRouteChildren {
+  AuthenticatedAdminAdminAttendeesUserIdIndexRoute: typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
+  AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute: typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
+}
+
+const AuthenticatedAdminAdminAttendeesRouteChildren: AuthenticatedAdminAdminAttendeesRouteChildren =
+  {
+    AuthenticatedAdminAdminAttendeesUserIdIndexRoute:
+      AuthenticatedAdminAdminAttendeesUserIdIndexRoute,
+    AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute:
+      AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute,
+  }
+
+const AuthenticatedAdminAdminAttendeesRouteWithChildren =
+  AuthenticatedAdminAdminAttendeesRoute._addFileChildren(
+    AuthenticatedAdminAdminAttendeesRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAdminAttendeesRoute: typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   AuthenticatedAdminAdminRegistrationsRoute: typeof AuthenticatedAdminAdminRegistrationsRoute
+  AuthenticatedAdminAdminReviewRoute: typeof AuthenticatedAdminAdminReviewRoute
   AuthenticatedAdminAdminUsersRoute: typeof AuthenticatedAdminAdminUsersRoute
   AuthenticatedAdminAdminIndexRoute: typeof AuthenticatedAdminAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAdminAttendeesRoute:
+    AuthenticatedAdminAdminAttendeesRouteWithChildren,
   AuthenticatedAdminAdminRegistrationsRoute:
     AuthenticatedAdminAdminRegistrationsRoute,
+  AuthenticatedAdminAdminReviewRoute: AuthenticatedAdminAdminReviewRoute,
   AuthenticatedAdminAdminUsersRoute: AuthenticatedAdminAdminUsersRoute,
   AuthenticatedAdminAdminIndexRoute: AuthenticatedAdminAdminIndexRoute,
 }
@@ -260,12 +501,37 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
+interface AuthenticatedDashboardRouteChildren {
+  AuthenticatedDashboardDeliverablesRoute: typeof AuthenticatedDashboardDeliverablesRoute
+  AuthenticatedDashboardDocumentsRoute: typeof AuthenticatedDashboardDocumentsRoute
+  AuthenticatedDashboardGoalsRoute: typeof AuthenticatedDashboardGoalsRoute
+  AuthenticatedDashboardProfileRoute: typeof AuthenticatedDashboardProfileRoute
+  AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
+}
+
+const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
+  {
+    AuthenticatedDashboardDeliverablesRoute:
+      AuthenticatedDashboardDeliverablesRoute,
+    AuthenticatedDashboardDocumentsRoute: AuthenticatedDashboardDocumentsRoute,
+    AuthenticatedDashboardGoalsRoute: AuthenticatedDashboardGoalsRoute,
+    AuthenticatedDashboardProfileRoute: AuthenticatedDashboardProfileRoute,
+    AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
+  }
+
+const AuthenticatedDashboardRouteWithChildren =
+  AuthenticatedDashboardRoute._addFileChildren(
+    AuthenticatedDashboardRouteChildren,
+  )
+
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -280,6 +546,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ScheduleRoute: ScheduleRoute,
   SignupRoute: SignupRoute,
+  ApiPublicHooksPublishDueDeliverablesRoute:
+    ApiPublicHooksPublishDueDeliverablesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
