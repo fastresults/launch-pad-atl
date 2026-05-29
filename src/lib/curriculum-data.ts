@@ -130,7 +130,7 @@ export const STAGES: Stage[] = [
       "1-page profile of your first named buyer with their top 3 problems priced in dollars",
       "Starter prospect list begun in-session with the source template and CSV export ready",
       "Outreach script customized to that specific buyer",
-      "3-competitor grid + your one-sentence positioning",
+      "Competitive research pack: 3 competitors compared on offer, price, and positioning, with sourced customer quotes and a one-page 'what makes you different' summary",
     ],
     afterWorkshop: [
       "Fill out the prospect list and run discovery calls within the next 2 weeks",
