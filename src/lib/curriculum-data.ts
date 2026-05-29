@@ -138,6 +138,20 @@ export const STAGES: Stage[] = [
     covers: ["Your first customer", "Validation script", "3-competitor look", "What makes you different"],
     tasks: [
       {
+        title: "Research the idea from every angle",
+        deliverable:
+          "A one-page research brief on your idea: market size, trend direction, regulation/permits, supplier/competitor scan, pricing benchmarks, and 5 real customer quotes pulled from forums/reviews — with source links.",
+        tool: "Idea-research brief template",
+        details: [
+          "Write 5 research questions that would kill or confirm the idea",
+          "Pull market-size and trend data from public sources (IBISWorld snippets, BLS, Statista free)",
+          "Scan regulation, permits, and licensing for the business type in your county",
+          "Collect 5 verbatim customer quotes from Reddit, Facebook groups, or product reviews — log every URL",
+        ],
+        takeaway:
+          "Your idea-research brief — sourced, dated, and decision-ready.",
+      },
+      {
         title: "Pick your first real customer",
         deliverable:
           "A one-page profile of one specific buyer for your business, their top 3 problems, and what each problem costs them in dollars.",
