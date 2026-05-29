@@ -14,6 +14,460 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_pipeline_runs: {
+        Row: {
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          options: Json | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["pipeline_run_status"]
+          triggered_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          options?: Json | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["pipeline_run_status"]
+          triggered_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          options?: Json | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["pipeline_run_status"]
+          triggered_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_pipeline_steps: {
+        Row: {
+          created_at: string
+          deliverable_key: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          input_snapshot: Json | null
+          model: string | null
+          raw_output: Json | null
+          run_id: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["pipeline_step_status"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deliverable_key: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_snapshot?: Json | null
+          model?: string | null
+          raw_output?: Json | null
+          run_id: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["pipeline_step_status"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deliverable_key?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_snapshot?: Json | null
+          model?: string | null
+          raw_output?: Json | null
+          run_id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["pipeline_step_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_pipeline_steps_deliverable_key_fkey"
+            columns: ["deliverable_key"]
+            isOneToOne: false
+            referencedRelation: "deliverable_types"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "ai_pipeline_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_pipeline_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendee_deliverables: {
+        Row: {
+          admin_edited_at: string | null
+          admin_edited_by: string | null
+          ai_generated_at: string | null
+          approved_at: string | null
+          approved_by: string | null
+          content_ai: Json | null
+          content_current: Json | null
+          content_source: Database["public"]["Enums"]["deliverable_content_source"]
+          created_at: string
+          deliverable_key: string
+          id: string
+          last_run_id: string | null
+          publish_at: string | null
+          publish_status: Database["public"]["Enums"]["deliverable_publish_status"]
+          published_at: string | null
+          review_status: Database["public"]["Enums"]["deliverable_review_status"]
+          reviewer_notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_edited_at?: string | null
+          admin_edited_by?: string | null
+          ai_generated_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          content_ai?: Json | null
+          content_current?: Json | null
+          content_source?: Database["public"]["Enums"]["deliverable_content_source"]
+          created_at?: string
+          deliverable_key: string
+          id?: string
+          last_run_id?: string | null
+          publish_at?: string | null
+          publish_status?: Database["public"]["Enums"]["deliverable_publish_status"]
+          published_at?: string | null
+          review_status?: Database["public"]["Enums"]["deliverable_review_status"]
+          reviewer_notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_edited_at?: string | null
+          admin_edited_by?: string | null
+          ai_generated_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          content_ai?: Json | null
+          content_current?: Json | null
+          content_source?: Database["public"]["Enums"]["deliverable_content_source"]
+          created_at?: string
+          deliverable_key?: string
+          id?: string
+          last_run_id?: string | null
+          publish_at?: string | null
+          publish_status?: Database["public"]["Enums"]["deliverable_publish_status"]
+          published_at?: string | null
+          review_status?: Database["public"]["Enums"]["deliverable_review_status"]
+          reviewer_notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendee_deliverables_deliverable_key_fkey"
+            columns: ["deliverable_key"]
+            isOneToOne: false
+            referencedRelation: "deliverable_types"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      attendee_documents: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          mime_type: string | null
+          original_name: string
+          size_bytes: number | null
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          mime_type?: string | null
+          original_name: string
+          size_bytes?: number | null
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          mime_type?: string | null
+          original_name?: string
+          size_bytes?: number | null
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      attendee_goals: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          horizon: number
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          horizon: number
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          horizon?: number
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      attendee_profiles: {
+        Row: {
+          background: string | null
+          business_model: string | null
+          business_name: string | null
+          competitors: string[] | null
+          created_at: string
+          current_revenue: number | null
+          full_name: string | null
+          funding_raised: number | null
+          headline: string | null
+          id: string
+          industry: string | null
+          intake_completed_at: string | null
+          monthly_burn: number | null
+          primary_goal: string | null
+          problem_solved: string | null
+          projections: Json | null
+          runway_months: number | null
+          skills: string[] | null
+          stage: string | null
+          target_market: string | null
+          time_commitment_hours: number | null
+          updated_at: string
+          user_id: string
+          value_prop: string | null
+        }
+        Insert: {
+          background?: string | null
+          business_model?: string | null
+          business_name?: string | null
+          competitors?: string[] | null
+          created_at?: string
+          current_revenue?: number | null
+          full_name?: string | null
+          funding_raised?: number | null
+          headline?: string | null
+          id?: string
+          industry?: string | null
+          intake_completed_at?: string | null
+          monthly_burn?: number | null
+          primary_goal?: string | null
+          problem_solved?: string | null
+          projections?: Json | null
+          runway_months?: number | null
+          skills?: string[] | null
+          stage?: string | null
+          target_market?: string | null
+          time_commitment_hours?: number | null
+          updated_at?: string
+          user_id: string
+          value_prop?: string | null
+        }
+        Update: {
+          background?: string | null
+          business_model?: string | null
+          business_name?: string | null
+          competitors?: string[] | null
+          created_at?: string
+          current_revenue?: number | null
+          full_name?: string | null
+          funding_raised?: number | null
+          headline?: string | null
+          id?: string
+          industry?: string | null
+          intake_completed_at?: string | null
+          monthly_burn?: number | null
+          primary_goal?: string | null
+          problem_solved?: string | null
+          projections?: Json | null
+          runway_months?: number | null
+          skills?: string[] | null
+          stage?: string | null
+          target_market?: string | null
+          time_commitment_hours?: number | null
+          updated_at?: string
+          user_id?: string
+          value_prop?: string | null
+        }
+        Relationships: []
+      }
+      attendee_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          module_key: string
+          notes: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          module_key: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          module_key?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      deliverable_revisions: {
+        Row: {
+          action: string
+          actor: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          deliverable_id: string
+          deliverable_key: string
+          id: string
+          notes: string | null
+          source: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          deliverable_id: string
+          deliverable_key: string
+          id?: string
+          notes?: string | null
+          source?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          deliverable_id?: string
+          deliverable_key?: string
+          id?: string
+          notes?: string | null
+          source?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliverable_revisions_deliverable_id_fkey"
+            columns: ["deliverable_id"]
+            isOneToOne: false
+            referencedRelation: "attendee_deliverables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deliverable_types: {
+        Row: {
+          active: boolean
+          created_at: string
+          default_model: string
+          depends_on_keys: string[] | null
+          description: string | null
+          key: string
+          label: string
+          output_schema: Json | null
+          prompt_template: string | null
+          schema_version: number
+          sort_order: number
+          stage_label: string | null
+          stage_n: number | null
+          tier_required: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          default_model?: string
+          depends_on_keys?: string[] | null
+          description?: string | null
+          key: string
+          label: string
+          output_schema?: Json | null
+          prompt_template?: string | null
+          schema_version?: number
+          sort_order?: number
+          stage_label?: string | null
+          stage_n?: number | null
+          tier_required?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          default_model?: string
+          depends_on_keys?: string[] | null
+          description?: string | null
+          key?: string
+          label?: string
+          output_schema?: Json | null
+          prompt_template?: string | null
+          schema_version?: number
+          sort_order?: number
+          stage_label?: string | null
+          stage_n?: number | null
+          tier_required?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -123,6 +577,31 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "admin" | "user"
+      deliverable_content_source: "ai" | "admin_override"
+      deliverable_publish_status:
+        | "unpublished"
+        | "scheduled"
+        | "published"
+        | "unpublished_manual"
+      deliverable_review_status:
+        | "draft"
+        | "pending_review"
+        | "approved"
+        | "rejected"
+        | "changes_requested"
+      pipeline_run_status:
+        | "queued"
+        | "running"
+        | "completed"
+        | "failed"
+        | "partial"
+      pipeline_step_status:
+        | "pending"
+        | "queued"
+        | "running"
+        | "completed"
+        | "failed"
+        | "skipped"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -251,6 +730,35 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "admin", "user"],
+      deliverable_content_source: ["ai", "admin_override"],
+      deliverable_publish_status: [
+        "unpublished",
+        "scheduled",
+        "published",
+        "unpublished_manual",
+      ],
+      deliverable_review_status: [
+        "draft",
+        "pending_review",
+        "approved",
+        "rejected",
+        "changes_requested",
+      ],
+      pipeline_run_status: [
+        "queued",
+        "running",
+        "completed",
+        "failed",
+        "partial",
+      ],
+      pipeline_step_status: [
+        "pending",
+        "queued",
+        "running",
+        "completed",
+        "failed",
+        "skipped",
+      ],
     },
   },
 } as const
