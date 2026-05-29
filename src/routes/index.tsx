@@ -43,7 +43,7 @@ function HomePage() {
       
       <ValueByTheNumbers />
       <FacilitatorSection />
-      <FacilitatorProof />
+      
       <VenueCard />
       <BottomCTA />
       <SiteFooter />
