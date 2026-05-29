@@ -51,6 +51,8 @@ import {
   LayoutGrid,
   List as ListIcon,
   Library,
+  Eye,
+  Link2,
 } from "lucide-react";
 
 type Scope = "master" | "user";
