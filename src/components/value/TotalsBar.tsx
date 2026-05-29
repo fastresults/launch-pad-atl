@@ -1,4 +1,5 @@
 import { VALUE_TOTALS, formatCostRange, formatHoursRange, PRICING } from "@/lib/value-grid";
+import { toPublicSeats } from "@/lib/cohorts";
 import { DollarSign, Clock, Sparkles } from "lucide-react";
 
 export function TotalsBar() {
