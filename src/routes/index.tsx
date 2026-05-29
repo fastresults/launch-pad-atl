@@ -51,6 +51,46 @@ function HomePage() {
   );
 }
 
+function NotACourseBanner() {
+  return (
+    <section className="relative">
+      <div className="absolute inset-0 bg-hero-gradient opacity-95" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
+      <div className="relative container mx-auto px-6 py-8 md:py-10">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-4 md:max-w-3xl">
+            <span className="mt-1 inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/30 backdrop-blur">
+              <Zap className="size-5 text-white" />
+            </span>
+            <div>
+              <h2 className="text-xl md:text-2xl font-semibold text-white leading-tight">
+                This is not a course. It's a build day.
+              </h2>
+              <p className="mt-2 text-sm md:text-base text-white/85 leading-relaxed">
+                No theory. No slides. No "go figure it out later." You walk in with an idea — seven hours later you walk out with your EIN in hand, your brand and website built, your legal docs and offer drafted, and a short, plain-English checklist for the handful of items only you can sign for (LLC filing, bank account, business license).
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 md:flex-col md:items-end md:gap-2 md:shrink-0">
+            <Chip icon={<Hammer className="size-3.5" />} label="Build, don't learn" />
+            <Chip icon={<Timer className="size-3.5" />} label="7 working hours, one day" />
+            <Chip icon={<Check className="size-3.5" />} label="Real work, not worksheets" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Chip({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-white/20 backdrop-blur">
+      {icon}
+      {label}
+    </span>
+  );
+}
+
 function Hero() {
   return (
     <section className="relative overflow-hidden">
