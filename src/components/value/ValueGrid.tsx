@@ -1,5 +1,29 @@
-import { VALUE_ROWS, VALUE_TOTALS, formatCostRange, formatHoursRange } from "@/lib/value-grid";
-import { Check, Clock, DollarSign } from "lucide-react";
+import { VALUE_ROWS, VALUE_TOTALS, formatCostRange, formatHoursRange, type ValueRow } from "@/lib/value-grid";
+import { Check, Clock, DollarSign, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+function PostWorkshopTip({ row }: { row: ValueRow }) {
+  if (!row.postWorkshop) return null;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label="What to do after the workshop"
+          className="inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-primary transition-colors align-middle"
+        >
+          <Info className="size-3.5" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs bg-popover text-popover-foreground border border-border shadow-lg p-3">
+        <div className="text-[10px] uppercase tracking-[0.18em] text-primary font-semibold mb-1">
+          After the workshop
+        </div>
+        <p className="text-xs leading-relaxed">{row.postWorkshop}</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 const STAGE_TINT = [
   "from-fuchsia-500/10",
