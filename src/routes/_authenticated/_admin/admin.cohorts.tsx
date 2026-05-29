@@ -47,6 +47,12 @@ type FormState = {
   founders_seats: string;
   cohort_price: string;
   cohort_seats: string;
+  founders_display_floor: string;
+  founders_warming_boost: string;
+  founders_honest_threshold_pct: string;
+  cohort_display_floor: string;
+  cohort_warming_boost: string;
+  cohort_honest_threshold_pct: string;
 };
 
 const emptyForm = (): FormState => ({
