@@ -62,7 +62,7 @@ function SchedulePage() {
           <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
             {EVENT.dateLabel} · {EVENT.timeLabel}
           </p>
-          <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
+          <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
             Idea in. <span className="text-gradient-brand">Launch plan out.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
