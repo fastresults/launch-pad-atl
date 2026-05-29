@@ -70,7 +70,7 @@ function NotACourseBanner() {
                 Walk in with an idea. Walk out with a built business.
               </h2>
               <p className="mt-2 text-sm text-white/55 leading-relaxed md:text-sm">
-                Not a course. Not a coaching call. Not a 12-week cohort that ends in a PDF. In one focused day — seven hours, one room, one founder — you build the actual business: name, brand, website, offer, pricing, legal drafts, and a launch plan. You leave with real work in hand and a short, plain-English checklist for the few items only your signature can finish — LLC filing, bank account, license, and publishing the site. You arrive with a spark. You leave with a company that's built, not a notebook full of someday.
+                Not a course. Not a coaching call. Not a PDF. In one focused day, you build the actual business — name, brand, website, offer, pricing, legal drafts, and launch plan — plus a short checklist for the few items only your signature can finish. You arrive with a spark. You leave with a company.
               </p>
 
             </div>
