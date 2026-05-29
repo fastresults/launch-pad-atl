@@ -1,5 +1,29 @@
-import { VALUE_ROWS, VALUE_TOTALS, formatCostRange, formatHoursRange } from "@/lib/value-grid";
-import { Check, Clock, DollarSign } from "lucide-react";
+import { VALUE_ROWS, VALUE_TOTALS, formatCostRange, formatHoursRange, type ValueRow } from "@/lib/value-grid";
+import { Check, Clock, DollarSign, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+function PostWorkshopTip({ row }: { row: ValueRow }) {
+  if (!row.postWorkshop) return null;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label="What to do after the workshop"
+          className="inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-primary transition-colors align-middle"
+        >
+          <Info className="size-3.5" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs bg-popover text-popover-foreground border border-border shadow-lg p-3">
+        <div className="text-[10px] uppercase tracking-[0.18em] text-primary font-semibold mb-1">
+          After the workshop
+        </div>
+        <p className="text-xs leading-relaxed">{row.postWorkshop}</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 const STAGE_TINT = [
   "from-fuchsia-500/10",
@@ -19,6 +43,7 @@ export function ValueGrid() {
   const stageNums = Object.keys(grouped).map(Number).sort((a, b) => a - b);
 
   return (
+    <TooltipProvider delayDuration={150}>
     <div className="rounded-2xl border border-white/10 bg-card overflow-hidden">
       {/* Desktop / tablet table */}
       <div className="hidden md:block">
@@ -48,7 +73,10 @@ export function ValueGrid() {
                     <span className="text-muted-foreground/60 pl-8">↳</span>
                   )}
                 </div>
-                <div className="col-span-6 text-foreground/90">{r.deliverable}</div>
+                <div className="col-span-6 text-foreground/90 flex items-center gap-2">
+                  <span>{r.deliverable}</span>
+                  <PostWorkshopTip row={r} />
+                </div>
                 <div className="col-span-2 text-right tabular-nums text-foreground/80">
                   {formatCostRange(r.marketCostMin, r.marketCostMax)}
                 </div>
@@ -95,7 +123,8 @@ export function ValueGrid() {
               <div key={r.deliverable} className="px-5 py-4 border-b border-white/5 space-y-2">
                 <div className="flex items-start gap-2 text-sm">
                   <Check className="size-4 mt-0.5 shrink-0 text-primary" />
-                  <span>{r.deliverable}</span>
+                  <span className="flex-1">{r.deliverable}</span>
+                  <PostWorkshopTip row={r} />
                 </div>
                 <div className="flex gap-4 pl-6 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
@@ -126,5 +155,6 @@ export function ValueGrid() {
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
