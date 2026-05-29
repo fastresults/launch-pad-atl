@@ -21,6 +21,12 @@ export type CohortRow = {
   founders_seats: number;
   cohort_price_cents: number;
   cohort_seats: number;
+  founders_display_floor: number;
+  founders_warming_boost: number;
+  founders_honest_threshold_pct: number;
+  cohort_display_floor: number;
+  cohort_warming_boost: number;
+  cohort_honest_threshold_pct: number;
 };
 
 export type Cohort = {
