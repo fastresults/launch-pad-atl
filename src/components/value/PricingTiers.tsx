@@ -3,7 +3,7 @@ import { Check, ArrowRight } from "lucide-react";
 
 const PERKS = [
   "8-hour build day with Adam Anderson",
-  "All 17 deliverables, finished in the room",
+  "All 25 deliverables, finished in the room",
   "Lunch + coffee + working tables",
   "Take-home digital packet (every file, every link)",
   "30-day follow-up email check-ins",
