@@ -647,13 +647,14 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
         ) : (
           <Card className="overflow-hidden">
             <div className="divide-y">
-              <div className="grid grid-cols-[36px_44px_1fr_90px_90px_140px] items-center gap-3 bg-muted/40 px-3 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <div className="grid grid-cols-[36px_44px_1fr_90px_90px_140px_88px] items-center gap-3 bg-muted/40 px-3 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <div></div>
                 <div></div>
                 <div>Name</div>
                 <div>Type</div>
                 <div>Size</div>
                 <div>Uploaded</div>
+                <div className="text-right">Actions</div>
               </div>
               {assets.map((a) => {
                 const Icon = TYPE_ICONS[a.media_type];
@@ -665,7 +666,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                     onDragStart={(e) => handleDragStart(e, a.id)}
                     onDragEnd={handleDragEnd}
                     onClick={() => openAsset(a)}
-                    className={`grid cursor-pointer grid-cols-[36px_44px_1fr_90px_90px_140px] items-center gap-3 px-3 py-2 text-sm transition hover:bg-muted/40 ${
+                    className={`grid cursor-pointer grid-cols-[36px_44px_1fr_90px_90px_140px_88px] items-center gap-3 px-3 py-2 text-sm transition hover:bg-muted/40 ${
                       isSelected ? "bg-primary/5" : ""
                     }`}
                   >
@@ -693,6 +694,29 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                     <div className="text-xs text-muted-foreground">{humanSize(a.size_bytes)}</div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(a.created_at).toLocaleDateString()}
+                    </div>
+                    <div
+                      className="flex justify-end gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        title="Preview"
+                        onClick={() => openAsset(a)}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        title="Copy link"
+                        onClick={() => copyAssetUrl(a.id)}
+                      >
+                        <Link2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </div>
                 );
