@@ -189,19 +189,21 @@ export const STAGES: Stage[] = [
           "Fill out the prospect list and run discovery calls in the next 2 weeks; score each one.",
       },
       {
-        title: "Competitive research pack",
+        title: "Competitive research pack + competitive advantage brief",
         deliverable:
-          "A competitive research pack: 3 competitors compared on offer, price, channel, proof, and weakness, with sourced customer quotes and a one-page 'what makes you different' summary.",
-        tool: "Competitive research template",
+          "A competitive research pack: 3 competitors compared on offer, price, channel, proof, and weakness, with sourced customer quotes and a one-page 'what makes you different' summary — plus a one-sentence competitive advantage brief (your defensible 'secret sauce') you can put on the website and in pitches.",
+        tool: "Competitive research template + advantage brief",
         details: [
           "Identify 3 real competitors (2 direct + 1 substitute)",
           "Score each on offer, price, channel, proof, and weakness",
           "Pull sourced customer quotes that show where each competitor falls short",
+          "Distill the research + competitor weaknesses into one defensible advantage and write it as a one-sentence positioning line",
           "Write a one-line positioning statement: For X, who Y, we are Z because…",
         ],
         takeaway:
-          "Your competitive research pack — 3 competitors compared, sourced customer quotes, and a one-page 'what makes you different' summary.",
+          "Your competitive research pack plus a competitive advantage brief — your 'secret sauce' written in one sentence you can defend.",
       },
+
     ],
   },
   {
