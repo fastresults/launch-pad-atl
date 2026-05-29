@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -13,7 +13,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,6 +32,7 @@ import {
   pushAssetsToUsers,
   listAttendeesForPush,
   reprocessAi,
+  toggleCollectionItem,
 } from "@/lib/media.functions";
 import {
   FileText,
@@ -48,10 +48,14 @@ import {
   Sparkles,
   Send,
   Loader2,
+  LayoutGrid,
+  List as ListIcon,
+  Library,
 } from "lucide-react";
 
 type Scope = "master" | "user";
 type MediaType = "document" | "image" | "audio" | "video" | "other";
+type ViewMode = "grid" | "list";
 
 type Asset = {
   id: string;
@@ -102,15 +106,33 @@ function humanSize(b: number) {
   return `${(b / 1024 / 1024 / 1024).toFixed(2)} GB`;
 }
 
+type DragPayload = { ids: string[] };
+const DRAG_MIME = "application/x-media-asset-ids";
+
 export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
   const qc = useQueryClient();
   const [folderId, setFolderId] = useState<string | null>(null);
+  const [collectionId, setCollectionId] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<MediaType | "all">("all");
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [pushDialogOpen, setPushDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [isDragging, setIsDragging] = useState(false);
+  const [dropTargetKey, setDropTargetKey] = useState<string | null>(null);
+
+  // Load persisted view mode
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const v = window.localStorage.getItem("media-hub-view");
+    if (v === "grid" || v === "list") setViewMode(v);
+  }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("media-hub-view", viewMode);
+  }, [viewMode]);
 
   const listFn = useServerFn(listMedia);
   const foldersFn = useServerFn(listFolders);
@@ -123,8 +145,9 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
   const updateFn = useServerFn(updateAsset);
   const deleteFn = useServerFn(deleteAsset);
   const reprocessFn = useServerFn(reprocessAi);
+  const toggleCollectionFn = useServerFn(toggleCollectionItem);
 
-  const queryKey = ["media", scope, ownerUserId, folderId, mediaType, search];
+  const queryKey = ["media", scope, ownerUserId, folderId, collectionId, mediaType, search];
   const assetsQ = useQuery({
     queryKey,
     queryFn: () =>
@@ -132,7 +155,8 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
         data: {
           scope,
           ownerUserId: ownerUserId ?? null,
-          folderId,
+          folderId: collectionId ? undefined : folderId,
+          collectionId,
           mediaType: mediaType === "all" ? null : mediaType,
           search: search || null,
         },
@@ -233,6 +257,65 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
     }
   }
 
+  // ===== Drag & drop =====
+  function handleDragStart(e: React.DragEvent, assetId: string) {
+    // If dragging an asset that's part of the multi-selection, drag the whole selection.
+    const ids = selectedIds.has(assetId) ? Array.from(selectedIds) : [assetId];
+    const payload: DragPayload = { ids };
+    e.dataTransfer.setData(DRAG_MIME, JSON.stringify(payload));
+    e.dataTransfer.effectAllowed = "move";
+    setIsDragging(true);
+  }
+  function handleDragEnd() {
+    setIsDragging(false);
+    setDropTargetKey(null);
+  }
+  function readPayload(e: React.DragEvent): DragPayload | null {
+    const raw = e.dataTransfer.getData(DRAG_MIME);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as DragPayload;
+    } catch {
+      return null;
+    }
+  }
+
+  async function dropOnFolder(e: React.DragEvent, targetFolderId: string | null) {
+    e.preventDefault();
+    setDropTargetKey(null);
+    const p = readPayload(e);
+    if (!p || p.ids.length === 0) return;
+    try {
+      await Promise.all(p.ids.map((id) => updateFn({ data: { id, folderId: targetFolderId } })));
+      toast.success(`Moved ${p.ids.length} file${p.ids.length === 1 ? "" : "s"}`);
+      setSelectedIds(new Set());
+      invalidate();
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  async function dropOnCollection(e: React.DragEvent, targetCollectionId: string) {
+    e.preventDefault();
+    setDropTargetKey(null);
+    const p = readPayload(e);
+    if (!p || p.ids.length === 0) return;
+    try {
+      await Promise.all(
+        p.ids.map((id) =>
+          toggleCollectionFn({
+            data: { collectionId: targetCollectionId, assetId: id, action: "add" },
+          }),
+        ),
+      );
+      toast.success(`Added ${p.ids.length} to collection`);
+      setSelectedIds(new Set());
+      qc.invalidateQueries({ queryKey: ["media"] });
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  }
+
   // ===== Tag editor in drawer =====
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
@@ -275,6 +358,12 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
     },
   });
 
+  // ===== Sidebar drop target helpers =====
+  const dropTargetClass = (key: string) =>
+    `${dropTargetKey === key ? "ring-2 ring-primary bg-primary/10" : ""} ${
+      isDragging ? "outline outline-1 outline-dashed outline-muted-foreground/30" : ""
+    }`;
+
   return (
     <div className="grid gap-6 md:grid-cols-[240px_1fr]">
       {/* Sidebar */}
@@ -294,20 +383,42 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
             </Button>
           </div>
           <button
-            onClick={() => setFolderId(null)}
-            className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm ${
-              folderId === null ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"
-            }`}
+            onClick={() => {
+              setFolderId(null);
+              setCollectionId(null);
+            }}
+            onDragOver={(e) => {
+              if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
+              e.preventDefault();
+              setDropTargetKey("folder:null");
+            }}
+            onDragLeave={() => setDropTargetKey(null)}
+            onDrop={(e) => dropOnFolder(e, null)}
+            className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm transition ${
+              folderId === null && !collectionId
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground hover:bg-muted/50"
+            } ${dropTargetClass("folder:null")}`}
           >
             <Folder className="h-4 w-4" /> All files
           </button>
           {folders.map((f) => (
             <button
               key={f.id}
-              onClick={() => setFolderId(f.id)}
-              className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm ${
+              onClick={() => {
+                setFolderId(f.id);
+                setCollectionId(null);
+              }}
+              onDragOver={(e) => {
+                if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
+                e.preventDefault();
+                setDropTargetKey(`folder:${f.id}`);
+              }}
+              onDragLeave={() => setDropTargetKey(null)}
+              onDrop={(e) => dropOnFolder(e, f.id)}
+              className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm transition ${
                 folderId === f.id ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"
-              }`}
+              } ${dropTargetClass(`folder:${f.id}`)}`}
             >
               <Folder className="h-4 w-4" /> {f.name}
             </button>
@@ -346,9 +457,25 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
             <p className="text-xs text-muted-foreground">No collections yet</p>
           ) : (
             collections.map((c) => (
-              <div key={c.id} className="px-2 py-1 text-sm text-muted-foreground">
-                {c.name}
-              </div>
+              <button
+                key={c.id}
+                onClick={() => {
+                  setCollectionId(c.id);
+                  setFolderId(null);
+                }}
+                onDragOver={(e) => {
+                  if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
+                  e.preventDefault();
+                  setDropTargetKey(`coll:${c.id}`);
+                }}
+                onDragLeave={() => setDropTargetKey(null)}
+                onDrop={(e) => dropOnCollection(e, c.id)}
+                className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm transition ${
+                  collectionId === c.id ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"
+                } ${dropTargetClass(`coll:${c.id}`)}`}
+              >
+                <Library className="h-4 w-4" /> {c.name}
+              </button>
             ))
           )}
         </div>
@@ -364,6 +491,26 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
             onChange={(e) => setSearch(e.target.value)}
             className="w-64"
           />
+          <div className="flex rounded-md border">
+            <Button
+              type="button"
+              size="icon"
+              variant={viewMode === "grid" ? "secondary" : "ghost"}
+              onClick={() => setViewMode("grid")}
+              title="Grid view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              size="icon"
+              variant={viewMode === "list" ? "secondary" : "ghost"}
+              onClick={() => setViewMode("list")}
+              title="List view"
+            >
+              <ListIcon className="h-4 w-4" />
+            </Button>
+          </div>
           <input
             ref={fileInput}
             type="file"
@@ -382,6 +529,19 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
           )}
         </div>
 
+        {collectionId && (
+          <div className="flex items-center gap-2 rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            <Library className="h-3.5 w-3.5" />
+            Viewing collection: {collections.find((c) => c.id === collectionId)?.name}
+            <button
+              className="ml-auto underline hover:text-foreground"
+              onClick={() => setCollectionId(null)}
+            >
+              Clear
+            </button>
+          </div>
+        )}
+
         {assetsQ.isLoading ? (
           <div className="py-12 text-center text-sm text-muted-foreground">Loading…</div>
         ) : assets.length === 0 ? (
@@ -390,13 +550,13 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
-              handleFiles(e.dataTransfer.files);
+              if (e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files);
             }}
           >
             <Upload className="h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">Drop files here or click Upload</p>
           </Card>
-        ) : (
+        ) : viewMode === "grid" ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {assets.map((a) => {
               const Icon = TYPE_ICONS[a.media_type];
@@ -404,22 +564,23 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
               return (
                 <Card
                   key={a.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, a.id)}
+                  onDragEnd={handleDragEnd}
                   className={`group relative cursor-pointer overflow-hidden p-0 transition hover:border-primary/50 ${
                     isSelected ? "ring-2 ring-primary" : ""
                   }`}
                   onClick={() => openAsset(a)}
                 >
-                  {canAdminPush && (
-                    <div
-                      className="absolute left-2 top-2 z-10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleSelect(a.id);
-                      }}
-                    >
-                      <Checkbox checked={isSelected} />
-                    </div>
-                  )}
+                  <div
+                    className="absolute left-2 top-2 z-10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSelect(a.id);
+                    }}
+                  >
+                    <Checkbox checked={isSelected} />
+                  </div>
                   <div className="flex aspect-square items-center justify-center bg-muted/30">
                     {a.media_type === "image" && a.upload_status === "ready" ? (
                       <AssetThumb assetId={a.id} />
@@ -448,6 +609,61 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
               );
             })}
           </div>
+        ) : (
+          <Card className="overflow-hidden">
+            <div className="divide-y">
+              <div className="grid grid-cols-[36px_44px_1fr_90px_90px_140px] items-center gap-3 bg-muted/40 px-3 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <div></div>
+                <div></div>
+                <div>Name</div>
+                <div>Type</div>
+                <div>Size</div>
+                <div>Uploaded</div>
+              </div>
+              {assets.map((a) => {
+                const Icon = TYPE_ICONS[a.media_type];
+                const isSelected = selectedIds.has(a.id);
+                return (
+                  <div
+                    key={a.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, a.id)}
+                    onDragEnd={handleDragEnd}
+                    onClick={() => openAsset(a)}
+                    className={`grid cursor-pointer grid-cols-[36px_44px_1fr_90px_90px_140px] items-center gap-3 px-3 py-2 text-sm transition hover:bg-muted/40 ${
+                      isSelected ? "bg-primary/5" : ""
+                    }`}
+                  >
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(a.id)} />
+                    </div>
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded bg-muted/40">
+                      {a.media_type === "image" && a.upload_status === "ready" ? (
+                        <AssetThumb assetId={a.id} />
+                      ) : (
+                        <Icon className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{a.title ?? a.original_name}</p>
+                      {a.ai_summary && (
+                        <p className="truncate text-xs text-muted-foreground">{a.ai_summary}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Badge variant="outline" className="text-[10px] capitalize">
+                        {a.media_type}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground">{humanSize(a.size_bytes)}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(a.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
         )}
       </div>
 
@@ -523,6 +739,33 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                     </SelectContent>
                   </Select>
                 </div>
+                {collections.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium uppercase text-muted-foreground">Add to collection</label>
+                    <Select
+                      value=""
+                      onValueChange={(v) =>
+                        toggleCollectionFn({
+                          data: { collectionId: v, assetId: selectedAsset.id, action: "add" },
+                        }).then(() => {
+                          toast.success("Added to collection");
+                          invalidate();
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pick a collection…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {collections.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <Button onClick={() => saveEdit.mutate()} disabled={saveEdit.isPending} className="w-full">
                   Save changes
                 </Button>
