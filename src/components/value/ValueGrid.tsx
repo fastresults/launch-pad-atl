@@ -43,6 +43,7 @@ export function ValueGrid() {
   const stageNums = Object.keys(grouped).map(Number).sort((a, b) => a - b);
 
   return (
+    <TooltipProvider delayDuration={150}>
     <div className="rounded-2xl border border-white/10 bg-card overflow-hidden">
       {/* Desktop / tablet table */}
       <div className="hidden md:block">
