@@ -71,7 +71,7 @@ export const upsertMyProfile = createServerFn({ method: "POST" })
 
     const { error } = await supabase
       .from("attendee_profiles")
-      .update(payload)
+      .update(payload as never)
       .eq("user_id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
