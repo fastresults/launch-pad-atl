@@ -361,21 +361,23 @@ export const STAGES: Stage[] = [
           "Run the drafts past your first paying customer and iterate after their feedback.",
       },
       {
-        title: "Operations & workflow",
+        title: "Operations & workflow + sourcing & staffing plan",
         deliverable:
-          "3 written SOPs specific to your business (sales intake, fulfillment, customer onboarding) — each with trigger, steps, owner, tools, definition of done, and failure modes — loaded into your project hub as runnable templates, plus a one-page weekly operating rhythm.",
-        tool: "SOP templates + weekly operating rhythm",
+          "3 written SOPs specific to your business (sales intake, fulfillment, customer onboarding) loaded into your project hub as runnable templates, a one-page weekly operating rhythm, and a sourcing & staffing plan naming the suppliers, contractors, or first hires you'll need for raw goods, services, and talent.",
+        tool: "SOP templates + weekly operating rhythm + sourcing & staffing plan",
         details: [
           "Pick the 3 highest-leverage workflows: sales intake, fulfillment, customer onboarding",
           "Write each as a numbered SOP: trigger → inputs → steps → owner → tools → definition of done",
           "Add a 'what breaks this' section listing the top 3 failure modes and the recovery step",
           "Draft a one-page weekly operating rhythm: standing blocks, review cadence, and the 3 numbers you check every Friday",
           "Load all 3 SOPs into Notion / ClickUp / Trello as runnable templates anyone on the team can follow",
+          "Identify named sources for raw goods, services, and talent — suppliers, contractors, and any first hires — and capture them as a first-call list",
         ],
         takeaway:
-          "Your operations & workflow: 3 runnable SOPs in your project hub plus a one-page weekly operating rhythm.",
+          "Your operations & workflow plus a sourcing & staffing plan — SOPs, weekly rhythm, and a first-call list for goods, services, and talent.",
         followUp:
           "Run each SOP once with a real or rehearsed customer in the first 2 weeks; revise the steps that broke.",
+
       },
     ],
   },
