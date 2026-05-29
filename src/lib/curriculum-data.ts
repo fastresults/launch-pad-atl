@@ -100,18 +100,18 @@ export const STAGES: Stage[] = [
       {
         title: "Funding plan & raise-ready kit",
         deliverable:
-          "Your funding path chosen for this business, a 12-month capital needs table, a 1-page raise summary, and 10 named lenders or investors to contact.",
+          "Your funding path chosen for this business, a 12-month capital needs table, a 1-page raise summary, and a funder outreach list you start building with the message templates ready to send.",
         tool: "Funding decision tree + raise 1-pager template",
         details: [
           "Pick the funding path: bootstrap, friends & family, revenue-based, SBA microloan, line of credit, or equity",
           "Build a 12-month capital needs table — startup costs, monthly burn, runway",
           "Draft a 1-page raise summary: problem, offer, traction proof, ask, use of funds",
-          "Build a 10-name funder/lender outreach list with the message templates ready to send",
+          "Start your funder/lender outreach list and customize the message templates so they're ready to send",
         ],
         takeaway:
-          "Your funding path chosen, 12-month capital needs costed, raise-ready 1-pager, and 10 named funders to contact.",
+          "Your funding path chosen, 12-month capital needs costed, raise-ready 1-pager, and a funder outreach plan ready to send.",
         followUp:
-          "Send the 10 outreach messages within the first 2 weeks; book intro calls with anyone who replies.",
+          "Build out the outreach list and send the messages in the first 2 weeks; book intro calls with anyone who replies.",
       },
     ],
   },
@@ -123,16 +123,16 @@ export const STAGES: Stage[] = [
     summary: "Who you serve, what they'll pay for, and how you beat the competition.",
     oneLiner: "Demand & proof",
     takeHome:
-      "A sourced 1-page research brief on your idea (market size, trend, regulation, suppliers, 5 customer quotes), one named first customer with their problems priced in dollars, a 25-name prospect list pulled for your niche and zip, and a validated outreach script — exported as a CSV you can start messaging tonight.",
+      "A sourced 1-page research brief on your idea (market size, trend, regulation, suppliers, real customer quotes), one named first customer with their problems priced in dollars, a starter prospect list you begin in-session, and a validated outreach script — with the CSV export template ready.",
     walkOut: [
-      "1-page idea-research brief: market size, trend, regulation, supplier/competitor scan, and 5 sourced customer quotes",
+      "1-page idea-research brief: market size, trend, regulation, supplier/competitor scan, and sourced customer quotes",
       "1-page profile of your first named buyer with their top 3 problems priced in dollars",
-      "25-name prospect list pulled for your niche and zip — exported as a CSV",
+      "Starter prospect list begun in-session with the source template and CSV export ready",
       "Outreach script customized to that specific buyer",
       "3-competitor grid + your one-sentence positioning",
     ],
     afterWorkshop: [
-      "Send the script to your 25 prospects and run 5 discovery calls within 2 weeks",
+      "Fill out the prospect list and run discovery calls within the next 2 weeks",
     ],
     duration: "60 min",
     covers: ["Your first customer", "Validation script", "3-competitor look", "What makes you different"],
@@ -140,13 +140,13 @@ export const STAGES: Stage[] = [
       {
         title: "Research the idea from every angle",
         deliverable:
-          "A one-page research brief on your idea: market size, trend direction, regulation/permits, supplier/competitor scan, pricing benchmarks, and 5 real customer quotes pulled from forums/reviews — with source links.",
+          "A one-page research brief on your idea: market size, trend direction, regulation/permits, supplier/competitor scan, pricing benchmarks, and real customer quotes pulled from forums or reviews — with source links.",
         tool: "Idea-research brief template",
         details: [
           "Write 5 research questions that would kill or confirm the idea",
           "Pull market-size and trend data from public sources (IBISWorld snippets, BLS, Statista free)",
           "Scan regulation, permits, and licensing for the business type in your county",
-          "Collect 5 verbatim customer quotes from Reddit, Facebook groups, or product reviews — log every URL",
+          "Pull real customer quotes from Reddit, Facebook groups, or product reviews — log every URL",
         ],
         takeaway:
           "Your idea-research brief — sourced, dated, and decision-ready.",
@@ -168,18 +168,18 @@ export const STAGES: Stage[] = [
       {
         title: "Estimate the market + write a short script you'll send",
         deliverable:
-          "A real-world estimate of how many buyers exist for your business, a 25-name prospect list pulled for you, and a short outreach script customized to your first customer.",
+          "A real-world estimate of how many buyers exist for your business, a starter prospect list you begin in-session, and a short outreach script customized to your first customer.",
         tool: "Market snapshot template + validation script",
         details: [
           "Estimate how many buyers exist, how many you can realistically reach, and how many you'll win in year one",
-          "Pull a 25-name prospect list from LinkedIn, local groups, or referrals",
+          "Start your prospect list from LinkedIn, local groups, or referrals using the source template",
           "Customize the problem-discovery script for your first customer",
           "Pick a scoring rubric: pain confirmed, willingness to pay, intro to others",
         ],
         takeaway:
-          "Your market snapshot + 25-name prospect list + outreach script — customized to your business.",
+          "Your market snapshot + starter prospect list + outreach script — customized to your business.",
         followUp:
-          "Send the script to your 25 prospects and run 5 discovery calls within the next 2 weeks; score each one.",
+          "Fill out the prospect list and run discovery calls in the next 2 weeks; score each one.",
       },
       {
         title: "Look at 3 competitors and find your edge",
@@ -523,11 +523,11 @@ export const STAGES: Stage[] = [
       "Your dated 90-day plan, your launch-day checklist, and the weekly check-in that keeps you moving.",
     oneLiner: "90-day plan",
     takeHome:
-      "Your signed, dated 90-day plan (first 3 paying customers → 10 → repeatable channel), your launch-day checklist with personalized outreach drafts ready to send, and an accountability partner on next Monday's calendar.",
+      "Your signed, dated 90-day plan (first 3 paying customers → 10 → repeatable channel), your launch-day checklist with personal outreach drafts ready to send, and an accountability partner on next Monday's calendar.",
     walkOut: [
       "Signed, dated 30/60/90 plan: first 3 paying customers → 10 → repeatable channel",
-      "25-name personal announcement list",
-      "10 personalized outreach drafts saved (DM, email, voice note)",
+      "Personal announcement list started in-session",
+      "Personal outreach drafts saved (DM, email, voice note)",
       "Day-of launch timeline locked",
       "Starter CRM seeded with your announcement list",
       "3 weekly metrics defined + accountability partner paired with cadence agreed",
@@ -556,18 +556,18 @@ export const STAGES: Stage[] = [
       {
         title: "Launch-day checklist & outreach drafts",
         deliverable:
-          "Your 25-name announcement list + 10 personalized outreach drafts written for your contacts + day-of timeline (drafts saved, not sent).",
+          "Your personal announcement list started in-session, personal outreach drafts written from templates you've customized, and a day-of timeline (drafts saved, not sent).",
         tool: "Launch checklist + outreach templates",
         details: [
-          "Build a 25-name personal announcement list (friends, peers, past clients)",
-          "Draft 10 personalized outreach messages (DM, email, voice note)",
+          "Start your personal announcement list (friends, peers, past clients) using the source template",
+          "Customize personal outreach drafts (DM, email, voice note) from the templates",
           "Identify 3 partner / press / community asks for a co-launch boost",
           "Lock a day-of timeline: 8 AM post → 10 AM email → 2 PM follow-ups",
         ],
         takeaway:
-          "Your launch-day checklist + 10 personalized outreach drafts — ready to send.",
+          "Your launch-day checklist + personal outreach drafts — ready to send.",
         followUp:
-          "Pick your launch date, send the drafts that morning, and work the day-of timeline.",
+          "Fill out the list, pick your launch date, send the drafts that morning, and work the day-of timeline.",
       },
       {
         title: "Sales pipeline + accountability",
