@@ -1,23 +1,35 @@
 ## Goal
 
-Replace the orange→pink gradient text styling (`.text-gradient-brand`) shown in the screenshots with a solid color `#097ad9` (blue), keeping all current usages intact.
+Communicate in the site footer that **Startuplabs is a division of Evolve Inc.**, paired with the Evolve logo.
 
-## Change
+## Changes
 
-Single-file edit in `src/styles.css` — redefine the `text-gradient-brand` utility to render a solid color instead of a clipped gradient. All 18 existing usages across `index.tsx`, `register.tsx`, and `schedule.tsx` will pick up the new color automatically; no component edits required.
+**1. Add Evolve logo asset**
+- Download the provided SVG and save it as `src/assets/evolve-logo.svg`.
 
-```css
-@utility text-gradient-brand {
-  color: #097ad9;
-  background-image: none;
-  -webkit-background-clip: initial;
-  background-clip: initial;
-}
+**2. Update `src/components/site/Footer.tsx`**
+- Import the new `evolve-logo.svg`.
+- Add a new footer block (right side on desktop, stacked on mobile) containing:
+  - The Evolve logo (height matched to the Startuplabs logo, ~h-8/h-10).
+  - Tagline text: **"A division of Evolve Inc."** rendered in `text-muted-foreground`.
+- Keep existing Startuplabs logo + address on the left and copyright in its current position; reflow into a 3-column layout on `md+` so the Evolve attribution sits clearly with its logo.
+
+Proposed layout:
+
+```text
+[ Startuplabs logo · Norcross, GA ]   [ A division of  Evolve logo ]
+                       © 2026 · One day. One business.
 ```
 
-The unrelated `bg-hero-gradient` (used for buttons, pills, backgrounds) is left untouched — only the text gradient is affected.
+## Copy options (pick one in build)
+
+- "A division of Evolve Inc." (default — concise, clearest)
+- "Startuplabs is a division of Evolve Inc."
+- "Proudly part of Evolve Inc."
+
+Default to option 1 unless you'd prefer another.
 
 ## Out of scope
 
-- `bg-hero-gradient` button/background usages remain as-is.
-- Hero section background image unchanged.
+- No styling or structural changes to other footer content.
+- No new routes or About-page Evolve section (can be a follow-up).
