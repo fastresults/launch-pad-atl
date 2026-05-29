@@ -9,7 +9,7 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { createRegistration } from "@/lib/registrations.functions";
 import { listCohorts } from "@/lib/cohorts.functions";
-import { EVENT, buildEvent } from "@/lib/schedule-data";
+import { EVENT } from "@/lib/schedule-data";
 import { getCohortById, getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
 import { ValueGrid } from "@/components/value/ValueGrid";
 import { TotalsBar } from "@/components/value/TotalsBar";
