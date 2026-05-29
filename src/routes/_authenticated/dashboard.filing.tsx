@@ -96,14 +96,14 @@ function FilingPage() {
       </section>
 
       <section className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Business</h2>
+        <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Startup</h2>
         <div className="grid gap-4 md:grid-cols-2">
           {field("llc_name", "LLC name")}
           {field("registered_agent_name", "Registered agent name")}
         </div>
         {field("registered_agent_address", "Registered agent address")}
         <div className="space-y-1.5">
-          <Label className="text-sm">Business purpose</Label>
+          <Label className="text-sm">Startup purpose</Label>
           <Textarea rows={3} value={v.business_purpose} onChange={(e) => setV((s) => ({ ...s, business_purpose: e.target.value }))} />
         </div>
       </section>
