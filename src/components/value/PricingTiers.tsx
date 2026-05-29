@@ -145,7 +145,7 @@ function TierCard({
         <h3 className="mt-3 text-2xl font-semibold">{label}</h3>
         <p className="text-sm text-muted-foreground">{subtitle}</p>
         <div className="mt-5 flex items-baseline gap-2">
-          <span className="text-4xl font-semibold tabular-nums md:text-5xl">
+          <span className="text-4xl font-semibold tabular-nums md:text-4xl lg:text-5xl">
             {formatPriceCents(priceCents)}
           </span>
           <span className="text-sm text-muted-foreground">one-time</span>

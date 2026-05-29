@@ -108,11 +108,11 @@ function Hero() {
         style={{ backgroundImage: `url(${heroBg})` }}
       />
       <div className="absolute inset-0 bg-background/50" />
-      <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-32">
+      <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-24 lg:py-32">
         <p className="mb-5 text-xs uppercase tracking-[0.18em] text-white/80 md:mb-6 md:text-sm md:tracking-[0.2em]">
           One day. One founder. One operationally launch-ready business.
         </p>
-        <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-7xl">
+        <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
           Walk in with an idea. <br />
           Walk out <span className="italic">with a business built to earn</span>.
         </h1>
@@ -234,7 +234,7 @@ function FacilitatorSection() {
   return (
     <section className="py-12 md:py-20">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="grid items-center gap-8 rounded-3xl border border-white/10 bg-card p-6 md:grid-cols-[1fr_1.4fr] md:gap-10 md:p-12">
+        <div className="grid items-center gap-8 rounded-3xl border border-white/10 bg-card p-6 md:grid-cols-[1fr_1.4fr] md:gap-10 md:p-8 lg:p-12">
           <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-hero-gradient">
             <div
               className="absolute inset-0 mix-blend-overlay opacity-30"
@@ -271,7 +271,7 @@ function FacilitatorSection() {
             <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
               Who's in the room with you
             </h2>
-            <p className="text-2xl font-semibold tracking-tight md:text-4xl">
+            <p className="text-2xl font-semibold tracking-tight md:text-3xl lg:text-4xl">
               {FACILITATOR_NAME} —{" "}
               <span className="text-gradient-brand">at your table for the day.</span>
             </p>
@@ -523,7 +523,7 @@ function ValueByTheNumbers() {
               key={s.label}
               className="flex flex-col items-start gap-1 rounded-2xl px-4 py-4"
             >
-              <div className="text-5xl font-semibold leading-none tracking-tight md:text-6xl">
+              <div className="text-5xl font-semibold leading-none tracking-tight lg:text-6xl">
                 <span className="text-gradient-brand">{s.n}</span>
               </div>
               <div className="mt-2 text-sm text-muted-foreground">{s.label}</div>
@@ -542,13 +542,13 @@ function VenueCard() {
   return (
     <section className="pb-16 md:pb-24">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="overflow-hidden rounded-3xl border border-white/10 bg-card p-6 md:p-12">
+        <div className="overflow-hidden rounded-3xl border border-white/10 bg-card p-6 md:p-8 lg:p-12">
           <div className="grid gap-8 md:grid-cols-[1.05fr_1fr] md:gap-10">
             <div>
               <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
                 Where it happens
               </h2>
-              <p className="text-2xl font-semibold tracking-tight md:text-4xl">
+              <p className="text-2xl font-semibold tracking-tight md:text-3xl lg:text-4xl">
                 {EVENT.venueName}
               </p>
               <p className="mt-3 text-muted-foreground">{EVENT.address}</p>
@@ -633,7 +633,7 @@ function BottomCTA() {
   return (
     <section className="pb-16 md:pb-24">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-hero-gradient p-8 md:p-16">
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-hero-gradient p-8 md:p-10 lg:p-16">
           <div
             className="absolute inset-0 mix-blend-overlay opacity-30"
             style={{
@@ -643,7 +643,7 @@ function BottomCTA() {
             }}
           />
           <div className="relative max-w-3xl text-white">
-            <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-5xl">
+            <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
               Twenty seats. One date. One door from idea to business.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
