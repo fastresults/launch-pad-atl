@@ -16,6 +16,8 @@ import {
   getNextAvailable,
   FALLBACK_COHORT,
   formatPriceCents,
+  toPublicSeats,
+  toPublicTaken,
   type Cohort,
 } from "@/lib/cohorts";
 import { ValueGrid } from "@/components/value/ValueGrid";
