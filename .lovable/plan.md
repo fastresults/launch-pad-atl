@@ -1,89 +1,81 @@
-## What's missing — and where to put it
+## What's not realistic in 7 hours
 
-The user named four threads not represented in the curriculum or the walk-out list:
+A scan of the 21 home-page bullets and the underlying curriculum data turns up four promises that imply *finished outside-the-room research* the workshop can't actually deliver:
 
-1. **Idea research** — a structured way to research every angle of the startup idea.
-2. **Viability analysis** — a clear go/no-go on the idea before money and time get spent.
-3. **Funding strategy + fundraising tools** — how to fund the business and what to use to raise money.
-4. **Operationalized workflows** — SOPs and repeatable workflows specific to the business.
-
-The 7-stage / 8h30m schedule is already maxed out, so the right move is to **fold these into the existing stages where they naturally belong** rather than invent an 8th stage. Schedule times stay; per-stage walk-outs and tasks expand. Home-page walk-out list grows to reflect the additions.
-
-## Where each thread lands
-
-| Thread | Lands in | Why it fits |
+| # | Current bullet | Why it's not real |
 |---|---|---|
-| Idea research | Stage 2 — Customer & market | Research is upstream of "who buys." It belongs before the prospect list. |
-| Viability analysis | Stage 3 — Offer & product | Go/no-go happens once you know the buyer, the offer, and the unit economics. Slots in next to break-even. |
-| Funding strategy + fundraising tools | Stage 1 — Form the business | Capital structure decisions sit with entity setup. Bank, EIN, and funding plan are one conversation. |
-| Operationalized workflows | Stage 4 — Build the first working version | SOPs are the durable form of "how a sale becomes a happy customer." |
+| 1 | "…5 sourced customer quotes" | Pulling and citing 5 verbatim quotes from forums/reviews mid-session is research work, not workshop work. |
+| 2 | "…25 real names to message" | Researching 25 named prospects takes hours of LinkedIn/local-list work, not a 60-min block. |
+| 10 | "…10 funders to contact" | Naming 10 vetted lenders/investors is a research project on its own. |
+| 20 | "…10 outreach drafts ready" | Personalizing 10 unique messages to named people requires having the named people — see #2. |
 
-## Stage-by-stage edits in `src/lib/curriculum-data.ts`
+The fix: keep the artifacts, drop the quantified outside-the-room research. The founder leaves with the **system** (template, plan, scoring rubric) instead of a phantom finished dataset.
 
-### Stage 1 — Form the business
-- **New task #4 (funding strategy & fundraising kit):** `Funding plan & raise-ready kit`
-  - Deliverable: a one-page funding plan picking the right path for this business (bootstrap, friends & family, revenue-based, SBA microloan, line of credit, equity), a 12-month capital needs table, and the artifacts needed to ask for money.
-  - Details: pick the funding path; build a 12-month cash needs table (startup costs + monthly burn + runway); draft a 1-page raise summary (problem, offer, traction proof, ask, use of funds); save a lender/investor outreach list with 10 named contacts and the templates to message them.
-  - Take-home: your funding path chosen, 12-month capital needs costed, raise-ready 1-pager, and 10 named funders to contact.
-- **walkOut additions:**
-  - `Your funding path chosen (bootstrap / F&F / revenue-based / SBA microloan / line of credit / equity) with a 12-month capital needs table`
-  - `Raise-ready 1-pager (problem, offer, ask, use of funds) + 10 named funders or lenders to contact`
-- **takeHome** sentence updated to include the funding line.
+## Cleaned-up 21 bullets (same order, same length budget)
 
-### Stage 2 — Customer & market
-- **New task #4 (idea research):** `Research the idea from every angle`
-  - Deliverable: a one-page research brief covering market size, trend direction, regulation/permits, supplier/competitor landscape, pricing benchmarks, and 5 real customer quotes pulled from forums, reviews, or interviews — with source links.
-  - Details: define 5 research questions that would kill or confirm the idea; pull market-size and trend data; scan regulation/permits/licensing for the business type and county; collect 5 verbatim customer quotes from reviews/forums/Reddit/Facebook groups; log every source URL.
-  - Take-home: your idea-research brief — sourced, dated, and decision-ready.
-- **walkOut addition:** `1-page idea-research brief: market size, trend, regulation, supplier/competitor scan, and 5 sourced customer quotes`
-- **takeHome** sentence updated.
+**Investigate**
+1. A 1-page idea brief: market size, trend, permits, competitor scan, and real customer quotes you've pulled
 
-### Stage 3 — Offer & product
-- **New task #4 (viability analysis):** `Score the idea — go / no-go`
-  - Deliverable: a one-page viability scorecard with a clear go / pivot / kill recommendation, scored on demand evidence, willingness to pay, unit economics, founder fit, regulatory load, and time to first dollar — each scored 0–5 with the evidence cited.
-  - Details: score each of the 6 dimensions against the research, offer, and pricing built in stages 2–3; require a written sentence of evidence per score; compute the total and apply the rule (≥22 go, 15–21 pivot the weakest dimension, <15 kill); write the one-sentence recommendation and sign it.
-  - Take-home: your signed viability scorecard with a go / pivot / kill decision and the evidence behind it.
-- **walkOut addition:** `Signed viability scorecard with a go / pivot / kill decision, scored on 6 dimensions with evidence`
-- **takeHome** sentence updated.
+**Validate the buyer**
+2. Your first customer profiled, their problem priced, and a prospect list you start building in-session
+3. An outreach message written for you, 3 competitors mapped, and what makes you different
 
-### Stage 4 — Build the first working version
-- **New task #4 (operational workflows):** `Operationalize the workflows`
-  - Deliverable: 3 written SOPs specific to this business (sales intake, fulfillment, customer onboarding) — each with trigger, steps, owner, tools, definition of done, and the failure modes to watch — saved into the project hub created earlier.
-  - Details: pick the 3 highest-leverage workflows; write each as a numbered SOP with trigger / inputs / steps / owner / tools / definition of done; add a "what breaks this" section; load all 3 into Notion / ClickUp / Trello as runnable templates.
-  - Take-home: 3 written SOPs loaded into your project hub — runnable on day one with a real customer.
-- **walkOut addition:** `3 written SOPs (sales intake, fulfillment, onboarding) loaded into your project hub as runnable templates`
-- **takeHome** sentence updated.
+**Shape the offer**
+4. Your offer in one sentence, scope mapped step-by-step, and a price built from real costs
 
-> Note: each affected stage now has 4 tasks instead of 3. The `tasks` tuple type in `curriculum-data.ts` is currently `[Task, Task, Task]` — change it to `Task[]` (the only consumer is `STAGES.map(...)`, and the `/schedule` route iterates tasks without an index assumption — quick grep to confirm before editing).
+**Decide — go / pivot / kill**
+5. A signed go / pivot / kill score across 6 areas, with the proof behind each
 
-## Edits in `src/routes/index.tsx` (home page `WalkInWalkOut`)
+**Form the business**
+6. Your Georgia LLC paperwork, pre-filled and ready to file
+7. Your EIN issued before lunch
+8. Terms, Privacy, and a customer agreement customized to your business
+9. Business-bank shortlist plus local license and sales-tax steps
 
-Insert the four new bullets into the existing 17-item `walkOut` array so the page reflects the curriculum truth. New plain-English wording, kept in stage order, no pricing:
+**Fund it**
+10. Funding path picked, a 12-month money plan, a raise 1-pager, and a funder outreach plan ready to send
 
-- After the Stage 1 bullets, add: `Your funding path picked, a 12-month money plan, a one-page raise summary, and 10 named lenders or investors to contact`
-- After the Stage 2 bullets, add: `A one-page research brief on your idea — market size, trends, rules and permits, suppliers and competitors, and 5 real customer quotes with the links`
-- After the Stage 3 bullet, add: `A signed go / pivot / kill score for your idea across 6 areas, with the proof behind each score`
-- After the Stage 4 bullets, add: `Three written playbooks for your business — how a sale comes in, how you deliver it, how a new customer is welcomed — loaded into your project hub`
+**Build the first working version**
+11. Your sale-to-customer map with the free apps set up in your name
+12. Your first customer's deliverable drafted, with a 5-point quality checklist
+13. Three SOPs — intake, fulfillment, onboarding — loaded into your project hub
 
-New total on the home page: **21 finished pieces** (was 17). No copy outside these bullets needs to change.
+**Brand & publish**
+14. Your logo, 4-color palette, and font pair, built from your business name
+15. A 4-page website (Home, Offer, About, Contact) in your voice, ready to publish
+16. Payments, business email, and GA4 set up and queued for one click
 
-## Schedule timing (`src/lib/schedule-data.ts`)
+**Print & promote**
+17. Headline, 3 reasons to buy, 30-second pitch, and 100-word founder bio
+18. Print-ready business card and 1-page flyer in your brand
+19. 6 social posts, a 60-second video script, and a 30-day plan with 3 weekly KPIs
 
-Each affected stage gains one task without growing its time slot — the new tasks are 8–12 minute artifacts that compress into the existing 60–75 minute blocks. No changes to:
+**Launch**
+20. Your signed 30/60/90 plan, announcement list, and personal outreach drafts ready to send
+21. Launch-day timeline, starter CRM, 3 weekly KPIs, and an accountability partner on the calendar
 
-- `EVENT` times, `SCHEDULE` rows, break lengths, start/end ISO, calendar exports.
-- `FLOW_STAGES` derivation (it reads from `STAGES`, so the new walk-outs flow through automatically).
+## Curriculum-data alignment (`src/lib/curriculum-data.ts`)
 
-The only edit to `schedule-data.ts` is none — it picks up the new walk-out bullets and `takeHome` text via the existing `FLOW_STAGES` mapping. Confirmed by re-reading lines 71–79.
+The same overpromises live deeper in the curriculum and feed the schedule page. Soften them so the home page and `/schedule` agree:
 
-## Out of scope
+- **Stage 1, Funding task** — change deliverable/walkOut/takeaway from "10 named lenders or investors to contact" to "a funder outreach list you start building with the message templates ready to send." Follow-up text stays — sending the messages happens after.
+- **Stage 2, takeHome** — drop "25-name prospect list pulled for your niche and zip." Replace with "a prospect list you start building in-session."
+- **Stage 2, walkOut item** — change "25-name prospect list pulled… exported as a CSV" to "a starter prospect list with the source template and the CSV export ready."
+- **Stage 2, Research task** — change "Collect 5 verbatim customer quotes…" to "Pull real customer quotes from Reddit, Facebook groups, or product reviews — log every URL." (Drop the count of 5.)
+- **Stage 2, Research task takeaway / walkOut** — replace "5 sourced customer quotes" with "sourced customer quotes."
+- **Stage 2, Market task** — soften the "25-name prospect list pulled for you" line to "a starter prospect list you begin building in-session, with the source template."
+- **Stage 7, Launch task** — change "10 personalized outreach drafts written for your contacts" to "personal outreach drafts ready to send from a template you've personalized." Drop the 10 count from walkOut and takeaway.
+- **Stage 7, takeHome** — drop the "personalized outreach drafts ready to send" count language so the home page and curriculum match.
 
-- No 8th stage, no schedule-time changes, no new routes or components.
-- No edits to `FlowStrip`, `AIToolkit`, `ValueByTheNumbers`, `/schedule` route layout, or the home page outside the `walkOut` array.
-- No pricing, dollar figures, or value pills.
-- No changes to the `walkIn` list.
+The follow-up text in each task ("send the messages within 2 weeks", etc.) stays. That's the right place for the homework promise.
 
 ## Files touched
 
-- `src/lib/curriculum-data.ts` — add one task to each of stages 1, 2, 3, 4; extend their `walkOut` and `takeHome`; relax the `tasks` tuple type to `Task[]`.
-- `src/routes/index.tsx` — insert four new bullets into the `WalkInWalkOut` `walkOut` array in stage order.
+- `src/routes/index.tsx` — replace the `walkOut` array with the 21 tightened, realistic bullets above.
+- `src/lib/curriculum-data.ts` — surgical edits to Stage 1 funding task, Stage 2 (takeHome, walkOut, research task, market task), Stage 7 (takeHome, launch task). No structural changes, no new tasks, no removed tasks.
+
+## Out of scope
+
+- No edits to `/schedule` route layout (it reads from `STAGES` and updates automatically).
+- No changes to `walkIn`, `FlowStrip`-related sections, headings, group labels, or visual styling.
+- No new promises added — only quantified outside-the-room promises softened.
