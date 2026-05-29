@@ -104,6 +104,12 @@ const fromCohort = (c: Cohort): FormState => ({
   cohort_honest_threshold_pct: String(c.cohortHonestThresholdPct),
 });
 
+function clampInt(s: string, lo: number, hi: number): number {
+  const n = Math.floor(Number(s) || 0);
+  if (!Number.isFinite(n)) return lo;
+  return Math.max(lo, Math.min(hi, n));
+}
+
 function CohortsAdminPage() {
   const { isSuperAdmin, loading } = useAuth();
   const qc = useQueryClient();
