@@ -8,9 +8,11 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { createRegistration } from "@/lib/registrations.functions";
 import { EVENT } from "@/lib/schedule-data";
+import { getCohortById, getNextAvailableCohort } from "@/lib/cohorts";
 import { ValueGrid } from "@/components/value/ValueGrid";
 import { TotalsBar } from "@/components/value/TotalsBar";
 import { PricingTiers } from "@/components/value/PricingTiers";
+import { CohortPicker } from "@/components/value/CohortPicker";
 import { PRICING, type TierKey } from "@/lib/value-grid";
 import { CheckCircle2, ArrowRight, ShieldCheck, Users, CalendarDays } from "lucide-react";
 
@@ -46,6 +48,7 @@ const FormSchema = z.object({
   stage: z.enum(["idea", "early", "existing"]),
   referral_source: z.string().trim().max(120).optional().or(z.literal("")),
   tier_interest: z.enum(["founders", "cohort"]),
+  cohort_id: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a cohort date"),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
@@ -54,6 +57,8 @@ function RegisterPage() {
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [tier, setTier] = useState<TierKey>("founders");
+  const defaultCohort = getNextAvailableCohort();
+  const [cohortId, setCohortId] = useState<string>(defaultCohort.id);
   const submit = useServerFn(createRegistration);
 
   const {
@@ -63,13 +68,25 @@ function RegisterPage() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
-    defaultValues: { stage: "idea", industry: "", tier_interest: "founders" },
+    defaultValues: {
+      stage: "idea",
+      industry: "",
+      tier_interest: "founders",
+      cohort_id: defaultCohort.id,
+    },
   });
 
   const selectTier = (t: TierKey) => {
     setTier(t);
     setValue("tier_interest", t, { shouldValidate: true });
   };
+
+  const selectCohort = (id: string) => {
+    setCohortId(id);
+    setValue("cohort_id", id, { shouldValidate: true });
+  };
+
+  const selectedCohort = getCohortById(cohortId) ?? defaultCohort;
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
@@ -90,7 +107,7 @@ function RegisterPage() {
       <section className="border-b border-white/5 py-16 md:py-20">
         <div className="mx-auto max-w-5xl px-6">
           <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-            {EVENT.dateLabel} · IGNITE Center at Greater Atlanta Christian School, Norcross GA
+            Monthly cohorts · IGNITE Center at Greater Atlanta Christian School, Norcross GA
           </p>
           <h1 className="text-5xl font-semibold tracking-tight md:text-6xl">
             Walk in with an idea.{" "}
@@ -102,7 +119,7 @@ function RegisterPage() {
           </p>
           <div className="mt-6 flex flex-wrap gap-4 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-2">
-              <Users className="size-4" /> 20 seats total
+              <Users className="size-4" /> 20 seats per cohort
             </span>
             <span className="inline-flex items-center gap-2">
               <CalendarDays className="size-4" /> {EVENT.timeLabel}
@@ -110,6 +127,11 @@ function RegisterPage() {
             <span className="inline-flex items-center gap-2">
               <ShieldCheck className="size-4" /> Founder-led, build-as-you-go
             </span>
+          </div>
+
+          {/* Cohort picker — compact, sits in the hero */}
+          <div className="mt-8">
+            <CohortPicker selectedId={cohortId} onSelect={selectCohort} />
           </div>
         </div>
       </section>
@@ -163,7 +185,7 @@ function RegisterPage() {
             </p>
           </div>
           {submitted ? (
-            <SuccessCard tier={tier} />
+            <SuccessCard tier={tier} cohortId={cohortId} />
           ) : (
             <form
               onSubmit={onSubmit}
@@ -246,7 +268,17 @@ function RegisterPage() {
                   })}
                 </div>
                 <input type="hidden" {...register("tier_interest")} />
+                <input type="hidden" {...register("cohort_id")} />
               </Field>
+
+              <div className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Cohort
+                </div>
+                <div className="mt-0.5 font-medium text-foreground">
+                  Reserving for {selectedCohort.dateLabel}
+                </div>
+              </div>
 
               <Field label="How did you hear about us? (optional)" error={errors.referral_source?.message}>
                 <input {...register("referral_source")} className="input" placeholder="Friend, Instagram, search…" />
@@ -313,7 +345,8 @@ function Field({
   );
 }
 
-function SuccessCard({ tier }: { tier: TierKey }) {
+function SuccessCard({ tier, cohortId }: { tier: TierKey; cohortId: string }) {
+  const cohort = getCohortById(cohortId);
   const bring = [
     "Your laptop and charger",
     "Headphones (optional)",
@@ -327,7 +360,7 @@ function SuccessCard({ tier }: { tier: TierKey }) {
       </div>
       <h2 className="text-2xl font-semibold tracking-tight">You&apos;re in.</h2>
       <p className="mt-2 text-muted-foreground">
-        {PRICING[tier].label} reserved for {EVENT.dateLabel}. Check your email for confirmation and payment instructions shortly.
+        {PRICING[tier].label} reserved for {cohort?.dateLabel ?? EVENT.dateLabel}. Check your email for confirmation and payment instructions shortly.
       </p>
       <div className="mt-8 rounded-xl border border-white/10 p-5 text-left">
         <div className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
