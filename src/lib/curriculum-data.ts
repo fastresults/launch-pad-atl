@@ -255,19 +255,21 @@ export const STAGES: Stage[] = [
           "Your first-version scope — mapped step-by-step from sale to handoff.",
       },
       {
-        title: "Set price, margin & payment terms",
+        title: "Set price using competitor + value benchmarks",
         deliverable:
-          "Your pricing sheet, your real cost per sale, and the exact number of sales you need to cover your costs.",
-        tool: "Pricing & margin calculator",
+          "Your pricing sheet built from a 3-competitor price scan and the value to your customer, with real cost per sale, margin, break-even, and payment terms.",
+        tool: "Competitor + value-based pricing calculator",
         details: [
-          "Compute what each sale actually costs you to make",
+          "Scan 3 named competitors and capture their public prices and what's included",
           "Set price using value, cost-plus, and competitor anchors",
+          "Compute what each sale actually costs you to make",
           "Calculate units/month to break even and to hit a target income",
           "Define deposit, milestones, refund policy, and accepted payment methods",
         ],
         takeaway:
-          "Your pricing sheet + exact break-even number + payment terms.",
+          "Your pricing sheet — anchored to competitors and customer value — plus exact break-even number and payment terms.",
       },
+
       {
         title: "Score the idea — go / pivot / kill",
         deliverable:
