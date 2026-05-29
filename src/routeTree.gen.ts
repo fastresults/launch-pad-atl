@@ -26,8 +26,10 @@ import { Route as AuthenticatedDashboardProfileRouteImport } from './routes/_aut
 import { Route as AuthenticatedDashboardMediaRouteImport } from './routes/_authenticated/dashboard.media'
 import { Route as AuthenticatedDashboardGoalsRouteImport } from './routes/_authenticated/dashboard.goals'
 import { Route as AuthenticatedDashboardFilingRouteImport } from './routes/_authenticated/dashboard.filing'
+import { Route as AuthenticatedDashboardFilesRouteImport } from './routes/_authenticated/dashboard.files'
 import { Route as AuthenticatedDashboardDocumentsRouteImport } from './routes/_authenticated/dashboard.documents'
 import { Route as AuthenticatedDashboardDeliverablesRouteImport } from './routes/_authenticated/dashboard.deliverables'
+import { Route as AuthenticatedDashboardDayRouteImport } from './routes/_authenticated/dashboard.day'
 import { Route as AuthenticatedDashboardBriefRouteImport } from './routes/_authenticated/dashboard.brief'
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
 import { Route as ApiPublicHooksPublishDueDeliverablesRouteImport } from './routes/api/public/hooks/publish-due-deliverables'
@@ -133,6 +135,12 @@ const AuthenticatedDashboardFilingRoute =
     path: '/filing',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardFilesRoute =
+  AuthenticatedDashboardFilesRouteImport.update({
+    id: '/files',
+    path: '/files',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardDocumentsRoute =
   AuthenticatedDashboardDocumentsRouteImport.update({
     id: '/documents',
@@ -143,6 +151,12 @@ const AuthenticatedDashboardDeliverablesRoute =
   AuthenticatedDashboardDeliverablesRouteImport.update({
     id: '/deliverables',
     path: '/deliverables',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardDayRoute =
+  AuthenticatedDashboardDayRouteImport.update({
+    id: '/day',
+    path: '/day',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardBriefRoute =
@@ -247,8 +261,10 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
+  '/dashboard/day': typeof AuthenticatedDashboardDayRoute
   '/dashboard/deliverables': typeof AuthenticatedDashboardDeliverablesRoute
   '/dashboard/documents': typeof AuthenticatedDashboardDocumentsRoute
+  '/dashboard/files': typeof AuthenticatedDashboardFilesRoute
   '/dashboard/filing': typeof AuthenticatedDashboardFilingRoute
   '/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
   '/dashboard/media': typeof AuthenticatedDashboardMediaRoute
@@ -280,8 +296,10 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
+  '/dashboard/day': typeof AuthenticatedDashboardDayRoute
   '/dashboard/deliverables': typeof AuthenticatedDashboardDeliverablesRoute
   '/dashboard/documents': typeof AuthenticatedDashboardDocumentsRoute
+  '/dashboard/files': typeof AuthenticatedDashboardFilesRoute
   '/dashboard/filing': typeof AuthenticatedDashboardFilingRoute
   '/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
   '/dashboard/media': typeof AuthenticatedDashboardMediaRoute
@@ -317,8 +335,10 @@ export interface FileRoutesById {
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
+  '/_authenticated/dashboard/day': typeof AuthenticatedDashboardDayRoute
   '/_authenticated/dashboard/deliverables': typeof AuthenticatedDashboardDeliverablesRoute
   '/_authenticated/dashboard/documents': typeof AuthenticatedDashboardDocumentsRoute
+  '/_authenticated/dashboard/files': typeof AuthenticatedDashboardFilesRoute
   '/_authenticated/dashboard/filing': typeof AuthenticatedDashboardFilingRoute
   '/_authenticated/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
   '/_authenticated/dashboard/media': typeof AuthenticatedDashboardMediaRoute
@@ -353,8 +373,10 @@ export interface FileRouteTypes {
     | '/terms'
     | '/dashboard'
     | '/dashboard/brief'
+    | '/dashboard/day'
     | '/dashboard/deliverables'
     | '/dashboard/documents'
+    | '/dashboard/files'
     | '/dashboard/filing'
     | '/dashboard/goals'
     | '/dashboard/media'
@@ -386,8 +408,10 @@ export interface FileRouteTypes {
     | '/signup'
     | '/terms'
     | '/dashboard/brief'
+    | '/dashboard/day'
     | '/dashboard/deliverables'
     | '/dashboard/documents'
+    | '/dashboard/files'
     | '/dashboard/filing'
     | '/dashboard/goals'
     | '/dashboard/media'
@@ -422,8 +446,10 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin'
     | '/_authenticated/dashboard'
     | '/_authenticated/dashboard/brief'
+    | '/_authenticated/dashboard/day'
     | '/_authenticated/dashboard/deliverables'
     | '/_authenticated/dashboard/documents'
+    | '/_authenticated/dashboard/files'
     | '/_authenticated/dashboard/filing'
     | '/_authenticated/dashboard/goals'
     | '/_authenticated/dashboard/media'
@@ -580,6 +606,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardFilingRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/files': {
+      id: '/_authenticated/dashboard/files'
+      path: '/files'
+      fullPath: '/dashboard/files'
+      preLoaderRoute: typeof AuthenticatedDashboardFilesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/documents': {
       id: '/_authenticated/dashboard/documents'
       path: '/documents'
@@ -592,6 +625,13 @@ declare module '@tanstack/react-router' {
       path: '/deliverables'
       fullPath: '/dashboard/deliverables'
       preLoaderRoute: typeof AuthenticatedDashboardDeliverablesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/day': {
+      id: '/_authenticated/dashboard/day'
+      path: '/day'
+      fullPath: '/dashboard/day'
+      preLoaderRoute: typeof AuthenticatedDashboardDayRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/brief': {
@@ -784,8 +824,10 @@ const AuthenticatedDashboardWorkflowRouteWithChildren =
 
 interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardBriefRoute: typeof AuthenticatedDashboardBriefRoute
+  AuthenticatedDashboardDayRoute: typeof AuthenticatedDashboardDayRoute
   AuthenticatedDashboardDeliverablesRoute: typeof AuthenticatedDashboardDeliverablesRoute
   AuthenticatedDashboardDocumentsRoute: typeof AuthenticatedDashboardDocumentsRoute
+  AuthenticatedDashboardFilesRoute: typeof AuthenticatedDashboardFilesRoute
   AuthenticatedDashboardFilingRoute: typeof AuthenticatedDashboardFilingRoute
   AuthenticatedDashboardGoalsRoute: typeof AuthenticatedDashboardGoalsRoute
   AuthenticatedDashboardMediaRoute: typeof AuthenticatedDashboardMediaRoute
@@ -797,9 +839,11 @@ interface AuthenticatedDashboardRouteChildren {
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
   {
     AuthenticatedDashboardBriefRoute: AuthenticatedDashboardBriefRoute,
+    AuthenticatedDashboardDayRoute: AuthenticatedDashboardDayRoute,
     AuthenticatedDashboardDeliverablesRoute:
       AuthenticatedDashboardDeliverablesRoute,
     AuthenticatedDashboardDocumentsRoute: AuthenticatedDashboardDocumentsRoute,
+    AuthenticatedDashboardFilesRoute: AuthenticatedDashboardFilesRoute,
     AuthenticatedDashboardFilingRoute: AuthenticatedDashboardFilingRoute,
     AuthenticatedDashboardGoalsRoute: AuthenticatedDashboardGoalsRoute,
     AuthenticatedDashboardMediaRoute: AuthenticatedDashboardMediaRoute,

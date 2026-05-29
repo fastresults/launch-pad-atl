@@ -1,30 +1,43 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyBrief, updateBriefField } from "@/lib/brief.functions";
 import { BRIEF_FIELDS } from "@/lib/workflow";
 import { VoiceField } from "@/components/voice/VoiceField";
-import { Progress } from "@/components/ui/progress";
+import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/brief")({
-  component: BriefPage,
-  head: () => ({ meta: [{ title: "Business Brief" }] }),
+  component: BriefWizard,
+  head: () => ({ meta: [{ title: "My business — Startup Labs" }] }),
 });
 
-function BriefPage() {
+function BriefWizard() {
   const getFn = useServerFn(getMyBrief);
   const saveFn = useServerFn(updateBriefField);
+  const navigate = useNavigate();
   const { data, refetch } = useQuery({ queryKey: ["my", "brief"], queryFn: () => getFn() });
   const [values, setValues] = useState<Record<string, string>>({});
+  const [idx, setIdx] = useState(0);
 
   useEffect(() => {
     if (!data?.brief) return;
     const init: Record<string, string> = {};
     for (const f of BRIEF_FIELDS) init[f.key] = (data.brief[f.key as keyof typeof data.brief] as string) ?? "";
     setValues(init);
+    // jump to first unanswered question on initial load
+    const firstEmpty = BRIEF_FIELDS.findIndex((f) => !init[f.key]);
+    if (firstEmpty >= 0) setIdx(firstEmpty);
   }, [data]);
+
+  const total = BRIEF_FIELDS.length;
+  const current = BRIEF_FIELDS[idx];
+  const value = values[current.key] ?? "";
+  const answeredCount = useMemo(
+    () => BRIEF_FIELDS.filter((f) => (values[f.key] ?? "").trim().length > 0).length,
+    [values],
+  );
 
   const save = async (key: string) => {
     try {
@@ -35,35 +48,106 @@ function BriefPage() {
     }
   };
 
-  const score = data?.brief?.completeness_score ?? 0;
-  const pct = Math.round((score / BRIEF_FIELDS.length) * 100);
+  const goNext = async () => {
+    await save(current.key);
+    if (idx < total - 1) setIdx(idx + 1);
+    else {
+      toast.success("All done. Your AI has everything it needs.");
+      navigate({ to: "/dashboard" });
+    }
+  };
+
+  const goBack = () => {
+    if (idx > 0) setIdx(idx - 1);
+  };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Your business brief</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Speak or type. Every deliverable downstream uses this brief, so the more specific you are, the better the output.
-        </p>
-        <div className="mt-4 flex items-center gap-3">
-          <Progress value={pct} className="h-2 flex-1" />
-          <span className="text-sm text-muted-foreground">{score} / {BRIEF_FIELDS.length}</span>
+    <div className="mx-auto max-w-2xl">
+      {/* Header + progress */}
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Question {idx + 1} of {total}
+        </div>
+        <div className="text-xs text-muted-foreground tabular-nums">
+          {answeredCount}/{total} answered
         </div>
       </div>
+      <div className="mt-2 h-1.5 rounded-full bg-muted/30 overflow-hidden">
+        <div
+          className="h-full bg-primary transition-all duration-500"
+          style={{ width: `${((idx + 1) / total) * 100}%` }}
+        />
+      </div>
 
-      <div className="space-y-6 rounded-2xl border border-white/10 bg-card p-6">
-        {BRIEF_FIELDS.map((f) => (
-          <VoiceField
-            key={f.key}
-            label={f.label}
-            value={values[f.key] ?? ""}
-            onChange={(v) => setValues((s) => ({ ...s, [f.key]: v }))}
-            onBlur={() => save(f.key)}
-            placeholder={f.placeholder}
-            multiline={f.multiline}
-            context={f.label}
-          />
-        ))}
+      {/* The question */}
+      <div className="mt-10 space-y-6">
+        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight leading-tight">
+          {current.label}
+        </h1>
+        <p className="text-muted-foreground">
+          You can talk instead of type. Tap the mic, just speak naturally.
+        </p>
+
+        <VoiceField
+          label=""
+          value={value}
+          onChange={(v) => setValues((s) => ({ ...s, [current.key]: v }))}
+          placeholder={current.placeholder}
+          multiline={current.multiline}
+          context={current.label}
+        />
+      </div>
+
+      {/* Nav */}
+      <div className="mt-10 flex items-center justify-between gap-3">
+        <button
+          onClick={goBack}
+          disabled={idx === 0}
+          className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed min-h-[44px]"
+        >
+          <ChevronLeft className="h-4 w-4" /> Back
+        </button>
+        <button
+          onClick={goNext}
+          className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:opacity-90 min-h-[44px]"
+        >
+          {idx === total - 1 ? (
+            <>
+              I'm done <Check className="h-4 w-4" />
+            </>
+          ) : (
+            <>
+              Next <ChevronRight className="h-4 w-4" />
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Skip-to-question grid */}
+      <div className="mt-12">
+        <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Jump to any question</div>
+        <div className="flex flex-wrap gap-1.5">
+          {BRIEF_FIELDS.map((f, i) => {
+            const answered = (values[f.key] ?? "").trim().length > 0;
+            const active = i === idx;
+            return (
+              <button
+                key={f.key}
+                onClick={() => setIdx(i)}
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition ${
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : answered
+                      ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30"
+                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                }`}
+                title={f.label}
+              >
+                {i + 1}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
