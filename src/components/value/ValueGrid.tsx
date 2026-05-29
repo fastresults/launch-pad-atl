@@ -123,7 +123,8 @@ export function ValueGrid() {
               <div key={r.deliverable} className="px-5 py-4 border-b border-white/5 space-y-2">
                 <div className="flex items-start gap-2 text-sm">
                   <Check className="size-4 mt-0.5 shrink-0 text-primary" />
-                  <span>{r.deliverable}</span>
+                  <span className="flex-1">{r.deliverable}</span>
+                  <PostWorkshopTip row={r} />
                 </div>
                 <div className="flex gap-4 pl-6 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
