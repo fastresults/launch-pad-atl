@@ -44,7 +44,7 @@ function PrivacyPage() {
             <p>
               Startup Labs ("Startup Labs," "we," "us," or "our"), a division of
               Evolve Inc., operates startuplabs.online and the in-person workshop
-              experience held in Norcross, GA. This Privacy Policy explains what
+              experience held in Norcross, Georgia, and metropolitan areas across the Southeast United States. This Privacy Policy explains what
               information we collect, how we use it, and the choices you have.
             </p>
           </section>
@@ -194,15 +194,15 @@ function PrivacyPage() {
             <p>
               Questions about this policy or your data? Email{" "}
               <a
-                href="mailto:hello@startuplabs.online"
+                href="mailto:fastresults@gmail.com"
                 className="text-primary underline-offset-4 hover:underline"
               >
-                hello@startuplabs.online
+                fastresults@gmail.com
               </a>
               .
             </p>
             <p className="text-sm text-muted-foreground">
-              Startup Labs · Norcross, GA · A division of Evolve Inc.
+              Startup Labs · Norcross, Georgia, and metropolitan areas across the Southeast United States · A division of Evolve Inc.
             </p>
           </Section>
         </div>
