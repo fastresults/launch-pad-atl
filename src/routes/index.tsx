@@ -78,7 +78,7 @@ function NotACourseBanner() {
 
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 md:flex-col md:items-end md:gap-2 md:shrink-0">
+          <div className="flex flex-col gap-2 md:flex-col md:items-end md:gap-2 md:shrink-0">
             <BannerChip icon={<Hammer className="size-3.5" />} label="Built in the room, not assigned as homework" />
             <BannerChip icon={<Timer className="size-3.5" />} label="Seven hours. One founder. One business." />
             <BannerChip icon={<Check className="size-3.5" />} label="Real deliverables + a one-page finish list" />
@@ -108,15 +108,15 @@ function Hero() {
         style={{ backgroundImage: `url(${heroBg})` }}
       />
       <div className="absolute inset-0 bg-background/50" />
-      <div className="relative mx-auto max-w-6xl px-6 py-24 md:py-32">
-        <p className="mb-6 text-sm uppercase tracking-[0.2em] text-white/80">
+      <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-32">
+        <p className="mb-5 text-xs uppercase tracking-[0.18em] text-white/80 md:mb-6 md:text-sm md:tracking-[0.2em]">
           One day. One founder. One operationally launch-ready business.
         </p>
-        <h1 className="max-w-3xl text-5xl font-semibold leading-[1.05] tracking-tight text-white md:text-7xl">
+        <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-7xl">
           Walk in with an idea. <br />
           Walk out <span className="italic">with a business built to earn</span>.
         </h1>
-        <p className="mt-6 max-w-2xl text-lg text-white/90">
+        <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
           Seven focused hours at the IGNITE Center in Norcross, GA.{" "}
           <span className="font-medium text-white">
             You bring the idea — even a rough one. We build <em>your</em> business, not a template.
@@ -125,26 +125,26 @@ function Hero() {
           a website ready to publish, your full marketing kit, and a 90-day plan with
           your next ten moves already on the calendar.
         </p>
-        <p className="mt-4 max-w-2xl text-base text-white/85">
+        <p className="mt-4 max-w-2xl text-sm text-white/85 md:text-base">
           The fastest path we know from idea to a viable, profit-ready business — in one
           focused day, with paying customers in the 90-day plan you take home.
         </p>
 
-        <div className="mt-10 flex flex-wrap items-center gap-4">
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 md:mt-10">
           <Link
             to="/register"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
           >
             Claim one of 10 seats <ArrowRight className="size-4" />
           </Link>
           <Link
             to="/schedule"
-            className="inline-flex items-center gap-2 rounded-full border border-white/30 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/30 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
           >
             See the 7-hour flow
           </Link>
         </div>
-        <div className="mt-12 grid max-w-3xl grid-cols-1 gap-4 text-white/90 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid max-w-3xl grid-cols-1 gap-3 text-white/90 sm:grid-cols-2 lg:grid-cols-4 md:mt-12 md:gap-4">
           <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
           <Meta icon={<MapPin className="size-4" />} label="IGNITE Center · Greater Atlanta Christian School" />
           <Meta icon={<Users className="size-4" />} label={`${EVENT.capacity} seats`} />
@@ -232,9 +232,9 @@ function FlowStrip() {
 
 function FacilitatorSection() {
   return (
-    <section className="py-20">
+    <section className="py-12 md:py-20">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="grid items-center gap-10 rounded-3xl border border-white/10 bg-card p-8 md:grid-cols-[1fr_1.4fr] md:p-12">
+        <div className="grid items-center gap-8 rounded-3xl border border-white/10 bg-card p-6 md:grid-cols-[1fr_1.4fr] md:gap-10 md:p-12">
           <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-hero-gradient">
             <div
               className="absolute inset-0 mix-blend-overlay opacity-30"
@@ -271,7 +271,7 @@ function FacilitatorSection() {
             <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
               Who's in the room with you
             </h2>
-            <p className="text-3xl font-semibold tracking-tight md:text-4xl">
+            <p className="text-2xl font-semibold tracking-tight md:text-4xl">
               {FACILITATOR_NAME} —{" "}
               <span className="text-gradient-brand">at your table for the day.</span>
             </p>
@@ -425,17 +425,17 @@ function WalkInWalkOut() {
     "No structure, no kit, no plan you can actually follow Monday morning",
   ];
   return (
-    <section className="py-20">
+    <section className="py-12 md:py-20">
       <div className="mx-auto max-w-6xl px-6">
-        <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+        <h2 className="mb-2 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           The transformation
         </h2>
-        <p className="mb-10 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
+        <p className="mb-8 max-w-3xl text-2xl font-semibold leading-tight tracking-tight md:mb-10 md:text-4xl">
           What changes between{" "}
           <span className="text-gradient-brand">8:00 AM and 4:30 PM</span>.
         </p>
-        <div className="grid gap-6 md:grid-cols-[1fr_1.4fr]">
-          <div className="rounded-3xl border border-white/10 bg-card/50 p-7 md:p-8">
+        <div className="grid gap-5 md:grid-cols-[1fr_1.4fr] md:gap-6">
+          <div className="rounded-3xl border border-white/10 bg-card/50 p-6 md:p-8">
             <div className="mb-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
               8:00 AM
             </div>
@@ -451,7 +451,7 @@ function WalkInWalkOut() {
               ))}
             </ul>
           </div>
-          <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-card p-7 md:p-8">
+          <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-card p-6 md:p-8">
             <div className="pointer-events-none absolute inset-0 bg-hero-gradient opacity-[0.08]" />
             <div className="relative">
               <div className="mb-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -540,15 +540,15 @@ function ValueByTheNumbers() {
 function VenueCard() {
   const EVENT = useEvent();
   return (
-    <section className="pb-24">
+    <section className="pb-16 md:pb-24">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="overflow-hidden rounded-3xl border border-white/10 bg-card p-8 md:p-12">
-          <div className="grid gap-10 md:grid-cols-[1.05fr_1fr]">
+        <div className="overflow-hidden rounded-3xl border border-white/10 bg-card p-6 md:p-12">
+          <div className="grid gap-8 md:grid-cols-[1.05fr_1fr] md:gap-10">
             <div>
               <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
                 Where it happens
               </h2>
-              <p className="text-3xl font-semibold tracking-tight md:text-4xl">
+              <p className="text-2xl font-semibold tracking-tight md:text-4xl">
                 {EVENT.venueName}
               </p>
               <p className="mt-3 text-muted-foreground">{EVENT.address}</p>
@@ -631,9 +631,9 @@ function VenueCard() {
 
 function BottomCTA() {
   return (
-    <section className="pb-24">
+    <section className="pb-16 md:pb-24">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-hero-gradient p-10 md:p-16">
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-hero-gradient p-8 md:p-16">
           <div
             className="absolute inset-0 mix-blend-overlay opacity-30"
             style={{
@@ -643,18 +643,18 @@ function BottomCTA() {
             }}
           />
           <div className="relative max-w-3xl text-white">
-            <h2 className="text-4xl font-semibold tracking-tight md:text-5xl">
+            <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-5xl">
               Twenty seats. One date. One door from idea to business.
             </h2>
-            <p className="mt-5 text-lg text-white/90">
+            <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
               If you've been waiting for the right week to start earning, this is the day
               you stop waiting. Bring the idea. We'll bring the operator, the room, and
               every template you need to turn it into a business that actually brings in money.
             </p>
-            <div className="mt-8">
+            <div className="mt-7 md:mt-8">
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-base font-medium text-neutral-900 transition-opacity hover:opacity-90 hover:text-neutral-900"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-base font-medium text-neutral-900 transition-opacity hover:opacity-90 hover:text-neutral-900 sm:w-auto"
               >
                 Reserve your seat for July 23 <ArrowRight className="size-4" />
               </Link>
@@ -785,12 +785,12 @@ function TheArtOfThePossible() {
   const rowB = filtered.filter((_, i) => i % 2 === 1);
 
   return (
-    <section className="border-y border-white/5 py-20">
-      <div className="mx-auto mb-10 max-w-6xl px-6">
-        <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+    <section className="border-y border-white/5 py-12 md:py-20">
+      <div className="mx-auto mb-8 max-w-6xl px-6 md:mb-10">
+        <h2 className="mb-2 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           What others are starting in 2026
         </h2>
-        <p className="max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl">
+        <p className="max-w-3xl text-2xl font-semibold leading-tight tracking-tight md:text-5xl">
           Proof, not a menu.{" "}
           <span className="text-gradient-brand">
             These are the kinds of businesses real people are launching in 2026 —
