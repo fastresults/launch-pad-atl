@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/documents")({
 
 const KINDS = [
   { key: "pitch_deck", label: "Pitch deck" },
-  { key: "business_plan", label: "Business plan" },
+  { key: "business_plan", label: "Startup plan" },
   { key: "logo", label: "Logo" },
   { key: "other", label: "Other" },
 ] as const;

@@ -140,7 +140,7 @@ function BeforeMode({
       ) : (
         <NextActionCard
           eyebrow="Pre-work"
-          title="Answer 10 quick questions about your business."
+          title="Answer 10 quick questions about your startup."
           description={
             <>
               You can talk instead of type. Your AI assistant uses these answers all day Saturday to build your 25 deliverables.
@@ -361,7 +361,7 @@ function NoCohortMode({ briefScore, briefTotal }: { briefScore: number; briefTot
       </p>
       <NextActionCard
         eyebrow="Start here"
-        title="Answer 10 quick questions about your business."
+        title="Answer 10 quick questions about your startup."
         description={`You're ${briefScore} of ${briefTotal} done.`}
         primary={{ to: "/dashboard/brief", label: briefScore === 0 ? "Start" : "Keep going" }}
       />
@@ -377,7 +377,7 @@ function WalkOutMoment() {
       <div className="text-xs font-medium uppercase tracking-wide text-primary">4:30 PM</div>
       <h1 className="mt-2 text-4xl md:text-5xl font-semibold tracking-tight">You did it 🎉</h1>
       <p className="mt-4 text-lg text-muted-foreground max-w-lg mx-auto">
-        You walked in with an idea. You're walking out with a launched business and a signed 90-day plan.
+        You walked in with an idea. You're walking out with a launched startup and a signed 90-day plan.
       </p>
       <Link
         to="/dashboard/workflow"

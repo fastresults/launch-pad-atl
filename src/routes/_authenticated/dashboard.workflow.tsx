@@ -52,7 +52,7 @@ function WorkflowPage() {
 
       {!briefReady && (
         <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/5 p-4 text-sm">
-          <Link to="/dashboard/brief" className="font-medium underline">Finish your Business Brief</Link>
+          <Link to="/dashboard/brief" className="font-medium underline">Finish your Startup Brief</Link>
           {" "}first ({briefScore} / 10 fields done). AI needs it to generate good deliverables.
         </div>
       )}

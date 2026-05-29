@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/brief")({
   component: BriefWizard,
-  head: () => ({ meta: [{ title: "My business — Startup Labs" }] }),
+  head: () => ({ meta: [{ title: "My startup — Startup Labs" }] }),
 });
 
 function BriefWizard() {

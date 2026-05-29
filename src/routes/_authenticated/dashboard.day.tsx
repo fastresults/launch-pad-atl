@@ -48,7 +48,7 @@ function WorkshopDayPage() {
         <ul className="space-y-2 text-sm">
           <li className="rounded-xl border border-white/10 bg-card p-4">Your laptop (and charger).</li>
           <li className="rounded-xl border border-white/10 bg-card p-4">A government-issued ID (for LLC filing).</li>
-          <li className="rounded-xl border border-white/10 bg-card p-4">Your business idea — even if it's rough. We'll shape it together.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">Your startup idea — even if it's rough. We'll shape it together.</li>
           <li className="rounded-xl border border-white/10 bg-card p-4">A debit card if you'd like to pay your state filing fee on the spot (about $100 in GA).</li>
         </ul>
       </section>
