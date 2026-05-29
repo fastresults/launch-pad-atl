@@ -501,18 +501,19 @@ export const STAGES: Stage[] = [
           "Send the print files to your printer and schedule the 6 posts in Buffer / Later / Meta Business Suite; record the video.",
       },
       {
-        title: "1-page marketing plan",
+        title: "Marketing & communications",
         deliverable:
-          "Your 1-page marketing plan: channels, budget, 30-day calendar, and 3 numbers to check every week.",
-        tool: "Marketing plan template",
+          "Your marketing & communications: audience, channels, messaging pillars, 30-day content calendar, weekly budget, and 3 numbers to check every week.",
+        tool: "Marketing & communications template",
         details: [
+          "Lock the audience and the 3 messaging pillars you'll repeat across every channel",
           "Pick your top-2 acquisition channels (1 organic, 1 outbound or paid)",
           "Set a weekly time + dollar budget per channel",
           "Build a 30-day content + outreach calendar (publish dates locked)",
           "Define 3 KPIs: leads/week, reply rate, conversion to sale",
         ],
         takeaway:
-          "Your 30-day marketing plan — 2 channels, weekly budget, content calendar, 3 weekly KPIs.",
+          "Your marketing & communications — audience, channels, messaging pillars, 30-day calendar, weekly budget, 3 weekly KPIs.",
       },
     ],
   },
