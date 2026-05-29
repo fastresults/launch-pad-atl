@@ -13,7 +13,9 @@ const COHORT_FIELDS =
 export const getMyCohort = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const email = context.claims?.email as string | undefined;
+    const userId = context.userId;
+    const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const email = userRes?.user?.email;
     if (!email) return { cohort: null as Cohort | null };
 
     const { data: reg } = await supabaseAdmin
