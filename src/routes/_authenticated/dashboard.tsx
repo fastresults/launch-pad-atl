@@ -14,6 +14,7 @@ function DashboardLayout() {
     { to: "/dashboard", label: "Overview" },
     { to: "/dashboard/profile", label: "Profile" },
     { to: "/dashboard/documents", label: "Documents" },
+    { to: "/dashboard/media", label: "Media" },
     { to: "/dashboard/goals", label: "Goals" },
     { to: "/dashboard/deliverables", label: "Deliverables" },
   ] as const;

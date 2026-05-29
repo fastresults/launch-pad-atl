@@ -20,6 +20,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/_admin'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
 import { Route as AuthenticatedDashboardProfileRouteImport } from './routes/_authenticated/dashboard.profile'
+import { Route as AuthenticatedDashboardMediaRouteImport } from './routes/_authenticated/dashboard.media'
 import { Route as AuthenticatedDashboardGoalsRouteImport } from './routes/_authenticated/dashboard.goals'
 import { Route as AuthenticatedDashboardDocumentsRouteImport } from './routes/_authenticated/dashboard.documents'
 import { Route as AuthenticatedDashboardDeliverablesRouteImport } from './routes/_authenticated/dashboard.deliverables'
@@ -28,8 +29,10 @@ import { Route as ApiPublicHooksPublishDueDeliverablesRouteImport } from './rout
 import { Route as AuthenticatedAdminAdminUsersRouteImport } from './routes/_authenticated/_admin/admin.users'
 import { Route as AuthenticatedAdminAdminReviewRouteImport } from './routes/_authenticated/_admin/admin.review'
 import { Route as AuthenticatedAdminAdminRegistrationsRouteImport } from './routes/_authenticated/_admin/admin.registrations'
+import { Route as AuthenticatedAdminAdminMediaRouteImport } from './routes/_authenticated/_admin/admin.media'
 import { Route as AuthenticatedAdminAdminAttendeesRouteImport } from './routes/_authenticated/_admin/admin.attendees'
 import { Route as AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.index'
+import { Route as AuthenticatedAdminAdminAttendeesUserIdMediaRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.media'
 import { Route as AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.deliverables.$key'
 
 const SignupRoute = SignupRouteImport.update({
@@ -87,6 +90,12 @@ const AuthenticatedDashboardProfileRoute =
     path: '/profile',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardMediaRoute =
+  AuthenticatedDashboardMediaRouteImport.update({
+    id: '/media',
+    path: '/media',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardGoalsRoute =
   AuthenticatedDashboardGoalsRouteImport.update({
     id: '/goals',
@@ -135,6 +144,12 @@ const AuthenticatedAdminAdminRegistrationsRoute =
     path: '/admin/registrations',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAdminMediaRoute =
+  AuthenticatedAdminAdminMediaRouteImport.update({
+    id: '/admin/media',
+    path: '/admin/media',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAdminAttendeesRoute =
   AuthenticatedAdminAdminAttendeesRouteImport.update({
     id: '/admin/attendees',
@@ -145,6 +160,12 @@ const AuthenticatedAdminAdminAttendeesUserIdIndexRoute =
   AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport.update({
     id: '/$userId/',
     path: '/$userId/',
+    getParentRoute: () => AuthenticatedAdminAdminAttendeesRoute,
+  } as any)
+const AuthenticatedAdminAdminAttendeesUserIdMediaRoute =
+  AuthenticatedAdminAdminAttendeesUserIdMediaRouteImport.update({
+    id: '/$userId/media',
+    path: '/$userId/media',
     getParentRoute: () => AuthenticatedAdminAdminAttendeesRoute,
   } as any)
 const AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute =
@@ -165,14 +186,17 @@ export interface FileRoutesByFullPath {
   '/dashboard/deliverables': typeof AuthenticatedDashboardDeliverablesRoute
   '/dashboard/documents': typeof AuthenticatedDashboardDocumentsRoute
   '/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
+  '/dashboard/media': typeof AuthenticatedDashboardMediaRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
+  '/admin/media': typeof AuthenticatedAdminAdminMediaRoute
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
+  '/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
   '/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
   '/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
@@ -186,14 +210,17 @@ export interface FileRoutesByTo {
   '/dashboard/deliverables': typeof AuthenticatedDashboardDeliverablesRoute
   '/dashboard/documents': typeof AuthenticatedDashboardDocumentsRoute
   '/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
+  '/dashboard/media': typeof AuthenticatedDashboardMediaRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
+  '/admin/media': typeof AuthenticatedAdminAdminMediaRoute
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
+  '/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
   '/admin/attendees/$userId': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
   '/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
@@ -211,14 +238,17 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/deliverables': typeof AuthenticatedDashboardDeliverablesRoute
   '/_authenticated/dashboard/documents': typeof AuthenticatedDashboardDocumentsRoute
   '/_authenticated/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
+  '/_authenticated/dashboard/media': typeof AuthenticatedDashboardMediaRoute
   '/_authenticated/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/_admin/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
+  '/_authenticated/_admin/admin/media': typeof AuthenticatedAdminAdminMediaRoute
   '/_authenticated/_admin/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/_authenticated/_admin/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/_authenticated/_admin/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
+  '/_authenticated/_admin/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
   '/_authenticated/_admin/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
   '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
@@ -235,14 +265,17 @@ export interface FileRouteTypes {
     | '/dashboard/deliverables'
     | '/dashboard/documents'
     | '/dashboard/goals'
+    | '/dashboard/media'
     | '/dashboard/profile'
     | '/dashboard/'
     | '/admin/attendees'
+    | '/admin/media'
     | '/admin/registrations'
     | '/admin/review'
     | '/admin/users'
     | '/api/public/hooks/publish-due-deliverables'
     | '/admin/'
+    | '/admin/attendees/$userId/media'
     | '/admin/attendees/$userId/'
     | '/admin/attendees/$userId/deliverables/$key'
   fileRoutesByTo: FileRoutesByTo
@@ -256,14 +289,17 @@ export interface FileRouteTypes {
     | '/dashboard/deliverables'
     | '/dashboard/documents'
     | '/dashboard/goals'
+    | '/dashboard/media'
     | '/dashboard/profile'
     | '/dashboard'
     | '/admin/attendees'
+    | '/admin/media'
     | '/admin/registrations'
     | '/admin/review'
     | '/admin/users'
     | '/api/public/hooks/publish-due-deliverables'
     | '/admin'
+    | '/admin/attendees/$userId/media'
     | '/admin/attendees/$userId'
     | '/admin/attendees/$userId/deliverables/$key'
   id:
@@ -280,14 +316,17 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/deliverables'
     | '/_authenticated/dashboard/documents'
     | '/_authenticated/dashboard/goals'
+    | '/_authenticated/dashboard/media'
     | '/_authenticated/dashboard/profile'
     | '/_authenticated/dashboard/'
     | '/_authenticated/_admin/admin/attendees'
+    | '/_authenticated/_admin/admin/media'
     | '/_authenticated/_admin/admin/registrations'
     | '/_authenticated/_admin/admin/review'
     | '/_authenticated/_admin/admin/users'
     | '/api/public/hooks/publish-due-deliverables'
     | '/_authenticated/_admin/admin/'
+    | '/_authenticated/_admin/admin/attendees/$userId/media'
     | '/_authenticated/_admin/admin/attendees/$userId/'
     | '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key'
   fileRoutesById: FileRoutesById
@@ -382,6 +421,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardProfileRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/media': {
+      id: '/_authenticated/dashboard/media'
+      path: '/media'
+      fullPath: '/dashboard/media'
+      preLoaderRoute: typeof AuthenticatedDashboardMediaRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/goals': {
       id: '/_authenticated/dashboard/goals'
       path: '/goals'
@@ -438,6 +484,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminRegistrationsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/_admin/admin/media': {
+      id: '/_authenticated/_admin/admin/media'
+      path: '/admin/media'
+      fullPath: '/admin/media'
+      preLoaderRoute: typeof AuthenticatedAdminAdminMediaRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/_admin/admin/attendees': {
       id: '/_authenticated/_admin/admin/attendees'
       path: '/admin/attendees'
@@ -452,6 +505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport
       parentRoute: typeof AuthenticatedAdminAdminAttendeesRoute
     }
+    '/_authenticated/_admin/admin/attendees/$userId/media': {
+      id: '/_authenticated/_admin/admin/attendees/$userId/media'
+      path: '/$userId/media'
+      fullPath: '/admin/attendees/$userId/media'
+      preLoaderRoute: typeof AuthenticatedAdminAdminAttendeesUserIdMediaRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminAttendeesRoute
+    }
     '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key': {
       id: '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key'
       path: '/$userId/deliverables/$key'
@@ -463,12 +523,15 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminAdminAttendeesRouteChildren {
+  AuthenticatedAdminAdminAttendeesUserIdMediaRoute: typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
   AuthenticatedAdminAdminAttendeesUserIdIndexRoute: typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
   AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute: typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
 
 const AuthenticatedAdminAdminAttendeesRouteChildren: AuthenticatedAdminAdminAttendeesRouteChildren =
   {
+    AuthenticatedAdminAdminAttendeesUserIdMediaRoute:
+      AuthenticatedAdminAdminAttendeesUserIdMediaRoute,
     AuthenticatedAdminAdminAttendeesUserIdIndexRoute:
       AuthenticatedAdminAdminAttendeesUserIdIndexRoute,
     AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute:
@@ -482,6 +545,7 @@ const AuthenticatedAdminAdminAttendeesRouteWithChildren =
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAdminAttendeesRoute: typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
+  AuthenticatedAdminAdminMediaRoute: typeof AuthenticatedAdminAdminMediaRoute
   AuthenticatedAdminAdminRegistrationsRoute: typeof AuthenticatedAdminAdminRegistrationsRoute
   AuthenticatedAdminAdminReviewRoute: typeof AuthenticatedAdminAdminReviewRoute
   AuthenticatedAdminAdminUsersRoute: typeof AuthenticatedAdminAdminUsersRoute
@@ -491,6 +555,7 @@ interface AuthenticatedAdminRouteChildren {
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAdminAttendeesRoute:
     AuthenticatedAdminAdminAttendeesRouteWithChildren,
+  AuthenticatedAdminAdminMediaRoute: AuthenticatedAdminAdminMediaRoute,
   AuthenticatedAdminAdminRegistrationsRoute:
     AuthenticatedAdminAdminRegistrationsRoute,
   AuthenticatedAdminAdminReviewRoute: AuthenticatedAdminAdminReviewRoute,
@@ -505,6 +570,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardDeliverablesRoute: typeof AuthenticatedDashboardDeliverablesRoute
   AuthenticatedDashboardDocumentsRoute: typeof AuthenticatedDashboardDocumentsRoute
   AuthenticatedDashboardGoalsRoute: typeof AuthenticatedDashboardGoalsRoute
+  AuthenticatedDashboardMediaRoute: typeof AuthenticatedDashboardMediaRoute
   AuthenticatedDashboardProfileRoute: typeof AuthenticatedDashboardProfileRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
@@ -515,6 +581,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardDeliverablesRoute,
     AuthenticatedDashboardDocumentsRoute: AuthenticatedDashboardDocumentsRoute,
     AuthenticatedDashboardGoalsRoute: AuthenticatedDashboardGoalsRoute,
+    AuthenticatedDashboardMediaRoute: AuthenticatedDashboardMediaRoute,
     AuthenticatedDashboardProfileRoute: AuthenticatedDashboardProfileRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   }
@@ -552,3 +619,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
