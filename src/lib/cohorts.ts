@@ -230,10 +230,10 @@ export const FALLBACK_COHORT: Cohort = buildCohortFromRow({
   founders_seats: DEFAULT_PRICING.foundersSeats,
   cohort_price_cents: DEFAULT_PRICING.cohortPriceCents,
   cohort_seats: DEFAULT_PRICING.cohortSeats,
-  founders_display_floor: 2,
+  founders_display_floor_pct: 25,
   founders_warming_boost: 2,
   founders_honest_threshold_pct: 50,
-  cohort_display_floor: 8,
+  cohort_display_floor_pct: 25,
   cohort_warming_boost: 2,
   cohort_honest_threshold_pct: 50,
 });
