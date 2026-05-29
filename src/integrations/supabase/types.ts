@@ -110,6 +110,66 @@ export type Database = {
           },
         ]
       }
+      attendee_business_brief: {
+        Row: {
+          business_model: string | null
+          completed_at: string | null
+          completeness_score: number
+          created_at: string
+          id: string
+          inspiration_brands: string | null
+          offer_description: string | null
+          one_line_pitch: string | null
+          origin_story: string | null
+          pricing_idea: string | null
+          problem_statement: string | null
+          target_customer: string | null
+          twelve_month_vision: string | null
+          unique_insight: string | null
+          updated_at: string
+          user_id: string
+          voice_transcripts: Json
+        }
+        Insert: {
+          business_model?: string | null
+          completed_at?: string | null
+          completeness_score?: number
+          created_at?: string
+          id?: string
+          inspiration_brands?: string | null
+          offer_description?: string | null
+          one_line_pitch?: string | null
+          origin_story?: string | null
+          pricing_idea?: string | null
+          problem_statement?: string | null
+          target_customer?: string | null
+          twelve_month_vision?: string | null
+          unique_insight?: string | null
+          updated_at?: string
+          user_id: string
+          voice_transcripts?: Json
+        }
+        Update: {
+          business_model?: string | null
+          completed_at?: string | null
+          completeness_score?: number
+          created_at?: string
+          id?: string
+          inspiration_brands?: string | null
+          offer_description?: string | null
+          one_line_pitch?: string | null
+          origin_story?: string | null
+          pricing_idea?: string | null
+          problem_statement?: string | null
+          target_customer?: string | null
+          twelve_month_vision?: string | null
+          unique_insight?: string | null
+          updated_at?: string
+          user_id?: string
+          voice_transcripts?: Json
+        }
+        Relationships: []
+      }
       attendee_deliverables: {
         Row: {
           admin_edited_at: string | null
@@ -213,6 +273,72 @@ export type Database = {
           original_name?: string
           size_bytes?: number | null
           storage_path?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      attendee_filing_info: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          business_purpose: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          dob: string | null
+          id: string
+          legal_first_name: string | null
+          legal_last_name: string | null
+          llc_name: string | null
+          postal_code: string | null
+          registered_agent_address: string | null
+          registered_agent_name: string | null
+          ssn_full: string | null
+          ssn_last4: string | null
+          state: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          business_purpose?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          dob?: string | null
+          id?: string
+          legal_first_name?: string | null
+          legal_last_name?: string | null
+          llc_name?: string | null
+          postal_code?: string | null
+          registered_agent_address?: string | null
+          registered_agent_name?: string | null
+          ssn_full?: string | null
+          ssn_last4?: string | null
+          state?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          business_purpose?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          dob?: string | null
+          id?: string
+          legal_first_name?: string | null
+          legal_last_name?: string | null
+          llc_name?: string | null
+          postal_code?: string | null
+          registered_agent_address?: string | null
+          registered_agent_name?: string | null
+          ssn_full?: string | null
+          ssn_last4?: string | null
+          state?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -367,6 +493,39 @@ export type Database = {
         }
         Relationships: []
       }
+      attendee_stage_intake: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          deliverable_key: string
+          id: string
+          intake: Json
+          updated_at: string
+          user_id: string
+          voice_transcripts: Json
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          deliverable_key: string
+          id?: string
+          intake?: Json
+          updated_at?: string
+          user_id: string
+          voice_transcripts?: Json
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          deliverable_key?: string
+          id?: string
+          intake?: Json
+          updated_at?: string
+          user_id?: string
+          voice_transcripts?: Json
+        }
+        Relationships: []
+      }
       cohorts: {
         Row: {
           cohort_date: string
@@ -504,51 +663,66 @@ export type Database = {
       deliverable_types: {
         Row: {
           active: boolean
+          auto_runnable: boolean
           created_at: string
           default_model: string
           depends_on_keys: string[] | null
           description: string | null
           key: string
           label: string
+          output_kind: string
           output_schema: Json | null
+          produces_context_key: string | null
           prompt_template: string | null
+          requires_context_keys: string[]
           schema_version: number
           sort_order: number
           stage_label: string | null
           stage_n: number | null
           tier_required: string | null
+          user_can_trigger: boolean
         }
         Insert: {
           active?: boolean
+          auto_runnable?: boolean
           created_at?: string
           default_model?: string
           depends_on_keys?: string[] | null
           description?: string | null
           key: string
           label: string
+          output_kind?: string
           output_schema?: Json | null
+          produces_context_key?: string | null
           prompt_template?: string | null
+          requires_context_keys?: string[]
           schema_version?: number
           sort_order?: number
           stage_label?: string | null
           stage_n?: number | null
           tier_required?: string | null
+          user_can_trigger?: boolean
         }
         Update: {
           active?: boolean
+          auto_runnable?: boolean
           created_at?: string
           default_model?: string
           depends_on_keys?: string[] | null
           description?: string | null
           key?: string
           label?: string
+          output_kind?: string
           output_schema?: Json | null
+          produces_context_key?: string | null
           prompt_template?: string | null
+          requires_context_keys?: string[]
           schema_version?: number
           sort_order?: number
           stage_label?: string | null
           stage_n?: number | null
           tier_required?: string | null
+          user_can_trigger?: boolean
         }
         Relationships: []
       }
