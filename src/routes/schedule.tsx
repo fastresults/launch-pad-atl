@@ -179,16 +179,8 @@ function SchedulePage() {
                                   </span>
                                   <div className="min-w-0 flex-1">
                                     <div className="font-medium text-foreground">{t.title}</div>
-                                    <div className="mt-0.5 flex flex-wrap items-start gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                                      <span className="flex min-w-0 flex-1 items-start gap-1.5">
-                                        <Check className="mt-0.5 size-3.5 shrink-0 text-foreground/70" />
-                                        <span>{t.deliverable}</span>
-                                      </span>
-                                      <span className="inline-block rounded-full border border-white/15 px-2 py-0.5 text-[11px] text-muted-foreground">
-                                        {t.tool}
-                                      </span>
-                                    </div>
                                     <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+
                                       {t.details.map((d, di) => (
                                         <li key={di} className="flex items-start gap-2">
                                           <span className="mt-1.5 inline-block size-1 shrink-0 rounded-full bg-foreground/40" />
