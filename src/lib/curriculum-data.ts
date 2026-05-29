@@ -295,14 +295,16 @@ export const STAGES: Stage[] = [
       "Set up how you'll actually deliver. Pick what kind of business you're building, set up your free apps, and draft what your first customer will get.",
     oneLiner: "Your first working version",
     takeHome:
-      "Your delivery process mapped step-by-step, the free apps that run it set up with your accounts, your first customer's deliverable drafted and rehearsed, and 3 written SOPs (sales intake, fulfillment, onboarding) loaded into your project hub — before a real customer ever sees it.",
+      "Your delivery process mapped step-by-step, the free apps that run it set up with your accounts, your first customer's deliverable drafted and rehearsed, 3 written SOPs (sales intake, fulfillment, onboarding) loaded into your project hub, and a sourcing & staffing plan for the raw goods, services, and talent you'll need — before a real customer ever sees it.",
     walkOut: [
       "Sale-to-happy-customer map with the app you'll use at each step",
       "Free-app accounts created in your name: project hub, files, scheduling, business email alias",
       "Your first customer's deliverable drafted and rehearsed end-to-end",
       "5-point quality checklist for anything that goes to a real customer",
       "Operations & workflow: 3 runnable SOPs (intake, fulfillment, onboarding) in your project hub plus a one-page weekly operating rhythm",
+      "Sourcing & staffing plan: named suppliers, contractors, or hires for raw goods, services, and talent — with a first-call list",
     ],
+
     afterWorkshop: [
       "Run the rehearsed deliverable past your first paying customer and iterate",
       "Upgrade to paid app tiers as revenue justifies",
