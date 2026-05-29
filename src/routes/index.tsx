@@ -53,9 +53,9 @@ function HomePage() {
 
 function NotACourseBanner() {
   return (
-    <section className="relative">
-      <div className="absolute inset-0 bg-hero-gradient opacity-95" />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
+    <section className="relative bg-neutral-900">
+      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] via-transparent to-black/30" />
+
       <div className="relative container mx-auto px-6 py-8 md:py-10">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="flex items-start gap-4 md:max-w-3xl">
