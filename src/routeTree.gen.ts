@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/_admin'
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
+import { Route as AuthenticatedAdminAdminRegistrationsRouteImport } from './routes/_authenticated/_admin/admin.registrations'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -63,6 +64,12 @@ const AuthenticatedAdminAdminIndexRoute =
     path: '/admin/',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAdminRegistrationsRoute =
+  AuthenticatedAdminAdminRegistrationsRouteImport.update({
+    id: '/admin/registrations',
+    path: '/admin/registrations',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
   '/signup': typeof SignupRoute
+  '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -80,6 +88,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
   '/signup': typeof SignupRoute
+  '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -92,6 +101,7 @@ export interface FileRoutesById {
   '/schedule': typeof ScheduleRoute
   '/signup': typeof SignupRoute
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/_admin/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -103,6 +113,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/schedule'
     | '/signup'
+    | '/admin/registrations'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -112,6 +123,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/schedule'
     | '/signup'
+    | '/admin/registrations'
     | '/admin'
   id:
     | '__root__'
@@ -123,6 +135,7 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/signup'
     | '/_authenticated/_admin'
+    | '/_authenticated/_admin/admin/registrations'
     | '/_authenticated/_admin/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -201,14 +214,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/_admin/admin/registrations': {
+      id: '/_authenticated/_admin/admin/registrations'
+      path: '/admin/registrations'
+      fullPath: '/admin/registrations'
+      preLoaderRoute: typeof AuthenticatedAdminAdminRegistrationsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAdminRegistrationsRoute: typeof AuthenticatedAdminAdminRegistrationsRoute
   AuthenticatedAdminAdminIndexRoute: typeof AuthenticatedAdminAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAdminRegistrationsRoute:
+    AuthenticatedAdminAdminRegistrationsRoute,
   AuthenticatedAdminAdminIndexRoute: AuthenticatedAdminAdminIndexRoute,
 }
 
