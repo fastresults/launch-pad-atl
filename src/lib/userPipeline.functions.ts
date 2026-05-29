@@ -490,3 +490,38 @@ export const getMyRecentRuns = createServerFn({ method: "GET" })
       : { data: [] };
     return { runs: runs ?? [], steps: steps ?? [] };
   });
+
+// Admin: read another user's workflow grid
+const AdminWorkflowInput = z.object({ userId: z.string().uuid() });
+export const adminGetUserWorkflow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => AdminWorkflowInput.parse(i))
+  .handler(async ({ context, data }) => {
+    const isAdmin = await assertAdminish(context.userId);
+    if (!isAdmin) throw new Error("Forbidden");
+    const [types, ctx] = await Promise.all([loadAllTypes(), buildContext(data.userId)]);
+    const items = types.map((t) => {
+      const generated = !!ctx.deliverables[t.key];
+      const depsMet = (t.depends_on_keys ?? []).every((d) => !!ctx.deliverables[d]);
+      return {
+        key: t.key,
+        label: t.label,
+        description: t.description,
+        stage_label: t.stage_label,
+        stage_n: t.stage_n,
+        sort_order: t.sort_order,
+        depends_on_keys: t.depends_on_keys,
+        user_can_trigger: t.user_can_trigger,
+        generated,
+        deps_met: depsMet,
+        ready: depsMet,
+      };
+    });
+    return {
+      brief: ctx.brief,
+      filingPresent: !!ctx.filing,
+      intakeKeys: Object.keys(ctx.intakes),
+      items,
+    };
+  });
+

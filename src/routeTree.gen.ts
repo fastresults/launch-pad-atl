@@ -38,6 +38,7 @@ import { Route as AuthenticatedAdminAdminCohortsRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminAdminAttendeesRouteImport } from './routes/_authenticated/_admin/admin.attendees'
 import { Route as AuthenticatedAdminAdminCohortsTestRouteImport } from './routes/_authenticated/_admin/admin.cohorts.test'
 import { Route as AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.index'
+import { Route as AuthenticatedAdminAdminAttendeesUserIdWorkflowRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.workflow'
 import { Route as AuthenticatedAdminAdminAttendeesUserIdMediaRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.media'
 import { Route as AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.deliverables.$key'
 
@@ -204,6 +205,12 @@ const AuthenticatedAdminAdminAttendeesUserIdIndexRoute =
     path: '/$userId/',
     getParentRoute: () => AuthenticatedAdminAdminAttendeesRoute,
   } as any)
+const AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute =
+  AuthenticatedAdminAdminAttendeesUserIdWorkflowRouteImport.update({
+    id: '/$userId/workflow',
+    path: '/$userId/workflow',
+    getParentRoute: () => AuthenticatedAdminAdminAttendeesRoute,
+  } as any)
 const AuthenticatedAdminAdminAttendeesUserIdMediaRoute =
   AuthenticatedAdminAdminAttendeesUserIdMediaRouteImport.update({
     id: '/$userId/media',
@@ -245,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
   '/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
+  '/admin/attendees/$userId/workflow': typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute
   '/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
   '/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
@@ -275,6 +283,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
   '/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
+  '/admin/attendees/$userId/workflow': typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute
   '/admin/attendees/$userId': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
   '/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
@@ -309,6 +318,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/_authenticated/_admin/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
   '/_authenticated/_admin/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
+  '/_authenticated/_admin/admin/attendees/$userId/workflow': typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute
   '/_authenticated/_admin/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
   '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
@@ -342,6 +352,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/cohorts/test'
     | '/admin/attendees/$userId/media'
+    | '/admin/attendees/$userId/workflow'
     | '/admin/attendees/$userId/'
     | '/admin/attendees/$userId/deliverables/$key'
   fileRoutesByTo: FileRoutesByTo
@@ -372,6 +383,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/cohorts/test'
     | '/admin/attendees/$userId/media'
+    | '/admin/attendees/$userId/workflow'
     | '/admin/attendees/$userId'
     | '/admin/attendees/$userId/deliverables/$key'
   id:
@@ -405,6 +417,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/'
     | '/_authenticated/_admin/admin/cohorts/test'
     | '/_authenticated/_admin/admin/attendees/$userId/media'
+    | '/_authenticated/_admin/admin/attendees/$userId/workflow'
     | '/_authenticated/_admin/admin/attendees/$userId/'
     | '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key'
   fileRoutesById: FileRoutesById
@@ -625,6 +638,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport
       parentRoute: typeof AuthenticatedAdminAdminAttendeesRoute
     }
+    '/_authenticated/_admin/admin/attendees/$userId/workflow': {
+      id: '/_authenticated/_admin/admin/attendees/$userId/workflow'
+      path: '/$userId/workflow'
+      fullPath: '/admin/attendees/$userId/workflow'
+      preLoaderRoute: typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminAttendeesRoute
+    }
     '/_authenticated/_admin/admin/attendees/$userId/media': {
       id: '/_authenticated/_admin/admin/attendees/$userId/media'
       path: '/$userId/media'
@@ -644,6 +664,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminAdminAttendeesRouteChildren {
   AuthenticatedAdminAdminAttendeesUserIdMediaRoute: typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
+  AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute: typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute
   AuthenticatedAdminAdminAttendeesUserIdIndexRoute: typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
   AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute: typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
@@ -652,6 +673,8 @@ const AuthenticatedAdminAdminAttendeesRouteChildren: AuthenticatedAdminAdminAtte
   {
     AuthenticatedAdminAdminAttendeesUserIdMediaRoute:
       AuthenticatedAdminAdminAttendeesUserIdMediaRoute,
+    AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute:
+      AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute,
     AuthenticatedAdminAdminAttendeesUserIdIndexRoute:
       AuthenticatedAdminAdminAttendeesUserIdIndexRoute,
     AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute:
