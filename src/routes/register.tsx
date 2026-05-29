@@ -48,6 +48,7 @@ const FormSchema = z.object({
   stage: z.enum(["idea", "early", "existing"]),
   referral_source: z.string().trim().max(120).optional().or(z.literal("")),
   tier_interest: z.enum(["founders", "cohort"]),
+  cohort_id: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a cohort date"),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
@@ -56,6 +57,8 @@ function RegisterPage() {
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [tier, setTier] = useState<TierKey>("founders");
+  const defaultCohort = getNextAvailableCohort();
+  const [cohortId, setCohortId] = useState<string>(defaultCohort.id);
   const submit = useServerFn(createRegistration);
 
   const {
@@ -65,7 +68,12 @@ function RegisterPage() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
-    defaultValues: { stage: "idea", industry: "", tier_interest: "founders" },
+    defaultValues: {
+      stage: "idea",
+      industry: "",
+      tier_interest: "founders",
+      cohort_id: defaultCohort.id,
+    },
   });
 
   const selectTier = (t: TierKey) => {
