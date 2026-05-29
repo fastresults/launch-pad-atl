@@ -544,28 +544,34 @@ function CohortsAdminPage() {
 }
 
 function ScarcityFields({
-  tier, capacity, floor, boost, pct, onFloor, onBoost, onPct,
+  tier, capacity, floorPct, boost, pct, onFloorPct, onBoost, onPct,
 }: {
   tier: string;
   capacity: number;
-  floor: string;
+  floorPct: string;
   boost: string;
   pct: string;
-  onFloor: (v: string) => void;
+  onFloorPct: (v: string) => void;
   onBoost: (v: string) => void;
   onPct: (v: string) => void;
 }) {
-  const f = Math.min(Math.max(0, Math.floor(Number(floor) || 0)), Math.max(capacity - 1, 0));
+  const fp = Math.max(0, Math.min(90, Math.floor(Number(floorPct) || 0)));
   const p = Math.max(1, Math.min(100, Math.floor(Number(pct) || 50)));
-  const coldLeft = Math.max(capacity - f, 0);
+  const coldLeft =
+    capacity <= 0 || fp <= 0
+      ? capacity
+      : Math.max(1, Math.ceil((capacity * fp) / 100));
   const honestAt = Math.max(1, Math.ceil((capacity * p) / 100));
   return (
     <div className="space-y-2">
       <div className="text-xs font-medium text-foreground">{tier} tier (capacity {capacity})</div>
       <div className="grid gap-3 md:grid-cols-3">
         <div>
-          <Label className="text-xs">Cold-start floor</Label>
-          <Input type="number" min={0} max={Math.max(capacity - 1, 0)} value={floor} onChange={(e) => onFloor(e.target.value)} />
+          <Label className="text-xs">Cold-start remaining %</Label>
+          <div className="relative">
+            <Input type="number" min={0} max={90} value={floorPct} onChange={(e) => onFloorPct(e.target.value)} />
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+          </div>
         </div>
         <div>
           <Label className="text-xs">Warming boost</Label>
@@ -577,7 +583,7 @@ function ScarcityFields({
         </div>
       </div>
       <p className="text-[11px] text-muted-foreground">
-        Cold start shows <span className="text-foreground">{coldLeft} of {capacity} seats left</span>;
+        Cold start shows <span className="text-foreground">{coldLeft} of {capacity} seats left</span> (≈ {fp}% remaining);
         switches to real count at <span className="text-foreground">{honestAt} real signup{honestAt === 1 ? "" : "s"}</span>.
       </p>
     </div>
