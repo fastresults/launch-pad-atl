@@ -366,7 +366,8 @@ function RegisterPage() {
                     const tierAvail = t === "founders" ? availability?.founders : availability?.cohort;
                     const soldOut = tierAvail?.soldOut ?? false;
                     const price = t === "founders" ? selectedCohort.foundersPriceCents : selectedCohort.cohortPriceCents;
-                    const cap = t === "founders" ? selectedCohort.foundersSeats : selectedCohort.cohortSeats;
+                    const internalCap = t === "founders" ? selectedCohort.foundersSeats : selectedCohort.cohortSeats;
+                    const cap = toPublicSeats(internalCap);
                     return (
                       <button
                         type="button"
