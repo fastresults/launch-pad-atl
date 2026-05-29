@@ -468,10 +468,10 @@ function CohortsAdminPage() {
               <ScarcityFields
                 tier="Founders"
                 capacity={Number(form.founders_seats) || 0}
-                floor={form.founders_display_floor}
+                floorPct={form.founders_display_floor_pct}
                 boost={form.founders_warming_boost}
                 pct={form.founders_honest_threshold_pct}
-                onFloor={(v) => setForm({ ...form, founders_display_floor: v })}
+                onFloorPct={(v) => setForm({ ...form, founders_display_floor_pct: v })}
                 onBoost={(v) => setForm({ ...form, founders_warming_boost: v })}
                 onPct={(v) => setForm({ ...form, founders_honest_threshold_pct: v })}
               />
@@ -479,10 +479,10 @@ function CohortsAdminPage() {
               <ScarcityFields
                 tier="Cohort"
                 capacity={Number(form.cohort_seats) || 0}
-                floor={form.cohort_display_floor}
+                floorPct={form.cohort_display_floor_pct}
                 boost={form.cohort_warming_boost}
                 pct={form.cohort_honest_threshold_pct}
-                onFloor={(v) => setForm({ ...form, cohort_display_floor: v })}
+                onFloorPct={(v) => setForm({ ...form, cohort_display_floor_pct: v })}
                 onBoost={(v) => setForm({ ...form, cohort_warming_boost: v })}
                 onPct={(v) => setForm({ ...form, cohort_honest_threshold_pct: v })}
               />
