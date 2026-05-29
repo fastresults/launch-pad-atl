@@ -1,6 +1,8 @@
 import { createFileRoute, Outlet, Navigate, Link, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export const Route = createFileRoute("/_authenticated/_admin")({
   component: AdminLayout,
