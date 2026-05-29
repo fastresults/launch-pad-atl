@@ -86,10 +86,10 @@ export const upsertCohort = createServerFn({ method: "POST" })
       founders_seats: data.founders_seats,
       cohort_price_cents: data.cohort_price_cents,
       cohort_seats: data.cohort_seats,
-      founders_display_floor: Math.min(data.founders_display_floor, Math.max(data.founders_seats - 1, 0)),
+      founders_display_floor_pct: data.founders_display_floor_pct,
       founders_warming_boost: data.founders_warming_boost,
       founders_honest_threshold_pct: data.founders_honest_threshold_pct,
-      cohort_display_floor: Math.min(data.cohort_display_floor, Math.max(data.cohort_seats - 1, 0)),
+      cohort_display_floor_pct: data.cohort_display_floor_pct,
       cohort_warming_boost: data.cohort_warming_boost,
       cohort_honest_threshold_pct: data.cohort_honest_threshold_pct,
     };
