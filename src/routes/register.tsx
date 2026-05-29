@@ -8,9 +8,11 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { createRegistration } from "@/lib/registrations.functions";
 import { EVENT } from "@/lib/schedule-data";
+import { COHORTS, getCohortById, getNextAvailableCohort } from "@/lib/cohorts";
 import { ValueGrid } from "@/components/value/ValueGrid";
 import { TotalsBar } from "@/components/value/TotalsBar";
 import { PricingTiers } from "@/components/value/PricingTiers";
+import { CohortPicker } from "@/components/value/CohortPicker";
 import { PRICING, type TierKey } from "@/lib/value-grid";
 import { CheckCircle2, ArrowRight, ShieldCheck, Users, CalendarDays } from "lucide-react";
 
