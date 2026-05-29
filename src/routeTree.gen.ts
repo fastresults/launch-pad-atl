@@ -24,6 +24,7 @@ import { Route as AuthenticatedDashboardGoalsRouteImport } from './routes/_authe
 import { Route as AuthenticatedDashboardDocumentsRouteImport } from './routes/_authenticated/dashboard.documents'
 import { Route as AuthenticatedDashboardDeliverablesRouteImport } from './routes/_authenticated/dashboard.deliverables'
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
+import { Route as ApiPublicHooksPublishDueDeliverablesRouteImport } from './routes/api/public/hooks/publish-due-deliverables'
 import { Route as AuthenticatedAdminAdminUsersRouteImport } from './routes/_authenticated/_admin/admin.users'
 import { Route as AuthenticatedAdminAdminReviewRouteImport } from './routes/_authenticated/_admin/admin.review'
 import { Route as AuthenticatedAdminAdminRegistrationsRouteImport } from './routes/_authenticated/_admin/admin.registrations'
@@ -110,6 +111,12 @@ const AuthenticatedAdminAdminIndexRoute =
     path: '/admin/',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const ApiPublicHooksPublishDueDeliverablesRoute =
+  ApiPublicHooksPublishDueDeliverablesRouteImport.update({
+    id: '/api/public/hooks/publish-due-deliverables',
+    path: '/api/public/hooks/publish-due-deliverables',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminAdminUsersRoute =
   AuthenticatedAdminAdminUsersRouteImport.update({
     id: '/admin/users',
@@ -164,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
+  '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
   '/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
@@ -184,6 +192,7 @@ export interface FileRoutesByTo {
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
+  '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/attendees/$userId': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
   '/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
@@ -208,6 +217,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/_authenticated/_admin/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/_authenticated/_admin/admin/users': typeof AuthenticatedAdminAdminUsersRoute
+  '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/_authenticated/_admin/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
   '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
@@ -231,6 +241,7 @@ export interface FileRouteTypes {
     | '/admin/registrations'
     | '/admin/review'
     | '/admin/users'
+    | '/api/public/hooks/publish-due-deliverables'
     | '/admin/'
     | '/admin/attendees/$userId/'
     | '/admin/attendees/$userId/deliverables/$key'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/admin/registrations'
     | '/admin/review'
     | '/admin/users'
+    | '/api/public/hooks/publish-due-deliverables'
     | '/admin'
     | '/admin/attendees/$userId'
     | '/admin/attendees/$userId/deliverables/$key'
@@ -274,6 +286,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/registrations'
     | '/_authenticated/_admin/admin/review'
     | '/_authenticated/_admin/admin/users'
+    | '/api/public/hooks/publish-due-deliverables'
     | '/_authenticated/_admin/admin/'
     | '/_authenticated/_admin/admin/attendees/$userId/'
     | '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key'
@@ -287,6 +300,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ScheduleRoute: typeof ScheduleRoute
   SignupRoute: typeof SignupRoute
+  ApiPublicHooksPublishDueDeliverablesRoute: typeof ApiPublicHooksPublishDueDeliverablesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -395,6 +409,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/api/public/hooks/publish-due-deliverables': {
+      id: '/api/public/hooks/publish-due-deliverables'
+      path: '/api/public/hooks/publish-due-deliverables'
+      fullPath: '/api/public/hooks/publish-due-deliverables'
+      preLoaderRoute: typeof ApiPublicHooksPublishDueDeliverablesRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_admin/admin/users': {
       id: '/_authenticated/_admin/admin/users'
@@ -525,7 +546,19 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ScheduleRoute: ScheduleRoute,
   SignupRoute: SignupRoute,
+  ApiPublicHooksPublishDueDeliverablesRoute:
+    ApiPublicHooksPublishDueDeliverablesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
