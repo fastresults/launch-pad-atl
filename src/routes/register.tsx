@@ -59,7 +59,17 @@ function RegisterPage() {
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [tier, setTier] = useState<TierKey>("founders");
-  const defaultCohort = getNextAvailableCohort();
+  const fetchCohorts = useServerFn(listCohorts);
+  const { data: cohorts = [] } = useQuery<Cohort[]>({
+    queryKey: ["cohorts"],
+    queryFn: () => fetchCohorts(),
+    initialData: [],
+    staleTime: 60_000,
+  });
+  const defaultCohort = useMemo(
+    () => getNextAvailable(cohorts) ?? FALLBACK_COHORT,
+    [cohorts],
+  );
   const [cohortId, setCohortId] = useState<string>(defaultCohort.id);
   const submit = useServerFn(createRegistration);
 
@@ -78,6 +88,12 @@ function RegisterPage() {
     },
   });
 
+  // Once cohorts hydrate, sync the form's hidden field if the user hasn't picked yet.
+  if (cohortId === FALLBACK_COHORT.id && defaultCohort.id !== FALLBACK_COHORT.id) {
+    setCohortId(defaultCohort.id);
+    setValue("cohort_id", defaultCohort.id, { shouldValidate: false });
+  }
+
   const selectTier = (t: TierKey) => {
     setTier(t);
     setValue("tier_interest", t, { shouldValidate: true });
@@ -88,7 +104,8 @@ function RegisterPage() {
     setValue("cohort_id", id, { shouldValidate: true });
   };
 
-  const selectedCohort = getCohortById(cohortId) ?? defaultCohort;
+  const selectedCohort = getCohortById(cohorts, cohortId) ?? defaultCohort;
+  const selectedEvent = buildEvent(selectedCohort);
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
