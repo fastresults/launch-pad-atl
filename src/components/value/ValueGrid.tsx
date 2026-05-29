@@ -73,7 +73,10 @@ export function ValueGrid() {
                     <span className="text-muted-foreground/60 pl-8">↳</span>
                   )}
                 </div>
-                <div className="col-span-6 text-foreground/90">{r.deliverable}</div>
+                <div className="col-span-6 text-foreground/90 flex items-center gap-2">
+                  <span>{r.deliverable}</span>
+                  <PostWorkshopTip row={r} />
+                </div>
                 <div className="col-span-2 text-right tabular-nums text-foreground/80">
                   {formatCostRange(r.marketCostMin, r.marketCostMax)}
                 </div>
