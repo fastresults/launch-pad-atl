@@ -18,6 +18,13 @@ export function SiteFooter() {
           >
             Privacy Policy
           </Link>
+          <span>·</span>
+          <Link
+            to="/terms"
+            className="underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Terms of Service
+          </Link>
         </div>
         <div className="flex items-center gap-2">
           <span>A division of</span>
