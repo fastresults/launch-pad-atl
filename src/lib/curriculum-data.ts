@@ -447,7 +447,7 @@ export const STAGES: Stage[] = [
   {
     n: 6,
     slug: "marketing",
-    title: "Marketing plan & creatives",
+    title: "Marketing & creatives",
     shortTitle: "marketing",
     summary:
       "Your printable business card and flyer, your social channels branded, and a 30-day plan to put it all in motion.",
