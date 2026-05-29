@@ -32,7 +32,7 @@ function LoginPage() {
   useEffect(() => {
     if (loading) return;
     if (isAuthenticated) {
-      navigate({ to: redirect ?? (isAdmin ? "/admin" : "/"), replace: true });
+      navigate({ to: redirect ?? (isAdmin ? "/admin" : "/dashboard"), replace: true });
     }
   }, [isAuthenticated, isAdmin, loading, navigate, redirect]);
 

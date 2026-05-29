@@ -57,12 +57,17 @@ export function SiteHeader() {
         {/* Desktop right side */}
         <div className="hidden items-center gap-3 lg:flex">
           {isAuthenticated ? (
-            <button
-              onClick={() => signOut()}
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              sign out
-            </button>
+            <>
+              <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
+                dashboard
+              </Link>
+              <button
+                onClick={() => signOut()}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                sign out
+              </button>
+            </>
           ) : (
             <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
               sign in
@@ -136,15 +141,24 @@ export function SiteHeader() {
                     Reserve seat — from $679
                   </Link>
                   {isAuthenticated ? (
-                    <button
-                      onClick={() => {
-                        close();
-                        signOut();
-                      }}
-                      className="flex w-full items-center justify-center rounded-full border border-white/15 px-5 py-3 text-sm text-muted-foreground"
-                    >
-                      sign out
-                    </button>
+                    <>
+                      <Link
+                        to="/dashboard"
+                        onClick={close}
+                        className="flex w-full items-center justify-center rounded-full border border-white/15 px-5 py-3 text-sm text-muted-foreground"
+                      >
+                        dashboard
+                      </Link>
+                      <button
+                        onClick={() => {
+                          close();
+                          signOut();
+                        }}
+                        className="flex w-full items-center justify-center rounded-full border border-white/15 px-5 py-3 text-sm text-muted-foreground"
+                      >
+                        sign out
+                      </button>
+                    </>
                   ) : (
                     <Link
                       to="/login"
