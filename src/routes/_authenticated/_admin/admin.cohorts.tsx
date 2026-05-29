@@ -152,6 +152,12 @@ function CohortsAdminPage() {
           founders_seats: foundersSeats,
           cohort_price_cents: cohortPriceCents,
           cohort_seats: cohortSeats,
+          founders_display_floor: clampInt(vars.founders_display_floor, 0, Math.max(foundersSeats - 1, 0)),
+          founders_warming_boost: clampInt(vars.founders_warming_boost, 0, 500),
+          founders_honest_threshold_pct: clampInt(vars.founders_honest_threshold_pct, 1, 100),
+          cohort_display_floor: clampInt(vars.cohort_display_floor, 0, Math.max(cohortSeats - 1, 0)),
+          cohort_warming_boost: clampInt(vars.cohort_warming_boost, 0, 500),
+          cohort_honest_threshold_pct: clampInt(vars.cohort_honest_threshold_pct, 1, 100),
         },
       });
     },
