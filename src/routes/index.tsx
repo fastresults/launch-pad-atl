@@ -911,52 +911,5 @@ const WALKOUT_PHASES: WalkoutPhase[] = [
   },
 ];
 
-function AIToolkit() {
-  return (
-    <section className="border-y border-white/5 py-20">
-      <div className="mx-auto max-w-6xl px-6">
-        <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-          What you walk out with
-        </p>
-        <h2 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
-          A full business in your hands by Saturday night.
-        </h2>
-        <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
-          Every artifact below is finished in the room and tailored to your business.
-          A few — domain DNS, bank approval, printer turnaround — need you to push
-          the button after you leave. We mark exactly which.
-        </p>
-
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {WALKOUT_PHASES.map((p) => (
-            <div
-              key={p.n}
-              className="rounded-2xl border border-white/10 bg-card p-6 md:p-7"
-            >
-              <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                Phase {p.n}
-              </div>
-              <h3 className="mt-2 text-xl font-semibold tracking-tight">{p.title}</h3>
-              <p className="mt-2 text-sm leading-snug text-muted-foreground">{p.intro}</p>
-              <ul className="mt-5 space-y-3">
-                {p.items.map((g) => (
-                  <li key={g.name} className="flex items-start gap-2">
-                    <span className="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-hero-gradient" />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-foreground">{g.name}</div>
-                      <div className="text-[12px] leading-snug text-muted-foreground">
-                        {g.desc}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 
