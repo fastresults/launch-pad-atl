@@ -31,7 +31,7 @@ export function SiteHeader() {
           className="flex items-center font-semibold tracking-tight"
           aria-label="Atlanta Startup Workshop"
         >
-          <img src={logoUrl} alt="StartupLabs" className="h-9 w-auto md:h-12" />
+          <StartupLabsLogo className="h-9 w-auto md:h-12 text-white" />
         </Link>
 
         {/* Desktop nav */}
