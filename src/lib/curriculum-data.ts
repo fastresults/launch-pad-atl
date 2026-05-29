@@ -348,18 +348,19 @@ export const STAGES: Stage[] = [
           "Run the drafts past your first paying customer and iterate after their feedback.",
       },
       {
-        title: "Operationalize the workflows",
+        title: "Operations & workflow",
         deliverable:
-          "3 written SOPs specific to your business (sales intake, fulfillment, customer onboarding) — each with trigger, steps, owner, tools, definition of done, and the failure modes to watch — loaded into your project hub as runnable templates.",
-        tool: "SOP template (per workflow)",
+          "3 written SOPs specific to your business (sales intake, fulfillment, customer onboarding) — each with trigger, steps, owner, tools, definition of done, and failure modes — loaded into your project hub as runnable templates, plus a one-page weekly operating rhythm.",
+        tool: "SOP templates + weekly operating rhythm",
         details: [
           "Pick the 3 highest-leverage workflows: sales intake, fulfillment, customer onboarding",
           "Write each as a numbered SOP: trigger → inputs → steps → owner → tools → definition of done",
           "Add a 'what breaks this' section listing the top 3 failure modes and the recovery step",
-          "Load all 3 into Notion / ClickUp / Trello as runnable templates anyone on the team can follow",
+          "Draft a one-page weekly operating rhythm: standing blocks, review cadence, and the 3 numbers you check every Friday",
+          "Load all 3 SOPs into Notion / ClickUp / Trello as runnable templates anyone on the team can follow",
         ],
         takeaway:
-          "3 written SOPs loaded into your project hub — runnable on day one with a real customer.",
+          "Your operations & workflow: 3 runnable SOPs in your project hub plus a one-page weekly operating rhythm.",
         followUp:
           "Run each SOP once with a real or rehearsed customer in the first 2 weeks; revise the steps that broke.",
       },
