@@ -64,6 +64,7 @@ function DashboardLayout() {
               </Link>
             )}
             <span className="hidden text-muted-foreground sm:inline">{user?.email}</span>
+            <ThemeToggle />
             <Button variant="outline" size="sm" onClick={signOut}>
               Sign out
             </Button>
@@ -74,5 +75,6 @@ function DashboardLayout() {
         <Outlet />
       </main>
     </div>
+    </ThemeProvider>
   );
 }
