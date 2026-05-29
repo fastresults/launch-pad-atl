@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,14 +9,21 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { createRegistration } from "@/lib/registrations.functions";
 import { listCohorts } from "@/lib/cohorts.functions";
+import { getCohortAvailability } from "@/lib/cohort-availability.functions";
 import { EVENT } from "@/lib/schedule-data";
-import { getCohortById, getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
+import {
+  getCohortById,
+  getNextAvailable,
+  FALLBACK_COHORT,
+  formatPriceCents,
+  type Cohort,
+} from "@/lib/cohorts";
 import { ValueGrid } from "@/components/value/ValueGrid";
 import { TotalsBar } from "@/components/value/TotalsBar";
 import { PricingTiers } from "@/components/value/PricingTiers";
 import { CohortPicker } from "@/components/value/CohortPicker";
-import { PRICING, type TierKey } from "@/lib/value-grid";
-import { CheckCircle2, ArrowRight, ShieldCheck, Users, CalendarDays } from "lucide-react";
+import { type TierKey } from "@/lib/value-grid";
+import { CheckCircle2, ArrowRight, ShieldCheck, Users, CalendarDays, Lock } from "lucide-react";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -25,12 +32,12 @@ export const Route = createFileRoute("/register")({
       {
         name: "description",
         content:
-          "One day. A formed business, a built website, a printed marketing kit, and a signed 90-day launch plan. From $679 for the first 7 seats.",
+          "One day. A formed business, a built website, a printed marketing kit, and a signed 90-day launch plan.",
       },
       { property: "og:title", content: "Reserve your seat — Ignite Business Launch Workshop" },
       {
         property: "og:description",
-        content: "Walk in with an idea. Walk out with a business. From $679.",
+        content: "Walk in with an idea. Walk out with a business.",
       },
     ],
   }),
@@ -60,6 +67,8 @@ function RegisterPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [tier, setTier] = useState<TierKey>("founders");
   const fetchCohorts = useServerFn(listCohorts);
+  const fetchAvailability = useServerFn(getCohortAvailability);
+
   const { data: cohorts = [] } = useQuery<Cohort[]>({
     queryKey: ["cohorts"],
     queryFn: () => fetchCohorts(),
@@ -72,6 +81,16 @@ function RegisterPage() {
   );
   const [cohortId, setCohortId] = useState<string>(defaultCohort.id);
   const submit = useServerFn(createRegistration);
+
+  const selectedCohort = getCohortById(cohorts, cohortId) ?? defaultCohort;
+
+  const { data: availability } = useQuery({
+    queryKey: ["cohort-availability", cohortId],
+    queryFn: () => fetchAvailability({ data: { cohort_id: cohortId } }),
+    enabled: cohortId !== FALLBACK_COHORT.id && Boolean(getCohortById(cohorts, cohortId)),
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+  });
 
   const {
     register,
@@ -89,12 +108,24 @@ function RegisterPage() {
   });
 
   // Once cohorts hydrate, sync the form's hidden field if the user hasn't picked yet.
-  if (cohortId === FALLBACK_COHORT.id && defaultCohort.id !== FALLBACK_COHORT.id) {
-    setCohortId(defaultCohort.id);
-    setValue("cohort_id", defaultCohort.id, { shouldValidate: false });
-  }
+  useEffect(() => {
+    if (cohortId === FALLBACK_COHORT.id && defaultCohort.id !== FALLBACK_COHORT.id) {
+      setCohortId(defaultCohort.id);
+      setValue("cohort_id", defaultCohort.id, { shouldValidate: false });
+    }
+  }, [cohortId, defaultCohort.id, setValue]);
+
+  // Auto-roll to cohort tier when founders is sold out for the selected cohort.
+  useEffect(() => {
+    if (availability?.founders.soldOut && tier === "founders" && !availability.cohortSoldOut) {
+      setTier("cohort");
+      setValue("tier_interest", "cohort", { shouldValidate: true });
+    }
+  }, [availability, tier, setValue]);
 
   const selectTier = (t: TierKey) => {
+    const aTier = t === "founders" ? availability?.founders : availability?.cohort;
+    if (aTier?.soldOut) return;
     setTier(t);
     setValue("tier_interest", t, { shouldValidate: true });
   };
@@ -102,9 +133,17 @@ function RegisterPage() {
   const selectCohort = (id: string) => {
     setCohortId(id);
     setValue("cohort_id", id, { shouldValidate: true });
+    // reset tier preference so the new cohort's availability picks the right default
+    setTier("founders");
+    setValue("tier_interest", "founders", { shouldValidate: false });
   };
 
-  const selectedCohort = getCohortById(cohorts, cohortId) ?? defaultCohort;
+  const cohortSoldOut = availability?.cohortSoldOut ?? selectedCohort.status === "sold_out";
+  const effectiveTier: TierKey = availability?.founders.soldOut ? "cohort" : tier;
+  const effectivePriceCents =
+    effectiveTier === "founders"
+      ? selectedCohort.foundersPriceCents
+      : selectedCohort.cohortPriceCents;
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
@@ -137,7 +176,7 @@ function RegisterPage() {
           </p>
           <div className="mt-6 flex flex-wrap gap-4 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-2">
-              <Users className="size-4" /> 20 seats per cohort
+              <Users className="size-4" /> {selectedCohort.totalSeats} seats per cohort
             </span>
             <span className="inline-flex items-center gap-2">
               <CalendarDays className="size-4" /> {EVENT.timeLabel}
@@ -183,11 +222,43 @@ function RegisterPage() {
               Pick your seat
             </p>
             <h2 className="text-4xl font-semibold tracking-tight md:text-5xl">
-              From <span className="text-gradient-brand">${PRICING.founders.price}</span>.
-              All 25 deliverables included.
+              From{" "}
+              <span className="text-gradient-brand">
+                {formatPriceCents(selectedCohort.foundersPriceCents)}
+              </span>
+              . All 25 deliverables included.
             </h2>
+            {availability && !cohortSoldOut && (
+              <p className="mt-3 text-sm text-muted-foreground">
+                {availability.founders.soldOut ? (
+                  <>
+                    Founders is sold out for this cohort —{" "}
+                    <span className="text-foreground">
+                      {availability.cohort.remaining} of {availability.cohort.capacity} Cohort
+                      seats left at {formatPriceCents(selectedCohort.cohortPriceCents)}
+                    </span>
+                    .
+                  </>
+                ) : (
+                  <>
+                    <span className="text-foreground">
+                      {availability.founders.remaining} of {availability.founders.capacity}{" "}
+                      Founders seats left
+                    </span>{" "}
+                    at {formatPriceCents(selectedCohort.foundersPriceCents)} — price rolls to{" "}
+                    {formatPriceCents(selectedCohort.cohortPriceCents)} when Founders fills.
+                  </>
+                )}
+              </p>
+            )}
           </div>
-          <PricingTiers selected={tier} onSelect={selectTier} scrollTargetId="register-form" />
+          <PricingTiers
+            selected={effectiveTier}
+            onSelect={selectTier}
+            cohort={selectedCohort}
+            availability={availability}
+            scrollTargetId="register-form"
+          />
         </div>
       </section>
 
@@ -203,7 +274,18 @@ function RegisterPage() {
             </p>
           </div>
           {submitted ? (
-            <SuccessCard tier={tier} cohort={selectedCohort} />
+            <SuccessCard tier={effectiveTier} cohort={selectedCohort} priceCents={effectivePriceCents} />
+          ) : cohortSoldOut ? (
+            <div className="rounded-2xl border border-white/10 bg-card p-8 text-center">
+              <div className="mx-auto mb-4 inline-flex size-12 items-center justify-center rounded-full bg-white/10">
+                <Lock className="size-5 text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-semibold">This cohort is sold out</h3>
+              <p className="mt-2 text-muted-foreground">
+                All {selectedCohort.totalSeats} seats for {selectedCohort.dateLabel} are claimed.
+                Pick another date above to reserve your seat.
+              </p>
+            </div>
           ) : (
             <form
               onSubmit={onSubmit}
@@ -263,24 +345,38 @@ function RegisterPage() {
               <Field label="Seat tier" error={errors.tier_interest?.message}>
                 <div className="grid gap-3 md:grid-cols-2">
                   {(["founders", "cohort"] as const).map((t) => {
-                    const p = PRICING[t];
-                    const isOn = tier === t;
+                    const isOn = effectiveTier === t;
+                    const tierAvail = t === "founders" ? availability?.founders : availability?.cohort;
+                    const soldOut = tierAvail?.soldOut ?? false;
+                    const price = t === "founders" ? selectedCohort.foundersPriceCents : selectedCohort.cohortPriceCents;
+                    const cap = t === "founders" ? selectedCohort.foundersSeats : selectedCohort.cohortSeats;
                     return (
                       <button
                         type="button"
                         key={t}
+                        disabled={soldOut}
                         onClick={() => selectTier(t)}
                         className={`text-left rounded-xl border p-4 transition ${
-                          isOn
+                          soldOut
+                            ? "border-white/5 bg-white/[0.02] opacity-60 cursor-not-allowed"
+                            : isOn
                             ? "border-primary bg-primary/10"
                             : "border-white/10 hover:border-white/20"
                         }`}
                       >
                         <div className="flex items-baseline justify-between">
-                          <span className="font-medium">{p.label}</span>
-                          <span className="tabular-nums font-semibold">${p.price}</span>
+                          <span className="font-medium">
+                            {t === "founders" ? "Founders Seat" : "Cohort Seat"}
+                          </span>
+                          <span className="tabular-nums font-semibold">{formatPriceCents(price)}</span>
                         </div>
-                        <div className="mt-1 text-xs text-muted-foreground">{p.subtitle}</div>
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          {soldOut
+                            ? `Sold out · ${cap}/${cap} claimed`
+                            : t === "founders"
+                            ? `First ${cap} to register`
+                            : `Next ${cap} seats`}
+                        </div>
                       </button>
                     );
                   })}
@@ -313,7 +409,9 @@ function RegisterPage() {
                 disabled={isSubmitting}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
               >
-                {isSubmitting ? "Reserving…" : `Reserve my ${PRICING[tier].label} — $${PRICING[tier].price}`}
+                {isSubmitting
+                  ? "Reserving…"
+                  : `Reserve my ${effectiveTier === "founders" ? "Founders" : "Cohort"} Seat — ${formatPriceCents(effectivePriceCents)}`}
                 {!isSubmitting && <ArrowRight className="size-4" />}
               </button>
               <p className="text-center text-xs text-muted-foreground">
@@ -363,13 +461,22 @@ function Field({
   );
 }
 
-function SuccessCard({ tier, cohort }: { tier: TierKey; cohort: Cohort }) {
+function SuccessCard({
+  tier,
+  cohort,
+  priceCents,
+}: {
+  tier: TierKey;
+  cohort: Cohort;
+  priceCents: number;
+}) {
   const bring = [
     "Your laptop and charger",
     "Headphones (optional)",
     "Any existing brand assets / domain ideas",
     "An open mind and your business idea",
   ];
+  const tierLabel = tier === "founders" ? "Founders Seat" : "Cohort Seat";
   return (
     <div className="rounded-2xl border border-white/10 bg-card p-8 text-center">
       <div className="mx-auto mb-4 inline-flex size-12 items-center justify-center rounded-full bg-hero-gradient">
@@ -377,7 +484,8 @@ function SuccessCard({ tier, cohort }: { tier: TierKey; cohort: Cohort }) {
       </div>
       <h2 className="text-2xl font-semibold tracking-tight">You&apos;re in.</h2>
       <p className="mt-2 text-muted-foreground">
-        {PRICING[tier].label} reserved for {cohort.dateLabel} in {cohort.cityLabel}. Check your email for confirmation and payment instructions shortly.
+        {tierLabel} ({formatPriceCents(priceCents)}) reserved for {cohort.dateLabel} in{" "}
+        {cohort.cityLabel}. Check your email for confirmation and payment instructions shortly.
       </p>
       <div className="mt-8 rounded-xl border border-white/10 p-5 text-left">
         <div className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">

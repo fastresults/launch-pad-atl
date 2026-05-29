@@ -370,8 +370,12 @@ export type Database = {
       cohorts: {
         Row: {
           cohort_date: string
+          cohort_price_cents: number
+          cohort_seats: number
           created_at: string
           end_time: string
+          founders_price_cents: number
+          founders_seats: number
           id: string
           seats_left: number | null
           sort_order: number
@@ -387,8 +391,12 @@ export type Database = {
         }
         Insert: {
           cohort_date: string
+          cohort_price_cents?: number
+          cohort_seats?: number
           created_at?: string
           end_time?: string
+          founders_price_cents?: number
+          founders_seats?: number
           id: string
           seats_left?: number | null
           sort_order?: number
@@ -404,8 +412,12 @@ export type Database = {
         }
         Update: {
           cohort_date?: string
+          cohort_price_cents?: number
+          cohort_seats?: number
           created_at?: string
           end_time?: string
+          founders_price_cents?: number
+          founders_seats?: number
           id?: string
           seats_left?: number | null
           sort_order?: number
@@ -832,6 +844,7 @@ export type Database = {
       }
       workshop_registrations: {
         Row: {
+          assigned_tier: string | null
           business_idea: string
           cohort_id: string | null
           created_at: string
@@ -839,13 +852,16 @@ export type Database = {
           id: string
           industry: string
           name: string
+          paid_at: string | null
           phone: string | null
+          price_paid_cents: number | null
           referral_source: string | null
           stage: string
           status: string
           tier_interest: string | null
         }
         Insert: {
+          assigned_tier?: string | null
           business_idea: string
           cohort_id?: string | null
           created_at?: string
@@ -853,13 +869,16 @@ export type Database = {
           id?: string
           industry: string
           name: string
+          paid_at?: string | null
           phone?: string | null
+          price_paid_cents?: number | null
           referral_source?: string | null
           stage: string
           status?: string
           tier_interest?: string | null
         }
         Update: {
+          assigned_tier?: string | null
           business_idea?: string
           cohort_id?: string | null
           created_at?: string
@@ -867,7 +886,9 @@ export type Database = {
           id?: string
           industry?: string
           name?: string
+          paid_at?: string | null
           phone?: string | null
+          price_paid_cents?: number | null
           referral_source?: string | null
           stage?: string
           status?: string
@@ -888,6 +909,21 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      reserve_cohort_seat: {
+        Args: {
+          _cohort_id: string
+          _registration_id: string
+          _requested_tier: string
+        }
+        Returns: {
+          assigned_tier: string
+          price_cents: number
+        }[]
+      }
+      sync_cohort_seat_cache: {
+        Args: { _cohort_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "user"
