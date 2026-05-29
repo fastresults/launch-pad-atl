@@ -11,6 +11,7 @@ const RegistrationSchema = z.object({
   stage: z.enum(["idea", "early", "existing"]),
   referral_source: z.string().trim().max(120).optional().or(z.literal("")),
   tier_interest: z.enum(["founders", "cohort"]).optional(),
+  cohort_id: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
 export const createRegistration = createServerFn({ method: "POST" })
@@ -25,6 +26,7 @@ export const createRegistration = createServerFn({ method: "POST" })
       stage: data.stage,
       referral_source: data.referral_source || null,
       tier_interest: data.tier_interest ?? null,
+      cohort_id: data.cohort_id ?? null,
     });
     if (error) {
       console.error("[registrations] insert failed", error);
