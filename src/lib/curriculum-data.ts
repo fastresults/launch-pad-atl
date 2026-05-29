@@ -19,7 +19,7 @@ export type Stage = {
   afterWorkshop: string[];
   duration: string;
   covers: string[];
-  tasks: [Task, Task, Task];
+  tasks: Task[];
 };
 
 export const STAGES: Stage[] = [
@@ -31,13 +31,15 @@ export const STAGES: Stage[] = [
     summary: "The legal foundation. Leave with a filing-ready packet and the legal kit you need to sell.",
     oneLiner: "Legal foundation",
     takeHome:
-      "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit. File Monday, start taking money the same week.",
+      "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding path picked with a 12-month capital plan and a raise-ready 1-pager. File Monday, start taking money the same week.",
     walkOut: [
       "Articles of Organization pre-filled in your GA Secretary of State account",
       "EIN application completed and submitted — number issued in the session",
       "Business-bank shortlist + bank application checklist filled for your business",
       "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business",
       "Local license + sales-tax requirements documented for your county",
+      "Your funding path chosen (bootstrap / F&F / revenue-based / SBA microloan / line of credit / equity) with a 12-month capital needs table",
+      "Raise-ready 1-pager (problem, offer, ask, use of funds) + 10 named funders or lenders to contact",
     ],
     afterWorkshop: [
       "Submit the Articles + filing fee from home (about 10 minutes)",
@@ -95,6 +97,22 @@ export const STAGES: Stage[] = [
         followUp:
           "File the local business license and (if applicable) sales-tax registration once your entity is approved.",
       },
+      {
+        title: "Funding plan & raise-ready kit",
+        deliverable:
+          "Your funding path chosen for this business, a 12-month capital needs table, a 1-page raise summary, and 10 named lenders or investors to contact.",
+        tool: "Funding decision tree + raise 1-pager template",
+        details: [
+          "Pick the funding path: bootstrap, friends & family, revenue-based, SBA microloan, line of credit, or equity",
+          "Build a 12-month capital needs table — startup costs, monthly burn, runway",
+          "Draft a 1-page raise summary: problem, offer, traction proof, ask, use of funds",
+          "Build a 10-name funder/lender outreach list with the message templates ready to send",
+        ],
+        takeaway:
+          "Your funding path chosen, 12-month capital needs costed, raise-ready 1-pager, and 10 named funders to contact.",
+        followUp:
+          "Send the 10 outreach messages within the first 2 weeks; book intro calls with anyone who replies.",
+      },
     ],
   },
   {
@@ -105,8 +123,9 @@ export const STAGES: Stage[] = [
     summary: "Who you serve, what they'll pay for, and how you beat the competition.",
     oneLiner: "Demand & proof",
     takeHome:
-      "One named first customer with their problems priced in dollars, a 25-name prospect list pulled for your niche and zip, and a validated outreach script — exported as a CSV you can start messaging tonight.",
+      "A sourced 1-page research brief on your idea (market size, trend, regulation, suppliers, 5 customer quotes), one named first customer with their problems priced in dollars, a 25-name prospect list pulled for your niche and zip, and a validated outreach script — exported as a CSV you can start messaging tonight.",
     walkOut: [
+      "1-page idea-research brief: market size, trend, regulation, supplier/competitor scan, and 5 sourced customer quotes",
       "1-page profile of your first named buyer with their top 3 problems priced in dollars",
       "25-name prospect list pulled for your niche and zip — exported as a CSV",
       "Outreach script customized to that specific buyer",
@@ -118,6 +137,20 @@ export const STAGES: Stage[] = [
     duration: "60 min",
     covers: ["Your first customer", "Validation script", "3-competitor look", "What makes you different"],
     tasks: [
+      {
+        title: "Research the idea from every angle",
+        deliverable:
+          "A one-page research brief on your idea: market size, trend direction, regulation/permits, supplier/competitor scan, pricing benchmarks, and 5 real customer quotes pulled from forums/reviews — with source links.",
+        tool: "Idea-research brief template",
+        details: [
+          "Write 5 research questions that would kill or confirm the idea",
+          "Pull market-size and trend data from public sources (IBISWorld snippets, BLS, Statista free)",
+          "Scan regulation, permits, and licensing for the business type in your county",
+          "Collect 5 verbatim customer quotes from Reddit, Facebook groups, or product reviews — log every URL",
+        ],
+        takeaway:
+          "Your idea-research brief — sourced, dated, and decision-ready.",
+      },
       {
         title: "Pick your first real customer",
         deliverable:
@@ -172,11 +205,12 @@ export const STAGES: Stage[] = [
     summary: "What you actually sell, how it's delivered, and the price tag.",
     oneLiner: "What you sell & what it costs",
     takeHome:
-      "Your offer written in one sentence a buyer can say yes or no to, your price backed into from your real costs, and the exact number of sales you need to break even — on a one-page offer sheet.",
+      "Your offer written in one sentence a buyer can say yes or no to, your price backed into from your real costs, the exact number of sales you need to break even, and a signed go / pivot / kill viability score — on a one-page offer sheet.",
     walkOut: [
       "Your one-sentence offer locked",
       "First-version scope mapped step-by-step from sale to handoff",
       "Pricing sheet with real cost per sale, break-even number, and payment terms",
+      "Signed viability scorecard with a go / pivot / kill decision, scored on 6 dimensions with evidence",
     ],
     afterWorkshop: [],
     duration: "60 min",
@@ -224,6 +258,20 @@ export const STAGES: Stage[] = [
         takeaway:
           "Your pricing sheet + exact break-even number + payment terms.",
       },
+      {
+        title: "Score the idea — go / pivot / kill",
+        deliverable:
+          "A signed one-page viability scorecard rating your business on demand evidence, willingness to pay, unit economics, founder fit, regulatory load, and time to first dollar — each 0–5 with the evidence written next to it.",
+        tool: "Viability scorecard",
+        details: [
+          "Score each of the 6 dimensions 0–5 against the research, customer profile, and pricing",
+          "Write one sentence of evidence per score — no number stands alone",
+          "Total the score: ≥22 go, 15–21 pivot the weakest dimension, <15 kill",
+          "Write your one-sentence recommendation and sign it",
+        ],
+        takeaway:
+          "Your signed viability scorecard with a go / pivot / kill decision and the evidence behind it.",
+      },
     ],
   },
   {
@@ -235,12 +283,13 @@ export const STAGES: Stage[] = [
       "Set up how you'll actually deliver. Pick what kind of business you're building, set up your free apps, and draft what your first customer will get.",
     oneLiner: "Your first working version",
     takeHome:
-      "Your delivery process mapped step-by-step, the free apps that run it set up with your accounts, and your first customer's deliverable drafted and rehearsed — before a real customer ever sees it.",
+      "Your delivery process mapped step-by-step, the free apps that run it set up with your accounts, your first customer's deliverable drafted and rehearsed, and 3 written SOPs (sales intake, fulfillment, onboarding) loaded into your project hub — before a real customer ever sees it.",
     walkOut: [
       "Sale-to-happy-customer map with the app you'll use at each step",
       "Free-app accounts created in your name: project hub, files, scheduling, business email alias",
       "Your first customer's deliverable drafted and rehearsed end-to-end",
       "5-point quality checklist for anything that goes to a real customer",
+      "3 written SOPs (sales intake, fulfillment, onboarding) loaded into your project hub as runnable templates",
     ],
     afterWorkshop: [
       "Run the rehearsed deliverable past your first paying customer and iterate",
@@ -296,6 +345,22 @@ export const STAGES: Stage[] = [
           "Your first customer's deliverable — drafted and rehearsed end-to-end with a 5-point quality checklist.",
         followUp:
           "Run the drafts past your first paying customer and iterate after their feedback.",
+      },
+      {
+        title: "Operationalize the workflows",
+        deliverable:
+          "3 written SOPs specific to your business (sales intake, fulfillment, customer onboarding) — each with trigger, steps, owner, tools, definition of done, and the failure modes to watch — loaded into your project hub as runnable templates.",
+        tool: "SOP template (per workflow)",
+        details: [
+          "Pick the 3 highest-leverage workflows: sales intake, fulfillment, customer onboarding",
+          "Write each as a numbered SOP: trigger → inputs → steps → owner → tools → definition of done",
+          "Add a 'what breaks this' section listing the top 3 failure modes and the recovery step",
+          "Load all 3 into Notion / ClickUp / Trello as runnable templates anyone on the team can follow",
+        ],
+        takeaway:
+          "3 written SOPs loaded into your project hub — runnable on day one with a real customer.",
+        followUp:
+          "Run each SOP once with a real or rehearsed customer in the first 2 weeks; revise the steps that broke.",
       },
     ],
   },
