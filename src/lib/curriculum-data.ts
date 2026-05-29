@@ -549,6 +549,7 @@ export const STAGES: Stage[] = [
           "Your signed, dated 90-day plan for your business: first 3 customers → 10 → repeatable channel.",
         tool: "Launch plan template",
         details: [
+          "Lock the go-to-market: target segment, offer, pricing, channel mix, and week-by-week tactics feeding the 30/60/90",
           "Day 1–30: ship offer, close first 3 paying customers",
           "Day 31–60: refine fulfillment, reach 10 customers, collect testimonials",
           "Day 61–90: double down on the channel that worked, kill what didn't",
