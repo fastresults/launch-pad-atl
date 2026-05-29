@@ -31,15 +31,16 @@ export const STAGES: Stage[] = [
     summary: "The legal foundation. Leave with a filing-ready packet and the legal kit you need to sell.",
     oneLiner: "Legal foundation",
     takeHome:
-      "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding path picked with a 12-month capital plan and a raise-ready 1-pager. File Monday, start taking money the same week.",
+      "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding model with 12-month runway, an investor-ready pitch deck, and a fundraising kit ready to send. File Monday, start taking money the same week.",
     walkOut: [
       "Articles of Organization pre-filled in your GA Secretary of State account",
       "EIN application completed and submitted — number issued in the session",
       "Business-bank shortlist + bank application checklist filled for your business",
       "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business",
       "Local license + sales-tax requirements documented for your county",
-      "Your funding path chosen (bootstrap / F&F / revenue-based / SBA microloan / line of credit / equity) with a 12-month capital needs table",
-      "Raise-ready 1-pager (problem, offer, ask, use of funds) + 10 named funders or lenders to contact",
+      "Funding model & 12-month runway: real costs, margins, break-even, and cash picture by month",
+      "Investor-ready pitch deck: 10 slides in your brand (problem, solution, market, offer, traction, model, GTM, team, ask, use of funds)",
+      "Fundraising kit: 1-page raise summary, funder outreach list with email template, and your path picked across grants, microloans, SBA, and friends-and-family",
     ],
     afterWorkshop: [
       "Submit the Articles + filing fee from home (about 10 minutes)",
