@@ -76,8 +76,8 @@ export const SCHEDULE: Session[] = [
   {
     time: "11:30 AM",
     duration: "30 min",
-    title: "Lunch break — on your own",
-    description: "Grab lunch nearby (options within a short drive). Working tables stay open if you'd rather keep building.",
+    title: "Catered lunch & discussion",
+    description: "Lunch is provided. Eat together, swap notes, and talk through what you're building with the group and instructors.",
     kind: "break",
   },
   stageBlock(4, "12:00 PM"),
