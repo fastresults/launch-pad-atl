@@ -803,7 +803,7 @@ function TheArtOfThePossible() {
         <p className="mt-4 max-w-2xl text-muted-foreground md:text-lg">
           Scroll through for inspiration.{" "}
           <span className="font-medium text-foreground">
-            Yours doesn't have to be on this list — it shouldn't be.
+            Yours doesn't have to be on this list.
           </span>{" "}
           You walk in with your idea, and we build the business around it using the
           same seven stages — so you leave with a formed business and a 90-day plan
