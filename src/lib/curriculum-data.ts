@@ -31,15 +31,16 @@ export const STAGES: Stage[] = [
     summary: "The legal foundation. Leave with a filing-ready packet and the legal kit you need to sell.",
     oneLiner: "Legal foundation",
     takeHome:
-      "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding path picked with a 12-month capital plan and a raise-ready 1-pager. File Monday, start taking money the same week.",
+      "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding model with 12-month runway, an investor-ready pitch deck, and a fundraising kit ready to send. File Monday, start taking money the same week.",
     walkOut: [
       "Articles of Organization pre-filled in your GA Secretary of State account",
       "EIN application completed and submitted — number issued in the session",
       "Business-bank shortlist + bank application checklist filled for your business",
       "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business",
       "Local license + sales-tax requirements documented for your county",
-      "Your funding path chosen (bootstrap / F&F / revenue-based / SBA microloan / line of credit / equity) with a 12-month capital needs table",
-      "Raise-ready 1-pager (problem, offer, ask, use of funds) + 10 named funders or lenders to contact",
+      "Funding model & 12-month runway: real costs, margins, break-even, and cash picture by month",
+      "Investor-ready pitch deck: 10 slides in your brand (problem, solution, market, offer, traction, model, GTM, team, ask, use of funds)",
+      "Fundraising kit: 1-page raise summary, funder outreach list with email template, and your path picked across grants, microloans, SBA, and friends-and-family",
     ],
     afterWorkshop: [
       "Submit the Articles + filing fee from home (about 10 minutes)",
@@ -98,20 +99,20 @@ export const STAGES: Stage[] = [
           "File the local business license and (if applicable) sales-tax registration once your entity is approved.",
       },
       {
-        title: "Funding plan & raise-ready kit",
+        title: "Funding model, pitch deck & fundraising kit",
         deliverable:
-          "Your funding path chosen for this business, a 12-month capital needs table, a 1-page raise summary, and a funder outreach list you start building with the message templates ready to send.",
-        tool: "Funding decision tree + raise 1-pager template",
+          "Your funding model with 12-month runway, a 10-slide investor-ready pitch deck in your brand, and a fundraising kit — 1-page raise summary, funder outreach list with email template, and your path picked across grants, microloans, SBA, and friends-and-family.",
+        tool: "Funding model + pitch deck + raise kit templates",
         details: [
-          "Pick the funding path: bootstrap, friends & family, revenue-based, SBA microloan, line of credit, or equity",
-          "Build a 12-month capital needs table — startup costs, monthly burn, runway",
-          "Draft a 1-page raise summary: problem, offer, traction proof, ask, use of funds",
-          "Start your funder/lender outreach list and customize the message templates so they're ready to send",
+          "Build the funding model: startup costs, monthly burn, break-even, and a 12-month cash picture",
+          "Pick the funding path: grants, microloans, SBA, revenue-based, line of credit, friends & family, or equity",
+          "Draft the 10-slide pitch deck in your brand: problem, solution, market, offer, traction, model, GTM, team, ask, use of funds",
+          "Write the 1-page raise summary and customize the funder outreach email template so it's ready to send",
         ],
         takeaway:
-          "Your funding path chosen, 12-month capital needs costed, raise-ready 1-pager, and a funder outreach plan ready to send.",
+          "Your funding model with 12-month runway, investor-ready pitch deck, and fundraising kit — ready to send.",
         followUp:
-          "Build out the outreach list and send the messages in the first 2 weeks; book intro calls with anyone who replies.",
+          "Build out the funder list and send the outreach in the first 2 weeks; book intro calls with anyone who replies.",
       },
     ],
   },
@@ -129,7 +130,7 @@ export const STAGES: Stage[] = [
       "1-page profile of your first named buyer with their top 3 problems priced in dollars",
       "Starter prospect list begun in-session with the source template and CSV export ready",
       "Outreach script customized to that specific buyer",
-      "3-competitor grid + your one-sentence positioning",
+      "Competitive research pack: 3 competitors compared on offer, price, and positioning, with sourced customer quotes and a one-page 'what makes you different' summary",
     ],
     afterWorkshop: [
       "Fill out the prospect list and run discovery calls within the next 2 weeks",
@@ -182,18 +183,18 @@ export const STAGES: Stage[] = [
           "Fill out the prospect list and run discovery calls in the next 2 weeks; score each one.",
       },
       {
-        title: "Look at 3 competitors and find your edge",
+        title: "Competitive research pack",
         deliverable:
-          "A grid comparing 3 real competitors against your business + one sentence on what makes you different.",
-        tool: "Competitive grid template",
+          "A competitive research pack: 3 competitors compared on offer, price, channel, proof, and weakness, with sourced customer quotes and a one-page 'what makes you different' summary.",
+        tool: "Competitive research template",
         details: [
           "Identify 3 real competitors (2 direct + 1 substitute)",
           "Score each on offer, price, channel, proof, and weakness",
-          "Find the gap they all miss — your edge",
+          "Pull sourced customer quotes that show where each competitor falls short",
           "Write a one-line positioning statement: For X, who Y, we are Z because…",
         ],
         takeaway:
-          "Your 3-competitor grid + one-sentence positioning that names what makes you different.",
+          "Your competitive research pack — 3 competitors compared, sourced customer quotes, and a one-page 'what makes you different' summary.",
       },
     ],
   },
@@ -289,7 +290,7 @@ export const STAGES: Stage[] = [
       "Free-app accounts created in your name: project hub, files, scheduling, business email alias",
       "Your first customer's deliverable drafted and rehearsed end-to-end",
       "5-point quality checklist for anything that goes to a real customer",
-      "3 written SOPs (sales intake, fulfillment, onboarding) loaded into your project hub as runnable templates",
+      "Operations & workflow: 3 runnable SOPs (intake, fulfillment, onboarding) in your project hub plus a one-page weekly operating rhythm",
     ],
     afterWorkshop: [
       "Run the rehearsed deliverable past your first paying customer and iterate",
@@ -347,18 +348,19 @@ export const STAGES: Stage[] = [
           "Run the drafts past your first paying customer and iterate after their feedback.",
       },
       {
-        title: "Operationalize the workflows",
+        title: "Operations & workflow",
         deliverable:
-          "3 written SOPs specific to your business (sales intake, fulfillment, customer onboarding) — each with trigger, steps, owner, tools, definition of done, and the failure modes to watch — loaded into your project hub as runnable templates.",
-        tool: "SOP template (per workflow)",
+          "3 written SOPs specific to your business (sales intake, fulfillment, customer onboarding) — each with trigger, steps, owner, tools, definition of done, and failure modes — loaded into your project hub as runnable templates, plus a one-page weekly operating rhythm.",
+        tool: "SOP templates + weekly operating rhythm",
         details: [
           "Pick the 3 highest-leverage workflows: sales intake, fulfillment, customer onboarding",
           "Write each as a numbered SOP: trigger → inputs → steps → owner → tools → definition of done",
           "Add a 'what breaks this' section listing the top 3 failure modes and the recovery step",
-          "Load all 3 into Notion / ClickUp / Trello as runnable templates anyone on the team can follow",
+          "Draft a one-page weekly operating rhythm: standing blocks, review cadence, and the 3 numbers you check every Friday",
+          "Load all 3 SOPs into Notion / ClickUp / Trello as runnable templates anyone on the team can follow",
         ],
         takeaway:
-          "3 written SOPs loaded into your project hub — runnable on day one with a real customer.",
+          "Your operations & workflow: 3 runnable SOPs in your project hub plus a one-page weekly operating rhythm.",
         followUp:
           "Run each SOP once with a real or rehearsed customer in the first 2 weeks; revise the steps that broke.",
       },
@@ -445,7 +447,7 @@ export const STAGES: Stage[] = [
   {
     n: 6,
     slug: "marketing",
-    title: "Marketing plan & creatives",
+    title: "Marketing & creatives",
     shortTitle: "marketing",
     summary:
       "Your printable business card and flyer, your social channels branded, and a 30-day plan to put it all in motion.",
@@ -458,7 +460,7 @@ export const STAGES: Stage[] = [
       "Print-ready 1-page flyer designed in your brand",
       "Instagram, LinkedIn, and one of TikTok/YouTube/X — handles claimed, profile copy, link-in-bio, and banner filled in",
       "6 on-brand post drafts + 60-second founder video script",
-      "30-day marketing plan: 2 channels, weekly budget, content calendar, 3 weekly KPIs",
+      "Marketing & communications: audience, channels, messaging pillars, 30-day content calendar, weekly budget, and 3 weekly KPIs",
     ],
     afterWorkshop: [
       "Send the print files to your printer",
@@ -499,18 +501,19 @@ export const STAGES: Stage[] = [
           "Send the print files to your printer and schedule the 6 posts in Buffer / Later / Meta Business Suite; record the video.",
       },
       {
-        title: "1-page marketing plan",
+        title: "Marketing & communications",
         deliverable:
-          "Your 1-page marketing plan: channels, budget, 30-day calendar, and 3 numbers to check every week.",
-        tool: "Marketing plan template",
+          "Your marketing & communications: audience, channels, messaging pillars, 30-day content calendar, weekly budget, and 3 numbers to check every week.",
+        tool: "Marketing & communications template",
         details: [
+          "Lock the audience and the 3 messaging pillars you'll repeat across every channel",
           "Pick your top-2 acquisition channels (1 organic, 1 outbound or paid)",
           "Set a weekly time + dollar budget per channel",
           "Build a 30-day content + outreach calendar (publish dates locked)",
           "Define 3 KPIs: leads/week, reply rate, conversion to sale",
         ],
         takeaway:
-          "Your 30-day marketing plan — 2 channels, weekly budget, content calendar, 3 weekly KPIs.",
+          "Your marketing & communications — audience, channels, messaging pillars, 30-day calendar, weekly budget, 3 weekly KPIs.",
       },
     ],
   },
@@ -523,8 +526,9 @@ export const STAGES: Stage[] = [
       "Your dated 90-day plan, your launch-day checklist, and the weekly check-in that keeps you moving.",
     oneLiner: "90-day plan",
     takeHome:
-      "Your signed, dated 90-day plan (first 3 paying customers → 10 → repeatable channel), your launch-day checklist with personal outreach drafts ready to send, and an accountability partner on next Monday's calendar.",
+      "Your signed, dated 90-day plan with a go-to-market feeding it (first 3 paying customers → 10 → repeatable channel), your launch-day checklist with personal outreach drafts ready to send, and an accountability partner on next Monday's calendar.",
     walkOut: [
+      "Go-to-market: target segment, offer, pricing, channel mix, week-by-week tactics, and KPIs that prove it's working",
       "Signed, dated 30/60/90 plan: first 3 paying customers → 10 → repeatable channel",
       "Personal announcement list started in-session",
       "Personal outreach drafts saved (DM, email, voice note)",
@@ -545,6 +549,7 @@ export const STAGES: Stage[] = [
           "Your signed, dated 90-day plan for your business: first 3 customers → 10 → repeatable channel.",
         tool: "Launch plan template",
         details: [
+          "Lock the go-to-market: target segment, offer, pricing, channel mix, and week-by-week tactics feeding the 30/60/90",
           "Day 1–30: ship offer, close first 3 paying customers",
           "Day 31–60: refine fulfillment, reach 10 customers, collect testimonials",
           "Day 61–90: double down on the channel that worked, kill what didn't",
