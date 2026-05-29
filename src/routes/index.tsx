@@ -880,7 +880,7 @@ const WALKOUT_PHASES: WalkoutPhase[] = [
       { name: "Signed legal kit", desc: "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business." },
       { name: "Your first customer profile", desc: "One named buyer, their problems priced in dollars, and where to find them." },
       { name: "25-name prospect list + outreach script", desc: "A CSV you can start messaging tonight." },
-      { name: "Competitor grid + positioning", desc: "Three competitors compared and one sentence on what makes you different." },
+      { name: "Competitive research pack", desc: "Three competitors compared on offer, price, and positioning, with sourced customer quotes and a one-page 'what makes you different' summary." },
     ],
   },
   {
@@ -893,6 +893,8 @@ const WALKOUT_PHASES: WalkoutPhase[] = [
       { name: "Delivery map", desc: "Your business mapped sale-to-happy-customer, with the app you'll use at each step." },
       { name: "Free-app stack set up", desc: "Project hub, files, scheduling, comms — accounts created in your name." },
       { name: "First customer's deliverable", desc: "Drafted and rehearsed end-to-end with a 5-point quality checklist." },
+      { name: "Operations & workflow plan", desc: "Three SOPs — intake, fulfillment, customer onboarding — loaded into your project hub, plus a one-page weekly operating rhythm." },
+      { name: "Funding model & 12-month money plan", desc: "Real costs, margins, break-even, runway, and a 12-month cash plan you can defend to a lender or investor." },
     ],
   },
   {
@@ -906,7 +908,11 @@ const WALKOUT_PHASES: WalkoutPhase[] = [
       { name: "Printable business card + flyer", desc: "Designed in your brand and ready to send to a printer." },
       { name: "Social channels claimed and branded", desc: "Profile copy, link-in-bio, banner — ready to configure on Instagram, LinkedIn, and one more." },
       { name: "6 on-brand posts + 60-second video script", desc: "Ready to publish and record this week." },
-      { name: "Signed 90-day plan + launch-day kit", desc: "Dated 30/60/90 plan, 10 personalized outreach drafts, starter CRM, accountability partner on the calendar." },
+      { name: "Marketing & communications plan", desc: "Audience, channels, messaging pillars, and a 30-day content calendar mapped to the posts and video script you're leaving with." },
+      { name: "Go-to-market plan", desc: "Launch sequence with target segment, offer, pricing, channel mix, week-by-week tactics, and the KPIs that prove it's working." },
+      { name: "Investor-ready pitch deck", desc: "10-slide deck — problem, solution, market, offer, traction, model, GTM, team, ask, use of funds — in your brand." },
+      { name: "Fundraising kit", desc: "One-page raise summary, funder outreach plan with email template, and a path picked across grants, microloans, SBA, and friends-and-family." },
+      { name: "Signed 90-day plan + launch-day kit", desc: "Dated 30/60/90 plan, personal outreach drafts, starter CRM, accountability partner on the calendar." },
     ],
   },
 ];
