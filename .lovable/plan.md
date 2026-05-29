@@ -1,35 +1,64 @@
-# Add post-workshop "what to do next" tooltips to the Value Grid
+# Rewrite the "Not a course" banner — accurate, still impactful
 
-## Goal
-On each deliverable in the Value Grid that still needs the user to do something after the 7 hours (file, pay, host, publish, send, etc.), show a small info icon. Tap/hover → short, plain-English instructions an 8th-grader can follow.
+Keep the punch of the last pass. Strip every claim that overpromises. The revolution is real without exaggeration: a founder walks in with an idea and walks out with a built business — brand, website, offer, legal drafts, and a clear path — instead of a binder of theory.
 
-## Which rows get a tooltip (and what it says)
+## What changes
 
-Rows with no post-workshop action (EIN, ICP list, competitor grid, offer sheet, workflow map, first deliverable draft, headline/pitch, social posts, 30/60/90 plan, day-of timeline) → **no tooltip**.
+Only copy inside `<NotACourseBanner />` in `src/routes/index.tsx`. No layout, icon, structure, or styling changes.
 
-Rows that DO get a tooltip:
+## What's actually true (the guardrail)
 
-1. **GA LLC filing packet** — "Go to georgia.gov Corporations site. Upload your Articles PDF. Pay the $100 fee with a card. Approval email arrives in 5–7 business days."
-2. **Terms / Privacy / Service Agreement** — "Save the 3 PDFs to Google Drive. Link Terms + Privacy in your website footer. Email the Service Agreement to your first customer to sign."
-3. **Bank + license + sales-tax checklist** — "Walk into your bank with your EIN letter + LLC packet to open the account. Apply for your city business license online ($50–$75). Register for sales tax at dor.georgia.gov if you sell products."
-4. **Logo + palette + fonts** — "Download the logo ZIP. Upload to your website, email signature, and social profiles. Keep the brand sheet PDF — hand it to anyone making things for you."
-5. **Complete 4-page website** — "Click Publish in the site builder. Buy your domain ($12/yr) and connect it — the builder walks you through it. Site is live in ~30 minutes."
-6. **Stripe / Square + GA4 + email** — "Finish Stripe verification (bank routing + SSN, 5 min). Verify your business email by clicking the link they send. GA4 is already tracking — just log in weekly."
-7. **Business card + flyer** — "Upload the print-ready PDFs to Vistaprint or Moo. 500 cards ≈ $25, flyers ≈ $40. Arrives in 5–7 days."
-8. **6 posts + video + 30-day plan** — "Post one item every 2 days on the schedule we built. Film the 60-sec video on your phone using the script. Don't overthink it — done beats perfect."
-9. **CRM + 3 KPIs** — "Log in to the CRM each Monday. Add every new lead. Check your 3 KPIs every Friday — that's it."
+**Built in the room, walk out with it:**
+- Business name, brand identity, logo
+- Website designed and built (ready to publish)
+- Core offer and pricing written
+- Legal document drafts (operating agreement, contracts, policies)
+- Marketing kit and launch plan
+- AI toolkit configured for the business
 
-## Technical details
+**Started in the room, finished by you after (one short checklist):**
+- EIN application
+- LLC filing with the state
+- Business bank account
+- Local business license
+- Website publish + domain
+- Payment processor verification
 
-- Edit `src/lib/value-grid.ts`: add optional `postWorkshop?: string` field to `ValueRow`, fill in the 9 strings above.
-- Edit `src/components/value/ValueGrid.tsx`:
-  - Import `Tooltip, TooltipTrigger, TooltipContent, TooltipProvider` from `@/components/ui/tooltip` and `Info` from `lucide-react`.
-  - Wrap the table in `<TooltipProvider delayDuration={150}>`.
-  - For rows with `postWorkshop`, render an `Info` icon (size-3.5, muted) next to the deliverable text. Trigger is a button (a11y). Tooltip content: small heading "After the workshop" + the instruction text, max-w-xs.
-  - Apply to both desktop grid and mobile card layouts.
-- No data model, route, or schema changes. No new files.
+## Copy direction (recommended)
+
+**Eyebrow**
+`Most workshops teach. This one builds.`
+
+**Headline**
+`Walk in with an idea. Walk out with a built business.`
+
+**Subhead**
+`Not a course. Not a coaching call. Not a 12-week cohort that ends in a PDF. In one focused day — seven hours, one room, one founder — you build the actual business: name, brand, website, offer, pricing, legal drafts, and a launch plan. You leave with real work in hand and a short, plain-English checklist for the few items only your signature can finish — LLC filing, bank account, license, and publishing the site. You arrive with a spark. You leave with a company that's built, not a notebook full of someday.`
+
+**Proof chips (replace existing three)**
+- `Built in the room, not assigned as homework`
+- `Seven hours. One founder. One business.`
+- `You leave with real deliverables — and a one-page finish list`
+
+## Why this works without overpromising
+
+- **"Built business" instead of "a business"** — honest: the work is done, the legal entity isn't yet issued by the state.
+- **No "EIN in hand," no "website live," no "filed."** Every claim maps to something physically created in the room.
+- **The short finish list is reframed as a feature, not a footnote** — "the few items only your signature can finish" makes the honesty itself feel premium, not like a caveat.
+- **"Built, not a notebook full of someday"** keeps the emotional punch of the previous pass while staying defensible.
+- **Chips are now receipts you can actually show** — no falsifiable claims about EINs or live websites.
+
+## Alternate headlines if you want a different flavor
+
+1. `Idea in. Built business out. One day.`
+2. `Seven hours from "what if" to "ready to launch."`
+3. `The only workshop where you leave with a business that's built — not a course you have to apply later.`
+
+Going with the recommended version unless you pick one.
 
 ## Out of scope
-- Rewording existing deliverables.
-- Changing pricing, totals, or the registration form.
-- Any change outside `/register`.
+
+- Hero copy or any other section
+- Visual/layout/animation changes
+- Adjusting the actual list of in-room deliverables (that's a separate decision)
+- A/B variants in code

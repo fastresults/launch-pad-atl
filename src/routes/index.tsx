@@ -63,18 +63,22 @@ function NotACourseBanner() {
               <Zap className="size-5 text-white" />
             </span>
             <div>
-              <h2 className="text-xl md:text-2xl font-semibold text-white leading-tight">
-                This is not a course. It's a build day.
+              <p className="text-[11px] md:text-xs uppercase tracking-[0.18em] font-semibold text-white/70">
+                Most workshops teach. This one builds.
+              </p>
+              <h2 className="mt-2 text-xl md:text-2xl font-semibold text-white leading-tight">
+                Walk in with an idea. Walk out with a built business.
               </h2>
               <p className="mt-2 text-sm md:text-base text-white/85 leading-relaxed">
-                No theory. No slides. No "go figure it out later." You walk in with an idea — seven hours later you walk out with your EIN in hand, your brand and website built, your legal docs and offer drafted, and a short, plain-English checklist for the handful of items only you can sign for (LLC filing, bank account, business license).
+                Not a course. Not a coaching call. Not a 12-week cohort that ends in a PDF. In one focused day — seven hours, one room, one founder — you build the actual business: name, brand, website, offer, pricing, legal drafts, and a launch plan. You leave with real work in hand and a short, plain-English checklist for the few items only your signature can finish — LLC filing, bank account, license, and publishing the site. You arrive with a spark. You leave with a company that's built, not a notebook full of someday.
               </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2 md:flex-col md:items-end md:gap-2 md:shrink-0">
-            <BannerChip icon={<Hammer className="size-3.5" />} label="Build, don't learn" />
-            <BannerChip icon={<Timer className="size-3.5" />} label="7 working hours, one day" />
-            <BannerChip icon={<Check className="size-3.5" />} label="Real work, not worksheets" />
+            <BannerChip icon={<Hammer className="size-3.5" />} label="Built in the room, not assigned as homework" />
+            <BannerChip icon={<Timer className="size-3.5" />} label="Seven hours. One founder. One business." />
+            <BannerChip icon={<Check className="size-3.5" />} label="Real deliverables + a one-page finish list" />
+
           </div>
         </div>
       </div>
