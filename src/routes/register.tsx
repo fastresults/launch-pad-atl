@@ -345,7 +345,8 @@ function Field({
   );
 }
 
-function SuccessCard({ tier }: { tier: TierKey }) {
+function SuccessCard({ tier, cohortId }: { tier: TierKey; cohortId: string }) {
+  const cohort = getCohortById(cohortId);
   const bring = [
     "Your laptop and charger",
     "Headphones (optional)",
@@ -359,7 +360,7 @@ function SuccessCard({ tier }: { tier: TierKey }) {
       </div>
       <h2 className="text-2xl font-semibold tracking-tight">You&apos;re in.</h2>
       <p className="mt-2 text-muted-foreground">
-        {PRICING[tier].label} reserved for {EVENT.dateLabel}. Check your email for confirmation and payment instructions shortly.
+        {PRICING[tier].label} reserved for {cohort?.dateLabel ?? EVENT.dateLabel}. Check your email for confirmation and payment instructions shortly.
       </p>
       <div className="mt-8 rounded-xl border border-white/10 p-5 text-left">
         <div className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
