@@ -40,6 +40,7 @@ function DashboardLayout() {
                   Admin
                 </Link>
               )}
+              <ThemeToggle />
               <Button variant="outline" size="sm" onClick={signOut}>
                 Sign out
               </Button>
