@@ -110,7 +110,7 @@ function Hero() {
       <div className="absolute inset-0 bg-background/50" />
       <div className="relative mx-auto max-w-6xl px-6 py-24 md:py-32">
         <p className="mb-6 text-sm uppercase tracking-[0.2em] text-white/80">
-          One day. One founder. One real, revenue-ready business.
+          One day. One founder. One operationally launch-ready business.
         </p>
         <h1 className="max-w-3xl text-5xl font-semibold leading-[1.05] tracking-tight text-white md:text-7xl">
           Walk in with an idea. <br />
