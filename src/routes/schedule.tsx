@@ -166,41 +166,6 @@ function SchedulePage() {
 
                       {stage && (
                         <>
-                          {/* You walk out with */}
-                          <div className="mt-5 grid gap-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-4 md:grid-cols-2">
-                            <div>
-                              <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                                Done in the room
-                              </div>
-                              <ul className="mt-2 space-y-1.5">
-                                {stage.walkOut.map((item, i) => (
-                                  <li key={i} className="flex items-start gap-2 text-[13px] leading-snug text-foreground/90">
-                                    <Check className="mt-0.5 size-3.5 shrink-0 text-foreground/80" />
-                                    <span>{item}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div>
-                              <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                                You finish at home
-                              </div>
-                              {stage.afterWorkshop.length > 0 ? (
-                                <ul className="mt-2 space-y-1.5">
-                                  {stage.afterWorkshop.map((item, i) => (
-                                    <li key={i} className="flex items-start gap-2 text-[12px] italic leading-snug text-muted-foreground">
-                                      <Clock className="mt-0.5 size-3.5 shrink-0 text-foreground/60" />
-                                      <span>{item}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <div className="mt-2 text-[12px] italic text-foreground/70">
-                                  Nothing — this stage is done in the room.
-                                </div>
-                              )}
-                            </div>
-                          </div>
 
                           <div className="mt-5 rounded-xl border border-white/10 bg-background/40 p-5">
                             <div className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">
