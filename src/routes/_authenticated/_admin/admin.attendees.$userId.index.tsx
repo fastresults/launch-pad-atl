@@ -56,10 +56,16 @@ function AttendeeDetail() {
           <p className="mt-1 text-sm text-muted-foreground">{data.profile?.email}</p>
         </div>
         {isSuperAdmin && (
-          <Button onClick={() => trigger.mutate()} disabled={trigger.isPending}>
-            {trigger.isPending ? "Running pipeline…" : "Run full AI pipeline"}
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <Link to="/admin/attendees/$userId/workflow" params={{ userId }}>Workflow</Link>
+            </Button>
+            <Button onClick={() => trigger.mutate()} disabled={trigger.isPending}>
+              {trigger.isPending ? "Running pipeline…" : "Run full AI pipeline"}
+            </Button>
+          </div>
         )}
+
       </div>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
