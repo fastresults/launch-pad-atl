@@ -123,8 +123,9 @@ export const STAGES: Stage[] = [
     summary: "Who you serve, what they'll pay for, and how you beat the competition.",
     oneLiner: "Demand & proof",
     takeHome:
-      "One named first customer with their problems priced in dollars, a 25-name prospect list pulled for your niche and zip, and a validated outreach script — exported as a CSV you can start messaging tonight.",
+      "A sourced 1-page research brief on your idea (market size, trend, regulation, suppliers, 5 customer quotes), one named first customer with their problems priced in dollars, a 25-name prospect list pulled for your niche and zip, and a validated outreach script — exported as a CSV you can start messaging tonight.",
     walkOut: [
+      "1-page idea-research brief: market size, trend, regulation, supplier/competitor scan, and 5 sourced customer quotes",
       "1-page profile of your first named buyer with their top 3 problems priced in dollars",
       "25-name prospect list pulled for your niche and zip — exported as a CSV",
       "Outreach script customized to that specific buyer",
