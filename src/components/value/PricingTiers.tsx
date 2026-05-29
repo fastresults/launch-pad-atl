@@ -38,9 +38,10 @@ export function PricingTiers({
         gradient
         priceCents={cohort.foundersPriceCents}
         capacity={cohort.foundersSeats}
-        taken={availability?.founders.taken}
+        displayedTaken={availability?.founders.displayedTaken}
         soldOut={foundersSoldOut}
         disabled={foundersSoldOut}
+        sellingFast={availability?.founders.showSellingFast ?? false}
       />
       <TierCard
         tier="cohort"
@@ -50,9 +51,10 @@ export function PricingTiers({
         badge={`Standard cohort seat · next ${cohort.cohortSeats}`}
         priceCents={cohort.cohortPriceCents}
         capacity={cohort.cohortSeats}
-        taken={availability?.cohort.taken}
+        displayedTaken={availability?.cohort.displayedTaken}
         soldOut={cohortSoldOut}
         disabled={cohortSoldOut}
+        sellingFast={availability?.cohort.showSellingFast ?? false}
         unlocksWhen={!foundersSoldOut ? "Founders fills up" : undefined}
       />
     </div>
