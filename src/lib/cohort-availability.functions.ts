@@ -26,6 +26,7 @@ export type CohortAvailability = {
   totalRemaining: number;
   cohortSoldOut: boolean;
   nextTier: "founders" | "cohort" | null;
+  isActiveCohort: boolean;
 };
 
 const Input = z.object({ cohort_id: z.string().min(1) });
@@ -60,6 +61,22 @@ export const getCohortAvailability = createServerFn({ method: "GET" })
       cohort_honest_threshold_pct: number;
     };
 
+    // Determine if this is the "active" cohort (earliest non-sold-out cohort with date >= today).
+    // Scarcity inflation only applies to the active cohort; all other cohorts show real numbers.
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: activeRow } = await supabaseAdmin
+      .from("cohorts" as never)
+      .select("id")
+      .neq("status", "sold_out")
+      .gte("cohort_date", today)
+      .order("cohort_date", { ascending: true })
+      .order("sort_order", { ascending: true })
+      .order("id", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    const activeId = (activeRow as { id?: string } | null)?.id ?? null;
+    const isActiveCohort = activeId === cohort_id;
+
     const { data: regs, error: rErr } = await supabaseAdmin
       .from("workshop_registrations")
       .select("assigned_tier, status")
@@ -73,20 +90,24 @@ export const getCohortAvailability = createServerFn({ method: "GET" })
     const foundersTaken = rows.filter((r) => r.assigned_tier === "founders").length;
     const cohortTaken = rows.filter((r) => r.assigned_tier === "cohort").length;
 
-    const foundersDisp = computeDisplayedTaken(
-      foundersTaken,
-      c.founders_seats,
-      c.founders_display_floor,
-      c.founders_warming_boost,
-      c.founders_honest_threshold_pct,
-    );
-    const cohortDisp = computeDisplayedTaken(
-      cohortTaken,
-      c.cohort_seats,
-      c.cohort_display_floor,
-      c.cohort_warming_boost,
-      c.cohort_honest_threshold_pct,
-    );
+    const foundersDisp = isActiveCohort
+      ? computeDisplayedTaken(
+          foundersTaken,
+          c.founders_seats,
+          c.founders_display_floor,
+          c.founders_warming_boost,
+          c.founders_honest_threshold_pct,
+        )
+      : { displayedTaken: foundersTaken, mode: "honest" as ScarcityMode };
+    const cohortDisp = isActiveCohort
+      ? computeDisplayedTaken(
+          cohortTaken,
+          c.cohort_seats,
+          c.cohort_display_floor,
+          c.cohort_warming_boost,
+          c.cohort_honest_threshold_pct,
+        )
+      : { displayedTaken: cohortTaken, mode: "honest" as ScarcityMode };
 
     const foundersSoldOut = foundersTaken >= c.founders_seats;
     const cohortSoldOutReal = cohortTaken >= c.cohort_seats;
@@ -132,5 +153,6 @@ export const getCohortAvailability = createServerFn({ method: "GET" })
       totalRemaining,
       cohortSoldOut,
       nextTier,
+      isActiveCohort,
     };
   });

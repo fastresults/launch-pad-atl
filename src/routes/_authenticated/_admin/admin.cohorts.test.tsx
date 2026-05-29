@@ -147,21 +147,35 @@ function CohortTestPage() {
 
           {avail && selected && (
             <div className="rounded-xl border border-white/10 bg-card p-4 space-y-3">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">
-                Live availability
+              <div className="flex items-center justify-between">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Live availability
+                </div>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
+                    avail.isActiveCohort
+                      ? "bg-amber-400/15 text-amber-300"
+                      : "bg-white/5 text-muted-foreground"
+                  }`}
+                >
+                  {avail.isActiveCohort ? "Active · scarcity live" : "Inactive · honest only"}
+                </span>
               </div>
               <TierRow
                 label="Founders"
                 price={formatPriceCents(selected.foundersPriceCents)}
                 taken={avail.founders.taken}
                 capacity={avail.founders.capacity}
+                displayed={avail.founders.displayedTaken}
               />
               <TierRow
                 label="Cohort"
                 price={formatPriceCents(selected.cohortPriceCents)}
                 taken={avail.cohort.taken}
                 capacity={avail.cohort.capacity}
+                displayed={avail.cohort.displayedTaken}
               />
+
               <div className="border-t border-white/5 pt-3 text-xs">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total paid</span>
@@ -327,15 +341,19 @@ function CohortTestPage() {
   );
 }
 
-function TierRow({ label, price, taken, capacity }: { label: string; price: string; taken: number; capacity: number }) {
+function TierRow({ label, price, taken, capacity, displayed }: { label: string; price: string; taken: number; capacity: number; displayed?: number }) {
   const pct = capacity > 0 ? Math.min(100, (taken / capacity) * 100) : 0;
   const full = taken >= capacity;
+  const showDisplayed = typeof displayed === "number" && displayed !== taken;
   return (
     <div>
       <div className="flex items-baseline justify-between text-sm">
         <span>{label} <span className="text-muted-foreground tabular-nums">· {price}</span></span>
         <span className="tabular-nums text-xs">
           {taken} / {capacity} {full && <span className="text-amber-300">· full</span>}
+          {showDisplayed && (
+            <span className="ml-2 text-amber-300">· shown as {displayed}</span>
+          )}
         </span>
       </div>
       <div className="mt-1 h-1.5 rounded-full bg-white/5 overflow-hidden">

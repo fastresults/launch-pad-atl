@@ -207,6 +207,18 @@ function CohortsAdminPage() {
   const totalSeatsPreview =
     (Number(form.founders_seats) || 0) + (Number(form.cohort_seats) || 0);
 
+  // The "active" cohort: earliest non-sold-out cohort with date >= today.
+  // Scarcity inflation only applies to this one cohort.
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const activeCohortId =
+    [...cohorts]
+      .filter((c) => c.status !== "sold_out" && c.id >= todayStr)
+      .sort((a, b) => a.id.localeCompare(b.id))[0]?.id ?? null;
+  const isFormActive = !!form.id && form.id === activeCohortId;
+  const isFormFutureOpen =
+    !!form.id && !isFormActive && form.status !== "sold_out" && form.cohort_date >= todayStr;
+
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -253,10 +265,18 @@ function CohortsAdminPage() {
             ) : (
               cohorts.map((c) => (
                 <tr key={c.id} className="border-t border-white/5">
-                  <td className="px-4 py-3 font-medium">{c.dateLabel}</td>
+                  <td className="px-4 py-3 font-medium">
+                    {c.dateLabel}
+                    {c.id === activeCohortId && (
+                      <span className="ml-2 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-300">
+                        Scarcity live
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {c.startISO.slice(11, 16)} – {c.endISO.slice(11, 16)} ({c.startISO.endsWith("-04:00") ? "EDT" : "EST"})
                   </td>
+
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-0.5 text-xs ${
                       c.status === "sold_out" ? "bg-white/5 text-muted-foreground" :
@@ -430,6 +450,21 @@ function CohortsAdminPage() {
                   Real seat counts, reservations, and emails always use the truth.
                 </div>
               </div>
+              {form.id && (
+                <div
+                  className={`mb-3 rounded-md border px-3 py-2 text-xs ${
+                    isFormActive
+                      ? "border-amber-400/30 bg-amber-400/10 text-amber-200"
+                      : "border-white/10 bg-white/[0.02] text-muted-foreground"
+                  }`}
+                >
+                  {isFormActive
+                    ? "Active cohort — scarcity is live for visitors right now."
+                    : isFormFutureOpen
+                    ? "Future cohort — visitors see honest seat counts. These values activate once this becomes the next available cohort."
+                    : "Past or sold-out cohort — scarcity does not apply."}
+                </div>
+              )}
               <ScarcityFields
                 tier="Founders"
                 capacity={Number(form.founders_seats) || 0}
