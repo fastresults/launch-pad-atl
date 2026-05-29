@@ -424,29 +424,6 @@ function WalkInWalkOut() {
     "No clear first customer",
     "No structure, no kit, no plan you can actually follow Monday morning",
   ];
-  const walkOut = [
-    "A 1-page idea brief: market size, trend, permits, competitor scan, and real customer quotes you've pulled",
-    "Your first customer profiled, their problem priced, and a prospect list you start building in-session",
-    "An outreach message written for you, 3 competitors mapped, and what makes you different",
-    "Your offer in one sentence, scope mapped step-by-step, and a price built from real costs",
-    "A signed go / pivot / kill score across 6 areas, with the proof behind each",
-    "Your Georgia LLC paperwork, pre-filled and ready to file",
-    "Your EIN issued before lunch",
-    "Terms, Privacy, and a customer agreement customized to your business",
-    "Business-bank shortlist plus local license and sales-tax steps",
-    "Funding path picked, a 12-month money plan, a raise 1-pager, and a funder outreach plan ready to send",
-    "Your sale-to-customer map with the free apps set up in your name",
-    "Your first customer's deliverable drafted, with a 5-point quality checklist",
-    "Three SOPs — intake, fulfillment, onboarding — loaded into your project hub",
-    "Your logo, 4-color palette, and font pair, built from your business name",
-    "A 4-page website (Home, Offer, About, Contact) in your voice, ready to publish",
-    "Payments, business email, and GA4 set up and queued for one click",
-    "Headline, 3 reasons to buy, 30-second pitch, and 100-word founder bio",
-    "Print-ready business card and 1-page flyer in your brand",
-    "6 social posts, a 60-second video script, and a 30-day plan with 3 weekly KPIs",
-    "Your signed 30/60/90 plan, announcement list, and personal outreach drafts ready to send",
-    "Launch-day timeline, starter CRM, 3 weekly KPIs, and an accountability partner on the calendar",
-  ];
   return (
     <section className="py-20">
       <div className="mx-auto max-w-6xl px-6">
