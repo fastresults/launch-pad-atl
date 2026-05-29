@@ -273,7 +273,7 @@ async function runStep(args: {
 
     let deliverableId: string;
     if (existing) {
-      await supabaseAdmin.from("attendee_deliverables").update(patch).eq("id", existing.id);
+      await supabaseAdmin.from("attendee_deliverables").update(patch as never).eq("id", existing.id);
       deliverableId = existing.id;
     } else {
       const { data: inserted, error: insErr } = await supabaseAdmin
@@ -466,7 +466,7 @@ export const updateDeliverableContent = createServerFn({ method: "POST" })
       actor: context.userId,
       source: "admin",
       before: existing.content_current,
-      after: data.content,
+      after: data.content as never,
     });
 
     return { ok: true };
@@ -547,7 +547,7 @@ export const reviewDeliverable = createServerFn({ method: "POST" })
       patch.publish_status = "unpublished";
     }
 
-    await supabaseAdmin.from("attendee_deliverables").update(patch).eq("id", row.id);
+    await supabaseAdmin.from("attendee_deliverables").update(patch as never).eq("id", row.id);
     await supabaseAdmin.from("deliverable_revisions").insert({
       deliverable_id: row.id,
       user_id: data.userId,
