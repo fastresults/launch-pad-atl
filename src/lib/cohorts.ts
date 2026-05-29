@@ -258,3 +258,14 @@ export function computeDisplayedTaken(
   const mode: ScarcityMode = realTaken === 0 ? "cold" : "warming";
   return { displayedTaken: Math.max(capped, realTaken), mode };
 }
+
+// Convert a "remaining %" floor (admin setting) into an absolute "displayed taken
+// floor" for computeDisplayedTaken. Example: capacity 20, pct 25 → 5 remaining
+// → floor of 15 taken. Clamped to capacity - 1 so the cold state never appears
+// sold out.
+export function displayFloorFromPct(capacity: number, remainingPct: number): number {
+  if (capacity <= 0 || remainingPct <= 0) return 0;
+  const remaining = Math.max(1, Math.ceil((capacity * remainingPct) / 100));
+  const floorTaken = capacity - remaining;
+  return Math.max(0, Math.min(floorTaken, Math.max(capacity - 1, 0)));
+}
