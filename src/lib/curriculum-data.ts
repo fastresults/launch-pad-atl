@@ -523,11 +523,11 @@ export const STAGES: Stage[] = [
       "Your dated 90-day plan, your launch-day checklist, and the weekly check-in that keeps you moving.",
     oneLiner: "90-day plan",
     takeHome:
-      "Your signed, dated 90-day plan (first 3 paying customers → 10 → repeatable channel), your launch-day checklist with personalized outreach drafts ready to send, and an accountability partner on next Monday's calendar.",
+      "Your signed, dated 90-day plan (first 3 paying customers → 10 → repeatable channel), your launch-day checklist with personal outreach drafts ready to send, and an accountability partner on next Monday's calendar.",
     walkOut: [
       "Signed, dated 30/60/90 plan: first 3 paying customers → 10 → repeatable channel",
-      "25-name personal announcement list",
-      "10 personalized outreach drafts saved (DM, email, voice note)",
+      "Personal announcement list started in-session",
+      "Personal outreach drafts saved (DM, email, voice note)",
       "Day-of launch timeline locked",
       "Starter CRM seeded with your announcement list",
       "3 weekly metrics defined + accountability partner paired with cadence agreed",
@@ -556,18 +556,18 @@ export const STAGES: Stage[] = [
       {
         title: "Launch-day checklist & outreach drafts",
         deliverable:
-          "Your 25-name announcement list + 10 personalized outreach drafts written for your contacts + day-of timeline (drafts saved, not sent).",
+          "Your personal announcement list started in-session, personal outreach drafts written from templates you've customized, and a day-of timeline (drafts saved, not sent).",
         tool: "Launch checklist + outreach templates",
         details: [
-          "Build a 25-name personal announcement list (friends, peers, past clients)",
-          "Draft 10 personalized outreach messages (DM, email, voice note)",
+          "Start your personal announcement list (friends, peers, past clients) using the source template",
+          "Customize personal outreach drafts (DM, email, voice note) from the templates",
           "Identify 3 partner / press / community asks for a co-launch boost",
           "Lock a day-of timeline: 8 AM post → 10 AM email → 2 PM follow-ups",
         ],
         takeaway:
-          "Your launch-day checklist + 10 personalized outreach drafts — ready to send.",
+          "Your launch-day checklist + personal outreach drafts — ready to send.",
         followUp:
-          "Pick your launch date, send the drafts that morning, and work the day-of timeline.",
+          "Fill out the list, pick your launch date, send the drafts that morning, and work the day-of timeline.",
       },
       {
         title: "Sales pipeline + accountability",
