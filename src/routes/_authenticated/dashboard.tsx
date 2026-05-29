@@ -25,7 +25,7 @@ import { getWorkshopMode } from "@/lib/workshop-mode";
 import { RoomClock } from "@/components/dashboard/RoomClock";
 import { AIWorklogPill } from "@/components/dashboard/AIWorklogPill";
 import { HelpFab } from "@/components/dashboard/HelpFab";
-import logoUrl from "@/assets/startuplabs-logo.svg";
+import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardLayout,
@@ -105,7 +105,7 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-3 py-3">
         <Link to="/dashboard" className="flex items-center gap-2 font-semibold tracking-tight">
-          <img src={logoUrl} alt="StartupLabs" className={collapsed ? "h-6 w-auto" : "h-7 w-auto"} />
+          <StartupLabsLogo className={collapsed ? "h-6 w-auto text-foreground" : "h-7 w-auto text-foreground"} />
         </Link>
       </SidebarHeader>
       <SidebarContent>

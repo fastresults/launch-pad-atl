@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import logoUrl from "@/assets/startuplabs-logo.svg";
+import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 import {
   Sheet,
   SheetContent,
@@ -31,7 +31,7 @@ export function SiteHeader() {
           className="flex items-center font-semibold tracking-tight"
           aria-label="Atlanta Startup Workshop"
         >
-          <img src={logoUrl} alt="StartupLabs" className="h-9 w-auto md:h-12" />
+          <StartupLabsLogo className="h-9 w-auto md:h-12 text-white" />
         </Link>
 
         {/* Desktop nav */}
@@ -101,7 +101,7 @@ export function SiteHeader() {
             <SheetContent side="right" className="w-[82vw] max-w-sm border-white/10 bg-background p-0">
               <div className="flex h-full flex-col">
                 <div className="flex items-center gap-3 border-b border-white/5 px-6 py-5">
-                  <img src={logoUrl} alt="StartupLabs" className="h-9 w-auto" />
+                  <StartupLabsLogo className="h-9 w-auto text-white" />
                 </div>
                 <SheetTitle className="sr-only">Navigation</SheetTitle>
                 <SheetDescription className="sr-only">
