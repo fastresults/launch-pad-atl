@@ -6,7 +6,8 @@ import { Check, ArrowRight, Lock } from "lucide-react";
 const PERKS = [
   "8-hour build day with Adam Anderson",
   "All 25 deliverables, finished in the room",
-  "Lunch + coffee + working tables",
+  "Complete 4-page website — branded, written, SEO-configured, delivered live within 2 weeks",
+  "Coffee + working tables (lunch on your own — options nearby)",
   "Take-home digital packet (every file, every link)",
   "30-day follow-up email check-ins",
 ];

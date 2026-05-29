@@ -20,13 +20,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "One working day in Norcross, GA. 20 seats. Led by a 30-year startup operator. By 4:30 PM you'll have a formed business, a website ready to publish, a complete creative kit, and a signed 30/60/90 launch plan.",
+          "One working day in Norcross, GA. Just 10 seats — intimate and hands-on. Led by a 30-year startup operator. By 4:30 PM you'll walk out operationally ready to launch: a formed business, a website ready to publish, a complete creative kit, and a signed 30/60/90 launch plan.",
       },
       { property: "og:title", content: "Atlanta Startup Workshop — One day. One business." },
       {
         property: "og:description",
         content:
-          "July 23, 2026 · IGNITE Center at Greater Atlanta Christian School, Norcross, GA. Seven hours, seven stages, one filing-ready business by dinner. Led by a 30-year startup operator.",
+          "July 23, 2026 · IGNITE Center at Greater Atlanta Christian School, Norcross, GA. Seven hours, seven stages, one filing-ready business by 4:30 PM. Led by a 30-year startup operator.",
       },
     ],
   }),
@@ -73,7 +73,7 @@ function NotACourseBanner() {
                 Walk in with an idea. Walk out with a built business.
               </h2>
               <p className="mt-2 text-sm text-white/55 leading-relaxed md:text-sm">
-                Not a course, not a coaching session, and not DIY worksheets. In one focused day, you build the actual business — name, brand, website, offer, pricing, legal drafts, and launch plan — plus a short checklist for the few items only your signature can finish. You arrive with a spark. You leave with a company.
+                Not a course, not a coaching session, and not DIY worksheets. In one focused day, you build the operational foundation of an actual business — name, brand, website, offer, pricing, legal drafts, and launch plan — plus a short checklist for the few items only your signature can finish. You arrive with a spark. You leave with a company. <span className="text-white/40">(Anything physical your business needs — space, equipment, inventory — is on you.)</span>
               </p>
 
             </div>
@@ -110,7 +110,7 @@ function Hero() {
       <div className="absolute inset-0 bg-background/50" />
       <div className="relative mx-auto max-w-6xl px-6 py-24 md:py-32">
         <p className="mb-6 text-sm uppercase tracking-[0.2em] text-white/80">
-          One day. One founder. One real, revenue-ready business.
+          One day. One founder. One operationally launch-ready business.
         </p>
         <h1 className="max-w-3xl text-5xl font-semibold leading-[1.05] tracking-tight text-white md:text-7xl">
           Walk in with an idea. <br />
@@ -135,7 +135,7 @@ function Hero() {
             to="/register"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
-            Claim one of 20 seats <ArrowRight className="size-4" />
+            Claim one of 10 seats <ArrowRight className="size-4" />
           </Link>
           <Link
             to="/schedule"
