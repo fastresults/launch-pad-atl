@@ -1,8 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
-import { SCHEDULE, EVENT } from "@/lib/schedule-data";
+import { SCHEDULE, buildEvent } from "@/lib/schedule-data";
+import { listCohorts } from "@/lib/cohorts.functions";
+import { getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
 import { STAGES } from "@/lib/curriculum-data";
 import { ArrowRight, Coffee, Clock } from "lucide-react";
 
