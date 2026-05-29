@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import logoUrl from "@/assets/startuplabs-logo.svg";
+import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 import evolveLogoUrl from "@/assets/evolve-logo.svg";
 
 export function SiteFooter() {
