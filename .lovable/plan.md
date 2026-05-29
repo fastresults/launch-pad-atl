@@ -1,120 +1,52 @@
-## Media Hub — Plan
+# Media Hub: Drag-and-drop + Grid/List views
 
-A unified media management system with two scopes:
-- **Master Hub** — super-admin only, holds shared/library assets unrelated to any specific attendee.
-- **User Hubs** — one per registrant, owned by the workshop user, also fully accessible to super admin. Super admin can push files from the Master Hub (or direct upload) into any user hub.
+All work is frontend-only in `src/components/media/MediaHub.tsx`. The server functions needed (`updateAsset` with `folderId`, `setCollectionMembership`) already exist.
 
-### 1. Storage
+## 1. Drag-and-drop assets into folders & collections
 
-Two private Supabase Storage buckets:
-- `master-media` — super-admin only (RLS via `is_admin`).
-- `user-media` — keyed by `{user_id}/...`; user accesses their own folder, admin accesses all.
+**Draggable**: every asset card/row gets `draggable` + `onDragStart` that stores the asset id (and includes all currently selected ids if the dragged item is part of the selection, so you can drag a multi-selection in one go).
 
-Limits: 100MB/file. Allowed MIME groups: documents (PDF, Word, text), images, audio, video.
+**Drop targets** in the left sidebar:
+- "All files" row → clears folder (`folder_id = null`)
+- Each folder row → sets `folder_id` to that folder
+- Each collection row → adds asset(s) to that collection via `setCollectionMembership({action:"add"})`
 
-Access is always via short-lived **signed URLs** (download, upload, streaming).
+Visual feedback: drop targets highlight on `onDragOver` (ring + bg change), revert on `onDragLeave/onDrop`.
 
-### 2. Database
+On drop:
+- Folder target → call `updateAsset({ id, folderId })` for each dragged id, then invalidate `["media"]`.
+- Collection target → call `setCollectionMembership({ collectionId, assetId, action:"add" })` for each dragged id, then toast and invalidate collection queries.
 
-New tables (all with RLS + GRANTs):
+Bulk action also exposed as a button: when `selectedIds.size > 0`, show a "Move to…" dropdown (folder list) + "Add to collection…" dropdown next to "Push to users", for users who don't want to drag.
 
-- **`media_assets`** — one row per file
-  - `scope` enum: `master` | `user`
-  - `owner_user_id` (null for master)
-  - `storage_bucket`, `storage_path`, `original_name`, `mime_type`, `size_bytes`, `media_type` (doc/image/audio/video — derived)
-  - `title`, `description`, `tags text[]`
-  - `folder_id` (nullable, nested folders)
-  - `thumbnail_path` (for images/video)
-  - `ai_summary`, `ai_transcript`, `ai_tags text[]`, `ai_status` (pending/processing/ready/failed)
-  - `pushed_from_asset_id` (nullable — links a user-hub copy back to the master original for traceability; copy is independent)
-  - `pushed_by`, `pushed_at` (nullable, set on admin push)
-  - audit: `created_by`, `created_at`, `updated_at`
+Clicking a collection in the sidebar also filters the main view to that collection's members (currently collections are display-only). This requires a small extension to `listMedia` call: pass `collectionId` filter — but `listMedia` already supports it (line 66 references `media_collection_items`). I'll wire `collectionId` into the query state next to `folderId`.
 
-- **`media_folders`** — nested tree
-  - `scope`, `owner_user_id` (null for master), `parent_id` (nullable), `name`, `path` (materialized for fast lookup)
+## 2. Grid vs List view toggle
 
-- **`media_collections`** + **`media_collection_items`** — flat named groupings (many-to-many with assets)
+Add a `viewMode: "grid" | "list"` state with a toggle (Grid/List icons) in the top toolbar, persisted to `localStorage` so the choice sticks per browser.
 
-- **`media_push_log`** — audit of admin pushes (`source_asset_id`, `target_user_id`, `target_asset_id`, `admin_id`, `note`, `created_at`)
+**Grid view** (existing): card with square thumbnail/icon, title, size, badges. Keep current responsive 2/3/4 columns.
 
-**RLS summary**
-- Master scope: read/write requires `is_admin(auth.uid())`.
-- User scope: owner can full CRUD on own rows; admin can full CRUD on all.
-- Folders/collections follow the same rule based on their `scope` + `owner_user_id`.
+**List view** (new): table-like rows with columns
+- thumbnail (40px) / type icon
+- name + AI summary snippet
+- type badge
+- size
+- tags (first 3 chips)
+- created date
+- row-level actions (open, checkbox)
 
-**Categories by type** are derived (not stored as a table) from `media_type` for filter chips.
+Both views share the same selection, drag, click-to-open behavior. Rows in list view are also `draggable` and have the same drop logic when targeting sidebar items.
 
-### 3. Server Functions (`src/lib/media.functions.ts`)
+## 3. Small UX touches
+- Sidebar folders/collections show a subtle "drop here" outline only while a drag is active (track with a `isDragging` state on the parent).
+- After a successful drop, briefly flash the destination row.
+- "Push to users" button stays as-is.
 
-All protected with `requireSupabaseAuth`; admin-only ones additionally check `is_admin`.
+## Files changed
+- `src/components/media/MediaHub.tsx` — only file edited. No DB, no new server functions, no migrations.
 
-- `listMedia({ scope, ownerUserId?, folderId?, collectionId?, mediaType?, tags?, search? })`
-- `getMediaAsset(id)` → row + signed download/stream URL
-- `createSignedUploadUrl({ scope, ownerUserId?, folderId?, filename, mimeType, sizeBytes })` — server validates size/MIME, returns signed PUT URL + pending asset row
-- `finalizeUpload(assetId)` — marks ready, kicks off thumbnail + AI processing
-- `updateMediaAsset(id, { title, description, tags, folderId })`
-- `deleteMediaAsset(id)`
-- `moveToCollection(assetId, collectionId, add|remove)`
-- Folders: `createFolder`, `renameFolder`, `moveFolder`, `deleteFolder`
-- Collections: `createCollection`, `renameCollection`, `deleteCollection`
-- **Admin-only**: `pushAssetsToUser({ sourceAssetIds, targetUserIds, targetFolderId?, note? })` — copies file in storage to each user's bucket path, inserts new `media_assets` row(s) with `scope=user`, `pushed_from_asset_id`, logs to `media_push_log`. Independent copy: user owns it and can rename/delete.
-- **Admin-only**: `listUserHubs()`, `getUserHubSummary(userId)`
-
-### 4. AI Processing
-
-Background processing on `finalizeUpload`, using Lovable AI Gateway (already wired in `src/lib/ai-gateway.server.ts`):
-- **Images** → `google/gemini-2.5-flash` vision call → `ai_tags`, `ai_summary` (alt-text).
-- **PDF / Word / text docs** → extract text server-side, send to `google/gemini-3-flash-preview` → `ai_summary` + `ai_tags`.
-- **Audio / video** → transcribe via Gemini multimodal (or chunked) → `ai_transcript` + `ai_summary` + `ai_tags`.
-- **Thumbnails**: images via on-the-fly Supabase transform; video via first-frame extraction stored at `thumbnail_path`.
-
-Failure tolerant: `ai_status` lets UI show a retry button. Admin can trigger `reprocessAi(assetId)`.
-
-### 5. Frontend
-
-Shared component: `<MediaHub scope="master" | "user" ownerUserId={...} canAdminPush={bool} />` — drives both contexts to avoid duplication.
-
-**Layout**
-- Left sidebar: Folder tree, Collections list, Type filter chips (All / Documents / Images / Audio / Video), Tag cloud.
-- Top bar: Search, view toggle (Grid/List), Upload button, "New folder", "New collection". Admin in user hubs gets "Push from Master".
-- Main: Grid (thumbnails for images/video, icon+title for docs/audio) or List (name, type, size, tags, date).
-- Right drawer (on select): Preview, metadata edit, tags, AI summary/transcript, move/copy, delete.
-
-**Previews**
-- Images: lightbox gallery.
-- PDFs: inline `<iframe>` or `react-pdf`.
-- Audio/video: native `<audio>`/`<video>` with signed URL.
-- Docs (Word): download + AI summary inline.
-
-**Uploads**
-- Drag-and-drop + file picker, multi-file, chunked progress, client-side type/size guard.
-
-**Routes**
-- `/_authenticated/dashboard/media` — current user's hub.
-- `/_authenticated/_admin/admin/media` — Master Hub.
-- `/_authenticated/_admin/admin/attendees/$userId/media` — that user's hub from admin side, with "Push from Master" picker.
-
-Master Hub gets a multi-select → "Push to users" dialog (multi-user picker, optional target folder, note). Returns per-user success/failure summary.
-
-### 6. Realtime
-
-`media_assets` added to `supabase_realtime`: a user sees admin-pushed files appear live in their hub; admin sees user uploads live.
-
-### 7. Surfacing in existing app
-
-- Dashboard nav: add "Media" tab.
-- Admin nav: add "Media Library" (master) and "Media" inside attendee detail page.
-- The existing `attendee_documents` table is intake-only (founder profile docs); media hub is separate. We'll cross-link by surfacing intake docs as a read-only collection inside the user hub.
-
-### Technical notes
-
-- New migration creates buckets, tables, enums, indexes (`scope`, `owner_user_id`, `folder_id`, GIN on `tags`), RLS, GRANTs, and adds tables to realtime publication.
-- AI processing runs inside the `finalizeUpload` server function (not blocking the upload PUT). Long-running transcription runs fire-and-forget with status polling via Realtime.
-- Storage paths: `master/{folder_path}/{uuid}-{filename}` and `users/{user_id}/{folder_path}/{uuid}-{filename}`.
-- Push = `storage.copy` (server-side) + new asset row; original untouched; user copy is fully independent.
-
-### Out of scope (flag for follow-up)
-- Versioning / file history
-- Sharing between users
-- External shareable public links
-- Quotas per user
+## Out of scope
+- Drag to reorder within a folder (no sort_order column).
+- Drag files OUT of a collection (use the drawer's remove action — added as a small "Remove from collection" chip in the drawer when viewing an asset that's in collections; optional, can defer).
+- Nested folder drag (moving a folder into another folder).
