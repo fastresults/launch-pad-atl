@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { computeDisplayedTaken, type ScarcityMode } from "./cohorts";
+import { computeDisplayedTaken, displayFloorFromPct, type ScarcityMode } from "./cohorts";
 
 export type TierAvailability = {
   price_cents: number;
@@ -39,7 +39,7 @@ export const getCohortAvailability = createServerFn({ method: "GET" })
     const { data: cohort, error: cErr } = await supabaseAdmin
       .from("cohorts" as never)
       .select(
-        "id, founders_price_cents, founders_seats, cohort_price_cents, cohort_seats, founders_display_floor, founders_warming_boost, founders_honest_threshold_pct, cohort_display_floor, cohort_warming_boost, cohort_honest_threshold_pct",
+        "id, founders_price_cents, founders_seats, cohort_price_cents, cohort_seats, founders_display_floor_pct, founders_warming_boost, founders_honest_threshold_pct, cohort_display_floor_pct, cohort_warming_boost, cohort_honest_threshold_pct",
       )
       .eq("id", cohort_id)
       .single();
@@ -53,10 +53,10 @@ export const getCohortAvailability = createServerFn({ method: "GET" })
       founders_seats: number;
       cohort_price_cents: number;
       cohort_seats: number;
-      founders_display_floor: number;
+      founders_display_floor_pct: number;
       founders_warming_boost: number;
       founders_honest_threshold_pct: number;
-      cohort_display_floor: number;
+      cohort_display_floor_pct: number;
       cohort_warming_boost: number;
       cohort_honest_threshold_pct: number;
     };
@@ -90,27 +90,35 @@ export const getCohortAvailability = createServerFn({ method: "GET" })
     const foundersTaken = rows.filter((r) => r.assigned_tier === "founders").length;
     const cohortTaken = rows.filter((r) => r.assigned_tier === "cohort").length;
 
-    const foundersDisp = isActiveCohort
+    const foundersSoldOutReal = foundersTaken >= c.founders_seats;
+    const cohortSoldOutReal = cohortTaken >= c.cohort_seats;
+
+    // Sequential scarcity: Founders is eligible while it has real seats; Cohort
+    // only becomes eligible once Founders is truly sold out. The active-cohort
+    // gate (computed above) wraps both.
+    const foundersEligible = isActiveCohort && !foundersSoldOutReal;
+    const cohortEligible = isActiveCohort && foundersSoldOutReal;
+
+    const foundersDisp = foundersEligible
       ? computeDisplayedTaken(
           foundersTaken,
           c.founders_seats,
-          c.founders_display_floor,
+          displayFloorFromPct(c.founders_seats, c.founders_display_floor_pct),
           c.founders_warming_boost,
           c.founders_honest_threshold_pct,
         )
       : { displayedTaken: foundersTaken, mode: "honest" as ScarcityMode };
-    const cohortDisp = isActiveCohort
+    const cohortDisp = cohortEligible
       ? computeDisplayedTaken(
           cohortTaken,
           c.cohort_seats,
-          c.cohort_display_floor,
+          displayFloorFromPct(c.cohort_seats, c.cohort_display_floor_pct),
           c.cohort_warming_boost,
           c.cohort_honest_threshold_pct,
         )
       : { displayedTaken: cohortTaken, mode: "honest" as ScarcityMode };
 
-    const foundersSoldOut = foundersTaken >= c.founders_seats;
-    const cohortSoldOutReal = cohortTaken >= c.cohort_seats;
+    const foundersSoldOut = foundersSoldOutReal;
 
     const founders: TierAvailability = {
       price_cents: c.founders_price_cents,

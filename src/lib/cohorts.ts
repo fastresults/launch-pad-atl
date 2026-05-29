@@ -21,10 +21,10 @@ export type CohortRow = {
   founders_seats: number;
   cohort_price_cents: number;
   cohort_seats: number;
-  founders_display_floor: number;
+  founders_display_floor_pct: number;
   founders_warming_boost: number;
   founders_honest_threshold_pct: number;
-  cohort_display_floor: number;
+  cohort_display_floor_pct: number;
   cohort_warming_boost: number;
   cohort_honest_threshold_pct: number;
 };
@@ -45,10 +45,10 @@ export type Cohort = {
   cohortSeats: number;
   totalSeats: number;
   // Scarcity display config
-  foundersDisplayFloor: number;
+  foundersDisplayFloorPct: number;
   foundersWarmingBoost: number;
   foundersHonestThresholdPct: number;
-  cohortDisplayFloor: number;
+  cohortDisplayFloorPct: number;
   cohortWarmingBoost: number;
   cohortHonestThresholdPct: number;
   // Venue
@@ -165,10 +165,10 @@ export function buildCohortFromRow(row: CohortRow): Cohort {
     cohortPriceCents: row.cohort_price_cents,
     cohortSeats: row.cohort_seats,
     totalSeats: row.founders_seats + row.cohort_seats,
-    foundersDisplayFloor: row.founders_display_floor,
+    foundersDisplayFloorPct: row.founders_display_floor_pct,
     foundersWarmingBoost: row.founders_warming_boost,
     foundersHonestThresholdPct: row.founders_honest_threshold_pct,
-    cohortDisplayFloor: row.cohort_display_floor,
+    cohortDisplayFloorPct: row.cohort_display_floor_pct,
     cohortWarmingBoost: row.cohort_warming_boost,
     cohortHonestThresholdPct: row.cohort_honest_threshold_pct,
     venueName: row.venue_name,
@@ -230,10 +230,10 @@ export const FALLBACK_COHORT: Cohort = buildCohortFromRow({
   founders_seats: DEFAULT_PRICING.foundersSeats,
   cohort_price_cents: DEFAULT_PRICING.cohortPriceCents,
   cohort_seats: DEFAULT_PRICING.cohortSeats,
-  founders_display_floor: 2,
+  founders_display_floor_pct: 25,
   founders_warming_boost: 2,
   founders_honest_threshold_pct: 50,
-  cohort_display_floor: 8,
+  cohort_display_floor_pct: 25,
   cohort_warming_boost: 2,
   cohort_honest_threshold_pct: 50,
 });
@@ -257,4 +257,15 @@ export function computeDisplayedTaken(
   const capped = Math.min(inflated, Math.max(capacity - 1, 0));
   const mode: ScarcityMode = realTaken === 0 ? "cold" : "warming";
   return { displayedTaken: Math.max(capped, realTaken), mode };
+}
+
+// Convert a "remaining %" floor (admin setting) into an absolute "displayed taken
+// floor" for computeDisplayedTaken. Example: capacity 20, pct 25 → 5 remaining
+// → floor of 15 taken. Clamped to capacity - 1 so the cold state never appears
+// sold out.
+export function displayFloorFromPct(capacity: number, remainingPct: number): number {
+  if (capacity <= 0 || remainingPct <= 0) return 0;
+  const remaining = Math.max(1, Math.ceil((capacity * remainingPct) / 100));
+  const floorTaken = capacity - remaining;
+  return Math.max(0, Math.min(floorTaken, Math.max(capacity - 1, 0)));
 }
