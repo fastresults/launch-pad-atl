@@ -38,7 +38,7 @@ function HomePage() {
       <NotACourseBanner />
       <WalkInWalkOut />
       <TheArtOfThePossible />
-      <FlowStrip />
+      
       <AIToolkit />
       
       <ValueByTheNumbers />
