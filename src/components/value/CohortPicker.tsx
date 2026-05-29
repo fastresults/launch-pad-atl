@@ -9,7 +9,7 @@ type Props = {
   availability?: CohortAvailability;
 };
 
-export function CohortPicker({ cohorts, selectedId, onSelect }: Props) {
+export function CohortPicker({ cohorts, selectedId, onSelect, availability }: Props) {
   if (cohorts.length === 0) {
     return (
       <div className="rounded-2xl border border-white/10 bg-card p-5 text-sm text-muted-foreground">
@@ -19,8 +19,33 @@ export function CohortPicker({ cohorts, selectedId, onSelect }: Props) {
   }
 
   const featured = cohorts.find((c) => c.id === selectedId) ?? cohorts[0];
-  const isFilling = featured.status === "filling";
   const firstSoldOut = getFirstSoldOut(cohorts);
+
+  // Sequential scarcity for the featured (active) cohort pill:
+  // While Founders has real seats, the pill reflects Founders scarcity.
+  // Once Founders sells out, it rolls to Cohort scarcity.
+  const availabilityForFeatured =
+    availability && availability.cohort_id === featured.id ? availability : undefined;
+
+  let pillTier: "founders" | "cohort" | null = null;
+  let pillSeatsLeft: number | undefined;
+  let pillShow = false;
+
+  if (availabilityForFeatured) {
+    if (!availabilityForFeatured.founders.soldOut) {
+      pillTier = "founders";
+      pillSeatsLeft = availabilityForFeatured.founders.displayedRemaining;
+      pillShow = availabilityForFeatured.founders.showSellingFast;
+    } else if (!availabilityForFeatured.cohort.soldOut) {
+      pillTier = "cohort";
+      pillSeatsLeft = availabilityForFeatured.cohort.displayedRemaining;
+      pillShow = availabilityForFeatured.cohort.showSellingFast;
+    }
+  } else {
+    // Fallback when availability isn't loaded yet — preserve previous behavior.
+    pillShow = featured.status === "filling";
+    pillSeatsLeft = featured.seatsLeft;
+  }
 
   return (
     <div className="rounded-2xl border border-white/10 bg-card overflow-hidden">
@@ -35,14 +60,20 @@ export function CohortPicker({ cohorts, selectedId, onSelect }: Props) {
               <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                 {featured.status === "sold_out" ? "Sold out" : "Your cohort"}
               </span>
-              {isFilling && (
+              {pillShow && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-300">
                   <span className="relative flex size-1.5">
                     <span className="absolute inset-0 animate-ping rounded-full bg-amber-400 opacity-75" />
                     <span className="relative inline-flex size-1.5 rounded-full bg-amber-400" />
                   </span>
                   Filling up
-                  {typeof featured.seatsLeft === "number" && ` · ${featured.seatsLeft} seats left`}
+                  {typeof pillSeatsLeft === "number" && (
+                    <>
+                      {" · "}
+                      {pillSeatsLeft} {pillTier === "cohort" ? "Cohort" : pillTier === "founders" ? "Founders" : ""}
+                      {pillTier ? " " : ""}seats left
+                    </>
+                  )}
                 </span>
               )}
             </div>
