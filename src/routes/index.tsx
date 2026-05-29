@@ -99,6 +99,7 @@ function BannerChip({ icon, label }: { icon: React.ReactNode; label: string }) {
 }
 
 function Hero() {
+  const EVENT = useEvent();
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 bg-hero-gradient opacity-90" />
