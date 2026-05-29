@@ -205,11 +205,12 @@ export const STAGES: Stage[] = [
     summary: "What you actually sell, how it's delivered, and the price tag.",
     oneLiner: "What you sell & what it costs",
     takeHome:
-      "Your offer written in one sentence a buyer can say yes or no to, your price backed into from your real costs, and the exact number of sales you need to break even — on a one-page offer sheet.",
+      "Your offer written in one sentence a buyer can say yes or no to, your price backed into from your real costs, the exact number of sales you need to break even, and a signed go / pivot / kill viability score — on a one-page offer sheet.",
     walkOut: [
       "Your one-sentence offer locked",
       "First-version scope mapped step-by-step from sale to handoff",
       "Pricing sheet with real cost per sale, break-even number, and payment terms",
+      "Signed viability scorecard with a go / pivot / kill decision, scored on 6 dimensions with evidence",
     ],
     afterWorkshop: [],
     duration: "60 min",
@@ -256,6 +257,20 @@ export const STAGES: Stage[] = [
         ],
         takeaway:
           "Your pricing sheet + exact break-even number + payment terms.",
+      },
+      {
+        title: "Score the idea — go / pivot / kill",
+        deliverable:
+          "A signed one-page viability scorecard rating your business on demand evidence, willingness to pay, unit economics, founder fit, regulatory load, and time to first dollar — each 0–5 with the evidence written next to it.",
+        tool: "Viability scorecard",
+        details: [
+          "Score each of the 6 dimensions 0–5 against the research, customer profile, and pricing",
+          "Write one sentence of evidence per score — no number stands alone",
+          "Total the score: ≥22 go, 15–21 pivot the weakest dimension, <15 kill",
+          "Write your one-sentence recommendation and sign it",
+        ],
+        takeaway:
+          "Your signed viability scorecard with a go / pivot / kill decision and the evidence behind it.",
       },
     ],
   },
