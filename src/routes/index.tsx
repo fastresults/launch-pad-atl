@@ -36,9 +36,9 @@ function HomePage() {
       <SiteHeader />
       <Hero />
       <NotACourseBanner />
+      <WalkInWalkOut />
       <TheArtOfThePossible />
       <FlowStrip />
-      <WhatYouLeaveWith />
       <AIToolkit />
       
       <ValueByTheNumbers />
@@ -416,133 +416,81 @@ function FacilitatorProof() {
 }
 
 
-type LeaveStage = {
-  n: number;
-  title: string;
-  promise: string;
-  items: string[];
-};
-
-const LEAVE_STAGES: LeaveStage[] = [
-  {
-    n: 1,
-    title: "Make it a real business",
-    promise: "Your business is legally formed and ready to take money.",
-    items: [
-      "Your Georgia LLC paperwork, filled in with your business name",
-      "Your EIN tax number, in your inbox before lunch",
-      "Your Terms, Privacy Policy, and customer agreement, written for your business",
-      "A short list of business banks and the steps to open your local license and sales-tax account",
-    ],
-  },
-  {
-    n: 2,
-    title: "Find your first paying customer",
-    promise: "You walk out knowing exactly who buys from you first and you have 25 names to message tonight.",
-    items: [
-      "A one-page picture of your first customer, what their problem costs them, and 25 real names to reach out to",
-      "The message to send them, written for you, plus a quick look at 3 competitors and what makes you different",
-    ],
-  },
-  {
-    n: 3,
-    title: "Lock your offer",
-    promise: "What you sell, how you deliver it, and what it costs — on one page.",
-    items: [
-      "Your offer in one sentence, your step-by-step scope of work, and a price built from your real costs",
-    ],
-  },
-  {
-    n: 4,
-    title: "Build the first working version",
-    promise: "Your business has wheels — apps set up, delivery rehearsed, before any real customer shows up.",
-    items: [
-      "A map of how a sale becomes a happy customer and the free apps you'll use at each step, set up in your name",
-      "Your first customer's deliverable drafted and a 5-point checklist you run before anything goes out the door",
-    ],
-  },
-  {
-    n: 5,
-    title: "Brand and website",
-    promise: "A logo, brand colors, and a four-page website ready to publish today.",
-    items: [
-      "Your logo, four brand colors, and a font pair, made from your business name",
-      "A four-page website (Home, Offer, About, Contact) written in your voice and ready to publish",
-      "Payments (Stripe or Square), business email, and Google Analytics all set up and queued for one click",
-    ],
-  },
-  {
-    n: 6,
-    title: "Print and post",
-    promise: "A full launch kit — print, social, and a 30-day plan you can actually follow.",
-    items: [
-      "Your headline, three reasons to buy, a 30-second pitch, and a 100-word founder bio",
-      "A printable business card and a one-page flyer, designed in your brand",
-      "Six social posts, a 60-second video script, and a 30-day plan with three numbers to watch each week",
-    ],
-  },
-  {
-    n: 7,
-    title: "Ninety-day launch plan",
-    promise: "A dated, signed plan to get your first 3 customers, then 10, then a steady stream.",
-    items: [
-      "Your signed 30/60/90 plan, your announcement list, and ten personal outreach messages already written",
-      "Your launch-day timeline, a starter CRM seeded with your list, three weekly numbers, and an accountability partner with check-ins on the calendar",
-    ],
-  },
-];
-
-function WhatYouLeaveWith() {
+function WalkInWalkOut() {
+  const walkIn = [
+    "An idea you've been turning over for months (or years)",
+    "A notebook full of \"someday\" notes",
+    "Questions about LLCs, EINs, websites, pricing, and where to even start",
+    "No clear first customer",
+    "No structure, no kit, no plan you can actually follow Monday morning",
+  ];
+  const walkOut = [
+    "Your Georgia LLC paperwork, filled in with your business name",
+    "Your EIN tax number, in your inbox before lunch",
+    "Your Terms, Privacy Policy, and customer agreement, written for your business",
+    "A short list of business banks plus the steps to open your local license and sales-tax account",
+    "A one-page picture of your first customer, what their problem costs them, and 25 real names to reach out to",
+    "The outreach message to send them, written for you, plus a quick look at 3 competitors and what makes you different",
+    "Your offer in one sentence, your step-by-step scope of work, and a price built from your real costs",
+    "A map of how a sale becomes a happy customer and the free apps you'll use at each step, set up in your name",
+    "Your first customer's deliverable drafted and a 5-point checklist you run before anything goes out the door",
+    "Your logo, four brand colors, and a font pair, made from your business name",
+    "A four-page website (Home, Offer, About, Contact) written in your voice and ready to publish",
+    "Payments (Stripe or Square), business email, and Google Analytics all set up and queued for one click",
+    "Your headline, three reasons to buy, a 30-second pitch, and a 100-word founder bio",
+    "A printable business card and a one-page flyer, designed in your brand",
+    "Six social posts, a 60-second video script, and a 30-day plan with three numbers to watch each week",
+    "Your signed 30/60/90 plan, your announcement list, and ten personal outreach messages already written",
+    "Your launch-day timeline, a starter CRM seeded with your list, three weekly numbers, and an accountability partner with check-ins on the calendar",
+  ];
   return (
-    <section className="relative py-20">
-      <div className="pointer-events-none absolute inset-0 bg-hero-gradient opacity-[0.05]" />
-      <div className="relative mx-auto max-w-6xl px-6">
+    <section className="py-20">
+      <div className="mx-auto max-w-6xl px-6">
         <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-          4:30 PM — what's in your hands
+          The transformation
         </h2>
-        <p className="mb-4 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
-          Seventeen finished pieces of a real business.{" "}
-          <span className="text-foreground/60">Not homework. Not notes.</span>
+        <p className="mb-10 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
+          What changes between{" "}
+          <span className="text-gradient-brand">8:00 AM and 4:30 PM</span>.
         </p>
-        <p className="mb-10 max-w-3xl text-lg text-foreground/80">
-          You walk in with an idea. You walk out with the work — every piece below,
-          saved in a folder named after your business, ready to use Monday morning.
-        </p>
-
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {LEAVE_STAGES.map((s) => (
-            <div
-              key={s.n}
-              className="flex flex-col rounded-2xl border border-white/10 bg-card p-6"
-            >
-              <div className="mb-3 flex items-center gap-3">
-                <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-hero-gradient text-xs font-semibold text-white">
-                  {s.n}
-                </span>
-                <h3 className="text-lg font-semibold tracking-tight">{s.title}</h3>
+        <div className="grid gap-6 md:grid-cols-[1fr_1.4fr]">
+          <div className="rounded-3xl border border-white/10 bg-card/50 p-7 md:p-8">
+            <div className="mb-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              8:00 AM
+            </div>
+            <div className="text-2xl font-semibold tracking-tight text-foreground/80">
+              What you walk in with
+            </div>
+            <ul className="mt-6 space-y-3">
+              {walkIn.map((i) => (
+                <li key={i} className="flex items-start gap-3 text-foreground/70">
+                  <X className="mt-1 size-4 shrink-0 text-foreground/40" />
+                  <span>{i}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-card p-7 md:p-8">
+            <div className="pointer-events-none absolute inset-0 bg-hero-gradient opacity-[0.08]" />
+            <div className="relative">
+              <div className="mb-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                4:30 PM
               </div>
-              <p className="mb-4 text-sm text-foreground/70">{s.promise}</p>
-              <ol className="mt-auto divide-y divide-white/5 border-t border-white/5">
-                {s.items.map((item, i) => (
-                  <li key={i} className="flex gap-3 py-3 text-sm text-foreground/90">
-                    <span className="shrink-0 text-foreground/40 tabular-nums">
-                      {i + 1}.
+              <div className="text-2xl font-semibold tracking-tight">
+                <span className="text-gradient-brand">What you walk out with</span>
+              </div>
+              <ul className="mt-6 space-y-3">
+                {walkOut.map((i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="mt-1 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-hero-gradient">
+                      <Check className="size-3 text-white" />
                     </span>
-                    <span>{item}</span>
+                    <span className="text-foreground">{i}</span>
                   </li>
                 ))}
-              </ol>
+              </ul>
             </div>
-          ))}
-        </div>
-
-        <div className="mt-8 rounded-2xl border border-white/10 bg-card/60 px-6 py-6 text-center">
-          <p className="text-base text-foreground/80 md:text-lg">
-            <span className="text-gradient-brand font-semibold">
-              Seventeen finished pieces. One day.
-            </span>{" "}
-            Built by you, with the person who's done it before sitting next to you.
-          </p>
+          </div>
         </div>
       </div>
     </section>
