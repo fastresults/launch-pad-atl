@@ -47,10 +47,10 @@ type FormState = {
   founders_seats: string;
   cohort_price: string;
   cohort_seats: string;
-  founders_display_floor: string;
+  founders_display_floor_pct: string;
   founders_warming_boost: string;
   founders_honest_threshold_pct: string;
-  cohort_display_floor: string;
+  cohort_display_floor_pct: string;
   cohort_warming_boost: string;
   cohort_honest_threshold_pct: string;
 };
