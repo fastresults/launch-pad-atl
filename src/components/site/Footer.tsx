@@ -7,7 +7,7 @@ export function SiteFooter() {
     <footer className="border-t border-white/5 py-8 md:py-10">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 text-center text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:gap-6 md:text-left">
         <div className="flex items-center gap-3">
-          <img src={logoUrl} alt="Startuplabs" className="h-9 w-auto md:h-10" />
+          <StartupLabsLogo className="h-9 w-auto md:h-10 text-white" />
           <span>· Norcross, GA</span>
         </div>
         <div className="flex flex-col items-center gap-1 md:flex-row md:gap-4">
