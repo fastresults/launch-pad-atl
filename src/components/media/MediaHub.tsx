@@ -600,6 +600,29 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                       <Icon className="h-12 w-12 text-muted-foreground" />
                     )}
                   </div>
+                  <div
+                    className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 transition group-hover:opacity-100"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="h-7 w-7"
+                      title="Preview"
+                      onClick={() => openAsset(a)}
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="h-7 w-7"
+                      title="Copy link"
+                      onClick={() => copyAssetUrl(a.id)}
+                    >
+                      <Link2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                   <div className="space-y-1 p-3">
                     <p className="truncate text-sm font-medium">{a.title ?? a.original_name}</p>
                     <p className="text-xs text-muted-foreground">{humanSize(a.size_bytes)}</p>
