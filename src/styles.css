@@ -99,10 +99,10 @@
 }
 
 @utility text-gradient-brand {
-  background-image: var(--gradient-text);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+  color: #097ad9;
+  background-image: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
 }
 
 @keyframes marquee-left {
