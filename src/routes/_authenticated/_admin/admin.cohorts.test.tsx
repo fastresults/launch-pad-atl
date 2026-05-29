@@ -341,15 +341,19 @@ function CohortTestPage() {
   );
 }
 
-function TierRow({ label, price, taken, capacity }: { label: string; price: string; taken: number; capacity: number }) {
+function TierRow({ label, price, taken, capacity, displayed }: { label: string; price: string; taken: number; capacity: number; displayed?: number }) {
   const pct = capacity > 0 ? Math.min(100, (taken / capacity) * 100) : 0;
   const full = taken >= capacity;
+  const showDisplayed = typeof displayed === "number" && displayed !== taken;
   return (
     <div>
       <div className="flex items-baseline justify-between text-sm">
         <span>{label} <span className="text-muted-foreground tabular-nums">· {price}</span></span>
         <span className="tabular-nums text-xs">
           {taken} / {capacity} {full && <span className="text-amber-300">· full</span>}
+          {showDisplayed && (
+            <span className="ml-2 text-amber-300">· shown as {displayed}</span>
+          )}
         </span>
       </div>
       <div className="mt-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
