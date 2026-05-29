@@ -401,7 +401,7 @@ function SuccessCard({ tier, cohort }: { tier: TierKey; cohort: Cohort }) {
           See the schedule
         </Link>
         <a
-          href={EVENT.mapsUrl}
+          href={cohort.mapsUrl}
           target="_blank"
           rel="noreferrer"
           className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
