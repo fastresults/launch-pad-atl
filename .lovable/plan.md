@@ -1,74 +1,35 @@
-# Value Justification Grid + Registration Page
+# Add post-workshop "what to do next" tooltips to the Value Grid
 
-Build a single, conversion-focused page that proves the workshop's value line-by-line, then closes with tiered pricing and the existing registration form.
+## Goal
+On each deliverable in the Value Grid that still needs the user to do something after the 7 hours (file, pay, host, publish, send, etc.), show a small info icon. Tap/hover → short, plain-English instructions an 8th-grader can follow.
 
-## Page structure (rebuild `/register`)
+## Which rows get a tooltip (and what it says)
 
-1. **Hero** — "Walk in with an idea. Walk out with a business." + cohort date + seats-left framing.
-2. **The Value Grid** (centerpiece — see below).
-3. **Totals bar** — *Market value: ~$X,XXX · Time to DIY: ~XX weeks · Your price today: from $679*.
-4. **Pricing tier cards** — Founders ($679, first 7) vs Cohort ($997, next 13).
-5. **Registration form** (existing form, unchanged logic, plus tier-interest field).
-6. **FAQ / guarantee strip**.
+Rows with no post-workshop action (EIN, ICP list, competitor grid, offer sheet, workflow map, first deliverable draft, headline/pitch, social posts, 30/60/90 plan, day-of timeline) → **no tooltip**.
 
-## The Value Grid — conservative estimates (pulled back ~25% on cost and time)
+Rows that DO get a tooltip:
 
-One row per deliverable, grouped by stage. Columns: Stage · Deliverable · Typical market cost · DIY time · Included.
+1. **GA LLC filing packet** — "Go to georgia.gov Corporations site. Upload your Articles PDF. Pay the $100 fee with a card. Approval email arrives in 5–7 business days."
+2. **Terms / Privacy / Service Agreement** — "Save the 3 PDFs to Google Drive. Link Terms + Privacy in your website footer. Email the Service Agreement to your first customer to sign."
+3. **Bank + license + sales-tax checklist** — "Walk into your bank with your EIN letter + LLC packet to open the account. Apply for your city business license online ($50–$75). Register for sales tax at dor.georgia.gov if you sell products."
+4. **Logo + palette + fonts** — "Download the logo ZIP. Upload to your website, email signature, and social profiles. Keep the brand sheet PDF — hand it to anyone making things for you."
+5. **Complete 4-page website** — "Click Publish in the site builder. Buy your domain ($12/yr) and connect it — the builder walks you through it. Site is live in ~30 minutes."
+6. **Stripe / Square + GA4 + email** — "Finish Stripe verification (bank routing + SSN, 5 min). Verify your business email by clicking the link they send. GA4 is already tracking — just log in weekly."
+7. **Business card + flyer** — "Upload the print-ready PDFs to Vistaprint or Moo. 500 cards ≈ $25, flyers ≈ $40. Arrives in 5–7 days."
+8. **6 posts + video + 30-day plan** — "Post one item every 2 days on the schedule we built. Film the 60-sec video on your phone using the script. Don't overthink it — done beats perfect."
+9. **CRM + 3 KPIs** — "Log in to the CRM each Monday. Add every new lead. Check your 3 KPIs every Friday — that's it."
 
-| Stage | Deliverable | Market cost | DIY time |
-|---|---|---|---|
-| 1. Form | GA LLC filing packet (Articles pre-filled) | $225–$600 | 3–6 hrs |
-| 1. Form | EIN issued | $0–$185 | 1–1.5 hrs |
-| 1. Form | Terms / Privacy / Service Agreement | $300–$1,125 | 4.5–7.5 hrs |
-| 1. Form | Bank + license + sales-tax checklist | $110 | 2 hrs |
-| 2. Customer | 1-page ICP + 25-name prospect list | $375 | 4.5 hrs |
-| 2. Customer | Outreach script + 3-competitor grid | $225 | 3 hrs |
-| 3. Offer | One-sentence offer + scope + pricing sheet | $560 | 6 hrs |
-| 4. Build | Sale-to-delivery workflow map | $300 | 3.5 hrs |
-| 4. Build | First customer's deliverable + 5-pt QA checklist | $375 | 4.5 hrs |
-| 5. Brand | Logo + 4-color palette + font pairing | $375–$1,875 | 7.5–15 hrs |
-| 5. Brand | Complete website built (4 pages, branded, written, SEO-set) | $1,500–$4,500 | 15–30 hrs |
-| 5. Brand | Stripe/Square + GA4 + business email | $225 | 3 hrs |
-| 6. Marketing | Headline, 3 value props, 30-sec pitch | $300 | 3.5 hrs |
-| 6. Marketing | Business card + flyer print files | $185 | 3 hrs |
-| 6. Marketing | 6 social posts + 60-sec video script + 30-day plan | $450 | 6 hrs |
-| 7. Launch | 30/60/90 plan + 25-name launch list + 10 drafts | $375 | 4.5 hrs |
-| 7. Launch | Day-of timeline + CRM + 3 KPIs | $225 | 2 hrs |
+## Technical details
 
-**Totals row (highlighted):** Market value ≈ **$6,130–$11,440** · DIY time ≈ **76–106 hours** · **Your price: $679 (first 7) / $997 (cohort).**
+- Edit `src/lib/value-grid.ts`: add optional `postWorkshop?: string` field to `ValueRow`, fill in the 9 strings above.
+- Edit `src/components/value/ValueGrid.tsx`:
+  - Import `Tooltip, TooltipTrigger, TooltipContent, TooltipProvider` from `@/components/ui/tooltip` and `Info` from `lucide-react`.
+  - Wrap the table in `<TooltipProvider delayDuration={150}>`.
+  - For rows with `postWorkshop`, render an `Info` icon (size-3.5, muted) next to the deliverable text. Trigger is a button (a11y). Tooltip content: small heading "After the workshop" + the instruction text, max-w-xs.
+  - Apply to both desktop grid and mobile card layouts.
+- No data model, route, or schema changes. No new files.
 
-Data lives in `src/lib/value-grid.ts` (typed array with `marketCostMin`, `marketCostMax`, `diyHoursMin`, `diyHoursMax` per row). Home page and schedule page untouched.
-
-## Pricing tier cards (side-by-side)
-
-- **Founders Seat — $679** · "First 7 to register" · badge: "X of 7 left" · all deliverables.
-- **Cohort Seat — $997** · "Next 13 seats" · all deliverables.
-
-Both cards list: 8-hour build day, lunch, all 17 deliverables above, take-home packet, 30-day follow-up. CTA scrolls to the form.
-
-Pricing is **display-only** in this plan — no Stripe/checkout. Add a `tier_interest` field (enum: `founders` / `cohort`) to the registration form so we capture intent.
-
-## Visual style
-
-- Dark theme, consistent with `/` and `/schedule`.
-- Grid: alternating row tint by stage, sticky header on scroll; mobile = accordion per stage.
-- Totals row: gradient background using existing `--gradient-brand` tokens.
-- Founders card: gradient border. Cohort card: muted variant.
-- Icons: `Check` for included, `Clock` for DIY time, `DollarSign` for market cost (lucide-react).
-
-## Files to touch
-
-- **New:** `src/lib/value-grid.ts`
-- **New:** `src/components/value/ValueGrid.tsx`, `PricingTiers.tsx`, `TotalsBar.tsx`
-- **Edit:** `src/routes/register.tsx` — insert hero, grid, totals, pricing tiers above the existing form; add `tier_interest` select
-- **Edit:** `src/lib/registrations.functions.ts` + Zod schema — accept optional `tier_interest`
-- **Migration:** `alter table workshop_registrations add column tier_interest text`
-- **Edit:** `src/components/site/Header.tsx` — primary CTA "Reserve seat — from $679"
-
-## Out of scope (ask if you want any of these)
-
-- Actual payment collection / Stripe checkout
-- Live seat-count from the database (the "X left" badge will be a static prop for now)
-- Changes to `/` or `/schedule`
-
-Confirm and I'll build it.
+## Out of scope
+- Rewording existing deliverables.
+- Changing pricing, totals, or the registration form.
+- Any change outside `/register`.
