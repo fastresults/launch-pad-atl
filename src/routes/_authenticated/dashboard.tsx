@@ -105,7 +105,7 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-3 py-3">
         <Link to="/dashboard" className="flex items-center gap-2 font-semibold tracking-tight">
-          <img src={logoUrl} alt="StartupLabs" className={collapsed ? "h-6 w-auto" : "h-7 w-auto"} />
+          <StartupLabsLogo className={collapsed ? "h-6 w-auto text-foreground" : "h-7 w-auto text-foreground"} />
         </Link>
       </SidebarHeader>
       <SidebarContent>
