@@ -1,31 +1,41 @@
-# Fix: Mobile business-ideas rail looks static
+# Show public (halved) seat counts everywhere on the public site
 
-## Problem
-On the home page section "What others are starting in 2026", the mobile view (`MobileScroller` in `src/routes/index.tsx`, lines ~746–757) is a plain horizontal `overflow-x-auto` rail. Cards fill the viewport edge-to-edge, nothing animates, and there's no peek of the next card — so users don't realize they can swipe. Desktop/tablet already auto-scroll via `MarqueeRow`.
+The `toPublicSeats` / `toPublicTaken` helpers in `src/lib/cohorts.ts` are already used by `PricingTiers`, but several other public surfaces still render the raw internal seat numbers (7 / 13 / 20). This plan finds every remaining leak and routes it through the same helpers so the marketing site consistently reads "first 4 / next 7 / 10 total" while admin + reservation logic keeps the real internal numbers.
 
-## Goal
-Make it obvious on mobile that the rail is swipeable AND have it auto-scroll on its own, matching the desktop marquee behavior — without breaking touch scrolling.
+## Leaks to fix
 
-## Changes (mobile only, `src/routes/index.tsx`)
+1. **Register page scarcity line** — `src/routes/register.tsx` ~lines 231–252
+   - Currently: `{availability.founders.remaining} of {availability.founders.capacity} Founders seats left` (and the Cohort variant)
+   - These read raw internal values from `availability` → screenshot shows "7 of 7 Founders seats left".
+   - Fix: derive public capacity via `toPublicSeats(selectedCohort.foundersSeats)` (and cohort), public taken via `toPublicTaken(availability.founders.displayedTaken, selectedCohort.foundersSeats, publicCapacity)`, then render `publicCapacity - publicTaken` of `publicCapacity`.
 
-1. **Reuse `MarqueeRow` on mobile** instead of the static `MobileScroller`.
-   - Replace the `md:hidden` block to render two `MarqueeRow`s (rowA left, rowB right) at a slightly slower speed tuned for small screens.
-   - Keep the existing desktop block unchanged (`hidden md:block`).
-   - If `MarqueeRow` doesn't already pause on touch/hover, add `pause-on-hover` + `touch-action: pan-x` so a user finger drag pauses the auto-scroll and lets them swipe freely; releases resume the animation.
+2. **Register page "Seat tier" picker** — `src/routes/register.tsx` ~lines 345–380 (screenshot 1)
+   - `const cap = ... foundersSeats : cohortSeats` then renders `First {cap} to register`, `Next {cap} seats`, `Sold out · {cap}/{cap} claimed`.
+   - Fix: replace `cap` with `toPublicSeats(internalCap)`.
 
-2. **Card peek (visual affordance)** — constrain `IdeaCard` width on mobile so ~15% of the next card is always visible at the right edge (e.g. `w-[85vw] max-w-[340px]`). This is the strongest "there's more →" signal.
+3. **TotalsBar "Your investment" card** — `src/components/value/TotalsBar.tsx` line 22 (screenshot 2)
+   - Hardcoded `$997 after first 7 seats`.
+   - Fix: import `toPublicSeats` and `PRICING` and render ``$${PRICING.cohort.price} after first ${toPublicSeats(PRICING.founders.seats)} seats``.
 
-3. **Swipe hint chip** — under the category pills, add a small mobile-only line: `← swipe to explore →` with subtle muted styling and a fade-out after first user interaction (simple `useState` flag toggled on touchstart).
+4. **Static PRICING subtitles** — `src/lib/value-grid.ts` lines 59–60
+   - `subtitle: "First 7 to register"` and `"Next 13 seats"` are stale public copy hardcoded to internal seat numbers. They're not currently rendered (PricingTiers computes its own subtitle), but they're a footgun.
+   - Fix: update the literals to the public numbers ("First 4 to register", "Next 7 seats") so any future reuse stays in sync, OR remove the `subtitle` field. Recommendation: update the strings.
 
-4. **Edge fade mask** — add a left/right gradient fade on the mobile rail container (`mask-image: linear-gradient(...)`) so cards visibly bleed off both edges, reinforcing the scrollable affordance.
-
-5. **Remove `MobileScroller`** once unused, or keep as dead code removed in same edit.
+5. **CohortPicker "Filling up · N Founders seats left" pill** — `src/components/value/CohortPicker.tsx` ~lines 36–43, 70–76
+   - Uses `availability.founders.displayedRemaining` / `cohort.displayedRemaining`, which are raw internal counts.
+   - Fix: convert with `toPublicSeats` + `toPublicTaken` on the cohort's internal capacities before rendering.
 
 ## Out of scope
-Desktop layout, card content, category filter behavior, copy outside the new hint chip.
+
+- Admin UI (`admin.cohorts.tsx`, `admin.cohorts.test.tsx`) — must keep showing real internal numbers.
+- `cohort-availability.functions.ts` — server still returns real numbers; scaling stays in the presentation layer (already the established pattern).
+- `schedule-data.ts` — already uses `toPublicSeats`.
+- Reservation logic, pricing, roll-over thresholds.
 
 ## Verification
-- Preview at 375×812 and 390×844: rail auto-scrolls slowly, next card peeks at right edge, edge fade visible, hint chip shows then fades after swipe.
-- Finger drag pauses animation and scrolls freely; release resumes.
-- Desktop 1366+ unchanged (still two `MarqueeRow`s).
-- No horizontal page scroll introduced.
+
+- `/register`: scarcity line reads "X of {publicCap} Founders seats left" with publicCap = ceil(internal/2); seat-tier picker shows "First {publicCap} to register" / "Next {publicCap} seats"; sold-out badge shows `publicCap/publicCap claimed`.
+- Home page "Your investment" card reads `$997 after first 4 seats` (or whatever `toPublicSeats(7)` resolves to).
+- CohortPicker "Filling up" pill shows the halved remaining count.
+- Admin cohort screens still show the true 7 / 13 / 20 numbers — unchanged.
+- No raw internal number appears anywhere on the public marketing/register pages.

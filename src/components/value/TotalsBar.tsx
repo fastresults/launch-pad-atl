@@ -1,4 +1,5 @@
 import { VALUE_TOTALS, formatCostRange, formatHoursRange, PRICING } from "@/lib/value-grid";
+import { toPublicSeats } from "@/lib/cohorts";
 import { DollarSign, Clock, Sparkles } from "lucide-react";
 
 export function TotalsBar() {
@@ -19,7 +20,7 @@ export function TotalsBar() {
         icon={<Sparkles className="size-5" />}
         label="Your investment"
         value={`from $${PRICING.founders.price}`}
-        sub={`$${PRICING.cohort.price} after first 7 seats`}
+        sub={`$${PRICING.cohort.price} after first ${toPublicSeats(PRICING.founders.seats)} seats`}
         accent
       />
     </div>

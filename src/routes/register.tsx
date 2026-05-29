@@ -16,6 +16,8 @@ import {
   getNextAvailable,
   FALLBACK_COHORT,
   formatPriceCents,
+  toPublicSeats,
+  toPublicTaken,
   type Cohort,
 } from "@/lib/cohorts";
 import { ValueGrid } from "@/components/value/ValueGrid";
@@ -228,29 +230,44 @@ function RegisterPage() {
               </span>
               . All 25 deliverables included.
             </h2>
-            {availability && !cohortSoldOut && (
-              <p className="mt-3 text-sm text-muted-foreground">
-                {availability.founders.soldOut ? (
-                  <>
-                    Founders is sold out for this cohort —{" "}
-                    <span className="text-foreground">
-                      {availability.cohort.remaining} of {availability.cohort.capacity} Cohort
-                      seats left at {formatPriceCents(selectedCohort.cohortPriceCents)}
-                    </span>
-                    .
-                  </>
-                ) : (
-                  <>
-                    <span className="text-foreground">
-                      {availability.founders.remaining} of {availability.founders.capacity}{" "}
-                      Founders seats left
-                    </span>{" "}
-                    at {formatPriceCents(selectedCohort.foundersPriceCents)} — price rolls to{" "}
-                    {formatPriceCents(selectedCohort.cohortPriceCents)} when Founders fills.
-                  </>
-                )}
-              </p>
-            )}
+            {availability && !cohortSoldOut && (() => {
+              const pubFoundersCap = toPublicSeats(selectedCohort.foundersSeats);
+              const pubCohortCap = toPublicSeats(selectedCohort.cohortSeats);
+              const pubFoundersTaken = toPublicTaken(
+                availability.founders.displayedTaken,
+                selectedCohort.foundersSeats,
+                pubFoundersCap,
+              );
+              const pubCohortTaken = toPublicTaken(
+                availability.cohort.displayedTaken,
+                selectedCohort.cohortSeats,
+                pubCohortCap,
+              );
+              const pubFoundersLeft = Math.max(pubFoundersCap - pubFoundersTaken, 0);
+              const pubCohortLeft = Math.max(pubCohortCap - pubCohortTaken, 0);
+              return (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  {availability.founders.soldOut ? (
+                    <>
+                      Founders is sold out for this cohort —{" "}
+                      <span className="text-foreground">
+                        {pubCohortLeft} of {pubCohortCap} Cohort
+                        seats left at {formatPriceCents(selectedCohort.cohortPriceCents)}
+                      </span>
+                      .
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-foreground">
+                        {pubFoundersLeft} of {pubFoundersCap} Founders seats left
+                      </span>{" "}
+                      at {formatPriceCents(selectedCohort.foundersPriceCents)} — price rolls to{" "}
+                      {formatPriceCents(selectedCohort.cohortPriceCents)} when Founders fills.
+                    </>
+                  )}
+                </p>
+              );
+            })()}
           </div>
           <PricingTiers
             selected={effectiveTier}
@@ -349,7 +366,8 @@ function RegisterPage() {
                     const tierAvail = t === "founders" ? availability?.founders : availability?.cohort;
                     const soldOut = tierAvail?.soldOut ?? false;
                     const price = t === "founders" ? selectedCohort.foundersPriceCents : selectedCohort.cohortPriceCents;
-                    const cap = t === "founders" ? selectedCohort.foundersSeats : selectedCohort.cohortSeats;
+                    const internalCap = t === "founders" ? selectedCohort.foundersSeats : selectedCohort.cohortSeats;
+                    const cap = toPublicSeats(internalCap);
                     return (
                       <button
                         type="button"

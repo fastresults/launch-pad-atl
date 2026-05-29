@@ -1,4 +1,4 @@
-import { type Cohort, getFirstSoldOut } from "@/lib/cohorts";
+import { type Cohort, getFirstSoldOut, toPublicSeats, toPublicTaken } from "@/lib/cohorts";
 import type { CohortAvailability } from "@/lib/cohort-availability.functions";
 import { CalendarDays, Check, Lock, MapPin } from "lucide-react";
 
@@ -34,17 +34,29 @@ export function CohortPicker({ cohorts, selectedId, onSelect, availability }: Pr
   if (availabilityForFeatured) {
     if (!availabilityForFeatured.founders.soldOut) {
       pillTier = "founders";
-      pillSeatsLeft = availabilityForFeatured.founders.displayedRemaining;
+      const pubCap = toPublicSeats(featured.foundersSeats);
+      const pubTaken = toPublicTaken(
+        availabilityForFeatured.founders.displayedTaken,
+        featured.foundersSeats,
+        pubCap,
+      );
+      pillSeatsLeft = Math.max(pubCap - pubTaken, 0);
       pillShow = availabilityForFeatured.founders.showSellingFast;
     } else if (!availabilityForFeatured.cohort.soldOut) {
       pillTier = "cohort";
-      pillSeatsLeft = availabilityForFeatured.cohort.displayedRemaining;
+      const pubCap = toPublicSeats(featured.cohortSeats);
+      const pubTaken = toPublicTaken(
+        availabilityForFeatured.cohort.displayedTaken,
+        featured.cohortSeats,
+        pubCap,
+      );
+      pillSeatsLeft = Math.max(pubCap - pubTaken, 0);
       pillShow = availabilityForFeatured.cohort.showSellingFast;
     }
   } else {
     // Fallback when availability isn't loaded yet — preserve previous behavior.
     pillShow = featured.status === "filling";
-    pillSeatsLeft = featured.seatsLeft;
+    pillSeatsLeft = featured.seatsLeft != null ? toPublicSeats(featured.seatsLeft) : undefined;
   }
 
   return (
