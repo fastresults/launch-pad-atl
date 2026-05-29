@@ -166,7 +166,7 @@ function RegisterPage() {
           <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
             Monthly cohorts · IGNITE Center at Greater Atlanta Christian School, Norcross GA
           </p>
-          <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
+          <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
             Walk in with an idea.{" "}
             <span className="text-gradient-brand">Walk out with a business.</span>
           </h1>
