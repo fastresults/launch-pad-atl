@@ -75,8 +75,8 @@ function ProfilePage() {
         <Button onClick={() => save.mutate({ section: "founder", data: founder })} disabled={save.isPending}>Save founder</Button>
       </Section>
 
-      <Section title="Business">
-        <Field label="Business name"><Input value={business.business_name} onChange={(e) => setBusiness({ ...business, business_name: e.target.value })} /></Field>
+      <Section title="Startup">
+        <Field label="Startup name"><Input value={business.business_name} onChange={(e) => setBusiness({ ...business, business_name: e.target.value })} /></Field>
         <Field label="Industry"><Input value={business.industry} onChange={(e) => setBusiness({ ...business, industry: e.target.value })} /></Field>
         <Field label="Stage"><Input value={business.stage} onChange={(e) => setBusiness({ ...business, stage: e.target.value })} placeholder="idea / mvp / launched" /></Field>
         <Field label="Problem solved"><Textarea rows={3} value={business.problem_solved} onChange={(e) => setBusiness({ ...business, problem_solved: e.target.value })} /></Field>
