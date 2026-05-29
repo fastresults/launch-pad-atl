@@ -79,12 +79,12 @@ export const DEFAULT_PRICING = {
   foundersPriceCents: 67900,
   foundersSeats: 7,
   cohortPriceCents: 99700,
-  cohortSeats: 13,
+  cohortSeats: 3,
 } as const;
 
 const EVENT_TITLE = "Ignite Business Launch Workshop";
 const EVENT_DETAILS =
-  "One-day, build-your-business workshop with Adam Anderson. You walk in with an idea, you walk out with a real, revenue-ready business: LLC packet, EIN, offer, website draft, full marketing kit, and a signed 90-day plan.";
+  "One-day, build-your-business workshop with Adam Anderson. You walk in with an idea, you walk out operationally launch-ready: LLC packet, EIN, offer, website draft, full marketing kit, and a signed 90-day plan. (Anything physical your business needs — space, equipment, inventory — is on you.)";
 
 const MONTH_LONG = [
   "January", "February", "March", "April", "May", "June",
