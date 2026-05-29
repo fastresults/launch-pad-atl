@@ -19,13 +19,17 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/_admin'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as AuthenticatedDashboardWorkflowRouteImport } from './routes/_authenticated/dashboard.workflow'
 import { Route as AuthenticatedDashboardProfileRouteImport } from './routes/_authenticated/dashboard.profile'
 import { Route as AuthenticatedDashboardMediaRouteImport } from './routes/_authenticated/dashboard.media'
 import { Route as AuthenticatedDashboardGoalsRouteImport } from './routes/_authenticated/dashboard.goals'
+import { Route as AuthenticatedDashboardFilingRouteImport } from './routes/_authenticated/dashboard.filing'
 import { Route as AuthenticatedDashboardDocumentsRouteImport } from './routes/_authenticated/dashboard.documents'
 import { Route as AuthenticatedDashboardDeliverablesRouteImport } from './routes/_authenticated/dashboard.deliverables'
+import { Route as AuthenticatedDashboardBriefRouteImport } from './routes/_authenticated/dashboard.brief'
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
 import { Route as ApiPublicHooksPublishDueDeliverablesRouteImport } from './routes/api/public/hooks/publish-due-deliverables'
+import { Route as AuthenticatedDashboardWorkflowKeyRouteImport } from './routes/_authenticated/dashboard.workflow.$key'
 import { Route as AuthenticatedAdminAdminUsersRouteImport } from './routes/_authenticated/_admin/admin.users'
 import { Route as AuthenticatedAdminAdminReviewRouteImport } from './routes/_authenticated/_admin/admin.review'
 import { Route as AuthenticatedAdminAdminRegistrationsRouteImport } from './routes/_authenticated/_admin/admin.registrations'
@@ -86,6 +90,12 @@ const AuthenticatedDashboardIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardWorkflowRoute =
+  AuthenticatedDashboardWorkflowRouteImport.update({
+    id: '/workflow',
+    path: '/workflow',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardProfileRoute =
   AuthenticatedDashboardProfileRouteImport.update({
     id: '/profile',
@@ -104,6 +114,12 @@ const AuthenticatedDashboardGoalsRoute =
     path: '/goals',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardFilingRoute =
+  AuthenticatedDashboardFilingRouteImport.update({
+    id: '/filing',
+    path: '/filing',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardDocumentsRoute =
   AuthenticatedDashboardDocumentsRouteImport.update({
     id: '/documents',
@@ -114,6 +130,12 @@ const AuthenticatedDashboardDeliverablesRoute =
   AuthenticatedDashboardDeliverablesRouteImport.update({
     id: '/deliverables',
     path: '/deliverables',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardBriefRoute =
+  AuthenticatedDashboardBriefRouteImport.update({
+    id: '/brief',
+    path: '/brief',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedAdminAdminIndexRoute =
@@ -127,6 +149,12 @@ const ApiPublicHooksPublishDueDeliverablesRoute =
     id: '/api/public/hooks/publish-due-deliverables',
     path: '/api/public/hooks/publish-due-deliverables',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedDashboardWorkflowKeyRoute =
+  AuthenticatedDashboardWorkflowKeyRouteImport.update({
+    id: '/$key',
+    path: '/$key',
+    getParentRoute: () => AuthenticatedDashboardWorkflowRoute,
   } as any)
 const AuthenticatedAdminAdminUsersRoute =
   AuthenticatedAdminAdminUsersRouteImport.update({
@@ -197,11 +225,14 @@ export interface FileRoutesByFullPath {
   '/schedule': typeof ScheduleRoute
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
   '/dashboard/deliverables': typeof AuthenticatedDashboardDeliverablesRoute
   '/dashboard/documents': typeof AuthenticatedDashboardDocumentsRoute
+  '/dashboard/filing': typeof AuthenticatedDashboardFilingRoute
   '/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
   '/dashboard/media': typeof AuthenticatedDashboardMediaRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
+  '/dashboard/workflow': typeof AuthenticatedDashboardWorkflowRouteWithChildren
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/admin/cohorts': typeof AuthenticatedAdminAdminCohortsRouteWithChildren
@@ -209,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
+  '/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
@@ -223,11 +255,14 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
   '/signup': typeof SignupRoute
+  '/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
   '/dashboard/deliverables': typeof AuthenticatedDashboardDeliverablesRoute
   '/dashboard/documents': typeof AuthenticatedDashboardDocumentsRoute
+  '/dashboard/filing': typeof AuthenticatedDashboardFilingRoute
   '/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
   '/dashboard/media': typeof AuthenticatedDashboardMediaRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
+  '/dashboard/workflow': typeof AuthenticatedDashboardWorkflowRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/admin/cohorts': typeof AuthenticatedAdminAdminCohortsRouteWithChildren
@@ -235,6 +270,7 @@ export interface FileRoutesByTo {
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
+  '/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
@@ -253,11 +289,14 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/_authenticated/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
   '/_authenticated/dashboard/deliverables': typeof AuthenticatedDashboardDeliverablesRoute
   '/_authenticated/dashboard/documents': typeof AuthenticatedDashboardDocumentsRoute
+  '/_authenticated/dashboard/filing': typeof AuthenticatedDashboardFilingRoute
   '/_authenticated/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
   '/_authenticated/dashboard/media': typeof AuthenticatedDashboardMediaRoute
   '/_authenticated/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
+  '/_authenticated/dashboard/workflow': typeof AuthenticatedDashboardWorkflowRouteWithChildren
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/_admin/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/_authenticated/_admin/admin/cohorts': typeof AuthenticatedAdminAdminCohortsRouteWithChildren
@@ -265,6 +304,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/_authenticated/_admin/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/_authenticated/_admin/admin/users': typeof AuthenticatedAdminAdminUsersRoute
+  '/_authenticated/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/_authenticated/_admin/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
@@ -282,11 +322,14 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/signup'
     | '/dashboard'
+    | '/dashboard/brief'
     | '/dashboard/deliverables'
     | '/dashboard/documents'
+    | '/dashboard/filing'
     | '/dashboard/goals'
     | '/dashboard/media'
     | '/dashboard/profile'
+    | '/dashboard/workflow'
     | '/dashboard/'
     | '/admin/attendees'
     | '/admin/cohorts'
@@ -294,6 +337,7 @@ export interface FileRouteTypes {
     | '/admin/registrations'
     | '/admin/review'
     | '/admin/users'
+    | '/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
     | '/admin/'
     | '/admin/cohorts/test'
@@ -308,11 +352,14 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/schedule'
     | '/signup'
+    | '/dashboard/brief'
     | '/dashboard/deliverables'
     | '/dashboard/documents'
+    | '/dashboard/filing'
     | '/dashboard/goals'
     | '/dashboard/media'
     | '/dashboard/profile'
+    | '/dashboard/workflow'
     | '/dashboard'
     | '/admin/attendees'
     | '/admin/cohorts'
@@ -320,6 +367,7 @@ export interface FileRouteTypes {
     | '/admin/registrations'
     | '/admin/review'
     | '/admin/users'
+    | '/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
     | '/admin'
     | '/admin/cohorts/test'
@@ -337,11 +385,14 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_authenticated/_admin'
     | '/_authenticated/dashboard'
+    | '/_authenticated/dashboard/brief'
     | '/_authenticated/dashboard/deliverables'
     | '/_authenticated/dashboard/documents'
+    | '/_authenticated/dashboard/filing'
     | '/_authenticated/dashboard/goals'
     | '/_authenticated/dashboard/media'
     | '/_authenticated/dashboard/profile'
+    | '/_authenticated/dashboard/workflow'
     | '/_authenticated/dashboard/'
     | '/_authenticated/_admin/admin/attendees'
     | '/_authenticated/_admin/admin/cohorts'
@@ -349,6 +400,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/registrations'
     | '/_authenticated/_admin/admin/review'
     | '/_authenticated/_admin/admin/users'
+    | '/_authenticated/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
     | '/_authenticated/_admin/admin/'
     | '/_authenticated/_admin/admin/cohorts/test'
@@ -440,6 +492,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/workflow': {
+      id: '/_authenticated/dashboard/workflow'
+      path: '/workflow'
+      fullPath: '/dashboard/workflow'
+      preLoaderRoute: typeof AuthenticatedDashboardWorkflowRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/profile': {
       id: '/_authenticated/dashboard/profile'
       path: '/profile'
@@ -461,6 +520,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardGoalsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/filing': {
+      id: '/_authenticated/dashboard/filing'
+      path: '/filing'
+      fullPath: '/dashboard/filing'
+      preLoaderRoute: typeof AuthenticatedDashboardFilingRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/documents': {
       id: '/_authenticated/dashboard/documents'
       path: '/documents'
@@ -473,6 +539,13 @@ declare module '@tanstack/react-router' {
       path: '/deliverables'
       fullPath: '/dashboard/deliverables'
       preLoaderRoute: typeof AuthenticatedDashboardDeliverablesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/brief': {
+      id: '/_authenticated/dashboard/brief'
+      path: '/brief'
+      fullPath: '/dashboard/brief'
+      preLoaderRoute: typeof AuthenticatedDashboardBriefRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/_admin/admin/': {
@@ -488,6 +561,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/hooks/publish-due-deliverables'
       preLoaderRoute: typeof ApiPublicHooksPublishDueDeliverablesRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboard/workflow/$key': {
+      id: '/_authenticated/dashboard/workflow/$key'
+      path: '/$key'
+      fullPath: '/dashboard/workflow/$key'
+      preLoaderRoute: typeof AuthenticatedDashboardWorkflowKeyRouteImport
+      parentRoute: typeof AuthenticatedDashboardWorkflowRoute
     }
     '/_authenticated/_admin/admin/users': {
       id: '/_authenticated/_admin/admin/users'
@@ -624,23 +704,45 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
+interface AuthenticatedDashboardWorkflowRouteChildren {
+  AuthenticatedDashboardWorkflowKeyRoute: typeof AuthenticatedDashboardWorkflowKeyRoute
+}
+
+const AuthenticatedDashboardWorkflowRouteChildren: AuthenticatedDashboardWorkflowRouteChildren =
+  {
+    AuthenticatedDashboardWorkflowKeyRoute:
+      AuthenticatedDashboardWorkflowKeyRoute,
+  }
+
+const AuthenticatedDashboardWorkflowRouteWithChildren =
+  AuthenticatedDashboardWorkflowRoute._addFileChildren(
+    AuthenticatedDashboardWorkflowRouteChildren,
+  )
+
 interface AuthenticatedDashboardRouteChildren {
+  AuthenticatedDashboardBriefRoute: typeof AuthenticatedDashboardBriefRoute
   AuthenticatedDashboardDeliverablesRoute: typeof AuthenticatedDashboardDeliverablesRoute
   AuthenticatedDashboardDocumentsRoute: typeof AuthenticatedDashboardDocumentsRoute
+  AuthenticatedDashboardFilingRoute: typeof AuthenticatedDashboardFilingRoute
   AuthenticatedDashboardGoalsRoute: typeof AuthenticatedDashboardGoalsRoute
   AuthenticatedDashboardMediaRoute: typeof AuthenticatedDashboardMediaRoute
   AuthenticatedDashboardProfileRoute: typeof AuthenticatedDashboardProfileRoute
+  AuthenticatedDashboardWorkflowRoute: typeof AuthenticatedDashboardWorkflowRouteWithChildren
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
 
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
   {
+    AuthenticatedDashboardBriefRoute: AuthenticatedDashboardBriefRoute,
     AuthenticatedDashboardDeliverablesRoute:
       AuthenticatedDashboardDeliverablesRoute,
     AuthenticatedDashboardDocumentsRoute: AuthenticatedDashboardDocumentsRoute,
+    AuthenticatedDashboardFilingRoute: AuthenticatedDashboardFilingRoute,
     AuthenticatedDashboardGoalsRoute: AuthenticatedDashboardGoalsRoute,
     AuthenticatedDashboardMediaRoute: AuthenticatedDashboardMediaRoute,
     AuthenticatedDashboardProfileRoute: AuthenticatedDashboardProfileRoute,
+    AuthenticatedDashboardWorkflowRoute:
+      AuthenticatedDashboardWorkflowRouteWithChildren,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   }
 
