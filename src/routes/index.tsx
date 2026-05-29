@@ -287,10 +287,10 @@ function FacilitatorSection() {
               go from a half-formed idea to a business that actually opens its doors.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Chip>Helped launch dozens of modern businesses</Chip>
-              <Chip>Built for Fortune 500 companies</Chip>
-              <Chip>Built systems for a whole country</Chip>
-              <Chip>Produced 5 major business summits</Chip>
+              <TagChip>Helped launch dozens of modern businesses</TagChip>
+              <TagChip>Built for Fortune 500 companies</TagChip>
+              <TagChip>Built systems for a whole country</TagChip>
+              <TagChip>Produced 5 major business summits</TagChip>
             </div>
           </div>
         </div>
@@ -299,7 +299,7 @@ function FacilitatorSection() {
   );
 }
 
-function Chip({ children }: { children: React.ReactNode }) {
+function TagChip({ children }: { children: React.ReactNode }) {
   return (
     <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-foreground/85">
       {children}
@@ -534,9 +534,9 @@ function VenueCard() {
               </p>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <Chip>Free on-site parking</Chip>
-                <Chip>{EVENT.capacity} seats</Chip>
-                <Chip>Small cohort · no audience</Chip>
+                <TagChip>Free on-site parking</TagChip>
+                <TagChip>{EVENT.capacity} seats</TagChip>
+                <TagChip>Small cohort · no audience</TagChip>
               </div>
 
               <div className="mt-7 flex flex-wrap items-start gap-3">
