@@ -268,7 +268,17 @@ function RegisterPage() {
                   })}
                 </div>
                 <input type="hidden" {...register("tier_interest")} />
+                <input type="hidden" {...register("cohort_id")} />
               </Field>
+
+              <div className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Cohort
+                </div>
+                <div className="mt-0.5 font-medium text-foreground">
+                  Reserving for {selectedCohort.dateLabel}
+                </div>
+              </div>
 
               <Field label="How did you hear about us? (optional)" error={errors.referral_source?.message}>
                 <input {...register("referral_source")} className="input" placeholder="Friend, Instagram, search…" />
