@@ -770,6 +770,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function TheArtOfThePossible() {
+  const EVENT = useEvent();
   const [active, setActive] = useState<BusinessCategory | "all">("all");
   // Client-only seed bumps on mount + filter change so SSR/CSR markup matches first,
   // then we reshuffle in the browser (no hydration mismatch).
