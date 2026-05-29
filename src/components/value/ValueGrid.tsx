@@ -151,5 +151,6 @@ export function ValueGrid() {
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
