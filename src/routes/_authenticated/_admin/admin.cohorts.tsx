@@ -96,6 +96,12 @@ const fromCohort = (c: Cohort): FormState => ({
   founders_seats: String(c.foundersSeats),
   cohort_price: String(c.cohortPriceCents / 100),
   cohort_seats: String(c.cohortSeats),
+  founders_display_floor: String(c.foundersDisplayFloor),
+  founders_warming_boost: String(c.foundersWarmingBoost),
+  founders_honest_threshold_pct: String(c.foundersHonestThresholdPct),
+  cohort_display_floor: String(c.cohortDisplayFloor),
+  cohort_warming_boost: String(c.cohortWarmingBoost),
+  cohort_honest_threshold_pct: String(c.cohortHonestThresholdPct),
 });
 
 function CohortsAdminPage() {
