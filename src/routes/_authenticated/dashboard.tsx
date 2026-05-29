@@ -26,6 +26,7 @@ function DashboardLayout() {
 
 
   return (
+    <ThemeProvider>
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-8 md:px-6 md:py-4">
