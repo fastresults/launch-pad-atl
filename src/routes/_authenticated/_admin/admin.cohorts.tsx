@@ -423,6 +423,39 @@ function CohortsAdminPage() {
             </div>
 
             <div className="rounded-xl border border-white/10 p-4">
+              <div className="mb-3">
+                <div className="text-sm font-medium">Scarcity display (psychology)</div>
+                <div className="text-xs text-muted-foreground">
+                  Controls what visitors see in the "X of N seats left" badge before real demand catches up.
+                  Real seat counts, reservations, and emails always use the truth.
+                </div>
+              </div>
+              <ScarcityFields
+                tier="Founders"
+                capacity={Number(form.founders_seats) || 0}
+                floor={form.founders_display_floor}
+                boost={form.founders_warming_boost}
+                pct={form.founders_honest_threshold_pct}
+                onFloor={(v) => setForm({ ...form, founders_display_floor: v })}
+                onBoost={(v) => setForm({ ...form, founders_warming_boost: v })}
+                onPct={(v) => setForm({ ...form, founders_honest_threshold_pct: v })}
+              />
+              <div className="my-3 border-t border-white/5" />
+              <ScarcityFields
+                tier="Cohort"
+                capacity={Number(form.cohort_seats) || 0}
+                floor={form.cohort_display_floor}
+                boost={form.cohort_warming_boost}
+                pct={form.cohort_honest_threshold_pct}
+                onFloor={(v) => setForm({ ...form, cohort_display_floor: v })}
+                onBoost={(v) => setForm({ ...form, cohort_warming_boost: v })}
+                onPct={(v) => setForm({ ...form, cohort_honest_threshold_pct: v })}
+              />
+            </div>
+
+
+
+            <div className="rounded-xl border border-white/10 p-4">
               <div className="mb-3 flex items-center justify-between">
                 <div>
                   <div className="text-sm font-medium">Venue</div>
