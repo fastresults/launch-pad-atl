@@ -119,7 +119,7 @@ function TierCard({
         disabled ? "opacity-60" : ""
       }`}
     >
-      <div className="rounded-2xl bg-card p-6 md:p-7 h-full flex flex-col">
+      <div className="rounded-2xl bg-card p-5 md:p-7 h-full flex flex-col">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
             {badge}
@@ -145,7 +145,7 @@ function TierCard({
         <h3 className="mt-3 text-2xl font-semibold">{label}</h3>
         <p className="text-sm text-muted-foreground">{subtitle}</p>
         <div className="mt-5 flex items-baseline gap-2">
-          <span className="text-5xl font-semibold tabular-nums">
+          <span className="text-4xl font-semibold tabular-nums md:text-5xl">
             {formatPriceCents(priceCents)}
           </span>
           <span className="text-sm text-muted-foreground">one-time</span>

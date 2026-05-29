@@ -3,7 +3,7 @@ import { DollarSign, Clock, Sparkles } from "lucide-react";
 
 export function TotalsBar() {
   return (
-    <div className="rounded-2xl border border-white/10 bg-card p-6 md:p-8 grid gap-6 md:grid-cols-3">
+    <div className="rounded-2xl border border-white/10 bg-card p-5 md:p-8 grid gap-5 md:grid-cols-3 md:gap-6">
       <Stat
         icon={<DollarSign className="size-5" />}
         label="Market value of what you walk out with"
@@ -45,7 +45,7 @@ function Stat({
         {icon}
         {label}
       </div>
-      <div className="mt-2 text-3xl font-semibold tabular-nums">{value}</div>
+      <div className="mt-2 text-2xl font-semibold tabular-nums md:text-3xl">{value}</div>
       {sub && <div className={`mt-1 text-xs ${accent ? "opacity-90" : "text-muted-foreground"}`}>{sub}</div>}
     </div>
   );

@@ -57,22 +57,22 @@ function SchedulePage() {
       <SiteHeader />
 
       {/* Hero */}
-      <section className="border-b border-white/5 py-20">
+      <section className="border-b border-white/5 py-12 md:py-20">
         <div className="mx-auto max-w-4xl px-6">
-          <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+          <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
             {EVENT.dateLabel} · {EVENT.timeLabel}
           </p>
-          <h1 className="text-5xl font-semibold tracking-tight md:text-6xl">
+          <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
             Idea in. <span className="text-gradient-brand">Launch plan out.</span>
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
+          <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
             Seven working hours, seven stages, one outcome. Every hour produces something
             the next hour builds on. By 4:30 PM you have a filing-ready business and a signed,
             dated 90-day launch plan.
           </p>
 
           {/* Stat ribbon */}
-          <div className="mt-10 grid grid-cols-1 gap-3 border-t border-white/10 pt-8 sm:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-3 border-t border-white/10 pt-6 sm:grid-cols-3 md:mt-10 md:pt-8">
             {[
               { stat: "7 hrs", label: "working time" },
               { stat: "7 stages", label: "idea → launch" },
@@ -157,7 +157,7 @@ function SchedulePage() {
                       </span>
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-white/25 md:p-7">
+                    <div className="rounded-2xl border border-white/10 bg-card p-5 transition-colors hover:border-white/25 md:p-7">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-baseline gap-3">
                           <span className="text-sm font-semibold text-foreground/90">
@@ -174,16 +174,16 @@ function SchedulePage() {
                           </span>
                         )}
                       </div>
-                      <h3 className="mt-3 text-2xl font-semibold tracking-tight md:text-3xl">
+                      <h3 className="mt-3 text-xl font-semibold leading-tight tracking-tight md:text-3xl">
                         {s.title}
                       </h3>
-                      <p className="mt-2 text-muted-foreground">{s.description}</p>
+                      <p className="mt-2 text-sm text-muted-foreground md:text-base">{s.description}</p>
 
 
                       {stage && (
                         <>
 
-                          <div className="mt-5 rounded-xl border border-white/10 bg-background/40 p-5">
+                          <div className="mt-5 rounded-xl border border-white/10 bg-background/40 p-4 md:p-5">
                             <div className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">
                               {stage.tasks.length} essential tasks
                             </div>
@@ -257,7 +257,7 @@ function SchedulePage() {
           </ol>
 
           {/* Footer CTA tile */}
-          <div className="mt-16 rounded-2xl border border-white/10 bg-card p-8 text-center md:p-10">
+          <div className="mt-16 rounded-2xl border border-white/10 bg-card p-6 text-center md:p-10">
             <h3 className="text-2xl font-semibold tracking-tight md:text-3xl">
               One day. One door. Twenty seats.
             </h3>
@@ -267,7 +267,7 @@ function SchedulePage() {
             <div className="mt-6 flex justify-center">
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
               >
                 Reserve your seat <ArrowRight className="size-4" />
               </Link>
