@@ -39,7 +39,7 @@ export const getCohortAvailability = createServerFn({ method: "GET" })
     const { data: cohort, error: cErr } = await supabaseAdmin
       .from("cohorts" as never)
       .select(
-        "id, founders_price_cents, founders_seats, cohort_price_cents, cohort_seats, founders_display_floor, founders_warming_boost, founders_honest_threshold_pct, cohort_display_floor, cohort_warming_boost, cohort_honest_threshold_pct",
+        "id, founders_price_cents, founders_seats, cohort_price_cents, cohort_seats, founders_display_floor_pct, founders_warming_boost, founders_honest_threshold_pct, cohort_display_floor_pct, cohort_warming_boost, cohort_honest_threshold_pct",
       )
       .eq("id", cohort_id)
       .single();
@@ -53,10 +53,10 @@ export const getCohortAvailability = createServerFn({ method: "GET" })
       founders_seats: number;
       cohort_price_cents: number;
       cohort_seats: number;
-      founders_display_floor: number;
+      founders_display_floor_pct: number;
       founders_warming_boost: number;
       founders_honest_threshold_pct: number;
-      cohort_display_floor: number;
+      cohort_display_floor_pct: number;
       cohort_warming_boost: number;
       cohort_honest_threshold_pct: number;
     };
