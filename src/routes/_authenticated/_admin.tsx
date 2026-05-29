@@ -11,6 +11,7 @@ const NAV = [
   { to: "/admin/registrations", label: "Registrations", super: false },
   { to: "/admin/attendees", label: "Attendees", super: false },
   { to: "/admin/review", label: "Review queue", super: true },
+  { to: "/admin/media", label: "Media library", super: true },
   { to: "/admin/users", label: "Users", super: true },
 ] as const;
 

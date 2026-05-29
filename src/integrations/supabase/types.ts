@@ -468,6 +468,263 @@ export type Database = {
         }
         Relationships: []
       }
+      media_assets: {
+        Row: {
+          ai_error: string | null
+          ai_status: Database["public"]["Enums"]["media_ai_status"]
+          ai_summary: string | null
+          ai_tags: string[]
+          ai_transcript: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          folder_id: string | null
+          id: string
+          media_type: Database["public"]["Enums"]["media_type"]
+          mime_type: string
+          original_name: string
+          owner_user_id: string | null
+          pushed_at: string | null
+          pushed_by: string | null
+          pushed_from_asset_id: string | null
+          scope: Database["public"]["Enums"]["media_scope"]
+          size_bytes: number
+          storage_bucket: string
+          storage_path: string
+          tags: string[]
+          thumbnail_path: string | null
+          title: string | null
+          updated_at: string
+          upload_status: string
+        }
+        Insert: {
+          ai_error?: string | null
+          ai_status?: Database["public"]["Enums"]["media_ai_status"]
+          ai_summary?: string | null
+          ai_tags?: string[]
+          ai_transcript?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          folder_id?: string | null
+          id?: string
+          media_type?: Database["public"]["Enums"]["media_type"]
+          mime_type: string
+          original_name: string
+          owner_user_id?: string | null
+          pushed_at?: string | null
+          pushed_by?: string | null
+          pushed_from_asset_id?: string | null
+          scope: Database["public"]["Enums"]["media_scope"]
+          size_bytes?: number
+          storage_bucket: string
+          storage_path: string
+          tags?: string[]
+          thumbnail_path?: string | null
+          title?: string | null
+          updated_at?: string
+          upload_status?: string
+        }
+        Update: {
+          ai_error?: string | null
+          ai_status?: Database["public"]["Enums"]["media_ai_status"]
+          ai_summary?: string | null
+          ai_tags?: string[]
+          ai_transcript?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          folder_id?: string | null
+          id?: string
+          media_type?: Database["public"]["Enums"]["media_type"]
+          mime_type?: string
+          original_name?: string
+          owner_user_id?: string | null
+          pushed_at?: string | null
+          pushed_by?: string | null
+          pushed_from_asset_id?: string | null
+          scope?: Database["public"]["Enums"]["media_scope"]
+          size_bytes?: number
+          storage_bucket?: string
+          storage_path?: string
+          tags?: string[]
+          thumbnail_path?: string | null
+          title?: string | null
+          updated_at?: string
+          upload_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_assets_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "media_folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_assets_pushed_from_asset_id_fkey"
+            columns: ["pushed_from_asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_collection_items: {
+        Row: {
+          added_at: string
+          asset_id: string
+          collection_id: string
+        }
+        Insert: {
+          added_at?: string
+          asset_id: string
+          collection_id: string
+        }
+        Update: {
+          added_at?: string
+          asset_id?: string
+          collection_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_collection_items_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "media_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_collections: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          owner_user_id: string | null
+          scope: Database["public"]["Enums"]["media_scope"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          owner_user_id?: string | null
+          scope: Database["public"]["Enums"]["media_scope"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          owner_user_id?: string | null
+          scope?: Database["public"]["Enums"]["media_scope"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      media_folders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          owner_user_id: string | null
+          parent_id: string | null
+          path: string
+          scope: Database["public"]["Enums"]["media_scope"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          owner_user_id?: string | null
+          parent_id?: string | null
+          path?: string
+          scope: Database["public"]["Enums"]["media_scope"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          owner_user_id?: string | null
+          parent_id?: string | null
+          path?: string
+          scope?: Database["public"]["Enums"]["media_scope"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "media_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_push_log: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          note: string | null
+          source_asset_id: string | null
+          target_asset_id: string | null
+          target_user_id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          source_asset_id?: string | null
+          target_asset_id?: string | null
+          target_user_id: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          source_asset_id?: string | null
+          target_asset_id?: string | null
+          target_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_push_log_source_asset_id_fkey"
+            columns: ["source_asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_push_log_target_asset_id_fkey"
+            columns: ["target_asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -589,6 +846,9 @@ export type Database = {
         | "approved"
         | "rejected"
         | "changes_requested"
+      media_ai_status: "pending" | "processing" | "ready" | "failed" | "skipped"
+      media_scope: "master" | "user"
+      media_type: "document" | "image" | "audio" | "video" | "other"
       pipeline_run_status:
         | "queued"
         | "running"
@@ -744,6 +1004,9 @@ export const Constants = {
         "rejected",
         "changes_requested",
       ],
+      media_ai_status: ["pending", "processing", "ready", "failed", "skipped"],
+      media_scope: ["master", "user"],
+      media_type: ["document", "image", "audio", "video", "other"],
       pipeline_run_status: [
         "queued",
         "running",
