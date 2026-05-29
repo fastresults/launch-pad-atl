@@ -26,6 +26,7 @@ export type CohortAvailability = {
   totalRemaining: number;
   cohortSoldOut: boolean;
   nextTier: "founders" | "cohort" | null;
+  isActiveCohort: boolean;
 };
 
 const Input = z.object({ cohort_id: z.string().min(1) });
