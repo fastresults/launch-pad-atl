@@ -103,15 +103,11 @@ function Hero() {
   const EVENT = useEvent();
   return (
     <section className="relative overflow-hidden">
-      <div className="absolute inset-0 bg-hero-gradient opacity-90" />
       <div
-        className="absolute inset-0 mix-blend-overlay opacity-30"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)",
-          backgroundSize: "22px 22px",
-        }}
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${heroBg})` }}
       />
+      <div className="absolute inset-0 bg-background/60" />
       <div className="relative mx-auto max-w-6xl px-6 py-24 md:py-32">
         <p className="mb-6 text-sm uppercase tracking-[0.2em] text-white/80">
           One day. One founder. One real, revenue-ready business.
