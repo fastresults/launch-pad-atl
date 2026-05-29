@@ -1,42 +1,30 @@
-## Light / dark toggle for the authenticated area
+# Privacy Policy Page + Footer Link
 
-Today `src/styles.css` defines one set of dark tokens on `:root` with no `.dark` variant, so the app is dark-only. Tailwind v4 is already set up for a `.dark` variant (`@custom-variant dark (&:is(.dark *))`), so the structure is in place — we just need a light token set, a theme controller, and a toggle.
+## Goal
+Add a legally sound privacy policy to the Startup Labs site, served at `/privacy`, and link it from the site footer.
 
-### Scope
+## Plan
 
-- Toggle is **only** active in the authenticated portal: `/_authenticated/dashboard/*` and `/_authenticated/_admin/*` (anything behind login).
-- Public marketing routes (`/`, `/register`, `/login`, `/signup`, etc.) stay locked to the current dark look — they're designed for it.
+### 1. Create the privacy policy route (`src/routes/privacy.tsx`)
+- New TanStack route at `/privacy`.
+- Content covers: what data is collected (name, email, phone, payment info), how it is used (registration, payment processing, communication, workshop logistics), how it is stored (Lovable Cloud/Supabase), cookies and analytics, third-party services (payment processor, Google OAuth), user rights (access, deletion, opt-out), and contact info.
+- Design: clean, readable, single-column layout matching the site's dark theme (semantic tokens from `src/styles.css`), with proper heading hierarchy.
+- SEO: page title "Privacy Policy — Startup Labs", meta description, canonical link.
 
-### 1. Token set in `src/styles.css`
+### 2. Update the site footer (`src/components/site/Footer.tsx`)
+- Add a "Privacy Policy" text link between the copyright line and the "A division of" line, or grouped in a small link row.
+- Link points to `/privacy` using `<Link>` from `@tanstack/react-router`.
 
-- Keep current tokens, but move the **dark values** into `.dark { ... }`.
-- Add a parallel **light** palette on `:root`: white-ish background, dark foreground, the same blue primary, lighter borders/muted, same brand gradient stops (gradients work in both themes).
-- Keep the brand gradient variables outside the light/dark split (shared).
+### 3. Verify
+- Navigate to `/privacy` from the footer link.
+- Check responsive layout and heading structure.
 
-### 2. Theme controller (`src/components/theme/ThemeProvider.tsx`)
+## Out of scope
+- Terms of service (can be added later if needed).
+- Cookie consent banner.
+- International compliance specifics beyond standard US best practices (GDPR, CCPA add-ons can be layered later if requested).
 
-Small client-only provider, no extra dependency:
-- React context exposing `theme: "light" | "dark"` and `setTheme`.
-- Reads initial value from `localStorage` key `dashboard-theme` (fallback `"dark"` to preserve today's look; no system-preference auto-detect to keep behavior predictable).
-- Applies/removes the `dark` class on `document.documentElement` inside a `useEffect`, so SSR stays stable (no hydration mismatch).
-- Persists changes to `localStorage`.
-- On unmount (i.e., when leaving the authenticated area) it removes the `dark` class — public pages keep their inline dark styling via tokens, unaffected.
-
-### 3. `ThemeToggle` button (`src/components/theme/ThemeToggle.tsx`)
-
-- shadcn `Button variant="ghost" size="icon"`.
-- Renders `Sun` (in dark mode) / `Moon` (in light mode) from `lucide-react`.
-- `onClick` flips the theme. `aria-label="Toggle theme"`.
-- Wrapped in `<ClientOnly fallback={…16px placeholder…}>` so the icon doesn't cause hydration mismatch.
-
-### 4. Wire-up
-
-- Wrap the inside of `DashboardLayout` (`src/routes/_authenticated/dashboard.tsx`) with `<ThemeProvider>`.
-- Wrap the inside of the admin layout (`src/routes/_authenticated/_admin.tsx`, or whichever file owns the admin shell) with the same `<ThemeProvider>`.
-- Place `<ThemeToggle />` in each header — in the dashboard header next to the "Sign out" button (both the mobile and desktop right-side blocks), and in the admin shell header in the same position.
-
-### Out of scope
-
-- No changes to public/marketing routes or their styling.
-- No system-preference detection or transitions — explicit user toggle only.
-- No per-account persistence; preference is local to the browser.
+## Assumptions
+- The site currently collects: name, email, phone, and payment data via registration; authentication via email/password and Google OAuth.
+- Data is stored in Lovable Cloud (Supabase).
+- Payment processing is handled by a third-party processor (Stripe or similar) — the policy will reference this generically and can be tightened once the exact processor is confirmed.

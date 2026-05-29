@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import logoUrl from "@/assets/startuplabs-logo.svg";
 import evolveLogoUrl from "@/assets/evolve-logo.svg";
 
@@ -9,7 +10,15 @@ export function SiteFooter() {
           <img src={logoUrl} alt="Startuplabs" className="h-9 w-auto md:h-10" />
           <span>· Norcross, GA</span>
         </div>
-        <div>© {new Date().getFullYear()} · One day. One business.</div>
+        <div className="flex flex-col items-center gap-1 md:flex-row md:gap-4">
+          <span>© {new Date().getFullYear()} · One day. One business.</span>
+          <Link
+            to="/privacy"
+            className="underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Privacy Policy
+          </Link>
+        </div>
         <div className="flex items-center gap-2">
           <span>A division of</span>
           <img src={evolveLogoUrl} alt="Evolve Inc." className="h-7 w-auto md:h-8" />
