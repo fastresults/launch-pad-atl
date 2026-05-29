@@ -14,9 +14,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-background/70 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <span className="inline-block size-3 rounded-full bg-hero-gradient" />
-          <span>Atlanta Startup Workshop</span>
+        <Link to="/" className="flex items-center font-semibold tracking-tight" aria-label="Atlanta Startup Workshop">
+          <img src={logoUrl} alt="StartupLabs" className="h-7 w-auto" />
         </Link>
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
           {nav.map((n) => (
