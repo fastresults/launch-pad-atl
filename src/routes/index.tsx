@@ -39,7 +39,7 @@ function HomePage() {
       <WalkInWalkOut />
       <TheArtOfThePossible />
       
-      <AIToolkit />
+      
       
       <ValueByTheNumbers />
       <FacilitatorSection />
