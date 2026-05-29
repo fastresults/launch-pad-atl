@@ -40,6 +40,12 @@ const UpsertSchema = z.object({
   founders_seats: z.number().int().min(0).max(500),
   cohort_price_cents: z.number().int().min(0).max(10_000_00),
   cohort_seats: z.number().int().min(0).max(500),
+  founders_display_floor: z.number().int().min(0).max(500),
+  founders_warming_boost: z.number().int().min(0).max(500),
+  founders_honest_threshold_pct: z.number().int().min(1).max(100),
+  cohort_display_floor: z.number().int().min(0).max(500),
+  cohort_warming_boost: z.number().int().min(0).max(500),
+  cohort_honest_threshold_pct: z.number().int().min(1).max(100),
 });
 
 async function ensureSuperAdmin(userId: string) {
