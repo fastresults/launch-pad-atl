@@ -779,6 +779,7 @@ export type Database = {
       workshop_registrations: {
         Row: {
           business_idea: string
+          cohort_id: string | null
           created_at: string
           email: string
           id: string
@@ -792,6 +793,7 @@ export type Database = {
         }
         Insert: {
           business_idea: string
+          cohort_id?: string | null
           created_at?: string
           email: string
           id?: string
@@ -805,6 +807,7 @@ export type Database = {
         }
         Update: {
           business_idea?: string
+          cohort_id?: string | null
           created_at?: string
           email?: string
           id?: string
