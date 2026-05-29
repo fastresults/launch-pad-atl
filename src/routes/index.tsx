@@ -60,7 +60,7 @@ function NotACourseBanner() {
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="flex items-start gap-4 md:max-w-3xl">
             <span className="mt-1 inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/30 backdrop-blur">
-              <Zap className="size-5 text-white" />
+              <AlertTriangle className="size-5 text-white" />
             </span>
             <div>
               <p className="text-[11px] md:text-xs uppercase tracking-[0.18em] font-semibold text-gradient-brand">
