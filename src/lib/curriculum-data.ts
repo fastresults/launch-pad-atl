@@ -99,20 +99,20 @@ export const STAGES: Stage[] = [
           "File the local business license and (if applicable) sales-tax registration once your entity is approved.",
       },
       {
-        title: "Funding plan & raise-ready kit",
+        title: "Funding model, pitch deck & fundraising kit",
         deliverable:
-          "Your funding path chosen for this business, a 12-month capital needs table, a 1-page raise summary, and a funder outreach list you start building with the message templates ready to send.",
-        tool: "Funding decision tree + raise 1-pager template",
+          "Your funding model with 12-month runway, a 10-slide investor-ready pitch deck in your brand, and a fundraising kit — 1-page raise summary, funder outreach list with email template, and your path picked across grants, microloans, SBA, and friends-and-family.",
+        tool: "Funding model + pitch deck + raise kit templates",
         details: [
-          "Pick the funding path: bootstrap, friends & family, revenue-based, SBA microloan, line of credit, or equity",
-          "Build a 12-month capital needs table — startup costs, monthly burn, runway",
-          "Draft a 1-page raise summary: problem, offer, traction proof, ask, use of funds",
-          "Start your funder/lender outreach list and customize the message templates so they're ready to send",
+          "Build the funding model: startup costs, monthly burn, break-even, and a 12-month cash picture",
+          "Pick the funding path: grants, microloans, SBA, revenue-based, line of credit, friends & family, or equity",
+          "Draft the 10-slide pitch deck in your brand: problem, solution, market, offer, traction, model, GTM, team, ask, use of funds",
+          "Write the 1-page raise summary and customize the funder outreach email template so it's ready to send",
         ],
         takeaway:
-          "Your funding path chosen, 12-month capital needs costed, raise-ready 1-pager, and a funder outreach plan ready to send.",
+          "Your funding model with 12-month runway, investor-ready pitch deck, and fundraising kit — ready to send.",
         followUp:
-          "Build out the outreach list and send the messages in the first 2 weeks; book intro calls with anyone who replies.",
+          "Build out the funder list and send the outreach in the first 2 weeks; book intro calls with anyone who replies.",
       },
     ],
   },
