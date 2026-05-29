@@ -12,12 +12,16 @@ function DashboardLayout() {
   const { location } = useRouterState();
   const tabs = [
     { to: "/dashboard", label: "Overview" },
+    { to: "/dashboard/brief", label: "Brief" },
+    { to: "/dashboard/filing", label: "Filing" },
+    { to: "/dashboard/workflow", label: "Workflow" },
     { to: "/dashboard/profile", label: "Profile" },
     { to: "/dashboard/documents", label: "Documents" },
     { to: "/dashboard/media", label: "Media" },
     { to: "/dashboard/goals", label: "Goals" },
     { to: "/dashboard/deliverables", label: "Deliverables" },
   ] as const;
+
 
   return (
     <div className="min-h-screen bg-background">
