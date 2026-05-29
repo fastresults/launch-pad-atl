@@ -105,7 +105,6 @@ function RegisterPage() {
   };
 
   const selectedCohort = getCohortById(cohorts, cohortId) ?? defaultCohort;
-  const selectedEvent = buildEvent(selectedCohort);
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
