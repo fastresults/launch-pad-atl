@@ -644,7 +644,7 @@ function BottomCTA() {
           />
           <div className="relative max-w-3xl text-white">
             <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-              Twenty seats. One date. One door from idea to business.
+              {capitalize(numberToWord(EVENT.capacity))} seats. One date. One door from idea to business.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
               If you've been waiting for the right week to start earning, this is the day
