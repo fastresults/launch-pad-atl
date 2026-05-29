@@ -30,6 +30,18 @@ export const Route = createFileRoute("/schedule")({
 });
 
 function SchedulePage() {
+  const fetchCohorts = useServerFn(listCohorts);
+  const { data: cohorts = [] } = useQuery<Cohort[]>({
+    queryKey: ["cohorts"],
+    queryFn: () => fetchCohorts(),
+    initialData: [],
+    staleTime: 60_000,
+  });
+  const EVENT = useMemo(
+    () => buildEvent(getNextAvailable(cohorts) ?? FALLBACK_COHORT),
+    [cohorts],
+  );
+
   // Scroll to #stage-N anchors when navigating from the home flow strip
   useEffect(() => {
     if (typeof window === "undefined") return;
