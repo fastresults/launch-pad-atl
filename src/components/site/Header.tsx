@@ -141,15 +141,24 @@ export function SiteHeader() {
                     Reserve seat — from $679
                   </Link>
                   {isAuthenticated ? (
-                    <button
-                      onClick={() => {
-                        close();
-                        signOut();
-                      }}
-                      className="flex w-full items-center justify-center rounded-full border border-white/15 px-5 py-3 text-sm text-muted-foreground"
-                    >
-                      sign out
-                    </button>
+                    <>
+                      <Link
+                        to="/dashboard"
+                        onClick={close}
+                        className="flex w-full items-center justify-center rounded-full border border-white/15 px-5 py-3 text-sm text-muted-foreground"
+                      >
+                        dashboard
+                      </Link>
+                      <button
+                        onClick={() => {
+                          close();
+                          signOut();
+                        }}
+                        className="flex w-full items-center justify-center rounded-full border border-white/15 px-5 py-3 text-sm text-muted-foreground"
+                      >
+                        sign out
+                      </button>
+                    </>
                   ) : (
                     <Link
                       to="/login"
