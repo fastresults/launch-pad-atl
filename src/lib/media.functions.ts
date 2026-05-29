@@ -345,7 +345,12 @@ export const updateAsset = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     await assertCanAccess(context.userId, asset.scope, asset.owner_user_id);
 
-    const patch: Record<string, unknown> = {};
+    const patch: {
+      title?: string;
+      description?: string;
+      tags?: string[];
+      folder_id?: string | null;
+    } = {};
     if (data.title !== undefined) patch.title = data.title;
     if (data.description !== undefined) patch.description = data.description;
     if (data.tags !== undefined) patch.tags = data.tags;
