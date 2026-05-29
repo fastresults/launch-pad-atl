@@ -183,18 +183,18 @@ export const STAGES: Stage[] = [
           "Fill out the prospect list and run discovery calls in the next 2 weeks; score each one.",
       },
       {
-        title: "Look at 3 competitors and find your edge",
+        title: "Competitive research pack",
         deliverable:
-          "A grid comparing 3 real competitors against your business + one sentence on what makes you different.",
-        tool: "Competitive grid template",
+          "A competitive research pack: 3 competitors compared on offer, price, channel, proof, and weakness, with sourced customer quotes and a one-page 'what makes you different' summary.",
+        tool: "Competitive research template",
         details: [
           "Identify 3 real competitors (2 direct + 1 substitute)",
           "Score each on offer, price, channel, proof, and weakness",
-          "Find the gap they all miss — your edge",
+          "Pull sourced customer quotes that show where each competitor falls short",
           "Write a one-line positioning statement: For X, who Y, we are Z because…",
         ],
         takeaway:
-          "Your 3-competitor grid + one-sentence positioning that names what makes you different.",
+          "Your competitive research pack — 3 competitors compared, sourced customer quotes, and a one-page 'what makes you different' summary.",
       },
     ],
   },
