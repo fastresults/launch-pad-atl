@@ -97,7 +97,7 @@ function RegisterPage() {
             <span className="text-gradient-brand">Walk out with a business.</span>
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
-            One 8-hour build day. 17 finished deliverables. A formed business, a built website,
+            One 8-hour build day. 25 finished deliverables. A formed business, a built website,
             a printed marketing kit, and a signed 90-day launch plan — all done in the room.
           </p>
           <div className="mt-6 flex flex-wrap gap-4 text-sm text-muted-foreground">
