@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site/Footer";
 import { EVENT, FLOW_STAGES } from "@/lib/schedule-data";
 import { BUSINESS_IDEAS, BUSINESS_CATEGORIES, type BusinessCategory, type BusinessIdea } from "@/lib/business-ideas";
 import { MapPin, Calendar, Users, ArrowRight, Award, FileCheck2, Target, Globe2, Rocket, X, Check, Clock, Laptop, Store, Wrench, ChefHat, Sun, Home as HomeIcon, Sparkles, DollarSign, UserPlus, Zap, Hammer, Timer, AlertTriangle } from "lucide-react";
+import facilitatorPhoto from "@/assets/facilitator.jpg";
 
 export const FACILITATOR_NAME = "Adam Anderson";
 export const FACILITATOR_TITLE =
@@ -250,8 +251,8 @@ function FacilitatorSection() {
                 Your facilitator
               </div>
               <div className="mt-1 flex items-center gap-3">
-                <div className="flex size-12 items-center justify-center rounded-full bg-white/15 text-lg font-semibold backdrop-blur">
-                  AA
+                <div className="size-12 overflow-hidden rounded-full bg-white/15 backdrop-blur">
+                  <img src={facilitatorPhoto} alt={FACILITATOR_NAME} className="size-full object-cover" />
                 </div>
                 <div>
                   <div className="text-2xl font-semibold leading-tight">
