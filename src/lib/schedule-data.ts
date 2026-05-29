@@ -1,5 +1,5 @@
 import { STAGES } from "./curriculum-data";
-import { FALLBACK_COHORT, type Cohort } from "./cohorts";
+import { FALLBACK_COHORT, toPublicSeats, type Cohort } from "./cohorts";
 
 export type Session = {
   time: string;
@@ -22,7 +22,8 @@ export function buildEvent(cohort: Cohort) {
     venueCity: cohort.venueCity,
     venueRegion: cohort.venueRegion,
     isDefaultVenue: cohort.isDefaultVenue,
-    capacity: 10,
+    // Public-facing seat count = half of real internal capacity (see toPublicSeats).
+    capacity: toPublicSeats(cohort.foundersSeats + cohort.cohortSeats),
     mapsUrl: cohort.mapsUrl,
     mapsEmbedUrl: `https://www.google.com/maps?q=${encodeURIComponent(venueAddress)}&output=embed`,
     startISO: cohort.startISO,

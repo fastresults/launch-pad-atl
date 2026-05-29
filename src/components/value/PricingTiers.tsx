@@ -1,5 +1,5 @@
 import { type TierKey } from "@/lib/value-grid";
-import { type Cohort, formatPriceCents } from "@/lib/cohorts";
+import { type Cohort, formatPriceCents, toPublicSeats, toPublicTaken } from "@/lib/cohorts";
 import type { CohortAvailability } from "@/lib/cohort-availability.functions";
 import { Check, ArrowRight, Lock } from "lucide-react";
 
@@ -28,6 +28,20 @@ export function PricingTiers({
   const foundersSoldOut = availability?.founders.soldOut ?? false;
   const cohortSoldOut = availability?.cohort.soldOut ?? false;
 
+  // Public-facing seat counts are half of the real internal capacity.
+  // soldOut still uses real numbers (from availability) so we never oversell.
+  const publicFoundersCapacity = toPublicSeats(cohort.foundersSeats);
+  const publicCohortCapacity = toPublicSeats(cohort.cohortSeats);
+
+  const publicFoundersTaken =
+    availability != null
+      ? toPublicTaken(availability.founders.displayedTaken, cohort.foundersSeats, publicFoundersCapacity)
+      : undefined;
+  const publicCohortTaken =
+    availability != null
+      ? toPublicTaken(availability.cohort.displayedTaken, cohort.cohortSeats, publicCohortCapacity)
+      : undefined;
+
   return (
     <div className="grid gap-5 md:grid-cols-2">
       <TierCard
@@ -35,11 +49,11 @@ export function PricingTiers({
         selected={selected === "founders"}
         onSelect={() => onSelect("founders")}
         scrollTargetId={scrollTargetId}
-        badge={`Best value · first ${cohort.foundersSeats} seats`}
+        badge={`Best value · first ${publicFoundersCapacity} seats`}
         gradient
         priceCents={cohort.foundersPriceCents}
-        capacity={cohort.foundersSeats}
-        displayedTaken={availability?.founders.displayedTaken}
+        capacity={publicFoundersCapacity}
+        displayedTaken={publicFoundersTaken}
         soldOut={foundersSoldOut}
         disabled={foundersSoldOut}
         sellingFast={availability?.founders.showSellingFast ?? false}
@@ -49,10 +63,10 @@ export function PricingTiers({
         selected={selected === "cohort"}
         onSelect={() => onSelect("cohort")}
         scrollTargetId={scrollTargetId}
-        badge={`Standard cohort seat · next ${cohort.cohortSeats}`}
+        badge={`Standard cohort seat · next ${publicCohortCapacity}`}
         priceCents={cohort.cohortPriceCents}
-        capacity={cohort.cohortSeats}
-        displayedTaken={availability?.cohort.displayedTaken}
+        capacity={publicCohortCapacity}
+        displayedTaken={publicCohortTaken}
         soldOut={cohortSoldOut}
         disabled={cohortSoldOut}
         sellingFast={availability?.cohort.showSellingFast ?? false}
