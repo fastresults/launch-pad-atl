@@ -273,8 +273,10 @@ function CohortsAdminPage() {
                       </span>
                     )}
                   </td>
-
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {c.startISO.slice(11, 16)} – {c.endISO.slice(11, 16)} ({c.startISO.endsWith("-04:00") ? "EDT" : "EST"})
                   </td>
+
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-0.5 text-xs ${
                       c.status === "sold_out" ? "bg-white/5 text-muted-foreground" :
