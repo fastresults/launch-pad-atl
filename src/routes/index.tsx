@@ -39,7 +39,7 @@ function HomePage() {
       <WalkInWalkOut />
       <TheArtOfThePossible />
       
-      <AIToolkit />
+      
       
       <ValueByTheNumbers />
       <FacilitatorSection />
@@ -424,29 +424,6 @@ function WalkInWalkOut() {
     "No clear first customer",
     "No structure, no kit, no plan you can actually follow Monday morning",
   ];
-  const walkOut = [
-    "A 1-page idea brief: market size, trend, permits, competitor scan, and real customer quotes you've pulled",
-    "Your first customer profiled, their problem priced, and a prospect list you start building in-session",
-    "An outreach message written for you, 3 competitors mapped, and what makes you different",
-    "Your offer in one sentence, scope mapped step-by-step, and a price built from real costs",
-    "A signed go / pivot / kill score across 6 areas, with the proof behind each",
-    "Your Georgia LLC paperwork, pre-filled and ready to file",
-    "Your EIN issued before lunch",
-    "Terms, Privacy, and a customer agreement customized to your business",
-    "Business-bank shortlist plus local license and sales-tax steps",
-    "Funding path picked, a 12-month money plan, a raise 1-pager, and a funder outreach plan ready to send",
-    "Your sale-to-customer map with the free apps set up in your name",
-    "Your first customer's deliverable drafted, with a 5-point quality checklist",
-    "Three SOPs — intake, fulfillment, onboarding — loaded into your project hub",
-    "Your logo, 4-color palette, and font pair, built from your business name",
-    "A 4-page website (Home, Offer, About, Contact) in your voice, ready to publish",
-    "Payments, business email, and GA4 set up and queued for one click",
-    "Headline, 3 reasons to buy, 30-second pitch, and 100-word founder bio",
-    "Print-ready business card and 1-page flyer in your brand",
-    "6 social posts, a 60-second video script, and a 30-day plan with 3 weekly KPIs",
-    "Your signed 30/60/90 plan, announcement list, and personal outreach drafts ready to send",
-    "Launch-day timeline, starter CRM, 3 weekly KPIs, and an accountability partner on the calendar",
-  ];
   return (
     <section className="py-20">
       <div className="mx-auto max-w-6xl px-6">
@@ -483,16 +460,44 @@ function WalkInWalkOut() {
               <div className="text-2xl font-semibold tracking-tight">
                 <span className="text-gradient-brand">What you walk out with</span>
               </div>
-              <ul className="mt-6 space-y-3">
-                {walkOut.map((i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <span className="mt-1 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-hero-gradient">
-                      <Check className="size-3 text-white" />
-                    </span>
-                    <span className="text-foreground">{i}</span>
-                  </li>
+              <div className="mt-6 space-y-7">
+                {WALKOUT_PHASES.map((p, idx) => (
+                  <div
+                    key={p.n}
+                    className={
+                      idx === 0
+                        ? ""
+                        : "border-t border-white/10 pt-7"
+                    }
+                  >
+                    <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                      Phase {p.n}
+                    </div>
+                    <h3 className="mt-1 text-base font-semibold tracking-tight">
+                      {p.title}
+                    </h3>
+                    <p className="mt-1 text-sm leading-snug text-muted-foreground">
+                      {p.intro}
+                    </p>
+                    <ul className="mt-4 space-y-3">
+                      {p.items.map((g) => (
+                        <li key={g.name} className="flex items-start gap-3">
+                          <span className="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-hero-gradient" />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium text-foreground">
+                              {g.name}
+                            </div>
+                            <div className="text-[12px] leading-snug text-muted-foreground">
+                              {g.desc}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ))}
-              </ul>
+              </div>
+
             </div>
           </div>
         </div>
@@ -906,52 +911,5 @@ const WALKOUT_PHASES: WalkoutPhase[] = [
   },
 ];
 
-function AIToolkit() {
-  return (
-    <section className="border-y border-white/5 py-20">
-      <div className="mx-auto max-w-6xl px-6">
-        <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-          What you walk out with
-        </p>
-        <h2 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
-          A full business in your hands by Saturday night.
-        </h2>
-        <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
-          Every artifact below is finished in the room and tailored to your business.
-          A few — domain DNS, bank approval, printer turnaround — need you to push
-          the button after you leave. We mark exactly which.
-        </p>
-
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {WALKOUT_PHASES.map((p) => (
-            <div
-              key={p.n}
-              className="rounded-2xl border border-white/10 bg-card p-6 md:p-7"
-            >
-              <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                Phase {p.n}
-              </div>
-              <h3 className="mt-2 text-xl font-semibold tracking-tight">{p.title}</h3>
-              <p className="mt-2 text-sm leading-snug text-muted-foreground">{p.intro}</p>
-              <ul className="mt-5 space-y-3">
-                {p.items.map((g) => (
-                  <li key={g.name} className="flex items-start gap-2">
-                    <span className="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-hero-gradient" />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-foreground">{g.name}</div>
-                      <div className="text-[12px] leading-snug text-muted-foreground">
-                        {g.desc}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 
