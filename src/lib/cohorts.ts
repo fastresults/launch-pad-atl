@@ -44,6 +44,13 @@ export type Cohort = {
   cohortPriceCents: number;
   cohortSeats: number;
   totalSeats: number;
+  // Scarcity display config
+  foundersDisplayFloor: number;
+  foundersWarmingBoost: number;
+  foundersHonestThresholdPct: number;
+  cohortDisplayFloor: number;
+  cohortWarmingBoost: number;
+  cohortHonestThresholdPct: number;
   // Venue
   venueName: string;
   venueAddress: string;
