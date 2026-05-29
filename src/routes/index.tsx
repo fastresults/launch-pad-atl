@@ -63,7 +63,7 @@ function NotACourseBanner() {
               <Zap className="size-5 text-white" />
             </span>
             <div>
-              <p className="text-[11px] md:text-xs uppercase tracking-[0.18em] font-semibold text-white/70">
+              <p className="text-[11px] md:text-xs uppercase tracking-[0.18em] font-semibold text-gradient-brand">
                 Most workshops teach. This one builds.
               </p>
               <h2 className="mt-2 text-xl font-semibold text-white/70 leading-tight md:text-xl">
