@@ -25,6 +25,7 @@ import { getWorkshopMode } from "@/lib/workshop-mode";
 import { RoomClock } from "@/components/dashboard/RoomClock";
 import { AIWorklogPill } from "@/components/dashboard/AIWorklogPill";
 import { HelpFab } from "@/components/dashboard/HelpFab";
+import logoUrl from "@/assets/startuplabs-logo.svg";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardLayout,
@@ -94,7 +95,7 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
   const items: NavItem[] = [
     { to: "/dashboard", label: "Today", icon: Home },
     { to: "/dashboard/day", label: "Workshop day", icon: Calendar, hide: mode === "after" },
-    { to: "/dashboard/brief", label: "My business", icon: ClipboardList },
+    { to: "/dashboard/brief", label: "My startup", icon: ClipboardList },
     { to: "/dashboard/workflow", label: "Plan (25 steps)", icon: ListChecks, dimmed: mode === "during" },
     { to: "/dashboard/files", label: "My files", icon: FolderOpen },
     { to: "/dashboard/profile", label: "Account", icon: User },
@@ -104,8 +105,7 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-3 py-3">
         <Link to="/dashboard" className="flex items-center gap-2 font-semibold tracking-tight">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs">SL</span>
-          {!collapsed && <span>Startup Labs</span>}
+          <img src={logoUrl} alt="StartupLabs" className={collapsed ? "h-6 w-auto" : "h-7 w-auto"} />
         </Link>
       </SidebarHeader>
       <SidebarContent>

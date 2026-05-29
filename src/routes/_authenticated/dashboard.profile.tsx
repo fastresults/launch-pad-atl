@@ -75,14 +75,14 @@ function ProfilePage() {
         <Button onClick={() => save.mutate({ section: "founder", data: founder })} disabled={save.isPending}>Save founder</Button>
       </Section>
 
-      <Section title="Business">
-        <Field label="Business name"><Input value={business.business_name} onChange={(e) => setBusiness({ ...business, business_name: e.target.value })} /></Field>
+      <Section title="Startup">
+        <Field label="Startup name"><Input value={business.business_name} onChange={(e) => setBusiness({ ...business, business_name: e.target.value })} /></Field>
         <Field label="Industry"><Input value={business.industry} onChange={(e) => setBusiness({ ...business, industry: e.target.value })} /></Field>
         <Field label="Stage"><Input value={business.stage} onChange={(e) => setBusiness({ ...business, stage: e.target.value })} placeholder="idea / mvp / launched" /></Field>
         <Field label="Problem solved"><Textarea rows={3} value={business.problem_solved} onChange={(e) => setBusiness({ ...business, problem_solved: e.target.value })} /></Field>
         <Field label="Value proposition"><Textarea rows={3} value={business.value_prop} onChange={(e) => setBusiness({ ...business, value_prop: e.target.value })} /></Field>
         <Field label="Target market"><Textarea rows={3} value={business.target_market} onChange={(e) => setBusiness({ ...business, target_market: e.target.value })} /></Field>
-        <Button onClick={() => save.mutate({ section: "business", data: business })} disabled={save.isPending}>Save business</Button>
+        <Button onClick={() => save.mutate({ section: "business", data: business })} disabled={save.isPending}>Save startup</Button>
       </Section>
 
       <Section title="Financial">
