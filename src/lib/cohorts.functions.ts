@@ -38,13 +38,13 @@ const UpsertSchema = z.object({
   sort_order: z.number().int().optional(),
 });
 
-async function ensureSuperAdmin(supabase: ReturnType<typeof supabaseAdmin.from> extends never ? never : Awaited<ReturnType<typeof import("@/integrations/supabase/auth-middleware").requireSupabaseAuth>>["context"]["supabase"], userId: string) {
-  const { data, error } = await supabase
+async function ensureSuperAdmin(userId: string) {
+  const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
   if (error) throw new Error("Could not verify permissions.");
-  const isSuper = (data ?? []).some((r) => r.role === "super_admin");
+  const isSuper = (data ?? []).some((r: { role: string }) => r.role === "super_admin");
   if (!isSuper) throw new Error("Forbidden: super admin only.");
 }
 
