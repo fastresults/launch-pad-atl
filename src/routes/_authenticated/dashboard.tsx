@@ -1,6 +1,8 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardLayout,
@@ -24,6 +26,7 @@ function DashboardLayout() {
 
 
   return (
+    <ThemeProvider>
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-8 md:px-6 md:py-4">
@@ -37,6 +40,7 @@ function DashboardLayout() {
                   Admin
                 </Link>
               )}
+              <ThemeToggle />
               <Button variant="outline" size="sm" onClick={signOut}>
                 Sign out
               </Button>
@@ -60,6 +64,7 @@ function DashboardLayout() {
               </Link>
             )}
             <span className="hidden text-muted-foreground sm:inline">{user?.email}</span>
+            <ThemeToggle />
             <Button variant="outline" size="sm" onClick={signOut}>
               Sign out
             </Button>
@@ -70,5 +75,6 @@ function DashboardLayout() {
         <Outlet />
       </main>
     </div>
+    </ThemeProvider>
   );
 }

@@ -1,6 +1,8 @@
 import { createFileRoute, Outlet, Navigate, Link, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export const Route = createFileRoute("/_authenticated/_admin")({
   component: AdminLayout,
@@ -33,6 +35,7 @@ function AdminLayout() {
   }
 
   return (
+    <ThemeProvider>
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -57,6 +60,7 @@ function AdminLayout() {
           </div>
           <div className="flex items-center gap-3 text-sm">
             <span className="hidden text-muted-foreground sm:inline">{user?.email}</span>
+            <ThemeToggle />
             <Button variant="outline" size="sm" onClick={signOut}>
               Sign out
             </Button>
@@ -67,5 +71,6 @@ function AdminLayout() {
         <Outlet />
       </main>
     </div>
+    </ThemeProvider>
   );
 }
