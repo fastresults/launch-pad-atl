@@ -107,7 +107,7 @@ function RegisterPage() {
       <section className="border-b border-white/5 py-16 md:py-20">
         <div className="mx-auto max-w-5xl px-6">
           <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-            {EVENT.dateLabel} · IGNITE Center at Greater Atlanta Christian School, Norcross GA
+            Monthly cohorts · IGNITE Center at Greater Atlanta Christian School, Norcross GA
           </p>
           <h1 className="text-5xl font-semibold tracking-tight md:text-6xl">
             Walk in with an idea.{" "}
@@ -119,7 +119,7 @@ function RegisterPage() {
           </p>
           <div className="mt-6 flex flex-wrap gap-4 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-2">
-              <Users className="size-4" /> 20 seats total
+              <Users className="size-4" /> 20 seats per cohort
             </span>
             <span className="inline-flex items-center gap-2">
               <CalendarDays className="size-4" /> {EVENT.timeLabel}
@@ -127,6 +127,11 @@ function RegisterPage() {
             <span className="inline-flex items-center gap-2">
               <ShieldCheck className="size-4" /> Founder-led, build-as-you-go
             </span>
+          </div>
+
+          {/* Cohort picker — compact, sits in the hero */}
+          <div className="mt-8">
+            <CohortPicker selectedId={cohortId} onSelect={selectCohort} />
           </div>
         </div>
       </section>
