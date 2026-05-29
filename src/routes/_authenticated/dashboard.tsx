@@ -25,6 +25,7 @@ import { getWorkshopMode } from "@/lib/workshop-mode";
 import { RoomClock } from "@/components/dashboard/RoomClock";
 import { AIWorklogPill } from "@/components/dashboard/AIWorklogPill";
 import { HelpFab } from "@/components/dashboard/HelpFab";
+import logoUrl from "@/assets/startuplabs-logo.svg";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardLayout,
