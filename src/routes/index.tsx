@@ -629,7 +629,17 @@ function VenueCard() {
   );
 }
 
+const NUMBER_WORDS = [
+  "Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+  "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen",
+  "Sixteen", "Seventeen", "Eighteen", "Nineteen", "Twenty",
+];
+function seatsWord(n: number): string {
+  return NUMBER_WORDS[n] ?? String(n);
+}
+
 function BottomCTA() {
+  const EVENT = useEvent();
   return (
     <section className="pb-16 md:pb-24">
       <div className="mx-auto max-w-6xl px-6">
@@ -644,7 +654,7 @@ function BottomCTA() {
           />
           <div className="relative max-w-3xl text-white">
             <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-              {capitalize(numberToWord(EVENT.capacity))} seats. One date. One door from idea to business.
+              {seatsWord(EVENT.capacity)} seats. One date. One door from idea to business.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
               If you've been waiting for the right week to start earning, this is the day
