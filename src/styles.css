@@ -69,10 +69,9 @@
 
   --gradient-hero: linear-gradient(
     115deg,
-    oklch(0.72 0.21 45) 0%,
-    oklch(0.65 0.25 25) 22%,
-    oklch(0.62 0.27 350) 55%,
-    oklch(0.55 0.27 295) 100%
+    #d8941e 0%,
+    #7f95a8 55%,
+    #6c92d4 100%
   );
   --gradient-text: linear-gradient(
     90deg,
