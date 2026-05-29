@@ -81,6 +81,13 @@ function RegisterPage() {
     setValue("tier_interest", t, { shouldValidate: true });
   };
 
+  const selectCohort = (id: string) => {
+    setCohortId(id);
+    setValue("cohort_id", id, { shouldValidate: true });
+  };
+
+  const selectedCohort = getCohortById(cohortId) ?? defaultCohort;
+
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
     try {
