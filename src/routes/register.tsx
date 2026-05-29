@@ -144,7 +144,7 @@ function RegisterPage() {
             </p>
             <h2 className="text-4xl font-semibold tracking-tight md:text-5xl">
               From <span className="text-gradient-brand">${PRICING.founders.price}</span>.
-              All 17 deliverables included.
+              All 25 deliverables included.
             </h2>
           </div>
           <PricingTiers selected={tier} onSelect={selectTier} scrollTargetId="register-form" />
