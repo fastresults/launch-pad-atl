@@ -893,8 +893,8 @@ const WALKOUT_PHASES: WalkoutPhase[] = [
       { name: "Delivery map", desc: "Your business mapped sale-to-happy-customer, with the app you'll use at each step." },
       { name: "Free-app stack set up", desc: "Project hub, files, scheduling, comms — accounts created in your name." },
       { name: "First customer's deliverable", desc: "Drafted and rehearsed end-to-end with a 5-point quality checklist." },
-      { name: "Operations & workflow plan", desc: "Three SOPs — intake, fulfillment, customer onboarding — loaded into your project hub, plus a one-page weekly operating rhythm." },
-      { name: "Funding model & 12-month money plan", desc: "Real costs, margins, break-even, runway, and a 12-month cash plan you can defend to a lender or investor." },
+      { name: "Operations & workflow", desc: "Three SOPs — intake, fulfillment, customer onboarding — loaded into your project hub, plus a one-page weekly operating rhythm." },
+      { name: "Funding model & 12-month runway", desc: "Real costs, margins, break-even, and a 12-month cash picture you can defend to a lender or investor." },
     ],
   },
   {
