@@ -17,6 +17,10 @@ export type CohortRow = {
   venue_region: string;
   venue_postal: string;
   sort_order: number;
+  founders_price_cents: number;
+  founders_seats: number;
+  cohort_price_cents: number;
+  cohort_seats: number;
 };
 
 export type Cohort = {
@@ -28,6 +32,12 @@ export type Cohort = {
   monthLabel: string;
   status: CohortStatus;
   seatsLeft?: number;
+  // Pricing & capacity (per cohort)
+  foundersPriceCents: number;
+  foundersSeats: number;
+  cohortPriceCents: number;
+  cohortSeats: number;
+  totalSeats: number;
   // Venue
   venueName: string;
   venueAddress: string;
@@ -50,6 +60,13 @@ export const DEFAULT_VENUE = {
   city: "Norcross",
   region: "GA",
   postal: "30093",
+} as const;
+
+export const DEFAULT_PRICING = {
+  foundersPriceCents: 67900,
+  foundersSeats: 7,
+  cohortPriceCents: 99700,
+  cohortSeats: 13,
 } as const;
 
 const EVENT_TITLE = "Ignite Business Launch Workshop";
@@ -130,6 +147,11 @@ export function buildCohortFromRow(row: CohortRow): Cohort {
     monthLabel: `${longMonth} ${y}`,
     status: row.status,
     seatsLeft: row.seats_left ?? undefined,
+    foundersPriceCents: row.founders_price_cents,
+    foundersSeats: row.founders_seats,
+    cohortPriceCents: row.cohort_price_cents,
+    cohortSeats: row.cohort_seats,
+    totalSeats: row.founders_seats + row.cohort_seats,
     venueName: row.venue_name,
     venueAddress: row.venue_address,
     venueCity: row.venue_city,
@@ -162,6 +184,13 @@ export function getFirstSoldOut(cohorts: Cohort[]): Cohort | undefined {
   return cohorts.find((c) => c.status === "sold_out");
 }
 
+export function formatPriceCents(cents: number): string {
+  const dollars = cents / 100;
+  return dollars % 1 === 0
+    ? `$${dollars.toLocaleString("en-US")}`
+    : `$${dollars.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 // Fallback used during SSR before data is hydrated. Lets existing static
 // imports of `EVENT` continue to work without crashing.
 export const FALLBACK_COHORT: Cohort = buildCohortFromRow({
@@ -178,4 +207,8 @@ export const FALLBACK_COHORT: Cohort = buildCohortFromRow({
   venue_region: DEFAULT_VENUE.region,
   venue_postal: DEFAULT_VENUE.postal,
   sort_order: 0,
+  founders_price_cents: DEFAULT_PRICING.foundersPriceCents,
+  founders_seats: DEFAULT_PRICING.foundersSeats,
+  cohort_price_cents: DEFAULT_PRICING.cohortPriceCents,
+  cohort_seats: DEFAULT_PRICING.cohortSeats,
 });

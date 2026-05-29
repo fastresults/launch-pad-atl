@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { buildCohortFromRow, type Cohort, type CohortRow } from "./cohorts";
 
 const COHORT_COLUMNS =
-  "id, cohort_date, tz, start_time, end_time, status, seats_left, venue_name, venue_address, venue_city, venue_region, venue_postal, sort_order";
+  "id, cohort_date, tz, start_time, end_time, status, seats_left, venue_name, venue_address, venue_city, venue_region, venue_postal, sort_order, founders_price_cents, founders_seats, cohort_price_cents, cohort_seats";
 
 export const listCohorts = createServerFn({ method: "GET" }).handler(
   async (): Promise<Cohort[]> => {
@@ -36,6 +36,10 @@ const UpsertSchema = z.object({
   venue_region: z.string().trim().min(1).max(60),
   venue_postal: z.string().trim().min(1).max(20),
   sort_order: z.number().int().optional(),
+  founders_price_cents: z.number().int().min(0).max(10_000_00),
+  founders_seats: z.number().int().min(0).max(500),
+  cohort_price_cents: z.number().int().min(0).max(10_000_00),
+  cohort_seats: z.number().int().min(0).max(500),
 });
 
 async function ensureSuperAdmin(userId: string) {
@@ -72,6 +76,10 @@ export const upsertCohort = createServerFn({ method: "POST" })
       venue_region: data.venue_region,
       venue_postal: data.venue_postal,
       sort_order,
+      founders_price_cents: data.founders_price_cents,
+      founders_seats: data.founders_seats,
+      cohort_price_cents: data.cohort_price_cents,
+      cohort_seats: data.cohort_seats,
     };
 
     const { error } = await supabaseAdmin
@@ -82,6 +90,8 @@ export const upsertCohort = createServerFn({ method: "POST" })
       console.error("[cohorts] upsert failed", error);
       throw new Error(error.message);
     }
+    // Sync the seats_left/status cache to reflect any capacity change
+    await supabaseAdmin.rpc("sync_cohort_seat_cache" as never, { _cohort_id: id } as never);
     return { ok: true as const, id };
   });
 
