@@ -265,9 +265,15 @@ function CohortsAdminPage() {
             ) : (
               cohorts.map((c) => (
                 <tr key={c.id} className="border-t border-white/5">
-                  <td className="px-4 py-3 font-medium">{c.dateLabel}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {c.startISO.slice(11, 16)} – {c.endISO.slice(11, 16)} ({c.startISO.endsWith("-04:00") ? "EDT" : "EST"})
+                  <td className="px-4 py-3 font-medium">
+                    {c.dateLabel}
+                    {c.id === activeCohortId && (
+                      <span className="ml-2 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-300">
+                        Scarcity live
+                      </span>
+                    )}
+                  </td>
+
                   </td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-0.5 text-xs ${
