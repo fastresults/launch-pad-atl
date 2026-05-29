@@ -259,6 +259,16 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
     }
   }
 
+  async function copyAssetUrl(assetId: string) {
+    try {
+      const { url } = await getUrlFn({ data: { assetId } });
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied (valid 1 hour)");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
   // ===== Drag & drop =====
   function handleDragStart(e: React.DragEvent, assetId: string) {
     // If dragging an asset that's part of the multi-selection, drag the whole selection.
