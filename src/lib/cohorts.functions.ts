@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { buildCohortFromRow, type Cohort, type CohortRow } from "./cohorts";
 
 const COHORT_COLUMNS =
-  "id, cohort_date, tz, start_time, end_time, status, seats_left, venue_name, venue_address, venue_city, venue_region, venue_postal, sort_order, founders_price_cents, founders_seats, cohort_price_cents, cohort_seats";
+  "id, cohort_date, tz, start_time, end_time, status, seats_left, venue_name, venue_address, venue_city, venue_region, venue_postal, sort_order, founders_price_cents, founders_seats, cohort_price_cents, cohort_seats, founders_display_floor, founders_warming_boost, founders_honest_threshold_pct, cohort_display_floor, cohort_warming_boost, cohort_honest_threshold_pct";
 
 export const listCohorts = createServerFn({ method: "GET" }).handler(
   async (): Promise<Cohort[]> => {
@@ -40,6 +40,12 @@ const UpsertSchema = z.object({
   founders_seats: z.number().int().min(0).max(500),
   cohort_price_cents: z.number().int().min(0).max(10_000_00),
   cohort_seats: z.number().int().min(0).max(500),
+  founders_display_floor: z.number().int().min(0).max(500),
+  founders_warming_boost: z.number().int().min(0).max(500),
+  founders_honest_threshold_pct: z.number().int().min(1).max(100),
+  cohort_display_floor: z.number().int().min(0).max(500),
+  cohort_warming_boost: z.number().int().min(0).max(500),
+  cohort_honest_threshold_pct: z.number().int().min(1).max(100),
 });
 
 async function ensureSuperAdmin(userId: string) {
@@ -80,6 +86,12 @@ export const upsertCohort = createServerFn({ method: "POST" })
       founders_seats: data.founders_seats,
       cohort_price_cents: data.cohort_price_cents,
       cohort_seats: data.cohort_seats,
+      founders_display_floor: Math.min(data.founders_display_floor, Math.max(data.founders_seats - 1, 0)),
+      founders_warming_boost: data.founders_warming_boost,
+      founders_honest_threshold_pct: data.founders_honest_threshold_pct,
+      cohort_display_floor: Math.min(data.cohort_display_floor, Math.max(data.cohort_seats - 1, 0)),
+      cohort_warming_boost: data.cohort_warming_boost,
+      cohort_honest_threshold_pct: data.cohort_honest_threshold_pct,
     };
 
     const { error } = await supabaseAdmin

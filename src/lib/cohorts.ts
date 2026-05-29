@@ -21,6 +21,12 @@ export type CohortRow = {
   founders_seats: number;
   cohort_price_cents: number;
   cohort_seats: number;
+  founders_display_floor: number;
+  founders_warming_boost: number;
+  founders_honest_threshold_pct: number;
+  cohort_display_floor: number;
+  cohort_warming_boost: number;
+  cohort_honest_threshold_pct: number;
 };
 
 export type Cohort = {
@@ -38,6 +44,13 @@ export type Cohort = {
   cohortPriceCents: number;
   cohortSeats: number;
   totalSeats: number;
+  // Scarcity display config
+  foundersDisplayFloor: number;
+  foundersWarmingBoost: number;
+  foundersHonestThresholdPct: number;
+  cohortDisplayFloor: number;
+  cohortWarmingBoost: number;
+  cohortHonestThresholdPct: number;
   // Venue
   venueName: string;
   venueAddress: string;
@@ -152,6 +165,12 @@ export function buildCohortFromRow(row: CohortRow): Cohort {
     cohortPriceCents: row.cohort_price_cents,
     cohortSeats: row.cohort_seats,
     totalSeats: row.founders_seats + row.cohort_seats,
+    foundersDisplayFloor: row.founders_display_floor,
+    foundersWarmingBoost: row.founders_warming_boost,
+    foundersHonestThresholdPct: row.founders_honest_threshold_pct,
+    cohortDisplayFloor: row.cohort_display_floor,
+    cohortWarmingBoost: row.cohort_warming_boost,
+    cohortHonestThresholdPct: row.cohort_honest_threshold_pct,
     venueName: row.venue_name,
     venueAddress: row.venue_address,
     venueCity: row.venue_city,
@@ -211,4 +230,31 @@ export const FALLBACK_COHORT: Cohort = buildCohortFromRow({
   founders_seats: DEFAULT_PRICING.foundersSeats,
   cohort_price_cents: DEFAULT_PRICING.cohortPriceCents,
   cohort_seats: DEFAULT_PRICING.cohortSeats,
+  founders_display_floor: 2,
+  founders_warming_boost: 2,
+  founders_honest_threshold_pct: 50,
+  cohort_display_floor: 8,
+  cohort_warming_boost: 2,
+  cohort_honest_threshold_pct: 50,
 });
+
+// Compute the scarcity-displayed taken count for a tier. Real `taken` stays
+// the source of truth for reservations and roll-over; this only powers the
+// "X of N seats left" badge on the public registration UI.
+export type ScarcityMode = "cold" | "warming" | "honest";
+
+export function computeDisplayedTaken(
+  realTaken: number,
+  capacity: number,
+  floor: number,
+  boost: number,
+  thresholdPct: number,
+): { displayedTaken: number; mode: ScarcityMode } {
+  if (capacity <= 0) return { displayedTaken: 0, mode: "honest" };
+  const honestAt = Math.max(1, Math.ceil((capacity * thresholdPct) / 100));
+  if (realTaken >= honestAt) return { displayedTaken: realTaken, mode: "honest" };
+  const inflated = Math.max(realTaken + boost, floor);
+  const capped = Math.min(inflated, Math.max(capacity - 1, 0));
+  const mode: ScarcityMode = realTaken === 0 ? "cold" : "warming";
+  return { displayedTaken: Math.max(capped, realTaken), mode };
+}

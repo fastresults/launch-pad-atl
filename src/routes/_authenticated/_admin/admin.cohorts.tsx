@@ -47,6 +47,12 @@ type FormState = {
   founders_seats: string;
   cohort_price: string;
   cohort_seats: string;
+  founders_display_floor: string;
+  founders_warming_boost: string;
+  founders_honest_threshold_pct: string;
+  cohort_display_floor: string;
+  cohort_warming_boost: string;
+  cohort_honest_threshold_pct: string;
 };
 
 const emptyForm = (): FormState => ({
@@ -65,6 +71,12 @@ const emptyForm = (): FormState => ({
   founders_seats: String(DEFAULT_PRICING.foundersSeats),
   cohort_price: String(DEFAULT_PRICING.cohortPriceCents / 100),
   cohort_seats: String(DEFAULT_PRICING.cohortSeats),
+  founders_display_floor: "2",
+  founders_warming_boost: "2",
+  founders_honest_threshold_pct: "50",
+  cohort_display_floor: "8",
+  cohort_warming_boost: "2",
+  cohort_honest_threshold_pct: "50",
 });
 
 const fromCohort = (c: Cohort): FormState => ({
@@ -84,7 +96,19 @@ const fromCohort = (c: Cohort): FormState => ({
   founders_seats: String(c.foundersSeats),
   cohort_price: String(c.cohortPriceCents / 100),
   cohort_seats: String(c.cohortSeats),
+  founders_display_floor: String(c.foundersDisplayFloor),
+  founders_warming_boost: String(c.foundersWarmingBoost),
+  founders_honest_threshold_pct: String(c.foundersHonestThresholdPct),
+  cohort_display_floor: String(c.cohortDisplayFloor),
+  cohort_warming_boost: String(c.cohortWarmingBoost),
+  cohort_honest_threshold_pct: String(c.cohortHonestThresholdPct),
 });
+
+function clampInt(s: string, lo: number, hi: number): number {
+  const n = Math.floor(Number(s) || 0);
+  if (!Number.isFinite(n)) return lo;
+  return Math.max(lo, Math.min(hi, n));
+}
 
 function CohortsAdminPage() {
   const { isSuperAdmin, loading } = useAuth();
@@ -134,6 +158,12 @@ function CohortsAdminPage() {
           founders_seats: foundersSeats,
           cohort_price_cents: cohortPriceCents,
           cohort_seats: cohortSeats,
+          founders_display_floor: clampInt(vars.founders_display_floor, 0, Math.max(foundersSeats - 1, 0)),
+          founders_warming_boost: clampInt(vars.founders_warming_boost, 0, 500),
+          founders_honest_threshold_pct: clampInt(vars.founders_honest_threshold_pct, 1, 100),
+          cohort_display_floor: clampInt(vars.cohort_display_floor, 0, Math.max(cohortSeats - 1, 0)),
+          cohort_warming_boost: clampInt(vars.cohort_warming_boost, 0, 500),
+          cohort_honest_threshold_pct: clampInt(vars.cohort_honest_threshold_pct, 1, 100),
         },
       });
     },
@@ -393,6 +423,39 @@ function CohortsAdminPage() {
             </div>
 
             <div className="rounded-xl border border-white/10 p-4">
+              <div className="mb-3">
+                <div className="text-sm font-medium">Scarcity display (psychology)</div>
+                <div className="text-xs text-muted-foreground">
+                  Controls what visitors see in the "X of N seats left" badge before real demand catches up.
+                  Real seat counts, reservations, and emails always use the truth.
+                </div>
+              </div>
+              <ScarcityFields
+                tier="Founders"
+                capacity={Number(form.founders_seats) || 0}
+                floor={form.founders_display_floor}
+                boost={form.founders_warming_boost}
+                pct={form.founders_honest_threshold_pct}
+                onFloor={(v) => setForm({ ...form, founders_display_floor: v })}
+                onBoost={(v) => setForm({ ...form, founders_warming_boost: v })}
+                onPct={(v) => setForm({ ...form, founders_honest_threshold_pct: v })}
+              />
+              <div className="my-3 border-t border-white/5" />
+              <ScarcityFields
+                tier="Cohort"
+                capacity={Number(form.cohort_seats) || 0}
+                floor={form.cohort_display_floor}
+                boost={form.cohort_warming_boost}
+                pct={form.cohort_honest_threshold_pct}
+                onFloor={(v) => setForm({ ...form, cohort_display_floor: v })}
+                onBoost={(v) => setForm({ ...form, cohort_warming_boost: v })}
+                onPct={(v) => setForm({ ...form, cohort_honest_threshold_pct: v })}
+              />
+            </div>
+
+
+
+            <div className="rounded-xl border border-white/10 p-4">
               <div className="mb-3 flex items-center justify-between">
                 <div>
                   <div className="text-sm font-medium">Venue</div>
@@ -444,3 +507,45 @@ function CohortsAdminPage() {
     </div>
   );
 }
+
+function ScarcityFields({
+  tier, capacity, floor, boost, pct, onFloor, onBoost, onPct,
+}: {
+  tier: string;
+  capacity: number;
+  floor: string;
+  boost: string;
+  pct: string;
+  onFloor: (v: string) => void;
+  onBoost: (v: string) => void;
+  onPct: (v: string) => void;
+}) {
+  const f = Math.min(Math.max(0, Math.floor(Number(floor) || 0)), Math.max(capacity - 1, 0));
+  const p = Math.max(1, Math.min(100, Math.floor(Number(pct) || 50)));
+  const coldLeft = Math.max(capacity - f, 0);
+  const honestAt = Math.max(1, Math.ceil((capacity * p) / 100));
+  return (
+    <div className="space-y-2">
+      <div className="text-xs font-medium text-foreground">{tier} tier (capacity {capacity})</div>
+      <div className="grid gap-3 md:grid-cols-3">
+        <div>
+          <Label className="text-xs">Cold-start floor</Label>
+          <Input type="number" min={0} max={Math.max(capacity - 1, 0)} value={floor} onChange={(e) => onFloor(e.target.value)} />
+        </div>
+        <div>
+          <Label className="text-xs">Warming boost</Label>
+          <Input type="number" min={0} value={boost} onChange={(e) => onBoost(e.target.value)} />
+        </div>
+        <div>
+          <Label className="text-xs">Honest threshold %</Label>
+          <Input type="number" min={1} max={100} value={pct} onChange={(e) => onPct(e.target.value)} />
+        </div>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Cold start shows <span className="text-foreground">{coldLeft} of {capacity} seats left</span>;
+        switches to real count at <span className="text-foreground">{honestAt} real signup{honestAt === 1 ? "" : "s"}</span>.
+      </p>
+    </div>
+  );
+}
+

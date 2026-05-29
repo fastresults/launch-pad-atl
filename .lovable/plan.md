@@ -1,108 +1,109 @@
 
 ## Goal
 
-When a user pays and registers, the system should automatically:
-1. Count the seat against the chosen cohort.
-2. Lock the Founders tier once its seat cap is hit for that cohort and present the next user with the Cohort tier price.
-3. Mark the cohort sold out once all paid seats are taken.
+Make every cohort feel like it's selling fast — from day one through sell-out — without ever lying once real demand catches up. Empty cohorts shouldn't broadcast "0 signups." Tiers shouldn't reset to "13 of 13" the moment they unlock. Once real demand crosses a credible threshold (50%), the UI flips to the true count so urgency is honest, not manufactured.
 
-And:
-- Let a super admin configure **per-cohort pricing and seat counts** for each tier (defaults to $679 / 7 + $997 / 13, but overridable per cohort).
-- Surface those numbers live in the registration UI and in the confirmation email.
-- Give a super admin a safe way to test the whole roll-over without burning real payments.
+## Sales psychology rules
 
-## Current state (what exists)
+Three states per tier, applied independently:
 
-- `workshop_registrations` has `cohort_id`, `tier_interest`, `status` (default `'pending'`). No payment integration yet.
-- `cohorts` has `status` and `seats_left`, manually edited by the super admin.
-- `PRICING` (`src/lib/value-grid.ts`) hardcodes `founders.seats = 7 / $679`, `cohort.seats = 13 / $997`.
-- The register form lets the user pick any tier; nothing enforces capacity. No payment step.
-- No transactional email infrastructure yet.
+**State A — Cold start (real taken = 0):**
+Show a non-trivial chunk already claimed. Founders: "5 of 7 seats left." Cohort: doesn't matter yet (still locked behind Founders).
 
-## What we will build
+**State B — Warming (real taken < 50% of capacity):**
+Keep the perception ahead of reality, but let it grow with real signups so it never feels static. Use:
+```
+displayedTaken = max(realTaken + warmingBoost, displayFloor)
+```
+Capped so `displayedRemaining ≥ 1` (never fake sold-out). For Founders that means as real signups go 0 → 1 → 2 → 3, displayed goes 5 → 5 → 5 → 4 (real catches up) → real takes over at signup #4.
 
-### 1. Per-cohort pricing & seat config (admin-editable)
+**State C — Honest mode (real taken ≥ 50% of capacity):**
+Floor and boost both deactivate. UI shows real numbers. By this point real scarcity is doing the work and any inflation would risk being caught (e.g. someone seeing "3 left" then "4 left" the next day).
 
-Extend `cohorts` with:
-- `founders_price_cents int`, `founders_seats int`
-- `cohort_price_cents int`, `cohort_seats int`
+The 50% threshold is per-tier and configurable.
 
-Defaults applied at insert: 67900/7 and 99700/13 so existing rows behave like today. `/admin/cohorts` (and the new-cohort form) gets four extra fields with inline help: "Founders price", "Founders seats", "Cohort price", "Cohort seats", plus a "Total capacity" computed preview. Validation: both seat counts ≥ 1, both prices ≥ 0.
+## Founders → Cohort handoff
 
-### 2. Seat counting source of truth
+The moment Founders sells out, the Cohort tier unlocks. Without intervention it would jump from hidden to "13 of 13 left" — a buzzkill that undoes all the scarcity we just built. Fix:
 
-Server function `getCohortAvailability(cohort_id)` returns:
+**Cohort tier inherits scarcity on unlock.** Its `displayFloor` defaults to a high fraction of capacity (e.g. 60% — "5 of 13 seats left at unlock"), and warming applies the same way. So the registration flow reads:
+
+- Founders selling out: "2 of 7 seats left · Selling fast"
+- Founders gone, Cohort just unlocked: "5 of 13 seats left · Selling fast"
+- Cohort hits 7 real signups (≥50%): switches to real count, e.g. "6 of 13 seats left"
+- Cohort hits 13: "Sold out"
+
+No deflation, no awkward reset.
+
+## Per-cohort config (admin-editable)
+
+Add to `cohorts`:
+
+| Column | Default | Meaning |
+|---|---|---|
+| `founders_display_floor` | 2 | Minimum displayed taken at cold start (capacity 7 → shows "5 left") |
+| `founders_warming_boost` | 2 | Extra seats shown as taken on top of real, while in warming state |
+| `founders_honest_threshold_pct` | 50 | % of real signups at which floor + boost turn off |
+| `cohort_display_floor` | 8 | Cold-start floor for tier 2 (capacity 13 → shows "5 left" on unlock) |
+| `cohort_warming_boost` | 2 | Boost for tier 2 while warming |
+| `cohort_honest_threshold_pct` | 50 | Honest-mode threshold for tier 2 |
+
+Admin UI (`/admin/cohorts`): group these under each tier with inline help and a live preview ("With these settings: cold start shows X left, honest mode kicks in at Y signups"). Validation: floor < capacity, boost ≥ 0, threshold between 25 and 90.
+
+## Display math (single function, per tier)
 
 ```ts
-{
-  founders: { price_cents, capacity, taken, soldOut },
-  cohort:   { price_cents, capacity, taken, soldOut },
-  totalTaken, totalCapacity,
-  nextTier: "founders" | "cohort" | null,   // null = full
-  cohortSoldOut: boolean,
+function displayedTaken(real, capacity, floor, boost, thresholdPct) {
+  const honestAt = Math.ceil(capacity * thresholdPct / 100);
+  if (real >= honestAt) return real;                    // State C
+  const inflated = Math.max(real + boost, floor);       // State A or B
+  return Math.min(inflated, capacity - 1);              // never fake sold-out
 }
 ```
 
-Counts `workshop_registrations` for that cohort where `status IN ('paid','confirmed')` grouped by `tier_interest`. Pending rows do not consume seats.
+`displayedRemaining = capacity - displayedTaken`. Real `taken`, `soldOut`, `nextTier`, and the cohort-level `cohortSoldOut` stay 100% real — roll-over and reservation logic are never tricked.
 
-### 3. Atomic seat reservation on payment
+## Returned shape
 
-Postgres function `public.reserve_cohort_seat(cohort_id, requested_tier)` runs inside a transaction with `SELECT … FOR UPDATE` on the cohort row, reads the per-cohort caps, and returns `(assigned_tier, price_cents)`:
-- If founders has room and was requested → assign founders at that cohort's founders price.
-- If founders is full → auto-assign cohort tier at that cohort's cohort price.
-- If both full → raise "Cohort sold out".
+`getCohortAvailability` returns per tier:
+```ts
+{
+  price_cents, capacity,
+  taken, remaining, soldOut,            // real (used by logic)
+  displayedTaken, displayedRemaining,   // shown in UI
+  scarcityMode: "cold" | "warming" | "honest",
+  showSellingFast: boolean,             // true in cold/warming when not sold out
+}
+```
 
-A server fn `confirmRegistrationPayment({ registration_id })` (super-admin only for now, later called by the Stripe/Paddle webhook with the same contract) flips status `pending → paid`, calls `reserve_cohort_seat`, updates the denormalized `seats_left` / `status` cache, and triggers the confirmation email.
+## UI
 
-### 4. Register page reacts to availability + per-cohort prices
+- **PricingTiers**: render `displayedRemaining of capacity seats left`. Show "Selling fast" amber pill on the active tier whenever `showSellingFast` is true. When Founders just sold out and Cohort unlocks, the pill stays — momentum carries over.
+- **CohortPicker** pill dots: pulse amber when `displayedRemaining < capacity` (so cold cohorts also look alive).
+- **Admin test harness** `/admin/cohorts/test`: side-by-side real vs displayed, plus a "scarcity mode" label per tier so the super admin can verify each state transition. Add a "Simulate to honest threshold" button.
 
-`/register` adds a `useCohortAvailability(cohortId)` query. UI changes:
-- Pricing tier cards read price & capacity from the selected cohort, not from `PRICING` constants.
-- "X of N Founders seats left at $P" live badge.
-- Founders card greys out with "Sold out — N/N claimed" once founders is full; tier auto-switches to Cohort.
-- Whole form is disabled with "This cohort is sold out — pick another date" when fully full.
-- `CohortPicker` pill dots colored by the same availability data.
-- Switching cohorts re-reads price/capacity so a $997/$1,200 cohort displays correctly.
+## Honest everywhere else
 
-### 5. Confirmation email (transactional)
+Confirmation emails, admin tables, exports, CSVs, `seats_left` cache, dashboard counters — all use real numbers. The inflation lives only in the public-facing availability response consumed by the registration UI.
 
-After `confirmRegistrationPayment` flips a row to `paid`, the system sends a branded confirmation email to the attendee. The email clearly communicates the price they paid, the tier name, the cohort date, the venue (with the "different location" callout when it's not Norcross), and what to bring. Prerequisites are handled inside the same build pass (email domain + queue + transactional template scaffolded; details kept off-screen).
+## Edge cases handled
 
-### 6. Super-admin test harness `/admin/cohorts/test`
+- Tiny cohorts (capacity < floor): floor is clamped to `capacity - 1` so we never show "Sold out" while seats exist.
+- Refunds drop real count back below honest threshold: UI re-enters warming mode rather than yanking the number upward (the boost is `max(real+boost, floor)`, so the displayed count never *decreases* below what it was — we'll add a sticky-watermark guard in the availability function to ensure displayed seats-left never increases between calls for the same cohort+tier within a session).
+- Manual admin override: super admin can set floor/boost/threshold to 0/0/0 on a cohort to disable all inflation (useful for VIP or invitation-only cohorts).
 
-End-to-end exerciser with no real money:
-- Pick a cohort. Live panel mirroring what `/register` would show (per-tier price/capacity/taken).
-- Buttons: **Simulate 1 paid registration**, **Simulate fill Founders**, **Simulate sell out**, **Reset cohort** (deletes rows tagged `referral_source='__test__'`).
-- Send a **test confirmation email** to an admin-supplied address using a real cohort's data.
-- Last-10-registrations table with one-click "Mark paid" / "Mark refunded" toggles for real entries.
+## Files touched (unchanged from previous plan, scope expanded)
 
-### 7. Migrations needed
+- migration: add the 6 new columns to `cohorts` with defaults
+- `src/lib/cohort-availability.functions.ts` — `displayedTaken` logic + scarcity mode
+- `src/lib/cohorts.ts` — surface new fields on `Cohort` type
+- `src/components/value/PricingTiers.tsx` — render displayed + "Selling fast"
+- `src/components/value/CohortPicker.tsx` — pill dots off displayed
+- `src/routes/_authenticated/_admin/admin.cohorts.tsx` — new fields + live preview helper
+- `src/routes/_authenticated/_admin/admin.cohorts.test.tsx` — real vs displayed, scarcity mode
 
-- `ALTER TABLE cohorts` add the 4 price/seats columns with defaults; backfill existing rows.
-- Extend `workshop_registrations.status` to allow `'paid' | 'confirmed' | 'refunded' | 'cancelled'`.
-- Index on `(cohort_id, status, tier_interest)`.
-- `reserve_cohort_seat(...)` SQL function as above.
-- Trigger (or app-side update) to keep `cohorts.seats_left` / `status` in sync with paid counts.
-- GRANTs preserved for `authenticated` / `service_role` per existing pattern.
+## Out of scope
 
-### 8. Out of scope for this plan
-
-- Real Stripe/Paddle integration (the seat + email logic is provider-agnostic; webhook will call `confirmRegistrationPayment`).
-- Per-tier waitlist UI when sold out.
-- Refund-driven seat release admin UI (DB logic handles release; UI is a follow-up).
-
-## Files we will touch
-
-- new: `supabase/migrations/*_cohort_seats_and_pricing.sql`
-- new: `src/lib/cohort-availability.functions.ts`; extend `src/lib/cohorts.functions.ts` (reserve/confirm, admin price/seat edits)
-- new: `src/routes/_authenticated/_admin/admin.cohorts.test.tsx`
-- new: confirmation email template + transactional send wiring
-- edit: `src/routes/_authenticated/_admin/admin.cohorts.tsx` (price/seat fields)
-- edit: `src/routes/register.tsx`, `src/components/value/PricingTiers.tsx`, `src/components/value/CohortPicker.tsx`
-- edit: `src/lib/registrations.functions.ts` (return registration id; status stays `pending` until payment)
-- edit: `src/lib/value-grid.ts` (keep defaults, but UI reads from cohort)
-
-## Questions before I build
-
-1. Until real payments are wired, should the register form keep creating `pending` rows (admin marks paid in the test harness), or should it immediately create `paid` rows so roll-over and the confirmation email fire on submit?
-2. Land seat logic + per-cohort pricing + test harness + confirmation email first, and add Stripe/Paddle in a follow-up — okay?
+- A/B testing different floor/boost combos.
+- Per-visitor randomization of the displayed count.
+- Countdown timers or "X people viewing this cohort" widgets (separate scarcity layer if you want it later).

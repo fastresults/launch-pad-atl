@@ -1,13 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { computeDisplayedTaken, type ScarcityMode } from "./cohorts";
 
 export type TierAvailability = {
   price_cents: number;
   capacity: number;
+  // Real numbers — drive reservations, roll-over, sold-out logic
   taken: number;
   remaining: number;
   soldOut: boolean;
+  // Displayed numbers — drive the public UI badge
+  displayedTaken: number;
+  displayedRemaining: number;
+  scarcityMode: ScarcityMode;
+  showSellingFast: boolean;
 };
 
 export type CohortAvailability = {
@@ -30,7 +37,9 @@ export const getCohortAvailability = createServerFn({ method: "GET" })
 
     const { data: cohort, error: cErr } = await supabaseAdmin
       .from("cohorts" as never)
-      .select("id, founders_price_cents, founders_seats, cohort_price_cents, cohort_seats")
+      .select(
+        "id, founders_price_cents, founders_seats, cohort_price_cents, cohort_seats, founders_display_floor, founders_warming_boost, founders_honest_threshold_pct, cohort_display_floor, cohort_warming_boost, cohort_honest_threshold_pct",
+      )
       .eq("id", cohort_id)
       .single();
 
@@ -43,6 +52,12 @@ export const getCohortAvailability = createServerFn({ method: "GET" })
       founders_seats: number;
       cohort_price_cents: number;
       cohort_seats: number;
+      founders_display_floor: number;
+      founders_warming_boost: number;
+      founders_honest_threshold_pct: number;
+      cohort_display_floor: number;
+      cohort_warming_boost: number;
+      cohort_honest_threshold_pct: number;
     };
 
     const { data: regs, error: rErr } = await supabaseAdmin
@@ -58,19 +73,45 @@ export const getCohortAvailability = createServerFn({ method: "GET" })
     const foundersTaken = rows.filter((r) => r.assigned_tier === "founders").length;
     const cohortTaken = rows.filter((r) => r.assigned_tier === "cohort").length;
 
+    const foundersDisp = computeDisplayedTaken(
+      foundersTaken,
+      c.founders_seats,
+      c.founders_display_floor,
+      c.founders_warming_boost,
+      c.founders_honest_threshold_pct,
+    );
+    const cohortDisp = computeDisplayedTaken(
+      cohortTaken,
+      c.cohort_seats,
+      c.cohort_display_floor,
+      c.cohort_warming_boost,
+      c.cohort_honest_threshold_pct,
+    );
+
+    const foundersSoldOut = foundersTaken >= c.founders_seats;
+    const cohortSoldOutReal = cohortTaken >= c.cohort_seats;
+
     const founders: TierAvailability = {
       price_cents: c.founders_price_cents,
       capacity: c.founders_seats,
       taken: foundersTaken,
       remaining: Math.max(c.founders_seats - foundersTaken, 0),
-      soldOut: foundersTaken >= c.founders_seats,
+      soldOut: foundersSoldOut,
+      displayedTaken: foundersDisp.displayedTaken,
+      displayedRemaining: Math.max(c.founders_seats - foundersDisp.displayedTaken, 0),
+      scarcityMode: foundersDisp.mode,
+      showSellingFast: !foundersSoldOut && foundersDisp.mode !== "honest",
     };
     const cohortTier: TierAvailability = {
       price_cents: c.cohort_price_cents,
       capacity: c.cohort_seats,
       taken: cohortTaken,
       remaining: Math.max(c.cohort_seats - cohortTaken, 0),
-      soldOut: cohortTaken >= c.cohort_seats,
+      soldOut: cohortSoldOutReal,
+      displayedTaken: cohortDisp.displayedTaken,
+      displayedRemaining: Math.max(c.cohort_seats - cohortDisp.displayedTaken, 0),
+      scarcityMode: cohortDisp.mode,
+      showSellingFast: !cohortSoldOutReal && cohortDisp.mode !== "honest",
     };
     const totalCapacity = founders.capacity + cohortTier.capacity;
     const totalTaken = founders.taken + cohortTier.taken;
