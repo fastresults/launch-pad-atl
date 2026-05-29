@@ -90,20 +90,29 @@ export const getCohortAvailability = createServerFn({ method: "GET" })
     const foundersTaken = rows.filter((r) => r.assigned_tier === "founders").length;
     const cohortTaken = rows.filter((r) => r.assigned_tier === "cohort").length;
 
-    const foundersDisp = isActiveCohort
+    const foundersSoldOutReal = foundersTaken >= c.founders_seats;
+    const cohortSoldOutReal = cohortTaken >= c.cohort_seats;
+
+    // Sequential scarcity: Founders is eligible while it has real seats; Cohort
+    // only becomes eligible once Founders is truly sold out. The active-cohort
+    // gate (computed above) wraps both.
+    const foundersEligible = isActiveCohort && !foundersSoldOutReal;
+    const cohortEligible = isActiveCohort && foundersSoldOutReal;
+
+    const foundersDisp = foundersEligible
       ? computeDisplayedTaken(
           foundersTaken,
           c.founders_seats,
-          c.founders_display_floor,
+          displayFloorFromPct(c.founders_seats, c.founders_display_floor_pct),
           c.founders_warming_boost,
           c.founders_honest_threshold_pct,
         )
       : { displayedTaken: foundersTaken, mode: "honest" as ScarcityMode };
-    const cohortDisp = isActiveCohort
+    const cohortDisp = cohortEligible
       ? computeDisplayedTaken(
           cohortTaken,
           c.cohort_seats,
-          c.cohort_display_floor,
+          displayFloorFromPct(c.cohort_seats, c.cohort_display_floor_pct),
           c.cohort_warming_boost,
           c.cohort_honest_threshold_pct,
         )
