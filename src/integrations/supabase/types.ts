@@ -370,12 +370,18 @@ export type Database = {
       cohorts: {
         Row: {
           cohort_date: string
+          cohort_display_floor: number
+          cohort_honest_threshold_pct: number
           cohort_price_cents: number
           cohort_seats: number
+          cohort_warming_boost: number
           created_at: string
           end_time: string
+          founders_display_floor: number
+          founders_honest_threshold_pct: number
           founders_price_cents: number
           founders_seats: number
+          founders_warming_boost: number
           id: string
           seats_left: number | null
           sort_order: number
@@ -391,12 +397,18 @@ export type Database = {
         }
         Insert: {
           cohort_date: string
+          cohort_display_floor?: number
+          cohort_honest_threshold_pct?: number
           cohort_price_cents?: number
           cohort_seats?: number
+          cohort_warming_boost?: number
           created_at?: string
           end_time?: string
+          founders_display_floor?: number
+          founders_honest_threshold_pct?: number
           founders_price_cents?: number
           founders_seats?: number
+          founders_warming_boost?: number
           id: string
           seats_left?: number | null
           sort_order?: number
@@ -412,12 +424,18 @@ export type Database = {
         }
         Update: {
           cohort_date?: string
+          cohort_display_floor?: number
+          cohort_honest_threshold_pct?: number
           cohort_price_cents?: number
           cohort_seats?: number
+          cohort_warming_boost?: number
           created_at?: string
           end_time?: string
+          founders_display_floor?: number
+          founders_honest_threshold_pct?: number
           founders_price_cents?: number
           founders_seats?: number
+          founders_warming_boost?: number
           id?: string
           seats_left?: number | null
           sort_order?: number
