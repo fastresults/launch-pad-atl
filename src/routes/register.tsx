@@ -180,7 +180,7 @@ function RegisterPage() {
           </p>
           <div className="mt-5 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:gap-4 md:mt-6">
             <span className="inline-flex items-center gap-2">
-              <Users className="size-4" /> {selectedCohort.totalSeats} seats per cohort
+              <Users className="size-4" /> {displayedSeats} seats per cohort
             </span>
             <span className="inline-flex items-center gap-2">
               <CalendarDays className="size-4" /> {EVENT.timeLabel}
