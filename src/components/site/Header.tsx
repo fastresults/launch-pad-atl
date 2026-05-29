@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
+import logoUrl from "@/assets/startuplabs-logo.svg";
 
 const nav = [
   { to: "/", label: "home" },
