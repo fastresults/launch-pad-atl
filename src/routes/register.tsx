@@ -161,20 +161,20 @@ function RegisterPage() {
       <SiteHeader />
 
       {/* Hero */}
-      <section className="border-b border-white/5 py-16 md:py-20">
+      <section className="border-b border-white/5 py-12 md:py-20">
         <div className="mx-auto max-w-5xl px-6">
-          <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+          <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
             Monthly cohorts · IGNITE Center at Greater Atlanta Christian School, Norcross GA
           </p>
-          <h1 className="text-5xl font-semibold tracking-tight md:text-6xl">
+          <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
             Walk in with an idea.{" "}
             <span className="text-gradient-brand">Walk out with a business.</span>
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
+          <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
             One 8-hour build day. 25 finished deliverables. A formed business, a built website,
             a printed marketing kit, and a signed 90-day launch plan — all done in the room.
           </p>
-          <div className="mt-6 flex flex-wrap gap-4 text-sm text-muted-foreground">
+          <div className="mt-5 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:gap-4 md:mt-6">
             <span className="inline-flex items-center gap-2">
               <Users className="size-4" /> {selectedCohort.totalSeats} seats per cohort
             </span>
@@ -187,20 +187,20 @@ function RegisterPage() {
           </div>
 
           {/* Cohort picker — compact, sits in the hero */}
-          <div className="mt-8">
+          <div className="mt-7 md:mt-8">
             <CohortPicker cohorts={cohorts} selectedId={cohortId} onSelect={selectCohort} availability={availability} />
           </div>
         </div>
       </section>
 
       {/* Value Grid */}
-      <section className="py-16">
+      <section className="py-12 md:py-16">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-8 max-w-2xl">
-            <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+          <div className="mb-7 max-w-2xl md:mb-8">
+            <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
               What you actually walk out with
             </p>
-            <h2 className="text-4xl font-semibold tracking-tight md:text-5xl">
+            <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-5xl">
               Every deliverable. <span className="text-muted-foreground">What it would cost. What it would take.</span>
             </h2>
             <p className="mt-3 text-muted-foreground">
@@ -215,13 +215,13 @@ function RegisterPage() {
       </section>
 
       {/* Pricing */}
-      <section className="border-y border-white/5 bg-white/[0.02] py-16">
+      <section className="border-y border-white/5 bg-white/[0.02] py-12 md:py-16">
         <div className="mx-auto max-w-5xl px-6">
-          <div className="mb-8 text-center">
-            <p className="mb-3 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+          <div className="mb-7 text-center md:mb-8">
+            <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
               Pick your seat
             </p>
-            <h2 className="text-4xl font-semibold tracking-tight md:text-5xl">
+            <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-5xl">
               From{" "}
               <span className="text-gradient-brand">
                 {formatPriceCents(selectedCohort.foundersPriceCents)}
@@ -263,10 +263,10 @@ function RegisterPage() {
       </section>
 
       {/* Form */}
-      <section className="py-16" id="register-form">
+      <section className="py-12 md:py-16" id="register-form">
         <div className="mx-auto max-w-2xl px-6">
           <div className="mb-6 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
+            <h2 className="text-2xl font-semibold tracking-tight md:text-4xl">
               Reserve your seat
             </h2>
             <p className="mt-2 text-muted-foreground">
