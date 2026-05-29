@@ -818,16 +818,18 @@ function TheArtOfThePossible() {
         </div>
       </div>
 
-      {/* Desktop / tablet: two auto-scrolling rows */}
-      <div className="hidden space-y-4 md:block">
+      {/* Auto-scrolling rows — two on tablet+, one on mobile */}
+      <div className="space-y-4">
         <MarqueeRow ideas={rowA} direction="left" />
-        <MarqueeRow ideas={rowB} direction="right" />
+        <div className="hidden md:block">
+          <MarqueeRow ideas={rowB} direction="right" />
+        </div>
       </div>
 
-      {/* Mobile: swipe rail */}
-      <div className="md:hidden">
-        <MobileScroller ideas={filtered} />
-      </div>
+      {/* Mobile swipe hint */}
+      <p className="mt-3 text-center text-xs text-muted-foreground/70 md:hidden">
+        ← swipe or tap to pause →
+      </p>
 
       <div className="mx-auto mt-12 max-w-6xl px-6">
         <div className="rounded-2xl border border-white/10 bg-card/60 p-6 md:p-8">
