@@ -88,7 +88,7 @@ function CohortTestPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const confirm = useMutation({
+  const markPaid = useMutation({
     mutationFn: (id: string) => confirmFn({ data: { registration_id: id } }),
     onSuccess: () => { toast.success("Marked as paid"); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
