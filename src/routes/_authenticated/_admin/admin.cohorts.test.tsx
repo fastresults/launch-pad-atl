@@ -309,8 +309,8 @@ function CohortTestPage() {
                             Mark refunded
                           </Button>
                         ) : (
-                          <Button size="sm" disabled={confirm.isPending}
-                            onClick={() => confirm.mutate(row.id)}>
+                          <Button size="sm" disabled={markPaid.isPending}
+                            onClick={() => markPaid.mutate(row.id)}>
                             Mark paid
                           </Button>
                         )}
