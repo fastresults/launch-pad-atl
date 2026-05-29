@@ -128,14 +128,16 @@ export const STAGES: Stage[] = [
     summary: "Who you serve, what they'll pay for, and how you beat the competition.",
     oneLiner: "Demand & proof",
     takeHome:
-      "A sourced 1-page research brief on your idea (market size, trend, regulation, suppliers, real customer quotes), one named first customer with their problems priced in dollars, a starter prospect list you begin in-session, and a validated outreach script — with the CSV export template ready.",
+      "A sourced 1-page research brief on your idea (market size, trend, regulation, suppliers, real customer quotes), one named first customer with their problems priced in dollars, a starter prospect list you begin in-session, a validated outreach script, a competitive research pack, and a one-sentence competitive advantage brief — your defensible 'secret sauce' pulled from the research.",
     walkOut: [
       "1-page idea-research brief: market size, trend, regulation, supplier/competitor scan, and sourced customer quotes",
       "1-page profile of your first named buyer with their top 3 problems priced in dollars",
       "Starter prospect list begun in-session with the source template and CSV export ready",
       "Outreach script customized to that specific buyer",
       "Competitive research pack: 3 competitors compared on offer, price, and positioning, with sourced customer quotes and a one-page 'what makes you different' summary",
+      "Competitive advantage brief: your defensible 'secret sauce' written in one sentence, sourced from the research + competitor scan",
     ],
+
     afterWorkshop: [
       "Fill out the prospect list and run discovery calls within the next 2 weeks",
     ],
