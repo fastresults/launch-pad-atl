@@ -290,7 +290,7 @@ export const STAGES: Stage[] = [
       "Free-app accounts created in your name: project hub, files, scheduling, business email alias",
       "Your first customer's deliverable drafted and rehearsed end-to-end",
       "5-point quality checklist for anything that goes to a real customer",
-      "3 written SOPs (sales intake, fulfillment, onboarding) loaded into your project hub as runnable templates",
+      "Operations & workflow: 3 runnable SOPs (intake, fulfillment, onboarding) in your project hub plus a one-page weekly operating rhythm",
     ],
     afterWorkshop: [
       "Run the rehearsed deliverable past your first paying customer and iterate",
