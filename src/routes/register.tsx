@@ -146,6 +146,8 @@ function RegisterPage() {
     effectiveTier === "founders"
       ? selectedCohort.foundersPriceCents
       : selectedCohort.cohortPriceCents;
+  const displayedSeats = Math.ceil(selectedCohort.totalSeats / 2);
+
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
