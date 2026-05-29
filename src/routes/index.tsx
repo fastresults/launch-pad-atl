@@ -72,9 +72,9 @@ function NotACourseBanner() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 md:flex-col md:items-end md:gap-2 md:shrink-0">
-            <Chip icon={<Hammer className="size-3.5" />} label="Build, don't learn" />
-            <Chip icon={<Timer className="size-3.5" />} label="7 working hours, one day" />
-            <Chip icon={<Check className="size-3.5" />} label="Real work, not worksheets" />
+            <BannerChip icon={<Hammer className="size-3.5" />} label="Build, don't learn" />
+            <BannerChip icon={<Timer className="size-3.5" />} label="7 working hours, one day" />
+            <BannerChip icon={<Check className="size-3.5" />} label="Real work, not worksheets" />
           </div>
         </div>
       </div>
@@ -82,7 +82,7 @@ function NotACourseBanner() {
   );
 }
 
-function Chip({ icon, label }: { icon: React.ReactNode; label: string }) {
+function BannerChip({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-white/20 backdrop-blur">
       {icon}
