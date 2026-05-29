@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/use-auth";
 
 const nav = [
   { to: "/", label: "home" },
@@ -7,6 +8,8 @@ const nav = [
 ] as const;
 
 export function SiteHeader() {
+  const { isAuthenticated, isAdmin, signOut } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-background/70 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -26,13 +29,32 @@ export function SiteHeader() {
               {n.label}
             </Link>
           ))}
+          {isAdmin && (
+            <Link to="/admin" className="transition-colors hover:text-foreground">
+              admin
+            </Link>
+          )}
         </nav>
-        <Link
-          to="/register"
-          className="rounded-full bg-hero-gradient px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
-        >
-          Reserve seat — from $679
-        </Link>
+        <div className="flex items-center gap-3">
+          {isAuthenticated ? (
+            <button
+              onClick={() => signOut()}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              sign out
+            </button>
+          ) : (
+            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
+              sign in
+            </Link>
+          )}
+          <Link
+            to="/register"
+            className="rounded-full bg-hero-gradient px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+          >
+            Reserve seat — from $679
+          </Link>
+        </div>
       </div>
     </header>
   );
