@@ -83,7 +83,7 @@ export function ValueGrid() {
     <TooltipProvider delayDuration={150}>
     <div className="rounded-2xl border border-white/10 bg-card overflow-hidden">
       {/* Desktop / tablet table */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-white/10 bg-white/[0.02] text-xs uppercase tracking-[0.18em] text-muted-foreground">
           <div className="col-span-2">Stage</div>
           <div className="col-span-6">Deliverable</div>
@@ -157,7 +157,7 @@ export function ValueGrid() {
       </div>
 
       {/* Mobile cards grouped by stage */}
-      <div className="md:hidden">
+      <div className="lg:hidden">
         {stageNums.map((n) => (
           <div key={n} className={`bg-gradient-to-b ${STAGE_TINT[n - 1]} to-transparent`}>
             <div className="px-5 py-3 border-b border-white/10 flex items-center gap-2">

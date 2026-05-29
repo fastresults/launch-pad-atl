@@ -35,7 +35,7 @@ export function SiteHeader() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
+        <nav className="hidden items-center gap-7 text-sm text-muted-foreground lg:flex">
           {nav.map((n) => (
             <Link
               key={n.to}
@@ -55,7 +55,7 @@ export function SiteHeader() {
         </nav>
 
         {/* Desktop right side */}
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-3 lg:flex">
           {isAuthenticated ? (
             <button
               onClick={() => signOut()}
@@ -76,8 +76,8 @@ export function SiteHeader() {
           </Link>
         </div>
 
-        {/* Mobile right side */}
-        <div className="flex items-center gap-2 md:hidden">
+        {/* Mobile + tablet right side */}
+        <div className="flex items-center gap-2 lg:hidden">
           <Link
             to="/register"
             className="rounded-full bg-hero-gradient px-3.5 py-2 text-sm font-medium text-white"
