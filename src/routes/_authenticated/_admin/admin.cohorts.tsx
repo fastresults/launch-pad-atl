@@ -207,6 +207,18 @@ function CohortsAdminPage() {
   const totalSeatsPreview =
     (Number(form.founders_seats) || 0) + (Number(form.cohort_seats) || 0);
 
+  // The "active" cohort: earliest non-sold-out cohort with date >= today.
+  // Scarcity inflation only applies to this one cohort.
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const activeCohortId =
+    [...cohorts]
+      .filter((c) => c.status !== "sold_out" && c.id >= todayStr)
+      .sort((a, b) => a.id.localeCompare(b.id))[0]?.id ?? null;
+  const isFormActive = !!form.id && form.id === activeCohortId;
+  const isFormFutureOpen =
+    !!form.id && !isFormActive && form.status !== "sold_out" && form.cohort_date >= todayStr;
+
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
