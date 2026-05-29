@@ -450,6 +450,21 @@ function CohortsAdminPage() {
                   Real seat counts, reservations, and emails always use the truth.
                 </div>
               </div>
+              {form.id && (
+                <div
+                  className={`mb-3 rounded-md border px-3 py-2 text-xs ${
+                    isFormActive
+                      ? "border-amber-400/30 bg-amber-400/10 text-amber-200"
+                      : "border-white/10 bg-white/[0.02] text-muted-foreground"
+                  }`}
+                >
+                  {isFormActive
+                    ? "Active cohort — scarcity is live for visitors right now."
+                    : isFormFutureOpen
+                    ? "Future cohort — visitors see honest seat counts. These values activate once this becomes the next available cohort."
+                    : "Past or sold-out cohort — scarcity does not apply."}
+                </div>
+              )}
               <ScarcityFields
                 tier="Founders"
                 capacity={Number(form.founders_seats) || 0}
