@@ -52,7 +52,7 @@ export const upsertCohort = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => UpsertSchema.parse(input))
   .handler(async ({ data, context }) => {
-    await ensureSuperAdmin(context.supabase, context.userId);
+    await ensureSuperAdmin(context.userId);
 
     const id = data.id ?? data.cohort_date;
     const sort_order =
@@ -89,7 +89,7 @@ export const deleteCohort = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().min(1) }).parse(input))
   .handler(async ({ data, context }) => {
-    await ensureSuperAdmin(context.supabase, context.userId);
+    await ensureSuperAdmin(context.userId);
     const { error } = await supabaseAdmin
       .from("cohorts" as never)
       .delete()
