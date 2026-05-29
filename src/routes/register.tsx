@@ -185,7 +185,7 @@ function RegisterPage() {
             </p>
           </div>
           {submitted ? (
-            <SuccessCard tier={tier} />
+            <SuccessCard tier={tier} cohortId={cohortId} />
           ) : (
             <form
               onSubmit={onSubmit}
