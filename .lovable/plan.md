@@ -1,22 +1,15 @@
-## Fix remaining public seat-count leak
+## Tighten the "What this is" paragraph
 
-**Found:** `src/routes/index.tsx` line 647 hard-codes the internal total ("Twenty seats") in a section headline:
+**File:** `src/routes/index.tsx` line 76
 
-> Twenty seats. One date. One door from idea to business.
+**Current:**
+> Not a course, not a coaching session, and not DIY worksheets. In one focused day, you build the operational foundation of an actual business — name, brand, website, offer, pricing, legal drafts, and launch plan — plus a short checklist for the few items only your signature can finish. You arrive with a spark. You leave with a company. *(Anything physical your business needs — space, equipment, inventory — is on you.)*
 
-Everywhere else on this section (and the rest of the public site) already shows the scaled public number via `EVENT.capacity` (which uses `toPublicSeats` in `src/lib/schedule-data.ts`).
+**Replace with (same voice, tighter, adds hard-costs caveat):**
+> Not a course, not coaching, not DIY worksheets. In one focused day you build the operational foundation of a real business — name, brand, website, offer, pricing, legal drafts, launch plan — plus a short checklist for the items only your signature can finish. You arrive with a spark. You leave with a company. *(Hard costs — filing fees, hosting, tech subscriptions, and anything physical like space, equipment, or inventory — aren't covered by the workshop fee.)*
 
-## Change
+## Scope
 
-In `src/routes/index.tsx` line 647, replace the hardcoded word "Twenty" with a dynamic value derived from `EVENT.capacity`, rendered as a word for headline style:
-
-- Use `EVENT.capacity` (already in scope on this page — used at lines 150, 561, 846).
-- Spell the number out (e.g. "Ten") so the headline keeps its current voice. Add a tiny helper `numberToWord(n)` local to this file covering the realistic range (1–20, fallback to digits) and capitalize at the headline.
-
-Result:
-> Ten seats. One date. One door from idea to business.
-
-## Out of scope
-
-- No changes to data, pricing, admin UI, or internal capacity.
-- No other files touched — a grep for "Twenty"/"20 seats"/raw capacity strings on public routes returned only this one leak.
+- Single-line copy change in `src/routes/index.tsx`.
+- Keeps the muted-parenthetical styling (`<span className="text-white/40">`).
+- No other files, no logic, no design changes.

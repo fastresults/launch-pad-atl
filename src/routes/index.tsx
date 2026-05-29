@@ -73,7 +73,7 @@ function NotACourseBanner() {
                 Walk in with an idea. Walk out with a built business.
               </h2>
               <p className="mt-2 text-sm text-white/55 leading-relaxed md:text-sm">
-                Not a course, not a coaching session, and not DIY worksheets. In one focused day, you build the operational foundation of an actual business — name, brand, website, offer, pricing, legal drafts, and launch plan — plus a short checklist for the few items only your signature can finish. You arrive with a spark. You leave with a company. <span className="text-white/40">(Anything physical your business needs — space, equipment, inventory — is on you.)</span>
+                Not a course, not coaching, not DIY worksheets. In one focused day you build the operational foundation of a real business — name, brand, website, offer, pricing, legal drafts, launch plan — plus a short checklist for the items only your signature can finish. You arrive with a spark. You leave with a company. <span className="text-white/40">(Hard costs — filing fees, hosting, tech subscriptions, and anything physical like space, equipment, or inventory — aren't covered by the workshop fee.)</span>
               </p>
 
             </div>
