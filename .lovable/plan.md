@@ -1,36 +1,32 @@
 ## Goal
-Every file in the Media Hub (admin library + user hub) gets a quick **Preview** and a **Copy URL** action — accessible from both the card/list rows and the detail drawer.
+Replace the current text-only "Atlanta Startup Workshop" brand mark (a small gradient dot + wordmark) with the supplied **StartupLabs color SVG** everywhere it shows up.
+
+## Where the logo currently lives
+- `src/components/site/Header.tsx` — `<span className="inline-block size-3 rounded-full bg-hero-gradient" />` + text wordmark
+- `src/components/site/Footer.tsx` — same gradient dot + text
+- `src/routes/__root.tsx` — no favicon link today; site uses default
+
+There are no other `<img>` or imported logo assets in the codebase.
 
 ## Changes
 
-**1. `src/components/media/MediaHub.tsx`** — only file touched.
+**1. Add the asset to the repo**
+- Download the signed Supabase URL once and save as `src/assets/startuplabs-logo.svg` (signed URLs expire — must be bundled).
 
-**Detail drawer (already has signed `previewUrl`):**
-- Add a **Copy URL** button next to Download / Re-run AI that writes `previewUrl` to the clipboard via `navigator.clipboard.writeText` and shows a `toast.success("Link copied")`.
-- URL is the 1-hour signed URL already produced by `getAssetSignedUrl`. Add a small helper note in the drawer: "Link expires in 1 hour."
+**2. `src/components/site/Header.tsx`**
+- Import the SVG: `import logoUrl from "@/assets/startuplabs-logo.svg";`
+- Replace the gradient dot + wordmark `<span>`s inside the `<Link to="/">` with `<img src={logoUrl} alt="StartupLabs" className="h-7 w-auto" />` (height tuned to header padding).
+- Keep the link target and surrounding layout.
 
-**Card (grid) and row (list) quick actions:**
-- Add two icon buttons on every asset (visible on hover for grid, always for list): **Eye** (Preview) and **Link** (Copy URL).
-- Preview: opens the existing detail drawer (same as clicking the card) — guarantees inline preview for images, PDFs, audio, video; fallback message for other types (already implemented in `Preview` component).
-- Copy URL: calls a new `copyAssetUrl(assetId)` helper that invokes `getAssetSignedUrl` server fn on demand, copies the returned signed URL, and toasts. No drawer open required.
-- `stopPropagation` on both buttons so they don't trigger row selection / drag.
+**3. `src/components/site/Footer.tsx`**
+- Same import + swap the gradient dot for `<img src={logoUrl} alt="StartupLabs" className="h-5 w-auto" />`. Keep the "· Norcross, GA" text next to it.
 
-**Bulk action (nice-to-have, small):**
-- When exactly one asset is selected, the existing toolbar gains a **Copy URL** button using the same helper.
+**4. `src/routes/__root.tsx`**
+- Add favicon links under the existing `links: [...]`:
+  - `{ rel: "icon", type: "image/svg+xml", href: "/startuplabs-logo.svg" }`
+  - Also copy the SVG to `public/startuplabs-logo.svg` so the browser can fetch the favicon by URL (Vite serves `public/` at the root).
 
 ## Out of scope
-- No server-fn changes — `getAssetSignedUrl` already returns a signed URL and works for both admin (`master-media`) and user (`user-media`) assets.
-- No new permanent/public URLs — signed URLs only (respects bucket privacy + RLS).
-- No changes to upload, push-to-user, folders, collections, drag-and-drop.
-
-## Technical notes
-- Single helper inside `MediaHub.tsx`:
-  ```ts
-  const copySignedUrl = async (assetId: string) => {
-    const { url } = await getSignedFn({ data: { assetId } });
-    await navigator.clipboard.writeText(url);
-    toast.success("Link copied (valid 1 hour)");
-  };
-  ```
-- Uses existing `useServerFn(getAssetSignedUrl)` (already wired for `AssetThumb`).
-- Icons: `Eye`, `Link` from `lucide-react` (already imported elsewhere or added to existing import).
+- No changes to titles, meta descriptions, or the existing `og:image` (the user asked for logo replacement only).
+- No dark/light variants (the SVG is full-color and works on the current dark background; revisit if contrast becomes an issue).
+- Does not touch any user-uploaded "logo" docs in the dashboard (those are user content, not site branding).
