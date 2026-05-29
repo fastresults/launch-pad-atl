@@ -875,6 +875,7 @@ const WALKOUT_PHASES: WalkoutPhase[] = [
       { name: "Your first customer profile", desc: "One named buyer, their problems priced in dollars, and where to find them." },
       { name: "25-name prospect list + outreach script", desc: "A CSV you can start messaging tonight." },
       { name: "Competitive research pack", desc: "Three competitors compared on offer, price, and positioning, with sourced customer quotes and a one-page 'what makes you different' summary." },
+      { name: "Competitive advantage brief", desc: "Your 'secret sauce' — the one defensible thing you do better, pulled from the research and competitor scan and written in a sentence you can use on the website, in pitches, and in DMs." },
     ],
   },
   {
@@ -883,14 +884,17 @@ const WALKOUT_PHASES: WalkoutPhase[] = [
     intro: "By mid-afternoon, the offer is locked, priced, and rehearsed.",
     items: [
       { name: "One-sentence offer", desc: "The line you'll use on your website, in pitches, and in DMs." },
-      { name: "Pricing sheet + break-even number", desc: "Real costs, real margin, and the exact number of sales to break even." },
+      { name: "Competitor + value-based pricing", desc: "Your price set against a 3-competitor price scan and the value to your customer, with real costs, margin, and the exact number of sales to break even." },
       { name: "Delivery map", desc: "Your business mapped sale-to-happy-customer, with the app you'll use at each step." },
       { name: "Free-app stack set up", desc: "Project hub, files, scheduling, comms — accounts created in your name." },
       { name: "First customer's deliverable", desc: "Drafted and rehearsed end-to-end with a 5-point quality checklist." },
       { name: "Operations & workflow", desc: "Three SOPs — intake, fulfillment, customer onboarding — loaded into your project hub, plus a one-page weekly operating rhythm." },
+      { name: "Sourcing & staffing plan", desc: "Where to source raw goods, services, and talent — whether you sell a product or a service — with named suppliers, contractors, or hires and a first-call list." },
       { name: "Funding model & 12-month runway", desc: "Real costs, margins, break-even, and a 12-month cash picture you can defend to a lender or investor." },
+      { name: "Business plan with pro formas", desc: "A short narrative plan plus a 12-month P&L, cash flow, and break-even pro forma — formatted the way banks, the SBA, and investors expect." },
     ],
   },
+
   {
     n: 3,
     title: "Brand, marketing & launch — everything ready to go live",
