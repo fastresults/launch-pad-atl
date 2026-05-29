@@ -79,8 +79,29 @@ export const DEFAULT_PRICING = {
   foundersPriceCents: 67900,
   foundersSeats: 7,
   cohortPriceCents: 99700,
-  cohortSeats: 3,
+  cohortSeats: 13,
 } as const;
+
+// Public-facing seat counts are shown at half of the real internal capacity.
+// Admin / DB / registration pipeline always uses the real internal numbers
+// (so we onboard up to 20). The marketing site shows the scaled-down public
+// numbers (e.g. 10) so the workshop reads as intimate and hands-on.
+export const PUBLIC_DISPLAY_DIVISOR = 2;
+
+export function toPublicSeats(internal: number): number {
+  if (internal <= 0) return 0;
+  return Math.max(1, Math.round(internal / PUBLIC_DISPLAY_DIVISOR));
+}
+
+export function toPublicTaken(
+  internalTaken: number,
+  internalCapacity: number,
+  publicCapacity: number,
+): number {
+  if (internalCapacity <= 0 || publicCapacity <= 0) return 0;
+  const scaled = Math.round((internalTaken / internalCapacity) * publicCapacity);
+  return Math.min(publicCapacity, Math.max(0, scaled));
+}
 
 const EVENT_TITLE = "Ignite Business Launch Workshop";
 const EVENT_DETAILS =
