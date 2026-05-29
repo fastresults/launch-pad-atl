@@ -51,6 +51,8 @@ import {
   LayoutGrid,
   List as ListIcon,
   Library,
+  Eye,
+  Link2,
 } from "lucide-react";
 
 type Scope = "master" | "user";
@@ -252,6 +254,16 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
     try {
       const { url } = await getUrlFn({ data: { assetId: asset.id } });
       setPreviewUrl(url);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function copyAssetUrl(assetId: string) {
+    try {
+      const { url } = await getUrlFn({ data: { assetId } });
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied (valid 1 hour)");
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -588,6 +600,29 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                       <Icon className="h-12 w-12 text-muted-foreground" />
                     )}
                   </div>
+                  <div
+                    className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 transition group-hover:opacity-100"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="h-7 w-7"
+                      title="Preview"
+                      onClick={() => openAsset(a)}
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="h-7 w-7"
+                      title="Copy link"
+                      onClick={() => copyAssetUrl(a.id)}
+                    >
+                      <Link2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                   <div className="space-y-1 p-3">
                     <p className="truncate text-sm font-medium">{a.title ?? a.original_name}</p>
                     <p className="text-xs text-muted-foreground">{humanSize(a.size_bytes)}</p>
@@ -612,13 +647,14 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
         ) : (
           <Card className="overflow-hidden">
             <div className="divide-y">
-              <div className="grid grid-cols-[36px_44px_1fr_90px_90px_140px] items-center gap-3 bg-muted/40 px-3 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <div className="grid grid-cols-[36px_44px_1fr_90px_90px_140px_88px] items-center gap-3 bg-muted/40 px-3 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <div></div>
                 <div></div>
                 <div>Name</div>
                 <div>Type</div>
                 <div>Size</div>
                 <div>Uploaded</div>
+                <div className="text-right">Actions</div>
               </div>
               {assets.map((a) => {
                 const Icon = TYPE_ICONS[a.media_type];
@@ -630,7 +666,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                     onDragStart={(e) => handleDragStart(e, a.id)}
                     onDragEnd={handleDragEnd}
                     onClick={() => openAsset(a)}
-                    className={`grid cursor-pointer grid-cols-[36px_44px_1fr_90px_90px_140px] items-center gap-3 px-3 py-2 text-sm transition hover:bg-muted/40 ${
+                    className={`grid cursor-pointer grid-cols-[36px_44px_1fr_90px_90px_140px_88px] items-center gap-3 px-3 py-2 text-sm transition hover:bg-muted/40 ${
                       isSelected ? "bg-primary/5" : ""
                     }`}
                   >
@@ -658,6 +694,29 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                     <div className="text-xs text-muted-foreground">{humanSize(a.size_bytes)}</div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(a.created_at).toLocaleDateString()}
+                    </div>
+                    <div
+                      className="flex justify-end gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        title="Preview"
+                        onClick={() => openAsset(a)}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        title="Copy link"
+                        onClick={() => copyAssetUrl(a.id)}
+                      >
+                        <Link2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </div>
                 );
@@ -690,6 +749,18 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                   <Button
                     size="sm"
                     variant="outline"
+                    disabled={!previewUrl}
+                    onClick={async () => {
+                      if (!previewUrl) return;
+                      await navigator.clipboard.writeText(previewUrl);
+                      toast.success("Link copied (valid 1 hour)");
+                    }}
+                  >
+                    <Link2 className="mr-2 h-4 w-4" /> Copy link
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
                     onClick={() => reprocessFn({ data: { assetId: selectedAsset.id } }).then(() => invalidate())}
                   >
                     <Sparkles className="mr-2 h-4 w-4" /> Re-run AI
@@ -704,6 +775,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                     <Trash2 className="mr-2 h-4 w-4" /> Delete
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">Shared links are signed and expire in 1 hour.</p>
                 <div className="space-y-2">
                   <label className="text-xs font-medium uppercase text-muted-foreground">Title</label>
                   <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
