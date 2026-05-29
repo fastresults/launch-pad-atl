@@ -70,10 +70,11 @@ function TierCard({
   gradient,
   priceCents,
   capacity,
-  taken,
+  displayedTaken,
   soldOut,
   disabled,
   unlocksWhen,
+  sellingFast,
 }: {
   tier: TierKey;
   selected: boolean;
@@ -83,15 +84,17 @@ function TierCard({
   gradient?: boolean;
   priceCents: number;
   capacity: number;
-  taken?: number;
+  displayedTaken?: number;
   soldOut: boolean;
   disabled: boolean;
   unlocksWhen?: string;
+  sellingFast?: boolean;
 }) {
   const label = tier === "founders" ? "Founders Seat" : "Cohort Seat";
   const subtitle =
     tier === "founders" ? `First ${capacity} to register` : `Next ${capacity} seats`;
-  const remaining = typeof taken === "number" ? Math.max(capacity - taken, 0) : undefined;
+  const remaining =
+    typeof displayedTaken === "number" ? Math.max(capacity - displayedTaken, 0) : undefined;
 
   return (
     <div
@@ -109,6 +112,14 @@ function TierCard({
           {soldOut ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 text-xs text-muted-foreground">
               <Lock className="size-3" /> Sold out
+            </span>
+          ) : sellingFast ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-2.5 py-0.5 text-xs font-medium text-amber-300">
+              <span className="relative flex size-1.5">
+                <span className="absolute inset-0 animate-ping rounded-full bg-amber-400 opacity-75" />
+                <span className="relative inline-flex size-1.5 rounded-full bg-amber-400" />
+              </span>
+              Selling fast
             </span>
           ) : selected ? (
             <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-xs text-primary">
