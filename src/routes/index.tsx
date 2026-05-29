@@ -251,8 +251,8 @@ function FacilitatorSection() {
                 Your facilitator
               </div>
               <div className="mt-1 flex items-center gap-3">
-                <div className="flex size-12 items-center justify-center rounded-full bg-white/15 text-lg font-semibold backdrop-blur">
-                  AA
+                <div className="size-12 overflow-hidden rounded-full bg-white/15 backdrop-blur">
+                  <img src={facilitatorPhoto} alt={FACILITATOR_NAME} className="size-full object-cover" />
                 </div>
                 <div>
                   <div className="text-2xl font-semibold leading-tight">
