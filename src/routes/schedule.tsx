@@ -204,7 +204,7 @@ function SchedulePage() {
 
                           <div className="mt-5 rounded-xl border border-white/10 bg-background/40 p-5">
                             <div className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                              3 essential tasks
+                              {stage.tasks.length} essential tasks
                             </div>
                             <ul className="space-y-5">
                               {stage.tasks.map((t, idx) => (

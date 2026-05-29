@@ -19,7 +19,7 @@ export type Stage = {
   afterWorkshop: string[];
   duration: string;
   covers: string[];
-  tasks: [Task, Task, Task];
+  tasks: Task[];
 };
 
 export const STAGES: Stage[] = [
