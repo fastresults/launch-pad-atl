@@ -749,6 +749,18 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                   <Button
                     size="sm"
                     variant="outline"
+                    disabled={!previewUrl}
+                    onClick={async () => {
+                      if (!previewUrl) return;
+                      await navigator.clipboard.writeText(previewUrl);
+                      toast.success("Link copied (valid 1 hour)");
+                    }}
+                  >
+                    <Link2 className="mr-2 h-4 w-4" /> Copy link
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
                     onClick={() => reprocessFn({ data: { assetId: selectedAsset.id } }).then(() => invalidate())}
                   >
                     <Sparkles className="mr-2 h-4 w-4" /> Re-run AI
@@ -763,6 +775,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                     <Trash2 className="mr-2 h-4 w-4" /> Delete
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">Shared links are signed and expire in 1 hour.</p>
                 <div className="space-y-2">
                   <label className="text-xs font-medium uppercase text-muted-foreground">Title</label>
                   <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
