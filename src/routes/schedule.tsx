@@ -1,8 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
-import { SCHEDULE, EVENT } from "@/lib/schedule-data";
+import { SCHEDULE, buildEvent } from "@/lib/schedule-data";
+import { listCohorts } from "@/lib/cohorts.functions";
+import { getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
 import { STAGES } from "@/lib/curriculum-data";
 import { ArrowRight, Coffee, Clock } from "lucide-react";
 
@@ -26,6 +30,18 @@ export const Route = createFileRoute("/schedule")({
 });
 
 function SchedulePage() {
+  const fetchCohorts = useServerFn(listCohorts);
+  const { data: cohorts = [] } = useQuery<Cohort[]>({
+    queryKey: ["cohorts"],
+    queryFn: () => fetchCohorts(),
+    initialData: [],
+    staleTime: 60_000,
+  });
+  const EVENT = useMemo(
+    () => buildEvent(getNextAvailable(cohorts) ?? FALLBACK_COHORT),
+    [cohorts],
+  );
+
   // Scroll to #stage-N anchors when navigating from the home flow strip
   useEffect(() => {
     if (typeof window === "undefined") return;

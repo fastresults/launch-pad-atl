@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
-import { EVENT, FLOW_STAGES } from "@/lib/schedule-data";
+import { FLOW_STAGES } from "@/lib/schedule-data";
+import { useEvent } from "@/lib/use-event";
 import { BUSINESS_IDEAS, BUSINESS_CATEGORIES, type BusinessCategory, type BusinessIdea } from "@/lib/business-ideas";
 import { MapPin, Calendar, Users, ArrowRight, Award, FileCheck2, Target, Globe2, Rocket, X, Check, Clock, Laptop, Store, Wrench, ChefHat, Sun, Home as HomeIcon, Sparkles, DollarSign, UserPlus, Zap, Hammer, Timer, AlertTriangle } from "lucide-react";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
@@ -98,6 +99,7 @@ function BannerChip({ icon, label }: { icon: React.ReactNode; label: string }) {
 }
 
 function Hero() {
+  const EVENT = useEvent();
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 bg-hero-gradient opacity-90" />
@@ -539,6 +541,7 @@ function ValueByTheNumbers() {
 
 
 function VenueCard() {
+  const EVENT = useEvent();
   return (
     <section className="pb-24">
       <div className="mx-auto max-w-6xl px-6">
@@ -767,6 +770,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function TheArtOfThePossible() {
+  const EVENT = useEvent();
   const [active, setActive] = useState<BusinessCategory | "all">("all");
   // Client-only seed bumps on mount + filter change so SSR/CSR markup matches first,
   // then we reshuffle in the browser (no hydration mismatch).
