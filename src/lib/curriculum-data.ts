@@ -214,16 +214,17 @@ export const STAGES: Stage[] = [
     summary: "What you actually sell, how it's delivered, and the price tag.",
     oneLiner: "What you sell & what it costs",
     takeHome:
-      "Your offer written in one sentence a buyer can say yes or no to, your price backed into from your real costs, the exact number of sales you need to break even, and a signed go / pivot / kill viability score — on a one-page offer sheet.",
+      "Your offer written in one sentence a buyer can say yes or no to, your price set from a 3-competitor scan, value to the customer, and your real costs, the exact number of sales you need to break even, and a signed go / pivot / kill viability score — on a one-page offer sheet.",
     walkOut: [
       "Your one-sentence offer locked",
       "First-version scope mapped step-by-step from sale to handoff",
-      "Pricing sheet with real cost per sale, break-even number, and payment terms",
+      "Competitor + value-based pricing: 3-competitor price scan, value & cost-plus anchors, real cost per sale, break-even number, and payment terms",
       "Signed viability scorecard with a go / pivot / kill decision, scored on 6 dimensions with evidence",
     ],
     afterWorkshop: [],
     duration: "60 min",
-    covers: ["Offer in one sentence", "What's in V1", "Pricing & break-even"],
+    covers: ["Offer in one sentence", "What's in V1", "Competitor + value-based pricing"],
+
     tasks: [
       {
         title: "Write the offer in one sentence",
