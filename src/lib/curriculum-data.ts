@@ -101,20 +101,22 @@ export const STAGES: Stage[] = [
           "File the local business license and (if applicable) sales-tax registration once your entity is approved.",
       },
       {
-        title: "Funding model, pitch deck & fundraising kit",
+        title: "Funding model, business plan with pro formas, pitch deck & fundraising kit",
         deliverable:
-          "Your funding model with 12-month runway, a 10-slide investor-ready pitch deck in your brand, and a fundraising kit — 1-page raise summary, funder outreach list with email template, and your path picked across grants, microloans, SBA, and friends-and-family.",
-        tool: "Funding model + pitch deck + raise kit templates",
+          "Your funding model with 12-month runway, a business plan with pro formas (12-month P&L, cash flow, and break-even), a 10-slide investor-ready pitch deck in your brand, and a fundraising kit — 1-page raise summary, funder outreach list with email template, and your path picked across grants, microloans, SBA, and friends-and-family.",
+        tool: "Funding model + business plan + pitch deck + raise kit templates",
         details: [
           "Build the funding model: startup costs, monthly burn, break-even, and a 12-month cash picture",
+          "Build a 12-month P&L, cash flow, and break-even pro forma alongside a short narrative business plan",
           "Pick the funding path: grants, microloans, SBA, revenue-based, line of credit, friends & family, or equity",
           "Draft the 10-slide pitch deck in your brand: problem, solution, market, offer, traction, model, GTM, team, ask, use of funds",
           "Write the 1-page raise summary and customize the funder outreach email template so it's ready to send",
         ],
         takeaway:
-          "Your funding model with 12-month runway, investor-ready pitch deck, and fundraising kit — ready to send.",
+          "Your funding model, business plan with pro formas, investor-ready pitch deck, and fundraising kit — ready to send.",
         followUp:
           "Build out the funder list and send the outreach in the first 2 weeks; book intro calls with anyone who replies.",
+
       },
     ],
   },
