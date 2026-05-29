@@ -147,21 +147,35 @@ function CohortTestPage() {
 
           {avail && selected && (
             <div className="rounded-xl border border-white/10 bg-card p-4 space-y-3">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">
-                Live availability
+              <div className="flex items-center justify-between">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Live availability
+                </div>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
+                    avail.isActiveCohort
+                      ? "bg-amber-400/15 text-amber-300"
+                      : "bg-white/5 text-muted-foreground"
+                  }`}
+                >
+                  {avail.isActiveCohort ? "Active · scarcity live" : "Inactive · honest only"}
+                </span>
               </div>
               <TierRow
                 label="Founders"
                 price={formatPriceCents(selected.foundersPriceCents)}
                 taken={avail.founders.taken}
                 capacity={avail.founders.capacity}
+                displayed={avail.founders.displayedTaken}
               />
               <TierRow
                 label="Cohort"
                 price={formatPriceCents(selected.cohortPriceCents)}
                 taken={avail.cohort.taken}
                 capacity={avail.cohort.capacity}
+                displayed={avail.cohort.displayedTaken}
               />
+
               <div className="border-t border-white/5 pt-3 text-xs">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total paid</span>
