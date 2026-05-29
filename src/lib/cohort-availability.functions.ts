@@ -118,8 +118,7 @@ export const getCohortAvailability = createServerFn({ method: "GET" })
         )
       : { displayedTaken: cohortTaken, mode: "honest" as ScarcityMode };
 
-    const foundersSoldOut = foundersTaken >= c.founders_seats;
-    const cohortSoldOutReal = cohortTaken >= c.cohort_seats;
+    const foundersSoldOut = foundersSoldOutReal;
 
     const founders: TierAvailability = {
       price_cents: c.founders_price_cents,
