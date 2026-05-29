@@ -1,29 +1,18 @@
-# Deliver 25 Deliverables — Agentic Workflow (RLS-only, no new secrets)
+## Problem
 
-Same plan as approved, with one change: **drop the `FILING_PII_KEY` encryption step.** Filing PII (SSN, DOB, address) is protected by strict RLS (owner + admin only) instead of `pgp_sym_encrypt`. No new secret required — uses only what's already configured.
+The register page shows `20 seats per cohort` (and `All 20 seats … are claimed` when sold out), which is the true capacity (`founders_seats + cohort_seats` = 7 + 13). Public-facing copy should advertise half of that.
 
-## What changes vs. the prior plan
+## Change
 
-- `attendee_filing_info` stores `ssn`, `dob`, `address_*` as plain columns.
-- RLS: only `auth.uid() = user_id` can SELECT/INSERT/UPDATE their own row; admins via `is_admin(auth.uid())`. No anon grant.
-- `filing.functions.ts` reads/writes through `requireSupabaseAuth` (RLS-scoped) — never `supabaseAdmin` from user-facing paths.
-- Admin filing reads happen in admin-only server fns that check `is_admin` before querying.
-- No `pgcrypto`, no `FILING_PII_KEY`, no `add_secret` call.
+In `src/routes/register.tsx`, replace the two `selectedCohort.totalSeats` references in user-facing strings with a displayed value equal to `Math.ceil(selectedCohort.totalSeats / 2)` (10 for the default cohort).
 
-Everything else from the approved plan stands:
+- Line ~181: `{displayedSeats} seats per cohort`
+- Line ~302: `All {displayedSeats} seats for {selectedCohort.dateLabel} are claimed.`
 
-1. **Migration** — create `attendee_business_brief`, `attendee_filing_info`, `attendee_stage_intake` (all RLS, owner+admin); extend `deliverable_types` with the 8 missing rows + `requires_context_keys`, `produces_context_key`, `output_kind`, `user_can_trigger`, `auto_runnable`.
-2. **Workflow manifest** — `src/lib/workflow.ts` with the 25-deliverable dependency graph and context-key map.
-3. **Server fns** — `brief.functions.ts`, `filing.functions.ts` (RLS only), `stageIntake.functions.ts`, `voice.functions.ts` (`transcribeAudio` via Lovable AI Gateway).
-4. **Pipeline runner** — `pipeline.functions.ts`: `buildAttendeeContext`, `getMyWorkflow`, `attendeeTriggerDeliverable` (rate-limited 5 concurrent / 30/day), `runAttendeePipeline` (topological loop, pauses on `needs_input`), `attendeePublishDeliverable`. Uses AI SDK `Output` API for structured output.
-5. **Voice UI** — `VoiceTextarea` / `VoiceInput` components (MediaRecorder → `transcribeAudio`).
-6. **Dashboard routes** — `/dashboard/brief`, `/dashboard/filing`, `/dashboard/workflow`, `/dashboard/workflow.$key`.
-7. **Admin mirror** — `/admin/attendees/$userId.workflow.tsx`; redirect `/dashboard/deliverables` → `/dashboard/workflow`.
+Compute `displayedSeats` once near the top of the component from `selectedCohort.totalSeats`.
 
 ## Out of scope
 
-Real GA e-filing, IRS EIN submission, Stripe, domain purchase, real-time streaming transcription, at-rest field-level encryption (RLS is the sole PII guard).
-
-## Security note on PII
-
-RLS + the `is_admin` check is sufficient for this app's threat model. If you later want defense-in-depth encryption for SSN/DOB, we can add it as a follow-up — it would require generating and storing one encryption key at that time.
+- No DB changes — real capacity, seat reservation, sold-out logic, and the cohort-availability "displayed remaining" math all stay on actual `totalSeats`.
+- Admin views continue to show the true number.
+- No change to the "1 founders seat left" / "filling up" pill — that already uses the display-floor system in `cohort-availability.functions.ts`.

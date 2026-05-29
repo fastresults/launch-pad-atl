@@ -146,6 +146,8 @@ function RegisterPage() {
     effectiveTier === "founders"
       ? selectedCohort.foundersPriceCents
       : selectedCohort.cohortPriceCents;
+  const displayedSeats = Math.ceil(selectedCohort.totalSeats / 2);
+
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
@@ -178,7 +180,7 @@ function RegisterPage() {
           </p>
           <div className="mt-5 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:gap-4 md:mt-6">
             <span className="inline-flex items-center gap-2">
-              <Users className="size-4" /> {selectedCohort.totalSeats} seats per cohort
+              <Users className="size-4" /> {displayedSeats} seats per cohort
             </span>
             <span className="inline-flex items-center gap-2">
               <CalendarDays className="size-4" /> {EVENT.timeLabel}
@@ -299,7 +301,7 @@ function RegisterPage() {
               </div>
               <h3 className="text-xl font-semibold">This cohort is sold out</h3>
               <p className="mt-2 text-muted-foreground">
-                All {selectedCohort.totalSeats} seats for {selectedCohort.dateLabel} are claimed.
+                All {displayedSeats} seats for {selectedCohort.dateLabel} are claimed.
                 Pick another date above to reserve your seat.
               </p>
             </div>
