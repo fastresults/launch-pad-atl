@@ -41,7 +41,7 @@ function HomePage() {
       
       
       
-      <ValueByTheNumbers />
+      
       <FacilitatorSection />
       
       <VenueCard />
