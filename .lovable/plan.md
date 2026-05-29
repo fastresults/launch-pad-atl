@@ -1,24 +1,77 @@
-## Goal
-Make the "What you actually walk out with" value grid on `/register` partially collapsed by default — show the first 5 rows, then a click-to-expand control reveals the rest (and the totals row).
+# Admin-Managed Cohort Dates + Venues
 
-## Changes
+Move cohort dates **and venues** out of the hardcoded `SEED` array in `src/lib/cohorts.ts` into a database table that super admins can edit. Most cohorts share the same default venue (IGNITE Center, Norcross GA); when a cohort uses a different city/address, the public UI calls it out clearly so users aren't confused.
 
-**`src/components/value/ValueGrid.tsx`** (only file touched)
+## 1. Database
 
-1. Add `useState` with `expanded = false`.
-2. Compute a flat ordered list of `VALUE_ROWS` (already in stage order) and slice the first 5 as the "preview" set. Determine which stages those 5 rows belong to so stage grouping/tints still render correctly in the collapsed state.
-3. Desktop table:
-   - When collapsed, render only rows whose index < 5. Suppress any stage group that has no visible rows.
-   - Hide the totals (`bg-hero-gradient`) row when collapsed.
-   - Below the last visible row (still inside the bordered card), render a full-width expand control:
-     - Label: "Show all 22 deliverables" (count derived from `VALUE_ROWS.length`) with a `ChevronDown` icon.
-     - Subtext: "+ market cost & DIY time totals".
-     - Soft gradient fade overlay above the button so the cut-off feels intentional.
-   - When expanded, render all rows + totals as today, and swap the control to "Show less" with `ChevronUp`.
-4. Mobile cards: mirror the same logic — show first 5 deliverable cards across stages, hide the mobile totals block, same expand/collapse button at the bottom.
-5. Button is a real `<button>` with `aria-expanded` and `aria-controls` pointing at the rows container id for a11y. Smooth: no animation library needed; rely on conditional render. (If we want a reveal animation later, we can add `max-h` transition — not in scope.)
-6. Import `ChevronDown`, `ChevronUp` from `lucide-react`. No other files, no data changes, no prop changes — `ValueGrid` stays a zero-prop component so `register.tsx` is untouched.
+New table `public.cohorts`:
 
-## Out of scope
-- No changes to `value-grid.ts` data, totals math, `TotalsBar`, pricing, or any other route.
-- No change to which 5 rows show (just the first 5 in current order). If you want a specific curated 5, say which and I'll hardcode the selection instead.
+- `id text PK` (e.g. `"2026-07-15"`)
+- `cohort_date date NOT NULL UNIQUE`
+- `tz text NOT NULL CHECK (tz IN ('EDT','EST'))`
+- `start_time time NOT NULL DEFAULT '08:00'`
+- `end_time time NOT NULL DEFAULT '16:30'`
+- `status text NOT NULL CHECK (status IN ('sold_out','filling','open')) DEFAULT 'open'`
+- `seats_left int` (nullable)
+- `venue_name text NOT NULL DEFAULT 'IGNITE Center at Greater Atlanta Christian School'`
+- `venue_address text NOT NULL DEFAULT '1500 Indian Trail Lilburn Rd NW'`
+- `venue_city text NOT NULL DEFAULT 'Norcross'`
+- `venue_region text NOT NULL DEFAULT 'GA'`
+- `venue_postal text NOT NULL DEFAULT '30093'`
+- `sort_order int NOT NULL`
+- `created_at`, `updated_at` + trigger
+
+App-side constant `DEFAULT_VENUE` (matching the column defaults) is the source of truth for "is this cohort at the usual place?" — compare a row's venue fields against it to decide whether to render the "Different location" callout.
+
+GRANTs + RLS:
+- `GRANT SELECT ON public.cohorts TO anon, authenticated;`
+- `GRANT ALL ON public.cohorts TO service_role;`
+- Policies: public `SELECT`; `INSERT/UPDATE/DELETE` only when `has_role(auth.uid(), 'super_admin')`.
+
+Seed 12 existing rows (Jun 2026 → May 2027) with the default venue.
+
+`workshop_registrations.cohort_id` already exists — no change.
+
+## 2. Server functions (`src/lib/cohorts.functions.ts`)
+
+- `listCohorts()` — public read.
+- `upsertCohort({ id?, cohort_date, tz, start_time, end_time, status, seats_left, venue_name, venue_address, venue_city, venue_region, venue_postal })` — `requireSupabaseAuth` + super-admin guard, Zod-validated.
+- `deleteCohort({ id })` — same guard.
+
+## 3. Refactor `src/lib/cohorts.ts`
+
+- Keep `Cohort` type (extend with `venue` fields + computed `isDefaultVenue: boolean` and `venueLine: string`), label helpers, and Google Calendar / ICS builders.
+- Calendar `location` field now derives from the cohort's own venue (not a hardcoded constant).
+- Remove `SEED`/`COHORTS` constants. Export pure helpers `getNextAvailable(cohorts)` and `getCohortById(cohorts, id)`.
+- Export `DEFAULT_VENUE` for client-side comparison.
+
+## 4. Wire consumers to live data
+
+- `src/lib/schedule-data.ts`: derive `EVENT` from the next-available DB cohort (including its venue).
+- `src/components/value/CohortPicker.tsx`:
+  - Accept `cohorts: Cohort[]` as a prop.
+  - Each pill for a non-default-venue cohort gets a small "Different location" badge (e.g. amber dot + city name like "Atlanta, GA").
+  - Below the picker's "Your cohort" row, show a compact venue line: city + short address. When `!isDefaultVenue`, wrap it in a prominent callout card (amber/warning accent, `MapPin` icon, copy: "Heads up — this cohort meets in {city}, not Norcross. {full address}").
+- `src/routes/register.tsx`: loader calls `listCohorts()`; success card and Add-to-Calendar links use the selected cohort's venue.
+- `src/routes/schedule.tsx` + other importers: switch to loader data; surface the same "Different location" treatment.
+
+## 5. New admin page `/admin/cohorts` (super-admin only)
+
+File: `src/routes/_authenticated/_admin/admin.cohorts.tsx`. Add `{ to: "/admin/cohorts", label: "Cohorts", super: true }` to `NAV`.
+
+- Table: date, weekday, tz, times, status, seats, **venue (city — flagged if non-default)**, actions.
+- Add/Edit dialog fields: date picker, tz, start/end time, status, seats-left, and a **Venue section** with: `venue_name`, `venue_address`, `venue_city`, `venue_region`, `venue_postal`. Include a "Use default venue" button that resets all five fields to `DEFAULT_VENUE`. A live preview line shows "Default venue ✓" or "Custom venue — will show callout to users".
+- Mutations call `upsertCohort`/`deleteCohort` and invalidate the `["cohorts"]` query.
+- Component-level guard: `if (!isSuperAdmin) return <Navigate to="/admin" replace />;`.
+
+## 6. Out of scope
+
+- Auto-deriving status from registration counts.
+- Per-cohort pricing.
+- Geocoding / embedded maps (we just render the address + a "Get directions" Google Maps link built from `encodeURIComponent(fullAddress)`).
+
+## Open questions
+
+1. Allow any weekday for `cohort_date`, or warn when not a Wednesday? **Default: allow any, no warning.**
+2. For the "Different location" callout, is a city-level chip enough on the picker pill (full address only in the expanded detail), or should the full street address appear on the pill itself? **Default: city only on the pill, full address in the callout card.**
+
