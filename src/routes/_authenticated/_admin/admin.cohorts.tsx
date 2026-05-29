@@ -1,10 +1,10 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { listCohorts, upsertCohort, deleteCohort } from "@/lib/cohorts.functions";
-import { DEFAULT_VENUE, type Cohort } from "@/lib/cohorts";
+import { DEFAULT_VENUE, DEFAULT_PRICING, formatPriceCents, type Cohort } from "@/lib/cohorts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import { FlaskConical, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_admin/admin/cohorts")({
   component: CohortsAdminPage,
@@ -43,6 +43,10 @@ type FormState = {
   venue_city: string;
   venue_region: string;
   venue_postal: string;
+  founders_price: string;   // dollars, as string for input
+  founders_seats: string;
+  cohort_price: string;
+  cohort_seats: string;
 };
 
 const emptyForm = (): FormState => ({
@@ -57,6 +61,10 @@ const emptyForm = (): FormState => ({
   venue_city: DEFAULT_VENUE.city,
   venue_region: DEFAULT_VENUE.region,
   venue_postal: DEFAULT_VENUE.postal,
+  founders_price: String(DEFAULT_PRICING.foundersPriceCents / 100),
+  founders_seats: String(DEFAULT_PRICING.foundersSeats),
+  cohort_price: String(DEFAULT_PRICING.cohortPriceCents / 100),
+  cohort_seats: String(DEFAULT_PRICING.cohortSeats),
 });
 
 const fromCohort = (c: Cohort): FormState => ({
@@ -72,6 +80,10 @@ const fromCohort = (c: Cohort): FormState => ({
   venue_city: c.venueCity,
   venue_region: c.venueRegion,
   venue_postal: c.venuePostal,
+  founders_price: String(c.foundersPriceCents / 100),
+  founders_seats: String(c.foundersSeats),
+  cohort_price: String(c.cohortPriceCents / 100),
+  cohort_seats: String(c.cohortSeats),
 });
 
 function CohortsAdminPage() {
@@ -90,8 +102,21 @@ function CohortsAdminPage() {
   const [form, setForm] = useState<FormState>(emptyForm());
 
   const upsert = useMutation({
-    mutationFn: (vars: FormState) =>
-      upsertFn({
+    mutationFn: (vars: FormState) => {
+      const foundersPriceCents = Math.round(Number(vars.founders_price) * 100);
+      const cohortPriceCents = Math.round(Number(vars.cohort_price) * 100);
+      const foundersSeats = Math.max(0, Math.floor(Number(vars.founders_seats) || 0));
+      const cohortSeats = Math.max(0, Math.floor(Number(vars.cohort_seats) || 0));
+      if (!Number.isFinite(foundersPriceCents) || foundersPriceCents < 0) {
+        throw new Error("Founders price must be a non-negative number.");
+      }
+      if (!Number.isFinite(cohortPriceCents) || cohortPriceCents < 0) {
+        throw new Error("Cohort price must be a non-negative number.");
+      }
+      if (foundersSeats + cohortSeats < 1) {
+        throw new Error("Total seats must be at least 1.");
+      }
+      return upsertFn({
         data: {
           id: vars.id,
           cohort_date: vars.cohort_date,
@@ -105,8 +130,13 @@ function CohortsAdminPage() {
           venue_city: vars.venue_city.trim(),
           venue_region: vars.venue_region.trim(),
           venue_postal: vars.venue_postal.trim(),
+          founders_price_cents: foundersPriceCents,
+          founders_seats: foundersSeats,
+          cohort_price_cents: cohortPriceCents,
+          cohort_seats: cohortSeats,
         },
-      }),
+      });
+    },
     onSuccess: () => {
       toast.success("Cohort saved");
       qc.invalidateQueries({ queryKey: ["cohorts"] });
@@ -144,23 +174,33 @@ function CohortsAdminPage() {
       venue_postal: DEFAULT_VENUE.postal,
     }));
 
+  const totalSeatsPreview =
+    (Number(form.founders_seats) || 0) + (Number(form.cohort_seats) || 0);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Cohorts</h1>
           <p className="text-sm text-muted-foreground">
-            Set the date, venue, and status for each monthly workshop.
+            Set the date, venue, pricing, and seat caps for each monthly workshop.
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setForm(emptyForm());
-            setOpen(true);
-          }}
-        >
-          <Plus className="mr-1.5 size-4" /> Add cohort
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link to="/admin/cohorts/test">
+              <FlaskConical className="mr-1.5 size-4" /> Test registration flow
+            </Link>
+          </Button>
+          <Button
+            onClick={() => {
+              setForm(emptyForm());
+              setOpen(true);
+            }}
+          >
+            <Plus className="mr-1.5 size-4" /> Add cohort
+          </Button>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-white/10 bg-card">
@@ -170,7 +210,7 @@ function CohortsAdminPage() {
               <th className="px-4 py-3">Date</th>
               <th className="px-4 py-3">Hours</th>
               <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Seats</th>
+              <th className="px-4 py-3">Pricing / seats</th>
               <th className="px-4 py-3">Venue</th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
@@ -196,8 +236,16 @@ function CohortsAdminPage() {
                       {c.status === "sold_out" ? "Sold out" : c.status === "filling" ? "Filling" : "Open"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {typeof c.seatsLeft === "number" ? c.seatsLeft : "—"}
+                  <td className="px-4 py-3 text-xs leading-relaxed">
+                    <div>
+                      Founders: <span className="text-foreground tabular-nums">{formatPriceCents(c.foundersPriceCents)}</span>{" "}
+                      <span className="text-muted-foreground">× {c.foundersSeats}</span>
+                    </div>
+                    <div>
+                      Cohort: <span className="text-foreground tabular-nums">{formatPriceCents(c.cohortPriceCents)}</span>{" "}
+                      <span className="text-muted-foreground">× {c.cohortSeats}</span>
+                    </div>
+                    <div className="text-muted-foreground">Total {c.totalSeats} seats</div>
                   </td>
                   <td className="px-4 py-3">
                     {c.isDefaultVenue ? (
@@ -232,7 +280,7 @@ function CohortsAdminPage() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{form.id ? "Edit cohort" : "Add cohort"}</DialogTitle>
           </DialogHeader>
@@ -275,9 +323,12 @@ function CohortsAdminPage() {
                     <SelectItem value="sold_out">Sold out</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Updated automatically based on paid seats. Override manually if needed.
+                </p>
               </div>
               <div>
-                <Label>Seats left {form.status !== "filling" && <span className="text-xs text-muted-foreground">(only used when "Filling up")</span>}</Label>
+                <Label>Seats left override {form.status !== "filling" && <span className="text-xs text-muted-foreground">(only used when "Filling up")</span>}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -285,6 +336,59 @@ function CohortsAdminPage() {
                   onChange={(e) => setForm({ ...form, seats_left: e.target.value })}
                   disabled={form.status !== "filling"}
                 />
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-white/10 p-4">
+              <div className="mb-3">
+                <div className="text-sm font-medium">Pricing & seat caps</div>
+                <div className="text-xs text-muted-foreground">
+                  The first <span className="text-foreground">{form.founders_seats || 0}</span> paid seats use the Founders price.
+                  Once full, new sign-ups automatically roll to the Cohort price.
+                  Total capacity: <span className="text-foreground">{totalSeatsPreview} seats</span>.
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <Label>Founders price (USD)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={form.founders_price}
+                    onChange={(e) => setForm({ ...form, founders_price: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Founders seats</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={form.founders_seats}
+                    onChange={(e) => setForm({ ...form, founders_seats: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Cohort price (USD)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={form.cohort_price}
+                    onChange={(e) => setForm({ ...form, cohort_price: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Cohort seats</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={form.cohort_seats}
+                    onChange={(e) => setForm({ ...form, cohort_seats: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
 
