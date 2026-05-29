@@ -880,7 +880,7 @@ const WALKOUT_PHASES: WalkoutPhase[] = [
       { name: "Signed legal kit", desc: "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business." },
       { name: "Your first customer profile", desc: "One named buyer, their problems priced in dollars, and where to find them." },
       { name: "25-name prospect list + outreach script", desc: "A CSV you can start messaging tonight." },
-      { name: "Competitor grid + positioning", desc: "Three competitors compared and one sentence on what makes you different." },
+      { name: "Competitive research pack", desc: "Three competitors compared on offer, price, and positioning, with sourced customer quotes and a one-page 'what makes you different' summary." },
     ],
   },
   {
