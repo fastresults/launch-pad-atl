@@ -848,12 +848,6 @@ function TheArtOfThePossible() {
             the same seven stages, in one day, in this room.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <a
-              href="#flow-stages"
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-medium transition-colors hover:border-white/40"
-            >
-              See the seven stages <ArrowRight className="size-4" />
-            </a>
             <Link
               to="/register"
               className="inline-flex items-center gap-2 rounded-full bg-hero-gradient px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
