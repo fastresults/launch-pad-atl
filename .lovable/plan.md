@@ -1,154 +1,120 @@
-## Goal
+## Media Hub — Plan
 
-Registered attendees complete intake (founder + business + financial profile, document uploads, goals, progress). Super admin runs an **AI-first deliverables pipeline** that ingests that data and sequentially produces every deliverable promised in the registration/pricing matrix. Each AI output lands in a **super-admin review queue first** — nothing reaches the attendee until super admin approves it, and approved deliverables can be **published immediately or scheduled for a future date/time**. Super admin can also edit/override any deliverable; overrides become the version the attendee sees.
+A unified media management system with two scopes:
+- **Master Hub** — super-admin only, holds shared/library assets unrelated to any specific attendee.
+- **User Hubs** — one per registrant, owned by the workshop user, also fully accessible to super admin. Super admin can push files from the Master Hub (or direct upload) into any user hub.
 
-## Database (new tables, RLS-protected)
+### 1. Storage
 
-1. **`attendee_profiles`** (1:1 with `auth.users`) — founder / business / financial fields, intake_completed_at
-2. **`attendee_documents`** — kind, storage_path, original_name, size, mime
-3. **`attendee_goals`** — 30/60/90 plan rows
-4. **`attendee_progress`** — module/assignment tracking
-5. **`deliverable_types`** — seeded catalog of every promised deliverable from the registration/pricing matrix (key, label, description, schema_version, default_model, prompt_template_id, sort_order, depends_on_keys[], tier_required)
-6. **`attendee_deliverables`** — one row per (user × deliverable_type)
-   - **review_status**: `draft` | `pending_review` | `approved` | `rejected` | `changes_requested`
-   - **publish_status**: `unpublished` | `scheduled` | `published` | `unpublished_manual`
-   - **publish_at** (timestamptz, nullable) — when scheduled
-   - **published_at** (timestamptz, nullable) — when actually went live
-   - **visible_to_user** (bool, computed/maintained: `publish_status='published'`)
-   - **content_current** (jsonb): the version attendee sees once published
-   - **content_ai** (jsonb): latest AI-generated version (kept for diff/revert)
-   - **content_source**: `ai` | `admin_override`
-   - admin_edited_at, admin_edited_by, ai_generated_at, approved_by, approved_at, reviewer_notes
-7. **`deliverable_revisions`** — append-only audit log (who, when, source, before/after snapshot, action: generated|edited|approved|rejected|scheduled|published|unpublished|reverted)
-8. **`ai_pipeline_runs`** — top-level pipeline execution per attendee (status, triggered_by, options)
-9. **`ai_pipeline_steps`** — one row per deliverable produced inside a run (run_id, deliverable_type_key, status, model, input_snapshot, raw_output, error, depends_on_keys[]) — sequential/DAG execution, resumable
+Two private Supabase Storage buckets:
+- `master-media` — super-admin only (RLS via `is_admin`).
+- `user-media` — keyed by `{user_id}/...`; user accesses their own folder, admin accesses all.
 
-Storage bucket: **`attendee-docs`** (private), path `{user_id}/{doc_id}-{filename}`.
+Limits: 100MB/file. Allowed MIME groups: documents (PDF, Word, text), images, audio, video.
 
-RLS (uses existing `is_admin()` / `has_role()`):
-- Attendees: CRUD own profile/docs/goals/progress; SELECT own `attendee_deliverables` **only where `publish_status='published'` AND `published_at <= now()`**.
-- Admins: SELECT all attendee tables and deliverables; INSERT pipeline runs.
-- Super admin: full CRUD on `attendee_deliverables`, `deliverable_revisions`, `ai_pipeline_runs`, `deliverable_types`.
+Access is always via short-lived **signed URLs** (download, upload, streaming).
 
-## AI-first deliverables pipeline
+### 2. Database
 
-**Trigger** (super-admin only): "Run full pipeline" on an attendee, run one specific deliverable, or re-run a failed step.
+New tables (all with RLS + GRANTs):
 
-**Engine** (`src/lib/pipeline.functions.ts`):
-- `triggerPipeline({userId, deliverableKeys?, force?})` opens `ai_pipeline_runs`, materializes step rows in dependency order.
-- Step executor uses **AI SDK** + Lovable AI Gateway provider helper with `Output.object` schemas per deliverable_type.
-- Steps run sequentially and pass upstream outputs as context to downstream prompts (SWOT → roadmap; canvas → GTM plan, etc.).
-- **Every completed step writes to `content_ai` and sets `review_status='pending_review'`, `publish_status='unpublished'`.** Nothing becomes visible to the attendee.
-- `content_current` initialized to `content_ai` for review/editing convenience but gated by `publish_status`.
-- Re-runs never overwrite `content_current` when `content_source='admin_override'` without explicit confirmation.
-- Default model: `google/gemini-3-flash-preview`; long-form deliverables use `google/gemini-2.5-pro`.
-- Streaming progress via realtime channel on `ai_pipeline_steps`.
+- **`media_assets`** — one row per file
+  - `scope` enum: `master` | `user`
+  - `owner_user_id` (null for master)
+  - `storage_bucket`, `storage_path`, `original_name`, `mime_type`, `size_bytes`, `media_type` (doc/image/audio/video — derived)
+  - `title`, `description`, `tags text[]`
+  - `folder_id` (nullable, nested folders)
+  - `thumbnail_path` (for images/video)
+  - `ai_summary`, `ai_transcript`, `ai_tags text[]`, `ai_status` (pending/processing/ready/failed)
+  - `pushed_from_asset_id` (nullable — links a user-hub copy back to the master original for traceability; copy is independent)
+  - `pushed_by`, `pushed_at` (nullable, set on admin push)
+  - audit: `created_by`, `created_at`, `updated_at`
 
-## Review → Approve → Schedule → Publish workflow
+- **`media_folders`** — nested tree
+  - `scope`, `owner_user_id` (null for master), `parent_id` (nullable), `name`, `path` (materialized for fast lookup)
 
-**Review queue** (`/admin/review`) — central inbox of all `pending_review` deliverables across all attendees, sortable by attendee, type, age. Each row links to the detail view.
+- **`media_collections`** + **`media_collection_items`** — flat named groupings (many-to-many with assets)
 
-**Per-deliverable review screen** (super-admin only):
-1. **View** AI version, current version, diff.
-2. **Edit inline** — rich editor for prose (markdown), structured editor for typed fields. Save writes `content_current`, sets `content_source='admin_override'`, appends revision.
-3. **Regenerate** this single deliverable (optionally use admin edits as guidance).
-4. **Revert** to last AI version.
-5. **Decision actions**:
-   - **Approve & Publish now** → `review_status='approved'`, `publish_status='published'`, `published_at=now()`, `visible_to_user=true`.
-   - **Approve & Schedule** → date/time picker (with timezone, defaults to admin's tz). Sets `review_status='approved'`, `publish_status='scheduled'`, `publish_at=<future>`. A scheduled worker flips it to `published` at the chosen time.
-   - **Approve only (hold)** → `review_status='approved'`, `publish_status='unpublished'`. Can be scheduled or published later.
-   - **Request changes** → `review_status='changes_requested'` + reviewer_notes (kept for audit; triggers no user-facing change).
-   - **Reject** → `review_status='rejected'`, `publish_status='unpublished'`.
-6. **Reschedule / Unpublish / Republish** at any time:
-   - Reschedule: change `publish_at` while `publish_status='scheduled'`.
-   - Unpublish a live deliverable: `publish_status='unpublished_manual'`, `visible_to_user=false` (attendee loses access immediately; revision logged).
-   - Republish: back to `published`.
-7. **Bulk actions** on the queue: approve-all / schedule-all (same time) / publish-all for a given attendee — useful right after a pipeline run finishes.
+- **`media_push_log`** — audit of admin pushes (`source_asset_id`, `target_user_id`, `target_asset_id`, `admin_id`, `note`, `created_at`)
 
-**Scheduled-publish worker** — TanStack server route `src/routes/api/public/hooks/publish-due-deliverables.ts` driven by `pg_cron` every minute:
-- Selects `attendee_deliverables` where `publish_status='scheduled' AND publish_at <= now() AND review_status='approved'`.
-- For each: sets `publish_status='published'`, `published_at=now()`, writes `deliverable_revisions` row (action='published', source='scheduler').
-- Optional: emits realtime event so the attendee dashboard updates instantly.
-- Auth via Supabase anon key in `apikey` header (canonical `/api/public/*` cron pattern).
+**RLS summary**
+- Master scope: read/write requires `is_admin(auth.uid())`.
+- User scope: owner can full CRUD on own rows; admin can full CRUD on all.
+- Folders/collections follow the same rule based on their `scope` + `owner_user_id`.
 
-Cron job seeded via `supabase--insert`:
-```sql
-select cron.schedule('publish-due-deliverables','* * * * *',
-  $$ select net.http_post(
-       url:='https://project--c8862b1b-6e2d-43fc-916e-3cbc978bcf87.lovable.app/api/public/hooks/publish-due-deliverables',
-       headers:='{"Content-Type":"application/json","apikey":"<anon>"}'::jsonb,
-       body:='{}'::jsonb) $$);
-```
+**Categories by type** are derived (not stored as a table) from `media_type` for filter chips.
 
-Attendee dashboard always reads `content_current` where `publish_status='published' AND published_at <= now()`. They never see drafts, pending, scheduled, or rejected items.
+### 3. Server Functions (`src/lib/media.functions.ts`)
 
-## Server functions
+All protected with `requireSupabaseAuth`; admin-only ones additionally check `is_admin`.
 
-**Attendee** (`requireSupabaseAuth`)
-- `getMyProfile`, `upsertMyProfile(section)`
-- `listMyDocuments`, `createDocumentUploadUrl`, `finalizeDocument`, `deleteMyDocument`
-- `listMyGoals`, `upsertGoal`, `deleteGoal`
-- `getMyProgress`, `updateModuleProgress`
-- `listMyDeliverables`, `getMyDeliverable(key)` — published-only
+- `listMedia({ scope, ownerUserId?, folderId?, collectionId?, mediaType?, tags?, search? })`
+- `getMediaAsset(id)` → row + signed download/stream URL
+- `createSignedUploadUrl({ scope, ownerUserId?, folderId?, filename, mimeType, sizeBytes })` — server validates size/MIME, returns signed PUT URL + pending asset row
+- `finalizeUpload(assetId)` — marks ready, kicks off thumbnail + AI processing
+- `updateMediaAsset(id, { title, description, tags, folderId })`
+- `deleteMediaAsset(id)`
+- `moveToCollection(assetId, collectionId, add|remove)`
+- Folders: `createFolder`, `renameFolder`, `moveFolder`, `deleteFolder`
+- Collections: `createCollection`, `renameCollection`, `deleteCollection`
+- **Admin-only**: `pushAssetsToUser({ sourceAssetIds, targetUserIds, targetFolderId?, note? })` — copies file in storage to each user's bucket path, inserts new `media_assets` row(s) with `scope=user`, `pushed_from_asset_id`, logs to `media_push_log`. Independent copy: user owns it and can rename/delete.
+- **Admin-only**: `listUserHubs()`, `getUserHubSummary(userId)`
 
-**Admin** (`assertAdmin`)
-- `listAttendees`, `getAttendeeDetail(userId)`
-- `listReviewQueue({status?, attendeeId?})`
+### 4. AI Processing
 
-**Super-admin** (`assertSuperAdmin`)
-- `triggerPipeline({userId, deliverableKeys?, force?})`
-- `regenerateDeliverable({userId, key, guidance?})`
-- `updateDeliverableContent({userId, key, content})`
-- `revertDeliverableToAi({userId, key})`
-- `reviewDeliverable({userId, key, decision: 'approve'|'request_changes'|'reject', notes?})`
-- `publishDeliverable({userId, key, when: 'now' | {scheduledAt: iso, timezone}})`
-- `unpublishDeliverable({userId, key, reason?})`
-- `rescheduleDeliverable({userId, key, scheduledAt, timezone})`
-- `bulkPublish({userId, keys, when})`
-- `listDeliverableRevisions`, `restoreRevision`
-- `listPipelineRuns`, `getPipelineRun`
+Background processing on `finalizeUpload`, using Lovable AI Gateway (already wired in `src/lib/ai-gateway.server.ts`):
+- **Images** → `google/gemini-2.5-flash` vision call → `ai_tags`, `ai_summary` (alt-text).
+- **PDF / Word / text docs** → extract text server-side, send to `google/gemini-3-flash-preview` → `ai_summary` + `ai_tags`.
+- **Audio / video** → transcribe via Gemini multimodal (or chunked) → `ai_transcript` + `ai_summary` + `ai_tags`.
+- **Thumbnails**: images via on-the-fly Supabase transform; video via first-frame extraction stored at `thumbnail_path`.
 
-## Routes
+Failure tolerant: `ai_status` lets UI show a retry button. Admin can trigger `reprocessAi(assetId)`.
 
-**Attendee portal** (`_authenticated/`)
-- `/dashboard` — intake %, goals snapshot, published deliverables count, next session
-- `/dashboard/profile` — multi-step intake (Founder → Business → Financials), autosave
-- `/dashboard/documents` — upload/list/delete
-- `/dashboard/goals` — 30/60/90 editor
-- `/dashboard/progress` — modules checklist
-- `/dashboard/deliverables` — published list (with publish dates)
-- `/dashboard/deliverables/$key` — typed renderer
+### 5. Frontend
 
-**Admin** (`_authenticated/_admin/`)
-- `/admin/attendees`, `/admin/attendees/$userId` — tabs: Profile · Documents · Goals · Progress · Deliverables · Pipeline Runs
-- `/admin/review` (super-admin gated) — global review queue
-- `/admin/attendees/$userId/deliverables/$key` (super-admin gated) — diff + editor + approve/schedule/publish controls + history
-- `/admin/pipeline/$runId` — live progress
+Shared component: `<MediaHub scope="master" | "user" ownerUserId={...} canAdminPush={bool} />` — drives both contexts to avoid duplication.
 
-## Frontend
+**Layout**
+- Left sidebar: Folder tree, Collections list, Type filter chips (All / Documents / Images / Audio / Video), Tag cloud.
+- Top bar: Search, view toggle (Grid/List), Upload button, "New folder", "New collection". Admin in user hubs gets "Push from Master".
+- Main: Grid (thumbnails for images/video, icon+title for docs/audio) or List (name, type, size, tags, date).
+- Right drawer (on select): Preview, metadata edit, tags, AI summary/transcript, move/copy, delete.
 
-- TanStack Query + `useServerFn`.
-- React-hook-form + zod; section autosave on intake.
-- Direct-to-Supabase signed-URL uploads.
-- Realtime on `attendee_deliverables` (attendee + admin views).
-- Schedule picker: shadcn `Calendar` + time input + timezone select (Luxon for tz math).
-- Diff UI: `react-diff-viewer-continued` for prose; custom side-by-side for structured fields.
-- Markdown: `react-markdown` + `remark-gfm`.
+**Previews**
+- Images: lightbox gallery.
+- PDFs: inline `<iframe>` or `react-pdf`.
+- Audio/video: native `<audio>`/`<video>` with signed URL.
+- Docs (Word): download + AI summary inline.
 
-## Security
+**Uploads**
+- Drag-and-drop + file picker, multi-file, chunked progress, client-side type/size guard.
 
-- All super-admin actions enforced server-side via `assertSuperAdmin`.
-- Attendee reads gated by both RLS (`publish_status='published' AND published_at<=now()`) and server-side filtering.
-- Cron endpoint validates anon key, uses `supabaseAdmin` only for the flip.
-- `deliverable_revisions` append-only (no DELETE policy) — full audit trail of every approval, schedule change, publish, and unpublish.
-- Storage private; signed URLs only.
+**Routes**
+- `/_authenticated/dashboard/media` — current user's hub.
+- `/_authenticated/_admin/admin/media` — Master Hub.
+- `/_authenticated/_admin/admin/attendees/$userId/media` — that user's hub from admin side, with "Push from Master" picker.
 
-## Open items to confirm before build
+Master Hub gets a multi-select → "Push to users" dialog (multi-user picker, optional target folder, note). Returns per-user success/failure summary.
 
-1. **Deliverables catalog** — I'll seed `deliverable_types` from `PricingTiers` + `ValueGrid`. Share an explicit list if you want different/extended items.
-2. **Tier gating** — all attendees get all deliverables by default (no gating). Confirm or override.
-3. **Notifications** — email attendee when a deliverable publishes? Default: no.
-4. **Default timezone for scheduling** — admin's browser tz by default. Workshop is Atlanta-based; want me to lock the picker to America/New_York?
-5. **Cost guardrails** — cap pipeline runs per attendee per day? Default: no cap.
+### 6. Realtime
 
-Confirm or override and I'll build.
+`media_assets` added to `supabase_realtime`: a user sees admin-pushed files appear live in their hub; admin sees user uploads live.
+
+### 7. Surfacing in existing app
+
+- Dashboard nav: add "Media" tab.
+- Admin nav: add "Media Library" (master) and "Media" inside attendee detail page.
+- The existing `attendee_documents` table is intake-only (founder profile docs); media hub is separate. We'll cross-link by surfacing intake docs as a read-only collection inside the user hub.
+
+### Technical notes
+
+- New migration creates buckets, tables, enums, indexes (`scope`, `owner_user_id`, `folder_id`, GIN on `tags`), RLS, GRANTs, and adds tables to realtime publication.
+- AI processing runs inside the `finalizeUpload` server function (not blocking the upload PUT). Long-running transcription runs fire-and-forget with status polling via Realtime.
+- Storage paths: `master/{folder_path}/{uuid}-{filename}` and `users/{user_id}/{folder_path}/{uuid}-{filename}`.
+- Push = `storage.copy` (server-side) + new asset row; original untouched; user copy is fully independent.
+
+### Out of scope (flag for follow-up)
+- Versioning / file history
+- Sharing between users
+- External shareable public links
+- Quotas per user
