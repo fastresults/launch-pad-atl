@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { buildCohortFromRow, type Cohort, type CohortRow } from "./cohorts";
 
 const COHORT_COLUMNS =
-  "id, cohort_date, tz, start_time, end_time, status, seats_left, venue_name, venue_address, venue_city, venue_region, venue_postal, sort_order, founders_price_cents, founders_seats, cohort_price_cents, cohort_seats, founders_display_floor, founders_warming_boost, founders_honest_threshold_pct, cohort_display_floor, cohort_warming_boost, cohort_honest_threshold_pct";
+  "id, cohort_date, tz, start_time, end_time, status, seats_left, venue_name, venue_address, venue_city, venue_region, venue_postal, sort_order, founders_price_cents, founders_seats, cohort_price_cents, cohort_seats, founders_display_floor_pct, founders_warming_boost, founders_honest_threshold_pct, cohort_display_floor_pct, cohort_warming_boost, cohort_honest_threshold_pct";
 
 export const listCohorts = createServerFn({ method: "GET" }).handler(
   async (): Promise<Cohort[]> => {
