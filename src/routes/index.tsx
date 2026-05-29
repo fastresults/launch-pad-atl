@@ -35,6 +35,7 @@ function HomePage() {
     <div className="min-h-screen">
       <SiteHeader />
       <Hero />
+      <NotACourseBanner />
       <WalkInWalkOut />
       <TheArtOfThePossible />
       <FlowStrip />
