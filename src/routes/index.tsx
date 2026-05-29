@@ -460,16 +460,44 @@ function WalkInWalkOut() {
               <div className="text-2xl font-semibold tracking-tight">
                 <span className="text-gradient-brand">What you walk out with</span>
               </div>
-              <ul className="mt-6 space-y-3">
-                {walkOut.map((i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <span className="mt-1 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-hero-gradient">
-                      <Check className="size-3 text-white" />
-                    </span>
-                    <span className="text-foreground">{i}</span>
-                  </li>
+              <div className="mt-6 space-y-7">
+                {WALKOUT_PHASES.map((p, idx) => (
+                  <div
+                    key={p.n}
+                    className={
+                      idx === 0
+                        ? ""
+                        : "border-t border-white/10 pt-7"
+                    }
+                  >
+                    <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                      Phase {p.n}
+                    </div>
+                    <h3 className="mt-1 text-base font-semibold tracking-tight">
+                      {p.title}
+                    </h3>
+                    <p className="mt-1 text-sm leading-snug text-muted-foreground">
+                      {p.intro}
+                    </p>
+                    <ul className="mt-4 space-y-3">
+                      {p.items.map((g) => (
+                        <li key={g.name} className="flex items-start gap-3">
+                          <span className="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-hero-gradient" />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium text-foreground">
+                              {g.name}
+                            </div>
+                            <div className="text-[12px] leading-snug text-muted-foreground">
+                              {g.desc}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ))}
-              </ul>
+              </div>
+
             </div>
           </div>
         </div>
