@@ -31,7 +31,7 @@ export const STAGES: Stage[] = [
     summary: "The legal foundation. Leave with a filing-ready packet and the legal kit you need to sell.",
     oneLiner: "Legal foundation",
     takeHome:
-      "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding model with 12-month runway, an investor-ready pitch deck, and a fundraising kit ready to send. File Monday, start taking money the same week.",
+      "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding model with 12-month runway, a business plan with pro formas, an investor-ready pitch deck, and a fundraising kit ready to send. File Monday, start taking money the same week.",
     walkOut: [
       "Articles of Organization pre-filled in your GA Secretary of State account",
       "EIN application completed and submitted — number issued in the session",
@@ -39,9 +39,11 @@ export const STAGES: Stage[] = [
       "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business",
       "Local license + sales-tax requirements documented for your county",
       "Funding model & 12-month runway: real costs, margins, break-even, and cash picture by month",
+      "Business plan with pro formas: short narrative plan + 12-month P&L, cash flow, and break-even pro forma a bank or investor will accept",
       "Investor-ready pitch deck: 10 slides in your brand (problem, solution, market, offer, traction, model, GTM, team, ask, use of funds)",
       "Fundraising kit: 1-page raise summary, funder outreach list with email template, and your path picked across grants, microloans, SBA, and friends-and-family",
     ],
+
     afterWorkshop: [
       "Submit the Articles + filing fee from home (about 10 minutes)",
       "Open the business bank account (1–7 days after you apply)",
@@ -99,20 +101,22 @@ export const STAGES: Stage[] = [
           "File the local business license and (if applicable) sales-tax registration once your entity is approved.",
       },
       {
-        title: "Funding model, pitch deck & fundraising kit",
+        title: "Funding model, business plan with pro formas, pitch deck & fundraising kit",
         deliverable:
-          "Your funding model with 12-month runway, a 10-slide investor-ready pitch deck in your brand, and a fundraising kit — 1-page raise summary, funder outreach list with email template, and your path picked across grants, microloans, SBA, and friends-and-family.",
-        tool: "Funding model + pitch deck + raise kit templates",
+          "Your funding model with 12-month runway, a business plan with pro formas (12-month P&L, cash flow, and break-even), a 10-slide investor-ready pitch deck in your brand, and a fundraising kit — 1-page raise summary, funder outreach list with email template, and your path picked across grants, microloans, SBA, and friends-and-family.",
+        tool: "Funding model + business plan + pitch deck + raise kit templates",
         details: [
           "Build the funding model: startup costs, monthly burn, break-even, and a 12-month cash picture",
+          "Build a 12-month P&L, cash flow, and break-even pro forma alongside a short narrative business plan",
           "Pick the funding path: grants, microloans, SBA, revenue-based, line of credit, friends & family, or equity",
           "Draft the 10-slide pitch deck in your brand: problem, solution, market, offer, traction, model, GTM, team, ask, use of funds",
           "Write the 1-page raise summary and customize the funder outreach email template so it's ready to send",
         ],
         takeaway:
-          "Your funding model with 12-month runway, investor-ready pitch deck, and fundraising kit — ready to send.",
+          "Your funding model, business plan with pro formas, investor-ready pitch deck, and fundraising kit — ready to send.",
         followUp:
           "Build out the funder list and send the outreach in the first 2 weeks; book intro calls with anyone who replies.",
+
       },
     ],
   },
@@ -124,14 +128,16 @@ export const STAGES: Stage[] = [
     summary: "Who you serve, what they'll pay for, and how you beat the competition.",
     oneLiner: "Demand & proof",
     takeHome:
-      "A sourced 1-page research brief on your idea (market size, trend, regulation, suppliers, real customer quotes), one named first customer with their problems priced in dollars, a starter prospect list you begin in-session, and a validated outreach script — with the CSV export template ready.",
+      "A sourced 1-page research brief on your idea (market size, trend, regulation, suppliers, real customer quotes), one named first customer with their problems priced in dollars, a starter prospect list you begin in-session, a validated outreach script, a competitive research pack, and a one-sentence competitive advantage brief — your defensible 'secret sauce' pulled from the research.",
     walkOut: [
       "1-page idea-research brief: market size, trend, regulation, supplier/competitor scan, and sourced customer quotes",
       "1-page profile of your first named buyer with their top 3 problems priced in dollars",
       "Starter prospect list begun in-session with the source template and CSV export ready",
       "Outreach script customized to that specific buyer",
       "Competitive research pack: 3 competitors compared on offer, price, and positioning, with sourced customer quotes and a one-page 'what makes you different' summary",
+      "Competitive advantage brief: your defensible 'secret sauce' written in one sentence, sourced from the research + competitor scan",
     ],
+
     afterWorkshop: [
       "Fill out the prospect list and run discovery calls within the next 2 weeks",
     ],
@@ -183,19 +189,21 @@ export const STAGES: Stage[] = [
           "Fill out the prospect list and run discovery calls in the next 2 weeks; score each one.",
       },
       {
-        title: "Competitive research pack",
+        title: "Competitive research pack + competitive advantage brief",
         deliverable:
-          "A competitive research pack: 3 competitors compared on offer, price, channel, proof, and weakness, with sourced customer quotes and a one-page 'what makes you different' summary.",
-        tool: "Competitive research template",
+          "A competitive research pack: 3 competitors compared on offer, price, channel, proof, and weakness, with sourced customer quotes and a one-page 'what makes you different' summary — plus a one-sentence competitive advantage brief (your defensible 'secret sauce') you can put on the website and in pitches.",
+        tool: "Competitive research template + advantage brief",
         details: [
           "Identify 3 real competitors (2 direct + 1 substitute)",
           "Score each on offer, price, channel, proof, and weakness",
           "Pull sourced customer quotes that show where each competitor falls short",
+          "Distill the research + competitor weaknesses into one defensible advantage and write it as a one-sentence positioning line",
           "Write a one-line positioning statement: For X, who Y, we are Z because…",
         ],
         takeaway:
-          "Your competitive research pack — 3 competitors compared, sourced customer quotes, and a one-page 'what makes you different' summary.",
+          "Your competitive research pack plus a competitive advantage brief — your 'secret sauce' written in one sentence you can defend.",
       },
+
     ],
   },
   {
@@ -206,16 +214,17 @@ export const STAGES: Stage[] = [
     summary: "What you actually sell, how it's delivered, and the price tag.",
     oneLiner: "What you sell & what it costs",
     takeHome:
-      "Your offer written in one sentence a buyer can say yes or no to, your price backed into from your real costs, the exact number of sales you need to break even, and a signed go / pivot / kill viability score — on a one-page offer sheet.",
+      "Your offer written in one sentence a buyer can say yes or no to, your price set from a 3-competitor scan, value to the customer, and your real costs, the exact number of sales you need to break even, and a signed go / pivot / kill viability score — on a one-page offer sheet.",
     walkOut: [
       "Your one-sentence offer locked",
       "First-version scope mapped step-by-step from sale to handoff",
-      "Pricing sheet with real cost per sale, break-even number, and payment terms",
+      "Competitor + value-based pricing: 3-competitor price scan, value & cost-plus anchors, real cost per sale, break-even number, and payment terms",
       "Signed viability scorecard with a go / pivot / kill decision, scored on 6 dimensions with evidence",
     ],
     afterWorkshop: [],
     duration: "60 min",
-    covers: ["Offer in one sentence", "What's in V1", "Pricing & break-even"],
+    covers: ["Offer in one sentence", "What's in V1", "Competitor + value-based pricing"],
+
     tasks: [
       {
         title: "Write the offer in one sentence",
@@ -246,19 +255,21 @@ export const STAGES: Stage[] = [
           "Your first-version scope — mapped step-by-step from sale to handoff.",
       },
       {
-        title: "Set price, margin & payment terms",
+        title: "Set price using competitor + value benchmarks",
         deliverable:
-          "Your pricing sheet, your real cost per sale, and the exact number of sales you need to cover your costs.",
-        tool: "Pricing & margin calculator",
+          "Your pricing sheet built from a 3-competitor price scan and the value to your customer, with real cost per sale, margin, break-even, and payment terms.",
+        tool: "Competitor + value-based pricing calculator",
         details: [
-          "Compute what each sale actually costs you to make",
+          "Scan 3 named competitors and capture their public prices and what's included",
           "Set price using value, cost-plus, and competitor anchors",
+          "Compute what each sale actually costs you to make",
           "Calculate units/month to break even and to hit a target income",
           "Define deposit, milestones, refund policy, and accepted payment methods",
         ],
         takeaway:
-          "Your pricing sheet + exact break-even number + payment terms.",
+          "Your pricing sheet — anchored to competitors and customer value — plus exact break-even number and payment terms.",
       },
+
       {
         title: "Score the idea — go / pivot / kill",
         deliverable:
@@ -284,14 +295,16 @@ export const STAGES: Stage[] = [
       "Set up how you'll actually deliver. Pick what kind of business you're building, set up your free apps, and draft what your first customer will get.",
     oneLiner: "Your first working version",
     takeHome:
-      "Your delivery process mapped step-by-step, the free apps that run it set up with your accounts, your first customer's deliverable drafted and rehearsed, and 3 written SOPs (sales intake, fulfillment, onboarding) loaded into your project hub — before a real customer ever sees it.",
+      "Your delivery process mapped step-by-step, the free apps that run it set up with your accounts, your first customer's deliverable drafted and rehearsed, 3 written SOPs (sales intake, fulfillment, onboarding) loaded into your project hub, and a sourcing & staffing plan for the raw goods, services, and talent you'll need — before a real customer ever sees it.",
     walkOut: [
       "Sale-to-happy-customer map with the app you'll use at each step",
       "Free-app accounts created in your name: project hub, files, scheduling, business email alias",
       "Your first customer's deliverable drafted and rehearsed end-to-end",
       "5-point quality checklist for anything that goes to a real customer",
       "Operations & workflow: 3 runnable SOPs (intake, fulfillment, onboarding) in your project hub plus a one-page weekly operating rhythm",
+      "Sourcing & staffing plan: named suppliers, contractors, or hires for raw goods, services, and talent — with a first-call list",
     ],
+
     afterWorkshop: [
       "Run the rehearsed deliverable past your first paying customer and iterate",
       "Upgrade to paid app tiers as revenue justifies",
@@ -348,21 +361,23 @@ export const STAGES: Stage[] = [
           "Run the drafts past your first paying customer and iterate after their feedback.",
       },
       {
-        title: "Operations & workflow",
+        title: "Operations & workflow + sourcing & staffing plan",
         deliverable:
-          "3 written SOPs specific to your business (sales intake, fulfillment, customer onboarding) — each with trigger, steps, owner, tools, definition of done, and failure modes — loaded into your project hub as runnable templates, plus a one-page weekly operating rhythm.",
-        tool: "SOP templates + weekly operating rhythm",
+          "3 written SOPs specific to your business (sales intake, fulfillment, customer onboarding) loaded into your project hub as runnable templates, a one-page weekly operating rhythm, and a sourcing & staffing plan naming the suppliers, contractors, or first hires you'll need for raw goods, services, and talent.",
+        tool: "SOP templates + weekly operating rhythm + sourcing & staffing plan",
         details: [
           "Pick the 3 highest-leverage workflows: sales intake, fulfillment, customer onboarding",
           "Write each as a numbered SOP: trigger → inputs → steps → owner → tools → definition of done",
           "Add a 'what breaks this' section listing the top 3 failure modes and the recovery step",
           "Draft a one-page weekly operating rhythm: standing blocks, review cadence, and the 3 numbers you check every Friday",
           "Load all 3 SOPs into Notion / ClickUp / Trello as runnable templates anyone on the team can follow",
+          "Identify named sources for raw goods, services, and talent — suppliers, contractors, and any first hires — and capture them as a first-call list",
         ],
         takeaway:
-          "Your operations & workflow: 3 runnable SOPs in your project hub plus a one-page weekly operating rhythm.",
+          "Your operations & workflow plus a sourcing & staffing plan — SOPs, weekly rhythm, and a first-call list for goods, services, and talent.",
         followUp:
           "Run each SOP once with a real or rehearsed customer in the first 2 weeks; revise the steps that broke.",
+
       },
     ],
   },
