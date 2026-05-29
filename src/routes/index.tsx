@@ -66,12 +66,13 @@ function NotACourseBanner() {
               <p className="text-[11px] md:text-xs uppercase tracking-[0.18em] font-semibold text-white/70">
                 Most workshops teach. This one builds.
               </p>
-              <h2 className="mt-2 text-xl md:text-2xl font-semibold text-white leading-tight">
+              <h2 className="mt-2 text-xl md:text-2xl font-semibold text-white/70 leading-tight">
                 Walk in with an idea. Walk out with a built business.
               </h2>
-              <p className="mt-2 text-sm md:text-base text-white/85 leading-relaxed">
+              <p className="mt-2 text-sm md:text-base text-white/70 leading-relaxed">
                 Not a course. Not a coaching call. Not a 12-week cohort that ends in a PDF. In one focused day — seven hours, one room, one founder — you build the actual business: name, brand, website, offer, pricing, legal drafts, and a launch plan. You leave with real work in hand and a short, plain-English checklist for the few items only your signature can finish — LLC filing, bank account, license, and publishing the site. You arrive with a spark. You leave with a company that's built, not a notebook full of someday.
               </p>
+
             </div>
           </div>
           <div className="flex flex-wrap gap-2 md:flex-col md:items-end md:gap-2 md:shrink-0">
