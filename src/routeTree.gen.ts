@@ -25,7 +25,11 @@ import { Route as AuthenticatedDashboardDocumentsRouteImport } from './routes/_a
 import { Route as AuthenticatedDashboardDeliverablesRouteImport } from './routes/_authenticated/dashboard.deliverables'
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
 import { Route as AuthenticatedAdminAdminUsersRouteImport } from './routes/_authenticated/_admin/admin.users'
+import { Route as AuthenticatedAdminAdminReviewRouteImport } from './routes/_authenticated/_admin/admin.review'
 import { Route as AuthenticatedAdminAdminRegistrationsRouteImport } from './routes/_authenticated/_admin/admin.registrations'
+import { Route as AuthenticatedAdminAdminAttendeesRouteImport } from './routes/_authenticated/_admin/admin.attendees'
+import { Route as AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.index'
+import { Route as AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.deliverables.$key'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -112,11 +116,35 @@ const AuthenticatedAdminAdminUsersRoute =
     path: '/admin/users',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAdminReviewRoute =
+  AuthenticatedAdminAdminReviewRouteImport.update({
+    id: '/admin/review',
+    path: '/admin/review',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAdminRegistrationsRoute =
   AuthenticatedAdminAdminRegistrationsRouteImport.update({
     id: '/admin/registrations',
     path: '/admin/registrations',
     getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminAdminAttendeesRoute =
+  AuthenticatedAdminAdminAttendeesRouteImport.update({
+    id: '/admin/attendees',
+    path: '/admin/attendees',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminAdminAttendeesUserIdIndexRoute =
+  AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport.update({
+    id: '/$userId/',
+    path: '/$userId/',
+    getParentRoute: () => AuthenticatedAdminAdminAttendeesRoute,
+  } as any)
+const AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute =
+  AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRouteImport.update({
+    id: '/$userId/deliverables/$key',
+    path: '/$userId/deliverables/$key',
+    getParentRoute: () => AuthenticatedAdminAdminAttendeesRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -132,9 +160,13 @@ export interface FileRoutesByFullPath {
   '/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
+  '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
+  '/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
+  '/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -148,9 +180,13 @@ export interface FileRoutesByTo {
   '/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
+  '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
+  '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
+  '/admin/attendees/$userId': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
+  '/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -168,9 +204,13 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/goals': typeof AuthenticatedDashboardGoalsRoute
   '/_authenticated/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/_authenticated/_admin/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/_authenticated/_admin/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
+  '/_authenticated/_admin/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/_authenticated/_admin/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
+  '/_authenticated/_admin/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
+  '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key': typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -187,9 +227,13 @@ export interface FileRouteTypes {
     | '/dashboard/goals'
     | '/dashboard/profile'
     | '/dashboard/'
+    | '/admin/attendees'
     | '/admin/registrations'
+    | '/admin/review'
     | '/admin/users'
     | '/admin/'
+    | '/admin/attendees/$userId/'
+    | '/admin/attendees/$userId/deliverables/$key'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -203,9 +247,13 @@ export interface FileRouteTypes {
     | '/dashboard/goals'
     | '/dashboard/profile'
     | '/dashboard'
+    | '/admin/attendees'
     | '/admin/registrations'
+    | '/admin/review'
     | '/admin/users'
     | '/admin'
+    | '/admin/attendees/$userId'
+    | '/admin/attendees/$userId/deliverables/$key'
   id:
     | '__root__'
     | '/'
@@ -222,9 +270,13 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/goals'
     | '/_authenticated/dashboard/profile'
     | '/_authenticated/dashboard/'
+    | '/_authenticated/_admin/admin/attendees'
     | '/_authenticated/_admin/admin/registrations'
+    | '/_authenticated/_admin/admin/review'
     | '/_authenticated/_admin/admin/users'
     | '/_authenticated/_admin/admin/'
+    | '/_authenticated/_admin/admin/attendees/$userId/'
+    | '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -351,6 +403,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminUsersRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/_admin/admin/review': {
+      id: '/_authenticated/_admin/admin/review'
+      path: '/admin/review'
+      fullPath: '/admin/review'
+      preLoaderRoute: typeof AuthenticatedAdminAdminReviewRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/_admin/admin/registrations': {
       id: '/_authenticated/_admin/admin/registrations'
       path: '/admin/registrations'
@@ -358,18 +417,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminRegistrationsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/_admin/admin/attendees': {
+      id: '/_authenticated/_admin/admin/attendees'
+      path: '/admin/attendees'
+      fullPath: '/admin/attendees'
+      preLoaderRoute: typeof AuthenticatedAdminAdminAttendeesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/_admin/admin/attendees/$userId/': {
+      id: '/_authenticated/_admin/admin/attendees/$userId/'
+      path: '/$userId'
+      fullPath: '/admin/attendees/$userId/'
+      preLoaderRoute: typeof AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminAttendeesRoute
+    }
+    '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key': {
+      id: '/_authenticated/_admin/admin/attendees/$userId/deliverables/$key'
+      path: '/$userId/deliverables/$key'
+      fullPath: '/admin/attendees/$userId/deliverables/$key'
+      preLoaderRoute: typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminAttendeesRoute
+    }
   }
 }
 
+interface AuthenticatedAdminAdminAttendeesRouteChildren {
+  AuthenticatedAdminAdminAttendeesUserIdIndexRoute: typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
+  AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute: typeof AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute
+}
+
+const AuthenticatedAdminAdminAttendeesRouteChildren: AuthenticatedAdminAdminAttendeesRouteChildren =
+  {
+    AuthenticatedAdminAdminAttendeesUserIdIndexRoute:
+      AuthenticatedAdminAdminAttendeesUserIdIndexRoute,
+    AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute:
+      AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute,
+  }
+
+const AuthenticatedAdminAdminAttendeesRouteWithChildren =
+  AuthenticatedAdminAdminAttendeesRoute._addFileChildren(
+    AuthenticatedAdminAdminAttendeesRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAdminAttendeesRoute: typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   AuthenticatedAdminAdminRegistrationsRoute: typeof AuthenticatedAdminAdminRegistrationsRoute
+  AuthenticatedAdminAdminReviewRoute: typeof AuthenticatedAdminAdminReviewRoute
   AuthenticatedAdminAdminUsersRoute: typeof AuthenticatedAdminAdminUsersRoute
   AuthenticatedAdminAdminIndexRoute: typeof AuthenticatedAdminAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAdminAttendeesRoute:
+    AuthenticatedAdminAdminAttendeesRouteWithChildren,
   AuthenticatedAdminAdminRegistrationsRoute:
     AuthenticatedAdminAdminRegistrationsRoute,
+  AuthenticatedAdminAdminReviewRoute: AuthenticatedAdminAdminReviewRoute,
   AuthenticatedAdminAdminUsersRoute: AuthenticatedAdminAdminUsersRoute,
   AuthenticatedAdminAdminIndexRoute: AuthenticatedAdminAdminIndexRoute,
 }
