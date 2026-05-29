@@ -57,12 +57,17 @@ export function SiteHeader() {
         {/* Desktop right side */}
         <div className="hidden items-center gap-3 lg:flex">
           {isAuthenticated ? (
-            <button
-              onClick={() => signOut()}
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              sign out
-            </button>
+            <>
+              <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
+                dashboard
+              </Link>
+              <button
+                onClick={() => signOut()}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                sign out
+              </button>
+            </>
           ) : (
             <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
               sign in
