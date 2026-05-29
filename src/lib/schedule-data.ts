@@ -1,5 +1,5 @@
 import { STAGES } from "./curriculum-data";
-import { getNextAvailableCohort } from "./cohorts";
+import { FALLBACK_COHORT, type Cohort } from "./cohorts";
 
 export type Session = {
   time: string;
@@ -10,30 +10,32 @@ export type Session = {
   kind?: "session" | "break";
 };
 
-const EVENT_ADDRESS = "1500 Indian Trail Lilburn Rd NW, Norcross, GA 30093";
+// Build an EVENT-shape object from a cohort. Used by hero/schedule/confirmation.
+export function buildEvent(cohort: Cohort) {
+  const venueAddress = `${cohort.venueAddress}, ${cohort.venueCity}, ${cohort.venueRegion} ${cohort.venuePostal}`;
+  return {
+    dateLabel: cohort.dateLabel,
+    timeLabel: "8:00 AM – 4:30 PM ET",
+    durationLabel: "8 hours 30 minutes",
+    venueName: cohort.venueName,
+    address: venueAddress,
+    venueCity: cohort.venueCity,
+    venueRegion: cohort.venueRegion,
+    isDefaultVenue: cohort.isDefaultVenue,
+    capacity: 20,
+    mapsUrl: cohort.mapsUrl,
+    mapsEmbedUrl: `https://www.google.com/maps?q=${encodeURIComponent(venueAddress)}&output=embed`,
+    startISO: cohort.startISO,
+    endISO: cohort.endISO,
+    googleCalendarUrl: cohort.googleCalendarUrl,
+    icsHref: cohort.icsHref,
+    icsFilename: cohort.icsFilename,
+  };
+}
 
-// EVENT reflects the next-available cohort so the hero, schedule page,
-// and confirmation flow auto-roll forward as monthly cohorts fill up.
-const NEXT = getNextAvailableCohort();
-
-export const EVENT = {
-  dateLabel: NEXT.dateLabel,
-  timeLabel: "8:00 AM – 4:30 PM ET",
-  durationLabel: "8 hours 30 minutes",
-  venueName: "IGNITE Center at Greater Atlanta Christian School",
-  address: EVENT_ADDRESS,
-  capacity: 20,
-  mapsUrl:
-    "https://www.google.com/maps/search/?api=1&query=1500+Indian+Trail+Lilburn+Rd+NW%2C+Norcross%2C+GA+30093",
-  mapsEmbedUrl:
-    "https://www.google.com/maps?q=1500+Indian+Trail+Lilburn+Rd+NW%2C+Norcross%2C+GA+30093&output=embed",
-  startISO: NEXT.startISO,
-  endISO: NEXT.endISO,
-  googleCalendarUrl: NEXT.googleCalendarUrl,
-  icsHref: NEXT.icsHref,
-  icsFilename: NEXT.icsFilename,
-};
-
+// Static fallback so existing static `EVENT` imports keep working at build time.
+// Pages that need live data should call `buildEvent(cohort)` with loader data.
+export const EVENT = buildEvent(FALLBACK_COHORT);
 
 // Flow strip on the home page mirrors the curriculum.
 export const FLOW_STAGES = STAGES.map((s) => ({

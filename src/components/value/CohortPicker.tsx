@@ -1,14 +1,24 @@
-import { COHORTS, FIRST_SOLD_OUT, type Cohort } from "@/lib/cohorts";
-import { CalendarDays, Check, Lock } from "lucide-react";
+import { type Cohort, getFirstSoldOut } from "@/lib/cohorts";
+import { CalendarDays, Check, Lock, MapPin } from "lucide-react";
 
 type Props = {
+  cohorts: Cohort[];
   selectedId: string;
   onSelect: (id: string) => void;
 };
 
-export function CohortPicker({ selectedId, onSelect }: Props) {
-  const featured = COHORTS.find((c) => c.id === selectedId) ?? COHORTS[0];
+export function CohortPicker({ cohorts, selectedId, onSelect }: Props) {
+  if (cohorts.length === 0) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-card p-5 text-sm text-muted-foreground">
+        No upcoming cohorts scheduled yet.
+      </div>
+    );
+  }
+
+  const featured = cohorts.find((c) => c.id === selectedId) ?? cohorts[0];
   const isFilling = featured.status === "filling";
+  const firstSoldOut = getFirstSoldOut(cohorts);
 
   return (
     <div className="rounded-2xl border border-white/10 bg-card overflow-hidden">
@@ -37,22 +47,51 @@ export function CohortPicker({ selectedId, onSelect }: Props) {
             <div className="mt-0.5 truncate text-lg font-semibold text-foreground">
               {featured.dateLabel}
             </div>
+            <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <MapPin className="size-3" />
+              <span className="truncate">{featured.cityLabel}</span>
+            </div>
           </div>
         </div>
-        {FIRST_SOLD_OUT && featured.id !== FIRST_SOLD_OUT.id && (
+        {firstSoldOut && featured.id !== firstSoldOut.id && (
           <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
             <Lock className="size-3.5" />
             <span>
-              <span className="line-through">{FIRST_SOLD_OUT.shortLabel}</span> sold out
+              <span className="line-through">{firstSoldOut.shortLabel}</span> sold out
             </span>
           </div>
         )}
       </div>
 
+      {/* Different-location callout */}
+      {!featured.isDefaultVenue && featured.status !== "sold_out" && (
+        <div className="border-b border-amber-400/20 bg-amber-400/10 px-5 py-3 md:px-6">
+          <div className="flex items-start gap-2.5">
+            <MapPin className="mt-0.5 size-4 shrink-0 text-amber-300" />
+            <div className="text-xs leading-relaxed text-amber-100">
+              <span className="font-semibold text-amber-200">
+                Heads up — this cohort meets in {featured.venueCity}, not Norcross.
+              </span>{" "}
+              <span className="text-amber-100/90">
+                {featured.venueName} · {featured.venueAddress}, {featured.venueCity}, {featured.venueRegion} {featured.venuePostal}
+              </span>{" "}
+              <a
+                href={featured.mapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-2 hover:text-amber-50"
+              >
+                Get directions
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Pill rail */}
       <div className="px-3 py-3 md:px-4">
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:thin]">
-          {COHORTS.map((c) => (
+          {cohorts.map((c) => (
             <CohortPill
               key={c.id}
               cohort={c}
@@ -62,7 +101,7 @@ export function CohortPicker({ selectedId, onSelect }: Props) {
           ))}
         </div>
         <p className="mt-2 px-1 text-[11px] text-muted-foreground">
-          Workshops run the third Wednesday of every month · 8:00 AM – 4:30 PM ET
+          Monthly cohorts · 8:00 AM – 4:30 PM ET · Most meet in Norcross, GA
         </p>
       </div>
     </div>
@@ -89,18 +128,20 @@ function CohortPill({
     ? "border-primary bg-primary/10 text-foreground shadow-[0_0_0_1px_var(--color-primary)]"
     : "border-white/10 bg-white/[0.02] hover:border-white/25 hover:bg-white/[0.05] text-foreground/90";
 
+  const [month, day] = cohort.shortLabel.split(" ");
+
   return (
     <button
       type="button"
       disabled={isSoldOut}
       onClick={() => !isSoldOut && onSelect(cohort.id)}
       aria-pressed={selected}
-      aria-label={`${cohort.dateLabel}${isSoldOut ? " (sold out)" : ""}`}
+      aria-label={`${cohort.dateLabel}${isSoldOut ? " (sold out)" : ""}${!cohort.isDefaultVenue ? ` in ${cohort.cityLabel}` : ""}`}
       className={`${base} ${stateClass}`}
     >
       <div className="flex items-center gap-1.5">
         <span className={`text-[10px] uppercase tracking-wider ${isSoldOut ? "line-through" : "text-muted-foreground"}`}>
-          {cohort.shortLabel.split(" ")[0]}
+          {month}
         </span>
         {isFilling && !selected && (
           <span className="inline-block size-1.5 rounded-full bg-amber-400" />
@@ -110,13 +151,18 @@ function CohortPill({
         )}
       </div>
       <div className={`text-sm font-semibold tabular-nums ${isSoldOut ? "line-through" : ""}`}>
-        {cohort.shortLabel.split(" ")[1]}
+        {day}
       </div>
-      {isSoldOut && (
+      {isSoldOut ? (
         <div className="mt-0.5 text-[9px] uppercase tracking-wider text-muted-foreground/70">
           Sold out
         </div>
-      )}
+      ) : !cohort.isDefaultVenue ? (
+        <div className="mt-0.5 flex items-center gap-1 text-[9px] uppercase tracking-wider text-amber-300">
+          <MapPin className="size-2.5" />
+          {cohort.venueCity}
+        </div>
+      ) : null}
     </button>
   );
 }

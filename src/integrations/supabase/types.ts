@@ -367,6 +367,60 @@ export type Database = {
         }
         Relationships: []
       }
+      cohorts: {
+        Row: {
+          cohort_date: string
+          created_at: string
+          end_time: string
+          id: string
+          seats_left: number | null
+          sort_order: number
+          start_time: string
+          status: string
+          tz: string
+          updated_at: string
+          venue_address: string
+          venue_city: string
+          venue_name: string
+          venue_postal: string
+          venue_region: string
+        }
+        Insert: {
+          cohort_date: string
+          created_at?: string
+          end_time?: string
+          id: string
+          seats_left?: number | null
+          sort_order?: number
+          start_time?: string
+          status?: string
+          tz?: string
+          updated_at?: string
+          venue_address?: string
+          venue_city?: string
+          venue_name?: string
+          venue_postal?: string
+          venue_region?: string
+        }
+        Update: {
+          cohort_date?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          seats_left?: number | null
+          sort_order?: number
+          start_time?: string
+          status?: string
+          tz?: string
+          updated_at?: string
+          venue_address?: string
+          venue_city?: string
+          venue_name?: string
+          venue_postal?: string
+          venue_region?: string
+        }
+        Relationships: []
+      }
       deliverable_revisions: {
         Row: {
           action: string

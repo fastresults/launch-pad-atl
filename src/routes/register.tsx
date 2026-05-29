@@ -1,14 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { createRegistration } from "@/lib/registrations.functions";
+import { listCohorts } from "@/lib/cohorts.functions";
 import { EVENT } from "@/lib/schedule-data";
-import { getCohortById, getNextAvailableCohort } from "@/lib/cohorts";
+import { getCohortById, getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
 import { ValueGrid } from "@/components/value/ValueGrid";
 import { TotalsBar } from "@/components/value/TotalsBar";
 import { PricingTiers } from "@/components/value/PricingTiers";
@@ -57,7 +59,17 @@ function RegisterPage() {
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [tier, setTier] = useState<TierKey>("founders");
-  const defaultCohort = getNextAvailableCohort();
+  const fetchCohorts = useServerFn(listCohorts);
+  const { data: cohorts = [] } = useQuery<Cohort[]>({
+    queryKey: ["cohorts"],
+    queryFn: () => fetchCohorts(),
+    initialData: [],
+    staleTime: 60_000,
+  });
+  const defaultCohort = useMemo(
+    () => getNextAvailable(cohorts) ?? FALLBACK_COHORT,
+    [cohorts],
+  );
   const [cohortId, setCohortId] = useState<string>(defaultCohort.id);
   const submit = useServerFn(createRegistration);
 
@@ -76,6 +88,12 @@ function RegisterPage() {
     },
   });
 
+  // Once cohorts hydrate, sync the form's hidden field if the user hasn't picked yet.
+  if (cohortId === FALLBACK_COHORT.id && defaultCohort.id !== FALLBACK_COHORT.id) {
+    setCohortId(defaultCohort.id);
+    setValue("cohort_id", defaultCohort.id, { shouldValidate: false });
+  }
+
   const selectTier = (t: TierKey) => {
     setTier(t);
     setValue("tier_interest", t, { shouldValidate: true });
@@ -86,7 +104,7 @@ function RegisterPage() {
     setValue("cohort_id", id, { shouldValidate: true });
   };
 
-  const selectedCohort = getCohortById(cohortId) ?? defaultCohort;
+  const selectedCohort = getCohortById(cohorts, cohortId) ?? defaultCohort;
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
@@ -131,7 +149,7 @@ function RegisterPage() {
 
           {/* Cohort picker — compact, sits in the hero */}
           <div className="mt-8">
-            <CohortPicker selectedId={cohortId} onSelect={selectCohort} />
+            <CohortPicker cohorts={cohorts} selectedId={cohortId} onSelect={selectCohort} />
           </div>
         </div>
       </section>
@@ -185,7 +203,7 @@ function RegisterPage() {
             </p>
           </div>
           {submitted ? (
-            <SuccessCard tier={tier} cohortId={cohortId} />
+            <SuccessCard tier={tier} cohort={selectedCohort} />
           ) : (
             <form
               onSubmit={onSubmit}
@@ -345,8 +363,7 @@ function Field({
   );
 }
 
-function SuccessCard({ tier, cohortId }: { tier: TierKey; cohortId: string }) {
-  const cohort = getCohortById(cohortId);
+function SuccessCard({ tier, cohort }: { tier: TierKey; cohort: Cohort }) {
   const bring = [
     "Your laptop and charger",
     "Headphones (optional)",
@@ -360,7 +377,7 @@ function SuccessCard({ tier, cohortId }: { tier: TierKey; cohortId: string }) {
       </div>
       <h2 className="text-2xl font-semibold tracking-tight">You&apos;re in.</h2>
       <p className="mt-2 text-muted-foreground">
-        {PRICING[tier].label} reserved for {cohort?.dateLabel ?? EVENT.dateLabel}. Check your email for confirmation and payment instructions shortly.
+        {PRICING[tier].label} reserved for {cohort.dateLabel} in {cohort.cityLabel}. Check your email for confirmation and payment instructions shortly.
       </p>
       <div className="mt-8 rounded-xl border border-white/10 p-5 text-left">
         <div className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
@@ -383,7 +400,7 @@ function SuccessCard({ tier, cohortId }: { tier: TierKey; cohortId: string }) {
           See the schedule
         </Link>
         <a
-          href={EVENT.mapsUrl}
+          href={cohort.mapsUrl}
           target="_blank"
           rel="noreferrer"
           className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
