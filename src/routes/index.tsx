@@ -107,7 +107,7 @@ function Hero() {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${heroBg})` }}
       />
-      <div className="absolute inset-0 bg-background/60" />
+      <div className="absolute inset-0 bg-background/0" />
       <div className="relative mx-auto max-w-6xl px-6 py-24 md:py-32">
         <p className="mb-6 text-sm uppercase tracking-[0.2em] text-white/80">
           One day. One founder. One real, revenue-ready business.
