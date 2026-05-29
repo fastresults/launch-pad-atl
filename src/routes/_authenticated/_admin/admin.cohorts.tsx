@@ -71,6 +71,12 @@ const emptyForm = (): FormState => ({
   founders_seats: String(DEFAULT_PRICING.foundersSeats),
   cohort_price: String(DEFAULT_PRICING.cohortPriceCents / 100),
   cohort_seats: String(DEFAULT_PRICING.cohortSeats),
+  founders_display_floor: "2",
+  founders_warming_boost: "2",
+  founders_honest_threshold_pct: "50",
+  cohort_display_floor: "8",
+  cohort_warming_boost: "2",
+  cohort_honest_threshold_pct: "50",
 });
 
 const fromCohort = (c: Cohort): FormState => ({
