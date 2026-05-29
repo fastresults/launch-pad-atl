@@ -1,10 +1,12 @@
 import { type Cohort, getFirstSoldOut } from "@/lib/cohorts";
+import type { CohortAvailability } from "@/lib/cohort-availability.functions";
 import { CalendarDays, Check, Lock, MapPin } from "lucide-react";
 
 type Props = {
   cohorts: Cohort[];
   selectedId: string;
   onSelect: (id: string) => void;
+  availability?: CohortAvailability;
 };
 
 export function CohortPicker({ cohorts, selectedId, onSelect }: Props) {
