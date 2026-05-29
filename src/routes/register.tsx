@@ -150,7 +150,7 @@ function RegisterPage() {
 
           {/* Cohort picker — compact, sits in the hero */}
           <div className="mt-8">
-            <CohortPicker selectedId={cohortId} onSelect={selectCohort} />
+            <CohortPicker cohorts={cohorts} selectedId={cohortId} onSelect={selectCohort} />
           </div>
         </div>
       </section>
