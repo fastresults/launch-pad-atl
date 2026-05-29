@@ -31,13 +31,15 @@ export const STAGES: Stage[] = [
     summary: "The legal foundation. Leave with a filing-ready packet and the legal kit you need to sell.",
     oneLiner: "Legal foundation",
     takeHome:
-      "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit. File Monday, start taking money the same week.",
+      "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding path picked with a 12-month capital plan and a raise-ready 1-pager. File Monday, start taking money the same week.",
     walkOut: [
       "Articles of Organization pre-filled in your GA Secretary of State account",
       "EIN application completed and submitted — number issued in the session",
       "Business-bank shortlist + bank application checklist filled for your business",
       "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business",
       "Local license + sales-tax requirements documented for your county",
+      "Your funding path chosen (bootstrap / F&F / revenue-based / SBA microloan / line of credit / equity) with a 12-month capital needs table",
+      "Raise-ready 1-pager (problem, offer, ask, use of funds) + 10 named funders or lenders to contact",
     ],
     afterWorkshop: [
       "Submit the Articles + filing fee from home (about 10 minutes)",
@@ -94,6 +96,22 @@ export const STAGES: Stage[] = [
           "Your signed Terms of Service, Privacy Policy, and 1-page Service Agreement — customized to your business.",
         followUp:
           "File the local business license and (if applicable) sales-tax registration once your entity is approved.",
+      },
+      {
+        title: "Funding plan & raise-ready kit",
+        deliverable:
+          "Your funding path chosen for this business, a 12-month capital needs table, a 1-page raise summary, and 10 named lenders or investors to contact.",
+        tool: "Funding decision tree + raise 1-pager template",
+        details: [
+          "Pick the funding path: bootstrap, friends & family, revenue-based, SBA microloan, line of credit, or equity",
+          "Build a 12-month capital needs table — startup costs, monthly burn, runway",
+          "Draft a 1-page raise summary: problem, offer, traction proof, ask, use of funds",
+          "Build a 10-name funder/lender outreach list with the message templates ready to send",
+        ],
+        takeaway:
+          "Your funding path chosen, 12-month capital needs costed, raise-ready 1-pager, and 10 named funders to contact.",
+        followUp:
+          "Send the 10 outreach messages within the first 2 weeks; book intro calls with anyone who replies.",
       },
     ],
   },
