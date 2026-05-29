@@ -460,7 +460,7 @@ export const STAGES: Stage[] = [
       "Print-ready 1-page flyer designed in your brand",
       "Instagram, LinkedIn, and one of TikTok/YouTube/X — handles claimed, profile copy, link-in-bio, and banner filled in",
       "6 on-brand post drafts + 60-second founder video script",
-      "30-day marketing plan: 2 channels, weekly budget, content calendar, 3 weekly KPIs",
+      "Marketing & communications: audience, channels, messaging pillars, 30-day content calendar, weekly budget, and 3 weekly KPIs",
     ],
     afterWorkshop: [
       "Send the print files to your printer",
