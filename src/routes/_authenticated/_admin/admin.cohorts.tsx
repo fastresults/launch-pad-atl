@@ -507,3 +507,45 @@ function CohortsAdminPage() {
     </div>
   );
 }
+
+function ScarcityFields({
+  tier, capacity, floor, boost, pct, onFloor, onBoost, onPct,
+}: {
+  tier: string;
+  capacity: number;
+  floor: string;
+  boost: string;
+  pct: string;
+  onFloor: (v: string) => void;
+  onBoost: (v: string) => void;
+  onPct: (v: string) => void;
+}) {
+  const f = Math.min(Math.max(0, Math.floor(Number(floor) || 0)), Math.max(capacity - 1, 0));
+  const p = Math.max(1, Math.min(100, Math.floor(Number(pct) || 50)));
+  const coldLeft = Math.max(capacity - f, 0);
+  const honestAt = Math.max(1, Math.ceil((capacity * p) / 100));
+  return (
+    <div className="space-y-2">
+      <div className="text-xs font-medium text-foreground">{tier} tier (capacity {capacity})</div>
+      <div className="grid gap-3 md:grid-cols-3">
+        <div>
+          <Label className="text-xs">Cold-start floor</Label>
+          <Input type="number" min={0} max={Math.max(capacity - 1, 0)} value={floor} onChange={(e) => onFloor(e.target.value)} />
+        </div>
+        <div>
+          <Label className="text-xs">Warming boost</Label>
+          <Input type="number" min={0} value={boost} onChange={(e) => onBoost(e.target.value)} />
+        </div>
+        <div>
+          <Label className="text-xs">Honest threshold %</Label>
+          <Input type="number" min={1} max={100} value={pct} onChange={(e) => onPct(e.target.value)} />
+        </div>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Cold start shows <span className="text-foreground">{coldLeft} of {capacity} seats left</span>;
+        switches to real count at <span className="text-foreground">{honestAt} real signup{honestAt === 1 ? "" : "s"}</span>.
+      </p>
+    </div>
+  );
+}
+
