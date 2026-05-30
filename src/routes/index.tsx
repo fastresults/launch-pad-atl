@@ -52,7 +52,7 @@ function HomePage() {
       <Hero />
       <NotACourseBanner />
       <WalkInWalkOut />
-      <TheArtOfThePossible />
+      <ArtOfThePossible />
       
       
       
