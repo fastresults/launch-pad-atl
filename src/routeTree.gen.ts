@@ -47,6 +47,7 @@ import { Route as AuthenticatedAdminAdminUsersRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminAdminSiteRouteImport } from './routes/_authenticated/_admin/admin.site'
 import { Route as AuthenticatedAdminAdminReviewRouteImport } from './routes/_authenticated/_admin/admin.review'
 import { Route as AuthenticatedAdminAdminRegistrationsRouteImport } from './routes/_authenticated/_admin/admin.registrations'
+import { Route as AuthenticatedAdminAdminMembersRouteImport } from './routes/_authenticated/_admin/admin.members'
 import { Route as AuthenticatedAdminAdminMediaRouteImport } from './routes/_authenticated/_admin/admin.media'
 import { Route as AuthenticatedAdminAdminCohortsRouteImport } from './routes/_authenticated/_admin/admin.cohorts'
 import { Route as AuthenticatedAdminAdminAttendeesRouteImport } from './routes/_authenticated/_admin/admin.attendees'
@@ -269,6 +270,12 @@ const AuthenticatedAdminAdminRegistrationsRoute =
     path: '/admin/registrations',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAdminMembersRoute =
+  AuthenticatedAdminAdminMembersRouteImport.update({
+    id: '/admin/members',
+    path: '/admin/members',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAdminMediaRoute =
   AuthenticatedAdminAdminMediaRouteImport.update({
     id: '/admin/media',
@@ -372,6 +379,7 @@ export interface FileRoutesByFullPath {
   '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/admin/cohorts': typeof AuthenticatedAdminAdminCohortsRouteWithChildren
   '/admin/media': typeof AuthenticatedAdminAdminMediaRoute
+  '/admin/members': typeof AuthenticatedAdminAdminMembersRoute
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/site': typeof AuthenticatedAdminAdminSiteRoute
@@ -421,6 +429,7 @@ export interface FileRoutesByTo {
   '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/admin/cohorts': typeof AuthenticatedAdminAdminCohortsRouteWithChildren
   '/admin/media': typeof AuthenticatedAdminAdminMediaRoute
+  '/admin/members': typeof AuthenticatedAdminAdminMembersRoute
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/site': typeof AuthenticatedAdminAdminSiteRoute
@@ -474,6 +483,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/_authenticated/_admin/admin/cohorts': typeof AuthenticatedAdminAdminCohortsRouteWithChildren
   '/_authenticated/_admin/admin/media': typeof AuthenticatedAdminAdminMediaRoute
+  '/_authenticated/_admin/admin/members': typeof AuthenticatedAdminAdminMembersRoute
   '/_authenticated/_admin/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/_authenticated/_admin/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/_authenticated/_admin/admin/site': typeof AuthenticatedAdminAdminSiteRoute
@@ -526,6 +536,7 @@ export interface FileRouteTypes {
     | '/admin/attendees'
     | '/admin/cohorts'
     | '/admin/media'
+    | '/admin/members'
     | '/admin/registrations'
     | '/admin/review'
     | '/admin/site'
@@ -575,6 +586,7 @@ export interface FileRouteTypes {
     | '/admin/attendees'
     | '/admin/cohorts'
     | '/admin/media'
+    | '/admin/members'
     | '/admin/registrations'
     | '/admin/review'
     | '/admin/site'
@@ -627,6 +639,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/attendees'
     | '/_authenticated/_admin/admin/cohorts'
     | '/_authenticated/_admin/admin/media'
+    | '/_authenticated/_admin/admin/members'
     | '/_authenticated/_admin/admin/registrations'
     | '/_authenticated/_admin/admin/review'
     | '/_authenticated/_admin/admin/site'
@@ -937,6 +950,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminRegistrationsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/_admin/admin/members': {
+      id: '/_authenticated/_admin/admin/members'
+      path: '/admin/members'
+      fullPath: '/admin/members'
+      preLoaderRoute: typeof AuthenticatedAdminAdminMembersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/_admin/admin/media': {
       id: '/_authenticated/_admin/admin/media'
       path: '/admin/media'
@@ -1067,6 +1087,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAdminAttendeesRoute: typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   AuthenticatedAdminAdminCohortsRoute: typeof AuthenticatedAdminAdminCohortsRouteWithChildren
   AuthenticatedAdminAdminMediaRoute: typeof AuthenticatedAdminAdminMediaRoute
+  AuthenticatedAdminAdminMembersRoute: typeof AuthenticatedAdminAdminMembersRoute
   AuthenticatedAdminAdminRegistrationsRoute: typeof AuthenticatedAdminAdminRegistrationsRoute
   AuthenticatedAdminAdminReviewRoute: typeof AuthenticatedAdminAdminReviewRoute
   AuthenticatedAdminAdminSiteRoute: typeof AuthenticatedAdminAdminSiteRoute
@@ -1084,6 +1105,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAdminCohortsRoute:
     AuthenticatedAdminAdminCohortsRouteWithChildren,
   AuthenticatedAdminAdminMediaRoute: AuthenticatedAdminAdminMediaRoute,
+  AuthenticatedAdminAdminMembersRoute: AuthenticatedAdminAdminMembersRoute,
   AuthenticatedAdminAdminRegistrationsRoute:
     AuthenticatedAdminAdminRegistrationsRoute,
   AuthenticatedAdminAdminReviewRoute: AuthenticatedAdminAdminReviewRoute,
