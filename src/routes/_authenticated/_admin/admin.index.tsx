@@ -360,22 +360,27 @@ function Panel({
   href,
   children,
   empty,
+  toolbar,
 }: {
   title: string;
   href: string;
   children: React.ReactNode;
   empty: string;
+  toolbar?: React.ReactNode;
 }) {
   const hasChildren = Array.isArray(children) ? children.length > 0 : !!children;
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
           {title}
         </h2>
-        <Link to={href} className="text-xs text-muted-foreground hover:text-foreground">
-          View all →
-        </Link>
+        <div className="flex items-center gap-3">
+          {toolbar}
+          <Link to={href} className="text-xs text-muted-foreground hover:text-foreground">
+            View all →
+          </Link>
+        </div>
       </div>
       <div className="overflow-hidden rounded-2xl border border-white/10">
         {hasChildren ? (
