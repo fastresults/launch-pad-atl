@@ -115,7 +115,7 @@ async function runOne(args: {
         status: "running",
         model: type.default_model,
         started_at: new Date().toISOString(),
-        input_snapshot: { hasBrief: !!ctx.brief, intakeKeys: Object.keys(ctx.intakes), upstreamKeys: Object.keys(ctx.deliverables) },
+        input_snapshot: { hasBrief: !!ctx.brief, intakeKeys: Object.keys(ctx.intakes), upstreamKeys: Object.keys(ctx.deliverables), founder_context: ctx.founderContext },
       },
       { onConflict: "run_id,deliverable_key" },
     )
@@ -137,6 +137,8 @@ async function runOne(args: {
       `You are producing the deliverable "${type.label}" for a workshop attendee.`,
       type.description ? `Purpose: ${type.description}` : "",
       `Stage: ${type.stage_label ?? "general"}.`,
+      ``,
+      ctx.founderContext,
       ``,
       `# Business Brief (the most important context)`,
       JSON.stringify(ctx.brief ?? {}, null, 2),
