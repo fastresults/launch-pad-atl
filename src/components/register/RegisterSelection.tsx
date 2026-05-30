@@ -87,8 +87,9 @@ export function RegisterSelection() {
             <span className="text-gradient-brand">the six.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
+            Applications close <span className="font-medium text-foreground">June 20, 2026</span>.
             Dozens will apply. Six will be chosen by{" "}
-            <span className="font-medium text-foreground">July 15</span>. Every other applicant
+            <span className="font-medium text-foreground">July 8</span>. Every other applicant
             gets a <span className="font-medium text-foreground">Founder&rsquo;s Discount</span>{" "}
             on the next cohort, sent the same day. Twelve minutes, no fee, no follow-up sales call.
           </p>
