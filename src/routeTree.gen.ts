@@ -51,6 +51,7 @@ import { Route as AuthenticatedAdminAdminCohortsRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminAdminAttendeesRouteImport } from './routes/_authenticated/_admin/admin.attendees'
 import { Route as AuthenticatedAdminAdminInquiriesIndexRouteImport } from './routes/_authenticated/_admin/admin.inquiries.index'
 import { Route as AuthenticatedAdminAdminApplicationsIndexRouteImport } from './routes/_authenticated/_admin/admin.applications.index'
+import { Route as AuthenticatedAdminAdminInquiriesIdRouteImport } from './routes/_authenticated/_admin/admin.inquiries.$id'
 import { Route as AuthenticatedAdminAdminCohortsTestRouteImport } from './routes/_authenticated/_admin/admin.cohorts.test'
 import { Route as AuthenticatedAdminAdminApplicationsIdRouteImport } from './routes/_authenticated/_admin/admin.applications.$id'
 import { Route as AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.index'
@@ -292,6 +293,12 @@ const AuthenticatedAdminAdminApplicationsIndexRoute =
     path: '/admin/applications/',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAdminInquiriesIdRoute =
+  AuthenticatedAdminAdminInquiriesIdRouteImport.update({
+    id: '/admin/inquiries/$id',
+    path: '/admin/inquiries/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAdminCohortsTestRoute =
   AuthenticatedAdminAdminCohortsTestRouteImport.update({
     id: '/test',
@@ -370,6 +377,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
+  '/admin/inquiries/$id': typeof AuthenticatedAdminAdminInquiriesIdRoute
   '/admin/applications/': typeof AuthenticatedAdminAdminApplicationsIndexRoute
   '/admin/inquiries/': typeof AuthenticatedAdminAdminInquiriesIndexRoute
   '/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
@@ -417,6 +425,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
+  '/admin/inquiries/$id': typeof AuthenticatedAdminAdminInquiriesIdRoute
   '/admin/applications': typeof AuthenticatedAdminAdminApplicationsIndexRoute
   '/admin/inquiries': typeof AuthenticatedAdminAdminInquiriesIndexRoute
   '/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
@@ -468,6 +477,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/_authenticated/_admin/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/_authenticated/_admin/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
+  '/_authenticated/_admin/admin/inquiries/$id': typeof AuthenticatedAdminAdminInquiriesIdRoute
   '/_authenticated/_admin/admin/applications/': typeof AuthenticatedAdminAdminApplicationsIndexRoute
   '/_authenticated/_admin/admin/inquiries/': typeof AuthenticatedAdminAdminInquiriesIndexRoute
   '/_authenticated/_admin/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
@@ -518,6 +528,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/applications/$id'
     | '/admin/cohorts/test'
+    | '/admin/inquiries/$id'
     | '/admin/applications/'
     | '/admin/inquiries/'
     | '/admin/attendees/$userId/media'
@@ -565,6 +576,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/applications/$id'
     | '/admin/cohorts/test'
+    | '/admin/inquiries/$id'
     | '/admin/applications'
     | '/admin/inquiries'
     | '/admin/attendees/$userId/media'
@@ -615,6 +627,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/'
     | '/_authenticated/_admin/admin/applications/$id'
     | '/_authenticated/_admin/admin/cohorts/test'
+    | '/_authenticated/_admin/admin/inquiries/$id'
     | '/_authenticated/_admin/admin/applications/'
     | '/_authenticated/_admin/admin/inquiries/'
     | '/_authenticated/_admin/admin/attendees/$userId/media'
@@ -940,6 +953,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminApplicationsIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/_admin/admin/inquiries/$id': {
+      id: '/_authenticated/_admin/admin/inquiries/$id'
+      path: '/admin/inquiries/$id'
+      fullPath: '/admin/inquiries/$id'
+      preLoaderRoute: typeof AuthenticatedAdminAdminInquiriesIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/_admin/admin/cohorts/test': {
       id: '/_authenticated/_admin/admin/cohorts/test'
       path: '/test'
@@ -1034,6 +1054,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAdminUsersRoute: typeof AuthenticatedAdminAdminUsersRoute
   AuthenticatedAdminAdminIndexRoute: typeof AuthenticatedAdminAdminIndexRoute
   AuthenticatedAdminAdminApplicationsIdRoute: typeof AuthenticatedAdminAdminApplicationsIdRoute
+  AuthenticatedAdminAdminInquiriesIdRoute: typeof AuthenticatedAdminAdminInquiriesIdRoute
   AuthenticatedAdminAdminApplicationsIndexRoute: typeof AuthenticatedAdminAdminApplicationsIndexRoute
   AuthenticatedAdminAdminInquiriesIndexRoute: typeof AuthenticatedAdminAdminInquiriesIndexRoute
 }
@@ -1052,6 +1073,8 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAdminIndexRoute: AuthenticatedAdminAdminIndexRoute,
   AuthenticatedAdminAdminApplicationsIdRoute:
     AuthenticatedAdminAdminApplicationsIdRoute,
+  AuthenticatedAdminAdminInquiriesIdRoute:
+    AuthenticatedAdminAdminInquiriesIdRoute,
   AuthenticatedAdminAdminApplicationsIndexRoute:
     AuthenticatedAdminAdminApplicationsIndexRoute,
   AuthenticatedAdminAdminInquiriesIndexRoute:

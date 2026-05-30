@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
   Shield,
   ExternalLink,
+  MessageSquare,
   type LucideIcon,
 } from "lucide-react";
 
@@ -18,7 +19,7 @@ export type AdminNavItem = {
   icon: LucideIcon;
   group: "Overview" | "Operations" | "Content" | "System";
   super?: boolean;
-  badgeKey?: "reviewPending" | "applicationsPending";
+  badgeKey?: "reviewPending" | "applicationsPending" | "inquiriesNew";
   external?: boolean;
 };
 
