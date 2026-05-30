@@ -20,6 +20,7 @@ interface EnqueueParams {
   recipientEmail: string
   idempotencyKey: string
   templateData?: Record<string, any>
+  replyTo?: string
 }
 
 /**
