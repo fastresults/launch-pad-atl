@@ -23,7 +23,7 @@ export function FacilitatorStory() {
           I didn't learn AI in a classroom. I built five products with it — while running a live agency, producing international events, and advising clients who couldn't afford to get it wrong.
         </blockquote>
         <p>
-          Today, Adam is Founder & CEO of Ampfli, an AI-powered content intelligence platform, and is building the Institute of AI Professionals (IAIP) — a global standards body for AI practitioners. He actively ships SaaS products on the bleeding edge — composing frontier LLMs, agentic frameworks, AI-native code generation, vector databases, and serverless edge infrastructure — and brings that live toolchain directly into every workshop so audiences sharpen the same skills he uses in production each day.
+          Today, Adam is Founder & CEO of Ampfli (https://askeve.io), an AI-powered content intelligence platform, and is building the Institute of AI Professionals (IAIP: https://theiaip.com/) — a global standards body for AI practitioners. He actively ships SaaS products on the bleeding edge — composing frontier LLMs, agentic frameworks, AI-native code generation, vector databases, and serverless edge infrastructure — and brings that live toolchain directly into every workshop so audiences sharpen the same skills he uses in production each day.
         </p>
       </div>
     </motion.section>
