@@ -1392,31 +1392,94 @@ export type Database = {
           },
         ]
       }
+      member_intakes: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          one_line_idea: string
+          reviewed_at: string | null
+          reviewer_id: string | null
+          startup_name: string | null
+          startup_type: string
+          status: string
+          submitted_at: string
+          supporting_info: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          one_line_idea: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          startup_name?: string | null
+          startup_type: string
+          status?: string
+          submitted_at?: string
+          supporting_info?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          one_line_idea?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          startup_name?: string | null
+          startup_type?: string
+          status?: string
+          submitted_at?: string
+          supporting_info?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
+          approved_via: string | null
           avatar_url: string | null
           created_at: string
           display_name: string | null
           email: string | null
           id: string
+          member_status: string
+          rejected_reason: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_via?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
           id?: string
+          member_status?: string
+          rejected_reason?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_via?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
           id?: string
+          member_status?: string
+          rejected_reason?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1505,6 +1568,7 @@ export type Database = {
           stage: string
           status: string
           tier_interest: string | null
+          user_id: string | null
         }
         Insert: {
           assigned_tier?: string | null
@@ -1522,6 +1586,7 @@ export type Database = {
           stage: string
           status?: string
           tier_interest?: string | null
+          user_id?: string | null
         }
         Update: {
           assigned_tier?: string | null
@@ -1539,6 +1604,7 @@ export type Database = {
           stage?: string
           status?: string
           tier_interest?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
