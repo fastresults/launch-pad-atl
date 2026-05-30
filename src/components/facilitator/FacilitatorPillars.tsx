@@ -2,12 +2,12 @@ import { motion } from "framer-motion";
 import { Brain, Rocket, Megaphone, Globe, Shuffle, Users, type LucideIcon } from "lucide-react";
 
 const PILLARS: { icon: LucideIcon; title: string; desc: string }[] = [
-  { icon: Brain, title: "Practitioner-first AI fluency", desc: "Adam uses AI daily to build, ship, and operate. Every tactic he teaches is live in production." },
-  { icon: Rocket, title: "Startup velocity frameworks", desc: "From ideation to validated product — methodologies built across real ventures, not hypotheticals." },
-  { icon: Megaphone, title: "Personal brand authority", desc: "Four decades of brand infrastructure work distilled into a voice-led system for the AI era." },
-  { icon: Globe, title: "Global business perspective", desc: "Strategy shaped by work with Fortune 500s, sovereign governments, and Caribbean economic institutions." },
-  { icon: Shuffle, title: "Real-time transformation lens", desc: "Not a retrospective on what worked in 2019 — a live read on what's shifting right now." },
-  { icon: Users, title: "Executive-caliber delivery", desc: "A facilitator who has presented to heads of state and C-suites. No wasted words in the room." },
+  { icon: Brain, title: "Practitioner-first AI fluency", desc: "Nothing taught in the room is theoretical. Every prompt, pattern, and workflow is one Adam ran in production this week." },
+  { icon: Rocket, title: "Compressed time-to-launch", desc: "Frameworks pulled from shipping five AI-native SaaS products solo — the same playbook that turns weeks of build into days." },
+  { icon: Megaphone, title: "Narrative that compounds", desc: "Brand systems engineered to gain authority over time, not chase the algorithm — drawn from four decades of Fortune 500 and sovereign storytelling." },
+  { icon: Globe, title: "Global operating range", desc: "Strategy stress-tested with Citigroup boardrooms, OECS heads of government, and the St. Kitts–Nevis pavilion at Expo 2020 Dubai." },
+  { icon: Shuffle, title: "Real-time transformation lens", desc: "Not a retrospective on what worked in 2019. A live read on what the frontier looks like the week you walk into the room." },
+  { icon: Users, title: "Executive-caliber delivery", desc: "A facilitator who has briefed prime ministers, CMOs, and conference mainstages. No wasted words, no filler slides." },
 ];
 
 export function FacilitatorPillars() {
