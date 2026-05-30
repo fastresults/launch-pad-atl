@@ -428,7 +428,7 @@ function FacilitatorProof() {
 
 function WalkInWalkOut() {
   const walkIn = [
-    "An idea you've been turning over for months (or years)",
+    "An idea you have been turning over for months (or years)",
     "A notebook full of \"someday\" notes",
     "Questions about LLCs, EINs, websites, pricing, and where to even start",
     "No clear first customer",
