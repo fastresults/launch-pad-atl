@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   ClipboardList,
+  FileText,
   Users,
   Inbox,
   CalendarRange,
