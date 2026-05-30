@@ -44,16 +44,10 @@ function FacilitatorPage() {
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
       <main
-        className="flex-1 mx-auto w-full px-6 py-16 md:py-24 font-body"
-        style={{
-          maxWidth: "860px",
-          fontFamily: '"DM Sans", system-ui, sans-serif',
-        }}
+        className="flex-1 mx-auto w-full px-6 py-16 md:py-24"
+        style={{ maxWidth: "860px" }}
       >
-        <style>{`
-          .font-display { font-family: "Playfair Display", Georgia, serif; }
-          .font-body { font-family: "DM Sans", system-ui, sans-serif; }
-        `}</style>
+
         <div className="space-y-12 md:space-y-20">
           <FacilitatorHero />
           <div className="border-t border-border" />

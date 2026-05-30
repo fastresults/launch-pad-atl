@@ -18,7 +18,7 @@ export function FacilitatorPillars() {
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: 0.3 }}
     >
-      <p className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mb-4">
+      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mb-4">
         What he brings to the room
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -30,8 +30,8 @@ export function FacilitatorPillars() {
             className="rounded-xl border border-border bg-card p-6"
           >
             <Icon className="text-primary mb-4" size={24} />
-            <h3 className="font-display font-bold text-lg text-card-foreground mb-2">{title}</h3>
-            <p className="font-body text-sm leading-[1.7] text-muted-foreground">{desc}</p>
+            <h3 className="font-bold text-lg text-card-foreground mb-2">{title}</h3>
+            <p className="text-sm leading-[1.7] text-muted-foreground">{desc}</p>
           </motion.div>
         ))}
       </div>

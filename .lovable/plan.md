@@ -1,36 +1,46 @@
-## Goal
+## Problem
 
-Introduce Adam's portrait into `/facilitator` in a way that humanizes the page without dominating it. The copy already does the heavy lifting — the photo should anchor, not headline.
+The `/facilitator` page is the only page on the site running a custom typography system:
 
-## Recommendation: small portrait inside the Hero, asymmetric two-column
+- `src/routes/facilitator.tsx` injects an inline `<style>` block defining `.font-display` → **Playfair Display (serif)** and `.font-body` → **DM Sans**, and sets `fontFamily: "DM Sans"` inline on `<main>`.
+- Every facilitator component (`FacilitatorHero`, `FacilitatorStory`, `FacilitatorPillars`, `FacilitatorTimeline`, `FacilitatorStats`, `FacilitatorAudience`, `FacilitatorCTA`) uses `font-display` for headings and `font-body` for body.
 
-The strongest UX placement is **inside `FacilitatorHero.tsx`**, as a contained square portrait sitting beside (not above) the headline.
+No other page (home, schedule, register, login, signup, privacy, terms) uses these classes or fonts. The rest of the site uses the default Tailwind sans stack (system-ui / inherited from `body`) with weight utilities like `font-semibold`, `font-bold`, etc. That's why the facilitator page reads as a different brand — it's literally a different typeface family.
 
-### Why this placement
-- The Hero is the only section that currently introduces "who is this person?" — a face here closes the trust loop instantly without any reader having to scroll.
-- Putting it anywhere lower (Story, CTA, sidebar to Timeline) means readers spend the first scroll trying to mentally picture the author. Placing it in the Hero kills that friction.
-- Other placements considered and rejected:
-  - **Full-bleed hero photo** — too much energy on the image, violates the brief.
-  - **Above the headline** — pushes copy down, makes the page feel like a personal-brand site, not a workshop site.
-  - **Inside Story** — late, feels like a stock author bio block.
-  - **Floating in the CTA** — sales-y, undercuts the executive tone.
+## Fix
 
-### Visual treatment (keeps energy balanced toward copy)
-- **Size:** ~160px square on desktop, ~96px on mobile. Small enough that the headline still owns the screen.
-- **Layout:** Hero becomes a two-column flex — left column is the existing eyebrow + headline + subhead (unchanged copy, keeps the left primary border); right column is the portrait. On mobile the portrait stacks above the eyebrow at 96px so it doesn't push the headline below the fold.
-- **Shape:** Soft square with `rounded-2xl` and `overflow-hidden` — not a circle (avatars feel social-media casual; squares feel editorial and serious).
-- **Treatment:** Subtle `border border-border` + light shadow. No filters, no duotone, no parallax — the photo is high-quality and editorial; let it be.
-- **Caption:** A single 11px uppercase tracked line under the image — "Adam Anderson · Facilitator" — matches the existing eyebrow typography system so the photo reads as part of the layout, not pasted on.
-- **Motion:** Same fade-in as the hero's existing `motion.section` — no separate hover/scale on the photo. It's an anchor, not an interaction target.
+Bring the facilitator page onto the exact same typography system as the rest of the site: default sans, no serif, no custom font-family overrides.
 
-### Asset handling
-- Download the signed image to `src/assets/adam-anderson.jpg` (the signed Supabase URL expires; we need it bundled).
-- Import as ES6 module in `FacilitatorHero.tsx` for Vite optimization.
-- Add real `alt="Adam Anderson, workshop facilitator"` for SEO/a11y.
-- Add `loading="eager"` (it's above the fold) and `width`/`height` to prevent CLS.
+### 1. `src/routes/facilitator.tsx`
 
-## Out of scope
-- No changes to copy in Hero, Story, Pillars, Timeline, Audience, or CTA.
-- No second portrait anywhere else on the page.
-- No layout or color changes to other sections.
-- No new background, gradient, or decorative imagery.
+- Remove the inline `<style>` block that defines `.font-display` and `.font-body`.
+- Remove the `font-body` class from `<main>`.
+- Remove the inline `style={{ fontFamily: '"DM Sans", ...' }}`; keep only `maxWidth: "860px"`.
+
+### 2. Facilitator components (7 files)
+
+In each file, do a surgical class swap — no layout, spacing, color, or copy changes:
+
+- `font-display` → remove the class (headings inherit the site sans font; weight is already set via `font-bold` / `font-black`).
+- `font-body` → remove the class (body text inherits site sans).
+- Leave all weight, size, tracking, leading, and color utilities untouched.
+
+Files touched:
+- `src/components/facilitator/FacilitatorHero.tsx`
+- `src/components/facilitator/FacilitatorStory.tsx` (includes the blockquote — drops serif, keeps italic + bold + border)
+- `src/components/facilitator/FacilitatorPillars.tsx`
+- `src/components/facilitator/FacilitatorTimeline.tsx`
+- `src/components/facilitator/FacilitatorStats.tsx`
+- `src/components/facilitator/FacilitatorAudience.tsx`
+- `src/components/facilitator/FacilitatorCTA.tsx`
+
+### 3. Out of scope
+
+- No copy changes.
+- No color, spacing, or layout changes.
+- No edits to other pages or to `src/styles.css`.
+- The Adam Anderson portrait, eyebrows, border-left treatment, stat numbers, and timeline structure all stay exactly as they are — only the typeface changes.
+
+## Result
+
+After the change, the facilitator headlines and body text render in the same default sans stack used by the home, schedule, and register pages. Visual hierarchy is preserved through the existing weight / size / tracking utilities, so the page still reads as editorial and structured — just in the site's actual brand voice instead of a foreign serif.

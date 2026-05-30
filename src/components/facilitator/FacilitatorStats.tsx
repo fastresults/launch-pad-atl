@@ -18,8 +18,8 @@ export function FacilitatorStats() {
     >
       {STATS.map((s) => (
         <div key={s.l} className="border-t border-border pt-4">
-          <div className="font-display font-black text-[40px] leading-none text-foreground">{s.n}</div>
-          <div className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mt-3">
+          <div className="font-black text-[40px] leading-none text-foreground">{s.n}</div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mt-3">
             {s.l}
           </div>
         </div>
