@@ -39,6 +39,7 @@ function WelcomePage() {
   const intakeQ = useQuery({
     queryKey: ["my-intake"],
     queryFn: () => getIntake(),
+    enabled: !!user,
   });
 
   const [startupType, setStartupType] = useState("");
