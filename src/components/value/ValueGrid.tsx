@@ -38,7 +38,7 @@ const STAGE_TINT = [
   "from-rose-500/10",
 ];
 
-export function ValueGrid() {
+export function ValueGrid({ showCosts = true }: { showCosts?: boolean } = {}) {
   const [expanded, setExpanded] = useState(false);
   const visibleRows = expanded ? VALUE_ROWS : VALUE_ROWS.slice(0, PREVIEW_COUNT);
   const hiddenCount = VALUE_ROWS.length - PREVIEW_COUNT;
@@ -73,11 +73,12 @@ export function ValueGrid() {
       </span>
       {!expanded && (
         <span className="text-xs text-muted-foreground">
-          + {hiddenCount} more, market cost & DIY time totals
+          + {hiddenCount} more{showCosts ? ", market cost & DIY time totals" : ""}
         </span>
       )}
     </button>
   );
+
 
   return (
     <TooltipProvider delayDuration={150}>
