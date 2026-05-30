@@ -73,7 +73,7 @@ function AdminMembersPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Members"
-        description="Every person who created a Startup Labs account lives here. Approve new signups to unlock their founder dashboard, review their intake answers, and manage existing members. Pending members cannot access founder tools until you approve them, so clearing this queue is the fastest way to onboard new startups into the program."
+        description="Approve new signups to unlock their founder dashboard. Review intakes and manage existing members."
       />
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>

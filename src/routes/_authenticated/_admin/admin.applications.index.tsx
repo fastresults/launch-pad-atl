@@ -187,7 +187,7 @@ function ApplicationsListPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Applications"
-        description="Applications submitted through the public apply form. Filter by status, search by name or email, edit details inline, and move applicants through Applied → Reviewing → Shortlisted → Selected. Use bulk actions to update or remove multiple records at once. Selected applicants can be promoted into a registration so they can confirm their cohort spot."
+        description="Review applicants, edit inline, bulk-update status, and promote selected founders into a cohort registration."
         actions={
           <Input
             placeholder="Search name, email, industry…"

@@ -37,7 +37,7 @@ function UsersPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Users & roles"
-        description="Grant or revoke admin and super admin access for Startup Labs staff. Search by email, change a user's role, and audit who can manage applications, registrations, and site content. Only super admins can promote others, so be intentional — anyone listed here can read and modify founder data across the platform."
+        description="Grant or revoke admin access for staff. Anyone listed here can read and modify founder data."
       />
 
       {isLoading ? (

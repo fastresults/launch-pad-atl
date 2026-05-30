@@ -17,7 +17,7 @@ function ReviewPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Review queue"
-        description="Accounts that have signed up but not yet completed their startup intake or required materials. Super admins can manually unlock a founder's dashboard from here when an exception is needed. Use this queue to follow up with stalled signups before they go cold and to override blocks when context warrants it."
+        description="Signups with incomplete intake or missing materials. Manually unlock a founder's dashboard when an exception is needed."
       />
 
       {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
