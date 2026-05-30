@@ -30,7 +30,7 @@ export function FacilitatorPillars() {
             className="rounded-xl border border-border bg-card p-6"
           >
             <Icon className="text-primary mb-4" size={24} />
-            <h3 className="font-bold text-lg text-card-foreground mb-2">{title}</h3>
+            <h3 className="text-lg font-semibold tracking-tight text-card-foreground mb-2">{title}</h3>
             <p className="text-sm leading-[1.7] text-muted-foreground">{desc}</p>
           </motion.div>
         ))}

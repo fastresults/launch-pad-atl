@@ -11,7 +11,7 @@ export function FacilitatorStory() {
       <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mb-4">
         The Story
       </p>
-      <h2 className="font-bold text-[28px] text-foreground mb-6">A practitioner's path</h2>
+      <h2 className="text-2xl font-semibold tracking-tight text-foreground mb-6 md:text-3xl">A practitioner's path</h2>
       <div className="space-y-6 text-base leading-[1.8] text-foreground/90">
         <p>
           <span className="font-bold text-foreground">Boardrooms.</span> Adam's first chapter was built inside the world's most demanding brands. From Orlando, he contributed to the creative and production teams behind the Mayo Clinic Experience Center at Mall of America, the 3M HIS Division Experience Center, and the Amway Arena visitor experience — helping translate clinical-grade, enterprise-grade messaging into environments people actually wanted to walk through. Citigroup, Disney, and a roster of Fortune 500 clients followed.

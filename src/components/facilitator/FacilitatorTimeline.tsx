@@ -31,7 +31,7 @@ export function FacilitatorTimeline() {
               <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary mb-1">
                 {it.year}
               </div>
-              <h3 className="font-bold text-xl text-foreground mb-1.5">{it.title}</h3>
+              <h3 className="text-xl font-semibold tracking-tight text-foreground mb-1.5">{it.title}</h3>
               <p className="text-base leading-[1.8] text-muted-foreground">{it.desc}</p>
             </li>
           ))}
