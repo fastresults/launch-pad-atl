@@ -5,6 +5,7 @@ import { createHash } from "crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { extractTextFromResumeFile } from "@/lib/discovery.server";
 
 // ===================== Founder profile =====================
 
