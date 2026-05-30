@@ -179,21 +179,23 @@ export function ValueGrid({ showCosts = true }: { showCosts?: boolean } = {}) {
                   <span className="flex-1">{r.deliverable}</span>
                   <PostWorkshopTip row={r} />
                 </div>
-                <div className="flex gap-4 pl-6 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <DollarSign className="size-3" />
-                    {formatCostRange(r.marketCostMin, r.marketCostMax)}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="size-3" />
-                    {formatHoursRange(r.diyHoursMin, r.diyHoursMax)}
-                  </span>
-                </div>
+                {showCosts && (
+                  <div className="flex gap-4 pl-6 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <DollarSign className="size-3" />
+                      {formatCostRange(r.marketCostMin, r.marketCostMax)}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="size-3" />
+                      {formatHoursRange(r.diyHoursMin, r.diyHoursMax)}
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         ))}
-        {expanded && (
+        {expanded && showCosts && (
           <div className="px-5 py-5 bg-hero-gradient text-white">
             <div className="font-medium text-sm mb-2">If you built or hired it all yourself</div>
             <div className="flex justify-between text-sm">
@@ -208,6 +210,7 @@ export function ValueGrid({ showCosts = true }: { showCosts?: boolean } = {}) {
             </div>
           </div>
         )}
+
         <ExpandToggle className="border-t border-white/10" />
       </div>
     </div>
