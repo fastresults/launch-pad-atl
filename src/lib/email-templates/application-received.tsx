@@ -12,7 +12,8 @@ import {
 import type { TemplateEntry } from './registry'
 
 const SITE_NAME = 'Atlanta Startup Sprint'
-const CONTACT_URL = 'https://startuplabs.online/contact'
+const SITE_URL = (process.env.SITE_URL || 'https://startuplabs.online').replace(/\/+$/, '')
+const CONTACT_URL = `${SITE_URL}/contact`
 
 interface ApplicationReceivedProps {
   firstName?: string
