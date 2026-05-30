@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { MediaHub } from "@/components/media/MediaHub";
 
 export const Route = createFileRoute("/_authenticated/_admin/admin/media")({
