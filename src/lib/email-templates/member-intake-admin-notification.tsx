@@ -31,7 +31,7 @@ const Email = ({ memberName, memberEmail, startupType, startupName, oneLineIdea,
           <strong>{memberName}</strong> ({memberEmail}) submitted a startup intake.
         </Text>
         <Section style={box}>
-          <Row label="Startup type" value={startupType ?? '—'} />
+          <Row label="Startup type" value={String(startupType ?? '—')} />
           {startupName ? <Row label="Startup name" value={startupName} /> : null}
           <Row label="Idea" value={oneLineIdea ?? '—'} />
           {supportingInfo ? <Row label="Supporting info" value={supportingInfo} /> : null}
