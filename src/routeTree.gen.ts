@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ScheduleRouteImport } from './routes/schedule'
@@ -55,6 +56,11 @@ import { Route as AuthenticatedAdminAdminAttendeesUserIdWorkflowRouteImport } fr
 import { Route as AuthenticatedAdminAdminAttendeesUserIdMediaRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.media'
 import { Route as AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.deliverables.$key'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -320,6 +326,7 @@ export interface FileRoutesByFullPath {
   '/schedule': typeof ScheduleRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
@@ -365,6 +372,7 @@ export interface FileRoutesByTo {
   '/schedule': typeof ScheduleRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
   '/dashboard/day': typeof AuthenticatedDashboardDayRoute
@@ -411,6 +419,7 @@ export interface FileRoutesById {
   '/schedule': typeof ScheduleRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -459,6 +468,7 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/signup'
     | '/terms'
+    | '/unsubscribe'
     | '/dashboard'
     | '/email/unsubscribe'
     | '/dashboard/brief'
@@ -504,6 +514,7 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/signup'
     | '/terms'
+    | '/unsubscribe'
     | '/email/unsubscribe'
     | '/dashboard/brief'
     | '/dashboard/day'
@@ -549,6 +560,7 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/signup'
     | '/terms'
+    | '/unsubscribe'
     | '/_authenticated/_admin'
     | '/_authenticated/dashboard'
     | '/email/unsubscribe'
@@ -597,6 +609,7 @@ export interface RootRouteChildren {
   ScheduleRoute: typeof ScheduleRoute
   SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksPublishDueDeliverablesRoute: typeof ApiPublicHooksPublishDueDeliverablesRoute
@@ -607,6 +620,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -1074,6 +1094,7 @@ const rootRouteChildren: RootRouteChildren = {
   ScheduleRoute: ScheduleRoute,
   SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksPublishDueDeliverablesRoute:
