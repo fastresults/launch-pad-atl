@@ -196,7 +196,6 @@ function ApplicationsListPage() {
           />
         }
       />
-      </div>
 
       <div className="flex flex-wrap gap-2">
         {STATUS_OPTIONS.map((opt) => {
