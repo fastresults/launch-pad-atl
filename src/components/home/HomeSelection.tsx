@@ -22,7 +22,7 @@ const FACILITATOR_NAME = "Adam Anderson";
 // TBD with founder — placeholders flagged for easy swap.
 const FINALIST_DISCOUNT_PCT = 40; // % off next Atlanta cohort
 const FINALIST_DISCOUNT_VALIDITY = "the next two scheduled Atlanta cohorts";
-const PIECEMEAL_VALUE = "$25,000";
+const PIECEMEAL_VALUE = "$10,000";
 
 export function HomeSelection() {
   return (
