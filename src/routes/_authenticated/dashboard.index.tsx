@@ -9,6 +9,7 @@ import { getMyCohort } from "@/lib/cohort.functions";
 import { getWorkshopMode, formatMinutesLeft, FRIENDLY_STAGE, type WorkshopState } from "@/lib/workshop-mode";
 import { ProgressRing } from "@/components/dashboard/ProgressRing";
 import { NextActionCard } from "@/components/dashboard/NextActionCard";
+import { BriefCompleteCard } from "@/components/brief/BriefCompleteCard";
 import { Calendar, MapPin, Coffee, Sparkles, CheckCircle2, Hand } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/")({
