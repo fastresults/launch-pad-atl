@@ -26,6 +26,8 @@ import { PricingTiers } from "@/components/value/PricingTiers";
 import { CohortPicker } from "@/components/value/CohortPicker";
 import { type TierKey } from "@/lib/value-grid";
 import { CheckCircle2, ArrowRight, ShieldCheck, Users, CalendarDays, Lock } from "lucide-react";
+import { getPublicSiteSettings } from "@/lib/site-settings.functions";
+import { RegisterSelection } from "@/components/register/RegisterSelection";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -65,6 +67,14 @@ const FormSchema = z.object({
 type FormValues = z.infer<typeof FormSchema>;
 
 function RegisterPage() {
+  const fetchSettings = useServerFn(getPublicSiteSettings);
+  const { data: siteSettings } = useQuery({
+    queryKey: ["site-settings"],
+    queryFn: () => fetchSettings(),
+    staleTime: 60_000,
+  });
+  if (siteSettings?.register_variant === "selection") return <RegisterSelection />;
+
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [tier, setTier] = useState<TierKey>("founders");
