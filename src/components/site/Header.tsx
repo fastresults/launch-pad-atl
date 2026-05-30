@@ -13,6 +13,7 @@ import {
 
 const nav = [
   { to: "/", label: "home" },
+  { to: "/facilitator", label: "facilitator" },
   { to: "/schedule", label: "schedule" },
   { to: "/register", label: "register" },
 ] as const;
