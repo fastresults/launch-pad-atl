@@ -4,6 +4,7 @@ import {
   Head,
   Heading,
   Html,
+  Link,
   Preview,
   Section,
   Text,
@@ -11,13 +12,19 @@ import {
 import type { TemplateEntry } from './registry'
 
 const SITE_NAME = 'Atlanta Startup Sprint'
+const CONTACT_URL = 'https://startuplabs.online/contact'
 
 interface ApplicationReceivedProps {
   firstName?: string
+  fullName?: string
 }
 
-const ApplicationReceivedEmail = ({ firstName }: ApplicationReceivedProps) => {
-  const greeting = firstName ? `Thanks, ${firstName}!` : 'Thanks for applying!'
+const ApplicationReceivedEmail = ({ firstName, fullName }: ApplicationReceivedProps) => {
+  const displayName =
+    (firstName && firstName.trim()) ||
+    (fullName && fullName.trim().split(/\s+/)[0]) ||
+    ''
+  const greeting = displayName ? `Thanks, ${displayName}!` : 'Thanks for applying!'
   return (
     <Html lang="en" dir="ltr">
       <Head />
@@ -72,6 +79,14 @@ const ApplicationReceivedEmail = ({ firstName }: ApplicationReceivedProps) => {
             email and we'll add it to your file.
           </Text>
 
+          <Text style={text}>
+            Have a question in the meantime?{' '}
+            <Link href={CONTACT_URL} style={inlineLink}>
+              Get in touch
+            </Link>
+            {' '}and a real person will reply within 1 business day.
+          </Text>
+
           <Text style={signoff}>
             — The {SITE_NAME} team
           </Text>
@@ -85,8 +100,9 @@ export const template = {
   component: ApplicationReceivedEmail,
   subject: 'We got your Atlanta Startup Sprint application',
   displayName: 'Application received',
-  previewData: { firstName: 'Jordan' },
+  previewData: { firstName: 'Jordan', fullName: 'Jordan Rivera' },
 } satisfies TemplateEntry
+
 
 const BRAND = '#3b82f6'
 const TEXT = '#1f2937'
@@ -173,3 +189,8 @@ const stepTitle: React.CSSProperties = {
   color: TEXT,
   fontWeight: 600,
 }
+const inlineLink: React.CSSProperties = {
+  color: BRAND,
+  textDecoration: 'underline',
+}
+

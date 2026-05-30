@@ -52,12 +52,19 @@ export const submitFounderApplication = createServerFn({ method: "POST" })
     // Fire confirmation email. Never fail the submission if email fails —
     // application is already saved and visible in admin.
     try {
-      const firstName = data.name.trim().split(/\s+/)[0] || undefined;
+      const cleanName = data.name.trim().replace(/\s+/g, " ");
+      const firstName = cleanName.split(" ")[0] || undefined;
+      console.log("[applications] enqueue confirmation", {
+        applicationId,
+        recipient: data.email,
+        name: cleanName,
+        firstName,
+      });
       await enqueueTransactionalEmail({
         templateName: "application-received",
         recipientEmail: data.email,
         idempotencyKey: `application-confirm-${applicationId}`,
-        templateData: { firstName },
+        templateData: { firstName, fullName: cleanName },
       });
     } catch (emailErr) {
       console.error("[applications] confirmation email failed", emailErr);
