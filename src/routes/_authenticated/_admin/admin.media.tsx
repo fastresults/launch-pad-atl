@@ -12,7 +12,7 @@ function MasterMediaPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Media library"
-        description="Upload and manage images used across the public site and founder dashboard. Reuse assets without re-uploading, copy hosted URLs into editors, and delete files that are no longer referenced. Keeping this library tidy ensures the marketing site stays fast and that founders always see current branding instead of stale or duplicate imagery."
+        description="Upload, reuse, and manage images used across the public site and founder dashboards."
       />
       <MediaHub scope="master" canAdminPush />
     </div>

@@ -45,7 +45,7 @@ function AdminSitePage() {
     <div className="space-y-8">
       <AdminPageHeader
         title="Site settings"
-        description="Control the public marketing site without redeploying. Edit hero copy, navigation labels, calls to action, contact details, and SEO metadata. Changes save immediately and reflect on the live site for visitors and search engines. Use this view to keep messaging current as cohorts, partners, and program details evolve throughout the year."
+        description="Edit public site copy, CTAs, contact details, and SEO metadata. Changes go live instantly — no redeploy."
       />
 
       {error && (

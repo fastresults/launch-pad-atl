@@ -43,7 +43,7 @@ function RegistrationsPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Registrations"
-        description="Founders who have been promoted from an application and are confirming their seat in a cohort. Track who has paid, who is pending, and who has dropped. Resend confirmation emails, update cohort assignments, and prepare the final attendee roster from this view before the cohort officially kicks off."
+        description="Founders confirming their cohort seat. Track payment status, update assignments, and finalize the attendee roster."
       />
 
       {isLoading ? (

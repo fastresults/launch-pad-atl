@@ -17,7 +17,7 @@ function AttendeesPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Attendees"
-        description="Active founders currently enrolled in a cohort. Open an attendee to view their startup profile, workflow progress, uploaded deliverables, and media. Use this view during the program to monitor engagement, unblock founders who are stuck on a milestone, and confirm each team is keeping pace with their cohort's curriculum."
+        description="Active founders in a cohort. Open one to view their profile, workflow progress, deliverables, and media."
       />
 
       {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}

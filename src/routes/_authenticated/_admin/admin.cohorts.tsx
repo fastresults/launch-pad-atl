@@ -225,7 +225,7 @@ function CohortsAdminPage() {
       <div className="flex items-start justify-between gap-4">
         <AdminPageHeader
           title="Cohorts"
-          description="Define the cohorts founders apply to and graduate from. Create new cohorts with start and end dates, set capacity, open or close applications, and archive past sessions. The cohort selected on an application or registration drives which programming and milestones a founder sees inside their dashboard, so keep this list accurate."
+          description="Create cohorts with dates, capacity, and pricing. Drives the programming founders see in their dashboard."
         />
         <div className="flex gap-2">
           <Button asChild variant="outline">

@@ -185,7 +185,7 @@ function AdminDashboard() {
     <div className="space-y-10">
       <AdminPageHeader
         title="Dashboard"
-        description="Your command center for Startup Labs. See pending member approvals, fresh applications, confirmed registrations, and new inquiries at a glance. Use this view to triage what needs your attention today, then jump into the specific queue to take action. Counters update in real time as your team works through each list."
+        description="Triage what needs attention today: pending approvals, new applications, registrations, and inquiries — all at a glance."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">

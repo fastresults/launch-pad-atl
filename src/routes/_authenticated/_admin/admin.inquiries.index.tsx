@@ -46,7 +46,7 @@ function InquiriesListPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Inquiries"
-        description="Messages submitted through the public contact form. Read the full inquiry, mark it as in progress or resolved, and reply directly via email. New inquiries are flagged with a badge so nothing slips through the cracks. Resolve threads here to keep the queue focused on conversations that still need a human response."
+        description="Messages from the public contact form. Reply by email, then mark in progress or resolved."
       />
 
       <div className="flex flex-wrap items-center gap-2">
