@@ -19,10 +19,15 @@ interface Props {
   supportingInfo?: string | null
 }
 
-const Email = ({ memberName, memberEmail, startupType, startupName, oneLineIdea, supportingInfo }: Props) => (
+const Email = (props: Props) => {
+  const memberName = props.memberName ?? 'New member'
+  const memberEmail = props.memberEmail ?? ''
+  const startupType = props.startupType ?? '—'
+  const { startupName, oneLineIdea, supportingInfo } = props
+  return (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>New member intake from {memberName}</Preview>
+    <Preview>{`New member intake from ${memberName}`}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={brandBar} />
@@ -31,7 +36,7 @@ const Email = ({ memberName, memberEmail, startupType, startupName, oneLineIdea,
           <strong>{memberName}</strong> ({memberEmail}) submitted a startup intake.
         </Text>
         <Section style={box}>
-          <Row label="Startup type" value={String(startupType ?? '—')} />
+          <Row label="Startup type" value={startupType} />
           {startupName ? <Row label="Startup name" value={startupName} /> : null}
           <Row label="Idea" value={oneLineIdea ?? '—'} />
           {supportingInfo ? <Row label="Supporting info" value={supportingInfo} /> : null}
@@ -40,7 +45,8 @@ const Email = ({ memberName, memberEmail, startupType, startupName, oneLineIdea,
       </Container>
     </Body>
   </Html>
-)
+  )
+}
 
 const Row = ({ label, value }: { label: string; value: string }) => (
   <>
