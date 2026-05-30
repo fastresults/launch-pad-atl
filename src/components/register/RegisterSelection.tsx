@@ -344,7 +344,7 @@ function SuccessCard() {
         </div>
         <p className="text-sm text-muted-foreground">
           The worst outcome here is a {FINALIST_DISCOUNT_PCT}% discount and a front-row seat to
-          watch six Atlanta founders launch in public. Watch the inbox on July 15 — the
+          watch six Atlanta founders launch in public. Watch the inbox on July 8 — the
           Founder&rsquo;s Discount is single-use and time-bound.
         </p>
       </div>
