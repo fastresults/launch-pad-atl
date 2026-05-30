@@ -42,44 +42,52 @@ export function FounderBlock({ onDone }: Props) {
 
   const [rightPerson, setRightPerson] = useState<string>((profile?.right_person_reason as string) ?? "");
   const [edge, setEdge] = useState<string>((profile?.unfair_advantage as string) ?? "");
+  const [extractNote, setExtractNote] = useState<string | null>(null);
 
-  const onFile = async (file: File) => {
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Max 10MB");
-      return;
-    }
-    setUploading(true);
-    try {
-      const { path, signedUrl } = await signFn({ data: { filename: file.name, mime: file.type || "application/octet-stream" } });
-      const res = await fetch(signedUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type || "application/octet-stream" } });
-      if (!res.ok) throw new Error("Upload failed");
-      setFilePath(path);
-      setFilename(file.name);
-      toast.success("Uploaded. Now paste the resume text below so AI can read it.");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Upload failed");
-    } finally {
-      setUploading(false);
-    }
-  };
+  const hasText = rawText.trim().length >= 20;
+  const hasFile = !!filePath;
+  const hasLinkedin = linkedinUrl.trim().length > 0;
+  const canExtract = hasText || hasFile || hasLinkedin;
 
-  const runExtract = async () => {
-    if (rawText.trim().length < 20) {
-      toast.error("Paste at least a paragraph of your background.");
+  const ctaLabel = extracting
+    ? hasFile && !hasText
+      ? "Reading your resume…"
+      : "Reading…"
+    : hasText
+      ? hasExtraction
+        ? "Re-extract"
+        : "Extract with AI"
+      : hasFile
+        ? "Read my resume"
+        : hasLinkedin
+          ? "Save LinkedIn & continue"
+          : "Extract with AI";
+
+  const runExtract = async (overrides?: { filePath?: string | null }) => {
+    const effectiveFilePath = overrides?.filePath !== undefined ? overrides.filePath : filePath;
+    const effectiveHasFile = !!effectiveFilePath;
+    if (!hasText && !effectiveHasFile && !hasLinkedin) {
+      toast.error("Add a resume, LinkedIn URL, or paste your background.");
       return;
     }
     setExtracting(true);
+    setExtractNote(null);
     try {
-      await extractFn({
+      const res = await extractFn({
         data: {
-          raw_text: rawText.trim(),
-          linkedin_url: linkedinUrl.trim() || null,
-          source: filePath ? "resume" : linkedinUrl.trim() ? "linkedin" : "manual",
-          source_file_path: filePath,
+          raw_text: hasText ? rawText.trim() : null,
+          linkedin_url: hasLinkedin ? linkedinUrl.trim() : null,
+          source: effectiveHasFile ? "resume" : hasLinkedin ? "linkedin" : "manual",
+          source_file_path: effectiveFilePath ?? null,
         },
       });
       await refetch();
-      toast.success("Got it. Check what we extracted below.");
+      if (res?.note) {
+        setExtractNote(res.note);
+        toast.message(res.note);
+      } else {
+        toast.success("Got it. Check what we extracted below.");
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Extraction failed");
     } finally {
