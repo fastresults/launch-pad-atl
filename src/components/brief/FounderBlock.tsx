@@ -205,15 +205,21 @@ export function FounderBlock({ onDone }: Props) {
           placeholder="Paste your background here…"
           className="mt-3 w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm"
         />
-        <div className="mt-3 flex items-center justify-end">
+        <div className="mt-3 flex flex-col items-end gap-2">
           <button
-            onClick={runExtract}
-            disabled={extracting || rawText.trim().length < 20}
+            onClick={() => runExtract()}
+            disabled={extracting || uploading || !canExtract}
             className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-40"
           >
             {extracting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {extracting ? "Reading…" : hasExtraction ? "Re-extract" : "Extract with AI"}
+            {ctaLabel}
           </button>
+          <p className="text-xs text-muted-foreground">
+            Any one works — upload, link, or paste. Combine them for the best result.
+          </p>
+          {extractNote && (
+            <p className="text-xs text-amber-500 max-w-md text-right">{extractNote}</p>
+          )}
         </div>
       </div>
 
