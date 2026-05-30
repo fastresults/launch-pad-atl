@@ -200,11 +200,35 @@ function Panel({
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number | undefined }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-card p-5">
+function StatCard({
+  label,
+  value,
+  href,
+  highlight,
+}: {
+  label: string;
+  value: number | undefined;
+  href?: string;
+  highlight?: boolean;
+}) {
+  const inner = (
+    <div
+      className={`rounded-2xl border p-5 transition ${
+        highlight
+          ? "border-primary/50 bg-primary/5 hover:bg-primary/10"
+          : "border-white/10 bg-card"
+      } ${href ? "hover:border-white/20" : ""}`}
+    >
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="mt-2 text-3xl font-semibold tracking-tight">{value ?? "—"}</div>
     </div>
   );
+  if (href) {
+    return (
+      <Link to={href} className="block">
+        {inner}
+      </Link>
+    );
+  }
+  return inner;
 }
