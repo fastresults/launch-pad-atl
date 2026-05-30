@@ -330,7 +330,7 @@ function FinalistOffer() {
               <span className="font-medium text-foreground">
                 {FINALIST_DISCOUNT_PCT}% off the next paid Atlanta cohort
               </span>
-              , emailed July 15. The discount activates after the workshop on purpose: you get to
+              , emailed July 8. The discount activates after the workshop on purpose: you get to
               watch the six launch in public — read the case studies, click the live sites, see
               the 90-day numbers — and then decide if you want your turn.
             </p>
