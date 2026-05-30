@@ -26,15 +26,7 @@ export const Route = createFileRoute("/facilitator")({
       },
       { property: "og:url", content: "https://startuplabs.online/facilitator" },
     ],
-    links: [
-      { rel: "canonical", href: "https://startuplabs.online/facilitator" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap",
-      },
-    ],
+    links: [{ rel: "canonical", href: "https://startuplabs.online/facilitator" }],
   }),
   component: FacilitatorPage,
 });
