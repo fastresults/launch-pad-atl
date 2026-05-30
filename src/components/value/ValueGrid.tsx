@@ -38,7 +38,7 @@ const STAGE_TINT = [
   "from-rose-500/10",
 ];
 
-export function ValueGrid() {
+export function ValueGrid({ showCosts = true }: { showCosts?: boolean } = {}) {
   const [expanded, setExpanded] = useState(false);
   const visibleRows = expanded ? VALUE_ROWS : VALUE_ROWS.slice(0, PREVIEW_COUNT);
   const hiddenCount = VALUE_ROWS.length - PREVIEW_COUNT;
@@ -73,11 +73,12 @@ export function ValueGrid() {
       </span>
       {!expanded && (
         <span className="text-xs text-muted-foreground">
-          + {hiddenCount} more, market cost & DIY time totals
+          + {hiddenCount} more{showCosts ? ", market cost & DIY time totals" : ""}
         </span>
       )}
     </button>
   );
+
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -86,9 +87,9 @@ export function ValueGrid() {
       <div className="hidden lg:block">
         <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-white/10 bg-white/[0.02] text-xs uppercase tracking-[0.18em] text-muted-foreground">
           <div className="col-span-2">Stage</div>
-          <div className="col-span-6">Deliverable</div>
-          <div className="col-span-2 text-right">Market cost</div>
-          <div className="col-span-1 text-right">DIY time</div>
+          <div className={showCosts ? "col-span-6" : "col-span-9"}>Deliverable</div>
+          {showCosts && <div className="col-span-2 text-right">Market cost</div>}
+          {showCosts && <div className="col-span-1 text-right">DIY time</div>}
           <div className="col-span-1 text-right">Included</div>
         </div>
         <div id="value-grid-rows" className="relative">
@@ -113,16 +114,20 @@ export function ValueGrid() {
                         <span className="text-muted-foreground/60 pl-8">↳</span>
                       )}
                     </div>
-                    <div className="col-span-6 text-foreground/90 flex items-center gap-2">
+                    <div className={`${showCosts ? "col-span-6" : "col-span-9"} text-foreground/90 flex items-center gap-2`}>
                       <span>{r.deliverable}</span>
                       <PostWorkshopTip row={r} />
                     </div>
-                    <div className="col-span-2 text-right tabular-nums text-foreground/80">
-                      {formatCostRange(r.marketCostMin, r.marketCostMax)}
-                    </div>
-                    <div className="col-span-1 text-right tabular-nums text-muted-foreground">
-                      {formatHoursRange(r.diyHoursMin, r.diyHoursMax)}
-                    </div>
+                    {showCosts && (
+                      <div className="col-span-2 text-right tabular-nums text-foreground/80">
+                        {formatCostRange(r.marketCostMin, r.marketCostMax)}
+                      </div>
+                    )}
+                    {showCosts && (
+                      <div className="col-span-1 text-right tabular-nums text-muted-foreground">
+                        {formatHoursRange(r.diyHoursMin, r.diyHoursMax)}
+                      </div>
+                    )}
                     <div className="col-span-1 flex justify-end">
                       <span className="inline-flex size-7 items-center justify-center rounded-full bg-primary/15 text-primary">
                         <Check className="size-4" />
@@ -137,7 +142,7 @@ export function ValueGrid() {
             <div className="pointer-events-none absolute inset-x-0 -top-16 h-16 bg-gradient-to-b from-transparent to-card" />
           )}
         </div>
-        {expanded && (
+        {expanded && showCosts && (
           <div className="grid grid-cols-12 gap-4 px-6 py-5 bg-hero-gradient text-white items-center">
             <div className="col-span-8 font-medium">
               Total if you built it all yourself or hired it out
@@ -156,6 +161,7 @@ export function ValueGrid() {
         <ExpandToggle className="border-t border-white/10" />
       </div>
 
+
       {/* Mobile cards grouped by stage */}
       <div className="lg:hidden">
         {stageNums.map((n) => (
@@ -173,21 +179,23 @@ export function ValueGrid() {
                   <span className="flex-1">{r.deliverable}</span>
                   <PostWorkshopTip row={r} />
                 </div>
-                <div className="flex gap-4 pl-6 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <DollarSign className="size-3" />
-                    {formatCostRange(r.marketCostMin, r.marketCostMax)}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="size-3" />
-                    {formatHoursRange(r.diyHoursMin, r.diyHoursMax)}
-                  </span>
-                </div>
+                {showCosts && (
+                  <div className="flex gap-4 pl-6 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <DollarSign className="size-3" />
+                      {formatCostRange(r.marketCostMin, r.marketCostMax)}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="size-3" />
+                      {formatHoursRange(r.diyHoursMin, r.diyHoursMax)}
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         ))}
-        {expanded && (
+        {expanded && showCosts && (
           <div className="px-5 py-5 bg-hero-gradient text-white">
             <div className="font-medium text-sm mb-2">If you built or hired it all yourself</div>
             <div className="flex justify-between text-sm">
@@ -202,6 +210,7 @@ export function ValueGrid() {
             </div>
           </div>
         )}
+
         <ExpandToggle className="border-t border-white/10" />
       </div>
     </div>

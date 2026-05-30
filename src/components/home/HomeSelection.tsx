@@ -209,7 +209,7 @@ function WhatYouWalkOut() {
           Conservative market rates and DIY hours, deliverable by deliverable. No fluff.
         </p>
         <div className="mt-8">
-          <ValueGrid />
+          <ValueGrid showCosts={false} />
         </div>
         <p className="mt-6 max-w-3xl text-sm text-muted-foreground md:text-base">
           If you bought these piecemeal from a brand studio, a dev shop, and a fractional CMO,
