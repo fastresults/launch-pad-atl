@@ -50,13 +50,21 @@ export function BriefReview({ values, onEdit, onContinueDiscovery }: Props) {
         })}
       </ul>
 
-      <div className="pt-4">
+      <div className="pt-4 flex flex-wrap items-center gap-3">
         <Link
           to="/dashboard"
           className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-card px-5 py-2.5 text-sm hover:bg-white/5 min-h-[44px]"
         >
           <ArrowLeft className="h-4 w-4" /> Back to dashboard
         </Link>
+        {onContinueDiscovery && (
+          <button
+            onClick={onContinueDiscovery}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 min-h-[44px]"
+          >
+            Add background & market →
+          </button>
+        )}
       </div>
     </div>
   );
