@@ -136,17 +136,15 @@ function BeforeMode({
 
       {/* The one next thing */}
       {briefDone ? (
-        <NextActionCard
-          eyebrow="You're ready"
-          title="You're all set for workshop day."
-          description="Your AI assistant has everything it needs. You can review your answers any time, or just show up Saturday."
-          primary={{ to: "/dashboard/brief", label: "Review my answers" }}
+        <BriefCompleteCard
+          pitch={pitch}
           secondary={{ to: "/dashboard/day", label: "What to bring →" }}
+          footnote="You're all set for Saturday. Just show up."
         />
       ) : (
         <NextActionCard
           eyebrow="Pre-work"
-          title="Answer 10 quick questions about your startup."
+          title={briefScore === 0 ? "Answer 10 quick questions about your startup." : "Pick up where you left off."}
           description={
             <>
               You can talk instead of type. Your AI assistant uses these answers all day Saturday to build your 25 deliverables.
