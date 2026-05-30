@@ -143,6 +143,22 @@ function BriefWizard() {
     if (idx > 0) setIdx(idx - 1);
   };
 
+  if (mode === "review") {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <BriefReview
+          values={values}
+          onEdit={(i) => {
+            setEditingFromReview(true);
+            setCheckpointBlock(null);
+            setIdx(i);
+            setMode("question");
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-2xl">
       {/* Header + progress */}
