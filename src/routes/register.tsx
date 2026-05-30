@@ -68,14 +68,19 @@ type FormValues = z.infer<typeof FormSchema>;
 
 function RegisterPage() {
   const fetchSettings = useServerFn(getPublicSiteSettings);
-  const { data: siteSettings } = useQuery({
+  const { data: siteSettings, isLoading } = useQuery({
     queryKey: ["site-settings"],
     queryFn: () => fetchSettings(),
     staleTime: 60_000,
   });
+  if (isLoading) return null;
   if (siteSettings?.register_variant === "selection") return <RegisterSelection />;
+  return <RegisterDefault />;
+}
 
+function RegisterDefault() {
   const [submitted, setSubmitted] = useState(false);
+
   const [serverError, setServerError] = useState<string | null>(null);
   const [tier, setTier] = useState<TierKey>("founders");
   const fetchCohorts = useServerFn(listCohorts);
