@@ -211,3 +211,129 @@ export const promoteApplicationToRegistration = createServerFn({ method: "POST" 
 
     return { ok: true, registrationId: result as string };
   });
+
+const PatchSchema = z
+  .object({
+    status: z.enum(STATUSES).optional(),
+    industry: z.string().trim().min(1).max(120).optional(),
+    stage: z.string().trim().min(1).max(120).optional(),
+    name: z.string().trim().min(1).max(200).optional(),
+    email: z.string().trim().email().max(255).optional(),
+    cohort_id: z.string().trim().max(64).nullable().optional(),
+  })
+  .refine((p) => Object.keys(p).length > 0, { message: "Empty patch" });
+
+export const updateApplication = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({ id: z.string().uuid(), patch: PatchSchema })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+
+    const { data: current } = await supabaseAdmin
+      .from("founder_applications")
+      .select("status")
+      .eq("id", data.id)
+      .single();
+    if (!current) throw new Error("Application not found");
+
+    const update: Record<string, unknown> = { ...data.patch };
+    if (data.patch.status && data.patch.status !== current.status) {
+      update.reviewed_by = context.userId;
+      update.reviewed_at = new Date().toISOString();
+    }
+
+    const { error } = await supabaseAdmin
+      .from("founder_applications")
+      .update(update)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+
+    if (data.patch.status && data.patch.status !== current.status) {
+      const actor = await getActorDisplayName(context.userId);
+      await supabaseAdmin.from("application_notes").insert({
+        application_id: data.id,
+        author_id: context.userId,
+        author_name: actor,
+        kind: "system",
+        body: `Status changed: ${current.status} → ${data.patch.status}`,
+      });
+    }
+
+    return { ok: true };
+  });
+
+export const bulkUpdateApplications = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        ids: z.array(z.string().uuid()).min(1).max(100),
+        patch: z.object({ status: z.enum(STATUSES) }),
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+
+    const { error } = await supabaseAdmin
+      .from("founder_applications")
+      .update({
+        status: data.patch.status,
+        reviewed_by: context.userId,
+        reviewed_at: new Date().toISOString(),
+      })
+      .in("id", data.ids);
+    if (error) throw new Error(error.message);
+
+    const actor = await getActorDisplayName(context.userId);
+    await supabaseAdmin.from("application_notes").insert(
+      data.ids.map((id) => ({
+        application_id: id,
+        author_id: context.userId,
+        author_name: actor,
+        kind: "system",
+        body: `Status changed (bulk) → ${data.patch.status}`,
+      })),
+    );
+
+    return { ok: true, updated: data.ids.length };
+  });
+
+export const bulkDeleteApplications = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({ ids: z.array(z.string().uuid()).min(1).max(100) })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+
+    const { data: rows, error: selErr } = await supabaseAdmin
+      .from("founder_applications")
+      .select("id, name, converted_registration_id")
+      .in("id", data.ids);
+    if (selErr) throw new Error(selErr.message);
+
+    const skipped = (rows ?? [])
+      .filter((r) => r.converted_registration_id)
+      .map((r) => ({ id: r.id, name: r.name, reason: "Already promoted to a registration" }));
+    const deletable = (rows ?? [])
+      .filter((r) => !r.converted_registration_id)
+      .map((r) => r.id);
+
+    if (deletable.length > 0) {
+      const { error } = await supabaseAdmin
+        .from("founder_applications")
+        .delete()
+        .in("id", deletable);
+      if (error) throw new Error(error.message);
+    }
+
+    return { ok: true, deleted: deletable.length, skipped };
+  });
+
