@@ -367,12 +367,18 @@ function SuccessCard() {
         </ul>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Link
           to="/"
           className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm transition-colors hover:bg-white/10"
         >
           Back to home
+        </Link>
+        <Link
+          to="/contact"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-hero-gradient px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+        >
+          Have a question? Contact us
         </Link>
       </div>
     </div>
