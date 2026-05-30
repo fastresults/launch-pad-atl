@@ -1,30 +1,22 @@
-## Problem
+## Forensic findings
 
-The "Get in touch" link in the cohort application confirmation email isn't taking recipients to the contact form. The template currently hardcodes `https://startuplabs.online/contact`, but the link still isn't landing on `/contact` in delivered emails.
+- The `/contact` route exists in the code (`src/routes/contact.tsx`) and is registered in `src/routeTree.gen.ts`.
+- It works in the preview environment.
+- **The published site does NOT have it.** I fetched both:
+  - `https://startuplabs.online/contact` → 404
+  - `https://launch-pad-atl.lovable.app/contact` → 404
+- The email link points to `https://startuplabs.online/contact`, which is correct — but the live deployment is an older build that predates the contact route.
 
-Likely causes (in order of probability):
-1. The email the user received was sent **before** the recent template change — the older version didn't link to `/contact` at all.
-2. The hardcoded production URL doesn't match the environment the email was sent from (preview vs. published vs. custom domain), so clicks land on a stale or wrong host.
-3. No regression test confirmed the rendered email actually points to `/contact`.
+## Root cause
 
-## Plan
+The project has not been re-published since the `/contact` route (and the email template's "Get in touch" link) were added. New routes only go live on the production domain after a publish. Until then, every recipient who clicks the link lands on the 404 page.
 
-1. **Centralize the site URL** in the email templates.
-   - Read `SITE_URL` from `process.env.SITE_URL` (server-side, set at send time inside the `application-received` template render path) with a safe fallback to `https://startuplabs.online`.
-   - Build `CONTACT_URL` as `${SITE_URL}/contact`.
-   - Apply the same pattern to any other template that links back to the marketing site (`inquiry-received`, `inquiry-reply` if applicable) so all outbound links stay consistent.
+## Fix
 
-2. **Verify the link renders correctly** by previewing the `application-received` template via the email preview route and confirming the anchor `href` is `https://startuplabs.online/contact` (or the configured SITE_URL).
+This is a publish-only fix — no code changes are needed. Steps:
 
-3. **Confirm `/contact` is reachable** on the published custom domain (`https://startuplabs.online/contact`) and on the Lovable-hosted URLs. The route exists (`src/routes/contact.tsx`) and now renders `SiteHeader` + form + `SiteFooter`, so a fresh publish should make it live everywhere.
+1. **Publish the project** so the current code (including `src/routes/contact.tsx`, the updated email template, and `SiteHeader` on the contact page) goes live on `startuplabs.online` and the `.lovable.app` URLs.
+2. **Verify** by visiting `https://startuplabs.online/contact` after publish completes — the contact form should render with the site header.
+3. **Trigger a fresh application** and click "Get in touch" in the email to confirm end-to-end.
 
-4. **Trigger a real test application** after publishing, receive the email, and click "Get in touch" end-to-end to confirm it opens the contact form.
-
-## Files to touch
-
-- `src/lib/email-templates/application-received.tsx` — replace hardcoded `CONTACT_URL` with env-driven value.
-- `src/lib/email-templates/inquiry-received.tsx`, `src/lib/email-templates/inquiry-reply.tsx` — same treatment if they link to the site.
-
-## Note about old emails
-
-Emails already delivered cannot be changed. The fix only affects emails sent **after** the next publish. If you're testing, submit a fresh application after publish.
+After approval I'll surface the publish action so you can ship it in one click. If you'd also like a one-time backstop (e.g., a redirect rule on the marketing domain so any old `/contact` link works even when unpublished), I can add that, but the cleanest fix is simply to publish.
