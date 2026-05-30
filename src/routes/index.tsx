@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { FLOW_STAGES } from "@/lib/schedule-data";
@@ -8,6 +10,8 @@ import { BUSINESS_IDEAS, BUSINESS_CATEGORIES, type BusinessCategory, type Busine
 import { MapPin, Calendar, Users, ArrowRight, Award, FileCheck2, Target, Globe2, Rocket, X, Check, Clock, Laptop, Store, Wrench, ChefHat, Sun, Home as HomeIcon, Sparkles, DollarSign, UserPlus, Zap, Hammer, Timer, AlertTriangle } from "lucide-react";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroBg from "@/assets/hero-bg.png";
+import { getPublicSiteSettings } from "@/lib/site-settings.functions";
+import { HomeSelection } from "@/components/home/HomeSelection";
 
 export const FACILITATOR_NAME = "Adam Anderson";
 export const FACILITATOR_TITLE =
@@ -34,6 +38,13 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const fetchSettings = useServerFn(getPublicSiteSettings);
+  const { data } = useQuery({
+    queryKey: ["site-settings"],
+    queryFn: () => fetchSettings(),
+    staleTime: 60_000,
+  });
+  if (data?.home_variant === "selection") return <HomeSelection />;
   return (
     <div className="min-h-screen">
       <SiteHeader />

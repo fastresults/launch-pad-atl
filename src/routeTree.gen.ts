@@ -35,6 +35,7 @@ import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_auth
 import { Route as ApiPublicHooksPublishDueDeliverablesRouteImport } from './routes/api/public/hooks/publish-due-deliverables'
 import { Route as AuthenticatedDashboardWorkflowKeyRouteImport } from './routes/_authenticated/dashboard.workflow.$key'
 import { Route as AuthenticatedAdminAdminUsersRouteImport } from './routes/_authenticated/_admin/admin.users'
+import { Route as AuthenticatedAdminAdminSiteRouteImport } from './routes/_authenticated/_admin/admin.site'
 import { Route as AuthenticatedAdminAdminReviewRouteImport } from './routes/_authenticated/_admin/admin.review'
 import { Route as AuthenticatedAdminAdminRegistrationsRouteImport } from './routes/_authenticated/_admin/admin.registrations'
 import { Route as AuthenticatedAdminAdminMediaRouteImport } from './routes/_authenticated/_admin/admin.media'
@@ -189,6 +190,12 @@ const AuthenticatedAdminAdminUsersRoute =
     path: '/admin/users',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAdminSiteRoute =
+  AuthenticatedAdminAdminSiteRouteImport.update({
+    id: '/admin/site',
+    path: '/admin/site',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAdminReviewRoute =
   AuthenticatedAdminAdminReviewRouteImport.update({
     id: '/admin/review',
@@ -276,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/admin/media': typeof AuthenticatedAdminAdminMediaRoute
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
+  '/admin/site': typeof AuthenticatedAdminAdminSiteRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
@@ -311,6 +319,7 @@ export interface FileRoutesByTo {
   '/admin/media': typeof AuthenticatedAdminAdminMediaRoute
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
+  '/admin/site': typeof AuthenticatedAdminAdminSiteRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
@@ -350,6 +359,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/media': typeof AuthenticatedAdminAdminMediaRoute
   '/_authenticated/_admin/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/_authenticated/_admin/admin/review': typeof AuthenticatedAdminAdminReviewRoute
+  '/_authenticated/_admin/admin/site': typeof AuthenticatedAdminAdminSiteRoute
   '/_authenticated/_admin/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/_authenticated/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
@@ -388,6 +398,7 @@ export interface FileRouteTypes {
     | '/admin/media'
     | '/admin/registrations'
     | '/admin/review'
+    | '/admin/site'
     | '/admin/users'
     | '/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
@@ -423,6 +434,7 @@ export interface FileRouteTypes {
     | '/admin/media'
     | '/admin/registrations'
     | '/admin/review'
+    | '/admin/site'
     | '/admin/users'
     | '/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
@@ -461,6 +473,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/media'
     | '/_authenticated/_admin/admin/registrations'
     | '/_authenticated/_admin/admin/review'
+    | '/_authenticated/_admin/admin/site'
     | '/_authenticated/_admin/admin/users'
     | '/_authenticated/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
@@ -669,6 +682,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminUsersRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/_admin/admin/site': {
+      id: '/_authenticated/_admin/admin/site'
+      path: '/admin/site'
+      fullPath: '/admin/site'
+      preLoaderRoute: typeof AuthenticatedAdminAdminSiteRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/_admin/admin/review': {
       id: '/_authenticated/_admin/admin/review'
       path: '/admin/review'
@@ -787,6 +807,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAdminMediaRoute: typeof AuthenticatedAdminAdminMediaRoute
   AuthenticatedAdminAdminRegistrationsRoute: typeof AuthenticatedAdminAdminRegistrationsRoute
   AuthenticatedAdminAdminReviewRoute: typeof AuthenticatedAdminAdminReviewRoute
+  AuthenticatedAdminAdminSiteRoute: typeof AuthenticatedAdminAdminSiteRoute
   AuthenticatedAdminAdminUsersRoute: typeof AuthenticatedAdminAdminUsersRoute
   AuthenticatedAdminAdminIndexRoute: typeof AuthenticatedAdminAdminIndexRoute
 }
@@ -800,6 +821,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAdminRegistrationsRoute:
     AuthenticatedAdminAdminRegistrationsRoute,
   AuthenticatedAdminAdminReviewRoute: AuthenticatedAdminAdminReviewRoute,
+  AuthenticatedAdminAdminSiteRoute: AuthenticatedAdminAdminSiteRoute,
   AuthenticatedAdminAdminUsersRoute: AuthenticatedAdminAdminUsersRoute,
   AuthenticatedAdminAdminIndexRoute: AuthenticatedAdminAdminIndexRoute,
 }
@@ -888,13 +910,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
