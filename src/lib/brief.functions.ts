@@ -169,12 +169,12 @@ export const summarizeBriefBlock = createServerFn({ method: "POST" })
       `- bullets: 3–4 short bullets (≤ 18 words each) capturing the key takeaways from this block.`,
     ].join("\n");
 
-    const { experimental_output } = await generateText({
+    const { output } = await generateText({
       model,
-      experimental_output: Output.object({ schema: SummaryOutputSchema }),
+      output: Output.object({ schema: SummaryOutputSchema }),
       prompt,
     });
-    const out = experimental_output as { summary: string; bullets: string[] };
+    const out = output as { summary: string; bullets: string[] };
 
     // Mark prior memory superseded
     if (existing) {
