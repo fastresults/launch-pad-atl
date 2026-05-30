@@ -20,6 +20,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { ADMIN_GROUPS, ADMIN_NAV } from "@/lib/admin-nav";
 import { getAdminBadges } from "@/lib/admin-badges.functions";
 import { LogOut } from "lucide-react";
+import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
+import { StartupLabsMark } from "@/components/brand/StartupLabsMark";
 
 export function AdminSidebar() {
   const { isSuperAdmin, signOut, user } = useAuth();
@@ -41,13 +43,9 @@ export function AdminSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
-        <Link to="/admin" className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
-            SL
-          </div>
-          <span className="text-sm font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
-            Admin
-          </span>
+        <Link to="/admin" className="flex items-center gap-2" aria-label="StartupLabs admin">
+          <StartupLabsLogo className="h-7 w-auto text-foreground group-data-[collapsible=icon]:hidden" />
+          <StartupLabsMark className="hidden h-6 w-6 group-data-[collapsible=icon]:block" />
         </Link>
       </SidebarHeader>
 

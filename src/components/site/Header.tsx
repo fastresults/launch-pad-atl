@@ -33,7 +33,7 @@ export function SiteHeader() {
           className="flex items-center font-semibold tracking-tight"
           aria-label="Atlanta Startup Workshop"
         >
-          <StartupLabsLogo className="h-9 w-auto md:h-12 text-white" />
+          <StartupLabsLogo className="h-9 w-auto md:h-12 text-foreground" />
         </Link>
 
         {/* Desktop nav */}
@@ -103,7 +103,7 @@ export function SiteHeader() {
             <SheetContent side="right" className="w-[82vw] max-w-sm border-white/10 bg-background p-0">
               <div className="flex h-full flex-col">
                 <div className="flex items-center gap-3 border-b border-white/5 px-6 py-5">
-                  <StartupLabsLogo className="h-9 w-auto text-white" />
+                  <StartupLabsLogo className="h-9 w-auto text-foreground" />
                 </div>
                 <SheetTitle className="sr-only">Navigation</SheetTitle>
                 <SheetDescription className="sr-only">

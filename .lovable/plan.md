@@ -1,53 +1,41 @@
-# Admin page intros
+# Use the real StartupLabs logo everywhere
 
-Add a consistent intro block at the top of every admin dashboard page so admins immediately understand what the view manages.
+## Problem
 
-## Component
+- `src/components/admin/AdminSidebar.tsx` renders a hand-rolled blue "SL" tile + the word "Admin" instead of the real brand logo. That's what's in the screenshot.
+- `src/components/site/Header.tsx` and `src/components/site/Footer.tsx` use the real `StartupLabsLogo`, but hardcode `text-white` on it. The "startup" wordmark uses `currentColor`, so in light mode it becomes invisible (white on white).
+- `src/routes/_authenticated/dashboard.tsx` already does it right (`text-foreground`) — we'll match that pattern everywhere.
 
-Create `src/components/admin/AdminPageHeader.tsx`:
-- Props: `title: string`, `description: string`, optional `actions?: ReactNode` (for future use).
-- Renders an `h1` (text-3xl, tracking-tight) and a muted `p` below it, constrained to `max-w-3xl` for readability.
-- Replaces the ad-hoc heading currently in `admin.index.tsx` and is added to all other admin route components.
+## Plan
 
-## Pages and copy (~60 words each)
+### 1. Add a compact mark for collapsed sidebars
 
-Applied to one route file each under `src/routes/_authenticated/_admin/`:
+Create `src/components/brand/StartupLabsMark.tsx` — a small SVG containing only the gradient leaf glyph from `StartupLabsLogo` (same `<defs>` + leaf `<path>`, square viewBox `0 0 174.28 174.28`). Theme-agnostic (gradient stays the same in light/dark). Used when the sidebar is collapsed to icon mode.
 
-1. **Dashboard** (`admin.index.tsx`)
-   "Your command center for Startup Labs. See pending member approvals, fresh applications, confirmed registrations, and new inquiries at a glance. Use this view to triage what needs your attention today, then jump into the specific queue to take action. Counters update in real time as your team works through each list."
+### 2. Fix the admin sidebar header
 
-2. **Members** (`admin.members.tsx`)
-   "Every person who created a Startup Labs account lives here. Approve new signups to unlock their founder dashboard, review their intake answers, and manage existing members. Pending members cannot access founder tools until you approve them, so clearing this queue is the fastest way to onboard new startups into the program."
+In `src/components/admin/AdminSidebar.tsx`, replace the SL tile + "Admin" label with:
 
-3. **Applications** (`admin.applications.index.tsx`)
-   "Applications submitted through the public apply form. Filter by status, search by name or email, edit details inline, and move applicants through Applied → Reviewing → Shortlisted → Selected. Use bulk actions to update or remove multiple records at once. Selected applicants can be promoted into a registration so they can confirm their cohort spot."
+- Expanded state: `<StartupLabsLogo className="h-7 w-auto text-foreground" />` (wordmark uses `currentColor`, so it flips correctly between light and dark).
+- Collapsed (`group-data-[collapsible=icon]`) state: `<StartupLabsMark className="h-6 w-6" />`.
 
-4. **Registrations** (`admin.registrations.tsx`)
-   "Founders who have been promoted from an application and are confirming their seat in a cohort. Track who has paid, who is pending, and who has dropped. Resend confirmation emails, update cohort assignments, and prepare the final attendee roster from this view before the cohort officially kicks off."
+Toggle via the existing `group-data-[collapsible=icon]:hidden` / `:block` utilities so we don't need extra state.
 
-5. **Attendees** (`admin.attendees.tsx`)
-   "Active founders currently enrolled in a cohort. Open an attendee to view their startup profile, workflow progress, uploaded deliverables, and media. Use this view during the program to monitor engagement, unblock founders who are stuck on a milestone, and confirm each team is keeping pace with their cohort's curriculum."
+Keep the wrapping `<Link to="/admin">`.
 
-6. **Review queue** (`admin.review.tsx`) — super only
-   "Accounts that have signed up but not yet completed their startup intake or required materials. Super admins can manually unlock a founder's dashboard from here when an exception is needed. Use this queue to follow up with stalled signups before they go cold and to override blocks when context warrants it."
+### 3. Make the public site logo theme-aware
 
-7. **Inquiries** (`admin.inquiries.index.tsx`)
-   "Messages submitted through the public contact form. Read the full inquiry, mark it as in progress or resolved, and reply directly via email. New inquiries are flagged with a badge so nothing slips through the cracks. Resolve threads here to keep the queue focused on conversations that still need a human response."
+In `src/components/site/Header.tsx` (both desktop and mobile sheet) and `src/components/site/Footer.tsx`, change `text-white` on the `<StartupLabsLogo />` to `text-foreground`. The leaf gradient stays untouched; the "startup" wordmark now adapts to the current theme. Header background is already `bg-background/70`, so contrast is correct in both modes.
 
-8. **Cohorts** (`admin.cohorts.tsx`) — super only
-   "Define the cohorts founders apply to and graduate from. Create new cohorts with start and end dates, set capacity, open or close applications, and archive past sessions. The cohort selected on an application or registration drives which programming and milestones a founder sees inside their dashboard, so keep this list accurate."
+### 4. Sanity-check the rest
 
-9. **Site settings** (`admin.site.tsx`) — super only
-   "Control the public marketing site without redeploying. Edit hero copy, navigation labels, calls to action, contact details, and SEO metadata. Changes save immediately and reflect on the live site for visitors and search engines. Use this view to keep messaging current as cohorts, partners, and program details evolve throughout the year."
+Grep for any other ad-hoc "SL" / placeholder logo tiles in admin/dashboard/auth pages and swap them for `StartupLabsLogo` (`text-foreground`) if found. Known good: `dashboard.tsx` already uses `text-foreground`.
 
-10. **Media library** (`admin.media.tsx`) — super only
-    "Upload and manage images used across the public site and founder dashboard. Reuse assets without re-uploading, copy hosted URLs into editors, and delete files that are no longer referenced. Keeping this library tidy ensures the marketing site stays fast and that founders always see current branding instead of stale or duplicate imagery."
+## Files touched
 
-11. **Users & roles** (`admin.users.tsx`) — super only
-    "Grant or revoke admin and super admin access for Startup Labs staff. Search by email, change a user's role, and audit who can manage applications, registrations, and site content. Only super admins can promote others, so be intentional — anyone listed here can read and modify founder data across the platform."
+- new: `src/components/brand/StartupLabsMark.tsx`
+- edit: `src/components/admin/AdminSidebar.tsx`
+- edit: `src/components/site/Header.tsx`
+- edit: `src/components/site/Footer.tsx`
 
-## Out of scope
-
-- Editing the public site or founder views.
-- Restructuring nav or moving routes.
-- Making copy CMS-editable (hard-coded strings for now).
+No backend, schema, or routing changes.
