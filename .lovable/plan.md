@@ -1,60 +1,119 @@
-## v2 — Conversion-oriented Atlanta announcement (Nano Banana Pro)
+# Applications: capture, triage, confirm — end to end
 
-Same target: `imagegen--generate_image`, `model: "premium.gemini"`, `1088×1920`, save to `/mnt/documents/atlanta-six-announcement-v2.png` (keep v1 so you can compare side by side).
+## Mission
 
-### What's changing vs v1
-The original prompt under-sold the offer. v1 buried "free" inside a small info card and led with a brand line ("Six Founders. One Thursday."). v2 pulls the three highest-converting levers to the top of the visual hierarchy:
+Right now, when someone fills out the free-cohort selection form, three things are broken:
 
-1. **Lead with FREE.** A huge typographic "FREE" or "$0" badge is the first thing the eye lands on, before the headline. Free is the offer — it should not be a footnote.
-2. **Stakes + scarcity in the headline.** Replace "One Thursday" framing with a scarcity-forward line ("6 Free Seats. 1 Day. Your Startup, Launched.") so a scroller knows what's at stake in under a second.
-3. **CTA promotes the upside, not the deadline.** "APPLY FREE — JUNE 20" pairs the action with the zero-cost promise; deadline is the constraint, "free" is the reason to tap.
-4. **Risk-reversal microcopy.** Add a short reassurance line: "No fee to apply. No catch. Every applicant hears back." This is the highest-impact addition for conversion — it kills the "what's the catch?" objection that kills scrollers on "free" offers.
-5. **Tighter info row.** Drop "LED BY A 30-YEAR STARTUP OPERATOR" from the visual (it's a credibility line, not a conversion line) and replace it with "Worth $2,500 · Yours at $0" — anchor a value so "free" lands.
+1. **They get no acknowledgement.** No email tells them we received it or what happens next.
+2. **The admin has no place to see them.** The form writes into `workshop_registrations`, but the admin "Registrations" page mixes them in with paid registrants — and there's no way to read the full application, leave notes, or move someone from "applied" to "selected."
+3. **The conceptual model is wrong.** "Registrants" are people who are *attending*. "Applicants" are people *asking to be considered*. They need to be separate, both in the database and in the admin UI.
 
-### Refined prompt to send
+The admin needs a complete management workflow: see the queue, open any application to read every field in full, take notes over multiple sessions, change status through the funnel, and when someone is selected, promote them into the actual registration list — without losing the application history.
 
-```
-A premium 9:16 vertical social media poster for Instagram, Facebook, and LinkedIn stories. Editorial design quality, conversion-optimized hierarchy, museum-grade typography. Designed by an award-winning art director who knows that on social, free is the hook and the eye has one second.
+## Plan
 
-Background: deep midnight navy (#0a0a1a fading to #141432). A sweeping diagonal gradient ribbon — magenta (#e94560) → violet (#6c5ce7) → cyan (#2dd4a8) — cuts across the upper third. Subtle film grain, faint hand-drawn constellation lines in the negative space.
+### 1. New `founder_applications` table (separate from registrations)
 
-VISUAL HIERARCHY (top to bottom, the eye should land in this order):
+Create `public.founder_applications`:
+- **Identity**: `name`, `email`, `phone`, `linkedin_url`
+- **Application body** (discrete fields, not the concatenated `business_idea` blob): `about_you`, `about_startup`, `why_now`
+- **Context**: `industry`, `stage` (idea/early/existing), `referral_source`, `can_attend`, `cohort_id`
+- **Triage state**: `status` `CHECK` constraint with values `applied | reviewing | shortlisted | selected | waitlisted | rejected | withdrawn` (default `applied`)
+- **Promotion link**: `converted_registration_id uuid null` — set when a selected applicant becomes a paid registrant, so we can navigate from the application to the registration and back
+- **Audit**: `reviewed_by uuid`, `reviewed_at timestamptz`, `status_changed_at timestamptz`, `created_at`, `updated_at`
 
-1. KICKER pill at the very top, centered, thin outline, soft white uppercase letter-spaced: "ATLANTA · INAUGURAL COHORT"
+RLS: anon + authenticated may `INSERT` (public form); only admins/super_admins may `SELECT/UPDATE/DELETE` (via `is_admin(auth.uid())`). Full GRANTs for anon/authenticated/service_role per the public-schema rule. Trigger to keep `updated_at` and bump `status_changed_at` when `status` changes.
 
-2. THE OFFER — the single largest element on the entire poster: the word "FREE" set in a massive condensed display sans-serif, filled with the magenta-to-cyan gradient, with a small star/asterisk mark. Directly under it in small uppercase white: "TUITION · MATERIALS · LUNCH — ALL COVERED"
+Backfill the 2 existing `status='applied'` rows from `workshop_registrations` (both Doug's test submissions) by parsing the concatenated `business_idea` blob back into the three fields, then delete them from `workshop_registrations`.
 
-3. HEADLINE in bold sans-serif, white, two tight lines:
-   "6 SEATS. 1 DAY."
-   "YOUR STARTUP, LAUNCHED." — set the second line in elegant italic serif, tinted with the gradient
+### 2. New `application_notes` table (admin notes — append-only thread)
 
-4. SUB-HEADLINE, medium sans, white at 90% opacity, one line: "Walk in with an idea. Walk out at 4:30 PM with a filing-ready startup."
+The user explicitly asked for the ability to make notes. A single `admin_notes` text column is fragile (one admin can overwrite another, no timeline). Instead:
 
-5. RISK-REVERSAL strip in a thin rounded outline, single line, slightly smaller, white at 80%: "No application fee · No catch · Every applicant hears back"
+`public.application_notes`:
+- `application_id uuid` (FK semantics enforced by query)
+- `author_id uuid` (the admin)
+- `body text`
+- `created_at timestamptz`
 
-6. INFO row, two columns separated by a vertical hairline:
-   LEFT: "THU · JULY 23, 2026"  /  small line: "IGNITE Center, Norcross GA"
-   RIGHT: "WORTH $2,500"  /  small line: "Yours at $0"
+RLS: admins only for all operations. Renders as a chronological thread on the application detail page, like comments.
 
-7. PILL CTA BUTTON, gradient fill (magenta→cyan), bold white text: "APPLY FREE — JUNE 20"
-   Fine print directly below in light gray, small: "12 minutes to apply · Decisions emailed July 8"
+### 3. Application detail page (the missing review surface)
 
-8. ATLANTA SKYLINE silhouette anchoring the bottom — deep indigo with thin neon-cyan edge light, stylized minimal (Bank of America Plaza tower, Westin cylinder, Ponce City Market, mid-rises). Six glowing warm-white dots float as a constellation just above the skyline, connected by thin luminous lines — exactly six dots, no more, no less.
+New route: `src/routes/_authenticated/_admin/admin.applications.$id.tsx`
 
-9. URL footer, centered, letter-spaced, small white: "STARTUPLABS.ONLINE"
+Two-column layout:
+- **Left (main column)**: Header with name + email + status pill + applied-date + cohort. Then full unabridged content of every field — "About you," "About the startup," "Why now," industry, stage, referral source, LinkedIn (clickable), phone, can-attend confirmation. Nothing truncated. Copy-to-clipboard on email/phone.
+- **Right (sidebar, sticky)**:
+  - **Status workflow**: a vertical stepper `applied → reviewing → shortlisted → selected` with side actions for `waitlist` / `reject` / `withdraw`. Click a step to advance; confirmation modal on terminal actions (select / reject) so a misclick is recoverable. Each change logs an automatic system note ("Status: applied → reviewing by Doug · 2026-05-30").
+  - **Promote to registration**: button enabled only when status is `selected`. Creates a row in `workshop_registrations` with `tier_interest='selection'`, `status='confirmed'`, `cohort_id`, `assigned_tier='selection'`, and stores the new registration id in `converted_registration_id`. Idempotent — if already converted, button becomes a link to the registration row.
+  - **Notes thread**: textarea + Add button → posts to `application_notes`. Thread renders newest-first with author name and timestamp. Notes are never edited or deleted (audit integrity); the admin can post a follow-up correction if needed.
+- **Top bar**: back arrow to the list, "Open in Gmail" mailto link with a pre-drafted reply, keyboard `j`/`k` to move to next/prev application in the current list.
 
-Constraints: every element inside at least 8% safe-area padding from every edge. Nothing clips. Perfect kerning. No stock photos, no people, no clip-art icons, no emojis, no watermarks. Every word spelled correctly. Readable as a thumbnail. The word FREE must be the single most dominant element.
-```
+### 4. Applications list page (the queue)
 
-### QA after generation
-- The word FREE is unambiguously the biggest, brightest element.
-- All text is spelled correctly (especially "STARTUPLABS.ONLINE", "NORCROSS", "FACILITATOR" is not on this poster).
-- Exactly six constellation dots.
-- The pill CTA is visually intact — gradient, full text, no clipping.
-- Nothing touches the canvas edges.
-- If text is mangled, regenerate once with a tightened prompt rather than raster-editing.
+New route: `src/routes/_authenticated/_admin/admin.applications.tsx`
 
-### Delivery
-Surface both files so you can pick the winner:
-- `<presentation-artifact path="atlanta-six-announcement-v2.png" mime_type="image/png"></presentation-artifact>`
-- (v1 is already delivered as `atlanta-six-announcement.png`)
+- Top: count chips per status (Applied 12 · Reviewing 3 · Shortlisted 5 · Selected 2 · Waitlist 1 · Rejected 4). Clicking a chip filters.
+- Search box (matches name/email/industry).
+- Compact table: date · name · email · industry · stage · status pill · one-line excerpt of `about_startup`. Whole row is clickable → detail page.
+- Empty state: friendly "No applications match this filter yet."
+- Default sort: oldest-applied first within `applied` status (so the queue is fair); newest-first for other statuses.
+
+### 5. Sidebar + dashboard + server functions
+
+- Add **Applications** to `AdminSidebar.tsx` *above* Registrations, with a live count badge of `applied + reviewing` (the actionable queue).
+- Add **Applications** to `AdminCommandMenu.tsx`.
+- Rewrite the admin dashboard `admin.index.tsx`:
+  - Stat cards: **Applications to review** (`applied + reviewing`) · **Applications total** · **Registrations confirmed** · **Accounts**
+  - Two stacked recent-activity sections: **"New applications"** (latest 8, links to detail page) and **"Confirmed registrations"** (latest 8)
+- New server fns in a dedicated `src/lib/applications-admin.functions.ts`:
+  - `listApplications({ status?, search? })`
+  - `getApplication({ id })` — returns application + notes thread + linked registration if any
+  - `updateApplicationStatus({ id, status })` — writes status, sets `reviewed_by`/`reviewed_at`, inserts a system note
+  - `addApplicationNote({ applicationId, body })`
+  - `promoteApplicationToRegistration({ id })` — idempotent, creates the registration row and links it
+  - All `.middleware([requireSupabaseAuth])` + assertAdmin
+
+### 6. Form server fn rewrite (`submitFounderApplication`)
+
+Insert into `founder_applications` with discrete fields. On success, enqueue the confirmation email (step 7) with idempotency key `application-confirm-<id>`. Email failure is logged but never blocks the submit response.
+
+### 7. Email infrastructure + `application-received` template
+
+Project currently has no email domain or queue. Sequenced setup after plan approval:
+1. Prompt the user to set up an email subdomain (e.g. `notify.startuplabs.online`) via the email-domain setup dialog. They add NS records; verification runs asynchronously.
+2. Set up shared email infrastructure (queue, tables, cron).
+3. Scaffold app emails.
+4. Add one React Email template `application-received.tsx` (registered in `registry.ts`).
+
+**Email copy** (white body, brand colors from `src/styles.css`):
+- **Subject**: `We got your Launch Pad ATL application, {firstName}`
+- **Preview**: `You're on our list — here's what happens next.`
+- **Body**:
+  - "Thanks, **{firstName}** — your application for the **July 23, 2026 Atlanta selection cohort** is in."
+  - **What happens next** (numbered):
+    1. We read every application personally — usually within 5 business days.
+    2. If we see a strong fit, you'll get an email with a 15-minute scheduling link for a founder call.
+    3. After the call we confirm your seat. Tuition, materials, and lunch are all covered — your seat costs you nothing.
+  - **While you wait**: one line — "If you forgot something or want to add context, just reply to this email."
+  - Sign-off from the program team.
+- No CTA button (this is acknowledgement, not conversion). System auto-appends the unsubscribe footer.
+
+Sends are queued, so they'll dispatch automatically once DNS verifies — submissions that come in before verification still get emailed once the domain goes active.
+
+## Technical notes
+
+- Two new tables follow the 4-step migration shape: CREATE TABLE → GRANTs → ENABLE RLS → POLICIES. Status uses a `CHECK` constraint (not `CREATE TYPE`) so it's reversible.
+- Backfill is a one-shot inside the same migration; only 2 rows, both test data.
+- Promotion to registration is wrapped in a SECURITY DEFINER function `promote_application(_app_id uuid)` so the insert into `workshop_registrations` + the update of `converted_registration_id` are atomic.
+- System-generated status-change notes are inserted in the same server-fn handler as `updateApplicationStatus`, with `author_id = context.userId` and a body like `Status changed: applied → reviewing`.
+- All admin reads of `founder_applications` go through `requireSupabaseAuth` + `assertAdmin` server fns (RLS is the backstop, not the gate).
+- `workshop_registrations` is untouched structurally; the public form just stops writing to it. Existing paid-tier flow (`createRegistration`) is unaffected.
+
+## Order of operations after approval
+
+1. Run the migration (creates both tables, backfills, drops the 2 test rows from `workshop_registrations`).
+2. Add server fns + Applications list page + Applications detail page + sidebar/command-menu/dashboard updates.
+3. Rewrite `submitFounderApplication` to write to the new table.
+4. Email domain setup dialog → email infra → app-emails scaffold → `application-received` template → wire the send into `submitFounderApplication`.
