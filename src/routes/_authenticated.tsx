@@ -6,7 +6,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, isApprovedMember, loading } = useAuth();
   const { location } = useRouterState();
 
   if (loading) {
@@ -19,6 +19,13 @@ function AuthenticatedLayout() {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" search={{ redirect: location.href }} replace />;
+  }
+
+  // Gate: non-approved members can only see /welcome
+  const path = location.pathname;
+  const isWelcome = path === "/welcome" || path.startsWith("/welcome/");
+  if (!isApprovedMember && !isWelcome) {
+    return <Navigate to="/welcome" replace />;
   }
 
   return <Outlet />;
