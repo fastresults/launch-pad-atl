@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
 import { SiteFooter } from "@/components/site/Footer";
+import { SiteHeader } from "@/components/site/Header";
 
 export const Route = createFileRoute("/contact")({
   component: ContactPage,
