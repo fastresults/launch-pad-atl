@@ -102,6 +102,12 @@ function BriefWizard() {
 
   const goNext = async () => {
     await save(current.key);
+    // Editing from a completed brief returns to review, no checkpoint replay
+    if (editingFromReview) {
+      setEditingFromReview(false);
+      setMode("review");
+      return;
+    }
     const endingBlock = isLastFieldOfBlock(idx);
     if (endingBlock) {
       setCheckpointBlock(endingBlock);
