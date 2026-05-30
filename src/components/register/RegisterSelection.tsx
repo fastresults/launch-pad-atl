@@ -98,7 +98,7 @@ export function RegisterSelection() {
           <ul className="mx-auto mt-8 grid max-w-2xl gap-2 text-left text-sm sm:grid-cols-2">
             {[
               "6 seats · 0 cost · 0 strings",
-              "Decision by July 15 — every applicant hears back",
+              "Decision by July 8 — every applicant hears back",
               `Not chosen? ${FINALIST_DISCOUNT_PCT}% Founder's Discount, same day`,
               "Adam reads every application personally",
             ].map((b) => (
