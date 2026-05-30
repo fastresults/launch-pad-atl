@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 const ITEMS = [
   { year: "1985 – 2008", title: "Fortune 500 brand & communications", desc: "40-year career building brand infrastructure, communications systems, and identity programs for some of North America's largest organizations, including Citigroup." },
-  { year: "2009", title: "Co-founded OPEN Interactive", desc: "Full-service digital agency and event production company. First client: Citigroup. Now operating globally with Pathways PR as its communications division." },
+  { year: "2009", title: "Founded OPEN Interactive", desc: "Full-service digital agency and event production company headquartered in the West Indies, serving clients across three continents. First client: Citigroup." },
   { year: "2014 – 2020", title: "Sovereign technology partner, St. Kitts & Nevis", desc: "Built eGovernment infrastructure, the national IRS portal, and CBI branding for the federal government. Originated the Caribbean Investment Summit." },
   { year: "2022 – present", title: "AI-native product builder", desc: "Launched and actively ships five SaaS platforms including Ampfli, PivotHQ, AskEve, and WorkshopAI — all built with AI-first toolchains." },
   { year: "2024 – present", title: "Founder & CEO, Institute of AI Professionals", desc: "Building the global standards body for AI practitioners, with five founding chapters across North America, Europe, Asia-Pacific, the Middle East, and Africa & the Caribbean." },
