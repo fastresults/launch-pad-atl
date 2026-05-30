@@ -1,0 +1,2 @@
+ALTER TABLE public.workshop_registrations DROP CONSTRAINT workshop_registrations_status_check;
+ALTER TABLE public.workshop_registrations ADD CONSTRAINT workshop_registrations_status_check CHECK (status = ANY (ARRAY['applied'::text,'selected'::text,'waitlisted'::text,'declined'::text,'pending'::text,'paid'::text,'confirmed'::text,'refunded'::text,'cancelled'::text]));
