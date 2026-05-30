@@ -14,7 +14,7 @@ export function FacilitatorCTA() {
         Ready to build in the AI era?
       </h2>
       <p className="font-body text-base leading-[1.8] text-muted-foreground mb-6">
-        Half-day and full-day workshops available for teams, conferences, and private cohorts. Every session is tailored, practitioner-led, and built to produce immediate, applicable results.
+        Half-day and full-day formats available for teams, conferences, and private cohorts. Every engagement is custom-scoped, practitioner-led, and built to leave the room with work already shipped.
       </p>
       <Button asChild size="lg">
         <a href="mailto:adam@madebyopen.com">Book a Workshop →</a>

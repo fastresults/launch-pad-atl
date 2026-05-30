@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 
 const STATS = [
-  { n: "40+", l: "Years in brand & comms" },
-  { n: "5+", l: "SaaS products built with AI" },
-  { n: "3", l: "Active ventures led today" },
-  { n: "2", l: "Continents of government work" },
+  { n: "18 yrs", l: "Leading OPEN Interactive" },
+  { n: "4", l: "Fortune 500 experience centers" },
+  { n: "5", l: "Caribbean Investment Summits produced" },
+  { n: "7 yrs", l: "Embedded with a sovereign government" },
 ];
 
 export function FacilitatorStats() {

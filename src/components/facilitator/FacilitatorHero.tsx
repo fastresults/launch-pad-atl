@@ -19,7 +19,7 @@ export function FacilitatorHero() {
         He teaches what works.
       </h1>
       <p className="font-body text-base leading-[1.8] text-muted-foreground mt-6">
-        40 years building brands for Fortune 500 companies and sovereign governments. Now translating that experience into practical AI skills that entrepreneurs and executives can use tomorrow morning.
+        One of the few practitioners fluent across three rooms most consultants never enter together — Fortune 500 boardrooms, sovereign cabinet ministries, and the AI-native product trenches. Workshops translate that fluency into skills you can deploy Monday morning.
       </p>
     </motion.section>
   );

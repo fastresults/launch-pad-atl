@@ -1,11 +1,14 @@
 import { motion } from "framer-motion";
 
 const ITEMS = [
-  { year: "1985 – 2008", title: "Fortune 500 brand & communications", desc: "40-year career building brand infrastructure, communications systems, and identity programs for some of North America's largest organizations, including Citigroup." },
-  { year: "2009", title: "Founded OPEN Interactive", desc: "Full-service digital agency and event production company headquartered in the West Indies, serving clients across three continents. First client: Citigroup." },
-  { year: "2014 – 2020", title: "Sovereign technology partner, St. Kitts & Nevis", desc: "Built eGovernment infrastructure, the national IRS portal, and CBI branding for the federal government. Originated the Caribbean Investment Summit." },
-  { year: "2022 – present", title: "AI-native product builder", desc: "Launched and actively ships five SaaS platforms including Ampfli, PivotHQ, AskEve, and WorkshopAI — all built with AI-first toolchains." },
-  { year: "2024 – present", title: "Founder & CEO, Institute of AI Professionals", desc: "Building the global standards body for AI practitioners, with five founding chapters across North America, Europe, Asia-Pacific, the Middle East, and Africa & the Caribbean." },
+  { year: "1985 – 2008", title: "Brand & communications foundation", desc: "Two decades engineering brand infrastructure for North American enterprises, laying the groundwork that would later draw Citigroup, Mayo Clinic, 3M, and Disney as clients." },
+  { year: "2009", title: "Founded OPEN Interactive (Orlando)", desc: "Launched OPEN Interactive LLC in Florida. Delivered the Mayo Clinic Experience Center at Mall of America, the 3M HIS Division Experience Center, and the Amway Arena visitor experience." },
+  { year: "2014", title: "Relocated to St. Kitts & Nevis", desc: "Co-founded OPEN Interactive Inc. in the Federation and stood up the region's largest public-private technology partnership, working across nearly every government ministry." },
+  { year: "2014 – 2021", title: "National digital infrastructure", desc: "Engineered the Federation's central eGovernment portal, the Inland Revenue tax portal, and a child-protective-services case-management system. Branded the national CBI program." },
+  { year: "2018 – present", title: "Caribbean Investment Summit", desc: "Co-originated the franchise and served as Executive Producer for CIS18, CIS19, CIS24 (Grenada), CIS25 (Antigua & Barbuda), and CIS26 (Saint Lucia) — five OECS jurisdictions." },
+  { year: "2020", title: "Sovereign crisis & soft-power work", desc: "Directed pro-bono COVID-19 crisis communications for the St. Kitts & Nevis Ministry of Health and advised the national pavilion at Expo 2020 Dubai." },
+  { year: "2022 – present", title: "AI-native product builder", desc: "Designed and shipped five SaaS platforms — Ampfli, PivotHQ, AskEve, WorkshopAI, and a fifth in stealth — each built with an AI-first toolchain." },
+  { year: "2024 – present", title: "Founder & CEO, Institute of AI Professionals", desc: "Building the global standards body for AI practitioners, with founding chapters across North America, Europe, Asia-Pacific, the Middle East, and Africa & the Caribbean." },
 ];
 
 export function FacilitatorTimeline() {
