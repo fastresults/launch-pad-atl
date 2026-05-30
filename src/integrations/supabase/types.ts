@@ -110,6 +110,44 @@ export type Database = {
           },
         ]
       }
+      application_notes: {
+        Row: {
+          application_id: string
+          author_id: string | null
+          author_name: string | null
+          body: string
+          created_at: string
+          id: string
+          kind: string
+        }
+        Insert: {
+          application_id: string
+          author_id?: string | null
+          author_name?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          kind?: string
+        }
+        Update: {
+          application_id?: string
+          author_id?: string | null
+          author_name?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_notes_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "founder_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendee_business_brief: {
         Row: {
           business_model: string | null
@@ -861,6 +899,75 @@ export type Database = {
         }
         Relationships: []
       }
+      founder_applications: {
+        Row: {
+          about_startup: string
+          about_you: string
+          can_attend: boolean
+          cohort_id: string | null
+          converted_registration_id: string | null
+          created_at: string
+          email: string
+          id: string
+          industry: string
+          linkedin_url: string | null
+          name: string
+          phone: string | null
+          referral_source: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          stage: string
+          status: string
+          status_changed_at: string
+          updated_at: string
+          why_now: string
+        }
+        Insert: {
+          about_startup: string
+          about_you: string
+          can_attend?: boolean
+          cohort_id?: string | null
+          converted_registration_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          industry: string
+          linkedin_url?: string | null
+          name: string
+          phone?: string | null
+          referral_source?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          stage: string
+          status?: string
+          status_changed_at?: string
+          updated_at?: string
+          why_now: string
+        }
+        Update: {
+          about_startup?: string
+          about_you?: string
+          can_attend?: boolean
+          cohort_id?: string | null
+          converted_registration_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          industry?: string
+          linkedin_url?: string | null
+          name?: string
+          phone?: string | null
+          referral_source?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          stage?: string
+          status?: string
+          status_changed_at?: string
+          updated_at?: string
+          why_now?: string
+        }
+        Relationships: []
+      }
       media_assets: {
         Row: {
           ai_error: string | null
@@ -1257,6 +1364,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      promote_application: { Args: { _app_id: string }; Returns: string }
       reserve_cohort_seat: {
         Args: {
           _cohort_id: string
