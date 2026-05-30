@@ -230,7 +230,7 @@ const CRITERIA = [
     body: "You&rsquo;re building in metro Atlanta — or moving here in the next 90 days.",
   },
   {
-    title: "An idea you&rsquo;ve been turning over",
+    title: "An idea you have been turning over",
     body: "You don&rsquo;t need revenue. You do need a real idea you can&rsquo;t stop thinking about.",
   },
   {
