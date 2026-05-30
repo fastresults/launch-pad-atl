@@ -1,62 +1,80 @@
+# Expand discovery beyond the 10-question brief
 
-## The problem
+## Goal
+Make the brief AI-first: collect richer **founder context** (background, skills, edge) and **market/model context** (industry, geography, business archetype, channels) with minimal typing. Let users upload a resume or paste a LinkedIn URL/profile text; AI extracts structured data. Everything flows into `attendee_founder_memory` so the 25 deliverables get a fuller picture.
 
-The founder has finished all 10 brief questions (`completeness_score = 10`, `completed_at` set), but the app keeps pushing them back into the questionnaire:
+## What the user will experience
 
-1. **Dashboard "Today" → no-cohort mode** (`src/routes/_authenticated/dashboard.index.tsx`, `NoCohortMode`, lines 355–370) hardcodes the card *"Answer 10 quick questions about your startup"* even when the score is already 10/10. There is no completed-state branch.
-2. **`/dashboard/brief` re-entry** (`src/routes/_authenticated/dashboard.brief.tsx`, lines 37–44) uses `findIndex(f => !init[f.key])`. When every field is filled, `firstEmpty === -1` and `setIdx` is skipped, so the wizard silently lands on **Q1** again. To the user this looks identical to starting over — the "endless cycle".
-3. **Dashboard "Today" → before-workshop mode** already has a `briefDone` branch ("You're all set"), but it's a thin card with no acknowledgment of what was captured and no review affordance other than a button. It also doesn't appear in the no-cohort path.
+After finishing the 10 startup-brief questions, the wizard continues into two new blocks before the final "You've told everything we need" screen:
 
-## What to build
+**Block 4 — About you (the founder)**
+- Single screen: "Tell us about you — the fastest way is to upload."
+- Options (any one is enough):
+  - Upload resume (PDF / DOCX)
+  - Paste LinkedIn profile URL
+  - Paste/type a short bio
+- AI extracts: years of experience, roles, industries, skills, notable wins, education, location. Shown back as an editable recap card ("Did we get this right?").
+- Two clarifier questions only if extraction is thin: "Why are you the right person to start this?" and "What's your unfair advantage?"
 
-A single completed-brief experience that replaces the questionnaire prompt across every dashboard mode, plus a real "review my answers" view inside the brief route.
+**Block 5 — Your market & model**
+- Five quick chip/select questions (no essays):
+  1. Business archetype — chips: Online / Main-street brick-and-mortar / Service-based / Blue-collar trade / Product / Marketplace / SaaS / Hybrid
+  2. Where you'll operate — local city/region, regional, national, global
+  3. Industry / category (typeahead, free text fallback)
+  4. Primary channel — in-person, website, marketplace (Amazon/Etsy), social, referrals, B2B sales
+  5. Who pays — consumers (B2C), other businesses (B2B), both
+- Optional 1-liner: "Anything about this market we should know?"
 
-### 1. New component: `BriefCompleteCard`
+**Checkpoint after each new block** uses the existing `BlockCheckpoint` summary pattern, so the founder feels heard before moving on. Both summaries are saved to `attendee_founder_memory` (sources `founder_profile` and `market_model`) and join the existing `brief_block` summaries in `loadFounderContext` for every downstream AI deliverable.
 
-`src/components/brief/BriefCompleteCard.tsx`. Reused by both dashboard modes.
+The completed-state `BriefCompleteCard` is updated to show five recap rows instead of three.
 
-- Eyebrow: "Your startup brief"
-- Title: "You've told us everything we need."
-- Subtitle: pulls `one_line_pitch` from the brief and shows it back in quotes so the founder sees their own words ("So we know your startup as: *…*").
-- Block list: 3 rows — "Your story", "Your customer & edge", "Your model & vision" — each with a green check and a one-line recap from the stored `attendee_founder_memory` summary (fallback: count of questions in the block).
-- Two buttons: **Review my answers** (`/dashboard/brief?review=1`) and a contextual secondary CTA picked by caller (e.g. "What to bring →" before the workshop, or "Browse the 25 deliverables →" when no cohort yet).
+## Technical plan
 
-### 2. Fix `NoCohortMode`
+### 1. Database (one migration)
+- `attendee_founder_profile` table — extracted fields:
+  - `user_id` (unique), `source` (`resume` | `linkedin` | `manual`), `source_file_path` (nullable, storage path in `attendee-docs`), `linkedin_url` (nullable), `raw_text` (nullable, capped), `extracted` jsonb (`{ headline, years_experience, roles[], industries[], skills[], education[], wins[], location }`), `right_person_reason` text, `unfair_advantage` text, `extracted_at`, timestamps.
+  - RLS: owner read/insert/update; admins read. Standard GRANTs.
+- `attendee_market_profile` table:
+  - `user_id` (unique), `archetype` text[], `geography` text, `industry` text, `channels` text[], `customer_type` text (`b2c|b2b|both`), `market_note` text, timestamps.
+  - RLS + GRANTs same pattern.
+- Extend `attendee_founder_memory.source` usage with two new logical keys (`founder_profile`, `market_model`) — no schema change needed (text column).
 
-Branch on `briefScore >= briefTotal`:
-- **Complete:** render `<BriefCompleteCard secondary={…}/>` and a short "We'll email you as soon as your workshop date is set" line. No more "answer 10 questions".
-- **In progress:** keep the existing card, but soften copy to "Pick up where you left off — you're {n} of 10 done."
+### 2. Server functions (new file `src/lib/discovery.functions.ts`)
+- `getFounderProfile` / `upsertFounderProfile` (manual fields, advantage answers).
+- `getMarketProfile` / `upsertMarketProfile`.
+- `extractFromResume({ storage_path })` — read PDF/DOCX via `pdf-parse` / `mammoth` in server fn (verify Worker compat; fall back to plain text upload + AI parse if a native dep is unsafe — preferred path is **AI-only**: pass the file text to `google/gemini-2.5-pro` with a Zod-validated `extracted` schema).
+- `extractFromLinkedIn({ url, pasted_text })` — same AI extraction (URL is stored; we do NOT scrape — we ask the user to paste the profile text, which AI normalizes). If a LinkedIn connector is later added, swap implementations.
+- `summarizeFounderProfile` and `summarizeMarketProfile` — mirror `summarizeBriefBlock`: hash inputs, write a recap + bullets into `attendee_founder_memory` with `source` = `founder_profile` / `market_model`.
 
-### 3. Fix `BeforeMode` completed branch
+### 3. Storage
+- Reuse existing `attendee-docs` bucket. New folder convention: `{user_id}/founder/resume-*.pdf`. Upload via existing media/upload pattern from the brief wizard.
 
-Replace the current thin "You're all set" card with `<BriefCompleteCard secondary={{ to: "/dashboard/day", label: "What to bring →" }}/>`. Keeps the workshop countdown card above it untouched.
+### 4. Wizard changes (`dashboard.brief.tsx` + `brief-blocks.ts`)
+- Extend `BRIEF_BLOCKS` to 5 blocks. Blocks 4 & 5 use **custom screens** (not the generic `VoiceField` loop). Add a discriminator (`kind: "qa" | "founder" | "market"`) so the wizard renders the right component for each block, then routes through the same checkpoint flow.
+- New components:
+  - `src/components/brief/FounderBlock.tsx` — upload + LinkedIn + bio + extracted-recap editor.
+  - `src/components/brief/MarketBlock.tsx` — chip selectors.
+- Reuse `BlockCheckpoint` (parameterized to call the matching summarize fn).
+- `BriefReview` shows founder + market answers alongside the original 10.
+- `BriefCompleteCard` shows 5 recap rows.
 
-### 4. Fix `/dashboard/brief` re-entry (the real loop)
+### 5. Founder context for the 25 deliverables (`founderMemory.server.ts`)
+- `loadFounderContext` already concatenates `brief_block` memories. Extend it to include `founder_profile` and `market_model` memory rows + raw structured fields from the two new tables. This is the only change the downstream pipeline needs.
 
-In `BriefWizard` (`dashboard.brief.tsx`):
-- Detect "all complete" (`answeredCount === total` on initial load, or `?review=1` in the URL) and set a new `mode: "review"`.
-- Review mode renders a `<BriefReview/>` panel: each of the 10 questions with the saved answer, an inline **Edit** button per question that jumps to that `idx` in normal question mode, and a footer button "Back to dashboard". No auto-jump to Q1.
-- When the user edits one answer and saves the last empty field again, return them to review mode, not Q1.
-- Keep checkpoint summaries between blocks for the *first* completion pass; skip them in review mode.
+### 6. Dashboard surface (`dashboard.index.tsx`)
+- `briefScore` "complete" threshold becomes "all 10 brief fields + founder block + market block answered/skipped". `BriefCompleteCard` is gated on the new combined completeness, with sub-progress shown while the founder/market blocks are pending.
 
-### 5. Copy tightening
+### 7. Out of scope (this plan)
+- LinkedIn OAuth scraping (we only accept URL + pasted text now).
+- Editing extracted founder data in admin UI.
+- Reflecting new fields in `admin.attendees.$userId.*` views (follow-up).
 
-Per project memory: keep "your startup" everywhere user-facing. Replace any lingering "business" wording in the new card/review.
+## Files
+- **New**: `supabase/migrations/<ts>_founder_market_profiles.sql`, `src/lib/discovery.functions.ts`, `src/lib/discovery.server.ts`, `src/components/brief/FounderBlock.tsx`, `src/components/brief/MarketBlock.tsx`.
+- **Edited**: `src/lib/brief-blocks.ts`, `src/lib/founderMemory.server.ts`, `src/routes/_authenticated/dashboard.brief.tsx`, `src/components/brief/BriefReview.tsx`, `src/components/brief/BriefCompleteCard.tsx`, `src/components/brief/BlockCheckpoint.tsx` (parameterize summary source), `src/routes/_authenticated/dashboard.index.tsx`.
 
-## Out of scope
-
-- No DB / RLS / migration changes.
-- No edits to `updateBriefField`, `getMyBrief`, `summarizeBriefBlock`, or `attendee_founder_memory`.
-- No changes to the workflow / deliverables routes or workshop-mode logic.
-- Voice recording, save-on-blur, and the existing checkpoint UI stay as-is.
-
-## Files touched
-
-- `src/routes/_authenticated/dashboard.index.tsx` — `NoCohortMode` + `BeforeMode` completed branches.
-- `src/routes/_authenticated/dashboard.brief.tsx` — add `review` mode, gate auto-advance, honor `?review=1`.
-- `src/components/brief/BriefCompleteCard.tsx` *(new)*.
-- `src/components/brief/BriefReview.tsx` *(new)*.
-
-## Result
-
-A founder who has finished the brief sees: "You've told us everything we need" with their pitch echoed back, a 3-block recap, and one clear next step — never the "Answer 10 quick questions" prompt again. Re-opening `/dashboard/brief` shows a review/edit screen, not Q1.
+## Open questions (will ask before building if you want)
+1. Resume parsing: AI-only on raw text (simpler, Worker-safe) vs. add `pdf-parse`/`mammoth` server-side? Recommend **AI-only**.
+2. Should the founder & market blocks be **required** to unlock the 25 deliverables, or skippable with a "complete later" nudge? Recommend **skippable but strongly nudged**.
+3. Industry list: free text only, or a curated list (NAICS-lite) for better downstream AI? Recommend **curated + "Other"**.
