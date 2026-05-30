@@ -13,6 +13,13 @@ export function SiteFooter() {
         <div className="flex flex-col items-center gap-1 md:flex-row md:gap-4">
           <span>© {new Date().getFullYear()} · One day. One business.</span>
           <Link
+            to="/contact"
+            className="underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Contact
+          </Link>
+          <span>·</span>
+          <Link
             to="/privacy"
             className="underline-offset-4 hover:text-foreground hover:underline"
           >
