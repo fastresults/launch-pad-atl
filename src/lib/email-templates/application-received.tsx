@@ -189,3 +189,8 @@ const stepTitle: React.CSSProperties = {
   color: TEXT,
   fontWeight: 600,
 }
+const inlineLink: React.CSSProperties = {
+  color: BRAND,
+  textDecoration: 'underline',
+}
+
