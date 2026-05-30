@@ -5,6 +5,7 @@ import { createHash } from "crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { extractTextFromResumeFile } from "@/lib/discovery.server";
 
 // ===================== Founder profile =====================
 
@@ -70,12 +71,17 @@ export const upsertFounderProfile = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-const ExtractInput = z.object({
-  raw_text: z.string().trim().min(20).max(40000),
-  linkedin_url: z.string().url().max(500).optional().nullable(),
-  source: z.enum(["resume", "linkedin", "manual"]),
-  source_file_path: z.string().max(500).optional().nullable(),
-});
+const ExtractInput = z
+  .object({
+    raw_text: z.string().trim().max(40000).optional().nullable(),
+    linkedin_url: z.string().url().max(500).optional().nullable(),
+    source: z.enum(["resume", "linkedin", "manual"]),
+    source_file_path: z.string().max(500).optional().nullable(),
+  })
+  .refine(
+    (v) => (v.raw_text && v.raw_text.length >= 20) || !!v.source_file_path || !!v.linkedin_url,
+    { message: "Provide a resume file, a LinkedIn URL, or pasted text." },
+  );
 
 export const extractFounderFromText = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -84,27 +90,51 @@ export const extractFounderFromText = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
-    const model = createLovableAiGatewayProvider(apiKey)("google/gemini-3-flash-preview");
 
-    const prompt = [
-      "You are extracting a founder's professional profile from text they pasted.",
-      "Be faithful to the source — do not invent. If a field isn't present, leave it empty.",
-      "Return ONLY the structured object.",
-      "",
-      data.linkedin_url ? `LinkedIn URL (for reference): ${data.linkedin_url}` : "",
-      "",
-      "TEXT:",
-      data.raw_text,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    // Resolve the text we'll feed to the model from whichever source we have.
+    let textForModel = (data.raw_text ?? "").trim();
+    let resolvedRawText = textForModel;
+    let noteToUser: string | null = null;
 
-    const { output } = await generateText({
-      model,
-      output: Output.object({ schema: ExtractedFounderSchema }),
-      prompt,
-    });
-    const extracted = output as ExtractedFounder;
+    if (!textForModel && data.source_file_path) {
+      const { text, reason } = await extractTextFromResumeFile(data.source_file_path);
+      if (text) {
+        textForModel = text;
+        resolvedRawText = text;
+      } else {
+        noteToUser = reason ?? "We couldn't read that file. Paste your background to continue.";
+      }
+    }
+
+    let extracted: ExtractedFounder = ExtractedFounderSchema.parse({});
+
+    if (textForModel.length >= 20) {
+      const model = createLovableAiGatewayProvider(apiKey)("google/gemini-3-flash-preview");
+      const prompt = [
+        "You are extracting a founder's professional profile from text they provided.",
+        "Be faithful to the source — do not invent. If a field isn't present, leave it empty.",
+        "Return ONLY the structured object.",
+        "",
+        data.linkedin_url ? `LinkedIn URL (for reference): ${data.linkedin_url}` : "",
+        "",
+        "TEXT:",
+        textForModel,
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      const { output } = await generateText({
+        model,
+        output: Output.object({ schema: ExtractedFounderSchema }),
+        prompt,
+      });
+      extracted = output as ExtractedFounder;
+    } else if (data.linkedin_url) {
+      // LinkedIn-only path: we can't scrape, but we still save the URL and let them continue.
+      noteToUser =
+        noteToUser ??
+        "LinkedIn pages can't be auto-read. Add a short bio below for stronger AI alignment.";
+    }
 
     const { error } = await supabase
       .from("attendee_founder_profile" as never)
@@ -114,14 +144,14 @@ export const extractFounderFromText = createServerFn({ method: "POST" })
           source: data.source,
           source_file_path: data.source_file_path ?? null,
           linkedin_url: data.linkedin_url ?? null,
-          raw_text: data.raw_text,
+          raw_text: resolvedRawText || null,
           extracted: extracted as unknown,
           extracted_at: new Date().toISOString(),
         } as never,
         { onConflict: "user_id" },
       );
     if (error) throw new Error(error.message);
-    return { extracted };
+    return { extracted, note: noteToUser };
   });
 
 // ===================== Market profile =====================

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Upload, Link2, Sparkles, Loader2, ChevronRight } from "lucide-react";
@@ -42,6 +42,58 @@ export function FounderBlock({ onDone }: Props) {
 
   const [rightPerson, setRightPerson] = useState<string>((profile?.right_person_reason as string) ?? "");
   const [edge, setEdge] = useState<string>((profile?.unfair_advantage as string) ?? "");
+  const [extractNote, setExtractNote] = useState<string | null>(null);
+
+  const hasText = rawText.trim().length >= 20;
+  const hasFile = !!filePath;
+  const hasLinkedin = linkedinUrl.trim().length > 0;
+  const canExtract = hasText || hasFile || hasLinkedin;
+
+  const ctaLabel = extracting
+    ? hasFile && !hasText
+      ? "Reading your resume…"
+      : "Reading…"
+    : hasText
+      ? hasExtraction
+        ? "Re-extract"
+        : "Extract with AI"
+      : hasFile
+        ? "Read my resume"
+        : hasLinkedin
+          ? "Save LinkedIn & continue"
+          : "Extract with AI";
+
+  const runExtract = async (overrides?: { filePath?: string | null }) => {
+    const effectiveFilePath = overrides?.filePath !== undefined ? overrides.filePath : filePath;
+    const effectiveHasFile = !!effectiveFilePath;
+    if (!hasText && !effectiveHasFile && !hasLinkedin) {
+      toast.error("Add a resume, LinkedIn URL, or paste your background.");
+      return;
+    }
+    setExtracting(true);
+    setExtractNote(null);
+    try {
+      const res = await extractFn({
+        data: {
+          raw_text: hasText ? rawText.trim() : null,
+          linkedin_url: hasLinkedin ? linkedinUrl.trim() : null,
+          source: effectiveHasFile ? "resume" : hasLinkedin ? "linkedin" : "manual",
+          source_file_path: effectiveFilePath ?? null,
+        },
+      });
+      await refetch();
+      if (res?.note) {
+        setExtractNote(res.note);
+        toast.message(res.note);
+      } else {
+        toast.success("Got it. Check what we extracted below.");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Extraction failed");
+    } finally {
+      setExtracting(false);
+    }
+  };
 
   const onFile = async (file: File) => {
     if (file.size > 10 * 1024 * 1024) {
@@ -50,40 +102,28 @@ export function FounderBlock({ onDone }: Props) {
     }
     setUploading(true);
     try {
-      const { path, signedUrl } = await signFn({ data: { filename: file.name, mime: file.type || "application/octet-stream" } });
-      const res = await fetch(signedUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type || "application/octet-stream" } });
+      const { path, signedUrl } = await signFn({
+        data: { filename: file.name, mime: file.type || "application/octet-stream" },
+      });
+      const res = await fetch(signedUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+      });
       if (!res.ok) throw new Error("Upload failed");
       setFilePath(path);
       setFilename(file.name);
-      toast.success("Uploaded. Now paste the resume text below so AI can read it.");
+      // Auto-trigger extraction so the user doesn't also have to paste text.
+      if (file.name.toLowerCase().endsWith(".pdf")) {
+        toast.success("Uploaded. Reading your resume…");
+        await runExtract({ filePath: path });
+      } else {
+        toast.success("Uploaded. Click below to extract — or paste the text for DOCX files.");
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setUploading(false);
-    }
-  };
-
-  const runExtract = async () => {
-    if (rawText.trim().length < 20) {
-      toast.error("Paste at least a paragraph of your background.");
-      return;
-    }
-    setExtracting(true);
-    try {
-      await extractFn({
-        data: {
-          raw_text: rawText.trim(),
-          linkedin_url: linkedinUrl.trim() || null,
-          source: filePath ? "resume" : linkedinUrl.trim() ? "linkedin" : "manual",
-          source_file_path: filePath,
-        },
-      });
-      await refetch();
-      toast.success("Got it. Check what we extracted below.");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Extraction failed");
-    } finally {
-      setExtracting(false);
     }
   };
 
@@ -165,15 +205,21 @@ export function FounderBlock({ onDone }: Props) {
           placeholder="Paste your background here…"
           className="mt-3 w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm"
         />
-        <div className="mt-3 flex items-center justify-end">
+        <div className="mt-3 flex flex-col items-end gap-2">
           <button
-            onClick={runExtract}
-            disabled={extracting || rawText.trim().length < 20}
+            onClick={() => runExtract()}
+            disabled={extracting || uploading || !canExtract}
             className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-40"
           >
             {extracting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {extracting ? "Reading…" : hasExtraction ? "Re-extract" : "Extract with AI"}
+            {ctaLabel}
           </button>
+          <p className="text-xs text-muted-foreground">
+            Any one works — upload, link, or paste. Combine them for the best result.
+          </p>
+          {extractNote && (
+            <p className="text-xs text-amber-500 max-w-md text-right">{extractNote}</p>
+          )}
         </div>
       </div>
 
