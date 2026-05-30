@@ -1,22 +1,16 @@
-## Forensic findings
+## Proposed Copy Change
 
-- The `/contact` route exists in the code (`src/routes/contact.tsx`) and is registered in `src/routeTree.gen.ts`.
-- It works in the preview environment.
-- **The published site does NOT have it.** I fetched both:
-  - `https://startuplabs.online/contact` → 404
-  - `https://launch-pad-atl.lovable.app/contact` → 404
-- The email link points to `https://startuplabs.online/contact`, which is correct — but the live deployment is an older build that predates the contact route.
+Update the **Frontier** paragraph in `src/components/facilitator/FacilitatorStory.tsx` so it reads as platforms Anderson is actively developing and will launch in 2026 — not already live and in-market.
 
-## Root cause
+### Current copy (line 26)
+> **Frontier.** Today Adam is Founder & CEO of Ampfli (askeve.io), an AI-powered content intelligence platform, and is building the Institute of AI Professionals (theiaip.com) — a global standards body for AI practitioners with founding chapters across five world regions. He ships SaaS on the bleeding edge — composing frontier LLMs, agentic frameworks, AI-native code generation, vector databases, and serverless edge infrastructure — and walks workshop audiences through the same live toolchain he uses in production each day.
 
-The project has not been re-published since the `/contact` route (and the email template's "Get in touch" link) were added. New routes only go live on the production domain after a publish. Until then, every recipient who clicks the link lands on the 404 page.
+### Proposed copy
+> **Frontier.** In 2025, Adam is developing Ampfli (askeve.io), an AI-powered content intelligence platform, and the Institute of AI Professionals (theiaip.com) — a global standards body for AI practitioners with founding chapters across five world regions. Both platforms are scheduled for release in 2026. He builds on the bleeding edge — composing frontier LLMs, agentic frameworks, AI-native code generation, vector databases, and serverless edge infrastructure — and walks workshop audiences through the same live toolchain he uses in production each day.
 
-## Fix
+### What changes
+- Removes "Founder & CEO of" and "is building" framing that implies live products.
+- Adds explicit "developing" and "scheduled for release in 2026" language.
+- Keeps links, the "bleeding edge" description, and the workshop/live-toolchain line intact.
 
-This is a publish-only fix — no code changes are needed. Steps:
-
-1. **Publish the project** so the current code (including `src/routes/contact.tsx`, the updated email template, and `SiteHeader` on the contact page) goes live on `startuplabs.online` and the `.lovable.app` URLs.
-2. **Verify** by visiting `https://startuplabs.online/contact` after publish completes — the contact form should render with the site header.
-3. **Trigger a fresh application** and click "Get in touch" in the email to confirm end-to-end.
-
-After approval I'll surface the publish action so you can ship it in one click. If you'd also like a one-time backstop (e.g., a redirect rule on the marketing domain so any old `/contact` link works even when unpublished), I can add that, but the cleanest fix is simply to publish.
+Approve to apply.
