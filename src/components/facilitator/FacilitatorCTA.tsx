@@ -10,10 +10,10 @@ export function FacilitatorCTA() {
       transition={{ duration: 0.5, delay: 0.6 }}
       className="border-l-4 border-primary bg-card rounded-xl p-10"
     >
-      <h2 className="font-display font-bold text-[28px] text-card-foreground mb-3">
+      <h2 className="font-bold text-[28px] text-card-foreground mb-3">
         Ready to build in the AI era?
       </h2>
-      <p className="font-body text-base leading-[1.8] text-muted-foreground mb-6">
+      <p className="text-base leading-[1.8] text-muted-foreground mb-6">
         Half-day and full-day formats available for teams, conferences, and private cohorts. Every engagement is custom-scoped, practitioner-led, and built to leave the room with work already shipped.
       </p>
       <Button asChild size="lg">

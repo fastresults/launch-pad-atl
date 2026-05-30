@@ -21,24 +21,24 @@ export function FacilitatorHero() {
             className="w-full h-full object-cover"
           />
         </div>
-        <p className="hidden md:block font-body text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mt-3">
+        <p className="hidden md:block text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mt-3">
           Adam Anderson · Facilitator
         </p>
       </div>
 
       {/* Headline column — keeps the existing left primary border */}
       <div className="order-2 md:order-1 md:flex-1 border-l-4 border-primary pl-6">
-        <p className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mb-4">
+        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mb-4">
           Workshop Facilitator & AI Strategist
         </p>
-        <h1 className="font-display font-black leading-[1.1] text-foreground text-[36px] md:text-[52px]">
+        <h1 className="font-black leading-[1.1] text-foreground text-[36px] md:text-[52px]">
           Adam Anderson
           <br />
           doesn't teach theory.
           <br />
           He teaches what works.
         </h1>
-        <p className="font-body text-base leading-[1.8] text-muted-foreground mt-6">
+        <p className="text-base leading-[1.8] text-muted-foreground mt-6">
           One of the few practitioners fluent across three rooms most consultants never enter together — Fortune 500 boardrooms, sovereign cabinet ministries, and the AI-native product trenches. Workshops translate that fluency into skills you can deploy Monday morning.
         </p>
       </div>
