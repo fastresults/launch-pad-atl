@@ -4,6 +4,7 @@ import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { loadFounderContext } from "@/lib/founderMemory.server";
 
 // Per-user concurrency guard (best-effort; resets on worker recycle).
 const RUNNING: Map<string, number> = new Map();
@@ -38,7 +39,7 @@ async function loadAllTypes(): Promise<DeliverableType[]> {
 
 // ===== Per-user context =====
 async function buildContext(userId: string) {
-  const [{ data: profile }, { data: brief }, { data: filing }, { data: goals }, { data: intakes }, { data: deliverables }] = await Promise.all([
+  const [{ data: profile }, { data: brief }, { data: filing }, { data: goals }, { data: intakes }, { data: deliverables }, founderContext] = await Promise.all([
     supabaseAdmin.from("attendee_profiles").select("*").eq("user_id", userId).maybeSingle(),
     supabaseAdmin.from("attendee_business_brief").select("*").eq("user_id", userId).maybeSingle(),
     supabaseAdmin
@@ -52,6 +53,7 @@ async function buildContext(userId: string) {
       .from("attendee_deliverables")
       .select("deliverable_key, content_current, review_status, publish_status, ai_generated_at")
       .eq("user_id", userId),
+    loadFounderContext(userId),
   ]);
 
   const intakeMap: Record<string, Record<string, string>> = {};
@@ -69,6 +71,7 @@ async function buildContext(userId: string) {
     goals: goals ?? [],
     intakes: intakeMap,
     deliverables: deliverableMap,
+    founderContext,
   };
 }
 
@@ -112,7 +115,7 @@ async function runOne(args: {
         status: "running",
         model: type.default_model,
         started_at: new Date().toISOString(),
-        input_snapshot: { hasBrief: !!ctx.brief, intakeKeys: Object.keys(ctx.intakes), upstreamKeys: Object.keys(ctx.deliverables) },
+        input_snapshot: { hasBrief: !!ctx.brief, intakeKeys: Object.keys(ctx.intakes), upstreamKeys: Object.keys(ctx.deliverables), founder_context: ctx.founderContext },
       },
       { onConflict: "run_id,deliverable_key" },
     )
@@ -134,6 +137,8 @@ async function runOne(args: {
       `You are producing the deliverable "${type.label}" for a workshop attendee.`,
       type.description ? `Purpose: ${type.description}` : "",
       `Stage: ${type.stage_label ?? "general"}.`,
+      ``,
+      ctx.founderContext,
       ``,
       `# Business Brief (the most important context)`,
       JSON.stringify(ctx.brief ?? {}, null, 2),

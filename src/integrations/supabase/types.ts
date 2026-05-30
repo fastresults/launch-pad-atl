@@ -343,6 +343,57 @@ export type Database = {
         }
         Relationships: []
       }
+      attendee_founder_memory: {
+        Row: {
+          block_n: number | null
+          bullets: string[]
+          content_hash: string
+          created_at: string
+          field_keys: string[]
+          id: string
+          model: string | null
+          qa: Json
+          source: string
+          source_key: string
+          summary: string | null
+          superseded_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          block_n?: number | null
+          bullets?: string[]
+          content_hash: string
+          created_at?: string
+          field_keys?: string[]
+          id?: string
+          model?: string | null
+          qa?: Json
+          source: string
+          source_key: string
+          summary?: string | null
+          superseded_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          block_n?: number | null
+          bullets?: string[]
+          content_hash?: string
+          created_at?: string
+          field_keys?: string[]
+          id?: string
+          model?: string | null
+          qa?: Json
+          source?: string
+          source_key?: string
+          summary?: string | null
+          superseded_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       attendee_goals: {
         Row: {
           created_at: string
