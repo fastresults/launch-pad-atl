@@ -5,9 +5,10 @@ import { BRIEF_FIELDS } from "@/lib/workflow";
 type Props = {
   values: Record<string, string>;
   onEdit: (idx: number) => void;
+  onContinueDiscovery?: () => void;
 };
 
-export function BriefReview({ values, onEdit }: Props) {
+export function BriefReview({ values, onEdit, onContinueDiscovery }: Props) {
   return (
     <div className="mt-10 space-y-5">
       <div>
