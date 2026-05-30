@@ -1,20 +1,20 @@
-## Wire up the inquiry system into navigation
+## Plan
 
-The inquiry form (`/contact`) and admin inbox (`/admin/inquiries`) were built but never linked from anywhere, so they're invisible. Three small edits:
+1. Update the free-cohort application success experience to include an explicit Contact action.
+   - Add a clear Contact link/button in the selection-application success card, since that is the post-submit screen the applicant is actually seeing.
+   - Keep the existing site-wide Contact nav/header/footer links intact.
 
-### 1. Admin sidebar — add Inquiries
-In `src/lib/admin-nav.ts`, add an entry under the "Operations" group:
-```
-{ to: "/admin/inquiries", label: "Inquiries", icon: MessageSquare,
-  group: "Operations", badgeKey: "inquiriesNew" }
-```
-The `MessageSquare` icon is already imported. The `inquiriesNew` badge key is already wired through `getAdminBadges`, so the unread count will appear automatically.
+2. Fix the applicant-name bug in the free-cohort confirmation email flow.
+   - Trace the application confirmation path from `submitFounderApplication` through the queued app-email renderer.
+   - Correct the data mapping so the confirmation always uses the saved applicant name from the application record and never falls back to unrelated text like “See attached.”
+   - Verify the greeting and any other personalized fields use the same canonical source.
 
-### 2. Public footer — add Contact link
-In `src/components/site/Footer.tsx`, add a `<Link to="/contact">Contact</Link>` next to the existing Privacy / Terms links.
+3. Validate the full end-to-end behavior.
+   - Submit a fresh test application.
+   - Confirm the success UI shows Contact in the right place.
+   - Confirm the saved application record, queued email payload, and rendered confirmation all show the applicant’s real name.
 
-### 3. Public header — add Contact link
-In `src/components/site/Header.tsx`, add a Contact link to the main nav so visitors can actually find the form without knowing the URL. (I'll match the existing nav styling.)
-
-### Out of scope
-No changes to the form itself, the email templates, the database, or the admin detail page — those were already built in the previous turn and are working. This is purely the missing navigation wiring.
+## Technical details
+- Public UI files likely involved: `src/components/register/RegisterSelection.tsx` and possibly shared site navigation only if a gap is found in that specific flow.
+- Application flow files likely involved: `src/lib/applications.functions.ts`, `src/lib/email/enqueue.server.ts`, and the `application-received` email template / send path.
+- No backend schema change is planned unless the trace reveals data is being transformed incorrectly before queueing.
