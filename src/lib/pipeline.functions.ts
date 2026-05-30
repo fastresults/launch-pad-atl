@@ -4,6 +4,7 @@ import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { loadFounderContext } from "@/lib/founderMemory.server";
 
 // ===== Auth helpers =====
 async function assertAdmin(userId: string) {
@@ -166,12 +167,13 @@ function orderByDeps(types: DeliverableType[]): DeliverableType[] {
 }
 
 async function buildAttendeeContext(userId: string) {
-  const [{ data: prof }, { data: docs }, { data: goals }] = await Promise.all([
+  const [{ data: prof }, { data: docs }, { data: goals }, founderContext] = await Promise.all([
     supabaseAdmin.from("attendee_profiles").select("*").eq("user_id", userId).maybeSingle(),
     supabaseAdmin.from("attendee_documents").select("kind, original_name").eq("user_id", userId),
     supabaseAdmin.from("attendee_goals").select("horizon, title, description").eq("user_id", userId),
+    loadFounderContext(userId),
   ]);
-  return { profile: prof, documents: docs ?? [], goals: goals ?? [] };
+  return { profile: prof, documents: docs ?? [], goals: goals ?? [], founderContext };
 }
 
 const DeliverableOutputSchema = z.object({
@@ -204,7 +206,7 @@ async function runStep(args: {
         status: "running",
         model: type.default_model,
         started_at: new Date().toISOString(),
-        input_snapshot: { attendee: attendeeCtx, upstream_keys: Object.keys(upstream) },
+        input_snapshot: { attendee: attendeeCtx, upstream_keys: Object.keys(upstream), founder_context: attendeeCtx.founderContext },
       },
       { onConflict: "run_id,deliverable_key" },
     )
@@ -220,6 +222,8 @@ async function runStep(args: {
       `You are producing the deliverable "${type.label}" for a workshop attendee.`,
       type.description ? `Purpose: ${type.description}` : "",
       `Stage: ${type.stage_label ?? "general"}.`,
+      ``,
+      attendeeCtx.founderContext,
       ``,
       `# Attendee profile`,
       JSON.stringify(attendeeCtx.profile, null, 2),
