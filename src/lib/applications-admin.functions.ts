@@ -240,7 +240,16 @@ export const updateApplication = createServerFn({ method: "POST" })
       .single();
     if (!current) throw new Error("Application not found");
 
-    const update: Record<string, unknown> = { ...data.patch };
+    const update: {
+      status?: ApplicationStatus;
+      industry?: string;
+      stage?: string;
+      name?: string;
+      email?: string;
+      cohort_id?: string | null;
+      reviewed_by?: string;
+      reviewed_at?: string;
+    } = { ...data.patch };
     if (data.patch.status && data.patch.status !== current.status) {
       update.reviewed_by = context.userId;
       update.reviewed_at = new Date().toISOString();
@@ -250,6 +259,7 @@ export const updateApplication = createServerFn({ method: "POST" })
       .from("founder_applications")
       .update(update)
       .eq("id", data.id);
+
     if (error) throw new Error(error.message);
 
     if (data.patch.status && data.patch.status !== current.status) {
