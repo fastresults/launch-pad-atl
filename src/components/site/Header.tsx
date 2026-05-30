@@ -87,7 +87,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-2 lg:hidden">
           <Link
             to="/register"
-            className="rounded-full bg-hero-gradient px-3.5 py-2 text-sm font-medium text-foreground"
+            className="rounded-full bg-hero-gradient px-3.5 py-2 text-sm font-medium text-white"
           >
             Reserve
           </Link>
@@ -138,7 +138,7 @@ export function SiteHeader() {
                   <Link
                     to="/register"
                     onClick={close}
-                    className="flex w-full items-center justify-center rounded-full bg-hero-gradient px-5 py-3 text-base font-medium text-foreground"
+                    className="flex w-full items-center justify-center rounded-full bg-hero-gradient px-5 py-3 text-base font-medium text-white"
                   >
                     Reserve seat — from $679
                   </Link>
