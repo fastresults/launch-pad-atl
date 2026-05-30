@@ -1,80 +1,48 @@
-# Expand discovery beyond the 10-question brief
+## Problem
 
-## Goal
-Make the brief AI-first: collect richer **founder context** (background, skills, edge) and **market/model context** (industry, geography, business archetype, channels) with minimal typing. Let users upload a resume or paste a LinkedIn URL/profile text; AI extracts structured data. Everything flows into `attendee_founder_memory` so the 25 deliverables get a fuller picture.
+The "About you" block requires pasted text to enable **Extract with AI**. If a founder only uploads a resume PDF, or only pastes a LinkedIn URL, the button stays disabled and they're stuck.
 
-## What the user will experience
+## Fix — make any single input a valid path forward
 
-After finishing the 10 startup-brief questions, the wizard continues into two new blocks before the final "You've told everything we need" screen:
+Treat the three inputs as **alternative sources**, not stacked requirements. Enable "Extract with AI" as soon as **any one** of these is present:
 
-**Block 4 — About you (the founder)**
-- Single screen: "Tell us about you — the fastest way is to upload."
-- Options (any one is enough):
-  - Upload resume (PDF / DOCX)
-  - Paste LinkedIn profile URL
-  - Paste/type a short bio
-- AI extracts: years of experience, roles, industries, skills, notable wins, education, location. Shown back as an editable recap card ("Did we get this right?").
-- Two clarifier questions only if extraction is thin: "Why are you the right person to start this?" and "What's your unfair advantage?"
+1. An uploaded resume file (PDF/DOCX)
+2. A LinkedIn URL
+3. Pasted text (≥20 chars)
 
-**Block 5 — Your market & model**
-- Five quick chip/select questions (no essays):
-  1. Business archetype — chips: Online / Main-street brick-and-mortar / Service-based / Blue-collar trade / Product / Marketplace / SaaS / Hybrid
-  2. Where you'll operate — local city/region, regional, national, global
-  3. Industry / category (typeahead, free text fallback)
-  4. Primary channel — in-person, website, marketplace (Amazon/Etsy), social, referrals, B2B sales
-  5. Who pays — consumers (B2C), other businesses (B2B), both
-- Optional 1-liner: "Anything about this market we should know?"
+### Server changes (`src/lib/discovery.functions.ts`)
 
-**Checkpoint after each new block** uses the existing `BlockCheckpoint` summary pattern, so the founder feels heard before moving on. Both summaries are saved to `attendee_founder_memory` (sources `founder_profile` and `market_model`) and join the existing `brief_block` summaries in `loadFounderContext` for every downstream AI deliverable.
+Update `extractFounderFromText` (rename behavior, keep export name) so `raw_text` becomes optional. The handler branches:
 
-The completed-state `BriefCompleteCard` is updated to show five recap rows instead of three.
+- **If pasted text** is present → current AI extraction flow on that text.
+- **If resume file** is uploaded (and no text) → server downloads the file from the `attendee-docs` bucket via `supabaseAdmin`, extracts text:
+  - PDF: lightweight text extraction using `unpdf` (Worker-compatible, pure JS — no `pdf-parse`/native deps).
+  - DOCX: send raw bytes through the AI Gateway with a "extract plain text from this DOCX" prompt as a fallback, OR ask user to paste if extraction yields nothing. Start with `unpdf` for PDFs only; for DOCX, prompt the user to paste (most common resume format is PDF anyway).
+  - Then run the same AI extraction on the extracted text.
+- **If only LinkedIn URL** is present → we cannot scrape LinkedIn (auth-walled). Run AI extraction with a minimal prompt: "Founder provided only their LinkedIn URL: {url}. Return an empty extracted structure but save the URL." Save the URL and show an inline hint: *"LinkedIn pages can't be auto-read. Paste your headline + experience below for best results."* — but still let them continue.
 
-## Technical plan
+All three paths persist to `attendee_founder_profile` with the correct `source` value.
 
-### 1. Database (one migration)
-- `attendee_founder_profile` table — extracted fields:
-  - `user_id` (unique), `source` (`resume` | `linkedin` | `manual`), `source_file_path` (nullable, storage path in `attendee-docs`), `linkedin_url` (nullable), `raw_text` (nullable, capped), `extracted` jsonb (`{ headline, years_experience, roles[], industries[], skills[], education[], wins[], location }`), `right_person_reason` text, `unfair_advantage` text, `extracted_at`, timestamps.
-  - RLS: owner read/insert/update; admins read. Standard GRANTs.
-- `attendee_market_profile` table:
-  - `user_id` (unique), `archetype` text[], `geography` text, `industry` text, `channels` text[], `customer_type` text (`b2c|b2b|both`), `market_note` text, timestamps.
-  - RLS + GRANTs same pattern.
-- Extend `attendee_founder_memory.source` usage with two new logical keys (`founder_profile`, `market_model`) — no schema change needed (text column).
+### UI changes (`src/components/brief/FounderBlock.tsx`)
 
-### 2. Server functions (new file `src/lib/discovery.functions.ts`)
-- `getFounderProfile` / `upsertFounderProfile` (manual fields, advantage answers).
-- `getMarketProfile` / `upsertMarketProfile`.
-- `extractFromResume({ storage_path })` — read PDF/DOCX via `pdf-parse` / `mammoth` in server fn (verify Worker compat; fall back to plain text upload + AI parse if a native dep is unsafe — preferred path is **AI-only**: pass the file text to `google/gemini-2.5-pro` with a Zod-validated `extracted` schema).
-- `extractFromLinkedIn({ url, pasted_text })` — same AI extraction (URL is stored; we do NOT scrape — we ask the user to paste the profile text, which AI normalizes). If a LinkedIn connector is later added, swap implementations.
-- `summarizeFounderProfile` and `summarizeMarketProfile` — mirror `summarizeBriefBlock`: hash inputs, write a recap + bullets into `attendee_founder_memory` with `source` = `founder_profile` / `market_model`.
+- **Enable button** when `rawText.length >= 20 || filePath || linkedinUrl.trim()`.
+- Button label adapts:
+  - text present → "Extract with AI"
+  - file only → "Read my resume"
+  - linkedin only → "Save & continue"
+- After successful upload, auto-trigger extraction (no need for user to also paste).
+- Replace the disabled-button confusion with a small helper line under the CTA: *"Any one of the above works — upload, link, or paste."*
+- Keep the optional follow-up questions (right person / unfair advantage) as-is.
 
-### 3. Storage
-- Reuse existing `attendee-docs` bucket. New folder convention: `{user_id}/founder/resume-*.pdf`. Upload via existing media/upload pattern from the brief wizard.
+### Files touched
 
-### 4. Wizard changes (`dashboard.brief.tsx` + `brief-blocks.ts`)
-- Extend `BRIEF_BLOCKS` to 5 blocks. Blocks 4 & 5 use **custom screens** (not the generic `VoiceField` loop). Add a discriminator (`kind: "qa" | "founder" | "market"`) so the wizard renders the right component for each block, then routes through the same checkpoint flow.
-- New components:
-  - `src/components/brief/FounderBlock.tsx` — upload + LinkedIn + bio + extracted-recap editor.
-  - `src/components/brief/MarketBlock.tsx` — chip selectors.
-- Reuse `BlockCheckpoint` (parameterized to call the matching summarize fn).
-- `BriefReview` shows founder + market answers alongside the original 10.
-- `BriefCompleteCard` shows 5 recap rows.
+- `src/lib/discovery.functions.ts` — accept optional `raw_text`, branch by source, add PDF text extraction.
+- `src/lib/discovery.server.ts` — add `extractTextFromResumeFile(path)` helper using `unpdf`.
+- `src/components/brief/FounderBlock.tsx` — relax enable condition, adaptive label, auto-extract on upload, helper copy.
+- `package.json` — add `unpdf`.
 
-### 5. Founder context for the 25 deliverables (`founderMemory.server.ts`)
-- `loadFounderContext` already concatenates `brief_block` memories. Extend it to include `founder_profile` and `market_model` memory rows + raw structured fields from the two new tables. This is the only change the downstream pipeline needs.
+### Notes
 
-### 6. Dashboard surface (`dashboard.index.tsx`)
-- `briefScore` "complete" threshold becomes "all 10 brief fields + founder block + market block answered/skipped". `BriefCompleteCard` is gated on the new combined completeness, with sub-progress shown while the founder/market blocks are pending.
-
-### 7. Out of scope (this plan)
-- LinkedIn OAuth scraping (we only accept URL + pasted text now).
-- Editing extracted founder data in admin UI.
-- Reflecting new fields in `admin.attendees.$userId.*` views (follow-up).
-
-## Files
-- **New**: `supabase/migrations/<ts>_founder_market_profiles.sql`, `src/lib/discovery.functions.ts`, `src/lib/discovery.server.ts`, `src/components/brief/FounderBlock.tsx`, `src/components/brief/MarketBlock.tsx`.
-- **Edited**: `src/lib/brief-blocks.ts`, `src/lib/founderMemory.server.ts`, `src/routes/_authenticated/dashboard.brief.tsx`, `src/components/brief/BriefReview.tsx`, `src/components/brief/BriefCompleteCard.tsx`, `src/components/brief/BlockCheckpoint.tsx` (parameterize summary source), `src/routes/_authenticated/dashboard.index.tsx`.
-
-## Open questions (will ask before building if you want)
-1. Resume parsing: AI-only on raw text (simpler, Worker-safe) vs. add `pdf-parse`/`mammoth` server-side? Recommend **AI-only**.
-2. Should the founder & market blocks be **required** to unlock the 25 deliverables, or skippable with a "complete later" nudge? Recommend **skippable but strongly nudged**.
-3. Industry list: free text only, or a curated list (NAICS-lite) for better downstream AI? Recommend **curated + "Other"**.
+- `unpdf` is Cloudflare Worker-safe (used by TanStack/Nitro examples). No native binaries.
+- DOCX support deferred — if a user uploads DOCX we surface: *"Couldn't read this DOCX. Paste the text and we'll handle the rest."* Non-blocking.
+- LinkedIn-only path is intentionally light: we save the URL for admin reference but don't pretend to have extracted data.
