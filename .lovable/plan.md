@@ -1,121 +1,50 @@
-# Super-Admin Redesign: Sidebar Shell + Command Palette
+# Fix: Site Settings toggles fail with "Could not find the table"
 
-## The problem
+## Forensic findings
 
-The current admin uses a single horizontal nav bar inside `_admin.tsx`. With 8 items it's already crowded; as Cohorts, Site settings, Review queue, Media, Users, and future modules (Emails, Payments, Analytics, Audit log, Integrations, Feature flags) get added, horizontal nav becomes unusable: items truncate, hierarchy disappears, and there's no room for status badges (pending reviews count, sold-out cohorts, etc.).
+1. **Root cause**: The `public.site_settings` table does not exist in the database. Verified via `information_schema.tables` — zero rows. The earlier migration that was supposed to create it never actually executed (it was drafted but the SQL never landed in Postgres).
+2. **Symptom**: Every call to `updateSiteSetting` (Original ⇄ Selection toggles) hits PostgREST, which checks its schema cache, finds no `site_settings`, and returns `Could not find the table 'public.site_settings' in the schema cache`. The toast surfaces that error verbatim.
+3. **Code is correct**: `src/lib/site-settings.functions.ts` and `src/routes/_authenticated/_admin/admin.site.tsx` reference the table as designed. The selection cohort row (`id = '2026-07-15'`, date 2026-07-23) already exists — that side is healthy.
+4. **No other related drift**: `applications.functions.ts` points at the correct cohort id (`2026-07-15`). Nothing else needs touching.
 
-## Recommended treatment
+## Fix
 
-A **persistent collapsible left sidebar** with grouped navigation, a top utility bar with breadcrumbs + global search, and a **⌘K command palette** for power-user jumps. This is the pattern used by Linear, Vercel, Stripe, Supabase, and Resend dashboards — it's the proven SaaS-admin standard because it:
+A single migration that re-creates the missing table with the structure and policies originally specified:
 
-- Scales linearly: 30+ items still browsable via groups and collapse
-- Preserves hierarchy: sections (Operations, Content, People, System) communicate scope
-- Frees vertical canvas: page headers, filters, and tables get more room
-- Surfaces state: badges on nav items (e.g. "Review queue · 4") replace hidden notifications
-- Works on every viewport: icon-rail collapse on tablet, sheet drawer on mobile
+```sql
+CREATE TABLE public.site_settings (
+  key text PRIMARY KEY,
+  value jsonb NOT NULL DEFAULT '{}'::jsonb,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  updated_by uuid
+);
 
-## Information architecture
+GRANT SELECT ON public.site_settings TO anon, authenticated;
+GRANT ALL ON public.site_settings TO service_role;
 
-Group the existing + planned items into 4 sections. Order reflects daily use frequency.
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 
-```
-OVERVIEW
-  ▸ Dashboard                /admin
+CREATE POLICY "Site settings are publicly readable"
+  ON public.site_settings FOR SELECT
+  USING (true);
+-- Writes go through the super-admin-gated server fn using supabaseAdmin,
+-- so no INSERT/UPDATE policy for end users.
 
-OPERATIONS
-  ▸ Registrations            /admin/registrations
-  ▸ Attendees                /admin/attendees
-  ▸ Review queue   [badge]   /admin/review        (super)
-  ▸ Cohorts                  /admin/cohorts       (super)
-
-CONTENT
-  ▸ Site settings            /admin/site          (super)
-  ▸ Media library            /admin/media         (super)
-
-SYSTEM
-  ▸ Users & roles            /admin/users         (super)
-  ▸ View public site →       /
-```
-
-Future items slot cleanly: Emails/Audit log → System; Analytics → Overview; Feature flags → System.
-
-## Layout
-
-```text
-┌──────────────────────────────────────────────────────────────┐
-│ ☰  Admin · Registrations                    ⌘K  🔔  avatar ▾ │ ← top bar (h-14)
-├──────────┬───────────────────────────────────────────────────┤
-│ LOGO     │                                                   │
-│          │                                                   │
-│ OVERVIEW │                                                   │
-│  ▢ Dash  │           page content (full width)               │
-│          │                                                   │
-│ OPS      │                                                   │
-│  ▢ Regs  │                                                   │
-│  ▢ Att.  │                                                   │
-│  ▢ Rev 4 │                                                   │
-│  ▢ Coh.  │                                                   │
-│          │                                                   │
-│ CONTENT  │                                                   │
-│  ▢ Site  │                                                   │
-│  ▢ Media │                                                   │
-│          │                                                   │
-│ SYSTEM   │                                                   │
-│  ▢ Users │                                                   │
-│          │                                                   │
-│ ─────    │                                                   │
-│ ☾ theme  │                                                   │
-│ ⎋ out    │                                                   │
-└──────────┴───────────────────────────────────────────────────┘
+-- Seed defaults so the loader has something to read
+INSERT INTO public.site_settings (key, value) VALUES
+  ('home_variant',     '"original"'::jsonb),
+  ('register_variant', '"original"'::jsonb);
 ```
 
-- **Sidebar**: `w-60` expanded, `w-14` icon rail when collapsed. Persists via `SidebarProvider`.
-- **Top bar**: sidebar trigger, breadcrumb (Admin › Section › Page), spacer, command palette button (`⌘K`), theme toggle, user menu (email, sign out).
-- **Mobile (<768px)**: sidebar becomes a sheet drawer triggered by hamburger.
+Public read is intentional: the homepage and `/register` need to know which variant to render before the user authenticates. No PII lives here — just two enum strings.
 
-## Command palette (⌘K)
+## Verification
 
-`cmdk`-based dialog with sections matching the sidebar IA, plus contextual actions:
-- Jump to any admin page
-- "Create cohort", "Open review queue", "Toggle homepage variant"
-- Search attendees/registrations by email (later)
+After the migration runs:
+1. Reload `/admin/site` — toggle from Original → Selection. Expect no error, "Saved" feedback.
+2. Reload `/` — confirm the chosen variant renders.
+3. Toggle back and re-verify.
 
-Replaces the need to add every shortcut to the visible nav.
+## Out of scope
 
-## Visual / brand
-
-- Sidebar uses `bg-sidebar` token, subtle right border (`border-sidebar-border`)
-- Active item: filled pill (`bg-sidebar-accent`), 2px primary indicator on the left edge
-- Group labels: `text-xs uppercase tracking-wider text-muted-foreground`
-- Badges (review count, etc.): small `Badge variant="secondary"` aligned right
-- Smooth 200ms collapse animation; no layout shift on hover
-
-## Technical plan
-
-1. **Add shadcn sidebar primitives** (already documented in the repo's knowledge file). Files: `src/components/ui/sidebar.tsx` (if not present, install via shadcn).
-2. **Create `src/components/admin/AdminSidebar.tsx`** — the grouped nav with active-route highlighting via `useRouterState`, super-admin filtering via `useAuth().isSuperAdmin`, and badge slot per item (data fetched via lightweight server fn `getAdminBadges` returning `{ reviewPending: n }`).
-3. **Create `src/components/admin/AdminTopbar.tsx`** — `SidebarTrigger`, breadcrumb derived from current pathname + NAV map, `CommandMenuButton`, `ThemeToggle`, user dropdown.
-4. **Create `src/components/admin/AdminCommandMenu.tsx`** — `cmdk` dialog, opens on ⌘K / Ctrl+K, lists all nav targets + quick actions, navigates via `useNavigate`.
-5. **Rewrite `src/routes/_authenticated/_admin.tsx`** to render `<SidebarProvider><AdminSidebar /><SidebarInset><AdminTopbar /><main><Outlet/></main></SidebarInset></SidebarProvider>`. Keeps `isAdmin` guard and `ThemeProvider` wrapper unchanged.
-6. **Add `src/lib/admin-nav.ts`** — single source of truth for nav items (label, to, icon, group, super, badgeKey). Consumed by sidebar, breadcrumb, and command palette.
-7. **Badges server fn** (`src/lib/admin-badges.functions.ts`) — `getAdminBadges` returns counts for review queue (and future: pending registrations, unread messages). Cached via TanStack Query, 30s stale.
-8. **Expand max width**: drop `max-w-6xl` constraint inside admin so tables and grids use full width minus sidebar.
-9. **Keyboard**: ⌘K opens palette, ⌘B toggles sidebar (built into shadcn sidebar).
-
-## Files touched
-
-- Edit: `src/routes/_authenticated/_admin.tsx`
-- New: `src/components/admin/AdminSidebar.tsx`, `AdminTopbar.tsx`, `AdminCommandMenu.tsx`, `AdminBreadcrumb.tsx`
-- New: `src/lib/admin-nav.ts`, `src/lib/admin-badges.functions.ts`
-- Possibly new shadcn: `src/components/ui/sidebar.tsx`, `src/components/ui/command.tsx`, `src/components/ui/breadcrumb.tsx` (install if missing)
-
-## Out of scope (future)
-
-- Per-user nav favorites/pinning
-- Saved filter views in the sidebar
-- Inline notifications drawer
-- Multi-workspace switcher (not needed at one-tenant scale)
-
-## Sequence
-
-Install shadcn sidebar/command/breadcrumb → admin-nav source of truth → sidebar + topbar components → command palette → swap `_admin.tsx` shell → wire badges fn → verify all 8 routes render correctly at desktop/tablet/mobile widths.
+No code changes required. The components, server functions, and cohort seed are already correct.
