@@ -103,6 +103,83 @@ function AdminDashboard() {
     }
   };
 
+  const previewApps = (apps.data?.applications ?? []).slice(0, 8);
+  const previewIds = previewApps.map((a) => a.id);
+  const allSelected = previewIds.length > 0 && previewIds.every((id) => selectedIds.has(id));
+  const someSelected = previewIds.some((id) => selectedIds.has(id));
+
+  const toggleOne = (id: string, on: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+  const toggleAll = (on: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      previewIds.forEach((id) => (on ? next.add(id) : next.delete(id)));
+      return next;
+    });
+  };
+
+  const invalidateApps = () => {
+    qc.invalidateQueries({ queryKey: ["admin", "applications"] });
+    qc.invalidateQueries({ queryKey: ["admin", "badges"] });
+  };
+
+  const handleRowStatus = async (id: string, newStatus: ApplicationStatus) => {
+    try {
+      await updateAppFn({ data: { id, patch: { status: newStatus } } });
+      toast.success("Status updated");
+      invalidateApps();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to update");
+    }
+  };
+
+  const handleBulkStatus = async (newStatus: ApplicationStatus) => {
+    const ids = Array.from(selectedIds);
+    if (!ids.length) return;
+    try {
+      await bulkUpdateFn({ data: { ids, patch: { status: newStatus } } });
+      toast.success(`Updated ${ids.length} application(s)`);
+      setSelectedIds(new Set());
+      invalidateApps();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to update");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (!ids.length) return;
+    try {
+      const res = await bulkDeleteFn({ data: { ids } });
+      toast.success(
+        `Deleted ${res.deleted}${res.skipped.length ? ` — skipped ${res.skipped.length} (already registered)` : ""}`,
+      );
+      setSelectedIds(new Set());
+      setConfirmBulkDelete(false);
+      invalidateApps();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to delete");
+    }
+  };
+
+  const handleRowDelete = async (id: string) => {
+    try {
+      const res = await bulkDeleteFn({ data: { ids: [id] } });
+      if (res.deleted) toast.success("Application deleted");
+      else toast.error(res.skipped[0]?.reason ?? "Could not delete");
+      setConfirmRowDelete(null);
+      invalidateApps();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to delete");
+    }
+  };
+
   return (
     <div className="space-y-10">
       <div>
