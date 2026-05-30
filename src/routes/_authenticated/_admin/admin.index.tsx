@@ -1,12 +1,54 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { getAdminStats, listRegistrations } from "@/lib/admin.functions";
-import { listApplications } from "@/lib/applications-admin.functions";
+import {
+  listApplications,
+  updateApplication,
+  bulkUpdateApplications,
+  bulkDeleteApplications,
+} from "@/lib/applications-admin.functions";
 import { listMembers, approveMember } from "@/lib/members-admin.functions";
+import type { ApplicationStatus } from "@/lib/applications-admin.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+
+const STATUS_CHOICES: { value: ApplicationStatus; label: string }[] = [
+  { value: "applied", label: "Applied" },
+  { value: "reviewing", label: "Reviewing" },
+  { value: "shortlisted", label: "Shortlisted" },
+  { value: "selected", label: "Selected" },
+  { value: "waitlisted", label: "Waitlist" },
+  { value: "rejected", label: "Rejected" },
+  { value: "withdrawn", label: "Withdrawn" },
+];
 
 export const Route = createFileRoute("/_authenticated/_admin/admin/")({
   component: AdminDashboard,
@@ -17,9 +59,16 @@ function AdminDashboard() {
   const statsFn = useServerFn(getAdminStats);
   const regFn = useServerFn(listRegistrations);
   const appsFn = useServerFn(listApplications);
+  const updateAppFn = useServerFn(updateApplication);
+  const bulkUpdateFn = useServerFn(bulkUpdateApplications);
+  const bulkDeleteFn = useServerFn(bulkDeleteApplications);
   const membersFn = useServerFn(listMembers);
   const approveFn = useServerFn(approveMember);
   const qc = useQueryClient();
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [confirmRowDelete, setConfirmRowDelete] = useState<{ id: string; name: string } | null>(null);
 
   const stats = useQuery({ queryKey: ["admin", "stats"], queryFn: () => statsFn() });
   const regs = useQuery({
@@ -51,6 +100,83 @@ function AdminDashboard() {
       qc.invalidateQueries({ queryKey: ["admin", "badges"] });
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to approve");
+    }
+  };
+
+  const previewApps = (apps.data?.applications ?? []).slice(0, 8);
+  const previewIds = previewApps.map((a) => a.id);
+  const allSelected = previewIds.length > 0 && previewIds.every((id) => selectedIds.has(id));
+  const someSelected = previewIds.some((id) => selectedIds.has(id));
+
+  const toggleOne = (id: string, on: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+  const toggleAll = (on: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      previewIds.forEach((id) => (on ? next.add(id) : next.delete(id)));
+      return next;
+    });
+  };
+
+  const invalidateApps = () => {
+    qc.invalidateQueries({ queryKey: ["admin", "applications"] });
+    qc.invalidateQueries({ queryKey: ["admin", "badges"] });
+  };
+
+  const handleRowStatus = async (id: string, newStatus: ApplicationStatus) => {
+    try {
+      await updateAppFn({ data: { id, patch: { status: newStatus } } });
+      toast.success("Status updated");
+      invalidateApps();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to update");
+    }
+  };
+
+  const handleBulkStatus = async (newStatus: ApplicationStatus) => {
+    const ids = Array.from(selectedIds);
+    if (!ids.length) return;
+    try {
+      await bulkUpdateFn({ data: { ids, patch: { status: newStatus } } });
+      toast.success(`Updated ${ids.length} application(s)`);
+      setSelectedIds(new Set());
+      invalidateApps();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to update");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (!ids.length) return;
+    try {
+      const res = await bulkDeleteFn({ data: { ids } });
+      toast.success(
+        `Deleted ${res.deleted}${res.skipped.length ? ` — skipped ${res.skipped.length} (already registered)` : ""}`,
+      );
+      setSelectedIds(new Set());
+      setConfirmBulkDelete(false);
+      invalidateApps();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to delete");
+    }
+  };
+
+  const handleRowDelete = async (id: string) => {
+    try {
+      const res = await bulkDeleteFn({ data: { ids: [id] } });
+      if (res.deleted) toast.success("Application deleted");
+      else toast.error(res.skipped[0]?.reason ?? "Could not delete");
+      setConfirmRowDelete(null);
+      invalidateApps();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to delete");
     }
   };
 
@@ -119,23 +245,85 @@ function AdminDashboard() {
           title="New applications"
           empty="No applications yet."
           href="/admin/applications"
-        >
-          {(apps.data?.applications ?? []).slice(0, 8).map((a) => (
-            <Link
-              key={a.id}
-              to="/admin/applications/$id"
-              params={{ id: a.id }}
-              className="flex items-center justify-between border-t border-white/5 px-4 py-3 first:border-t-0 hover:bg-white/5"
-            >
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium">{a.name}</div>
-                <div className="truncate text-xs text-muted-foreground">{a.email}</div>
+          toolbar={
+            previewIds.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                  onCheckedChange={(v) => toggleAll(!!v)}
+                  aria-label="Select all"
+                />
+                {selectedIds.size > 0 && (
+                  <>
+                    <span className="text-xs text-muted-foreground">{selectedIds.size} selected</span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-xs">Set status</Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {STATUS_CHOICES.map((s) => (
+                          <DropdownMenuItem key={s.value} onClick={() => handleBulkStatus(s.value)}>
+                            {s.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => setConfirmBulkDelete(true)}
+                    >
+                      Delete
+                    </Button>
+                  </>
+                )}
               </div>
-              <Badge variant="secondary" className="text-[10px]">
-                {a.industry}
-              </Badge>
-            </Link>
-          ))}
+            ) : null
+          }
+        >
+          {previewApps.map((a) => {
+            const checked = selectedIds.has(a.id);
+            return (
+              <div
+                key={a.id}
+                className="flex items-center gap-3 border-t border-white/5 px-4 py-3 first:border-t-0 hover:bg-white/5"
+              >
+                <Checkbox
+                  checked={checked}
+                  onCheckedChange={(v) => toggleOne(a.id, !!v)}
+                  aria-label={`Select ${a.name}`}
+                />
+                <Link
+                  to="/admin/applications/$id"
+                  params={{ id: a.id }}
+                  className="min-w-0 flex-1"
+                >
+                  <div className="truncate text-sm font-medium">{a.name}</div>
+                  <div className="truncate text-xs text-muted-foreground">{a.email}</div>
+                </Link>
+                <Select value={a.status} onValueChange={(v) => handleRowStatus(a.id, v as ApplicationStatus)}>
+                  <SelectTrigger className="h-7 w-[120px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_CHOICES.map((s) => (
+                      <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-muted-foreground hover:text-rose-400"
+                  onClick={() => setConfirmRowDelete({ id: a.id, name: a.name })}
+                  aria-label="Delete"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            );
+          })}
         </Panel>
 
         <Panel
@@ -162,6 +350,41 @@ function AdminDashboard() {
             ))}
         </Panel>
       </div>
+
+      <AlertDialog open={confirmBulkDelete} onOpenChange={setConfirmBulkDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} application(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Applications already promoted to a registration will be skipped.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!confirmRowDelete}
+        onOpenChange={(o) => !o && setConfirmRowDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {confirmRowDelete?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmRowDelete && handleRowDelete(confirmRowDelete.id)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -172,22 +395,27 @@ function Panel({
   href,
   children,
   empty,
+  toolbar,
 }: {
   title: string;
   href: string;
   children: React.ReactNode;
   empty: string;
+  toolbar?: React.ReactNode;
 }) {
   const hasChildren = Array.isArray(children) ? children.length > 0 : !!children;
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
           {title}
         </h2>
-        <Link to={href} className="text-xs text-muted-foreground hover:text-foreground">
-          View all →
-        </Link>
+        <div className="flex items-center gap-3">
+          {toolbar}
+          <Link to={href} className="text-xs text-muted-foreground hover:text-foreground">
+            View all →
+          </Link>
+        </div>
       </div>
       <div className="overflow-hidden rounded-2xl border border-white/10">
         {hasChildren ? (
