@@ -245,23 +245,85 @@ function AdminDashboard() {
           title="New applications"
           empty="No applications yet."
           href="/admin/applications"
-        >
-          {(apps.data?.applications ?? []).slice(0, 8).map((a) => (
-            <Link
-              key={a.id}
-              to="/admin/applications/$id"
-              params={{ id: a.id }}
-              className="flex items-center justify-between border-t border-white/5 px-4 py-3 first:border-t-0 hover:bg-white/5"
-            >
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium">{a.name}</div>
-                <div className="truncate text-xs text-muted-foreground">{a.email}</div>
+          toolbar={
+            previewIds.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                  onCheckedChange={(v) => toggleAll(!!v)}
+                  aria-label="Select all"
+                />
+                {selectedIds.size > 0 && (
+                  <>
+                    <span className="text-xs text-muted-foreground">{selectedIds.size} selected</span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-xs">Set status</Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {STATUS_CHOICES.map((s) => (
+                          <DropdownMenuItem key={s.value} onClick={() => handleBulkStatus(s.value)}>
+                            {s.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => setConfirmBulkDelete(true)}
+                    >
+                      Delete
+                    </Button>
+                  </>
+                )}
               </div>
-              <Badge variant="secondary" className="text-[10px]">
-                {a.industry}
-              </Badge>
-            </Link>
-          ))}
+            ) : null
+          }
+        >
+          {previewApps.map((a) => {
+            const checked = selectedIds.has(a.id);
+            return (
+              <div
+                key={a.id}
+                className="flex items-center gap-3 border-t border-white/5 px-4 py-3 first:border-t-0 hover:bg-white/5"
+              >
+                <Checkbox
+                  checked={checked}
+                  onCheckedChange={(v) => toggleOne(a.id, !!v)}
+                  aria-label={`Select ${a.name}`}
+                />
+                <Link
+                  to="/admin/applications/$id"
+                  params={{ id: a.id }}
+                  className="min-w-0 flex-1"
+                >
+                  <div className="truncate text-sm font-medium">{a.name}</div>
+                  <div className="truncate text-xs text-muted-foreground">{a.email}</div>
+                </Link>
+                <Select value={a.status} onValueChange={(v) => handleRowStatus(a.id, v as ApplicationStatus)}>
+                  <SelectTrigger className="h-7 w-[120px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_CHOICES.map((s) => (
+                      <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-muted-foreground hover:text-rose-400"
+                  onClick={() => setConfirmRowDelete({ id: a.id, name: a.name })}
+                  aria-label="Delete"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            );
+          })}
         </Panel>
 
         <Panel
