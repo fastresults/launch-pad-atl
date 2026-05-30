@@ -59,9 +59,16 @@ function AdminDashboard() {
   const statsFn = useServerFn(getAdminStats);
   const regFn = useServerFn(listRegistrations);
   const appsFn = useServerFn(listApplications);
+  const updateAppFn = useServerFn(updateApplication);
+  const bulkUpdateFn = useServerFn(bulkUpdateApplications);
+  const bulkDeleteFn = useServerFn(bulkDeleteApplications);
   const membersFn = useServerFn(listMembers);
   const approveFn = useServerFn(approveMember);
   const qc = useQueryClient();
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [confirmRowDelete, setConfirmRowDelete] = useState<{ id: string; name: string } | null>(null);
 
   const stats = useQuery({ queryKey: ["admin", "stats"], queryFn: () => statsFn() });
   const regs = useQuery({
