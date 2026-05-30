@@ -16,6 +16,7 @@ const nav = [
   { to: "/schedule", label: "schedule" },
   { to: "/register", label: "register" },
   { to: "/facilitator", label: "facilitator" },
+  { to: "/contact", label: "contact" },
 ] as const;
 
 export function SiteHeader() {
