@@ -10,7 +10,7 @@ export function FacilitatorCTA() {
       transition={{ duration: 0.5, delay: 0.6 }}
       className="border-l-4 border-primary bg-card rounded-xl p-10"
     >
-      <h2 className="font-bold text-[28px] text-card-foreground mb-3">
+      <h2 className="text-2xl font-semibold tracking-tight text-card-foreground mb-3 md:text-3xl">
         Ready to build in the AI era?
       </h2>
       <p className="text-base leading-[1.8] text-muted-foreground mb-6">

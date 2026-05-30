@@ -31,7 +31,7 @@ export function FacilitatorHero() {
         <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mb-4">
           Workshop Facilitator & AI Strategist
         </p>
-        <h1 className="font-black leading-[1.1] text-foreground text-[36px] md:text-[52px]">
+        <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight text-foreground md:text-5xl lg:text-6xl">
           Adam Anderson
           <br />
           doesn't teach theory.

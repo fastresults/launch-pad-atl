@@ -23,7 +23,7 @@ export function FacilitatorAudience() {
         {ITEMS.map(({ icon: Icon, title, desc }) => (
           <div key={title} className="rounded-xl border border-border bg-card p-6">
             <Icon className="text-primary mb-3" size={22} />
-            <h3 className="font-bold text-lg text-card-foreground mb-2">{title}</h3>
+            <h3 className="text-lg font-semibold tracking-tight text-card-foreground mb-2">{title}</h3>
             <p className="text-sm leading-[1.7] text-muted-foreground">{desc}</p>
           </div>
         ))}
