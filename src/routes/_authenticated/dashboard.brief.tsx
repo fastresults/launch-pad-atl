@@ -42,6 +42,7 @@ function BriefWizard() {
   const [mode, setMode] = useState<Mode>("question");
   const [checkpointBlock, setCheckpointBlock] = useState<BriefBlock | null>(null);
   const [initialized, setInitialized] = useState(false);
+  const [editingFromReview, setEditingFromReview] = useState(false);
 
   useEffect(() => {
     if (!data?.brief) return;
