@@ -54,7 +54,7 @@ function Hero() {
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
           Six founders.{" "}
           <span className="italic">One Thursday.</span>{" "}
-          <span className="text-gradient-brand">A startup that opens by Monday.</span>
+          <span className="text-gradient-brand">A real company, not a plan.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
           We&rsquo;re new to Atlanta — and we&rsquo;re betting on six of you to prove what one
