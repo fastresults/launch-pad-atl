@@ -268,7 +268,7 @@ export function RegisterSelection() {
                 {!isSubmitting && <ArrowRight className="size-4" />}
               </button>
               <p className="text-center text-xs text-muted-foreground">
-                You&rsquo;ll hear from us by July 15 — either a seat or a Founder&rsquo;s Discount.
+                You&rsquo;ll hear from us by July 8 — either a seat or a Founder&rsquo;s Discount.
                 No silent rejections.
               </p>
             </form>
