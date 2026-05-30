@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
 import { SiteFooter } from "@/components/site/Footer";
+import { SiteHeader } from "@/components/site/Header";
 
 export const Route = createFileRoute("/contact")({
   component: ContactPage,
@@ -51,6 +52,7 @@ function ContactPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <SiteHeader />
       <main className="flex-1">
         <div className="mx-auto max-w-2xl px-6 py-16 md:py-24">
           <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
