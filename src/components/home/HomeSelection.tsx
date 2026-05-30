@@ -112,9 +112,9 @@ function WhyApplyingIsTheMove() {
       icon: <Flame className="size-5 text-primary" />,
       title: "If you&rsquo;re chosen",
       body:
-        "A free seat at the table on July 23 — roughly " +
+        "A free seat on July 23 — roughly " +
         PIECEMEAL_VALUE +
-        " of brand, web, and launch work built with you in one day, plus a 90-day plan signed before you leave.",
+        " of brand, web, and launch work built with you in one day, and a signed 90-day plan in your hand before you leave.",
     },
     {
       icon: <TicketPercent className="size-5 text-primary" />,
