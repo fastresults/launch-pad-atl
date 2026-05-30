@@ -112,9 +112,9 @@ function WhyApplyingIsTheMove() {
       icon: <Flame className="size-5 text-primary" />,
       title: "If you&rsquo;re chosen",
       body:
-        "A free seat at the table on July 23 — roughly " +
+        "A free seat on July 23 — roughly " +
         PIECEMEAL_VALUE +
-        " of brand, web, and launch work built with you in one day, plus a 90-day plan signed before you leave.",
+        " of brand, web, and launch work built with you in one day, and a signed 90-day plan in your hand before you leave.",
     },
     {
       icon: <TicketPercent className="size-5 text-primary" />,
@@ -206,15 +206,15 @@ function WhatYouWalkOut() {
           <span className="text-gradient-brand">A built startup.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Conservative market rates and DIY hours, deliverable by deliverable. No fluff.
+          Every deliverable, stage by stage — the full build you carry out the door at 4:30.
         </p>
         <div className="mt-8">
           <ValueGrid showCosts={false} />
         </div>
         <p className="mt-6 max-w-3xl text-sm text-muted-foreground md:text-base">
-          If you bought these piecemeal from a brand studio, a dev shop, and a fractional CMO,
-          you&rsquo;d be north of <span className="text-foreground font-medium">{PIECEMEAL_VALUE}</span>{" "}
-          and six weeks in. You&rsquo;ll have them by dinner.
+          Hire this out piecemeal — brand studio, dev shop, fractional CMO — and you&rsquo;re six
+          weeks and north of <span className="text-foreground font-medium">{PIECEMEAL_VALUE}</span>{" "}
+          in before anyone takes a payment. We&rsquo;ll have it in your hands by dinner.
         </p>
       </div>
     </section>
