@@ -59,7 +59,7 @@ function Hero() {
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
           We&rsquo;re new to Atlanta — and we&rsquo;re betting on six of you to prove what one
-          honest day can do. Apply by <span className="font-medium text-white">July 8</span>. Six
+          honest day can do. Apply by <span className="font-medium text-white">June 20</span>. Six
           founders get a free seat at the IGNITE Center on{" "}
           <span className="font-medium text-white">July 23, 2026</span> — tuition, materials, and
           lunch covered. Every other applicant gets a{" "}
@@ -67,7 +67,7 @@ function Hero() {
           cohort, sent the same day we announce the six.
         </p>
         <p className="mt-4 max-w-2xl text-sm text-white/85 md:text-base">
-          Decisions emailed <span className="font-medium text-white">July 15</span>. There is no
+          Decisions emailed <span className="font-medium text-white">July 8</span>. There is no
           version of this where applying costs you something.
         </p>
 
@@ -272,9 +272,9 @@ function WhoWereLookingFor() {
 
 const STEPS = [
   { label: "Applications open", date: "Now" },
-  { label: "Applications close", date: "July 8, 2026" },
-  { label: "Selections announced — six seats emailed", date: "July 15, 2026" },
-  { label: "Founder&rsquo;s Discount emailed to every other applicant", date: "July 15, 2026" },
+  { label: "Applications close", date: "June 20, 2026" },
+  { label: "Selections announced — six seats emailed", date: "July 8, 2026" },
+  { label: "Founder&rsquo;s Discount emailed to every other applicant", date: "July 8, 2026" },
   { label: "Workshop day", date: "July 23, 2026" },
   { label: "90-day follow-through — launches in public", date: "Through October 2026" },
 ];
@@ -330,7 +330,7 @@ function FinalistOffer() {
               <span className="font-medium text-foreground">
                 {FINALIST_DISCOUNT_PCT}% off the next paid Atlanta cohort
               </span>
-              , emailed July 15. The discount activates after the workshop on purpose: you get to
+              , emailed July 8. The discount activates after the workshop on purpose: you get to
               watch the six launch in public — read the case studies, click the live sites, see
               the 90-day numbers — and then decide if you want your turn.
             </p>
@@ -353,7 +353,7 @@ function FinalistOffer() {
             </div>
             <p className="mt-6 text-xs text-muted-foreground">
               Founder&rsquo;s Discount terms are simple — one applicant per email, one use per
-              person, full terms emailed with the code on July 15.
+              person, full terms emailed with the code on July 8.
             </p>
           </div>
         </div>
@@ -431,7 +431,7 @@ function BottomCTA() {
           <span className="text-gradient-brand">Yours starts with one form.</span>
         </h2>
         <p className="mt-4 text-base text-muted-foreground md:text-lg">
-          Twelve minutes to apply. Decision by July 15. Either a free seat on July 23 — or a{" "}
+          Twelve minutes to apply. Decision by July 8. Either a free seat on July 23 — or a{" "}
           {FINALIST_DISCOUNT_PCT}% Founder&rsquo;s Discount and a front-row seat to the launches.
           There is no version of this where applying costs you.
         </p>

@@ -1,48 +1,39 @@
-## Problem
+## Date corrections for the Free Founder Selection offer
 
-`/register` crashes with React error #300 ("rendered fewer hooks than expected"). The page shows the generic "This page didn't load" error boundary.
+Apply the new dates everywhere in the selection-variant copy:
 
-## Root cause
+- Application deadline: **June 20, 2026** (was July 8)
+- Decisions emailed (both seats and Founder's Discount): **July 8, 2026** (was July 15)
+- Workshop day: **July 23, 2026** (unchanged)
 
-`src/routes/register.tsx` → `RegisterPage` calls `useQuery` for site settings, then does an **early return** based on the result:
+Per your clarification, both the six winners and the Founder's Discount go out the same day — **July 8** — so every "July 15" reference becomes "July 8".
 
-```tsx
-const { data: siteSettings } = useQuery({ queryKey: ["site-settings"], ... });
-if (siteSettings?.register_variant === "selection") return <RegisterSelection />;
+## Files to edit
 
-const [submitted, setSubmitted] = useState(false);
-// ...many more useState / useQuery / useForm / useEffect hooks
-```
+### 1. `src/components/home/HomeSelection.tsx`
+- L62 hero: "Apply by July 8" → "Apply by **June 20**"
+- L70 sub-hero: "Decisions emailed July 15" → "Decisions emailed **July 8**"
+- L275 timeline "Applications close": `July 8, 2026` → `June 20, 2026`
+- L276 timeline "Selections announced": `July 15, 2026` → `July 8, 2026`
+- L277 timeline "Founder's Discount emailed": `July 15, 2026` → `July 8, 2026`
+- L333 Founder's Discount paragraph: "emailed July 15" → "emailed **July 8**"
+- L356 fine print: "code on July 15" → "code on **July 8**"
+- L434 bottom CTA: "Decision by July 15" → "Decision by **July 8**"
 
-On the first render `siteSettings` is `undefined`, so all ~10 downstream hooks run. As soon as the query resolves and the variant is `"selection"`, the component returns early — hook count drops — React throws #300 and the route's `errorComponent` renders "This page didn't load". This is exactly what the screen recording shows (page hydrates, then immediately swaps to the error UI).
+### 2. `src/components/register/RegisterSelection.tsx`
+- L91 sub-hero: "chosen by July 15" → "chosen by **July 8**"
+- L100 trust strip: "Decision by July 15 — every applicant hears back" → "Decision by **July 8** — every applicant hears back"
+- L270 form footnote: "hear from us by July 15" → "hear from us by **July 8**"
+- L334–335 SuccessCard: "Between now and July 15, 2026… On July 15…" → "Between now and **July 8, 2026**… On **July 8**…"
+- L346 SuccessCard: "Watch the inbox on July 15" → "Watch the inbox on **July 8**"
+- (No change to L43/L237/L206 — those are the July 23 workshop date.)
 
-The current admin config sets `register_variant = "selection"`, so this is the variant that should be showing — but the same bug would eventually fire for any user once settings hydrate to a non-default value.
+### 3. Add an apply-by line to the register page
+Currently RegisterSelection never states the June 20 deadline. Add it to the sub-hero (L89–94) so applicants see it before they start: append "Applications close **June 20, 2026**." to that paragraph.
 
-## Fix
-
-Split the route component so all hooks live inside the variant they belong to, and no hooks run after a conditional return.
-
-1. Rename the existing `RegisterPage` body (everything from `useState(submitted)` through the returned JSX) into a new internal component `RegisterDefault` in the same file. It owns all the form/cohort/availability hooks.
-2. Make `RegisterPage` a thin router:
-   ```tsx
-   function RegisterPage() {
-     const fetchSettings = useServerFn(getPublicSiteSettings);
-     const { data: siteSettings, isLoading } = useQuery({
-       queryKey: ["site-settings"],
-       queryFn: () => fetchSettings(),
-       staleTime: 60_000,
-     });
-     if (isLoading) return null; // or a lightweight skeleton inside SiteHeader/Footer shell
-     return siteSettings?.register_variant === "selection"
-       ? <RegisterSelection />
-       : <RegisterDefault />;
-   }
-   ```
-   No other hooks run in `RegisterPage`, so the early branch is safe.
-3. Leave `RegisterSelection.tsx` and `getPublicSiteSettings` untouched — the admin-driven AB switch keeps working as designed.
+## Not touched
+- `src/routes/index.tsx`, `src/lib/cohorts.ts`, `src/lib/curriculum-data.ts`, `src/lib/applications.functions.ts`, `admin.site.tsx` — only reference July 23 (workshop date), which is unchanged.
+- The paid `HomePage` / default register flow — this offer copy lives in the selection variant only.
 
 ## Verification
-
-- Load `/register` — should render the selection variant (current admin setting) without flashing the error boundary.
-- Toggle `register_variant` back to the default in admin → `/register` renders the full form variant.
-- Console: no more React #300 errors.
+After edits, re-grep for `July 8`, `July 15`, and `June 20` in `src/components/home` and `src/components/register` to confirm: zero remaining `July 15`, the only `July 8` references are the new decision-date ones, and `June 20` appears as the application deadline in both hero copy and the timeline.
