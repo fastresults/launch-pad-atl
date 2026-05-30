@@ -77,11 +77,13 @@ function BeforeMode({
   briefScore,
   briefTotal,
   firstName,
+  pitch,
 }: {
   state: WorkshopState;
   briefScore: number;
   briefTotal: number;
   firstName: string | null;
+  pitch: string | null;
 }) {
   const cohort = state.cohort!;
   const briefDone = briefScore >= briefTotal;
