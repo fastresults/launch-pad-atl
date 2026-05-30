@@ -1,44 +1,47 @@
 ## Goal
 
-Make the new-account review queue (founders who signed up but haven't been approved or paid) impossible to miss from the admin dashboard.
+On `/admin/applications`, let admins **select multiple rows**, **bulk-change status / delete**, and **inline-edit** a row's key fields (status, industry, stage) without leaving the list view.
 
-The `/admin/members` page already exists and works. What's missing is **visibility from the dashboard**: no stat card, no panel, no sidebar badge, and the link is buried in Operations. From the Dashboard today an admin has no signal that pending members are waiting.
+## Scope
+
+This applies to the **Applications** list (`founder_applications`). The dashboard "New applications" panel on `/admin` keeps its read-only preview; "View all" already takes admins to this enhanced page.
 
 ## Plan
 
-### 1. Surface a "Pending members" badge in the sidebar
+### 1. Server functions — `src/lib/applications-admin.functions.ts`
 
-`src/lib/admin-badges.functions.ts` → add a `membersPending` count: number of `profiles` rows where `member_status = 'pending'` AND user is not in `user_roles` with admin/super_admin.
+Add three new admin-gated server functions (mirroring existing `updateApplicationStatus`):
 
-`src/lib/admin-nav.ts` → extend `badgeKey` union with `"membersPending"` and attach it to the existing Members nav item so the red count chip appears next to it, the same way Applications/Inquiries already do.
+- **`updateApplication`** — patch a single row. Accepts `{ id, patch: { status?, industry?, stage?, name?, email?, cohort_id? } }`. Uses Zod, scrubs unknown fields, writes via `supabaseAdmin`.
+- **`bulkUpdateApplications`** — `{ ids: string[] (max 100), patch: { status } }`. Single `.in('id', ids).update(...)`.
+- **`bulkDeleteApplications`** — `{ ids: string[] (max 100) }`. Single `.in('id', ids).delete()`. Guard: skip rows where `converted_registration_id IS NOT NULL` (already promoted to a registration — deleting orphans the registration); return `{ deleted, skipped: [{id, reason}] }` so the UI can surface what was skipped.
 
-`src/components/admin/AdminSidebar.tsx` → wire the new key into the badge lookup (mechanical, mirrors existing keys).
+All three call `assertAdmin(userId)` like the existing fns. No schema changes needed — `is_admin` policies already cover `UPDATE`/`DELETE` on `founder_applications`.
 
-### 2. Add a "Pending members" stat card + panel on `/admin`
+### 2. List UI — `src/routes/_authenticated/_admin/admin.applications.index.tsx`
 
-`src/routes/_authenticated/_admin/admin.index.tsx`:
+- **Selection column**: leftmost `<th>`/`<td>` with a `Checkbox`. Header checkbox = select-all-on-current-filter (indeterminate when partial). Track `selectedIds: Set<string>` in component state; clear on filter/search change.
+- **Bulk action bar**: appears above the table when `selectedIds.size > 0`. Shows count + three actions:
+  - **Set status →** `DropdownMenu` of the same `STATUS_OPTIONS` (minus "All"). On pick, calls `bulkUpdateApplications`, toast result, invalidate query, clear selection.
+  - **Delete** → `AlertDialog` confirm ("Delete N applications? This cannot be undone."). Calls `bulkDeleteApplications`. If `skipped.length > 0`, toast a warning naming the skipped ones (already promoted).
+  - **Clear selection**.
+- **Inline edit per row**: replace the static Status `<Badge>` cell with a `Select` populated from `STATUS_OPTIONS` (minus "All"). `onValueChange` → `updateApplication({ id, patch: { status } })` with optimistic update via `queryClient.setQueryData`, toast on error + rollback.
+- **Per-row delete**: tiny trash `Button` (variant=ghost, size=icon) in a new rightmost actions column, behind the same `AlertDialog` confirm. Same promoted-guard error path.
+- Keep the existing "click name → detail page" link intact.
 
-- Add a 5th StatCard: **Pending members** → links to `/admin/members?tab=pending`.
-- Add a new Panel below the existing two: **Pending member approvals**, showing the latest 6 pending signups (name, email, startup type/one-liner if intake submitted, "No intake yet" otherwise) with inline **Approve** and **Review** buttons. Empty state: "No pending members."
-- Data: call the existing `listMembers({ status: "pending" })` server fn — no new endpoint needed.
+### 3. Empty/loading polish
 
-### 3. Promote Members in the sidebar order
-
-In `src/lib/admin-nav.ts`, move **Members** to the top of the Operations group (above Applications) so the gating queue is the first thing admins see, matching the new account flow we just built.
-
-### 4. Make `/admin/members` deep-linkable per tab
-
-`src/routes/_authenticated/_admin/admin.members.tsx`:
-
-- Accept a `?tab=pending|approved|rejected|no_intake` search param via `validateSearch`, hydrate the `tab` state from it, and update the URL when the user switches tabs. This lets the dashboard card and the sidebar badge both deep-link straight into the Pending tab.
+- Adjust the `colSpan` of the existing empty/loading rows to account for the two new columns (select + actions).
+- Keep the search/filter bar untouched; selection clears whenever `status` or `search` changes (effect dep).
 
 ## Technical notes
 
-- `membersPending` count query: `profiles` where `member_status = 'pending'` minus user_ids present in `user_roles` with role in (`admin`,`super_admin`). One round-trip via `.not('user_id','in', '(select user_id from user_roles where role in (...))')` is awkward over PostgREST; simpler: fetch admin user_ids once (already cheap, same pattern `listMembers` uses) and do `select id, head:true` with `.eq('member_status','pending').not('user_id','in',`(${ids.join(',')})`)`. Fallback if `ids` is empty: skip the `not in` clause.
-- No schema migration. No new server fn beyond the badge count addition.
-- No changes to the welcome/intake flow, approval logic, or payment auto-approval trigger — those are already wired.
+- `bulkDeleteApplications` is the only one with a real risk surface (the `converted_registration_id` orphan case). Handle entirely on the server: fetch the candidate rows' `id, converted_registration_id, name`, partition, delete the safe set, return the split.
+- Optimistic updates: cache key is `["admin","applications", status, search]` — already in the file. Use `queryClient.setQueryData` to patch the matching application before the request resolves; on error, refetch.
+- No new packages: `Checkbox`, `DropdownMenu`, `Select`, `AlertDialog`, `Button`, `sonner` are all already in the project.
 
 ## Out of scope
 
-- Email notifications to admins on new signup (the intake notification email already exists; pure-signup notification can be a follow-up if you want it).
-- Bulk approve/reject UI.
+- Multi-field bulk edit (only status in bulk; single-row edit is broader).
+- Undo for bulk delete (toast + refetch only; would need a soft-delete column).
+- CSV export — separate ask.
