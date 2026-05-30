@@ -20,6 +20,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { ADMIN_GROUPS, ADMIN_NAV } from "@/lib/admin-nav";
 import { getAdminBadges } from "@/lib/admin-badges.functions";
 import { LogOut } from "lucide-react";
+import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
+import { StartupLabsMark } from "@/components/brand/StartupLabsMark";
 
 export function AdminSidebar() {
   const { isSuperAdmin, signOut, user } = useAuth();
