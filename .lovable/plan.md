@@ -1,48 +1,49 @@
-## Problem
+# Auto-read LinkedIn URLs (Proxycurl)
 
-The "About you" block requires pasted text to enable **Extract with AI**. If a founder only uploads a resume PDF, or only pastes a LinkedIn URL, the button stays disabled and they're stuck.
+Wire up Proxycurl so that pasting a public LinkedIn profile URL auto-fills the founder profile — no upload, no copy/paste required.
 
-## Fix — make any single input a valid path forward
+## How it works
 
-Treat the three inputs as **alternative sources**, not stacked requirements. Enable "Extract with AI" as soon as **any one** of these is present:
+1. User pastes a LinkedIn URL in the Founder block.
+2. Clicking **"Read my LinkedIn"** calls a new server function.
+3. The server function hits Proxycurl's Person Profile endpoint with the URL.
+4. The returned JSON (headline, summary, experiences, education, skills, accomplishments) is normalized into our existing `attendee_founder_profile.extracted` shape.
+5. The same downstream summarizer runs, producing the founder-memory recap exactly like the resume/text path.
+6. URL + raw JSON are also stored on `attendee_founder_profile` for traceability.
 
-1. An uploaded resume file (PDF/DOCX)
-2. A LinkedIn URL
-3. Pasted text (≥20 chars)
+## Files
 
-### Server changes (`src/lib/discovery.functions.ts`)
+- **New:** `src/lib/linkedin.server.ts` — `fetchLinkedInProfile(url)` calls Proxycurl, returns normalized profile.
+- **Edit:** `src/lib/discovery.functions.ts` — `extractFounderFromText`: when only `linkedin_url` is present, route to Proxycurl path; map result into `extracted` and persist. Keep resume/text branches untouched.
+- **Edit:** `src/components/brief/FounderBlock.tsx` — change LinkedIn-only CTA label to "Read my LinkedIn", show loading state, render the same success summary as resume extraction. Light URL validation (must match `linkedin.com/in/...`).
+- **No migration needed** — `attendee_founder_profile` already has `linkedin_url`, `extracted`, `raw_text`, `source` columns.
 
-Update `extractFounderFromText` (rename behavior, keep export name) so `raw_text` becomes optional. The handler branches:
+## Proxycurl integration details
 
-- **If pasted text** is present → current AI extraction flow on that text.
-- **If resume file** is uploaded (and no text) → server downloads the file from the `attendee-docs` bucket via `supabaseAdmin`, extracts text:
-  - PDF: lightweight text extraction using `unpdf` (Worker-compatible, pure JS — no `pdf-parse`/native deps).
-  - DOCX: send raw bytes through the AI Gateway with a "extract plain text from this DOCX" prompt as a fallback, OR ask user to paste if extraction yields nothing. Start with `unpdf` for PDFs only; for DOCX, prompt the user to paste (most common resume format is PDF anyway).
-  - Then run the same AI extraction on the extracted text.
-- **If only LinkedIn URL** is present → we cannot scrape LinkedIn (auth-walled). Run AI extraction with a minimal prompt: "Founder provided only their LinkedIn URL: {url}. Return an empty extracted structure but save the URL." Save the URL and show an inline hint: *"LinkedIn pages can't be auto-read. Paste your headline + experience below for best results."* — but still let them continue.
+- Endpoint: `GET https://nubela.co/proxycurl/api/v2/linkedin?url=<linkedin_url>&use_cache=if-present&fallback_to_cache=on-error`
+- Auth: `Authorization: Bearer $PROXYCURL_API_KEY`
+- Handle: 404 (profile not found / private), 401 (bad key), 402 (out of credits), 429 (rate limit) — surface a friendly error to the UI without crashing.
+- Normalize fields:
+  - `headline` → `extracted.headline`
+  - `summary` → `extracted.bio`
+  - `experiences[]` → `extracted.roles[]` (company, title, dates, description)
+  - `education[]` → `extracted.education[]`
+  - `skills[]` → `extracted.skills[]`
+  - `accomplishment_*` → `extracted.wins[]`
+- Store raw response on `attendee_founder_profile.raw_text` as JSON string for debugging/re-summarization.
 
-All three paths persist to `attendee_founder_profile` with the correct `source` value.
+## Secret
 
-### UI changes (`src/components/brief/FounderBlock.tsx`)
+- Add `PROXYCURL_API_KEY` via `add_secret`. User gets it from https://nubela.co/proxycurl (sign up, top up credits — pricing is ~$0.01/lookup on pay-as-you-go).
 
-- **Enable button** when `rawText.length >= 20 || filePath || linkedinUrl.trim()`.
-- Button label adapts:
-  - text present → "Extract with AI"
-  - file only → "Read my resume"
-  - linkedin only → "Save & continue"
-- After successful upload, auto-trigger extraction (no need for user to also paste).
-- Replace the disabled-button confusion with a small helper line under the CTA: *"Any one of the above works — upload, link, or paste."*
-- Keep the optional follow-up questions (right person / unfair advantage) as-is.
+## What we are NOT doing
 
-### Files touched
+- No LinkedIn OAuth (different scope; would only give name + headline).
+- No scraping or browser automation (LinkedIn blocks it; ToS risk).
+- No DOCX parsing (still deferred from previous plan).
 
-- `src/lib/discovery.functions.ts` — accept optional `raw_text`, branch by source, add PDF text extraction.
-- `src/lib/discovery.server.ts` — add `extractTextFromResumeFile(path)` helper using `unpdf`.
-- `src/components/brief/FounderBlock.tsx` — relax enable condition, adaptive label, auto-extract on upload, helper copy.
-- `package.json` — add `unpdf`.
+## Sequence after approval
 
-### Notes
-
-- `unpdf` is Cloudflare Worker-safe (used by TanStack/Nitro examples). No native binaries.
-- DOCX support deferred — if a user uploads DOCX we surface: *"Couldn't read this DOCX. Paste the text and we'll handle the rest."* Non-blocking.
-- LinkedIn-only path is intentionally light: we save the URL for admin reference but don't pretend to have extracted data.
+1. Request the `PROXYCURL_API_KEY` secret.
+2. Once provided, ship the three file changes above.
+3. Smoke-test with one real LinkedIn URL via the UI.
