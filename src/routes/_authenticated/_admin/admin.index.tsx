@@ -182,12 +182,10 @@ function AdminDashboard() {
 
   return (
     <div className="space-y-10">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          New signups waiting for approval, applicants asking to be considered, and confirmed registrations.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Dashboard"
+        description="Your command center for Startup Labs. See pending member approvals, fresh applications, confirmed registrations, and new inquiries at a glance. Use this view to triage what needs your attention today, then jump into the specific queue to take action. Counters update in real time as your team works through each list."
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="Pending members" value={pendingMembers} href="/admin/members" highlight={pendingMembers > 0} />

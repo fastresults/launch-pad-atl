@@ -42,13 +42,10 @@ function AdminSitePage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Site variants</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Switch the homepage and registration page between the standard paid-cohort version and
-          the inaugural Atlanta selection version (free, 6 seats, July 23, 2026).
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Site settings"
+        description="Control the public marketing site without redeploying. Edit hero copy, navigation labels, calls to action, contact details, and SEO metadata. Changes save immediately and reflect on the live site for visitors and search engines. Use this view to keep messaging current as cohorts, partners, and program details evolve throughout the year."
+      />
 
       {error && (
         <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive-foreground">

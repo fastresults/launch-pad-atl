@@ -221,13 +221,11 @@ function CohortsAdminPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Cohorts</h1>
-          <p className="text-sm text-muted-foreground">
-            Set the date, venue, pricing, and seat caps for each monthly workshop.
-          </p>
-        </div>
+      <div className="flex items-start justify-between gap-4">
+        <AdminPageHeader
+          title="Cohorts"
+          description="Define the cohorts founders apply to and graduate from. Create new cohorts with start and end dates, set capacity, open or close applications, and archive past sessions. The cohort selected on an application or registration drives which programming and milestones a founder sees inside their dashboard, so keep this list accurate."
+        />
         <div className="flex gap-2">
           <Button asChild variant="outline">
             <Link to="/admin/cohorts/test">

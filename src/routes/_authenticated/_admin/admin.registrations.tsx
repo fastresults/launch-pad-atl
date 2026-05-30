@@ -40,12 +40,10 @@ function RegistrationsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Registrations</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Every workshop signup, with full details.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Registrations"
+        description="Founders who have been promoted from an application and are confirming their seat in a cohort. Track who has paid, who is pending, and who has dropped. Resend confirmation emails, update cohort assignments, and prepare the final attendee roster from this view before the cohort officially kicks off."
+      />
 
       {isLoading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
