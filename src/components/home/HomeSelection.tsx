@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
+import { ValueGrid } from "@/components/value/ValueGrid";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroBg from "@/assets/hero-bg.png";
 import {
@@ -193,16 +194,6 @@ function WhyDoingThis() {
   );
 }
 
-const DELIVERABLES = [
-  "An LLC filed in your name — EIN landing in your inbox while you eat lunch",
-  "An offer a stranger could buy from tonight, with pricing you&rsquo;ll defend",
-  "A one-sentence story of who you help and why it&rsquo;s you — not the other six",
-  "A working way to deliver to your first customer without hiring anyone",
-  "A brand kit and a homepage live at yourdomain.com before you leave the building",
-  "Business card in your wallet, flyer in your bag, social profiles up, six posts queued, video script ready to film",
-  "A signed 90-day plan with your next ten moves already on the calendar",
-];
-
 function WhatYouWalkOut() {
   return (
     <section id="deliverables" className="py-12 md:py-20 scroll-mt-20">
@@ -214,13 +205,11 @@ function WhatYouWalkOut() {
           Not a course. Not coaching.{" "}
           <span className="text-gradient-brand">A built startup.</span>
         </h2>
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
-          {DELIVERABLES.map((d) => (
-            <div key={d} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-card p-5">
-              <Check className="mt-1 size-5 shrink-0 text-primary" />
-              <p className="text-base text-foreground" dangerouslySetInnerHTML={{ __html: d }} />
-            </div>
-          ))}
+        <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
+          Conservative market rates and DIY hours, deliverable by deliverable. No fluff.
+        </p>
+        <div className="mt-8">
+          <ValueGrid />
         </div>
         <p className="mt-6 max-w-3xl text-sm text-muted-foreground md:text-base">
           If you bought these piecemeal from a brand studio, a dev shop, and a fractional CMO,
@@ -231,6 +220,7 @@ function WhatYouWalkOut() {
     </section>
   );
 }
+
 
 const CRITERIA = [
   {
