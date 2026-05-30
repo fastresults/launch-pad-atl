@@ -95,6 +95,38 @@ export function FounderBlock({ onDone }: Props) {
     }
   };
 
+  const onFile = async (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Max 10MB");
+      return;
+    }
+    setUploading(true);
+    try {
+      const { path, signedUrl } = await signFn({
+        data: { filename: file.name, mime: file.type || "application/octet-stream" },
+      });
+      const res = await fetch(signedUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      setFilePath(path);
+      setFilename(file.name);
+      // Auto-trigger extraction so the user doesn't also have to paste text.
+      if (file.name.toLowerCase().endsWith(".pdf")) {
+        toast.success("Uploaded. Reading your resume…");
+        await runExtract({ filePath: path });
+      } else {
+        toast.success("Uploaded. Click below to extract — or paste the text for DOCX files.");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const saveAnswersAndContinue = async () => {
     try {
       await upsertFn({
