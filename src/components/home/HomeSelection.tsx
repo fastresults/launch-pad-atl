@@ -272,9 +272,9 @@ function WhoWereLookingFor() {
 
 const STEPS = [
   { label: "Applications open", date: "Now" },
-  { label: "Applications close", date: "July 8, 2026" },
-  { label: "Selections announced — six seats emailed", date: "July 15, 2026" },
-  { label: "Founder&rsquo;s Discount emailed to every other applicant", date: "July 15, 2026" },
+  { label: "Applications close", date: "June 20, 2026" },
+  { label: "Selections announced — six seats emailed", date: "July 8, 2026" },
+  { label: "Founder&rsquo;s Discount emailed to every other applicant", date: "July 8, 2026" },
   { label: "Workshop day", date: "July 23, 2026" },
   { label: "90-day follow-through — launches in public", date: "Through October 2026" },
 ];
