@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { enqueueTransactionalEmail } from "@/lib/email/enqueue.server";
 
 const SELECTION_COHORT_ID = "2026-07-15";
 
@@ -46,8 +47,21 @@ export const submitFounderApplication = createServerFn({ method: "POST" })
       throw new Error("Could not save your application. Please try again.");
     }
 
-    // TODO: enqueue application-received confirmation email once email
-    // infrastructure is set up (see plan step 7).
+    const applicationId = (inserted as { id: string }).id;
 
-    return { ok: true as const, id: (inserted as { id: string }).id };
+    // Fire confirmation email. Never fail the submission if email fails —
+    // application is already saved and visible in admin.
+    try {
+      const firstName = data.name.trim().split(/\s+/)[0] || undefined;
+      await enqueueTransactionalEmail({
+        templateName: "application-received",
+        recipientEmail: data.email,
+        idempotencyKey: `application-confirm-${applicationId}`,
+        templateData: { firstName },
+      });
+    } catch (emailErr) {
+      console.error("[applications] confirmation email failed", emailErr);
+    }
+
+    return { ok: true as const, id: applicationId };
   });
