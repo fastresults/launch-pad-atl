@@ -1,47 +1,53 @@
-## Goal
+# Admin page intros
 
-On `/admin/applications`, let admins **select multiple rows**, **bulk-change status / delete**, and **inline-edit** a row's key fields (status, industry, stage) without leaving the list view.
+Add a consistent intro block at the top of every admin dashboard page so admins immediately understand what the view manages.
 
-## Scope
+## Component
 
-This applies to the **Applications** list (`founder_applications`). The dashboard "New applications" panel on `/admin` keeps its read-only preview; "View all" already takes admins to this enhanced page.
+Create `src/components/admin/AdminPageHeader.tsx`:
+- Props: `title: string`, `description: string`, optional `actions?: ReactNode` (for future use).
+- Renders an `h1` (text-3xl, tracking-tight) and a muted `p` below it, constrained to `max-w-3xl` for readability.
+- Replaces the ad-hoc heading currently in `admin.index.tsx` and is added to all other admin route components.
 
-## Plan
+## Pages and copy (~60 words each)
 
-### 1. Server functions — `src/lib/applications-admin.functions.ts`
+Applied to one route file each under `src/routes/_authenticated/_admin/`:
 
-Add three new admin-gated server functions (mirroring existing `updateApplicationStatus`):
+1. **Dashboard** (`admin.index.tsx`)
+   "Your command center for Startup Labs. See pending member approvals, fresh applications, confirmed registrations, and new inquiries at a glance. Use this view to triage what needs your attention today, then jump into the specific queue to take action. Counters update in real time as your team works through each list."
 
-- **`updateApplication`** — patch a single row. Accepts `{ id, patch: { status?, industry?, stage?, name?, email?, cohort_id? } }`. Uses Zod, scrubs unknown fields, writes via `supabaseAdmin`.
-- **`bulkUpdateApplications`** — `{ ids: string[] (max 100), patch: { status } }`. Single `.in('id', ids).update(...)`.
-- **`bulkDeleteApplications`** — `{ ids: string[] (max 100) }`. Single `.in('id', ids).delete()`. Guard: skip rows where `converted_registration_id IS NOT NULL` (already promoted to a registration — deleting orphans the registration); return `{ deleted, skipped: [{id, reason}] }` so the UI can surface what was skipped.
+2. **Members** (`admin.members.tsx`)
+   "Every person who created a Startup Labs account lives here. Approve new signups to unlock their founder dashboard, review their intake answers, and manage existing members. Pending members cannot access founder tools until you approve them, so clearing this queue is the fastest way to onboard new startups into the program."
 
-All three call `assertAdmin(userId)` like the existing fns. No schema changes needed — `is_admin` policies already cover `UPDATE`/`DELETE` on `founder_applications`.
+3. **Applications** (`admin.applications.index.tsx`)
+   "Applications submitted through the public apply form. Filter by status, search by name or email, edit details inline, and move applicants through Applied → Reviewing → Shortlisted → Selected. Use bulk actions to update or remove multiple records at once. Selected applicants can be promoted into a registration so they can confirm their cohort spot."
 
-### 2. List UI — `src/routes/_authenticated/_admin/admin.applications.index.tsx`
+4. **Registrations** (`admin.registrations.tsx`)
+   "Founders who have been promoted from an application and are confirming their seat in a cohort. Track who has paid, who is pending, and who has dropped. Resend confirmation emails, update cohort assignments, and prepare the final attendee roster from this view before the cohort officially kicks off."
 
-- **Selection column**: leftmost `<th>`/`<td>` with a `Checkbox`. Header checkbox = select-all-on-current-filter (indeterminate when partial). Track `selectedIds: Set<string>` in component state; clear on filter/search change.
-- **Bulk action bar**: appears above the table when `selectedIds.size > 0`. Shows count + three actions:
-  - **Set status →** `DropdownMenu` of the same `STATUS_OPTIONS` (minus "All"). On pick, calls `bulkUpdateApplications`, toast result, invalidate query, clear selection.
-  - **Delete** → `AlertDialog` confirm ("Delete N applications? This cannot be undone."). Calls `bulkDeleteApplications`. If `skipped.length > 0`, toast a warning naming the skipped ones (already promoted).
-  - **Clear selection**.
-- **Inline edit per row**: replace the static Status `<Badge>` cell with a `Select` populated from `STATUS_OPTIONS` (minus "All"). `onValueChange` → `updateApplication({ id, patch: { status } })` with optimistic update via `queryClient.setQueryData`, toast on error + rollback.
-- **Per-row delete**: tiny trash `Button` (variant=ghost, size=icon) in a new rightmost actions column, behind the same `AlertDialog` confirm. Same promoted-guard error path.
-- Keep the existing "click name → detail page" link intact.
+5. **Attendees** (`admin.attendees.tsx`)
+   "Active founders currently enrolled in a cohort. Open an attendee to view their startup profile, workflow progress, uploaded deliverables, and media. Use this view during the program to monitor engagement, unblock founders who are stuck on a milestone, and confirm each team is keeping pace with their cohort's curriculum."
 
-### 3. Empty/loading polish
+6. **Review queue** (`admin.review.tsx`) — super only
+   "Accounts that have signed up but not yet completed their startup intake or required materials. Super admins can manually unlock a founder's dashboard from here when an exception is needed. Use this queue to follow up with stalled signups before they go cold and to override blocks when context warrants it."
 
-- Adjust the `colSpan` of the existing empty/loading rows to account for the two new columns (select + actions).
-- Keep the search/filter bar untouched; selection clears whenever `status` or `search` changes (effect dep).
+7. **Inquiries** (`admin.inquiries.index.tsx`)
+   "Messages submitted through the public contact form. Read the full inquiry, mark it as in progress or resolved, and reply directly via email. New inquiries are flagged with a badge so nothing slips through the cracks. Resolve threads here to keep the queue focused on conversations that still need a human response."
 
-## Technical notes
+8. **Cohorts** (`admin.cohorts.tsx`) — super only
+   "Define the cohorts founders apply to and graduate from. Create new cohorts with start and end dates, set capacity, open or close applications, and archive past sessions. The cohort selected on an application or registration drives which programming and milestones a founder sees inside their dashboard, so keep this list accurate."
 
-- `bulkDeleteApplications` is the only one with a real risk surface (the `converted_registration_id` orphan case). Handle entirely on the server: fetch the candidate rows' `id, converted_registration_id, name`, partition, delete the safe set, return the split.
-- Optimistic updates: cache key is `["admin","applications", status, search]` — already in the file. Use `queryClient.setQueryData` to patch the matching application before the request resolves; on error, refetch.
-- No new packages: `Checkbox`, `DropdownMenu`, `Select`, `AlertDialog`, `Button`, `sonner` are all already in the project.
+9. **Site settings** (`admin.site.tsx`) — super only
+   "Control the public marketing site without redeploying. Edit hero copy, navigation labels, calls to action, contact details, and SEO metadata. Changes save immediately and reflect on the live site for visitors and search engines. Use this view to keep messaging current as cohorts, partners, and program details evolve throughout the year."
+
+10. **Media library** (`admin.media.tsx`) — super only
+    "Upload and manage images used across the public site and founder dashboard. Reuse assets without re-uploading, copy hosted URLs into editors, and delete files that are no longer referenced. Keeping this library tidy ensures the marketing site stays fast and that founders always see current branding instead of stale or duplicate imagery."
+
+11. **Users & roles** (`admin.users.tsx`) — super only
+    "Grant or revoke admin and super admin access for Startup Labs staff. Search by email, change a user's role, and audit who can manage applications, registrations, and site content. Only super admins can promote others, so be intentional — anyone listed here can read and modify founder data across the platform."
 
 ## Out of scope
 
-- Multi-field bulk edit (only status in bulk; single-row edit is broader).
-- Undo for bulk delete (toast + refetch only; would need a soft-delete column).
-- CSV export — separate ask.
+- Editing the public site or founder views.
+- Restructuring nav or moving routes.
+- Making copy CMS-editable (hard-coded strings for now).

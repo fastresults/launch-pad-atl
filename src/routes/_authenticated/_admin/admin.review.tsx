@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listReviewQueue } from "@/lib/pipeline.functions";
@@ -14,10 +15,10 @@ function ReviewPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Review queue</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Deliverables awaiting your approval.</p>
-      </div>
+      <AdminPageHeader
+        title="Review queue"
+        description="Accounts that have signed up but not yet completed their startup intake or required materials. Super admins can manually unlock a founder's dashboard from here when an exception is needed. Use this queue to follow up with stalled signups before they go cold and to override blocks when context warrants it."
+      />
 
       {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
 

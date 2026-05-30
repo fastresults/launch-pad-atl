@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { MediaHub } from "@/components/media/MediaHub";
 
 export const Route = createFileRoute("/_authenticated/_admin/admin/media")({
@@ -9,12 +10,10 @@ export const Route = createFileRoute("/_authenticated/_admin/admin/media")({
 function MasterMediaPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Master Media Library</h1>
-        <p className="text-sm text-muted-foreground">
-          Shared assets accessible only to super admins. Select files and push to specific attendees.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Media library"
+        description="Upload and manage images used across the public site and founder dashboard. Reuse assets without re-uploading, copy hosted URLs into editors, and delete files that are no longer referenced. Keeping this library tidy ensures the marketing site stays fast and that founders always see current branding instead of stale or duplicate imagery."
+      />
       <MediaHub scope="master" canAdminPush />
     </div>
   );

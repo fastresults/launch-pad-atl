@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listAttendees } from "@/lib/pipeline.functions";
@@ -14,10 +15,10 @@ function AttendeesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Attendees</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Open an attendee to view intake, documents, and deliverables.</p>
-      </div>
+      <AdminPageHeader
+        title="Attendees"
+        description="Active founders currently enrolled in a cohort. Open an attendee to view their startup profile, workflow progress, uploaded deliverables, and media. Use this view during the program to monitor engagement, unblock founders who are stuck on a milestone, and confirm each team is keeping pace with their cohort's curriculum."
+      />
 
       {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
 

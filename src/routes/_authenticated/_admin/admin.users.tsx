@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listUsersWithRoles, setUserRole } from "@/lib/admin.functions";
@@ -34,12 +35,10 @@ function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Users</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Promote or demote admins. Super admin is bootstrap-only.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Users & roles"
+        description="Grant or revoke admin and super admin access for Startup Labs staff. Search by email, change a user's role, and audit who can manage applications, registrations, and site content. Only super admins can promote others, so be intentional — anyone listed here can read and modify founder data across the platform."
+      />
 
       {isLoading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>

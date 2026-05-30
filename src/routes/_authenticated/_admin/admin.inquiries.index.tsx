@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -43,12 +44,10 @@ function InquiriesListPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Inquiries</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Messages submitted through the public contact form.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Inquiries"
+        description="Messages submitted through the public contact form. Read the full inquiry, mark it as in progress or resolved, and reply directly via email. New inquiries are flagged with a badge so nothing slips through the cracks. Resolve threads here to keep the queue focused on conversations that still need a human response."
+      />
 
       <div className="flex flex-wrap items-center gap-2">
         {FILTERS.map((f) => {

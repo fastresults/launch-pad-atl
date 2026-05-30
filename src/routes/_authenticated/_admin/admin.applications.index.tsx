@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -184,21 +185,18 @@ function ApplicationsListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Applications</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Founders asking to be considered for the selection cohort. Review, take notes, and
-            promote selected applicants into a registration.
-          </p>
-        </div>
-        <Input
-          placeholder="Search name, email, industry…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="h-9 w-64"
-        />
-      </div>
+      <AdminPageHeader
+        title="Applications"
+        description="Applications submitted through the public apply form. Filter by status, search by name or email, edit details inline, and move applicants through Applied → Reviewing → Shortlisted → Selected. Use bulk actions to update or remove multiple records at once. Selected applicants can be promoted into a registration so they can confirm their cohort spot."
+        actions={
+          <Input
+            placeholder="Search name, email, industry…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-9 w-64"
+          />
+        }
+      />
 
       <div className="flex flex-wrap gap-2">
         {STATUS_OPTIONS.map((opt) => {
