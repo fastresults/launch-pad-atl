@@ -18,7 +18,13 @@ export interface TemplateEntry {
  *   // then add to TEMPLATES: 'welcome': welcomeTemplate
  */
 import { template as applicationReceived } from './application-received'
+import { template as inquiryReceived } from './inquiry-received'
+import { template as inquiryAdminNotification } from './inquiry-admin-notification'
+import { template as inquiryReply } from './inquiry-reply'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'application-received': applicationReceived,
+  'inquiry-received': inquiryReceived,
+  'inquiry-admin-notification': inquiryAdminNotification,
+  'inquiry-reply': inquiryReply,
 }

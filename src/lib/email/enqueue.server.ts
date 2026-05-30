@@ -20,6 +20,7 @@ interface EnqueueParams {
   recipientEmail: string
   idempotencyKey: string
   templateData?: Record<string, any>
+  replyTo?: string
 }
 
 /**
@@ -130,6 +131,7 @@ export async function enqueueTransactionalEmail(
       label: templateName,
       idempotency_key: idempotencyKey,
       unsubscribe_token: unsubscribeToken,
+      reply_to: params.replyTo,
       queued_at: new Date().toISOString(),
     },
   })

@@ -18,6 +18,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FacilitatorRouteImport } from './routes/facilitator'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
@@ -48,7 +49,9 @@ import { Route as AuthenticatedAdminAdminRegistrationsRouteImport } from './rout
 import { Route as AuthenticatedAdminAdminMediaRouteImport } from './routes/_authenticated/_admin/admin.media'
 import { Route as AuthenticatedAdminAdminCohortsRouteImport } from './routes/_authenticated/_admin/admin.cohorts'
 import { Route as AuthenticatedAdminAdminAttendeesRouteImport } from './routes/_authenticated/_admin/admin.attendees'
+import { Route as AuthenticatedAdminAdminInquiriesIndexRouteImport } from './routes/_authenticated/_admin/admin.inquiries.index'
 import { Route as AuthenticatedAdminAdminApplicationsIndexRouteImport } from './routes/_authenticated/_admin/admin.applications.index'
+import { Route as AuthenticatedAdminAdminInquiriesIdRouteImport } from './routes/_authenticated/_admin/admin.inquiries.$id'
 import { Route as AuthenticatedAdminAdminCohortsTestRouteImport } from './routes/_authenticated/_admin/admin.cohorts.test'
 import { Route as AuthenticatedAdminAdminApplicationsIdRouteImport } from './routes/_authenticated/_admin/admin.applications.$id'
 import { Route as AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.index'
@@ -99,6 +102,11 @@ const LoginRoute = LoginRouteImport.update({
 const FacilitatorRoute = FacilitatorRouteImport.update({
   id: '/facilitator',
   path: '/facilitator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -273,10 +281,22 @@ const AuthenticatedAdminAdminAttendeesRoute =
     path: '/admin/attendees',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAdminInquiriesIndexRoute =
+  AuthenticatedAdminAdminInquiriesIndexRouteImport.update({
+    id: '/admin/inquiries/',
+    path: '/admin/inquiries/',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAdminApplicationsIndexRoute =
   AuthenticatedAdminAdminApplicationsIndexRouteImport.update({
     id: '/admin/applications/',
     path: '/admin/applications/',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminAdminInquiriesIdRoute =
+  AuthenticatedAdminAdminInquiriesIdRouteImport.update({
+    id: '/admin/inquiries/$id',
+    path: '/admin/inquiries/$id',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminAdminCohortsTestRoute =
@@ -318,6 +338,7 @@ const AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/contact': typeof ContactRoute
   '/facilitator': typeof FacilitatorRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
@@ -356,7 +377,9 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
+  '/admin/inquiries/$id': typeof AuthenticatedAdminAdminInquiriesIdRoute
   '/admin/applications/': typeof AuthenticatedAdminAdminApplicationsIndexRoute
+  '/admin/inquiries/': typeof AuthenticatedAdminAdminInquiriesIndexRoute
   '/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
   '/admin/attendees/$userId/workflow': typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute
   '/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
@@ -364,6 +387,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/contact': typeof ContactRoute
   '/facilitator': typeof FacilitatorRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
@@ -401,7 +425,9 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
+  '/admin/inquiries/$id': typeof AuthenticatedAdminAdminInquiriesIdRoute
   '/admin/applications': typeof AuthenticatedAdminAdminApplicationsIndexRoute
+  '/admin/inquiries': typeof AuthenticatedAdminAdminInquiriesIndexRoute
   '/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
   '/admin/attendees/$userId/workflow': typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute
   '/admin/attendees/$userId': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
@@ -411,6 +437,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/contact': typeof ContactRoute
   '/facilitator': typeof FacilitatorRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
@@ -450,7 +477,9 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/_authenticated/_admin/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/_authenticated/_admin/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
+  '/_authenticated/_admin/admin/inquiries/$id': typeof AuthenticatedAdminAdminInquiriesIdRoute
   '/_authenticated/_admin/admin/applications/': typeof AuthenticatedAdminAdminApplicationsIndexRoute
+  '/_authenticated/_admin/admin/inquiries/': typeof AuthenticatedAdminAdminInquiriesIndexRoute
   '/_authenticated/_admin/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
   '/_authenticated/_admin/admin/attendees/$userId/workflow': typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute
   '/_authenticated/_admin/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
@@ -460,6 +489,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/contact'
     | '/facilitator'
     | '/login'
     | '/privacy'
@@ -498,7 +528,9 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/applications/$id'
     | '/admin/cohorts/test'
+    | '/admin/inquiries/$id'
     | '/admin/applications/'
+    | '/admin/inquiries/'
     | '/admin/attendees/$userId/media'
     | '/admin/attendees/$userId/workflow'
     | '/admin/attendees/$userId/'
@@ -506,6 +538,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/contact'
     | '/facilitator'
     | '/login'
     | '/privacy'
@@ -543,7 +576,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/applications/$id'
     | '/admin/cohorts/test'
+    | '/admin/inquiries/$id'
     | '/admin/applications'
+    | '/admin/inquiries'
     | '/admin/attendees/$userId/media'
     | '/admin/attendees/$userId/workflow'
     | '/admin/attendees/$userId'
@@ -552,6 +587,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/contact'
     | '/facilitator'
     | '/login'
     | '/privacy'
@@ -591,7 +627,9 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/'
     | '/_authenticated/_admin/admin/applications/$id'
     | '/_authenticated/_admin/admin/cohorts/test'
+    | '/_authenticated/_admin/admin/inquiries/$id'
     | '/_authenticated/_admin/admin/applications/'
+    | '/_authenticated/_admin/admin/inquiries/'
     | '/_authenticated/_admin/admin/attendees/$userId/media'
     | '/_authenticated/_admin/admin/attendees/$userId/workflow'
     | '/_authenticated/_admin/admin/attendees/$userId/'
@@ -601,6 +639,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  ContactRoute: typeof ContactRoute
   FacilitatorRoute: typeof FacilitatorRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -681,6 +720,13 @@ declare module '@tanstack/react-router' {
       path: '/facilitator'
       fullPath: '/facilitator'
       preLoaderRoute: typeof FacilitatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -893,11 +939,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminAttendeesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/_admin/admin/inquiries/': {
+      id: '/_authenticated/_admin/admin/inquiries/'
+      path: '/admin/inquiries'
+      fullPath: '/admin/inquiries/'
+      preLoaderRoute: typeof AuthenticatedAdminAdminInquiriesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/_admin/admin/applications/': {
       id: '/_authenticated/_admin/admin/applications/'
       path: '/admin/applications'
       fullPath: '/admin/applications/'
       preLoaderRoute: typeof AuthenticatedAdminAdminApplicationsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/_admin/admin/inquiries/$id': {
+      id: '/_authenticated/_admin/admin/inquiries/$id'
+      path: '/admin/inquiries/$id'
+      fullPath: '/admin/inquiries/$id'
+      preLoaderRoute: typeof AuthenticatedAdminAdminInquiriesIdRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/_admin/admin/cohorts/test': {
@@ -994,7 +1054,9 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAdminUsersRoute: typeof AuthenticatedAdminAdminUsersRoute
   AuthenticatedAdminAdminIndexRoute: typeof AuthenticatedAdminAdminIndexRoute
   AuthenticatedAdminAdminApplicationsIdRoute: typeof AuthenticatedAdminAdminApplicationsIdRoute
+  AuthenticatedAdminAdminInquiriesIdRoute: typeof AuthenticatedAdminAdminInquiriesIdRoute
   AuthenticatedAdminAdminApplicationsIndexRoute: typeof AuthenticatedAdminAdminApplicationsIndexRoute
+  AuthenticatedAdminAdminInquiriesIndexRoute: typeof AuthenticatedAdminAdminInquiriesIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
@@ -1011,8 +1073,12 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAdminIndexRoute: AuthenticatedAdminAdminIndexRoute,
   AuthenticatedAdminAdminApplicationsIdRoute:
     AuthenticatedAdminAdminApplicationsIdRoute,
+  AuthenticatedAdminAdminInquiriesIdRoute:
+    AuthenticatedAdminAdminInquiriesIdRoute,
   AuthenticatedAdminAdminApplicationsIndexRoute:
     AuthenticatedAdminAdminApplicationsIndexRoute,
+  AuthenticatedAdminAdminInquiriesIndexRoute:
+    AuthenticatedAdminAdminInquiriesIndexRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
@@ -1086,6 +1152,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  ContactRoute: ContactRoute,
   FacilitatorRoute: FacilitatorRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
