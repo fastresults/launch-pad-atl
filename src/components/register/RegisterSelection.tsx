@@ -7,7 +7,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { submitFounderApplication } from "@/lib/applications.functions";
-import { ArrowRight, CalendarDays, CheckCircle2, MapPin, Sparkles, Users } from "lucide-react";
+import { ArrowRight, CheckCircle2, Sparkles, TicketPercent } from "lucide-react";
+
+// Keep in sync with HomeSelection — TBD with founder.
+const FINALIST_DISCOUNT_PCT = 40;
 
 const FormSchema = z.object({
   name: z.string().trim().min(1, "Please enter your name").max(120),
@@ -77,28 +80,36 @@ export function RegisterSelection() {
       <section className="border-b border-white/5 py-12 md:py-20">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-            <Sparkles className="size-3.5" /> Atlanta · Inaugural Cohort · Apply for a free seat
+            <Sparkles className="size-3.5" /> Atlanta · Inaugural Cohort · Application
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
-            Apply to join the{" "}
-            <span className="text-gradient-brand">six.</span>
+            Apply for one of{" "}
+            <span className="text-gradient-brand">the six.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
-            We&rsquo;re selecting six Atlanta startup founders for a free full-day build workshop
-            on July 23, 2026. Tell us a little about you and your startup — we&rsquo;ll email a
-            decision by July 15.
+            Dozens will apply. Six will be chosen by{" "}
+            <span className="font-medium text-foreground">July 15</span>. Every other applicant
+            gets a <span className="font-medium text-foreground">Founder&rsquo;s Discount</span>{" "}
+            on the next cohort, sent the same day. Twelve minutes, no fee, no follow-up sales call.
           </p>
-          <div className="mt-6 flex flex-col items-center justify-center gap-2 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:gap-4">
-            <span className="inline-flex items-center gap-2">
-              <Users className="size-4" /> 6 seats
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <CalendarDays className="size-4" /> Thursday, July 23, 2026
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <MapPin className="size-4" /> IGNITE Center · Norcross, GA
-            </span>
-          </div>
+
+          {/* Trust strip */}
+          <ul className="mx-auto mt-8 grid max-w-2xl gap-2 text-left text-sm sm:grid-cols-2">
+            {[
+              "6 seats · 0 cost · 0 strings",
+              "Decision by July 15 — every applicant hears back",
+              `Not chosen? ${FINALIST_DISCOUNT_PCT}% Founder's Discount, same day`,
+              "Adam reads every application personally",
+            ].map((b) => (
+              <li
+                key={b}
+                className="flex items-start gap-2 rounded-xl border border-white/10 bg-card/60 px-3 py-2 text-muted-foreground"
+              >
+                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -112,6 +123,12 @@ export function RegisterSelection() {
               onSubmit={onSubmit}
               className="space-y-5 rounded-2xl border border-white/10 bg-card p-6 md:p-8"
             >
+              <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 text-sm text-muted-foreground">
+                We&rsquo;re choosing six from dozens — write like you&rsquo;re talking to one
+                person who&rsquo;s rooting for you. Half-sentences and buzzwords don&rsquo;t make
+                the cut.
+              </div>
+
               <Field label="Full name" error={errors.name?.message}>
                 <input {...register("name")} className="input" placeholder="Your name" autoComplete="name" />
               </Field>
@@ -130,7 +147,7 @@ export function RegisterSelection() {
 
               <Field
                 label="Tell us about you"
-                hint="Background, what you&rsquo;re working on now, what you&rsquo;ve built before."
+                hint="Where you come from, what you&rsquo;re doing right now, what you&rsquo;ve shipped before — even if it was a side project. Specifics earn the read."
                 error={errors.about_you?.message}
               >
                 <textarea
@@ -143,7 +160,7 @@ export function RegisterSelection() {
 
               <Field
                 label="Tell us about your startup"
-                hint="What is it, who&rsquo;s it for, what problem are you solving?"
+                hint="What is it, who exactly is the first customer, what problem are you ending for them? Name the person, the price, and the moment they&rsquo;d buy."
                 error={errors.about_startup?.message}
               >
                 <textarea
@@ -186,13 +203,14 @@ export function RegisterSelection() {
 
               <Field
                 label="Why this workshop, why now?"
+                hint="What actually changes in your life if you walk out July 23 with a launched startup? Be concrete — money, time, freedom, a person you want to prove something to."
                 error={errors.why_now?.message}
               >
                 <textarea
                   {...register("why_now")}
                   rows={4}
                   className="input resize-y"
-                  placeholder="What would change for you if you walked out July 23 with a launched business?"
+                  placeholder="Write it like you&rsquo;d say it to a friend over coffee."
                 />
               </Field>
 
@@ -249,7 +267,8 @@ export function RegisterSelection() {
                 {!isSubmitting && <ArrowRight className="size-4" />}
               </button>
               <p className="text-center text-xs text-muted-foreground">
-                We&rsquo;ll email you a decision by July 15, 2026.
+                You&rsquo;ll hear from us by July 15 — either a seat or a Founder&rsquo;s Discount.
+                No silent rejections.
               </p>
             </form>
           )}
@@ -309,12 +328,26 @@ function SuccessCard() {
       <div className="mx-auto mb-4 inline-flex size-12 items-center justify-center rounded-full bg-hero-gradient">
         <CheckCircle2 className="size-6 text-white" />
       </div>
-      <h2 className="text-2xl font-semibold tracking-tight">Application received.</h2>
+      <h2 className="text-2xl font-semibold tracking-tight">You&rsquo;re in the running.</h2>
       <p className="mt-2 text-muted-foreground">
-        Thanks — we&rsquo;ve got it. We&rsquo;ll email every applicant a decision by{" "}
-        <span className="font-medium text-foreground">July 15, 2026</span>. If selected, you&rsquo;ll
-        get logistics and what to bring to the IGNITE Center on July 23.
+        We&rsquo;ve got it. Between now and{" "}
+        <span className="font-medium text-foreground">July 15, 2026</span>, Adam is reading every
+        application personally. On July 15 you&rsquo;ll get one of two emails — a seat for July 23,
+        or a {FINALIST_DISCOUNT_PCT}% Founder&rsquo;s Discount on the next Atlanta cohort. Either
+        way, you&rsquo;ll hear from us.
       </p>
+
+      <div className="mt-8 rounded-xl border border-primary/30 bg-primary/5 p-5 text-left">
+        <div className="mb-2 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-primary">
+          <TicketPercent className="size-4" /> Floor, not ceiling
+        </div>
+        <p className="text-sm text-muted-foreground">
+          The worst outcome here is a {FINALIST_DISCOUNT_PCT}% discount and a front-row seat to
+          watch six Atlanta founders launch in public. Watch the inbox on July 15 — the
+          Founder&rsquo;s Discount is single-use and time-bound.
+        </p>
+      </div>
+
       <div className="mt-8 rounded-xl border border-white/10 p-5 text-left">
         <div className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
           While you wait
@@ -322,14 +355,17 @@ function SuccessCard() {
         <ul className="space-y-2 text-sm">
           <li className="flex items-start gap-2">
             <span className="mt-1 inline-block size-1.5 shrink-0 rounded-full bg-hero-gradient" />
-            Keep refining your startup idea — every sentence counts on selection day.
+            Keep sharpening the answer to &ldquo;who&rsquo;s the first customer?&rdquo; — every
+            specific sentence helps on selection day.
           </li>
           <li className="flex items-start gap-2">
             <span className="mt-1 inline-block size-1.5 shrink-0 rounded-full bg-hero-gradient" />
-            Know an Atlanta founder who&rsquo;d be a fit? Send them our way.
+            Know an Atlanta founder who&rsquo;d be a fit? Send them our way — the bench gets
+            deeper, and you both benefit.
           </li>
         </ul>
       </div>
+
       <div className="mt-6">
         <Link
           to="/"

@@ -8,23 +8,33 @@ import {
   Award,
   Calendar,
   Check,
+  Eye,
+  Flame,
   MapPin,
   Sparkles,
   Target,
+  TicketPercent,
   Users,
 } from "lucide-react";
 
 const FACILITATOR_NAME = "Adam Anderson";
+
+// TBD with founder — placeholders flagged for easy swap.
+const FINALIST_DISCOUNT_PCT = 40; // % off next Atlanta cohort
+const FINALIST_DISCOUNT_VALIDITY = "the next two scheduled Atlanta cohorts";
+const PIECEMEAL_VALUE = "$25,000";
 
 export function HomeSelection() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
       <Hero />
+      <WhyApplyingIsTheMove />
       <WhyDoingThis />
       <WhatYouWalkOut />
       <WhoWereLookingFor />
       <Timeline />
+      <FinalistOffer />
       <Facilitator />
       <BottomCTA />
       <SiteFooter />
@@ -39,24 +49,25 @@ function Hero() {
       <div className="absolute inset-0 bg-background/60" />
       <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-24 lg:py-32">
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white/85 md:text-sm md:tracking-[0.2em]">
-          <Sparkles className="size-3.5" /> Atlanta · Inaugural Cohort · Invitation Only
+          <Sparkles className="size-3.5" /> Atlanta · Inaugural Cohort · 6 seats · 0 cost
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
-          Six Atlanta founders.{" "}
-          <span className="italic">One day.</span>{" "}
-          <span className="text-gradient-brand">Zero cost.</span>
+          Six founders.{" "}
+          <span className="italic">One Thursday.</span>{" "}
+          <span className="text-gradient-brand">A startup that opens by Monday.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          We&rsquo;re new to Atlanta — and to launch right, we&rsquo;re hand-picking{" "}
-          <span className="font-medium text-white">six startup founders</span> to attend a full-day
-          build workshop on <span className="font-medium text-white">July 23, 2026</span> at the
-          IGNITE Center in Norcross, GA. Tuition, materials, and lunch — fully covered. Selected
-          founders walk out by 4:30 PM with a formed business, a website ready to publish, a full
-          marketing kit, and a signed 90-day launch plan.
+          We&rsquo;re new to Atlanta — and we&rsquo;re betting on six of you to prove what one
+          honest day can do. Apply by <span className="font-medium text-white">July 8</span>. Six
+          founders get a free seat at the IGNITE Center on{" "}
+          <span className="font-medium text-white">July 23, 2026</span> — tuition, materials, and
+          lunch covered. Every other applicant gets a{" "}
+          <span className="font-medium text-white">Founder&rsquo;s Discount</span> on the next
+          cohort, sent the same day we announce the six.
         </p>
         <p className="mt-4 max-w-2xl text-sm text-white/85 md:text-base">
-          Applications close <span className="font-medium text-white">July 8</span>. Selections
-          announced <span className="font-medium text-white">July 15</span>.
+          Decisions emailed <span className="font-medium text-white">July 15</span>. There is no
+          version of this where applying costs you something.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 md:mt-10">
@@ -70,7 +81,7 @@ function Hero() {
             href="#deliverables"
             className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/30 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
           >
-            See what we&rsquo;ll build
+            See what the six walk out with
           </a>
         </div>
 
@@ -94,23 +105,83 @@ function Meta({ icon, label }: { icon: React.ReactNode; label: string }) {
   );
 }
 
+function WhyApplyingIsTheMove() {
+  const cards = [
+    {
+      icon: <Flame className="size-5 text-primary" />,
+      title: "If you&rsquo;re chosen",
+      body:
+        "A free seat at the table on July 23 — roughly " +
+        PIECEMEAL_VALUE +
+        " of brand, web, and launch work built with you in one day, plus a 90-day plan signed before you leave.",
+    },
+    {
+      icon: <TicketPercent className="size-5 text-primary" />,
+      title: "If you&rsquo;re not",
+      body:
+        "A named Founder&rsquo;s Discount — " +
+        FINALIST_DISCOUNT_PCT +
+        "% off the next paid Atlanta cohort, sent the same day we announce the six. Watch them launch in public, then decide if you want your turn.",
+    },
+    {
+      icon: <Target className="size-5 text-primary" />,
+      title: "Either way",
+      body:
+        "You put your startup on paper. You said it out loud. That&rsquo;s further than 99% of people who&rsquo;ve been saying &ldquo;someday&rdquo; for years.",
+    },
+  ];
+  return (
+    <section className="border-b border-white/5 py-12 md:py-20">
+      <div className="mx-auto max-w-6xl px-6">
+        <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
+          Why applying is the move
+        </p>
+        <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
+          Dozens will apply. Six will build.{" "}
+          <span className="text-gradient-brand">Everyone who steps in gets something back.</span>
+        </h2>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {cards.map((c) => (
+            <div key={c.title} className="rounded-2xl border border-white/10 bg-card p-6">
+              <div className="mb-3">{c.icon}</div>
+              <div
+                className="text-lg font-semibold tracking-tight"
+                dangerouslySetInnerHTML={{ __html: c.title }}
+              />
+              <p
+                className="mt-2 text-sm text-muted-foreground"
+                dangerouslySetInnerHTML={{ __html: c.body }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function WhyDoingThis() {
   return (
-    <section className="border-y border-white/5 py-12 md:py-20">
+    <section className="border-b border-white/5 py-12 md:py-20">
       <div className="mx-auto max-w-4xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           Why we&rsquo;re doing this
         </p>
         <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-          We want six real Atlanta launches as our{" "}
-          <span className="text-gradient-brand">proof of work</span>.
+          We&rsquo;re betting on Atlanta first —{" "}
+          <span className="text-gradient-brand">and we want six real launches to point to.</span>
         </h2>
         <p className="mt-5 text-base text-muted-foreground md:text-lg">
-          This is our inaugural Atlanta cohort. Instead of selling seats to introduce ourselves,
-          we&rsquo;re investing in six founders directly — covering the full workshop, the
-          deliverables, and the 90-day follow-through. In return, we get six real businesses we
-          can point to. You get the fastest path we know from idea to a viable, profit-ready
-          business, with nothing out of pocket for the workshop itself.
+          This is our inaugural Atlanta cohort. Instead of buying ads to introduce ourselves,
+          we&rsquo;re investing the full price of six seats into six founders — the workshop, the
+          deliverables, and the 90-day follow-through. In return, we get six Atlanta startups we
+          can point to as proof of work. You get the fastest path we know from idea to a
+          revenue-ready startup, with nothing out of pocket for the workshop itself.
+        </p>
+        <p className="mt-4 text-base text-muted-foreground md:text-lg">
+          We expect dozens of applications for six seats. That&rsquo;s the point. We want to
+          choose from a deep bench — and we want every founder who applied to walk away with
+          something real, even if the seat goes to someone else.
         </p>
         <p className="mt-4 text-sm text-muted-foreground">
           Hard costs after the day — state filing fees, hosting, subscriptions, and anything
@@ -123,13 +194,13 @@ function WhyDoingThis() {
 }
 
 const DELIVERABLES = [
-  "Your business, formed and filing-ready",
-  "An offer real people will pay for, with pricing",
-  "A clear story of who you help and why you&rsquo;re different",
-  "A simple, working way to deliver to your first customer",
-  "A brand kit and a website ready to publish",
-  "Business card, flyer, social profiles, 6 posts, video script",
-  "A signed 90-day plan with your next 10 moves on the calendar",
+  "An LLC filed in your name — EIN landing in your inbox while you eat lunch",
+  "An offer a stranger could buy from tonight, with pricing you&rsquo;ll defend",
+  "A one-sentence story of who you help and why it&rsquo;s you — not the other six",
+  "A working way to deliver to your first customer without hiring anyone",
+  "A brand kit and a homepage live at yourdomain.com before you leave the building",
+  "Business card in your wallet, flyer in your bag, social profiles up, six posts queued, video script ready to film",
+  "A signed 90-day plan with your next ten moves already on the calendar",
 ];
 
 function WhatYouWalkOut() {
@@ -141,7 +212,7 @@ function WhatYouWalkOut() {
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
           Not a course. Not coaching.{" "}
-          <span className="text-gradient-brand">A built business.</span>
+          <span className="text-gradient-brand">A built startup.</span>
         </h2>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           {DELIVERABLES.map((d) => (
@@ -151,6 +222,11 @@ function WhatYouWalkOut() {
             </div>
           ))}
         </div>
+        <p className="mt-6 max-w-3xl text-sm text-muted-foreground md:text-base">
+          If you bought these piecemeal from a brand studio, a dev shop, and a fractional CMO,
+          you&rsquo;d be north of <span className="text-foreground font-medium">{PIECEMEAL_VALUE}</span>{" "}
+          and six weeks in. You&rsquo;ll have them by dinner.
+        </p>
       </div>
     </section>
   );
@@ -162,16 +238,16 @@ const CRITERIA = [
     body: "You&rsquo;re building in metro Atlanta — or moving here in the next 90 days.",
   },
   {
-    title: "An idea or early traction",
-    body: "You don&rsquo;t need revenue. You do need a real idea you&rsquo;ve been turning over.",
+    title: "An idea you&rsquo;ve been turning over",
+    body: "You don&rsquo;t need revenue. You do need a real idea you can&rsquo;t stop thinking about.",
   },
   {
     title: "Coachable and decisive",
-    body: "You&rsquo;ll make calls in the room — name, offer, pricing — and stick with them.",
+    body: "You&rsquo;ll make calls in the room — name, offer, pricing — and stick with them past the parking lot.",
   },
   {
     title: "Free on July 23",
-    body: "You can commit the full day, in person, in Norcross. No half-attendance.",
+    body: "You can commit the full day, in person, in Norcross. No half-attendance, no Zoom-in.",
   },
 ];
 
@@ -184,8 +260,12 @@ function WhoWereLookingFor() {
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
           Six founders ready to{" "}
-          <span className="text-gradient-brand">leave with a real business</span> — not a deck.
+          <span className="text-gradient-brand">leave with a real startup</span> — not a deck.
         </h2>
+        <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
+          Adam reads every application personally. Be specific — vague applications don&rsquo;t
+          make the six.
+        </p>
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {CRITERIA.map((c) => (
             <div key={c.title} className="rounded-2xl border border-white/10 bg-card p-6">
@@ -203,9 +283,10 @@ function WhoWereLookingFor() {
 const STEPS = [
   { label: "Applications open", date: "Now" },
   { label: "Applications close", date: "July 8, 2026" },
-  { label: "Selections announced", date: "July 15, 2026" },
+  { label: "Selections announced — six seats emailed", date: "July 15, 2026" },
+  { label: "Founder&rsquo;s Discount emailed to every other applicant", date: "July 15, 2026" },
   { label: "Workshop day", date: "July 23, 2026" },
-  { label: "90-day follow-through", date: "Through October 2026" },
+  { label: "90-day follow-through — launches in public", date: "Through October 2026" },
 ];
 
 function Timeline() {
@@ -216,7 +297,7 @@ function Timeline() {
           Timeline
         </p>
         <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-          Five dates. <span className="text-gradient-brand">One launch.</span>
+          Six dates. <span className="text-gradient-brand">One launch.</span>
         </h2>
         <ol className="mt-8 space-y-3">
           {STEPS.map((s, i) => (
@@ -225,7 +306,10 @@ function Timeline() {
                 {i + 1}
               </div>
               <div className="flex flex-1 flex-wrap items-baseline justify-between gap-2">
-                <div className="text-base font-medium">{s.label}</div>
+                <div
+                  className="text-base font-medium"
+                  dangerouslySetInnerHTML={{ __html: s.label }}
+                />
                 <div className="text-sm text-muted-foreground">{s.date}</div>
               </div>
             </li>
@@ -233,6 +317,68 @@ function Timeline() {
         </ol>
       </div>
     </section>
+  );
+}
+
+function FinalistOffer() {
+  return (
+    <section className="py-12 md:py-20">
+      <div className="mx-auto max-w-5xl px-6">
+        <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-card p-8 md:p-12">
+          <div className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-hero-gradient opacity-20 blur-3xl" />
+          <div className="relative">
+            <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-primary">
+              <TicketPercent className="size-3.5" /> The Founder&rsquo;s Discount
+            </p>
+            <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
+              Not chosen?{" "}
+              <span className="text-gradient-brand">You still leave with something real.</span>
+            </h2>
+            <p className="mt-5 max-w-3xl text-base text-muted-foreground md:text-lg">
+              Every applicant we don&rsquo;t pick for the six gets a named Founder&rsquo;s
+              Discount —{" "}
+              <span className="font-medium text-foreground">
+                {FINALIST_DISCOUNT_PCT}% off the next paid Atlanta cohort
+              </span>
+              , emailed July 15. The discount activates after the workshop on purpose: you get to
+              watch the six launch in public — read the case studies, click the live sites, see
+              the 90-day numbers — and then decide if you want your turn.
+            </p>
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              <Pillar
+                icon={<TicketPercent className="size-5 text-primary" />}
+                title={`${FINALIST_DISCOUNT_PCT}% off`}
+                body="Emailed the same day we announce the six. Single-use, transferable to one founder you recommend."
+              />
+              <Pillar
+                icon={<Eye className="size-5 text-primary" />}
+                title="A front-row seat"
+                body="You see what came out of the room — websites, brands, offers, 90-day numbers — before you commit a dollar."
+              />
+              <Pillar
+                icon={<Calendar className="size-5 text-primary" />}
+                title="Valid for two cohorts"
+                body={`Honored across ${FINALIST_DISCOUNT_VALIDITY} — so timing doesn&rsquo;t cost you the offer.`}
+              />
+            </div>
+            <p className="mt-6 text-xs text-muted-foreground">
+              Founder&rsquo;s Discount terms are simple — one applicant per email, one use per
+              person, full terms emailed with the code on July 15.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Pillar({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-background/40 p-5">
+      <div className="mb-2">{icon}</div>
+      <div className="text-base font-semibold tracking-tight">{title}</div>
+      <p className="mt-1 text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: body }} />
+    </div>
   );
 }
 
@@ -257,7 +403,7 @@ function Facilitator() {
                 </div>
               </div>
               <div className="mt-4 text-base leading-snug opacity-95">
-                30 years of starting businesses. One day with yours.
+                30 years of starting startups. One day with yours.
               </div>
             </div>
           </div>
@@ -270,14 +416,14 @@ function Facilitator() {
             </p>
             <p className="mt-5 text-muted-foreground">
               Adam has personally started multiple companies and helped launch dozens more — the
-              kind of lean, modern businesses people are actually building in 2026. He&rsquo;s
+              kind of lean, modern startups people are actually building in 2026. He&rsquo;s
               shipped work for Citigroup, Mayo Clinic, 3M, and Disney, built full digital systems
               for a Caribbean country&rsquo;s government, and produced one of the region&rsquo;s
               biggest business summits for five years.
             </p>
             <p className="mt-3 text-muted-foreground">
               He&rsquo;s sat in your seat — more than once. He knows exactly what it takes to go
-              from a half-formed idea to a business that opens its doors.
+              from a half-formed idea to a startup that opens its doors.
             </p>
           </div>
         </div>
@@ -291,11 +437,13 @@ function BottomCTA() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-3xl px-6 text-center">
         <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-5xl">
-          Six seats.{" "}
-          <span className="text-gradient-brand">Apply by July 8.</span>
+          Six seats. Dozens will apply.{" "}
+          <span className="text-gradient-brand">Yours starts with one form.</span>
         </h2>
         <p className="mt-4 text-base text-muted-foreground md:text-lg">
-          Tell us about you and your startup. We&rsquo;ll email a decision by July 15.
+          Twelve minutes to apply. Decision by July 15. Either a free seat on July 23 — or a{" "}
+          {FINALIST_DISCOUNT_PCT}% Founder&rsquo;s Discount and a front-row seat to the launches.
+          There is no version of this where applying costs you.
         </p>
         <Link
           to="/register"
