@@ -49,6 +49,7 @@ import { Route as AuthenticatedAdminAdminRegistrationsRouteImport } from './rout
 import { Route as AuthenticatedAdminAdminMediaRouteImport } from './routes/_authenticated/_admin/admin.media'
 import { Route as AuthenticatedAdminAdminCohortsRouteImport } from './routes/_authenticated/_admin/admin.cohorts'
 import { Route as AuthenticatedAdminAdminAttendeesRouteImport } from './routes/_authenticated/_admin/admin.attendees'
+import { Route as AuthenticatedAdminAdminInquiriesIndexRouteImport } from './routes/_authenticated/_admin/admin.inquiries.index'
 import { Route as AuthenticatedAdminAdminApplicationsIndexRouteImport } from './routes/_authenticated/_admin/admin.applications.index'
 import { Route as AuthenticatedAdminAdminCohortsTestRouteImport } from './routes/_authenticated/_admin/admin.cohorts.test'
 import { Route as AuthenticatedAdminAdminApplicationsIdRouteImport } from './routes/_authenticated/_admin/admin.applications.$id'
@@ -279,6 +280,12 @@ const AuthenticatedAdminAdminAttendeesRoute =
     path: '/admin/attendees',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAdminInquiriesIndexRoute =
+  AuthenticatedAdminAdminInquiriesIndexRouteImport.update({
+    id: '/admin/inquiries/',
+    path: '/admin/inquiries/',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAdminApplicationsIndexRoute =
   AuthenticatedAdminAdminApplicationsIndexRouteImport.update({
     id: '/admin/applications/',
@@ -364,6 +371,7 @@ export interface FileRoutesByFullPath {
   '/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
   '/admin/applications/': typeof AuthenticatedAdminAdminApplicationsIndexRoute
+  '/admin/inquiries/': typeof AuthenticatedAdminAdminInquiriesIndexRoute
   '/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
   '/admin/attendees/$userId/workflow': typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute
   '/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
@@ -410,6 +418,7 @@ export interface FileRoutesByTo {
   '/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
   '/admin/applications': typeof AuthenticatedAdminAdminApplicationsIndexRoute
+  '/admin/inquiries': typeof AuthenticatedAdminAdminInquiriesIndexRoute
   '/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
   '/admin/attendees/$userId/workflow': typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute
   '/admin/attendees/$userId': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
@@ -460,6 +469,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/_authenticated/_admin/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
   '/_authenticated/_admin/admin/applications/': typeof AuthenticatedAdminAdminApplicationsIndexRoute
+  '/_authenticated/_admin/admin/inquiries/': typeof AuthenticatedAdminAdminInquiriesIndexRoute
   '/_authenticated/_admin/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
   '/_authenticated/_admin/admin/attendees/$userId/workflow': typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute
   '/_authenticated/_admin/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
@@ -509,6 +519,7 @@ export interface FileRouteTypes {
     | '/admin/applications/$id'
     | '/admin/cohorts/test'
     | '/admin/applications/'
+    | '/admin/inquiries/'
     | '/admin/attendees/$userId/media'
     | '/admin/attendees/$userId/workflow'
     | '/admin/attendees/$userId/'
@@ -555,6 +566,7 @@ export interface FileRouteTypes {
     | '/admin/applications/$id'
     | '/admin/cohorts/test'
     | '/admin/applications'
+    | '/admin/inquiries'
     | '/admin/attendees/$userId/media'
     | '/admin/attendees/$userId/workflow'
     | '/admin/attendees/$userId'
@@ -604,6 +616,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/applications/$id'
     | '/_authenticated/_admin/admin/cohorts/test'
     | '/_authenticated/_admin/admin/applications/'
+    | '/_authenticated/_admin/admin/inquiries/'
     | '/_authenticated/_admin/admin/attendees/$userId/media'
     | '/_authenticated/_admin/admin/attendees/$userId/workflow'
     | '/_authenticated/_admin/admin/attendees/$userId/'
@@ -913,6 +926,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminAttendeesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/_admin/admin/inquiries/': {
+      id: '/_authenticated/_admin/admin/inquiries/'
+      path: '/admin/inquiries'
+      fullPath: '/admin/inquiries/'
+      preLoaderRoute: typeof AuthenticatedAdminAdminInquiriesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/_admin/admin/applications/': {
       id: '/_authenticated/_admin/admin/applications/'
       path: '/admin/applications'
@@ -1015,6 +1035,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAdminIndexRoute: typeof AuthenticatedAdminAdminIndexRoute
   AuthenticatedAdminAdminApplicationsIdRoute: typeof AuthenticatedAdminAdminApplicationsIdRoute
   AuthenticatedAdminAdminApplicationsIndexRoute: typeof AuthenticatedAdminAdminApplicationsIndexRoute
+  AuthenticatedAdminAdminInquiriesIndexRoute: typeof AuthenticatedAdminAdminInquiriesIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
@@ -1033,6 +1054,8 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
     AuthenticatedAdminAdminApplicationsIdRoute,
   AuthenticatedAdminAdminApplicationsIndexRoute:
     AuthenticatedAdminAdminApplicationsIndexRoute,
+  AuthenticatedAdminAdminInquiriesIndexRoute:
+    AuthenticatedAdminAdminInquiriesIndexRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
