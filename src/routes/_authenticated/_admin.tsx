@@ -1,27 +1,18 @@
-import { createFileRoute, Outlet, Navigate, Link, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
+import { AdminCommandMenu } from "@/components/admin/AdminCommandMenu";
 
 export const Route = createFileRoute("/_authenticated/_admin")({
   component: AdminLayout,
 });
 
-const NAV = [
-  { to: "/admin", label: "Dashboard", super: false },
-  { to: "/admin/registrations", label: "Registrations", super: false },
-  { to: "/admin/attendees", label: "Attendees", super: false },
-  { to: "/admin/cohorts", label: "Cohorts", super: true },
-  { to: "/admin/site", label: "Site", super: true },
-  { to: "/admin/review", label: "Review queue", super: true },
-  { to: "/admin/media", label: "Media library", super: true },
-  { to: "/admin/users", label: "Users", super: true },
-] as const;
-
 function AdminLayout() {
-  const { isAdmin, loading, signOut, user, isSuperAdmin } = useAuth();
-  const { location } = useRouterState();
+  const { isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
@@ -37,41 +28,22 @@ function AdminLayout() {
 
   return (
     <ThemeProvider>
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-8">
-            <Link to="/admin" className="font-semibold tracking-tight">
-              Admin
-            </Link>
-            <nav className="flex items-center gap-5 text-sm text-muted-foreground">
-              {NAV.filter((n) => !n.super || isSuperAdmin).map((n) => (
-                <Link
-                  key={n.to}
-                  to={n.to}
-                  className={location.pathname === n.to ? "text-foreground" : "hover:text-foreground"}
-                >
-                  {n.label}
-                </Link>
-              ))}
-              <Link to="/" className="hover:text-foreground">
-                View site
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="hidden text-muted-foreground sm:inline">{user?.email}</span>
-            <ThemeToggle />
-            <Button variant="outline" size="sm" onClick={signOut}>
-              Sign out
-            </Button>
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-6 py-10">
-        <Outlet />
-      </main>
-    </div>
+      <SidebarProvider>
+        <AdminSidebar />
+        <SidebarInset>
+          <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <AdminBreadcrumb />
+            <div className="ml-auto flex items-center gap-2">
+              <AdminCommandMenu />
+            </div>
+          </header>
+          <main className="flex-1 p-6">
+            <Outlet />
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
     </ThemeProvider>
   );
 }

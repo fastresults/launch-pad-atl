@@ -1,123 +1,121 @@
-# A/B variants for Homepage & Registration (super-admin toggle)
+# Super-Admin Redesign: Sidebar Shell + Command Palette
 
-Add a second "Selection / Free Cohort" variant for `/` and `/register`, switchable by super admins. The new variant pitches a free, invite-only workshop on **July 23, 2026** for **6 selected Atlanta founders**, with selections announced by **July 15, 2026** — no cohort picker, no payment.
+## The problem
 
-## How the toggle works
+The current admin uses a single horizontal nav bar inside `_admin.tsx`. With 8 items it's already crowded; as Cohorts, Site settings, Review queue, Media, Users, and future modules (Emails, Payments, Analytics, Audit log, Integrations, Feature flags) get added, horizontal nav becomes unusable: items truncate, hierarchy disappears, and there's no room for status badges (pending reviews count, sold-out cohorts, etc.).
 
-- New table `public.site_settings` (key/value JSON) with two keys:
-  - `home_variant`: `"original" | "selection"`
-  - `register_variant`: `"original" | "selection"`
-- Defaults: both `"original"`.
-- A small SSR-safe server fn `getPublicSiteSettings()` (uses `supabaseAdmin`, read-only, no auth) returns the two variants.
-- Each route (`/` and `/register`) calls it from the loader via `queryOptions` + `useSuspenseQuery` (matches existing TanStack pattern) and renders either `<HomeOriginal />` / `<HomeSelection />` or `<RegisterOriginal />` / `<RegisterSelection />`.
-- Super-admin page at `/admin/site` lets super_admins flip each variant independently (radio group, single-click save). Uses an authed `updateSiteSetting` server fn gated by `has_role(uid, 'super_admin')`.
+## Recommended treatment
 
-## Database (single migration)
+A **persistent collapsible left sidebar** with grouped navigation, a top utility bar with breadcrumbs + global search, and a **⌘K command palette** for power-user jumps. This is the pattern used by Linear, Vercel, Stripe, Supabase, and Resend dashboards — it's the proven SaaS-admin standard because it:
 
-```sql
-CREATE TABLE public.site_settings (
-  key text PRIMARY KEY,
-  value jsonb NOT NULL,
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  updated_by uuid
-);
-GRANT SELECT ON public.site_settings TO anon, authenticated;
-GRANT ALL ON public.site_settings TO service_role;
-ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public read site settings" ON public.site_settings FOR SELECT USING (true);
--- writes go through service_role only (super-admin server fn)
-INSERT INTO public.site_settings(key, value) VALUES
-  ('home_variant', '"original"'::jsonb),
-  ('register_variant', '"original"'::jsonb);
-```
+- Scales linearly: 30+ items still browsable via groups and collapse
+- Preserves hierarchy: sections (Operations, Content, People, System) communicate scope
+- Frees vertical canvas: page headers, filters, and tables get more room
+- Surfaces state: badges on nav items (e.g. "Review queue · 4") replace hidden notifications
+- Works on every viewport: icon-rail collapse on tablet, sheet drawer on mobile
 
-## Files
+## Information architecture
 
-**New**
-- `src/lib/site-settings.functions.ts` — `getPublicSiteSettings()` (public read via `supabaseAdmin`), `updateSiteSetting({ key, value })` (super-admin gated).
-- `src/routes/_authenticated/_admin/admin.site.tsx` — toggle UI: two cards, each with two radios ("Original" / "Selection — Free Cohort"), live save, last-updated stamp.
-- `src/components/home/HomeOriginal.tsx` — extracted from current `src/routes/index.tsx` body (just moves the existing `HomePage` JSX + its local helpers to a component file; no design changes).
-- `src/components/home/HomeSelection.tsx` — new landing for the selection variant (sections below).
-- `src/components/register/RegisterOriginal.tsx` — extracted from current `src/routes/register.tsx` body.
-- `src/components/register/RegisterSelection.tsx` — new short application form.
-- `src/lib/applications.functions.ts` — `submitFounderApplication(...)` writing to `workshop_registrations` with `cohort_id = 'select-2026-07-23'`, `status='applied'`, `tier_interest='selection'`.
-
-**Edit**
-- `src/routes/index.tsx` — replace body with a thin switch: loader reads `home_variant`, component renders `HomeOriginal` or `HomeSelection`. Keep route-level `head()` but compute meta from variant.
-- `src/routes/register.tsx` — same pattern using `register_variant`.
-- `src/components/layout/Sidebar` (admin nav, wherever the admin menu lives — `src/routes/_authenticated/_admin.tsx`) — add "Site" link.
-- `supabase/migrations/...site_settings.sql`
-
-**No edits** to: cohorts, pricing, value-grid, existing admin pages.
-
-## "Selection" homepage content outline (`HomeSelection.tsx`)
-
-Reuses existing design tokens, Header/Footer, same hero shell — only the copy and CTAs change.
-
-1. **Hero** — eyebrow: "Atlanta · Inaugural Cohort". Headline: "Six Atlanta founders. One day. Zero cost." Sub: "We're new to Atlanta. To launch right, we're hand-picking **six founders** to attend a **free** full-day build workshop on **July 23, 2026** at the IGNITE Center, Norcross GA." CTA: "Apply for a seat → /register". Secondary: "See what we'll build → #deliverables".
-2. **Why we're doing this** — short trust block: new to the market, want six real launches as proof, full-tuition value (~$X) covered for selected founders.
-3. **Walk in / walk out** — reuse the existing `WalkInWalkOut` section verbatim (import from a shared component file; refactor a tiny bit so both variants can share).
-4. **What you walk out with** — reuse `ValueGrid` (deliverables) without the pricing TotalsBar.
-5. **Who we're looking for** — 4 criteria cards: "Atlanta-based or relocating", "Idea or early traction", "Coachable & decisive", "Can commit a full day on July 23".
-6. **Timeline** — "Applications close July 8 · Selections announced July 15 · Workshop July 23 · 90-day follow-through".
-7. **Facilitator** — reuse `FacilitatorSection`.
-8. **Venue** — reuse `VenueCard`.
-9. **Bottom CTA** — "Six seats. Apply by July 8. → /register".
-
-## "Selection" register page (`RegisterSelection.tsx`)
-
-Application form, not a checkout. No cohort picker, no tier, no payment.
-
-Fields:
-- Full name, email, phone (optional).
-- "Tell us about you" (textarea, 120–800 chars) — background, what you're working on now.
-- "Tell us about your startup" (textarea, 120–1500 chars) — what it is, who it serves, what problem.
-- Stage select (idea / early / existing).
-- Industry select (reuse existing list).
-- "Why this workshop, why now?" (textarea, 60–600 chars).
-- Linkedin URL (optional).
-- "I can attend in person on July 23, 2026 in Norcross, GA" — required checkbox.
-- "How did you hear about us?" (optional).
-
-Submit → `submitFounderApplication` which inserts into existing `workshop_registrations` with:
-- `cohort_id = 'select-2026-07-23'` (insert this cohort row in the migration: status `'application'`, prices 0, seats 6/0)
-- `tier_interest = 'selection'`, `assigned_tier = null`, `status = 'applied'`.
-- Long-form answers stored in `business_idea` (combined) — schema unchanged.
-
-Success card: "Application received. We'll email a decision by **July 15, 2026**." Includes what to expect next + a "Tell a friend" share line.
-
-Add `cohort_id = 'select-2026-07-23'` cohort row in the same migration so existing FK-less reads still work and admin can see applicants on the existing Registrations page.
-
-## Super-admin toggle UI (`/admin/site`)
+Group the existing + planned items into 4 sections. Order reflects daily use frequency.
 
 ```
-┌─ Homepage ──────────────────────────────┐
-│  ( ) Original                           │
-│  (•) Selection — Free Cohort (Jul 23)   │
-│  Last updated 2m ago by you             │
-└─────────────────────────────────────────┘
-┌─ Registration ──────────────────────────┐
-│  ( ) Original                           │
-│  (•) Selection — Application form       │
-└─────────────────────────────────────────┘
+OVERVIEW
+  ▸ Dashboard                /admin
+
+OPERATIONS
+  ▸ Registrations            /admin/registrations
+  ▸ Attendees                /admin/attendees
+  ▸ Review queue   [badge]   /admin/review        (super)
+  ▸ Cohorts                  /admin/cohorts       (super)
+
+CONTENT
+  ▸ Site settings            /admin/site          (super)
+  ▸ Media library            /admin/media         (super)
+
+SYSTEM
+  ▸ Users & roles            /admin/users         (super)
+  ▸ View public site →       /
 ```
 
-Each radio change calls `updateSiteSetting` and invalidates the `["site-settings"]` query. Below each card, a "Preview in new tab" link opens `/` or `/register` so the admin can verify before announcing.
+Future items slot cleanly: Emails/Audit log → System; Analytics → Overview; Feature flags → System.
 
-## Edge cases / safety
+## Layout
 
-- `getPublicSiteSettings()` returns defaults if the table is empty or the row is missing — no broken site if migration hasn't run yet.
-- Both variants share `SiteHeader` / `SiteFooter`, so global nav stays consistent.
-- SEO: each variant supplies its own `<title>` / `og:` meta via `head()`.
-- Existing paid cohorts and the admin "Cohorts" / "Registrations" pages are untouched. Switching variants doesn't change pricing, RLS, or any existing flow.
-- The selection cohort row uses `price = 0` and a dedicated id so revenue reports aren't polluted.
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ ☰  Admin · Registrations                    ⌘K  🔔  avatar ▾ │ ← top bar (h-14)
+├──────────┬───────────────────────────────────────────────────┤
+│ LOGO     │                                                   │
+│          │                                                   │
+│ OVERVIEW │                                                   │
+│  ▢ Dash  │           page content (full width)               │
+│          │                                                   │
+│ OPS      │                                                   │
+│  ▢ Regs  │                                                   │
+│  ▢ Att.  │                                                   │
+│  ▢ Rev 4 │                                                   │
+│  ▢ Coh.  │                                                   │
+│          │                                                   │
+│ CONTENT  │                                                   │
+│  ▢ Site  │                                                   │
+│  ▢ Media │                                                   │
+│          │                                                   │
+│ SYSTEM   │                                                   │
+│  ▢ Users │                                                   │
+│          │                                                   │
+│ ─────    │                                                   │
+│ ☾ theme  │                                                   │
+│ ⎋ out    │                                                   │
+└──────────┴───────────────────────────────────────────────────┘
+```
+
+- **Sidebar**: `w-60` expanded, `w-14` icon rail when collapsed. Persists via `SidebarProvider`.
+- **Top bar**: sidebar trigger, breadcrumb (Admin › Section › Page), spacer, command palette button (`⌘K`), theme toggle, user menu (email, sign out).
+- **Mobile (<768px)**: sidebar becomes a sheet drawer triggered by hamburger.
+
+## Command palette (⌘K)
+
+`cmdk`-based dialog with sections matching the sidebar IA, plus contextual actions:
+- Jump to any admin page
+- "Create cohort", "Open review queue", "Toggle homepage variant"
+- Search attendees/registrations by email (later)
+
+Replaces the need to add every shortcut to the visible nav.
+
+## Visual / brand
+
+- Sidebar uses `bg-sidebar` token, subtle right border (`border-sidebar-border`)
+- Active item: filled pill (`bg-sidebar-accent`), 2px primary indicator on the left edge
+- Group labels: `text-xs uppercase tracking-wider text-muted-foreground`
+- Badges (review count, etc.): small `Badge variant="secondary"` aligned right
+- Smooth 200ms collapse animation; no layout shift on hover
+
+## Technical plan
+
+1. **Add shadcn sidebar primitives** (already documented in the repo's knowledge file). Files: `src/components/ui/sidebar.tsx` (if not present, install via shadcn).
+2. **Create `src/components/admin/AdminSidebar.tsx`** — the grouped nav with active-route highlighting via `useRouterState`, super-admin filtering via `useAuth().isSuperAdmin`, and badge slot per item (data fetched via lightweight server fn `getAdminBadges` returning `{ reviewPending: n }`).
+3. **Create `src/components/admin/AdminTopbar.tsx`** — `SidebarTrigger`, breadcrumb derived from current pathname + NAV map, `CommandMenuButton`, `ThemeToggle`, user dropdown.
+4. **Create `src/components/admin/AdminCommandMenu.tsx`** — `cmdk` dialog, opens on ⌘K / Ctrl+K, lists all nav targets + quick actions, navigates via `useNavigate`.
+5. **Rewrite `src/routes/_authenticated/_admin.tsx`** to render `<SidebarProvider><AdminSidebar /><SidebarInset><AdminTopbar /><main><Outlet/></main></SidebarInset></SidebarProvider>`. Keeps `isAdmin` guard and `ThemeProvider` wrapper unchanged.
+6. **Add `src/lib/admin-nav.ts`** — single source of truth for nav items (label, to, icon, group, super, badgeKey). Consumed by sidebar, breadcrumb, and command palette.
+7. **Badges server fn** (`src/lib/admin-badges.functions.ts`) — `getAdminBadges` returns counts for review queue (and future: pending registrations, unread messages). Cached via TanStack Query, 30s stale.
+8. **Expand max width**: drop `max-w-6xl` constraint inside admin so tables and grids use full width minus sidebar.
+9. **Keyboard**: ⌘K opens palette, ⌘B toggles sidebar (built into shadcn sidebar).
+
+## Files touched
+
+- Edit: `src/routes/_authenticated/_admin.tsx`
+- New: `src/components/admin/AdminSidebar.tsx`, `AdminTopbar.tsx`, `AdminCommandMenu.tsx`, `AdminBreadcrumb.tsx`
+- New: `src/lib/admin-nav.ts`, `src/lib/admin-badges.functions.ts`
+- Possibly new shadcn: `src/components/ui/sidebar.tsx`, `src/components/ui/command.tsx`, `src/components/ui/breadcrumb.tsx` (install if missing)
+
+## Out of scope (future)
+
+- Per-user nav favorites/pinning
+- Saved filter views in the sidebar
+- Inline notifications drawer
+- Multi-workspace switcher (not needed at one-tenant scale)
 
 ## Sequence
 
-1. Run the migration (creates table, seeds defaults, inserts `select-2026-07-23` cohort).
-2. Add `site-settings.functions.ts` + `applications.functions.ts`.
-3. Extract current pages into `HomeOriginal` / `RegisterOriginal` (pure move).
-4. Build `HomeSelection` and `RegisterSelection`.
-5. Wire variant switches in `/` and `/register` loaders.
-6. Ship `/admin/site` toggle page + sidebar link.
-7. Verify both variants render in dev and the toggle flips without redeploy.
+Install shadcn sidebar/command/breadcrumb → admin-nav source of truth → sidebar + topbar components → command palette → swap `_admin.tsx` shell → wire badges fn → verify all 8 routes render correctly at desktop/tablet/mobile widths.
