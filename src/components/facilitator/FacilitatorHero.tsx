@@ -10,7 +10,7 @@ export function FacilitatorHero() {
       className="flex flex-col md:flex-row md:items-start md:gap-10"
     >
       {/* Portrait — small on mobile (stacked above), 160px square on desktop (right of headline) */}
-      <div className="order-1 md:order-2 md:flex-shrink-0 mb-6 md:mb-0">
+      <div className="order-1 md:order-2 md:flex-shrink-0 mb-6 md:mb-0 md:mt-8">
         <div className="overflow-hidden rounded-2xl border border-border shadow-sm w-24 h-24 md:w-40 md:h-40">
           <img
             src={adamPortrait}
