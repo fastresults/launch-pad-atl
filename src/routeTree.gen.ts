@@ -22,6 +22,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/_admin'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
@@ -46,6 +47,7 @@ import { Route as AuthenticatedAdminAdminUsersRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminAdminSiteRouteImport } from './routes/_authenticated/_admin/admin.site'
 import { Route as AuthenticatedAdminAdminReviewRouteImport } from './routes/_authenticated/_admin/admin.review'
 import { Route as AuthenticatedAdminAdminRegistrationsRouteImport } from './routes/_authenticated/_admin/admin.registrations'
+import { Route as AuthenticatedAdminAdminMembersRouteImport } from './routes/_authenticated/_admin/admin.members'
 import { Route as AuthenticatedAdminAdminMediaRouteImport } from './routes/_authenticated/_admin/admin.media'
 import { Route as AuthenticatedAdminAdminCohortsRouteImport } from './routes/_authenticated/_admin/admin.cohorts'
 import { Route as AuthenticatedAdminAdminAttendeesRouteImport } from './routes/_authenticated/_admin/admin.attendees'
@@ -122,6 +124,11 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedWelcomeRoute = AuthenticatedWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
@@ -263,6 +270,12 @@ const AuthenticatedAdminAdminRegistrationsRoute =
     path: '/admin/registrations',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAdminMembersRoute =
+  AuthenticatedAdminAdminMembersRouteImport.update({
+    id: '/admin/members',
+    path: '/admin/members',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAdminMediaRoute =
   AuthenticatedAdminAdminMediaRouteImport.update({
     id: '/admin/media',
@@ -349,6 +362,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/welcome': typeof AuthenticatedWelcomeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
   '/dashboard/day': typeof AuthenticatedDashboardDayRoute
@@ -365,6 +379,7 @@ export interface FileRoutesByFullPath {
   '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/admin/cohorts': typeof AuthenticatedAdminAdminCohortsRouteWithChildren
   '/admin/media': typeof AuthenticatedAdminAdminMediaRoute
+  '/admin/members': typeof AuthenticatedAdminAdminMembersRoute
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/site': typeof AuthenticatedAdminAdminSiteRoute
@@ -397,6 +412,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/welcome': typeof AuthenticatedWelcomeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
   '/dashboard/day': typeof AuthenticatedDashboardDayRoute
@@ -413,6 +429,7 @@ export interface FileRoutesByTo {
   '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/admin/cohorts': typeof AuthenticatedAdminAdminCohortsRouteWithChildren
   '/admin/media': typeof AuthenticatedAdminAdminMediaRoute
+  '/admin/members': typeof AuthenticatedAdminAdminMembersRoute
   '/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/admin/site': typeof AuthenticatedAdminAdminSiteRoute
@@ -449,6 +466,7 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/_authenticated/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
   '/_authenticated/dashboard/day': typeof AuthenticatedDashboardDayRoute
@@ -465,6 +483,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/_authenticated/_admin/admin/cohorts': typeof AuthenticatedAdminAdminCohortsRouteWithChildren
   '/_authenticated/_admin/admin/media': typeof AuthenticatedAdminAdminMediaRoute
+  '/_authenticated/_admin/admin/members': typeof AuthenticatedAdminAdminMembersRoute
   '/_authenticated/_admin/admin/registrations': typeof AuthenticatedAdminAdminRegistrationsRoute
   '/_authenticated/_admin/admin/review': typeof AuthenticatedAdminAdminReviewRoute
   '/_authenticated/_admin/admin/site': typeof AuthenticatedAdminAdminSiteRoute
@@ -500,6 +519,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/dashboard'
+    | '/welcome'
     | '/email/unsubscribe'
     | '/dashboard/brief'
     | '/dashboard/day'
@@ -516,6 +536,7 @@ export interface FileRouteTypes {
     | '/admin/attendees'
     | '/admin/cohorts'
     | '/admin/media'
+    | '/admin/members'
     | '/admin/registrations'
     | '/admin/review'
     | '/admin/site'
@@ -548,6 +569,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/terms'
     | '/unsubscribe'
+    | '/welcome'
     | '/email/unsubscribe'
     | '/dashboard/brief'
     | '/dashboard/day'
@@ -564,6 +586,7 @@ export interface FileRouteTypes {
     | '/admin/attendees'
     | '/admin/cohorts'
     | '/admin/media'
+    | '/admin/members'
     | '/admin/registrations'
     | '/admin/review'
     | '/admin/site'
@@ -599,6 +622,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/_authenticated/_admin'
     | '/_authenticated/dashboard'
+    | '/_authenticated/welcome'
     | '/email/unsubscribe'
     | '/_authenticated/dashboard/brief'
     | '/_authenticated/dashboard/day'
@@ -615,6 +639,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/attendees'
     | '/_authenticated/_admin/admin/cohorts'
     | '/_authenticated/_admin/admin/media'
+    | '/_authenticated/_admin/admin/members'
     | '/_authenticated/_admin/admin/registrations'
     | '/_authenticated/_admin/admin/review'
     | '/_authenticated/_admin/admin/site'
@@ -749,6 +774,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/welcome': {
+      id: '/_authenticated/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof AuthenticatedWelcomeRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
@@ -918,6 +950,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminRegistrationsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/_admin/admin/members': {
+      id: '/_authenticated/_admin/admin/members'
+      path: '/admin/members'
+      fullPath: '/admin/members'
+      preLoaderRoute: typeof AuthenticatedAdminAdminMembersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/_admin/admin/media': {
       id: '/_authenticated/_admin/admin/media'
       path: '/admin/media'
@@ -1048,6 +1087,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAdminAttendeesRoute: typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   AuthenticatedAdminAdminCohortsRoute: typeof AuthenticatedAdminAdminCohortsRouteWithChildren
   AuthenticatedAdminAdminMediaRoute: typeof AuthenticatedAdminAdminMediaRoute
+  AuthenticatedAdminAdminMembersRoute: typeof AuthenticatedAdminAdminMembersRoute
   AuthenticatedAdminAdminRegistrationsRoute: typeof AuthenticatedAdminAdminRegistrationsRoute
   AuthenticatedAdminAdminReviewRoute: typeof AuthenticatedAdminAdminReviewRoute
   AuthenticatedAdminAdminSiteRoute: typeof AuthenticatedAdminAdminSiteRoute
@@ -1065,6 +1105,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAdminCohortsRoute:
     AuthenticatedAdminAdminCohortsRouteWithChildren,
   AuthenticatedAdminAdminMediaRoute: AuthenticatedAdminAdminMediaRoute,
+  AuthenticatedAdminAdminMembersRoute: AuthenticatedAdminAdminMembersRoute,
   AuthenticatedAdminAdminRegistrationsRoute:
     AuthenticatedAdminAdminRegistrationsRoute,
   AuthenticatedAdminAdminReviewRoute: AuthenticatedAdminAdminReviewRoute,
@@ -1138,11 +1179,13 @@ const AuthenticatedDashboardRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
+  AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
+  AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

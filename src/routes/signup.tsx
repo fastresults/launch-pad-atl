@@ -14,7 +14,7 @@ export const Route = createFileRoute("/signup")({
 });
 
 function SignupPage() {
-  const { isAuthenticated, isAdmin, loading } = useAuth();
+  const { isAuthenticated, isAdmin, isApprovedMember, loading } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -25,9 +25,10 @@ function SignupPage() {
   useEffect(() => {
     if (loading) return;
     if (isAuthenticated) {
-      navigate({ to: isAdmin ? "/admin" : "/dashboard", replace: true });
+      const to = isAdmin ? "/admin" : isApprovedMember ? "/dashboard" : "/welcome";
+      navigate({ to, replace: true });
     }
-  }, [isAuthenticated, isAdmin, loading, navigate]);
+  }, [isAuthenticated, isAdmin, isApprovedMember, loading, navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

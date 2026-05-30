@@ -3,16 +3,19 @@ import type { Session, User } from "@supabase/supabase-js";
 import { useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { getMyRoles, type AppRole } from "@/lib/auth.functions";
+import { getMyAccount, type AppRole, type MemberStatus } from "@/lib/auth.functions";
 
 type AuthState = {
   user: User | null;
   session: Session | null;
   roles: AppRole[];
+  memberStatus: MemberStatus;
+  approvedVia: "admin" | "payment" | null;
   loading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  isApprovedMember: boolean;
   signOut: () => Promise<void>;
 };
 
@@ -24,31 +27,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
+  const [memberStatus, setMemberStatus] = useState<MemberStatus>("pending");
+  const [approvedVia, setApprovedVia] = useState<"admin" | "payment" | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
 
-    const loadRoles = async (u: User | null) => {
+    const loadAccount = async (u: User | null) => {
       if (!u) {
-        if (active) setRoles([]);
+        if (active) {
+          setRoles([]);
+          setMemberStatus("pending");
+          setApprovedVia(null);
+        }
         return;
       }
       try {
-        const res = await getMyRoles();
-        if (active) setRoles(res.roles);
+        const res = await getMyAccount();
+        if (active) {
+          setRoles(res.roles);
+          setMemberStatus(res.memberStatus);
+          setApprovedVia(res.approvedVia);
+        }
       } catch (e) {
-        console.error("Failed to load roles", e);
-        if (active) setRoles([]);
+        console.error("Failed to load account", e);
+        if (active) {
+          setRoles([]);
+          setMemberStatus("pending");
+          setApprovedVia(null);
+        }
       }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
-      // Defer to avoid running inside the listener callback
       setTimeout(() => {
-        loadRoles(s?.user ?? null);
+        loadAccount(s?.user ?? null);
         router.invalidate();
         queryClient.invalidateQueries();
       }, 0);
@@ -58,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!active) return;
       setSession(data.session);
       setUser(data.session?.user ?? null);
-      loadRoles(data.session?.user ?? null).finally(() => {
+      loadAccount(data.session?.user ?? null).finally(() => {
         if (active) setLoading(false);
       });
     });
@@ -73,14 +89,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const isAdmin = roles.includes("admin") || roles.includes("super_admin");
+
   const value: AuthState = {
     user,
     session,
     roles,
+    memberStatus,
+    approvedVia,
     loading,
     isAuthenticated: !!user,
-    isAdmin: roles.includes("admin") || roles.includes("super_admin"),
+    isAdmin,
     isSuperAdmin: roles.includes("super_admin"),
+    isApprovedMember: isAdmin || memberStatus === "approved",
     signOut,
   };
 
