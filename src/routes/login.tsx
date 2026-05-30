@@ -22,7 +22,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const { isAuthenticated, isAdmin, loading } = useAuth();
+  const { isAuthenticated, isAdmin, isApprovedMember, loading } = useAuth();
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/login" });
   const [email, setEmail] = useState("");
@@ -32,9 +32,10 @@ function LoginPage() {
   useEffect(() => {
     if (loading) return;
     if (isAuthenticated) {
-      navigate({ to: redirect ?? (isAdmin ? "/admin" : "/dashboard"), replace: true });
+      const fallback = isAdmin ? "/admin" : isApprovedMember ? "/dashboard" : "/welcome";
+      navigate({ to: redirect ?? fallback, replace: true });
     }
-  }, [isAuthenticated, isAdmin, loading, navigate, redirect]);
+  }, [isAuthenticated, isAdmin, isApprovedMember, loading, navigate, redirect]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
