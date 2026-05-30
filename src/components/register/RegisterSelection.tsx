@@ -37,7 +37,7 @@ const FormSchema = z.object({
     .optional()
     .or(z.literal("")),
   can_attend: z.literal(true, {
-    errorMap: () => ({ message: "You must be able to attend on July 23, 2026" }),
+    message: "You must be able to attend on July 23, 2026",
   }),
   referral_source: z.string().trim().max(120).optional().or(z.literal("")),
 });

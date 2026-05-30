@@ -23,14 +23,24 @@ const DEFAULTS: SiteSettings = {
 export const getPublicSiteSettings = createServerFn({ method: "GET" }).handler(
   async (): Promise<SiteSettings> => {
     try {
-      const { data, error } = await supabaseAdmin
+      // site_settings is new; types may not include it yet — cast to bypass typed table list.
+      const { data, error } = await (supabaseAdmin as unknown as {
+        from: (t: string) => {
+          select: (cols: string) => {
+            in: (col: string, vals: string[]) => Promise<{
+              data: Array<{ key: string; value: unknown; updated_at: string }> | null;
+              error: unknown;
+            }>;
+          };
+        };
+      })
         .from("site_settings")
         .select("key, value, updated_at")
         .in("key", ["home_variant", "register_variant"]);
       if (error || !data) return DEFAULTS;
       const out: SiteSettings = { ...DEFAULTS, updated: { home_variant: null, register_variant: null } };
-      for (const row of data as Array<{ key: string; value: unknown; updated_at: string }>) {
-        const v = row.value === "selection" ? "selection" : "original";
+      for (const row of data) {
+        const v: SiteVariant = row.value === "selection" ? "selection" : "original";
         if (row.key === "home_variant") {
           out.home_variant = v;
           out.updated.home_variant = row.updated_at;
@@ -63,7 +73,11 @@ export const updateSiteSetting = createServerFn({ method: "POST" })
     const isSuper = (roles ?? []).some((r: { role: string }) => r.role === "super_admin");
     if (!isSuper) throw new Error("Forbidden: super admin only.");
 
-    const { error } = await supabaseAdmin
+    const { error } = await (supabaseAdmin as unknown as {
+      from: (t: string) => {
+        upsert: (row: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+      };
+    })
       .from("site_settings")
       .upsert(
         {
