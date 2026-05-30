@@ -394,6 +394,51 @@ export type Database = {
         }
         Relationships: []
       }
+      attendee_founder_profile: {
+        Row: {
+          created_at: string
+          extracted: Json
+          extracted_at: string | null
+          id: string
+          linkedin_url: string | null
+          raw_text: string | null
+          right_person_reason: string | null
+          source: string | null
+          source_file_path: string | null
+          unfair_advantage: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          extracted?: Json
+          extracted_at?: string | null
+          id?: string
+          linkedin_url?: string | null
+          raw_text?: string | null
+          right_person_reason?: string | null
+          source?: string | null
+          source_file_path?: string | null
+          unfair_advantage?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          extracted?: Json
+          extracted_at?: string | null
+          id?: string
+          linkedin_url?: string | null
+          raw_text?: string | null
+          right_person_reason?: string | null
+          source?: string | null
+          source_file_path?: string | null
+          unfair_advantage?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       attendee_goals: {
         Row: {
           created_at: string
@@ -425,6 +470,45 @@ export type Database = {
           id?: string
           status?: string
           title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      attendee_market_profile: {
+        Row: {
+          archetype: string[]
+          channels: string[]
+          created_at: string
+          customer_type: string | null
+          geography: string | null
+          id: string
+          industry: string | null
+          market_note: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archetype?: string[]
+          channels?: string[]
+          created_at?: string
+          customer_type?: string | null
+          geography?: string | null
+          id?: string
+          industry?: string | null
+          market_note?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archetype?: string[]
+          channels?: string[]
+          created_at?: string
+          customer_type?: string | null
+          geography?: string | null
+          id?: string
+          industry?: string | null
+          market_note?: string | null
           updated_at?: string
           user_id?: string
         }

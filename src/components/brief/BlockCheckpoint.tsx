@@ -1,22 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { summarizeBriefBlock } from "@/lib/brief.functions";
 import type { BriefBlock } from "@/lib/brief-blocks";
 import { ChevronRight, Pencil, Sparkles } from "lucide-react";
+
+type SummaryResult = { summary: string; bullets: string[]; cached?: boolean };
 
 type Props = {
   block: BriefBlock;
   blockIndex: number; // 1-based
   totalBlocks: number;
+  summarize: () => Promise<SummaryResult>;
+  cacheKey: ReadonlyArray<unknown>;
   onContinue: () => void;
   onEdit: () => void;
+  editLabel?: string;
 };
 
-export function BlockCheckpoint({ block, blockIndex, totalBlocks, onContinue, onEdit }: Props) {
-  const summarize = useServerFn(summarizeBriefBlock);
+export function BlockCheckpoint({
+  block,
+  blockIndex,
+  totalBlocks,
+  summarize,
+  cacheKey,
+  onContinue,
+  onEdit,
+  editLabel = "Edit my answers",
+}: Props) {
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
-    queryKey: ["brief", "summary", block.id],
-    queryFn: () => summarize({ data: { block: block.id as 1 | 2 | 3 } }),
+    queryKey: ["brief", "summary", ...cacheKey],
+    queryFn: () => summarize(),
     staleTime: 1000 * 60 * 10,
     retry: 1,
   });
@@ -43,11 +54,6 @@ export function BlockCheckpoint({ block, blockIndex, totalBlocks, onContinue, on
             <div className="h-4 bg-muted/40 rounded animate-pulse w-11/12" />
             <div className="h-4 bg-muted/40 rounded animate-pulse w-10/12" />
             <div className="h-4 bg-muted/40 rounded animate-pulse w-9/12" />
-            <div className="mt-6 space-y-2">
-              <div className="h-3 bg-muted/40 rounded animate-pulse w-3/4" />
-              <div className="h-3 bg-muted/40 rounded animate-pulse w-2/3" />
-              <div className="h-3 bg-muted/40 rounded animate-pulse w-3/5" />
-            </div>
           </div>
         ) : isError ? (
           <div className="space-y-3">
@@ -55,18 +61,11 @@ export function BlockCheckpoint({ block, blockIndex, totalBlocks, onContinue, on
               We couldn't generate a recap, but your answers are saved.
               {error instanceof Error ? ` (${error.message})` : ""}
             </p>
-            <button
-              onClick={() => refetch()}
-              className="text-sm text-primary hover:underline"
-            >
-              Try again
-            </button>
+            <button onClick={() => refetch()} className="text-sm text-primary hover:underline">Try again</button>
           </div>
         ) : data ? (
           <div className="space-y-5">
-            <p className="text-base leading-relaxed text-foreground whitespace-pre-wrap">
-              {data.summary}
-            </p>
+            <p className="text-base leading-relaxed text-foreground whitespace-pre-wrap">{data.summary}</p>
             {data.bullets?.length ? (
               <ul className="space-y-2 pl-1">
                 {data.bullets.map((b, i) => (
@@ -86,7 +85,7 @@ export function BlockCheckpoint({ block, blockIndex, totalBlocks, onContinue, on
           onClick={onEdit}
           className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground min-h-[44px]"
         >
-          <Pencil className="h-4 w-4" /> Edit my answers
+          <Pencil className="h-4 w-4" /> {editLabel}
         </button>
         <button
           onClick={onContinue}
