@@ -33,6 +33,7 @@ import { Route as AuthenticatedDashboardDeliverablesRouteImport } from './routes
 import { Route as AuthenticatedDashboardDayRouteImport } from './routes/_authenticated/dashboard.day'
 import { Route as AuthenticatedDashboardBriefRouteImport } from './routes/_authenticated/dashboard.brief'
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicHooksPublishDueDeliverablesRouteImport } from './routes/api/public/hooks/publish-due-deliverables'
 import { Route as AuthenticatedDashboardWorkflowKeyRouteImport } from './routes/_authenticated/dashboard.workflow.$key'
 import { Route as AuthenticatedAdminAdminUsersRouteImport } from './routes/_authenticated/_admin/admin.users'
@@ -180,6 +181,12 @@ const AuthenticatedAdminAdminIndexRoute =
     path: '/admin/',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksPublishDueDeliverablesRoute =
   ApiPublicHooksPublishDueDeliverablesRouteImport.update({
     id: '/api/public/hooks/publish-due-deliverables',
@@ -308,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
@@ -347,6 +355,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
@@ -390,6 +399,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/_authenticated/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/_authenticated/_admin/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/_authenticated/_admin/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
@@ -432,6 +442,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
+    | '/lovable/email/queue/process'
     | '/admin/'
     | '/admin/applications/$id'
     | '/admin/cohorts/test'
@@ -471,6 +482,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
+    | '/lovable/email/queue/process'
     | '/admin'
     | '/admin/applications/$id'
     | '/admin/cohorts/test'
@@ -513,6 +525,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/users'
     | '/_authenticated/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
+    | '/lovable/email/queue/process'
     | '/_authenticated/_admin/admin/'
     | '/_authenticated/_admin/admin/applications/$id'
     | '/_authenticated/_admin/admin/cohorts/test'
@@ -535,6 +548,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
   ApiPublicHooksPublishDueDeliverablesRoute: typeof ApiPublicHooksPublishDueDeliverablesRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -706,6 +720,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/publish-due-deliverables': {
       id: '/api/public/hooks/publish-due-deliverables'
@@ -973,6 +994,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ApiPublicHooksPublishDueDeliverablesRoute:
     ApiPublicHooksPublishDueDeliverablesRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
