@@ -16,6 +16,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as FacilitatorRouteImport } from './routes/facilitator'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -80,6 +81,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FacilitatorRoute = FacilitatorRouteImport.update({
+  id: '/facilitator',
+  path: '/facilitator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -259,6 +265,7 @@ const AuthenticatedAdminAdminAttendeesUserIdDeliverablesKeyRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/facilitator': typeof FacilitatorRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
@@ -296,6 +303,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/facilitator': typeof FacilitatorRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
@@ -334,6 +342,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/facilitator': typeof FacilitatorRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
@@ -374,6 +383,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/facilitator'
     | '/login'
     | '/privacy'
     | '/register'
@@ -411,6 +421,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/facilitator'
     | '/login'
     | '/privacy'
     | '/register'
@@ -448,6 +459,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/facilitator'
     | '/login'
     | '/privacy'
     | '/register'
@@ -488,6 +500,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  FacilitatorRoute: typeof FacilitatorRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   RegisterRoute: typeof RegisterRoute
@@ -547,6 +560,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/facilitator': {
+      id: '/facilitator'
+      path: '/facilitator'
+      fullPath: '/facilitator'
+      preLoaderRoute: typeof FacilitatorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -897,6 +917,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  FacilitatorRoute: FacilitatorRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   RegisterRoute: RegisterRoute,

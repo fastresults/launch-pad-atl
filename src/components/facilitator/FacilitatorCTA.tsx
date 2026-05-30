@@ -1,0 +1,24 @@
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+
+export function FacilitatorCTA() {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: 0.6 }}
+      className="border-l-4 border-primary bg-card rounded-xl p-10"
+    >
+      <h2 className="font-display font-bold text-[28px] text-card-foreground mb-3">
+        Ready to build in the AI era?
+      </h2>
+      <p className="font-body text-base leading-[1.8] text-muted-foreground mb-6">
+        Half-day and full-day workshops available for teams, conferences, and private cohorts. Every session is tailored, practitioner-led, and built to produce immediate, applicable results.
+      </p>
+      <Button asChild size="lg">
+        <a href="mailto:adam@madebyopen.com">Book a Workshop →</a>
+      </Button>
+    </motion.section>
+  );
+}
