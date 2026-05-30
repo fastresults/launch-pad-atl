@@ -1,46 +1,48 @@
 ## Problem
 
-The `/facilitator` page is the only page on the site running a custom typography system:
+`/register` crashes with React error #300 ("rendered fewer hooks than expected"). The page shows the generic "This page didn't load" error boundary.
 
-- `src/routes/facilitator.tsx` injects an inline `<style>` block defining `.font-display` → **Playfair Display (serif)** and `.font-body` → **DM Sans**, and sets `fontFamily: "DM Sans"` inline on `<main>`.
-- Every facilitator component (`FacilitatorHero`, `FacilitatorStory`, `FacilitatorPillars`, `FacilitatorTimeline`, `FacilitatorStats`, `FacilitatorAudience`, `FacilitatorCTA`) uses `font-display` for headings and `font-body` for body.
+## Root cause
 
-No other page (home, schedule, register, login, signup, privacy, terms) uses these classes or fonts. The rest of the site uses the default Tailwind sans stack (system-ui / inherited from `body`) with weight utilities like `font-semibold`, `font-bold`, etc. That's why the facilitator page reads as a different brand — it's literally a different typeface family.
+`src/routes/register.tsx` → `RegisterPage` calls `useQuery` for site settings, then does an **early return** based on the result:
+
+```tsx
+const { data: siteSettings } = useQuery({ queryKey: ["site-settings"], ... });
+if (siteSettings?.register_variant === "selection") return <RegisterSelection />;
+
+const [submitted, setSubmitted] = useState(false);
+// ...many more useState / useQuery / useForm / useEffect hooks
+```
+
+On the first render `siteSettings` is `undefined`, so all ~10 downstream hooks run. As soon as the query resolves and the variant is `"selection"`, the component returns early — hook count drops — React throws #300 and the route's `errorComponent` renders "This page didn't load". This is exactly what the screen recording shows (page hydrates, then immediately swaps to the error UI).
+
+The current admin config sets `register_variant = "selection"`, so this is the variant that should be showing — but the same bug would eventually fire for any user once settings hydrate to a non-default value.
 
 ## Fix
 
-Bring the facilitator page onto the exact same typography system as the rest of the site: default sans, no serif, no custom font-family overrides.
+Split the route component so all hooks live inside the variant they belong to, and no hooks run after a conditional return.
 
-### 1. `src/routes/facilitator.tsx`
+1. Rename the existing `RegisterPage` body (everything from `useState(submitted)` through the returned JSX) into a new internal component `RegisterDefault` in the same file. It owns all the form/cohort/availability hooks.
+2. Make `RegisterPage` a thin router:
+   ```tsx
+   function RegisterPage() {
+     const fetchSettings = useServerFn(getPublicSiteSettings);
+     const { data: siteSettings, isLoading } = useQuery({
+       queryKey: ["site-settings"],
+       queryFn: () => fetchSettings(),
+       staleTime: 60_000,
+     });
+     if (isLoading) return null; // or a lightweight skeleton inside SiteHeader/Footer shell
+     return siteSettings?.register_variant === "selection"
+       ? <RegisterSelection />
+       : <RegisterDefault />;
+   }
+   ```
+   No other hooks run in `RegisterPage`, so the early branch is safe.
+3. Leave `RegisterSelection.tsx` and `getPublicSiteSettings` untouched — the admin-driven AB switch keeps working as designed.
 
-- Remove the inline `<style>` block that defines `.font-display` and `.font-body`.
-- Remove the `font-body` class from `<main>`.
-- Remove the inline `style={{ fontFamily: '"DM Sans", ...' }}`; keep only `maxWidth: "860px"`.
+## Verification
 
-### 2. Facilitator components (7 files)
-
-In each file, do a surgical class swap — no layout, spacing, color, or copy changes:
-
-- `font-display` → remove the class (headings inherit the site sans font; weight is already set via `font-bold` / `font-black`).
-- `font-body` → remove the class (body text inherits site sans).
-- Leave all weight, size, tracking, leading, and color utilities untouched.
-
-Files touched:
-- `src/components/facilitator/FacilitatorHero.tsx`
-- `src/components/facilitator/FacilitatorStory.tsx` (includes the blockquote — drops serif, keeps italic + bold + border)
-- `src/components/facilitator/FacilitatorPillars.tsx`
-- `src/components/facilitator/FacilitatorTimeline.tsx`
-- `src/components/facilitator/FacilitatorStats.tsx`
-- `src/components/facilitator/FacilitatorAudience.tsx`
-- `src/components/facilitator/FacilitatorCTA.tsx`
-
-### 3. Out of scope
-
-- No copy changes.
-- No color, spacing, or layout changes.
-- No edits to other pages or to `src/styles.css`.
-- The Adam Anderson portrait, eyebrows, border-left treatment, stat numbers, and timeline structure all stay exactly as they are — only the typeface changes.
-
-## Result
-
-After the change, the facilitator headlines and body text render in the same default sans stack used by the home, schedule, and register pages. Visual hierarchy is preserved through the existing weight / size / tracking utilities, so the page still reads as editorial and structured — just in the site's actual brand voice instead of a foreign serif.
+- Load `/register` — should render the selection variant (current admin setting) without flashing the error boundary.
+- Toggle `register_variant` back to the default in admin → `/register` renders the full form variant.
+- Console: no more React #300 errors.
