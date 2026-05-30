@@ -332,8 +332,8 @@ function SuccessCard() {
       <h2 className="text-2xl font-semibold tracking-tight">You&rsquo;re in the running.</h2>
       <p className="mt-2 text-muted-foreground">
         We&rsquo;ve got it. Between now and{" "}
-        <span className="font-medium text-foreground">July 15, 2026</span>, Adam is reading every
-        application personally. On July 15 you&rsquo;ll get one of two emails — a seat for July 23,
+        <span className="font-medium text-foreground">July 8, 2026</span>, Adam is reading every
+        application personally. On July 8 you&rsquo;ll get one of two emails — a seat for July 23,
         or a {FINALIST_DISCOUNT_PCT}% Founder&rsquo;s Discount on the next Atlanta cohort. Either
         way, you&rsquo;ll hear from us.
       </p>
