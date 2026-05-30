@@ -1,12 +1,54 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { getAdminStats, listRegistrations } from "@/lib/admin.functions";
-import { listApplications } from "@/lib/applications-admin.functions";
+import {
+  listApplications,
+  updateApplication,
+  bulkUpdateApplications,
+  bulkDeleteApplications,
+} from "@/lib/applications-admin.functions";
 import { listMembers, approveMember } from "@/lib/members-admin.functions";
+import type { ApplicationStatus } from "@/lib/applications-admin.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+
+const STATUS_CHOICES: { value: ApplicationStatus; label: string }[] = [
+  { value: "applied", label: "Applied" },
+  { value: "reviewing", label: "Reviewing" },
+  { value: "shortlisted", label: "Shortlisted" },
+  { value: "selected", label: "Selected" },
+  { value: "waitlisted", label: "Waitlist" },
+  { value: "rejected", label: "Rejected" },
+  { value: "withdrawn", label: "Withdrawn" },
+];
 
 export const Route = createFileRoute("/_authenticated/_admin/admin/")({
   component: AdminDashboard,
