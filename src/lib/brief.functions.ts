@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { generateText, Output } from "ai";
+import { createHash } from "crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { BRIEF_BLOCKS, fieldLabel } from "@/lib/brief-blocks";
 
 const BRIEF_KEYS = [
   "one_line_pitch","origin_story","problem_statement","target_customer","unique_insight",
