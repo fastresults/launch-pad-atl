@@ -431,7 +431,7 @@ function BottomCTA() {
           <span className="text-gradient-brand">Yours starts with one form.</span>
         </h2>
         <p className="mt-4 text-base text-muted-foreground md:text-lg">
-          Twelve minutes to apply. Decision by July 15. Either a free seat on July 23 — or a{" "}
+          Twelve minutes to apply. Decision by July 8. Either a free seat on July 23 — or a{" "}
           {FINALIST_DISCOUNT_PCT}% Founder&rsquo;s Discount and a front-row seat to the launches.
           There is no version of this where applying costs you.
         </p>
