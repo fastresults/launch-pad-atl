@@ -19,7 +19,7 @@ export function FacilitatorTimeline() {
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: 0.4 }}
     >
-      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mb-6">
+      <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
         Career Milestones
       </p>
       <div className="relative pl-8">
@@ -28,11 +28,11 @@ export function FacilitatorTimeline() {
           {ITEMS.map((it) => (
             <li key={it.year} className="relative">
               <span className="absolute -left-8 top-1.5 h-[15px] w-[15px] rounded-full bg-primary" />
-              <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary mb-1">
+              <div className="text-xs uppercase tracking-[0.18em] text-primary mb-1">
                 {it.year}
               </div>
-              <h3 className="text-xl font-semibold tracking-tight text-foreground mb-1.5">{it.title}</h3>
-              <p className="text-base leading-[1.8] text-muted-foreground">{it.desc}</p>
+              <h3 className="text-xl font-semibold leading-tight tracking-tight text-foreground mb-1.5 md:text-3xl">{it.title}</h3>
+              <p className="text-base text-muted-foreground md:text-lg">{it.desc}</p>
             </li>
           ))}
         </ul>

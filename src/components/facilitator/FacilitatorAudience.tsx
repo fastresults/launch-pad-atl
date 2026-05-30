@@ -16,14 +16,14 @@ export function FacilitatorAudience() {
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: 0.5 }}
     >
-      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mb-6">
+      <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
         These workshops are built for
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {ITEMS.map(({ icon: Icon, title, desc }) => (
           <div key={title} className="rounded-xl border border-border bg-card p-6">
             <Icon className="text-primary mb-3" size={22} />
-            <h3 className="text-lg font-semibold tracking-tight text-card-foreground mb-2">{title}</h3>
+            <h3 className="text-lg font-semibold capitalize tracking-tight text-card-foreground mb-2">{title}</h3>
             <p className="text-sm leading-[1.7] text-muted-foreground">{desc}</p>
           </div>
         ))}
