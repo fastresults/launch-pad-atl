@@ -1,16 +1,33 @@
-## Proposed Copy Change
+# Add the startup-ideas slider to the free-cohort homepage
 
-Update the **Frontier** paragraph in `src/components/facilitator/FacilitatorStory.tsx` so it reads as platforms Anderson is actively developing and will launch in 2026 — not already live and in-market.
+## Problem
 
-### Current copy (line 26)
-> **Frontier.** Today Adam is Founder & CEO of Ampfli (askeve.io), an AI-powered content intelligence platform, and is building the Institute of AI Professionals (theiaip.com) — a global standards body for AI practitioners with founding chapters across five world regions. He ships SaaS on the bleeding edge — composing frontier LLMs, agentic frameworks, AI-native code generation, vector databases, and serverless edge infrastructure — and walks workshop audiences through the same live toolchain he uses in production each day.
+The main homepage (`src/routes/index.tsx`) renders a `TheArtOfThePossible` section — the slider/grid of startup concepts driven by `BUSINESS_IDEAS` + `BUSINESS_CATEGORIES`. The free-cohort variant (`src/components/home/HomeSelection.tsx`, shown when `home_variant === "selection"`) is missing that section entirely.
 
-### Proposed copy
-> **Frontier.** In 2025, Adam is developing Ampfli (askeve.io), an AI-powered content intelligence platform, and the Institute of AI Professionals (theiaip.com) — a global standards body for AI practitioners with founding chapters across five world regions. Both platforms are scheduled for release in 2026. He builds on the bleeding edge — composing frontier LLMs, agentic frameworks, AI-native code generation, vector databases, and serverless edge infrastructure — and walks workshop audiences through the same live toolchain he uses in production each day.
+Right now `TheArtOfThePossible` is defined as a local function inside `index.tsx` (line 777), so it cannot be reused from `HomeSelection`.
 
-### What changes
-- Removes "Founder & CEO of" and "is building" framing that implies live products.
-- Adds explicit "developing" and "scheduled for release in 2026" language.
-- Keeps links, the "bleeding edge" description, and the workshop/live-toolchain line intact.
+## Plan
 
-Approve to apply.
+1. **Extract the component** into a shared file: `src/components/home/ArtOfThePossible.tsx`.
+   - Move the `TheArtOfThePossible` function and any tiny local helpers it uses (category pills, idea card, etc.) out of `index.tsx`.
+   - Export it as a named component: `export function ArtOfThePossible()`.
+   - Keep all existing copy, styling, filtering behavior, and `BUSINESS_IDEAS` / `BUSINESS_CATEGORIES` imports intact — no visual or behavioral changes.
+
+2. **Update `src/routes/index.tsx`** to import and render `<ArtOfThePossible />` in the same slot where `<TheArtOfThePossible />` is rendered today (line 54). Remove the now-duplicate local definition.
+
+3. **Add the section to `src/components/home/HomeSelection.tsx`** so the free-cohort homepage shows the same slider. Insertion point: between `WhatYouWalkOut` and `WhoWereLookingFor` — after founders see what they'll walk out with, they get inspiration for the kind of startup they could pitch in their application.
+   ```
+   <WhatYouWalkOut />
+   <ArtOfThePossible />   ← new
+   <WhoWereLookingFor />
+   ```
+
+4. **Verify** by loading both variants in preview:
+   - Default homepage: section still renders unchanged.
+   - Free-cohort homepage (`home_variant = "selection"`): slider now appears in the new slot.
+
+## Out of scope
+
+- No copy edits to the slider itself.
+- No changes to `BUSINESS_IDEAS` data.
+- No changes to other sections on either homepage.
