@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   ClipboardList,
+  FileText,
   Users,
   Inbox,
   CalendarRange,
@@ -17,13 +18,14 @@ export type AdminNavItem = {
   icon: LucideIcon;
   group: "Overview" | "Operations" | "Content" | "System";
   super?: boolean;
-  badgeKey?: "reviewPending";
+  badgeKey?: "reviewPending" | "applicationsPending";
   external?: boolean;
 };
 
 export const ADMIN_NAV: AdminNavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, group: "Overview" },
 
+  { to: "/admin/applications", label: "Applications", icon: FileText, group: "Operations", badgeKey: "applicationsPending" },
   { to: "/admin/registrations", label: "Registrations", icon: ClipboardList, group: "Operations" },
   { to: "/admin/attendees", label: "Attendees", icon: Users, group: "Operations" },
   { to: "/admin/review", label: "Review queue", icon: Inbox, group: "Operations", super: true, badgeKey: "reviewPending" },

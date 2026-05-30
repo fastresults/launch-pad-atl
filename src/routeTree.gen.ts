@@ -42,7 +42,9 @@ import { Route as AuthenticatedAdminAdminRegistrationsRouteImport } from './rout
 import { Route as AuthenticatedAdminAdminMediaRouteImport } from './routes/_authenticated/_admin/admin.media'
 import { Route as AuthenticatedAdminAdminCohortsRouteImport } from './routes/_authenticated/_admin/admin.cohorts'
 import { Route as AuthenticatedAdminAdminAttendeesRouteImport } from './routes/_authenticated/_admin/admin.attendees'
+import { Route as AuthenticatedAdminAdminApplicationsIndexRouteImport } from './routes/_authenticated/_admin/admin.applications.index'
 import { Route as AuthenticatedAdminAdminCohortsTestRouteImport } from './routes/_authenticated/_admin/admin.cohorts.test'
+import { Route as AuthenticatedAdminAdminApplicationsIdRouteImport } from './routes/_authenticated/_admin/admin.applications.$id'
 import { Route as AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.index'
 import { Route as AuthenticatedAdminAdminAttendeesUserIdWorkflowRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.workflow'
 import { Route as AuthenticatedAdminAdminAttendeesUserIdMediaRouteImport } from './routes/_authenticated/_admin/admin.attendees.$userId.media'
@@ -232,11 +234,23 @@ const AuthenticatedAdminAdminAttendeesRoute =
     path: '/admin/attendees',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAdminApplicationsIndexRoute =
+  AuthenticatedAdminAdminApplicationsIndexRouteImport.update({
+    id: '/admin/applications/',
+    path: '/admin/applications/',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAdminCohortsTestRoute =
   AuthenticatedAdminAdminCohortsTestRouteImport.update({
     id: '/test',
     path: '/test',
     getParentRoute: () => AuthenticatedAdminAdminCohortsRoute,
+  } as any)
+const AuthenticatedAdminAdminApplicationsIdRoute =
+  AuthenticatedAdminAdminApplicationsIdRouteImport.update({
+    id: '/admin/applications/$id',
+    path: '/admin/applications/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminAdminAttendeesUserIdIndexRoute =
   AuthenticatedAdminAdminAttendeesUserIdIndexRouteImport.update({
@@ -295,7 +309,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
+  '/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
+  '/admin/applications/': typeof AuthenticatedAdminAdminApplicationsIndexRoute
   '/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
   '/admin/attendees/$userId/workflow': typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute
   '/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
@@ -332,7 +348,9 @@ export interface FileRoutesByTo {
   '/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
+  '/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
+  '/admin/applications': typeof AuthenticatedAdminAdminApplicationsIndexRoute
   '/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
   '/admin/attendees/$userId/workflow': typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute
   '/admin/attendees/$userId': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
@@ -373,7 +391,9 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
+  '/_authenticated/_admin/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/_authenticated/_admin/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
+  '/_authenticated/_admin/admin/applications/': typeof AuthenticatedAdminAdminApplicationsIndexRoute
   '/_authenticated/_admin/admin/attendees/$userId/media': typeof AuthenticatedAdminAdminAttendeesUserIdMediaRoute
   '/_authenticated/_admin/admin/attendees/$userId/workflow': typeof AuthenticatedAdminAdminAttendeesUserIdWorkflowRoute
   '/_authenticated/_admin/admin/attendees/$userId/': typeof AuthenticatedAdminAdminAttendeesUserIdIndexRoute
@@ -413,7 +433,9 @@ export interface FileRouteTypes {
     | '/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
     | '/admin/'
+    | '/admin/applications/$id'
     | '/admin/cohorts/test'
+    | '/admin/applications/'
     | '/admin/attendees/$userId/media'
     | '/admin/attendees/$userId/workflow'
     | '/admin/attendees/$userId/'
@@ -450,7 +472,9 @@ export interface FileRouteTypes {
     | '/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
     | '/admin'
+    | '/admin/applications/$id'
     | '/admin/cohorts/test'
+    | '/admin/applications'
     | '/admin/attendees/$userId/media'
     | '/admin/attendees/$userId/workflow'
     | '/admin/attendees/$userId'
@@ -490,7 +514,9 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
     | '/_authenticated/_admin/admin/'
+    | '/_authenticated/_admin/admin/applications/$id'
     | '/_authenticated/_admin/admin/cohorts/test'
+    | '/_authenticated/_admin/admin/applications/'
     | '/_authenticated/_admin/admin/attendees/$userId/media'
     | '/_authenticated/_admin/admin/attendees/$userId/workflow'
     | '/_authenticated/_admin/admin/attendees/$userId/'
@@ -744,12 +770,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminAttendeesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/_admin/admin/applications/': {
+      id: '/_authenticated/_admin/admin/applications/'
+      path: '/admin/applications'
+      fullPath: '/admin/applications/'
+      preLoaderRoute: typeof AuthenticatedAdminAdminApplicationsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/_admin/admin/cohorts/test': {
       id: '/_authenticated/_admin/admin/cohorts/test'
       path: '/test'
       fullPath: '/admin/cohorts/test'
       preLoaderRoute: typeof AuthenticatedAdminAdminCohortsTestRouteImport
       parentRoute: typeof AuthenticatedAdminAdminCohortsRoute
+    }
+    '/_authenticated/_admin/admin/applications/$id': {
+      id: '/_authenticated/_admin/admin/applications/$id'
+      path: '/admin/applications/$id'
+      fullPath: '/admin/applications/$id'
+      preLoaderRoute: typeof AuthenticatedAdminAdminApplicationsIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/_admin/admin/attendees/$userId/': {
       id: '/_authenticated/_admin/admin/attendees/$userId/'
@@ -830,6 +870,8 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAdminSiteRoute: typeof AuthenticatedAdminAdminSiteRoute
   AuthenticatedAdminAdminUsersRoute: typeof AuthenticatedAdminAdminUsersRoute
   AuthenticatedAdminAdminIndexRoute: typeof AuthenticatedAdminAdminIndexRoute
+  AuthenticatedAdminAdminApplicationsIdRoute: typeof AuthenticatedAdminAdminApplicationsIdRoute
+  AuthenticatedAdminAdminApplicationsIndexRoute: typeof AuthenticatedAdminAdminApplicationsIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
@@ -844,6 +886,10 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAdminSiteRoute: AuthenticatedAdminAdminSiteRoute,
   AuthenticatedAdminAdminUsersRoute: AuthenticatedAdminAdminUsersRoute,
   AuthenticatedAdminAdminIndexRoute: AuthenticatedAdminAdminIndexRoute,
+  AuthenticatedAdminAdminApplicationsIdRoute:
+    AuthenticatedAdminAdminApplicationsIdRoute,
+  AuthenticatedAdminAdminApplicationsIndexRoute:
+    AuthenticatedAdminAdminApplicationsIndexRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
@@ -931,13 +977,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -2,8 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-// Cohort id for the inaugural Atlanta selection workshop (July 23, 2026).
-// Reuses the existing cohorts row with date 2026-07-23.
 const SELECTION_COHORT_ID = "2026-07-15";
 
 const ApplicationSchema = z.object({
@@ -23,23 +21,20 @@ const ApplicationSchema = z.object({
 export const submitFounderApplication = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => ApplicationSchema.parse(i))
   .handler(async ({ data }) => {
-    const combined =
-      `ABOUT THE FOUNDER:\n${data.about_you}\n\n` +
-      `ABOUT THE STARTUP:\n${data.about_startup}\n\n` +
-      `WHY THIS, WHY NOW:\n${data.why_now}` +
-      (data.linkedin_url ? `\n\nLINKEDIN: ${data.linkedin_url}` : "");
-
     const { data: inserted, error } = await supabaseAdmin
-      .from("workshop_registrations")
+      .from("founder_applications")
       .insert({
         name: data.name,
         email: data.email,
         phone: data.phone || null,
-        business_idea: combined,
+        linkedin_url: data.linkedin_url || null,
+        about_you: data.about_you,
+        about_startup: data.about_startup,
+        why_now: data.why_now,
         industry: data.industry,
         stage: data.stage,
         referral_source: data.referral_source || null,
-        tier_interest: "selection",
+        can_attend: data.can_attend,
         cohort_id: SELECTION_COHORT_ID,
         status: "applied",
       })
@@ -50,5 +45,9 @@ export const submitFounderApplication = createServerFn({ method: "POST" })
       console.error("[applications] insert failed", error);
       throw new Error("Could not save your application. Please try again.");
     }
+
+    // TODO: enqueue application-received confirmation email once email
+    // infrastructure is set up (see plan step 7).
+
     return { ok: true as const, id: (inserted as { id: string }).id };
   });
