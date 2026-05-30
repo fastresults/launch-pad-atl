@@ -59,7 +59,7 @@ function Hero() {
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
           We&rsquo;re new to Atlanta — and we&rsquo;re betting on six of you to prove what one
-          honest day can do. Apply by <span className="font-medium text-white">July 8</span>. Six
+          honest day can do. Apply by <span className="font-medium text-white">June 20</span>. Six
           founders get a free seat at the IGNITE Center on{" "}
           <span className="font-medium text-white">July 23, 2026</span> — tuition, materials, and
           lunch covered. Every other applicant gets a{" "}
@@ -67,7 +67,7 @@ function Hero() {
           cohort, sent the same day we announce the six.
         </p>
         <p className="mt-4 max-w-2xl text-sm text-white/85 md:text-base">
-          Decisions emailed <span className="font-medium text-white">July 15</span>. There is no
+          Decisions emailed <span className="font-medium text-white">July 8</span>. There is no
           version of this where applying costs you something.
         </p>
 
