@@ -18,7 +18,7 @@ export function FacilitatorPillars() {
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: 0.3 }}
     >
-      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mb-4">
+      <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
         What he brings to the room
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
