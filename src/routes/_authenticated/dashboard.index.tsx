@@ -44,6 +44,8 @@ function TodayPage() {
   const total = items.length;
   const firstName = (brief.data?.brief?.one_line_pitch || "").split(" ")[0] || null;
 
+  const pitch = brief.data?.brief?.one_line_pitch ?? null;
+
   return (
     <div className="space-y-8">
       {state.mode === "before" && (
@@ -52,6 +54,7 @@ function TodayPage() {
           briefScore={briefScore}
           briefTotal={briefTotal}
           firstName={firstName}
+          pitch={pitch}
         />
       )}
       {state.mode === "during" && (
@@ -61,7 +64,7 @@ function TodayPage() {
         <AfterMode state={state} generated={generated} total={total} briefReady={briefReady} filingReady={filingReady} />
       )}
       {state.mode === "none" && (
-        <NoCohortMode briefScore={briefScore} briefTotal={briefTotal} />
+        <NoCohortMode briefScore={briefScore} briefTotal={briefTotal} pitch={pitch} />
       )}
     </div>
   );
