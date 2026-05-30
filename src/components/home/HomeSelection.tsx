@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { ValueGrid } from "@/components/value/ValueGrid";
+import { ArtOfThePossible } from "@/components/home/ArtOfThePossible";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroBg from "@/assets/hero-bg.png";
 import {
