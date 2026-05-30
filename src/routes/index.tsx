@@ -1,13 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { FLOW_STAGES } from "@/lib/schedule-data";
 import { useEvent } from "@/lib/use-event";
-import { BUSINESS_IDEAS, BUSINESS_CATEGORIES, type BusinessCategory, type BusinessIdea } from "@/lib/business-ideas";
-import { MapPin, Calendar, Users, ArrowRight, Award, FileCheck2, Target, Globe2, Rocket, X, Check, Clock, Laptop, Store, Wrench, ChefHat, Sun, Home as HomeIcon, Sparkles, DollarSign, UserPlus, Zap, Hammer, Timer, AlertTriangle } from "lucide-react";
+import { MapPin, Calendar, Users, ArrowRight, Award, Check, Clock, X, Hammer, Timer, AlertTriangle } from "lucide-react";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroBg from "@/assets/hero-bg.png";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
