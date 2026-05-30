@@ -9,6 +9,7 @@ import { getMyCohort } from "@/lib/cohort.functions";
 import { getWorkshopMode, formatMinutesLeft, FRIENDLY_STAGE, type WorkshopState } from "@/lib/workshop-mode";
 import { ProgressRing } from "@/components/dashboard/ProgressRing";
 import { NextActionCard } from "@/components/dashboard/NextActionCard";
+import { BriefCompleteCard } from "@/components/brief/BriefCompleteCard";
 import { Calendar, MapPin, Coffee, Sparkles, CheckCircle2, Hand } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/")({
@@ -43,6 +44,8 @@ function TodayPage() {
   const total = items.length;
   const firstName = (brief.data?.brief?.one_line_pitch || "").split(" ")[0] || null;
 
+  const pitch = brief.data?.brief?.one_line_pitch ?? null;
+
   return (
     <div className="space-y-8">
       {state.mode === "before" && (
@@ -51,6 +54,7 @@ function TodayPage() {
           briefScore={briefScore}
           briefTotal={briefTotal}
           firstName={firstName}
+          pitch={pitch}
         />
       )}
       {state.mode === "during" && (
@@ -60,7 +64,7 @@ function TodayPage() {
         <AfterMode state={state} generated={generated} total={total} briefReady={briefReady} filingReady={filingReady} />
       )}
       {state.mode === "none" && (
-        <NoCohortMode briefScore={briefScore} briefTotal={briefTotal} />
+        <NoCohortMode briefScore={briefScore} briefTotal={briefTotal} pitch={pitch} />
       )}
     </div>
   );
@@ -73,11 +77,13 @@ function BeforeMode({
   briefScore,
   briefTotal,
   firstName,
+  pitch,
 }: {
   state: WorkshopState;
   briefScore: number;
   briefTotal: number;
   firstName: string | null;
+  pitch: string | null;
 }) {
   const cohort = state.cohort!;
   const briefDone = briefScore >= briefTotal;
@@ -130,17 +136,15 @@ function BeforeMode({
 
       {/* The one next thing */}
       {briefDone ? (
-        <NextActionCard
-          eyebrow="You're ready"
-          title="You're all set for workshop day."
-          description="Your AI assistant has everything it needs. You can review your answers any time, or just show up Saturday."
-          primary={{ to: "/dashboard/brief", label: "Review my answers" }}
+        <BriefCompleteCard
+          pitch={pitch}
           secondary={{ to: "/dashboard/day", label: "What to bring →" }}
+          footnote="You're all set for Saturday. Just show up."
         />
       ) : (
         <NextActionCard
           eyebrow="Pre-work"
-          title="Answer 10 quick questions about your startup."
+          title={briefScore === 0 ? "Answer 10 quick questions about your startup." : "Pick up where you left off."}
           description={
             <>
               You can talk instead of type. Your AI assistant uses these answers all day Saturday to build your 25 deliverables.
@@ -352,19 +356,30 @@ function AfterMode({
 
 // ============ Fallback — no cohort assigned ============
 
-function NoCohortMode({ briefScore, briefTotal }: { briefScore: number; briefTotal: number }) {
+function NoCohortMode({ briefScore, briefTotal, pitch }: { briefScore: number; briefTotal: number; pitch: string | null }) {
+  const done = briefScore >= briefTotal;
   return (
     <>
       <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Welcome</h1>
       <p className="mt-2 text-muted-foreground">
-        We haven't matched you to a workshop date yet. While you wait, start your brief.
+        {done
+          ? "Your brief is locked in. We'll email you the moment your workshop date is set."
+          : "We haven't matched you to a workshop date yet. While you wait, start your brief."}
       </p>
-      <NextActionCard
-        eyebrow="Start here"
-        title="Answer 10 quick questions about your startup."
-        description={`You're ${briefScore} of ${briefTotal} done.`}
-        primary={{ to: "/dashboard/brief", label: briefScore === 0 ? "Start" : "Keep going" }}
-      />
+      {done ? (
+        <BriefCompleteCard
+          pitch={pitch}
+          secondary={{ to: "/dashboard/workflow", label: "Browse the 25 deliverables →" }}
+          footnote="No workshop date yet — we'll be in touch soon."
+        />
+      ) : (
+        <NextActionCard
+          eyebrow="Start here"
+          title={briefScore === 0 ? "Answer 10 quick questions about your startup." : "Pick up where you left off."}
+          description={`You're ${briefScore} of ${briefTotal} done.`}
+          primary={{ to: "/dashboard/brief", label: briefScore === 0 ? "Start" : "Keep going" }}
+        />
+      )}
     </>
   );
 }

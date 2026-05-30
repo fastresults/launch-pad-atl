@@ -14,34 +14,51 @@ import {
 } from "@/lib/brief-blocks";
 import { VoiceField } from "@/components/voice/VoiceField";
 import { BlockCheckpoint } from "@/components/brief/BlockCheckpoint";
+import { BriefReview } from "@/components/brief/BriefReview";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const briefSearchSchema = z.object({
+  review: z.coerce.number().optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/dashboard/brief")({
   component: BriefWizard,
+  validateSearch: briefSearchSchema,
   head: () => ({ meta: [{ title: "My startup — Startup Labs" }] }),
 });
 
-type Mode = "question" | "checkpoint";
+type Mode = "question" | "checkpoint" | "review";
 
 function BriefWizard() {
   const getFn = useServerFn(getMyBrief);
   const saveFn = useServerFn(updateBriefField);
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const { data, refetch } = useQuery({ queryKey: ["my", "brief"], queryFn: () => getFn() });
   const [values, setValues] = useState<Record<string, string>>({});
   const [idx, setIdx] = useState(0);
   const [mode, setMode] = useState<Mode>("question");
   const [checkpointBlock, setCheckpointBlock] = useState<BriefBlock | null>(null);
+  const [initialized, setInitialized] = useState(false);
+  const [editingFromReview, setEditingFromReview] = useState(false);
 
   useEffect(() => {
     if (!data?.brief) return;
     const init: Record<string, string> = {};
     for (const f of BRIEF_FIELDS) init[f.key] = (data.brief[f.key as keyof typeof data.brief] as string) ?? "";
     setValues(init);
+    if (initialized) return;
     const firstEmpty = BRIEF_FIELDS.findIndex((f) => !init[f.key]);
-    if (firstEmpty >= 0) setIdx(firstEmpty);
-  }, [data]);
+    const allDone = firstEmpty === -1;
+    if (allDone || search.review === 1) {
+      setMode("review");
+    } else {
+      setIdx(firstEmpty);
+    }
+    setInitialized(true);
+  }, [data, initialized, search.review]);
 
   const total = BRIEF_FIELDS.length;
   const current = BRIEF_FIELDS[idx];
@@ -86,6 +103,12 @@ function BriefWizard() {
 
   const goNext = async () => {
     await save(current.key);
+    // Editing from a completed brief returns to review, no checkpoint replay
+    if (editingFromReview) {
+      setEditingFromReview(false);
+      setMode("review");
+      return;
+    }
     const endingBlock = isLastFieldOfBlock(idx);
     if (endingBlock) {
       setCheckpointBlock(endingBlock);
@@ -119,6 +142,22 @@ function BriefWizard() {
   const goBack = () => {
     if (idx > 0) setIdx(idx - 1);
   };
+
+  if (mode === "review") {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <BriefReview
+          values={values}
+          onEdit={(i) => {
+            setEditingFromReview(true);
+            setCheckpointBlock(null);
+            setIdx(i);
+            setMode("question");
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-2xl">
