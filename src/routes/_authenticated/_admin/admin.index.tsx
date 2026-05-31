@@ -172,6 +172,7 @@ function AdminDashboard() {
     setRejectTarget(null);
   };
 
+  const previewApps = (apps.data?.applications ?? []).slice(0, 8);
   const previewIds = previewApps.map((a) => a.id);
   const allSelected = previewIds.length > 0 && previewIds.every((id) => selectedIds.has(id));
   const someSelected = previewIds.some((id) => selectedIds.has(id));
