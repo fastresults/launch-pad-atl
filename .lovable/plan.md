@@ -1,51 +1,35 @@
-# Kill native browser dialogs
+## Goal
 
-## Problem
+Replace the "Pending member approvals" panel on the admin dashboard (`/admin`) with an **All members** panel that shows every member with their current status and inline status actions — no "View all" click needed for routine triage.
 
-`window.confirm` / `window.prompt` render as ugly system modals showing the raw `*.lovableproject.com` origin (see screenshot). They also break in embedded previews and ignore our theme. Five call sites today:
+## Changes
 
-- `src/routes/_authenticated/_admin/admin.members.tsx`
-  - Pause access — confirm + reason prompt
-  - Reject — reason prompt
-- `src/components/media/MediaHub.tsx`
-  - New folder — name prompt
-  - New collection — name prompt
+### `src/routes/_authenticated/_admin/admin.index.tsx`
 
-## Plan
+1. **Query all members instead of just pending**
+   - Change the `members` query to call `listMembers({ data: {} })` (no status filter) with key `["admin", "members", "all"]`.
+   - Keep `pendingMembers` stat from `members.data.counts.pending` (still works — counts are returned regardless of filter).
 
-### 1. New reusable dialog: `ConfirmDialog`
+2. **Replace the panel** "Pending member approvals" → "Members":
+   - Render up to ~12 rows by default, sorted: `pending` first, then `paused`, then `approved`, then `rejected`. Add a small client-side status filter (All / Pending / Approved / Paused / Rejected) as chip toggles in the panel toolbar so the admin can slice without leaving the dashboard.
+   - Each row shows: name, email, intake badge/idea (as today), a **status Badge** (color-coded: pending=amber, approved=emerald, paused=rose, rejected=muted), and a kebab/`DropdownMenu` of contextual actions:
+     - pending → Approve, Reject
+     - approved → Pause access, Move to pending
+     - paused → Reinstate, Move to pending
+     - rejected → Move to pending
+   - Wire actions to the existing server fns already used on `admin.members.tsx` (`approveMember`, `rejectMember`, `pauseMember`, `setMemberPending`) via `useServerFn`. Reuse the existing `ConfirmDialog` component for destructive actions (Pause, Reject) with reason textarea — no native modals.
+   - Empty state copy: "No members yet. New signups will appear here."
+   - Keep a small "Manage all →" link to `/admin/members` for the full management page, but it's no longer the only path to act.
 
-`src/components/ui/confirm-dialog.tsx` — built on existing shadcn `AlertDialog`. Controlled `open` + `onOpenChange`. Props: `title`, `description`, `confirmLabel` (default "Confirm"), `cancelLabel` ("Cancel"), `variant` ("default" | "destructive"), optional `reasonLabel` + `reasonPlaceholder` (when set, renders a `Textarea` and passes the value to `onConfirm(reason)`), `loading` state to disable buttons while the mutation runs. One component covers both pure confirm and confirm+reason flows.
+3. **No backend / schema / RLS changes.** All required server functions already exist.
 
-### 2. New reusable dialog: `PromptDialog`
+## Out of scope
 
-Same file. Single text input (e.g. folder name). Props: `title`, `description?`, `inputLabel`, `placeholder`, `confirmLabel`, `required` (disables confirm when empty), `defaultValue?`. Calls `onConfirm(value)`.
+- The `/admin/members` full page stays as-is (it's the deep-management view).
+- No new columns, migrations, or auth changes.
 
-Both dialogs auto-focus the input on open, submit on Enter, close on Cancel/Escape, and use theme tokens (no hardcoded colors). Destructive variant uses `bg-destructive`.
+## Technical notes
 
-### 3. Wire into `admin.members.tsx`
-
-Replace the three `window.*` calls. Add local state for which dialog is open + the target member row. Three dialog instances rendered once at the bottom of the page:
-
-- **Pause access** — `ConfirmDialog` destructive, title "Pause {name}'s access?", description explains they'll see the paused-account screen until reinstated, with reason textarea (optional). Confirm → `pauseMember.mutate({ userId, reason })`.
-- **Reject** — `ConfirmDialog` destructive, reason textarea (optional), confirm → `rejectMember.mutate(...)`.
-- (Approve / Reinstate / Move-to-pending stay as direct mutations — no confirm needed; they're reversible.)
-
-Show toast on success/error (already wired via existing `toast` import). Disable buttons while `isPending`.
-
-### 4. Wire into `MediaHub.tsx`
-
-Two `PromptDialog` instances for "New folder" and "New collection". State holds `{ kind: 'folder' | 'collection' | null }`. Required input, min length 1, max 80. Submit triggers existing create mutations.
-
-### 5. Lint guard (optional, low-effort)
-
-Add an ESLint rule note in `eslint.config.js` — `no-restricted-globals` for `confirm`, `prompt`, `alert` — so future regressions fail the build. Skip if it conflicts with existing config.
-
-## Files
-
-- new: `src/components/ui/confirm-dialog.tsx` (exports `ConfirmDialog` + `PromptDialog`)
-- edit: `src/routes/_authenticated/_admin/admin.members.tsx`
-- edit: `src/components/media/MediaHub.tsx`
-- edit (optional): `eslint.config.js`
-
-No server, schema, or auth changes.
+- `listMembers` already returns the full list and counts when called with no status; the filter is applied client-side via the chip toggles.
+- Color tokens: use existing semantic classes already used in `admin.members.tsx` for status badges to stay consistent.
+- Loading state: skeleton rows while `members.isLoading`.
