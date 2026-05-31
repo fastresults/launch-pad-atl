@@ -103,7 +103,7 @@ export function SiteHeader() {
             to="/register"
             className="rounded-full bg-hero-gradient px-3.5 py-2 text-sm font-medium text-white"
           >
-            Reserve
+            {ctaShort}
           </Link>
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
