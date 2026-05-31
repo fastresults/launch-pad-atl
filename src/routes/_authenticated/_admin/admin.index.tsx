@@ -265,11 +265,41 @@ function AdminDashboard() {
       </div>
 
       <Panel
-        title="Pending member approvals"
-        empty="No pending members. New signups will appear here."
+        title="Members"
+        empty={
+          memberFilter === "all"
+            ? "No members yet. New signups will appear here."
+            : `No ${memberFilter} members.`
+        }
         href="/admin/members"
+        viewAllLabel="Manage all"
+        toolbar={
+          <div className="flex flex-wrap items-center gap-1">
+            {(["all", "pending", "paused", "approved", "rejected"] as const).map((f) => {
+              const count =
+                f === "all"
+                  ? allMembers.length
+                  : (members.data?.counts as Record<string, number> | undefined)?.[f] ?? 0;
+              const active = memberFilter === f;
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setMemberFilter(f)}
+                  className={`rounded-full px-2.5 py-1 text-[11px] uppercase tracking-wide transition ${
+                    active
+                      ? "bg-foreground text-background"
+                      : "bg-white/5 text-muted-foreground hover:bg-white/10"
+                  }`}
+                >
+                  {f} <span className="opacity-60">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        }
       >
-        {(members.data?.members ?? []).slice(0, 6).map((m) => (
+        {previewMembers.map((m) => (
           <div
             key={m.user_id}
             className="flex flex-col gap-2 border-t border-white/5 px-4 py-3 first:border-t-0 sm:flex-row sm:items-center sm:justify-between"
@@ -278,6 +308,7 @@ function AdminDashboard() {
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm font-medium">{m.display_name ?? m.email}</span>
                 <span className="text-xs text-muted-foreground">{m.email}</span>
+                <MemberStatusBadge status={m.member_status} />
                 {m.intake && (
                   <Badge variant="secondary" className="text-[10px]">
                     {m.intake.startup_type}
@@ -295,17 +326,59 @@ function AdminDashboard() {
                 )}
               </div>
             </div>
-            <div className="flex shrink-0 gap-2">
-              <Button size="sm" onClick={() => handleApprove(m.user_id)}>
-                Approve
-              </Button>
-              <Button size="sm" variant="outline" asChild>
-                <Link to="/admin/members">Review</Link>
-              </Button>
+            <div className="flex shrink-0 items-center gap-2">
+              {m.member_status === "pending" && (
+                <Button size="sm" disabled={actionLoading} onClick={() => handleApprove(m.user_id)}>
+                  Approve
+                </Button>
+              )}
+              {m.member_status === "paused" && (
+                <Button size="sm" disabled={actionLoading} onClick={() => handleApprove(m.user_id)}>
+                  Reinstate
+                </Button>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="icon" variant="outline" className="h-8 w-8" aria-label="More actions">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {m.member_status === "pending" && (
+                    <DropdownMenuItem onClick={() => setRejectTarget(m)}>
+                      Reject…
+                    </DropdownMenuItem>
+                  )}
+                  {m.member_status === "approved" && (
+                    <DropdownMenuItem onClick={() => setPauseTarget(m)}>
+                      Pause access…
+                    </DropdownMenuItem>
+                  )}
+                  {m.member_status === "paused" && (
+                    <DropdownMenuItem onClick={() => handleRestore(m.user_id)}>
+                      Move to pending
+                    </DropdownMenuItem>
+                  )}
+                  {m.member_status === "rejected" && (
+                    <DropdownMenuItem onClick={() => handleRestore(m.user_id)}>
+                      Move to pending
+                    </DropdownMenuItem>
+                  )}
+                  {m.member_status === "approved" && (
+                    <DropdownMenuItem onClick={() => handleRestore(m.user_id)}>
+                      Move to pending
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin/members">Open full review</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         ))}
       </Panel>
+
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel
