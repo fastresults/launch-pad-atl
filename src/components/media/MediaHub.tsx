@@ -388,10 +388,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => {
-                const name = window.prompt("Folder name");
-                if (name) createFolderMu.mutate(name);
-              }}
+              onClick={() => setPromptKind("folder")}
             >
               <FolderPlus className="h-4 w-4" />
             </Button>
