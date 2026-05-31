@@ -35,6 +35,9 @@ function AdminMembersPage() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("pending");
   const [search, setSearch] = useState("");
+  const [pauseTarget, setPauseTarget] = useState<{ userId: string; name: string } | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<{ userId: string; name: string } | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const q = useQuery({
     queryKey: ["admin", "members", tab, search],
@@ -55,19 +58,26 @@ function AdminMembersPage() {
 
   const handleApprove = (userId: string) =>
     run(() => approveFn({ data: { userId } }), "Member approved");
-  const handleReject = (userId: string) => {
-    const reason = window.prompt("Reason for rejection (optional)") ?? undefined;
-    return run(() => rejectFn({ data: { userId, reason } }), "Member rejected");
-  };
   const handleContact = (userId: string) =>
     run(() => contactFn({ data: { userId } }), "Marked as contacted");
-  const handlePause = (userId: string, name: string) => {
-    if (!window.confirm(`Pause ${name}'s access? They will see the paused-account screen until you reinstate them.`)) return;
-    const reason = window.prompt("Internal note about why (optional)") ?? undefined;
-    return run(() => pauseFn({ data: { userId, reason } }), "Access paused");
-  };
   const handleRestoreToPending = (userId: string) =>
     run(() => restoreFn({ data: { userId } }), "Moved back to pending");
+
+  const confirmPause = async (reason?: string) => {
+    if (!pauseTarget) return;
+    setActionLoading(true);
+    await run(() => pauseFn({ data: { userId: pauseTarget.userId, reason } }), "Access paused");
+    setActionLoading(false);
+    setPauseTarget(null);
+  };
+
+  const confirmReject = async (reason?: string) => {
+    if (!rejectTarget) return;
+    setActionLoading(true);
+    await run(() => rejectFn({ data: { userId: rejectTarget.userId, reason } }), "Member rejected");
+    setActionLoading(false);
+    setRejectTarget(null);
+  };
 
   const counts =
     q.data?.counts ?? { pending: 0, approved: 0, paused: 0, rejected: 0, no_intake: 0 };
