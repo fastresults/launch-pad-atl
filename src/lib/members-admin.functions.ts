@@ -15,11 +15,13 @@ async function assertAdmin(userId: string) {
   }
 }
 
+export type MemberStatusValue = "pending" | "approved" | "rejected" | "paused";
+
 export type MemberRow = {
   user_id: string;
   email: string | null;
   display_name: string | null;
-  member_status: "pending" | "approved" | "rejected";
+  member_status: MemberStatusValue;
   approved_at: string | null;
   approved_via: "admin" | "payment" | null;
   created_at: string;
@@ -40,7 +42,7 @@ export const listMembers = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        status: z.enum(["pending", "approved", "rejected", "no_intake"]).optional(),
+        status: z.enum(["pending", "approved", "rejected", "paused", "no_intake"]).optional(),
         search: z.string().trim().max(120).optional(),
       })
       .optional()
@@ -105,6 +107,7 @@ export const listMembers = createServerFn({ method: "GET" })
       pending: 0,
       approved: 0,
       rejected: 0,
+      paused: 0,
       no_intake: 0,
     };
     for (const p of profiles ?? []) {
@@ -255,5 +258,51 @@ export const markMemberContacted = createServerFn({ method: "POST" })
       })
       .eq("user_id", data.userId);
     if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const pauseMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        reason: z.string().trim().max(1000).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        member_status: "paused",
+        rejected_reason: data.reason ?? null,
+      })
+      .eq("user_id", data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const restoreMemberToPending = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ userId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        member_status: "pending",
+        rejected_reason: null,
+      })
+      .eq("user_id", data.userId);
+    if (error) throw new Error(error.message);
+
+    await supabaseAdmin
+      .from("member_intakes")
+      .update({ status: "submitted", reviewed_at: null, reviewer_id: null })
+      .eq("user_id", data.userId);
     return { ok: true };
   });

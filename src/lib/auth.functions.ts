@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export type AppRole = "super_admin" | "admin" | "user";
-export type MemberStatus = "pending" | "approved" | "rejected";
+export type MemberStatus = "pending" | "approved" | "rejected" | "paused";
 
 export const getMyRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

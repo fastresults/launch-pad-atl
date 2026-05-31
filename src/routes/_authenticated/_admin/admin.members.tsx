@@ -8,6 +8,8 @@ import {
   approveMember,
   rejectMember,
   markMemberContacted,
+  pauseMember,
+  restoreMemberToPending,
 } from "@/lib/members-admin.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,13 +22,15 @@ export const Route = createFileRoute("/_authenticated/_admin/admin/members")({
   head: () => ({ meta: [{ title: "Members — Admin" }] }),
 });
 
-type Tab = "pending" | "approved" | "rejected" | "no_intake";
+type Tab = "pending" | "approved" | "paused" | "rejected" | "no_intake";
 
 function AdminMembersPage() {
   const listFn = useServerFn(listMembers);
   const approveFn = useServerFn(approveMember);
   const rejectFn = useServerFn(rejectMember);
   const contactFn = useServerFn(markMemberContacted);
+  const pauseFn = useServerFn(pauseMember);
+  const restoreFn = useServerFn(restoreMemberToPending);
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("pending");
   const [search, setSearch] = useState("");
@@ -38,42 +42,40 @@ function AdminMembersPage() {
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "members"] });
 
-  const handleApprove = async (userId: string) => {
+  const run = async (fn: () => Promise<unknown>, ok: string) => {
     try {
-      await approveFn({ data: { userId } });
-      toast.success("Member approved");
-      refresh();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Failed");
-    }
-  };
-  const handleReject = async (userId: string) => {
-    const reason = window.prompt("Reason for rejection (optional)") ?? undefined;
-    try {
-      await rejectFn({ data: { userId, reason } });
-      toast.success("Member rejected");
-      refresh();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Failed");
-    }
-  };
-  const handleContact = async (userId: string) => {
-    try {
-      await contactFn({ data: { userId } });
-      toast.success("Marked as contacted");
+      await fn();
+      toast.success(ok);
       refresh();
     } catch (e: any) {
       toast.error(e?.message ?? "Failed");
     }
   };
 
-  const counts = q.data?.counts ?? { pending: 0, approved: 0, rejected: 0, no_intake: 0 };
+  const handleApprove = (userId: string) =>
+    run(() => approveFn({ data: { userId } }), "Member approved");
+  const handleReject = (userId: string) => {
+    const reason = window.prompt("Reason for rejection (optional)") ?? undefined;
+    return run(() => rejectFn({ data: { userId, reason } }), "Member rejected");
+  };
+  const handleContact = (userId: string) =>
+    run(() => contactFn({ data: { userId } }), "Marked as contacted");
+  const handlePause = (userId: string, name: string) => {
+    if (!window.confirm(`Pause ${name}'s access? They will see the paused-account screen until you reinstate them.`)) return;
+    const reason = window.prompt("Internal note about why (optional)") ?? undefined;
+    return run(() => pauseFn({ data: { userId, reason } }), "Access paused");
+  };
+  const handleRestoreToPending = (userId: string) =>
+    run(() => restoreFn({ data: { userId } }), "Moved back to pending");
+
+  const counts =
+    q.data?.counts ?? { pending: 0, approved: 0, paused: 0, rejected: 0, no_intake: 0 };
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
         title="Members"
-        description="Approve new signups to unlock their founder dashboard. Review intakes and manage existing members."
+        description="Approve new signups to unlock their founder dashboard. Pause or reinstate access at any time."
       />
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
@@ -81,6 +83,7 @@ function AdminMembersPage() {
           <TabsList>
             <TabsTrigger value="pending">Pending ({counts.pending})</TabsTrigger>
             <TabsTrigger value="approved">Approved ({counts.approved})</TabsTrigger>
+            <TabsTrigger value="paused">Paused ({counts.paused})</TabsTrigger>
             <TabsTrigger value="rejected">Rejected ({counts.rejected})</TabsTrigger>
             <TabsTrigger value="no_intake">No intake ({counts.no_intake})</TabsTrigger>
           </TabsList>
@@ -101,64 +104,118 @@ function AdminMembersPage() {
                 No members in this tab.
               </div>
             ) : (
-              (q.data?.members ?? []).map((m) => (
-                <div
-                  key={m.user_id}
-                  className="flex flex-col gap-3 border-t border-white/5 p-4 first:border-t-0 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium">{m.display_name ?? m.email}</span>
-                      <span className="text-xs text-muted-foreground">{m.email}</span>
-                      {m.approved_via && (
-                        <Badge variant="outline" className="text-[10px]">
-                          via {m.approved_via}
-                        </Badge>
-                      )}
-                      {m.intake && (
-                        <Badge variant="secondary" className="text-[10px]">
-                          {m.intake.startup_type}
-                        </Badge>
+              (q.data?.members ?? []).map((m) => {
+                const name = m.display_name ?? m.email ?? "this member";
+                return (
+                  <div
+                    key={m.user_id}
+                    className="flex flex-col gap-3 border-t border-white/5 p-4 first:border-t-0 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">{m.display_name ?? m.email}</span>
+                        <span className="text-xs text-muted-foreground">{m.email}</span>
+                        {m.approved_via && (
+                          <Badge variant="outline" className="text-[10px]">
+                            via {m.approved_via}
+                          </Badge>
+                        )}
+                        {m.approved_at && (
+                          <span className="text-[10px] text-muted-foreground">
+                            approved {new Date(m.approved_at).toLocaleDateString()}
+                          </span>
+                        )}
+                        {m.intake && (
+                          <Badge variant="secondary" className="text-[10px]">
+                            {m.intake.startup_type}
+                          </Badge>
+                        )}
+                      </div>
+                      {m.intake ? (
+                        <div className="mt-1 truncate text-sm text-muted-foreground">
+                          {m.intake.startup_name ? <strong>{m.intake.startup_name}: </strong> : null}
+                          {m.intake.one_line_idea}
+                        </div>
+                      ) : (
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          No intake submitted yet.
+                        </div>
                       )}
                     </div>
-                    {m.intake ? (
-                      <div className="mt-1 truncate text-sm text-muted-foreground">
-                        {m.intake.startup_name ? <strong>{m.intake.startup_name}: </strong> : null}
-                        {m.intake.one_line_idea}
-                      </div>
-                    ) : (
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        No intake submitted yet.
-                      </div>
-                    )}
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      {tab === "approved" && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handlePause(m.user_id, name)}
+                          >
+                            Pause access
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleReject(m.user_id)}
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                      {tab === "paused" && (
+                        <>
+                          <Button size="sm" onClick={() => handleApprove(m.user_id)}>
+                            Reinstate
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleReject(m.user_id)}
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                      {tab === "rejected" && (
+                        <>
+                          <Button size="sm" onClick={() => handleApprove(m.user_id)}>
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRestoreToPending(m.user_id)}
+                          >
+                            Move to pending
+                          </Button>
+                        </>
+                      )}
+                      {(tab === "pending" || tab === "no_intake") && (
+                        <>
+                          <Button size="sm" onClick={() => handleApprove(m.user_id)}>
+                            Approve
+                          </Button>
+                          {m.intake && m.intake.status === "submitted" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleContact(m.user_id)}
+                            >
+                              Mark contacted
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleReject(m.user_id)}
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex shrink-0 gap-2">
-                    {m.member_status !== "approved" && (
-                      <Button size="sm" onClick={() => handleApprove(m.user_id)}>
-                        Approve
-                      </Button>
-                    )}
-                    {m.intake && m.intake.status === "submitted" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleContact(m.user_id)}
-                      >
-                        Mark contacted
-                      </Button>
-                    )}
-                    {m.member_status !== "rejected" && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleReject(m.user_id)}
-                      >
-                        Reject
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </TabsContent>
@@ -166,7 +223,8 @@ function AdminMembersPage() {
 
       <p className="text-xs text-muted-foreground">
         Members are auto-approved when their workshop registration is paid, or you can approve
-        them manually here. <Link to="/admin" className="underline">Back to dashboard</Link>
+        them manually here. Approvals are fully reversible — pause to revoke dashboard access
+        without losing their data. <Link to="/admin" className="underline">Back to dashboard</Link>
       </p>
     </div>
   );
