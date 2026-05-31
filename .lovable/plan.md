@@ -1,68 +1,51 @@
-# Reversible approval + Paused account screen
+# Kill native browser dialogs
 
-## Today
+## Problem
 
-`/admin/members` only has Approve / Reject / Mark contacted, with no clean way to take approval back. The `_authenticated` gate (`src/routes/_authenticated.tsx`) sends any non-approved member to `/welcome`, which is written for brand-new applicants — wrong tone for someone whose access was revoked.
+`window.confirm` / `window.prompt` render as ugly system modals showing the raw `*.lovableproject.com` origin (see screenshot). They also break in embedded previews and ignore our theme. Five call sites today:
 
-We need (1) reversible approval in the admin UI and (2) a distinct "your account is paused" experience for previously-approved members, separate from the new-applicant welcome flow.
+- `src/routes/_authenticated/_admin/admin.members.tsx`
+  - Pause access — confirm + reason prompt
+  - Reject — reason prompt
+- `src/components/media/MediaHub.tsx`
+  - New folder — name prompt
+  - New collection — name prompt
 
 ## Plan
 
-### 1. New `paused` member status
+### 1. New reusable dialog: `ConfirmDialog`
 
-Add `'paused'` to the allowed values of `profiles.member_status` (currently `pending | approved | rejected`). Migration: drop+recreate the check constraint (or expand the enum if one exists) to include `paused`. No other column changes — `approved_at`, `approved_by`, `approved_via` stay populated as the audit trail of the prior approval.
+`src/components/ui/confirm-dialog.tsx` — built on existing shadcn `AlertDialog`. Controlled `open` + `onOpenChange`. Props: `title`, `description`, `confirmLabel` (default "Confirm"), `cancelLabel` ("Cancel"), `variant` ("default" | "destructive"), optional `reasonLabel` + `reasonPlaceholder` (when set, renders a `Textarea` and passes the value to `onConfirm(reason)`), `loading` state to disable buttons while the mutation runs. One component covers both pure confirm and confirm+reason flows.
 
-Update `MemberRow` typing and the `assertAdmin`-gated server fns to know about `paused`.
+### 2. New reusable dialog: `PromptDialog`
 
-### 2. New server fn: `pauseMember` (replaces "revoke" wording)
+Same file. Single text input (e.g. folder name). Props: `title`, `description?`, `inputLabel`, `placeholder`, `confirmLabel`, `required` (disables confirm when empty), `defaultValue?`. Calls `onConfirm(value)`.
 
-In `src/lib/members-admin.functions.ts`. POST, admin-gated. Input `{ userId: uuid, reason?: string ≤1000 }`.
+Both dialogs auto-focus the input on open, submit on Enter, close on Cancel/Escape, and use theme tokens (no hardcoded colors). Destructive variant uses `bg-destructive`.
 
-- `profiles`: set `member_status = 'paused'`, store `reason` in `rejected_reason` (re-used as the pause/decline note column), keep `approved_at/by/via` intact.
-- `member_intakes`: leave as `converted`. Pausing isn't a re-review.
-- Return `{ ok: true }`. No email.
+### 3. Wire into `admin.members.tsx`
 
-### 3. New server fn: `restoreMemberToPending`
+Replace the three `window.*` calls. Add local state for which dialog is open + the target member row. Three dialog instances rendered once at the bottom of the page:
 
-For rejected members only. Sets `member_status='pending'`, clears `rejected_reason`, resets `member_intakes.status='submitted'`. Used from the Rejected tab.
+- **Pause access** — `ConfirmDialog` destructive, title "Pause {name}'s access?", description explains they'll see the paused-account screen until reinstated, with reason textarea (optional). Confirm → `pauseMember.mutate({ userId, reason })`.
+- **Reject** — `ConfirmDialog` destructive, reason textarea (optional), confirm → `rejectMember.mutate(...)`.
+- (Approve / Reinstate / Move-to-pending stay as direct mutations — no confirm needed; they're reversible.)
 
-### 4. Admin UI changes (`admin.members.tsx`)
+Show toast on success/error (already wired via existing `toast` import). Disable buttons while `isPending`.
 
-Make actions tab-aware and add a fifth tab:
+### 4. Wire into `MediaHub.tsx`
 
-- Tabs: **Pending • Approved • Paused • Rejected • No intake** (counts update accordingly).
-- **Pending / No intake**: Approve, Mark contacted, Reject. (Unchanged.)
-- **Approved**: show `approved_at` + `approved_via` badge inline; primary action **Pause access** (destructive). Confirm with `window.confirm("Pause {name}'s access? They will see the paused-account screen until you reinstate them.")`. Optional reason via `window.prompt`.
-- **Paused**: show **Reinstate** (primary, calls `approveMember` — re-sets to approved + `approved_via='admin'`) and **Reject** (secondary).
-- **Rejected**: **Move to pending** and **Approve**. Hide Reject.
+Two `PromptDialog` instances for "New folder" and "New collection". State holds `{ kind: 'folder' | 'collection' | null }`. Required input, min length 1, max 80. Submit triggers existing create mutations.
 
-Toasts: "Access paused" / "Member reinstated" / "Moved back to pending". Invalidate `["admin","members"]` after each.
+### 5. Lint guard (optional, low-effort)
 
-### 5. New route `/paused` for the gated screen
-
-Create `src/routes/_authenticated/paused.tsx`. Renders a polished, on-brand screen with the StartupLabs logo (theme-aware, per the recent logo fix), heading **"Your account is paused"**, and short award-winning copy:
-
-> Access to your founder dashboard has been temporarily paused by the StartupLabs team. Your work is safe — nothing has been deleted. If this feels like a mistake or you'd like to discuss reinstatement, send us a note below and we'll get back to you within one business day.
-
-Below that, an **Inquiry form** (name pre-filled from profile, email pre-filled and read-only, subject pre-filled with "Account paused — request review", message textarea). Submitting calls a new thin server fn `submitPausedAccountInquiry` that inserts into the existing `inquiries` table (admin already has `/admin/inquiries`) with `subject` prefixed `[Paused account]` and the user's `user_id` referenced in `message` for traceability. Sign-out button in the corner.
-
-### 6. Update the auth gate
-
-In `src/routes/_authenticated.tsx`:
-
-- If `member_status === 'paused'` → redirect to `/paused` (allow `/paused` itself).
-- If `member_status === 'pending' | 'rejected'` → existing `/welcome` redirect (unchanged).
-- Approved → through.
-
-`/welcome` keeps its current new-applicant copy; the paused screen is its own thing.
+Add an ESLint rule note in `eslint.config.js` — `no-restricted-globals` for `confirm`, `prompt`, `alert` — so future regressions fail the build. Skip if it conflicts with existing config.
 
 ## Files
 
-- new migration: expand `member_status` allowed values to include `'paused'`
-- edit: `src/lib/members-admin.functions.ts` (add `pauseMember`, `restoreMemberToPending`, update status enums)
-- new: `src/lib/paused-inquiry.functions.ts` (`submitPausedAccountInquiry`)
-- edit: `src/routes/_authenticated/_admin/admin.members.tsx` (tab-aware actions + Paused tab)
-- new: `src/routes/_authenticated/paused.tsx`
-- edit: `src/routes/_authenticated.tsx` (paused → `/paused` redirect)
+- new: `src/components/ui/confirm-dialog.tsx` (exports `ConfirmDialog` + `PromptDialog`)
+- edit: `src/routes/_authenticated/_admin/admin.members.tsx`
+- edit: `src/components/media/MediaHub.tsx`
+- edit (optional): `eslint.config.js`
 
-No new tables, RLS unchanged (server fns use `supabaseAdmin`; inquiries insert is already open to authenticated users via existing policy).
+No server, schema, or auth changes.
