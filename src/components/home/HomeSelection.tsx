@@ -37,6 +37,7 @@ export function HomeSelection() {
       <WhyApplyingIsTheMove />
       <WhyDoingThis />
       <WhatYouWalkOut />
+      <BringYourCard />
       <ArtOfThePossible />
       <WhoWereLookingFor />
       <Timeline />
