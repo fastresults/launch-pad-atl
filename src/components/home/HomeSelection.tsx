@@ -208,15 +208,15 @@ function BringYourCard() {
         </h2>
         <div className="mt-6 rounded-2xl border border-white/10 bg-card p-6 md:p-8">
           <p className="text-base text-muted-foreground md:text-lg">
-            Your seat, the build, the brand, the materials, lunch — the workshop itself is entirely
-            on us. The only costs you&rsquo;ll see are the ordinary, expected expenses that come
-            with opening any business: your domain (~$12), email and hosting setup, a state filing
-            fee, maybe an AI tool subscription. These go straight from you to those vendors — not
-            a cent is a payment to us. Budget around{" "}
-            <span className="font-medium text-foreground">${INCIDENTALS_CAP}</span> and you&rsquo;ll
-            be well covered. Everything is set up in your name, on your accounts, with your card,
-            so from day one you own every login, every receipt, and every asset — just like any
-            founder does.
+            Your seat, the build, the brand, the materials, lunch — the workshop is entirely on
+            us. The only costs you&rsquo;ll see are the ordinary startup setup expenses every
+            founder pays: your domain (~$12), email and hosting, a state filing fee, maybe one AI
+            tool. These go straight from you to those vendors — not a cent comes to us. If
+            you&rsquo;re one of the six, we&rsquo;ll email you ahead of time with exactly what we
+            recommend, why, and how it fits your startup, so you can handle everything beforehand
+            at your own pace. Budget around{" "}
+            <span className="font-medium text-foreground">${INCIDENTALS_CAP}</span>, set it all up
+            in your name on your card, and walk in ready to build.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Chip icon={<ShieldCheck className="size-3.5" />} label="Everything in your name" />
