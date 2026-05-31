@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 const FACILITATOR_NAME = "Adam Anderson";
-const INCIDENTALS_CAP = 100;
+const INCIDENTALS_CAP = 200;
 
 // TBD with founder — placeholders flagged for easy swap.
 const FINALIST_DISCOUNT_PCT = 40; // % off next Atlanta cohort
@@ -208,15 +208,16 @@ function BringYourCard() {
         </h2>
         <div className="mt-6 rounded-2xl border border-white/10 bg-card p-6 md:p-8">
           <p className="text-base text-muted-foreground md:text-lg">
-            Your seat, the build, the brand, the materials, lunch — all covered. The only thing
-            we ask you to bring is a personal card for the handful of tiny pass-through costs
-            that happen the day you go live: your domain (~$12), email + hosting trials, a state
-            filing fee, maybe an AI tool subscription. Budget up to{" "}
-            <span className="font-medium text-foreground">${INCIDENTALS_CAP}</span> total and
-            you&rsquo;ll have margin to spare. Everything gets set up in <em>your</em> name, on{" "}
-            <em>your</em> accounts, with <em>your</em> card — because on day one, you should own
-            every login, every receipt, every asset. We just stand beside you while you click
-            &ldquo;buy.&rdquo;
+            Your seat, the build, the brand, the materials, lunch — all covered by us. The one
+            thing we can&rsquo;t put on our tab is the handful of small pass-through costs that
+            land in <em>your</em> name on launch day: your domain (~$12), email + hosting
+            trials, a state filing fee, maybe an AI tool subscription. These are direct expenses
+            between you and those vendors — we never see your card, and we don&rsquo;t need to.
+            Budget up to{" "}
+            <span className="font-medium text-foreground">${INCIDENTALS_CAP}</span> and
+            you&rsquo;ll have plenty of margin. Everything gets set up in <em>your</em> name, on{" "}
+            <em>your</em> accounts, with <em>your</em> card, so on day one you own every login,
+            every receipt, and every asset — privacy intact, control fully yours.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Chip icon={<ShieldCheck className="size-3.5" />} label="Everything in your name" />
