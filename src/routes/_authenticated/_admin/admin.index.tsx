@@ -18,6 +18,7 @@ import {
   pauseMember,
   restoreMemberToPending,
 } from "@/lib/members-admin.functions";
+import type { MemberRow, MemberStatusValue as MemberStatus } from "@/lib/members-admin.functions";
 import type { ApplicationStatus } from "@/lib/applications-admin.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
