@@ -159,7 +159,7 @@ function AdminMembersPage() {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handlePause(m.user_id, name)}
+                            onClick={() => setPauseTarget({ userId: m.user_id, name })}
                           >
                             Pause access
                           </Button>
