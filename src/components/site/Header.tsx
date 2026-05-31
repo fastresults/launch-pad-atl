@@ -154,7 +154,7 @@ export function SiteHeader() {
                     onClick={close}
                     className="flex w-full items-center justify-center rounded-full bg-hero-gradient px-5 py-3 text-base font-medium text-white"
                   >
-                    Reserve seat — from $679
+                    {ctaFull}
                   </Link>
                   {isAuthenticated ? (
                     <>
