@@ -524,8 +524,47 @@ function AdminDashboard() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!pauseTarget}
+        onOpenChange={(o) => !o && setPauseTarget(null)}
+        title={`Pause ${pauseTarget?.display_name ?? pauseTarget?.email ?? "this member"}'s access?`}
+        description="They'll see the paused-account screen until you reinstate them. Their data and progress remain intact."
+        confirmLabel="Pause access"
+        variant="destructive"
+        reasonLabel="Reason (optional)"
+        reasonPlaceholder="Shared with the member on the paused screen"
+        loading={actionLoading}
+        onConfirm={confirmPause}
+      />
+
+      <ConfirmDialog
+        open={!!rejectTarget}
+        onOpenChange={(o) => !o && setRejectTarget(null)}
+        title={`Reject ${rejectTarget?.display_name ?? rejectTarget?.email ?? "this member"}?`}
+        description="They won't be able to access the founder dashboard. You can move them back to pending later."
+        confirmLabel="Reject"
+        variant="destructive"
+        reasonLabel="Reason (optional)"
+        reasonPlaceholder="Internal note — not sent to the member"
+        loading={actionLoading}
+        onConfirm={confirmReject}
+      />
     </div>
+  );
+}
+
+function MemberStatusBadge({ status }: { status: MemberStatus }) {
+  const map: Record<MemberStatus, { label: string; className: string }> = {
+    pending: { label: "Pending", className: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
+    approved: { label: "Approved", className: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" },
+    paused: { label: "Paused", className: "bg-rose-500/15 text-rose-300 border-rose-500/30" },
+    rejected: { label: "Rejected", className: "bg-muted text-muted-foreground border-white/10" },
+  };
+  const v = map[status];
+  return (
+    <Badge variant="outline" className={`text-[10px] ${v.className}`}>
+      {v.label}
+    </Badge>
   );
 }
 
