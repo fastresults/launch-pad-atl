@@ -125,6 +125,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [isDragging, setIsDragging] = useState(false);
   const [dropTargetKey, setDropTargetKey] = useState<string | null>(null);
+  const [promptKind, setPromptKind] = useState<"folder" | "collection" | null>(null);
 
   // Load persisted view mode
   useEffect(() => {
