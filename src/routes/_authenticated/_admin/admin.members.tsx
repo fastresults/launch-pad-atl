@@ -166,7 +166,7 @@ function AdminMembersPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleReject(m.user_id)}
+                            onClick={() => setRejectTarget({ userId: m.user_id, name })}
                           >
                             Reject
                           </Button>
@@ -180,7 +180,7 @@ function AdminMembersPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleReject(m.user_id)}
+                            onClick={() => setRejectTarget({ userId: m.user_id, name })}
                           >
                             Reject
                           </Button>
@@ -217,7 +217,7 @@ function AdminMembersPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleReject(m.user_id)}
+                            onClick={() => setRejectTarget({ userId: m.user_id, name })}
                           >
                             Reject
                           </Button>
