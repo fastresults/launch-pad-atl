@@ -237,6 +237,32 @@ function AdminMembersPage() {
         them manually here. Approvals are fully reversible — pause to revoke dashboard access
         without losing their data. <Link to="/admin" className="underline">Back to dashboard</Link>
       </p>
+
+      <ConfirmDialog
+        open={pauseTarget !== null}
+        onOpenChange={(o) => !o && setPauseTarget(null)}
+        title={pauseTarget ? `Pause ${pauseTarget.name}'s access?` : "Pause access"}
+        description="They will see the paused-account screen until you reinstate them. Their data and progress remain intact."
+        confirmLabel="Pause access"
+        variant="destructive"
+        reasonLabel="Internal note about why (optional)"
+        reasonPlaceholder="e.g. Failure to pay"
+        loading={actionLoading}
+        onConfirm={confirmPause}
+      />
+
+      <ConfirmDialog
+        open={rejectTarget !== null}
+        onOpenChange={(o) => !o && setRejectTarget(null)}
+        title={rejectTarget ? `Reject ${rejectTarget.name}?` : "Reject member"}
+        description="Their intake will be closed. You can move them back to pending later if needed."
+        confirmLabel="Reject"
+        variant="destructive"
+        reasonLabel="Reason for rejection (optional)"
+        reasonPlaceholder="Visible only to admins"
+        loading={actionLoading}
+        onConfirm={confirmReject}
+      />
     </div>
   );
 }
