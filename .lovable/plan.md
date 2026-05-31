@@ -1,24 +1,24 @@
-## Revise "BringYourCard" copy on free-cohort homepage
+## Goal
 
-### Goal
-Update the BringYourCard section on the free-cohort homepage (`HomeSelection.tsx`) to sound more respectful of founders' privacy and autonomy, and raise the incidental-expenses cap from $100 to $200.
+Refine the `BringYourCard` body copy into a single, tight paragraph that adds the pre-workshop email promise without repeating what the first paragraph already covers.
 
-### What changes
+## Scope
 
-**1. Incidental cap constant**
-- Change `INCIDENTALS_CAP` from `100` to `200` on line 25.
+- File: `src/components/home/HomeSelection.tsx`
+- Lines: ~210–220 (body text only)
+- `INCIDENTALS_CAP` stays at 225; chips, styling, and layout unchanged
 
-**2. Body copy rewrite (line 210–219)**
-- Remove the "We just stand beside you while you click 'buy'" phrasing entirely — it feels intrusive.
-- Replace it with copy that emphasizes: these are **your** direct expenses, not ours; you control when and what to spend; your privacy and ownership are respected. Keep the same warm, award-winning tone, the same structure (covered vs. not covered), and the same length.
-- Ensure the inline `${INCIDENTALS_CAP}` reference renders the new $200 value.
+## Proposed copy (single paragraph)
 
-**3. Chip label**
-- The "Up to ~$100 total" chip on line 223 auto-updates with the constant change.
+> Your seat, the build, the brand, the materials, lunch — the workshop is entirely on us. The only costs you'll see are the ordinary startup setup expenses every founder pays: your domain (~$12), email and hosting, a state filing fee, maybe one AI tool. These go straight from you to those vendors — not a cent comes to us. If you're one of the six, we'll email you ahead of time with exactly what we recommend, why, and how it fits your startup, so you can handle everything beforehand at your own pace. Budget around $225, set it all up in your name on your card, and walk in ready to build.
 
-### What does NOT change
-- Section placement, styling, card layout, chips, icons, or any other homepage sections.
-- No backend, no data model, no other routes.
+## Why this works
 
-### Files touched
-- `src/components/home/HomeSelection.tsx`
+- One paragraph, no redundancy. Every sentence advances the message.
+- Sentence 1: what's free. Sentence 2: what costs are. Sentence 3: not payment to us. Sentence 4: pre-workshop email with what/why/how + flexibility. Sentence 5: budget + ownership + readiness.
+- "walk in ready to build" implies no derailment without saying "we won't derail you."
+- Friendly, calm, founder-respecting tone throughout.
+
+## Files touched
+
+- `src/components/home/HomeSelection.tsx` — body text only
