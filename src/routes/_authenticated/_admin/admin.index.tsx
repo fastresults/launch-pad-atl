@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { MoreHorizontal, Trash2 } from "lucide-react";
 import { getAdminStats, listRegistrations } from "@/lib/admin.functions";
 import {
   listApplications,
@@ -11,10 +11,18 @@ import {
   bulkUpdateApplications,
   bulkDeleteApplications,
 } from "@/lib/applications-admin.functions";
-import { listMembers, approveMember } from "@/lib/members-admin.functions";
+import {
+  listMembers,
+  approveMember,
+  rejectMember,
+  pauseMember,
+  restoreMemberToPending,
+} from "@/lib/members-admin.functions";
+import type { MemberRow, MemberStatusValue as MemberStatus } from "@/lib/members-admin.functions";
 import type { ApplicationStatus } from "@/lib/applications-admin.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -65,11 +73,18 @@ function AdminDashboard() {
   const bulkDeleteFn = useServerFn(bulkDeleteApplications);
   const membersFn = useServerFn(listMembers);
   const approveFn = useServerFn(approveMember);
+  const rejectFn = useServerFn(rejectMember);
+  const pauseFn = useServerFn(pauseMember);
+  const restoreFn = useServerFn(restoreMemberToPending);
   const qc = useQueryClient();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [confirmRowDelete, setConfirmRowDelete] = useState<{ id: string; name: string } | null>(null);
+  const [memberFilter, setMemberFilter] = useState<"all" | MemberStatus>("all");
+  const [pauseTarget, setPauseTarget] = useState<MemberRow | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<MemberRow | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const stats = useQuery({ queryKey: ["admin", "stats"], queryFn: () => statsFn() });
   const regs = useQuery({
@@ -81,8 +96,8 @@ function AdminDashboard() {
     queryFn: () => appsFn({ data: { status: "applied" } }),
   });
   const members = useQuery({
-    queryKey: ["admin", "members", "pending"],
-    queryFn: () => membersFn({ data: { status: "pending" } }),
+    queryKey: ["admin", "members", "all"],
+    queryFn: () => membersFn({ data: {} }),
   });
 
   const applicationsPending =
@@ -93,15 +108,68 @@ function AdminDashboard() {
   const confirmedRegistrations = stats.data?.confirmed ?? 0;
   const pendingMembers = members.data?.counts.pending ?? 0;
 
-  const handleApprove = async (userId: string) => {
+  const STATUS_ORDER: Record<MemberStatus, number> = {
+    pending: 0,
+    paused: 1,
+    approved: 2,
+    rejected: 3,
+  };
+  const allMembers = (members.data?.members ?? []) as MemberRow[];
+  const sortedMembers = useMemo(
+    () =>
+      [...allMembers].sort(
+        (a, b) =>
+          (STATUS_ORDER[a.member_status] ?? 9) -
+          (STATUS_ORDER[b.member_status] ?? 9),
+      ),
+    [allMembers],
+  );
+  const filteredMembers =
+    memberFilter === "all"
+      ? sortedMembers
+      : sortedMembers.filter((m) => m.member_status === memberFilter);
+  const previewMembers = filteredMembers.slice(0, 12);
+
+  const invalidateMembers = () => {
+    qc.invalidateQueries({ queryKey: ["admin", "members"] });
+    qc.invalidateQueries({ queryKey: ["admin", "badges"] });
+  };
+
+  const runMember = async (fn: () => Promise<unknown>, okMsg: string) => {
+    setActionLoading(true);
     try {
-      await approveFn({ data: { userId } });
-      toast.success("Member approved — dashboard unlocked");
-      qc.invalidateQueries({ queryKey: ["admin", "members"] });
-      qc.invalidateQueries({ queryKey: ["admin", "badges"] });
+      await fn();
+      toast.success(okMsg);
+      invalidateMembers();
     } catch (e: any) {
-      toast.error(e?.message ?? "Failed to approve");
+      toast.error(e?.message ?? "Action failed");
+    } finally {
+      setActionLoading(false);
     }
+  };
+
+  const handleApprove = (userId: string) =>
+    runMember(() => approveFn({ data: { userId } }), "Member approved");
+  const handleRestore = (userId: string) =>
+    runMember(
+      () => restoreFn({ data: { userId } }),
+      "Moved back to pending",
+    );
+  const confirmPause = async (reason?: string) => {
+    if (!pauseTarget) return;
+    await runMember(
+      () => pauseFn({ data: { userId: pauseTarget.user_id, reason } }),
+      "Access paused",
+    );
+    setPauseTarget(null);
+  };
+  const confirmReject = async (reason?: string) => {
+    if (!rejectTarget) return;
+    await runMember(
+      () => rejectFn({ data: { userId: rejectTarget.user_id, reason } }),
+      "Member rejected",
+    );
+    setRejectTarget(null);
   };
 
   const previewApps = (apps.data?.applications ?? []).slice(0, 8);
@@ -197,11 +265,41 @@ function AdminDashboard() {
       </div>
 
       <Panel
-        title="Pending member approvals"
-        empty="No pending members. New signups will appear here."
+        title="Members"
+        empty={
+          memberFilter === "all"
+            ? "No members yet. New signups will appear here."
+            : `No ${memberFilter} members.`
+        }
         href="/admin/members"
+        viewAllLabel="Manage all"
+        toolbar={
+          <div className="flex flex-wrap items-center gap-1">
+            {(["all", "pending", "paused", "approved", "rejected"] as const).map((f) => {
+              const count =
+                f === "all"
+                  ? allMembers.length
+                  : (members.data?.counts as Record<string, number> | undefined)?.[f] ?? 0;
+              const active = memberFilter === f;
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setMemberFilter(f)}
+                  className={`rounded-full px-2.5 py-1 text-[11px] uppercase tracking-wide transition ${
+                    active
+                      ? "bg-foreground text-background"
+                      : "bg-white/5 text-muted-foreground hover:bg-white/10"
+                  }`}
+                >
+                  {f} <span className="opacity-60">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        }
       >
-        {(members.data?.members ?? []).slice(0, 6).map((m) => (
+        {previewMembers.map((m) => (
           <div
             key={m.user_id}
             className="flex flex-col gap-2 border-t border-white/5 px-4 py-3 first:border-t-0 sm:flex-row sm:items-center sm:justify-between"
@@ -210,6 +308,7 @@ function AdminDashboard() {
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm font-medium">{m.display_name ?? m.email}</span>
                 <span className="text-xs text-muted-foreground">{m.email}</span>
+                <MemberStatusBadge status={m.member_status} />
                 {m.intake && (
                   <Badge variant="secondary" className="text-[10px]">
                     {m.intake.startup_type}
@@ -227,17 +326,59 @@ function AdminDashboard() {
                 )}
               </div>
             </div>
-            <div className="flex shrink-0 gap-2">
-              <Button size="sm" onClick={() => handleApprove(m.user_id)}>
-                Approve
-              </Button>
-              <Button size="sm" variant="outline" asChild>
-                <Link to="/admin/members">Review</Link>
-              </Button>
+            <div className="flex shrink-0 items-center gap-2">
+              {m.member_status === "pending" && (
+                <Button size="sm" disabled={actionLoading} onClick={() => handleApprove(m.user_id)}>
+                  Approve
+                </Button>
+              )}
+              {m.member_status === "paused" && (
+                <Button size="sm" disabled={actionLoading} onClick={() => handleApprove(m.user_id)}>
+                  Reinstate
+                </Button>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="icon" variant="outline" className="h-8 w-8" aria-label="More actions">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {m.member_status === "pending" && (
+                    <DropdownMenuItem onClick={() => setRejectTarget(m)}>
+                      Reject…
+                    </DropdownMenuItem>
+                  )}
+                  {m.member_status === "approved" && (
+                    <DropdownMenuItem onClick={() => setPauseTarget(m)}>
+                      Pause access…
+                    </DropdownMenuItem>
+                  )}
+                  {m.member_status === "paused" && (
+                    <DropdownMenuItem onClick={() => handleRestore(m.user_id)}>
+                      Move to pending
+                    </DropdownMenuItem>
+                  )}
+                  {m.member_status === "rejected" && (
+                    <DropdownMenuItem onClick={() => handleRestore(m.user_id)}>
+                      Move to pending
+                    </DropdownMenuItem>
+                  )}
+                  {m.member_status === "approved" && (
+                    <DropdownMenuItem onClick={() => handleRestore(m.user_id)}>
+                      Move to pending
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin/members">Open full review</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         ))}
       </Panel>
+
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel
@@ -384,7 +525,48 @@ function AdminDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ConfirmDialog
+        open={!!pauseTarget}
+        onOpenChange={(o) => !o && setPauseTarget(null)}
+        title={`Pause ${pauseTarget?.display_name ?? pauseTarget?.email ?? "this member"}'s access?`}
+        description="They'll see the paused-account screen until you reinstate them. Their data and progress remain intact."
+        confirmLabel="Pause access"
+        variant="destructive"
+        reasonLabel="Reason (optional)"
+        reasonPlaceholder="Shared with the member on the paused screen"
+        loading={actionLoading}
+        onConfirm={confirmPause}
+      />
+
+      <ConfirmDialog
+        open={!!rejectTarget}
+        onOpenChange={(o) => !o && setRejectTarget(null)}
+        title={`Reject ${rejectTarget?.display_name ?? rejectTarget?.email ?? "this member"}?`}
+        description="They won't be able to access the founder dashboard. You can move them back to pending later."
+        confirmLabel="Reject"
+        variant="destructive"
+        reasonLabel="Reason (optional)"
+        reasonPlaceholder="Internal note — not sent to the member"
+        loading={actionLoading}
+        onConfirm={confirmReject}
+      />
     </div>
+  );
+}
+
+function MemberStatusBadge({ status }: { status: MemberStatus }) {
+  const map: Record<MemberStatus, { label: string; className: string }> = {
+    pending: { label: "Pending", className: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
+    approved: { label: "Approved", className: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" },
+    paused: { label: "Paused", className: "bg-rose-500/15 text-rose-300 border-rose-500/30" },
+    rejected: { label: "Rejected", className: "bg-muted text-muted-foreground border-white/10" },
+  };
+  const v = map[status];
+  return (
+    <Badge variant="outline" className={`text-[10px] ${v.className}`}>
+      {v.label}
+    </Badge>
   );
 }
 
@@ -395,12 +577,14 @@ function Panel({
   children,
   empty,
   toolbar,
+  viewAllLabel = "View all",
 }: {
   title: string;
   href: string;
   children: React.ReactNode;
   empty: string;
   toolbar?: React.ReactNode;
+  viewAllLabel?: string;
 }) {
   const hasChildren = Array.isArray(children) ? children.length > 0 : !!children;
   return (
@@ -412,7 +596,7 @@ function Panel({
         <div className="flex items-center gap-3">
           {toolbar}
           <Link to={href} className="text-xs text-muted-foreground hover:text-foreground">
-            View all →
+            {viewAllLabel} →
           </Link>
         </div>
       </div>
