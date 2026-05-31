@@ -578,6 +578,7 @@ function Panel({
   empty,
   toolbar,
   viewAllLabel = "View all",
+  description,
 }: {
   title: string;
   href: string;
@@ -585,11 +586,12 @@ function Panel({
   empty: string;
   toolbar?: React.ReactNode;
   viewAllLabel?: string;
+  description?: string;
 }) {
   const hasChildren = Array.isArray(children) ? children.length > 0 : !!children;
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
           {title}
         </h2>
@@ -600,6 +602,11 @@ function Panel({
           </Link>
         </div>
       </div>
+      {description ? (
+        <p className="mb-3 max-w-2xl text-xs leading-relaxed text-muted-foreground">
+          {description}
+        </p>
+      ) : null}
       <div className="overflow-hidden rounded-2xl border border-white/10">
         {hasChildren ? (
           children
