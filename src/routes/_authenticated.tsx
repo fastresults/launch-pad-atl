@@ -6,7 +6,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
-  const { isAuthenticated, isApprovedMember, loading } = useAuth();
+  const { isAuthenticated, isApprovedMember, isAdmin, memberStatus, loading } = useAuth();
   const { location } = useRouterState();
 
   if (loading) {
@@ -21,12 +21,26 @@ function AuthenticatedLayout() {
     return <Navigate to="/login" search={{ redirect: location.href }} replace />;
   }
 
-  // Gate: non-approved members can only see /welcome
   const path = location.pathname;
+  const isPaused = path === "/paused" || path.startsWith("/paused/");
   const isWelcome = path === "/welcome" || path.startsWith("/welcome/");
+
+  // Paused members: account was previously approved, now revoked.
+  if (!isAdmin && memberStatus === "paused") {
+    if (!isPaused) return <Navigate to="/paused" replace />;
+    return <Outlet />;
+  }
+
+  // Non-approved (pending/rejected): send to the new-applicant welcome flow.
   if (!isApprovedMember && !isWelcome) {
     return <Navigate to="/welcome" replace />;
   }
 
+  // Approved members trying to view /paused should be sent back to the app.
+  if (isApprovedMember && isPaused) {
+    return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
+  }
+
   return <Outlet />;
 }
+
