@@ -107,6 +107,7 @@ export const listMembers = createServerFn({ method: "GET" })
       pending: 0,
       approved: 0,
       rejected: 0,
+      paused: 0,
       no_intake: 0,
     };
     for (const p of profiles ?? []) {
