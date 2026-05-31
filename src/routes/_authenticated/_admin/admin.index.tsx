@@ -577,12 +577,14 @@ function Panel({
   children,
   empty,
   toolbar,
+  viewAllLabel = "View all",
 }: {
   title: string;
   href: string;
   children: React.ReactNode;
   empty: string;
   toolbar?: React.ReactNode;
+  viewAllLabel?: string;
 }) {
   const hasChildren = Array.isArray(children) ? children.length > 0 : !!children;
   return (
@@ -594,7 +596,7 @@ function Panel({
         <div className="flex items-center gap-3">
           {toolbar}
           <Link to={href} className="text-xs text-muted-foreground hover:text-foreground">
-            View all →
+            {viewAllLabel} →
           </Link>
         </div>
       </div>
