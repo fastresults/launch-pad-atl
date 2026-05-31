@@ -381,6 +381,7 @@ function AdminDashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel
           title="New applications"
+          description="Founders who applied to the free cohort but haven't been admitted yet. Review each application, then move them through Reviewing, Shortlisted, Selected, Waitlist, or Rejected. Selecting an applicant promotes them to a confirmed registration and unlocks their founder dashboard."
           empty="No applications yet."
           href="/admin/applications"
           toolbar={
