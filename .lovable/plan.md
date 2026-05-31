@@ -1,35 +1,24 @@
 ## Goal
 
-Replace the "Pending member approvals" panel on the admin dashboard (`/admin`) with an **All members** panel that shows every member with their current status and inline status actions — no "View all" click needed for routine triage.
+Add short admin-facing descriptions (~40 words each) above the "New applications" and "Confirmed registrations" panels on `/admin`, so admins immediately understand what those two free-cohort sections represent.
 
-## Changes
+## Change
 
 ### `src/routes/_authenticated/_admin/admin.index.tsx`
 
-1. **Query all members instead of just pending**
-   - Change the `members` query to call `listMembers({ data: {} })` (no status filter) with key `["admin", "members", "all"]`.
-   - Keep `pendingMembers` stat from `members.data.counts.pending` (still works — counts are returned regardless of filter).
+1. Extend the `Panel` component with an optional `description?: string` prop. When present, render it as a small muted paragraph between the title row and the bordered list container (`text-xs text-muted-foreground max-w-2xl mb-3`).
 
-2. **Replace the panel** "Pending member approvals" → "Members":
-   - Render up to ~12 rows by default, sorted: `pending` first, then `paused`, then `approved`, then `rejected`. Add a small client-side status filter (All / Pending / Approved / Paused / Rejected) as chip toggles in the panel toolbar so the admin can slice without leaving the dashboard.
-   - Each row shows: name, email, intake badge/idea (as today), a **status Badge** (color-coded: pending=amber, approved=emerald, paused=rose, rejected=muted), and a kebab/`DropdownMenu` of contextual actions:
-     - pending → Approve, Reject
-     - approved → Pause access, Move to pending
-     - paused → Reinstate, Move to pending
-     - rejected → Move to pending
-   - Wire actions to the existing server fns already used on `admin.members.tsx` (`approveMember`, `rejectMember`, `pauseMember`, `setMemberPending`) via `useServerFn`. Reuse the existing `ConfirmDialog` component for destructive actions (Pause, Reject) with reason textarea — no native modals.
-   - Empty state copy: "No members yet. New signups will appear here."
-   - Keep a small "Manage all →" link to `/admin/members` for the full management page, but it's no longer the only path to act.
+2. Pass copy to the two free-cohort panels:
 
-3. **No backend / schema / RLS changes.** All required server functions already exist.
+   - **New applications** (~40 words)
+     > "Founders who applied to the free cohort but haven't been admitted yet. Review each application, then move them through Reviewing, Shortlisted, Selected, Waitlist, or Rejected. Selecting an applicant promotes them to a confirmed registration and unlocks their founder dashboard."
+
+   - **Confirmed registrations** (~40 words)
+     > "Founders accepted into the current free cohort. Each entry represents a secured seat — they've cleared application review and are enrolled in programming. Use this list to confirm headcount, follow up on onboarding, and prep cohort communications."
+
+3. Leave the "Members" panel untouched (it already has a self-explanatory header from the page).
 
 ## Out of scope
 
-- The `/admin/members` full page stays as-is (it's the deep-management view).
-- No new columns, migrations, or auth changes.
-
-## Technical notes
-
-- `listMembers` already returns the full list and counts when called with no status; the filter is applied client-side via the chip toggles.
-- Color tokens: use existing semantic classes already used in `admin.members.tsx` for status badges to stay consistent.
-- Loading state: skeleton rows while `members.isLoading`.
+- No new copy on the page header, members panel, or stat cards.
+- No backend / schema / route changes.
