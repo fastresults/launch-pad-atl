@@ -1,41 +1,68 @@
-# Use the real StartupLabs logo everywhere
+# Reversible approval + Paused account screen
 
-## Problem
+## Today
 
-- `src/components/admin/AdminSidebar.tsx` renders a hand-rolled blue "SL" tile + the word "Admin" instead of the real brand logo. That's what's in the screenshot.
-- `src/components/site/Header.tsx` and `src/components/site/Footer.tsx` use the real `StartupLabsLogo`, but hardcode `text-white` on it. The "startup" wordmark uses `currentColor`, so in light mode it becomes invisible (white on white).
-- `src/routes/_authenticated/dashboard.tsx` already does it right (`text-foreground`) — we'll match that pattern everywhere.
+`/admin/members` only has Approve / Reject / Mark contacted, with no clean way to take approval back. The `_authenticated` gate (`src/routes/_authenticated.tsx`) sends any non-approved member to `/welcome`, which is written for brand-new applicants — wrong tone for someone whose access was revoked.
+
+We need (1) reversible approval in the admin UI and (2) a distinct "your account is paused" experience for previously-approved members, separate from the new-applicant welcome flow.
 
 ## Plan
 
-### 1. Add a compact mark for collapsed sidebars
+### 1. New `paused` member status
 
-Create `src/components/brand/StartupLabsMark.tsx` — a small SVG containing only the gradient leaf glyph from `StartupLabsLogo` (same `<defs>` + leaf `<path>`, square viewBox `0 0 174.28 174.28`). Theme-agnostic (gradient stays the same in light/dark). Used when the sidebar is collapsed to icon mode.
+Add `'paused'` to the allowed values of `profiles.member_status` (currently `pending | approved | rejected`). Migration: drop+recreate the check constraint (or expand the enum if one exists) to include `paused`. No other column changes — `approved_at`, `approved_by`, `approved_via` stay populated as the audit trail of the prior approval.
 
-### 2. Fix the admin sidebar header
+Update `MemberRow` typing and the `assertAdmin`-gated server fns to know about `paused`.
 
-In `src/components/admin/AdminSidebar.tsx`, replace the SL tile + "Admin" label with:
+### 2. New server fn: `pauseMember` (replaces "revoke" wording)
 
-- Expanded state: `<StartupLabsLogo className="h-7 w-auto text-foreground" />` (wordmark uses `currentColor`, so it flips correctly between light and dark).
-- Collapsed (`group-data-[collapsible=icon]`) state: `<StartupLabsMark className="h-6 w-6" />`.
+In `src/lib/members-admin.functions.ts`. POST, admin-gated. Input `{ userId: uuid, reason?: string ≤1000 }`.
 
-Toggle via the existing `group-data-[collapsible=icon]:hidden` / `:block` utilities so we don't need extra state.
+- `profiles`: set `member_status = 'paused'`, store `reason` in `rejected_reason` (re-used as the pause/decline note column), keep `approved_at/by/via` intact.
+- `member_intakes`: leave as `converted`. Pausing isn't a re-review.
+- Return `{ ok: true }`. No email.
 
-Keep the wrapping `<Link to="/admin">`.
+### 3. New server fn: `restoreMemberToPending`
 
-### 3. Make the public site logo theme-aware
+For rejected members only. Sets `member_status='pending'`, clears `rejected_reason`, resets `member_intakes.status='submitted'`. Used from the Rejected tab.
 
-In `src/components/site/Header.tsx` (both desktop and mobile sheet) and `src/components/site/Footer.tsx`, change `text-white` on the `<StartupLabsLogo />` to `text-foreground`. The leaf gradient stays untouched; the "startup" wordmark now adapts to the current theme. Header background is already `bg-background/70`, so contrast is correct in both modes.
+### 4. Admin UI changes (`admin.members.tsx`)
 
-### 4. Sanity-check the rest
+Make actions tab-aware and add a fifth tab:
 
-Grep for any other ad-hoc "SL" / placeholder logo tiles in admin/dashboard/auth pages and swap them for `StartupLabsLogo` (`text-foreground`) if found. Known good: `dashboard.tsx` already uses `text-foreground`.
+- Tabs: **Pending • Approved • Paused • Rejected • No intake** (counts update accordingly).
+- **Pending / No intake**: Approve, Mark contacted, Reject. (Unchanged.)
+- **Approved**: show `approved_at` + `approved_via` badge inline; primary action **Pause access** (destructive). Confirm with `window.confirm("Pause {name}'s access? They will see the paused-account screen until you reinstate them.")`. Optional reason via `window.prompt`.
+- **Paused**: show **Reinstate** (primary, calls `approveMember` — re-sets to approved + `approved_via='admin'`) and **Reject** (secondary).
+- **Rejected**: **Move to pending** and **Approve**. Hide Reject.
 
-## Files touched
+Toasts: "Access paused" / "Member reinstated" / "Moved back to pending". Invalidate `["admin","members"]` after each.
 
-- new: `src/components/brand/StartupLabsMark.tsx`
-- edit: `src/components/admin/AdminSidebar.tsx`
-- edit: `src/components/site/Header.tsx`
-- edit: `src/components/site/Footer.tsx`
+### 5. New route `/paused` for the gated screen
 
-No backend, schema, or routing changes.
+Create `src/routes/_authenticated/paused.tsx`. Renders a polished, on-brand screen with the StartupLabs logo (theme-aware, per the recent logo fix), heading **"Your account is paused"**, and short award-winning copy:
+
+> Access to your founder dashboard has been temporarily paused by the StartupLabs team. Your work is safe — nothing has been deleted. If this feels like a mistake or you'd like to discuss reinstatement, send us a note below and we'll get back to you within one business day.
+
+Below that, an **Inquiry form** (name pre-filled from profile, email pre-filled and read-only, subject pre-filled with "Account paused — request review", message textarea). Submitting calls a new thin server fn `submitPausedAccountInquiry` that inserts into the existing `inquiries` table (admin already has `/admin/inquiries`) with `subject` prefixed `[Paused account]` and the user's `user_id` referenced in `message` for traceability. Sign-out button in the corner.
+
+### 6. Update the auth gate
+
+In `src/routes/_authenticated.tsx`:
+
+- If `member_status === 'paused'` → redirect to `/paused` (allow `/paused` itself).
+- If `member_status === 'pending' | 'rejected'` → existing `/welcome` redirect (unchanged).
+- Approved → through.
+
+`/welcome` keeps its current new-applicant copy; the paused screen is its own thing.
+
+## Files
+
+- new migration: expand `member_status` allowed values to include `'paused'`
+- edit: `src/lib/members-admin.functions.ts` (add `pauseMember`, `restoreMemberToPending`, update status enums)
+- new: `src/lib/paused-inquiry.functions.ts` (`submitPausedAccountInquiry`)
+- edit: `src/routes/_authenticated/_admin/admin.members.tsx` (tab-aware actions + Paused tab)
+- new: `src/routes/_authenticated/paused.tsx`
+- edit: `src/routes/_authenticated.tsx` (paused → `/paused` redirect)
+
+No new tables, RLS unchanged (server fns use `supabaseAdmin`; inquiries insert is already open to authenticated users via existing policy).
