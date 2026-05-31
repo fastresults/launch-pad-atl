@@ -15,11 +15,13 @@ async function assertAdmin(userId: string) {
   }
 }
 
+export type MemberStatusValue = "pending" | "approved" | "rejected" | "paused";
+
 export type MemberRow = {
   user_id: string;
   email: string | null;
   display_name: string | null;
-  member_status: "pending" | "approved" | "rejected";
+  member_status: MemberStatusValue;
   approved_at: string | null;
   approved_via: "admin" | "payment" | null;
   created_at: string;
@@ -40,7 +42,7 @@ export const listMembers = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        status: z.enum(["pending", "approved", "rejected", "no_intake"]).optional(),
+        status: z.enum(["pending", "approved", "rejected", "paused", "no_intake"]).optional(),
         search: z.string().trim().max(120).optional(),
       })
       .optional()
