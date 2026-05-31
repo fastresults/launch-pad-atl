@@ -276,10 +276,8 @@ function AdminDashboard() {
         toolbar={
           <div className="flex flex-wrap items-center gap-1">
             {(["all", "pending", "paused", "approved", "rejected"] as const).map((f) => {
-              const count =
-                f === "all"
-                  ? allMembers.length
-                  : (members.data?.counts as Record<string, number> | undefined)?.[f] ?? 0;
+              const counts = members.data?.counts as Record<string, number> | undefined;
+              const count = f === "all" ? allMembers.length : counts?.[f] ?? 0;
               const active = memberFilter === f;
               return (
                 <button
