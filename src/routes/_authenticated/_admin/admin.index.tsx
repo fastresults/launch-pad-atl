@@ -524,6 +524,8 @@ function AdminDashboard() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
+      </AlertDialog>
+
       <ConfirmDialog
         open={!!pauseTarget}
         onOpenChange={(o) => !o && setPauseTarget(null)}
