@@ -899,6 +899,22 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
           }}
         />
       )}
+
+      <PromptDialog
+        open={promptKind !== null}
+        onOpenChange={(o) => !o && setPromptKind(null)}
+        title={promptKind === "collection" ? "New collection" : "New folder"}
+        inputLabel={promptKind === "collection" ? "Collection name" : "Folder name"}
+        placeholder={promptKind === "collection" ? "e.g. Pitch deck assets" : "e.g. Brand"}
+        confirmLabel="Create"
+        maxLength={80}
+        loading={promptKind === "folder" ? createFolderMu.isPending : createCollectionMu.isPending}
+        onConfirm={(name) => {
+          if (promptKind === "folder") createFolderMu.mutate(name);
+          else if (promptKind === "collection") createCollectionMu.mutate(name);
+          setPromptKind(null);
+        }}
+      />
     </div>
   );
 }
