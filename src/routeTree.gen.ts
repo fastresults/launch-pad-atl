@@ -23,6 +23,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
+import { Route as AuthenticatedPausedRouteImport } from './routes/_authenticated/paused'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/_admin'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
@@ -128,6 +129,11 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
 const AuthenticatedWelcomeRoute = AuthenticatedWelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPausedRoute = AuthenticatedPausedRouteImport.update({
+  id: '/paused',
+  path: '/paused',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -362,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/paused': typeof AuthenticatedPausedRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
@@ -412,6 +419,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/paused': typeof AuthenticatedPausedRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
@@ -466,6 +474,7 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/_authenticated/paused': typeof AuthenticatedPausedRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/_authenticated/dashboard/brief': typeof AuthenticatedDashboardBriefRoute
@@ -519,6 +528,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/dashboard'
+    | '/paused'
     | '/welcome'
     | '/email/unsubscribe'
     | '/dashboard/brief'
@@ -569,6 +579,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/terms'
     | '/unsubscribe'
+    | '/paused'
     | '/welcome'
     | '/email/unsubscribe'
     | '/dashboard/brief'
@@ -622,6 +633,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/_authenticated/_admin'
     | '/_authenticated/dashboard'
+    | '/_authenticated/paused'
     | '/_authenticated/welcome'
     | '/email/unsubscribe'
     | '/_authenticated/dashboard/brief'
@@ -780,6 +792,13 @@ declare module '@tanstack/react-router' {
       path: '/welcome'
       fullPath: '/welcome'
       preLoaderRoute: typeof AuthenticatedWelcomeRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/paused': {
+      id: '/_authenticated/paused'
+      path: '/paused'
+      fullPath: '/paused'
+      preLoaderRoute: typeof AuthenticatedPausedRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard': {
@@ -1179,12 +1198,14 @@ const AuthenticatedDashboardRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
+  AuthenticatedPausedRoute: typeof AuthenticatedPausedRoute
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
+  AuthenticatedPausedRoute: AuthenticatedPausedRoute,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
 }
 
