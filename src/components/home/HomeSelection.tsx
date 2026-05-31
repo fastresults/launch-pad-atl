@@ -208,16 +208,15 @@ function BringYourCard() {
         </h2>
         <div className="mt-6 rounded-2xl border border-white/10 bg-card p-6 md:p-8">
           <p className="text-base text-muted-foreground md:text-lg">
-            Your seat, the build, the brand, the materials, lunch — all covered by us. The one
-            thing we can&rsquo;t put on our tab is the handful of small pass-through costs that
-            land in <em>your</em> name on launch day: your domain (~$12), email + hosting
-            trials, a state filing fee, maybe an AI tool subscription. These are direct expenses
-            between you and those vendors — we never see your card, and we don&rsquo;t need to.
-            Budget up to{" "}
-            <span className="font-medium text-foreground">${INCIDENTALS_CAP}</span> and
-            you&rsquo;ll have plenty of margin. Everything gets set up in <em>your</em> name, on{" "}
-            <em>your</em> accounts, with <em>your</em> card, so on day one you own every login,
-            every receipt, and every asset — privacy intact, control fully yours.
+            Your seat, the build, the brand, the materials, lunch — the workshop itself is entirely
+            on us. The only costs you&rsquo;ll see are the ordinary, expected expenses that come
+            with opening any business: your domain (~$12), email and hosting setup, a state filing
+            fee, maybe an AI tool subscription. These go straight from you to those vendors — not
+            a cent is a payment to us. Budget around{" "}
+            <span className="font-medium text-foreground">${INCIDENTALS_CAP}</span> and you&rsquo;ll
+            be well covered. Everything is set up in your name, on your accounts, with your card,
+            so from day one you own every login, every receipt, and every asset — just like any
+            founder does.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Chip icon={<ShieldCheck className="size-3.5" />} label="Everything in your name" />
