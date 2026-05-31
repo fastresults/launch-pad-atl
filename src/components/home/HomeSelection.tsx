@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 const FACILITATOR_NAME = "Adam Anderson";
-const INCIDENTALS_CAP = 200;
+const INCIDENTALS_CAP = 225;
 
 // TBD with founder — placeholders flagged for easy swap.
 const FINALIST_DISCOUNT_PCT = 40; // % off next Atlanta cohort
