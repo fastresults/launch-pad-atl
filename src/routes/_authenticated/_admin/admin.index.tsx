@@ -72,11 +72,18 @@ function AdminDashboard() {
   const bulkDeleteFn = useServerFn(bulkDeleteApplications);
   const membersFn = useServerFn(listMembers);
   const approveFn = useServerFn(approveMember);
+  const rejectFn = useServerFn(rejectMember);
+  const pauseFn = useServerFn(pauseMember);
+  const restoreFn = useServerFn(restoreMemberToPending);
   const qc = useQueryClient();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [confirmRowDelete, setConfirmRowDelete] = useState<{ id: string; name: string } | null>(null);
+  const [memberFilter, setMemberFilter] = useState<"all" | MemberStatus>("all");
+  const [pauseTarget, setPauseTarget] = useState<MemberRow | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<MemberRow | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const stats = useQuery({ queryKey: ["admin", "stats"], queryFn: () => statsFn() });
   const regs = useQuery({
@@ -88,8 +95,8 @@ function AdminDashboard() {
     queryFn: () => appsFn({ data: { status: "applied" } }),
   });
   const members = useQuery({
-    queryKey: ["admin", "members", "pending"],
-    queryFn: () => membersFn({ data: { status: "pending" } }),
+    queryKey: ["admin", "members", "all"],
+    queryFn: () => membersFn({ data: {} }),
   });
 
   const applicationsPending =
@@ -100,18 +107,70 @@ function AdminDashboard() {
   const confirmedRegistrations = stats.data?.confirmed ?? 0;
   const pendingMembers = members.data?.counts.pending ?? 0;
 
-  const handleApprove = async (userId: string) => {
+  const STATUS_ORDER: Record<MemberStatus, number> = {
+    pending: 0,
+    paused: 1,
+    approved: 2,
+    rejected: 3,
+  };
+  const allMembers = (members.data?.members ?? []) as MemberRow[];
+  const sortedMembers = useMemo(
+    () =>
+      [...allMembers].sort(
+        (a, b) =>
+          (STATUS_ORDER[a.member_status] ?? 9) -
+          (STATUS_ORDER[b.member_status] ?? 9),
+      ),
+    [allMembers],
+  );
+  const filteredMembers =
+    memberFilter === "all"
+      ? sortedMembers
+      : sortedMembers.filter((m) => m.member_status === memberFilter);
+  const previewMembers = filteredMembers.slice(0, 12);
+
+  const invalidateMembers = () => {
+    qc.invalidateQueries({ queryKey: ["admin", "members"] });
+    qc.invalidateQueries({ queryKey: ["admin", "badges"] });
+  };
+
+  const runMember = async (fn: () => Promise<unknown>, okMsg: string) => {
+    setActionLoading(true);
     try {
-      await approveFn({ data: { userId } });
-      toast.success("Member approved — dashboard unlocked");
-      qc.invalidateQueries({ queryKey: ["admin", "members"] });
-      qc.invalidateQueries({ queryKey: ["admin", "badges"] });
+      await fn();
+      toast.success(okMsg);
+      invalidateMembers();
     } catch (e: any) {
-      toast.error(e?.message ?? "Failed to approve");
+      toast.error(e?.message ?? "Action failed");
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const previewApps = (apps.data?.applications ?? []).slice(0, 8);
+  const handleApprove = (userId: string) =>
+    runMember(() => approveFn({ data: { userId } }), "Member approved");
+  const handleRestore = (userId: string) =>
+    runMember(
+      () => restoreFn({ data: { userId } }),
+      "Moved back to pending",
+    );
+  const confirmPause = async (reason?: string) => {
+    if (!pauseTarget) return;
+    await runMember(
+      () => pauseFn({ data: { userId: pauseTarget.user_id, reason } }),
+      "Access paused",
+    );
+    setPauseTarget(null);
+  };
+  const confirmReject = async (reason?: string) => {
+    if (!rejectTarget) return;
+    await runMember(
+      () => rejectFn({ data: { userId: rejectTarget.user_id, reason } }),
+      "Member rejected",
+    );
+    setRejectTarget(null);
+  };
+
   const previewIds = previewApps.map((a) => a.id);
   const allSelected = previewIds.length > 0 && previewIds.every((id) => selectedIds.has(id));
   const someSelected = previewIds.some((id) => selectedIds.has(id));
