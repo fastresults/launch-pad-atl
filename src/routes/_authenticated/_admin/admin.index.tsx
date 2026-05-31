@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { MoreHorizontal, Trash2 } from "lucide-react";
 import { getAdminStats, listRegistrations } from "@/lib/admin.functions";
 import {
   listApplications,
@@ -11,10 +11,17 @@ import {
   bulkUpdateApplications,
   bulkDeleteApplications,
 } from "@/lib/applications-admin.functions";
-import { listMembers, approveMember } from "@/lib/members-admin.functions";
+import {
+  listMembers,
+  approveMember,
+  rejectMember,
+  pauseMember,
+  restoreMemberToPending,
+} from "@/lib/members-admin.functions";
 import type { ApplicationStatus } from "@/lib/applications-admin.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
