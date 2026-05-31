@@ -26,8 +26,18 @@ const nav = [
 export function SiteHeader() {
   const { isAuthenticated, isAdmin, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const getSettings = useServerFn(getPublicSiteSettings);
+  const { data: settings } = useQuery({
+    queryKey: ["site-settings"],
+    queryFn: () => getSettings(),
+    staleTime: 60_000,
+  });
+  const isFreeCohort = settings?.home_variant === "selection";
+  const ctaFull = isFreeCohort ? "Apply — free cohort" : "Reserve seat — from $679";
+  const ctaShort = isFreeCohort ? "Apply" : "Reserve";
 
   const close = () => setOpen(false);
+
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-background/70 backdrop-blur">
