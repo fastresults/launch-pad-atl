@@ -18,6 +18,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PromptDialog } from "@/components/ui/confirm-dialog";
 import {
   createSignedUploadUrl,
   finalizeUpload,
@@ -124,6 +125,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [isDragging, setIsDragging] = useState(false);
   const [dropTargetKey, setDropTargetKey] = useState<string | null>(null);
+  const [promptKind, setPromptKind] = useState<"folder" | "collection" | null>(null);
 
   // Load persisted view mode
   useEffect(() => {
@@ -386,10 +388,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => {
-                const name = window.prompt("Folder name");
-                if (name) createFolderMu.mutate(name);
-              }}
+              onClick={() => setPromptKind("folder")}
             >
               <FolderPlus className="h-4 w-4" />
             </Button>
@@ -457,10 +456,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => {
-                const name = window.prompt("Collection name");
-                if (name) createCollectionMu.mutate(name);
-              }}
+              onClick={() => setPromptKind("collection")}
             >
               <FolderPlus className="h-4 w-4" />
             </Button>
@@ -903,6 +899,22 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
           }}
         />
       )}
+
+      <PromptDialog
+        open={promptKind !== null}
+        onOpenChange={(o) => !o && setPromptKind(null)}
+        title={promptKind === "collection" ? "New collection" : "New folder"}
+        inputLabel={promptKind === "collection" ? "Collection name" : "Folder name"}
+        placeholder={promptKind === "collection" ? "e.g. Pitch deck assets" : "e.g. Brand"}
+        confirmLabel="Create"
+        maxLength={80}
+        loading={promptKind === "folder" ? createFolderMu.isPending : createCollectionMu.isPending}
+        onConfirm={(name) => {
+          if (promptKind === "folder") createFolderMu.mutate(name);
+          else if (promptKind === "collection") createCollectionMu.mutate(name);
+          setPromptKind(null);
+        }}
+      />
     </div>
   );
 }

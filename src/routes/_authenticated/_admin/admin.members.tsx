@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/_admin/admin/members")({
   component: AdminMembersPage,
@@ -34,6 +35,9 @@ function AdminMembersPage() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("pending");
   const [search, setSearch] = useState("");
+  const [pauseTarget, setPauseTarget] = useState<{ userId: string; name: string } | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<{ userId: string; name: string } | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const q = useQuery({
     queryKey: ["admin", "members", tab, search],
@@ -54,19 +58,26 @@ function AdminMembersPage() {
 
   const handleApprove = (userId: string) =>
     run(() => approveFn({ data: { userId } }), "Member approved");
-  const handleReject = (userId: string) => {
-    const reason = window.prompt("Reason for rejection (optional)") ?? undefined;
-    return run(() => rejectFn({ data: { userId, reason } }), "Member rejected");
-  };
   const handleContact = (userId: string) =>
     run(() => contactFn({ data: { userId } }), "Marked as contacted");
-  const handlePause = (userId: string, name: string) => {
-    if (!window.confirm(`Pause ${name}'s access? They will see the paused-account screen until you reinstate them.`)) return;
-    const reason = window.prompt("Internal note about why (optional)") ?? undefined;
-    return run(() => pauseFn({ data: { userId, reason } }), "Access paused");
-  };
   const handleRestoreToPending = (userId: string) =>
     run(() => restoreFn({ data: { userId } }), "Moved back to pending");
+
+  const confirmPause = async (reason?: string) => {
+    if (!pauseTarget) return;
+    setActionLoading(true);
+    await run(() => pauseFn({ data: { userId: pauseTarget.userId, reason } }), "Access paused");
+    setActionLoading(false);
+    setPauseTarget(null);
+  };
+
+  const confirmReject = async (reason?: string) => {
+    if (!rejectTarget) return;
+    setActionLoading(true);
+    await run(() => rejectFn({ data: { userId: rejectTarget.userId, reason } }), "Member rejected");
+    setActionLoading(false);
+    setRejectTarget(null);
+  };
 
   const counts =
     q.data?.counts ?? { pending: 0, approved: 0, paused: 0, rejected: 0, no_intake: 0 };
@@ -148,14 +159,14 @@ function AdminMembersPage() {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handlePause(m.user_id, name)}
+                            onClick={() => setPauseTarget({ userId: m.user_id, name })}
                           >
                             Pause access
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleReject(m.user_id)}
+                            onClick={() => setRejectTarget({ userId: m.user_id, name })}
                           >
                             Reject
                           </Button>
@@ -169,7 +180,7 @@ function AdminMembersPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleReject(m.user_id)}
+                            onClick={() => setRejectTarget({ userId: m.user_id, name })}
                           >
                             Reject
                           </Button>
@@ -206,7 +217,7 @@ function AdminMembersPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleReject(m.user_id)}
+                            onClick={() => setRejectTarget({ userId: m.user_id, name })}
                           >
                             Reject
                           </Button>
@@ -226,6 +237,32 @@ function AdminMembersPage() {
         them manually here. Approvals are fully reversible — pause to revoke dashboard access
         without losing their data. <Link to="/admin" className="underline">Back to dashboard</Link>
       </p>
+
+      <ConfirmDialog
+        open={pauseTarget !== null}
+        onOpenChange={(o) => !o && setPauseTarget(null)}
+        title={pauseTarget ? `Pause ${pauseTarget.name}'s access?` : "Pause access"}
+        description="They will see the paused-account screen until you reinstate them. Their data and progress remain intact."
+        confirmLabel="Pause access"
+        variant="destructive"
+        reasonLabel="Internal note about why (optional)"
+        reasonPlaceholder="e.g. Failure to pay"
+        loading={actionLoading}
+        onConfirm={confirmPause}
+      />
+
+      <ConfirmDialog
+        open={rejectTarget !== null}
+        onOpenChange={(o) => !o && setRejectTarget(null)}
+        title={rejectTarget ? `Reject ${rejectTarget.name}?` : "Reject member"}
+        description="Their intake will be closed. You can move them back to pending later if needed."
+        confirmLabel="Reject"
+        variant="destructive"
+        reasonLabel="Reason for rejection (optional)"
+        reasonPlaceholder="Visible only to admins"
+        loading={actionLoading}
+        onConfirm={confirmReject}
+      />
     </div>
   );
 }
