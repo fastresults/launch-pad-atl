@@ -467,6 +467,7 @@ function AdminDashboard() {
 
         <Panel
           title="Confirmed registrations"
+          description="Founders accepted into the current free cohort. Each entry represents a secured seat — they've cleared application review and are enrolled in programming. Use this list to confirm headcount, follow up on onboarding, and prep cohort communications."
           empty="No registrations yet."
           href="/admin/registrations"
         >
