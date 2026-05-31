@@ -13,13 +13,16 @@ import {
   Eye,
   Flame,
   MapPin,
+  ShieldCheck,
   Sparkles,
   Target,
   TicketPercent,
   Users,
+  Wallet,
 } from "lucide-react";
 
 const FACILITATOR_NAME = "Adam Anderson";
+const INCIDENTALS_CAP = 100;
 
 // TBD with founder — placeholders flagged for easy swap.
 const FINALIST_DISCOUNT_PCT = 40; // % off next Atlanta cohort
@@ -34,6 +37,7 @@ export function HomeSelection() {
       <WhyApplyingIsTheMove />
       <WhyDoingThis />
       <WhatYouWalkOut />
+      <BringYourCard />
       <ArtOfThePossible />
       <WhoWereLookingFor />
       <Timeline />
@@ -186,13 +190,51 @@ function WhyDoingThis() {
           choose from a deep bench — and we want every founder who applied to walk away with
           something real, even if the seat goes to someone else.
         </p>
-        <p className="mt-4 text-sm text-muted-foreground">
-          Hard costs after the day — state filing fees, hosting, subscriptions, and anything
-          physical like space, equipment, or inventory — aren&rsquo;t covered. Everything we
-          build together inside the room is.
-        </p>
       </div>
     </section>
+  );
+}
+
+function BringYourCard() {
+  return (
+    <section className="py-12 md:py-20">
+      <div className="mx-auto max-w-4xl px-6">
+        <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
+          A small heads-up
+        </p>
+        <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+          Bring a card for the small stuff —{" "}
+          <span className="text-gradient-brand">everything stays in your name.</span>
+        </h2>
+        <div className="mt-6 rounded-2xl border border-white/10 bg-card p-6 md:p-8">
+          <p className="text-base text-muted-foreground md:text-lg">
+            Your seat, the build, the brand, the materials, lunch — all covered. The only thing
+            we ask you to bring is a personal card for the handful of tiny pass-through costs
+            that happen the day you go live: your domain (~$12), email + hosting trials, a state
+            filing fee, maybe an AI tool subscription. Budget up to{" "}
+            <span className="font-medium text-foreground">${INCIDENTALS_CAP}</span> total and
+            you&rsquo;ll have margin to spare. Everything gets set up in <em>your</em> name, on{" "}
+            <em>your</em> accounts, with <em>your</em> card — because on day one, you should own
+            every login, every receipt, every asset. We just stand beside you while you click
+            &ldquo;buy.&rdquo;
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Chip icon={<ShieldCheck className="size-3.5" />} label="Everything in your name" />
+            <Chip icon={<Wallet className="size-3.5" />} label={`Up to ~$${INCIDENTALS_CAP} total`} />
+            <Chip icon={<Sparkles className="size-3.5" />} label="Optional — skip anything you don't need" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Chip({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-background/40 px-3 py-1.5 text-xs text-muted-foreground">
+      {icon}
+      {label}
+    </span>
   );
 }
 
