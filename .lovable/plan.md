@@ -1,24 +1,24 @@
-## Goal
+## Problem
 
-Add short admin-facing descriptions (~40 words each) above the "New applications" and "Confirmed registrations" panels on `/admin`, so admins immediately understand what those two free-cohort sections represent.
+`SiteHeader` hardcodes the top-right CTA as "Reserve seat — from $679" (desktop) and "Reserve" (mobile). When the admin switches the site to the **Selection — Free Cohort** variant via `/admin/site`, that price contradicts the free messaging.
 
-## Change
+## Fix
 
-### `src/routes/_authenticated/_admin/admin.index.tsx`
+Make the header CTA aware of the current `home_variant` site setting and swap its label when the site is in free-cohort mode.
 
-1. Extend the `Panel` component with an optional `description?: string` prop. When present, render it as a small muted paragraph between the title row and the bordered list container (`text-xs text-muted-foreground max-w-2xl mb-3`).
+### Changes
 
-2. Pass copy to the two free-cohort panels:
+1. **`src/components/site/Header.tsx`**
+   - Fetch site settings using the existing `getPublicSiteSettings` server fn via `useServerFn` + `useQuery` (queryKey `["site-settings"]`, matching `admin.site.tsx` so cache is shared).
+   - Derive `isFreeCohort = data?.home_variant === "selection"`.
+   - Desktop CTA label: `isFreeCohort ? "Apply — free cohort" : "Reserve seat — from $679"`.
+   - Mobile compact CTA label: `isFreeCohort ? "Apply" : "Reserve"`.
+   - Mobile sheet full CTA label: `isFreeCohort ? "Apply — free cohort" : "Reserve seat — from $679"`.
+   - While loading / on error, default to the paid label (safe fallback — current behavior).
+   - Link `to="/register"` stays the same; only the label changes.
 
-   - **New applications** (~40 words)
-     > "Founders who applied to the free cohort but haven't been admitted yet. Review each application, then move them through Reviewing, Shortlisted, Selected, Waitlist, or Rejected. Selecting an applicant promotes them to a confirmed registration and unlocks their founder dashboard."
+### Out of scope
 
-   - **Confirmed registrations** (~40 words)
-     > "Founders accepted into the current free cohort. Each entry represents a secured seat — they've cleared application review and are enrolled in programming. Use this list to confirm headcount, follow up on onboarding, and prep cohort communications."
-
-3. Leave the "Members" panel untouched (it already has a self-explanatory header from the page).
-
-## Out of scope
-
-- No new copy on the page header, members panel, or stat cards.
-- No backend / schema / route changes.
+- No change to `/register` page content, pricing data, or `register_variant` logic.
+- No change to the gradient pill styling.
+- Admin toggle UI is unchanged — this just consumes the existing setting.

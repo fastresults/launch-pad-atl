@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
 import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
+import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import {
   Sheet,
   SheetContent,
@@ -10,6 +13,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+
 
 const nav = [
   { to: "/", label: "home" },
@@ -22,8 +26,18 @@ const nav = [
 export function SiteHeader() {
   const { isAuthenticated, isAdmin, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const getSettings = useServerFn(getPublicSiteSettings);
+  const { data: settings } = useQuery({
+    queryKey: ["site-settings"],
+    queryFn: () => getSettings(),
+    staleTime: 60_000,
+  });
+  const isFreeCohort = settings?.home_variant === "selection";
+  const ctaFull = isFreeCohort ? "Apply — free cohort" : "Reserve seat — from $679";
+  const ctaShort = isFreeCohort ? "Apply" : "Reserve";
 
   const close = () => setOpen(false);
+
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-background/70 backdrop-blur">
@@ -79,7 +93,7 @@ export function SiteHeader() {
             to="/register"
             className="rounded-full bg-hero-gradient px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
           >
-            Reserve seat — from $679
+            {ctaFull}
           </Link>
         </div>
 
@@ -89,7 +103,7 @@ export function SiteHeader() {
             to="/register"
             className="rounded-full bg-hero-gradient px-3.5 py-2 text-sm font-medium text-white"
           >
-            Reserve
+            {ctaShort}
           </Link>
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
@@ -140,7 +154,7 @@ export function SiteHeader() {
                     onClick={close}
                     className="flex w-full items-center justify-center rounded-full bg-hero-gradient px-5 py-3 text-base font-medium text-white"
                   >
-                    Reserve seat — from $679
+                    {ctaFull}
                   </Link>
                   {isAuthenticated ? (
                     <>
