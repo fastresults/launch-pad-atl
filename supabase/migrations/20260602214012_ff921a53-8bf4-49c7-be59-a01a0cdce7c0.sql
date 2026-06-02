@@ -1,0 +1,1 @@
+UPDATE public.site_settings SET value = '"original"'::jsonb, updated_at = now() WHERE key = 'register_variant';
