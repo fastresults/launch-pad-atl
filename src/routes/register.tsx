@@ -90,6 +90,7 @@ function RegisterDefault() {
     queryKey: ["cohorts"],
     queryFn: () => fetchCohorts(),
     initialData: [],
+    initialDataUpdatedAt: 0,
     staleTime: 60_000,
   });
   const defaultCohort = useMemo(
