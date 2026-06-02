@@ -1,108 +1,72 @@
-## Goal
 
-Produce a comprehensive, multi-file Product Requirements Document (PRD) bundle in `/mnt/documents/prd/` that fully specifies the StartupLabs platform so an engineering team can rebuild it on the same stack (TanStack Start + Supabase) with no access to the original repo.
+# Parallel-load Startup Labs as a scaffolded module under the target app
 
-## Approach
+## How Option B actually works
 
-Use parallel subagents to exhaustively explore the codebase (routes, components, server functions, DB schema, RLS, emails, AI pipelines, admin tooling, copy), then assemble findings into a structured PRD bundle. Each document is high-level + reference style: architecture, contracts, workflows, and complete copy/email decks — not pixel-by-pixel UI breakdowns.
+Lovable's cross-project tools (`@mention` + `cross_project--read_project_file` / `cross_project--copy_project_asset`) only work in the **pull** direction — the agent reads from another project into the project it's running in. So this work happens in the **target app**, not here. My job in this project is to produce a single, exact "pull manifest + kickoff prompt" you paste over there.
 
-## Deliverable: `/mnt/documents/prd/`
+Both projects must be in the same Lovable workspace for `@mention` to see this project. Confirm that first.
 
-```
-prd/
-  00-overview.md              Product vision, personas, top-level value props,
-                              glossary, business rules
-  01-information-architecture.md
-                              Sitemap, route tree (public/auth/admin),
-                              navigation, layouts, route gating
-  02-design-system.md         Theme (oklch tokens), typography, spacing, shadcn
-                              components in use, brand assets (logo, favicon),
-                              dark/light mode, responsive rules
-  03-data-model.md            Every public.* table: columns, FKs, enums,
-                              triggers, indexes, plain-English access rules
-                              (RLS) + SQL reference, storage buckets
-  04-auth-and-roles.md        Signup/login flows, Google OAuth via Lovable
-                              broker, app_role enum, has_role/is_admin,
-                              member_status lifecycle, _authenticated gate,
-                              paused/welcome flows
-  05-public-site.md           Marketing pages spec: /, /facilitator,
-                              /schedule, /register, /contact, /privacy,
-                              /terms, /unsubscribe — sections, components,
-                              CTAs, dependencies
-  06-founder-dashboard.md     Authenticated founder app: dashboard home,
-                              brief, workflow, deliverables, documents,
-                              files, filing, goals, day-of, media, profile
-  07-founder-brief-ai.md      Brief blocks structure, question schema,
-                              checkpoint summaries, AI summarization,
-                              founder memory store, voice capture
-  08-workflow-and-pipeline.md User pipeline steps, AI pipeline stages,
-                              stage intake, deliverable publishing, cron
-                              hook (publish-due-deliverables)
-  09-cohorts-and-payments.md  Cohorts table, seat reservation, tier
-                              assignment (founders vs cohort), pricing,
-                              auto-approval on payment, registration flow
-  10-applications-flow.md     Founder application submission, statuses,
-                              admin review, selection → promotion to
-                              registration, related emails
-  11-inquiries-and-contact.md Contact form, inquiries table, admin
-                              triage, reply workflow, email templates
-  12-admin-tooling.md         All /admin/* screens: dashboard, attendees,
-                              applications, inquiries, cohorts, members,
-                              registrations, review, site settings, users,
-                              media library; permissions, badges, command menu
-  13-media-system.md          Master media library, per-user media hub,
-                              folders, collections, storage buckets, admin
-                              push-to-attendee
-  14-email-system.md          Full transactional email deck: every template
-                              (subject + body + variables + trigger), pgmq
-                              queue, enqueue/process/DLQ, suppression,
-                              unsubscribe, auth emails, custom domain config
-  15-server-functions.md      Inventory of every createServerFn (file,
-                              method, input, middleware, returns); public
-                              server routes (/api/public/*); patterns
-  16-ai-gateway.md            Lovable AI usage, models used, ai-gateway.server
-                              wrappers, prompts inventory
-  17-copy-deck.md             Verbatim user-facing copy: marketing pages,
-                              dashboard labels, empty states, errors, toasts,
-                              CTAs, microcopy, legal pages
-  18-environments-and-ops.md  Env vars, secrets, storage buckets, cron jobs,
-                              publishing flow, domains, monitoring
-  19-rebuild-checklist.md     Ordered build plan: scaffold → auth → schema
-                              → public site → admin → founder app → AI →
-                              emails → polish; acceptance criteria per phase
-  README.md                   How the bundle is organized, reading order,
-                              conventions
-```
+## What goes across (and what doesn't)
 
-## Research plan (parallel subagents)
+| Layer | Strategy | Why |
+|---|---|---|
+| Database schema, RLS, RPCs, triggers, pgmq queues | Copy all 27 migration files verbatim, run in filename order | Encodes cohort seat reservation, auto-approve, email queue, DLQ, role model — non-negotiable |
+| Storage buckets (`attendee-docs`, `master-media`, `user-media`) | Recreate via tool, copy RLS policies | Migrations don't create buckets |
+| Server functions (`src/lib/*.functions.ts` + `*.server.ts`) | Copy as-is into a namespaced folder, e.g. `src/lib/startuplabs/` | Preserves workflow DAG, AI pipeline, brief logic, email enqueue |
+| Email templates (`src/lib/email-templates/*`) | Copy verbatim + register in target's template registry | Exact subject lines, copy, unsubscribe wiring |
+| Routes (`src/routes/_authenticated/**`, public marketing pages) | Copy under a route prefix, e.g. `src/routes/startuplabs/` and `src/routes/_authenticated/startuplabs/` | Keeps target app's own routes intact; Startup Labs becomes a sub-surface |
+| Components (`src/components/brief`, `dashboard`, `facilitator`, `value`, `brand`, `voice`, `register`, `home`, `media`, `admin`) | Copy under `src/components/startuplabs/` | Avoid clashes with target app's components |
+| Shared UI (`src/components/ui/*` shadcn) | **Skip** — target already has them | Avoid version drift |
+| Brand assets (`public/startuplabs-logo.svg`, `src/assets/*`) | Copy via `cross_project--copy_project_asset` | Binary-safe |
+| Supabase generated files (`client.ts`, `client.server.ts`, `types.ts`, `auth-middleware.ts`, `auth-attacher.ts`) | **Do not copy** — target's are auto-generated for its own Supabase project | After migrations run, target's `types.ts` regenerates automatically |
+| `.env`, secrets | **Do not copy**. Re-add only the non-managed ones via Add Secret in the target app | Service role keys are project-scoped |
+| `routeTree.gen.ts` | **Do not copy** — auto-generated | TanStack Router regenerates on build |
+| Edge functions in `supabase/functions/` (if any inherited) | Copy folder, redeploy | Lovable auto-deploys |
 
-1. **Routes & navigation** — enumerate every file under `src/routes/`, capture title/purpose/components/data deps for each.
-2. **Server functions & API** — list every `*.functions.ts` and `src/routes/api/**` with signature, middleware, input/output.
-3. **Database schema** — read every migration in `supabase/migrations/`, compile tables, columns, RLS, triggers, functions, grants.
-4. **Components & design system** — read `src/styles.css`, theme tokens, brand components, key reusable components (dashboard, admin, brief, media, value, voice).
-5. **Copy extraction** — pull verbatim strings from marketing routes, dashboard routes, admin routes, email templates, legal pages.
-6. **Email system** — read `src/lib/email-templates/*`, `src/lib/email/*`, `src/routes/lovable/email/**` and the email queue infra.
-7. **AI / brief / pipeline** — read `src/lib/brief-blocks.ts`, `brief.functions.ts`, `pipeline.functions.ts`, `discovery.*`, `founderMemory.*`, `ai-gateway.server.ts`, `voice.*`.
-8. **Admin features** — read every `src/routes/_authenticated/_admin/*`, `members-admin`, `applications-admin`, `inquiries-admin`, badges, nav.
+## Namespacing strategy (critical)
 
-## Acceptance criteria
+Because the target app already has its own identity, every Startup Labs file lands under a `startuplabs/` prefix and all imports are rewritten:
 
-- 20 markdown files in `/mnt/documents/prd/` (19 + README).
-- Every public-schema table is documented with purpose, fields, access rules, and SQL reference.
-- Every route in `src/routes/` appears in `01-information-architecture.md` and is described (purpose + key components) in the appropriate section.
-- Every server function is listed in `15-server-functions.md`.
-- Every email template appears verbatim in `14-email-system.md` and `17-copy-deck.md`.
-- A new team could open `19-rebuild-checklist.md` and execute the rebuild in order without needing the original repo.
-- Bundle emitted via `<presentation-artifact>` tags for each file (or a zipped archive — TBD; default is individual tags for the README + checklist plus a zip of the full bundle).
+- `src/lib/*.functions.ts` → `src/lib/startuplabs/*.functions.ts`
+- `src/lib/email-templates/*` → `src/lib/startuplabs/email-templates/*`
+- `src/components/{brief,dashboard,...}/*` → `src/components/startuplabs/{brief,dashboard,...}/*`
+- `src/routes/_authenticated/dashboard.*` → `src/routes/_authenticated/startuplabs/dashboard.*` (URLs become `/startuplabs/dashboard`)
+- Marketing routes (`register.tsx`, `facilitator.tsx`, `schedule.tsx`, `contact.tsx`) → `src/routes/startuplabs/register.tsx`, etc.
 
-## Out of scope
+All cross-imports inside copied files get a find/replace pass:
+- `@/lib/` → `@/lib/startuplabs/` (except shadcn `@/lib/utils`)
+- `@/components/{brief,dashboard,facilitator,value,brand,voice,register,home,media,admin,site}/` → `@/components/startuplabs/...`
 
-- Pixel-perfect screen mockups (high-level + reference per your choice — sections point to source files for exact JSX).
-- Stack-agnostic abstractions (PRD assumes TanStack Start + Supabase).
-- Migration scripts or rebuild code itself (this is spec only).
+## Deliverable: the kickoff prompt you paste into the target app
 
-## Notes
+A single message containing:
 
-- Document will use plain English for access rules but include SQL excerpts as reference.
-- "Startup" (not "business") in all user-facing copy, per project memory.
-- This is a large research+writing task. Estimate 20–30 minutes of work in build mode using parallel subagents to keep it efficient.
+1. `@`-mention of this Startup Labs project so the cross-project tools light up.
+2. A 6-phase execution plan the target agent must follow in order, pausing for approval between phases:
+   - **Phase 1 — Schema**: read all 27 migration files from `supabase/migrations/`, concatenate in filename order, run as one migration. Verify `cohorts`, `workshop_registrations`, `founder_applications`, `attendee_profiles`, `profiles`, `user_roles`, `email_send_log`, `email_unsubscribe_tokens`, `suppressed_emails`, plus the `reserve_cohort_seat` / `promote_application` / `enqueue_email` / `has_role` / `is_admin` / `auto_approve_member_on_payment` functions exist.
+   - **Phase 2 — Storage**: create three private buckets and copy storage RLS policies from migrations.
+   - **Phase 3 — Server code**: copy `src/lib/*.functions.ts`, `*.server.ts`, `src/lib/email-templates/**`, `src/lib/email/**`, `src/lib/workflow.ts`, `src/lib/cohorts.ts`, `src/lib/brief-blocks.ts`, `src/lib/curriculum-data.ts`, `src/lib/schedule-data.ts`, `src/lib/value-grid.ts`, `src/lib/admin-nav.ts`, `src/lib/business-ideas.ts`, `src/lib/workshop-mode.ts`, `src/lib/error-capture.ts`, `src/lib/error-page.ts`, `src/lib/use-event.ts`, `src/lib/config.server.ts`, `src/lib/ai-gateway.server.ts` under `src/lib/startuplabs/`. Run the import-rewrite pass.
+   - **Phase 4 — Components**: copy all non-`ui` component folders under `src/components/startuplabs/`.
+   - **Phase 5 — Routes**: copy public routes under `src/routes/startuplabs/`, copy authenticated routes under `src/routes/_authenticated/startuplabs/`, copy admin routes under `src/routes/_authenticated/_admin/startuplabs/`. Add a single entry link from the target app's homepage to `/startuplabs`.
+   - **Phase 6 — Secrets, registry wiring, smoke test**: ensure `LOVABLE_API_KEY` exists, register copied templates in `src/lib/email-templates/registry.ts` (merging with target's existing registry), wire `attachSupabaseAuth` in `src/start.ts` if missing, navigate to `/startuplabs/register` and `/startuplabs/dashboard` and confirm both render.
+
+3. An explicit **DO NOT COPY** list (auto-generated Supabase files, `.env`, `routeTree.gen.ts`, shadcn `ui/*`, target's existing files).
+
+4. A list of secrets to re-add manually in the target app (none beyond `LOVABLE_API_KEY` which the target should already have via Lovable Cloud).
+
+## What you should expect
+
+- Migrations applying ~27 files in one go is the highest-risk step. If the target app already has tables named `profiles`, `user_roles`, or `app_role` enum from its own work, there **will** be conflicts. The plan handles this by having the target agent dry-run the concatenated SQL and report conflicts before applying — at that point you decide: rename target's tables, namespace Startup Labs tables (much bigger refactor), or accept a merge.
+- ~150–200 files copied. The target agent will do this in batches over several turns.
+- After Phase 1, `supabase/types.ts` regenerates in the target — every copied server function will typecheck cleanly against the new schema.
+- The Startup Labs surface lives at `/startuplabs/*` URLs in the target app, fully sandboxed from the target app's own routes.
+
+## Open questions to confirm before I write the prompt
+
+1. Is the target Lovable project in the **same workspace** as this one? (Required for `@mention` cross-project access.)
+2. Does the target app already have a `profiles`, `user_roles`, or `app_role` enum from its own auth setup? If yes, we need a conflict-resolution decision upfront.
+3. Confirm URL prefix: `/startuplabs/*` for all routes, or do you want something else (e.g. `/labs/*`, `/sprint/*`)?
+4. Should the target's homepage get an auto-added entry link/card to Startup Labs, or will you wire that yourself?
+
+Once you answer those four, I generate the single paste-ready kickoff prompt as my next step.
