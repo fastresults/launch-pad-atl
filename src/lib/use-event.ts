@@ -11,6 +11,7 @@ export function useEvent() {
     queryKey: ["cohorts"],
     queryFn: () => fetchCohorts(),
     initialData: [],
+    initialDataUpdatedAt: 0,
     staleTime: 60_000,
   });
   return useMemo(
