@@ -1,7 +1,6 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { } from 'react-router-dom';
 import { getMyBrief, updateBriefField, summarizeBriefBlock } from "@/lib/brief.functions";
 import { summarizeFounderProfile, summarizeMarketProfile } from "@/lib/discovery.functions";
 import { BRIEF_FIELDS } from "@/lib/workflow";
