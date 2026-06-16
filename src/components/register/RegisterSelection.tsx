@@ -73,27 +73,26 @@ export function RegisterSelection() {
       <section className="border-b border-white/5 py-12 md:py-20">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-            <Sparkles className="size-3.5" /> Atlanta · Inaugural Cohort · Application
+            <Sparkles className="size-3.5" /> 6 seats · $0 · closes June 20
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
-            Apply for one of{" "}
-            <span className="text-gradient-brand">the six.</span>
+            This is your shot.{" "}
+            <span className="text-gradient-brand">Take it.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
-            Applications close <span className="font-medium text-foreground">June 20, 2026</span>.
-            Dozens will apply. Six will be chosen by{" "}
-            <span className="font-medium text-foreground">July 8</span>. Every other applicant
-            gets a <span className="font-medium text-foreground">Founder&rsquo;s Discount</span>{" "}
-            on the next cohort, sent the same day. Twelve minutes, no fee, no follow-up sales call.
+            12 minutes to apply. Decision by{" "}
+            <span className="font-medium text-foreground">July 8</span>. Either a free build
+            on July 23 — or <span className="font-medium text-foreground">{FINALIST_DISCOUNT_PCT}% off</span>{" "}
+            the next cohort, same day. No fee. No sales call. No silent rejections.
           </p>
 
           {/* Trust strip */}
           <ul className="mx-auto mt-8 grid max-w-2xl gap-2 text-left text-sm sm:grid-cols-2">
             {[
-              "6 seats · 0 cost · 0 strings",
-              "Decision by July 8 — every applicant hears back",
-              `Not chosen? ${FINALIST_DISCOUNT_PCT}% Founder's Discount, same day`,
-              "Adam reads every application personally",
+              "Free seat — $0, no strings attached",
+              "Everyone hears back by July 8",
+              `No seat? ${FINALIST_DISCOUNT_PCT}% off, emailed same day`,
+              "Adam reads every app personally",
             ].map((b) => (
               <li
                 key={b}
@@ -118,9 +117,8 @@ export function RegisterSelection() {
               className="space-y-5 rounded-2xl border border-white/10 bg-card p-6 md:p-8"
             >
               <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 text-sm text-muted-foreground">
-                We&rsquo;re choosing six from dozens — write like you&rsquo;re talking to one
-                person who&rsquo;s rooting for you. Half-sentences and buzzwords don&rsquo;t make
-                the cut.
+                <span className="font-medium text-foreground">Write like you&rsquo;re texting a friend — not applying for a job.</span>{" "}
+                Specific beats polished. Vague answers don&rsquo;t make the 6.
               </div>
 
               <Field label="Full name" error={errors.name?.message}>
@@ -140,28 +138,28 @@ export function RegisterSelection() {
               </Field>
 
               <Field
-                label="Tell us about you"
-                hint="Where you come from, what you&rsquo;re doing right now, what you&rsquo;ve shipped before — even if it was a side project. Specifics earn the read."
+                label="Who are you?"
+                hint="What do you do, what have you built or shipped — even side projects count. Be specific. &ldquo;I&rsquo;m an entrepreneur&rdquo; tells us nothing. &ldquo;I run a 3-person cleaning crew and want to productize it&rdquo; gets you read."
                 error={errors.about_you?.message}
               >
                 <textarea
                   {...register("about_you")}
                   rows={5}
                   className="input resize-y"
-                  placeholder="A short paragraph about who you are and what you&rsquo;ve been up to."
+                  placeholder="Who you are, what you do, what you've shipped."
                 />
               </Field>
 
               <Field
-                label="Tell us about your startup"
-                hint="What is it, who exactly is the first customer, what problem are you ending for them? Name the person, the price, and the moment they&rsquo;d buy."
+                label="What&rsquo;s the startup?"
+                hint="What is it. Who&rsquo;s the first customer — name the actual person, not a demographic. What&rsquo;s the price. What problem does it solve and when would they pay for it?"
                 error={errors.about_startup?.message}
               >
                 <textarea
                   {...register("about_startup")}
                   rows={6}
                   className="input resize-y"
-                  placeholder="The idea, the customer, the problem, and where you are with it today."
+                  placeholder="The idea, the first customer, the price, and where you are with it today."
                 />
               </Field>
 
@@ -196,15 +194,15 @@ export function RegisterSelection() {
               </div>
 
               <Field
-                label="Why this workshop, why now?"
-                hint="What actually changes in your life if you walk out July 23 with a launched startup? Be concrete — money, time, freedom, a person you want to prove something to."
+                label="Why now?"
+                hint="What actually changes in your life if you walk out July 23 with a real business? Be honest — money, time, freedom, a person you want to prove something to. Don&rsquo;t write what sounds good. Write what&rsquo;s true."
                 error={errors.why_now?.message}
               >
                 <textarea
                   {...register("why_now")}
                   rows={4}
                   className="input resize-y"
-                  placeholder="Write it like you&rsquo;d say it to a friend over coffee."
+                  placeholder="Say it like you'd say it to a friend."
                 />
               </Field>
 
@@ -257,12 +255,11 @@ export function RegisterSelection() {
                 disabled={isSubmitting}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
               >
-                {isSubmitting ? "Submitting…" : "Submit application"}
+                {isSubmitting ? "Sending…" : "Send my application"}
                 {!isSubmitting && <ArrowRight className="size-4" />}
               </button>
               <p className="text-center text-xs text-muted-foreground">
-                You&rsquo;ll hear from us by July 8 — either a seat or a Founder&rsquo;s Discount.
-                No silent rejections.
+                You hear back July 8 — a seat or {FINALIST_DISCOUNT_PCT}% off. No bad outcome. No silence.
               </p>
             </form>
           )}
@@ -321,40 +318,35 @@ function SuccessCard() {
       <div className="mx-auto mb-4 inline-flex size-12 items-center justify-center rounded-full bg-hero-gradient">
         <CheckCircle2 className="size-6 text-white" />
       </div>
-      <h2 className="text-2xl font-semibold tracking-tight">You&rsquo;re in the running.</h2>
+      <h2 className="text-2xl font-semibold tracking-tight">Application received. You&rsquo;re in the mix.</h2>
       <p className="mt-2 text-muted-foreground">
-        We&rsquo;ve got it. Between now and{" "}
-        <span className="font-medium text-foreground">July 8, 2026</span>, Adam is reading every
-        application personally. On July 8 you&rsquo;ll get one of two emails — a seat for July 23,
-        or a {FINALIST_DISCOUNT_PCT}% Founder&rsquo;s Discount on the next Atlanta cohort. Either
-        way, you&rsquo;ll hear from us.
+        Adam reads every application personally. On{" "}
+        <span className="font-medium text-foreground">July 8</span> you&rsquo;ll get one of two
+        emails: a seat for July 23, or a {FINALIST_DISCOUNT_PCT}% Founder&rsquo;s Discount on
+        the next cohort. Either way, you hear back. No silence.
       </p>
 
       <div className="mt-8 rounded-xl border border-primary/30 bg-primary/5 p-5 text-left">
         <div className="mb-2 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-primary">
-          <TicketPercent className="size-4" /> Floor, not ceiling
+          <TicketPercent className="size-4" /> Worst case is still a win
         </div>
         <p className="text-sm text-muted-foreground">
-          The worst outcome here is a {FINALIST_DISCOUNT_PCT}% discount and a front-row seat to
-          watch six Atlanta founders launch in public. Watch the inbox on July 8 — the
-          Founder&rsquo;s Discount is single-use and time-bound.
+          You get {FINALIST_DISCOUNT_PCT}% off and a front-row seat to watch 6 Atlanta founders
+          launch live — their actual sites, brands, and 90-day numbers — before you spend a
+          dollar. Check your inbox July 8.
         </p>
       </div>
 
       <div className="mt-8 rounded-xl border border-white/10 p-5 text-left">
         <div className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-          While you wait
+          One thing to do right now
         </div>
         <ul className="space-y-2 text-sm">
           <li className="flex items-start gap-2">
             <span className="mt-1 inline-block size-1.5 shrink-0 rounded-full bg-hero-gradient" />
-            Keep sharpening the answer to &ldquo;who&rsquo;s the first customer?&rdquo; — every
-            specific sentence helps on selection day.
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="mt-1 inline-block size-1.5 shrink-0 rounded-full bg-hero-gradient" />
-            Know an Atlanta founder who&rsquo;d be a fit? Send them our way — the bench gets
-            deeper, and you both benefit.
+            Know an Atlanta founder who&rsquo;s been sitting on an idea? Send them the link.
+            The stronger the applicant pool, the better the room — and your{" "}
+            {FINALIST_DISCOUNT_PCT}% discount is transferable to one person you refer.
           </li>
         </ul>
       </div>

@@ -11,13 +11,15 @@ export function FacilitatorCTA() {
       className="border-l-4 border-primary bg-card rounded-xl p-10"
     >
       <h2 className="text-2xl font-semibold tracking-tight text-card-foreground md:text-3xl">
-        Ready to build in the AI era?
+        Want Adam in your room?
       </h2>
       <p className="mt-3 text-base text-muted-foreground md:mt-4 md:text-lg mb-6">
-        Half-day and full-day formats available for teams, conferences, and private cohorts. Every engagement is custom-scoped, practitioner-led, and built to leave the room with work already shipped.
+        Half-day and full-day formats for teams, conferences, and private cohorts. Custom-scoped,
+        practitioner-led, and built so the room leaves with work already shipped — not a slide deck
+        and a vague to-do list.
       </p>
       <Button asChild size="lg">
-        <a href="mailto:adam@madebyopen.com">Book a Workshop →</a>
+        <a href="/contact">Bring Adam to your team &rarr;</a>
       </Button>
     </motion.section>
   );
