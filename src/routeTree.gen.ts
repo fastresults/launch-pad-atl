@@ -27,7 +27,7 @@ import { Route as AuthenticatedPausedRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/_admin'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
-import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ApiEmailSuppressionRouteImport } from './routes/api/email/suppression'
 import { Route as AuthenticatedDashboardWorkflowRouteImport } from './routes/_authenticated/dashboard.workflow'
 import { Route as AuthenticatedDashboardProfileRouteImport } from './routes/_authenticated/dashboard.profile'
 import { Route as AuthenticatedDashboardMediaRouteImport } from './routes/_authenticated/dashboard.media'
@@ -39,9 +39,9 @@ import { Route as AuthenticatedDashboardDeliverablesRouteImport } from './routes
 import { Route as AuthenticatedDashboardDayRouteImport } from './routes/_authenticated/dashboard.day'
 import { Route as AuthenticatedDashboardBriefRouteImport } from './routes/_authenticated/dashboard.brief'
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
-import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as ApiEmailTransactionalSendRouteImport } from './routes/api/email/transactional/send'
+import { Route as ApiEmailTransactionalPreviewRouteImport } from './routes/api/email/transactional/preview'
+import { Route as ApiEmailQueueProcessRouteImport } from './routes/api/email/queue/process'
 import { Route as ApiPublicHooksPublishDueDeliverablesRouteImport } from './routes/api/public/hooks/publish-due-deliverables'
 import { Route as AuthenticatedDashboardWorkflowKeyRouteImport } from './routes/_authenticated/dashboard.workflow.$key'
 import { Route as AuthenticatedAdminAdminUsersRouteImport } from './routes/_authenticated/_admin/admin.users'
@@ -151,9 +151,9 @@ const AuthenticatedDashboardIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
-  id: '/lovable/email/suppression',
-  path: '/lovable/email/suppression',
+const ApiEmailSuppressionRoute = ApiEmailSuppressionRouteImport.update({
+  id: '/api/email/suppression',
+  path: '/api/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedDashboardWorkflowRoute =
@@ -222,22 +222,22 @@ const AuthenticatedAdminAdminIndexRoute =
     path: '/admin/',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const LovableEmailTransactionalSendRoute =
-  LovableEmailTransactionalSendRouteImport.update({
-    id: '/lovable/email/transactional/send',
-    path: '/lovable/email/transactional/send',
+const ApiEmailTransactionalSendRoute =
+  ApiEmailTransactionalSendRouteImport.update({
+    id: '/api/email/transactional/send',
+    path: '/api/email/transactional/send',
     getParentRoute: () => rootRouteImport,
   } as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
+const ApiEmailTransactionalPreviewRoute =
+  ApiEmailTransactionalPreviewRouteImport.update({
+    id: '/api/email/transactional/preview',
+    path: '/api/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
-const LovableEmailQueueProcessRoute =
-  LovableEmailQueueProcessRouteImport.update({
-    id: '/lovable/email/queue/process',
-    path: '/lovable/email/queue/process',
+const ApiEmailQueueProcessRoute =
+  ApiEmailQueueProcessRouteImport.update({
+    id: '/api/email/queue/process',
+    path: '/api/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksPublishDueDeliverablesRoute =
@@ -381,7 +381,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/media': typeof AuthenticatedDashboardMediaRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
   '/dashboard/workflow': typeof AuthenticatedDashboardWorkflowRouteWithChildren
-  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/email/suppression': typeof ApiEmailSuppressionRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/admin/cohorts': typeof AuthenticatedAdminAdminCohortsRouteWithChildren
@@ -393,9 +393,9 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
+  '/api/email/queue/process': typeof ApiEmailQueueProcessRoute
+  '/api/email/transactional/preview': typeof ApiEmailTransactionalPreviewRoute
+  '/api/email/transactional/send': typeof ApiEmailTransactionalSendRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
@@ -432,7 +432,7 @@ export interface FileRoutesByTo {
   '/dashboard/media': typeof AuthenticatedDashboardMediaRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
   '/dashboard/workflow': typeof AuthenticatedDashboardWorkflowRouteWithChildren
-  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/email/suppression': typeof ApiEmailSuppressionRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/admin/cohorts': typeof AuthenticatedAdminAdminCohortsRouteWithChildren
@@ -444,9 +444,9 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
+  '/api/email/queue/process': typeof ApiEmailQueueProcessRoute
+  '/api/email/transactional/preview': typeof ApiEmailTransactionalPreviewRoute
+  '/api/email/transactional/send': typeof ApiEmailTransactionalSendRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
@@ -487,7 +487,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/media': typeof AuthenticatedDashboardMediaRoute
   '/_authenticated/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
   '/_authenticated/dashboard/workflow': typeof AuthenticatedDashboardWorkflowRouteWithChildren
-  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/email/suppression': typeof ApiEmailSuppressionRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/_admin/admin/attendees': typeof AuthenticatedAdminAdminAttendeesRouteWithChildren
   '/_authenticated/_admin/admin/cohorts': typeof AuthenticatedAdminAdminCohortsRouteWithChildren
@@ -499,9 +499,9 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/users': typeof AuthenticatedAdminAdminUsersRoute
   '/_authenticated/dashboard/workflow/$key': typeof AuthenticatedDashboardWorkflowKeyRoute
   '/api/public/hooks/publish-due-deliverables': typeof ApiPublicHooksPublishDueDeliverablesRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
+  '/api/email/queue/process': typeof ApiEmailQueueProcessRoute
+  '/api/email/transactional/preview': typeof ApiEmailTransactionalPreviewRoute
+  '/api/email/transactional/send': typeof ApiEmailTransactionalSendRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/_authenticated/_admin/admin/applications/$id': typeof AuthenticatedAdminAdminApplicationsIdRoute
   '/_authenticated/_admin/admin/cohorts/test': typeof AuthenticatedAdminAdminCohortsTestRoute
@@ -541,7 +541,7 @@ export interface FileRouteTypes {
     | '/dashboard/media'
     | '/dashboard/profile'
     | '/dashboard/workflow'
-    | '/lovable/email/suppression'
+    | '/api/email/suppression'
     | '/dashboard/'
     | '/admin/attendees'
     | '/admin/cohorts'
@@ -553,9 +553,9 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
-    | '/lovable/email/queue/process'
-    | '/lovable/email/transactional/preview'
-    | '/lovable/email/transactional/send'
+    | '/api/email/queue/process'
+    | '/api/email/transactional/preview'
+    | '/api/email/transactional/send'
     | '/admin/'
     | '/admin/applications/$id'
     | '/admin/cohorts/test'
@@ -592,7 +592,7 @@ export interface FileRouteTypes {
     | '/dashboard/media'
     | '/dashboard/profile'
     | '/dashboard/workflow'
-    | '/lovable/email/suppression'
+    | '/api/email/suppression'
     | '/dashboard'
     | '/admin/attendees'
     | '/admin/cohorts'
@@ -604,9 +604,9 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
-    | '/lovable/email/queue/process'
-    | '/lovable/email/transactional/preview'
-    | '/lovable/email/transactional/send'
+    | '/api/email/queue/process'
+    | '/api/email/transactional/preview'
+    | '/api/email/transactional/send'
     | '/admin'
     | '/admin/applications/$id'
     | '/admin/cohorts/test'
@@ -646,7 +646,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/media'
     | '/_authenticated/dashboard/profile'
     | '/_authenticated/dashboard/workflow'
-    | '/lovable/email/suppression'
+    | '/api/email/suppression'
     | '/_authenticated/dashboard/'
     | '/_authenticated/_admin/admin/attendees'
     | '/_authenticated/_admin/admin/cohorts'
@@ -658,9 +658,9 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/users'
     | '/_authenticated/dashboard/workflow/$key'
     | '/api/public/hooks/publish-due-deliverables'
-    | '/lovable/email/queue/process'
-    | '/lovable/email/transactional/preview'
-    | '/lovable/email/transactional/send'
+    | '/api/email/queue/process'
+    | '/api/email/transactional/preview'
+    | '/api/email/transactional/send'
     | '/_authenticated/_admin/admin/'
     | '/_authenticated/_admin/admin/applications/$id'
     | '/_authenticated/_admin/admin/cohorts/test'
@@ -687,11 +687,11 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
-  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiEmailSuppressionRoute: typeof ApiEmailSuppressionRoute
   ApiPublicHooksPublishDueDeliverablesRoute: typeof ApiPublicHooksPublishDueDeliverablesRoute
-  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
-  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
-  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
+  ApiEmailQueueProcessRoute: typeof ApiEmailQueueProcessRoute
+  ApiEmailTransactionalPreviewRoute: typeof ApiEmailTransactionalPreviewRoute
+  ApiEmailTransactionalSendRoute: typeof ApiEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -822,11 +822,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/lovable/email/suppression': {
-      id: '/lovable/email/suppression'
-      path: '/lovable/email/suppression'
-      fullPath: '/lovable/email/suppression'
-      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+    '/api/email/suppression': {
+      id: '/api/email/suppression'
+      path: '/api/email/suppression'
+      fullPath: '/api/email/suppression'
+      preLoaderRoute: typeof ApiEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/dashboard/workflow': {
@@ -906,25 +906,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/lovable/email/transactional/send': {
-      id: '/lovable/email/transactional/send'
-      path: '/lovable/email/transactional/send'
-      fullPath: '/lovable/email/transactional/send'
-      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+    '/api/email/transactional/send': {
+      id: '/api/email/transactional/send'
+      path: '/api/email/transactional/send'
+      fullPath: '/api/email/transactional/send'
+      preLoaderRoute: typeof ApiEmailTransactionalSendRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+    '/api/email/transactional/preview': {
+      id: '/api/email/transactional/preview'
+      path: '/api/email/transactional/preview'
+      fullPath: '/api/email/transactional/preview'
+      preLoaderRoute: typeof ApiEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/queue/process': {
-      id: '/lovable/email/queue/process'
-      path: '/lovable/email/queue/process'
-      fullPath: '/lovable/email/queue/process'
-      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+    '/api/email/queue/process': {
+      id: '/api/email/queue/process'
+      path: '/api/email/queue/process'
+      fullPath: '/api/email/queue/process'
+      preLoaderRoute: typeof ApiEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/publish-due-deliverables': {
@@ -1227,12 +1227,12 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
-  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiEmailSuppressionRoute: ApiEmailSuppressionRoute,
   ApiPublicHooksPublishDueDeliverablesRoute:
     ApiPublicHooksPublishDueDeliverablesRoute,
-  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
-  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
-  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
+  ApiEmailQueueProcessRoute: ApiEmailQueueProcessRoute,
+  ApiEmailTransactionalPreviewRoute: ApiEmailTransactionalPreviewRoute,
+  ApiEmailTransactionalSendRoute: ApiEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
