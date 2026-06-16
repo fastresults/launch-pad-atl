@@ -107,7 +107,7 @@ export default function WorkflowPage() {
         );
       })}
 
-      {recent && recent.steps.length > 0 && (
+      {recent && recent.steps && recent.steps.length > 0 && (
         <section>
           <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-muted-foreground">Recent activity</h2>
           <ul className="space-y-1 rounded-xl border border-white/10 bg-card p-4 text-xs">
