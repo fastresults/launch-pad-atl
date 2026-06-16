@@ -25,6 +25,6 @@ export const sendTestApplicationReceivedEmail = async (data: any) => {
       recipientEmail: data.recipientEmail,
       idempotencyKey: `test-app-received-${Date.now()}`,
       templateData: { firstName: data.firstName },
-    };
+    });
     return result;
   };
