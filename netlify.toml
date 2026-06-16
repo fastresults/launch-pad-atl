@@ -8,6 +8,7 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "nft"
+  included_files = ["dist/client/**", "dist/server/**"]
 
 [[redirects]]
   from = "/*"
