@@ -4,14 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { } from 'react-router-dom';
 import { listAttendees } from "@/lib/pipeline.functions";
 
-export const Route =("/_authenticated/_admin/admin/attendees")({
-  component: AttendeesPage,
-  head: () => ({ meta: [{ title: "Attendees — Admin" }] }),
-});
 
 export default function AttendeesPage() {
-  const fn =(listAttendees);
-  const { data, isLoading } = useQuery({ queryKey: ["admin", "attendees"], queryFn: () => fn() });
+  
+  const { data, isLoading } = useQuery({ queryKey: ["admin", "attendees"], queryFn: () => listAttendees() });
 
   return (
     <div className="space-y-6">
@@ -38,7 +34,7 @@ export default function AttendeesPage() {
             {(data?.attendees ?? []).map((a) => (
               <tr key={a.user_id} className="border-t border-white/5 hover:bg-white/[0.02]">
                 <td className="px-4 py-3">
-                  <Link to="/admin/attendees/$userId" params={{ userId: a.user_id }} className="hover:underline">
+                  <Link to={`/admin/attendees/${a.user_id}`} className="hover:underline">
                     {a.display_name ?? "—"}
                   </Link>
                 </td>

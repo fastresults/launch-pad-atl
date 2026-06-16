@@ -8,15 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-export const Route =("/_authenticated/dashboard/profile")({
-  component: ProfilePage,
-});
 
 export default function ProfilePage() {
   const qc = useQueryClient();
-  const getFn =(getMyProfile);
-  const saveFn =(upsertMyProfile);
-  const { data } = useQuery({ queryKey: ["my", "profile"], queryFn: () => getFn() });
+  
+  
+  const { data } = useQuery({ queryKey: ["my", "profile"], queryFn: () => getMyProfile() });
 
   const [founder, setFounder] = useState({ full_name: "", headline: "", background: "", primary_goal: "" });
   const [business, setBusiness] = useState({ business_name: "", industry: "", stage: "", problem_solved: "", value_prop: "", target_market: "" });
@@ -49,7 +46,7 @@ export default function ProfilePage() {
 
   const save = useMutation({
     mutationFn: (vars: { section: "founder" | "business" | "financial" | "complete"; data: Record<string, unknown> }) =>
-      saveFn({ data: vars }),
+      upsertMyProfile({ data: vars }),
     onSuccess: () => {
       toast.success("Saved");
       qc.invalidateQueries({ queryKey: ["my", "profile"] });

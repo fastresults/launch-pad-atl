@@ -8,29 +8,25 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Circle, Lock, Loader2, Play } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route =("/_authenticated/dashboard/workflow")({
-  component: WorkflowPage,
-  head: () => ({ meta: [{ title: "Workflow" }] }),
-});
 
 export default function WorkflowPage() {
   const qc = useQueryClient();
-  const wfFn =(getMyWorkflow);
-  const runFn =(runMyDeliverable);
-  const runAllFn =(runMyRemaining);
-  const recentFn =(getMyRecentRuns);
+  
+  
+  
+  
 
-  const { data } = useQuery({ queryKey: ["my", "workflow"], queryFn: () => wfFn(), refetchInterval: 5000 });
-  const { data: recent } = useQuery({ queryKey: ["my", "recent-runs"], queryFn: () => recentFn(), refetchInterval: 3000 });
+  const { data } = useQuery({ queryKey: ["my", "workflow"], queryFn: () => getMyWorkflow(), refetchInterval: 5000 });
+  const { data: recent } = useQuery({ queryKey: ["my", "recent-runs"], queryFn: () => getMyRecentRuns(), refetchInterval: 3000 });
 
   const runOne = useMutation({
-    mutationFn: (key: string) => runFn({ data: { key, runUpstream: true } }),
+    mutationFn: (key: string) => runMyDeliverable({ data: { key, runUpstream: true } }),
     onSuccess: () => { toast.success("Generation complete"); qc.invalidateQueries({ queryKey: ["my"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Run failed"),
   });
 
   const runAll = useMutation({
-    mutationFn: () => runAllFn(),
+    mutationFn: () => runMyRemaining(),
     onSuccess: (r) => { toast.success(`Generated ${r.total - r.failed} / ${r.total}`); qc.invalidateQueries({ queryKey: ["my"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Bulk run failed"),
   });
@@ -99,7 +95,7 @@ export default function WorkflowPage() {
                       </Button>
                       {d.generated && (
                         <Button asChild size="sm" variant="ghost">
-                          <Link to="/dashboard/workflow/$key" params={{ key: d.key }}>View</Link>
+                          <Link to={`/dashboard/workflow/${d.key}`}>View</Link>
                         </Button>
                       )}
                     </div>

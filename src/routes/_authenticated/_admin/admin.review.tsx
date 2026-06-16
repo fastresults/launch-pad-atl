@@ -4,14 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { } from 'react-router-dom';
 import { listReviewQueue } from "@/lib/pipeline.functions";
 
-export const Route =("/_authenticated/_admin/admin/review")({
-  component: ReviewPage,
-  head: () => ({ meta: [{ title: "Review queue — Admin" }] }),
-});
 
 export default function ReviewPage() {
-  const fn =(listReviewQueue);
-  const { data, isLoading } = useQuery({ queryKey: ["admin", "review"], queryFn: () => fn() });
+  
+  const { data, isLoading } = useQuery({ queryKey: ["admin", "review"], queryFn: () => listReviewQueue() });
 
   return (
     <div className="space-y-6">
@@ -47,8 +43,7 @@ export default function ReviewPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
-                      to="/admin/attendees/$userId/deliverables/$key"
-                      params={{ userId: r.user_id, key: r.deliverable_key }}
+                      to={`/admin/attendees/${r.user_id}/deliverables/${r.deliverable_key}`}
                       className="text-primary hover:underline"
                     >
                       Open →

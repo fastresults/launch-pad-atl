@@ -6,25 +6,21 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 
-export const Route =("/_authenticated/_admin/admin/attendees/$userId/")({
-  component: AttendeeDetail,
-  head: () => ({ meta: [{ title: "Attendee — Admin" }] }),
-});
 
 export default function AttendeeDetail() {
-  const { userId } = Route.useParams();
+  const { userId } = useParams();
   const qc = useQueryClient();
   const { isSuperAdmin } = useAuth();
-  const detailFn =(getAttendeeDetail);
-  const triggerFn =(triggerPipeline);
+  
+  
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "attendee", userId],
-    queryFn: () => detailFn({ data: { userId } }),
+    queryFn: () => getAttendeeDetail({ data: { userId } }),
   });
 
   const trigger = useMutation({
-    mutationFn: () => triggerFn({ data: { userId } }),
+    mutationFn: () => triggerPipeline({ data: { userId } }),
     onSuccess: (r) => {
       toast.success(`Pipeline ran: ${r.totalSteps - r.failed}/${r.totalSteps} succeeded`);
       qc.invalidateQueries({ queryKey: ["admin", "attendee", userId] });
@@ -58,7 +54,7 @@ export default function AttendeeDetail() {
         {isSuperAdmin && (
           <div className="flex gap-2">
             <Button asChild variant="outline">
-              <Link to="/admin/attendees/$userId/workflow" params={{ userId }}>Workflow</Link>
+              <Link to={`/admin/attendees/${userId}/workflow`}>Workflow</Link>
             </Button>
             <Button onClick={() => trigger.mutate()} disabled={trigger.isPending}>
               {trigger.isPending ? "Running pipeline…" : "Run full AI pipeline"}
@@ -122,8 +118,7 @@ export default function AttendeeDetail() {
                     <td className="px-4 py-3 text-right">
                       {isSuperAdmin && (
                         <Link
-                          to="/admin/attendees/$userId/deliverables/$key"
-                          params={{ userId, key: d.deliverable_key }}
+                          to={`/admin/attendees/$userId/deliverables/${d.deliverable_key}`}
                           className="text-primary hover:underline"
                         >
                           Open →

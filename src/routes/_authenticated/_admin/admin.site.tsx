@@ -10,28 +10,24 @@ import {
 } from "@/lib/site-settings.functions";
 import { ExternalLink } from "lucide-react";
 
-export const Route =("/_authenticated/_admin/admin/site")({
-  component: AdminSitePage,
-  head: () => ({ meta: [{ title: "Site variants" }] }),
-});
 
 export default function AdminSitePage() {
-  const getFn =(getPublicSiteSettings);
-  const setFn =(updateSiteSetting);
+  
+  
   const qc = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery<SiteSettings>({
     queryKey: ["site-settings"],
-    queryFn: () => getFn(),
+    queryFn: () => getPublicSiteSettings(),
   });
 
   const onChange = async (key: "home_variant" | "register_variant", value: SiteVariant) => {
     setError(null);
     setSaving(key);
     try {
-      await setFn({ data: { key, value } });
+      await updateSiteSetting({ data: { key, value } });
       await qc.invalidateQueries({ queryKey: ["site-settings"] });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed.");

@@ -8,31 +8,27 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Circle, Lock, Loader2, Play } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route =("/_authenticated/_admin/admin/attendees/$userId/workflow")({
-  component: AdminAttendeeWorkflow,
-  head: () => ({ meta: [{ title: "Attendee workflow — Admin" }] }),
-});
 
 export default function AdminAttendeeWorkflow() {
-  const { userId } = Route.useParams();
+  const { userId } = useParams();
   const qc = useQueryClient();
-  const wfFn =(adminGetUserWorkflow);
-  const runFn =(adminRunForUser);
+  
+  
 
   const { data } = useQuery({
     queryKey: ["admin", "workflow", userId],
-    queryFn: () => wfFn({ data: { userId } }),
+    queryFn: () => adminGetUserWorkflow({ data: { userId } }),
     refetchInterval: 5000,
   });
 
   const runOne = useMutation({
-    mutationFn: (key: string) => runFn({ data: { userId, key, runUpstream: true } }),
+    mutationFn: (key: string) => adminRunForUser({ data: { userId, key, runUpstream: true } }),
     onSuccess: () => { toast.success("Generation complete"); qc.invalidateQueries({ queryKey: ["admin", "workflow", userId] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Run failed"),
   });
 
   const runAll = useMutation({
-    mutationFn: () => runFn({ data: { userId, bulk: true } }),
+    mutationFn: () => adminRunForUser({ data: { userId, bulk: true } }),
     onSuccess: (r) => { toast.success(`Generated ${r.total - r.failed} / ${r.total}`); qc.invalidateQueries({ queryKey: ["admin", "workflow", userId] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Bulk run failed"),
   });
@@ -43,7 +39,7 @@ export default function AdminAttendeeWorkflow() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <Link to="/admin/attendees/$userId" params={{ userId }} className="text-xs text-muted-foreground hover:text-foreground">
+          <Link to={`/admin/attendees/${userId}`} className="text-xs text-muted-foreground hover:text-foreground">
             ← Attendee
           </Link>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Workflow</h1>
@@ -99,8 +95,7 @@ export default function AdminAttendeeWorkflow() {
                       {d.generated && (
                         <Button asChild size="sm" variant="ghost">
                           <Link
-                            to="/admin/attendees/$userId/deliverables/$key"
-                            params={{ userId, key: d.key }}
+                            to={`/admin/attendees/$userId/deliverables/${d.key}`}
                           >
                             View
                           </Link>

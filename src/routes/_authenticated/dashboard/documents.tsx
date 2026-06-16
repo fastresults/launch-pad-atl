@@ -11,9 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-export const Route =("/_authenticated/dashboard/documents")({
-  component: DocumentsPage,
-});
 
 const KINDS = [
   { key: "pitch_deck", label: "Pitch deck" },
@@ -24,19 +21,19 @@ const KINDS = [
 
 export default function DocumentsPage() {
   const qc = useQueryClient();
-  const listFn =(listMyDocuments);
-  const signFn =(createDocumentUploadUrl);
-  const finalizeFn =(finalizeDocument);
-  const delFn =(deleteMyDocument);
-  const dlFn =(getDocumentDownloadUrl);
+  
+  
+  
+  
+  
   const fileRef = useRef<HTMLInputElement>(null);
   const [kind, setKind] = useState<(typeof KINDS)[number]["key"]>("other");
   const [uploading, setUploading] = useState(false);
 
-  const { data } = useQuery({ queryKey: ["my", "documents"], queryFn: () => listFn() });
+  const { data } = useQuery({ queryKey: ["my", "documents"], queryFn: () => listMyDocuments() });
 
   const del = useMutation({
-    mutationFn: (id: string) => delFn({ data: { id } }),
+    mutationFn: (id: string) => deleteMyDocument({ data: { id } }),
     onSuccess: () => {
       toast.success("Deleted");
       qc.invalidateQueries({ queryKey: ["my", "documents"] });
@@ -49,12 +46,12 @@ export default function DocumentsPage() {
     if (!f) return;
     setUploading(true);
     try {
-      const { signedUrl, path } = await signFn({
+      const { signedUrl, path } = await createDocumentUploadUrl({
         data: { kind, filename: f.name, mime: f.type || "application/octet-stream" },
       });
       const up = await fetch(signedUrl, { method: "PUT", body: f, headers: { "Content-Type": f.type || "application/octet-stream" } });
       if (!up.ok) throw new Error("Upload failed");
-      await finalizeFn({
+      await finalizeDocument({
         data: {
           kind,
           storage_path: path,
@@ -74,7 +71,7 @@ export default function DocumentsPage() {
   };
 
   const onDownload = async (id: string) => {
-    const { url } = await dlFn({ data: { id } });
+    const { url } = await getDocumentDownloadUrl({ data: { id } });
     window.open(url, "_blank");
   };
 

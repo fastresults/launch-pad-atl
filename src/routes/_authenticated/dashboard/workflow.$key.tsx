@@ -12,26 +12,23 @@ import { VoiceField } from "@/components/voice/VoiceField";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route =("/_authenticated/dashboard/workflow/$key")({
-  component: WorkflowDetail,
-});
 
 type Section = { heading: string; body_markdown: string };
 type Content = { title?: string; summary?: string; sections?: Section[]; action_items?: string[] };
 
 export default function WorkflowDetail() {
-  const { key } = Route.useParams();
+  const { key } = useParams();
   const wf = WORKFLOW_BY_KEY.get(key);
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  const getIntake =(getMyIntake);
-  const saveIntake =(updateMyIntake);
-  const runFn =(runMyDeliverable);
+  
+  
+  
 
   const { data: intakeData } = useQuery({
     queryKey: ["my", "intake", key],
-    queryFn: () => getIntake({ data: { deliverable_key: key } }),
+    queryFn: () => getMyIntake({ data: { deliverable_key: key } }),
   });
 
   const { data: deliverable, refetch } = useQuery({
@@ -57,14 +54,14 @@ export default function WorkflowDetail() {
 
   const persist = async (next: Record<string, string>) => {
     try {
-      await saveIntake({ data: { deliverable_key: key, intake: next } });
+      await updateMyIntake({ data: { deliverable_key: key, intake: next } });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed");
     }
   };
 
   const run = useMutation({
-    mutationFn: () => runFn({ data: { key, runUpstream: true } }),
+    mutationFn: () => runMyDeliverable({ data: { key, runUpstream: true } }),
     onSuccess: () => { toast.success("Generation complete"); refetch(); qc.invalidateQueries({ queryKey: ["my"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Run failed"),
   });

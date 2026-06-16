@@ -11,26 +11,22 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
-export const Route =("/_authenticated/_admin/admin/registrations")({
-  component: RegistrationsPage,
-  head: () => ({ meta: [{ title: "Registrations — Admin" }] }),
-});
 
 const STATUSES = ["pending", "confirmed", "cancelled", "waitlist"] as const;
 
 export default function RegistrationsPage() {
   const qc = useQueryClient();
-  const listFn =(listRegistrations);
-  const updateFn =(updateRegistrationStatus);
+  
+  
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "registrations"],
-    queryFn: () => listFn(),
+    queryFn: () => listRegistrations(),
   });
 
   const mutate = useMutation({
     mutationFn: (vars: { id: string; status: (typeof STATUSES)[number] }) =>
-      updateFn({ data: vars }),
+      updateRegistrationStatus({ data: vars }),
     onSuccess: () => {
       toast.success("Status updated");
       qc.invalidateQueries({ queryKey: ["admin"] });

@@ -18,20 +18,16 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
-export const Route =("/_authenticated/_admin/admin/members")({
-  component: AdminMembersPage,
-  head: () => ({ meta: [{ title: "Members — Admin" }] }),
-});
 
 type Tab = "pending" | "approved" | "paused" | "rejected" | "no_intake";
 
 export default function AdminMembersPage() {
-  const listFn =(listMembers);
-  const approveFn =(approveMember);
-  const rejectFn =(rejectMember);
-  const contactFn =(markMemberContacted);
-  const pauseFn =(pauseMember);
-  const restoreFn =(restoreMemberToPending);
+  
+  
+  
+  
+  
+  
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("pending");
   const [search, setSearch] = useState("");
@@ -41,7 +37,7 @@ export default function AdminMembersPage() {
 
   const q = useQuery({
     queryKey: ["admin", "members", tab, search],
-    queryFn: () => listFn({ data: { status: tab, search: search || undefined } }),
+    queryFn: () => listMembers({ data: { status: tab, search: search || undefined } }),
   });
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "members"] });
@@ -57,16 +53,16 @@ export default function AdminMembersPage() {
   };
 
   const handleApprove = (userId: string) =>
-    run(() => approveFn({ data: { userId } }), "Member approved");
+    run(() => approveMember({ data: { userId } }), "Member approved");
   const handleContact = (userId: string) =>
-    run(() => contactFn({ data: { userId } }), "Marked as contacted");
+    run(() => markMemberContacted({ data: { userId } }), "Marked as contacted");
   const handleRestoreToPending = (userId: string) =>
-    run(() => restoreFn({ data: { userId } }), "Moved back to pending");
+    run(() => restoreMemberToPending({ data: { userId } }), "Moved back to pending");
 
   const confirmPause = async (reason?: string) => {
     if (!pauseTarget) return;
     setActionLoading(true);
-    await run(() => pauseFn({ data: { userId: pauseTarget.userId, reason } }), "Access paused");
+    await run(() => pauseMember({ data: { userId: pauseTarget.userId, reason } }), "Access paused");
     setActionLoading(false);
     setPauseTarget(null);
   };
@@ -74,7 +70,7 @@ export default function AdminMembersPage() {
   const confirmReject = async (reason?: string) => {
     if (!rejectTarget) return;
     setActionLoading(true);
-    await run(() => rejectFn({ data: { userId: rejectTarget.userId, reason } }), "Member rejected");
+    await run(() => rejectMember({ data: { userId: rejectTarget.userId, reason } }), "Member rejected");
     setActionLoading(false);
     setRejectTarget(null);
   };

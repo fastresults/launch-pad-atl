@@ -40,10 +40,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
-export const Route =("/_authenticated/_admin/admin/applications/")({
-  component: ApplicationsListPage,
-  head: () => ({ meta: [{ title: "Applications — Admin" }] }),
-});
 
 const STATUS_OPTIONS: { value: ApplicationStatus | "all"; label: string }[] = [
   { value: "all", label: "All" },
@@ -79,10 +75,10 @@ export default function ApplicationsListPage() {
     null,
   );
 
-  const listFn =(listApplications);
-  const updateFn =(updateApplication);
-  const bulkUpdateFn =(bulkUpdateApplications);
-  const bulkDeleteFn =(bulkDeleteApplications);
+  
+  
+  
+  
   const qc = useQueryClient();
 
   const queryKey = ["admin", "applications", status, search] as const;
@@ -90,7 +86,7 @@ export default function ApplicationsListPage() {
   const { data, isLoading } = useQuery({
     queryKey,
     queryFn: () =>
-      listFn({
+      listApplications({
         data: {
           status: status === "all" ? undefined : status,
           search: search.trim() || undefined,
@@ -128,7 +124,7 @@ export default function ApplicationsListPage() {
 
   async function handleInlineStatus(id: string, next: ApplicationStatus) {
     try {
-      await updateFn({ data: { id, patch: { status: next } } });
+      await updateApplication({ data: { id, patch: { status: next } } });
       toast.success("Status updated");
       qc.invalidateQueries({ queryKey: ["admin", "applications"] });
     } catch (e) {
@@ -140,7 +136,7 @@ export default function ApplicationsListPage() {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
     try {
-      const res = await bulkUpdateFn({ data: { ids, patch: { status: next } } });
+      const res = await bulkUpdateApplications({ data: { ids, patch: { status: next } } });
       toast.success(`Updated ${res.updated} application${res.updated === 1 ? "" : "s"}`);
       setSelectedIds(new Set());
       qc.invalidateQueries({ queryKey: ["admin", "applications"] });
@@ -153,7 +149,7 @@ export default function ApplicationsListPage() {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
     try {
-      const res = await bulkDeleteFn({ data: { ids } });
+      const res = await bulkDeleteApplications({ data: { ids } });
       toast.success(`Deleted ${res.deleted} application${res.deleted === 1 ? "" : "s"}`);
       if (res.skipped.length > 0) {
         toast.warning(
@@ -170,7 +166,7 @@ export default function ApplicationsListPage() {
 
   async function handleRowDelete(id: string) {
     try {
-      const res = await bulkDeleteFn({ data: { ids: [id] } });
+      const res = await bulkDeleteApplications({ data: { ids: [id] } });
       if (res.deleted === 0 && res.skipped.length > 0) {
         toast.error(res.skipped[0].reason);
       } else {
@@ -304,8 +300,7 @@ export default function ApplicationsListPage() {
                   </td>
                   <td className="px-4 py-3 font-medium">
                     <Link
-                      to="/admin/applications/$id"
-                      params={{ id: a.id }}
+                      to={`/admin/applications/${a.id}`}
                       className="hover:underline"
                     >
                       {a.name}

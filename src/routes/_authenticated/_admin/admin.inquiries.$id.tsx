@@ -22,10 +22,6 @@ import { toast } from "sonner";
 import { ArrowLeft, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route =("/_authenticated/_admin/admin/inquiries/$id")({
-  component: InquiryDetailPage,
-  head: () => ({ meta: [{ title: "Inquiry — Admin" }] }),
-});
 
 const STATUSES: InquiryStatus[] = ["new", "in_progress", "replied", "closed"];
 
@@ -37,20 +33,20 @@ const TONE: Record<string, string> = {
 };
 
 export default function InquiryDetailPage() {
-  const { id } = Route.useParams();
+  const { id } = useParams();
   const qc = useQueryClient();
-  const getFn =(getInquiry);
-  const replyFn =(replyToInquiry);
-  const statusFn =(updateInquiryStatus);
+  
+  
+  
   const [reply, setReply] = useState("");
 
   const q = useQuery({
     queryKey: ["admin", "inquiry", id],
-    queryFn: () => getFn({ data: { id } }),
+    queryFn: () => getInquiry({ data: { id } }),
   });
 
   const replyMut = useMutation({
-    mutationFn: (body: string) => replyFn({ data: { id, body } }),
+    mutationFn: (body: string) => replyToInquiry({ data: { id, body } }),
     onSuccess: () => {
       setReply("");
       toast.success("Reply sent");
@@ -62,7 +58,7 @@ export default function InquiryDetailPage() {
   });
 
   const statusMut = useMutation({
-    mutationFn: (status: InquiryStatus) => statusFn({ data: { id, status } }),
+    mutationFn: (status: InquiryStatus) => updateInquiryStatus({ data: { id, status } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "inquiry", id] });
       qc.invalidateQueries({ queryKey: ["admin", "inquiries"] });

@@ -17,30 +17,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
-export const Route =("/_authenticated/_admin/admin/attendees/$userId/deliverables/$key")({
-  component: DeliverableEditor,
-  head: () => ({ meta: [{ title: "Edit deliverable — Admin" }] }),
-});
 
 export default function DeliverableEditor() {
-  const { userId, key } = Route.useParams();
+  const { userId, key } = useParams();
   const qc = useQueryClient();
-  const detailFn =(getAttendeeDetail);
-  const updateFn =(updateDeliverableContent);
-  const revertFn =(revertDeliverableToAi);
-  const regenFn =(regenerateDeliverable);
-  const reviewFn =(reviewDeliverable);
-  const publishFn =(publishDeliverable);
-  const unpublishFn =(unpublishDeliverable);
-  const revisionsFn =(listDeliverableRevisions);
+  
+  
+  
+  
+  
+  
+  
+  
 
   const { data } = useQuery({
     queryKey: ["admin", "attendee", userId],
-    queryFn: () => detailFn({ data: { userId } }),
+    queryFn: () => getAttendeeDetail({ data: { userId } }),
   });
   const { data: revs } = useQuery({
     queryKey: ["admin", "deliverable", userId, key, "revisions"],
-    queryFn: () => revisionsFn({ data: { userId, key } }),
+    queryFn: () => listDeliverableRevisions({ data: { userId, key } }),
   });
 
   const row = data?.deliverables.find((d) => d.deliverable_key === key);
@@ -64,40 +60,40 @@ export default function DeliverableEditor() {
     mutationFn: () => {
       let parsed: unknown;
       try { parsed = JSON.parse(json); } catch { throw new Error("Invalid JSON"); }
-      return updateFn({ data: { userId, key, content: parsed } });
+      return updateDeliverableContent({ data: { userId, key, content: parsed } });
     },
     onSuccess: () => { toast.success("Saved"); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const regen = useMutation({
-    mutationFn: () => regenFn({ data: { userId, key } }),
+    mutationFn: () => regenerateDeliverable({ data: { userId, key } }),
     onSuccess: () => { toast.success("Regenerated"); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const revert = useMutation({
-    mutationFn: () => revertFn({ data: { userId, key } }),
+    mutationFn: () => revertDeliverableToAi({ data: { userId, key } }),
     onSuccess: () => { toast.success("Reverted to AI version"); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const review = useMutation({
     mutationFn: (decision: "approve" | "request_changes" | "reject") =>
-      reviewFn({ data: { userId, key, decision, notes } }),
+      reviewDeliverable({ data: { userId, key, decision, notes } }),
     onSuccess: () => { toast.success("Review saved"); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const publish = useMutation({
     mutationFn: (when: "now" | { scheduledAt: string }) =>
-      publishFn({ data: { userId, key, when } }),
+      publishDeliverable({ data: { userId, key, when } }),
     onSuccess: () => { toast.success("Publishing updated"); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const unpublish = useMutation({
-    mutationFn: () => unpublishFn({ data: { userId, key } }),
+    mutationFn: () => unpublishDeliverable({ data: { userId, key } }),
     onSuccess: () => { toast.success("Unpublished"); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -105,7 +101,7 @@ export default function DeliverableEditor() {
   if (!row) {
     return (
       <div className="text-sm text-muted-foreground">
-        <Link to="/admin/attendees/$userId" params={{ userId }} className="hover:underline">← Back</Link>
+        <Link to={`/admin/attendees/${userId}`} className="hover:underline">← Back</Link>
         <div className="mt-4">Deliverable not found.</div>
       </div>
     );
@@ -114,7 +110,7 @@ export default function DeliverableEditor() {
   return (
     <div className="space-y-8">
       <div>
-        <Link to="/admin/attendees/$userId" params={{ userId }} className="text-xs text-muted-foreground hover:text-foreground">
+        <Link to={`/admin/attendees/${userId}`} className="text-xs text-muted-foreground hover:text-foreground">
           ← Back to attendee
         </Link>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">{type?.label ?? key}</h1>

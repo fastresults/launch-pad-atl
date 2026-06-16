@@ -7,9 +7,6 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminCommandMenu } from "@/components/admin/AdminCommandMenu";
 
-export const Route =("/_authenticated/_admin")({
-  component: AdminLayout,
-});
 
 export default function AdminLayout() {
   const { isAdmin, loading } = useAuth();

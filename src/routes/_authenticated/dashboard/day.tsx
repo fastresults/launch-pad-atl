@@ -5,14 +5,10 @@ import { getMyCohort } from "@/lib/cohort.functions";
 import { SCHEDULE_BLOCKS } from "@/lib/workshop-mode";
 import { MapPin, Calendar, Clock } from "lucide-react";
 
-export const Route =("/_authenticated/dashboard/day")({
-  component: WorkshopDayPage,
-  head: () => ({ meta: [{ title: "Workshop day — Startup Labs" }] }),
-});
 
 export default function WorkshopDayPage() {
-  const cohortFn =(getMyCohort);
-  const { data } = useQuery({ queryKey: ["my", "cohort"], queryFn: () => cohortFn(), staleTime: 60_000 });
+  
+  const { data } = useQuery({ queryKey: ["my", "cohort"], queryFn: () => getMyCohort(), staleTime: 60_000 });
   const cohort = data?.cohort;
 
   return (

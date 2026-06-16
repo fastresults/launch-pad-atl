@@ -59,23 +59,19 @@ const STATUS_CHOICES: { value: ApplicationStatus; label: string }[] = [
   { value: "withdrawn", label: "Withdrawn" },
 ];
 
-export const Route =("/_authenticated/_admin/admin/")({
-  component: AdminDashboard,
-  head: () => ({ meta: [{ title: "Admin dashboard" }] }),
-});
 
 export default function AdminDashboard() {
-  const statsFn =(getAdminStats);
-  const regFn =(listRegistrations);
-  const appsFn =(listApplications);
-  const updateAppFn =(updateApplication);
-  const bulkUpdateFn =(bulkUpdateApplications);
-  const bulkDeleteFn =(bulkDeleteApplications);
-  const membersFn =(listMembers);
-  const approveFn =(approveMember);
-  const rejectFn =(rejectMember);
-  const pauseFn =(pauseMember);
-  const restoreFn =(restoreMemberToPending);
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   const qc = useQueryClient();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -86,18 +82,18 @@ export default function AdminDashboard() {
   const [rejectTarget, setRejectTarget] = useState<MemberRow | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const stats = useQuery({ queryKey: ["admin", "stats"], queryFn: () => statsFn() });
+  const stats = useQuery({ queryKey: ["admin", "stats"], queryFn: () => getAdminStats() });
   const regs = useQuery({
     queryKey: ["admin", "registrations"],
-    queryFn: () => regFn(),
+    queryFn: () => listRegistrations(),
   });
   const apps = useQuery({
     queryKey: ["admin", "applications", "applied"],
-    queryFn: () => appsFn({ data: { status: "applied" } }),
+    queryFn: () => listApplications({ data: { status: "applied" } }),
   });
   const members = useQuery({
     queryKey: ["admin", "members", "all"],
-    queryFn: () => membersFn({ data: {} }),
+    queryFn: () => listMembers({ data: {} }),
   });
 
   const applicationsPending =
@@ -149,16 +145,16 @@ export default function AdminDashboard() {
   };
 
   const handleApprove = (userId: string) =>
-    runMember(() => approveFn({ data: { userId } }), "Member approved");
+    runMember(() => approveMember({ data: { userId } }), "Member approved");
   const handleRestore = (userId: string) =>
     runMember(
-      () => restoreFn({ data: { userId } }),
+      () => restoreMemberToPending({ data: { userId } }),
       "Moved back to pending",
     );
   const confirmPause = async (reason?: string) => {
     if (!pauseTarget) return;
     await runMember(
-      () => pauseFn({ data: { userId: pauseTarget.user_id, reason } }),
+      () => pauseMember({ data: { userId: pauseTarget.user_id, reason } }),
       "Access paused",
     );
     setPauseTarget(null);
@@ -166,7 +162,7 @@ export default function AdminDashboard() {
   const confirmReject = async (reason?: string) => {
     if (!rejectTarget) return;
     await runMember(
-      () => rejectFn({ data: { userId: rejectTarget.user_id, reason } }),
+      () => rejectMember({ data: { userId: rejectTarget.user_id, reason } }),
       "Member rejected",
     );
     setRejectTarget(null);
@@ -200,7 +196,7 @@ export default function AdminDashboard() {
 
   const handleRowStatus = async (id: string, newStatus: ApplicationStatus) => {
     try {
-      await updateAppFn({ data: { id, patch: { status: newStatus } } });
+      await updateApplication({ data: { id, patch: { status: newStatus } } });
       toast.success("Status updated");
       invalidateApps();
     } catch (e: any) {
@@ -212,7 +208,7 @@ export default function AdminDashboard() {
     const ids = Array.from(selectedIds);
     if (!ids.length) return;
     try {
-      await bulkUpdateFn({ data: { ids, patch: { status: newStatus } } });
+      await bulkUpdateApplications({ data: { ids, patch: { status: newStatus } } });
       toast.success(`Updated ${ids.length} application(s)`);
       setSelectedIds(new Set());
       invalidateApps();
@@ -225,7 +221,7 @@ export default function AdminDashboard() {
     const ids = Array.from(selectedIds);
     if (!ids.length) return;
     try {
-      const res = await bulkDeleteFn({ data: { ids } });
+      const res = await bulkDeleteApplications({ data: { ids } });
       toast.success(
         `Deleted ${res.deleted}${res.skipped.length ? ` — skipped ${res.skipped.length} (already registered)` : ""}`,
       );
@@ -239,7 +235,7 @@ export default function AdminDashboard() {
 
   const handleRowDelete = async (id: string) => {
     try {
-      const res = await bulkDeleteFn({ data: { ids: [id] } });
+      const res = await bulkDeleteApplications({ data: { ids: [id] } });
       if (res.deleted) toast.success("Application deleted");
       else toast.error(res.skipped[0]?.reason ?? "Could not delete");
       setConfirmRowDelete(null);
@@ -434,8 +430,7 @@ export default function AdminDashboard() {
                   aria-label={`Select ${a.name}`}
                 />
                 <Link
-                  to="/admin/applications/$id"
-                  params={{ id: a.id }}
+                  to={`/admin/applications/${a.id}`}
                   className="min-w-0 flex-1"
                 >
                   <div className="truncate text-sm font-medium">{a.name}</div>

@@ -6,25 +6,21 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-export const Route =("/_authenticated/_admin/admin/users")({
-  component: UsersPage,
-  head: () => ({ meta: [{ title: "Users — Admin" }] }),
-});
 
 export default function UsersPage() {
   const qc = useQueryClient();
   const { user } = useAuth();
-  const listFn =(listUsersWithRoles);
-  const setRoleFn =(setUserRole);
+  
+  
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "users"],
-    queryFn: () => listFn(),
+    queryFn: () => listUsersWithRoles(),
   });
 
   const mutate = useMutation({
     mutationFn: (vars: { userId: string; role: "admin" | "user" }) =>
-      setRoleFn({ data: vars }),
+      setUserRole({ data: vars }),
     onSuccess: () => {
       toast.success("Role updated");
       qc.invalidateQueries({ queryKey: ["admin", "users"] });

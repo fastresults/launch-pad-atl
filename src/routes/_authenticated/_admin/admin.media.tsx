@@ -1,10 +1,6 @@
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { MediaHub } from "@/components/media/MediaHub";
 
-export const Route =("/_authenticated/_admin/admin/media")({
-  component: MasterMediaPage,
-  head: () => ({ meta: [{ title: "Master Media Library" }] }),
-});
 
 export default function MasterMediaPage() {
   return (

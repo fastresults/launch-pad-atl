@@ -1,10 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FileText, Image, Sparkles } from "lucide-react";
 
-export const Route =("/_authenticated/dashboard/files")({
-  component: FilesIndex,
-  head: () => ({ meta: [{ title: "My files — Startup Labs" }] }),
-});
 
 export default function FilesIndex() {
   const sections = [

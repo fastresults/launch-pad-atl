@@ -8,10 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export const Route =("/_authenticated/_admin/admin/inquiries/")({
-  component: InquiriesListPage,
-  head: () => ({ meta: [{ title: "Inquiries — Admin" }] }),
-});
 
 const FILTERS: { value: InquiryStatus | "all"; label: string }[] = [
   { value: "new", label: "New" },
@@ -29,13 +25,13 @@ const TONE: Record<string, string> = {
 };
 
 export default function InquiriesListPage() {
-  const fn =(listInquiries);
+  
   const [status, setStatus] = useState<InquiryStatus | "all">("new");
   const [search, setSearch] = useState("");
 
   const q = useQuery({
     queryKey: ["admin", "inquiries", status, search],
-    queryFn: () => fn({ data: { status, search } }),
+    queryFn: () => listInquiries({ data: { status, search } }),
     refetchInterval: 30_000,
   });
 
@@ -105,8 +101,7 @@ export default function InquiriesListPage() {
                 >
                   <td className="px-4 py-3">
                     <Link
-                      to="/admin/inquiries/$id"
-                      params={{ id: r.id }}
+                      to={`/admin/inquiries/${r.id}`}
                       className="block"
                     >
                       <div className="font-medium">{r.name}</div>
@@ -114,7 +109,7 @@ export default function InquiriesListPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3">
-                    <Link to="/admin/inquiries/$id" params={{ id: r.id }}>
+                    <Link to={`/admin/inquiries/${r.id}`}>
                       <div className="truncate font-medium">{r.subject}</div>
                       <div className="line-clamp-1 text-xs text-muted-foreground">
                         {r.message}

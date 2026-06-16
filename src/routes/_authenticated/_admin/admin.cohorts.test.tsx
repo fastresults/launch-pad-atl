@@ -24,26 +24,22 @@ import {
 import { toast } from "sonner";
 import { ArrowLeft, RotateCcw, Zap } from "lucide-react";
 
-export const Route =("/_authenticated/_admin/admin/cohorts/test")({
-  component: CohortTestPage,
-  head: () => ({ meta: [{ title: "Test registration flow — Admin" }] }),
-});
 
 export default function CohortTestPage() {
   const { isSuperAdmin, loading } = useAuth();
   const qc = useQueryClient();
 
-  const listFn =(listCohorts);
-  const availFn =(getCohortAvailability);
-  const simulateFn =(simulatePaidRegistrations);
-  const resetFn =(resetTestRegistrations);
-  const listRegsFn =(listCohortRegistrations);
-  const confirmFn =(confirmRegistrationPayment);
-  const refundFn =(markRegistrationRefunded);
+  
+  
+  
+  
+  
+  
+  
 
   const { data: cohorts = [] } = useQuery({
     queryKey: ["cohorts"],
-    queryFn: () => listFn(),
+    queryFn: () => listCohorts(),
   });
 
   const [cohortId, setCohortId] = useState<string>("");
@@ -52,14 +48,14 @@ export default function CohortTestPage() {
 
   const { data: avail } = useQuery({
     queryKey: ["cohort-availability", effectiveId],
-    queryFn: () => availFn({ data: { cohort_id: effectiveId } }),
+    queryFn: () => getCohortAvailability({ data: { cohort_id: effectiveId } }),
     enabled: Boolean(effectiveId),
     refetchInterval: 2000,
   });
 
   const { data: regsData } = useQuery({
     queryKey: ["cohort-regs", effectiveId],
-    queryFn: () => listRegsFn({ data: { cohort_id: effectiveId, limit: 25 } }),
+    queryFn: () => listCohortRegistrations({ data: { cohort_id: effectiveId, limit: 25 } }),
     enabled: Boolean(effectiveId),
     refetchInterval: 2000,
   });
@@ -71,7 +67,7 @@ export default function CohortTestPage() {
   };
 
   const simulate = useMutation({
-    mutationFn: (count: number) => simulateFn({ data: { cohort_id: effectiveId, count } }),
+    mutationFn: (count: number) => simulatePaidRegistrations({ data: { cohort_id: effectiveId, count } }),
     onSuccess: (r) => {
       toast.success(`Simulated ${r.created.length} paid registration${r.created.length === 1 ? "" : "s"}`);
       invalidate();
@@ -80,7 +76,7 @@ export default function CohortTestPage() {
   });
 
   const reset = useMutation({
-    mutationFn: () => resetFn({ data: { cohort_id: effectiveId } }),
+    mutationFn: () => resetTestRegistrations({ data: { cohort_id: effectiveId } }),
     onSuccess: (r) => {
       toast.success(`Deleted ${r.deleted} test registration${r.deleted === 1 ? "" : "s"}`);
       invalidate();
@@ -89,13 +85,13 @@ export default function CohortTestPage() {
   });
 
   const markPaid = useMutation({
-    mutationFn: (id: string) => confirmFn({ data: { registration_id: id } }),
+    mutationFn: (id: string) => confirmRegistrationPayment({ data: { registration_id: id } }),
     onSuccess: () => { toast.success("Marked as paid"); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const refund = useMutation({
-    mutationFn: (id: string) => refundFn({ data: { registration_id: id } }),
+    mutationFn: (id: string) => markRegistrationRefunded({ data: { registration_id: id } }),
     onSuccess: () => { toast.success("Marked as refunded"); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });

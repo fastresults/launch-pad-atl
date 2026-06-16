@@ -7,23 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
-export const Route =("/_authenticated/dashboard/goals")({
-  component: GoalsPage,
-});
 
 export default function GoalsPage() {
   const qc = useQueryClient();
-  const listFn =(listMyGoals);
-  const saveFn =(upsertGoal);
-  const delFn =(deleteGoal);
-  const { data } = useQuery({ queryKey: ["my", "goals"], queryFn: () => listFn() });
+  
+  
+  
+  const { data } = useQuery({ queryKey: ["my", "goals"], queryFn: () => listMyGoals() });
 
   const [horizon, setHorizon] = useState<30 | 60 | 90>(30);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
 
   const save = useMutation({
-    mutationFn: () => saveFn({ data: { horizon, title, description: desc, status: "pending" } }),
+    mutationFn: () => upsertGoal({ data: { horizon, title, description: desc, status: "pending" } }),
     onSuccess: () => {
       toast.success("Goal added");
       setTitle("");
@@ -34,7 +31,7 @@ export default function GoalsPage() {
   });
 
   const del = useMutation({
-    mutationFn: (id: string) => delFn({ data: { id } }),
+    mutationFn: (id: string) => deleteGoal({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my", "goals"] }),
   });
 

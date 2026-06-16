@@ -2,9 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { } from 'react-router-dom';
 import { listMyDeliverables } from "@/lib/attendee.functions";
 
-export const Route =("/_authenticated/dashboard/deliverables")({
-  component: DeliverablesPage,
-});
 
 type Section = { heading: string; body_markdown: string };
 type Content = {
@@ -15,8 +12,8 @@ type Content = {
 };
 
 export default function DeliverablesPage() {
-  const listFn =(listMyDeliverables);
-  const { data, isLoading } = useQuery({ queryKey: ["my", "deliverables"], queryFn: () => listFn() });
+  
+  const { data, isLoading } = useQuery({ queryKey: ["my", "deliverables"], queryFn: () => listMyDeliverables() });
 
   return (
     <div className="space-y-8">

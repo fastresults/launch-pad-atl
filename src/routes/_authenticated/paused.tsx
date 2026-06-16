@@ -8,14 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
-export const Route =("/_authenticated/paused")({
-  component: PausedPage,
-  head: () => ({ meta: [{ title: "Account paused — StartupLabs" }] }),
-});
 
 export default function PausedPage() {
   const { user, signOut } = useAuth();
-  const submit =(submitInquiry);
+  
 
   const displayName =
     (user?.user_metadata?.display_name as string | undefined) ??
@@ -36,7 +32,7 @@ export default function PausedPage() {
     }
     setSending(true);
     try {
-      await submit({
+      await submitInquiry({
         data: {
           name: name || email,
           email,

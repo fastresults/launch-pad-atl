@@ -8,10 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-export const Route =("/_authenticated/dashboard/filing")({
-  component: FilingPage,
-  head: () => ({ meta: [{ title: "Filing Info" }] }),
-});
 
 const blank = {
   legal_first_name: "", legal_last_name: "", dob: "", ssn_last4: "", ssn_full: "",
@@ -20,9 +16,9 @@ const blank = {
 };
 
 export default function FilingPage() {
-  const getFn =(getMyFiling);
-  const saveFn =(updateMyFiling);
-  const { data, refetch } = useQuery({ queryKey: ["my", "filing"], queryFn: () => getFn() });
+  
+  
+  const { data, refetch } = useQuery({ queryKey: ["my", "filing"], queryFn: () => getMyFiling() });
   const [v, setV] = useState<Record<string, string>>(blank);
   const [saving, setSaving] = useState(false);
 
@@ -38,7 +34,7 @@ export default function FilingPage() {
     try {
       const payload: Record<string, string | null> = {};
       for (const k of Object.keys(v)) payload[k] = v[k] ? v[k] : null;
-      await saveFn({ data: payload as never });
+      await updateMyFiling({ data: payload as never });
       toast.success("Saved");
       refetch();
     } catch (e) {

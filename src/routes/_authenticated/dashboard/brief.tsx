@@ -27,23 +27,19 @@ const briefSearchSchema = z.object({
   review: z.coerce.number().optional(),
 });
 
-export const Route =("/_authenticated/dashboard/brief")({
-  component: BriefWizard,
-  validateSearch: briefSearchSchema,
-  head: () => ({ meta: [{ title: "My startup — Startup Labs" }] }),
-});
 
 type Mode = "question" | "checkpoint" | "founder" | "market" | "review";
 
 export default function BriefWizard() {
-  const getFn =(getMyBrief);
-  const saveFn =(updateBriefField);
-  const summarizeQaFn =(summarizeBriefBlock);
-  const summarizeFounderFn =(summarizeFounderProfile);
-  const summarizeMarketFn =(summarizeMarketProfile);
+  
+  
+  
+  
+  
   const navigate = useNavigate();
-  const search = Route.useSearch();
-  const { data, refetch } = useQuery({ queryKey: ["my", "brief"], queryFn: () => getFn() });
+  const [searchParams] = useSearchParams();
+  const search = Object.fromEntries(searchParams.entries());
+  const { data, refetch } = useQuery({ queryKey: ["my", "brief"], queryFn: () => getMyBrief() });
   const [values, setValues] = useState<Record<string, string>>({});
   const [idx, setIdx] = useState(0);
   const [mode, setMode] = useState<Mode>("question");
@@ -105,7 +101,7 @@ export default function BriefWizard() {
 
   const save = async (key: string) => {
     try {
-      await saveFn({ data: { field: key as never, value: values[key] ?? "" } });
+      await updateBriefField({ data: { field: key as never, value: values[key] ?? "" } });
       refetch();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed");
@@ -222,10 +218,10 @@ export default function BriefWizard() {
             totalBlocks={BRIEF_BLOCKS.length}
             summarize={
               checkpointBlock.kind === "qa"
-                ? () => summarizeQaFn({ data: { block: checkpointBlock.id as 1 | 2 | 3 } })
+                ? () => summarizeBriefBlock({ data: { block: checkpointBlock.id as 1 | 2 | 3 } })
                 : checkpointBlock.kind === "founder"
-                  ? () => summarizeFounderFn()
-                  : () => summarizeMarketFn()
+                  ? () => summarizeFounderProfile()
+                  : () => summarizeMarketProfile()
             }
             cacheKey={[checkpointBlock.kind, checkpointBlock.id]}
             onContinue={continueFromCheckpoint}

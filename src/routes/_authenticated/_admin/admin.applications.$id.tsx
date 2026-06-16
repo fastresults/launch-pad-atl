@@ -34,10 +34,6 @@ import { toast } from "sonner";
 import { ArrowLeft, Copy, Mail, ExternalLink, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route =("/_authenticated/_admin/admin/applications/$id")({
-  component: ApplicationDetailPage,
-  head: () => ({ meta: [{ title: "Application — Admin" }] }),
-});
 
 const STATUSES: ApplicationStatus[] = [
   "applied",
@@ -65,18 +61,18 @@ function copy(text: string) {
 }
 
 export default function ApplicationDetailPage() {
-  const { id } = Route.useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  const getFn =(getApplication);
-  const updateFn =(updateApplicationStatus);
-  const addNoteFn =(addApplicationNote);
-  const promoteFn =(promoteApplicationToRegistration);
+  
+  
+  
+  
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "application", id],
-    queryFn: () => getFn({ data: { id } }),
+    queryFn: () => getApplication({ data: { id } }),
   });
 
   const invalidate = () => {
@@ -87,7 +83,7 @@ export default function ApplicationDetailPage() {
 
   const statusMut = useMutation({
     mutationFn: (status: ApplicationStatus) =>
-      updateFn({ data: { id, status } }),
+      updateApplicationStatus({ data: { id, status } }),
     onSuccess: () => {
       toast.success("Status updated");
       invalidate();
@@ -96,7 +92,7 @@ export default function ApplicationDetailPage() {
   });
 
   const promoteMut = useMutation({
-    mutationFn: () => promoteFn({ data: { id } }),
+    mutationFn: () => promoteApplicationToRegistration({ data: { id } }),
     onSuccess: (res) => {
       toast.success("Created registration");
       invalidate();
@@ -108,7 +104,7 @@ export default function ApplicationDetailPage() {
   const [noteBody, setNoteBody] = useState("");
   const noteMut = useMutation({
     mutationFn: (body: string) =>
-      addNoteFn({ data: { applicationId: id, body } }),
+      addApplicationNote({ data: { applicationId: id, body } }),
     onSuccess: () => {
       setNoteBody("");
       toast.success("Note added");

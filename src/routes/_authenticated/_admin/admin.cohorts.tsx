@@ -26,10 +26,6 @@ import {
 import { toast } from "sonner";
 import { FlaskConical, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 
-export const Route =("/_authenticated/_admin/admin/cohorts")({
-  component: CohortsAdminPage,
-  head: () => ({ meta: [{ title: "Cohorts — Admin" }] }),
-});
 
 type FormState = {
   id?: string;
@@ -114,13 +110,13 @@ function clampInt(s: string, lo: number, hi: number): number {
 export default function CohortsAdminPage() {
   const { isSuperAdmin, loading } = useAuth();
   const qc = useQueryClient();
-  const listFn =(listCohorts);
-  const upsertFn =(upsertCohort);
-  const deleteFn =(deleteCohort);
+  
+  
+  
 
   const { data: cohorts = [], isLoading } = useQuery({
     queryKey: ["cohorts"],
-    queryFn: () => listFn(),
+    queryFn: () => listCohorts(),
   });
 
   const [open, setOpen] = useState(false);
@@ -141,7 +137,7 @@ export default function CohortsAdminPage() {
       if (foundersSeats + cohortSeats < 1) {
         throw new Error("Total seats must be at least 1.");
       }
-      return upsertFn({
+      return upsertCohort({
         data: {
           id: vars.id,
           cohort_date: vars.cohort_date,
@@ -177,7 +173,7 @@ export default function CohortsAdminPage() {
   });
 
   const del = useMutation({
-    mutationFn: (id: string) => deleteFn({ data: { id } }),
+    mutationFn: (id: string) => deleteCohort({ data: { id } }),
     onSuccess: () => {
       toast.success("Cohort deleted");
       qc.invalidateQueries({ queryKey: ["cohorts"] });

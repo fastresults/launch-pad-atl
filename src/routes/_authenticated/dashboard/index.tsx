@@ -12,20 +12,17 @@ import { NextActionCard } from "@/components/dashboard/NextActionCard";
 import { BriefCompleteCard } from "@/components/brief/BriefCompleteCard";
 import { Calendar, MapPin, Coffee, Sparkles, CheckCircle2, Hand } from "lucide-react";
 
-export const Route =("/_authenticated/dashboard/")({
-  component: TodayPage,
-});
 
 export default function TodayPage() {
-  const briefFn =(getMyBrief);
-  const filingFn =(getMyFiling);
-  const wfFn =(getMyWorkflow);
-  const cohortFn =(getMyCohort);
+  
+  
+  
+  
 
-  const brief = useQuery({ queryKey: ["my", "brief"], queryFn: () => briefFn() });
-  const filing = useQuery({ queryKey: ["my", "filing"], queryFn: () => filingFn() });
-  const wf = useQuery({ queryKey: ["my", "workflow"], queryFn: () => wfFn() });
-  const cohort = useQuery({ queryKey: ["my", "cohort"], queryFn: () => cohortFn(), staleTime: 60_000 });
+  const brief = useQuery({ queryKey: ["my", "brief"], queryFn: () => getMyBrief() });
+  const filing = useQuery({ queryKey: ["my", "filing"], queryFn: () => getMyFiling() });
+  const wf = useQuery({ queryKey: ["my", "workflow"], queryFn: () => getMyWorkflow() });
+  const cohort = useQuery({ queryKey: ["my", "cohort"], queryFn: () => getMyCohort(), staleTime: 60_000 });
 
   // Re-render once a minute so the mode and clock stay live
   const [, setTick] = useState(0);
@@ -279,8 +276,8 @@ function DuringMode({ state, generated, total }: { state: WorkshopState; generat
 
 function RecentlyFinished() {
   // Pulled lazily — uses the workflow query already cached
-  const wfFn =(getMyWorkflow);
-  const { data } = useQuery({ queryKey: ["my", "workflow"], queryFn: () => wfFn(), refetchInterval: 8000 });
+  
+  const { data } = useQuery({ queryKey: ["my", "workflow"], queryFn: () => getMyWorkflow(), refetchInterval: 8000 });
   const done = (data?.items ?? []).filter((i) => i.generated).slice(-3).reverse();
   if (done.length === 0) return null;
 
@@ -291,8 +288,7 @@ function RecentlyFinished() {
         {done.map((d) => (
           <Link
             key={d.key}
-            to="/dashboard/workflow/$key"
-            params={{ key: d.key }}
+            to={`/dashboard/workflow/${d.key}`}
             className="rounded-xl border border-white/10 bg-card p-4 hover:border-primary/30 transition"
           >
             <div className="flex items-center gap-2 text-emerald-500">

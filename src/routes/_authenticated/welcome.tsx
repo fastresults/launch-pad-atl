@@ -16,10 +16,6 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
-export const Route =("/_authenticated/welcome")({
-  component: WelcomePage,
-  head: () => ({ meta: [{ title: "Welcome — Atlanta Startup Sprint" }] }),
-});
 
 const STARTUP_TYPES = [
   { value: "online-services", label: "Online services / agency" },
@@ -33,11 +29,11 @@ const STARTUP_TYPES = [
 
 export default function WelcomePage() {
   const { user, isApprovedMember, isAdmin, signOut } = useAuth();
-  const getIntake =(getMyIntake);
-  const submit =(submitMyIntake);
+  
+  
   const intakeQ = useQuery({
     queryKey: ["my-intake"],
-    queryFn: () => getIntake(),
+    queryFn: () => getMyIntake(),
     enabled: !!user,
   });
 
@@ -70,7 +66,7 @@ export default function WelcomePage() {
     }
     setSubmitting(true);
     try {
-      await submit({
+      await submitMyIntake({
         data: {
           startup_type: startupType as any,
           startup_name: startupName || null,
