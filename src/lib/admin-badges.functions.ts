@@ -1,23 +1,23 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export interface AdminBadges {
-  pendingApplications: number;
-  pendingRegistrations: number;
-  pendingReviews: number;
-  openInquiries: number;
+  applicationsPending: number;
+  membersPending: number;
+  reviewPending: number;
+  inquiriesNew: number;
 }
 
 export async function getAdminBadges(): Promise<AdminBadges> {
-  const [apps, regs, reviews, inquiries] = await Promise.all([
-    supabase.from("applications").select("id", { count: "exact" }).eq("status", "pending"),
-    supabase.from("workshop_registrations").select("id", { count: "exact" }).eq("status", "pending"),
-    supabase.from("members").select("id", { count: "exact" }).eq("member_status", "pending"),
-    supabase.from("inquiries").select("id", { count: "exact" }).eq("status", "open"),
+  const [apps, members, reviews, inquiries] = await Promise.all([
+    supabase.from("founder_applications").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("member_intakes").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("member_intakes").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("inquiries").select("id", { count: "exact", head: true }).eq("status", "open"),
   ]);
   return {
-    pendingApplications: apps.count ?? 0,
-    pendingRegistrations: regs.count ?? 0,
-    pendingReviews: reviews.count ?? 0,
-    openInquiries: inquiries.count ?? 0,
+    applicationsPending: apps.count ?? 0,
+    membersPending: members.count ?? 0,
+    reviewPending: reviews.count ?? 0,
+    inquiriesNew: inquiries.count ?? 0,
   };
 }

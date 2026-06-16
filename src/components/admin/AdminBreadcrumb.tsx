@@ -10,7 +10,7 @@ import {
 import { ADMIN_NAV } from "@/lib/admin-nav";
 
 export function AdminBreadcrumb() {
-  const pathname = useLocation({ select: (s) => s.location.pathname });
+  const { pathname } = useLocation();
 
   // find best matching nav item
   const match = ADMIN_NAV.filter((n) => !n.external)

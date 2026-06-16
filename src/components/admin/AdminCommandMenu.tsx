@@ -37,7 +37,7 @@ export function AdminCommandMenu() {
     if (external) {
       window.open(to, "_blank");
     } else {
-      navigate({ to });
+      navigate(to);
     }
   };
 
