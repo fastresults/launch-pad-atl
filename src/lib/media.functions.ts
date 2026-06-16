@@ -500,7 +500,7 @@ export const reprocessAi = createServerFn({ method: "POST" })
   });
 
 async function processAiForAsset(assetId: string) {
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = process.env.AI_GATEWAY_API_KEY;
   if (!apiKey) return;
 
   const { data: asset } = await supabaseAdmin
@@ -522,7 +522,7 @@ async function processAiForAsset(assetId: string) {
         .createSignedUrl(asset.storage_path, 600);
       if (!signed) throw new Error("No signed URL");
 
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const res = await fetch("${process.env.AI_GATEWAY_URL ?? "https://api.openai.com/v1"}/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

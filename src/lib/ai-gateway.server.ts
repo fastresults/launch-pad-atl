@@ -1,31 +1,15 @@
-// Server-only Lovable AI Gateway provider helper.
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 
-const LOVABLE_AIG_RUN_ID_HEADER = "X-Lovable-AIG-Run-ID";
-
-export function createLovableAiGatewayProvider(lovableApiKey: string, initialRunId?: string) {
-  let runId = initialRunId?.trim() || undefined;
+export function createAiGatewayProvider(apiKey: string) {
+  const baseURL = process.env.AI_GATEWAY_URL ?? "https://api.openai.com/v1";
 
   const provider = createOpenAICompatible({
-    name: "lovable",
-    baseURL: "https://ai.gateway.lovable.dev/v1",
+    name: "ai-gateway",
+    baseURL,
     headers: {
-      "Lovable-API-Key": lovableApiKey,
-      "X-Lovable-AIG-SDK": "vercel-ai-sdk",
-    },
-    fetch: async (input, init) => {
-      const headers = new Headers(init?.headers);
-      if (runId && !headers.has(LOVABLE_AIG_RUN_ID_HEADER)) {
-        headers.set(LOVABLE_AIG_RUN_ID_HEADER, runId);
-      }
-      const response = await fetch(input, { ...init, headers });
-      const received = response.headers.get(LOVABLE_AIG_RUN_ID_HEADER) ?? undefined;
-      if (!runId && received) runId = received;
-      return response;
+      Authorization: `Bearer ${apiKey}`,
     },
   });
 
-  return Object.assign(provider, {
-    getRunId: () => runId,
-  });
+  return provider;
 }

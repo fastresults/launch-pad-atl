@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import { WebhookError, verifyWebhookRequest } from '@lovable.dev/webhooks-js'
 import { createFileRoute } from '@tanstack/react-router'
 
 // Suppression event payload sent by the Go API when Mailgun reports
@@ -51,11 +50,45 @@ function mapReasonToMessage(reason: string): string {
   }
 }
 
-export const Route = createFileRoute("/lovable/email/suppression")({
+
+async function verifyWebhook(request: Request, secret: string): Promise<{ body: string; payload: SuppressionPayload }> {
+  const signature = request.headers.get('X-Signature-256') ?? request.headers.get('X-Hub-Signature-256') ?? ''
+  const timestamp = request.headers.get('X-Timestamp') ?? ''
+  const body = await request.text()
+
+  if (!signature || !timestamp) {
+    throw Object.assign(new Error('Missing signature headers'), { code: 'invalid_signature' })
+  }
+
+  const age = Math.abs(Date.now() - Number(timestamp) * 1000)
+  if (age > 5 * 60 * 1000) {
+    throw Object.assign(new Error('Stale timestamp'), { code: 'stale_timestamp' })
+  }
+
+  const enc = new TextEncoder()
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(timestamp + '.' + body))
+  const computed = 'sha256=' + Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('')
+
+  if (computed !== signature) {
+    throw Object.assign(new Error('Invalid signature'), { code: 'invalid_signature' })
+  }
+
+  let payload: SuppressionPayload
+  try {
+    payload = parseSuppressionPayload(body)
+  } catch {
+    throw Object.assign(new Error('Invalid payload'), { code: 'invalid_payload' })
+  }
+
+  return { body, payload }
+}
+
+export const Route = createFileRoute("/api/email/suppression")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env.LOVABLE_API_KEY
+        const apiKey = process.env.WEBHOOK_SECRET
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -64,38 +97,23 @@ export const Route = createFileRoute("/lovable/email/suppression")({
           return Response.json({ error: 'Server configuration error' }, { status: 500 })
         }
 
-        // Verify HMAC signature using the Lovable API Key (same as auth-email-hook)
+        // Verify HMAC signature using WEBHOOK_SECRET
         let payload: SuppressionPayload
         try {
-          const verified = await verifyWebhookRequest({
-            req: request,
-            secret: apiKey,
-            parser: parseSuppressionPayload,
-          })
+          const verified = await verifyWebhook(request, apiKey)
           payload = verified.payload
-        } catch (error) {
-          if (error instanceof WebhookError) {
-            switch (error.code) {
-              case 'invalid_signature':
-                console.error('Invalid webhook signature')
-                return Response.json({ error: 'Invalid signature' }, { status: 401 })
-              case 'stale_timestamp':
-                console.error('Stale webhook timestamp')
-                return Response.json({ error: 'Stale timestamp' }, { status: 401 })
-              case 'invalid_payload':
-              case 'invalid_json':
-                console.error('Invalid payload', { code: error.code })
-                return Response.json({ error: 'Invalid payload' }, { status: 400 })
-              default:
-                console.error('Webhook verification failed', {
-                  code: error.code,
-                  message: error.message,
-                })
-                return Response.json({ error: 'Verification failed' }, { status: 401 })
-            }
+        } catch (error: any) {
+          const code = error?.code ?? 'unknown'
+          if (code === 'stale_timestamp') {
+            console.error('Stale webhook timestamp')
+            return Response.json({ error: 'Stale timestamp' }, { status: 401 })
           }
-          console.error('Unexpected error during verification', { error })
-          return Response.json({ error: 'Internal error' }, { status: 500 })
+          if (code === 'invalid_payload') {
+            console.error('Invalid payload')
+            return Response.json({ error: 'Invalid payload' }, { status: 400 })
+          }
+          console.error('Webhook verification failed', { code, message: error?.message })
+          return Response.json({ error: 'Invalid signature' }, { status: 401 })
         }
 
         const supabase = createClient(supabaseUrl, supabaseServiceKey)

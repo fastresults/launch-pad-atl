@@ -4,7 +4,7 @@ import { generateText, Output } from "ai";
 import { createHash } from "crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { BRIEF_BLOCKS, fieldLabel } from "@/lib/brief-blocks";
 
 const BRIEF_KEYS = [
@@ -153,9 +153,9 @@ export const summarizeBriefBlock = createServerFn({ method: "POST" })
       };
     }
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
-    const model = createLovableAiGatewayProvider(apiKey)("google/gemini-3-flash-preview");
+    const apiKey = process.env.AI_GATEWAY_API_KEY;
+    if (!apiKey) throw new Error("AI_GATEWAY_API_KEY is not configured");
+    const model = createAiGatewayProvider(apiKey)("google/gemini-3-flash-preview");
 
     const prompt = [
       `You are an encouraging startup coach. The founder just finished block "${block.title}" of their startup brief.`,

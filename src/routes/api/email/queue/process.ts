@@ -1,4 +1,3 @@
-import { sendLovableEmail } from '@lovable.dev/email-js'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createFileRoute } from '@tanstack/react-router'
 
@@ -60,11 +59,44 @@ async function moveToDlq(
   }
 }
 
-export const Route = createFileRoute("/lovable/email/queue/process")({
+
+async function sendEmailViaMailgun(
+  params: {
+    to: string; from: string; sender_domain: string; subject: string;
+    html: string; text?: string; idempotency_key?: string;
+    unsubscribe_token?: string; reply_to?: string; message_id?: string;
+  },
+  apiKey: string,
+): Promise<void> {
+  const form = new FormData()
+  form.append('to', params.to)
+  form.append('from', params.from)
+  form.append('subject', params.subject)
+  form.append('html', params.html)
+  if (params.text) form.append('text', params.text)
+  if (params.reply_to) form.append('h:Reply-To', params.reply_to)
+  if (params.message_id) form.append('h:Message-Id', `<${params.message_id}>`)
+  if (params.idempotency_key) form.append('o:idempotency-key', params.idempotency_key)
+
+  const credentials = btoa(`api:${apiKey}`)
+  const res = await fetch(`https://api.mailgun.net/v3/${params.sender_domain}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Basic ${credentials}` },
+    body: form,
+  })
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    const err: any = new Error(`Mailgun send failed: ${res.status} ${body.slice(0, 300)}`)
+    err.status = res.status
+    throw err
+  }
+}
+
+export const Route = createFileRoute("/api/email/queue/process")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env.LOVABLE_API_KEY
+        const apiKey = process.env.MAILGUN_API_KEY
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -221,23 +253,20 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
             }
 
             try {
-              await sendLovableEmail(
+              await sendEmailViaMailgun(
                 {
-                  run_id: payload.run_id,
                   to: payload.to,
                   from: payload.from,
                   sender_domain: payload.sender_domain,
                   subject: payload.subject,
                   html: payload.html,
                   text: payload.text,
-                  purpose: payload.purpose,
-                  label: payload.label,
                   idempotency_key: payload.idempotency_key,
                   unsubscribe_token: payload.unsubscribe_token,
                   reply_to: payload.reply_to,
                   message_id: payload.message_id,
                 },
-                { apiKey, sendUrl: process.env.LOVABLE_SEND_URL }
+                apiKey,
               )
 
               // Log success

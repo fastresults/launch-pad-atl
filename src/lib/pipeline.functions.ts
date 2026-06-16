@@ -3,7 +3,7 @@ import { z } from "zod";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { loadFounderContext } from "@/lib/founderMemory.server";
 
 // ===== Auth helpers =====
@@ -192,8 +192,8 @@ async function runStep(args: {
   triggeredBy: string;
 }) {
   const { type, runId, userId, attendeeCtx, upstream, triggeredBy } = args;
-  const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
+  const apiKey = process.env.AI_GATEWAY_API_KEY;
+  if (!apiKey) throw new Error("AI_GATEWAY_API_KEY is not configured");
 
   // Mark step running
   const { data: stepRow, error: stepErr } = await supabaseAdmin
@@ -215,7 +215,7 @@ async function runStep(args: {
   if (stepErr) throw new Error(stepErr.message);
 
   try {
-    const gateway = createLovableAiGatewayProvider(apiKey);
+    const gateway = createAiGatewayProvider(apiKey);
     const model = gateway(type.default_model);
 
     const prompt = [

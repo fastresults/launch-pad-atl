@@ -9,15 +9,15 @@ const TranscribeInput = z.object({
 });
 
 // The AI SDK's openai-compatible adapter only accepts wav/mp3 audio parts,
-// which MediaRecorder cannot produce in the browser. Call the Lovable AI
-// Gateway directly so we can pass the recorded webm/opus (or mp4) audio to
+// which MediaRecorder cannot produce in the browser. Call the AI gateway
+// directly so we can pass the recorded webm/opus (or mp4) audio to
 // Gemini, which accepts these formats natively.
 export const transcribeAudio = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => TranscribeInput.parse(i))
   .handler(async ({ data }) => {
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
+    const apiKey = process.env.AI_GATEWAY_API_KEY;
+    if (!apiKey) throw new Error("AI_GATEWAY_API_KEY is not configured");
 
     const systemPrompt =
       "You are a precise transcription engine. Output ONLY the spoken words verbatim in clean punctuation. " +
@@ -39,12 +39,12 @@ export const transcribeAudio = createServerFn({ method: "POST" })
       },
     });
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const gatewayUrl = process.env.AI_GATEWAY_URL ?? "https://api.openai.com/v1";
+    const res = await fetch(`${gatewayUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Lovable-API-Key": apiKey,
-        "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",

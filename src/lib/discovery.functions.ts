@@ -4,7 +4,7 @@ import { generateText, Output } from "ai";
 import { createHash } from "crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { extractTextFromResumeFile } from "@/lib/discovery.server";
 
 // ===================== Founder profile =====================
@@ -88,8 +88,8 @@ export const extractFounderFromText = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => ExtractInput.parse(i))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
+    const apiKey = process.env.AI_GATEWAY_API_KEY;
+    if (!apiKey) throw new Error("AI_GATEWAY_API_KEY is not configured");
 
     // Resolve the text we'll feed to the model from whichever source we have.
     let textForModel = (data.raw_text ?? "").trim();
@@ -109,7 +109,7 @@ export const extractFounderFromText = createServerFn({ method: "POST" })
     let extracted: ExtractedFounder = ExtractedFounderSchema.parse({});
 
     if (textForModel.length >= 20) {
-      const model = createLovableAiGatewayProvider(apiKey)("google/gemini-3-flash-preview");
+      const model = createAiGatewayProvider(apiKey)("google/gemini-3-flash-preview");
       const prompt = [
         "You are extracting a founder's professional profile from text they provided.",
         "Be faithful to the source — do not invent. If a field isn't present, leave it empty.",
@@ -279,9 +279,9 @@ export const summarizeFounderProfile = createServerFn({ method: "POST" })
       return { summary: cached.data.summary, bullets: (cached.data.bullets as string[]) ?? [], cached: true };
     }
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
-    const model = createLovableAiGatewayProvider(apiKey)("google/gemini-3-flash-preview");
+    const apiKey = process.env.AI_GATEWAY_API_KEY;
+    if (!apiKey) throw new Error("AI_GATEWAY_API_KEY is not configured");
+    const model = createAiGatewayProvider(apiKey)("google/gemini-3-flash-preview");
     const prompt = [
       "You are an encouraging startup coach reflecting a founder's background back to them.",
       'Use second person ("you", "your startup"). Always say "startup", never "business". Do not invent facts.',
@@ -339,9 +339,9 @@ export const summarizeMarketProfile = createServerFn({ method: "POST" })
       return { summary: cached.data.summary, bullets: (cached.data.bullets as string[]) ?? [], cached: true };
     }
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
-    const model = createLovableAiGatewayProvider(apiKey)("google/gemini-3-flash-preview");
+    const apiKey = process.env.AI_GATEWAY_API_KEY;
+    if (!apiKey) throw new Error("AI_GATEWAY_API_KEY is not configured");
+    const model = createAiGatewayProvider(apiKey)("google/gemini-3-flash-preview");
     const prompt = [
       "You are an encouraging startup coach recapping the market and model the founder just described.",
       'Use second person. Always say "startup", never "business". Do not invent facts.',

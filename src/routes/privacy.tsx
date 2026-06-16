@@ -105,8 +105,8 @@ function PrivacyPage() {
             <ul>
               <li>
                 <strong>Service providers</strong> that help us operate the
-                business, including our hosting and database provider (Lovable
-                Cloud / Supabase), our payment processor, our email provider,
+                business, including our hosting and database provider (Supabase /
+                Netlify), our payment processor, our email provider,
                 and Google for authentication.
               </li>
               <li>
@@ -122,8 +122,8 @@ function PrivacyPage() {
 
           <Section title="4. Data storage &amp; security">
             <p>
-              Your data is stored on secured infrastructure provided by Lovable
-              Cloud (Supabase) in the United States. We use industry-standard
+              Your data is stored on secured infrastructure provided by Supabase
+              in the United States. We use industry-standard
               safeguards including encryption in transit (HTTPS), role-based
               access controls, and database row-level security. No system is
               perfectly secure; you use the service at your own risk.
