@@ -1,14 +1,14 @@
-import { defineConfig } from "@tanstack/react-start/config";
+import { defineConfig } from "vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  vite: {
-    plugins: [tsConfigPaths(), tailwindcss()],
-  },
-  routers: {
-    server: {
-      entry: "./src/server.ts",
-    },
-  },
+  plugins: [
+    tsConfigPaths(),
+    tailwindcss(),
+    tanstackStart({
+      server: { entry: "./src/server.ts" },
+    }),
+  ],
 });
