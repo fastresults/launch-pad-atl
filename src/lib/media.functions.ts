@@ -522,7 +522,7 @@ async function processAiForAsset(assetId: string) {
         .createSignedUrl(asset.storage_path, 600);
       if (!signed) throw new Error("No signed URL");
 
-      const res = await fetch("${process.env.AI_GATEWAY_URL ?? "https://api.openai.com/v1"}/chat/completions", {
+      const res = await fetch(`${process.env.AI_GATEWAY_URL ?? "https://api.openai.com/v1"}/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
