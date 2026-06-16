@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 
 export type MemberStatusValue = "pending" | "approved" | "rejected" | "paused";

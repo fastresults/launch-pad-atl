@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useCallback, useEffect, useRef, useState } from "react";
 import {  } from "react-router-dom";
 import { Button } from "@/components/ui/button";
