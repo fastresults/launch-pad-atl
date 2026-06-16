@@ -18,7 +18,7 @@ export function FacilitatorCTA() {
         practitioner-led, and built so the room leaves with work already shipped — not a slide deck
         and a vague to-do list.
       </p>
-      <Button asChild size="lg">
+      <Button asChild size="lg" className="btn-glow">
         <a href="/contact">Bring Adam to your team &rarr;</a>
       </Button>
     </motion.section>

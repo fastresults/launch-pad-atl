@@ -78,7 +78,7 @@ function Hero() {
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 md:mt-10">
           <Link
             to="/register"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:opacity-90 sm:w-auto btn-glow"
           >
             Apply free — takes 12 min <ArrowRight className="size-4" />
           </Link>
@@ -146,7 +146,7 @@ function NoLosingScenario() {
         </h2>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {cards.map((c) => (
-            <div key={c.title} className="rounded-2xl border border-white/10 bg-card p-6">
+            <div key={c.title} className="rounded-2xl glass-card p-6">
               <div className="mb-3">{c.icon}</div>
               <div
                 className="text-lg font-semibold tracking-tight"
@@ -299,7 +299,7 @@ function WhoGetsIn() {
         </p>
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {CRITERIA.map((c) => (
-            <div key={c.title} className="rounded-2xl border border-white/10 bg-card p-6">
+            <div key={c.title} className="rounded-2xl glass-card p-6">
               <Zap className="mb-3 size-5 text-primary" />
               <div
                 className="text-lg font-semibold tracking-tight"
@@ -336,7 +336,7 @@ function Timeline() {
         </h2>
         <ol className="mt-8 space-y-3">
           {STEPS.map((s, i) => (
-            <li key={s.label} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-card p-5">
+            <li key={s.label} className="flex items-center gap-4 rounded-2xl glass-card p-5">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-hero-gradient text-sm font-semibold text-white">
                 {i + 1}
               </div>
@@ -359,7 +359,7 @@ function FinalistOffer() {
   return (
     <section className="py-12 md:py-20">
       <div className="mx-auto max-w-5xl px-6">
-        <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-card p-8 md:p-12">
+        <div className="relative overflow-hidden rounded-3xl glass-card-tinted p-8 md:p-12">
           <div className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-hero-gradient opacity-20 blur-3xl" />
           <div className="relative">
             <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-primary">
@@ -481,7 +481,7 @@ function BottomCTA() {
         </p>
         <Link
           to="/register"
-          className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 text-base font-medium text-primary-foreground hover:opacity-90 btn-glow"
         >
           Apply now — it&rsquo;s free <ArrowRight className="size-4" />
         </Link>

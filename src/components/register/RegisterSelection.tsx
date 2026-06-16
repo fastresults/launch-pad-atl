@@ -114,7 +114,7 @@ export function RegisterSelection() {
           ) : (
             <form
               onSubmit={onSubmit}
-              className="space-y-5 rounded-2xl border border-white/10 bg-card p-6 md:p-8"
+              className="space-y-5 rounded-2xl glass-card p-6 md:p-8"
             >
               <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">Write like you&rsquo;re texting a friend — not applying for a job.</span>{" "}
@@ -253,7 +253,7 @@ export function RegisterSelection() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white hover:opacity-90 disabled:opacity-60 disabled:shadow-none btn-glow-hero"
               >
                 {isSubmitting ? "Sending…" : "Send my application"}
                 {!isSubmitting && <ArrowRight className="size-4" />}
