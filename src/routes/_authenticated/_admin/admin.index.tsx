@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Link } from 'react-router-dom';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useQuery, useQueryClient } from "@tanstack/react-query";

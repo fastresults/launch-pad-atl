@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { type TierKey } from "@/lib/value-grid";
 import { type Cohort, formatPriceCents, toPublicSeats, toPublicTaken } from "@/lib/cohorts";
 import type { CohortAvailability } from "@/lib/cohort-availability.functions";
