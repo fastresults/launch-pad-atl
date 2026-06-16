@@ -1,9 +1,8 @@
-"use server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { enqueueTransactionalEmail } from "@/lib/email/enqueue.server";
+import { supabaseAdmin } from "@/integrations/supabase/admin-client";
+import { enqueueTransactionalEmail } from "@/lib/email/enqueue";
 
 const STARTUP_TYPES = [
   "online-services",

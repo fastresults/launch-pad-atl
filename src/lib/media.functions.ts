@@ -1,8 +1,7 @@
-"use server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { supabaseAdmin } from "@/integrations/supabase/admin-client";
 
 const MAX_BYTES = 100 * 1024 * 1024;
 

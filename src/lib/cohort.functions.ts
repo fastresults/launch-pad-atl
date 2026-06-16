@@ -1,7 +1,6 @@
-"use server";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { supabaseAdmin } from "@/integrations/supabase/admin-client";
 import { buildCohortFromRow, type Cohort, type CohortRow } from "./cohorts";
 
 const COHORT_FIELDS =

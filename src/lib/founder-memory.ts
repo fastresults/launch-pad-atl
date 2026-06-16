@@ -1,5 +1,5 @@
 // Server-only helpers for founder memory.
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { supabaseAdmin } from "@/integrations/supabase/admin-client";
 import { BRIEF_BLOCKS, QA_BLOCKS, fieldLabel } from "@/lib/brief-blocks";
 
 export type FounderMemoryRow = {

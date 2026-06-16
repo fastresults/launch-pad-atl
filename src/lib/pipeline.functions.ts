@@ -1,11 +1,10 @@
-"use server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
-import { loadFounderContext } from "@/lib/founderMemory.server";
+import { supabaseAdmin } from "@/integrations/supabase/admin-client";
+import { createAiGatewayProvider } from "@/lib/ai-gateway";
+import { loadFounderContext } from "@/lib/founder-memory";
 
 // ===== Auth helpers =====
 async function assertAdmin(userId: string) {

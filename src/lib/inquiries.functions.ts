@@ -1,8 +1,7 @@
-"use server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { enqueueTransactionalEmail } from "@/lib/email/enqueue.server";
+import { supabaseAdmin } from "@/integrations/supabase/admin-client";
+import { enqueueTransactionalEmail } from "@/lib/email/enqueue";
 
 const PUBLIC_SITE_URL = "https://startuplabs.online";
 

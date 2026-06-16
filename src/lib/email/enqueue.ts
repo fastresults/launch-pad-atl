@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { render } from '@react-email/components'
-import { supabaseAdmin } from '@/integrations/supabase/client.server'
+import { supabaseAdmin } from '@/integrations/supabase/admin-client'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
 const SITE_NAME = 'Atlanta Startup Sprint'

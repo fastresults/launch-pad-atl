@@ -1,11 +1,10 @@
-"use server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { generateText, Output } from "ai";
 import { createHash } from "crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { supabaseAdmin } from "@/integrations/supabase/admin-client";
+import { createAiGatewayProvider } from "@/lib/ai-gateway";
 import { BRIEF_BLOCKS, fieldLabel } from "@/lib/brief-blocks";
 
 const BRIEF_KEYS = [

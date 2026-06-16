@@ -1,7 +1,6 @@
-"use server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { supabaseAdmin } from "@/integrations/supabase/admin-client";
 import { computeDisplayedTaken, displayFloorFromPct, type ScarcityMode } from "./cohorts";
 
 export type TierAvailability = {

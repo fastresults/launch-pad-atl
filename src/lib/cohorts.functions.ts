@@ -1,7 +1,6 @@
-"use server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { supabaseAdmin } from "@/integrations/supabase/admin-client";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { buildCohortFromRow, type Cohort, type CohortRow } from "./cohorts";
 
