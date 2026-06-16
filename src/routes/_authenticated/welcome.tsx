@@ -1,7 +1,6 @@
-import { createFileRoute, Navigate, Link } from "@tanstack/react-router";
+import { Navigate, Link } from 'react-router-dom';
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
 import { getMyIntake, submitMyIntake } from "@/lib/member-intake.functions";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/welcome")({
+export const Route =("/_authenticated/welcome")({
   component: WelcomePage,
   head: () => ({ meta: [{ title: "Welcome — Atlanta Startup Sprint" }] }),
 });
@@ -32,10 +31,10 @@ const STARTUP_TYPES = [
   { value: "other", label: "Something else" },
 ];
 
-function WelcomePage() {
+export default function WelcomePage() {
   const { user, isApprovedMember, isAdmin, signOut } = useAuth();
-  const getIntake = useServerFn(getMyIntake);
-  const submit = useServerFn(submitMyIntake);
+  const getIntake =(getMyIntake);
+  const submit =(submitMyIntake);
   const intakeQ = useQuery({
     queryKey: ["my-intake"],
     queryFn: () => getIntake(),

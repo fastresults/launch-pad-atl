@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { getMyBrief, updateBriefField, summarizeBriefBlock } from "@/lib/brief.functions";
 import { summarizeFounderProfile, summarizeMarketProfile } from "@/lib/discovery.functions";
 import { BRIEF_FIELDS } from "@/lib/workflow";
@@ -27,7 +27,7 @@ const briefSearchSchema = z.object({
   review: z.coerce.number().optional(),
 });
 
-export const Route = createFileRoute("/_authenticated/dashboard/brief")({
+export const Route =("/_authenticated/dashboard/brief")({
   component: BriefWizard,
   validateSearch: briefSearchSchema,
   head: () => ({ meta: [{ title: "My startup — Startup Labs" }] }),
@@ -35,12 +35,12 @@ export const Route = createFileRoute("/_authenticated/dashboard/brief")({
 
 type Mode = "question" | "checkpoint" | "founder" | "market" | "review";
 
-function BriefWizard() {
-  const getFn = useServerFn(getMyBrief);
-  const saveFn = useServerFn(updateBriefField);
-  const summarizeQaFn = useServerFn(summarizeBriefBlock);
-  const summarizeFounderFn = useServerFn(summarizeFounderProfile);
-  const summarizeMarketFn = useServerFn(summarizeMarketProfile);
+export default function BriefWizard() {
+  const getFn =(getMyBrief);
+  const saveFn =(updateBriefField);
+  const summarizeQaFn =(summarizeBriefBlock);
+  const summarizeFounderFn =(summarizeFounderProfile);
+  const summarizeMarketFn =(summarizeMarketProfile);
   const navigate = useNavigate();
   const search = Route.useSearch();
   const { data, refetch } = useQuery({ queryKey: ["my", "brief"], queryFn: () => getFn() });

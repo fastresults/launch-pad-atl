@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getMyAccount, type AppRole, type MemberStatus } from "@/lib/auth.functions";
@@ -22,7 +21,6 @@ type AuthState = {
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -65,7 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(s?.user ?? null);
       setTimeout(() => {
         loadAccount(s?.user ?? null);
-        router.invalidate();
         queryClient.invalidateQueries();
       }, 0);
     });
@@ -83,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       active = false;
       subscription.unsubscribe();
     };
-  }, [router, queryClient]);
+  }, [queryClient]);
 
   const signOut = async () => {
     await supabase.auth.signOut();

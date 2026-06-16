@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/integrations/supabase/admin-client";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Download a resume from the attendee-docs bucket and extract plain text.
@@ -6,7 +6,7 @@ import { supabaseAdmin } from "@/integrations/supabase/admin-client";
  * Returns empty string when extraction isn't possible (e.g. DOCX, image-only PDF).
  */
 export async function extractTextFromResumeFile(path: string): Promise<{ text: string; reason?: string }> {
-  const { data: blob, error } = await supabaseAdmin.storage.from("attendee-docs").download(path);
+  const { data: blob, error } = await supabase.storage.from("attendee-docs").download(path);
   if (error || !blob) {
     return { text: "", reason: error?.message ?? "Could not download file" };
   }

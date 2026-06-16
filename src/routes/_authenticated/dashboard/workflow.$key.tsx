@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { runMyDeliverable } from "@/lib/userPipeline.functions";
 import { getMyIntake, updateMyIntake } from "@/lib/stageIntake.functions";
 import { WORKFLOW_BY_KEY } from "@/lib/workflow";
@@ -12,22 +12,22 @@ import { VoiceField } from "@/components/voice/VoiceField";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/dashboard/workflow/$key")({
+export const Route =("/_authenticated/dashboard/workflow/$key")({
   component: WorkflowDetail,
 });
 
 type Section = { heading: string; body_markdown: string };
 type Content = { title?: string; summary?: string; sections?: Section[]; action_items?: string[] };
 
-function WorkflowDetail() {
+export default function WorkflowDetail() {
   const { key } = Route.useParams();
   const wf = WORKFLOW_BY_KEY.get(key);
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  const getIntake = useServerFn(getMyIntake);
-  const saveIntake = useServerFn(updateMyIntake);
-  const runFn = useServerFn(runMyDeliverable);
+  const getIntake =(getMyIntake);
+  const saveIntake =(updateMyIntake);
+  const runFn =(runMyDeliverable);
 
   const { data: intakeData } = useQuery({
     queryKey: ["my", "intake", key],

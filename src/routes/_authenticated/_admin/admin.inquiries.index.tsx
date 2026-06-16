@@ -1,14 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { listInquiries, type InquiryStatus } from "@/lib/inquiries-admin.functions";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/inquiries/")({
+export const Route =("/_authenticated/_admin/admin/inquiries/")({
   component: InquiriesListPage,
   head: () => ({ meta: [{ title: "Inquiries — Admin" }] }),
 });
@@ -28,8 +28,8 @@ const TONE: Record<string, string> = {
   closed: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
 };
 
-function InquiriesListPage() {
-  const fn = useServerFn(listInquiries);
+export default function InquiriesListPage() {
+  const fn =(listInquiries);
   const [status, setStatus] = useState<InquiryStatus | "all">("new");
   const [search, setSearch] = useState("");
 

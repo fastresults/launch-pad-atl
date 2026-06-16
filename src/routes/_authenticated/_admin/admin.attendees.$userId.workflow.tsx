@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { adminGetUserWorkflow, adminRunForUser } from "@/lib/userPipeline.functions";
 import { STAGES } from "@/lib/workflow";
 import { Button } from "@/components/ui/button";
@@ -8,16 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Circle, Lock, Loader2, Play } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/attendees/$userId/workflow")({
+export const Route =("/_authenticated/_admin/admin/attendees/$userId/workflow")({
   component: AdminAttendeeWorkflow,
   head: () => ({ meta: [{ title: "Attendee workflow — Admin" }] }),
 });
 
-function AdminAttendeeWorkflow() {
+export default function AdminAttendeeWorkflow() {
   const { userId } = Route.useParams();
   const qc = useQueryClient();
-  const wfFn = useServerFn(adminGetUserWorkflow);
-  const runFn = useServerFn(adminRunForUser);
+  const wfFn =(adminGetUserWorkflow);
+  const runFn =(adminRunForUser);
 
   const { data } = useQuery({
     queryKey: ["admin", "workflow", userId],

@@ -1,32 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 
-export const Route = createFileRoute("/terms")({
-  head: () => ({
-    meta: [
-      { title: "Terms of Service — Startup Labs" },
-      {
-        name: "description",
-        content:
-          "The terms and conditions governing your use of the Startup Labs website, workshops, and services.",
-      },
-      { property: "og:title", content: "Terms of Service — Startup Labs" },
-      {
-        property: "og:description",
-        content:
-          "The terms and conditions governing your use of the Startup Labs website, workshops, and services.",
-      },
-      { property: "og:url", content: "https://startuplabs.online/terms" },
-    ],
-    links: [{ rel: "canonical", href: "https://startuplabs.online/terms" }],
-  }),
-  component: TermsPage,
-});
-
 const UPDATED = "May 29, 2026";
 
-function TermsPage() {
+export default function TermsPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />

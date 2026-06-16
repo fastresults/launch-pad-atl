@@ -1,17 +1,17 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { getMyCohort } from "@/lib/cohort.functions";
 import { SCHEDULE_BLOCKS } from "@/lib/workshop-mode";
 import { MapPin, Calendar, Clock } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/dashboard/day")({
+export const Route =("/_authenticated/dashboard/day")({
   component: WorkshopDayPage,
   head: () => ({ meta: [{ title: "Workshop day — Startup Labs" }] }),
 });
 
-function WorkshopDayPage() {
-  const cohortFn = useServerFn(getMyCohort);
+export default function WorkshopDayPage() {
+  const cohortFn =(getMyCohort);
   const { data } = useQuery({ queryKey: ["my", "cohort"], queryFn: () => cohortFn(), staleTime: 60_000 });
   const cohort = data?.cohort;
 

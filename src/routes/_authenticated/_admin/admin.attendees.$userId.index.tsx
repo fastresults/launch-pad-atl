@@ -1,22 +1,22 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { getAttendeeDetail, triggerPipeline } from "@/lib/pipeline.functions";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/attendees/$userId/")({
+export const Route =("/_authenticated/_admin/admin/attendees/$userId/")({
   component: AttendeeDetail,
   head: () => ({ meta: [{ title: "Attendee — Admin" }] }),
 });
 
-function AttendeeDetail() {
+export default function AttendeeDetail() {
   const { userId } = Route.useParams();
   const qc = useQueryClient();
   const { isSuperAdmin } = useAuth();
-  const detailFn = useServerFn(getAttendeeDetail);
-  const triggerFn = useServerFn(triggerPipeline);
+  const detailFn =(getAttendeeDetail);
+  const triggerFn =(triggerPipeline);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "attendee", userId],

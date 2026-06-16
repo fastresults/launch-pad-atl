@@ -1,38 +1,24 @@
-import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
+import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarFooter,
-  SidebarHeader,
-  useSidebar,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu,
+  SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
+  SidebarFooter, SidebarHeader, useSidebar,
 } from "@/components/ui/sidebar";
 import { Home, Calendar, ClipboardList, ListChecks, FolderOpen, User } from "lucide-react";
-import { getMyCohort } from "@/lib/cohort.functions";
+import { listCohorts } from "@/lib/cohorts.functions";
 import { getWorkshopMode } from "@/lib/workshop-mode";
+import { getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
 import { RoomClock } from "@/components/dashboard/RoomClock";
 import { AIWorklogPill } from "@/components/dashboard/AIWorklogPill";
 import { HelpFab } from "@/components/dashboard/HelpFab";
 import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 
-export const Route = createFileRoute("/_authenticated/dashboard")({
-  component: DashboardLayout,
-  head: () => ({ meta: [{ title: "Your dashboard" }] }),
-});
-
-function DashboardLayout() {
+export default function DashboardLayout() {
   return (
     <ThemeProvider>
       <SidebarProvider defaultOpen={true}>
@@ -44,13 +30,13 @@ function DashboardLayout() {
 
 function DashboardShell() {
   const { user, signOut, isAdmin } = useAuth();
-  const cohortFn = useServerFn(getMyCohort);
-  const { data } = useQuery({
-    queryKey: ["my", "cohort"],
-    queryFn: () => cohortFn(),
+  const { data: cohorts = [] } = useQuery<Cohort[]>({
+    queryKey: ["cohorts"],
+    queryFn: listCohorts,
     staleTime: 60_000,
   });
-  const state = getWorkshopMode(new Date(), data?.cohort ?? null);
+  const cohort = getNextAvailable(cohorts) ?? FALLBACK_COHORT;
+  const state = getWorkshopMode(new Date(), cohort);
 
   return (
     <div className="flex min-h-dvh w-full bg-background">
@@ -61,15 +47,11 @@ function DashboardShell() {
           <SidebarTrigger />
           <div className="ml-auto flex items-center gap-3">
             {isAdmin && (
-              <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground">
-                Admin
-              </Link>
+              <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground">Admin</Link>
             )}
             <span className="hidden text-sm text-muted-foreground sm:inline">{user?.email}</span>
             <ThemeToggle />
-            <Button variant="outline" size="sm" onClick={signOut}>
-              Sign out
-            </Button>
+            <Button variant="outline" size="sm" onClick={signOut}>Sign out</Button>
           </div>
         </header>
         <main className="flex-1 px-4 py-6 md:px-8 md:py-10">
@@ -89,9 +71,8 @@ type NavItem = { to: string; label: string; icon: typeof Home; dimmed?: boolean;
 function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"] }) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { pathname } = useLocation();
 
-  // Mode-aware items: Workshop day disappears in Mode C, Plan is dimmed in Mode B.
   const items: NavItem[] = [
     { to: "/dashboard", label: "Today", icon: Home },
     { to: "/dashboard/day", label: "Workshop day", icon: Calendar, hide: mode === "after" },
@@ -117,10 +98,7 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
                 return (
                   <SidebarMenuItem key={item.to}>
                     <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
-                      <Link
-                        to={item.to as never}
-                        className={`flex items-center gap-3 ${item.dimmed ? "opacity-50" : ""}`}
-                      >
+                      <Link to={item.to} className={`flex items-center gap-3 ${item.dimmed ? "opacity-50" : ""}`}>
                         <item.icon className="h-4 w-4" />
                         <span>{item.label}</span>
                       </Link>

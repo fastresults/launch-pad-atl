@@ -1,6 +1,5 @@
-import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState, type FormEvent } from "react";
-import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -8,22 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-const searchSchema = z.object({
-  redirect: z.string().optional(),
-});
-
-export const Route = createFileRoute("/login")({
-  validateSearch: searchSchema,
-  component: LoginPage,
-  head: () => ({
-    meta: [{ title: "Sign in — Atlanta Startup Workshop" }],
-  }),
-});
-
-function LoginPage() {
+export default function LoginPage() {
   const { isAuthenticated, isAdmin, isApprovedMember, loading } = useAuth();
   const navigate = useNavigate();
-  const { redirect } = useSearch({ from: "/login" });
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get("redirect");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -32,7 +20,7 @@ function LoginPage() {
     if (loading) return;
     if (isAuthenticated) {
       const fallback = isAdmin ? "/admin" : isApprovedMember ? "/dashboard" : "/welcome";
-      navigate({ to: redirect ?? fallback, replace: true });
+      navigate(redirect ?? fallback, { replace: true });
     }
   }, [isAuthenticated, isAdmin, isApprovedMember, loading, navigate, redirect]);
 
@@ -41,10 +29,7 @@ function LoginPage() {
     setSubmitting(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setSubmitting(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) { toast.error(error.message); return; }
     toast.success("Signed in");
   };
 
@@ -69,9 +54,7 @@ function LoginPage() {
         </Button>
 
         <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-white/10" />
-          </div>
+          <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-card px-2 text-muted-foreground">or</span>
           </div>
@@ -80,26 +63,14 @@ function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
               <ForgotPasswordLink email={email} />
             </div>
-            <Input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           <Button type="submit" className="w-full" disabled={submitting}>
             {submitting ? "Signing in..." : "Sign in"}
@@ -108,9 +79,7 @@ function LoginPage() {
 
         <p className="text-center text-sm text-muted-foreground">
           No account?{" "}
-          <Link to="/signup" className="text-foreground underline">
-            Create one
-          </Link>
+          <Link to="/signup" className="text-foreground underline">Create one</Link>
         </p>
       </div>
     </div>
@@ -119,10 +88,7 @@ function LoginPage() {
 
 function ForgotPasswordLink({ email }: { email: string }) {
   const handle = async () => {
-    if (!email) {
-      toast.error("Enter your email above first");
-      return;
-    }
+    if (!email) { toast.error("Enter your email above first"); return; }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin + "/reset-password",
     });

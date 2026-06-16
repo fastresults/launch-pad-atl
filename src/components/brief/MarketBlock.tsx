@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import {  } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { getMarketProfile, upsertMarketProfile } from "@/lib/discovery.functions";
@@ -52,8 +52,8 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 }
 
 export function MarketBlock({ onDone }: Props) {
-  const getFn = useServerFn(getMarketProfile);
-  const saveFn = useServerFn(upsertMarketProfile);
+  const getFn = (getMarketProfile);
+  const saveFn = (upsertMarketProfile);
   const { data, isLoading } = useQuery({ queryKey: ["my", "market-profile"], queryFn: () => getFn() });
   const p = (data?.profile ?? null) as Record<string, unknown> | null;
 

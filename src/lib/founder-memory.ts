@@ -1,5 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
 // Server-only helpers for founder memory.
-import { supabaseAdmin } from "@/integrations/supabase/admin-client";
 import { BRIEF_BLOCKS, QA_BLOCKS, fieldLabel } from "@/lib/brief-blocks";
 
 export type FounderMemoryRow = {
@@ -15,7 +15,7 @@ export type FounderMemoryRow = {
 };
 
 export async function loadCurrentFounderMemory(userId: string): Promise<FounderMemoryRow[]> {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabase
     .from("attendee_founder_memory")
     .select("id, source, source_key, block_n, field_keys, qa, summary, bullets, created_at")
     .eq("user_id", userId)
@@ -29,13 +29,13 @@ export async function loadCurrentFounderMemory(userId: string): Promise<FounderM
 // Build a single Markdown context string for AI prompts (the 25 deliverables).
 export async function loadFounderContext(userId: string): Promise<string> {
   const [{ data: brief }, { data: founder }, { data: market }, memories] = await Promise.all([
-    supabaseAdmin.from("attendee_business_brief").select("*").eq("user_id", userId).maybeSingle(),
-    supabaseAdmin
+    supabase.from("attendee_business_brief").select("*").eq("user_id", userId).maybeSingle(),
+    supabase
       .from("attendee_founder_profile" as never)
       .select("*")
       .eq("user_id", userId)
       .maybeSingle(),
-    supabaseAdmin
+    supabase
       .from("attendee_market_profile" as never)
       .select("*")
       .eq("user_id", userId)

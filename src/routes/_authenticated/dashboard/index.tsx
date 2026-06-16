@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { getMyBrief } from "@/lib/brief.functions";
 import { getMyFiling } from "@/lib/filing.functions";
@@ -12,15 +12,15 @@ import { NextActionCard } from "@/components/dashboard/NextActionCard";
 import { BriefCompleteCard } from "@/components/brief/BriefCompleteCard";
 import { Calendar, MapPin, Coffee, Sparkles, CheckCircle2, Hand } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/dashboard/")({
+export const Route =("/_authenticated/dashboard/")({
   component: TodayPage,
 });
 
-function TodayPage() {
-  const briefFn = useServerFn(getMyBrief);
-  const filingFn = useServerFn(getMyFiling);
-  const wfFn = useServerFn(getMyWorkflow);
-  const cohortFn = useServerFn(getMyCohort);
+export default function TodayPage() {
+  const briefFn =(getMyBrief);
+  const filingFn =(getMyFiling);
+  const wfFn =(getMyWorkflow);
+  const cohortFn =(getMyCohort);
 
   const brief = useQuery({ queryKey: ["my", "brief"], queryFn: () => briefFn() });
   const filing = useQuery({ queryKey: ["my", "filing"], queryFn: () => filingFn() });
@@ -279,7 +279,7 @@ function DuringMode({ state, generated, total }: { state: WorkshopState; generat
 
 function RecentlyFinished() {
   // Pulled lazily — uses the workflow query already cached
-  const wfFn = useServerFn(getMyWorkflow);
+  const wfFn =(getMyWorkflow);
   const { data } = useQuery({ queryKey: ["my", "workflow"], queryFn: () => wfFn(), refetchInterval: 8000 });
   const done = (data?.items ?? []).filter((i) => i.generated).slice(-3).reverse();
   if (done.length === 0) return null;

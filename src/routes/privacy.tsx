@@ -1,32 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 
-export const Route = createFileRoute("/privacy")({
-  head: () => ({
-    meta: [
-      { title: "Privacy Policy — Startup Labs" },
-      {
-        name: "description",
-        content:
-          "How Startup Labs collects, uses, and protects the personal information of workshop registrants and website visitors.",
-      },
-      { property: "og:title", content: "Privacy Policy — Startup Labs" },
-      {
-        property: "og:description",
-        content:
-          "How Startup Labs collects, uses, and protects the personal information of workshop registrants and website visitors.",
-      },
-      { property: "og:url", content: "https://startuplabs.online/privacy" },
-    ],
-    links: [{ rel: "canonical", href: "https://startuplabs.online/privacy" }],
-  }),
-  component: PrivacyPage,
-});
-
 const UPDATED = "May 29, 2026";
 
-function PrivacyPage() {
+export default function PrivacyPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />

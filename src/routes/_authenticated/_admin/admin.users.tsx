@@ -1,22 +1,21 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { listUsersWithRoles, setUserRole } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/users")({
+export const Route =("/_authenticated/_admin/admin/users")({
   component: UsersPage,
   head: () => ({ meta: [{ title: "Users — Admin" }] }),
 });
 
-function UsersPage() {
+export default function UsersPage() {
   const qc = useQueryClient();
   const { user } = useAuth();
-  const listFn = useServerFn(listUsersWithRoles);
-  const setRoleFn = useServerFn(setUserRole);
+  const listFn =(listUsersWithRoles);
+  const setRoleFn =(setUserRole);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "users"],

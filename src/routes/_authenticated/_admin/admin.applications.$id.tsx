@@ -1,7 +1,7 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import {
   getApplication,
   updateApplicationStatus,
@@ -34,7 +34,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Copy, Mail, ExternalLink, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/applications/$id")({
+export const Route =("/_authenticated/_admin/admin/applications/$id")({
   component: ApplicationDetailPage,
   head: () => ({ meta: [{ title: "Application — Admin" }] }),
 });
@@ -64,15 +64,15 @@ function copy(text: string) {
   toast.success("Copied");
 }
 
-function ApplicationDetailPage() {
+export default function ApplicationDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  const getFn = useServerFn(getApplication);
-  const updateFn = useServerFn(updateApplicationStatus);
-  const addNoteFn = useServerFn(addApplicationNote);
-  const promoteFn = useServerFn(promoteApplicationToRegistration);
+  const getFn =(getApplication);
+  const updateFn =(updateApplicationStatus);
+  const addNoteFn =(addApplicationNote);
+  const promoteFn =(promoteApplicationToRegistration);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "application", id],

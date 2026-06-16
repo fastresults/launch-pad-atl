@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import {  } from "react-router-dom";
 import { getMyRecentRuns } from "@/lib/userPipeline.functions";
 import { Sparkle, ChevronUp } from "lucide-react";
 
 // Subtle bottom-right pill that shows the AI working in the background.
 // Pings every few seconds during the workshop.
 export function AIWorklogPill() {
-  const recentFn = useServerFn(getMyRecentRuns);
+  const recentFn = (getMyRecentRuns);
   const { data } = useQuery({
     queryKey: ["my", "recent-runs"],
     queryFn: () => recentFn(),

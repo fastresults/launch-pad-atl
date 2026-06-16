@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useLocation } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,7 +10,7 @@ import {
 import { ADMIN_NAV } from "@/lib/admin-nav";
 
 export function AdminBreadcrumb() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = useLocation({ select: (s) => s.location.pathname });
 
   // find best matching nav item
   const match = ADMIN_NAV.filter((n) => !n.external)

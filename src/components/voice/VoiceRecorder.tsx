@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
+import {  } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { transcribeAudio } from "@/lib/voice.functions";
@@ -29,7 +29,7 @@ export function VoiceRecorder({ onTranscript, context, disabled, size = "icon" }
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
-  const transcribeFn = useServerFn(transcribeAudio);
+  const transcribeFn = (transcribeAudio);
 
   // Keep latest onTranscript/context in refs so the rec.onstop closure
   // (set when the user clicked record) always calls the freshest handler.

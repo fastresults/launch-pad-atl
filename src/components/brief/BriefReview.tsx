@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { Pencil, ArrowLeft } from "lucide-react";
 import { BRIEF_FIELDS } from "@/lib/workflow";
 

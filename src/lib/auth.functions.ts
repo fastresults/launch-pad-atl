@@ -1,41 +1,25 @@
-import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/admin-client";
+import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "super_admin" | "admin" | "user";
+export type AppRole = "admin" | "super_admin" | "member";
 export type MemberStatus = "pending" | "approved" | "rejected" | "paused";
 
-export const getMyRoles = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
+export async function getMyAccount(): Promise<{
+  roles: AppRole[];
+  memberStatus: MemberStatus;
+  approvedVia: "admin" | "payment" | null;
+}> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { roles: [], memberStatus: "pending", approvedVia: null };
 
-    if (error) {
-      console.error("getMyRoles error:", error);
-      return { roles: [] as AppRole[] };
-    }
-    return { roles: (data ?? []).map((r) => r.role as AppRole) };
-  });
+  const [{ data: rolesData }, { data: memberData }] = await Promise.all([
+    supabase.from("user_roles").select("role").eq("user_id", user.id),
+    supabase.from("members").select("member_status, approved_via").eq("user_id", user.id).maybeSingle(),
+  ]);
 
-export const getMyAccount = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { userId } = context;
-    const [rolesRes, profileRes] = await Promise.all([
-      supabaseAdmin.from("user_roles").select("role").eq("user_id", userId),
-      supabaseAdmin
-        .from("profiles")
-        .select("member_status, approved_via")
-        .eq("user_id", userId)
-        .maybeSingle(),
-    ]);
-    return {
-      roles: (rolesRes.data ?? []).map((r) => r.role as AppRole),
-      memberStatus: (profileRes.data?.member_status ?? "pending") as MemberStatus,
-      approvedVia: (profileRes.data?.approved_via ?? null) as "admin" | "payment" | null,
-    };
-  });
+  return {
+    roles: (rolesData ?? []).map((r: { role: string }) => r.role as AppRole),
+    memberStatus: (memberData?.member_status as MemberStatus) ?? "pending",
+    approvedVia: (memberData?.approved_via as "admin" | "payment" | null) ?? null,
+  };
+}
+

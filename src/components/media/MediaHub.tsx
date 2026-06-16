@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
+import {  } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -138,18 +138,18 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
     window.localStorage.setItem("media-hub-view", viewMode);
   }, [viewMode]);
 
-  const listFn = useServerFn(listMedia);
-  const foldersFn = useServerFn(listFolders);
-  const collectionsFn = useServerFn(listCollections);
-  const createFolderFn = useServerFn(createFolder);
-  const createCollectionFn = useServerFn(createCollection);
-  const createSignedFn = useServerFn(createSignedUploadUrl);
-  const finalizeFn = useServerFn(finalizeUpload);
-  const getUrlFn = useServerFn(getAssetSignedUrl);
-  const updateFn = useServerFn(updateAsset);
-  const deleteFn = useServerFn(deleteAsset);
-  const reprocessFn = useServerFn(reprocessAi);
-  const toggleCollectionFn = useServerFn(toggleCollectionItem);
+  const listFn = (listMedia);
+  const foldersFn = (listFolders);
+  const collectionsFn = (listCollections);
+  const createFolderFn = (createFolder);
+  const createCollectionFn = (createCollection);
+  const createSignedFn = (createSignedUploadUrl);
+  const finalizeFn = (finalizeUpload);
+  const getUrlFn = (getAssetSignedUrl);
+  const updateFn = (updateAsset);
+  const deleteFn = (deleteAsset);
+  const reprocessFn = (reprocessAi);
+  const toggleCollectionFn = (toggleCollectionItem);
 
   const queryKey = ["media", scope, ownerUserId, folderId, collectionId, mediaType, search];
   const assetsQ = useQuery({
@@ -920,7 +920,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
 }
 
 function AssetThumb({ assetId }: { assetId: string }) {
-  const getUrlFn = useServerFn(getAssetSignedUrl);
+  const getUrlFn = (getAssetSignedUrl);
   const { data } = useQuery({
     queryKey: ["asset-thumb", assetId],
     queryFn: () => getUrlFn({ data: { assetId } }),
@@ -955,8 +955,8 @@ function PushDialog({
   sourceIds: string[];
   onDone: () => void;
 }) {
-  const listAttendees = useServerFn(listAttendeesForPush);
-  const pushFn = useServerFn(pushAssetsToUsers);
+  const listAttendees = (listAttendeesForPush);
+  const pushFn = (pushAssetsToUsers);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [note, setNote] = useState("");
   const { data } = useQuery({

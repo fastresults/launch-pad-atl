@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useServerFn } from "@tanstack/react-start";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
-import { submitFounderApplication } from "@/lib/applications.functions";
 import { ArrowRight, CheckCircle2, Sparkles, TicketPercent } from "lucide-react";
 
 // Keep in sync with HomeSelection — TBD with founder.
@@ -40,31 +38,26 @@ const FormSchema = z.object({
     .optional()
     .or(z.literal("")),
   can_attend: z.literal(true, {
-    message: "You must be able to attend on July 23, 2026",
-  }),
-  referral_source: z.string().trim().max(120).optional().or(z.literal("")),
-});
+    message: "You must be able to attend on July 23, 2026" }),
+  referral_source: z.string().trim().max(120).optional().or(z.literal("")) });
 
 type FormValues = z.infer<typeof FormSchema>;
 
 export function RegisterSelection() {
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  const submit = useServerFn(submitFounderApplication);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
+    formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
-    defaultValues: { stage: "idea", industry: "" },
-  });
+    defaultValues: { stage: "idea", industry: "" } });
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
     try {
-      await submit({ data: values });
+      await submitFounderApplication(values);
       setSubmitted(true);
       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
@@ -301,8 +294,7 @@ function Field({
   label,
   hint,
   error,
-  children,
-}: {
+  children }: {
   label: string;
   hint?: string;
   error?: string;

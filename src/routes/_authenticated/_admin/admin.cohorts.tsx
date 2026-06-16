@@ -1,7 +1,7 @@
-import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+import { Link, Navigate } from 'react-router-dom';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { listCohorts, upsertCohort, deleteCohort } from "@/lib/cohorts.functions";
@@ -26,7 +26,7 @@ import {
 import { toast } from "sonner";
 import { FlaskConical, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/cohorts")({
+export const Route =("/_authenticated/_admin/admin/cohorts")({
   component: CohortsAdminPage,
   head: () => ({ meta: [{ title: "Cohorts — Admin" }] }),
 });
@@ -111,12 +111,12 @@ function clampInt(s: string, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
 }
 
-function CohortsAdminPage() {
+export default function CohortsAdminPage() {
   const { isSuperAdmin, loading } = useAuth();
   const qc = useQueryClient();
-  const listFn = useServerFn(listCohorts);
-  const upsertFn = useServerFn(upsertCohort);
-  const deleteFn = useServerFn(deleteCohort);
+  const listFn =(listCohorts);
+  const upsertFn =(upsertCohort);
+  const deleteFn =(deleteCohort);
 
   const { data: cohorts = [], isLoading } = useQuery({
     queryKey: ["cohorts"],

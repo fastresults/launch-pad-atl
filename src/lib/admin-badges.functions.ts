@@ -1,62 +1,23 @@
-import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/admin-client";
+import { supabase } from "@/integrations/supabase/client";
 
-export const getAdminBadges = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    // gate to admins
-    const { data: roles } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", context.userId);
-    const isAdmin = (roles ?? []).some((r) => r.role === "admin" || r.role === "super_admin");
-    if (!isAdmin) return { reviewPending: 0, applicationsPending: 0, inquiriesNew: 0, membersPending: 0 };
+export interface AdminBadges {
+  pendingApplications: number;
+  pendingRegistrations: number;
+  pendingReviews: number;
+  openInquiries: number;
+}
 
-    const { data: adminRoleRows } = await supabaseAdmin
-      .from("user_roles")
-      .select("user_id, role")
-      .in("role", ["admin", "super_admin"] as any);
-    const adminIds = Array.from(new Set((adminRoleRows ?? []).map((r) => r.user_id)));
-
-    let membersPendingQuery = supabaseAdmin
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("member_status", "pending");
-    if (adminIds.length > 0) {
-      membersPendingQuery = membersPendingQuery.not(
-        "user_id",
-        "in",
-        `(${adminIds.join(",")})`,
-      );
-    }
-
-    const [
-      { count: reviewPending },
-      { count: applicationsPending },
-      { count: inquiriesNew },
-      { count: membersPending },
-    ] = await Promise.all([
-      supabaseAdmin
-        .from("attendee_deliverables")
-        .select("id", { count: "exact", head: true })
-        .eq("review_status", "pending_review"),
-      supabaseAdmin
-        .from("founder_applications")
-        .select("id", { count: "exact", head: true })
-        .in("status", ["applied", "reviewing"]),
-      supabaseAdmin
-        .from("inquiries")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "new"),
-      membersPendingQuery,
-    ]);
-
-    return {
-      reviewPending: reviewPending ?? 0,
-      applicationsPending: applicationsPending ?? 0,
-      inquiriesNew: inquiriesNew ?? 0,
-      membersPending: membersPending ?? 0,
-    };
-  });
-
+export async function getAdminBadges(): Promise<AdminBadges> {
+  const [apps, regs, reviews, inquiries] = await Promise.all([
+    supabase.from("applications").select("id", { count: "exact" }).eq("status", "pending"),
+    supabase.from("workshop_registrations").select("id", { count: "exact" }).eq("status", "pending"),
+    supabase.from("members").select("id", { count: "exact" }).eq("member_status", "pending"),
+    supabase.from("inquiries").select("id", { count: "exact" }).eq("status", "open"),
+  ]);
+  return {
+    pendingApplications: apps.count ?? 0,
+    pendingRegistrations: regs.count ?? 0,
+    pendingReviews: reviews.count ?? 0,
+    openInquiries: inquiries.count ?? 0,
+  };
+}

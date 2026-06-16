@@ -1,16 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { listReviewQueue } from "@/lib/pipeline.functions";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/review")({
+export const Route =("/_authenticated/_admin/admin/review")({
   component: ReviewPage,
   head: () => ({ meta: [{ title: "Review queue — Admin" }] }),
 });
 
-function ReviewPage() {
-  const fn = useServerFn(listReviewQueue);
+export default function ReviewPage() {
+  const fn =(listReviewQueue);
   const { data, isLoading } = useQuery({ queryKey: ["admin", "review"], queryFn: () => fn() });
 
   return (

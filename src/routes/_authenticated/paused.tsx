@@ -1,6 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
 import { submitInquiry } from "@/lib/inquiries.functions";
 import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
@@ -10,14 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/paused")({
+export const Route =("/_authenticated/paused")({
   component: PausedPage,
   head: () => ({ meta: [{ title: "Account paused — StartupLabs" }] }),
 });
 
-function PausedPage() {
+export default function PausedPage() {
   const { user, signOut } = useAuth();
-  const submit = useServerFn(submitInquiry);
+  const submit =(submitInquiry);
 
   const displayName =
     (user?.user_metadata?.display_name as string | undefined) ??

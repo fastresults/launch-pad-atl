@@ -1,16 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { listAttendees } from "@/lib/pipeline.functions";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/attendees")({
+export const Route =("/_authenticated/_admin/admin/attendees")({
   component: AttendeesPage,
   head: () => ({ meta: [{ title: "Attendees — Admin" }] }),
 });
 
-function AttendeesPage() {
-  const fn = useServerFn(listAttendees);
+export default function AttendeesPage() {
+  const fn =(listAttendees);
   const { data, isLoading } = useQuery({ queryKey: ["admin", "attendees"], queryFn: () => fn() });
 
   return (

@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/applications/")({
+export const Route =("/_authenticated/_admin/admin/applications/")({
   component: ApplicationsListPage,
   head: () => ({ meta: [{ title: "Applications — Admin" }] }),
 });
@@ -70,7 +70,7 @@ const STATUS_TONE: Record<ApplicationStatus, string> = {
   withdrawn: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
 };
 
-function ApplicationsListPage() {
+export default function ApplicationsListPage() {
   const [status, setStatus] = useState<ApplicationStatus | "all">("applied");
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -79,10 +79,10 @@ function ApplicationsListPage() {
     null,
   );
 
-  const listFn = useServerFn(listApplications);
-  const updateFn = useServerFn(updateApplication);
-  const bulkUpdateFn = useServerFn(bulkUpdateApplications);
-  const bulkDeleteFn = useServerFn(bulkDeleteApplications);
+  const listFn =(listApplications);
+  const updateFn =(updateApplication);
+  const bulkUpdateFn =(bulkUpdateApplications);
+  const bulkDeleteFn =(bulkDeleteApplications);
   const qc = useQueryClient();
 
   const queryKey = ["admin", "applications", status, search] as const;

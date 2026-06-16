@@ -1,7 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { getMyFiling, updateMyFiling } from "@/lib/filing.functions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/dashboard/filing")({
+export const Route =("/_authenticated/dashboard/filing")({
   component: FilingPage,
   head: () => ({ meta: [{ title: "Filing Info" }] }),
 });
@@ -20,9 +19,9 @@ const blank = {
   llc_name: "", registered_agent_name: "", registered_agent_address: "", business_purpose: "",
 };
 
-function FilingPage() {
-  const getFn = useServerFn(getMyFiling);
-  const saveFn = useServerFn(updateMyFiling);
+export default function FilingPage() {
+  const getFn =(getMyFiling);
+  const saveFn =(updateMyFiling);
   const { data, refetch } = useQuery({ queryKey: ["my", "filing"], queryFn: () => getFn() });
   const [v, setV] = useState<Record<string, string>>(blank);
   const [saving, setSaving] = useState(false);

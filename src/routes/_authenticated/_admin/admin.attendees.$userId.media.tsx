@@ -1,12 +1,12 @@
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { useParams } from 'react-router-dom';
 import { MediaHub } from "@/components/media/MediaHub";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/attendees/$userId/media")({
+export const Route =("/_authenticated/_admin/admin/attendees/$userId/media")({
   component: AttendeeMediaPage,
   head: () => ({ meta: [{ title: "Attendee Media" }] }),
 });
 
-function AttendeeMediaPage() {
+export default function AttendeeMediaPage() {
   const { userId } = useParams({ from: "/_authenticated/_admin/admin/attendees/$userId/media" });
   return (
     <div className="space-y-6">

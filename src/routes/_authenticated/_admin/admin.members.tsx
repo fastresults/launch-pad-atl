@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import {
   listMembers,
   approveMember,
@@ -18,20 +18,20 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/members")({
+export const Route =("/_authenticated/_admin/admin/members")({
   component: AdminMembersPage,
   head: () => ({ meta: [{ title: "Members — Admin" }] }),
 });
 
 type Tab = "pending" | "approved" | "paused" | "rejected" | "no_intake";
 
-function AdminMembersPage() {
-  const listFn = useServerFn(listMembers);
-  const approveFn = useServerFn(approveMember);
-  const rejectFn = useServerFn(rejectMember);
-  const contactFn = useServerFn(markMemberContacted);
-  const pauseFn = useServerFn(pauseMember);
-  const restoreFn = useServerFn(restoreMemberToPending);
+export default function AdminMembersPage() {
+  const listFn =(listMembers);
+  const approveFn =(approveMember);
+  const rejectFn =(rejectMember);
+  const contactFn =(markMemberContacted);
+  const pauseFn =(pauseMember);
+  const restoreFn =(restoreMemberToPending);
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("pending");
   const [search, setSearch] = useState("");

@@ -1,7 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { getMyProfile, upsertMyProfile } from "@/lib/attendee.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,14 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/dashboard/profile")({
+export const Route =("/_authenticated/dashboard/profile")({
   component: ProfilePage,
 });
 
-function ProfilePage() {
+export default function ProfilePage() {
   const qc = useQueryClient();
-  const getFn = useServerFn(getMyProfile);
-  const saveFn = useServerFn(upsertMyProfile);
+  const getFn =(getMyProfile);
+  const saveFn =(upsertMyProfile);
   const { data } = useQuery({ queryKey: ["my", "profile"], queryFn: () => getFn() });
 
   const [founder, setFounder] = useState({ full_name: "", headline: "", background: "", primary_goal: "" });

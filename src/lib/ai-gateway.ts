@@ -9,7 +9,7 @@ export function createAiGatewayProvider(apiKey: string) {
     headers: {
       Authorization: `Bearer ${apiKey}`,
     },
-  });
+  };
 
   return provider;
 }

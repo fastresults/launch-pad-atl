@@ -1,6 +1,6 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { getAdminBadges } from "@/lib/admin-badges.functions";
+import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import {
   Sidebar,
   SidebarContent,
@@ -11,29 +11,25 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
+  SidebarMenuItem} from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useAuth } from "@/hooks/use-auth";
 import { ADMIN_GROUPS, ADMIN_NAV } from "@/lib/admin-nav";
-import { getAdminBadges } from "@/lib/admin-badges.functions";
 import { LogOut } from "lucide-react";
 import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 import { StartupLabsMark } from "@/components/brand/StartupLabsMark";
 
 export function AdminSidebar() {
   const { isSuperAdmin, signOut, user } = useAuth();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { pathname } = useLocation();
 
-  const fetchBadges = useServerFn(getAdminBadges);
   const { data: badges } = useQuery({
     queryKey: ["admin", "badges"],
-    queryFn: () => fetchBadges(),
+    queryFn: getAdminBadges,
     staleTime: 30_000,
-    refetchInterval: 60_000,
-  });
+    refetchInterval: 60_000});
 
   const items = ADMIN_NAV.filter((n) => !n.super || isSuperAdmin);
 

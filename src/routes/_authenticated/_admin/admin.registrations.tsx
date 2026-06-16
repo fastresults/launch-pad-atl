@@ -1,7 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { listRegistrations, updateRegistrationStatus } from "@/lib/admin.functions";
 import {
   Select,
@@ -12,17 +11,17 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/registrations")({
+export const Route =("/_authenticated/_admin/admin/registrations")({
   component: RegistrationsPage,
   head: () => ({ meta: [{ title: "Registrations — Admin" }] }),
 });
 
 const STATUSES = ["pending", "confirmed", "cancelled", "waitlist"] as const;
 
-function RegistrationsPage() {
+export default function RegistrationsPage() {
   const qc = useQueryClient();
-  const listFn = useServerFn(listRegistrations);
-  const updateFn = useServerFn(updateRegistrationStatus);
+  const listFn =(listRegistrations);
+  const updateFn =(updateRegistrationStatus);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "registrations"],

@@ -1,6 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { useEffect, useMemo } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
@@ -10,30 +9,12 @@ import { getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
 import { STAGES } from "@/lib/curriculum-data";
 import { ArrowRight, Coffee, Clock } from "lucide-react";
 
-export const Route = createFileRoute("/schedule")({
-  head: () => ({
-    meta: [
-      { title: "Schedule — Atlanta Startup Workshop" },
-      {
-        name: "description",
-        content:
-          "The full 8 AM – 4:30 PM workshop: form, customer, offer, build, brand, marketing, and your 90-day launch plan.",
-      },
-      { property: "og:title", content: "Schedule — Atlanta Startup Workshop" },
-      {
-        property: "og:description",
-        content: "Hour-by-hour breakdown of the one-day workshop in Norcross, GA.",
-      },
-    ],
-  }),
-  component: SchedulePage,
-});
 
-function SchedulePage() {
-  const fetchCohorts = useServerFn(listCohorts);
+export default function SchedulePage() {
+  
   const { data: cohorts = [] } = useQuery<Cohort[]>({
     queryKey: ["cohorts"],
-    queryFn: () => fetchCohorts(),
+    queryFn: listCohorts,
     initialData: [],
     staleTime: 60_000,
   });

@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { getMyWorkflow, runMyDeliverable, runMyRemaining, getMyRecentRuns } from "@/lib/userPipeline.functions";
 import { STAGES } from "@/lib/workflow";
 import { Button } from "@/components/ui/button";
@@ -8,17 +8,17 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Circle, Lock, Loader2, Play } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/dashboard/workflow")({
+export const Route =("/_authenticated/dashboard/workflow")({
   component: WorkflowPage,
   head: () => ({ meta: [{ title: "Workflow" }] }),
 });
 
-function WorkflowPage() {
+export default function WorkflowPage() {
   const qc = useQueryClient();
-  const wfFn = useServerFn(getMyWorkflow);
-  const runFn = useServerFn(runMyDeliverable);
-  const runAllFn = useServerFn(runMyRemaining);
-  const recentFn = useServerFn(getMyRecentRuns);
+  const wfFn =(getMyWorkflow);
+  const runFn =(runMyDeliverable);
+  const runAllFn =(runMyRemaining);
+  const recentFn =(getMyRecentRuns);
 
   const { data } = useQuery({ queryKey: ["my", "workflow"], queryFn: () => wfFn(), refetchInterval: 5000 });
   const { data: recent } = useQuery({ queryKey: ["my", "recent-runs"], queryFn: () => recentFn(), refetchInterval: 3000 });

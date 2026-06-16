@@ -1,27 +1,11 @@
-# Netlify deployment config for Launch Pad ATL (TanStack Start / Nitro SSR)
-# Build: `npm run build` — Nitro emits dist/client (static) and dist/server (SSR fn).
-#
-# *** DO NOT REMOVE [functions] OR [[redirects]] BLOCKS BELOW ***
-# Netlify does NOT auto-detect the Nitro output for SSR function wiring.
-# The [functions] dir and [[redirects]] fallback are REQUIRED.
-
 [build]
   command = "npm run build"
-  publish = "dist/client"
+  publish = "dist"
 
 [build.environment]
-  NODE_VERSION           = "22"
-  NITRO_PRESET           = "netlify"
-  AWS_LAMBDA_JS_RUNTIME  = "nodejs22.x"
-
-[functions]
-  directory    = "dist/server"
-  node_bundler = "none"
-
-[functions.server]
-  timeout = 30
+  NODE_VERSION = "22"
 
 [[redirects]]
-  from   = "/*"
-  to     = "/.netlify/functions/server"
+  from = "/*"
+  to = "/index.html"
   status = 200

@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { useMemo, useState } from "react";
 import { MoreHorizontal, Trash2 } from "lucide-react";
 import { getAdminStats, listRegistrations } from "@/lib/admin.functions";
@@ -59,23 +59,23 @@ const STATUS_CHOICES: { value: ApplicationStatus; label: string }[] = [
   { value: "withdrawn", label: "Withdrawn" },
 ];
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/")({
+export const Route =("/_authenticated/_admin/admin/")({
   component: AdminDashboard,
   head: () => ({ meta: [{ title: "Admin dashboard" }] }),
 });
 
-function AdminDashboard() {
-  const statsFn = useServerFn(getAdminStats);
-  const regFn = useServerFn(listRegistrations);
-  const appsFn = useServerFn(listApplications);
-  const updateAppFn = useServerFn(updateApplication);
-  const bulkUpdateFn = useServerFn(bulkUpdateApplications);
-  const bulkDeleteFn = useServerFn(bulkDeleteApplications);
-  const membersFn = useServerFn(listMembers);
-  const approveFn = useServerFn(approveMember);
-  const rejectFn = useServerFn(rejectMember);
-  const pauseFn = useServerFn(pauseMember);
-  const restoreFn = useServerFn(restoreMemberToPending);
+export default function AdminDashboard() {
+  const statsFn =(getAdminStats);
+  const regFn =(listRegistrations);
+  const appsFn =(listApplications);
+  const updateAppFn =(updateApplication);
+  const bulkUpdateFn =(bulkUpdateApplications);
+  const bulkDeleteFn =(bulkDeleteApplications);
+  const membersFn =(listMembers);
+  const approveFn =(approveMember);
+  const rejectFn =(rejectMember);
+  const pauseFn =(pauseMember);
+  const restoreFn =(restoreMemberToPending);
   const qc = useQueryClient();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());

@@ -1,12 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { FileText, Image, Sparkles } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/dashboard/files")({
+export const Route =("/_authenticated/dashboard/files")({
   component: FilesIndex,
   head: () => ({ meta: [{ title: "My files — Startup Labs" }] }),
 });
 
-function FilesIndex() {
+export default function FilesIndex() {
   const sections = [
     { to: "/dashboard/deliverables", label: "Made by your AI", desc: "The 25 deliverables your AI assistant builds for you.", icon: Sparkles },
     { to: "/dashboard/documents", label: "Documents", desc: "PDFs, contracts, and other docs.", icon: FileText },

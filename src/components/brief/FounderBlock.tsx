@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import {  } from "react-router-dom";
 import { Upload, Link2, Sparkles, Loader2, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -15,10 +15,10 @@ type Props = {
 };
 
 export function FounderBlock({ onDone }: Props) {
-  const getFn = useServerFn(getFounderProfile);
-  const extractFn = useServerFn(extractFounderFromText);
-  const upsertFn = useServerFn(upsertFounderProfile);
-  const signFn = useServerFn(createResumeUploadUrl);
+  const getFn = (getFounderProfile);
+  const extractFn = (extractFounderFromText);
+  const upsertFn = (upsertFounderProfile);
+  const signFn = (createResumeUploadUrl);
 
   const { data, refetch, isLoading } = useQuery({
     queryKey: ["my", "founder-profile"],

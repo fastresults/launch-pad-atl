@@ -1,0 +1,134 @@
+import { lazy, Suspense } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+
+// Layout guards
+import AuthenticatedLayout from "@/routes/_authenticated";
+import AdminLayout from "@/routes/_authenticated/_admin";
+
+// Public pages
+const HomePage = lazy(() => import("@/routes/index"));
+const SchedulePage = lazy(() => import("@/routes/schedule"));
+const RegisterPage = lazy(() => import("@/routes/register"));
+const FacilitatorPage = lazy(() => import("@/routes/facilitator"));
+const ContactPage = lazy(() => import("@/routes/contact"));
+const LoginPage = lazy(() => import("@/routes/login"));
+const SignupPage = lazy(() => import("@/routes/signup"));
+const ResetPasswordPage = lazy(() => import("@/routes/reset-password"));
+const PrivacyPage = lazy(() => import("@/routes/privacy"));
+const TermsPage = lazy(() => import("@/routes/terms"));
+const UnsubscribePage = lazy(() => import("@/routes/unsubscribe"));
+
+// Authenticated pages
+const WelcomePage = lazy(() => import("@/routes/_authenticated/welcome"));
+const PausedPage = lazy(() => import("@/routes/_authenticated/paused"));
+
+// Dashboard layout + sub-pages
+const DashboardLayout = lazy(() => import("@/routes/_authenticated/dashboard"));
+const DashboardIndex = lazy(() => import("@/routes/_authenticated/dashboard/index"));
+const DashboardBrief = lazy(() => import("@/routes/_authenticated/dashboard/brief"));
+const DashboardDay = lazy(() => import("@/routes/_authenticated/dashboard/day"));
+const DashboardDeliverables = lazy(() => import("@/routes/_authenticated/dashboard/deliverables"));
+const DashboardDocuments = lazy(() => import("@/routes/_authenticated/dashboard/documents"));
+const DashboardFiles = lazy(() => import("@/routes/_authenticated/dashboard/files"));
+const DashboardFiling = lazy(() => import("@/routes/_authenticated/dashboard/filing"));
+const DashboardGoals = lazy(() => import("@/routes/_authenticated/dashboard/goals"));
+const DashboardMedia = lazy(() => import("@/routes/_authenticated/dashboard/media"));
+const DashboardProfile = lazy(() => import("@/routes/_authenticated/dashboard/profile"));
+const DashboardWorkflow = lazy(() => import("@/routes/_authenticated/dashboard/workflow"));
+const DashboardWorkflowKey = lazy(() => import("@/routes/_authenticated/dashboard/workflow.$key"));
+
+// Admin sub-pages
+const AdminIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.index"));
+const AdminUsers = lazy(() => import("@/routes/_authenticated/_admin/admin.users"));
+const AdminSite = lazy(() => import("@/routes/_authenticated/_admin/admin.site"));
+const AdminReview = lazy(() => import("@/routes/_authenticated/_admin/admin.review"));
+const AdminRegistrations = lazy(() => import("@/routes/_authenticated/_admin/admin.registrations"));
+const AdminMembers = lazy(() => import("@/routes/_authenticated/_admin/admin.members"));
+const AdminMedia = lazy(() => import("@/routes/_authenticated/_admin/admin.media"));
+const AdminCohorts = lazy(() => import("@/routes/_authenticated/_admin/admin.cohorts"));
+const AdminCohortsTest = lazy(() => import("@/routes/_authenticated/_admin/admin.cohorts.test"));
+const AdminAttendees = lazy(() => import("@/routes/_authenticated/_admin/admin.attendees"));
+const AdminAttendeesUserIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.attendees.$userId.index"));
+const AdminAttendeesUserWorkflow = lazy(() => import("@/routes/_authenticated/_admin/admin.attendees.$userId.workflow"));
+const AdminAttendeesUserMedia = lazy(() => import("@/routes/_authenticated/_admin/admin.attendees.$userId.media"));
+const AdminAttendeesUserDeliverables = lazy(() => import("@/routes/_authenticated/_admin/admin.attendees.$userId.deliverables.$key"));
+const AdminApplicationsIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.applications.index"));
+const AdminApplicationsId = lazy(() => import("@/routes/_authenticated/_admin/admin.applications.$id"));
+const AdminInquiriesIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.inquiries.index"));
+const AdminInquiriesId = lazy(() => import("@/routes/_authenticated/_admin/admin.inquiries.$id"));
+
+function Loading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="text-sm text-muted-foreground">Loading…</div>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/schedule" element={<SchedulePage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/facilitator" element={<FacilitatorPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/unsubscribe" element={<UnsubscribePage />} />
+
+        {/* Authenticated routes */}
+        <Route element={<AuthenticatedLayout />}>
+          <Route path="/welcome" element={<WelcomePage />} />
+          <Route path="/paused" element={<PausedPage />} />
+
+          {/* Dashboard nested routes */}
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<DashboardIndex />} />
+            <Route path="brief" element={<DashboardBrief />} />
+            <Route path="day" element={<DashboardDay />} />
+            <Route path="deliverables" element={<DashboardDeliverables />} />
+            <Route path="documents" element={<DashboardDocuments />} />
+            <Route path="files" element={<DashboardFiles />} />
+            <Route path="filing" element={<DashboardFiling />} />
+            <Route path="goals" element={<DashboardGoals />} />
+            <Route path="media" element={<DashboardMedia />} />
+            <Route path="profile" element={<DashboardProfile />} />
+            <Route path="workflow" element={<DashboardWorkflow />} />
+            <Route path="workflow/:key" element={<DashboardWorkflowKey />} />
+          </Route>
+
+          {/* Admin nested routes */}
+          <Route element={<AdminLayout />}>
+            <Route path="/admin" element={<AdminIndex />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/site" element={<AdminSite />} />
+            <Route path="/admin/review" element={<AdminReview />} />
+            <Route path="/admin/registrations" element={<AdminRegistrations />} />
+            <Route path="/admin/members" element={<AdminMembers />} />
+            <Route path="/admin/media" element={<AdminMedia />} />
+            <Route path="/admin/cohorts" element={<AdminCohorts />} />
+            <Route path="/admin/cohorts/test" element={<AdminCohortsTest />} />
+            <Route path="/admin/attendees" element={<AdminAttendees />} />
+            <Route path="/admin/attendees/:userId" element={<AdminAttendeesUserIndex />} />
+            <Route path="/admin/attendees/:userId/workflow" element={<AdminAttendeesUserWorkflow />} />
+            <Route path="/admin/attendees/:userId/media" element={<AdminAttendeesUserMedia />} />
+            <Route path="/admin/attendees/:userId/deliverables/:key" element={<AdminAttendeesUserDeliverables />} />
+            <Route path="/admin/applications" element={<AdminApplicationsIndex />} />
+            <Route path="/admin/applications/:id" element={<AdminApplicationsId />} />
+            <Route path="/admin/inquiries" element={<AdminInquiriesIndex />} />
+            <Route path="/admin/inquiries/:id" element={<AdminInquiriesId />} />
+          </Route>
+        </Route>
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
+  );
+}

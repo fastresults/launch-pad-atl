@@ -1,11 +1,9 @@
-import { createServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/admin-client";
 import { enqueueTransactionalEmail } from "@/lib/email/enqueue";
 
 async function assertAdmin(userId: string) {
-  const { data } = await supabaseAdmin
+  const { data } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
@@ -20,16 +18,13 @@ const Schema = z.object({
   firstName: z.string().trim().min(1).max(80).optional(),
 });
 
-export const sendTestApplicationReceivedEmail = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => Schema.parse(i))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+export const sendTestApplicationReceivedEmail = async (data: any) => {
+    await assertAdmin((await supabase.auth.getUser()).data.user!.id);
     const result = await enqueueTransactionalEmail({
       templateName: "application-received",
       recipientEmail: data.recipientEmail,
       idempotencyKey: `test-app-received-${Date.now()}`,
       templateData: { firstName: data.firstName },
-    });
+    };
     return result;
-  });
+  };

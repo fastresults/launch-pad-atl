@@ -1,13 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { MediaHub } from "@/components/media/MediaHub";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/media")({
+export const Route =("/_authenticated/_admin/admin/media")({
   component: MasterMediaPage,
   head: () => ({ meta: [{ title: "Master Media Library" }] }),
 });
 
-function MasterMediaPage() {
+export default function MasterMediaPage() {
   return (
     <div className="space-y-6">
       <AdminPageHeader

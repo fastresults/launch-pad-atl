@@ -1,6 +1,6 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import {  } from "react-router-dom";
 import { CheckCircle2, Sparkles } from "lucide-react";
 import { getFounderMemory } from "@/lib/founderMemory.functions";
 import { BRIEF_BLOCKS } from "@/lib/brief-blocks";
@@ -12,7 +12,7 @@ type Props = {
 };
 
 export function BriefCompleteCard({ pitch, secondary, footnote }: Props) {
-  const memFn = useServerFn(getFounderMemory);
+  const memFn = (getFounderMemory);
   const { data } = useQuery({
     queryKey: ["my", "founder-memory"],
     queryFn: () => memFn(),

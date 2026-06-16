@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, Navigate } from "@tanstack/react-router";
+import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -7,11 +7,11 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminCommandMenu } from "@/components/admin/AdminCommandMenu";
 
-export const Route = createFileRoute("/_authenticated/_admin")({
+export const Route =("/_authenticated/_admin")({
   component: AdminLayout,
 });
 
-function AdminLayout() {
+export default function AdminLayout() {
   const { isAdmin, loading } = useAuth();
 
   if (loading) {

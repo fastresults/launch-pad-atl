@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import {
   getAttendeeDetail,
   listDeliverableRevisions,
@@ -17,22 +17,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/attendees/$userId/deliverables/$key")({
+export const Route =("/_authenticated/_admin/admin/attendees/$userId/deliverables/$key")({
   component: DeliverableEditor,
   head: () => ({ meta: [{ title: "Edit deliverable — Admin" }] }),
 });
 
-function DeliverableEditor() {
+export default function DeliverableEditor() {
   const { userId, key } = Route.useParams();
   const qc = useQueryClient();
-  const detailFn = useServerFn(getAttendeeDetail);
-  const updateFn = useServerFn(updateDeliverableContent);
-  const revertFn = useServerFn(revertDeliverableToAi);
-  const regenFn = useServerFn(regenerateDeliverable);
-  const reviewFn = useServerFn(reviewDeliverable);
-  const publishFn = useServerFn(publishDeliverable);
-  const unpublishFn = useServerFn(unpublishDeliverable);
-  const revisionsFn = useServerFn(listDeliverableRevisions);
+  const detailFn =(getAttendeeDetail);
+  const updateFn =(updateDeliverableContent);
+  const revertFn =(revertDeliverableToAi);
+  const regenFn =(regenerateDeliverable);
+  const reviewFn =(reviewDeliverable);
+  const publishFn =(publishDeliverable);
+  const unpublishFn =(unpublishDeliverable);
+  const revisionsFn =(listDeliverableRevisions);
 
   const { data } = useQuery({
     queryKey: ["admin", "attendee", userId],

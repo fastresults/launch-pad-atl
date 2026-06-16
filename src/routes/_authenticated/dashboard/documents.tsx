@@ -1,7 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import {
   createDocumentUploadUrl,
   deleteMyDocument,
@@ -12,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/dashboard/documents")({
+export const Route =("/_authenticated/dashboard/documents")({
   component: DocumentsPage,
 });
 
@@ -23,13 +22,13 @@ const KINDS = [
   { key: "other", label: "Other" },
 ] as const;
 
-function DocumentsPage() {
+export default function DocumentsPage() {
   const qc = useQueryClient();
-  const listFn = useServerFn(listMyDocuments);
-  const signFn = useServerFn(createDocumentUploadUrl);
-  const finalizeFn = useServerFn(finalizeDocument);
-  const delFn = useServerFn(deleteMyDocument);
-  const dlFn = useServerFn(getDocumentDownloadUrl);
+  const listFn =(listMyDocuments);
+  const signFn =(createDocumentUploadUrl);
+  const finalizeFn =(finalizeDocument);
+  const delFn =(deleteMyDocument);
+  const dlFn =(getDocumentDownloadUrl);
   const fileRef = useRef<HTMLInputElement>(null);
   const [kind, setKind] = useState<(typeof KINDS)[number]["key"]>("other");
   const [uploading, setUploading] = useState(false);

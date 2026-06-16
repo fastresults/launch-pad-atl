@@ -1,15 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
-
-export const Route = createFileRoute('/unsubscribe')({
-  component: UnsubscribePage,
-  validateSearch: (search): { token?: string } => ({
-    token: typeof search.token === 'string' ? search.token : undefined,
-  }),
-})
 
 type State =
   | { kind: 'loading' }
@@ -20,22 +13,17 @@ type State =
   | { kind: 'done' }
   | { kind: 'error'; message: string }
 
-function UnsubscribePage() {
-  const { token } = Route.useSearch()
+export default function UnsubscribePage() {
+  const [searchParams] = useSearchParams()
+  const token = searchParams.get('token') ?? undefined
   const [state, setState] = useState<State>({ kind: 'loading' })
 
   useEffect(() => {
-    if (!token) {
-      setState({ kind: 'invalid' })
-      return
-    }
+    if (!token) { setState({ kind: 'invalid' }); return }
     fetch(`/email/unsubscribe?token=${encodeURIComponent(token)}`)
       .then(async (r) => {
         const body = await r.json().catch(() => ({}))
-        if (!r.ok) {
-          setState({ kind: 'invalid' })
-          return
-        }
+        if (!r.ok) { setState({ kind: 'invalid' }); return }
         if (body.valid) setState({ kind: 'valid' })
         else if (body.reason === 'already_unsubscribed') setState({ kind: 'already' })
         else setState({ kind: 'invalid' })
@@ -66,9 +54,7 @@ function UnsubscribePage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Unsubscribe</CardTitle>
-          <CardDescription>
-            Manage emails from Atlanta Startup Sprint.
-          </CardDescription>
+          <CardDescription>Manage emails from Atlanta Startup Sprint.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {state.kind === 'loading' && (
@@ -78,13 +64,8 @@ function UnsubscribePage() {
           )}
           {state.kind === 'valid' && (
             <>
-              <p className="text-sm text-foreground">
-                Click below to stop receiving emails from us. You can still apply or
-                register manually anytime.
-              </p>
-              <Button onClick={confirm} className="w-full">
-                Confirm unsubscribe
-              </Button>
+              <p className="text-sm">Click below to stop receiving emails from us.</p>
+              <Button onClick={confirm} className="w-full">Confirm unsubscribe</Button>
             </>
           )}
           {state.kind === 'submitting' && (
@@ -93,46 +74,30 @@ function UnsubscribePage() {
             </div>
           )}
           {state.kind === 'done' && (
-            <div className="flex items-start gap-2 text-foreground">
+            <div className="flex items-start gap-2">
               <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
               <div>
                 <p className="font-medium">You're unsubscribed.</p>
-                <p className="text-sm text-muted-foreground">
-                  We won't email you again. Sorry to see you go.
-                </p>
+                <p className="text-sm text-muted-foreground">We won't email you again.</p>
               </div>
             </div>
           )}
           {state.kind === 'already' && (
-            <div className="flex items-start gap-2 text-foreground">
+            <div className="flex items-start gap-2">
               <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
-              <div>
-                <p className="font-medium">Already unsubscribed.</p>
-                <p className="text-sm text-muted-foreground">
-                  This email address isn't receiving messages from us.
-                </p>
-              </div>
+              <p className="text-sm text-muted-foreground">Already unsubscribed.</p>
             </div>
           )}
           {state.kind === 'invalid' && (
             <div className="flex items-start gap-2">
               <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
-              <div>
-                <p className="font-medium">Invalid or expired link.</p>
-                <p className="text-sm text-muted-foreground">
-                  Open the latest email you received and click the unsubscribe link
-                  there.
-                </p>
-              </div>
+              <p className="text-sm text-muted-foreground">Invalid or expired link.</p>
             </div>
           )}
           {state.kind === 'error' && (
             <div className="flex items-start gap-2">
               <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
-              <div>
-                <p className="font-medium">Something went wrong.</p>
-                <p className="text-sm text-muted-foreground">{state.message}</p>
-              </div>
+              <p className="text-sm text-muted-foreground">{state.message}</p>
             </div>
           )}
         </CardContent>

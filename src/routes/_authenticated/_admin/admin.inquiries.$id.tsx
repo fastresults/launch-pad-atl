@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from 'react-router-dom';
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import {
   getInquiry,
   replyToInquiry,
@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/inquiries/$id")({
+export const Route =("/_authenticated/_admin/admin/inquiries/$id")({
   component: InquiryDetailPage,
   head: () => ({ meta: [{ title: "Inquiry — Admin" }] }),
 });
@@ -36,12 +36,12 @@ const TONE: Record<string, string> = {
   closed: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
 };
 
-function InquiryDetailPage() {
+export default function InquiryDetailPage() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
-  const getFn = useServerFn(getInquiry);
-  const replyFn = useServerFn(replyToInquiry);
-  const statusFn = useServerFn(updateInquiryStatus);
+  const getFn =(getInquiry);
+  const replyFn =(replyToInquiry);
+  const statusFn =(updateInquiryStatus);
   const [reply, setReply] = useState("");
 
   const q = useQuery({

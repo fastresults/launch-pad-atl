@@ -1,6 +1,6 @@
-import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+import { Link, Navigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { listCohorts } from "@/lib/cohorts.functions";
@@ -24,22 +24,22 @@ import {
 import { toast } from "sonner";
 import { ArrowLeft, RotateCcw, Zap } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/cohorts/test")({
+export const Route =("/_authenticated/_admin/admin/cohorts/test")({
   component: CohortTestPage,
   head: () => ({ meta: [{ title: "Test registration flow — Admin" }] }),
 });
 
-function CohortTestPage() {
+export default function CohortTestPage() {
   const { isSuperAdmin, loading } = useAuth();
   const qc = useQueryClient();
 
-  const listFn = useServerFn(listCohorts);
-  const availFn = useServerFn(getCohortAvailability);
-  const simulateFn = useServerFn(simulatePaidRegistrations);
-  const resetFn = useServerFn(resetTestRegistrations);
-  const listRegsFn = useServerFn(listCohortRegistrations);
-  const confirmFn = useServerFn(confirmRegistrationPayment);
-  const refundFn = useServerFn(markRegistrationRefunded);
+  const listFn =(listCohorts);
+  const availFn =(getCohortAvailability);
+  const simulateFn =(simulatePaidRegistrations);
+  const resetFn =(resetTestRegistrations);
+  const listRegsFn =(listCohortRegistrations);
+  const confirmFn =(confirmRegistrationPayment);
+  const refundFn =(markRegistrationRefunded);
 
   const { data: cohorts = [] } = useQuery({
     queryKey: ["cohorts"],

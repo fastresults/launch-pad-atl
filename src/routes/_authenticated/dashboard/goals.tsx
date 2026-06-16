@@ -1,22 +1,21 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { deleteGoal, listMyGoals, upsertGoal } from "@/lib/attendee.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/dashboard/goals")({
+export const Route =("/_authenticated/dashboard/goals")({
   component: GoalsPage,
 });
 
-function GoalsPage() {
+export default function GoalsPage() {
   const qc = useQueryClient();
-  const listFn = useServerFn(listMyGoals);
-  const saveFn = useServerFn(upsertGoal);
-  const delFn = useServerFn(deleteGoal);
+  const listFn =(listMyGoals);
+  const saveFn =(upsertGoal);
+  const delFn =(deleteGoal);
   const { data } = useQuery({ queryKey: ["my", "goals"], queryFn: () => listFn() });
 
   const [horizon, setHorizon] = useState<30 | 60 | 90>(30);

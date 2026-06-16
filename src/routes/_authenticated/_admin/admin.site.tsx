@@ -1,7 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { useState } from "react";
 import {
   getPublicSiteSettings,
@@ -11,14 +10,14 @@ import {
 } from "@/lib/site-settings.functions";
 import { ExternalLink } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/_admin/admin/site")({
+export const Route =("/_authenticated/_admin/admin/site")({
   component: AdminSitePage,
   head: () => ({ meta: [{ title: "Site variants" }] }),
 });
 
-function AdminSitePage() {
-  const getFn = useServerFn(getPublicSiteSettings);
-  const setFn = useServerFn(updateSiteSetting);
+export default function AdminSitePage() {
+  const getFn =(getPublicSiteSettings);
+  const setFn =(updateSiteSetting);
   const qc = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);

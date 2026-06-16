@@ -1,9 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { } from 'react-router-dom';
 import { listMyDeliverables } from "@/lib/attendee.functions";
 
-export const Route = createFileRoute("/_authenticated/dashboard/deliverables")({
+export const Route =("/_authenticated/dashboard/deliverables")({
   component: DeliverablesPage,
 });
 
@@ -15,8 +14,8 @@ type Content = {
   action_items?: string[];
 };
 
-function DeliverablesPage() {
-  const listFn = useServerFn(listMyDeliverables);
+export default function DeliverablesPage() {
+  const listFn =(listMyDeliverables);
   const { data, isLoading } = useQuery({ queryKey: ["my", "deliverables"], queryFn: () => listFn() });
 
   return (
