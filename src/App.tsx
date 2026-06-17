@@ -63,6 +63,8 @@ const AdminSocialPosts = lazy(() => import("@/routes/_authenticated/_admin/admin
 const AdminSocialAnalytics = lazy(() => import("@/routes/_authenticated/_admin/admin.social.analytics"));
 const AdminSocialSetup = lazy(() => import("@/routes/_authenticated/_admin/admin.social.setup"));
 const AdminSocialSetupPlatform = lazy(() => import("@/routes/_authenticated/_admin/admin.social.setup.$platform"));
+const AdminSocialSetupCreative = lazy(() => import("@/routes/_authenticated/_admin/admin.social.setup.creative"));
+const AdminSocialSetupCreativeAsset = lazy(() => import("@/routes/_authenticated/_admin/admin.social.setup.creative.$assetType"));
 
 function Loading() {
   return (
