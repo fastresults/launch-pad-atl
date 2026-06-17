@@ -119,7 +119,7 @@ export default function AttendeeDetail() {
                     <td className="px-4 py-3 text-right">
                       {isSuperAdmin && (
                         <Link
-                          to={`/admin/attendees/$userId/deliverables/${d.deliverable_key}`}
+                          to={`/admin/attendees/${userId}/deliverables/${d.deliverable_key}`}
                           className="text-primary hover:underline"
                         >
                           Open →
