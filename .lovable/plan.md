@@ -1,76 +1,56 @@
-# Auth review: what's broken and how to fix it
+# Super Admin Login → Black Screen Fix
 
-I traced the sign-in and role plumbing end-to-end. There are three independent bugs, and together they explain why Google sign-in "doesn't work" and why even the super admin doesn't land in the admin area.
+## What's happening
 
-## Bug 1 — `getMyAccount` queries a table that doesn't exist
+Sign-in itself works. After the auth state updates, `login.tsx` redirects super-admins to `/admin`. That route mounts `AdminLayout` (dark `ThemeProvider`) and then `AdminDashboard` (`admin.index.tsx`), which **immediately crashes on render**, leaving an empty dark page — the "black screen" the user sees.
 
-`src/lib/auth.functions.ts` reads from `public.members`:
+## Root cause
 
-```ts
-supabase.from("members").select("member_status, approved_via")...
-```
+`admin.index.tsx` was written for an older API shape, but the data-layer files (`*.functions.ts`) have since been simplified to plain Supabase calls that return raw rows. The two no longer agree, so the page throws a `TypeError` on first render.
 
-There is no `members` table in the database. Member status actually lives on `public.profiles` (the `auto_approve_member_on_payment` trigger writes `profiles.member_status` / `profiles.approved_via`). The query throws, the `catch` in `useAuth` swallows it, and every signed-in user ends up with `roles: []` and `memberStatus: "pending"` — so:
+Concrete mismatches in `src/routes/_authenticated/_admin/admin.index.tsx`:
 
-- Super admin is not recognized as admin → never routed to `/admin`.
-- Every approved member is bounced to `/welcome`.
-- Sign-in looks like it "did nothing".
+| Call site in admin.index.tsx | Actual function signature / return |
+|---|---|
+| `listApplications({ data: { status: "applied" } })` | `listApplications(data?: { status })` — expects flat arg, returns `Row[]` (not `{ counts, applications }`) |
+| `listMembers({ data: {} })` | `listMembers(data?: { status })` — returns `Row[]` (not `{ counts, members }`) |
+| `listRegistrations()` | returns `Row[]` (not `{ confirmed }`) |
+| `getAdminStats()` | returns `{ registrations, members, openInquiries }` — code reads `stats.data?.confirmed` and `stats.data?.users` |
+| `apps.data?.counts.applied` | `apps.data` is an array → `.counts.applied` throws `TypeError: Cannot read properties of undefined` |
+| `approveMember({ data: { userId } })`, `pauseMember({ data: { userId, reason } })`, etc. | functions take `{ userId }` / `{ userId }` directly; no `reason` param |
 
-**Fix:** read from `profiles` instead:
+There is **no global ErrorBoundary**, so when the dashboard throws, React unmounts the tree and the dark `bg-background` is all that's left → black screen.
 
-```ts
-supabase.from("profiles").select("member_status, approved_via").eq("user_id", user.id).maybeSingle()
-```
+Regular users don't hit this because they're sent to `/dashboard`, not `/admin`.
 
-## Bug 2 — Role enum mismatch
+## Fix
 
-The DB `app_role` enum is `{super_admin, admin, user}` (confirmed via query) and `handle_new_user` inserts `'user'` for normal accounts. But the client type is:
+Two parts:
 
-```ts
-export type AppRole = "admin" | "super_admin" | "member";
-```
+### 1. Align `admin.index.tsx` with the current function shapes
+Rewrite the data-fetching and derived values in `src/routes/_authenticated/_admin/admin.index.tsx` so it works with arrays + the real `getAdminStats` shape:
 
-`"member"` doesn't exist in the DB, and `"user"` isn't in the TS union. Nothing downstream checks for `"user"`, so regular users have no usable role. `isApprovedMember` then depends entirely on `memberStatus === "approved"`, which is broken by Bug 1.
+- Call functions with flat args: `listApplications({ status: "applied" })`, `listMembers()`, `approveMember({ userId })`, `pauseMember({ userId })`, `rejectMember({ userId })`, `restoreMemberToPending({ userId })`.
+- Compute counts client-side from the returned arrays, e.g.:
+  ```ts
+  const appsList = apps.data ?? [];
+  const countsByStatus = appsList.reduce<Record<string, number>>((acc, a) => {
+    acc[a.status] = (acc[a.status] ?? 0) + 1; return acc;
+  }, {});
+  const applicationsPending = (countsByStatus.applied ?? 0) + (countsByStatus.reviewing ?? 0);
+  ```
+- Replace `stats.data?.confirmed` with `stats.data?.registrations`, and `stats.data?.users` with `stats.data?.members` (or add a `users` count to `getAdminStats`).
+- Drop the `reason` UI from pause/reject confirmations, or extend `pauseMember`/`rejectMember` in `members-admin.functions.ts` to accept and persist a reason column.
 
-**Fix:** change `AppRole` to `"super_admin" | "admin" | "user"` and update the one check in `use-auth.tsx` accordingly. No behavior change for admins; regular users get a valid role string.
+### 2. Add a safety net so a single broken admin page never blanks the whole app
+Wrap `<Outlet />` in `_admin.tsx` (and ideally `_authenticated.tsx`) with a small `ErrorBoundary` that renders a visible "Something went wrong" card with a Retry button. This prevents future regressions from producing another silent black screen and makes the real error visible in the UI instead of only the console.
 
-## Bug 3 — Google sign-in uses the legacy Supabase client, not Lovable managed OAuth
+## Verification
 
-`src/routes/login.tsx` and `src/routes/signup.tsx` call `supabase.auth.signInWithOAuth({ provider: "google", ... })` directly. Per Lovable Cloud guidance, managed Google Auth must go through `lovable.auth.signInWithOAuth(...)` from `@/integrations/lovable`. That folder doesn't exist in this project, which is why the button silently fails / hits a misconfigured redirect in preview.
+1. Sign in as super admin → land on `/admin` and see the dashboard render with stats, applications, and members lists (no console `TypeError`).
+2. Sign in as a regular approved user → still routes to `/dashboard`.
+3. Temporarily throw inside an admin page → ErrorBoundary card appears instead of a black screen.
 
-**Fix:** run the `configure_social_auth` tool with `providers: ["google"]` to scaffold `src/integrations/lovable/` and install `@lovable.dev/cloud-auth-js`. Then replace the two call sites:
+## Out of scope
 
-```ts
-import { lovable } from "@/integrations/lovable";
-
-const result = await lovable.auth.signInWithOAuth("google", {
-  redirect_uri: window.location.origin + "/login", // or /signup
-});
-if (result.error) { toast.error(result.error.message); return; }
-if (result.redirected) return;
-```
-
-Keep email/password as-is. Do not touch `src/integrations/supabase/client.ts` or anything under `src/integrations/lovable/`.
-
-## What I will NOT change
-
-- DB schema, RLS, or triggers — they're already correct.
-- The `_authenticated` and `_admin` layout routing logic — it works once `getMyAccount` returns real data.
-- Email/password flow.
-
-## Files to edit
-
-1. `src/lib/auth.functions.ts` — point at `profiles`, remove `@ts-nocheck` if trivial.
-2. `src/hooks/use-auth.tsx` — update `AppRole` import usage (no logic change beyond the type swap in `auth.functions.ts`).
-3. Run `configure_social_auth` (scaffolds `src/integrations/lovable/*`, edits `package.json`).
-4. `src/routes/login.tsx` — swap Google handler to `lovable.auth.signInWithOAuth`.
-5. `src/routes/signup.tsx` — same swap.
-
-## How to verify after build
-
-- Sign in as super admin with email/password → should land on `/admin`.
-- Sign in as an approved member → should land on `/dashboard`, not `/welcome`.
-- Click "Continue with Google" on `/login` → redirect to Google consent screen, return signed in.
-- New Google account that isn't an approved member → lands on `/welcome` (intake form), which is correct.
-
-Approve this and I'll implement in one pass.
+No changes to auth, Google OAuth, RLS, or routing guards — those are working. This is purely a render-time crash on the admin dashboard.
