@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, ChevronRight, Clock, Sparkles } from "lucide-react";
+import { CheckCircle2, Circle, ChevronRight, Clock, Sparkles, Palette } from "lucide-react";
 import {
   SETUP_GUIDES,
   stageProgress,
@@ -24,6 +24,8 @@ import {
   type ProgressRow,
 } from "@/lib/social-setup.functions";
 import { listAccounts } from "@/lib/zernio.functions";
+import { listSelectedAssets } from "@/lib/creative.functions";
+import { ASSET_TYPES } from "@/lib/creative-vibes";
 
 export default function AdminSocialSetup() {
   const qc = useQueryClient();
@@ -79,6 +81,8 @@ export default function AdminSocialSetup() {
       </Card>
 
       <BrandSection brand={brandQ.data} onSaved={() => qc.invalidateQueries({ queryKey: ["social-setup", "brand"] })} />
+
+      <CreativeStudioCard />
 
       <div>
         <h2 className="mb-3 text-lg font-medium">Platforms</h2>
@@ -259,4 +263,72 @@ function useMemoSyncBrand(
   useEffect(() => {
     if (brand) setForm(brand);
   }, [brand]); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+function CreativeStudioCard() {
+  const assetsQ = useQuery({ queryKey: ["creative", "selected"], queryFn: listSelectedAssets });
+  const selected = assetsQ.data ?? [];
+  const doneTypes = new Set(selected.map((a) => a.asset_type));
+  const doneCount = ASSET_TYPES.filter((t) => doneTypes.has(t.value)).length;
+  const pct = Math.round((doneCount / ASSET_TYPES.length) * 100);
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <div>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Palette className="h-4 w-4 text-primary" />
+            Step 0.5 — Creative Studio
+          </CardTitle>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Generate on-brand profile marks, covers, launch posts, and a founder portrait with AI.
+            No design skills needed.
+          </p>
+        </div>
+        <Button asChild size="sm">
+          <Link to="/admin/social/setup/creative">
+            {doneCount > 0 ? "Open Creative Studio" : "Start Creative Studio"}
+          </Link>
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>
+            {doneCount} of {ASSET_TYPES.length} creative types ready
+          </span>
+          <span>{pct}%</span>
+        </div>
+        <Progress value={pct} className="h-1.5" />
+        <div className="grid gap-2 sm:grid-cols-4">
+          {ASSET_TYPES.map((t) => {
+            const asset = selected.find((a) => a.asset_type === t.value);
+            return (
+              <div
+                key={t.value}
+                className="flex items-center gap-2 rounded border p-2 text-xs"
+              >
+                {asset?.signed_url ? (
+                  <img
+                    src={asset.signed_url}
+                    alt=""
+                    className="h-8 w-8 shrink-0 rounded object-cover"
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-muted text-base">
+                    {t.emoji}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <div className="truncate font-medium">{t.label}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {asset ? "Ready" : "Not generated"}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }

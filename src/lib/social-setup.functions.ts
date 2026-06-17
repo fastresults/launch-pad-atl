@@ -11,6 +11,9 @@ export type BrandKit = {
   website_url: string | null;
   logo_url: string | null;
   banner_url: string | null;
+  vibe: string | null;
+  color_mood: string | null;
+  brand_colors: string[] | null;
   created_at?: string;
   updated_at?: string;
 };
