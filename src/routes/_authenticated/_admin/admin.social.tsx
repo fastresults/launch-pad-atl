@@ -75,6 +75,9 @@ export default function AdminSocialIndex() {
         actions={
           <div className="flex gap-2">
             <Button asChild variant="outline">
+              <Link to="/admin/social/setup">Setup wizard</Link>
+            </Button>
+            <Button asChild variant="outline">
               <Link to="/admin/social/accounts">Manage accounts</Link>
             </Button>
             <Button asChild>
@@ -83,6 +86,21 @@ export default function AdminSocialIndex() {
           </div>
         }
       />
+
+      <Card className="border-primary/30 bg-primary/5">
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <div>
+            <div className="text-sm font-medium">New to social media?</div>
+            <p className="text-xs text-muted-foreground">
+              The setup wizard walks you through creating each account from scratch — what you need,
+              step-by-step instructions, and copy-paste brand assets.
+            </p>
+          </div>
+          <Button asChild size="sm">
+            <Link to="/admin/social/setup">Open setup wizard</Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">Profiles</h2>
