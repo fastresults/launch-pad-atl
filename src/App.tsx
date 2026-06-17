@@ -61,6 +61,8 @@ const AdminSocialAccounts = lazy(() => import("@/routes/_authenticated/_admin/ad
 const AdminSocialCompose = lazy(() => import("@/routes/_authenticated/_admin/admin.social.compose"));
 const AdminSocialPosts = lazy(() => import("@/routes/_authenticated/_admin/admin.social.posts"));
 const AdminSocialAnalytics = lazy(() => import("@/routes/_authenticated/_admin/admin.social.analytics"));
+const AdminSocialSetup = lazy(() => import("@/routes/_authenticated/_admin/admin.social.setup"));
+const AdminSocialSetupPlatform = lazy(() => import("@/routes/_authenticated/_admin/admin.social.setup.$platform"));
 
 function Loading() {
   return (
@@ -133,6 +135,8 @@ export default function App() {
             <Route path="/admin/social/compose" element={<AdminSocialCompose />} />
             <Route path="/admin/social/posts" element={<AdminSocialPosts />} />
             <Route path="/admin/social/analytics" element={<AdminSocialAnalytics />} />
+            <Route path="/admin/social/setup" element={<AdminSocialSetup />} />
+            <Route path="/admin/social/setup/:platform" element={<AdminSocialSetupPlatform />} />
           </Route>
         </Route>
 
