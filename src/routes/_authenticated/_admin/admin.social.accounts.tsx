@@ -49,7 +49,21 @@ export default function AdminSocialAccounts() {
       window.open(d.authUrl, "_blank", "noopener,noreferrer");
       toast.message("Opened Zernio in a new tab. Return here and refresh after authorizing.");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => {
+      if (e?.code === "PAYMENT_REQUIRED") {
+        toast.error(e.message, {
+          duration: 10000,
+          action: e.dashboardUrl
+            ? {
+                label: "Open Zernio billing",
+                onClick: () => window.open(e.dashboardUrl, "_blank", "noopener,noreferrer"),
+              }
+            : undefined,
+        });
+        return;
+      }
+      toast.error(e.message);
+    },
   });
 
   const disconnectMut = useMutation({

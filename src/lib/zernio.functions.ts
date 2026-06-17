@@ -24,7 +24,16 @@ async function call(action: string, params: any = {}) {
   });
   if (error) throw new Error(error.message || "Zernio request failed");
   if (data && typeof data === "object" && "error" in data && data.error) {
-    throw new Error(typeof data.error === "string" ? data.error : "Zernio error");
+    const err: any = new Error(
+      typeof data.error === "string" ? data.error : "Zernio error",
+    );
+    err.code = (data as any).code;
+    err.reason = (data as any).reason;
+    err.dashboardUrl = (data as any).dashboard_url;
+    err.documentationUrl = (data as any).documentation_url;
+    err.details = (data as any).details;
+    err.upstreamStatus = (data as any).upstreamStatus;
+    throw err;
   }
   return data;
 }
