@@ -1614,9 +1614,52 @@ export type Database = {
         }
         Relationships: []
       }
+      social_setup_brand_package: {
+        Row: {
+          created_at: string
+          identity: Json
+          intake_input: Json
+          launch_kit: Json
+          model_used: string | null
+          per_platform_bios: Json
+          status: string
+          tokens_used: number | null
+          updated_at: string
+          user_id: string
+          visual_direction: Json
+        }
+        Insert: {
+          created_at?: string
+          identity?: Json
+          intake_input?: Json
+          launch_kit?: Json
+          model_used?: string | null
+          per_platform_bios?: Json
+          status?: string
+          tokens_used?: number | null
+          updated_at?: string
+          user_id: string
+          visual_direction?: Json
+        }
+        Update: {
+          created_at?: string
+          identity?: Json
+          intake_input?: Json
+          launch_kit?: Json
+          model_used?: string | null
+          per_platform_bios?: Json
+          status?: string
+          tokens_used?: number | null
+          updated_at?: string
+          user_id?: string
+          visual_direction?: Json
+        }
+        Relationships: []
+      }
       social_setup_progress: {
         Row: {
           account_created: boolean
+          brand_package_approved: boolean
           created_at: string
           creative_ready: boolean
           email_verified: boolean
@@ -1631,6 +1674,7 @@ export type Database = {
         }
         Insert: {
           account_created?: boolean
+          brand_package_approved?: boolean
           created_at?: string
           creative_ready?: boolean
           email_verified?: boolean
@@ -1645,6 +1689,7 @@ export type Database = {
         }
         Update: {
           account_created?: boolean
+          brand_package_approved?: boolean
           created_at?: string
           creative_ready?: boolean
           email_verified?: boolean

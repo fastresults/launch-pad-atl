@@ -1,96 +1,80 @@
-# Creative Studio — guided brand creative inside the setup wizard (Lovable AI build)
+# AI-First Brand Intake — restructure Step 0 of the social setup wizard
 
-## Why this changed
+## Goal
 
-MCP connectors only extend the Lovable agent during build, not the running app, and Higgsfield isn't in the connector catalog. We're using **Lovable AI Gateway** image models instead — already wired in, no extra API key, billed from existing workspace credits.
+Replace the manual Brand Kit form with a short AI-guided intake that drafts **everything every platform needs** in one pass. Novice users answer 3 short prompts, AI generates a full Brand Package, user reviews/edits inline, then Creative Studio and the 14 platform cards consume that package automatically.
 
-## End result for the novice user
+## New flow
 
-After completing this step the user has a downloadable **Brand Creative Pack** they paste into every platform during the existing 4-stage setup checklist:
+```
+Step 0 — AI Brand Intake   (NEW: 3 prompts → AI drafts everything → user reviews)
+Step 0.5 — Creative Studio (existing, now auto-prefilled with vibe/colors/subject)
+Steps 1-14 — Platform cards (existing, now show per-platform bio + launch copy ready to paste)
+```
 
-1. **Profile mark / avatar** — 1024×1024 (used on all 14 platforms)
-2. **Platform covers / banners** — sized per platform:
-   - X header 1500×500, LinkedIn personal cover 1584×396, LinkedIn company banner 1128×191
-   - Facebook cover 1640×624, YouTube channel art 2560×1440 (safe area 1546×423)
-   - Discord, Pinterest, Reddit, Twitch covers at native specs
-3. **Launch / announcement post** — 1:1 (1080×1080), 9:16 story (1080×1920), 16:9 (1920×1080)
-4. **Founder portrait** — stylized headshot for "About" sections / press kit
+## Step 0 — guided intake (3 sub-steps, no jargon)
 
-Every asset is saved to `user-media`, attached to the user's brand kit, and surfaced as "Copy URL" / "Download" / "Use on X" chips inside each platform card downstream.
+1. **Tell us about your startup** — one textarea, 2-4 sentences. Placeholder: "We help X do Y so they can Z. Our vibe is…". Optional: industry chip, founder name, website URL if known.
+2. **Pick an audience tone** — 4 chips (Professional, Founder-personal, Playful, Authoritative).
+3. **Generate Brand Package** — full-screen progress UI streaming sections as they arrive (Identity → Per-platform bios → Visual direction → Launch kit). Each section appears in an editable card the moment it streams in.
 
-## Hand-holding flow (Step 0.5 — Creative Studio)
+After generation, a single "Review your Brand Package" screen with collapsible sections:
+- **Identity** — display name, 5 handle suggestions (with one-click "check availability" stubs that just open the platform's handle-check page), short bio (160ch), long bio (~600ch)
+- **Per-platform bios** — X (160), Instagram (150), LinkedIn personal (220), LinkedIn company tagline (120) + About (2000), YouTube About (1000), TikTok (80), Threads (150), Bluesky (256), Mastodon (500), Pinterest (160), Reddit (200), Facebook Page short description (255), Discord server description (120)
+- **Visual direction** — vibe (preselected from 6), color mood (preselected from 5), 3 brand hex colors, one-line logo prompt for Creative Studio
+- **Launch kit** — pinned-post copy (per platform-shape), link-in-bio blurb, 5 starter hashtags, 3 first-week post ideas
 
-Sits between Brand Kit (Step 0) and the platform grid. Same checklist UX as the rest of the wizard.
+Every field has "Regenerate this" (single-field re-prompt) and inline edit. "Save & continue" persists everything and unlocks Creative Studio.
 
-Per asset type, 4 sub-steps — no prompt writing required:
-1. **Pick a vibe** — 6 visual chips (Bold & Editorial, Soft Minimal, Tech Futurist, Warm Founder Story, Playful Startup, Premium Corporate)
-2. **Pick a color mood** — 5 swatches; auto-suggested from uploaded logo
-3. **Confirm subject** — auto-filled from Brand Kit (display name, short bio, industry); user can edit one textarea
-4. **Generate** — calls the edge function, streams 3 variations with blurred-while-loading state, user picks one (or "Regenerate")
+## Downstream wiring
 
-Founder portrait adds an optional reference-selfie upload (image-to-image edit).
-
-## Lovable AI integration
-
-Mirrors existing `zernio` pattern: edge function proxy + TanStack Query wrappers.
-
-**Edge function:** `supabase/functions/brand-creative/index.ts`
-- CORS, JWT validation, Zod body validation, admin role gate
-- Builds prompt server-side from `{assetType, vibe, colorMood, brand, dimensions}` using a template registry
-- Calls `https://ai.gateway.lovable.dev/v1/images/generations` with `LOVABLE_API_KEY` in the `Lovable-API-Key` header
-- **Default model** `openai/gpt-image-2`, `quality: "low"`, `stream: true`, `partial_images: 1` (per AI Gateway defaults)
-- For founder portrait reference upload, sends the image via the Gemini image model (`google/gemini-3.1-flash-image-preview`) using the chat-completions-image shape with `messages` + `modalities: ["image","text"]`
-- Pipes the SSE stream straight back to the client (no buffering — preserves progressive previews)
-- On terminal frame: uploads PNG to `user-media/social-brand/{userId}/{assetType}/{uuid}.png` via service-role client and returns final storage path + signed URL as the last SSE event
-- Surfaces 402 (credits) and 429 (rate limit) cleanly so the wizard can show a friendly toast
-
-**Client data layer:** `src/lib/creative.functions.ts`
-- `streamCreative({ assetType, vibe, colorMood, subject, refImageUrl? }, onFrame)` — fetch + `eventsource-parser` + `flushSync` (per the AI Gateway streaming rules)
-- `listBrandAssets`, `selectVariation`, `deleteVariation` (TanStack Query wrappers on Supabase)
-- 3 variations = 3 parallel `streamCreative` calls with shared abort controller
-
-**Vibe + spec registries**
-- `src/lib/creative-vibes.ts` — 6 vibes (label, thumbnail, prompt fragment) + 5 color moods (label, palette, prompt fragment)
-- `src/lib/zernio-setup-guides.ts` — extend each platform with `creativeSpecs: { avatar?, cover?, launchPost? }` (dimensions + aspect ratio)
-
-## Database changes (one migration)
-
-New `public.social_brand_assets`:
-- `id`, `user_id`, `asset_type` (`avatar` | `cover` | `launch_post` | `portrait`)
-- `platform` text null (null = reusable across platforms; set for per-platform covers)
-- `aspect_ratio`, `width`, `height`
-- `storage_path`, `signed_url`, `signed_url_expires_at`
-- `vibe`, `color_mood`, `prompt_used`, `model_used`
-- `is_selected boolean default false`
-- timestamps, RLS scoped to `auth.uid()`, service_role full, admin read via `has_role`
-- GRANT block per project standard
-
-Extend `public.social_setup_brand`: `vibe text`, `color_mood text`, `brand_colors text[]`
-Extend `public.social_setup_progress`: `creative_ready boolean default false`
+- **Creative Studio** — pre-fills vibe + color mood + brand colors + subject from the Brand Package. User can still override. The `logo_prompt` becomes a one-click "Generate logo mark" tile alongside the existing 4 asset types.
+- **Platform cards** (`admin.social.setup.$platform.tsx`) — at the "Profile completed" stage, render a "Copy paste pack" panel: that platform's bio variant + display name + handle + link-in-bio blurb + generated avatar/cover with download buttons. Removes the "type your bio from memory" step entirely.
 
 ## Files
 
-- **New** `supabase/functions/brand-creative/index.ts`
-- **New** `supabase/functions/brand-creative/prompts.ts` — per-asset-type templates
-- **New** `src/lib/creative.functions.ts` — streaming + persistence helpers
-- **New** `src/lib/creative-vibes.ts`
-- **New** `src/routes/_authenticated/_admin/admin.social.setup.creative.tsx` — overview grid (asset-type cards with progress)
-- **New** `src/routes/_authenticated/_admin/admin.social.setup.creative.$assetType.tsx` — guided 4-step flow + 3-variation picker with blur-while-loading
-- **Edit** `src/routes/_authenticated/_admin/admin.social.setup.tsx` — insert "Step 0.5 — Creative Studio" summary card
-- **Edit** `src/routes/_authenticated/_admin/admin.social.setup.$platform.tsx` — surface generated assets in the "Profile completed" stage with copy/download chips for that platform's specs
-- **Edit** `src/lib/zernio-setup-guides.ts` — add `creativeSpecs`
-- **Edit** `src/lib/social-setup.functions.ts` — extend brand getters/setters for vibe + colors
-- **Edit** `src/lib/admin-nav.ts` — add "Creative Studio" sub-link
-- **Edit** `src/App.tsx` — register the 2 new lazy routes
-- **New migration** — tables and column additions above
+**New**
+- `supabase/functions/brand-intake/index.ts` — CORS + JWT + admin gate + Zod. Calls Lovable AI Gateway `google/gemini-3-flash-preview` with `Output.object` structured output for the full Brand Package schema. Streams partial sections via SSE. Persists final package to `social_setup_brand` + new `social_setup_brand_package` row.
+- `supabase/functions/brand-intake/schema.ts` — shared Zod schema for the Brand Package (identity, perPlatformBios, visualDirection, launchKit).
+- `supabase/functions/brand-intake/prompts.ts` — system prompt + per-field regeneration prompts.
+- `src/lib/brand-intake.functions.ts` — `streamBrandIntake`, `regenerateField`, `getBrandPackage`, `saveBrandPackage` (TanStack Query).
+- `src/routes/_authenticated/_admin/admin.social.setup.intake.tsx` — the 3-step intake wizard + streaming review screen.
 
-## Secrets
+**Edit**
+- `src/routes/_authenticated/_admin/admin.social.setup.tsx` — replace the manual `BrandSection` form with a summary card: shows package status (Not started / Drafted / Approved), CTA "Open AI Brand Intake" or "Review Brand Package". Keep `CreativeStudioCard` below it; gate Creative Studio behind `brand_package_approved`.
+- `src/routes/_authenticated/_admin/admin.social.setup.$platform.tsx` — add the "Copy paste pack" panel that reads from the Brand Package for that platform.
+- `src/routes/_authenticated/_admin/admin.social.setup.creative.$assetType.tsx` — auto-select vibe/color/subject from package; add "Logo mark" asset type.
+- `src/lib/creative-vibes.ts` — add `logo_mark` asset type (1024×1024, transparent-friendly prompt fragment).
+- `src/lib/social-setup.functions.ts` — add `getBrandPackage`, `upsertBrandPackage`, `updateBrandPackageField` helpers.
+- `src/lib/zernio-setup-guides.ts` — add `bioMaxLength` and `bioFieldKey` per platform so the platform card knows which package field to surface.
+- `src/App.tsx` — register the new `admin.social.setup.intake` route.
 
-None new. `LOVABLE_API_KEY` already exists in this project's secrets.
+## Database (one migration)
+
+New `public.social_setup_brand_package`:
+- `user_id` PK, `status` (`draft` | `approved`), `intake_input` jsonb (the 3 user answers),
+- `identity` jsonb (display_name, handle_suggestions[], short_bio, long_bio)
+- `per_platform_bios` jsonb (keyed by platform)
+- `visual_direction` jsonb (vibe, color_mood, brand_colors[], logo_prompt)
+- `launch_kit` jsonb (pinned_posts keyed by platform-shape, link_in_bio, hashtags[], first_week_ideas[])
+- `model_used`, `tokens_used`, timestamps
+- RLS scoped to `auth.uid()`, service_role full, admin read via `has_role`
+- Full GRANT block per project standard (authenticated + service_role; no anon)
+
+Extend `public.social_setup_brand`: nothing new (already has `vibe`, `color_mood`, `brand_colors` from the prior migration). The intake function writes through to these fields so Creative Studio keeps working unchanged.
+
+Extend `public.social_setup_progress`: add `brand_package_approved boolean default false` (mirrors `creative_ready` pattern).
+
+## AI details
+
+- **Model**: `google/gemini-3-flash-preview` (default per stack), `Output.object` with the full Brand Package Zod schema for a single structured generation.
+- **Per-field regenerate**: same model, smaller schema scoped to the one field, with the rest of the package passed as context so regenerations stay on-brand.
+- **No new secrets** — `LOVABLE_API_KEY` already configured.
+- **Errors**: 402 → "Out of AI credits" toast with link to workspace billing. 429 → "Slow down, try again in a moment".
 
 ## Out of scope (v1)
 
-- Animated covers / video
-- Auto-pushing assets to platforms via APIs (user still uploads manually — matches existing wizard model)
-- A/B testing variations against engagement data
-- Versioned brand-asset history beyond the selected variation
+- Real handle availability checks via platform APIs (we link out to each platform's handle-check page instead).
+- Tone re-training from existing user content.
+- Multi-language brand packages (English only v1).
+- Auto-posting the launch kit (user still pastes).

@@ -41,6 +41,7 @@ import {
   listAccounts,
   getConnectUrl,
 } from "@/lib/zernio.functions";
+import { getBrandPackage, SETUP_PLATFORM_TO_BIO_KEY, PLATFORM_BIO_LIMITS } from "@/lib/brand-intake.functions";
 
 export default function AdminSocialSetupPlatform() {
   const { platform = "" } = useParams();
@@ -49,6 +50,7 @@ export default function AdminSocialSetupPlatform() {
 
   const qc = useQueryClient();
   const brandQ = useQuery({ queryKey: ["social-setup", "brand"], queryFn: getBrand });
+  const pkgQ = useQuery({ queryKey: ["brand-package"], queryFn: getBrandPackage });
   const progressQ = useQuery({ queryKey: ["social-setup", "progress"], queryFn: listProgress });
   const profilesQ = useQuery({ queryKey: ["zernio", "profiles"], queryFn: listProfiles });
   const accountsQ = useQuery({
@@ -209,23 +211,68 @@ export default function AdminSocialSetupPlatform() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Copy your brand assets</CardTitle>
+              <CardTitle className="text-base">Copy-paste pack for {guide.label}</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Click to copy, then paste into the platform's profile form.
+                Tuned text from your AI Brand Package + brand kit. Click any chip to copy.
               </p>
             </CardHeader>
             <CardContent className="grid gap-2 sm:grid-cols-2">
-              <CopyChip label="Display name" value={brand?.display_name} onCopy={copy} />
-              <CopyChip label="Handle" value={brand?.handle ? `@${brand.handle}` : null} onCopy={copy} />
+              <CopyChip label="Display name" value={pkgQ.data?.identity?.display_name ?? brand?.display_name} onCopy={copy} />
+              <CopyChip
+                label="Handle"
+                value={
+                  pkgQ.data?.identity?.handle_suggestions?.[0]
+                    ? `@${pkgQ.data.identity.handle_suggestions[0]}`
+                    : brand?.handle
+                    ? `@${brand.handle}`
+                    : null
+                }
+                onCopy={copy}
+              />
               <CopyChip label="Website" value={brand?.website_url} onCopy={copy} />
-              <CopyChip label="Short bio" value={brand?.short_bio} onCopy={copy} />
-              <CopyChip label="Long bio" value={brand?.long_bio} onCopy={copy} />
+              <CopyChip
+                label={`${guide.label} bio${
+                  SETUP_PLATFORM_TO_BIO_KEY[platform]
+                    ? ` (max ${PLATFORM_BIO_LIMITS[SETUP_PLATFORM_TO_BIO_KEY[platform]]})`
+                    : ""
+                }`}
+                value={
+                  pkgQ.data?.per_platform_bios?.[SETUP_PLATFORM_TO_BIO_KEY[platform] ?? ""] ??
+                  brand?.short_bio
+                }
+                onCopy={copy}
+              />
+              <CopyChip label="Long bio" value={pkgQ.data?.identity?.long_bio ?? brand?.long_bio} onCopy={copy} />
+              <CopyChip label="Link-in-bio one-liner" value={pkgQ.data?.launch_kit?.link_in_bio} onCopy={copy} />
+              <CopyChip
+                label="Pinned-post copy"
+                value={
+                  ["twitter", "threads", "bluesky"].includes(platform)
+                    ? pkgQ.data?.launch_kit?.pinned_post_short
+                    : pkgQ.data?.launch_kit?.pinned_post_long
+                }
+                onCopy={copy}
+              />
+              <CopyChip
+                label="Starter hashtags"
+                value={
+                  pkgQ.data?.launch_kit?.hashtags?.length
+                    ? pkgQ.data.launch_kit.hashtags.map((h: string) => `#${h}`).join(" ")
+                    : null
+                }
+                onCopy={copy}
+              />
               <CopyChip label="Logo URL" value={brand?.logo_url} onCopy={copy} />
               <CopyChip label="Banner URL" value={brand?.banner_url} onCopy={copy} />
-              <div className="flex items-center">
+              <div className="flex items-center gap-3 sm:col-span-2">
                 <Button asChild variant="link" size="sm" className="px-0">
-                  <Link to="/admin/social/setup">Edit brand kit →</Link>
+                  <Link to="/admin/social/setup/intake">Edit Brand Package →</Link>
                 </Button>
+                {!pkgQ.data && (
+                  <Badge variant="outline" className="text-[10px]">
+                    No Brand Package yet — run the AI intake to populate these
+                  </Badge>
+                )}
               </div>
             </CardContent>
           </Card>
