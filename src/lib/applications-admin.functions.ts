@@ -59,12 +59,34 @@ export async function listApplications(input?: any) {
 
 export async function getApplication(input: any) {
   const { id } = unwrap<{ id: string }>(input);
-  const { data } = await supabase
+  if (!id) return null;
+  const { data: application } = await supabase
     .from("founder_applications")
     .select("*")
     .eq("id", id)
     .maybeSingle();
-  return data;
+  if (!application) return null;
+
+  const [notesRes, regRes] = await Promise.all([
+    supabase
+      .from("application_notes")
+      .select("*")
+      .eq("application_id", id)
+      .order("created_at", { ascending: false }),
+    (application as any).converted_registration_id
+      ? supabase
+          .from("workshop_registrations")
+          .select("id, status, name, email")
+          .eq("id", (application as any).converted_registration_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null as any }),
+  ]);
+
+  return {
+    application,
+    notes: notesRes.data ?? [],
+    registration: regRes.data ?? null,
+  };
 }
 
 export async function updateApplicationStatus(input: any) {
@@ -77,11 +99,31 @@ export async function updateApplicationStatus(input: any) {
 }
 
 export async function addApplicationNote(input: any) {
-  const { id, note } = unwrap<{ id: string; note: string }>(input);
-  const { error } = await supabase
-    .from("founder_applications")
-    .update({ admin_notes: note })
-    .eq("id", id);
+  const args = unwrap<{ id?: string; applicationId?: string; body?: string; note?: string; kind?: string }>(input);
+  const application_id = args.id ?? args.applicationId;
+  const body = args.body ?? args.note ?? "";
+  if (!application_id || !body.trim()) throw new Error("Missing application id or note body");
+
+  const { data: userRes } = await supabase.auth.getUser();
+  const author_id = userRes.user?.id ?? null;
+
+  let author_name: string | null = null;
+  if (author_id) {
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("display_name, email")
+      .eq("user_id", author_id)
+      .maybeSingle();
+    author_name = prof?.display_name ?? prof?.email ?? null;
+  }
+
+  const { error } = await supabase.from("application_notes").insert({
+    application_id,
+    author_id,
+    author_name,
+    body: body.trim(),
+    kind: args.kind ?? "note",
+  });
   if (error) throw new Error(error.message);
 }
 
