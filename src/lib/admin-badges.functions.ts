@@ -20,7 +20,7 @@ export async function getAdminBadges(): Promise<AdminBadges> {
     supabase
       .from("attendee_deliverables")
       .select("id", { count: "exact", head: true })
-      .eq("review_status", "needs_review"),
+      .eq("review_status", "pending_review"),
     supabase
       .from("inquiries")
       .select("id", { count: "exact", head: true })
