@@ -55,7 +55,7 @@ function Hero() {
       <div className="absolute inset-0 bg-background/60" />
       <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-24 lg:py-32">
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white/85 md:text-sm md:tracking-[0.2em]">
-          <Sparkles className="size-3.5" /> Atlanta · July 23 · 6 free seats · closes June 20
+          <Sparkles className="size-3.5" /> Atlanta · July 23 · 6 free seats · closes July 7
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
           Your idea has been{" "}
@@ -65,7 +65,7 @@ function Hero() {
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
           We&rsquo;re handing 6 Atlanta founders a complete startup — brand, website, launch offer,
           90-day plan — built in one day. <span className="font-semibold text-white">$0. No pitch. No upsell.</span>{" "}
-          Apply by <span className="font-medium text-white">June 20</span>, hear back{" "}
+          Apply by <span className="font-medium text-white">July 7</span>, hear back{" "}
           <span className="font-medium text-white">July 8</span>, build on{" "}
           <span className="font-medium text-white">July 23</span>.
         </p>
@@ -316,7 +316,7 @@ function WhoGetsIn() {
 
 const STEPS = [
   { label: "Apply — free, 12 minutes", date: "Open now" },
-  { label: "Applications close", date: "June 20, 2026" },
+  { label: "Applications close", date: "July 7, 2026" },
   { label: "6 seats announced — every applicant hears back", date: "July 8, 2026" },
   { label: "Founder&rsquo;s Discount emailed to everyone else", date: "July 8, 2026" },
   { label: "Build day — you walk in with an idea, walk out with a startup", date: "July 23, 2026" },
@@ -472,7 +472,7 @@ function BottomCTA() {
       <div className="mx-auto max-w-3xl px-6 text-center">
         <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-5xl">
           6 seats. $0.{" "}
-          <span className="text-gradient-brand">June 20 is the cutoff.</span>
+          <span className="text-gradient-brand">July 7 is the cutoff.</span>
         </h2>
         <p className="mt-4 text-base text-muted-foreground md:text-lg">
           12 minutes to apply. Decision July 8. Either a free build on July 23 — or{" "}
