@@ -82,6 +82,8 @@ export default function AdminSocialSetup() {
 
       <BrandSection brand={brandQ.data} onSaved={() => qc.invalidateQueries({ queryKey: ["social-setup", "brand"] })} />
 
+      <CreativeStudioCard />
+
       <div>
         <h2 className="mb-3 text-lg font-medium">Platforms</h2>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
