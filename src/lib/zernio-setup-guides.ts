@@ -1,0 +1,355 @@
+// Per-platform setup guides for the social account wizard.
+// Edit copy here without touching components.
+
+export type SetupStage =
+  | "account_created"
+  | "email_verified"
+  | "profile_completed"
+  | "zernio_connected";
+
+export type SetupGuide = {
+  platform: string; // matches ZERNIO_PLATFORMS value
+  label: string;
+  blurb: string; // one sentence: why a startup should be on this
+  signupUrl: string;
+  brandingUrl?: string; // platform's profile-spec / branding page
+  needs: string[]; // what you need before starting
+  steps: string[]; // 4-8 numbered step strings
+  gotchas: string[]; // common pitfalls
+  estMinutes: number;
+};
+
+export const SETUP_GUIDES: SetupGuide[] = [
+  {
+    platform: "twitter",
+    label: "Twitter / X",
+    blurb: "Short-form public conversation; best for founder voice and product updates.",
+    signupUrl: "https://twitter.com/i/flow/signup",
+    brandingUrl: "https://help.twitter.com/en/managing-your-account/change-twitter-handle",
+    needs: ["Working email address", "A phone number (required for verification)", "Profile picture (400x400+)", "Banner image (1500x500)"],
+    steps: [
+      "Open the X signup page and click Create account.",
+      "Enter your name, email, and date of birth, then click Next.",
+      "Choose your preferences (you can skip everything), then click Next.",
+      "Verify the code that X emails you.",
+      "Set a strong password.",
+      "Upload your profile picture and add your short bio and website link.",
+      "When prompted, add your phone number — X requires this to use the API.",
+      "Pick a @handle that matches your brand (you can change it later).",
+    ],
+    gotchas: [
+      "X requires a phone number for API access. Without it, posting via Zernio will fail.",
+      "Connecting X via Zernio also requires a payment method in your Zernio account (API pass-through cost).",
+    ],
+    estMinutes: 8,
+  },
+  {
+    platform: "instagram",
+    label: "Instagram",
+    blurb: "Visual storytelling — product shots, behind-the-scenes, reels.",
+    signupUrl: "https://www.instagram.com/accounts/emailsignup/",
+    brandingUrl: "https://help.instagram.com/502981923235522",
+    needs: ["Email or phone number", "Profile picture (square, 320x320+)", "Short bio (150 chars)", "A Facebook account if you want a Business profile"],
+    steps: [
+      "Open the Instagram signup page.",
+      "Enter your email or phone, full name, username, and password.",
+      "Verify the code sent to your email or phone.",
+      "Add your birthday.",
+      "Skip 'Find contacts' and 'Follow people' unless you want them now.",
+      "Upload your profile picture and add your bio and website link in Edit profile.",
+      "Convert to a Business account: Settings → Account → Switch to Professional account → Business. This is required for Zernio.",
+      "Link your Instagram to a Facebook Page (Zernio needs this to publish).",
+    ],
+    gotchas: [
+      "Zernio can only publish to Instagram Business or Creator accounts, not personal ones.",
+      "A Business account also requires a Facebook Page — set up Facebook first if you haven't.",
+    ],
+    estMinutes: 15,
+  },
+  {
+    platform: "facebook",
+    label: "Facebook",
+    blurb: "Reach Boomers/Gen-X, run paid ads, and host community groups. Most Instagram tooling depends on having a Facebook Page.",
+    signupUrl: "https://www.facebook.com/r.php",
+    brandingUrl: "https://www.facebook.com/business/help/473994396650734",
+    needs: ["A personal Facebook account (required to create a Page)", "Page profile picture (170x170+)", "Cover image (820x312)", "A short About description"],
+    steps: [
+      "If you don't have a personal Facebook, create one first using the signup link.",
+      "Verify your email or phone.",
+      "Go to facebook.com/pages/create to create a Page.",
+      "Pick a Page name (your startup), choose a Category, and write a short About.",
+      "Upload your profile picture and cover image.",
+      "Add your website and contact info under Page settings.",
+      "Invite a few friends to Like the Page so it doesn't look empty.",
+      "Confirm you're listed as a Page admin under Page Roles.",
+    ],
+    gotchas: [
+      "Facebook Pages must be created from a personal account — there's no standalone business signup.",
+      "Zernio publishes to Facebook Pages, not personal profiles.",
+    ],
+    estMinutes: 15,
+  },
+  {
+    platform: "linkedin",
+    label: "LinkedIn",
+    blurb: "Professional network — fundraising, hiring, B2B sales, thought leadership.",
+    signupUrl: "https://www.linkedin.com/signup",
+    brandingUrl: "https://www.linkedin.com/help/linkedin/answer/710",
+    needs: ["Work email (preferred)", "Personal headshot", "Company logo (300x300+)", "A short tagline (120 chars)", "At least one personal connection (required to create a Company Page)"],
+    steps: [
+      "Sign up for a personal LinkedIn account — you need this to manage a Company Page.",
+      "Complete your personal profile (photo, headline, current role).",
+      "Connect with at least one person you know (LinkedIn requires this to create a Page).",
+      "Go to linkedin.com/company/setup/new/ to create your Company Page.",
+      "Fill in name, LinkedIn URL, website, industry, size, and type.",
+      "Upload the logo and a cover image.",
+      "Write the tagline and About section.",
+      "Verify you're listed as an admin under Admin tools → Manage admins.",
+    ],
+    gotchas: [
+      "LinkedIn won't let you create a Company Page until your personal profile has at least one connection and a profile picture.",
+      "Use a work-domain email if possible — it speeds Page verification.",
+    ],
+    estMinutes: 20,
+  },
+  {
+    platform: "tiktok",
+    label: "TikTok",
+    blurb: "Short-form video discovery — huge reach for product demos and founder content.",
+    signupUrl: "https://www.tiktok.com/signup",
+    brandingUrl: "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data",
+    needs: ["Email or phone number", "Profile picture (200x200+)", "Username (3-24 chars)", "Short bio (80 chars)"],
+    steps: [
+      "Open TikTok signup and choose 'Use phone or email'.",
+      "Enter your birthday — you must be 18+ to monetize.",
+      "Enter your phone or email and the verification code.",
+      "Set a strong password.",
+      "Pick a username that matches your handle on other platforms.",
+      "Go to Profile → Edit profile and add your picture, name, and bio.",
+      "Switch to a Business account: Profile → Settings → Account → Switch to Business Account.",
+      "Pick a category and verify your email if you haven't.",
+    ],
+    gotchas: [
+      "Zernio works best with TikTok Business accounts — personal accounts have limited API access.",
+      "Avoid copyrighted music in posts you'll schedule via API; you'll get takedowns.",
+    ],
+    estMinutes: 10,
+  },
+  {
+    platform: "youtube",
+    label: "YouTube",
+    blurb: "Long-form video — tutorials, founder vlogs, product walkthroughs.",
+    signupUrl: "https://accounts.google.com/signup",
+    brandingUrl: "https://support.google.com/youtube/answer/2657964",
+    needs: ["Google account", "Channel name", "Channel art (2560x1440 banner)", "Profile/logo (800x800)"],
+    steps: [
+      "If you don't have a Google account, create one using the signup link.",
+      "Go to youtube.com and sign in with that Google account.",
+      "Click your avatar → Create a channel.",
+      "Choose 'Use a custom name' if it's a brand channel (recommended for a startup).",
+      "Enter the channel name and click Create.",
+      "Upload your profile picture and channel banner under Customize channel.",
+      "Add a channel description, links, and contact email.",
+      "Verify your account (Settings → Channel → Feature eligibility) to unlock uploads >15min and custom thumbnails.",
+    ],
+    gotchas: [
+      "A brand channel (custom name) is much easier to hand off to a team later than a personal channel.",
+      "Verification requires a phone number.",
+    ],
+    estMinutes: 15,
+  },
+  {
+    platform: "pinterest",
+    label: "Pinterest",
+    blurb: "Visual search engine — strong for ecommerce, design, and DIY niches.",
+    signupUrl: "https://www.pinterest.com/business/create/",
+    brandingUrl: "https://help.pinterest.com/en/business/article/get-a-business-account",
+    needs: ["Email address", "Business name", "Website URL", "Logo (165x165+)"],
+    steps: [
+      "Open the Pinterest Business signup link (not the personal one).",
+      "Enter your email, password, and birthday.",
+      "Enter your business name and website.",
+      "Pick the business category that best fits your startup.",
+      "Choose whether to run ads (you can skip for now).",
+      "Upload your logo and write a 160-char bio in Edit profile.",
+      "Claim your website under Settings → Claimed accounts so your domain shows on every Pin.",
+    ],
+    gotchas: [
+      "Start with a Business account (not personal) so analytics and scheduling work.",
+      "Claiming your website takes 24h sometimes — don't worry if it doesn't verify instantly.",
+    ],
+    estMinutes: 12,
+  },
+  {
+    platform: "reddit",
+    label: "Reddit",
+    blurb: "Niche communities — great for B2B, dev tools, and honest feedback. Lurk before you post.",
+    signupUrl: "https://www.reddit.com/register",
+    brandingUrl: "https://support.reddithelp.com/hc/en-us/articles/360043035992",
+    needs: ["Email address", "Username (you can't change it later)", "Optional avatar"],
+    steps: [
+      "Open the Reddit signup page.",
+      "Enter your email and continue.",
+      "Pick a username — choose carefully, this is permanent.",
+      "Set a password.",
+      "Verify your email via the link Reddit sends.",
+      "Go to Settings → Profile and add an avatar, banner, and short bio.",
+      "Subscribe to 5–10 subreddits in your niche before posting anything.",
+    ],
+    gotchas: [
+      "Reddit aggressively bans new accounts that post promotional content. Lurk and comment for at least a week before any self-promotion.",
+      "Many subreddits ban links to your own site — read each subreddit's rules.",
+    ],
+    estMinutes: 8,
+  },
+  {
+    platform: "bluesky",
+    label: "Bluesky",
+    blurb: "Decentralized Twitter alternative — early-adopter founder + tech crowd.",
+    signupUrl: "https://bsky.app",
+    brandingUrl: "https://bsky.social/about/blog/02-23-2024-domain-handle",
+    needs: ["Email address", "Handle (you can use a custom domain later)"],
+    steps: [
+      "Open bsky.app and click Sign up.",
+      "Enter your email, password, and pick a handle ending in .bsky.social.",
+      "Verify the email code.",
+      "Complete the onboarding (interests, suggested follows).",
+      "Open Settings → Profile and add your avatar, banner, and bio.",
+      "Optionally set your domain as your handle (Settings → Advanced → Change handle).",
+    ],
+    gotchas: [
+      "Using your own domain as your handle (e.g. you.startup.com) acts as a free verification.",
+    ],
+    estMinutes: 6,
+  },
+  {
+    platform: "threads",
+    label: "Threads",
+    blurb: "Meta's Twitter-style network, tied to your Instagram account.",
+    signupUrl: "https://www.threads.net/login",
+    brandingUrl: "https://help.instagram.com/769983657850450",
+    needs: ["Existing Instagram account (Threads requires one)"],
+    steps: [
+      "Make sure your Instagram account is set up first.",
+      "Open threads.net or the Threads app and click Log in with Instagram.",
+      "Authorize Threads to use your Instagram identity.",
+      "Choose whether to import your bio and follows from Instagram.",
+      "Confirm your display name and profile picture.",
+      "Make your first post to activate the account.",
+    ],
+    gotchas: [
+      "You can't create Threads independently of Instagram. Deleting Threads also affects your Instagram.",
+    ],
+    estMinutes: 4,
+  },
+  {
+    platform: "googlebusiness",
+    label: "Google Business",
+    blurb: "Shows your startup on Google Maps and in local Search — critical if you have any physical presence.",
+    signupUrl: "https://www.google.com/business/",
+    brandingUrl: "https://support.google.com/business/answer/3038063",
+    needs: ["Google account", "Business name", "Verifiable business address or service area", "Phone number"],
+    steps: [
+      "Open google.com/business and click Manage now.",
+      "Sign in with your Google account.",
+      "Search for your business name — if it's not listed, click Add your business to Google.",
+      "Pick the category that best matches your startup.",
+      "Choose whether you serve customers at a location or only online/at customer addresses.",
+      "Enter the address or service area.",
+      "Enter phone and website.",
+      "Request verification (Google usually mails a postcard with a 5-digit code — takes 5-14 days).",
+    ],
+    gotchas: [
+      "Verification by postcard can take up to 2 weeks. You can't post via Zernio until verified.",
+      "Categories matter — they directly affect what searches you appear in.",
+    ],
+    estMinutes: 15,
+  },
+  {
+    platform: "telegram",
+    label: "Telegram",
+    blurb: "Channel-style broadcasts and community chats — popular in crypto, gaming, and international audiences.",
+    signupUrl: "https://telegram.org/",
+    brandingUrl: "https://core.telegram.org/api/channel",
+    needs: ["Phone number", "Telegram desktop or mobile app", "Channel name and short description", "Channel logo (512x512)"],
+    steps: [
+      "Install Telegram for desktop or mobile from telegram.org.",
+      "Sign up with your phone number and verify the SMS code.",
+      "Set your display name and (optionally) a @username.",
+      "Tap the New Message icon → New Channel.",
+      "Enter the channel name and description, upload the logo.",
+      "Choose Public channel and pick a @link.",
+      "Add 'Zernio Bot' (or the bot Zernio gives you) as an admin so it can post.",
+    ],
+    gotchas: [
+      "Zernio posts to channels, not personal chats. You must add their bot as an admin with post permission.",
+    ],
+    estMinutes: 10,
+  },
+  {
+    platform: "snapchat",
+    label: "Snapchat",
+    blurb: "Ephemeral content for Gen-Z. Strong for consumer brands; rarely useful for B2B.",
+    signupUrl: "https://accounts.snapchat.com/accounts/signup",
+    brandingUrl: "https://businesshelp.snapchat.com/s/article/business-account",
+    needs: ["Email address", "Phone number", "Birthday (18+ for Business)", "Bitmoji or logo"],
+    steps: [
+      "Open the Snapchat signup link and create a personal account.",
+      "Verify the email and phone code.",
+      "Open business.snapchat.com and sign in with the same account.",
+      "Create a Business Account and pick your country and time zone.",
+      "Add a profile picture and short description.",
+      "Verify your business (sometimes requires a tax ID or D-U-N-S).",
+    ],
+    gotchas: [
+      "Snapchat's organic reach for brands is tiny unless you pay for ads or use Spotlight.",
+      "Skip this entirely if you're not targeting under-25 consumers.",
+    ],
+    estMinutes: 12,
+  },
+  {
+    platform: "discord",
+    label: "Discord",
+    blurb: "Real-time community chat — strong for SaaS, dev tools, gaming, and Web3.",
+    signupUrl: "https://discord.com/register",
+    brandingUrl: "https://discord.com/branding",
+    needs: ["Email address", "Server name", "Server icon (512x512)", "Welcome text"],
+    steps: [
+      "Open the Discord signup link and create an account.",
+      "Verify your email.",
+      "Click the + button in the left sidebar → Create My Own → For a club or community.",
+      "Name your server and upload an icon.",
+      "Set up channels (e.g. #welcome, #announcements, #general, #feedback).",
+      "Create roles and configure permissions under Server Settings → Roles.",
+      "Generate an invite link under Server Settings → Invites.",
+      "Add the Zernio bot (or the bot Zernio supplies) with Send Messages permission.",
+    ],
+    gotchas: [
+      "Anyone with your invite link can join unless you set up role gating or a verification flow.",
+    ],
+    estMinutes: 15,
+  },
+];
+
+export const SETUP_GUIDES_BY_PLATFORM: Record<string, SetupGuide> = Object.fromEntries(
+  SETUP_GUIDES.map((g) => [g.platform, g]),
+);
+
+export const SETUP_STAGES: { key: SetupStage; label: string; helper: string }[] = [
+  { key: "account_created", label: "Account created", helper: "You completed signup on the platform." },
+  { key: "email_verified", label: "Email / phone verified", helper: "You clicked the verification link or entered the code." },
+  { key: "profile_completed", label: "Profile completed", helper: "Bio, image, banner, and link are filled in." },
+  { key: "zernio_connected", label: "Connected to Zernio", helper: "Authorized Zernio to post on your behalf." },
+];
+
+export function stageProgress(p: {
+  account_created: boolean;
+  email_verified: boolean;
+  profile_completed: boolean;
+  zernio_connected: boolean;
+}): number {
+  const done = [p.account_created, p.email_verified, p.profile_completed, p.zernio_connected].filter(
+    Boolean,
+  ).length;
+  return Math.round((done / 4) * 100);
+}
