@@ -128,6 +128,11 @@ export default function App() {
             <Route path="/admin/applications/:id" element={<AdminApplicationsId />} />
             <Route path="/admin/inquiries" element={<AdminInquiriesIndex />} />
             <Route path="/admin/inquiries/:id" element={<AdminInquiriesId />} />
+            <Route path="/admin/social" element={<AdminSocialIndex />} />
+            <Route path="/admin/social/accounts" element={<AdminSocialAccounts />} />
+            <Route path="/admin/social/compose" element={<AdminSocialCompose />} />
+            <Route path="/admin/social/posts" element={<AdminSocialPosts />} />
+            <Route path="/admin/social/analytics" element={<AdminSocialAnalytics />} />
           </Route>
         </Route>
 
