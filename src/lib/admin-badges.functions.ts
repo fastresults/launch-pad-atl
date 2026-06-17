@@ -9,10 +9,22 @@ export interface AdminBadges {
 
 export async function getAdminBadges(): Promise<AdminBadges> {
   const [apps, members, reviews, inquiries] = await Promise.all([
-    supabase.from("founder_applications").select("id", { count: "exact", head: true }).eq("status", "pending"),
-    supabase.from("member_intakes").select("id", { count: "exact", head: true }).eq("status", "pending"),
-    supabase.from("member_intakes").select("id", { count: "exact", head: true }).eq("status", "pending"),
-    supabase.from("inquiries").select("id", { count: "exact", head: true }).eq("status", "open"),
+    supabase
+      .from("founder_applications")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["applied", "reviewing"]),
+    supabase
+      .from("member_intakes")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "submitted"),
+    supabase
+      .from("attendee_deliverables")
+      .select("id", { count: "exact", head: true })
+      .eq("review_status", "needs_review"),
+    supabase
+      .from("inquiries")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "new"),
   ]);
   return {
     applicationsPending: apps.count ?? 0,
