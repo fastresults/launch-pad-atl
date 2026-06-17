@@ -24,6 +24,8 @@ import {
   type ProgressRow,
 } from "@/lib/social-setup.functions";
 import { listAccounts } from "@/lib/zernio.functions";
+import { listSelectedAssets } from "@/lib/creative.functions";
+import { ASSET_TYPES } from "@/lib/creative-vibes";
 
 export default function AdminSocialSetup() {
   const qc = useQueryClient();
