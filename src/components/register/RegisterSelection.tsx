@@ -74,7 +74,7 @@ export function RegisterSelection() {
       <section className="border-b border-white/5 py-12 md:py-20">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-            <Sparkles className="size-3.5" /> 6 seats · $0 · closes June 20
+            <Sparkles className="size-3.5" /> 6 seats · $0 · closes July 7
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
             This is your shot.{" "}
