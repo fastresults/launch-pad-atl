@@ -153,7 +153,25 @@ Deno.serve(async (req) => {
         return json({ error: `Unknown action: ${action}` }, 400);
     }
 
-    return json(result.data, result.status);
+    // Always return 200 so supabase.functions.invoke doesn't throw a generic
+    // "Edge function returned <status>" error and swallow the upstream body.
+    // Surface upstream status + data so the client can render a friendly message.
+    if (result.status >= 400) {
+      const d: any = result.data ?? {};
+      return json(
+        {
+          error: d.error || d.message || `Zernio error (${result.status})`,
+          code: d.code,
+          reason: d.reason,
+          documentation_url: d.documentation_url,
+          dashboard_url: d.dashboard_url,
+          details: d.details,
+          upstreamStatus: result.status,
+        },
+        200,
+      );
+    }
+    return json(result.data, 200);
   } catch (e) {
     console.error("zernio function error", e);
     return json({ error: (e as Error).message ?? "Internal error" }, 500);
