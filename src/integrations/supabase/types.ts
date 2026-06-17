@@ -1506,9 +1506,71 @@ export type Database = {
         }
         Relationships: []
       }
+      social_brand_assets: {
+        Row: {
+          aspect_ratio: string | null
+          asset_type: string
+          color_mood: string | null
+          created_at: string
+          height: number | null
+          id: string
+          is_selected: boolean
+          model_used: string | null
+          platform: string | null
+          prompt_used: string | null
+          signed_url: string | null
+          signed_url_expires_at: string | null
+          storage_path: string
+          updated_at: string
+          user_id: string
+          vibe: string | null
+          width: number | null
+        }
+        Insert: {
+          aspect_ratio?: string | null
+          asset_type: string
+          color_mood?: string | null
+          created_at?: string
+          height?: number | null
+          id?: string
+          is_selected?: boolean
+          model_used?: string | null
+          platform?: string | null
+          prompt_used?: string | null
+          signed_url?: string | null
+          signed_url_expires_at?: string | null
+          storage_path: string
+          updated_at?: string
+          user_id: string
+          vibe?: string | null
+          width?: number | null
+        }
+        Update: {
+          aspect_ratio?: string | null
+          asset_type?: string
+          color_mood?: string | null
+          created_at?: string
+          height?: number | null
+          id?: string
+          is_selected?: boolean
+          model_used?: string | null
+          platform?: string | null
+          prompt_used?: string | null
+          signed_url?: string | null
+          signed_url_expires_at?: string | null
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+          vibe?: string | null
+          width?: number | null
+        }
+        Relationships: []
+      }
       social_setup_brand: {
         Row: {
           banner_url: string | null
+          brand_colors: string[] | null
+          color_mood: string | null
           created_at: string
           display_name: string | null
           handle: string | null
@@ -1517,10 +1579,13 @@ export type Database = {
           short_bio: string | null
           updated_at: string
           user_id: string
+          vibe: string | null
           website_url: string | null
         }
         Insert: {
           banner_url?: string | null
+          brand_colors?: string[] | null
+          color_mood?: string | null
           created_at?: string
           display_name?: string | null
           handle?: string | null
@@ -1529,10 +1594,13 @@ export type Database = {
           short_bio?: string | null
           updated_at?: string
           user_id: string
+          vibe?: string | null
           website_url?: string | null
         }
         Update: {
           banner_url?: string | null
+          brand_colors?: string[] | null
+          color_mood?: string | null
           created_at?: string
           display_name?: string | null
           handle?: string | null
@@ -1541,6 +1609,7 @@ export type Database = {
           short_bio?: string | null
           updated_at?: string
           user_id?: string
+          vibe?: string | null
           website_url?: string | null
         }
         Relationships: []
@@ -1549,6 +1618,7 @@ export type Database = {
         Row: {
           account_created: boolean
           created_at: string
+          creative_ready: boolean
           email_verified: boolean
           id: string
           notes: string | null
@@ -1562,6 +1632,7 @@ export type Database = {
         Insert: {
           account_created?: boolean
           created_at?: string
+          creative_ready?: boolean
           email_verified?: boolean
           id?: string
           notes?: string | null
@@ -1575,6 +1646,7 @@ export type Database = {
         Update: {
           account_created?: boolean
           created_at?: string
+          creative_ready?: boolean
           email_verified?: boolean
           id?: string
           notes?: string | null
