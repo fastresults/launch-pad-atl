@@ -6,6 +6,8 @@ import { Separator } from "@/components/ui/separator";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminCommandMenu } from "@/components/admin/AdminCommandMenu";
+import { AdminErrorBoundary } from "@/components/admin/AdminErrorBoundary";
+
 
 
 export default function AdminLayout() {
@@ -37,7 +39,9 @@ export default function AdminLayout() {
             </div>
           </header>
           <main className="flex-1 p-6">
-            <Outlet />
+            <AdminErrorBoundary>
+              <Outlet />
+            </AdminErrorBoundary>
           </main>
         </SidebarInset>
       </SidebarProvider>
