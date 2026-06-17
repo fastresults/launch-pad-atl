@@ -54,25 +54,72 @@ export async function getAdminStats() {
 }
 
 export async function listUsersWithRoles() {
-  const { data } = await supabase.from("user_roles").select("*");
-  return data ?? [];
+  const [rolesRes, profilesRes] = await Promise.all([
+    supabase.from("user_roles").select("user_id, role"),
+    supabase.from("profiles").select("user_id, display_name, email"),
+  ]);
+  const profileByUser = new Map<string, any>();
+  for (const p of profilesRes.data ?? []) profileByUser.set(p.user_id, p);
+
+  const rolesByUser = new Map<string, string[]>();
+  for (const r of rolesRes.data ?? []) {
+    const arr = rolesByUser.get(r.user_id) ?? [];
+    arr.push(r.role);
+    rolesByUser.set(r.user_id, arr);
+  }
+  // Include users in profiles even if they have no role rows (defensive).
+  for (const uid of profileByUser.keys()) {
+    if (!rolesByUser.has(uid)) rolesByUser.set(uid, []);
+  }
+
+  const users = Array.from(rolesByUser.entries()).map(([user_id, roles]) => {
+    const p = profileByUser.get(user_id);
+    return {
+      user_id,
+      display_name: p?.display_name ?? null,
+      email: p?.email ?? null,
+      roles,
+    };
+  });
+  // Sort: admins first, then by name/email
+  users.sort((a, b) => {
+    const ar = a.roles.includes("super_admin") ? 0 : a.roles.includes("admin") ? 1 : 2;
+    const br = b.roles.includes("super_admin") ? 0 : b.roles.includes("admin") ? 1 : 2;
+    if (ar !== br) return ar - br;
+    return (a.display_name ?? a.email ?? "").localeCompare(b.display_name ?? b.email ?? "");
+  });
+  return { users };
 }
 
 export async function setUserRole(input: any) {
-  const { userId, role, action } = unwrap<{
+  const args = unwrap<{
     userId: string;
-    role: string;
-    action: "add" | "remove";
+    role: "admin" | "user" | "super_admin";
+    action?: "add" | "remove";
   }>(input);
+  const { userId, role } = args;
+  if (!userId || !role) throw new Error("Missing userId or role");
+
+  // The UI passes role: "admin" | "user" as the *desired* state.
+  // Interpret "user" as remove-admin, "admin" as add-admin, unless an explicit action is given.
+  const action: "add" | "remove" =
+    args.action ?? (role === "user" ? "remove" : "add");
+  const targetRole = role === "user" ? "admin" : role;
+
   if (action === "add") {
-    const { error } = await supabase.from("user_roles").upsert({ user_id: userId, role });
+    const { error } = await supabase
+      .from("user_roles")
+      .upsert(
+        { user_id: userId, role: targetRole },
+        { onConflict: "user_id,role" },
+      );
     if (error) throw new Error(error.message);
   } else {
     const { error } = await supabase
       .from("user_roles")
       .delete()
       .eq("user_id", userId)
-      .eq("role", role);
+      .eq("role", targetRole);
     if (error) throw new Error(error.message);
   }
 }
