@@ -1,36 +1,78 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 
-export async function listRegistrations() {
-  const { data } = await supabase.from("workshop_registrations").select("*").order("created_at", { ascending: false });
-  return data ?? [];
+// All functions accept either a bare arg or the wrapped `{ data: ... }`
+// shape that the UI uses (TanStack Start server-fn style).
+function unwrap<T>(input: any): T {
+  if (input && typeof input === "object" && "data" in input && Object.keys(input).length === 1) {
+    return input.data as T;
+  }
+  return input as T;
 }
 
-export async function updateRegistrationStatus(data: { id: string; status: string }) {
-  const { error } = await supabase.from("workshop_registrations").update({ status: data.status }).eq("id", data.id);
+export async function listRegistrations() {
+  const { data, error } = await supabase
+    .from("workshop_registrations")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  const rows = data ?? [];
+  return {
+    registrations: rows,
+    counts: rows.reduce<Record<string, number>>((acc, r: any) => {
+      const k = r.status ?? "unknown";
+      acc[k] = (acc[k] ?? 0) + 1;
+      return acc;
+    }, {}),
+    confirmed: rows.filter((r: any) => r.status === "confirmed").length,
+  };
+}
+
+export async function updateRegistrationStatus(input: any) {
+  const { id, status } = unwrap<{ id: string; status: string }>(input);
+  const { error } = await supabase
+    .from("workshop_registrations")
+    .update({ status })
+    .eq("id", id);
   if (error) throw new Error(error.message);
 }
 
 export async function getAdminStats() {
-  const [regs, members, inquiries] = await Promise.all([
-    supabase.from("workshop_registrations").select("id", { count: "exact" }),
-    supabase.from("members").select("id", { count: "exact" }),
-    supabase.from("inquiries").select("id", { count: "exact" }).eq("status", "open"),
+  const [regs, profiles, inquiries] = await Promise.all([
+    supabase.from("workshop_registrations").select("status"),
+    supabase.from("profiles").select("id", { count: "exact", head: true }),
+    supabase.from("inquiries").select("id", { count: "exact", head: true }).eq("status", "open"),
   ]);
-  return { registrations: regs.count ?? 0, members: members.count ?? 0, openInquiries: inquiries.count ?? 0 };
+  const regRows = regs.data ?? [];
+  return {
+    registrations: regRows.length,
+    confirmed: regRows.filter((r: any) => r.status === "confirmed").length,
+    users: profiles.count ?? 0,
+    members: profiles.count ?? 0,
+    openInquiries: inquiries.count ?? 0,
+  };
 }
 
 export async function listUsersWithRoles() {
-  const { data } = await supabase.from("user_roles").select("*, users:user_id(email)");
+  const { data } = await supabase.from("user_roles").select("*");
   return data ?? [];
 }
 
-export async function setUserRole(data: { userId: string; role: string; action: "add" | "remove" }) {
-  if (data.action === "add") {
-    const { error } = await supabase.from("user_roles").upsert({ user_id: data.userId, role: data.role });
+export async function setUserRole(input: any) {
+  const { userId, role, action } = unwrap<{
+    userId: string;
+    role: string;
+    action: "add" | "remove";
+  }>(input);
+  if (action === "add") {
+    const { error } = await supabase.from("user_roles").upsert({ user_id: userId, role });
     if (error) throw new Error(error.message);
   } else {
-    const { error } = await supabase.from("user_roles").delete().eq("user_id", data.userId).eq("role", data.role);
+    const { error } = await supabase
+      .from("user_roles")
+      .delete()
+      .eq("user_id", userId)
+      .eq("role", role);
     if (error) throw new Error(error.message);
   }
 }
