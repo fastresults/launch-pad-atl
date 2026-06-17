@@ -10,6 +10,9 @@ import {
   Shield,
   ExternalLink,
   MessageSquare,
+  Share2,
+  Send,
+  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 
@@ -17,7 +20,7 @@ export type AdminNavItem = {
   to: string;
   label: string;
   icon: LucideIcon;
-  group: "Overview" | "Operations" | "Content" | "System";
+  group: "Overview" | "Operations" | "Content" | "Social" | "System";
   super?: boolean;
   badgeKey?: "reviewPending" | "applicationsPending" | "inquiriesNew" | "membersPending";
   external?: boolean;
