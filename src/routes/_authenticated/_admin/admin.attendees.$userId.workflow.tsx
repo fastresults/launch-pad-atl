@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { } from 'react-router-dom';
 import { adminGetUserWorkflow, adminRunForUser } from "@/lib/userPipeline.functions";
@@ -96,7 +96,7 @@ export default function AdminAttendeeWorkflow() {
                       {d.generated && (
                         <Button asChild size="sm" variant="ghost">
                           <Link
-                            to={`/admin/attendees/$userId/deliverables/${d.key}`}
+                            to={`/admin/attendees/${userId}/deliverables/${d.key}`}
                           >
                             View
                           </Link>

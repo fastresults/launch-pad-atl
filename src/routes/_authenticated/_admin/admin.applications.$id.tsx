@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { } from 'react-router-dom';
@@ -137,7 +137,7 @@ export default function ApplicationDetailPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate({ to: "/admin/applications" })}
+          onClick={() => navigate("/admin/applications")}
           className="gap-2"
         >
           <ArrowLeft className="h-4 w-4" /> All applications

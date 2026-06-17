@@ -1,56 +1,65 @@
-# Super Admin Login → Black Screen Fix
+# Admin Routes — Forensic Report & Fix Plan
 
-## What's happening
+A full audit of every `/admin/*` route and its data-layer function uncovered one consistent root cause: **the UI was rewritten to expect rich envelopes (`{ items, counts }`, `{ application, notes, registration }`, `{ updated: {...} }`), but several data functions were simplified to return raw Supabase rows / arrays.** A second class of issue: several functions query tables that don't exist in the current schema (`members`, `member_*`, `media_items`), so they silently return empty even when the UI shape is right.
 
-Sign-in itself works. After the auth state updates, `login.tsx` redirects super-admins to `/admin`. That route mounts `AdminLayout` (dark `ThemeProvider`) and then `AdminDashboard` (`admin.index.tsx`), which **immediately crashes on render**, leaving an empty dark page — the "black screen" the user sees.
+The crash in the screenshot (`/admin/site` → "Cannot read properties of undefined (reading 'length')") is one instance of this pattern — `getPublicSiteSettings()` returns a flat map with no `updated` key, but the route reads `data.updated.home_variant`.
 
-## Root cause
+## Findings by severity
 
-`admin.index.tsx` was written for an older API shape, but the data-layer files (`*.functions.ts`) have since been simplified to plain Supabase calls that return raw rows. The two no longer agree, so the page throws a `TypeError` on first render.
-
-Concrete mismatches in `src/routes/_authenticated/_admin/admin.index.tsx`:
-
-| Call site in admin.index.tsx | Actual function signature / return |
+### Severity 1 — Crashes the route
+| Route | Cause |
 |---|---|
-| `listApplications({ data: { status: "applied" } })` | `listApplications(data?: { status })` — expects flat arg, returns `Row[]` (not `{ counts, applications }`) |
-| `listMembers({ data: {} })` | `listMembers(data?: { status })` — returns `Row[]` (not `{ counts, members }`) |
-| `listRegistrations()` | returns `Row[]` (not `{ confirmed }`) |
-| `getAdminStats()` | returns `{ registrations, members, openInquiries }` — code reads `stats.data?.confirmed` and `stats.data?.users` |
-| `apps.data?.counts.applied` | `apps.data` is an array → `.counts.applied` throws `TypeError: Cannot read properties of undefined` |
-| `approveMember({ data: { userId } })`, `pauseMember({ data: { userId, reason } })`, etc. | functions take `{ userId }` / `{ userId }` directly; no `reason` param |
+| `admin.site.tsx` | `data.updated.home_variant` — `getPublicSiteSettings` has no `updated` key |
+| `admin.applications.$id.tsx` | `notes.length` — `getApplication` returns raw row, no `notes`/`application`/`registration` |
+| `admin.attendees.tsx` | `data.attendees.length` — `listAttendees` returns flat array and queries non-existent `members` |
+| `admin.review.tsx` | `data.queue.length` — `listReviewQueue` returns flat array, queries non-existent `member_deliverable_runs` |
+| `admin.attendees.$userId.deliverables.$key.tsx` | `revs.revisions.length` — `listDeliverableRevisions` returns flat array |
 
-There is **no global ErrorBoundary**, so when the dashboard throws, React unmounts the tree and the dark `bg-background` is all that's left → black screen.
+### Severity 2 — Silent: renders but wrong/empty or mutations no-op
+- `admin.applications.$id.tsx`: `addApplicationNote` called with `{applicationId, body}`, function expects `{id, note}` → notes silently dropped.
+- `admin.inquiries.index.tsx` / `admin.inquiries.$id.tsx`: `listInquiries` / `getInquiry` have no `unwrap()`, so `{data:{…}}` envelope is treated as the filter object → empty results, "Not found" pages.
+- `admin.users.tsx`: `listUsersWithRoles` returns raw `user_roles` (no profile join, no `roles[]`), and `setUserRole` calls omit `action` so role changes do nothing.
+- `admin.attendees.$userId.index.tsx` and `…workflow.tsx`: `getAttendeeDetail` / `adminGetUserWorkflow` / `adminRunForUser` lack `unwrap()` and target tables that don't exist.
 
-Regular users don't hit this because they're sent to `/dashboard`, not `/admin`.
+### Severity 3 — Non-existent tables (silent empty)
+`pipeline.functions.ts`, `userPipeline.functions.ts`, `media.functions.ts`, `attendee.functions.ts` reference: `members`, `member_deliverable_runs`, `member_deliverables`, `member_deliverable_revisions`, `member_workflow_steps`, `member_documents`, `member_goals`, `member_progress`, `media_items`. Correct tables in current schema: `profiles`, `ai_pipeline_runs`, `attendee_deliverables`, `deliverable_revisions`, `attendee_documents`, `attendee_goals`, `attendee_progress`, `media_assets`.
 
-## Fix
+Also: `admin-badges.functions.ts` filters `founder_applications` by `status = "pending"` — not a valid status. Valid statuses: `applied`, `reviewing`, `shortlisted`, `selected`, `waitlisted`, `rejected`, `withdrawn`.
 
-Two parts:
+### Severity 4 — OK
+`admin.applications.index.tsx`, `admin.registrations.tsx`, `admin.members.tsx`, `admin.cohorts.tsx`, `admin.media.tsx`. The dashboard (`admin.index.tsx`) is fine for the parts that use the corrected applications/members/registrations functions.
 
-### 1. Align `admin.index.tsx` with the current function shapes
-Rewrite the data-fetching and derived values in `src/routes/_authenticated/_admin/admin.index.tsx` so it works with arrays + the real `getAdminStats` shape:
+## Fix plan
 
-- Call functions with flat args: `listApplications({ status: "applied" })`, `listMembers()`, `approveMember({ userId })`, `pauseMember({ userId })`, `rejectMember({ userId })`, `restoreMemberToPending({ userId })`.
-- Compute counts client-side from the returned arrays, e.g.:
-  ```ts
-  const appsList = apps.data ?? [];
-  const countsByStatus = appsList.reduce<Record<string, number>>((acc, a) => {
-    acc[a.status] = (acc[a.status] ?? 0) + 1; return acc;
-  }, {});
-  const applicationsPending = (countsByStatus.applied ?? 0) + (countsByStatus.reviewing ?? 0);
-  ```
-- Replace `stats.data?.confirmed` with `stats.data?.registrations`, and `stats.data?.users` with `stats.data?.members` (or add a `users` count to `getAdminStats`).
-- Drop the `reason` UI from pause/reject confirmations, or extend `pauseMember`/`rejectMember` in `members-admin.functions.ts` to accept and persist a reason column.
+The strategy is consistent across the board: **make functions return the envelope the UI expects, accept both wrapped and flat args via `unwrap()`, and point every query at a table that actually exists.**
 
-### 2. Add a safety net so a single broken admin page never blanks the whole app
-Wrap `<Outlet />` in `_admin.tsx` (and ideally `_authenticated.tsx`) with a small `ErrorBoundary` that renders a visible "Something went wrong" card with a Retry button. This prevents future regressions from producing another silent black screen and makes the real error visible in the UI instead of only the console.
+### Phase 1 — Stop the crashes (Severity 1)
+1. `src/lib/site-settings.functions.ts`: select `key, value, updated_at`; return `{ home_variant, register_variant, updated: { home_variant: <ts>, register_variant: <ts> } }`. As a belt-and-suspenders, also change route reads to `data?.updated?.home_variant ?? null`.
+2. `src/lib/applications-admin.functions.ts` — `getApplication`: return `{ application, notes, registration }` (join `application_notes`; look up `workshop_registrations` by `converted_registration_id`).
+3. `src/lib/pipeline.functions.ts`:
+   - `listAttendees`: query `profiles` (+ optional `member_intakes` join); return `{ attendees, counts }`.
+   - `listReviewQueue`: query `ai_pipeline_runs` (status `needs_review`); return `{ queue }`.
+   - `listDeliverableRevisions`: query `deliverable_revisions`; return `{ revisions }`.
 
-## Verification
+### Phase 2 — Restore broken interactions (Severity 2)
+4. `src/lib/applications-admin.functions.ts` — `addApplicationNote`: accept `{id, body}`, insert into `application_notes` (not patch `admin_notes` on the application).
+5. `src/lib/inquiries-admin.functions.ts`: add `unwrap()` to `listInquiries` and `getInquiry`; return `{ inquiries, counts }` and `{ inquiry, messages }` respectively.
+6. `src/lib/admin.functions.ts` — `listUsersWithRoles`: join `profiles`, aggregate roles per user, return `{ users: [{ user_id, email, display_name, roles[] }] }`. `setUserRole`: add `unwrap()` and default `action: "add"` if omitted.
+7. `src/lib/pipeline.functions.ts` — `getAttendeeDetail`: add `unwrap()`, query `profiles` + `attendee_documents` + `attendee_deliverables` + `ai_pipeline_runs`; return `{ attendee, profile, documents, deliverables, runs }`.
+8. `src/lib/userPipeline.functions.ts` — `adminGetUserWorkflow`, `adminRunForUser`, `getMyWorkflow`, `runMyDeliverable`: add `unwrap()`, retarget to `ai_pipeline_runs` + `attendee_business_brief` + `attendee_filing_info` to compute `{ brief, filingPresent, items }`.
+9. `admin.attendees.$userId.deliverables.$key.tsx` call sites: align param names with function signatures (`{ deliverableId }`, `{ id, content }`) — or update functions to accept the names already used. Pick the function-side change for consistency with the rest of the codebase.
 
-1. Sign in as super admin → land on `/admin` and see the dashboard render with stats, applications, and members lists (no console `TypeError`).
-2. Sign in as a regular approved user → still routes to `/dashboard`.
-3. Temporarily throw inside an admin page → ErrorBoundary card appears instead of a black screen.
+### Phase 3 — Schema correctness & polish (Severity 3)
+10. `src/lib/media.functions.ts`: `media_items` → `media_assets` everywhere.
+11. `src/lib/attendee.functions.ts`: retarget `members → profiles`, `member_documents → attendee_documents`, `member_goals → attendee_goals`, `member_progress → attendee_progress`, `member_deliverables → attendee_deliverables`.
+12. `src/lib/admin-badges.functions.ts`: change `.eq("status","pending")` for founder applications to `.in("status", ["applied","reviewing"])` (or whichever is the real "needs triage" set — confirm with you).
 
-## Out of scope
+### Phase 4 — Safety net
+13. The `AdminErrorBoundary` is already wrapping `<Outlet />` — keep it; the visible "Something went wrong" card in the screenshot proves it's working. After the fixes it should rarely trigger.
+14. After implementing, walk every admin route once in the preview and confirm no boundary trips and lists populate.
 
-No changes to auth, Google OAuth, RLS, or routing guards — those are working. This is purely a render-time crash on the admin dashboard.
+## Open questions before I implement
+- For Phase 3 step 12 (`founder_applications` "pending" badge): should that badge count `applied + reviewing`, or only `applied`?
+- For Phase 2 step 4 (notes): the current `addApplicationNote` writes `admin_notes` as a free-text column on the application. The `application_notes` table exists with columns for individual notes. Do you want the **history table** (multiple notes per application, with author/timestamp) or keep the **single overwriting admin_notes string**? The route UI currently shows a notes *list*, which only works with the history table — recommended.
+
+If you're good with the above, I'll implement Phase 1 → 4 in order and verify each route in the preview.
