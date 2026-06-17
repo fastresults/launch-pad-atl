@@ -1,35 +1,29 @@
 // @ts-nocheck
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { CheckCircle2, Circle, ChevronRight, Clock, Sparkles, Palette } from "lucide-react";
+import { CheckCircle2, Circle, ChevronRight, Clock, Sparkles, Palette, Wand2 } from "lucide-react";
 import {
   SETUP_GUIDES,
   stageProgress,
   SETUP_STAGES,
 } from "@/lib/zernio-setup-guides";
 import {
-  getBrand,
-  upsertBrand,
   listProgress,
-  type BrandKit,
   type ProgressRow,
 } from "@/lib/social-setup.functions";
 import { listAccounts } from "@/lib/zernio.functions";
 import { listSelectedAssets } from "@/lib/creative.functions";
 import { ASSET_TYPES } from "@/lib/creative-vibes";
+import { getBrandPackage } from "@/lib/brand-intake.functions";
 
 export default function AdminSocialSetup() {
-  const qc = useQueryClient();
-  const brandQ = useQuery({ queryKey: ["social-setup", "brand"], queryFn: getBrand });
+  const pkgQ = useQuery({ queryKey: ["brand-package"], queryFn: getBrandPackage });
   const progressQ = useQuery({ queryKey: ["social-setup", "progress"], queryFn: listProgress });
   const accountsQ = useQuery({
     queryKey: ["zernio", "accounts", "all"],
@@ -54,12 +48,15 @@ export default function AdminSocialSetup() {
   }).length;
 
   const overallPct = Math.round((readyCount / SETUP_GUIDES.length) * 100);
+  const pkg = pkgQ.data;
+  const packageApproved = pkg?.status === "approved";
+  const packageDraft = !!pkg && pkg.status === "draft";
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
         title="Setup wizard"
-        description="A guided, step-by-step walkthrough for creating each social media account from scratch and connecting it to Zernio."
+        description="An AI-guided, step-by-step walkthrough. Start with a 60-second brand intake — we draft everything every platform needs, then you create the visuals, then connect each account."
         actions={
           <Button asChild variant="outline">
             <Link to="/admin/social">Back to Social</Link>
@@ -80,12 +77,48 @@ export default function AdminSocialSetup() {
         </CardContent>
       </Card>
 
-      <BrandSection brand={brandQ.data} onSaved={() => qc.invalidateQueries({ queryKey: ["social-setup", "brand"] })} />
+      {/* Step 0 — AI Brand Intake */}
+      <Card className={packageApproved ? "" : "border-primary/40"}>
+        <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Wand2 className="h-4 w-4 text-primary" />
+              Step 0 — AI Brand Intake
+              {packageApproved && <Badge variant="secondary">Approved</Badge>}
+              {packageDraft && <Badge variant="outline">Draft</Badge>}
+            </CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Answer two short questions. AI drafts your display name, handles, every platform's bio,
+              visual direction, and a launch kit. Review, edit, approve.
+            </p>
+          </div>
+          <Button asChild size="sm">
+            <Link to="/admin/social/setup/intake">
+              {pkg ? "Open Brand Package" : "Start AI Intake"}
+            </Link>
+          </Button>
+        </CardHeader>
+        {pkg && (
+          <CardContent className="grid gap-2 text-xs sm:grid-cols-4">
+            <Snippet label="Display name" value={pkg.identity?.display_name} />
+            <Snippet label="Handle" value={pkg.identity?.handle_suggestions?.[0]
+              ? `@${pkg.identity.handle_suggestions[0]}` : null} />
+            <Snippet label="Vibe" value={pkg.visual_direction?.vibe?.replace(/_/g, " ")} />
+            <Snippet label="Color mood" value={pkg.visual_direction?.color_mood} />
+          </CardContent>
+        )}
+      </Card>
 
-      <CreativeStudioCard />
+      <CreativeStudioCard packageApproved={packageApproved} />
 
       <div>
         <h2 className="mb-3 text-lg font-medium">Platforms</h2>
+        {!packageApproved && (
+          <p className="mb-3 text-xs text-muted-foreground">
+            Tip: approve your Brand Package first — each platform card will then auto-populate the
+            bio, handle, and launch copy for that platform.
+          </p>
+        )}
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {SETUP_GUIDES.map((g) => {
             const p = progressByPlatform[g.platform];
@@ -144,128 +177,16 @@ export default function AdminSocialSetup() {
   );
 }
 
-function BrandSection({
-  brand,
-  onSaved,
-}: {
-  brand: BrandKit | null | undefined;
-  onSaved: () => void;
-}) {
-  const [form, setForm] = useState<Partial<BrandKit>>(brand ?? {});
-
-  // sync when query loads
-  useMemoSyncBrand(brand, setForm);
-
-  const saveMut = useMutation({
-    mutationFn: () => upsertBrand(form),
-    onSuccess: () => {
-      toast.success("Brand kit saved");
-      onSaved();
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
-
+function Snippet({ label, value }: { label: string; value?: string | null }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Step 0 — Your brand kit</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Fill this in once. Every platform card will give you copy-and-paste buttons for these
-          fields so you don't have to retype anything.
-        </p>
-      </CardHeader>
-      <CardContent className="grid gap-3 md:grid-cols-2">
-        <Field label="Display name" hint="e.g. StartupLabs">
-          <Input
-            value={form.display_name ?? ""}
-            onChange={(e) => setForm({ ...form, display_name: e.target.value })}
-          />
-        </Field>
-        <Field label="Handle" hint="lowercase, no spaces — try to keep it consistent across platforms">
-          <Input
-            value={form.handle ?? ""}
-            onChange={(e) => setForm({ ...form, handle: e.target.value.replace(/^@/, "") })}
-            placeholder="startuplabs"
-          />
-        </Field>
-        <Field label="Website URL">
-          <Input
-            value={form.website_url ?? ""}
-            onChange={(e) => setForm({ ...form, website_url: e.target.value })}
-            placeholder="https://startuplabs.online"
-          />
-        </Field>
-        <Field label="Logo URL" hint="Square, 400x400 or larger. Use the media library if you need to upload one.">
-          <Input
-            value={form.logo_url ?? ""}
-            onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
-            placeholder="https://…/logo.png"
-          />
-        </Field>
-        <Field label="Banner URL" hint="Wide, ~1500x500. Optional but most platforms support it.">
-          <Input
-            value={form.banner_url ?? ""}
-            onChange={(e) => setForm({ ...form, banner_url: e.target.value })}
-            placeholder="https://…/banner.jpg"
-          />
-        </Field>
-        <Field label="Short bio (160 chars)" className="md:col-span-1">
-          <Textarea
-            rows={3}
-            maxLength={160}
-            value={form.short_bio ?? ""}
-            onChange={(e) => setForm({ ...form, short_bio: e.target.value })}
-          />
-        </Field>
-        <Field label="Long bio (LinkedIn, About pages)" className="md:col-span-2">
-          <Textarea
-            rows={4}
-            value={form.long_bio ?? ""}
-            onChange={(e) => setForm({ ...form, long_bio: e.target.value })}
-          />
-        </Field>
-        <div className="md:col-span-2 flex justify-end">
-          <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}>
-            {saveMut.isPending ? "Saving…" : "Save brand kit"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  className,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className={className}>
-      <label className="mb-1 block text-xs font-medium text-foreground">{label}</label>
-      {children}
-      {hint && <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>}
+    <div className="rounded border p-2">
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="truncate font-medium capitalize">{value || <span className="text-muted-foreground italic">—</span>}</div>
     </div>
   );
 }
 
-// keep form synced after async brand load
-import { useEffect } from "react";
-function useMemoSyncBrand(
-  brand: BrandKit | null | undefined,
-  setForm: (b: Partial<BrandKit>) => void,
-) {
-  useEffect(() => {
-    if (brand) setForm(brand);
-  }, [brand]); // eslint-disable-line react-hooks/exhaustive-deps
-}
-
-function CreativeStudioCard() {
+function CreativeStudioCard({ packageApproved }: { packageApproved: boolean }) {
   const assetsQ = useQuery({ queryKey: ["creative", "selected"], queryFn: listSelectedAssets });
   const selected = assetsQ.data ?? [];
   const doneTypes = new Set(selected.map((a) => a.asset_type));
@@ -273,20 +194,21 @@ function CreativeStudioCard() {
   const pct = Math.round((doneCount / ASSET_TYPES.length) * 100);
 
   return (
-    <Card>
+    <Card className={!packageApproved ? "opacity-75" : ""}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <div>
           <CardTitle className="flex items-center gap-2 text-base">
             <Palette className="h-4 w-4 text-primary" />
             Step 0.5 — Creative Studio
+            {!packageApproved && <Badge variant="outline">Approve Brand Package first</Badge>}
           </CardTitle>
           <p className="mt-1 text-sm text-muted-foreground">
             Generate on-brand profile marks, covers, launch posts, and a founder portrait with AI.
-            No design skills needed.
+            Vibe and colors come from your Brand Package.
           </p>
         </div>
-        <Button asChild size="sm">
-          <Link to="/admin/social/setup/creative">
+        <Button asChild size="sm" disabled={!packageApproved}>
+          <Link to={packageApproved ? "/admin/social/setup/creative" : "/admin/social/setup/intake"}>
             {doneCount > 0 ? "Open Creative Studio" : "Start Creative Studio"}
           </Link>
         </Button>
