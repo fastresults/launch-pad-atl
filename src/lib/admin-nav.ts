@@ -10,6 +10,9 @@ import {
   Shield,
   ExternalLink,
   MessageSquare,
+  Share2,
+  Send,
+  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 
@@ -17,7 +20,7 @@ export type AdminNavItem = {
   to: string;
   label: string;
   icon: LucideIcon;
-  group: "Overview" | "Operations" | "Content" | "System";
+  group: "Overview" | "Operations" | "Content" | "Social" | "System";
   super?: boolean;
   badgeKey?: "reviewPending" | "applicationsPending" | "inquiriesNew" | "membersPending";
   external?: boolean;
@@ -37,6 +40,11 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { to: "/admin/site", label: "Site settings", icon: Settings, group: "Content", super: true },
   { to: "/admin/media", label: "Media library", icon: ImageIcon, group: "Content", super: true },
 
+  { to: "/admin/social", label: "Profiles & accounts", icon: Share2, group: "Social", super: true },
+  { to: "/admin/social/compose", label: "New post", icon: Send, group: "Social", super: true },
+  { to: "/admin/social/posts", label: "Posts", icon: MessageSquare, group: "Social", super: true },
+  { to: "/admin/social/analytics", label: "Analytics", icon: BarChart3, group: "Social", super: true },
+
   { to: "/admin/users", label: "Users & roles", icon: Shield, group: "System", super: true },
   { to: "/", label: "View public site", icon: ExternalLink, group: "System", external: true },
 ];
@@ -45,5 +53,6 @@ export const ADMIN_GROUPS: AdminNavItem["group"][] = [
   "Overview",
   "Operations",
   "Content",
+  "Social",
   "System",
 ];

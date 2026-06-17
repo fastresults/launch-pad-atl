@@ -56,6 +56,11 @@ const AdminApplicationsIndex = lazy(() => import("@/routes/_authenticated/_admin
 const AdminApplicationsId = lazy(() => import("@/routes/_authenticated/_admin/admin.applications.$id"));
 const AdminInquiriesIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.inquiries.index"));
 const AdminInquiriesId = lazy(() => import("@/routes/_authenticated/_admin/admin.inquiries.$id"));
+const AdminSocialIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.social"));
+const AdminSocialAccounts = lazy(() => import("@/routes/_authenticated/_admin/admin.social.accounts"));
+const AdminSocialCompose = lazy(() => import("@/routes/_authenticated/_admin/admin.social.compose"));
+const AdminSocialPosts = lazy(() => import("@/routes/_authenticated/_admin/admin.social.posts"));
+const AdminSocialAnalytics = lazy(() => import("@/routes/_authenticated/_admin/admin.social.analytics"));
 
 function Loading() {
   return (
@@ -123,6 +128,11 @@ export default function App() {
             <Route path="/admin/applications/:id" element={<AdminApplicationsId />} />
             <Route path="/admin/inquiries" element={<AdminInquiriesIndex />} />
             <Route path="/admin/inquiries/:id" element={<AdminInquiriesId />} />
+            <Route path="/admin/social" element={<AdminSocialIndex />} />
+            <Route path="/admin/social/accounts" element={<AdminSocialAccounts />} />
+            <Route path="/admin/social/compose" element={<AdminSocialCompose />} />
+            <Route path="/admin/social/posts" element={<AdminSocialPosts />} />
+            <Route path="/admin/social/analytics" element={<AdminSocialAnalytics />} />
           </Route>
         </Route>
 
