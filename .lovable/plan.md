@@ -1,61 +1,105 @@
 
-# Zernio Social Media Integration (Admin)
+# Guided Social Account Setup Wizard
 
-Add a "Social" section to the admin dashboard that uses the Zernio API to connect social accounts, publish/schedule posts, and view analytics — all gated to admin/super_admin.
+A novice-friendly, completely hand-held flow that walks an admin through creating each social media account **before** they connect it to Zernio. Covers all 14 Zernio platforms, with progress saved per user in the database so they can stop and resume.
 
-## Architecture
+## User flow
 
 ```text
-Admin UI (React)  ──►  Supabase Edge Function: `zernio` (proxy)  ──►  https://zernio.com/api/v1
-                                  │
-                                  └─ uses ZERNIO_API_KEY secret (server-side only)
+Admin → Social → Setup wizard
+  │
+  ├─ Step 0: Brand asset prep (one time)
+  │     • Display name + handle ideas (with availability tips)
+  │     • Short bio (160 chars) + long bio
+  │     • Profile image / logo upload (square, 400x400+)
+  │     • Banner image upload (1500x500)
+  │     • Brand link (website URL)
+  │     • Saved once, reused on every platform
+  │
+  ├─ Step 1..N: One card per platform (X, Instagram, Facebook,
+  │             LinkedIn, TikTok, YouTube, Pinterest, Reddit,
+  │             Bluesky, Threads, Google Business, Telegram,
+  │             Snapchat, Discord)
+  │     Each card has a 4-stage checklist:
+  │       a. Create the account  → "Open <platform> signup" deep link
+  │       b. Verify email / phone → tips + troubleshooting
+  │       c. Complete the profile → pre-filled copy/paste from Step 0
+  │                                 (name, bio, link, image, banner)
+  │       d. Connect to Zernio    → launches existing Zernio OAuth flow
+  │     Each stage has its own checkbox; progress persists.
+  │
+  └─ Done view: summary of completed/connected platforms + next steps
+                (Create your first post →)
 ```
 
-The API key never touches the browser. The edge function:
-- Verifies caller has `admin` or `super_admin` role (via JWT + `has_role`).
-- Forwards whitelisted operations to Zernio.
-- Returns JSON to the admin UI with CORS headers.
+## Per-platform content (the "hand-held" part)
 
-## Setup
+For every platform we ship a small content pack rendered in the wizard card:
 
-1. Add `ZERNIO_API_KEY` via the secrets tool (user-provided, from Zernio Settings → API Keys).
-2. Create one edge function `supabase/functions/zernio/index.ts` that routes by `{ action, params }` body:
-   - `profiles.list` / `profiles.create` / `profiles.delete`
-   - `accounts.list` / `accounts.disconnect`
-   - `connect.getUrl` (returns OAuth URL for a platform + profileId)
-   - `posts.list` / `posts.create` / `posts.delete`
-   - `analytics.get` (per account, with date range)
-3. Log a row to a new `zernio_audit` table on each mutation (who/what/when) — optional but useful for super-admin oversight.
+- **What it is** — one sentence, why a startup should be on it.
+- **Before you start** — what you need (email, phone, ID, business doc, etc.).
+- **Step-by-step** — numbered list, 4–8 steps, written for someone who has never used the platform.
+- **Common gotchas** — e.g. "X requires a phone number", "Facebook Page must be created from a personal account", "LinkedIn Company Page needs 1 personal connection", "TikTok business accounts can't use copyrighted music in ads", "Google Business needs a verifiable address/postcard".
+- **Open signup** button — deep link to the platform's signup URL in a new tab.
+- **Copy-to-clipboard** chips for the brand assets from Step 0 (handle, bio, link).
+- **"Mark this step done"** checkbox per stage (4 per platform).
+- **"Connect to Zernio"** button — only enabled after stages a/b/c are checked. Reuses the existing `getConnectUrl` flow from `src/lib/zernio.functions.ts`.
 
-## Database
+Content lives in a typed registry `src/lib/zernio-setup-guides.ts` so it's easy to edit copy without touching components.
 
-One small migration:
-- `zernio_audit (id, user_id, action, payload jsonb, response_status int, created_at)` — RLS: admins can read, service_role writes. GRANTs included.
+## Where it lives in the admin
 
-No need to mirror Zernio's data locally; we read live from the API and cache via TanStack Query.
+- New route: `src/routes/_authenticated/_admin/admin.social.setup.tsx` — wizard overview + platform progress grid.
+- New route: `src/routes/_authenticated/_admin/admin.social.setup.$platform.tsx` — detail view for a single platform.
+- `admin-nav.ts` gets a new entry under the existing **Social** group: **"Setup wizard"** (listed first, above Profiles, Accounts, Compose, Posts, Analytics).
+- `admin.social.tsx` (overview) gets a banner: *"New here? Start with the setup wizard →"* shown until all 14 platforms are marked connected.
 
-## Admin UI
+## Data model
 
-New routes under `src/routes/_authenticated/_admin/`:
-- `admin.social.tsx` — overview: list profiles, connected accounts per profile, quick "New post" button.
-- `admin.social.accounts.tsx` — connect/disconnect accounts. "Connect" opens Zernio's hosted OAuth URL in a new tab; on return, we refetch accounts list.
-- `admin.social.compose.tsx` — composer: textarea, media upload (phase 2), platform/account multi-select, schedule vs. publish-now vs. draft.
-- `admin.social.posts.tsx` — list scheduled/published/draft posts with status, delete.
-- `admin.social.analytics.tsx` — pick account + date range, render summary cards + simple charts (recharts) for impressions/engagement/followers as returned by Zernio.
+Two small tables, persisted per admin user, scoped by RLS to that user (admins shouldn't see each other's brand draft).
 
-Add a "Social" group to `src/lib/admin-nav.ts` with these entries (super-admin only by default; we can open to admin later).
+```text
+social_setup_brand
+  user_id (PK, fk → auth.users)
+  display_name, handle, short_bio, long_bio, website_url
+  logo_url, banner_url   (Supabase Storage in existing user-media bucket)
+  created_at, updated_at
 
-Data layer in `src/lib/zernio.functions.ts` — thin wrappers that call the `zernio` edge function via `supabase.functions.invoke`.
+social_setup_progress
+  id (uuid pk)
+  user_id (fk → auth.users)
+  platform (text)         -- one of the 14 Zernio platforms
+  account_created   bool default false
+  email_verified    bool default false
+  profile_completed bool default false
+  zernio_connected  bool default false
+  notes text
+  created_at, updated_at
+  unique (user_id, platform)
+```
 
-## Scope & assumptions
+RLS: each row is readable/writable only by `auth.uid() = user_id`, plus `public.has_role(auth.uid(), 'admin')` for admins to manage their own rows. Full GRANTs for `authenticated` + `service_role`.
 
-- Admin-only feature; not exposed to founders/attendees.
-- Phase 1: profiles, accounts, text posts, basic analytics. Media uploads + queue/recurring slots are phase 2.
-- OAuth callbacks are handled by Zernio's hosted flow — no callback route needed in our app.
+## Technical details
+
+- New file `src/lib/zernio-setup-guides.ts` — typed array of platform guides (id, label, signup URL, steps, gotchas, required-assets list, deep links to platform branding spec pages).
+- New file `src/lib/social-setup.functions.ts` — TanStack Query wrappers:
+  - `getBrand()`, `upsertBrand(input)`
+  - `listProgress()`, `upsertProgressStage(platform, stage, value)`
+  - All hit Supabase directly (no edge function needed — it's user-owned data).
+- Wizard UI uses existing shadcn primitives: `Card`, `Progress`, `Checkbox`, `Tabs`, `Accordion`, `Button`, `Input`, `Textarea`, plus `sonner` toasts. No new deps.
+- Image uploads go to existing `user-media` storage bucket under `social-brand/{userId}/{logo|banner}.{ext}`.
+- "Connect to Zernio" reuses `getConnectUrl(platform, profileId)`. If no Zernio profile exists yet, the wizard prompts to create one inline via the existing `createProfile` function before opening OAuth.
+- Auto-detection: when `accounts.list` from Zernio returns an account for a platform, mark `zernio_connected = true` and surface a green check in the wizard grid — so progress stays accurate even if the user connects outside the wizard.
+- Progress bar at the top of `admin.social.setup.tsx` shows `X / 14 platforms ready`.
+
+## Out of scope (v1)
+
+- Automated handle availability checks across platforms (each platform's API is gated; we just link out to their availability checkers).
+- Automatically pushing the saved logo/bio into each platform via API (most don't allow it during signup).
+- Multi-admin shared brand kit — each admin has their own draft for now.
 
 ## Open questions
 
-1. Should this be **super-admin only**, or available to all admins?
-2. Single shared Zernio workspace (one API key for all admins), or per-admin keys? (Recommend single shared — simpler, matches your request.)
-3. Include the `zernio_audit` log table, or skip it for v1?
-4. Do you want media uploads (images/videos) in v1, or text-only first?
+1. Should the brand asset prep (Step 0) be **per-admin** (private draft) or **shared across all admins** for this workspace? Plan currently assumes per-admin; flipping to shared is a one-line RLS change.
+2. For platforms the user isn't interested in (e.g. Snapchat for a B2B startup), should we add a "Skip / not relevant" state so the grid can show 100% without forcing all 14?

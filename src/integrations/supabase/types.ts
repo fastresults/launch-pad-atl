@@ -1506,6 +1506,87 @@ export type Database = {
         }
         Relationships: []
       }
+      social_setup_brand: {
+        Row: {
+          banner_url: string | null
+          created_at: string
+          display_name: string | null
+          handle: string | null
+          logo_url: string | null
+          long_bio: string | null
+          short_bio: string | null
+          updated_at: string
+          user_id: string
+          website_url: string | null
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          handle?: string | null
+          logo_url?: string | null
+          long_bio?: string | null
+          short_bio?: string | null
+          updated_at?: string
+          user_id: string
+          website_url?: string | null
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          handle?: string | null
+          logo_url?: string | null
+          long_bio?: string | null
+          short_bio?: string | null
+          updated_at?: string
+          user_id?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      social_setup_progress: {
+        Row: {
+          account_created: boolean
+          created_at: string
+          email_verified: boolean
+          id: string
+          notes: string | null
+          platform: string
+          profile_completed: boolean
+          skipped: boolean
+          updated_at: string
+          user_id: string
+          zernio_connected: boolean
+        }
+        Insert: {
+          account_created?: boolean
+          created_at?: string
+          email_verified?: boolean
+          id?: string
+          notes?: string | null
+          platform: string
+          profile_completed?: boolean
+          skipped?: boolean
+          updated_at?: string
+          user_id: string
+          zernio_connected?: boolean
+        }
+        Update: {
+          account_created?: boolean
+          created_at?: string
+          email_verified?: boolean
+          id?: string
+          notes?: string | null
+          platform?: string
+          profile_completed?: boolean
+          skipped?: boolean
+          updated_at?: string
+          user_id?: string
+          zernio_connected?: boolean
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
