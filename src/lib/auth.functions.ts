@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "admin" | "super_admin" | "member";
+export type AppRole = "super_admin" | "admin" | "user";
 export type MemberStatus = "pending" | "approved" | "rejected" | "paused";
 
 export async function getMyAccount(): Promise<{
@@ -12,15 +11,18 @@ export async function getMyAccount(): Promise<{
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { roles: [], memberStatus: "pending", approvedVia: null };
 
-  const [{ data: rolesData }, { data: memberData }] = await Promise.all([
+  const [{ data: rolesData }, { data: profileData }] = await Promise.all([
     supabase.from("user_roles").select("role").eq("user_id", user.id),
-    supabase.from("members").select("member_status, approved_via").eq("user_id", user.id).maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("member_status, approved_via")
+      .eq("user_id", user.id)
+      .maybeSingle(),
   ]);
 
   return {
     roles: (rolesData ?? []).map((r: { role: string }) => r.role as AppRole),
-    memberStatus: (memberData?.member_status as MemberStatus) ?? "pending",
-    approvedVia: (memberData?.approved_via as "admin" | "payment" | null) ?? null,
+    memberStatus: ((profileData as any)?.member_status as MemberStatus) ?? "pending",
+    approvedVia: ((profileData as any)?.approved_via as "admin" | "payment" | null) ?? null,
   };
 }
-
