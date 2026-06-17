@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, ChevronRight, Clock, Sparkles } from "lucide-react";
+import { CheckCircle2, Circle, ChevronRight, Clock, Sparkles, Palette } from "lucide-react";
 import {
   SETUP_GUIDES,
   stageProgress,
