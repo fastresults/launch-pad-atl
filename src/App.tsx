@@ -56,6 +56,11 @@ const AdminApplicationsIndex = lazy(() => import("@/routes/_authenticated/_admin
 const AdminApplicationsId = lazy(() => import("@/routes/_authenticated/_admin/admin.applications.$id"));
 const AdminInquiriesIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.inquiries.index"));
 const AdminInquiriesId = lazy(() => import("@/routes/_authenticated/_admin/admin.inquiries.$id"));
+const AdminSocialIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.social"));
+const AdminSocialAccounts = lazy(() => import("@/routes/_authenticated/_admin/admin.social.accounts"));
+const AdminSocialCompose = lazy(() => import("@/routes/_authenticated/_admin/admin.social.compose"));
+const AdminSocialPosts = lazy(() => import("@/routes/_authenticated/_admin/admin.social.posts"));
+const AdminSocialAnalytics = lazy(() => import("@/routes/_authenticated/_admin/admin.social.analytics"));
 
 function Loading() {
   return (
