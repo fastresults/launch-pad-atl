@@ -85,8 +85,8 @@ export function AdminCommandMenu() {
 
           <CommandSeparator />
           <CommandGroup heading="Quick actions">
-            <CommandItem value="toggle homepage variant site settings" onSelect={() => go("/admin/site")}>
-              Toggle homepage variant
+            <CommandItem value="view services page" onSelect={() => go("/services", true)}>
+              View services page
             </CommandItem>
             <CommandItem value="create new cohort" onSelect={() => go("/admin/cohorts")}>
               Manage cohorts
