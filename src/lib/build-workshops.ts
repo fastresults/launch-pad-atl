@@ -19,11 +19,13 @@ export type BuildWorkshop = {
   icon: LucideIcon;
   title: string; // The product name, e.g. "Brand Identity Workshop"
   capability: string; // The build-layer capability name, e.g. "Brand identity"
-  oneLiner: string; // Hero promise
-  subhead: string; // Hero subhead
-  pains: { title: string; body: string }[]; // 3 cost-of-inaction items
-  walkOuts: string[]; // 5-7 concrete artifacts
-  agenda: AgendaBlock[]; // 3-4 modules
+  priceCents: number; // 19700 | 29700 | 39700
+  priceLabel: string; // "$197" | "$297" | "$397"
+  oneLiner: string;
+  subhead: string;
+  pains: { title: string; body: string }[];
+  walkOuts: string[];
+  agenda: AgendaBlock[];
   forYou: string[];
   notForYou: string[];
   agencyService: {
@@ -35,24 +37,36 @@ export type BuildWorkshop = {
   faq: FAQ[];
 };
 
-const COMMON_FAQ: FAQ[] = [
-  {
-    q: `What's actually included for ${WORKSHOP_PRICE_LABEL}?`,
-    a: "The live half-day workshop, every template and worksheet we use, a recording you keep forever, and 30 days of follow-up access in our group channel to ask questions as you implement.",
-  },
-  {
-    q: "Do I need to attend the Strategic Foundation Workshop first?",
-    a: "Strongly recommended, not required. The foundation workshop locks your positioning, ICP, and offer. Without that, anything you build on top is a guess. If you already have those nailed, jump straight in.",
-  },
-  {
-    q: "What if I don't get value out of it?",
-    a: "Email us within 7 days and we refund the $97. No forms, no friction. We've never had to debate it.",
-  },
-  {
-    q: "Can your team just build this for me instead?",
-    a: "Yes — and that's the point. The workshop exists so you understand what good looks like before you hire anyone. If you decide to hand it to us, the $97 credits toward any engagement over $1,000.",
-  },
-];
+/** Map agency retail price (in cents) to the matching workshop price tier. */
+export function workshopPriceForRetailCents(retailCents: number): {
+  cents: number;
+  label: string;
+} {
+  if (retailCents < 200_000) return { cents: 19_700, label: "$197" };
+  if (retailCents < 300_000) return { cents: 29_700, label: "$297" };
+  return { cents: 39_700, label: "$397" };
+}
+
+function makeCommonFaq(priceLabel: string): FAQ[] {
+  return [
+    {
+      q: `What's actually included for ${priceLabel}?`,
+      a: "The live half-day workshop, every template and worksheet we use, a recording you keep forever, and 30 days of follow-up access in our group channel to ask questions as you implement.",
+    },
+    {
+      q: "Do I need to attend the Strategic Foundation Workshop first?",
+      a: `Strongly recommended, not required. The ${WORKSHOP_PRICE_LABEL} Foundation Workshop locks your positioning, ICP, and offer. Without that, anything you build on top is a guess. If you already have those nailed, jump straight in.`,
+    },
+    {
+      q: "What if I don't get value out of it?",
+      a: `Email us within 7 days and we refund the ${priceLabel}. No forms, no friction. We've never had to debate it.`,
+    },
+    {
+      q: "Can your team just build this for me instead?",
+      a: `Yes — and that's the point. The workshop exists so you understand what good looks like before you hire anyone. If you decide to hand it to us, the ${priceLabel} credits toward any engagement over $1,000.`,
+    },
+  ];
+}
 
 export const BUILD_WORKSHOPS: BuildWorkshop[] = [
   {
