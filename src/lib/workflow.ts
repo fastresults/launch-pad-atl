@@ -98,7 +98,7 @@ export const WORKFLOW: WorkflowDeliverable[] = [
       { key: "brand_feel", label: "How should your brand feel? (3 words)", placeholder: "warm, modern, expert", voice: true },
       { key: "brands_you_admire", label: "Brands you admire and why", multiline: true, voice: true },
     ]},
-  { key: "website_4pg", label: "Complete 4-page website", short: "Branded + written + SEO", stageN: 5, stageLabel: "Brand" },
+  { key: "website_4pg", label: "Complete website", short: "Branded + written + SEO", stageN: 5, stageLabel: "Brand" },
   { key: "payments_email_ga", label: "Stripe/Square + GA4 + business email", short: "Money + analytics + email", stageN: 5, stageLabel: "Brand" },
 
   // Stage 6 — Marketing
