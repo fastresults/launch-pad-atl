@@ -104,15 +104,16 @@ function Framework() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          What you walk out with
+          The main attraction
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-          Six strategic deliverables.{" "}
-          <span className="text-gradient-brand">One signed-off plan.</span>
+          Your complete strategic foundation.{" "}
+          <span className="text-gradient-brand">Built in one room, in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Every founder leaves with the same six artifacts — built for your business, not a template. This is the framework you'd pay a consultant $5,000+ to produce. We do it in a focused session for {WORKSHOP_PRICE_LABEL}.
+          This is what you came for. Six interlocking deliverables that turn a good idea into a defensible business — built for your specific startup, not a template. Consultants charge $5,000+ to produce this. You get it in a focused half-day for {WORKSHOP_PRICE_LABEL}.
         </p>
+
         <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {FRAMEWORK_DELIVERABLES.map((d) => {
             const Icon = d.icon;
