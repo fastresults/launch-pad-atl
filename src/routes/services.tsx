@@ -19,7 +19,7 @@ export default function ServicesPage() {
             <span className="text-gradient-brand">actually build it.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            Productized engagements for founders who have the strategic foundation and need execution. Pick a package, or scope a custom engagement. Every project is run by the same team behind the {WORKSHOP_PRICE_LABEL} workshop.
+            You've got the plan. Now you need it built. Pick a package below, or tell us what you need — same team that runs the {WORKSHOP_PRICE_LABEL} workshop, doing the work for you.
           </p>
         </div>
       </section>
@@ -76,7 +76,7 @@ export default function ServicesPage() {
               Start with the {WORKSHOP_PRICE_LABEL} Strategic Foundation Workshop.
             </h2>
             <p className="mt-4 text-base opacity-90 md:text-lg">
-              Get the strategic foundation first. If you decide our team is the right fit to build it, we'll credit the workshop fee toward any engagement above $1,000.
+              Get the plan first. If you decide our team is the right fit to build it, we'll knock the {WORKSHOP_PRICE_LABEL} off any project over $1,000.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
               <Link

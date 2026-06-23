@@ -56,11 +56,11 @@ function Hero() {
           <span className="text-gradient-brand">built in one morning.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          Six strategic deliverables that normally cost $5,000+ from a consultant: positioning, ideal customer, offer & pricing, 12-month economics, 90-day roadmap, and a build/hire/buy decision tree. Built live with Adam Anderson, for your business.{" "}
-          <span className="font-medium text-white">{WORKSHOP_PRICE_LABEL}. No upsell in the room.</span>
+          Six things a consultant would charge you $5,000 for. Positioning, your first customer, what to charge, the numbers, your first 90 days, and what to do yourself vs. pay for. Built live with Adam Anderson, for your idea.{" "}
+          <span className="font-medium text-white">{WORKSHOP_PRICE_LABEL}. No pitch in the room.</span>
         </p>
         <p className="mt-4 max-w-2xl text-sm text-white/80 md:text-base">
-          Coffee and light refreshments provided. When you're ready to build the brand, website, legal, or marketing — our team is here. Separate engagement, your call.
+          Coffee's on us. If you want help building the brand, the site, or the legal side after — we do that too. Your call, no pressure.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 md:mt-10">
@@ -111,7 +111,7 @@ function Framework() {
           <span className="text-gradient-brand">Built in one room, in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          This is what you came for. Six interlocking deliverables that turn a good idea into a defensible business — built for your specific startup, not a template. Consultants charge $5,000+ to produce this. You get it in a focused half-day for {WORKSHOP_PRICE_LABEL}.
+          Six things that turn "I have an idea" into "I have a business." Built for your idea — not a template. Consultants charge $5,000+. You pay {WORKSHOP_PRICE_LABEL}.
         </p>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -136,11 +136,11 @@ function Framework() {
 
 function InOutScope() {
   const inScope = [
-    "Your complete strategic foundation — all six deliverables",
-    "12-month back-of-envelope economics",
-    "90-day go-to-market roadmap",
-    "Build / hire / buy decision tree",
-    "Working time with Adam in a small group",
+    "All six pieces of your plan, built live",
+    "The numbers on one page — what it costs, what you make",
+    "Your first 90 days, week by week",
+    "What to do yourself, what to pay for",
+    "Working time with Adam in a small room",
     "Coffee and light refreshments throughout",
   ];
 
@@ -151,11 +151,11 @@ function InOutScope() {
           Honest scope
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-          {WORKSHOP_PRICE_LABEL} buys the strategic foundation.{" "}
+          {WORKSHOP_PRICE_LABEL} gets you the plan.{" "}
           <span className="text-gradient-brand">Not a built business.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Most "build your startup in a day" workshops over-promise and under-deliver. We don't. Here's exactly what you get — and what you don't.
+          Most "build your startup in a day" workshops over-promise and under-deliver. We don't. Here's what you get — and what you don't.
         </p>
         <div className="mt-10 grid gap-5 md:grid-cols-2 md:gap-6">
           <div className="rounded-2xl border border-primary/30 bg-card p-6 md:p-8">
@@ -184,7 +184,7 @@ function InOutScope() {
               ))}
             </ul>
             <p className="mt-5 text-xs text-muted-foreground">
-              These move faster when you have the foundation first. When you're ready,{" "}
+              These move faster when you have the plan first. When you're ready,{" "}
               <Link to="/services" className="text-foreground underline-offset-4 hover:underline">
                 see our services
               </Link>
@@ -234,7 +234,7 @@ function Facilitator() {
               Co-Founder of OPEN Interactive and a serial entrepreneur who has personally started multiple companies and helped launch dozens more across tech, services, and Main Street. Along the way he's shipped work for Citigroup, Mayo Clinic, 3M, and Disney, built full digital systems for a Caribbean country's government, and produced one of the region's biggest business summits for five years running.
             </p>
             <p className="mt-3 text-muted-foreground">
-              He's sat in your seat — more than once. He knows exactly what a defensible strategic foundation looks like, and what it takes to go from "good idea" to "running business."
+              He's sat in your seat — more than once. He knows what the first move looks like, and what it takes to get from "good idea" to "running business."
             </p>
           </div>
         </div>
@@ -254,8 +254,8 @@ function ServicesTeaser() {
               When you're ready to build it
             </p>
             <h2 className="max-w-2xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-              Done-for-you{" "}
-              <span className="text-gradient-brand">consulting + creative.</span>
+              When you're ready,{" "}
+              <span className="text-gradient-brand">we'll build it for you.</span>
             </h2>
           </div>
           <Link
@@ -347,7 +347,7 @@ function BottomCTA() {
               Stop turning the idea over in your head.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
-              {WORKSHOP_PRICE_LABEL} gets you in the room with Adam, a working strategic foundation, and a 90-day roadmap. If you decide you want our team to actually build the brand, the site, or the launch — we're a click away. If not, you keep the foundation either way.
+              {WORKSHOP_PRICE_LABEL} gets you in the room with Adam and a real plan you can start using Monday. If you want our team to build the brand, the site, or the launch after — we're a click away. If not, you keep the plan either way.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4 md:mt-8">
               <Link
