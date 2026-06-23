@@ -1,134 +1,162 @@
 
-# Productize the 8 Modern Build Layer Workshops
+# Rebuild /services to amplify the home page Build Layer
 
-Turn each card in the "Modern Build Layer" section into a real product: a $97 half-day workshop that teaches the strategy + gives a starter kit, with a clear path to the done-for-you agency engagement. Each workshop gets its own conversion-optimized landing page. The Build Layer grid on the homepage becomes the entry point.
+The home page already introduces the 8 capabilities ("Modern Build Layer") and routes founders into the $97 workshops. The /services page is the *other* door on that same moment: when the founder has decided they don't want to do it themselves. Today /services is a thin grid of four legacy packages with no through-line to the 8 capabilities. We rebuild it so it mirrors the build layer card-for-card, capability-for-capability, and makes the agency engagement feel like the natural next step from the workshop.
 
-## What we're building
+## Strategic framing
 
-**8 workshop products** (one per capability):
-1. Brand Identity Workshop
-2. Website That Converts Workshop
-3. Social Presence Workshop
-4. Content Engine Workshop
-5. AI as Your Operating System Workshop
-6. Email, CRM & Automation Workshop
-7. Sales Systems Workshop
-8. Legal, Financial & Operational Scaffolding Workshop
+Every section answers a single buyer question — in order:
 
-Each priced at **$97**, positioned as: *"Learn the strategy in a half-day. Walk out with the plan, the templates, and a clear decision on whether to build it yourself or have our team do it."*
+1. *"You're talking to whom?"* — Hero re-anchors the 8 capabilities, repositioning the page as the done-for-you path.
+2. *"What does done-for-you mean for each capability?"* — A capability-by-capability service grid that mirrors the build layer 1:1, each card naming the artifact you'd otherwise build yourself in the workshop.
+3. *"How do you actually work?"* — A 4-step engagement process (Diagnose → Scope → Build → Hand off) so the founder knows what they're buying.
+4. *"What's it cost and how do I bundle?"* — Three productized tracks (Launch, Growth, Operate) priced as bundles of capabilities, so the founder sees the smart combinations instead of à-la-carte math.
+5. *"Why you?"* — Proof block: 30 years, named brands, the credit-back-the-$97 promise.
+6. *"Where do I start?"* — Dual final CTA: book a call (high intent) or start with the workshop (warm).
 
-## Page architecture
+The 4 legacy `SERVICE_PACKAGES` get retired from the page (still exported for any other consumer) in favor of this new structure.
+
+## Page structure (top to bottom)
 
 ```text
-/build/                          → index of all 8 workshops (grid)
-/build/brand-identity            → individual workshop landing page
-/build/website-that-converts
-/build/social-presence
-/build/content-engine
-/build/ai-operating-system
-/build/email-crm-automation
-/build/sales-systems
-/build/legal-financial-ops
+1. Hero — re-anchor + dual CTA
+2. Capability ↔ Service grid (8 cards, mirrors home build layer)
+3. Three productized tracks (Launch / Growth / Operate)
+4. How we engage — 4-step process
+5. Proof + facilitator strip
+6. Workshop ↔ Service relationship (the $97 credit promise)
+7. FAQ (6 objections)
+8. Final CTA band
 ```
 
-Each card in the existing "Modern Build Layer" section on the homepage becomes a link to its `/build/<slug>` page.
+## Section detail
 
-## Individual workshop page structure
+### 1. Hero
+- Eyebrow: "Done-for-you · The 8 capabilities, built by our team"
+- H1: *"You shouldn't have to learn eight jobs to start one business."*
+- Sub: *"You attended the workshop, or you've already decided you'd rather buy the result than build it. Either way — here's what our team ships, capability by capability, on a fixed scope and a fixed clock."*
+- Dual CTA: **Book a discovery call** (primary, gradient) · **Start with the $97 workshop** (secondary)
+- Quick trust row: "Used by founders shipping to Citigroup · Mayo Clinic · 3M · Disney" or similar pulled from existing facilitator bio.
 
-Every workshop page follows the same award-winning conversion template (consistent = trust + faster to ship + easy to A/B):
+### 2. Capability ↔ Service grid (the amplification)
+Eight cards in a 2×4 grid, **same icons, same titles, same order** as the home page build layer. Each card carries:
+- Icon + capability name (matches home)
+- **One-line agency promise** (what we ship, not what the workshop teaches)
+- 3 deliverables we hand over
+- Starting price (e.g. "From $2,900")
+- Timeline chip (e.g. "2 weeks")
+- Footer link: **"Learn the strategy first — $97 workshop →"** linking to `/build/<slug>`
 
-1. **Hero** — Capability name, one-line promise, $97 price chip, primary CTA "Reserve your seat — $97", secondary "Have us build it for you".
-2. **The pain** — 3 bullets. What it costs founders to wing this (real numbers, real consequences).
-3. **What you'll walk out with** — 5–7 concrete deliverables (templates, frameworks, a finished artifact, e.g. "your brand brief signed off" or "your 30-day content calendar built live").
-4. **The agenda** — Half-day, broken into 3–4 modules with time blocks.
-5. **Who it's for / who it's not for** — Two columns. Ruthless qualification.
-6. **The decision moment** — Frame: leave knowing whether to DIY, hire elsewhere, or let our agency build it. No pressure, clear math.
-7. **Then: the done-for-you path** — The matching agency service, scoped + priced. The $97 credits toward any project over $1,000.
-8. **Workshop logistics** — Format (live online cohort), dates, group size cap, what's included (recording, templates, 30-day Slack access).
-9. **FAQ** — 5–6 objection-handlers (refund, recording, AI tools used, prerequisites, comparison to free YouTube content, do I need the foundation workshop first).
-10. **Final CTA band** — Price, scarcity (seats remaining or next cohort date), dual CTA.
+Example pairs (matches the 8 BUILD_LAYER items):
 
-## Workshop content map (per product)
+| Capability | Agency one-liner | Deliverables | Starts |
+|---|---|---|---|
+| Brand identity | "A premium brand system, shipped in 14 days." | Logo system · Voice + visual guidelines · Asset pack | $2,900 |
+| A website that converts | "A revenue surface — not a brochure — wired to payments and analytics." | Site design + build · Copy · Stripe + GA4 + CRM | $4,800 |
+| Social presence | "Two channels, owned. Profiles rebuilt, calendar shipped, cadence held." | Profile redesign · 30-day calendar · Cadence stack | $1,800 setup + $1,200/mo |
+| A content engine | "Pillars, SEO map, and 8 anchor pieces a month — repurposed everywhere." | Editorial system · 8 anchors/mo · Repurposing flow | $2,400/mo |
+| AI as your operating system | "Ten workflows rewired around AI, documented, owned by your team." | Workflow audit · 10 automations · Prompt library + governance | $4,500 |
+| Email, CRM & automation | "The follow-up machine. CRM live, sequences written, deliverability fixed." | CRM setup · 3 sequences · Lifecycle automation | $3,200 |
+| Sales systems | "A repeatable motion: ICP, script, pipeline, weekly rhythm." | ICP + script · Pipeline build · 30-day enablement | $3,800 |
+| Legal, financial & ops | "LLC, EIN, contracts, books, payroll — done, not promised." | Entity + EIN · Contract suite · Bookkeeping setup | $1,200 |
 
-| Workshop | Walk-out deliverables | Matching agency service |
-|---|---|---|
-| Brand Identity | Brand brief, archetype, voice doc, logo direction, color/type system spec | Brand & Website Build |
-| Website That Converts | Sitemap, wireframe, page-by-page copy outline, conversion event plan, stack decision | Brand & Website Build |
-| Social Presence | Channel-fit scorecard, profile rewrites, 30-day post calendar, hook bank, posting cadence | Marketing Engine |
-| Content Engine | Pillar topics, SEO keyword map, content production system, repurposing flow, editorial calendar | Marketing Engine |
-| AI as Operating System | AI stack audit, 5 workflows automated live, prompt library, governance doc, ROI model | New: AI Ops Sprint |
-| Email, CRM & Automation | CRM choice, lifecycle map, 3 sequences written, segmentation plan, automation blueprint | Marketing Engine |
-| Sales Systems | ICP scorecard, sales script, pipeline stages, objection bank, weekly sales rhythm | New: Sales System Sprint |
-| Legal, Financial & Ops | Entity decision, contract checklist, books setup plan, payroll readiness, ops calendar | Launch Kit |
+(Final copy + prices written in implementation; numbers above are the working anchor.)
 
-## Homepage change
+### 3. Three productized tracks
+Founders don't buy 8 things at once. Bundle the capabilities into three pre-packaged engagements with anchor pricing — this is where the conversion lift happens vs. à-la-carte cards.
 
-The existing 8-card "Modern Build Layer" grid stays visually identical, but each card becomes a clickable `Link` to its `/build/<slug>` page, with a subtle hover state and "Workshop · $97" chip added to each card. Section heading copy stays.
+- **Launch Track** — Brand + Website + Legal/Ops. *"From an idea to a business you can take money for."* From $7,500 · 4–6 weeks.
+- **Growth Track** *(featured)* — Social + Content + Email/CRM. *"The customer-acquisition engine, running monthly."* From $4,500/mo · ongoing.
+- **Operate Track** — AI as OS + Sales systems. *"Two people doing the work of ten. Pipeline you can forecast."* From $8,000 · 30-day sprint.
 
-A new sub-CTA under the grid: **"See all 8 workshops →"** linking to `/build`.
+Each track card lists the included capabilities (with the same icons used above so the eye connects them), the price, the timeline, the outcome, and a **Book a scoping call** CTA.
 
-## Index page `/build`
+### 4. How we engage — 4-step process
+Single horizontal strip with 4 numbered steps, each one sentence:
+1. **Diagnose** — 30-minute call. We tell you what to buy and what to skip.
+2. **Scope** — Fixed price, fixed deliverables, fixed clock. No "T&M" surprises.
+3. **Build** — Weekly demos, shared workspace, your team copied on everything.
+4. **Hand off** — Documented systems, recorded loom walkthroughs, 30-day support window.
 
-- Hero: "Eight workshops. One business that actually runs."
-- Sub: "Strategy is the foundation. These eight capabilities are the building. Each one is a half-day, $97 workshop — taught by the people who'd otherwise charge you $5K+ to build it for you."
-- Grid: all 8 workshops as rich cards (icon, name, one-line outcome, "What you walk out with: X · Y · Z", $97 chip, "Learn more →").
-- Bottom band: "Want it all done for you instead? → /services"
+### 5. Proof + facilitator strip
+Reuse Adam's photo + the existing facilitator copy from the home page (compact). Add 3–5 logos or "shipped work for" line. One short founder testimonial slot (placeholder until real one lands).
+
+### 6. The workshop ↔ service relationship
+A single band that names the math:
+- *"Attend the $97 workshop. Decide in the room whether to DIY or hand it to us. If you hire us for any engagement over $1,000, the $97 is credited back. Either way, you leave with the strategy."*
+- Two CTAs side by side: **See all 8 workshops** (`/build`) · **Book a discovery call** (`/contact`).
+
+### 7. FAQ (6 items)
+- Do I have to take the workshop first? *(No, but it pays for itself.)*
+- Can I bundle just two capabilities? *(Yes — that's what a discovery call sets.)*
+- Who owns the work? *(You do. Always. Source files, accounts, everything.)*
+- How fast do you start? *(Within 7 days of signed scope.)*
+- What if I already have a brand / site / CRM? *(We audit, then either tune yours or rebuild — your call after diagnose.)*
+- Do you take equity / revenue share? *(No. Fixed fees, clean books.)*
+
+### 8. Final CTA band (gradient)
+- H2: *"Strategy is the foundation. Execution is what makes it real."*
+- Sub: One sentence restating the dual offer.
+- Primary CTA: **Book a discovery call** → `/contact`
+- Secondary: **Start with the $97 workshop** → `/build`
+
+## Copywriting voice
+
+- 20-year conversion copywriter rules: one promise per section, concrete artifacts over adjectives, dual CTA on every major band, price anchored next to scope every time.
+- Mirror exact language from home where it earns trust (capability names verbatim, the "Foundation first. Build when ready." thesis, the $97 credit-back promise).
+- No hype words. Verbs and outputs only.
+- Every agency card states what is *shipped*, not what is *discussed*.
 
 ## Data model
 
-Add to `src/lib/framework-deliverables.ts` (or new `src/lib/build-workshops.ts` to keep it clean):
+New file: `src/lib/agency-services.ts`
 
 ```ts
-export type BuildWorkshop = {
-  slug: string;
+export type AgencyService = {
+  slug: string;          // matches build workshop slug
+  capability: string;    // matches BUILD_LAYER.title exactly
   icon: LucideIcon;
-  title: string;        // "Brand identity"
-  hero: string;         // one-line promise
-  pains: string[];      // 3
-  walkOuts: string[];   // 5-7
-  agenda: { time: string; title: string; detail: string }[];
-  forYou: string[];
-  notForYou: string[];
-  agencyService: { name: string; priceLabel: string; href: string };
-  faq: { q: string; a: string }[];
+  oneLiner: string;
+  deliverables: string[]; // 3 items
+  priceLabel: string;
+  timelineLabel: string;
+  workshopHref: string;   // /build/<slug>
+  ctaHref: string;        // /contact?service=<slug>
 };
 
-export const BUILD_WORKSHOPS: BuildWorkshop[] = [ /* 8 entries */ ];
+export type AgencyTrack = {
+  slug: "launch" | "growth" | "operate";
+  name: string;
+  tagline: string;
+  outcome: string;
+  includedSlugs: string[]; // references AgencyService slugs
+  priceLabel: string;
+  timelineLabel: string;
+  featured?: boolean;
+  ctaHref: string;
+};
+
+export const AGENCY_SERVICES: AgencyService[]; // 8 entries, ordered to match BUILD_LAYER
+export const AGENCY_TRACKS: AgencyTrack[];     // 3 entries
 ```
 
-The existing `BUILD_LAYER` array gets enriched with `slug` so the homepage cards link correctly, or is derived from `BUILD_WORKSHOPS`.
+Icons and `capability` strings are pulled from / kept in sync with `BUILD_LAYER` in `framework-deliverables.ts` so the home and services pages can never drift.
 
 ## Files to create / modify
 
 **New:**
-- `src/lib/build-workshops.ts` — content for all 8 workshops
-- `src/routes/build.tsx` — index page
-- `src/routes/build.$slug.tsx` — dynamic workshop page (single template, reads from `BUILD_WORKSHOPS`)
-- `src/components/build/WorkshopHero.tsx`
-- `src/components/build/WorkshopAgenda.tsx`
-- `src/components/build/WorkshopFit.tsx` (for-you / not-for-you)
-- `src/components/build/WorkshopFAQ.tsx`
-- `src/components/build/WorkshopCTA.tsx`
+- `src/lib/agency-services.ts` — the 8 services + 3 tracks data.
 
 **Modify:**
-- `src/components/home/HomeFramework.tsx` — make the 8 Build Layer cards link to `/build/<slug>`, add "$97 workshop" chip, add "See all 8 workshops" sub-CTA.
-- `src/lib/framework-deliverables.ts` — extend `BUILD_LAYER` entries with `slug`, or replace consumption sites with `BUILD_WORKSHOPS`.
-- `src/components/site/Header.tsx` (if it has nav links) — add "Workshops" entry pointing to `/build`.
-- Router registration wherever routes are wired up (check `src/routes/index.tsx`).
+- `src/routes/services.tsx` — full rewrite to the structure above. Drop the `SERVICE_PACKAGES` rendering; render the capability grid + tracks + process + proof + workshop band + FAQ + final CTA.
 
-## Copywriting voice
-
-20-year conversion copywriter rules applied throughout:
-- Specificity over adjectives ("walk out with a signed brand brief" not "deepen your brand thinking")
-- Cost-of-inaction framing in every "pain" block
-- One promise per page, repeated 3x in different words
-- Dual CTA everywhere: low-commitment ($97 workshop) + high-intent (book the build)
-- Price anchoring: $97 next to the $2,900 build price, every time
-- No hype words ("revolutionary", "game-changing", "unlock"). Concrete verbs only.
+**Untouched but referenced:**
+- `src/components/home/HomeFramework.tsx` — no changes; services page mirrors its order, icons, and labels via shared data.
+- `src/lib/framework-deliverables.ts` — `SERVICE_PACKAGES` export stays (in case used elsewhere) but is no longer rendered on /services.
 
 ## Not in scope (this pass)
 
-- Actual booking/payment flow for workshop registration (uses existing `/register` flow or `?workshop=<slug>` query param on existing register page — confirm in build).
-- Cohort scheduling backend.
-- Email automation for workshop attendees.
-- Two new agency services ("AI Ops Sprint", "Sales System Sprint") — surface them on workshop pages, but adding them to `/services` as full cards is a follow-up.
+- Real customer testimonials and logos (use restrained placeholder lines pulled from existing facilitator copy).
+- Pricing experimentation / A/B variants.
+- Stripe checkout for tracks (CTA still routes to `/contact` discovery call).
+- A new "case studies" page.
