@@ -1,0 +1,339 @@
+import { Link, Navigate, useParams } from "react-router-dom";
+import { SiteHeader } from "@/components/site/Header";
+import { SiteFooter } from "@/components/site/Footer";
+import { getBuildWorkshop, BUILD_WORKSHOPS } from "@/lib/build-workshops";
+import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
+import {
+  ArrowRight,
+  Check,
+  X,
+  AlertTriangle,
+  Sparkles,
+  Clock,
+  Users,
+  Calendar,
+} from "lucide-react";
+
+export default function BuildWorkshopPage() {
+  const { slug } = useParams<{ slug: string }>();
+  const w = slug ? getBuildWorkshop(slug) : undefined;
+
+  if (!w) return <Navigate to="/build" replace />;
+
+  const Icon = w.icon;
+  const otherWorkshops = BUILD_WORKSHOPS.filter((x) => x.slug !== w.slug).slice(0, 3);
+
+  return (
+    <div className="min-h-screen">
+      <SiteHeader />
+
+      {/* Hero */}
+      <section className="border-b border-white/5 py-16 md:py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <Link
+            to="/build"
+            className="mb-6 inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground md:text-sm"
+          >
+            ← All 8 workshops
+          </Link>
+          <div className="flex items-start gap-4">
+            <div className="rounded-2xl border border-primary/30 bg-primary/10 p-3">
+              <Icon className="size-7 text-primary" />
+            </div>
+            <div>
+              <p className="mb-2 text-xs uppercase tracking-[0.18em] text-primary md:text-sm md:tracking-[0.2em]">
+                {w.capability} · Workshop · {WORKSHOP_PRICE_LABEL}
+              </p>
+              <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
+                {w.oneLiner}
+              </h1>
+            </div>
+          </div>
+
+          <p className="ml-0 mt-6 max-w-3xl text-base text-muted-foreground md:ml-[80px] md:text-lg">
+            {w.subhead}
+          </p>
+
+          <div className="ml-0 mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4 md:ml-[80px]">
+            <Link
+              to={`/register?workshop=${w.slug}`}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90"
+            >
+              Reserve your seat — {WORKSHOP_PRICE_LABEL} <ArrowRight className="size-4" />
+            </Link>
+            <Link
+              to={w.agencyService.href}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-base font-medium text-foreground transition-colors hover:bg-white/10"
+            >
+              Have us build it instead
+            </Link>
+          </div>
+
+          <div className="ml-0 mt-8 grid max-w-2xl grid-cols-1 gap-3 text-muted-foreground sm:grid-cols-3 md:ml-[80px]">
+            <Meta icon={<Clock className="size-4" />} label="Half-day · 2h 45m" />
+            <Meta icon={<Users className="size-4" />} label="Small cohort" />
+            <Meta icon={<Calendar className="size-4" />} label="Live online" />
+          </div>
+        </div>
+      </section>
+
+      {/* The pain */}
+      <section className="py-16 md:py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground md:text-sm">
+            <AlertTriangle className="size-4 text-primary" /> What it costs to wing this
+          </div>
+          <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+            Skip this and you'll pay for it — usually in five figures.
+          </h2>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {w.pains.map((p) => (
+              <div
+                key={p.title}
+                className="rounded-2xl border border-white/10 bg-card p-6"
+              >
+                <h3 className="text-base font-semibold leading-snug tracking-tight md:text-lg">
+                  {p.title}
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  {p.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* What you walk out with */}
+      <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-primary md:text-sm">
+            <Check className="size-4" /> What you walk out with
+          </div>
+          <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+            Concrete artifacts.{" "}
+            <span className="text-gradient-brand">Not vibes, not "frameworks to think about."</span>
+          </h2>
+          <ul className="mt-10 grid gap-3 sm:grid-cols-2">
+            {w.walkOuts.map((d) => (
+              <li
+                key={d}
+                className="flex items-start gap-3 rounded-2xl border border-white/10 bg-card px-5 py-4"
+              >
+                <Check className="mt-1 size-5 shrink-0 text-primary" />
+                <span className="text-base font-medium tracking-tight">{d}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* Agenda */}
+      <section className="py-16 md:py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground md:text-sm">
+            <Clock className="size-4 text-primary" /> The agenda
+          </div>
+          <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+            One morning. Four working sessions.{" "}
+            <span className="text-gradient-brand">Real outputs by lunch.</span>
+          </h2>
+          <div className="mt-10 space-y-4">
+            {w.agenda.map((block, i) => (
+              <div
+                key={block.time}
+                className="rounded-2xl border border-white/10 bg-card p-6 md:p-7"
+              >
+                <div className="flex flex-col gap-1 md:flex-row md:items-baseline md:gap-6">
+                  <div className="text-xs uppercase tracking-[0.18em] text-primary md:w-40 md:text-sm">
+                    {block.time}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold tracking-tight md:text-xl">
+                      <span className="mr-2 text-muted-foreground">0{i + 1}.</span>
+                      {block.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground md:text-base">
+                      {block.detail}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Fit */}
+      <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+            Who this is for.{" "}
+            <span className="text-gradient-brand">And who it isn't.</span>
+          </h2>
+          <p className="mt-3 max-w-3xl text-base text-muted-foreground md:text-lg">
+            We'd rather you skip this workshop than sit through it as a wrong fit. Read both columns.
+          </p>
+          <div className="mt-10 grid gap-5 md:grid-cols-2">
+            <div className="rounded-2xl border border-primary/30 bg-card p-6 md:p-8">
+              <div className="mb-4 inline-flex items-center gap-2 text-sm uppercase tracking-[0.18em] text-primary">
+                <Check className="size-4" /> Right fit
+              </div>
+              <ul className="space-y-3">
+                {w.forYou.map((p) => (
+                  <li key={p} className="flex items-start gap-3 text-sm md:text-base">
+                    <Check className="mt-1 size-4 shrink-0 text-primary" />
+                    <span>{p}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-card p-6 md:p-8">
+              <div className="mb-4 inline-flex items-center gap-2 text-sm uppercase tracking-[0.18em] text-muted-foreground">
+                <X className="size-4" /> Skip it if
+              </div>
+              <ul className="space-y-3">
+                {w.notForYou.map((p) => (
+                  <li
+                    key={p}
+                    className="flex items-start gap-3 text-sm text-muted-foreground md:text-base"
+                  >
+                    <X className="mt-1 size-4 shrink-0" />
+                    <span>{p}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Decision moment */}
+      <section className="py-16 md:py-24">
+        <div className="mx-auto max-w-4xl px-6 text-center">
+          <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
+            The decision moment
+          </p>
+          <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+            Leave knowing exactly{" "}
+            <span className="text-gradient-brand">what to do next.</span>
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
+            By 11:30 you'll know whether to build this in-house, hire it out elsewhere, or hand it to our team. No pressure, no upsell in the room. Just clear math and the artifacts you came for.
+          </p>
+        </div>
+      </section>
+
+      {/* Agency upsell */}
+      <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="rounded-3xl border border-white/10 bg-hero-gradient p-8 text-white md:p-12">
+            <p className="mb-3 text-xs uppercase tracking-[0.18em] opacity-80 md:text-sm md:tracking-[0.2em]">
+              <Sparkles className="mr-1 inline size-3.5" /> The done-for-you path
+            </p>
+            <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+              {w.agencyService.name}
+            </h2>
+            <p className="mt-3 text-base opacity-95 md:text-lg">{w.agencyService.tagline}</p>
+            <p className="mt-6 text-sm uppercase tracking-[0.18em] opacity-80">
+              {w.agencyService.priceLabel}
+            </p>
+            <p className="mt-3 max-w-2xl text-sm opacity-90 md:text-base">
+              Attended the workshop? We'll knock the {WORKSHOP_PRICE_LABEL} off any engagement over $1,000.
+            </p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Link
+                to={w.agencyService.href}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-base font-medium text-black transition-opacity hover:opacity-90 sm:w-auto"
+              >
+                Book a call <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                to={`/register?workshop=${w.slug}`}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/30 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
+              >
+                Workshop first — {WORKSHOP_PRICE_LABEL}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-16 md:py-24">
+        <div className="mx-auto max-w-3xl px-6">
+          <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+            Questions, answered straight.
+          </h2>
+          <div className="mt-10 space-y-4">
+            {w.faq.map((f) => (
+              <details
+                key={f.q}
+                className="group rounded-2xl border border-white/10 bg-card p-5 transition-colors hover:border-white/20 md:p-6"
+              >
+                <summary className="flex cursor-pointer items-start justify-between gap-4 text-base font-medium tracking-tight md:text-lg">
+                  {f.q}
+                  <span className="mt-1 text-primary transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
+                  {f.a}
+                </p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Other workshops */}
+      <section className="border-t border-white/5 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-6">
+          <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
+            Keep building
+          </p>
+          <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+            The other capabilities your business will need.
+          </h2>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            {otherWorkshops.map((o) => {
+              const OIcon = o.icon;
+              return (
+                <Link
+                  key={o.slug}
+                  to={`/build/${o.slug}`}
+                  className="group rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-primary/40"
+                >
+                  <OIcon className="mb-3 size-5 text-primary" />
+                  <h3 className="text-lg font-semibold tracking-tight">{o.capability}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{o.oneLiner}</p>
+                  <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                    Learn more
+                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+          <div className="mt-10 text-center">
+            <Link
+              to="/build"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-3 text-sm font-medium transition-colors hover:bg-white/10"
+            >
+              See all 8 workshops <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <SiteFooter />
+    </div>
+  );
+}
+
+function Meta({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm">
+      {icon}
+      <span>{label}</span>
+    </div>
+  );
+}

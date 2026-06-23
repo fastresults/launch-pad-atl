@@ -10,6 +10,8 @@ const HomePage = lazy(() => import("@/routes/index"));
 const SchedulePage = lazy(() => import("@/routes/schedule"));
 const RegisterPage = lazy(() => import("@/routes/register"));
 const ServicesPage = lazy(() => import("@/routes/services"));
+const BuildIndexPage = lazy(() => import("@/routes/build"));
+const BuildWorkshopPage = lazy(() => import("@/routes/build.$slug"));
 const FacilitatorPage = lazy(() => import("@/routes/facilitator"));
 const ContactPage = lazy(() => import("@/routes/contact"));
 const LoginPage = lazy(() => import("@/routes/login"));
@@ -85,6 +87,8 @@ export default function App() {
         <Route path="/schedule" element={<SchedulePage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/services" element={<ServicesPage />} />
+        <Route path="/build" element={<BuildIndexPage />} />
+        <Route path="/build/:slug" element={<BuildWorkshopPage />} />
         <Route path="/facilitator" element={<FacilitatorPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />

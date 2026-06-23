@@ -9,6 +9,7 @@ import {
   TOTAL_DELIVERABLES,
   WORKSHOP_PRICE_LABEL,
 } from "@/lib/framework-deliverables";
+import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroBg from "@/assets/hero-bg.png";
 import {
@@ -219,25 +220,37 @@ function HonestRoadmap() {
             <Sparkles className="size-4 text-primary" /> The modern build layer — what comes next
           </div>
           <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-            In 2026, no startup wins on strategy alone. Eight capabilities turn the plan into a business that attracts customers, converts them, and keeps them coming back.
+            In 2026, no startup wins on strategy alone. Eight capabilities turn the plan into a business that attracts customers, converts them, and keeps them coming back. Each one is a half-day workshop for {WORKSHOP_PRICE_LABEL} — or we'll build it for you.
           </p>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {BUILD_LAYER.map((b) => {
               const Icon = b.icon;
+              const workshop = BUILD_WORKSHOPS.find((w) => w.capability === b.title);
+              const href = workshop ? `/build/${workshop.slug}` : "/build";
               return (
-                <div
+                <Link
                   key={b.title}
-                  className="rounded-2xl border border-white/10 bg-card p-5 transition-colors hover:border-white/25 md:p-6"
+                  to={href}
+                  className="group flex flex-col rounded-2xl border border-white/10 bg-card p-5 transition-colors hover:border-primary/40 md:p-6"
                 >
-                  <Icon className="mb-3 size-5 text-primary" />
+                  <div className="mb-3 flex items-center justify-between">
+                    <Icon className="size-5 text-primary" />
+                    <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
+                      Workshop · {WORKSHOP_PRICE_LABEL}
+                    </span>
+                  </div>
                   <h3 className="text-base font-semibold leading-snug tracking-tight">
                     {b.title}
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     {b.description}
                   </p>
-                </div>
+                  <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-primary">
+                    Learn more
+                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </Link>
               );
             })}
           </div>
@@ -252,16 +265,16 @@ function HonestRoadmap() {
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link
-              to="/services"
+              to="/build"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 sm:w-auto"
             >
-              See our services <ArrowRight className="size-4" />
+              See all 8 workshops <ArrowRight className="size-4" />
             </Link>
             <Link
-              to="/register"
+              to="/services"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-base font-medium text-foreground transition-colors hover:bg-white/10 sm:w-auto"
             >
-              Reserve a seat — {WORKSHOP_PRICE_LABEL} <ArrowRight className="size-4" />
+              Or have us build it for you
             </Link>
           </div>
         </div>
