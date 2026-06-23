@@ -318,49 +318,30 @@ function Facilitator() {
 }
 
 function ServicesTeaser() {
-  const featured = SERVICE_PACKAGES.slice(0, 3);
   return (
     <section className="border-t border-white/5 py-16 md:py-24">
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end md:gap-8">
-          <div>
-            <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-              When you're ready to build it
-            </p>
-            <h2 className="max-w-2xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-              When you're ready,{" "}
-              <span className="text-gradient-brand">we'll build it for you.</span>
-            </h2>
-          </div>
+      <div className="mx-auto max-w-4xl px-6 text-center">
+        <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
+          When you're ready to build it
+        </p>
+        <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+          When you're ready,{" "}
+          <span className="text-gradient-brand">we'll build it for you.</span>
+        </h2>
+        <div className="mt-8 flex justify-center">
           <Link
             to="/services"
-            className="inline-flex items-center gap-2 text-sm font-medium text-foreground underline-offset-4 hover:underline"
+            className="group inline-flex items-center gap-3 rounded-full bg-hero-gradient px-7 py-3.5 text-base font-medium text-white transition-opacity hover:opacity-90"
           >
-            See all services <ArrowRight className="size-4" />
+            See all services
+            <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
           </Link>
-        </div>
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {featured.map((p) => (
-            <div
-              key={p.name}
-              className="flex flex-col rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-white/20"
-            >
-              <div className="text-xs uppercase tracking-[0.18em] text-primary">{p.priceLabel}</div>
-              <h3 className="mt-2 text-xl font-semibold tracking-tight">{p.name}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{p.tagline}</p>
-              <Link
-                to={p.ctaHref}
-                className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-foreground underline-offset-4 hover:underline"
-              >
-                {p.ctaLabel} <ArrowRight className="size-3.5" />
-              </Link>
-            </div>
-          ))}
         </div>
       </div>
     </section>
   );
 }
+
 
 function Venue() {
   const EVENT = useEvent();
