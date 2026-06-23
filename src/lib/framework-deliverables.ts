@@ -14,47 +14,18 @@ export const WORKSHOP_PRICE_LABEL = "$97";
 export type FrameworkDeliverable = {
   icon: LucideIcon;
   title: string;
-  description: string;
+  description?: string;
 };
 
 export const FRAMEWORK_DELIVERABLES: FrameworkDeliverable[] = [
-  {
-    icon: Compass,
-    title: "A one-line answer to 'what do you do?'",
-    description:
-      "One sentence that tells anyone — your mom, an investor, a customer — exactly what you do and why they should care.",
-  },
-  {
-    icon: Users,
-    title: "Your first customer, by name",
-    description:
-      "The face and wallet of the person who buys first. Not a 'segment.' Someone you can go find on Monday.",
-  },
-  {
-    icon: Tag,
-    title: "What to charge — and how to say it",
-    description:
-      "Your price, why it's worth it, and the words to use when someone asks 'why so much?'",
-  },
-  {
-    icon: LineChart,
-    title: "The numbers on one page",
-    description:
-      "What it costs, what you make, and the month you stop losing money. No spreadsheet PhD required.",
-  },
-  {
-    icon: MapIcon,
-    title: "Your first 90 days, week by week",
-    description:
-      "The next move is always on the calendar. You'll know what to do Monday morning, and the Monday after that.",
-  },
-  {
-    icon: GitBranch,
-    title: "What to do yourself, what to pay for",
-    description:
-      "DIY this. Outsource that. Skip the other thing. No more guessing — and honest cost ranges where it counts.",
-  },
+  { icon: Compass, title: "Your one-line pitch" },
+  { icon: Users, title: "Your first customer" },
+  { icon: Tag, title: "Your price, defended" },
+  { icon: LineChart, title: "Your numbers, mapped" },
+  { icon: MapIcon, title: "Your 90-day plan" },
+  { icon: GitBranch, title: "Build, hire, skip" },
 ];
+
 
 
 export const OUT_OF_SCOPE = [
