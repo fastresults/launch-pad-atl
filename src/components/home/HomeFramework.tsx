@@ -49,18 +49,18 @@ function Hero() {
       <div className="absolute inset-0 bg-background/65" />
       <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-24 lg:py-32">
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white/85 md:text-sm md:tracking-[0.2em]">
-          <Sparkles className="size-3.5" /> Half-day strategic framework · {WORKSHOP_PRICE_LABEL}
+          <Sparkles className="size-3.5" /> The Strategic Foundation Workshop · {WORKSHOP_PRICE_LABEL}
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
-          Get the strategic framework to launch your startup —{" "}
-          <span className="text-gradient-brand">in 90 days.</span>
+          The strategic foundation every startup needs —{" "}
+          <span className="text-gradient-brand">built in one morning.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          A focused working session with Adam Anderson. You walk out with positioning, pricing, your ideal customer, a 90-day roadmap, and a clear plan for what to build, hire, or buy next.{" "}
+          Six strategic deliverables that normally cost $5,000+ from a consultant: positioning, ideal customer, offer & pricing, 12-month economics, 90-day roadmap, and a build/hire/buy decision tree. Built live with Adam Anderson, for your business.{" "}
           <span className="font-medium text-white">{WORKSHOP_PRICE_LABEL}. No upsell in the room.</span>
         </p>
         <p className="mt-4 max-w-2xl text-sm text-white/80 md:text-base">
-          When you're ready to actually build it — brand, website, legal, marketing — our team is here. Separate engagement, your call.
+          Coffee and light refreshments provided. When you're ready to build the brand, website, legal, or marketing — our team is here. Separate engagement, your call.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 md:mt-10">
@@ -81,13 +81,14 @@ function Hero() {
         <div className="mt-10 grid max-w-3xl grid-cols-1 gap-3 text-white/90 sm:grid-cols-2 lg:grid-cols-4 md:mt-12 md:gap-4">
           <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
           <Meta icon={<MapPin className="size-4" />} label={`${EVENT.venueCity}, ${EVENT.venueRegion}`} />
-          <Meta icon={<Clock className="size-4" />} label="Half-day · 4 hours" />
+          <Meta icon={<Clock className="size-4" />} label="8:45–11:30 AM · Coffee included" />
           <Meta icon={<Users className="size-4" />} label={`${EVENT.capacity} seats per cohort`} />
         </div>
       </div>
     </section>
   );
 }
+
 
 function Meta({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
