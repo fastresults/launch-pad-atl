@@ -213,8 +213,9 @@ export function RegisterFramework() {
                 <span className="text-sm text-muted-foreground">one-time</span>
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
-                Strategic Framework Workshop — small cohort, working session with Adam Anderson.
+                Strategic Foundation Workshop — small cohort, working session with Adam Anderson. Coffee and light refreshments provided.
               </p>
+
               <ul className="mt-6 space-y-2.5 text-sm">
                 {FRAMEWORK_DELIVERABLES.map((d) => (
                   <li key={d.title} className="flex gap-2">
