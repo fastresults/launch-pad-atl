@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
-import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
+
 import { AGENCY_SERVICES, AGENCY_TRACKS, getAgencyService } from "@/lib/agency-services";
 import { getBuildWorkshop } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
