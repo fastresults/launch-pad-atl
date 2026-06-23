@@ -154,8 +154,8 @@ function Framework() {
   );
 }
 
-function InOutScope() {
-  const inScope = [
+function HonestRoadmap() {
+  const included = [
     `All ${TOTAL_DELIVERABLES} strategy deliverables — foundation, strategy, and launch`,
     "Built live with Adam, for your idea — not a template",
     "Yours to keep forever, with a signed 90-day plan",
@@ -167,48 +167,103 @@ function InOutScope() {
     <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          Honest scope
+          The honest roadmap
         </p>
-        <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-          {WORKSHOP_PRICE_LABEL} gets you the plan.{" "}
-          <span className="text-gradient-brand">Not a built business.</span>
+        <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
+          The plan is the starting line.{" "}
+          <span className="text-gradient-brand">The business is what you build on top of it.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Most "build your startup in a day" workshops over-promise and under-deliver. We don't. Here's what you get — and what you don't.
+          Every founder we've watched fail had the same problem: they skipped the foundation, then spent $50K on a website, brand, and ads that couldn't tell a coherent story. The workshop gives you the story. After that, the modern build layer — site, social, content, AI, sales — is what turns the story into revenue.
         </p>
-        <div className="mt-10 grid gap-5 md:grid-cols-2 md:gap-6">
-          <div className="rounded-2xl border border-primary/30 bg-card p-6 md:p-8">
+
+        {/* Act 1 — Why foundation first */}
+        <div className="mt-12 md:mt-16">
+          <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground md:text-sm">
+            <AlertTriangle className="size-4 text-primary" /> Why foundation first
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {FOUNDATION_FIRST_REASONS.map((r) => (
+              <div
+                key={r.title}
+                className="rounded-2xl border border-white/10 bg-card p-5 md:p-6"
+              >
+                <h3 className="text-base font-semibold leading-snug tracking-tight md:text-lg">
+                  {r.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{r.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Act 2 — What $97 gets you */}
+        <div className="mt-12 md:mt-16">
+          <div className="rounded-2xl border border-primary/40 bg-card p-6 md:p-8">
             <div className="mb-4 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-primary">
-              <Check className="size-4" /> Included in {WORKSHOP_PRICE_LABEL}
+              <Check className="size-4" /> What {WORKSHOP_PRICE_LABEL} gets you — the foundation
             </div>
-            <ul className="space-y-3 text-sm">
-              {inScope.map((s) => (
-                <li key={s} className="flex items-start gap-2">
+            <ul className="grid gap-3 sm:grid-cols-2 md:gap-4">
+              {included.map((s) => (
+                <li key={s} className="flex items-start gap-2 text-sm md:text-base">
                   <Check className="mt-0.5 size-4 shrink-0 text-primary" />
                   <span>{s}</span>
                 </li>
               ))}
             </ul>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-card/40 p-6 md:p-8">
-            <div className="mb-4 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-              <X className="size-4" /> Not in the workshop
-            </div>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              {OUT_OF_SCOPE.map((s) => (
-                <li key={s} className="flex items-start gap-2">
-                  <X className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" />
-                  <span>{s}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-5 text-xs text-muted-foreground">
-              These move faster when you have the plan first. When you're ready,{" "}
-              <Link to="/services" className="text-foreground underline-offset-4 hover:underline">
-                see our services
-              </Link>
-              .
-            </p>
+        </div>
+
+        {/* Act 3 — The modern build layer */}
+        <div className="mt-12 md:mt-16">
+          <div className="mb-2 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground md:text-sm">
+            <Sparkles className="size-4 text-primary" /> The modern build layer — what comes next
+          </div>
+          <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
+            In 2026, no startup wins on strategy alone. Eight capabilities turn the plan into a business that attracts customers, converts them, and keeps them coming back.
+          </p>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {BUILD_LAYER.map((b) => {
+              const Icon = b.icon;
+              return (
+                <div
+                  key={b.title}
+                  className="rounded-2xl border border-white/10 bg-card p-5 transition-colors hover:border-white/25 md:p-6"
+                >
+                  <Icon className="mb-3 size-5 text-primary" />
+                  <h3 className="text-base font-semibold leading-snug tracking-tight">
+                    {b.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {b.description}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="mx-auto mt-10 max-w-3xl text-base text-muted-foreground md:text-lg">
+            DIY any of it. Hire anyone. Or hand it to our team. Either way, the workshop is what makes every dollar you spend on the build layer pull its weight.{" "}
+            <span className="font-medium text-foreground">
+              Foundation first. Build when ready.
+            </span>{" "}
+            That's not a slogan — it's the cheapest path to a real business.
+          </p>
+
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
+            <Link
+              to="/services"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 sm:w-auto"
+            >
+              See our services <ArrowRight className="size-4" />
+            </Link>
+            <Link
+              to="/register"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-base font-medium text-foreground transition-colors hover:bg-white/10 sm:w-auto"
+            >
+              Reserve a seat — {WORKSHOP_PRICE_LABEL} <ArrowRight className="size-4" />
+            </Link>
           </div>
         </div>
       </div>
