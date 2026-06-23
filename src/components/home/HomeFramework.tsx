@@ -3,9 +3,10 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { useEvent } from "@/lib/use-event";
 import {
-  FRAMEWORK_DELIVERABLES,
+  FRAMEWORK_STAGES,
   OUT_OF_SCOPE,
   SERVICE_PACKAGES,
+  TOTAL_DELIVERABLES,
   WORKSHOP_PRICE_LABEL,
 } from "@/lib/framework-deliverables";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
@@ -56,8 +57,8 @@ function Hero() {
           <span className="text-gradient-brand">built in one morning.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          Six things a consultant would charge you $5,000 for. Positioning, your first customer, what to charge, the numbers, your first 90 days, and what to do yourself vs. pay for. Built live with Adam Anderson, for your idea.{" "}
-          <span className="font-medium text-white">{WORKSHOP_PRICE_LABEL}. No pitch in the room.</span>
+          Twenty strategy deliverables a consultant would charge $50,000+ for. You get every one of them in a morning, for {WORKSHOP_PRICE_LABEL}.{" "}
+          <span className="font-medium text-white">No upsell in the room.</span>
         </p>
         <p className="mt-4 max-w-2xl text-sm text-white/80 md:text-base">
           Coffee's on us. If you want help building the brand, the site, or the legal side after — we do that too. Your call, no pressure.
@@ -111,23 +112,42 @@ function Framework() {
           <span className="text-gradient-brand">Built in one room, in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Six things that turn "I have an idea" into "I have a business." Built for your idea — not a template. Consultants charge $5,000+. You pay {WORKSHOP_PRICE_LABEL}.
+          {TOTAL_DELIVERABLES} deliverables across three stages. Each one built live for your idea, not pulled from a template. Consultants charge $50,000+ to produce this stack. You pay {WORKSHOP_PRICE_LABEL}.
         </p>
 
-        <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {FRAMEWORK_DELIVERABLES.map((d) => {
-            const Icon = d.icon;
-            return (
-              <li
-                key={d.title}
-                className="flex items-center gap-3 rounded-2xl border border-white/10 bg-card px-5 py-4 transition-colors hover:border-white/20"
-              >
-                <Icon className="size-5 shrink-0 text-primary" />
-                <span className="text-base font-medium tracking-tight">{d.title}</span>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="mt-14 space-y-14 md:space-y-20">
+          {FRAMEWORK_STAGES.map((stage) => (
+            <div key={stage.number}>
+              <div className="flex items-baseline gap-4">
+                <span className="text-5xl font-semibold leading-none text-gradient-brand md:text-6xl">
+                  {stage.number}
+                </span>
+                <div>
+                  <h3 className="text-xl font-semibold leading-tight tracking-tight md:text-2xl">
+                    {stage.name}
+                  </h3>
+                  <p className="mt-1 text-sm text-muted-foreground md:text-base">
+                    {stage.intro}
+                  </p>
+                </div>
+              </div>
+              <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
+                {stage.items.map((d) => {
+                  const Icon = d.icon;
+                  return (
+                    <li
+                      key={d.title}
+                      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-card px-5 py-4 transition-colors hover:border-white/20"
+                    >
+                      <Icon className="size-5 shrink-0 text-primary" />
+                      <span className="text-base font-medium tracking-tight">{d.title}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -135,10 +155,9 @@ function Framework() {
 
 function InOutScope() {
   const inScope = [
-    "All six pieces of your plan, built live",
-    "The numbers on one page — what it costs, what you make",
-    "Your first 90 days, week by week",
-    "What to do yourself, what to pay for",
+    `All ${TOTAL_DELIVERABLES} strategy deliverables — foundation, strategy, and launch`,
+    "Built live with Adam, for your idea — not a template",
+    "Yours to keep forever, with a signed 90-day plan",
     "Working time with Adam in a small room",
     "Coffee and light refreshments throughout",
   ];
