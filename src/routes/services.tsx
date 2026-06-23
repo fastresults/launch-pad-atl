@@ -76,7 +76,7 @@ export default function ServicesPage() {
               Start with the {WORKSHOP_PRICE_LABEL} Strategic Foundation Workshop.
             </h2>
             <p className="mt-4 text-base opacity-90 md:text-lg">
-              Get the strategic foundation first. If you decide our team is the right fit to build it, we'll credit the workshop fee toward any engagement above $1,500.
+              Get the strategic foundation first. If you decide our team is the right fit to build it, we'll credit the workshop fee toward any engagement above $1,000.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
               <Link

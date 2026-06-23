@@ -77,7 +77,7 @@ export const SERVICE_PACKAGES: ServicePackage[] = [
   {
     name: "Strategy Sprint",
     tagline: "Two weeks. We harden your framework into an executable plan.",
-    priceLabel: "From $2,500",
+    priceLabel: "From $1,600",
     bullets: [
       "Four 1:1 sessions with Adam",
       "Investor-ready pitch deck",
@@ -91,7 +91,7 @@ export const SERVICE_PACKAGES: ServicePackage[] = [
   {
     name: "Brand & Website Build",
     tagline: "A real brand identity and a 4-page site you can run a business from.",
-    priceLabel: "From $4,500",
+    priceLabel: "From $2,900",
     bullets: [
       "Logo, palette, typography system",
       "4-page website, written and SEO-configured",
@@ -104,7 +104,7 @@ export const SERVICE_PACKAGES: ServicePackage[] = [
   {
     name: "Launch Kit",
     tagline: "We handle the legal, financial, and operational scaffolding.",
-    priceLabel: "From $1,800",
+    priceLabel: "From $1,200",
     bullets: [
       "LLC formation + EIN",
       "Terms, Privacy, and Service Agreement",
@@ -117,7 +117,7 @@ export const SERVICE_PACKAGES: ServicePackage[] = [
   {
     name: "Marketing Engine",
     tagline: "Content, creative, and outreach that fills your pipeline.",
-    priceLabel: "From $3,200/mo",
+    priceLabel: "From $2,100/mo",
     bullets: [
       "30-day content calendar",
       "Creative assets + video scripts",
