@@ -11,7 +11,8 @@ import { createRegistration } from "@/lib/registrations.functions";
 import { listCohorts } from "@/lib/cohorts.functions";
 import { getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
 import {
-  FRAMEWORK_DELIVERABLES,
+  FRAMEWORK_STAGES,
+  TOTAL_DELIVERABLES,
   WORKSHOP_PRICE_LABEL,
 } from "@/lib/framework-deliverables";
 import { ArrowRight, Check, CheckCircle2, Sparkles, CalendarDays } from "lucide-react";
@@ -216,14 +217,25 @@ export function RegisterFramework() {
                 Strategic Foundation Workshop — small cohort, working session with Adam Anderson. Coffee and light refreshments provided.
               </p>
 
-              <ul className="mt-6 space-y-2.5 text-sm">
-                {FRAMEWORK_DELIVERABLES.map((d) => (
-                  <li key={d.title} className="flex gap-2">
+              <div className="mt-6 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                What you walk out with
+              </div>
+              <ul className="mt-3 space-y-3 text-sm">
+                {FRAMEWORK_STAGES.map((stage) => (
+                  <li key={stage.number} className="flex gap-3">
                     <Check className="mt-0.5 size-4 shrink-0 text-primary" />
-                    <span>{d.title}</span>
+                    <div>
+                      <div className="font-medium">
+                        Stage {Number(stage.number)} · {stage.items.length} deliverables
+                      </div>
+                      <div className="text-xs text-muted-foreground">{stage.name}</div>
+                    </div>
                   </li>
                 ))}
               </ul>
+              <div className="mt-3 text-xs text-muted-foreground">
+                {TOTAL_DELIVERABLES} deliverables total · built live with Adam · yours to keep.
+              </div>
               <div className="mt-6 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs text-muted-foreground">
                 <CalendarDays className="size-4 shrink-0" />
                 <span>Need execution help? See <Link to="/services" className="text-foreground underline-offset-4 hover:underline">our services</Link>.</span>
