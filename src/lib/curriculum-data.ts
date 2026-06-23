@@ -437,7 +437,7 @@ export const STAGES: Stage[] = [
           "Fill on-page SEO per page: title, meta, single H1, image alts",
         ],
         takeaway:
-          "Your bespoke website — 4 pages built, branded, written, and SEO-configured in your site builder. Hosting-ready.",
+          "Your bespoke website — built, branded, written, and SEO-configured in your site builder. Hosting-ready.",
         followUp:
           "Connect your domain, do a final mobile pass, and click Publish — usually under an hour once DNS resolves.",
       },
