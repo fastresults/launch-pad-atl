@@ -151,7 +151,7 @@ function InOutScope() {
           Honest scope
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-          {WORKSHOP_PRICE_LABEL} buys a framework.{" "}
+          {WORKSHOP_PRICE_LABEL} buys the strategic foundation.{" "}
           <span className="text-gradient-brand">Not a built business.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
@@ -184,7 +184,7 @@ function InOutScope() {
               ))}
             </ul>
             <p className="mt-5 text-xs text-muted-foreground">
-              These move faster when you have the framework first. When you're ready,{" "}
+              These move faster when you have the foundation first. When you're ready,{" "}
               <Link to="/services" className="text-foreground underline-offset-4 hover:underline">
                 see our services
               </Link>
@@ -234,7 +234,7 @@ function Facilitator() {
               Co-Founder of OPEN Interactive and a serial entrepreneur who has personally started multiple companies and helped launch dozens more across tech, services, and Main Street. Along the way he's shipped work for Citigroup, Mayo Clinic, 3M, and Disney, built full digital systems for a Caribbean country's government, and produced one of the region's biggest business summits for five years running.
             </p>
             <p className="mt-3 text-muted-foreground">
-              He's sat in your seat — more than once. He knows exactly what a defensible strategic framework looks like, and what it takes to go from "good idea" to "running business."
+              He's sat in your seat — more than once. He knows exactly what a defensible strategic foundation looks like, and what it takes to go from "good idea" to "running business."
             </p>
           </div>
         </div>
@@ -347,7 +347,7 @@ function BottomCTA() {
               Stop turning the idea over in your head.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
-              {WORKSHOP_PRICE_LABEL} gets you in the room with Adam, a working framework, and a 90-day roadmap. If you decide you want our team to actually build the brand, the site, or the launch — we're a click away. If not, you keep the framework either way.
+              {WORKSHOP_PRICE_LABEL} gets you in the room with Adam, a working strategic foundation, and a 90-day roadmap. If you decide you want our team to actually build the brand, the site, or the launch — we're a click away. If not, you keep the foundation either way.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4 md:mt-8">
               <Link
