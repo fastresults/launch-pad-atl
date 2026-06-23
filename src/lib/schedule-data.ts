@@ -15,8 +15,8 @@ export function buildEvent(cohort: Cohort) {
   const venueAddress = `${cohort.venueAddress}, ${cohort.venueCity}, ${cohort.venueRegion} ${cohort.venuePostal}`;
   return {
     dateLabel: cohort.dateLabel,
-    timeLabel: "8:00 AM – 4:30 PM ET",
-    durationLabel: "8 hours 30 minutes",
+    timeLabel: "8:45 AM – 11:30 AM ET",
+    durationLabel: "2 hours 45 minutes",
     venueName: cohort.venueName,
     address: venueAddress,
     venueCity: cohort.venueCity,
