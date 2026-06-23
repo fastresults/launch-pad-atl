@@ -19,7 +19,7 @@ export default function ServicesPage() {
             <span className="text-gradient-brand">actually build it.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            Productized engagements for founders who have the strategic framework and need execution. Pick a package, or scope a custom engagement. Every project is run by the same team behind the {WORKSHOP_PRICE_LABEL} workshop.
+            Productized engagements for founders who have the strategic foundation and need execution. Pick a package, or scope a custom engagement. Every project is run by the same team behind the {WORKSHOP_PRICE_LABEL} workshop.
           </p>
         </div>
       </section>
@@ -73,7 +73,7 @@ export default function ServicesPage() {
               Not sure yet?
             </p>
             <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-              Start with the {WORKSHOP_PRICE_LABEL} framework workshop.
+              Start with the {WORKSHOP_PRICE_LABEL} Strategic Foundation Workshop.
             </h2>
             <p className="mt-4 text-base opacity-90 md:text-lg">
               Get the strategic foundation first. If you decide our team is the right fit to build it, we'll credit the workshop fee toward any engagement above $1,500.
@@ -83,7 +83,7 @@ export default function ServicesPage() {
                 to="/register"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-base font-medium text-neutral-900 transition-opacity hover:opacity-90 sm:w-auto"
               >
-                Reserve a workshop seat <ArrowRight className="size-4" />
+                Reserve a foundation seat <ArrowRight className="size-4" />
               </Link>
               <Link
                 to="/contact"

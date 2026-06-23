@@ -1,44 +1,38 @@
 ## Goal
 
-Two copy-only updates across the public site:
+Carry the **"strategic foundation"** language consistently across all public-site copy. Today, three pages still call it a "framework," which weakens the positioning we just set on the home hero.
 
-1. Make clear that **coffee + light refreshments are provided** at the workshop.
-2. Sharpen the messaging so the **strategic foundation** reads as the headline attraction — not a side benefit.
-
-No layout, route, or schema changes. No new components.
+Copy-only changes. No new files, no layout shifts, no logic touched.
 
 ---
 
-## Changes
+## Files to update
 
-### 1. `src/lib/schedule-data.ts`
-- Update the check-in session (currently "Coffee, intros, set up your laptop…") to explicitly say coffee and light refreshments are provided throughout the morning.
-- Remove the stale "Catered lunch & discussion" block — the workshop now ends at 11:30 AM, so a lunch break no longer fits. Replace with a short mid-morning refreshment break.
+### 1. `src/components/site/Footer.tsx` (line 14)
+- Replace `"Framework first. Build when ready."` with `"Foundation first. Build when ready."`
 
-### 2. `src/components/home/HomeFramework.tsx`
-- **Hero (lines 51–64):** lead with "The Strategic Foundation" as the named product. Tighten the H1 around foundation language; reframe the sub-copy so the six artifacts are the headline value, not the half-day format.
-- **Meta strip (line 84):** swap "Half-day · 4 hours" for "8:45–11:30 AM · Coffee & refreshments included" (or add a 5th meta tile for refreshments — pick one in implementation to avoid crowding).
-- **Framework section (lines 108–113):** rename heading from "Six strategic deliverables" to "Your strategic foundation" and reframe the six items as the components of that foundation. Keep the "$5,000+ consultant" anchor — it's doing real work.
-- **In-scope list (line 137):** lead the included bullets with "The complete strategic foundation" instead of the current generic first line.
+### 2. `src/routes/services.tsx`
+- **Line 22** (hero sub-copy): replace `"founders who have the strategic framework"` with `"founders who have the strategic foundation"`.
+- **Line 76** (CTA heading): replace `"Start with the {WORKSHOP_PRICE_LABEL} framework workshop."` with `"Start with the {WORKSHOP_PRICE_LABEL} Strategic Foundation Workshop."`
+- **Line 86** (button): change `"Reserve a workshop seat"` to `"Reserve a foundation seat"` (or keep "workshop seat" if cleaner — flag during build; default to "foundation seat" for consistency with the new naming).
 
-### 3. `src/components/register/RegisterFramework.tsx`
-- **Hero badge + H1 area (lines 86–94):** rename to "Strategic Foundation Workshop" and rewrite the sub-copy so the foundation is the promise (positioning, ICP, pricing, economics, 90-day roadmap, build/hire/buy) — not "a framework you can run."
-- **Price card aside (lines 209–217):** under the price, add a one-line "Coffee and light refreshments provided" note alongside the existing "small cohort, working session with Adam" line.
-
-### 4. `src/lib/framework-deliverables.ts`
-- Optional: rename the exported concept from "Framework" to "Foundation" in user-facing strings only. Keep variable names (`FRAMEWORK_DELIVERABLES`, `WORKSHOP_PRICE_LABEL`) unchanged to avoid a sweep across imports.
+### 3. `src/components/home/HomeFramework.tsx`
+- **Line 154** (InOutScope H2): rewrite `"{WORKSHOP_PRICE_LABEL} buys a framework. Not a built business."` → `"{WORKSHOP_PRICE_LABEL} buys the strategic foundation. Not a built business."`
+- **Line 187**: `"have the framework first"` → `"have the foundation first"`.
+- **Line 237** (Facilitator copy): `"a defensible strategic framework"` → `"a defensible strategic foundation"`.
+- **Line 350** (BottomCTA): `"a working framework, and a 90-day roadmap"` → `"a working strategic foundation, and a 90-day roadmap"`; `"you keep the framework either way"` → `"you keep the foundation either way"`.
 
 ---
 
 ## Out of scope
 
-- No changes to `/services`, header, footer, admin, or DB.
-- No new images or icons.
-- Pricing, time (8:45–11:30 AM), and cohort logic stay as-is.
+- Internal identifiers stay as-is: `HomeFramework`, `RegisterFramework`, `FRAMEWORK_DELIVERABLES`, file name `framework-deliverables.ts`. Renaming them is a sweep across imports with no user-visible payoff.
+- `/privacy`, `/terms`, `/facilitator`, `/dashboard/*`, admin, and email templates aren't touched — "workshop" is still correct there, and none of them reference "framework" in a way that conflicts with the new positioning.
+- No pricing, schedule, or component structure changes.
 
 ---
 
 ## Technical notes
 
-- All edits are string/JSX swaps inside existing components — no new files, no new exports, no type changes.
-- The `SCHEDULE` array currently still describes a full-day agenda (8:00 AM – 4:30 PM with lunch). It's not rendered on the new home/register pages, but it's worth trimming to match the half-day reality so any future schedule view doesn't show stale content.
+- All edits are single-line string swaps in JSX.
+- The word "framework" only needs to leave **user-facing strings**. Imports like `@/lib/framework-deliverables` and the component name `Framework()` inside `HomeFramework.tsx` (line 102) stay.
