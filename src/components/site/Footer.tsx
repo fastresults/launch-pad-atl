@@ -11,25 +11,20 @@ export function SiteFooter() {
           <span>· Norcross, GA</span>
         </div>
         <div className="flex flex-col items-center gap-1 md:flex-row md:gap-4">
-          <span>© {new Date().getFullYear()} · One day. One business.</span>
-          <Link
-            to="/contact"
-            className="underline-offset-4 hover:text-foreground hover:underline"
-          >
+          <span>© {new Date().getFullYear()} · Framework first. Build when ready.</span>
+          <Link to="/services" className="underline-offset-4 hover:text-foreground hover:underline">
+            Services
+          </Link>
+          <span>·</span>
+          <Link to="/contact" className="underline-offset-4 hover:text-foreground hover:underline">
             Contact
           </Link>
           <span>·</span>
-          <Link
-            to="/privacy"
-            className="underline-offset-4 hover:text-foreground hover:underline"
-          >
+          <Link to="/privacy" className="underline-offset-4 hover:text-foreground hover:underline">
             Privacy Policy
           </Link>
           <span>·</span>
-          <Link
-            to="/terms"
-            className="underline-offset-4 hover:text-foreground hover:underline"
-          >
+          <Link to="/terms" className="underline-offset-4 hover:text-foreground hover:underline">
             Terms of Service
           </Link>
         </div>

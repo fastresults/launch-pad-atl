@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Menu } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
-import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import {
   Sheet,
   SheetContent,
@@ -15,6 +13,7 @@ import {
 
 const nav = [
   { to: "/", label: "home" },
+  { to: "/services", label: "services" },
   { to: "/schedule", label: "schedule" },
   { to: "/register", label: "register" },
   { to: "/facilitator", label: "facilitator" },
@@ -24,14 +23,8 @@ const nav = [
 export function SiteHeader() {
   const { isAuthenticated, isAdmin, signOut } = useAuth();
   const [open, setOpen] = useState(false);
-  const { data: settings } = useQuery({
-    queryKey: ["site-settings"],
-    queryFn: getPublicSiteSettings,
-    staleTime: 60_000,
-  });
-  const isFreeCohort = settings?.home_variant === "selection";
-  const ctaFull = isFreeCohort ? "Apply — free cohort" : "Reserve seat — from $679";
-  const ctaShort = isFreeCohort ? "Apply" : "Reserve";
+  const ctaFull = "Reserve seat — $97";
+  const ctaShort = "Reserve";
 
   const close = () => setOpen(false);
 

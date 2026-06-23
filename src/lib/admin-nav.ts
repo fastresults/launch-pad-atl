@@ -39,7 +39,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { to: "/admin/inquiries", label: "Inquiries", icon: MessageSquare, group: "Operations", badgeKey: "inquiriesNew" },
   { to: "/admin/cohorts", label: "Cohorts", icon: CalendarRange, group: "Operations", super: true },
 
-  { to: "/admin/site", label: "Site settings", icon: Settings, group: "Content", super: true },
+  
   { to: "/admin/media", label: "Media library", icon: ImageIcon, group: "Content", super: true },
 
   { to: "/admin/social/setup", label: "Setup wizard", icon: Rocket, group: "Social", super: true },

@@ -9,6 +9,7 @@ import AdminLayout from "@/routes/_authenticated/_admin";
 const HomePage = lazy(() => import("@/routes/index"));
 const SchedulePage = lazy(() => import("@/routes/schedule"));
 const RegisterPage = lazy(() => import("@/routes/register"));
+const ServicesPage = lazy(() => import("@/routes/services"));
 const FacilitatorPage = lazy(() => import("@/routes/facilitator"));
 const ContactPage = lazy(() => import("@/routes/contact"));
 const LoginPage = lazy(() => import("@/routes/login"));
@@ -40,7 +41,7 @@ const DashboardWorkflowKey = lazy(() => import("@/routes/_authenticated/dashboar
 // Admin sub-pages
 const AdminIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.index"));
 const AdminUsers = lazy(() => import("@/routes/_authenticated/_admin/admin.users"));
-const AdminSite = lazy(() => import("@/routes/_authenticated/_admin/admin.site"));
+
 const AdminReview = lazy(() => import("@/routes/_authenticated/_admin/admin.review"));
 const AdminRegistrations = lazy(() => import("@/routes/_authenticated/_admin/admin.registrations"));
 const AdminMembers = lazy(() => import("@/routes/_authenticated/_admin/admin.members"));
@@ -83,6 +84,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/schedule" element={<SchedulePage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/services" element={<ServicesPage />} />
         <Route path="/facilitator" element={<FacilitatorPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -117,7 +119,6 @@ export default function App() {
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<AdminIndex />} />
             <Route path="/admin/users" element={<AdminUsers />} />
-            <Route path="/admin/site" element={<AdminSite />} />
             <Route path="/admin/review" element={<AdminReview />} />
             <Route path="/admin/registrations" element={<AdminRegistrations />} />
             <Route path="/admin/members" element={<AdminMembers />} />
