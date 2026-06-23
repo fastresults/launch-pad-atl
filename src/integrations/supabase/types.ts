@@ -102,6 +102,13 @@ export type Database = {
             referencedColumns: ["key"]
           },
           {
+            foreignKeyName: "ai_pipeline_steps_deliverable_key_fkey"
+            columns: ["deliverable_key"]
+            isOneToOne: false
+            referencedRelation: "deliverable_types_public"
+            referencedColumns: ["key"]
+          },
+          {
             foreignKeyName: "ai_pipeline_steps_run_id_fkey"
             columns: ["run_id"]
             isOneToOne: false
@@ -278,6 +285,13 @@ export type Database = {
             columns: ["deliverable_key"]
             isOneToOne: false
             referencedRelation: "deliverable_types"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "attendee_deliverables_deliverable_key_fkey"
+            columns: ["deliverable_key"]
+            isOneToOne: false
+            referencedRelation: "deliverable_types_public"
             referencedColumns: ["key"]
           },
         ]
@@ -1808,7 +1822,66 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      deliverable_types_public: {
+        Row: {
+          active: boolean | null
+          auto_runnable: boolean | null
+          created_at: string | null
+          default_model: string | null
+          depends_on_keys: string[] | null
+          description: string | null
+          key: string | null
+          label: string | null
+          output_kind: string | null
+          produces_context_key: string | null
+          requires_context_keys: string[] | null
+          schema_version: number | null
+          sort_order: number | null
+          stage_label: string | null
+          stage_n: number | null
+          tier_required: string | null
+          user_can_trigger: boolean | null
+        }
+        Insert: {
+          active?: boolean | null
+          auto_runnable?: boolean | null
+          created_at?: string | null
+          default_model?: string | null
+          depends_on_keys?: string[] | null
+          description?: string | null
+          key?: string | null
+          label?: string | null
+          output_kind?: string | null
+          produces_context_key?: string | null
+          requires_context_keys?: string[] | null
+          schema_version?: number | null
+          sort_order?: number | null
+          stage_label?: string | null
+          stage_n?: number | null
+          tier_required?: string | null
+          user_can_trigger?: boolean | null
+        }
+        Update: {
+          active?: boolean | null
+          auto_runnable?: boolean | null
+          created_at?: string | null
+          default_model?: string | null
+          depends_on_keys?: string[] | null
+          description?: string | null
+          key?: string | null
+          label?: string | null
+          output_kind?: string | null
+          produces_context_key?: string | null
+          requires_context_keys?: string[] | null
+          schema_version?: number | null
+          sort_order?: number | null
+          stage_label?: string | null
+          stage_n?: number | null
+          tier_required?: string | null
+          user_can_trigger?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       delete_email: {
@@ -1827,6 +1900,28 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      list_deliverable_types_public: {
+        Args: never
+        Returns: {
+          active: boolean
+          auto_runnable: boolean
+          created_at: string
+          default_model: string
+          depends_on_keys: string[]
+          description: string
+          key: string
+          label: string
+          output_kind: string
+          produces_context_key: string
+          requires_context_keys: string[]
+          schema_version: number
+          sort_order: number
+          stage_label: string
+          stage_n: number
+          tier_required: string
+          user_can_trigger: boolean
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
