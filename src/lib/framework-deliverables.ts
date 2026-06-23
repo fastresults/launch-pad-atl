@@ -20,41 +20,42 @@ export type FrameworkDeliverable = {
 export const FRAMEWORK_DELIVERABLES: FrameworkDeliverable[] = [
   {
     icon: Compass,
-    title: "Positioning statement + competitive angle",
+    title: "A one-line answer to 'what do you do?'",
     description:
-      "A defensible one-liner for what you do, who it's for, and why it wins against the alternatives.",
+      "One sentence that tells anyone — your mom, an investor, a customer — exactly what you do and why they should care.",
   },
   {
     icon: Users,
-    title: "Ideal Customer Profile (1 page)",
+    title: "Your first customer, by name",
     description:
-      "A named first customer — not a demographic — with the pain, trigger, and budget that make them buy.",
+      "The face and wallet of the person who buys first. Not a 'segment.' Someone you can go find on Monday.",
   },
   {
     icon: Tag,
-    title: "Offer & pricing framework",
+    title: "What to charge — and how to say it",
     description:
-      "Value-based anchors, competitor scan, margin math, and the price you can defend out loud.",
+      "Your price, why it's worth it, and the words to use when someone asks 'why so much?'",
   },
   {
     icon: LineChart,
-    title: "Revenue model + 12-month economics",
+    title: "The numbers on one page",
     description:
-      "Back-of-envelope P&L, break-even, and the monthly cash plan that shows when this actually works.",
+      "What it costs, what you make, and the month you stop losing money. No spreadsheet PhD required.",
   },
   {
     icon: MapIcon,
-    title: "90-day go-to-market roadmap",
+    title: "Your first 90 days, week by week",
     description:
-      "Week-by-week milestones, channels, and KPIs — the first ten moves already on your calendar.",
+      "The next move is always on the calendar. You'll know what to do Monday morning, and the Monday after that.",
   },
   {
     icon: GitBranch,
-    title: "Build / hire / buy decision tree",
+    title: "What to do yourself, what to pay for",
     description:
-      "What to DIY, what to outsource, and what our team can build for you — with honest cost ranges.",
+      "DIY this. Outsource that. Skip the other thing. No more guessing — and honest cost ranges where it counts.",
   },
 ];
+
 
 export const OUT_OF_SCOPE = [
   "LLC filing, EIN, or legal docs",
@@ -76,7 +77,8 @@ export type ServicePackage = {
 export const SERVICE_PACKAGES: ServicePackage[] = [
   {
     name: "Strategy Sprint",
-    tagline: "Two weeks. We harden your framework into an executable plan.",
+    tagline:
+      "Two weeks with Adam. You walk out with a pitch deck, a financial model, and a list of investors to call.",
     priceLabel: "From $1,600",
     bullets: [
       "Four 1:1 sessions with Adam",
@@ -103,7 +105,8 @@ export const SERVICE_PACKAGES: ServicePackage[] = [
   },
   {
     name: "Launch Kit",
-    tagline: "We handle the legal, financial, and operational scaffolding.",
+    tagline:
+      "LLC, EIN, bank account, contracts, books. The boring stuff that keeps you legal — done for you.",
     priceLabel: "From $1,200",
     bullets: [
       "LLC formation + EIN",
@@ -116,7 +119,8 @@ export const SERVICE_PACKAGES: ServicePackage[] = [
   },
   {
     name: "Marketing Engine",
-    tagline: "Content, creative, and outreach that fills your pipeline.",
+    tagline:
+      "Posts, videos, and outreach that actually bring customers in — every month, on autopilot.",
     priceLabel: "From $2,100/mo",
     bullets: [
       "30-day content calendar",
@@ -128,3 +132,4 @@ export const SERVICE_PACKAGES: ServicePackage[] = [
     ctaHref: "/contact?service=marketing-engine",
   },
 ];
+
