@@ -114,21 +114,20 @@ function Framework() {
           Six things that turn "I have an idea" into "I have a business." Built for your idea — not a template. Consultants charge $5,000+. You pay {WORKSHOP_PRICE_LABEL}.
         </p>
 
-        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {FRAMEWORK_DELIVERABLES.map((d) => {
             const Icon = d.icon;
             return (
-              <div
+              <li
                 key={d.title}
-                className="rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-white/20"
+                className="flex items-center gap-3 rounded-2xl border border-white/10 bg-card px-5 py-4 transition-colors hover:border-white/20"
               >
-                <Icon className="mb-3 size-6 text-primary" />
-                <h3 className="text-lg font-semibold tracking-tight">{d.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d.description}</p>
-              </div>
+                <Icon className="size-5 shrink-0 text-primary" />
+                <span className="text-base font-medium tracking-tight">{d.title}</span>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </div>
     </section>
   );
