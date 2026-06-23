@@ -1,94 +1,93 @@
 
-## The frame
+## The problem with what's there now
 
-Twenty strategy deliverables. All included with the $97 workshop. Every label written like a conversion copywriter who knows the founder is one swipe away from closing the tab.
+The current "Honest Scope" section does one thing: lists what's in and what's not. It treats the "not" column as a disclaimer — small font, almost an apology. That's the wrong frame for a first-time founder.
 
-Rules I'm holding myself to:
+In 2026, no startup wins on the strategic foundation alone. They win when the foundation is wrapped in a modern customer-acquisition stack: a website that converts, a social presence that compounds, content that keeps earning attention, AI woven into the operating model, and the sales/CRM machinery that turns interest into revenue. **The foundation is what makes all that machinery pay off.** Without it, every dollar spent on the build layer evaporates.
 
-- **≤6 words per label.** Scannable, not skimmable.
-- **Second person, present tense.** "Your," not "the."
-- **End on the win, not the artifact.** Not "Business Plan Generator." A business plan an investor will actually read.
-- **No hedging, no hype.** "Premium pricing," not "potentially premium pricing." But also no "bulletproof" inside labels — it's a tell.
-- **Sentence rhythm matters.** Reading 20 in a row should feel like a drumbeat, not a grocery list.
+That's the story this section should tell. Right now it doesn't.
 
-## The 20 deliverables — final copy
+## What I'd build
 
-### Stage 1 · Build your unshakeable foundation
-*Five deliverables. The bedrock every defensible startup is built on.*
+Replace the current `InOutScope` block with a three-act educational section that teaches the prospect *why* the workshop matters, *what* they leave the room with, and *what comes next* — framed as a real roadmap, not a disclaimer.
 
-1. **Your idea, sharpened into a thesis** *(Concept Brief)*
-2. **A vision people want to follow** *(Vision & Mission)*
-3. **Legally airtight from day one** *(Legal Checklist)*
-4. **A brand worth premium pricing** *(Brand Builder)*
-5. **Your business model, on one page** *(Business Model Canvas)*
+### Section structure
 
-### Stage 2 · Craft your winning strategy
-*Five deliverables. The strategic edge competitors will spend years trying to copy.*
+**Eyebrow:** `THE HONEST ROADMAP`
 
-6. **The gap your competitors left open** *(Competitive Analysis)*
-7. **Prices your customers gladly pay** *(Pricing & Packaging)*
-8. **An investor-ready business plan** *(Business Plan)*
-9. **Your market, sized and decoded** *(Market Analysis)*
-10. **Numbers that survive investor scrutiny** *(Financial Projections)*
+**Headline:**
+> The plan is the starting line. **The business is what you build on top of it.**
 
-### Stage 3 · Launch with professional power
-*Ten deliverables. Everything you need to go from plan to paying customers.*
+**Lede (2 sentences):**
+> Every founder we've watched fail had the same problem: they skipped the foundation, then spent $50K on a website, brand, and ads that couldn't tell a coherent story. The workshop gives you the story. After that, the modern build layer — site, social, content, AI, sales — is what turns the story into revenue.
 
-11. **A launch the market notices** *(Launch Plan)*
-12. **Social channels ready to fire** *(Social Launch)*
-13. **Website copy that actually sells** *(Website Copy)*
-14. **Marketing that owns your category** *(Marketing Strategy)*
-15. **A repeatable, scalable sales system** *(Sales Strategy)*
-16. **Your customer, understood inside-out** *(Customer Research)*
-17. **A product customers can't put down** *(Product Development)*
-18. **Operations that run without you** *(Operations Plan)*
-19. **A funding plan investors respect** *(Funding Strategy)*
-20. **Growth tactics that compound fast** *(Growth Hacking)*
+### Act 1 — Why foundation first
 
-## Supporting copy that has to move with it
+Three short proof points, each one line:
 
-If 20 deliverables now ship with $97, the surrounding sentences need to back the claim or the page snaps. Updates:
+- **A wrong-headed brand is expensive to undo.** Logos and websites built before positioning is locked become $20K mistakes.
+- **A great website with no ICP doesn't convert.** Traffic without a defined buyer is just noise.
+- **AI amplifies whatever it's pointed at.** Point it at a fuzzy strategy and it scales the fuzz.
 
-### `src/components/home/HomeFramework.tsx`
+### Act 2 — What $97 gets you (the foundation)
 
-- **Hero subhead** — currently sells "six things." Rewrite: *"Twenty strategy deliverables a consultant would charge $50,000+ for. You get every one of them in a morning, for $97. No upsell in the room."*
-- **Framework section headline** — keep "Your complete strategic foundation. Built in one room, in one morning." Still earns it.
-- **Framework section intro** — *"Twenty deliverables across three stages. Each one built live for your idea, not pulled from a template. Consultants charge $50,000+ to produce this stack. You pay $97."*
-- **InOutScope "Included" list** — replace the 6 hand-written items with: *"All 20 strategy deliverables across foundation, strategy, and launch · Built live with Adam · Yours to keep forever · Coffee and light refreshments throughout."*
+The existing checklist, tightened:
 
-### `src/lib/framework-deliverables.ts`
+- All 20 strategy deliverables — foundation, strategy, and launch
+- Built live with Adam, for your idea — not a template
+- Yours to keep forever, with a signed 90-day plan
+- Working time with Adam in a small room
+- Coffee and light refreshments throughout
 
-- Replace `FRAMEWORK_DELIVERABLES` (flat 6) with `FRAMEWORK_STAGES` — three stages, each with `name`, `intro`, and an `items` array of `{ icon, title }`.
-- Export `FRAMEWORK_DELIVERABLES` as a flat alias of all 20 titles so `RegisterFramework.tsx` doesn't break.
-- Add 14 new lucide icons mapped sensibly (Scale, Palette, BarChart3, Target, DollarSign, FileText, Megaphone, Rocket, Share2, PenTool, TrendingUp, Search, Package, Settings, Banknote, Zap — final mapping at edit time).
+### Act 3 — The modern build layer (what comes after)
 
-### Home Framework layout
+This is the meaty rewrite. Replace the four-item "Not in the workshop" list with **eight build-layer capabilities** — each with a 1-sentence "why it matters in 2026" line. This educates the prospect that there's a real journey beyond the workshop, and quietly seeds why they'll want our services (or someone's).
 
-- Three stacked stage blocks instead of one flat grid.
-- Each block: small stage number ("01"), stage headline, intro line, then a 2-column outcome list — icon + 6-word label per row.
-- Stage 3 (10 items) gets a slightly denser grid so it doesn't dominate the page.
+| Capability | One-line why |
+|---|---|
+| **Brand identity** | A logo and visual system that earn trust in the first three seconds — before a single word is read. |
+| **A website that converts** | Not a brochure. A revenue surface, wired to payments and analytics, that turns visitors into customers. |
+| **Social presence** | Distribution you own. The channels where your buyers already scroll, primed to keep showing up. |
+| **A content engine** | Ongoing posts, videos, and SEO that compound — so traffic stops costing more every month. |
+| **AI as your operating system** | The unfair advantage. AI built into how you draft, design, qualify, and ship — so two people do the work of ten. |
+| **Email, CRM, and automation** | The follow-up machine. Most revenue is in the second, fifth, twelfth touch — automated, on time, on brand. |
+| **Sales systems** | A repeatable path from interested stranger to closed deal. Scripts, pipelines, and the playbook to run them. |
+| **Legal, financial, and operational scaffolding** | LLC, EIN, contracts, books, payroll. The boring stuff that keeps you legal and bankable as you scale. |
 
-### `src/components/register/RegisterFramework.tsx`
+**Closing line under the build-layer grid:**
+> DIY any of it. Hire anyone. Or hand it to our team. Either way, the workshop is what makes every dollar you spend on the build layer pull its weight. **Foundation first. Build when ready.** That's not a slogan — it's the cheapest path to a real business.
 
-- Sidebar can't show 20 lines without becoming a wall. Collapse to:
-  *"What you walk out with"* → three lines, one per stage, with the deliverable count and a one-liner. ("Stage 1 · Foundation — 5 deliverables · Your business, built right.") Full 20 stays on the home page where it has room to breathe.
+CTA row underneath: `See our services →` (primary, to /services) · `Reserve a seat — $97 →` (secondary, to /register).
 
-### `src/routes/services.tsx` workshop credit line
+## Where this lands in the code
 
-- Change "Get the plan first" → *"Get all 20 deliverables first. If you decide our team is the right fit to build it, we'll knock the $97 off any project over $1,000."*
+1. **`src/lib/framework-deliverables.ts`**
+   - Remove `OUT_OF_SCOPE`.
+   - Add `FOUNDATION_FIRST_REASONS: { title; body }[]` — the 3 Act 1 proof points.
+   - Add `BUILD_LAYER: { icon: LucideIcon; title; description }[]` — the 8 capabilities above. Icons: Palette, Globe, Share2, PenTool, Sparkles, Mail, TrendingUp, Scale.
 
-## One credibility flag — read before approving
+2. **`src/components/home/HomeFramework.tsx`**
+   - Rewrite the entire `InOutScope` function — rename to `HonestRoadmap`. Header in `HomeFramework` swaps the call.
+   - Three stacked sub-sections inside one shell: Act 1 (3-up proof points), Act 2 (the included checklist, in a primary-bordered card), Act 3 (4×2 grid of build-layer cards with icon, title, one-line "why").
+   - Closing line + dual CTA row at the bottom.
+   - Drop the `X` icon entirely from this section — the build layer is positive framing, not exclusion.
 
-You're putting 20 strategy deliverables behind a $97, ~3-hour workshop. The copy can absolutely sell it — that's what I'm here for. But a sharp founder will do the math: $4.85 per deliverable, ~8 minutes each. Two ways to handle it cleanly so the offer doesn't read as too-good-to-be-true:
+3. **No other files touched.** Footer, services, schedule, register stay as-is.
 
-- **(a) "Built live" framing.** Hold the line that the workshop produces all 20, structured templates filled in live with Adam guiding. The copy above already leans this way.
-- **(b) "Yours to keep, then refined together."** Workshop produces draft v1 of all 20; structured follow-ups in the weeks after refine them. More defensible, slightly less punchy.
+## Tone targets
 
-I've written the labels and supporting copy to fit **(a)**. Say the word if you want me to soften toward (b).
+- Educational, never preachy. Each line earns its place.
+- Speak to a founder who is smart but new — no insider jargon ("CAC," "stack," "funnel," "operationalize").
+- Confident but specific. "Two people do the work of ten" beats "AI improves productivity."
+- The build-layer language should make a thoughtful prospect think *"I hadn't thought through all of that — and they have."* That's the conversion moment.
 
 ## Out of scope
 
-- Schedule page timeline edits (separate pass once we lock the framing)
-- Pricing changes
-- Services page packages
-- Any icon/visual design beyond the lucide swap-in
+- Pricing or schedule changes.
+- Touching the 20-deliverable section above it — that work is already done and the new section builds on it cleanly.
+- Adding a new `/roadmap` page. Everything lives inside the existing home section.
+- Imagery or video — text + icon is enough at this resolution.
+
+## One call before I write the final lines
+
+**Should the closing CTA push toward `/services` (warm hand-off, gets the click on the build layer) or `/register` (book the workshop first)?** I'd actually do **both** — primary on services, secondary on register — because anyone reading this section already understands the workshop. The win is moving them toward thinking about who builds the rest. Flag if you'd rather invert that hierarchy.
