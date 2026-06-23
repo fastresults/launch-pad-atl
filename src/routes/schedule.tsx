@@ -47,17 +47,17 @@ export default function SchedulePage() {
             Idea in. <span className="text-gradient-brand">Launch plan out.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
-            Seven working hours, seven stages, one outcome. Every hour produces something
-            the next hour builds on. By 4:30 PM you have a filing-ready business and a signed,
-            dated 90-day launch plan.
+            One morning, four working stages, one outcome. Every block produces something
+            the next builds on. By 11:30 AM you walk out with your complete strategic
+            foundation and a signed, dated 90-day launch plan.
           </p>
 
           {/* Stat ribbon */}
           <div className="mt-8 grid grid-cols-1 gap-3 border-t border-white/10 pt-6 sm:grid-cols-3 md:mt-10 md:pt-8">
             {[
-              { stat: "7 hrs", label: "working time" },
-              { stat: "7 stages", label: "idea → launch" },
-              { stat: "9 deliverables", label: "in hand by 4:30" },
+              { stat: "2h 45m", label: "working time" },
+              { stat: "4 stages", label: "idea → foundation" },
+              { stat: "6 deliverables", label: "in hand by 11:30" },
             ].map((s) => (
               <div
                 key={s.label}
@@ -243,7 +243,7 @@ export default function SchedulePage() {
               One day. One door. Twenty seats.
             </h3>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              Idea in at 8 AM. Filing-ready business and a signed 90-day plan out at 4:30 PM.
+              Idea in at 8:45 AM. Complete strategic foundation and a signed 90-day plan out by 11:30 AM.
             </p>
             <div className="mt-6 flex justify-center">
               <Link
