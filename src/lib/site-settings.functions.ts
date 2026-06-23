@@ -1,15 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type SiteVariant = "original" | "selection";
-
 export type SiteSettings = {
-  home_variant: SiteVariant;
-  register_variant: SiteVariant;
   registration_open: boolean;
-  updated: {
-    home_variant: string | null;
-    register_variant: string | null;
-  };
+  inquiry_notification_email: string | null;
   [key: string]: unknown;
 };
 
@@ -20,32 +13,20 @@ function unwrap<T>(input: any): T {
   return (input ?? {}) as T;
 }
 
-function coerceVariant(v: unknown): SiteVariant {
-  return v === "selection" ? "selection" : "original";
-}
-
 export async function getPublicSiteSettings(): Promise<SiteSettings> {
   const { data } = await supabase
     .from("site_settings")
-    .select("key, value, updated_at");
+    .select("key, value");
   const rows = data ?? [];
-  const map = new Map<string, { value: unknown; updated_at: string | null }>();
-  for (const r of rows as Array<{ key: string; value: unknown; updated_at: string | null }>) {
-    map.set(r.key, { value: r.value, updated_at: r.updated_at });
+  const map = new Map<string, unknown>();
+  for (const r of rows as Array<{ key: string; value: unknown }>) {
+    map.set(r.key, r.value);
   }
-
-  const home = map.get("home_variant");
-  const reg = map.get("register_variant");
   const regOpen = map.get("registration_open");
-
+  const inquiryEmail = map.get("inquiry_notification_email");
   return {
-    home_variant: coerceVariant(home?.value),
-    register_variant: coerceVariant(reg?.value),
-    registration_open: regOpen?.value === false ? false : true,
-    updated: {
-      home_variant: home?.updated_at ?? null,
-      register_variant: reg?.updated_at ?? null,
-    },
+    registration_open: regOpen === false ? false : true,
+    inquiry_notification_email: typeof inquiryEmail === "string" ? inquiryEmail : null,
   };
 }
 

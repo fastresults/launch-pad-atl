@@ -1,0 +1,367 @@
+import { Link } from "react-router-dom";
+import { SiteHeader } from "@/components/site/Header";
+import { SiteFooter } from "@/components/site/Footer";
+import { useEvent } from "@/lib/use-event";
+import {
+  FRAMEWORK_DELIVERABLES,
+  OUT_OF_SCOPE,
+  SERVICE_PACKAGES,
+  WORKSHOP_PRICE_LABEL,
+} from "@/lib/framework-deliverables";
+import facilitatorPhoto from "@/assets/facilitator.jpg";
+import heroBg from "@/assets/hero-bg.png";
+import {
+  ArrowRight,
+  Calendar,
+  MapPin,
+  Users,
+  Clock,
+  Check,
+  X,
+  Award,
+  Sparkles,
+} from "lucide-react";
+
+export function HomeFramework() {
+  return (
+    <div className="min-h-screen">
+      <SiteHeader />
+      <Hero />
+      <Framework />
+      <InOutScope />
+      <Facilitator />
+      <ServicesTeaser />
+      <Venue />
+      <BottomCTA />
+      <SiteFooter />
+    </div>
+  );
+}
+
+function Hero() {
+  const EVENT = useEvent();
+  return (
+    <section className="relative overflow-hidden">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${heroBg})` }}
+      />
+      <div className="absolute inset-0 bg-background/65" />
+      <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-24 lg:py-32">
+        <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white/85 md:text-sm md:tracking-[0.2em]">
+          <Sparkles className="size-3.5" /> Half-day strategic framework · {WORKSHOP_PRICE_LABEL}
+        </p>
+        <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
+          Get the strategic framework to launch your startup —{" "}
+          <span className="text-gradient-brand">in 90 days.</span>
+        </h1>
+        <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
+          A focused working session with Adam Anderson. You walk out with positioning, pricing, your ideal customer, a 90-day roadmap, and a clear plan for what to build, hire, or buy next.{" "}
+          <span className="font-medium text-white">{WORKSHOP_PRICE_LABEL}. No upsell in the room.</span>
+        </p>
+        <p className="mt-4 max-w-2xl text-sm text-white/80 md:text-base">
+          When you're ready to actually build it — brand, website, legal, marketing — our team is here. Separate engagement, your call.
+        </p>
+
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 md:mt-10">
+          <Link
+            to="/register"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
+          >
+            Reserve a seat — {WORKSHOP_PRICE_LABEL} <ArrowRight className="size-4" />
+          </Link>
+          <Link
+            to="/services"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/30 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
+          >
+            See our services
+          </Link>
+        </div>
+
+        <div className="mt-10 grid max-w-3xl grid-cols-1 gap-3 text-white/90 sm:grid-cols-2 lg:grid-cols-4 md:mt-12 md:gap-4">
+          <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
+          <Meta icon={<MapPin className="size-4" />} label={`${EVENT.venueCity}, ${EVENT.venueRegion}`} />
+          <Meta icon={<Clock className="size-4" />} label="Half-day · 4 hours" />
+          <Meta icon={<Users className="size-4" />} label={`${EVENT.capacity} seats per cohort`} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Meta({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <div className="flex items-center gap-2 rounded-full bg-black/20 px-4 py-2 text-sm backdrop-blur">
+      {icon}
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function Framework() {
+  return (
+    <section className="border-t border-white/5 py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-6">
+        <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
+          What you walk out with
+        </p>
+        <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
+          Six strategic deliverables.{" "}
+          <span className="text-gradient-brand">One signed-off plan.</span>
+        </h2>
+        <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
+          Every founder leaves with the same six artifacts — built for your business, not a template. This is the framework you'd pay a consultant $5,000+ to produce. We do it in a focused session for {WORKSHOP_PRICE_LABEL}.
+        </p>
+        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {FRAMEWORK_DELIVERABLES.map((d) => {
+            const Icon = d.icon;
+            return (
+              <div
+                key={d.title}
+                className="rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-white/20"
+              >
+                <Icon className="mb-3 size-6 text-primary" />
+                <h3 className="text-lg font-semibold tracking-tight">{d.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d.description}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function InOutScope() {
+  const inScope = [
+    "Strategic framework — positioning, ICP, offer, pricing",
+    "12-month back-of-envelope economics",
+    "90-day go-to-market roadmap",
+    "Build / hire / buy decision tree",
+    "Working time with Adam in a small group",
+  ];
+  return (
+    <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-6">
+        <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
+          Honest scope
+        </p>
+        <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+          {WORKSHOP_PRICE_LABEL} buys a framework.{" "}
+          <span className="text-gradient-brand">Not a built business.</span>
+        </h2>
+        <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
+          Most "build your startup in a day" workshops over-promise and under-deliver. We don't. Here's exactly what you get — and what you don't.
+        </p>
+        <div className="mt-10 grid gap-5 md:grid-cols-2 md:gap-6">
+          <div className="rounded-2xl border border-primary/30 bg-card p-6 md:p-8">
+            <div className="mb-4 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-primary">
+              <Check className="size-4" /> Included in {WORKSHOP_PRICE_LABEL}
+            </div>
+            <ul className="space-y-3 text-sm">
+              {inScope.map((s) => (
+                <li key={s} className="flex items-start gap-2">
+                  <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <span>{s}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-card/40 p-6 md:p-8">
+            <div className="mb-4 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+              <X className="size-4" /> Not in the workshop
+            </div>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              {OUT_OF_SCOPE.map((s) => (
+                <li key={s} className="flex items-start gap-2">
+                  <X className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" />
+                  <span>{s}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 text-xs text-muted-foreground">
+              These move faster when you have the framework first. When you're ready,{" "}
+              <Link to="/services" className="text-foreground underline-offset-4 hover:underline">
+                see our services
+              </Link>
+              .
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Facilitator() {
+  return (
+    <section className="py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="grid items-center gap-8 rounded-3xl border border-white/10 bg-card p-6 md:grid-cols-[1fr_1.4fr] md:gap-10 md:p-8 lg:p-12">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-hero-gradient">
+            <div className="relative flex h-full flex-col justify-end p-6 text-white">
+              <Award className="mb-3 size-6 opacity-80" />
+              <div className="text-sm uppercase tracking-[0.2em] opacity-80">Your facilitator</div>
+              <div className="mt-1 flex items-center gap-3">
+                <div className="size-12 overflow-hidden rounded-full bg-white/15 backdrop-blur">
+                  <img src={facilitatorPhoto} alt="Adam Anderson" className="size-full object-cover" />
+                </div>
+                <div>
+                  <div className="text-2xl font-semibold leading-tight">Adam Anderson</div>
+                  <div className="text-xs uppercase tracking-[0.18em] opacity-80">
+                    Serial Entrepreneur · Operator
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 text-base leading-snug opacity-95">
+                30 years of starting businesses. A few hours with yours.
+              </div>
+            </div>
+          </div>
+          <div>
+            <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+              Who's in the room with you
+            </h2>
+            <p className="text-2xl font-semibold tracking-tight md:text-3xl lg:text-4xl">
+              Adam Anderson —{" "}
+              <span className="text-gradient-brand">at your table for the session.</span>
+            </p>
+            <p className="mt-5 text-muted-foreground">
+              Co-Founder of OPEN Interactive and a serial entrepreneur who has personally started multiple companies and helped launch dozens more across tech, services, and Main Street. Along the way he's shipped work for Citigroup, Mayo Clinic, 3M, and Disney, built full digital systems for a Caribbean country's government, and produced one of the region's biggest business summits for five years running.
+            </p>
+            <p className="mt-3 text-muted-foreground">
+              He's sat in your seat — more than once. He knows exactly what a defensible strategic framework looks like, and what it takes to go from "good idea" to "running business."
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ServicesTeaser() {
+  const featured = SERVICE_PACKAGES.slice(0, 3);
+  return (
+    <section className="border-t border-white/5 py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end md:gap-8">
+          <div>
+            <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
+              When you're ready to build it
+            </p>
+            <h2 className="max-w-2xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+              Done-for-you{" "}
+              <span className="text-gradient-brand">consulting + creative.</span>
+            </h2>
+          </div>
+          <Link
+            to="/services"
+            className="inline-flex items-center gap-2 text-sm font-medium text-foreground underline-offset-4 hover:underline"
+          >
+            See all services <ArrowRight className="size-4" />
+          </Link>
+        </div>
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {featured.map((p) => (
+            <div
+              key={p.name}
+              className="flex flex-col rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-white/20"
+            >
+              <div className="text-xs uppercase tracking-[0.18em] text-primary">{p.priceLabel}</div>
+              <h3 className="mt-2 text-xl font-semibold tracking-tight">{p.name}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{p.tagline}</p>
+              <Link
+                to={p.ctaHref}
+                className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-foreground underline-offset-4 hover:underline"
+              >
+                {p.ctaLabel} <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Venue() {
+  const EVENT = useEvent();
+  return (
+    <section className="py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="overflow-hidden rounded-3xl border border-white/10 bg-card p-6 md:p-8 lg:p-12">
+          <div className="grid gap-8 md:grid-cols-[1.05fr_1fr] md:gap-10">
+            <div>
+              <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+                Where it happens
+              </h2>
+              <p className="text-2xl font-semibold tracking-tight md:text-3xl lg:text-4xl">
+                {EVENT.venueName}
+              </p>
+              <p className="mt-3 text-muted-foreground">{EVENT.address}</p>
+              <p className="mt-1 text-muted-foreground">{EVENT.dateLabel}</p>
+              <div className="mt-7 flex flex-wrap items-start gap-3">
+                <a
+                  href={EVENT.mapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm transition-colors hover:bg-white/10"
+                >
+                  <MapPin className="size-4" /> Get directions
+                </a>
+                <Link
+                  to="/register"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                >
+                  Reserve seat <ArrowRight className="size-4" />
+                </Link>
+              </div>
+            </div>
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-black/40 md:aspect-auto md:min-h-[280px]">
+              <iframe
+                title={`Map of ${EVENT.venueName}`}
+                src={EVENT.mapsEmbedUrl}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="absolute inset-0 h-full w-full border-0"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BottomCTA() {
+  return (
+    <section className="pb-16 md:pb-24">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-hero-gradient p-8 md:p-12 lg:p-16">
+          <div className="relative max-w-3xl text-white">
+            <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
+              Stop turning the idea over in your head.
+            </h2>
+            <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
+              {WORKSHOP_PRICE_LABEL} gets you in the room with Adam, a working framework, and a 90-day roadmap. If you decide you want our team to actually build the brand, the site, or the launch — we're a click away. If not, you keep the framework either way.
+            </p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4 md:mt-8">
+              <Link
+                to="/register"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-base font-medium text-neutral-900 transition-opacity hover:opacity-90 sm:w-auto"
+              >
+                Reserve a seat — {WORKSHOP_PRICE_LABEL} <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                to="/services"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/40 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
+              >
+                See our services
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
