@@ -136,12 +136,14 @@ function Framework() {
 
 function InOutScope() {
   const inScope = [
-    "Strategic framework — positioning, ICP, offer, pricing",
+    "Your complete strategic foundation — all six deliverables",
     "12-month back-of-envelope economics",
     "90-day go-to-market roadmap",
     "Build / hire / buy decision tree",
     "Working time with Adam in a small group",
+    "Coffee and light refreshments throughout",
   ];
+
   return (
     <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
