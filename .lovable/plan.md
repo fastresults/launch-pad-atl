@@ -1,89 +1,44 @@
+## Goal
 
-# Reposition to a $97 Strategic Framework Workshop
+Two copy-only updates across the public site:
 
-One offer, one price, one funnel. The workshop sells a **strategic framework** (positioning, ICP, offer, pricing, 90-day roadmap) for **$97**. Bigger work — done-for-you consulting and creative services — moves to a dedicated `/services` page that the site, the workshop session, and the post-purchase flow all point to.
+1. Make clear that **coffee + light refreshments are provided** at the workshop.
+2. Sharpen the messaging so the **strategic foundation** reads as the headline attraction — not a side benefit.
 
-## What changes for the visitor
+No layout, route, or schema changes. No new components.
 
-- Homepage tells one story: $97, half-day-style strategic framework session, walk out with a clear plan, not a built business.
-- Register page is a single $97 checkout. No tier picker, no founders/cohort split, no scarcity tiers.
-- New `/services` page lists productized consulting and creative packages with prices and CTAs.
-- Header gets a "Services" link. Footer + post-purchase confirmation both route attendees there.
-- The "build a whole business in a day" promise (LLC packet, website, brand kit, legal docs, 25 deliverables) is gone from public copy. Those become services, not workshop deliverables.
+---
 
-## What the $97 workshop promises
+## Changes
 
-Reframed deliverables — strategic only, no production work:
+### 1. `src/lib/schedule-data.ts`
+- Update the check-in session (currently "Coffee, intros, set up your laptop…") to explicitly say coffee and light refreshments are provided throughout the morning.
+- Remove the stale "Catered lunch & discussion" block — the workshop now ends at 11:30 AM, so a lunch break no longer fits. Replace with a short mid-morning refreshment break.
 
-1. Positioning statement + competitive angle
-2. Ideal Customer Profile (1 page)
-3. Offer & pricing framework (value-based anchors, margin logic)
-4. Revenue model + 12-month back-of-envelope economics
-5. 90-day go-to-market roadmap with weekly milestones
-6. Next-step decision tree: what to DIY, what to hire out, what we can do for you
+### 2. `src/components/home/HomeFramework.tsx`
+- **Hero (lines 51–64):** lead with "The Strategic Foundation" as the named product. Tighten the H1 around foundation language; reframe the sub-copy so the six artifacts are the headline value, not the half-day format.
+- **Meta strip (line 84):** swap "Half-day · 4 hours" for "8:45–11:30 AM · Coffee & refreshments included" (or add a 5th meta tile for refreshments — pick one in implementation to avoid crowding).
+- **Framework section (lines 108–113):** rename heading from "Six strategic deliverables" to "Your strategic foundation" and reframe the six items as the components of that foundation. Keep the "$5,000+ consultant" anchor — it's doing real work.
+- **In-scope list (line 137):** lead the included bullets with "The complete strategic foundation" instead of the current generic first line.
 
-Anything execution-heavy (filings, website, brand, legal docs, content production) is explicitly out of scope and pitched as a `/services` upgrade.
+### 3. `src/components/register/RegisterFramework.tsx`
+- **Hero badge + H1 area (lines 86–94):** rename to "Strategic Foundation Workshop" and rewrite the sub-copy so the foundation is the promise (positioning, ICP, pricing, economics, 90-day roadmap, build/hire/buy) — not "a framework you can run."
+- **Price card aside (lines 209–217):** under the price, add a one-line "Coffee and light refreshments provided" note alongside the existing "small cohort, working session with Adam" line.
 
-## New `/services` page
+### 4. `src/lib/framework-deliverables.ts`
+- Optional: rename the exported concept from "Framework" to "Foundation" in user-facing strings only. Keep variable names (`FRAMEWORK_DELIVERABLES`, `WORKSHOP_PRICE_LABEL`) unchanged to avoid a sweep across imports.
 
-Productized packages, each with a fixed price band and a "Book a call" or "Start project" CTA:
+---
 
-- **Strategy Sprint** — 2-week 1:1 consulting to harden the framework into an executable plan.
-- **Brand & Website Build** — logo, identity, 4-page site, copy, SEO.
-- **Launch Kit** — LLC filing, EIN, legal templates, payment + analytics setup.
-- **Marketing Engine** — 30-day content calendar, creative assets, outreach sequences.
-- **Custom engagement** — contact form / call booking for anything bespoke.
+## Out of scope
 
-Pricing values will be placeholders the user fills in before launch — the plan ships the structure, not the dollar amounts (I'll flag every `TODO_PRICE`).
+- No changes to `/services`, header, footer, admin, or DB.
+- No new images or icons.
+- Pricing, time (8:45–11:30 AM), and cohort logic stay as-is.
 
-## Files to add / change
+---
 
-### New
-- `src/routes/services.tsx` — public Services page, registered in `src/App.tsx`.
-- `src/components/services/ServicesHero.tsx`, `ServicePackageCard.tsx`, `ServicesCTA.tsx`.
-- `src/components/home/HomeFramework.tsx` — the new single homepage (hero, framework promise, what's in / what's not, facilitator section reused, services teaser, FAQ, final CTA).
-- `src/components/register/RegisterFramework.tsx` — single $97 checkout form (name, email, phone, business idea one-liner, cohort date picker, pay-now CTA). No tier picker, no `PricingTiers`, no `ValueGrid`.
-- `src/lib/framework-deliverables.ts` — the six framework outputs above, used by home + register + services.
+## Technical notes
 
-### Rewritten
-- `src/routes/index.tsx` — render `<HomeFramework />` unconditionally. Remove the `site-settings` variant query and the `HomeSelection` / `HomeOriginal` branch.
-- `src/routes/register.tsx` — render `<RegisterFramework />` unconditionally. Same variant cleanup.
-- `src/components/site/Header.tsx` — add "Services" nav link.
-- `src/components/site/Footer.tsx` — add "Services" to the link list.
-
-### Deleted
-- `src/components/home/HomeOriginal.tsx`, `HomeSelection.tsx`, `ArtOfThePossible.tsx` (workshop-day-flow piece, no longer relevant).
-- `src/components/register/RegisterOriginal.tsx`, `RegisterSelection.tsx`.
-- `src/components/value/PricingTiers.tsx`, `TotalsBar.tsx`, `ValueGrid.tsx`, `CohortPicker.tsx` (founders/cohort tier UI is gone).
-- `src/lib/value-grid.ts` (the 25-deliverable / market-cost grid; replaced by the much smaller `framework-deliverables.ts`).
-- `src/routes/_authenticated/_admin/admin.site.tsx` (variant toggle UI) — and remove its entry from `src/lib/admin-nav.ts`.
-
-### Database (one migration, run after plan approval)
-- Drop `site_settings` rows for `home_variant` and `register_variant` (no longer used). Keep the table if anything else uses it — quick check first; if empty, drop the table.
-- `cohorts` table: set `founders_seats = 0`, `cohort_seats = <total seats>`, `founders_price_cents = 9700`, `cohort_price_cents = 9700` on existing rows so the single-tier reservation function keeps working without code changes. Rename is **not** done in this pass — column names stay `cohort_*` to avoid a destructive schema change. The single $97 price is sourced from `cohort_price_cents`.
-- `workshop_registrations.assigned_tier` keeps existing values for historical rows; new rows always insert `assigned_tier = 'cohort'`.
-
-### Untouched
-- `reserve_cohort_seat` SQL function, `cohort-availability` logic, auth, attendee dashboard, admin attendee tools, email templates. All keep working — they just operate on a single-tier cohort now.
-
-## Copy direction (high level)
-
-- Hero: "Get the strategic framework to launch in 90 days — for $97."
-- Sub: "Half-day working session with Adam Anderson. You leave with positioning, pricing, ICP, and a 90-day roadmap. When you're ready to build it, our team is here."
-- What you get: 6-item framework list, each with a one-line description.
-- What this is *not*: explicit "we don't build your website, file your LLC, or write your legal docs in this session — those are separate services" callout. Sets honest expectations and seeds the upsell.
-- Services teaser block under that with 3 service cards + "See all services →" link.
-
-## Out of scope for this pass
-
-- Stripe checkout wiring for the new $97 price (existing payment flow assumes per-cohort pricing; this plan updates the *price* in the DB and the UI, not the payment integration). Flag if you want that included.
-- Email template rewrites beyond a one-line copy nudge pointing to `/services`.
-- Filling in real service package prices — placeholders shipped.
-
-## Execution order
-
-1. Migration: update `cohorts` pricing/seats, clean `site_settings`.
-2. Build `framework-deliverables.ts`, `HomeFramework`, `RegisterFramework`, services components + route.
-3. Wire `index.tsx`, `register.tsx`, `Header`, `Footer`, `App.tsx`, `admin-nav.ts`.
-4. Delete obsolete files in one sweep.
-5. Verify: `tsgo`, load `/`, `/register`, `/services`, `/admin` to confirm no broken imports.
+- All edits are string/JSX swaps inside existing components — no new files, no new exports, no type changes.
+- The `SCHEDULE` array currently still describes a full-day agenda (8:00 AM – 4:30 PM with lunch). It's not rendered on the new home/register pages, but it's worth trimming to match the half-day reality so any future schedule view doesn't show stale content.

@@ -49,18 +49,18 @@ function Hero() {
       <div className="absolute inset-0 bg-background/65" />
       <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-24 lg:py-32">
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white/85 md:text-sm md:tracking-[0.2em]">
-          <Sparkles className="size-3.5" /> Half-day strategic framework · {WORKSHOP_PRICE_LABEL}
+          <Sparkles className="size-3.5" /> The Strategic Foundation Workshop · {WORKSHOP_PRICE_LABEL}
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
-          Get the strategic framework to launch your startup —{" "}
-          <span className="text-gradient-brand">in 90 days.</span>
+          The strategic foundation every startup needs —{" "}
+          <span className="text-gradient-brand">built in one morning.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          A focused working session with Adam Anderson. You walk out with positioning, pricing, your ideal customer, a 90-day roadmap, and a clear plan for what to build, hire, or buy next.{" "}
+          Six strategic deliverables that normally cost $5,000+ from a consultant: positioning, ideal customer, offer & pricing, 12-month economics, 90-day roadmap, and a build/hire/buy decision tree. Built live with Adam Anderson, for your business.{" "}
           <span className="font-medium text-white">{WORKSHOP_PRICE_LABEL}. No upsell in the room.</span>
         </p>
         <p className="mt-4 max-w-2xl text-sm text-white/80 md:text-base">
-          When you're ready to actually build it — brand, website, legal, marketing — our team is here. Separate engagement, your call.
+          Coffee and light refreshments provided. When you're ready to build the brand, website, legal, or marketing — our team is here. Separate engagement, your call.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 md:mt-10">
@@ -81,13 +81,14 @@ function Hero() {
         <div className="mt-10 grid max-w-3xl grid-cols-1 gap-3 text-white/90 sm:grid-cols-2 lg:grid-cols-4 md:mt-12 md:gap-4">
           <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
           <Meta icon={<MapPin className="size-4" />} label={`${EVENT.venueCity}, ${EVENT.venueRegion}`} />
-          <Meta icon={<Clock className="size-4" />} label="Half-day · 4 hours" />
+          <Meta icon={<Clock className="size-4" />} label="8:45–11:30 AM · Coffee included" />
           <Meta icon={<Users className="size-4" />} label={`${EVENT.capacity} seats per cohort`} />
         </div>
       </div>
     </section>
   );
 }
+
 
 function Meta({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
@@ -103,15 +104,16 @@ function Framework() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          What you walk out with
+          The main attraction
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-          Six strategic deliverables.{" "}
-          <span className="text-gradient-brand">One signed-off plan.</span>
+          Your complete strategic foundation.{" "}
+          <span className="text-gradient-brand">Built in one room, in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Every founder leaves with the same six artifacts — built for your business, not a template. This is the framework you'd pay a consultant $5,000+ to produce. We do it in a focused session for {WORKSHOP_PRICE_LABEL}.
+          This is what you came for. Six interlocking deliverables that turn a good idea into a defensible business — built for your specific startup, not a template. Consultants charge $5,000+ to produce this. You get it in a focused half-day for {WORKSHOP_PRICE_LABEL}.
         </p>
+
         <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {FRAMEWORK_DELIVERABLES.map((d) => {
             const Icon = d.icon;
@@ -134,12 +136,14 @@ function Framework() {
 
 function InOutScope() {
   const inScope = [
-    "Strategic framework — positioning, ICP, offer, pricing",
+    "Your complete strategic foundation — all six deliverables",
     "12-month back-of-envelope economics",
     "90-day go-to-market roadmap",
     "Build / hire / buy decision tree",
     "Working time with Adam in a small group",
+    "Coffee and light refreshments throughout",
   ];
+
   return (
     <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
