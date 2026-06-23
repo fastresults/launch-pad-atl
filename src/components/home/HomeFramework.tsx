@@ -3,8 +3,9 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { useEvent } from "@/lib/use-event";
 import {
+  BUILD_LAYER,
+  FOUNDATION_FIRST_REASONS,
   FRAMEWORK_STAGES,
-  OUT_OF_SCOPE,
   SERVICE_PACKAGES,
   TOTAL_DELIVERABLES,
   WORKSHOP_PRICE_LABEL,
@@ -18,9 +19,9 @@ import {
   Users,
   Clock,
   Check,
-  X,
   Award,
   Sparkles,
+  AlertTriangle,
 } from "lucide-react";
 
 export function HomeFramework() {
@@ -29,7 +30,7 @@ export function HomeFramework() {
       <SiteHeader />
       <Hero />
       <Framework />
-      <InOutScope />
+      <HonestRoadmap />
       <Facilitator />
       <ServicesTeaser />
       <Venue />
