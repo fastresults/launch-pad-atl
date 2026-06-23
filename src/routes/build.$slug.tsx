@@ -301,7 +301,12 @@ export default function BuildWorkshopPage() {
                   to={`/build/${o.slug}`}
                   className="group rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-primary/40"
                 >
-                  <OIcon className="mb-3 size-5 text-primary" />
+                  <div className="mb-3 flex items-center justify-between">
+                    <OIcon className="size-5 text-primary" />
+                    <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
+                      {o.priceLabel}
+                    </span>
+                  </div>
                   <h3 className="text-lg font-semibold tracking-tight">{o.capability}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{o.oneLiner}</p>
                   <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary">
