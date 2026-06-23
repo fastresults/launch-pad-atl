@@ -2,7 +2,6 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { getBuildWorkshop, BUILD_WORKSHOPS } from "@/lib/build-workshops";
-import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
 import {
   ArrowRight,
   Check,
@@ -42,7 +41,7 @@ export default function BuildWorkshopPage() {
             </div>
             <div>
               <p className="mb-2 text-xs uppercase tracking-[0.18em] text-primary md:text-sm md:tracking-[0.2em]">
-                {w.capability} · Workshop · {WORKSHOP_PRICE_LABEL}
+                {w.capability} · Workshop · {w.priceLabel}
               </p>
               <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
                 {w.oneLiner}
@@ -59,7 +58,7 @@ export default function BuildWorkshopPage() {
               to={`/register?workshop=${w.slug}`}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90"
             >
-              Reserve your seat — {WORKSHOP_PRICE_LABEL} <ArrowRight className="size-4" />
+              Reserve your seat — {w.priceLabel} <ArrowRight className="size-4" />
             </Link>
             <Link
               to={w.agencyService.href}
@@ -239,7 +238,7 @@ export default function BuildWorkshopPage() {
               {w.agencyService.priceLabel}
             </p>
             <p className="mt-3 max-w-2xl text-sm opacity-90 md:text-base">
-              Attended the workshop? We'll knock the {WORKSHOP_PRICE_LABEL} off any engagement over $1,000.
+              Attended the workshop? We'll knock the {w.priceLabel} off any engagement over $1,000.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -252,7 +251,7 @@ export default function BuildWorkshopPage() {
                 to={`/register?workshop=${w.slug}`}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/30 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
               >
-                Workshop first — {WORKSHOP_PRICE_LABEL}
+                Workshop first — {w.priceLabel}
               </Link>
             </div>
           </div>
@@ -302,7 +301,12 @@ export default function BuildWorkshopPage() {
                   to={`/build/${o.slug}`}
                   className="group rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-primary/40"
                 >
-                  <OIcon className="mb-3 size-5 text-primary" />
+                  <div className="mb-3 flex items-center justify-between">
+                    <OIcon className="size-5 text-primary" />
+                    <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
+                      {o.priceLabel}
+                    </span>
+                  </div>
                   <h3 className="text-lg font-semibold tracking-tight">{o.capability}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{o.oneLiner}</p>
                   <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary">

@@ -220,7 +220,7 @@ function HonestRoadmap() {
             <Sparkles className="size-4 text-primary" /> The modern build layer — what comes next
           </div>
           <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-            In 2026, no startup wins on strategy alone. Eight capabilities turn the plan into a business that attracts customers, converts them, and keeps them coming back. Each one is a half-day workshop for {WORKSHOP_PRICE_LABEL} — or we'll build it for you.
+            In 2026, no startup wins on strategy alone. Eight capabilities turn the plan into a business that attracts customers, converts them, and keeps them coming back. Each is a half-day workshop — from $197 — or we'll build it for you.
           </p>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -237,7 +237,7 @@ function HonestRoadmap() {
                   <div className="mb-3 flex items-center justify-between">
                     <Icon className="size-5 text-primary" />
                     <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
-                      Workshop · {WORKSHOP_PRICE_LABEL}
+                      Workshop · {workshop?.priceLabel ?? "$197"}
                     </span>
                   </div>
                   <h3 className="text-base font-semibold leading-snug tracking-tight">

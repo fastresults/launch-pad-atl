@@ -1,162 +1,96 @@
 
-# Rebuild /services to amplify the home page Build Layer
+# Tiered workshop pricing based on agency retail cost
 
-The home page already introduces the 8 capabilities ("Modern Build Layer") and routes founders into the $97 workshops. The /services page is the *other* door on that same moment: when the founder has decided they don't want to do it themselves. Today /services is a thin grid of four legacy packages with no through-line to the 8 capabilities. We rebuild it so it mirrors the build layer card-for-card, capability-for-capability, and makes the agency engagement feel like the natural next step from the workshop.
+Each of the 8 build-layer workshops gets its own price tied to the retail cost of the matching agency service. The original Strategic Foundation Workshop stays at $97 (it's the entry product, not tied to a build-layer service).
 
-## Strategic framing
+## Price mapping
 
-Every section answers a single buyer question — in order:
+Rules: 1–2K → $197 · 2–3K → $297 · 3–5K → $397
 
-1. *"You're talking to whom?"* — Hero re-anchors the 8 capabilities, repositioning the page as the done-for-you path.
-2. *"What does done-for-you mean for each capability?"* — A capability-by-capability service grid that mirrors the build layer 1:1, each card naming the artifact you'd otherwise build yourself in the workshop.
-3. *"How do you actually work?"* — A 4-step engagement process (Diagnose → Scope → Build → Hand off) so the founder knows what they're buying.
-4. *"What's it cost and how do I bundle?"* — Three productized tracks (Launch, Growth, Operate) priced as bundles of capabilities, so the founder sees the smart combinations instead of à-la-carte math.
-5. *"Why you?"* — Proof block: 30 years, named brands, the credit-back-the-$97 promise.
-6. *"Where do I start?"* — Dual final CTA: book a call (high intent) or start with the workshop (warm).
-
-The 4 legacy `SERVICE_PACKAGES` get retired from the page (still exported for any other consumer) in favor of this new structure.
-
-## Page structure (top to bottom)
-
-```text
-1. Hero — re-anchor + dual CTA
-2. Capability ↔ Service grid (8 cards, mirrors home build layer)
-3. Three productized tracks (Launch / Growth / Operate)
-4. How we engage — 4-step process
-5. Proof + facilitator strip
-6. Workshop ↔ Service relationship (the $97 credit promise)
-7. FAQ (6 objections)
-8. Final CTA band
-```
-
-## Section detail
-
-### 1. Hero
-- Eyebrow: "Done-for-you · The 8 capabilities, built by our team"
-- H1: *"You shouldn't have to learn eight jobs to start one business."*
-- Sub: *"You attended the workshop, or you've already decided you'd rather buy the result than build it. Either way — here's what our team ships, capability by capability, on a fixed scope and a fixed clock."*
-- Dual CTA: **Book a discovery call** (primary, gradient) · **Start with the $97 workshop** (secondary)
-- Quick trust row: "Used by founders shipping to Citigroup · Mayo Clinic · 3M · Disney" or similar pulled from existing facilitator bio.
-
-### 2. Capability ↔ Service grid (the amplification)
-Eight cards in a 2×4 grid, **same icons, same titles, same order** as the home page build layer. Each card carries:
-- Icon + capability name (matches home)
-- **One-line agency promise** (what we ship, not what the workshop teaches)
-- 3 deliverables we hand over
-- Starting price (e.g. "From $2,900")
-- Timeline chip (e.g. "2 weeks")
-- Footer link: **"Learn the strategy first — $97 workshop →"** linking to `/build/<slug>`
-
-Example pairs (matches the 8 BUILD_LAYER items):
-
-| Capability | Agency one-liner | Deliverables | Starts |
+| # | Workshop | Agency retail | New workshop price |
 |---|---|---|---|
-| Brand identity | "A premium brand system, shipped in 14 days." | Logo system · Voice + visual guidelines · Asset pack | $2,900 |
-| A website that converts | "A revenue surface — not a brochure — wired to payments and analytics." | Site design + build · Copy · Stripe + GA4 + CRM | $4,800 |
-| Social presence | "Two channels, owned. Profiles rebuilt, calendar shipped, cadence held." | Profile redesign · 30-day calendar · Cadence stack | $1,800 setup + $1,200/mo |
-| A content engine | "Pillars, SEO map, and 8 anchor pieces a month — repurposed everywhere." | Editorial system · 8 anchors/mo · Repurposing flow | $2,400/mo |
-| AI as your operating system | "Ten workflows rewired around AI, documented, owned by your team." | Workflow audit · 10 automations · Prompt library + governance | $4,500 |
-| Email, CRM & automation | "The follow-up machine. CRM live, sequences written, deliverability fixed." | CRM setup · 3 sequences · Lifecycle automation | $3,200 |
-| Sales systems | "A repeatable motion: ICP, script, pipeline, weekly rhythm." | ICP + script · Pipeline build · 30-day enablement | $3,800 |
-| Legal, financial & ops | "LLC, EIN, contracts, books, payroll — done, not promised." | Entity + EIN · Contract suite · Bookkeeping setup | $1,200 |
+| 1 | Brand identity | $2,900 | **$297** |
+| 2 | A website that converts | $4,800 | **$397** |
+| 3 | Social presence | $1,800 setup (+ $1,200/mo) | **$197** |
+| 4 | A content engine | $2,400/mo | **$297** |
+| 5 | AI as your operating system | $4,500 | **$397** |
+| 6 | Email, CRM & automation | $3,200 | **$397** |
+| 7 | Sales systems | $3,800 | **$397** |
+| 8 | Legal, financial & ops | $1,200 | **$197** |
 
-(Final copy + prices written in implementation; numbers above are the working anchor.)
+Foundation Workshop (homepage): **stays $97**.
 
-### 3. Three productized tracks
-Founders don't buy 8 things at once. Bundle the capabilities into three pre-packaged engagements with anchor pricing — this is where the conversion lift happens vs. à-la-carte cards.
+Tier banding for monthly services uses the setup/first-month figure as the anchor (Social Presence → $1,800 setup, Content Engine → $2,400/mo treated as the 2–3K band).
 
-- **Launch Track** — Brand + Website + Legal/Ops. *"From an idea to a business you can take money for."* From $7,500 · 4–6 weeks.
-- **Growth Track** *(featured)* — Social + Content + Email/CRM. *"The customer-acquisition engine, running monthly."* From $4,500/mo · ongoing.
-- **Operate Track** — AI as OS + Sales systems. *"Two people doing the work of ten. Pipeline you can forecast."* From $8,000 · 30-day sprint.
+## Data model changes
 
-Each track card lists the included capabilities (with the same icons used above so the eye connects them), the price, the timeline, the outcome, and a **Book a scoping call** CTA.
-
-### 4. How we engage — 4-step process
-Single horizontal strip with 4 numbered steps, each one sentence:
-1. **Diagnose** — 30-minute call. We tell you what to buy and what to skip.
-2. **Scope** — Fixed price, fixed deliverables, fixed clock. No "T&M" surprises.
-3. **Build** — Weekly demos, shared workspace, your team copied on everything.
-4. **Hand off** — Documented systems, recorded loom walkthroughs, 30-day support window.
-
-### 5. Proof + facilitator strip
-Reuse Adam's photo + the existing facilitator copy from the home page (compact). Add 3–5 logos or "shipped work for" line. One short founder testimonial slot (placeholder until real one lands).
-
-### 6. The workshop ↔ service relationship
-A single band that names the math:
-- *"Attend the $97 workshop. Decide in the room whether to DIY or hand it to us. If you hire us for any engagement over $1,000, the $97 is credited back. Either way, you leave with the strategy."*
-- Two CTAs side by side: **See all 8 workshops** (`/build`) · **Book a discovery call** (`/contact`).
-
-### 7. FAQ (6 items)
-- Do I have to take the workshop first? *(No, but it pays for itself.)*
-- Can I bundle just two capabilities? *(Yes — that's what a discovery call sets.)*
-- Who owns the work? *(You do. Always. Source files, accounts, everything.)*
-- How fast do you start? *(Within 7 days of signed scope.)*
-- What if I already have a brand / site / CRM? *(We audit, then either tune yours or rebuild — your call after diagnose.)*
-- Do you take equity / revenue share? *(No. Fixed fees, clean books.)*
-
-### 8. Final CTA band (gradient)
-- H2: *"Strategy is the foundation. Execution is what makes it real."*
-- Sub: One sentence restating the dual offer.
-- Primary CTA: **Book a discovery call** → `/contact`
-- Secondary: **Start with the $97 workshop** → `/build`
-
-## Copywriting voice
-
-- 20-year conversion copywriter rules: one promise per section, concrete artifacts over adjectives, dual CTA on every major band, price anchored next to scope every time.
-- Mirror exact language from home where it earns trust (capability names verbatim, the "Foundation first. Build when ready." thesis, the $97 credit-back promise).
-- No hype words. Verbs and outputs only.
-- Every agency card states what is *shipped*, not what is *discussed*.
-
-## Data model
-
-New file: `src/lib/agency-services.ts`
+`src/lib/build-workshops.ts` — add per-workshop price to the `BuildWorkshop` type:
 
 ```ts
-export type AgencyService = {
-  slug: string;          // matches build workshop slug
-  capability: string;    // matches BUILD_LAYER.title exactly
-  icon: LucideIcon;
-  oneLiner: string;
-  deliverables: string[]; // 3 items
-  priceLabel: string;
-  timelineLabel: string;
-  workshopHref: string;   // /build/<slug>
-  ctaHref: string;        // /contact?service=<slug>
+export type BuildWorkshop = {
+  slug: string;
+  // ...existing fields
+  priceCents: number;    // e.g. 19700, 29700, 39700
+  priceLabel: string;    // e.g. "$197", "$297", "$397"
+  // ...
 };
-
-export type AgencyTrack = {
-  slug: "launch" | "growth" | "operate";
-  name: string;
-  tagline: string;
-  outcome: string;
-  includedSlugs: string[]; // references AgencyService slugs
-  priceLabel: string;
-  timelineLabel: string;
-  featured?: boolean;
-  ctaHref: string;
-};
-
-export const AGENCY_SERVICES: AgencyService[]; // 8 entries, ordered to match BUILD_LAYER
-export const AGENCY_TRACKS: AgencyTrack[];     // 3 entries
 ```
 
-Icons and `capability` strings are pulled from / kept in sync with `BUILD_LAYER` in `framework-deliverables.ts` so the home and services pages can never drift.
+Populate `priceCents` + `priceLabel` for all 8 entries per the table above. Add a small helper:
 
-## Files to create / modify
+```ts
+export function workshopPriceForRetailCents(retailCents: number): { cents: number; label: string };
+```
 
-**New:**
-- `src/lib/agency-services.ts` — the 8 services + 3 tracks data.
+`src/lib/framework-deliverables.ts` — keep `WORKSHOP_PRICE_CENTS = 9700` and `WORKSHOP_PRICE_LABEL = "$97"` (now explicitly the **Foundation Workshop** price, used by the homepage hero, Honest Roadmap band, and Foundation CTAs only). No rename needed; just stop using it as the universal label everywhere else.
 
-**Modify:**
-- `src/routes/services.tsx` — full rewrite to the structure above. Drop the `SERVICE_PACKAGES` rendering; render the capability grid + tracks + process + proof + workshop band + FAQ + final CTA.
+## Copy surfaces that change
 
-**Untouched but referenced:**
-- `src/components/home/HomeFramework.tsx` — no changes; services page mirrors its order, icons, and labels via shared data.
-- `src/lib/framework-deliverables.ts` — `SERVICE_PACKAGES` export stays (in case used elsewhere) but is no longer rendered on /services.
+Every place that hardcodes "$97" while talking about one of the 8 build-layer workshops gets updated to use the workshop-specific `priceLabel`. Places referring to the Foundation Workshop keep `$97`.
 
-## Not in scope (this pass)
+### `src/routes/build.tsx` (workshops index)
+- Card chip: `Workshop · {WORKSHOP_PRICE_LABEL}` → `Workshop · {w.priceLabel}` (per-card).
+- Hero subhead "half-day, {WORKSHOP_PRICE_LABEL} workshop" → restate as "from $197" since the index covers all 8.
 
-- Real customer testimonials and logos (use restrained placeholder lines pulled from existing facilitator copy).
-- Pricing experimentation / A/B variants.
-- Stripe checkout for tracks (CTA still routes to `/contact` discovery call).
-- A new "case studies" page.
+### `src/routes/build.$slug.tsx` (individual workshop page)
+- Hero chip + CTAs + agency upsell band: all `WORKSHOP_PRICE_LABEL` → `w.priceLabel`.
+- "Other workshops" cards — show each one's own `priceLabel`.
+
+### `src/lib/build-workshops.ts` — COMMON_FAQ
+- "What's actually included for {WORKSHOP_PRICE_LABEL}?" — change to a parameterized FAQ generator so each workshop's FAQ shows its own price (e.g. "What's included for $297?").
+- Credit-back FAQ stays generic ("the workshop fee credits toward any engagement over $1,000").
+
+### `src/routes/services.tsx`
+- Capability grid: each card's "Or learn the strategy first — {WORKSHOP_PRICE_LABEL} workshop →" → use that service's matching workshop price (looked up via slug).
+- Hero CTA: "Start with a {WORKSHOP_PRICE_LABEL} workshop" → "Start with a workshop — from $197".
+- Workshop band ("Try us for $97"): reframe to "Try us for as little as $197" (since the 8 build-layer workshops start at $197; the Foundation Workshop sits separately on the homepage).
+- Credit-back copy: "the {WORKSHOP_PRICE_LABEL} is credited back" → "your workshop fee is credited back".
+- Final CTA: same treatment as hero.
+
+### `src/components/home/HomeFramework.tsx`
+- Hero, Honest Roadmap, and Foundation CTAs: keep `$97` (Foundation Workshop is unchanged).
+- Build-layer card chips: currently `Workshop · {WORKSHOP_PRICE_LABEL}` → switch to per-workshop `priceLabel` (looked up from `BUILD_WORKSHOPS` by capability match, which the cards already do).
+- Section intro line "Each one is a half-day workshop for {WORKSHOP_PRICE_LABEL}" → "Each one is a half-day workshop, from $197".
+
+### `src/components/register/RegisterFramework.tsx`, `src/routes/register.tsx`, any other surface
+- Audit any remaining `WORKSHOP_PRICE_LABEL` usage. If the context is the Foundation Workshop, leave it. If the context is a build-layer workshop, switch to the per-workshop price (via the `?workshop=<slug>` query param if present).
+
+## Files to modify
+
+- `src/lib/build-workshops.ts` — add `priceCents` + `priceLabel` per workshop; parameterize the FAQ price.
+- `src/routes/build.tsx` — per-card price chip, "from $197" hero.
+- `src/routes/build.$slug.tsx` — every CTA + chip uses `w.priceLabel`.
+- `src/routes/services.tsx` — per-service workshop price links, reframe banners to "from $197".
+- `src/components/home/HomeFramework.tsx` — per-card chip uses workshop price, build-layer intro reframed.
+- `src/components/register/RegisterFramework.tsx` — audit and update build-layer references; Foundation stays $97.
+
+## Files NOT changed
+
+- `src/lib/framework-deliverables.ts` — `WORKSHOP_PRICE_CENTS`/`WORKSHOP_PRICE_LABEL` remain the Foundation Workshop price.
+- Stripe / payment integration — no checkout exists yet, so no plumbing changes needed.
+
+## Not in scope
+
+- Real payment flow per workshop (still goes through existing `/register?workshop=<slug>` — pricing is display-only for now).
+- Repricing the Foundation Workshop.
+- Repricing agency services or tracks.

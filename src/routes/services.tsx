@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
-import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
+
 import { AGENCY_SERVICES, AGENCY_TRACKS, getAgencyService } from "@/lib/agency-services";
+import { getBuildWorkshop } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import {
   ArrowRight,
@@ -61,7 +62,7 @@ function Hero() {
             to="/build"
             className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-base font-medium text-foreground transition-colors hover:bg-white/10 sm:w-auto"
           >
-            Start with a {WORKSHOP_PRICE_LABEL} workshop
+            Start with a workshop — from $197
           </Link>
         </div>
 
@@ -87,7 +88,7 @@ function CapabilityGrid() {
           <span className="text-gradient-brand">Shipped — not taught.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Every card below names what you'd otherwise build yourself in the {WORKSHOP_PRICE_LABEL} workshop. Hire us when you'd rather own the result than the learning curve.
+          Every card below names what you'd otherwise build yourself in the matching workshop (from $197). Hire us when you'd rather own the result than the learning curve.
         </p>
 
         <div className="mt-10 grid gap-5 md:grid-cols-2">
@@ -133,7 +134,7 @@ function CapabilityGrid() {
                       to={s.workshopHref}
                       className="mt-1 inline-block text-xs text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      Or learn the strategy first — {WORKSHOP_PRICE_LABEL} workshop →
+                      Or learn the strategy first — {getBuildWorkshop(s.slug)?.priceLabel ?? "$197"} workshop →
                     </Link>
                   </div>
                   <Link
@@ -364,11 +365,11 @@ function WorkshopBand() {
             <Sparkles className="mr-1 inline size-3.5" /> The math you should hear
           </p>
           <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            Try us for {WORKSHOP_PRICE_LABEL}.{" "}
+            Try us for as little as $197.{" "}
             <span className="text-gradient-brand">Hire us if it's a fit.</span>
           </h2>
           <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-            Take any of the eight workshops. Decide in the room whether to DIY, hire someone else, or hand it to our team. If you hire us for any engagement over $1,000, the {WORKSHOP_PRICE_LABEL} is credited back. Either way, you leave with the strategy in writing.
+            Take any of the eight workshops — $197, $297, or $397 depending on the capability. Decide in the room whether to DIY, hire someone else, or hand it to our team. If you hire us for any engagement over $1,000, your workshop fee is credited back. Either way, you leave with the strategy in writing.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link
@@ -474,7 +475,7 @@ function FinalCTA() {
               to="/build"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/40 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
             >
-              Start with a {WORKSHOP_PRICE_LABEL} workshop
+              Start with a workshop — from $197
             </Link>
           </div>
         </div>

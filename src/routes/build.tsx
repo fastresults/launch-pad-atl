@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
-import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
+
 import { ArrowRight, Sparkles } from "lucide-react";
 
 export default function BuildIndexPage() {
@@ -20,7 +20,7 @@ export default function BuildIndexPage() {
             <span className="text-gradient-brand">One business that actually runs.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            Strategy is the foundation. These eight capabilities are the building. Each one is a half-day, {WORKSHOP_PRICE_LABEL} workshop — taught by the people who'd otherwise charge you $5K+ to build it for you.
+            Strategy is the foundation. These eight capabilities are the building. Each is a half-day workshop — <span className="text-foreground">from $197</span> — taught by the people who'd otherwise charge you $5K+ to build it for you.
           </p>
         </div>
       </section>
@@ -39,7 +39,7 @@ export default function BuildIndexPage() {
                   <div className="mb-4 flex items-center justify-between">
                     <Icon className="size-6 text-primary" />
                     <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.14em] text-primary">
-                      Workshop · {WORKSHOP_PRICE_LABEL}
+                      Workshop · {w.priceLabel}
                     </span>
                   </div>
                   <h2 className="text-xl font-semibold tracking-tight md:text-2xl">

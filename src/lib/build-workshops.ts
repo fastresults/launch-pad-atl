@@ -19,11 +19,13 @@ export type BuildWorkshop = {
   icon: LucideIcon;
   title: string; // The product name, e.g. "Brand Identity Workshop"
   capability: string; // The build-layer capability name, e.g. "Brand identity"
-  oneLiner: string; // Hero promise
-  subhead: string; // Hero subhead
-  pains: { title: string; body: string }[]; // 3 cost-of-inaction items
-  walkOuts: string[]; // 5-7 concrete artifacts
-  agenda: AgendaBlock[]; // 3-4 modules
+  priceCents: number; // 19700 | 29700 | 39700
+  priceLabel: string; // "$197" | "$297" | "$397"
+  oneLiner: string;
+  subhead: string;
+  pains: { title: string; body: string }[];
+  walkOuts: string[];
+  agenda: AgendaBlock[];
   forYou: string[];
   notForYou: string[];
   agencyService: {
@@ -35,28 +37,42 @@ export type BuildWorkshop = {
   faq: FAQ[];
 };
 
-const COMMON_FAQ: FAQ[] = [
-  {
-    q: `What's actually included for ${WORKSHOP_PRICE_LABEL}?`,
-    a: "The live half-day workshop, every template and worksheet we use, a recording you keep forever, and 30 days of follow-up access in our group channel to ask questions as you implement.",
-  },
-  {
-    q: "Do I need to attend the Strategic Foundation Workshop first?",
-    a: "Strongly recommended, not required. The foundation workshop locks your positioning, ICP, and offer. Without that, anything you build on top is a guess. If you already have those nailed, jump straight in.",
-  },
-  {
-    q: "What if I don't get value out of it?",
-    a: "Email us within 7 days and we refund the $97. No forms, no friction. We've never had to debate it.",
-  },
-  {
-    q: "Can your team just build this for me instead?",
-    a: "Yes — and that's the point. The workshop exists so you understand what good looks like before you hire anyone. If you decide to hand it to us, the $97 credits toward any engagement over $1,000.",
-  },
-];
+/** Map agency retail price (in cents) to the matching workshop price tier. */
+export function workshopPriceForRetailCents(retailCents: number): {
+  cents: number;
+  label: string;
+} {
+  if (retailCents < 200_000) return { cents: 19_700, label: "$197" };
+  if (retailCents < 300_000) return { cents: 29_700, label: "$297" };
+  return { cents: 39_700, label: "$397" };
+}
+
+function makeCommonFaq(priceLabel: string): FAQ[] {
+  return [
+    {
+      q: `What's actually included for ${priceLabel}?`,
+      a: "The live half-day workshop, every template and worksheet we use, a recording you keep forever, and 30 days of follow-up access in our group channel to ask questions as you implement.",
+    },
+    {
+      q: "Do I need to attend the Strategic Foundation Workshop first?",
+      a: `Strongly recommended, not required. The ${WORKSHOP_PRICE_LABEL} Foundation Workshop locks your positioning, ICP, and offer. Without that, anything you build on top is a guess. If you already have those nailed, jump straight in.`,
+    },
+    {
+      q: "What if I don't get value out of it?",
+      a: `Email us within 7 days and we refund the ${priceLabel}. No forms, no friction. We've never had to debate it.`,
+    },
+    {
+      q: "Can your team just build this for me instead?",
+      a: `Yes — and that's the point. The workshop exists so you understand what good looks like before you hire anyone. If you decide to hand it to us, the ${priceLabel} credits toward any engagement over $1,000.`,
+    },
+  ];
+}
 
 export const BUILD_WORKSHOPS: BuildWorkshop[] = [
   {
     slug: "brand-identity",
+    priceCents: 29700,
+    priceLabel: "$297",
     icon: Palette,
     title: "Brand Identity Workshop",
     capability: "Brand identity",
@@ -127,10 +143,12 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       priceLabel: "From $2,900",
       href: "/contact?service=brand-website",
     },
-    faq: COMMON_FAQ,
+    faq: makeCommonFaq("$297"),
   },
   {
     slug: "website-that-converts",
+    priceCents: 39700,
+    priceLabel: "$397",
     icon: Globe,
     title: "Website That Converts Workshop",
     capability: "A website that converts",
@@ -201,10 +219,12 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       priceLabel: "From $2,900",
       href: "/contact?service=brand-website",
     },
-    faq: COMMON_FAQ,
+    faq: makeCommonFaq("$397"),
   },
   {
     slug: "social-presence",
+    priceCents: 19700,
+    priceLabel: "$197",
     icon: Share2,
     title: "Social Presence Workshop",
     capability: "Social presence",
@@ -274,10 +294,12 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       priceLabel: "From $2,100/mo",
       href: "/contact?service=marketing-engine",
     },
-    faq: COMMON_FAQ,
+    faq: makeCommonFaq("$197"),
   },
   {
     slug: "content-engine",
+    priceCents: 29700,
+    priceLabel: "$297",
     icon: PenTool,
     title: "Content Engine Workshop",
     capability: "A content engine",
@@ -347,10 +369,12 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       priceLabel: "From $2,100/mo",
       href: "/contact?service=marketing-engine",
     },
-    faq: COMMON_FAQ,
+    faq: makeCommonFaq("$297"),
   },
   {
     slug: "ai-operating-system",
+    priceCents: 39700,
+    priceLabel: "$397",
     icon: Sparkles,
     title: "AI as Your Operating System Workshop",
     capability: "AI as your operating system",
@@ -419,10 +443,12 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       priceLabel: "From $4,500",
       href: "/contact?service=ai-ops-sprint",
     },
-    faq: COMMON_FAQ,
+    faq: makeCommonFaq("$397"),
   },
   {
     slug: "email-crm-automation",
+    priceCents: 39700,
+    priceLabel: "$397",
     icon: Mail,
     title: "Email, CRM & Automation Workshop",
     capability: "Email, CRM, and automation",
@@ -492,10 +518,12 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       priceLabel: "From $2,100/mo",
       href: "/contact?service=marketing-engine",
     },
-    faq: COMMON_FAQ,
+    faq: makeCommonFaq("$397"),
   },
   {
     slug: "sales-systems",
+    priceCents: 39700,
+    priceLabel: "$397",
     icon: TrendingUp,
     title: "Sales Systems Workshop",
     capability: "Sales systems",
@@ -565,10 +593,12 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       priceLabel: "From $3,800",
       href: "/contact?service=sales-system-sprint",
     },
-    faq: COMMON_FAQ,
+    faq: makeCommonFaq("$397"),
   },
   {
     slug: "legal-financial-ops",
+    priceCents: 19700,
+    priceLabel: "$197",
     icon: Scale,
     title: "Legal, Financial & Operational Scaffolding Workshop",
     capability: "Legal, financial, and operational scaffolding",
@@ -638,7 +668,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       priceLabel: "From $1,200",
       href: "/contact?service=launch-kit",
     },
-    faq: COMMON_FAQ,
+    faq: makeCommonFaq("$197"),
   },
 ];
 
