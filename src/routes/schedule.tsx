@@ -243,7 +243,7 @@ export default function SchedulePage() {
               One day. One door. Twenty seats.
             </h3>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              Idea in at 8 AM. Filing-ready business and a signed 90-day plan out at 4:30 PM.
+              Idea in at 8:45 AM. Complete strategic foundation and a signed 90-day plan out by 11:30 AM.
             </p>
             <div className="mt-6 flex justify-center">
               <Link
