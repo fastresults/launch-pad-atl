@@ -1,38 +1,30 @@
-## Goal
+# Reduce service prices by 35%
 
-Carry the **"strategic foundation"** language consistently across all public-site copy. Today, three pages still call it a "framework," which weakens the positioning we just set on the home hero.
+Apply -35% then round to the nearest $100 to all estimated service prices. Real, fixed prices (the $97 workshop) are left alone. Sample business-idea content in `business-ideas.ts` is illustrative founder examples, not our pricing — out of scope.
 
-Copy-only changes. No new files, no layout shifts, no logic touched.
+## Price changes
 
----
+| Item | Old | -35% | Rounded |
+|---|---|---|---|
+| Strategy Sprint | $2,500 | $1,625 | **$1,600** |
+| Brand & Website Build | $4,500 | $2,925 | **$2,900** |
+| Launch Kit | $1,800 | $1,170 | **$1,200** |
+| Marketing Engine | $3,200/mo | $2,080 | **$2,100/mo** |
+| Workshop credit threshold | $1,500 | $975 | **$1,000** |
 
-## Files to update
+## Files
 
-### 1. `src/components/site/Footer.tsx` (line 14)
-- Replace `"Framework first. Build when ready."` with `"Foundation first. Build when ready."`
+**`src/lib/framework-deliverables.ts`** — update `priceLabel` on all four `SERVICE_PACKAGES`:
+- `"From $2,500"` → `"From $1,600"`
+- `"From $4,500"` → `"From $2,900"`
+- `"From $1,800"` → `"From $1,200"`
+- `"From $3,200/mo"` → `"From $2,100/mo"`
 
-### 2. `src/routes/services.tsx`
-- **Line 22** (hero sub-copy): replace `"founders who have the strategic framework"` with `"founders who have the strategic foundation"`.
-- **Line 76** (CTA heading): replace `"Start with the {WORKSHOP_PRICE_LABEL} framework workshop."` with `"Start with the {WORKSHOP_PRICE_LABEL} Strategic Foundation Workshop."`
-- **Line 86** (button): change `"Reserve a workshop seat"` to `"Reserve a foundation seat"` (or keep "workshop seat" if cleaner — flag during build; default to "foundation seat" for consistency with the new naming).
-
-### 3. `src/components/home/HomeFramework.tsx`
-- **Line 154** (InOutScope H2): rewrite `"{WORKSHOP_PRICE_LABEL} buys a framework. Not a built business."` → `"{WORKSHOP_PRICE_LABEL} buys the strategic foundation. Not a built business."`
-- **Line 187**: `"have the framework first"` → `"have the foundation first"`.
-- **Line 237** (Facilitator copy): `"a defensible strategic framework"` → `"a defensible strategic foundation"`.
-- **Line 350** (BottomCTA): `"a working framework, and a 90-day roadmap"` → `"a working strategic foundation, and a 90-day roadmap"`; `"you keep the framework either way"` → `"you keep the foundation either way"`.
-
----
+**`src/routes/services.tsx`** (line 79) — update the credit copy:
+- `"any engagement above $1,500"` → `"any engagement above $1,000"`
 
 ## Out of scope
 
-- Internal identifiers stay as-is: `HomeFramework`, `RegisterFramework`, `FRAMEWORK_DELIVERABLES`, file name `framework-deliverables.ts`. Renaming them is a sweep across imports with no user-visible payoff.
-- `/privacy`, `/terms`, `/facilitator`, `/dashboard/*`, admin, and email templates aren't touched — "workshop" is still correct there, and none of them reference "framework" in a way that conflicts with the new positioning.
-- No pricing, schedule, or component structure changes.
-
----
-
-## Technical notes
-
-- All edits are single-line string swaps in JSX.
-- The word "framework" only needs to leave **user-facing strings**. Imports like `@/lib/framework-deliverables` and the component name `Framework()` inside `HomeFramework.tsx` (line 102) stay.
+- `WORKSHOP_PRICE_LABEL = "$97"` — actual ticket price, not an estimate.
+- `src/lib/business-ideas.ts` — sample business ideas shown to founders (their hypothetical offers/income), not StartupLabs pricing.
+- `src/lib/workflow.ts` placeholder `"$500–$1,500"` — example placeholder text in a founder-facing form field, not our pricing.
