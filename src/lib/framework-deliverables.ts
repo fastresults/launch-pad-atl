@@ -90,11 +90,11 @@ export const SERVICE_PACKAGES: ServicePackage[] = [
   },
   {
     name: "Brand & Website Build",
-    tagline: "A real brand identity and a 4-page site you can run a business from.",
+    tagline: "A real brand identity and a site you can run a business from.",
     priceLabel: "From $2,900",
     bullets: [
       "Logo, palette, typography system",
-      "4-page website, written and SEO-configured",
+      "Website, written and SEO-configured",
       "Stripe / payments + analytics wired",
       "Delivered live in 2 weeks",
     ],
