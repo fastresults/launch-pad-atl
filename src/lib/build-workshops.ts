@@ -68,7 +68,7 @@ function makeCommonFaq(priceLabel: string): FAQ[] {
   return [
     {
       q: `What's actually included for ${priceLabel}?`,
-      a: "The strategy, the exact tool stack we use, and the step-by-step process to ship it yourself — delivered in a live half-day workshop. Plus every template and worksheet, a recording you keep forever, and 30 days of follow-up access in our group channel as you implement.",
+      a: "The strategy, the exact tool stack we use, and the step-by-step process to ship it yourself — delivered in a live half-day workshop. Plus every framework and worksheet, a recording you keep forever, and 30 days of follow-up access in our group channel as you implement.",
     },
     {
       q: "Do I need to attend the Strategic Foundation Workshop first?",
@@ -80,7 +80,7 @@ function makeCommonFaq(priceLabel: string): FAQ[] {
     },
     {
       q: "Can your team just build this for me instead?",
-      a: `Yes. The workshop is built to let you ship it yourself — strategy, templates, tool stack, the whole playbook. If you'd rather hand it to us, the ${priceLabel} credits toward any engagement over $1,000.`,
+      a: `Yes. The workshop is built to let you ship it yourself — strategy, frameworks, tool stack, the whole playbook. If you'd rather hand it to us, the ${priceLabel} credits toward any engagement over $1,000.`,
     },
   ];
 }
@@ -229,7 +229,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         time: "9:15 – 10:15",
         title: "Wireframe the homepage and #1 conversion page",
         detail:
-          "Input: the proof-stack template, your real testimonials and metrics. Working session: live wireframing in Figma — no design polish, structure first. Output: two pages laid out section-by-section, ready for copy.",
+          "Input: the proof-stack framework, your real testimonials and metrics. Working session: live wireframing in Figma — no design polish, structure first. Output: two pages laid out section-by-section, ready for copy.",
       },
       {
         time: "10:30 – 11:15",
@@ -413,7 +413,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "3–5 content pillars tied to your offer and to buyer-intent keywords",
       "SEO keyword map — the terms you can realistically rank for in 6 months (with difficulty scores)",
       "Production system documented: capture → draft → edit → publish, with owners and SLAs",
-      "Repurposing flow — one anchor piece exploded into 10 derivative assets, with templates",
+      "Repurposing flow — one anchor piece exploded into 10 derivative assets, with frameworks",
       "90-day editorial calendar locked: titles, formats, ship dates, owner per asset",
       "Measurement plan — the 3 metrics that prove the engine is working (and the 12 to ignore)",
     ],
@@ -434,13 +434,13 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         time: "10:30 – 11:15",
         title: "Design the production system + repurposing flow",
         detail:
-          "Input: your team (or just you), your tool stack. Working session: map the assembly line — who captures, who drafts, who edits, who ships. Output: a documented workflow and the repurposing template (1 → 10).",
+          "Input: your team (or just you), your tool stack. Working session: map the assembly line — who captures, who drafts, who edits, who ships. Output: a documented workflow and the repurposing framework (1 → 10).",
       },
       {
         time: "11:15 – 11:30",
         title: "Lock the first 90 days",
         detail:
-          "Input: the editorial calendar template. Working session: assign titles, formats, and ship dates to the next 90 days. Output: a calendar you can execute against on Monday.",
+          "Input: the editorial calendar framework. Working session: assign titles, formats, and ship dates to the next 90 days. Output: a calendar you can execute against on Monday.",
       },
     ],
     forYou: [
@@ -460,7 +460,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       painHeadline: "A year of random posts and you rank for nothing your buyer actually searches.",
       walkOutHeadline: {
         lead: "Pillars, keywords, production flow, repurposing.",
-        emphasis: "Not a Notion template.",
+        emphasis: "Not a Notion framework.",
       },
       agendaHeadline: {
         lead: "One morning. The whole engine.",
@@ -477,7 +477,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         emphasis: "and a 90-day calendar already loaded.",
       },
       decisionBody:
-        "By 11:30 you'll have your pillars, a keyword map you can actually win in 6 months, a documented production flow (capture → draft → edit → ship), a 1-to-10 repurposing template, and a 90-day editorial calendar with owners assigned. You'll also know whether to operate it solo, hire an editor, or hand the whole flywheel to our team.",
+        "By 11:30 you'll have your pillars, a keyword map you can actually win in 6 months, a documented production flow (capture → draft → edit → ship), a 1-to-10 repurposing framework, and a 90-day editorial calendar with owners assigned. You'll also know whether to operate it solo, hire an editor, or hand the whole flywheel to our team.",
       otherWorkshopsHeadline: "The other channels your content will pour into.",
       faqHeadline: "Content questions, answered without the SEO theater.",
     },
@@ -828,7 +828,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         time: "9:15 – 10:15",
         title: "Lock the contracts that actually protect you",
         detail:
-          "Input: 5 contract templates every business needs. Working session: walk through clause-by-clause, mark the ones to adapt, flag the ones founders skip and regret. Output: a contract suite checklist with your specific edits noted.",
+          "Input: 5 contract frameworks every business needs. Working session: walk through clause-by-clause, mark the ones to adapt, flag the ones founders skip and regret. Output: a contract suite checklist with your specific edits noted.",
       },
       {
         time: "10:30 – 11:15",

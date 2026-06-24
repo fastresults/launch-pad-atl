@@ -88,7 +88,7 @@ function CapabilityGrid() {
           <span className="text-gradient-brand">Shipped — not taught.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Every card below is the same scope a workshop hands you the strategy, templates, and tool stack to build yourself (from $197). Hire us when you'd rather own the result than the learning curve.
+          Every card below is the same scope a workshop hands you the strategy, frameworks, and tool stack to build yourself (from $197). Hire us when you'd rather own the result than the learning curve.
         </p>
 
         <div className="mt-10 grid gap-5 md:grid-cols-2">
@@ -369,7 +369,7 @@ function WorkshopBand() {
             <span className="text-gradient-brand">Hire us if it's a fit.</span>
           </h2>
           <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-            Take any of the eight workshops — $197, $297, or $397 depending on the capability. You leave with the strategy, the templates, and the exact tool stack to ship it yourself. Decide in the room whether to DIY, hire someone else, or hand it to our team. If you hire us for any engagement over $1,000, your workshop fee is credited back.
+            Take any of the eight workshops — $197, $297, or $397 depending on the capability. You leave with the strategy, the frameworks, and the exact tool stack to ship it yourself. Decide in the room whether to DIY, hire someone else, or hand it to our team. If you hire us for any engagement over $1,000, your workshop fee is credited back.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link
@@ -396,7 +396,7 @@ function WorkshopBand() {
 const FAQS = [
   {
     q: "Do I have to take the workshop first?",
-    a: "No. But it's the cheapest insurance against hiring the wrong thing — and it hands you the strategy, the templates, and the tool stack to actually ship it yourself if you want to. Most founders who take it come back with a sharper scope and save more than they spend.",
+    a: "No. But it's the cheapest insurance against hiring the wrong thing — and it hands you the strategy, the frameworks, and the tool stack to actually ship it yourself if you want to. Most founders who take it come back with a sharper scope and save more than they spend.",
   },
   {
     q: "Can I bundle just two capabilities instead of a whole track?",

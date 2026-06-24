@@ -113,7 +113,7 @@ function Framework() {
           <span className="text-gradient-brand">Built in one room, in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          {TOTAL_DELIVERABLES} deliverables across three stages — each one built live for your idea, never pulled from a template. A fraction of the cost of hiring it out, and yours to keep for {WORKSHOP_PRICE_LABEL}.
+          {TOTAL_DELIVERABLES} deliverables across three stages — each one built live for your idea, never pulled from a framework. A fraction of the cost of hiring it out, and yours to keep for {WORKSHOP_PRICE_LABEL}.
         </p>
 
         <div className="mt-14 space-y-14 md:space-y-20">
@@ -157,7 +157,7 @@ function Framework() {
 function HonestRoadmap() {
   const included = [
     `All ${TOTAL_DELIVERABLES} strategy deliverables — foundation, strategy, and launch`,
-    "Built live with Adam, for your idea — not a template",
+    "Built live with Adam, for your idea — not a framework",
     "Yours to keep forever — plus a 90-day action plan you walk out with",
     "Working time with Adam in a small room",
     "Coffee and light refreshments throughout",
@@ -174,7 +174,7 @@ function HonestRoadmap() {
           <span className="text-gradient-brand">The business is what you build on top of it.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Every founder we've watched fail had the same problem: they skipped the foundation, then spent $50K on a website, brand, and ads that couldn't tell a coherent story. The workshop gives you the story, the templates, and the tool stack to ship it. After that, the modern build layer — site, social, content, AI, sales — is what turns the story into revenue.
+          Every founder we've watched fail had the same problem: they skipped the foundation, then spent $50K on a website, brand, and ads that couldn't tell a coherent story. The workshop gives you the story, the frameworks, and the tool stack to ship it. After that, the modern build layer — site, social, content, AI, sales — is what turns the story into revenue.
         </p>
 
         {/* Act 1 — Why foundation first */}
@@ -220,7 +220,7 @@ function HonestRoadmap() {
             <Sparkles className="size-4 text-primary" /> The modern build layer — what comes next
           </div>
           <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-            In 2026, no startup wins on strategy alone. Eight capabilities turn the plan into a business that attracts customers, converts them, and keeps them coming back. Each half-day workshop hands over the strategy, the templates, and the exact tool stack to DIY it — from $197 — or we'll build it for you.
+            In 2026, no startup wins on strategy alone. Eight capabilities turn the plan into a business that attracts customers, converts them, and keeps them coming back. Each half-day workshop hands over the strategy, the frameworks, and the exact tool stack to DIY it — from $197 — or we'll build it for you.
           </p>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -256,7 +256,7 @@ function HonestRoadmap() {
           </div>
 
           <p className="mx-auto mt-10 max-w-3xl text-base text-muted-foreground md:text-lg">
-            DIY any of it. Hire anyone. Or hand it to our team. Either way, the workshop is the DIY playbook — the same strategy, templates, and tool stack our team runs from.{" "}
+            DIY any of it. Hire anyone. Or hand it to our team. Either way, the workshop is the DIY playbook — the same strategy, frameworks, and tool stack our team runs from.{" "}
             <span className="font-medium text-foreground">
               Foundation first. Build when ready.
             </span>{" "}
