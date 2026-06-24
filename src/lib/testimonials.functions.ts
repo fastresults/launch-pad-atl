@@ -10,6 +10,8 @@ export type TestimonialSliderSettings = {
   start_muted: boolean;
   loop: boolean;
   show_on_mobile: boolean;
+  scroll_speed_px_s: number;
+  direction: "left" | "right";
 };
 
 export const DEFAULT_TESTIMONIAL_SETTINGS: TestimonialSliderSettings = {
@@ -21,6 +23,8 @@ export const DEFAULT_TESTIMONIAL_SETTINGS: TestimonialSliderSettings = {
   start_muted: true,
   loop: true,
   show_on_mobile: true,
+  scroll_speed_px_s: 40,
+  direction: "left",
 };
 
 export type Testimonial = {

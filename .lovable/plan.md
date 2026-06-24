@@ -1,30 +1,34 @@
-## Seed 10 dummy video testimonials
+## Convert testimonial slider to edge-to-edge marquee
 
-### Approach
-The slider signs URLs from the `master-media` bucket. To seed dummy data without uploading 10 actual video files, I'll make one tiny code tweak so any `video_path` / `poster_path` that already starts with `http://` or `https://` is used as-is (no signing). Existing real uploads keep working unchanged.
+### What changes
+Replace the centered single-video player in `src/components/home/VideoTestimonials.tsx` with a full-bleed, continuously scrolling marquee of 9:16 portrait video cards.
 
-### Code change (one file)
-`src/lib/testimonials.functions.ts` — `signUrl()` helper: if `path` matches `^https?://`, return it directly; otherwise sign from the bucket as today.
+### Behavior
+- **Edge-to-edge**: section breaks out of the page container; row spans the full viewport width with no horizontal padding on the strip itself.
+- **Continuous auto-scroll**: cards translate right-to-left at a steady speed (admin-configurable; default 40px/sec). When the first set scrolls off-screen, it loops seamlessly by duplicating the list (standard CSS marquee trick).
+- **Hover pauses** the entire row (animation-play-state: paused).
+- **All videos play simultaneously**, muted, looped, `playsInline`, `autoPlay`. This is the natural fit for a marquee — every visible card is alive.
+- **Per-card hover**: unmute button + pause button overlay on the hovered card.
+- **`prefers-reduced-motion`**: marquee freezes, becomes a normal horizontal scroll the user drags.
+- **Mobile**: same marquee, slightly smaller cards (~280px wide × 500px tall). Hidden entirely if `show_on_mobile` is off.
 
-### Data seed (one insert)
-Insert 10 rows into `public.video_testimonials`, all `status = 'published'`, `sort_order` 0–9, using Google's public sample MP4s and Unsplash headshots:
+### Card design (9:16 portrait, ~420px tall on desktop)
+- Width ~236px, height 420px, rounded-2xl, subtle ring.
+- Video fills the card (`object-cover`).
+- Bottom gradient overlay with founder name, role · startup, and the quote (clamped to 2 lines).
+- Small "play" icon top-right when muted.
 
-| # | Founder | Role | Startup | Quote |
-|---|---|---|---|---|
-| 1 | Maya Chen | Founder & CEO | Loomstack | "Walked in with a half-idea. Walked out with a 90-day plan I actually believe in." |
-| 2 | Darius Patel | Co-founder | Northwind Goods | "The positioning exercise alone was worth the seat." |
-| 3 | Aisha Okonkwo | Founder | Brightline Labs | "By Monday I had a price, a pitch, and my first three calls booked." |
-| 4 | Jonas Berg | CEO | Pebble & Pine | "Finally stopped guessing. I have a real plan now." |
-| 5 | Priya Raman | Founder | Verdant Health | "It cut six months of overthinking down to one morning." |
-| 6 | Marcus Hall | Founder | Stoneblock Studio | "The offer they helped me write is what I'm still selling today." |
-| 7 | Elena Vasquez | Co-founder | Aurora Yields | "Coffee, focus, and a foundation. Exactly what I needed." |
-| 8 | Wesley Tran | Founder | Kitsune Care | "I left with twenty deliverables and zero fluff." |
-| 9 | Hana Yamamoto | CEO | Folio Republic | "No upsell, no theater. Just the work that actually mattered." |
-| 10 | Caleb Mwangi | Founder | Topograph | "First time I felt like a real founder instead of someone with an idea." |
+### Settings adjustments (admin page)
+- Drop the now-irrelevant `autoplay`, `start_muted`, `loop`, `pause_seconds` fields from the active form (keep them in DB for compatibility, just hide).
+- Add: **Scroll speed (px/sec)** — default 40, range 10–200.
+- Add: **Direction** — left ↔ right (default left).
+- Keep: enabled, heading, subheading, show_on_mobile.
 
-Videos rotate through 4 public Google sample MP4s (Big Buck Bunny, Elephants Dream, For Bigger Blazes, Sintel). Posters use 10 distinct Unsplash portrait URLs.
+### Files
+- `src/components/home/VideoTestimonials.tsx` — rewrite as marquee.
+- `src/routes/_authenticated/_admin/admin.testimonials.tsx` — swap settings UI.
+- `src/lib/testimonials.functions.ts` — extend `TestimonialSliderSettings` with `scroll_speed_px_s` and `direction`, with defaults.
+- Section is mounted inside `<HomeFramework />` at full width by using `w-screen relative left-1/2 -ml-[50vw]` wrapper for the strip; the heading stays in the centered max-w container above it.
 
-### What you can do after
-- Open the homepage to see the slider populated.
-- Go to `/admin/testimonials` to edit, reorder, unpublish, or delete any of them.
-- Replace videos one-by-one with real founder clips when ready.
+### Why the data already loaded but you didn't see it
+The current component renders centered with a max-width — it *is* on the page, just not full-bleed and not a scroller. The rebuild fixes both at once.
