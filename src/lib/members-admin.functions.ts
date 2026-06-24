@@ -170,3 +170,16 @@ export async function restoreMemberToPending(input: any) {
     .eq("user_id", userId);
   if (error) throw new Error(error.message);
 }
+
+export async function setFoundersHubAccess(input: any) {
+  const { userId, grant } = unwrap<{ userId: string; grant: boolean }>(input);
+  const me = (await supabase.auth.getUser()).data.user;
+  const patch: Record<string, any> = {
+    founders_hub_access: grant,
+    founders_hub_granted_at: grant ? new Date().toISOString() : null,
+    founders_hub_granted_by: grant ? me?.id ?? null : null,
+  };
+  const { error } = await supabase.from("profiles").update(patch).eq("user_id", userId);
+  if (error) throw new Error(error.message);
+}
+
