@@ -291,11 +291,16 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
         </div>
       ))}
 
-      <div className="flex justify-end gap-2">
+      <div className="flex items-center justify-end gap-2">
+        {snapshot.concept_status !== "locked" && (
+          <p className="mr-auto text-xs text-amber-300">
+            Lock your concept in Concept Studio above to unlock document generation.
+          </p>
+        )}
         <Button variant="outline" onClick={() => save.mutate()} disabled={save.isPending}>
           {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save draft"}
         </Button>
-        <Button onClick={() => advance.mutate()} disabled={advance.isPending}>
+        <Button onClick={() => advance.mutate()} disabled={advance.isPending || snapshot.concept_status !== "locked"}>
           {advance.isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
           Continue to documents →
         </Button>
