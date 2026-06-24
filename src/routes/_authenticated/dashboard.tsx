@@ -9,7 +9,7 @@ import {
   SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
   SidebarFooter, SidebarHeader, useSidebar,
 } from "@/components/ui/sidebar";
-import { Home, Calendar, ClipboardList, ListChecks, FolderOpen, User } from "lucide-react";
+import { Home, Calendar, ClipboardList, ListChecks, FolderOpen, User, Sparkles } from "lucide-react";
 import { listCohorts } from "@/lib/cohorts.functions";
 import { getWorkshopMode } from "@/lib/workshop-mode";
 import { getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
