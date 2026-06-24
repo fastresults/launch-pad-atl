@@ -248,9 +248,12 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
       <div>
         <h2 className="text-xl font-semibold">Review the brief</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          We've drafted this from your concept. Edit anything that's off — every document downstream uses this.
+          We've drafted this from your concept and the deep-research pass. Edit anything that's off — every document downstream uses this.
         </p>
       </div>
+
+      <ResearchPanel snapshot={snapshot} />
+
 
       {SECTIONS.map((section) => (
         <div key={section.key} className="space-y-3 rounded-2xl border border-white/10 bg-card p-5">
