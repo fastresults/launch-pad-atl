@@ -256,7 +256,7 @@ function HonestRoadmap() {
           </div>
 
           <p className="mx-auto mt-10 max-w-3xl text-base text-muted-foreground md:text-lg">
-            DIY any of it. Hire anyone. Or hand it to our team. Either way, the workshop is what makes every dollar you spend on the build layer pull its weight.{" "}
+            DIY any of it. Hire anyone. Or hand it to our team. Either way, the workshop is the DIY playbook — the same strategy, templates, and tool stack our team runs from.{" "}
             <span className="font-medium text-foreground">
               Foundation first. Build when ready.
             </span>{" "}
