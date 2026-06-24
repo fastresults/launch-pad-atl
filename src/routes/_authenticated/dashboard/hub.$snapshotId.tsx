@@ -16,6 +16,7 @@ import {
   getSnapshot,
   retryEnrichment,
   updateExtractedData,
+  updateFounderContext,
   advanceToGenerate,
   listDocumentTypes,
   listSnapshotDocuments,
@@ -25,6 +26,7 @@ import {
   cancelJob,
   listFailures,
 } from "@/lib/foundersHub.functions";
+import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import {
   ArrowLeft,
   Loader2,
