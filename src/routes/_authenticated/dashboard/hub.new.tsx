@@ -96,6 +96,7 @@ function Inner() {
   const [files, setFiles] = useState<DroppedFile[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [drafting, setDrafting] = useState(false);
+  const [filling, setFilling] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const addFiles = useCallback(async (incoming: File[]) => {
@@ -303,22 +304,37 @@ function Inner() {
             <div className="flex items-center justify-between gap-2">
               <Label htmlFor="concept">Business concept *</Label>
               <div className="flex items-center gap-2">
-                {/* TODO: remove after testing — dev-only random fill */}
+                {/* TODO: remove after testing — scrapes a real startup site and reverse-engineers a concept */}
                 <Button
                   type="button"
                   size="sm"
                   variant="ghost"
                   className="text-xs text-muted-foreground"
-                  onClick={() => {
-                    const sample = SAMPLE_CONCEPTS[Math.floor(Math.random() * SAMPLE_CONCEPTS.length)];
-                    setCompanyName(sample.company);
-                    if (path !== "manual") setWebsiteUrl(sample.url);
-                    setBusinessConcept(sample.concept);
-                    if (path === "competitor") setDiff(sample.diff);
-                    toast.success("Filled test concept");
+                  disabled={filling}
+                  onClick={async () => {
+                    setFilling(true);
+                    try {
+                      const url = SEED_URLS[Math.floor(Math.random() * SEED_URLS.length)];
+                      const { data, error } = await supabase.functions.invoke(
+                        "dev-reverse-engineer-concept",
+                        { body: { url } },
+                      );
+                      if (error) throw error;
+                      if (!data?.company || !data?.concept) throw new Error("Empty response");
+                      setCompanyName(data.company);
+                      if (path !== "manual") setWebsiteUrl(data.url);
+                      setBusinessConcept(data.concept);
+                      if (path === "competitor" && data.diff) setDiff(data.diff);
+                      toast.success(`Filled from ${data.company}`);
+                    } catch (e) {
+                      toast.error(e instanceof Error ? e.message : "Couldn't fill test concept");
+                    } finally {
+                      setFilling(false);
+                    }
                   }}
                 >
-                  🧪 Fill test concept
+                  {filling ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+                  {filling ? "Scraping…" : "🧪 Fill test concept"}
                 </Button>
                 {readyFiles.length > 0 && (
                   <Button
