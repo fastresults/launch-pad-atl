@@ -58,9 +58,10 @@ function Hero() {
           <span className="text-gradient-brand">built in one morning.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          Built for founders who want to hit the ground running. Twenty strategy deliverables a consultant would charge $50,000+ for — yours in a morning, for {WORKSHOP_PRICE_LABEL}.{" "}
+          A half-day for founders who'd rather start with a real plan than guess. Twenty strategy deliverables, built live for your startup, yours to keep for {WORKSHOP_PRICE_LABEL}.{" "}
           <span className="font-medium text-white">No upsell in the room.</span>
         </p>
+
         <p className="mt-4 max-w-2xl text-sm text-white/80 md:text-base">
           Coffee's on us. If you want help building the brand, the site, or the legal side after — we do that too. Your call, no pressure.
         </p>
@@ -114,7 +115,8 @@ function Framework() {
           <span className="text-gradient-brand">Built in one room, in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          {TOTAL_DELIVERABLES} deliverables across three stages — each one built live for your startup, never pulled from a framework. A fraction of the cost of hiring it out, and yours to keep for {WORKSHOP_PRICE_LABEL}.
+          {TOTAL_DELIVERABLES} deliverables across three stages — each one built live for your startup, never pulled from a framework. Yours to keep for {WORKSHOP_PRICE_LABEL}.
+
         </p>
 
 
