@@ -167,8 +167,19 @@ QUALITY_SCORE: <0-100 integer reflecting completeness, specificity, and investor
     content_version_history: history.slice(0, 10),
   }, { onConflict: "snapshot_id,document_type" });
 
+  if (documentType === "visual_identity_brief") {
+    const m = raw.match(/```json\s*([\s\S]*?)```/);
+    if (m) {
+      try {
+        const tokens = JSON.parse(m[1]);
+        await supabase.from("venture_snapshots").update({ brand_tokens: tokens }).eq("id", snapshotId);
+      } catch { /* ignore */ }
+    }
+  }
+
   return { wordCount, quality };
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
