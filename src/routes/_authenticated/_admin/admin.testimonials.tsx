@@ -240,13 +240,6 @@ function SettingsForm({
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <div className="flex items-center justify-between rounded-md border p-3 md:col-span-2">
-        <div>
-          <Label>Show section on homepage</Label>
-          <p className="text-xs text-muted-foreground">Hide the entire slider when off.</p>
-        </div>
-        <Switch checked={s.enabled} onCheckedChange={(v) => set("enabled", v)} />
-      </div>
 
       <div className="space-y-2">
         <Label>Heading</Label>
