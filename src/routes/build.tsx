@@ -81,7 +81,7 @@ export default function BuildIndexPage() {
               Skip the learning curve. Hand it to our team.
             </h2>
             <p className="mt-4 text-base opacity-90 md:text-lg">
-              Same crew that runs the workshops. We'll build the brand, the website, the systems, and the engines — so you can stay focused on customers.
+              Same crew that runs the workshops, using the same templates and tool stack we teach. We'll build the brand, the website, the systems, and the engines — so you can stay focused on customers.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
