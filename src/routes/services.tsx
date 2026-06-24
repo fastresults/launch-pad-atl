@@ -396,7 +396,7 @@ function WorkshopBand() {
 const FAQS = [
   {
     q: "Do I have to take the workshop first?",
-    a: "No. But for $97, it's the cheapest insurance against hiring the wrong thing. Most founders who take it come back with a sharper scope and save more than they spend.",
+    a: "No. But it's the cheapest insurance against hiring the wrong thing — and it hands you the strategy, the templates, and the tool stack to actually ship it yourself if you want to. Most founders who take it come back with a sharper scope and save more than they spend.",
   },
   {
     q: "Can I bundle just two capabilities instead of a whole track?",
