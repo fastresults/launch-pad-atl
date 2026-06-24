@@ -105,9 +105,10 @@ Deno.serve(async (req) => {
     if (!snap) {
       return new Response(JSON.stringify({ error: "Snapshot not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    if (snap.user_id !== userId) {
+    if (!isServiceRole && snap.user_id !== userId) {
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    const ownerId = snap.user_id;
 
     const { data: doc } = await admin
       .from("venture_documents")
