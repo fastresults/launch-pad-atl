@@ -174,7 +174,7 @@ function HonestRoadmap() {
           <span className="text-gradient-brand">The business is what you build on top of it.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Every founder we've watched fail had the same problem: they skipped the foundation, then spent $50K on a website, brand, and ads that couldn't tell a coherent story. The workshop gives you the story. After that, the modern build layer — site, social, content, AI, sales — is what turns the story into revenue.
+          Every founder we've watched fail had the same problem: they skipped the foundation, then spent $50K on a website, brand, and ads that couldn't tell a coherent story. The workshop gives you the story, the templates, and the tool stack to ship it. After that, the modern build layer — site, social, content, AI, sales — is what turns the story into revenue.
         </p>
 
         {/* Act 1 — Why foundation first */}
