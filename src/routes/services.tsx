@@ -88,7 +88,7 @@ function CapabilityGrid() {
           <span className="text-gradient-brand">Shipped — not taught.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Every card below names what you'd otherwise build yourself in the matching workshop (from $197). Hire us when you'd rather own the result than the learning curve.
+          Every card below is the same scope a workshop hands you the strategy, templates, and tool stack to build yourself (from $197). Hire us when you'd rather own the result than the learning curve.
         </p>
 
         <div className="mt-10 grid gap-5 md:grid-cols-2">
