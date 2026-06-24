@@ -332,6 +332,8 @@ function Inner() {
                   className="text-xs text-muted-foreground"
                   onClick={() => {
                     const sample = SAMPLE_CONCEPTS[Math.floor(Math.random() * SAMPLE_CONCEPTS.length)];
+                    setCompanyName(sample.company);
+                    if (path !== "manual") setWebsiteUrl(sample.url);
                     setBusinessConcept(sample.concept);
                     if (path === "competitor") setDiff(sample.diff);
                     toast.success("Filled test concept");
