@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { createSnapshot } from "@/lib/foundersHub.functions";
 import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { toast } from "sonner";
 
 type Path = "own" | "competitor" | "manual";
@@ -99,12 +100,21 @@ function Inner() {
         )}
 
         <div className="grid gap-2">
-          <Label htmlFor="concept">Business concept *</Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="concept">Business concept *</Label>
+            <VoiceRecorder
+              size="sm"
+              context="Founder describing their business concept — what they're building, who it's for, and why it matters."
+              onTranscript={(text) =>
+                setBusinessConcept((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text))
+              }
+            />
+          </div>
           <Textarea
             id="concept"
             value={businessConcept}
             onChange={(e) => setBusinessConcept(e.target.value)}
-            placeholder="Describe what you're building, who it's for, and why it matters. The more specific, the better the output."
+            placeholder="Describe what you're building, who it's for, and why it matters. The more specific, the better the output. Tap the mic to dictate instead."
             rows={6}
           />
           <p className="text-xs text-muted-foreground">{businessConcept.trim().length} characters (min 20)</p>
@@ -112,8 +122,17 @@ function Inner() {
 
         {path === "competitor" && (
           <div className="grid gap-2">
-            <Label htmlFor="diff">How you'll differentiate</Label>
-            <Textarea id="diff" value={diff} onChange={(e) => setDiff(e.target.value)} rows={3} placeholder="What you'll do differently from the competitor." />
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="diff">How you'll differentiate</Label>
+              <VoiceRecorder
+                size="sm"
+                context="Founder explaining how their venture will differentiate from a competitor."
+                onTranscript={(text) =>
+                  setDiff((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text))
+                }
+              />
+            </div>
+            <Textarea id="diff" value={diff} onChange={(e) => setDiff(e.target.value)} rows={3} placeholder="What you'll do differently from the competitor. Tap the mic to dictate." />
           </div>
         )}
       </div>
