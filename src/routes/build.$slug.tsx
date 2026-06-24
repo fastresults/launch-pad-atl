@@ -1,7 +1,7 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
-import { getBuildWorkshop, BUILD_WORKSHOPS } from "@/lib/build-workshops";
+import { getBuildWorkshop, BUILD_WORKSHOPS, getWorkshopAgencyOffer } from "@/lib/build-workshops";
 import {
   ArrowRight,
   Check,
@@ -20,6 +20,7 @@ export default function BuildWorkshopPage() {
   if (!w) return <Navigate to="/build" replace />;
 
   const Icon = w.icon;
+  const offer = getWorkshopAgencyOffer(w.slug)!;
   const otherWorkshops = BUILD_WORKSHOPS.filter((x) => x.slug !== w.slug).slice(0, 3);
 
   return (
