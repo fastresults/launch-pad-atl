@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Sparkles, Lightbulb, Rocket, ShieldAlert, Lock, Unlock, History, CheckCircle2 } from "lucide-react";
+import { Loader2, Sparkles, Lightbulb, Rocket, ShieldAlert, Lock, Unlock, History, CheckCircle2, Zap, Bookmark, X } from "lucide-react";
 import { toast } from "sonner";
 import { refineConcept } from "@/lib/foundersHub.functions";
 
