@@ -19,7 +19,10 @@ export type MemberRow = {
   approved_at: string | null;
   created_at: string;
   intake: MemberIntake;
+  founders_hub_access: boolean;
+  founders_hub_granted_at: string | null;
 };
+
 
 function unwrap<T>(input: any): T {
   if (input && typeof input === "object" && "data" in input && Object.keys(input).length === 1) {
