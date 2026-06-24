@@ -143,8 +143,7 @@ function dependencyLayers(types: any[]): any[][] {
 
 const CONCURRENCY = 4;
 
-async function runLayer(supabase: any, snapshotId: string, jobId: string, layer: any[], state: { done: number; total: number; fails: number }) {
-  // Pre-filter already-complete docs
+async function runLayer(supabase: any, snapshotId: string, jobId: string, layer: any[], state: { done: number; total: number; fails: number; canceled: boolean }) {
   const { data: existingDocs } = await supabase
     .from("venture_documents")
     .select("document_type, status")
@@ -155,12 +154,21 @@ async function runLayer(supabase: any, snapshotId: string, jobId: string, layer:
   const pending = layer.filter((t) => !completeSet.has(t.type));
   state.done += layer.length - pending.length;
 
-  // Run pending with bounded concurrency.
   let cursor = 0;
   async function worker() {
     while (cursor < pending.length) {
+      const { data: jobRow } = await supabase
+        .from("venture_generation_jobs")
+        .select("cancel_requested")
+        .eq("id", jobId)
+        .maybeSingle();
+      if (jobRow?.cancel_requested) { state.canceled = true; return; }
+
       const t = pending[cursor++];
-      await supabase.from("venture_generation_jobs").update({ current_document_type: t.type }).eq("id", jobId);
+      await supabase.from("venture_generation_jobs").update({
+        current_document_type: t.type,
+        heartbeat_at: new Date().toISOString(),
+      }).eq("id", jobId);
       try {
         await generateOne(supabase, snapshotId, t.type);
         state.done++;
@@ -170,8 +178,9 @@ async function runLayer(supabase: any, snapshotId: string, jobId: string, layer:
       }
       await supabase.from("venture_generation_jobs").update({
         progress_pct: Math.round((state.done / state.total) * 100),
+        heartbeat_at: new Date().toISOString(),
       }).eq("id", jobId);
-      if (state.fails >= 3) return; // signal circuit-break to caller
+      if (state.fails >= 3) return;
     }
   }
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, pending.length || 1) }, () => worker()));
