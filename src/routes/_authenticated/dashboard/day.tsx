@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from "@tanstack/react-query";
 import { getMyCohort } from "@/lib/cohort.functions";
+import { listSnapshots } from "@/lib/foundersHub.functions";
 import { SCHEDULE_BLOCKS } from "@/lib/workshop-mode";
 import { WORKFLOW, STAGES } from "@/lib/workflow";
 import { EVENT } from "@/lib/schedule-data";
@@ -12,6 +13,8 @@ const TOTAL_DOC_MIN = WORKFLOW.reduce((sum, d) => sum + d.estMinutes, 0);
 export default function WorkshopDayPage() {
   const { data } = useQuery({ queryKey: ["my", "cohort"], queryFn: () => getMyCohort(), staleTime: 60_000 });
   const cohort = data?.cohort;
+  const { data: snapshots = [] } = useQuery({ queryKey: ["hub", "snapshots"], queryFn: listSnapshots, staleTime: 60_000, retry: false });
+  const hasVentures = snapshots.length > 0;
 
   return (
     <div className="space-y-10">
@@ -193,13 +196,15 @@ export default function WorkshopDayPage() {
 
       {/* CTAs */}
       <div className="flex flex-wrap gap-3">
-        <Link to="/dashboard/brief" className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:opacity-90">
-          Start my founder brief
+        <Link to="/dashboard/workflow" className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:opacity-90">
+          See what we build together
           <ArrowRight className="h-4 w-4" />
         </Link>
-        <Link to="/dashboard/workflow" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-card px-6 py-3 text-base font-medium hover:bg-white/5">
-          See what we build together
-        </Link>
+        {hasVentures && (
+          <Link to="/dashboard/hub" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-card px-6 py-3 text-base font-medium hover:bg-white/5">
+            Browse your ventures
+          </Link>
+        )}
       </div>
     </div>
   );
