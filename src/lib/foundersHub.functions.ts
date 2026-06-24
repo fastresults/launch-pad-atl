@@ -89,11 +89,29 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
     website_url,
     business_concept,
     differentiation_statement,
+    founder_name,
+    founder_email,
+    founder_phone,
+    city,
+    region,
+    country,
+    market_scope,
+    industry,
+    sub_industry,
   } = unwrap<{
     company_name?: string;
     website_url?: string;
     business_concept: string;
     differentiation_statement?: string;
+    founder_name?: string;
+    founder_email?: string;
+    founder_phone?: string;
+    city?: string;
+    region?: string;
+    country?: string;
+    market_scope?: "local" | "regional" | "national" | "international";
+    industry?: string;
+    sub_industry?: string;
   }>(input);
 
   const { data, error } = await supabase
@@ -104,6 +122,15 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
       website_url: website_url ?? null,
       business_concept,
       differentiation_statement: differentiation_statement ?? null,
+      founder_name: founder_name ?? null,
+      founder_email: founder_email ?? null,
+      founder_phone: founder_phone ?? null,
+      city: city ?? null,
+      region: region ?? null,
+      country: country ?? null,
+      market_scope: market_scope ?? null,
+      industry: industry ?? null,
+      sub_industry: sub_industry ?? null,
       status: "enriching",
       enrichment_progress: { stage: "queued", progress: 0, message: "Queued", updatedAt: new Date().toISOString() },
     })
@@ -115,6 +142,23 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
   void supabase.functions.invoke("venture-deep-research", { body: { snapshotId: data.id } });
 
   return { id: data.id };
+}
+
+export async function updateFounderContext(input: any): Promise<void> {
+  const { id, ...patch } = unwrap<{
+    id: string;
+    founder_name?: string;
+    founder_email?: string;
+    founder_phone?: string;
+    city?: string;
+    region?: string;
+    country?: string;
+    market_scope?: string;
+    industry?: string;
+    sub_industry?: string;
+  }>(input);
+  const { error } = await supabase.from("venture_snapshots").update(patch).eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export async function updateExtractedData(input: any): Promise<void> {
