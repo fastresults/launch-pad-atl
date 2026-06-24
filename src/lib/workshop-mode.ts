@@ -15,23 +15,20 @@ export type ScheduleBlock = {
   subtitle: string; // plain-language
 };
 
-// Mirrors src/lib/schedule-data.ts but in minute offsets so we don't
-// hard-code dates. 8:00 AM = 0.
+// Minute offsets from cohort.startISO (8:45 AM = 0). Mirrors the published
+// SCHEDULE in src/lib/schedule-data.ts and the 5-pillar / 20-document framework.
 export const SCHEDULE_BLOCKS: ScheduleBlock[] = [
-  { startMin: 0, endMin: 30, kind: "checkin", title: "Check-in", subtitle: "Settle in, coffee, set up your laptop." },
-  { startMin: 30, endMin: 90, kind: "stage", stageN: 1, title: "Stage 1 · Make it legal", subtitle: "LLC, EIN, the legal stuff handled." },
-  { startMin: 90, endMin: 150, kind: "stage", stageN: 2, title: "Stage 2 · Find your customer", subtitle: "Who buys, where they hang out, why now." },
-  { startMin: 150, endMin: 210, kind: "stage", stageN: 3, title: "Stage 3 · Decide what you sell", subtitle: "Your first offer and what to charge." },
-  { startMin: 210, endMin: 240, kind: "break", title: "Lunch break", subtitle: "Lunch is provided. Eat together. Your AI keeps working." },
-  { startMin: 240, endMin: 300, kind: "stage", stageN: 4, title: "Stage 4 · Set up delivery", subtitle: "How you fulfill what you sell." },
-  { startMin: 300, endMin: 375, kind: "stage", stageN: 5, title: "Stage 5 · Look the part", subtitle: "Brand, website, payments, email." },
-  { startMin: 375, endMin: 390, kind: "break", title: "Coffee reset", subtitle: "Quick stretch, refill, regroup." },
-  { startMin: 390, endMin: 450, kind: "stage", stageN: 6, title: "Stage 6 · Get the word out", subtitle: "Messaging, social, collateral." },
-  { startMin: 450, endMin: 510, kind: "stage", stageN: 7, title: "Stage 7 · Open for business", subtitle: "Your signed 90-day launch plan." },
-  { startMin: 510, endMin: 525, kind: "close", title: "You did it", subtitle: "Walk out with a launched business." },
+  { startMin: 0, endMin: 15, kind: "checkin", title: "Check-in", subtitle: "Coffee, refreshments, share your idea in one line." },
+  { startMin: 15, endMin: 40, kind: "stage", stageN: 1, title: "Foundation", subtitle: "Who you are and where you play — 5 docs." },
+  { startMin: 40, endMin: 75, kind: "stage", stageN: 2, title: "Strategy", subtitle: "How you win and grow — 5 docs." },
+  { startMin: 75, endMin: 85, kind: "break", title: "Refreshment break", subtitle: "Refill coffee, stretch, regroup." },
+  { startMin: 85, endMin: 110, kind: "stage", stageN: 3, title: "Operations", subtitle: "What you build and who builds it — 4 docs." },
+  { startMin: 110, endMin: 140, kind: "stage", stageN: 4, title: "Finance", subtitle: "The numbers that matter — 4 docs." },
+  { startMin: 140, endMin: 155, kind: "stage", stageN: 5, title: "Governance", subtitle: "Risk, oversight, and readiness — 2 docs." },
+  { startMin: 155, endMin: 165, kind: "close", title: "You did it", subtitle: "Walk out with all 20 strategic documents." },
 ];
 
-export const WORKSHOP_END_MIN = 525; // 4:45 PM safety buffer past 4:30 close
+export const WORKSHOP_END_MIN = 170; // small buffer past 11:30 AM close
 export const POST_WORKSHOP_DAYS = 90;
 
 export type WorkshopState = {
@@ -98,13 +95,11 @@ export function formatMinutesLeft(mins: number): string {
   return `${h}h ${m}m left`;
 }
 
-// Friendly stage labels for the 7 workshop stages.
+// Friendly labels for the 5 pillars in the workshop framework.
 export const FRIENDLY_STAGE: Record<number, { title: string; subtitle: string }> = {
-  1: { title: "Make it legal", subtitle: "LLC, EIN, the legal stuff handled." },
-  2: { title: "Find your customer", subtitle: "Who buys, where they hang out, why now." },
-  3: { title: "Decide what you sell", subtitle: "Your first offer and what to charge." },
-  4: { title: "Set up delivery", subtitle: "How you fulfill what you sell." },
-  5: { title: "Look the part", subtitle: "Brand, website, payments, email." },
-  6: { title: "Get the word out", subtitle: "Messaging, social, collateral." },
-  7: { title: "Open for business", subtitle: "Your signed 90-day launch plan." },
+  1: { title: "Foundation", subtitle: "Who you are and where you play." },
+  2: { title: "Strategy", subtitle: "How you win and grow." },
+  3: { title: "Operations", subtitle: "What you build and who builds it." },
+  4: { title: "Finance", subtitle: "The numbers that matter." },
+  5: { title: "Governance", subtitle: "Risk, oversight, and readiness." },
 };

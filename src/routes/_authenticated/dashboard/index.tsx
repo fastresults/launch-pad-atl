@@ -219,7 +219,7 @@ function DuringMode({ state, generated, total }: { state: WorkshopState; generat
   return (
     <>
       <div>
-        <div className="text-xs font-medium uppercase tracking-wide text-primary">Stage {stageN} of 7 · we're live</div>
+        <div className="text-xs font-medium uppercase tracking-wide text-primary">Pillar {stageN} of 5 · we're live</div>
         <h1 className="mt-1 text-3xl md:text-4xl font-semibold tracking-tight">{friendly.title}</h1>
         <p className="mt-2 text-muted-foreground">{friendly.subtitle}</p>
       </div>
@@ -404,16 +404,16 @@ function WalkOutMoment() {
 // ============ Walk-out preview (Mode A) ============
 
 function WalkOutPreview() {
-  const stages = [1, 2, 3, 4, 5, 6, 7];
+  const stages = [1, 2, 3, 4, 5];
   return (
     <section>
       <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-        By 4:30 PM on workshop day, you'll have all of this
+        By 11:30 AM on workshop day, you'll have all of this
       </h2>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {stages.map((n) => (
           <div key={n} className="rounded-xl border border-white/10 bg-card p-4 opacity-80">
-            <div className="text-xs text-muted-foreground">Stage {n}</div>
+            <div className="text-xs text-muted-foreground">Pillar {n}</div>
             <div className="mt-1 font-medium">{FRIENDLY_STAGE[n].title}</div>
             <div className="mt-1 text-xs text-muted-foreground">{FRIENDLY_STAGE[n].subtitle}</div>
           </div>
