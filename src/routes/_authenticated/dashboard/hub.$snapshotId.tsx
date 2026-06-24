@@ -28,6 +28,7 @@ import {
 } from "@/lib/foundersHub.functions";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { ConceptStudio } from "@/components/hub/ConceptStudio";
+import { DocumentViewer } from "@/components/hub/DocumentViewer";
 import { BrandStudio } from "@/components/hub/BrandStudio";
 import { SocialStudio } from "@/components/hub/SocialStudio";
 import {
