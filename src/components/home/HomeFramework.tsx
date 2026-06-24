@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
+import { VideoTestimonials } from "@/components/home/VideoTestimonials";
 import { useEvent } from "@/lib/use-event";
 import {
   BUILD_LAYER,
@@ -29,6 +30,7 @@ export function HomeFramework() {
     <div className="min-h-screen">
       <SiteHeader />
       <Hero />
+      <VideoTestimonials />
       <Framework />
       <HonestRoadmap />
       <Facilitator />
