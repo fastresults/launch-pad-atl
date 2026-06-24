@@ -146,7 +146,7 @@ function EnrichingStep({ snapshot, onRetry }: { snapshot: any; onRetry: () => vo
       </div>
       <Progress value={pct} />
       <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-        {["scraping", "research", "extraction", "validation"].map((stage) => (
+        {["scraping", "competitors", "market", "voice", "synthesis", "validation"].map((stage) => (
           <span key={stage} className={`rounded-full border px-2 py-0.5 ${
             prog.stage === stage ? "border-foreground text-foreground" : "border-white/10"
           }`}>{stage}</span>
