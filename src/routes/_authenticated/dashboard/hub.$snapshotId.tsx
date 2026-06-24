@@ -2,6 +2,8 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { FoundersHubGate } from "@/components/hub/FoundersHubGate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +22,8 @@ import {
   generateDocument,
   bulkGenerate,
   getActiveJob,
+  cancelJob,
+  listFailures,
 } from "@/lib/foundersHub.functions";
 import {
   ArrowLeft,
@@ -32,6 +36,7 @@ import {
   AlertCircle,
   Eye,
   Sparkles,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
