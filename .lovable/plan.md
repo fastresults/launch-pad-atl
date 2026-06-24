@@ -1,121 +1,76 @@
+# Concept Refinement Gateway
 
-# Founder context + market scope + industry, plus a downloadable Website PRD
+Insert a new mandatory step between deep research (status `review`) and bulk document generation. The user must produce/approve a tight 50–60 word concept summary + value proposition, optionally run AI-assisted brainstorming/innovation rounds, then explicitly "Lock concept" to unlock document generation.
 
-Two related additions:
+## 1. Data model
 
-1. **Capture richer founder + market context up front** so every downstream document (and the deep-research pass) is grounded in *where* and *who* the business is for, not just *what*.
-2. **Add a Website PRD** — a 21st document type that compiles the brief into a copy-pasteable prompt for AI website builders (Lovable, v0, Bolt, etc.), plus markdown copy blocks.
+Migration on `venture_snapshots`:
+- `concept_summary` text — final 50–60 word summary (locked version)
+- `value_proposition` text — competitive value prop (1–2 sentences)
+- `concept_status` text default `'draft'` — `draft | refining | locked`
+- `concept_locked_at` timestamptz
+- `concept_iterations` jsonb default `'[]'` — append-only log of AI suggestions + user edits: `{ id, kind: 'draft'|'brainstorm'|'innovate'|'critique'|'user_edit', input, output, model, created_at }`
 
-## 1. Founder + market intake
+New status value for `venture_snapshots.status`: `concept_review` (between `review` and `generating`). Deep research completion sets status to `concept_review` instead of `review`. Bulk generation refuses to start unless `concept_status='locked'`.
 
-Add a second "Founder & market" step on `hub.new.tsx` between the path picker and the concept block. Fields:
+## 2. New edge function: `venture-concept-refine`
 
-| Field | Why | Notes |
-|---|---|---|
-| Founder full name | Used in pitch deck, executive summary, legal brief | required |
-| Founder email | Contact block in PRD, pitch, About page | required |
-| Founder phone | Optional, surfaces in legal/governance docs | optional |
-| City / town | Drives "local market" research queries | required |
-| State / region | Disambiguates city, regulation context | required |
-| Country | Default `US`; needed for currency, regulation, market size | required |
-| Market scope | `local` / `regional` / `national` / `international` — drives competitor + market research scope | required, radio |
-| Industry | Searchable lookup against a curated NAICS-style list (~250 entries) with free-text fallback for novices | required, combobox |
-| Sub-industry / niche | Free text, autopopulated suggestions from the chosen industry | optional |
+Single function, action-dispatched POST body `{ snapshot_id, action, payload }`:
 
-**Industry lookup**: ship a static `src/lib/industries.ts` with a flattened NAICS 2-digit + common modern categories ("SaaS", "DTC ecommerce", "AI tooling", "Local services", etc.). Searchable `Command` combobox (shadcn pattern already in the project). Novices type "coffee shop" → matches "Food & beverage › Cafés". Free-text allowed as a fallback so we never block.
+- `draft` — generate initial 50–60 word summary + value prop from `research_brief` + `extracted_data` + founder/market context. Strict JSON output `{ summary, value_proposition, rationale }`. Word-count enforced server-side (re-prompt once if out of band).
+- `brainstorm` — produce 3–5 alternative angles/positioning shifts grounded in `research_brief.competitors` and `market_trends`. Returns `{ ideas: [{ title, summary, why_it_works, risks }] }`.
+- `innovate` — given a chosen idea or user prompt, produce a more ambitious reframe (new wedge, business model tweak, underserved segment). Returns same shape as `draft` plus `delta` explaining what changed.
+- `critique` — red-team the current summary against competitors + customer voice; returns weaknesses + concrete rewrite suggestions.
+- `apply` — persist a chosen variant as the working `concept_summary` / `value_proposition` (still `concept_status='refining'`).
+- `lock` — validate word count (50–60), non-empty value prop, then set `concept_status='locked'`, `concept_locked_at=now()`, `status='concept_review'` → ready for generation.
 
-**Persistence**: extend `venture_snapshots` with columns:
+Every call appends an entry to `concept_iterations`. Uses Lovable AI Gateway via existing `_shared/ai-gateway.ts` helper, model `google/gemini-3-flash-preview` (fast, cheap, structured output via `Output.object` + Zod). Auth: verify caller owns the snapshot.
 
-```text
-founder_name, founder_email, founder_phone,
-city, region, country,
-market_scope ('local'|'regional'|'national'|'international'),
-industry, sub_industry
-```
+## 3. Generation gating
 
-All optional at the DB layer; the form enforces "required" for the inputs marked above.
+`venture-bulk-generate` and `venture-generate-document`: at entry, load snapshot, refuse with 409 if `concept_status !== 'locked'`. Inject `concept_summary` + `value_proposition` as the canonical "north-star" block at the top of every document system prompt, ahead of `research_brief`. This is what keeps all 21 documents on-message.
 
-## 2. Deep research uses the new context
+## 4. UI: Concept Studio panel
 
-`venture-deep-research` currently builds search queries from concept keywords only. With the new context it generates much more targeted queries:
+New component `src/components/hub/ConceptStudio.tsx` rendered on `hub.$snapshotId.tsx` as the primary card whenever `status === 'concept_review'` and `concept_status !== 'locked'`. Document list + generate button stay disabled behind it.
 
-- Local mode → `"<industry> in <city>, <region>"`, `"best <industry> <city>"`, scrape Google Maps-ish results via Firecrawl search, and prefer competitors with addresses in the same metro.
-- Regional/national/international → existing flow, but Perplexity prompt is anchored: *"Analyze the <industry> market in <country>. Focus on segments operating at <scope> scale…"*.
-- Industry passed into both competitor discovery and market analysis so we stop pulling generic "alternatives" results when the founder is opening a bakery.
+Layout:
+- **Header**: "Refine your concept" + live word counter (turns green at 50–60).
+- **Summary editor**: textarea bound to `concept_summary`, inline word count, "Regenerate from research" button (calls `draft`).
+- **Value proposition editor**: textarea, 1–2 sentence guidance.
+- **Action rail** (buttons):
+  - Brainstorm alternatives → opens a drawer listing returned ideas with "Use this" → calls `apply`.
+  - Innovate / push further → prompt input ("what constraint to challenge?") + run.
+  - Red-team critique → returns bullet weaknesses + a suggested rewrite with one-click apply.
+- **Iteration history**: collapsible timeline rendered from `concept_iterations` with diff highlight and "Restore" per entry.
+- **Lock concept** primary button: disabled until word count valid + value prop non-empty. On click → confirmation modal explaining this becomes the spine of all 21 documents, then calls `lock`. UI flips to locked read-only summary with "Unlock & revise" (sets `concept_status='draft'`, requires re-lock; allowed only while no documents generated, otherwise warns about regeneration).
 
-Implementation: a new helper `buildQueries(snapshot)` that branches on `market_scope` and `industry`. Same artifact pipeline, better inputs.
+After lock, the existing "Generate all documents" CTA becomes enabled.
 
-## 3. Website PRD as document #21
+## 5. Client wiring
 
-Add a new `venture_document_types` row:
+In `src/lib/foundersHub.functions.ts`:
+- `refineConcept(snapshotId, action, payload)` → invokes `venture-concept-refine`.
+- `lockConcept(snapshotId)` → action `lock`.
+- Update `createSnapshot` flow notes (deep research now lands on `concept_review`).
+- Bulk-generate client call surfaces the 409 with a toast pointing back to Concept Studio.
 
-```text
-type:           website_prd
-name:           Website PRD (AI-builder prompt)
-category:       Marketing
-sort_order:     14   (between Marketing Plan and Financial Model)
-dependencies:   [value_proposition, brand_messaging, customer_personas, go_to_market_plan]
-estimated_minutes: 3
-```
+## 6. Telemetry / safeguards
 
-The generator (`venture-generate-document` + `venture-bulk-generate`) already injects `extracted_data` + `research_brief` + upstream docs. For this doc the system prompt is specialized to output a PRD-prompt structure rather than a free-form essay:
+- Cap: 20 AI refinement calls per snapshot (config constant); surface remaining count in UI.
+- Word-count validation both client and server.
+- All AI outputs validated with Zod; on parse failure, single retry then surfaced error toast.
 
-```text
-# {Company} — Website PRD
+## Technical summary
 
-## 1. Paste-ready prompt for an AI website builder
-A single fenced ``` block containing a self-contained prompt — company,
-audience, market scope, industry, value prop, pages, sections, tone,
-CTA, brand voice. Roughly 400-600 words. Reads as instructions.
+- 1 migration (5 columns + status enum value via check or text).
+- 1 new edge function `venture-concept-refine` (multi-action).
+- Edits: `venture-deep-research` (set status `concept_review`), `venture-bulk-generate` + `venture-generate-document` (gate + inject concept block), `foundersHub.functions.ts`, `hub.$snapshotId.tsx`, `src/integrations/supabase/types.ts` (regen after migration).
+- 1 new component `ConceptStudio.tsx` plus small subcomponents (`IdeaDrawer`, `IterationTimeline`).
 
-## 2. Sitemap
-- Home, About, Services/Product, Pricing, Contact, Blog (as relevant)
+## Open choices
 
-## 3. Page-by-page copy blocks
-For each page: H1, sub-headline, 3 sections with H2 + 2-3 sentence body,
-single primary CTA. Markdown only, no fluff.
-
-## 4. SEO bundle
-Title (<60c), meta description (<160c), 8-12 target keywords tuned to
-the local market when scope = local, og-image prompt.
-
-## 5. Tech checklist
-Forms needed, analytics, integrations (Stripe? Calendly? booking?),
-legal pages, accessibility notes.
-```
-
-Founder gets it via the existing document viewer; the **Copy** and **Download .md** buttons already work, so a one-click download as `website-prd.md` is free. We'll add a third button **"Copy prompt only"** that extracts the fenced section #1 so they can paste straight into Lovable/v0/Bolt.
-
-## 4. Review step shows the new fields
-
-The review step currently shows four `extracted_data` sections. We'll add a top "Founder & market" card with the new structured fields, editable, saved back to `venture_snapshots` (not `extracted_data`, since these are first-class columns now).
-
-## Files changed
-
-```text
-supabase migration         → add 10 columns to venture_snapshots
-supabase migration         → insert website_prd row into venture_document_types
-supabase/functions/venture-deep-research/index.ts
-                           → buildQueries(snapshot) using city/region/scope/industry
-                           → Perplexity prompt includes geo + industry
-supabase/functions/venture-bulk-generate/index.ts
-                           → specialized system prompt branch when documentType === 'website_prd'
-                           → inject founder/location/market fields into every prompt
-src/lib/industries.ts      → curated industry list (new)
-src/components/hub/IndustryCombobox.tsx
-                           → Command-based searchable picker (new)
-src/routes/_authenticated/dashboard/hub.new.tsx
-                           → new "Founder & market" form section above the path picker
-src/lib/foundersHub.functions.ts
-                           → createSnapshot signature extended; new updateFounderContext()
-src/routes/_authenticated/dashboard/hub.$snapshotId.tsx
-                           → editable founder/market card in ReviewStep
-                           → document viewer: "Copy prompt only" button when type === 'website_prd'
-```
-
-## Open choices for you
-
-1. **Required vs optional at submit** — should founder name, city, region, country, market scope, and industry all be hard-required to create a venture, or required-but-can-defer-until-review? Hard-required gives best research quality; deferred is friendlier for someone exploring an idea.
-2. **Industry list scope** — ~150 entries curated for solo founders / SMBs (cleaner, faster), or full NAICS 2-digit + 3-digit ~1,100 entries (more precise, more noise)?
-3. **Website PRD inclusion in bulk run** — generate it as part of "Generate all 21", or keep it as a one-click "Generate website PRD" button on its own (so non-website ventures don't pay for it)?
-4. **Phone number** — collect it, or skip until the founder explicitly asks for legal/governance docs that need it?
+1. **Word band** — strict 50–60, or soft 45–70 with warning? Strict gives consistent doc inputs; soft is friendlier.
+2. **Brainstorm scope** — keep ideas tightly anchored to the user's industry/market, or allow adjacent-market pivots?
+3. **Unlock after generation** — allow re-lock + regenerate all docs (expensive), allow but only regenerate stale docs, or freeze concept once any doc is generated?
+4. **Auto-draft on entry** — auto-run `draft` the first time the user lands on Concept Studio, or wait for explicit click?

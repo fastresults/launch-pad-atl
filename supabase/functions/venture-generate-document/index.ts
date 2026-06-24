@@ -97,10 +97,15 @@ QUALITY_SCORE: <0-100 integer>`;
     website_url: snap.website_url,
   };
 
+  const conceptBlock = snap.concept_summary
+    ? `\n## NORTH-STAR CONCEPT (locked by founder — every section must stay consistent with this)\nSummary: ${snap.concept_summary}\nValue proposition: ${snap.value_proposition ?? ""}`
+    : "";
+
   const userPrompt = [
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
     `Category: ${type.category}`,
+    conceptBlock,
     `\n## Founder & market (always reflect these accurately)\n${JSON.stringify(founderCard, null, 2)}`,
     `\n## Venture brief (extracted_data)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,
     snap.research_brief ? `\n## Research brief (use for evidence + citations)\n${JSON.stringify(snap.research_brief, null, 2)}` : "",
@@ -180,6 +185,14 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "snapshotId and documentType required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+    const { data: gateSnap } = await supabase
+      .from("venture_snapshots")
+      .select("concept_status")
+      .eq("id", snapshotId)
+      .maybeSingle();
+    if (!gateSnap || gateSnap.concept_status !== "locked") {
+      return new Response(JSON.stringify({ error: "Lock your concept summary before generating documents." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const result = await generateOne(supabase, snapshotId, documentType);
     return new Response(JSON.stringify({ ok: true, ...result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {

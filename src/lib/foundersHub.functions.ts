@@ -40,6 +40,11 @@ export interface VentureSnapshot {
   research_brief: any;
   status: SnapshotStatus;
   enrichment_progress: { stage?: string; progress?: number; message?: string; updatedAt?: string } | null;
+  concept_summary: string | null;
+  value_proposition: string | null;
+  concept_status: "draft" | "refining" | "locked";
+  concept_locked_at: string | null;
+  concept_iterations: any[];
   created_at: string;
   updated_at: string;
 }
@@ -296,3 +301,19 @@ export async function adminListSnapshots() {
   if (error) throw new Error(error.message);
   return (data ?? []) as VentureSnapshot[];
 }
+
+// Concept refinement gateway
+export async function refineConcept(input: any): Promise<any> {
+  const { snapshotId, action, payload } = unwrap<{ snapshotId: string; action: string; payload?: any }>(input);
+  const { data, error } = await supabase.functions.invoke("venture-concept-refine", {
+    body: { snapshot_id: snapshotId, action, payload },
+  });
+  if (error) {
+    // Surface gateway-side message when present
+    const msg = (data as any)?.error || error.message;
+    throw new Error(msg);
+  }
+  if ((data as any)?.error) throw new Error((data as any).error);
+  return data;
+}
+

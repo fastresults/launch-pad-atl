@@ -1967,6 +1967,10 @@ export type Database = {
           city: string | null
           company_name: string | null
           competitor_data: Json | null
+          concept_iterations: Json
+          concept_locked_at: string | null
+          concept_status: string
+          concept_summary: string | null
           country: string | null
           created_at: string
           differentiation_statement: string | null
@@ -1987,6 +1991,7 @@ export type Database = {
           sub_industry: string | null
           updated_at: string
           user_id: string
+          value_proposition: string | null
           website_url: string | null
         }
         Insert: {
@@ -1994,6 +1999,10 @@ export type Database = {
           city?: string | null
           company_name?: string | null
           competitor_data?: Json | null
+          concept_iterations?: Json
+          concept_locked_at?: string | null
+          concept_status?: string
+          concept_summary?: string | null
           country?: string | null
           created_at?: string
           differentiation_statement?: string | null
@@ -2014,6 +2023,7 @@ export type Database = {
           sub_industry?: string | null
           updated_at?: string
           user_id: string
+          value_proposition?: string | null
           website_url?: string | null
         }
         Update: {
@@ -2021,6 +2031,10 @@ export type Database = {
           city?: string | null
           company_name?: string | null
           competitor_data?: Json | null
+          concept_iterations?: Json
+          concept_locked_at?: string | null
+          concept_status?: string
+          concept_summary?: string | null
           country?: string | null
           created_at?: string
           differentiation_statement?: string | null
@@ -2041,6 +2055,7 @@ export type Database = {
           sub_industry?: string | null
           updated_at?: string
           user_id?: string
+          value_proposition?: string | null
           website_url?: string | null
         }
         Relationships: []
