@@ -45,7 +45,7 @@ export default function TermsPage() {
                 <strong>Consulting &amp; guidance:</strong> business coaching, feedback, and support provided during and after workshops.
               </li>
               <li>
-                <strong>Digital content:</strong> templates, guides, and resources made available to registered participants.
+                <strong>Digital content:</strong> frameworks, guides, and resources made available to registered participants.
               </li>
             </ul>
             <p>
@@ -85,7 +85,7 @@ export default function TermsPage() {
           <Section title="5. Intellectual Property">
             <ul>
               <li>
-                <strong>Our content:</strong> all materials, branding, curriculum, templates, and content provided by Startup Labs remain our intellectual property. You are granted a limited, non-exclusive license to use workshop materials for personal, non-commercial use.
+                <strong>Our content:</strong> all materials, branding, curriculum, frameworks, and content provided by Startup Labs remain our intellectual property. You are granted a limited, non-exclusive license to use workshop materials for personal, non-commercial use.
               </li>
               <li>
                 <strong>Your content:</strong> any business ideas, notes, or materials you submit remain your property. By submitting them, you grant us a license to review, provide feedback on, and use them solely for the purpose of delivering the Services.

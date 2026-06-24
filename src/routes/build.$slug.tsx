@@ -240,7 +240,7 @@ export default function BuildWorkshopPage() {
               {offer.priceLabel}
             </p>
             <p className="mt-3 max-w-2xl text-sm opacity-90 md:text-base">
-              The workshop hands you the strategy, templates, and tool stack to ship it yourself. Decide you'd rather we build it? We'll credit the {w.priceLabel} toward any engagement over $1,000.
+              The workshop hands you the strategy, frameworks, and tool stack to ship it yourself. Decide you'd rather we build it? We'll credit the {w.priceLabel} toward any engagement over $1,000.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link

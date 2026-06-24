@@ -76,7 +76,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
   {
     name: "AI inbox cleanup for small businesses",
     category: "online",
-    offer: "Done-for-you email triage + templates. $300/mo per client.",
+    offer: "Done-for-you email triage + frameworks. $300/mo per client.",
     startupCost: "Starts under $200",
     incomePotential: "$3k–$9k / mo",
     firstCustomers: "Realtors, contractors, LinkedIn DMs",
@@ -146,7 +146,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     stageHint: "Stage 7 gets your first 5 clients.",
   },
   {
-    name: "Notion templates for contractors",
+    name: "Notion frameworks for contractors",
     category: "online",
     offer: "Job tracker + estimate pack. $49 one-time.",
     startupCost: "Starts under $100",

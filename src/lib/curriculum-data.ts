@@ -41,7 +41,7 @@ export const STAGES: Stage[] = [
       "Funding model & 12-month runway: real costs, margins, break-even, and cash picture by month",
       "Business plan with pro formas: short narrative plan + 12-month P&L, cash flow, and break-even pro forma a bank or investor will accept",
       "Investor-ready pitch deck: 10 slides in your brand (problem, solution, market, offer, traction, model, GTM, team, ask, use of funds)",
-      "Fundraising kit: 1-page raise summary, funder outreach list with email template, and your path picked across grants, microloans, SBA, and friends-and-family",
+      "Fundraising kit: 1-page raise summary, funder outreach list with email framework, and your path picked across grants, microloans, SBA, and friends-and-family",
     ],
 
     afterWorkshop: [
@@ -88,11 +88,11 @@ export const STAGES: Stage[] = [
         title: "Compliance & legal kit",
         deliverable:
           "Your Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business; local license and sales-tax requirements documented for you.",
-        tool: "GA compliance checklist + contract templates",
+        tool: "GA compliance checklist + contract frameworks",
         details: [
           "Document Gwinnett city/county business license requirements",
           "Note GA sales tax registration steps if you'll sell taxable items",
-          "Customize Terms of Service and Privacy Policy from vetted templates",
+          "Customize Terms of Service and Privacy Policy from vetted frameworks",
           "Customize a 1-page service agreement / SOW for your first sale",
         ],
         takeaway:
@@ -103,14 +103,14 @@ export const STAGES: Stage[] = [
       {
         title: "Funding model, business plan with pro formas, pitch deck & fundraising kit",
         deliverable:
-          "Your funding model with 12-month runway, a business plan with pro formas (12-month P&L, cash flow, and break-even), a 10-slide investor-ready pitch deck in your brand, and a fundraising kit — 1-page raise summary, funder outreach list with email template, and your path picked across grants, microloans, SBA, and friends-and-family.",
-        tool: "Funding model + business plan + pitch deck + raise kit templates",
+          "Your funding model with 12-month runway, a business plan with pro formas (12-month P&L, cash flow, and break-even), a 10-slide investor-ready pitch deck in your brand, and a fundraising kit — 1-page raise summary, funder outreach list with email framework, and your path picked across grants, microloans, SBA, and friends-and-family.",
+        tool: "Funding model + business plan + pitch deck + raise kit frameworks",
         details: [
           "Build the funding model: startup costs, monthly burn, break-even, and a 12-month cash picture",
           "Build a 12-month P&L, cash flow, and break-even pro forma alongside a short narrative business plan",
           "Pick the funding path: grants, microloans, SBA, revenue-based, line of credit, friends & family, or equity",
           "Draft the 10-slide pitch deck in your brand: problem, solution, market, offer, traction, model, GTM, team, ask, use of funds",
-          "Write the 1-page raise summary and customize the funder outreach email template so it's ready to send",
+          "Write the 1-page raise summary and customize the funder outreach email framework so it's ready to send",
         ],
         takeaway:
           "Your funding model, business plan with pro formas, investor-ready pitch deck, and fundraising kit — ready to send.",
@@ -132,7 +132,7 @@ export const STAGES: Stage[] = [
     walkOut: [
       "1-page idea-research brief: market size, trend, regulation, supplier/competitor scan, and sourced customer quotes",
       "1-page profile of your first named buyer with their top 3 problems priced in dollars",
-      "Starter prospect list begun in-session with the source template and CSV export ready",
+      "Starter prospect list begun in-session with the source framework and CSV export ready",
       "Outreach script customized to that specific buyer",
       "Competitive research pack: 3 competitors compared on offer, price, and positioning, with sourced customer quotes and a one-page 'what makes you different' summary",
       "Competitive advantage brief: your defensible 'secret sauce' written in one sentence, sourced from the research + competitor scan",
@@ -148,7 +148,7 @@ export const STAGES: Stage[] = [
         title: "Research the idea from every angle",
         deliverable:
           "A one-page research brief on your idea: market size, trend direction, regulation/permits, supplier/competitor scan, pricing benchmarks, and real customer quotes pulled from forums or reviews — with source links.",
-        tool: "Idea-research brief template",
+        tool: "Idea-research brief framework",
         details: [
           "Write 5 research questions that would kill or confirm the idea",
           "Pull market-size and trend data from public sources (IBISWorld snippets, BLS, Statista free)",
@@ -176,10 +176,10 @@ export const STAGES: Stage[] = [
         title: "Estimate the market + write a short script you'll send",
         deliverable:
           "A real-world estimate of how many buyers exist for your business, a starter prospect list you begin in-session, and a short outreach script customized to your first customer.",
-        tool: "Market snapshot template + validation script",
+        tool: "Market snapshot framework + validation script",
         details: [
           "Estimate how many buyers exist, how many you can realistically reach, and how many you'll win in year one",
-          "Start your prospect list from LinkedIn, local groups, or referrals using the source template",
+          "Start your prospect list from LinkedIn, local groups, or referrals using the source framework",
           "Customize the problem-discovery script for your first customer",
           "Pick a scoring rubric: pain confirmed, willingness to pay, intro to others",
         ],
@@ -192,7 +192,7 @@ export const STAGES: Stage[] = [
         title: "Competitive research pack + competitive advantage brief",
         deliverable:
           "A competitive research pack: 3 competitors compared on offer, price, channel, proof, and weakness, with sourced customer quotes and a one-page 'what makes you different' summary — plus a one-sentence competitive advantage brief (your defensible 'secret sauce') you can put on the website and in pitches.",
-        tool: "Competitive research template + advantage brief",
+        tool: "Competitive research framework + advantage brief",
         details: [
           "Identify 3 real competitors (2 direct + 1 substitute)",
           "Score each on offer, price, channel, proof, and weakness",
@@ -230,7 +230,7 @@ export const STAGES: Stage[] = [
         title: "Write the offer in one sentence",
         deliverable:
           "Your offer written in one clear sentence a buyer can say yes or no to.",
-        tool: "Offer-builder template",
+        tool: "Offer-builder framework",
         details: [
           "Use the formula: We help [who] achieve [outcome] in [time] without [pain]",
           "Test it against your first-customer profile",
@@ -318,7 +318,7 @@ export const STAGES: Stage[] = [
           "A one-page picture of how a sale becomes a happy customer for your business (sale → intake → delivery → handoff) with the app you'll use at each step.",
         tool: "Build type picker + step-by-step map",
         details: [
-          "Service: intake → kickoff → delivery template → recap loop",
+          "Service: intake → kickoff → delivery framework → recap loop",
           "Online: pick a no-code stack (Lovable, Notion, Framer, Webflow, Shopify, GHL) and name the first screen",
           "Physical product: supplier/manufacturer shortlist + sample-order checklist + packaging decision",
           "Mark every step that depends on a vendor, contractor, or sample order",
@@ -334,7 +334,7 @@ export const STAGES: Stage[] = [
           "Free accounts created for the apps you'll run your business on, plus a one-page picture of how they connect (no paid plans signed today).",
         tool: "Free-app checklist",
         details: [
-          "Project hub: seed a Notion / ClickUp / Trello workspace from a starter template",
+          "Project hub: seed a Notion / ClickUp / Trello workspace from a starter framework",
           "Files & assets: create your Drive / Dropbox folder structure",
           "Comms: set up scheduling (Cal.com / Calendly free) + business email alias",
           "Build-type tool: Loom (service) / Figma (online) / supplier portal accounts (physical)",
@@ -348,9 +348,9 @@ export const STAGES: Stage[] = [
         title: "Draft what your first customer will actually receive",
         deliverable:
           "Three pieces of your first customer's deliverable drafted and saved to your folder, plus a 5-point quality checklist you'll run before you send anything to a real customer.",
-        tool: "Customer-delivery templates (per build type)",
+        tool: "Customer-delivery frameworks (per build type)",
         details: [
-          "Service: kickoff doc + delivery template + recap email — all three drafted",
+          "Service: kickoff doc + delivery framework + recap email — all three drafted",
           "Online: landing/demo screen sketched in your builder + onboarding flow outlined + first email drafted",
           "Physical: product spec sheet + unboxing/insert-card draft + first-customer thank-you note",
           "Write a 5-point quality checklist (quality, accuracy, timing, tone, follow-up)",
@@ -363,14 +363,14 @@ export const STAGES: Stage[] = [
       {
         title: "Operations & workflow + sourcing & staffing plan",
         deliverable:
-          "3 written SOPs specific to your business (sales intake, fulfillment, customer onboarding) loaded into your project hub as runnable templates, a one-page weekly operating rhythm, and a sourcing & staffing plan naming the suppliers, contractors, or first hires you'll need for raw goods, services, and talent.",
-        tool: "SOP templates + weekly operating rhythm + sourcing & staffing plan",
+          "3 written SOPs specific to your business (sales intake, fulfillment, customer onboarding) loaded into your project hub as runnable frameworks, a one-page weekly operating rhythm, and a sourcing & staffing plan naming the suppliers, contractors, or first hires you'll need for raw goods, services, and talent.",
+        tool: "SOP frameworks + weekly operating rhythm + sourcing & staffing plan",
         details: [
           "Pick the 3 highest-leverage workflows: sales intake, fulfillment, customer onboarding",
           "Write each as a numbered SOP: trigger → inputs → steps → owner → tools → definition of done",
           "Add a 'what breaks this' section listing the top 3 failure modes and the recovery step",
           "Draft a one-page weekly operating rhythm: standing blocks, review cadence, and the 3 numbers you check every Friday",
-          "Load all 3 SOPs into Notion / ClickUp / Trello as runnable templates anyone on the team can follow",
+          "Load all 3 SOPs into Notion / ClickUp / Trello as runnable frameworks anyone on the team can follow",
           "Identify named sources for raw goods, services, and talent — suppliers, contractors, and any first hires — and capture them as a first-call list",
         ],
         takeaway:
@@ -431,7 +431,7 @@ export const STAGES: Stage[] = [
           "A complete website built for your business — Home, Offer, About, and Contact pages designed in your brand kit, written with your locked messaging, mobile-ready, and configured for SEO. Ready to host.",
         tool: "Site builder + on-page SEO checklist",
         details: [
-          "Pick a starter template and apply your brand kit",
+          "Pick a starter framework and apply your brand kit",
           "Build Home and Offer pages with your locked messaging",
           "Build About and Contact pages (headline + sections + form)",
           "Fill on-page SEO per page: title, meta, single H1, image alts",
@@ -489,7 +489,7 @@ export const STAGES: Stage[] = [
         title: "Core messaging kit",
         deliverable:
           "Your headline, 3 value props, 30-second pitch, and 100-word founder bio — written for your business.",
-        tool: "Messaging kit template",
+        tool: "Messaging kit framework",
         details: [
           "Write a headline that names the buyer + outcome",
           "Draft 3 value props mapped to the top-3 customer pains",
@@ -503,7 +503,7 @@ export const STAGES: Stage[] = [
         title: "Your print and social kit",
         deliverable:
           "Printable business card and flyer designed in your brand; Instagram, LinkedIn, and one of TikTok/YouTube/X claimed with your profile copy, link-in-bio, and banner; 6 on-brand post drafts; 60-second founder video script.",
-        tool: "Creative kit templates (print + social)",
+        tool: "Creative kit frameworks (print + social)",
         details: [
           "Design a business card (front/back) in your brand kit — print-ready",
           "Design a 1-page flyer / one-pager for events, walk-ins, and partner shelves",
@@ -519,7 +519,7 @@ export const STAGES: Stage[] = [
         title: "Marketing & communications",
         deliverable:
           "Your marketing & communications: audience, channels, messaging pillars, 30-day content calendar, weekly budget, and 3 numbers to check every week.",
-        tool: "Marketing & communications template",
+        tool: "Marketing & communications framework",
         details: [
           "Lock the audience and the 3 messaging pillars you'll repeat across every channel",
           "Pick your top-2 acquisition channels (1 organic, 1 outbound or paid)",
@@ -562,7 +562,7 @@ export const STAGES: Stage[] = [
         title: "Sign your 90-day plan (30 / 60 / 90)",
         deliverable:
           "Your signed, dated 90-day plan for your business: first 3 customers → 10 → repeatable channel.",
-        tool: "Launch plan template",
+        tool: "Launch plan framework",
         details: [
           "Lock the go-to-market: target segment, offer, pricing, channel mix, and week-by-week tactics feeding the 30/60/90",
           "Day 1–30: ship offer, close first 3 paying customers",
@@ -576,11 +576,11 @@ export const STAGES: Stage[] = [
       {
         title: "Launch-day checklist & outreach drafts",
         deliverable:
-          "Your personal announcement list started in-session, personal outreach drafts written from templates you've customized, and a day-of timeline (drafts saved, not sent).",
-        tool: "Launch checklist + outreach templates",
+          "Your personal announcement list started in-session, personal outreach drafts written from frameworks you've customized, and a day-of timeline (drafts saved, not sent).",
+        tool: "Launch checklist + outreach frameworks",
         details: [
-          "Start your personal announcement list (friends, peers, past clients) using the source template",
-          "Customize personal outreach drafts (DM, email, voice note) from the templates",
+          "Start your personal announcement list (friends, peers, past clients) using the source framework",
+          "Customize personal outreach drafts (DM, email, voice note) from the frameworks",
           "Identify 3 partner / press / community asks for a co-launch boost",
           "Lock a day-of timeline: 8 AM post → 10 AM email → 2 PM follow-ups",
         ],
