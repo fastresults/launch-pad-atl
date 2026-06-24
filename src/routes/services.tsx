@@ -134,7 +134,7 @@ function CapabilityGrid() {
                       to={s.workshopHref}
                       className="mt-1 inline-block text-xs text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      Or learn the strategy first — {getBuildWorkshop(s.slug)?.priceLabel ?? "$197"} workshop →
+                      Or DIY it — {getBuildWorkshop(s.slug)?.priceLabel ?? "$197"} workshop (strategy + tools + process) →
                     </Link>
                   </div>
                   <Link
