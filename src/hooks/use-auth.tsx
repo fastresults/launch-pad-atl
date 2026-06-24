@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [memberStatus, setMemberStatus] = useState<MemberStatus>("pending");
   const [approvedVia, setApprovedVia] = useState<"admin" | "payment" | null>(null);
+  const [foundersHubAccess, setFoundersHubAccess] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRoles([]);
           setMemberStatus("pending");
           setApprovedVia(null);
+          setFoundersHubAccess(false);
         }
         return;
       }
@@ -49,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRoles(res.roles);
           setMemberStatus(res.memberStatus);
           setApprovedVia(res.approvedVia);
+          setFoundersHubAccess(res.foundersHubAccess);
         }
       } catch (e) {
         console.error("Failed to load account", e);
@@ -56,9 +59,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRoles([]);
           setMemberStatus("pending");
           setApprovedVia(null);
+          setFoundersHubAccess(false);
         }
       }
     };
+
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
