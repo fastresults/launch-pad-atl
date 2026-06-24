@@ -1820,6 +1820,8 @@ export type Database = {
           content_version_history: Json
           created_at: string
           document_type: string
+          hero_image_path: string | null
+          hero_image_prompt: string | null
           id: string
           metadata: Json
           quality_score: number | null
@@ -1834,6 +1836,8 @@ export type Database = {
           content_version_history?: Json
           created_at?: string
           document_type: string
+          hero_image_path?: string | null
+          hero_image_prompt?: string | null
           id?: string
           metadata?: Json
           quality_score?: number | null
@@ -1848,6 +1852,8 @@ export type Database = {
           content_version_history?: Json
           created_at?: string
           document_type?: string
+          hero_image_path?: string | null
+          hero_image_prompt?: string | null
           id?: string
           metadata?: Json
           quality_score?: number | null
