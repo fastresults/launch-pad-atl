@@ -125,6 +125,7 @@ function Marquee({
 function TestimonialCard({ item }: { item: TestimonialWithUrls }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [muted, setMuted] = useState(true);
+  const [playing, setPlaying] = useState(false);
 
   return (
     <div
@@ -139,11 +140,24 @@ function TestimonialCard({ item }: { item: TestimonialWithUrls }) {
         loop
         autoPlay
         playsInline
-        preload="metadata"
+        preload="auto"
+        onPlaying={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
         className="absolute inset-0 h-full w-full object-cover"
       />
 
-      {/* Mute toggle (only visible on card hover) */}
+      {/* Live/video indicator */}
+      <div className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white backdrop-blur">
+        <span
+          className={cn(
+            "h-1.5 w-1.5 rounded-full",
+            playing ? "bg-red-500 animate-pulse" : "bg-white/60",
+          )}
+        />
+        Video
+      </div>
+
+      {/* Mute toggle (only on hover) */}
       <button
         type="button"
         onClick={(e) => {
