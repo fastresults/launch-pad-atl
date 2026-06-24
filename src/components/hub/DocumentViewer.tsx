@@ -251,16 +251,67 @@ export function DocumentViewer({
   open,
   onOpenChange,
 }: {
-  doc: { document_type: string; content: string } | null;
+  doc:
+    | {
+        document_type: string;
+        content: string;
+        snapshot_id?: string;
+        hero_image_path?: string | null;
+      }
+    | null;
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }) {
   const [headings, setHeadings] = useState<{ id: string; text: string }[]>([]);
   const [tocOpen, setTocOpen] = useState(false);
+  const [heroUrl, setHeroUrl] = useState<string | null>(null);
+  const [heroPath, setHeroPath] = useState<string | null>(doc?.hero_image_path ?? null);
+  const [heroLoading, setHeroLoading] = useState(false);
 
   const components = useMemo(() => makeComponents(setHeadings), [doc?.content]);
   const title = titleCase(doc?.document_type ?? "");
   const content = doc?.content ?? "";
+
+  // Reset hero state when the document changes
+  useEffect(() => {
+    setHeroPath(doc?.hero_image_path ?? null);
+    setHeroUrl(null);
+  }, [doc?.snapshot_id, doc?.document_type, doc?.hero_image_path]);
+
+  // Mint a signed URL when we have a path
+  useEffect(() => {
+    let cancelled = false;
+    if (!heroPath) return;
+    (async () => {
+      const { data, error } = await supabase.storage
+        .from("venture-doc-images")
+        .createSignedUrl(heroPath, 3600);
+      if (!cancelled && !error && data?.signedUrl) setHeroUrl(data.signedUrl);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [heroPath]);
+
+  const generateHero = async (force = false) => {
+    if (!doc?.snapshot_id || !doc?.document_type) return;
+    setHeroLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("venture-document-image", {
+        body: { snapshotId: doc.snapshot_id, documentType: doc.document_type, force },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.path) {
+        setHeroPath(data.path);
+        setHeroUrl(null); // force re-sign
+        toast.success(force ? "New visual generated" : "Visual generated");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Image generation failed");
+    } finally {
+      setHeroLoading(false);
+    }
+  };
 
   const onCopy = () => {
     navigator.clipboard.writeText(content);
@@ -289,6 +340,7 @@ export function DocumentViewer({
     navigator.clipboard.writeText(m[1].trim());
     toast.success("AI-builder prompt copied");
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
