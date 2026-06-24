@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
     }
 
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-    const path = nextPath(userId, snapshotId, documentType, doc.hero_image_path);
+    const path = nextPath(ownerId, snapshotId, documentType, doc.hero_image_path);
 
     const { error: upErr } = await admin.storage.from(BUCKET).upload(path, bytes, {
       contentType: "image/png",
