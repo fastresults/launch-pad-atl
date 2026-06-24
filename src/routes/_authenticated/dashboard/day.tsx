@@ -4,7 +4,7 @@ import { getMyCohort } from "@/lib/cohort.functions";
 import { SCHEDULE_BLOCKS } from "@/lib/workshop-mode";
 import { WORKFLOW, STAGES } from "@/lib/workflow";
 import { EVENT } from "@/lib/schedule-data";
-import { MapPin, Calendar, Clock, Sparkles, FileText, ArrowRight } from "lucide-react";
+import { MapPin, Calendar, Clock, Sparkles, FileText, ArrowRight, Mic, Wand2 } from "lucide-react";
 
 const PILLARS = STAGES.filter((s) => s.n >= 1);
 const TOTAL_DOC_MIN = WORKFLOW.reduce((sum, d) => sum + d.estMinutes, 0);
@@ -37,6 +37,47 @@ export default function WorkshopDayPage() {
           You do the thinking out loud. Your facilitator guides you through it — who you serve, why people should care, how you'll price it, where your first customers come from, and what the money looks like. You leave with clear answers, a Monday-morning action plan, and the {WORKFLOW.length} founder-ready assets that back it all up.
         </p>
       </div>
+
+      {/* Two ways to build it */}
+      <section>
+        <h2 className="mb-1 text-sm font-medium uppercase tracking-wide text-muted-foreground">Two ways to build it</h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Same five pillars, same {WORKFLOW.length} founder-ready deliverables. Pick the path that fits where you are right now.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Card A — Guided in the room */}
+          <div className="flex flex-col rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-5">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-primary">
+              <Mic className="h-3.5 w-3.5" /> Guided workshop path · recommended
+            </div>
+            <h3 className="mt-2 text-lg font-semibold">Build it out loud with your facilitator</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Walk through each pillar one at a time. You talk it out, your facilitator keeps you moving, and the answers turn into your brief and your deliverables as you go. Best if it's your first time putting the idea into words.
+            </p>
+            <div className="mt-4">
+              <Link to="/dashboard/brief" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90">
+                Start my founder brief <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Card B — Fast venture path */}
+          <div className="flex flex-col rounded-2xl border border-white/10 bg-card p-5">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <Wand2 className="h-3.5 w-3.5" /> Fast venture path · head start
+            </div>
+            <h3 className="mt-2 text-lg font-semibold">Drop in a link or a paragraph, get all {WORKFLOW.length} back</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Paste your site or describe the idea. We'll enrich it, build every deliverable in order, and hand it all back so you can show up Saturday with something to react to instead of starting from a blank page.
+            </p>
+            <div className="mt-4">
+              <Link to="/dashboard/hub/new" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-background/50 px-4 py-2.5 text-sm font-medium hover:bg-white/5">
+                Spin up a venture <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Cohort card */}
       {cohort ? (
