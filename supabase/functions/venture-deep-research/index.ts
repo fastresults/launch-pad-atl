@@ -259,7 +259,16 @@ async function runResearch(supabase: any, snapshotId: string) {
   const concept = snap.business_concept ?? "";
   const companyName = snap.company_name ?? "";
   const ownUrl = snap.website_url ?? null;
-  const keyword = (companyName || concept.split(/[.\n]/)[0] || "").slice(0, 80);
+  const industry = (snap.industry ?? "").trim();
+  // Strip the "Group › Subgroup" prefix for cleaner search terms
+  const industryShort = industry.split("›").pop()?.trim() ?? industry;
+  const city = (snap.city ?? "").trim();
+  const region = (snap.region ?? "").trim();
+  const country = (snap.country ?? "").trim();
+  const scope = (snap.market_scope ?? "national") as
+    "local" | "regional" | "national" | "international";
+  const geo = [city, region].filter(Boolean).join(", ");
+  const keyword = (companyName || industryShort || concept.split(/[.\n]/)[0] || "").slice(0, 80);
 
   // ---------- Step 1: Own/competitor seed scrape ----------
   await updateProgress(supabase, snapshotId, "scraping", 10, "Scraping the seed website");
@@ -278,21 +287,43 @@ async function runResearch(supabase: any, snapshotId: string) {
   }
   if (ownArtifacts.length) await appendArtifacts(supabase, snapshotId, ownArtifacts);
 
-  // ---------- Step 2: Discover competitors ----------
+  // ---------- Step 2: Discover competitors (geo + industry aware) ----------
   await updateProgress(supabase, snapshotId, "competitors", 25, "Discovering competitors");
-  const compQueries = [
-    `${keyword} alternatives`,
-    `${keyword} competitors comparison`,
-  ];
+  const compQueries: string[] = [];
+  if (scope === "local" && geo && industryShort) {
+    compQueries.push(
+      `best ${industryShort} in ${geo}`,
+      `top ${industryShort} ${city}`,
+      `${industryShort} ${geo} reviews`,
+    );
+  } else if (scope === "regional" && industryShort) {
+    compQueries.push(
+      `top ${industryShort} companies in ${region || country}`,
+      `${industryShort} businesses ${region || country}`,
+    );
+  } else if (industryShort) {
+    compQueries.push(
+      `top ${industryShort} companies ${country || ""}`.trim(),
+      `${industryShort} market leaders`,
+      `${keyword} alternatives`,
+    );
+  } else {
+    compQueries.push(`${keyword} alternatives`, `${keyword} competitors comparison`);
+  }
+
   const compCandidates = new Map<string, { url: string; title?: string; description?: string }>();
   for (const q of compQueries) {
     const hits = await fcSearch(q, { limit: 6 });
     for (const h of hits) {
       const host = (() => { try { return new URL(h.url).hostname.replace(/^www\./, ""); } catch { return null; } })();
       if (!host) continue;
-      // skip the founder's own domain and obvious aggregators
       if (ownUrl && host && ownUrl.includes(host)) continue;
-      if (/^(g2|capterra|getapp|trustpilot|producthunt|reddit|medium|youtube|linkedin|wikipedia)\./i.test(host)) continue;
+      // For local searches, allow Yelp/Google Maps style aggregators because they list real local businesses;
+      // for non-local, skip them.
+      const aggregator = /^(g2|capterra|getapp|trustpilot|producthunt|medium|youtube|linkedin|wikipedia)\./i.test(host);
+      const localAggregator = /^(yelp|tripadvisor|opentable|nextdoor|yellowpages)\./i.test(host);
+      if (aggregator) continue;
+      if (scope !== "local" && localAggregator) continue;
       if (!compCandidates.has(host)) compCandidates.set(host, h);
       if (compCandidates.size >= 5) break;
     }
@@ -302,6 +333,7 @@ async function runResearch(supabase: any, snapshotId: string) {
     step: "competitor_discovery",
     fetched_at: new Date().toISOString(),
     content: JSON.stringify(Array.from(compCandidates.values()), null, 2),
+    metadata: { queries: compQueries, scope, geo, industry: industryShort },
   }]);
 
   // ---------- Step 3: Scrape competitor homepages ----------
@@ -321,25 +353,52 @@ async function runResearch(supabase: any, snapshotId: string) {
   }
   if (compArtifacts.length) await appendArtifacts(supabase, snapshotId, compArtifacts);
 
-  // ---------- Step 4: Industry/market via Perplexity ----------
+  // ---------- Step 4: Industry/market via Perplexity (geo + scope anchored) ----------
   await updateProgress(supabase, snapshotId, "market", 60, "Analyzing the market with Perplexity");
-  const marketPrompt = `Analyze the market for the following venture. Cover: (1) market size and growth, (2) major trends in the last 12 months, (3) regulatory or compliance considerations, (4) tailwinds, (5) headwinds. Cite sources.\n\nVenture: ${companyName}\nConcept: ${concept}`;
+  const scopeClause = scope === "local"
+    ? `the local ${geo || city || country} market`
+    : scope === "regional"
+    ? `the regional ${region || country} market`
+    : scope === "international"
+    ? `the international market across multiple countries`
+    : `the ${country || "national"} market`;
+  const marketPrompt = `Analyze ${scopeClause} for ${industryShort || "this venture"}${companyName ? ` (relevant to ${companyName})` : ""}.
+Cover concretely:
+1. Market size and growth (with numbers when available, scoped to ${scopeClause}).
+2. Major trends in the last 12 months.
+3. Regulatory / licensing / compliance considerations for ${country || "the relevant jurisdiction"}${scope === "local" ? ` and ${region || city}` : ""}.
+4. Tailwinds and headwinds.
+5. Customer segments and typical pricing.
+
+Cite sources for every numeric claim.
+
+Venture context:
+- Concept: ${concept}
+- Industry: ${industry}${snap.sub_industry ? ` (niche: ${snap.sub_industry})` : ""}
+- Location: ${geo || country || "unspecified"}
+- Market scope: ${scope}`;
   const market = await pplxResearch(marketPrompt);
   if (market) {
     await appendArtifacts(supabase, snapshotId, [{
       step: "market_research",
       fetched_at: new Date().toISOString(),
       content: market.content,
-      metadata: { citations: market.citations, source: "perplexity:sonar-pro" },
+      metadata: { citations: market.citations, source: "perplexity:sonar-pro", scope, geo },
     }]);
   }
 
-  // ---------- Step 5: Customer voice (Reddit/HN) ----------
+  // ---------- Step 5: Customer voice (Reddit/HN, geo when local) ----------
   await updateProgress(supabase, snapshotId, "voice", 75, "Gathering customer voice");
-  const voiceQueries = [
-    `${keyword} site:reddit.com problem OR complaint OR alternative`,
-    `${keyword} site:news.ycombinator.com`,
-  ];
+  const voiceTerm = industryShort || keyword;
+  const voiceQueries: string[] = scope === "local" && geo
+    ? [
+        `${voiceTerm} ${geo} site:reddit.com`,
+        `best ${voiceTerm} ${city} site:reddit.com`,
+      ]
+    : [
+        `${voiceTerm} site:reddit.com problem OR complaint OR alternative`,
+        `${voiceTerm} site:news.ycombinator.com`,
+      ];
   const voiceHits: { url: string; title?: string; description?: string }[] = [];
   for (const q of voiceQueries) {
     const hits = await fcSearch(q, { limit: 5, tbs: "qdr:y" });
@@ -353,6 +412,7 @@ async function runResearch(supabase: any, snapshotId: string) {
       content: voiceHits.slice(0, 10).map((h) => `- [${h.title ?? h.url}](${h.url})\n  ${h.description ?? ""}`).join("\n\n"),
     }]);
   }
+
 
   // ---------- Step 6: Synthesis ----------
   await updateProgress(supabase, snapshotId, "synthesis", 88, "Synthesizing research brief");
