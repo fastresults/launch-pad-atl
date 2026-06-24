@@ -46,6 +46,20 @@ const SEED_URLS = [
   "https://www.notion.com",
 ];
 
+// TODO: remove after testing — naive industry inference from a concept blurb
+function guessIndustry(concept: string): string {
+  const c = concept.toLowerCase();
+  if (/\b(bank|payment|fintech|invoic|payroll|ledger|treasury|card)\b/.test(c)) return "Financial Services";
+  if (/\b(developer|api|sdk|devtool|deploy|infrastructure|database|observability)\b/.test(c)) return "Developer Tools";
+  if (/\b(ai|llm|model|agent|machine learning|gpt)\b/.test(c)) return "Artificial Intelligence";
+  if (/\b(shop|store|ecommerce|e-commerce|retail|merchandise)\b/.test(c)) return "E-commerce & Retail";
+  if (/\b(marketing|seo|crm|sales|outreach|campaign|newsletter)\b/.test(c)) return "Marketing & Sales";
+  if (/\b(health|clinic|patient|medical|wellness|therapy)\b/.test(c)) return "Healthcare";
+  if (/\b(school|learn|education|course|tutor|student)\b/.test(c)) return "Education";
+  if (/\b(notes|productivity|workflow|collaborat|task|project management)\b/.test(c)) return "Productivity Software";
+  return "Software & SaaS";
+}
+
 async function extractFileText(file: File): Promise<{ text: string; error?: string }> {
   const name = file.name.toLowerCase();
   const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
