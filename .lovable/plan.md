@@ -1,34 +1,30 @@
-## Convert testimonial slider to edge-to-edge marquee
+## Goal
 
-### What changes
-Replace the centered single-video player in `src/components/home/VideoTestimonials.tsx` with a full-bleed, continuously scrolling marquee of 9:16 portrait video cards.
+Give admins a clear on/off switch for the homepage video-testimonial slider.
 
-### Behavior
-- **Edge-to-edge**: section breaks out of the page container; row spans the full viewport width with no horizontal padding on the strip itself.
-- **Continuous auto-scroll**: cards translate right-to-left at a steady speed (admin-configurable; default 40px/sec). When the first set scrolls off-screen, it loops seamlessly by duplicating the list (standard CSS marquee trick).
-- **Hover pauses** the entire row (animation-play-state: paused).
-- **All videos play simultaneously**, muted, looped, `playsInline`, `autoPlay`. This is the natural fit for a marquee — every visible card is alive.
-- **Per-card hover**: unmute button + pause button overlay on the hovered card.
-- **`prefers-reduced-motion`**: marquee freezes, becomes a normal horizontal scroll the user drags.
-- **Mobile**: same marquee, slightly smaller cards (~280px wide × 500px tall). Hidden entirely if `show_on_mobile` is off.
+## Current state
 
-### Card design (9:16 portrait, ~420px tall on desktop)
-- Width ~236px, height 420px, rounded-2xl, subtle ring.
-- Video fills the card (`object-cover`).
-- Bottom gradient overlay with founder name, role · startup, and the quote (clamped to 2 lines).
-- Small "play" icon top-right when muted.
+The capability already exists but is buried:
 
-### Settings adjustments (admin page)
-- Drop the now-irrelevant `autoplay`, `start_muted`, `loop`, `pause_seconds` fields from the active form (keep them in DB for compatibility, just hide).
-- Add: **Scroll speed (px/sec)** — default 40, range 10–200.
-- Add: **Direction** — left ↔ right (default left).
-- Keep: enabled, heading, subheading, show_on_mobile.
+- `TestimonialSliderSettings.enabled` is persisted in `site_settings` (key `testimonial_slider`).
+- `src/components/home/VideoTestimonials.tsx` already returns `null` when `settings.enabled` is false, so the slider hides correctly when toggled off.
+- `src/routes/_authenticated/_admin/admin.testimonials.tsx` already renders a `Switch` labeled "Show section on homepage" inside the Settings card — but it only saves when the admin clicks the "Save settings" button at the bottom of the form, which makes it feel like a buried form field rather than a real toggle.
 
-### Files
-- `src/components/home/VideoTestimonials.tsx` — rewrite as marquee.
-- `src/routes/_authenticated/_admin/admin.testimonials.tsx` — swap settings UI.
-- `src/lib/testimonials.functions.ts` — extend `TestimonialSliderSettings` with `scroll_speed_px_s` and `direction`, with defaults.
-- Section is mounted inside `<HomeFramework />` at full width by using `w-screen relative left-1/2 -ml-[50vw]` wrapper for the strip; the heading stays in the centered max-w container above it.
+So this is a UX upgrade, not new functionality.
 
-### Why the data already loaded but you didn't see it
-The current component renders centered with a max-width — it *is* on the page, just not full-bleed and not a scroller. The rebuild fixes both at once.
+## Plan
+
+Edit only `src/routes/_authenticated/_admin/admin.testimonials.tsx`:
+
+1. **Promote the on/off toggle out of the settings form** into its own prominent card at the top of the page (above "Slider settings"), titled something like **"Homepage slider"** with helper text "Show or hide the video testimonial slider on the public homepage."
+2. **Make it save instantly** on toggle (call `saveSettings.mutate({ enabled: v })` directly in `onCheckedChange`) instead of requiring the Save button. Show a subtle "Saving…" / "On" / "Off" state next to the switch.
+3. **Remove the duplicate `enabled` row** from the inner `SettingsForm` so there's a single source of truth.
+4. Keep all other settings (heading, subheading, scroll speed, direction, show on mobile) in the existing Settings form behind the Save button — unchanged.
+
+No DB changes, no changes to `VideoTestimonials.tsx`, no changes to `testimonials.functions.ts`.
+
+## Acceptance
+
+- Admin opens `/admin/testimonials` and sees a dedicated **Homepage slider: On/Off** switch at the top.
+- Flipping it immediately hides/shows the slider on `/` (after the homepage query refetches — already handled by the existing `invalidateQueries(["testimonial_settings"])` in the save mutation).
+- The rest of the settings form still works exactly as it does today.
