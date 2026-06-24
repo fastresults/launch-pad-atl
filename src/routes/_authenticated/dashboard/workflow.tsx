@@ -40,7 +40,7 @@ export default function WorkflowPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Your workflow</h1>
-          <p className="mt-1 text-sm text-muted-foreground">25 deliverables, organized in 7 stages. AI generates each one from your brief and prior outputs.</p>
+          <p className="mt-1 text-sm text-muted-foreground">20 documents, organized in 5 strategic pillars. AI generates each one from your brief and prior outputs.</p>
         </div>
         <Button onClick={() => runAll.mutate()} disabled={!briefReady || runAll.isPending}>
           {runAll.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Running…</> : <><Play className="mr-2 h-4 w-4" />Run remaining</>}
