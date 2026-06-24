@@ -45,6 +45,9 @@ export interface VentureSnapshot {
   concept_status: "draft" | "refining" | "locked";
   concept_locked_at: string | null;
   concept_iterations: any[];
+  epiphany_runs: any[];
+  saved_enhancements: any[];
+  brand_tokens: any;
   created_at: string;
   updated_at: string;
 }
@@ -316,4 +319,18 @@ export async function refineConcept(input: any): Promise<any> {
   if ((data as any)?.error) throw new Error((data as any).error);
   return data;
 }
+
+export async function generateBrandAsset(input: any): Promise<any> {
+  const { snapshotId, kind, count, extra } = unwrap<{ snapshotId: string; kind: string; count?: number; extra?: string }>(input);
+  const { data, error } = await supabase.functions.invoke("venture-brand-assets", {
+    body: { snapshotId, kind, count, extra },
+  });
+  if (error) {
+    const msg = (data as any)?.error || error.message;
+    throw new Error(msg);
+  }
+  if ((data as any)?.error) throw new Error((data as any).error);
+  return data;
+}
+
 

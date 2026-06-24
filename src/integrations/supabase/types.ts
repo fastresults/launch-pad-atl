@@ -1963,6 +1963,7 @@ export type Database = {
       }
       venture_snapshots: {
         Row: {
+          brand_tokens: Json | null
           business_concept: string | null
           city: string | null
           company_name: string | null
@@ -1975,6 +1976,7 @@ export type Database = {
           created_at: string
           differentiation_statement: string | null
           enrichment_progress: Json | null
+          epiphany_runs: Json
           extracted_data: Json | null
           founder_email: string | null
           founder_name: string | null
@@ -1986,6 +1988,7 @@ export type Database = {
           region: string | null
           research_artifacts: Json | null
           research_brief: Json | null
+          saved_enhancements: Json
           scraped_content: string | null
           status: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry: string | null
@@ -1995,6 +1998,7 @@ export type Database = {
           website_url: string | null
         }
         Insert: {
+          brand_tokens?: Json | null
           business_concept?: string | null
           city?: string | null
           company_name?: string | null
@@ -2007,6 +2011,7 @@ export type Database = {
           created_at?: string
           differentiation_statement?: string | null
           enrichment_progress?: Json | null
+          epiphany_runs?: Json
           extracted_data?: Json | null
           founder_email?: string | null
           founder_name?: string | null
@@ -2018,6 +2023,7 @@ export type Database = {
           region?: string | null
           research_artifacts?: Json | null
           research_brief?: Json | null
+          saved_enhancements?: Json
           scraped_content?: string | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry?: string | null
@@ -2027,6 +2033,7 @@ export type Database = {
           website_url?: string | null
         }
         Update: {
+          brand_tokens?: Json | null
           business_concept?: string | null
           city?: string | null
           company_name?: string | null
@@ -2039,6 +2046,7 @@ export type Database = {
           created_at?: string
           differentiation_statement?: string | null
           enrichment_progress?: Json | null
+          epiphany_runs?: Json
           extracted_data?: Json | null
           founder_email?: string | null
           founder_name?: string | null
@@ -2050,6 +2058,7 @@ export type Database = {
           region?: string | null
           research_artifacts?: Json | null
           research_brief?: Json | null
+          saved_enhancements?: Json
           scraped_content?: string | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry?: string | null

@@ -1,76 +1,77 @@
-# Concept Refinement Gateway
+# Brand Development & Social Media — comprehensive expansion
 
-Insert a new mandatory step between deep research (status `review`) and bulk document generation. The user must produce/approve a tight 50–60 word concept summary + value proposition, optionally run AI-assisted brainstorming/innovation rounds, then explicitly "Lock concept" to unlock document generation.
+Add a full brand-framework pipeline and a comprehensive social media setup + content strategy to the AI-first workflow, alongside the previously approved Epiphany Engine. Everything is driven by the locked concept summary + value proposition so output stays on-message.
 
-## 1. Data model
+## 1. New documents in the catalog (added to `venture_document_types`)
 
-Migration on `venture_snapshots`:
-- `concept_summary` text — final 50–60 word summary (locked version)
-- `value_proposition` text — competitive value prop (1–2 sentences)
-- `concept_status` text default `'draft'` — `draft | refining | locked`
-- `concept_locked_at` timestamptz
-- `concept_iterations` jsonb default `'[]'` — append-only log of AI suggestions + user edits: `{ id, kind: 'draft'|'brainstorm'|'innovate'|'critique'|'user_edit', input, output, model, created_at }`
+### Brand Development (new category "Brand", sort 9.x — runs after value_proposition)
 
-New status value for `venture_snapshots.status`: `concept_review` (between `review` and `generating`). Deep research completion sets status to `concept_review` instead of `review`. Bulk generation refuses to start unless `concept_status='locked'`.
+- **brand_strategy_framework** — full brand-strategy doc using a recognized framework:
+  Purpose → Vision → Mission → Values → Audience archetypes → Brand promise → Positioning statement (Geoffrey Moore template) → Brand pillars (3–5) → Personality (Jung archetype + 5 trait spectrum) → Brand essence (one phrase). Deps: `value_proposition`, `competitive_positioning`.
+- **brand_messaging_house** — Messaging architecture: tagline + 3 variants, elevator pitch (15/30/60s), brand story (StoryBrand 7-part), proof points, key messages per audience, do/don't language guide, banned phrases. Deps: `brand_strategy_framework`.
+- **visual_identity_brief** — Logo direction (concept + 3 mood pairings), color system (primary/secondary/neutral with hex + usage + accessibility AA contrast notes), typography pair (heading/body with fallbacks), iconography style, photography direction, layout principles, accessibility checklist. Outputs a paste-ready prompt block for AI logo/identity tools (Midjourney/Ideogram/Looka) plus a brand-tokens JSON the website_prd can consume. Deps: `brand_strategy_framework`.
+- **brand_voice_tone_guide** — Voice attributes (4 dimensions with sliders + examples), tone shifts by context (sales, support, crisis, social), reading-level target, sample rewrites (before/after × 5), inclusive-language rules. Deps: `brand_messaging_house`.
+- **brand_guidelines_pdf** — Final consolidated brand book combining the above with do/don'ts, asset usage, file-naming, governance ("who approves what"). Deps: `visual_identity_brief`, `brand_voice_tone_guide`.
 
-## 2. New edge function: `venture-concept-refine`
+### Social & Content (new category "Social & Content")
 
-Single function, action-dispatched POST body `{ snapshot_id, action, payload }`:
+- **social_media_audit_setup** — Per-platform recommendation matrix (Instagram, TikTok, LinkedIn, X, YouTube, Facebook, Pinterest, Threads, Reddit) scored Yes/Maybe/Skip for THIS venture with rationale tied to market_scope + industry + research_brief. For each "Yes" platform: handle availability checklist, profile setup (bio templates × 3, link-in-bio structure, profile/cover image specs, pinned-post strategy, highlight covers), keyword/hashtag seed list (15–25), follow-list of 25 accounts to engage. Deps: `brand_voice_tone_guide`, `customer_personas`.
+- **content_strategy_pillars** — Content pillars (4–6), each with: theme, audience job-to-be-done it serves, % of mix, formats, voice notes, success metrics. Includes content-to-funnel map (TOFU/MOFU/BOFU/loyalty %), POV statements, banned topics. Deps: `social_media_audit_setup`, `value_proposition`.
+- **content_calendar_90day** — 90-day editorial calendar: 3 posts/week minimum per primary platform, organized by pillar with title + hook + body outline + CTA + format + asset notes + best-time slot. Week 1–4 has full-text drafts; weeks 5–12 are outlined briefs. Includes batch-production schedule and repurposing matrix (1 long-form → 5 short-form derivatives). Deps: `content_strategy_pillars`.
+- **launch_content_kit** — Ready-to-paste launch sequence: 10 launch posts across formats (announcement, founder story, problem post, solution demo, social proof, FAQ, CTA, behind-the-scenes, manifesto, partnership-ask), each with caption + image/video prompt + hashtags + alt-text. Includes 5 email/DM templates and a press one-pager. Deps: `content_calendar_90day`, `brand_messaging_house`.
+- **community_engagement_playbook** — Reply scripts (10 scenarios), comment-prompt formulas, DM funnel, UGC + testimonial-collection scripts, crisis-response tree, weekly engagement ritual (60-min/day plan), KPI dashboard (reach, saves, shares, replies, profile visits → site visits → leads). Deps: `social_media_audit_setup`, `brand_voice_tone_guide`.
+- **influencer_partnership_brief** — Tiered creator-target list (nano/micro/mid) with 25 named candidates derived from research_brief + Perplexity search of `{industry} creators in {location}`, outreach scripts × 3, partnership terms template, performance tracking template. Deps: `content_strategy_pillars`, `customer_personas`.
+- **paid_ads_starter_pack** — Budget-tier plans ($300 / $1k / $3k monthly), platform allocation, 3 ad-creative concepts per platform with copy + visual prompts, audience definitions, conversion-tracking setup checklist (Pixel/CAPI), test-and-iterate framework. Deps: `content_strategy_pillars`, `customer_personas`.
 
-- `draft` — generate initial 50–60 word summary + value prop from `research_brief` + `extracted_data` + founder/market context. Strict JSON output `{ summary, value_proposition, rationale }`. Word-count enforced server-side (re-prompt once if out of band).
-- `brainstorm` — produce 3–5 alternative angles/positioning shifts grounded in `research_brief.competitors` and `market_trends`. Returns `{ ideas: [{ title, summary, why_it_works, risks }] }`.
-- `innovate` — given a chosen idea or user prompt, produce a more ambitious reframe (new wedge, business model tweak, underserved segment). Returns same shape as `draft` plus `delta` explaining what changed.
-- `critique` — red-team the current summary against competitors + customer voice; returns weaknesses + concrete rewrite suggestions.
-- `apply` — persist a chosen variant as the working `concept_summary` / `value_proposition` (still `concept_status='refining'`).
-- `lock` — validate word count (50–60), non-empty value prop, then set `concept_status='locked'`, `concept_locked_at=now()`, `status='concept_review'` → ready for generation.
+That's **5 brand docs + 6 social/content docs = 11 new types**, bringing the catalog from 21 → 32. All marked `free_tier: false` except `brand_strategy_framework`, `social_media_audit_setup`, and `content_strategy_pillars`, which stay free so even base users get the foundation.
 
-Every call appends an entry to `concept_iterations`. Uses Lovable AI Gateway via existing `_shared/ai-gateway.ts` helper, model `google/gemini-3-flash-preview` (fast, cheap, structured output via `Output.object` + Zod). Auth: verify caller owns the snapshot.
+## 2. Generator upgrades
 
-## 3. Generation gating
+`venture-bulk-generate` + `venture-generate-document`:
 
-`venture-bulk-generate` and `venture-generate-document`: at entry, load snapshot, refuse with 409 if `concept_status !== 'locked'`. Inject `concept_summary` + `value_proposition` as the canonical "north-star" block at the top of every document system prompt, ahead of `research_brief`. This is what keeps all 21 documents on-message.
+- Each new doc gets a specialized system prompt branch (like the existing `website_prd` branch). Brand docs reference a recognized framework explicitly in their prompts (Simon Sinek Golden Circle, StoryBrand, Jung archetypes, Aaker brand identity prism, Geoffrey Moore positioning) so output is structured and recognizable, not generic.
+- `visual_identity_brief` and `brand_guidelines_pdf` emit a fenced ```json brand_tokens block (colors, fonts, spacing). The `website_prd` generator is updated to read upstream `brand_tokens` and reference them in its paste-ready prompt — closes the loop so the website matches the brand.
+- `social_media_audit_setup` calls Perplexity once for fresh platform-trend data scoped to industry + market.
+- All content/social docs receive `brand_voice_tone_guide` as upstream context when present, ensuring caption voice = brand voice.
 
-## 4. UI: Concept Studio panel
+## 3. Brand Studio panel (UI)
 
-New component `src/components/hub/ConceptStudio.tsx` rendered on `hub.$snapshotId.tsx` as the primary card whenever `status === 'concept_review'` and `concept_status !== 'locked'`. Document list + generate button stay disabled behind it.
+New `src/components/hub/BrandStudio.tsx`, rendered on `hub.$snapshotId.tsx` in the Generate step as a dedicated section above the document grid (collapses once docs are complete). Shows:
 
-Layout:
-- **Header**: "Refine your concept" + live word counter (turns green at 50–60).
-- **Summary editor**: textarea bound to `concept_summary`, inline word count, "Regenerate from research" button (calls `draft`).
-- **Value proposition editor**: textarea, 1–2 sentence guidance.
-- **Action rail** (buttons):
-  - Brainstorm alternatives → opens a drawer listing returned ideas with "Use this" → calls `apply`.
-  - Innovate / push further → prompt input ("what constraint to challenge?") + run.
-  - Red-team critique → returns bullet weaknesses + a suggested rewrite with one-click apply.
-- **Iteration history**: collapsible timeline rendered from `concept_iterations` with diff highlight and "Restore" per entry.
-- **Lock concept** primary button: disabled until word count valid + value prop non-empty. On click → confirmation modal explaining this becomes the spine of all 21 documents, then calls `lock`. UI flips to locked read-only summary with "Unlock & revise" (sets `concept_status='draft'`, requires re-lock; allowed only while no documents generated, otherwise warns about regeneration).
+- **Brand status bar** — visual identity (color swatches + typography preview from `brand_tokens`), voice attributes pulled from `brand_voice_tone_guide`, one-line positioning statement.
+- **Asset actions** — "Generate logo concept" (calls imagegen tool through an edge function with the visual_identity_brief prompt; saves 4 variations to `media_assets`), "Generate social profile pack" (square + cover images per platform, sized correctly), "Export brand book PDF" (renders brand_guidelines_pdf markdown to PDF in the browser).
+- **Copy-prompt buttons** for paste-ready blocks (logo prompt, Midjourney mood prompt, Canva brief).
 
-After lock, the existing "Generate all documents" CTA becomes enabled.
+## 4. Social Studio panel (UI)
 
-## 5. Client wiring
+New `src/components/hub/SocialStudio.tsx`, rendered in the Generate step below Brand Studio:
 
-In `src/lib/foundersHub.functions.ts`:
-- `refineConcept(snapshotId, action, payload)` → invokes `venture-concept-refine`.
-- `lockConcept(snapshotId)` → action `lock`.
-- Update `createSnapshot` flow notes (deep research now lands on `concept_review`).
-- Bulk-generate client call surfaces the 409 with a toast pointing back to Concept Studio.
+- **Platform matrix** rendered from `social_media_audit_setup` with Yes/Maybe/Skip badges + handle-availability checker (links out to namechk.com style search per platform).
+- **Content calendar viewer** — week-grid view of `content_calendar_90day`, click a cell → full post draft + "Copy", "Schedule" (deep-links to Buffer/Hootsuite/native composer with pre-filled body), "Regenerate" (single-post regenerate via existing generate path with a targeted prompt).
+- **Launch kit** — 10 launch posts as cards, each with copy/image/hashtags + Copy + "Generate image" button (imagegen).
+- **KPI tracker stub** — placeholder for connecting analytics later (clearly marked future).
 
-## 6. Telemetry / safeguards
+## 5. Brand-asset image generation
 
-- Cap: 20 AI refinement calls per snapshot (config constant); surface remaining count in UI.
-- Word-count validation both client and server.
-- All AI outputs validated with Zod; on parse failure, single retry then surfaced error toast.
+New edge function `venture-brand-assets`:
+- Takes `{ snapshotId, kind: 'logo'|'social_profile'|'social_cover'|'launch_post', count, platform? }`.
+- Loads `visual_identity_brief` + `brand_tokens`, constructs a model-specific prompt, calls `google/gemini-3-flash-image` (Nano Banana — fast, good for marketing) or `google/gemini-3-pro-image` for logos.
+- Persists outputs as rows in `media_assets` tagged `brand_kit:{snapshot_id}` so they appear in the founder's media library.
+- Concurrency-capped (max 4 in flight).
 
-## Technical summary
+## 6. Data + types
 
-- 1 migration (5 columns + status enum value via check or text).
-- 1 new edge function `venture-concept-refine` (multi-action).
-- Edits: `venture-deep-research` (set status `concept_review`), `venture-bulk-generate` + `venture-generate-document` (gate + inject concept block), `foundersHub.functions.ts`, `hub.$snapshotId.tsx`, `src/integrations/supabase/types.ts` (regen after migration).
-- 1 new component `ConceptStudio.tsx` plus small subcomponents (`IdeaDrawer`, `IterationTimeline`).
+Migration adds 11 rows to `venture_document_types`. No schema changes needed beyond that — existing `venture_documents` table already stores arbitrary markdown content. `media_assets` already exists.
+
+Optional small addition: `venture_snapshots.brand_tokens jsonb` mirrored from the latest `visual_identity_brief` for fast read by Brand Studio + website_prd (avoids re-parsing markdown).
+
+## 7. Carry-over from prior plan
+
+This plan keeps the previously approved **Epiphany Engine** as-is (multi-step pipeline, top-3 enhancement cards, viability + attractiveness scoring). The Epiphany's "Fold into concept" path now also triggers a regeneration of `brand_messaging_house` and `content_strategy_pillars` when those docs already exist (marks them stale with a one-click "Regenerate to match new concept" button).
 
 ## Open choices
 
-1. **Word band** — strict 50–60, or soft 45–70 with warning? Strict gives consistent doc inputs; soft is friendlier.
-2. **Brainstorm scope** — keep ideas tightly anchored to the user's industry/market, or allow adjacent-market pivots?
-3. **Unlock after generation** — allow re-lock + regenerate all docs (expensive), allow but only regenerate stale docs, or freeze concept once any doc is generated?
-4. **Auto-draft on entry** — auto-run `draft` the first time the user lands on Concept Studio, or wait for explicit click?
+1. **Catalog size** — ship all 11 new docs, or start with the 6 highest-impact (brand_strategy_framework, brand_messaging_house, visual_identity_brief, social_media_audit_setup, content_strategy_pillars, content_calendar_90day) and add the rest in a phase 2?
+2. **Logo generation model** — default to Nano Banana (fast/cheap, 4 variants in ~15s) or `gemini-3-pro-image` (slower, higher quality, 2 variants)?
+3. **Calendar depth** — full 12 weeks of post drafts (longer generation, more credits), or 4 weeks drafted + 8 weeks outlined (recommended)?
+4. **Platform coverage** — cover all 9 platforms in the audit even if most score Skip, or only render the Yes/Maybe set in `social_media_audit_setup`?

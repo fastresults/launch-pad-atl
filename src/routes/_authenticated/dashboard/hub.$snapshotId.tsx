@@ -28,6 +28,8 @@ import {
 } from "@/lib/foundersHub.functions";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { ConceptStudio } from "@/components/hub/ConceptStudio";
+import { BrandStudio } from "@/components/hub/BrandStudio";
+import { SocialStudio } from "@/components/hub/SocialStudio";
 import {
   ArrowLeft,
   Loader2,
@@ -418,6 +420,11 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
           </details>
         )}
       </div>
+
+      <BrandStudio snapshot={snapshot} />
+      <SocialStudio snapshot={snapshot} />
+
+
 
       {categories.map(([cat, items]) => (
         <section key={cat} className="space-y-3">
