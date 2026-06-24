@@ -210,6 +210,27 @@ export async function getActiveJob(input: any) {
   return data;
 }
 
+export async function cancelJob(input: any): Promise<void> {
+  const { jobId } = unwrap<{ jobId: string }>(input);
+  const { error } = await supabase
+    .from("venture_generation_jobs")
+    .update({ cancel_requested: true })
+    .eq("id", jobId);
+  if (error) throw new Error(error.message);
+}
+
+export async function listFailures(input: any) {
+  const { snapshotId } = unwrap<{ snapshotId: string }>(input);
+  const { data, error } = await supabase
+    .from("venture_generation_failures")
+    .select("*")
+    .eq("snapshot_id", snapshotId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
 // Admin
 export async function adminListSnapshots() {
   const { data, error } = await supabase
