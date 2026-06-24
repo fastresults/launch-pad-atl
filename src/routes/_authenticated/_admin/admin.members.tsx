@@ -61,6 +61,12 @@ export default function AdminMembersPage() {
     run(() => markMemberContacted({ data: { userId } }), "Marked as contacted");
   const handleRestoreToPending = (userId: string) =>
     run(() => restoreMemberToPending({ data: { userId } }), "Moved back to pending");
+  const handleToggleHub = (userId: string, grant: boolean) =>
+    run(
+      () => setFoundersHubAccess({ data: { userId, grant } }),
+      grant ? "Founders Hub unlocked" : "Founders Hub locked",
+    );
+
 
   const confirmPause = async (reason?: string) => {
     if (!pauseTarget) return;
