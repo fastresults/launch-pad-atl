@@ -303,6 +303,16 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
+    // Gate: concept must be locked before any docs are generated.
+    const { data: gateSnap } = await supabase
+      .from("venture_snapshots")
+      .select("concept_status")
+      .eq("id", snapshotId)
+      .maybeSingle();
+    if (!gateSnap || gateSnap.concept_status !== "locked") {
+      return new Response(JSON.stringify({ error: "Lock your concept summary before generating documents." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // Reuse a running job if there is one
     const { data: existing } = await supabase
       .from("venture_generation_jobs")
