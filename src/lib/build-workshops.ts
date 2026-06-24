@@ -15,6 +15,23 @@ import { AGENCY_SERVICES } from "@/lib/agency-services";
 export type AgendaBlock = { time: string; title: string; detail: string };
 export type FAQ = { q: string; a: string };
 
+/** A two-clause headline rendered as `{lead} <gradient>{emphasis}</gradient>` */
+export type SplitHeadline = { lead: string; emphasis: string };
+
+/** Frame copy for every section on the /build/[slug] page. Workshop-specific. */
+export type WorkshopSections = {
+  painEyebrow: string;
+  painHeadline: string;
+  walkOutHeadline: SplitHeadline;
+  agendaHeadline: SplitHeadline;
+  fitHeadline: SplitHeadline;
+  fitLede: string;
+  decisionHeadline: SplitHeadline;
+  decisionBody: string;
+  otherWorkshopsHeadline: string;
+  faqHeadline: string;
+};
+
 export type BuildWorkshop = {
   slug: string;
   icon: LucideIcon;
@@ -32,6 +49,8 @@ export type BuildWorkshop = {
   /** Workshop-specific tagline for the "Have us build it instead" upsell.
    *  Name, price, and CTA href are resolved from AGENCY_SERVICES by slug. */
   agencyServiceTagline: string;
+  /** Per-workshop section frame copy (eyebrows, headlines, decision body). */
+  sections: WorkshopSections;
   faq: FAQ[];
 };
 
@@ -137,6 +156,32 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "You're hoping to debate font weights for six hours",
     ],
     agencyServiceTagline: "Logo system, voice, and full asset pack — shipped live in 2 weeks.",
+    sections: {
+      painEyebrow: "The cost of looking cheap",
+      painHeadline: "A $40 logo costs you $40K in deals you'll never know you lost.",
+      walkOutHeadline: {
+        lead: "A brand system tight enough to charge for.",
+        emphasis: "Not a logo. Not a mood board.",
+      },
+      agendaHeadline: {
+        lead: "One morning. One brand built.",
+        emphasis: "Voice, archetype, system — by lunch.",
+      },
+      fitHeadline: {
+        lead: "Built for founders ready to charge more.",
+        emphasis: "Not for hobbyists shopping fonts.",
+      },
+      fitLede:
+        "Read both columns honestly. The wrong workshop costs you a morning. The wrong brand costs you a year of pricing power.",
+      decisionHeadline: {
+        lead: "Leave with the brand —",
+        emphasis: "and the right to raise prices.",
+      },
+      decisionBody:
+        "By 11:30 you'll have the voice, palette, type, and asset rules a designer can execute against. You'll also know whether to roll it out yourself, hire a freelancer, or hand it to our team — and either way, you stop bleeding deals to a weak first impression.",
+      otherWorkshopsHeadline: "The other layers your brand will need to carry.",
+      faqHeadline: "Brand questions, answered honestly.",
+    },
     faq: makeCommonFaq("$297"),
   },
 
@@ -210,6 +255,32 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "You believe adding more sections will fix conversion",
     ],
     agencyServiceTagline: "Site, copy, payments, and analytics — shipped live in 2–3 weeks.",
+    sections: {
+      painEyebrow: "The cost of a brochure site",
+      painHeadline: "Every 0.4% you don't fix is a paid-ad budget set on fire.",
+      walkOutHeadline: {
+        lead: "Wireframes, copy, events, and a stack decision.",
+        emphasis: "Not Figma porn.",
+      },
+      agendaHeadline: {
+        lead: "One morning. Two pages wired for revenue.",
+        emphasis: "First event fires before lunch.",
+      },
+      fitHeadline: {
+        lead: "Built for founders selling something.",
+        emphasis: "Not for portfolio polishers.",
+      },
+      fitLede:
+        "If your site exists to look good, skip this. If your site exists to make money, sit down.",
+      decisionHeadline: {
+        lead: "Leave with a site that works —",
+        emphasis: "and proof in the analytics.",
+      },
+      decisionBody:
+        "By 11:30 you'll have a sitemap, two wireframed pages, a copy outline in your buyer's words, and a live conversion event firing into GA4. You'll also know whether to ship it on Webflow, Framer, or hand it to our team — with the 12-month cost math on the table.",
+      otherWorkshopsHeadline: "The other systems your site will drive traffic into.",
+      faqHeadline: "Site questions, answered without the agency hedge.",
+    },
     faq: makeCommonFaq("$397"),
   },
 
@@ -284,6 +355,32 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     ],
     agencyServiceTagline:
       "Two channels rebuilt to convert, a 30-day calendar shipped, the cadence held — every month.",
+    sections: {
+      painEyebrow: "The cost of being everywhere",
+      painHeadline: "Six channels at 200 followers each is invisibility with extra steps.",
+      walkOutHeadline: {
+        lead: "Two profiles, 20 posts, one cadence.",
+        emphasis: "Not a vibes board.",
+      },
+      agendaHeadline: {
+        lead: "One morning. Two channels owned.",
+        emphasis: "30-day calendar shipped, not sketched.",
+      },
+      fitHeadline: {
+        lead: "Built for founders ready to commit.",
+        emphasis: "Not for chasers of every new platform.",
+      },
+      fitLede:
+        "Concentration beats coverage. If you're not willing to publicly stop four channels by Monday, this workshop isn't for you.",
+      decisionHeadline: {
+        lead: "Leave with a calendar —",
+        emphasis: "and the discipline to hold it.",
+      },
+      decisionBody:
+        "By 11:30 you'll have rewritten both profiles, drafted 20+ real posts against pillars and hooks, and locked the 45-minute weekly routine that holds the engine. You'll also know whether to run it yourself, hire a part-time editor, or hand it to our team.",
+      otherWorkshopsHeadline: "The other surfaces your audience will land on.",
+      faqHeadline: "Social questions, answered without the guru spin.",
+    },
     faq: makeCommonFaq("$197"),
   },
 
@@ -358,6 +455,32 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     ],
     agencyServiceTagline:
       "Pillars, SEO map, and 8 anchor pieces a month — repurposed across every channel.",
+    sections: {
+      painEyebrow: "The cost of winging this",
+      painHeadline: "A year of random posts and you rank for nothing your buyer actually searches.",
+      walkOutHeadline: {
+        lead: "Pillars, keywords, production flow, repurposing.",
+        emphasis: "Not a Notion template.",
+      },
+      agendaHeadline: {
+        lead: "One morning. The whole engine.",
+        emphasis: "Pillars to publishing calendar — locked.",
+      },
+      fitHeadline: {
+        lead: "Built for founders who'll publish for 6 months.",
+        emphasis: "Not for traffic tourists.",
+      },
+      fitLede:
+        "Content rewards patience and punishes dabbling. If you won't commit to publishing through a slow quarter, save your $297.",
+      decisionHeadline: {
+        lead: "Leave with the engine —",
+        emphasis: "and a 90-day calendar already loaded.",
+      },
+      decisionBody:
+        "By 11:30 you'll have your pillars, a keyword map you can actually win in 6 months, a documented production flow (capture → draft → edit → ship), a 1-to-10 repurposing template, and a 90-day editorial calendar with owners assigned. You'll also know whether to operate it solo, hire an editor, or hand the whole flywheel to our team.",
+      otherWorkshopsHeadline: "The other channels your content will pour into.",
+      faqHeadline: "Content questions, answered without the SEO theater.",
+    },
     faq: makeCommonFaq("$297"),
   },
 
@@ -432,6 +555,32 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     ],
     agencyServiceTagline:
       "30 days, 10 of your workflows rewired around AI — built, tested, and handed off with the prompt library.",
+    sections: {
+      painEyebrow: "The cost of seats without systems",
+      painHeadline: "AI without workflows isn't transformation — it's a $400/month subscription.",
+      walkOutHeadline: {
+        lead: "Five live automations, a prompt library, governance.",
+        emphasis: "Not a demo reel.",
+      },
+      agendaHeadline: {
+        lead: "One morning. Five workflows automated.",
+        emphasis: "With your tools, your data — in the room.",
+      },
+      fitHeadline: {
+        lead: "Built for teams hitting the headcount wall.",
+        emphasis: "Not for ChatGPT 101 attendees.",
+      },
+      fitLede:
+        "If you came for tips and prompts, save the morning. If you came to actually take ten hours a week off your team, sit down.",
+      decisionHeadline: {
+        lead: "Leave with leverage —",
+        emphasis: "measured in hours per week.",
+      },
+      decisionBody:
+        "By 11:30 you'll have 5 working automations on your real data, a 20+ prompt library tuned to your brand, a one-page governance doc (what AI does, what it never does alone), and an ROI model showing hours and dollars saved per week. You'll also know whether to roll it out internally or have our team wire the next 10 workflows.",
+      otherWorkshopsHeadline: "The other workflows AI will quietly absorb.",
+      faqHeadline: "AI questions, answered without the hype-cycle math.",
+    },
     faq: makeCommonFaq("$397"),
   },
 
@@ -506,6 +655,32 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     ],
     agencyServiceTagline:
       "CRM picked and live, 3 production sequences shipped, deliverability fixed — in 3 weeks.",
+    sections: {
+      painEyebrow: "The cost of forgetting your pipeline",
+      painHeadline: "80% of your revenue lives in touches 2 through 12 — and you've never sent them.",
+      walkOutHeadline: {
+        lead: "CRM picked, lifecycle mapped, 16 emails written.",
+        emphasis: "Not a Mailchimp tutorial.",
+      },
+      agendaHeadline: {
+        lead: "One morning. The follow-up machine, built.",
+        emphasis: "Three sequences drafted, deliverability locked.",
+      },
+      fitHeadline: {
+        lead: "Built for founders losing deals in the inbox.",
+        emphasis: "Not for spam-cannon operators.",
+      },
+      fitLede:
+        "If you have a list and zero sequences against it, this is the highest-leverage morning you'll spend this quarter. If you don't have a list yet, build the offer first.",
+      decisionHeadline: {
+        lead: "Leave with the machine —",
+        emphasis: "running on autopilot by Friday.",
+      },
+      decisionBody:
+        "By 11:30 you'll have your CRM picked, a lifecycle map (stranger → repeat buyer), 16 emails drafted across three sequences, the segmentation plan, and SPF/DKIM/DMARC verified live on your sending domain. You'll also know whether to wire it yourself, hire an ops contractor, or hand it to our team.",
+      otherWorkshopsHeadline: "The other systems your sequences will feed.",
+      faqHeadline: "Email questions, answered without the deliverability theater.",
+    },
     faq: makeCommonFaq("$397"),
   },
 
@@ -580,6 +755,32 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     ],
     agencyServiceTagline:
       "ICP, script, pipeline in your CRM, and a 30-day handoff so your team runs it without you.",
+    sections: {
+      painEyebrow: "The cost of closing on vibes",
+      painHeadline: "Every deal closed on mood is a deal you can't repeat, hire, or forecast.",
+      walkOutHeadline: {
+        lead: "ICP scorecard, script, pipeline, objection bank.",
+        emphasis: "Not a motivational pep talk.",
+      },
+      agendaHeadline: {
+        lead: "One morning. The sales motion, written down.",
+        emphasis: "Stages, exit criteria, weekly rhythm — locked.",
+      },
+      fitHeadline: {
+        lead: "Built for founders who'll record their calls.",
+        emphasis: "Not for natural-born-closers.",
+      },
+      fitLede:
+        "If you believe sales is pure art, this morning will offend you. If you want a forecast you can defend in a board meeting, sit down.",
+      decisionHeadline: {
+        lead: "Leave with a motion —",
+        emphasis: "your next hire can actually run.",
+      },
+      decisionBody:
+        "By 11:30 you'll have an ICP scorecard, a 25-minute discovery script, pipeline stages with exit criteria, the 8-objection handler bank, and the 30-minute weekly rhythm that prevents 90% of forecast misses. You'll also know whether to run it solo, train your first AE, or hand the whole motion to our team.",
+      otherWorkshopsHeadline: "The other systems that feed your pipeline.",
+      faqHeadline: "Sales questions, answered without the closer's bravado.",
+    },
     faq: makeCommonFaq("$397"),
   },
 
@@ -654,6 +855,33 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     ],
     agencyServiceTagline:
       "LLC, EIN, contracts, books, invoicing, insurance checklist — done in 10 business days.",
+    sections: {
+      painEyebrow: "The cost of an un-bankable business",
+      painHeadline:
+        "Skip this and the bank, the investor, and the acquirer all say the same word: no.",
+      walkOutHeadline: {
+        lead: "Entity, contracts, books, calendar.",
+        emphasis: "Not a stack of PDFs to read later.",
+      },
+      agendaHeadline: {
+        lead: "One morning. The scaffolding decided.",
+        emphasis: "Entity, contracts, books, ops calendar.",
+      },
+      fitHeadline: {
+        lead: "Built for founders ready to be bankable.",
+        emphasis: "Not for procrastinators of paperwork.",
+      },
+      fitLede:
+        "The boring stuff is boring until a customer, bank, or investor asks. Then it's a five-figure scramble. This morning is the cheap version.",
+      decisionHeadline: {
+        lead: "Leave with the scaffolding —",
+        emphasis: "and a 12-month calendar that protects it.",
+      },
+      decisionBody:
+        "By 11:30 you'll have your entity decision in writing (with the tax math), a contract suite checklist, the bookkeeping stack and monthly close rhythm, an insurance shortlist for your industry, and a 12-month operations calendar with every filing assigned. You'll also know whether to set it up yourself, hire a fractional ops lead, or hand it to our team in 10 business days.",
+      otherWorkshopsHeadline: "The other systems your scaffolding will support.",
+      faqHeadline: "Legal and ops questions, answered without the lawyer hedge.",
+    },
     faq: makeCommonFaq("$197"),
   },
 ];
@@ -688,25 +916,49 @@ export function getWorkshopAgencyOffer(slug: string):
 }
 
 // Dev-mode drift guard: every workshop has a matching agency service,
-// and the workshop tier matches what workshopPriceForRetailCents() would pick
-// from the retail price label.
+// the workshop tier matches what workshopPriceForRetailCents() would pick
+// from the retail price label, AND no two workshops ship identical frame
+// copy (painHeadline or decisionBody).
 if (import.meta.env?.DEV) {
+  const seenPain = new Map<string, string>();
+  const seenDecision = new Map<string, string>();
   for (const w of BUILD_WORKSHOPS) {
     const svc = AGENCY_SERVICES.find((s) => s.slug === w.slug);
     if (!svc) {
       // eslint-disable-next-line no-console
       console.warn(`[build-workshops] no AGENCY_SERVICES entry for slug "${w.slug}"`);
-      continue;
+    } else {
+      const m = svc.priceLabel.match(/\$([\d,]+)/);
+      if (m) {
+        const retailCents = Number(m[1].replace(/,/g, "")) * 100;
+        const expected = workshopPriceForRetailCents(retailCents);
+        if (expected.cents !== w.priceCents) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[build-workshops] tier drift for "${w.slug}": retail ${svc.priceLabel} → expected ${expected.label}, got ${w.priceLabel}`,
+          );
+        }
+      }
     }
-    const m = svc.priceLabel.match(/\$([\d,]+)/);
-    if (!m) continue;
-    const retailCents = Number(m[1].replace(/,/g, "")) * 100;
-    const expected = workshopPriceForRetailCents(retailCents);
-    if (expected.cents !== w.priceCents) {
+
+    const prevPain = seenPain.get(w.sections.painHeadline);
+    if (prevPain) {
       // eslint-disable-next-line no-console
       console.warn(
-        `[build-workshops] tier drift for "${w.slug}": retail ${svc.priceLabel} → expected ${expected.label}, got ${w.priceLabel}`,
+        `[build-workshops] duplicate painHeadline: "${w.slug}" matches "${prevPain}"`,
       );
+    } else {
+      seenPain.set(w.sections.painHeadline, w.slug);
+    }
+
+    const prevDecision = seenDecision.get(w.sections.decisionBody);
+    if (prevDecision) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[build-workshops] duplicate decisionBody: "${w.slug}" matches "${prevDecision}"`,
+      );
+    } else {
+      seenDecision.set(w.sections.decisionBody, w.slug);
     }
   }
 }

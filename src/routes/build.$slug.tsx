@@ -81,10 +81,10 @@ export default function BuildWorkshopPage() {
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-5xl px-6">
           <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground md:text-sm">
-            <AlertTriangle className="size-4 text-primary" /> What it costs to wing this
+            <AlertTriangle className="size-4 text-primary" /> {w.sections.painEyebrow}
           </div>
           <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            Skip this and you'll pay for it — usually in five figures.
+            {w.sections.painHeadline}
           </h2>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {w.pains.map((p) => (
@@ -111,8 +111,8 @@ export default function BuildWorkshopPage() {
             <Check className="size-4" /> What you walk out with
           </div>
           <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            Concrete artifacts, the tool stack, and the playbook.{" "}
-            <span className="text-gradient-brand">Not vibes, not "frameworks to think about."</span>
+            {w.sections.walkOutHeadline.lead}{" "}
+            <span className="text-gradient-brand">{w.sections.walkOutHeadline.emphasis}</span>
           </h2>
           <ul className="mt-10 grid gap-3 sm:grid-cols-2">
             {w.walkOuts.map((d) => (
@@ -135,8 +135,8 @@ export default function BuildWorkshopPage() {
             <Clock className="size-4 text-primary" /> The agenda
           </div>
           <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            One morning. Four working sessions.{" "}
-            <span className="text-gradient-brand">Real outputs by lunch.</span>
+            {w.sections.agendaHeadline.lead}{" "}
+            <span className="text-gradient-brand">{w.sections.agendaHeadline.emphasis}</span>
           </h2>
           <div className="mt-10 space-y-4">
             {w.agenda.map((block, i) => (
@@ -168,11 +168,11 @@ export default function BuildWorkshopPage() {
       <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
         <div className="mx-auto max-w-5xl px-6">
           <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            Who this is for.{" "}
-            <span className="text-gradient-brand">And who it isn't.</span>
+            {w.sections.fitHeadline.lead}{" "}
+            <span className="text-gradient-brand">{w.sections.fitHeadline.emphasis}</span>
           </h2>
           <p className="mt-3 max-w-3xl text-base text-muted-foreground md:text-lg">
-            We'd rather you skip this workshop than sit through it as a wrong fit. Read both columns.
+            {w.sections.fitLede}
           </p>
           <div className="mt-10 grid gap-5 md:grid-cols-2">
             <div className="rounded-2xl border border-primary/30 bg-card p-6 md:p-8">
@@ -215,14 +215,15 @@ export default function BuildWorkshopPage() {
             The decision moment
           </p>
           <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            Leave knowing exactly{" "}
-            <span className="text-gradient-brand">what to do next.</span>
+            {w.sections.decisionHeadline.lead}{" "}
+            <span className="text-gradient-brand">{w.sections.decisionHeadline.emphasis}</span>
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            By 11:30 you'll know whether to build this in-house, hire it out elsewhere, or hand it to our team. No pressure, no upsell in the room. Just clear math and the artifacts you came for.
+            {w.sections.decisionBody}
           </p>
         </div>
       </section>
+
 
       {/* Agency upsell */}
       <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
@@ -263,7 +264,7 @@ export default function BuildWorkshopPage() {
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-3xl px-6">
           <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            Questions, answered straight.
+            {w.sections.faqHeadline}
           </h2>
           <div className="mt-10 space-y-4">
             {w.faq.map((f) => (
@@ -291,7 +292,7 @@ export default function BuildWorkshopPage() {
             Keep building
           </p>
           <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            The other capabilities your business will need.
+            {w.sections.otherWorkshopsHeadline}
           </h2>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {otherWorkshops.map((o) => {
