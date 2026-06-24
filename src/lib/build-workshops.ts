@@ -10,6 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
+import { AGENCY_SERVICES } from "@/lib/agency-services";
 
 export type AgendaBlock = { time: string; title: string; detail: string };
 export type FAQ = { q: string; a: string };
