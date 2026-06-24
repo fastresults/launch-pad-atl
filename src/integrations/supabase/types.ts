@@ -1972,6 +1972,8 @@ export type Database = {
           extracted_data: Json | null
           id: string
           market_research: string | null
+          research_artifacts: Json | null
+          research_brief: Json | null
           scraped_content: string | null
           status: Database["public"]["Enums"]["venture_snapshot_status"]
           updated_at: string
@@ -1988,6 +1990,8 @@ export type Database = {
           extracted_data?: Json | null
           id?: string
           market_research?: string | null
+          research_artifacts?: Json | null
+          research_brief?: Json | null
           scraped_content?: string | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
           updated_at?: string
@@ -2004,6 +2008,8 @@ export type Database = {
           extracted_data?: Json | null
           id?: string
           market_research?: string | null
+          research_artifacts?: Json | null
+          research_brief?: Json | null
           scraped_content?: string | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
           updated_at?: string
