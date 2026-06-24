@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { FoundersHubGate } from "@/components/hub/FoundersHubGate";
@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { createSnapshot } from "@/lib/foundersHub.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2 } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin } from "lucide-react";
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { toast } from "sonner";
 
@@ -97,7 +98,33 @@ function Inner() {
   const [dragOver, setDragOver] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [filling, setFilling] = useState(false);
+  // Founder + market context
+  const [founderName, setFounderName] = useState("");
+  const [founderEmail, setFounderEmail] = useState("");
+  const [founderPhone, setFounderPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [region, setRegion] = useState("");
+  const [country, setCountry] = useState("United States");
+  const [marketScope, setMarketScope] = useState<"local" | "regional" | "national" | "international">("local");
+  const [industry, setIndustry] = useState("");
+  const [subIndustry, setSubIndustry] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Prefill from authenticated user once
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const u = data.user;
+      if (!u) return;
+      const meta: any = u.user_metadata ?? {};
+      if (!founderEmail && u.email) setFounderEmail(u.email);
+      if (!founderName) {
+        const n = meta.display_name || meta.name || meta.full_name;
+        if (n) setFounderName(n);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const addFiles = useCallback(async (incoming: File[]) => {
     if (!incoming.length) return;
