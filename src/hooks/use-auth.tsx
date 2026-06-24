@@ -101,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roles,
     memberStatus,
     approvedVia,
+    foundersHubAccess,
     loading,
     isAuthenticated: !!user,
     isAdmin,
@@ -108,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isApprovedMember: isAdmin || memberStatus === "approved",
     signOut,
   };
+
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
