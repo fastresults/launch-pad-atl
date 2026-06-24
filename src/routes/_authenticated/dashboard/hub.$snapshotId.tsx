@@ -479,41 +479,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         </section>
       ))}
 
-      <Dialog open={viewerDoc !== null} onOpenChange={(o) => !o && setViewerDoc(null)}>
-        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{viewerDoc?.document_type?.replace(/_/g, " ")}</DialogTitle>
-          </DialogHeader>
-          <article className="space-y-3 text-sm leading-relaxed text-foreground/90 [&_h1]:mt-4 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:text-foreground [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-foreground [&_h3]:mt-3 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_p]:my-2 [&_strong]:text-foreground [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_a]:text-primary [&_a]:underline">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{viewerDoc?.content ?? ""}</ReactMarkdown>
-          </article>
-          <div className="flex flex-wrap gap-2 pt-3">
-            <Button size="sm" variant="outline" onClick={() => {
-              navigator.clipboard.writeText(viewerDoc?.content ?? "");
-              toast.success("Copied");
-            }}>Copy</Button>
-            <Button size="sm" variant="outline" onClick={() => {
-              const blob = new Blob([viewerDoc?.content ?? ""], { type: "text/markdown" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `${viewerDoc?.document_type}.md`;
-              a.click();
-              URL.revokeObjectURL(url);
-            }}>Download .md</Button>
-            {viewerDoc?.document_type === "website_prd" && (
-              <Button size="sm" onClick={() => {
-                const content: string = viewerDoc?.content ?? "";
-                // Extract the first fenced code block from section 1
-                const m = content.match(/```[a-zA-Z]*\n([\s\S]*?)```/);
-                if (!m) { toast.error("Couldn't find the prompt block"); return; }
-                navigator.clipboard.writeText(m[1].trim());
-                toast.success("AI-builder prompt copied");
-              }}>Copy prompt only</Button>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <DocumentViewer doc={viewerDoc} open={viewerDoc !== null} onOpenChange={(o) => !o && setViewerDoc(null)} />
     </div>
   );
 }
