@@ -116,23 +116,65 @@ QUALITY_SCORE: <0-100 integer>`;
   }, { onConflict: "snapshot_id,document_type" });
 }
 
-// Topologically order types by dependencies.
-function topoOrder(types: any[]): any[] {
+// Group document types into dependency layers (Kahn's algorithm).
+// Each layer can run fully in parallel since all its deps are in earlier layers.
+function dependencyLayers(types: any[]): any[][] {
   const byKey = new Map(types.map((t) => [t.type, t]));
-  const visited = new Set<string>();
-  const out: any[] = [];
-  function visit(t: any) {
-    if (visited.has(t.type)) return;
-    visited.add(t.type);
-    for (const dep of t.dependencies ?? []) {
-      const d = byKey.get(dep);
-      if (d) visit(d);
+  const remaining = new Set(types.map((t) => t.type));
+  const layers: any[][] = [];
+  while (remaining.size) {
+    const layer: any[] = [];
+    for (const key of remaining) {
+      const t = byKey.get(key)!;
+      const deps: string[] = t.dependencies ?? [];
+      if (deps.every((d) => !remaining.has(d))) layer.push(t);
     }
-    out.push(t);
+    if (!layer.length) {
+      // Cycle or missing dep — flush the rest so we don't infinite loop.
+      layers.push(Array.from(remaining).map((k) => byKey.get(k)!));
+      break;
+    }
+    layer.sort((a, b) => a.sort_order - b.sort_order);
+    for (const t of layer) remaining.delete(t.type);
+    layers.push(layer);
   }
-  // Walk in sort_order so siblings stay in their authored order.
-  for (const t of [...types].sort((a, b) => a.sort_order - b.sort_order)) visit(t);
-  return out;
+  return layers;
+}
+
+const CONCURRENCY = 4;
+
+async function runLayer(supabase: any, snapshotId: string, jobId: string, layer: any[], state: { done: number; total: number; fails: number }) {
+  // Pre-filter already-complete docs
+  const { data: existingDocs } = await supabase
+    .from("venture_documents")
+    .select("document_type, status")
+    .eq("snapshot_id", snapshotId)
+    .in("document_type", layer.map((t) => t.type));
+  const completeSet = new Set((existingDocs ?? []).filter((d: any) => d.status === "complete").map((d: any) => d.document_type));
+
+  const pending = layer.filter((t) => !completeSet.has(t.type));
+  state.done += layer.length - pending.length;
+
+  // Run pending with bounded concurrency.
+  let cursor = 0;
+  async function worker() {
+    while (cursor < pending.length) {
+      const t = pending[cursor++];
+      await supabase.from("venture_generation_jobs").update({ current_document_type: t.type }).eq("id", jobId);
+      try {
+        await generateOne(supabase, snapshotId, t.type);
+        state.done++;
+        state.fails = 0;
+      } catch (_e) {
+        state.fails++;
+      }
+      await supabase.from("venture_generation_jobs").update({
+        progress_pct: Math.round((state.done / state.total) * 100),
+      }).eq("id", jobId);
+      if (state.fails >= 3) return; // signal circuit-break to caller
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, pending.length || 1) }, () => worker()));
 }
 
 async function runJob(supabase: any, snapshotId: string, jobId: string) {
@@ -141,57 +183,26 @@ async function runJob(supabase: any, snapshotId: string, jobId: string) {
     .select("*")
     .eq("active", true);
 
-  const ordered = topoOrder(types ?? []);
-  const total = ordered.length;
-  let done = 0;
-  let consecutiveFails = 0;
+  const layers = dependencyLayers(types ?? []);
+  const total = (types ?? []).length;
+  const state = { done: 0, total, fails: 0 };
 
   await supabase.from("venture_generation_jobs").update({
     status: "running",
     started_at: new Date().toISOString(),
   }).eq("id", jobId);
 
-  for (const t of ordered) {
-    // Skip if already complete
-    const { data: existing } = await supabase
-      .from("venture_documents")
-      .select("status")
-      .eq("snapshot_id", snapshotId)
-      .eq("document_type", t.type)
-      .maybeSingle();
-    if (existing?.status === "complete") {
-      done++;
+  for (const layer of layers) {
+    await runLayer(supabase, snapshotId, jobId, layer, state);
+    if (state.fails >= 3) {
       await supabase.from("venture_generation_jobs").update({
-        progress_pct: Math.round((done / total) * 100),
+        status: "paused",
+        circuit_breaker_open: true,
+        error: `Paused after 3 consecutive failures`,
+        progress_pct: Math.round((state.done / total) * 100),
       }).eq("id", jobId);
-      continue;
+      return;
     }
-
-    await supabase.from("venture_generation_jobs").update({
-      current_document_type: t.type,
-      attempts: (await supabase.from("venture_generation_jobs").select("attempts").eq("id", jobId).maybeSingle()).data?.attempts ?? 0,
-    }).eq("id", jobId);
-
-    try {
-      await generateOne(supabase, snapshotId, t.type);
-      done++;
-      consecutiveFails = 0;
-    } catch (e) {
-      consecutiveFails++;
-      if (consecutiveFails >= 3) {
-        await supabase.from("venture_generation_jobs").update({
-          status: "paused",
-          circuit_breaker_open: true,
-          error: `Paused after 3 consecutive failures (last: ${e instanceof Error ? e.message : String(e)})`,
-          progress_pct: Math.round((done / total) * 100),
-        }).eq("id", jobId);
-        return;
-      }
-    }
-
-    await supabase.from("venture_generation_jobs").update({
-      progress_pct: Math.round((done / total) * 100),
-    }).eq("id", jobId);
   }
 
   await supabase.from("venture_generation_jobs").update({
@@ -203,6 +214,7 @@ async function runJob(supabase: any, snapshotId: string, jobId: string) {
 
   await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
