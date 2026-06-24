@@ -82,6 +82,7 @@ function Loading() {
 export default function App() {
   return (
     <Suspense fallback={<Loading />}>
+      <ScrollToTop />
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
