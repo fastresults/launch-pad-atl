@@ -259,6 +259,10 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
 
       <ResearchPanel snapshot={snapshot} />
 
+      <ConceptStudio snapshot={snapshot} onChanged={onSaved} />
+
+
+
 
 
 
