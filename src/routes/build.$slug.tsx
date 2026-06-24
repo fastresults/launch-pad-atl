@@ -110,7 +110,7 @@ export default function BuildWorkshopPage() {
             <Check className="size-4" /> What you walk out with
           </div>
           <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            Concrete artifacts.{" "}
+            Concrete artifacts, the tool stack, and the playbook.{" "}
             <span className="text-gradient-brand">Not vibes, not "frameworks to think about."</span>
           </h2>
           <ul className="mt-10 grid gap-3 sm:grid-cols-2">
