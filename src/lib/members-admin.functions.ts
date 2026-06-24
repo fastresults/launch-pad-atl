@@ -42,10 +42,11 @@ export async function listMembers(input?: any) {
   const { data: profiles, error } = await supabase
     .from("profiles")
     .select(
-      "user_id, email, display_name, member_status, approved_via, approved_at, created_at",
+      "user_id, email, display_name, member_status, approved_via, approved_at, created_at, founders_hub_access, founders_hub_granted_at",
     )
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
+
 
   const userIds = (profiles ?? []).map((p: any) => p.user_id);
   let intakeMap = new Map<string, any>();
