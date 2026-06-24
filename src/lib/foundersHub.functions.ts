@@ -45,6 +45,9 @@ export interface VentureSnapshot {
   concept_status: "draft" | "refining" | "locked";
   concept_locked_at: string | null;
   concept_iterations: any[];
+  epiphany_runs: any[];
+  saved_enhancements: any[];
+  brand_tokens: any;
   created_at: string;
   updated_at: string;
 }
