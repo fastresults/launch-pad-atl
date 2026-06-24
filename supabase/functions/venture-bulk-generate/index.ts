@@ -194,15 +194,25 @@ async function runJob(supabase: any, snapshotId: string, jobId: string) {
 
   const layers = dependencyLayers(types ?? []);
   const total = (types ?? []).length;
-  const state = { done: 0, total, fails: 0 };
+  const state = { done: 0, total, fails: 0, canceled: false };
 
   await supabase.from("venture_generation_jobs").update({
     status: "running",
     started_at: new Date().toISOString(),
+    heartbeat_at: new Date().toISOString(),
   }).eq("id", jobId);
 
   for (const layer of layers) {
     await runLayer(supabase, snapshotId, jobId, layer, state);
+    if (state.canceled) {
+      await supabase.from("venture_generation_jobs").update({
+        status: "canceled",
+        completed_at: new Date().toISOString(),
+        progress_pct: Math.round((state.done / total) * 100),
+        current_document_type: null,
+      }).eq("id", jobId);
+      return;
+    }
     if (state.fails >= 3) {
       await supabase.from("venture_generation_jobs").update({
         status: "paused",
