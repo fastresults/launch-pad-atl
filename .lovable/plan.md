@@ -1,49 +1,78 @@
-## Goal
+## Video Testimonial Slider — Homepage + Admin Manager
 
-Make it unmistakable — without hammering — that the homepage speaks to **founders and entrepreneurs starting (or just-launched) a startup**. Today the copy talks about "your idea," "a real plan," "the workshop" — strong, but audience-neutral. We'll thread founder/entrepreneur language through 5 targeted touchpoints so the reader self-identifies within the first scroll and again at each decision moment.
+### Where it goes
+Inserted in `src/components/home/HomeFramework.tsx` directly after `<Hero />`, before `<Framework />`, as a new `<VideoTestimonials />` section.
 
-## Scope
+### User-facing slider behavior
+- One video visible at a time, centered (with peek of next/prev on desktop).
+- Autoplays muted (browsers require muted for autoplay), inline, plays one video through to its end, pauses 2s, then advances to next. Loops.
+- Hover (or focus / touch) anywhere on the slider pauses both playback and the advance timer. Leaving resumes.
+- Controls: prev/next arrows, dot indicators, mute/unmute toggle, fullscreen button.
+- Each slide shows: video + founder name, role, startup name, optional 1-line quote (all admin-editable).
+- Respects `prefers-reduced-motion` (no autoplay, manual nav only).
+- Hidden entirely if zero published testimonials exist.
 
-File: `src/components/home/HomeFramework.tsx` only. Copy edits — no layout, components, routes, pricing, or data changes. Per project memory, user-facing copy says "startup" (not "business") when referring to what the founder is building.
+### Admin manager — `/admin/testimonials`
+New sidebar entry under an appropriate group (likely "Content"). Page contents:
 
-## Edits
+1. **Settings panel** (global, one row in `site_settings` or new `testimonial_settings` table):
+   - Enable/disable section on homepage (toggle)
+   - Section heading + subheading (text)
+   - Pause between videos in seconds (number, default 2)
+   - Autoplay on/off (default on)
+   - Start muted on/off (default on)
+   - Loop on/off (default on)
+   - Show on mobile (toggle)
 
-### 1. Hero eyebrow (line 53-55)
-Today: `The Strategic Foundation Workshop · $97`
-New: `For founders starting a startup · The Strategic Foundation Workshop · $97`
-Adds the audience tag without touching the H1.
+2. **Testimonials list** (table):
+   - Thumbnail preview, founder name, startup, status (draft/published), order, duration, updated date, actions (edit/delete/reorder via drag handle).
+   - "Add testimonial" button.
 
-### 2. Hero subhead (lines 60-63)
-Today opens with: "Twenty strategy deliverables a consultant would charge $50,000+ for…"
-New opens with founder framing, e.g.: "Built for founders launching a startup in the next 90 days. Twenty strategy deliverables a consultant would charge $50,000+ for — yours in a morning for $97."
-Keeps the "$50K → $97" punch; adds the who and the when.
+3. **Add/edit drawer**:
+   - Video uploader (drag-drop, mp4/webm, max ~100 MB) — uploads to existing `master-media` Supabase storage bucket.
+   - Optional poster image upload (jpg/png) — auto-generated from first frame if omitted (client-side canvas grab).
+   - Fields: founder name, role/title, startup name, quote (optional, short), display order, status.
+   - Preview pane showing exactly how the slide will render.
 
-### 3. Framework section lead-in (lines 108-117)
-Today eyebrow: "The main attraction" → New: "What every founder walks out with"
-Subhead gets a light founder cue, e.g.: "20 deliverables across three stages — each one built live for your startup, never pulled from a framework…"
-("your idea" → "your startup" matches the memory rule.)
+### Data model (new migration)
+```sql
+create table public.testimonials (
+  id uuid primary key default gen_random_uuid(),
+  founder_name text not null,
+  founder_role text,
+  startup_name text,
+  quote text,
+  video_bucket text not null default 'master-media',
+  video_path text not null,
+  poster_bucket text,
+  poster_path text,
+  duration_seconds numeric,
+  sort_order int not null default 0,
+  status text not null default 'draft', -- 'draft' | 'published'
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  created_by uuid references auth.users(id)
+);
+-- GRANTs: anon SELECT (published only via policy), authenticated full, service_role all
+-- RLS: anon/auth can SELECT where status='published'; admins full CRUD via has_role
+```
 
-### 4. Honest Roadmap intro (lines 169-178)
-Eyebrow stays. The opening sentence already says "Every founder we've watched fail…" — strong. Tighten the next line so the audience is explicit once more: "…The workshop gives founders the story, the frameworks, and the tool stack to ship it."
+Settings stored as a single JSON row in existing `site_settings` (key `testimonial_slider`) — no new table needed.
 
-### 5. Modern build layer paragraph (lines 222-224)
-Today: "In 2026, no startup wins on strategy alone…"
-Keep, but front-load the audience: "In 2026, no founder wins on strategy alone. Eight capabilities turn the plan into a startup that attracts customers, converts them, and keeps them coming back…"
+### Storage
+Reuse existing private `master-media` bucket. Public playback uses short-lived signed URLs fetched client-side via a small `getTestimonialsForHome` function (cached 5 min in React Query). Admin uses signed upload URLs (same pattern as `src/lib/media.functions.ts`).
 
-### 6. Bottom CTA (lines 413-418)
-H2 today: "Stop turning the idea over in your head."
-New: "Stop turning the startup over in your head." (one-word swap — same rhythm, explicit audience.)
-Subhead: light edit so it closes on the founder, e.g.: "$97 gets you in the room with Adam and a real plan your startup can run with Monday…"
+### Files to add / change
+- `supabase/migrations/...` — new `testimonials` table + GRANTs + RLS + `site_settings` seed row.
+- `src/components/home/VideoTestimonials.tsx` — public slider component (Embla carousel, already in project).
+- `src/components/home/HomeFramework.tsx` — mount `<VideoTestimonials />` after `<Hero />`.
+- `src/lib/testimonials.functions.ts` — list (public), CRUD (admin), reorder, signed-URL helpers.
+- `src/routes/_authenticated/_admin/admin.testimonials.tsx` — admin page (list + settings + drawer).
+- `src/components/admin/TestimonialForm.tsx` — upload + edit form.
+- `src/lib/admin-nav.ts` — add "Testimonials" entry.
 
-## What we are NOT changing
-
-- Hero H1 ("The strategic foundation every startup needs — built in one morning.") — already on-message.
-- Facilitator, Services Teaser, Venue, deliverables data, prices, CTAs, links, layout.
-- Other pages (`/build`, `/services`, etc.) — out of scope for this pass; can be done as a follow-up if desired.
-
-## Acceptance
-
-- Words "founder(s)" or "entrepreneur(s)" appear in: hero eyebrow, hero subhead, framework lede, roadmap lede, build-layer paragraph, bottom CTA — at least once per section, never more than once in the same paragraph.
-- "your idea" is replaced with "your startup" wherever it refers to the thing being built (memory rule).
-- No new claims, prices, or features introduced.
-- Reads balanced, not preachy — a reader skimming should clock "this is for me, a founder" within the first screen.
+### Open questions
+1. Should the slider show **one video at a time** (cinematic, centered) or a **multi-card row** (3 visible on desktop, swipeable)?
+2. **Audio default** — start muted with a clear unmute button, or start with sound on for the active slide? (Muted is required for reliable autoplay.)
+3. **Pause-between-videos behavior** — should "pause 2s" happen on a still poster frame, on the last frame of the current video, or on the first frame of the next?
+4. Any **max video length** to enforce on upload (e.g. 60s) so the rotation stays snappy?
