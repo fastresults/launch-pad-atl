@@ -146,6 +146,12 @@ export default function AdminMembersPage() {
                             {m.intake.startup_type}
                           </Badge>
                         )}
+                        {m.founders_hub_access && (
+                          <Badge className="bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/20 text-[10px]">
+                            Founders Hub
+                          </Badge>
+                        )}
+
                       </div>
                       {m.intake ? (
                         <div className="mt-1 truncate text-sm text-muted-foreground">
