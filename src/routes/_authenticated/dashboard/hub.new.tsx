@@ -312,7 +312,6 @@ function Inner() {
             <div className="flex items-center justify-between gap-2">
               <Label htmlFor="concept">Business concept *</Label>
               <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2">
                 {/* TODO: remove after testing — dev-only random fill */}
                 <Button
                   type="button"
