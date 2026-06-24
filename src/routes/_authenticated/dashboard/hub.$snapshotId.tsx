@@ -613,3 +613,80 @@ function ResearchPanel({ snapshot }: { snapshot: any }) {
   );
 }
 
+function FounderMarketCard({ snapshot, onSaved }: { snapshot: any; onSaved: () => void }) {
+  const [form, setForm] = useState({
+    founder_name: snapshot.founder_name ?? "",
+    founder_email: snapshot.founder_email ?? "",
+    founder_phone: snapshot.founder_phone ?? "",
+    city: snapshot.city ?? "",
+    region: snapshot.region ?? "",
+    country: snapshot.country ?? "",
+    market_scope: (snapshot.market_scope ?? "local") as "local" | "regional" | "national" | "international",
+    industry: snapshot.industry ?? "",
+    sub_industry: snapshot.sub_industry ?? "",
+  });
+
+  const save = useMutation({
+    mutationFn: () => updateFounderContext({ data: { id: snapshot.id, ...form } }),
+    onSuccess: () => { toast.success("Saved"); onSaved(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
+  });
+
+  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v as any }));
+
+  return (
+    <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Founder & market</h3>
+        <Button size="sm" variant="outline" onClick={() => save.mutate()} disabled={save.isPending}>
+          {save.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save"}
+        </Button>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-1.5"><Label className="text-xs">Founder name</Label>
+          <Input value={form.founder_name} onChange={(e) => set("founder_name", e.target.value)} /></div>
+        <div className="grid gap-1.5"><Label className="text-xs">Contact email</Label>
+          <Input type="email" value={form.founder_email} onChange={(e) => set("founder_email", e.target.value)} /></div>
+        <div className="grid gap-1.5"><Label className="text-xs">Phone</Label>
+          <Input value={form.founder_phone} onChange={(e) => set("founder_phone", e.target.value)} /></div>
+        <div className="grid gap-1.5"><Label className="text-xs">Country</Label>
+          <Input value={form.country} onChange={(e) => set("country", e.target.value)} /></div>
+        <div className="grid gap-1.5"><Label className="text-xs">City / town</Label>
+          <Input value={form.city} onChange={(e) => set("city", e.target.value)} /></div>
+        <div className="grid gap-1.5"><Label className="text-xs">State / region</Label>
+          <Input value={form.region} onChange={(e) => set("region", e.target.value)} /></div>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-1.5">
+          <Label className="text-xs">Market scope</Label>
+          <div className="grid grid-cols-4 gap-1.5">
+            {(["local", "regional", "national", "international"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => set("market_scope", s)}
+                className={`rounded-lg border px-2 py-1.5 text-xs capitalize transition ${
+                  form.market_scope === s ? "border-foreground bg-foreground text-background" : "border-white/10 hover:border-white/20"
+                }`}
+              >{s}</button>
+            ))}
+          </div>
+        </div>
+        <div className="grid gap-1.5">
+          <Label className="text-xs">Industry</Label>
+          <IndustryCombobox value={form.industry} onChange={(v) => set("industry", v)} />
+          <Input
+            className="mt-1"
+            value={form.sub_industry}
+            onChange={(e) => set("sub_industry", e.target.value)}
+            placeholder="Niche (optional)"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
