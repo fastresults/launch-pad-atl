@@ -264,7 +264,7 @@ export default function BuildWorkshopPage() {
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-3xl px-6">
           <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            Questions, answered straight.
+            {w.sections.faqHeadline}
           </h2>
           <div className="mt-10 space-y-4">
             {w.faq.map((f) => (
