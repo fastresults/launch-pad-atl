@@ -126,7 +126,11 @@ export default function App() {
             <Route path="profile" element={<DashboardProfile />} />
             <Route path="workflow" element={<DashboardWorkflow />} />
             <Route path="workflow/:key" element={<DashboardWorkflowKey />} />
+            <Route path="hub" element={<HubLibrary />} />
+            <Route path="hub/new" element={<HubNew />} />
+            <Route path="hub/:snapshotId" element={<HubSnapshot />} />
           </Route>
+
 
           {/* Admin nested routes */}
           <Route element={<AdminLayout />}>
