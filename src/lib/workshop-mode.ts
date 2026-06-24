@@ -18,14 +18,14 @@ export type ScheduleBlock = {
 // Minute offsets from cohort.startISO (8:45 AM = 0). Mirrors the published
 // SCHEDULE in src/lib/schedule-data.ts and the 5-pillar / 20-document framework.
 export const SCHEDULE_BLOCKS: ScheduleBlock[] = [
-  { startMin: 0, endMin: 15, kind: "checkin", title: "Check-in", subtitle: "Grab coffee. Settle in. Tell us your idea in one sentence — we'll take it from there." },
-  { startMin: 15, endMin: 40, kind: "stage", stageN: 1, title: "Foundation", subtitle: "Lock in who you serve, what makes you worth picking, and why you'll win. 5 docs." },
-  { startMin: 40, endMin: 75, kind: "stage", stageN: 2, title: "Strategy", subtitle: "Your plan, your pricing, and how you get your first customers. 5 docs." },
-  { startMin: 75, endMin: 85, kind: "break", title: "Refreshment break", subtitle: "Stretch. Refill. Step outside for 10 minutes. Your AI keeps typing." },
-  { startMin: 85, endMin: 110, kind: "stage", stageN: 3, title: "Operations", subtitle: "How the business actually runs Monday morning. 4 docs." },
-  { startMin: 110, endMin: 140, kind: "stage", stageN: 4, title: "Finance", subtitle: "Money in, money out, and what you'll raise if you raise. 4 docs." },
-  { startMin: 140, endMin: 155, kind: "stage", stageN: 5, title: "Governance", subtitle: "The grown-up stuff — what could go wrong and what to tell advisors. 2 docs." },
-  { startMin: 155, endMin: 165, kind: "close", title: "You did it", subtitle: "Hand on the door, 20 documents in your Drive. That's a wrap." },
+  { startMin: 0, endMin: 15, kind: "checkin", title: "Check-in", subtitle: "Grab coffee, settle in, and get the idea out of your head in one sentence. We take it from there." },
+  { startMin: 15, endMin: 40, kind: "stage", stageN: 1, title: "Foundation", subtitle: "Turn the idea into a clear offer for a specific person — and know exactly why they should care." },
+  { startMin: 40, endMin: 75, kind: "stage", stageN: 2, title: "Strategy", subtitle: "Make your first path to customers and revenue feel believable — pricing, positioning, and where the early demand comes from." },
+  { startMin: 75, endMin: 85, kind: "break", title: "Refreshment break", subtitle: "Stretch, refill, step outside. Your AI cofounder keeps working in the background." },
+  { startMin: 85, endMin: 110, kind: "stage", stageN: 3, title: "Operations", subtitle: "See how your startup actually runs Monday morning — the tools, the workflow, and what gets done first." },
+  { startMin: 110, endMin: 140, kind: "stage", stageN: 4, title: "Finance", subtitle: "Get honest with the numbers — pricing, costs, runway, and what you'd ask for if you ever raised." },
+  { startMin: 140, endMin: 155, kind: "stage", stageN: 5, title: "Governance", subtitle: "Know what to protect, what to decide, and what to bring to advisors, partners, or early supporters." },
+  { startMin: 155, endMin: 165, kind: "close", title: "You did it", subtitle: "Walk out knowing what you're building, who it's for, how it makes money, and what to do first." },
 ];
 
 export const WORKSHOP_END_MIN = 170; // small buffer past 11:30 AM close
@@ -97,9 +97,9 @@ export function formatMinutesLeft(mins: number): string {
 
 // Friendly labels for the 5 pillars in the workshop framework.
 export const FRIENDLY_STAGE: Record<number, { title: string; subtitle: string }> = {
-  1: { title: "Foundation", subtitle: "Who you are and where you play." },
-  2: { title: "Strategy", subtitle: "How you win and grow." },
-  3: { title: "Operations", subtitle: "What you build and who builds it." },
-  4: { title: "Finance", subtitle: "The numbers that matter." },
-  5: { title: "Governance", subtitle: "Risk, oversight, and readiness." },
+  1: { title: "Foundation", subtitle: "Say who it's for and why it matters." },
+  2: { title: "Strategy", subtitle: "Know how you'll reach people and make money." },
+  3: { title: "Operations", subtitle: "See how the startup actually runs." },
+  4: { title: "Finance", subtitle: "Understand the numbers without pretending to be a CFO." },
+  5: { title: "Governance", subtitle: "Know what to protect, decide, and ask for help with." },
 };
