@@ -68,6 +68,8 @@ export async function listMembers(input?: any) {
       approved_via: p.approved_via,
       approved_at: p.approved_at,
       created_at: p.created_at,
+      founders_hub_access: !!p.founders_hub_access,
+      founders_hub_granted_at: p.founders_hub_granted_at ?? null,
       intake: intake
         ? {
             startup_type: intake.startup_type,
@@ -77,6 +79,7 @@ export async function listMembers(input?: any) {
           }
         : null,
     };
+
   });
 
   const counts = {
