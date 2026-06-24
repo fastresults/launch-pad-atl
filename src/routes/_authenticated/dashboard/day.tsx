@@ -34,7 +34,7 @@ export default function WorkshopDayPage() {
           Walk in with an idea. Walk out knowing what to do with it.
         </h2>
         <p className="mt-2 max-w-2xl text-sm md:text-base text-muted-foreground">
-          You do the thinking out loud. Your AI cofounder turns it into a real plan you can use — who you serve, why people should care, how you'll price it, where your first customers come from, and what the money looks like. You leave with clear answers, a Monday-morning action plan, and the {WORKFLOW.length} founder-ready assets that back it all up.
+          You do the thinking out loud. Your facilitator guides you through it — who you serve, why people should care, how you'll price it, where your first customers come from, and what the money looks like. You leave with clear answers, a Monday-morning action plan, and the {WORKFLOW.length} founder-ready assets that back it all up.
         </p>
       </div>
 
@@ -140,7 +140,7 @@ export default function WorkshopDayPage() {
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">Bring four things</h2>
         <ul className="space-y-2 text-sm">
-          <li className="rounded-xl border border-white/10 bg-card p-4">Your laptop and charger — you're driving the thinking, the AI handles the typing.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">Your laptop and charger — you're driving the thinking, your facilitator keeps you moving.</li>
           <li className="rounded-xl border border-white/10 bg-card p-4">A government-issued ID, so the legal setup for your startup is ready to go when you are.</li>
           <li className="rounded-xl border border-white/10 bg-card p-4">A rough idea we can sharpen into a real offer — sticky-note energy is fine.</li>
           <li className="rounded-xl border border-white/10 bg-card p-4">The one question you really want answered before you walk out the door.</li>
