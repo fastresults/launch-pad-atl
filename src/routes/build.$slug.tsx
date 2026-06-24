@@ -62,7 +62,7 @@ export default function BuildWorkshopPage() {
               Reserve your seat — {w.priceLabel} <ArrowRight className="size-4" />
             </Link>
             <Link
-              to={w.agencyService.href}
+              to={offer.href}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-base font-medium text-foreground transition-colors hover:bg-white/10"
             >
               Have us build it instead
@@ -232,18 +232,18 @@ export default function BuildWorkshopPage() {
               <Sparkles className="mr-1 inline size-3.5" /> The done-for-you path
             </p>
             <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-              {w.agencyService.name}
+              {offer.name}
             </h2>
-            <p className="mt-3 text-base opacity-95 md:text-lg">{w.agencyService.tagline}</p>
+            <p className="mt-3 text-base opacity-95 md:text-lg">{offer.tagline}</p>
             <p className="mt-6 text-sm uppercase tracking-[0.18em] opacity-80">
-              {w.agencyService.priceLabel}
+              {offer.priceLabel}
             </p>
             <p className="mt-3 max-w-2xl text-sm opacity-90 md:text-base">
               The workshop hands you the strategy, templates, and tool stack to ship it yourself. Decide you'd rather we build it? We'll credit the {w.priceLabel} toward any engagement over $1,000.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
-                to={w.agencyService.href}
+                to={offer.href}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-base font-medium text-black transition-opacity hover:opacity-90 sm:w-auto"
               >
                 Book a call <ArrowRight className="size-4" />
