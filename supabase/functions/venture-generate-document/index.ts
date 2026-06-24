@@ -185,6 +185,14 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "snapshotId and documentType required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+    const { data: gateSnap } = await supabase
+      .from("venture_snapshots")
+      .select("concept_status")
+      .eq("id", snapshotId)
+      .maybeSingle();
+    if (!gateSnap || gateSnap.concept_status !== "locked") {
+      return new Response(JSON.stringify({ error: "Lock your concept summary before generating documents." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const result = await generateOne(supabase, snapshotId, documentType);
     return new Response(JSON.stringify({ ok: true, ...result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
