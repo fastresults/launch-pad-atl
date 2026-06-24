@@ -1905,11 +1905,13 @@ export type Database = {
       venture_generation_jobs: {
         Row: {
           attempts: number
+          cancel_requested: boolean
           circuit_breaker_open: boolean
           completed_at: string | null
           created_at: string
           current_document_type: string | null
           error: string | null
+          heartbeat_at: string | null
           id: string
           progress_pct: number
           snapshot_id: string
@@ -1919,11 +1921,13 @@ export type Database = {
         }
         Insert: {
           attempts?: number
+          cancel_requested?: boolean
           circuit_breaker_open?: boolean
           completed_at?: string | null
           created_at?: string
           current_document_type?: string | null
           error?: string | null
+          heartbeat_at?: string | null
           id?: string
           progress_pct?: number
           snapshot_id: string
@@ -1933,11 +1937,13 @@ export type Database = {
         }
         Update: {
           attempts?: number
+          cancel_requested?: boolean
           circuit_breaker_open?: boolean
           completed_at?: string | null
           created_at?: string
           current_document_type?: string | null
           error?: string | null
+          heartbeat_at?: string | null
           id?: string
           progress_pct?: number
           snapshot_id?: string

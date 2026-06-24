@@ -2,6 +2,8 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { FoundersHubGate } from "@/components/hub/FoundersHubGate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +22,8 @@ import {
   generateDocument,
   bulkGenerate,
   getActiveJob,
+  cancelJob,
+  listFailures,
 } from "@/lib/foundersHub.functions";
 import {
   ArrowLeft,
@@ -32,6 +36,7 @@ import {
   AlertCircle,
   Eye,
   Sparkles,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -314,6 +319,18 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Bulk run failed"),
   });
 
+  const cancel = useMutation({
+    mutationFn: (jobId: string) => cancelJob({ data: { jobId } }),
+    onSuccess: () => { toast.success("Cancel requested"); qc.invalidateQueries({ queryKey: ["hub"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Cancel failed"),
+  });
+
+  const failuresQ = useQuery({
+    queryKey: ["hub", "failures", snapshot.id],
+    queryFn: () => listFailures({ data: { snapshotId: snapshot.id } }),
+    refetchInterval: 10000,
+  });
+
   const types = typesQ.data ?? [];
   const docs = docsQ.data ?? [];
   const docByType = useMemo(() => new Map(docs.map((d) => [d.document_type, d])), [docs]);
@@ -342,13 +359,20 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               {completeCount} / {types.length} complete · ~{totalMin} min total
             </p>
           </div>
-          <Button onClick={() => bulk.mutate()} disabled={bulk.isPending || jobRunning}>
-            {bulk.isPending || jobRunning ? (
-              <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Running…</>
-            ) : (
-              <><Sparkles className="mr-1.5 h-4 w-4" />Generate all {types.length}</>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => bulk.mutate()} disabled={bulk.isPending || jobRunning}>
+              {bulk.isPending || jobRunning ? (
+                <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Running…</>
+              ) : (
+                <><Sparkles className="mr-1.5 h-4 w-4" />Generate all {types.length}</>
+              )}
+            </Button>
+            {jobRunning && job?.id && (
+              <Button variant="outline" size="sm" onClick={() => cancel.mutate(job.id)} disabled={cancel.isPending || job.cancel_requested}>
+                <XCircle className="mr-1 h-3 w-3" />{job.cancel_requested ? "Canceling…" : "Cancel"}
+              </Button>
             )}
-          </Button>
+          </div>
         </div>
         {job && (
           <div className="mt-4 space-y-1.5">
@@ -359,6 +383,20 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             <Progress value={job.progress_pct ?? 0} />
             {job.error && <p className="text-xs text-red-400">{job.error}</p>}
           </div>
+        )}
+        {(failuresQ.data?.length ?? 0) > 0 && (
+          <details className="mt-4 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-xs">
+            <summary className="cursor-pointer font-medium text-red-200">
+              {failuresQ.data.length} recent failure{failuresQ.data.length === 1 ? "" : "s"}
+            </summary>
+            <ul className="mt-2 space-y-1.5">
+              {failuresQ.data.slice(0, 8).map((f: any) => (
+                <li key={f.id} className="text-red-300/80">
+                  <span className="font-mono text-red-200">{f.document_type}</span> — {f.error}
+                </li>
+              ))}
+            </ul>
+          </details>
         )}
       </div>
 
@@ -420,9 +458,9 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
           <DialogHeader>
             <DialogTitle>{viewerDoc?.document_type?.replace(/_/g, " ")}</DialogTitle>
           </DialogHeader>
-          <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
-            {viewerDoc?.content ?? ""}
-          </pre>
+          <article className="space-y-3 text-sm leading-relaxed text-foreground/90 [&_h1]:mt-4 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:text-foreground [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-foreground [&_h3]:mt-3 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_p]:my-2 [&_strong]:text-foreground [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_a]:text-primary [&_a]:underline">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{viewerDoc?.content ?? ""}</ReactMarkdown>
+          </article>
           <div className="flex gap-2 pt-3">
             <Button size="sm" variant="outline" onClick={() => {
               navigator.clipboard.writeText(viewerDoc?.content ?? "");
