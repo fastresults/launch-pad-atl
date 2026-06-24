@@ -317,3 +317,17 @@ export async function refineConcept(input: any): Promise<any> {
   return data;
 }
 
+export async function generateBrandAsset(input: any): Promise<any> {
+  const { snapshotId, kind, count, extra } = unwrap<{ snapshotId: string; kind: string; count?: number; extra?: string }>(input);
+  const { data, error } = await supabase.functions.invoke("venture-brand-assets", {
+    body: { snapshotId, kind, count, extra },
+  });
+  if (error) {
+    const msg = (data as any)?.error || error.message;
+    throw new Error(msg);
+  }
+  if ((data as any)?.error) throw new Error((data as any).error);
+  return data;
+}
+
+
