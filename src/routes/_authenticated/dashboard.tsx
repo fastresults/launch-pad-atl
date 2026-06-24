@@ -41,6 +41,7 @@ function DashboardShell() {
   return (
     <div className="flex min-h-dvh w-full bg-background">
       <AppSidebar mode={state.mode} />
+
       <div className="flex flex-1 flex-col min-w-0">
         <RoomClock state={state} />
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-white/5 bg-background/80 px-4 backdrop-blur md:px-6">
