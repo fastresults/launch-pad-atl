@@ -158,7 +158,7 @@ function HonestRoadmap() {
   const included = [
     `All ${TOTAL_DELIVERABLES} strategy deliverables — foundation, strategy, and launch`,
     "Built live with Adam, for your idea — not a template",
-    "Yours to keep forever, with a signed 90-day plan",
+    "Yours to keep forever — plus a 90-day action plan you walk out with",
     "Working time with Adam in a small room",
     "Coffee and light refreshments throughout",
   ];
