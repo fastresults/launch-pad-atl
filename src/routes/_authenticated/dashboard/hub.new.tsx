@@ -46,6 +46,20 @@ const SEED_URLS = [
   "https://www.notion.com",
 ];
 
+// TODO: remove after testing — naive industry inference from a concept blurb
+function guessIndustry(concept: string): string {
+  const c = concept.toLowerCase();
+  if (/\b(bank|payment|fintech|invoic|payroll|ledger|treasury|card)\b/.test(c)) return "Financial Services";
+  if (/\b(developer|api|sdk|devtool|deploy|infrastructure|database|observability)\b/.test(c)) return "Developer Tools";
+  if (/\b(ai|llm|model|agent|machine learning|gpt)\b/.test(c)) return "Artificial Intelligence";
+  if (/\b(shop|store|ecommerce|e-commerce|retail|merchandise)\b/.test(c)) return "E-commerce & Retail";
+  if (/\b(marketing|seo|crm|sales|outreach|campaign|newsletter)\b/.test(c)) return "Marketing & Sales";
+  if (/\b(health|clinic|patient|medical|wellness|therapy)\b/.test(c)) return "Healthcare";
+  if (/\b(school|learn|education|course|tutor|student)\b/.test(c)) return "Education";
+  if (/\b(notes|productivity|workflow|collaborat|task|project management)\b/.test(c)) return "Productivity Software";
+  return "Software & SaaS";
+}
+
 async function extractFileText(file: File): Promise<{ text: string; error?: string }> {
   const name = file.name.toLowerCase();
   const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
@@ -438,6 +452,29 @@ function Inner() {
                       if (path !== "manual") setWebsiteUrl(data.url);
                       setBusinessConcept(data.concept);
                       if (path === "competitor" && data.diff) setDiff(data.diff);
+
+                      // Fill founder + market fields so the form is one-click submittable
+                      const { data: userData } = await supabase.auth.getUser();
+                      const u = userData.user;
+                      const meta: any = u?.user_metadata ?? {};
+                      const ts = Date.now();
+                      if (!founderName.trim()) {
+                        setFounderName(meta.display_name || meta.name || meta.full_name || "Test Founder");
+                      }
+                      if (!founderEmail.trim()) {
+                        setFounderEmail(u?.email || `test+${ts}@example.com`);
+                      }
+                      if (!founderPhone.trim()) setFounderPhone("+1 555 010 0123");
+                      if (!city.trim()) setCity("Atlanta");
+                      if (!region.trim()) setRegion("Georgia");
+                      if (!country.trim()) setCountry("United States");
+                      setMarketScope("national");
+                      if (!industry.trim()) setIndustry(guessIndustry(data.concept));
+                      if (!subIndustry.trim()) {
+                        const firstSentence = String(data.concept).split(/[.!?]/)[0]?.trim() ?? "";
+                        if (firstSentence) setSubIndustry(firstSentence.slice(0, 60));
+                      }
+
                       toast.success(`Filled from ${data.company}`);
                     } catch (e) {
                       toast.error(e instanceof Error ? e.message : "Couldn't fill test concept");
