@@ -270,6 +270,52 @@ Deno.serve(async (req) => {
         concept_locked_at: null,
       }).eq("id", snapshot_id);
       result = { ok: true, locked: false };
+    } else if (action === "epiphany") {
+      // 24h rate limit: max 3 runs per snapshot
+      const runs = Array.isArray(snap.epiphany_runs) ? snap.epiphany_runs : [];
+      const recent = runs.filter((r: any) => Date.now() - new Date(r.created_at).getTime() < 24 * 3600 * 1000).length;
+      if (recent >= 3) {
+        return new Response(JSON.stringify({ error: "Epiphany cap reached (3 runs / 24h). Try again tomorrow." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const t0 = Date.now();
+      const pipeline = await epiphanyPipeline(snap);
+      const run = { id: crypto.randomUUID(), created_at: new Date().toISOString(), took_ms: Date.now() - t0, ...pipeline };
+      const next = [run, ...runs].slice(0, 10);
+      await supabase.from("venture_snapshots").update({ epiphany_runs: next }).eq("id", snapshot_id);
+      await appendIteration(supabase, snapshot_id, { kind: "epiphany", output: { top3: pipeline.top3.map((c: any) => ({ title: c.title, combined: c.combined })) } });
+      result = { top3: pipeline.top3, exec_note: pipeline.exec_note, signals_count: pipeline.signals.length };
+    } else if (action === "save_enhancement") {
+      const card = payload?.card;
+      if (!card?.title) throw new Error("card required");
+      const saved = Array.isArray(snap.saved_enhancements) ? snap.saved_enhancements : [];
+      saved.unshift({ id: crypto.randomUUID(), saved_at: new Date().toISOString(), status: "saved", card });
+      await supabase.from("venture_snapshots").update({ saved_enhancements: saved.slice(0, 20) }).eq("id", snapshot_id);
+      result = { ok: true };
+    } else if (action === "dismiss_enhancement") {
+      const id = payload?.id;
+      const saved = (Array.isArray(snap.saved_enhancements) ? snap.saved_enhancements : []).map((s: any) =>
+        s.id === id ? { ...s, status: "dismissed" } : s,
+      );
+      await supabase.from("venture_snapshots").update({ saved_enhancements: saved }).eq("id", snapshot_id);
+      result = { ok: true };
+    } else if (action === "fold_enhancement") {
+      const card = payload?.card;
+      if (!card?.title) throw new Error("card required");
+      const folded = await actionFoldEnhancement(supabase, snap, card);
+      await supabase.from("venture_snapshots").update({
+        concept_summary: folded.summary,
+        value_proposition: folded.value_proposition,
+        concept_status: "refining",
+      }).eq("id", snapshot_id);
+      // Mark saved card as folded (if it was saved)
+      if (payload?.id) {
+        const saved = (Array.isArray(snap.saved_enhancements) ? snap.saved_enhancements : []).map((s: any) =>
+          s.id === payload.id ? { ...s, status: "folded", folded_at: new Date().toISOString() } : s,
+        );
+        await supabase.from("venture_snapshots").update({ saved_enhancements: saved }).eq("id", snapshot_id);
+      }
+      await appendIteration(supabase, snapshot_id, { kind: "fold", input: { title: card.title }, output: folded });
+      result = { ok: true, summary: folded.summary, value_proposition: folded.value_proposition, delta: folded.delta };
     } else {
       throw new Error(`Unknown action: ${action}`);
     }
