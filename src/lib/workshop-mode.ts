@@ -21,7 +21,7 @@ export const SCHEDULE_BLOCKS: ScheduleBlock[] = [
   { startMin: 0, endMin: 15, kind: "checkin", title: "Check-in", subtitle: "Grab coffee, settle in, and get the idea out of your head in one sentence. We take it from there." },
   { startMin: 15, endMin: 40, kind: "stage", stageN: 1, title: "Foundation", subtitle: "Turn the idea into a clear offer for a specific person — and know exactly why they should care." },
   { startMin: 40, endMin: 75, kind: "stage", stageN: 2, title: "Strategy", subtitle: "Make your first path to customers and revenue feel believable — pricing, positioning, and where the early demand comes from." },
-  { startMin: 75, endMin: 85, kind: "break", title: "Refreshment break", subtitle: "Stretch, refill, step outside. Your AI cofounder keeps working in the background." },
+  { startMin: 75, endMin: 85, kind: "break", title: "Refreshment break", subtitle: "Stretch, refill, step outside. Pick back up with your facilitator right after." },
   { startMin: 85, endMin: 110, kind: "stage", stageN: 3, title: "Operations", subtitle: "See how your startup actually runs Monday morning — the tools, the workflow, and what gets done first." },
   { startMin: 110, endMin: 140, kind: "stage", stageN: 4, title: "Finance", subtitle: "Get honest with the numbers — pricing, costs, runway, and what you'd ask for if you ever raised." },
   { startMin: 140, endMin: 155, kind: "stage", stageN: 5, title: "Governance", subtitle: "Know what to protect, what to decide, and what to bring to advisors, partners, or early supporters." },
