@@ -1,10 +1,11 @@
 // @ts-nocheck
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import {
   Copy,
   Download,
@@ -15,9 +16,13 @@ import {
   Lightbulb,
   CheckCircle2,
   List,
+  Sparkles,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 function titleCase(s: string) {
   return (s || "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -246,16 +251,67 @@ export function DocumentViewer({
   open,
   onOpenChange,
 }: {
-  doc: { document_type: string; content: string } | null;
+  doc:
+    | {
+        document_type: string;
+        content: string;
+        snapshot_id?: string;
+        hero_image_path?: string | null;
+      }
+    | null;
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }) {
   const [headings, setHeadings] = useState<{ id: string; text: string }[]>([]);
   const [tocOpen, setTocOpen] = useState(false);
+  const [heroUrl, setHeroUrl] = useState<string | null>(null);
+  const [heroPath, setHeroPath] = useState<string | null>(doc?.hero_image_path ?? null);
+  const [heroLoading, setHeroLoading] = useState(false);
 
   const components = useMemo(() => makeComponents(setHeadings), [doc?.content]);
   const title = titleCase(doc?.document_type ?? "");
   const content = doc?.content ?? "";
+
+  // Reset hero state when the document changes
+  useEffect(() => {
+    setHeroPath(doc?.hero_image_path ?? null);
+    setHeroUrl(null);
+  }, [doc?.snapshot_id, doc?.document_type, doc?.hero_image_path]);
+
+  // Mint a signed URL when we have a path
+  useEffect(() => {
+    let cancelled = false;
+    if (!heroPath) return;
+    (async () => {
+      const { data, error } = await supabase.storage
+        .from("venture-doc-images")
+        .createSignedUrl(heroPath, 3600);
+      if (!cancelled && !error && data?.signedUrl) setHeroUrl(data.signedUrl);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [heroPath]);
+
+  const generateHero = async (force = false) => {
+    if (!doc?.snapshot_id || !doc?.document_type) return;
+    setHeroLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("venture-document-image", {
+        body: { snapshotId: doc.snapshot_id, documentType: doc.document_type, force },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.path) {
+        setHeroPath(data.path);
+        setHeroUrl(null); // force re-sign
+        toast.success(force ? "New visual generated" : "Visual generated");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Image generation failed");
+    } finally {
+      setHeroLoading(false);
+    }
+  };
 
   const onCopy = () => {
     navigator.clipboard.writeText(content);
@@ -284,6 +340,7 @@ export function DocumentViewer({
     navigator.clipboard.writeText(m[1].trim());
     toast.success("AI-builder prompt copied");
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -329,6 +386,58 @@ export function DocumentViewer({
         </div>
 
         <div className="max-h-[calc(88vh-72px)] overflow-y-auto bg-gradient-to-b from-background/40 to-transparent">
+          <div className="mx-auto mt-4 max-w-[72ch] px-6">
+            <div className="group relative overflow-hidden rounded-lg ring-1 ring-white/10">
+              <AspectRatio ratio={16 / 9}>
+                {heroUrl ? (
+                  <img
+                    src={heroUrl}
+                    alt={title}
+                    loading="eager"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-accent/20">
+                    {heroLoading ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Generating visual…
+                      </div>
+                    ) : heroPath ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => generateHero(false)}
+                        disabled={heroLoading}
+                      >
+                        <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                        Generate visual
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </AspectRatio>
+              {heroUrl && (
+                <button
+                  type="button"
+                  onClick={() => generateHero(true)}
+                  disabled={heroLoading}
+                  title="Regenerate visual"
+                  className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-1 text-[11px] text-white opacity-0 backdrop-blur transition group-hover:opacity-100 disabled:opacity-50"
+                >
+                  {heroLoading ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-3 w-3" />
+                  )}
+                  Regenerate
+                </button>
+              )}
+            </div>
+          </div>
+
           {tocOpen && headings.length >= 4 && (
             <nav className="mx-auto mt-4 max-w-[72ch] rounded-lg border border-white/10 bg-card/60 px-4 py-3">
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">

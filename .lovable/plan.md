@@ -1,68 +1,89 @@
-# Document Viewer Visual Upgrade
 
-## Problem
+# Document hero images via Nano Banana Pro (per-user, per-venture storage)
 
-The "View" modal on a hub snapshot renders generated documents through `ReactMarkdown` with a long inline class list. Tables, callouts, code blocks, and headings all collapse into the same flat dark-on-dark style — research content is correct but reads like a debug dump (see the attached "Paid Ads Starter Pack" screenshot for the target polish level: clear section hierarchy, real table grid, comfortable line length).
+Every generated venture document gets a 16:9 illustration that visualizes its concept. The image renders at the top of the View modal, above the document body. Each user's images are isolated, and within their account each venture has its own folder.
 
-## What we will build
+## 1. Storage layout
 
-A dedicated, reusable **`DocumentViewer`** component (`src/components/hub/DocumentViewer.tsx`) that replaces the inline `<article>` block in `hub.$snapshotId.tsx` (lines 482–516). Same data in, much better presentation out. No backend changes, no schema changes — pure presentation.
+One private bucket, `venture-doc-images`, partitioned by user and venture so every founder owns their own space and every venture they create is its own folder inside it.
 
-### 1. Layout & chrome
-- Widen the dialog from `max-w-3xl` → `max-w-4xl`, add a sticky header inside the scroll container showing: document title (Title Case), a small `Badge` for `document_type`, and the action buttons (Copy / Download .md / Download .pdf / type-specific actions) pinned top-right so they stay reachable while scrolling.
-- Content column constrained to ~72ch for readable line length, centered with generous side padding.
-- Soft divider under the sticky header; subtle background tint on the content area so it reads like a "page" inside the dark UI.
+Path pattern:
+```
+{user_id}/{snapshot_id}/{document_type}/{version}.png
+```
 
-### 2. Typography system (semantic tokens only)
-A single `prose-doc` class group on the article wrapper:
-- **H1** 2xl, tight tracking, bottom border accent in `--primary` at 30% opacity.
-- **H2** xl, top margin + subtle uppercase eyebrow feel via tracking.
-- **H3** lg, foreground color, lighter weight than H2.
-- **Paragraphs** 14.5px, `leading-7`, `text-foreground/85`.
-- **Strong** bumped to `text-foreground` + medium weight (not bold-heavy).
-- **Lists** proper indent, marker color in `text-primary/70`, nested list spacing fixed.
-- **Blockquote** left border in `--primary`, italic, muted bg.
-- **HR** as a thin gradient line using the brand gradient tokens.
-- **Links** primary color, underline-offset-4, hover brightens.
+Why one bucket instead of literally one bucket per venture: Supabase storage caps and listing/RLS work cleanly at the path level, and creating a new bucket on every "New Venture" click would hit account limits fast and can't be done from the client. The `{user_id}/{snapshot_id}/...` prefix gives each founder a dedicated namespace and each venture a dedicated subfolder — functionally equivalent to "their own bucket per venture" while staying within platform best practice. (If you'd rather have literal per-venture buckets, say so and I'll switch to that — it just trades cleanliness for a per-venture provisioning step.)
 
-### 3. Tables (the main pain point)
-Custom markdown renderer overrides for `table`, `thead`, `tr`, `th`, `td` that reuse the existing shadcn `@/components/ui/table` primitives:
-- Wrapper with rounded border, horizontal scroll on small viewports.
-- Header row: `bg-muted/40`, uppercase 11px tracking-wide, sticky on vertical scroll inside the dialog.
-- Zebra rows via `even:bg-muted/20`.
-- Cell padding `px-3 py-2`, top-aligned, `text-sm`.
-- Numeric-looking cells (regex `/^[\$£€]?[\d,.]+%?$/`) get `font-mono tabular-nums text-right`.
+RLS on `storage.objects` for this bucket:
+- Owner read: `auth.uid()::text = (storage.foldername(name))[1]`
+- Owner write/update/delete: same predicate
+- Service role: full access (used by the edge function)
+- No public access; the viewer fetches a short-lived **signed URL** instead.
 
-### 4. Code blocks & inline code
-- Inline `code`: `bg-muted px-1.5 py-0.5 rounded text-[12.5px] font-mono`.
-- Fenced blocks: dark surface card with a header strip showing the language label and a "Copy" button; body uses `font-mono text-[12.5px] leading-6` with horizontal scroll.
+## 2. Schema
 
-### 5. Callouts
-Detect markdown patterns we already emit (`> **Note:**`, `> **Warning:**`, `> **Tip:**`) and render them as colored callout cards (info / warning / success) with an icon — falls back to a normal styled blockquote when no keyword matches.
+Migration adds two columns to `venture_documents`:
+- `hero_image_path text` — storage object key
+- `hero_image_prompt text` — prompt used (for debugging / regenerate)
 
-### 6. Table of contents (long docs)
-If the document has 4+ H2s, render a collapsible TOC at the top with anchor links that smooth-scroll within the dialog. Each heading gets a slugified `id` via a `rehype-slug`-style renderer override (no new dependency — small inline slugifier).
+Old rows stay null; viewer falls back to a placeholder with a "Generate visual" button.
 
-### 7. Export polish
-- Rename existing "Download .md" → keep as-is.
-- Add **"Print / Save as PDF"** button that opens `window.print()` on a hidden iframe containing the rendered HTML with a print stylesheet (white bg, black text, page-break rules on H1/H2). Uses the browser's native PDF — no new dependency.
-- Existing "Copy" and the `website_prd` "Copy prompt only" button preserved unchanged.
+## 3. New edge function: `venture-document-image`
 
-## Files touched
+`supabase/functions/venture-document-image/index.ts`
+
+Input: `{ snapshotId, documentType, force?: boolean }`.
+
+Flow:
+1. Verify JWT, resolve `user_id` from the token.
+2. Load the `venture_documents` row + parent `venture_snapshots`; confirm the snapshot belongs to this `user_id` (defense in depth).
+3. Skip if `hero_image_path` exists and `force !== true`.
+4. Build a visual prompt from:
+   - document title (`venture_document_types.name`)
+   - first ~600 chars of `content` stripped of markdown
+   - brand_tokens colors + mood adjectives when present (so visuals stay on-brand)
+   - explicit rules: "no text, no logos, no UI mockups, editorial illustration, 16:9 cinematic composition"
+5. Call Lovable AI Gateway `google/gemini-3-pro-image` (Nano Banana Pro) via the chat-completions image shape (`messages` + `modalities: ["image","text"]`), non-streaming.
+6. Decode `b64_json` → upload with service role to `{user_id}/{snapshotId}/{documentType}/{version}.png`.
+7. Update the document row with `hero_image_path` + `hero_image_prompt`.
+8. Return `{ path }`. The client mints its own signed URL via the user-scoped Supabase client.
+
+Errors (429 / 402 / moderation) are caught and logged to `venture_generation_failures` — the document itself is never lost when image generation fails.
+
+## 4. Auto-trigger after document generation
+
+In `venture-generate-document` (and the same point inside `venture-bulk-generate`'s per-doc loop), after the `status: "complete"` upsert, fire-and-forget invoke `venture-document-image` with `{ snapshotId, documentType }`. Best-effort — failure does not fail the doc.
+
+## 5. Frontend: viewer modal
+
+`src/components/hub/DocumentViewer.tsx`
+
+- If `doc.hero_image_path`, call `supabase.storage.from("venture-doc-images").createSignedUrl(path, 3600)` and render inside an `AspectRatio ratio={16/9}` block above the sticky header / title — rounded-lg, ring, overflow-hidden, `loading="eager"`, `alt={doc.title}`.
+- If missing: gradient placeholder (using brand_tokens when present) with a "Generate visual" button that invokes the edge function and refetches.
+- Hover-only "Regenerate" icon button on existing images (invokes with `force: true`, writes a new versioned path).
+
+## 6. Types
+
+Add `hero_image_path` and `hero_image_prompt` to the `venture_documents` row type in `src/integrations/supabase/types.ts` so the viewer compiles.
+
+## 7. Files touched
 
 | File | Change |
 |---|---|
-| `src/components/hub/DocumentViewer.tsx` | **new** — the component above |
-| `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` | replace the inline Dialog body (lines 482–516) with `<DocumentViewer doc={viewerDoc} onClose={...} />` |
-
-No new npm packages — `react-markdown` + `remark-gfm` are already installed, and we'll lean on existing shadcn `Table`, `Badge`, `Button`, and Lucide icons.
+| Storage bucket `venture-doc-images` (private) | new, created via the storage tool |
+| `supabase/migrations/*_doc_hero_images.sql` | 2 new columns + storage.objects RLS for the bucket |
+| `supabase/functions/venture-document-image/index.ts` | new |
+| `supabase/functions/venture-generate-document/index.ts` | fire-and-forget invoke after success |
+| `supabase/functions/venture-bulk-generate/index.ts` | same hook per doc |
+| `src/components/hub/DocumentViewer.tsx` | hero image block + generate / regenerate controls |
+| `src/integrations/supabase/types.ts` | add the two new columns |
 
 ## Out of scope
 
-- Editing documents inline (still copy/download-only).
-- Real PDF generation server-side (browser print is enough for v1).
-- Changing the document generation prompts or content.
+- Backfilling images for existing documents (handled lazily via "Generate visual" when an older doc is opened).
+- Multiple image variants / picker UI.
+- Embedding the image into Markdown / PDF exports.
 
 ## Verification
 
-After build, open a generated document (e.g. "Brand Strategy Framework" or any doc containing a markdown table) from the hub snapshot page and confirm: headings have hierarchy, tables render with borders + zebra striping, code blocks have a copy chip, the sticky action bar stays visible while scrolling, and Print produces a clean white PDF.
+Open a freshly generated doc → modal shows a 16:9 illustration above the title within a few seconds, served from `{your-user-id}/{venture-id}/{document_type}/1.png`. A second user cannot read another user's path (RLS denies). Older doc → placeholder + "Generate visual" works. Regenerate → version increments, new image replaces old.

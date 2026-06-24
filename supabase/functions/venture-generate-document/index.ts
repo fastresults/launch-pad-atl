@@ -177,6 +177,15 @@ QUALITY_SCORE: <0-100 integer reflecting completeness, specificity, and investor
     }
   }
 
+  // Fire-and-forget hero image generation (Nano Banana Pro). Best-effort.
+  try {
+    fetch(`${SUPABASE_URL}/functions/v1/venture-document-image`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ snapshotId, documentType }),
+    }).catch(() => {});
+  } catch { /* ignore */ }
+
   return { wordCount, quality };
 }
 
