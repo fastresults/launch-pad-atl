@@ -252,7 +252,11 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
         </p>
       </div>
 
+      <FounderMarketCard snapshot={snapshot} onSaved={onSaved} />
+
       <ResearchPanel snapshot={snapshot} />
+
+
 
 
       {SECTIONS.map((section) => (
