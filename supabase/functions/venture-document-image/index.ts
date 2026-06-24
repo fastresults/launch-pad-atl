@@ -78,12 +78,16 @@ Deno.serve(async (req) => {
     if (!token) {
       return new Response(JSON.stringify({ error: "Missing auth" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    const isServiceRole = token === SERVICE_KEY;
 
-    const userClient = createClient(SUPABASE_URL, ANON_KEY, { global: { headers: { Authorization: auth } } });
-    const { data: userRes } = await userClient.auth.getUser();
-    const userId = userRes?.user?.id;
-    if (!userId) {
-      return new Response(JSON.stringify({ error: "Not signed in" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    let userId: string | null = null;
+    if (!isServiceRole) {
+      const userClient = createClient(SUPABASE_URL, ANON_KEY, { global: { headers: { Authorization: auth } } });
+      const { data: userRes } = await userClient.auth.getUser();
+      userId = userRes?.user?.id ?? null;
+      if (!userId) {
+        return new Response(JSON.stringify({ error: "Not signed in" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
 
     const { snapshotId, documentType, force } = await req.json();
