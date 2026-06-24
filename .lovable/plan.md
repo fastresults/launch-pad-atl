@@ -1,70 +1,41 @@
-## Plan: Make `/dashboard/day` outcome-first instead of document-first
+## Plan: Present both AI workflows clearly on `/dashboard/day`
 
 ### Goal
-Rewrite the workshop dashboard copy so founders understand what they leave able to do — not that they receive “20 documents.” The tone should feel clear, confident, and useful to Millennial/Gen Z founders: less formal, less corporate, more “now I know what I’m building and what to do next.”
+Keep both 20-document systems, but make the choice obvious on `/dashboard/day` so a founder never has to wonder which path they're on:
 
-### Copy direction
-- Replace “documents” as the main value promise with founder outcomes like:
-  - know who you serve
-  - explain why people should care
-  - price with confidence
-  - map the first customers
-  - understand the money
-  - talk to advisors, lenders, partners, or early supporters
-  - leave with a clear next-week action plan
-- Use “receipts,” “working pieces,” “startup toolkit,” “guides,” “playbooks,” and “prep” only where they clarify value.
-- Keep the “20” as a proof point, but not the headline value. Example: “You leave with the thinking, tools, and next steps behind 20 founder-ready assets.”
-- Avoid copy that sounds like paperwork, compliance, boardroom language, or investor cosplay.
+- **Fast path — Founders Hub** (`/dashboard/hub/new`): paste a URL or short concept, the system enriches it and bulk-generates all 20 in dependency order. Best for "I already know what I'm building, give me the receipts."
+- **Guided path — Workshop Brief & Workflow** (`/dashboard/brief` → `/dashboard/workflow`): voice-friendly intake that walks through each pillar with the facilitator, generating documents as decisions get made. Best for the in-room workshop morning.
 
-### Page-level changes
-1. **Header**
-   - Change from a schedule/document framing to a confidence framing.
-   - Example direction: “Your workshop morning” with supporting copy like: “By the end, you’ll know what you’re building, who it’s for, how it makes money, and what to do first.”
+### What's already built (no changes needed)
+- Hub: `venture-extract-concept`, `venture-bulk-generate`, `venture-generate-document` edge functions; `venture_snapshots`, `venture_document_types` (20 seeded), `venture_documents`, `venture_generation_jobs`, `venture_generation_failures`; `/dashboard/hub`, `/hub/new`, `/hub/$snapshotId` UI with progress, version history, circuit breaker, cancel.
+- Workshop Brief/Workflow: `src/lib/workflow.ts` manifest with voice intake fields, `/dashboard/brief`, `/dashboard/workflow`, `/dashboard/workflow/$key`, backed by `deliverable_types` + `attendee_deliverables`.
 
-2. **Hero value strip**
-   - Replace “Walk out with 20 documents” style language.
-   - New emphasis: “Walk in with an idea. Walk out knowing what to do with it.”
-   - Body copy should explain that the AI-first workflow captures the founder’s thinking and turns it into practical startup tools, not generic paperwork.
+### Changes (UI/presentation only)
 
-3. **Outcome section**
-   - Rename from “What you walk out with” if needed to something more useful, such as “What you’ll be able to do after this.”
-   - Frame each pillar around founder capability:
-     - Foundation → “Say who it’s for and why it matters.”
-     - Strategy → “Know how you’ll reach people and make money.”
-     - Operations → “See how the startup actually runs.”
-     - Finance → “Understand the numbers without pretending to be a CFO.”
-     - Governance/Risk → “Know what to protect, decide, and ask for help with.”
+1. **`/dashboard/day` — add a "Two ways to build it" choice block** placed right after the hero strip, before the cohort card:
+   - Card A — *Guided in the room* (primary, recommended for first-time founders attending the workshop). Subcopy emphasizes: facilitator-led, pillar-by-pillar, decisions out loud. CTA → "Start my founder brief" → `/dashboard/brief`.
+   - Card B — *One-shot from a URL or concept* (secondary, recommended for founders who want a head start before the workshop or who already have a website). Subcopy emphasizes: drop a link, get all 20 back, then refine in person. CTA → "Spin up a venture" → `/dashboard/hub/new`.
+   - Both cards make clear it's the same five pillars and same 20 deliverables — just different ways of getting there.
 
-4. **Pillars section**
-   - Keep the five-part framework, but stop describing pillars by document count.
-   - Use outcome subcopy for each pillar instead of “5 docs / 4 docs.”
-   - If the count appears, tuck it into a secondary line like “Includes the working assets behind this step,” not as the main message.
+2. **Rework the existing CTA row at the bottom of `/dashboard/day`** so it no longer duplicates the choice. Replace with:
+   - Primary: "See what we build together" → `/dashboard/workflow` (the pillar/document map)
+   - Secondary: "Browse your ventures" → `/dashboard/hub` (only when the user has at least one snapshot; otherwise hide)
 
-5. **Schedule section**
-   - Rewrite each block so it describes what the founder gets clarity on during that part of the morning.
-   - Keep it casual but valuable:
-     - Check-in: settle in and get the idea out of your head
-     - Foundation: turn the idea into a clear offer and audience
-     - Strategy: make the first path to customers and revenue believable
-     - Operations: map what has to happen after the workshop
-     - Finance: understand pricing, costs, runway, and funding needs
-     - Governance: know the risks, decisions, and support asks
-     - Close: leave with next steps, not a pile of files
+3. **Pillar section copy** — keep the current outcome-based copy, but add one sentence noting that whichever path the founder picks, the five pillars and outcomes are the same.
 
-6. **What to bring**
-   - Keep friendly tone, but tie each item to the value it unlocks.
-   - Example: “A rough idea” becomes “A rough idea we can sharpen into an offer.”
+4. **Naming/labels** — across `/dashboard/day` only, refer to the two paths consistently as:
+   - "Guided workshop path" (Brief → Workflow)
+   - "Fast venture path" (Hub)
+   Avoid "System A/B," "Hub vs Brief," or any internal naming.
 
-7. **Calls to action**
-   - Replace document-focused CTA language.
-   - Suggested CTAs:
-     - Primary: “Start my founder brief”
-     - Secondary: “See what we build together” or “Preview the founder toolkit”
+### Out of scope (do not change in this plan)
+- No DB migrations. The two catalogs (`venture_document_types` and `deliverable_types`) stay independent — reconciling them is a separate decision.
+- No changes to Hub or Brief/Workflow internals, edge functions, or generation logic.
+- No changes to `/dashboard/hub*` or `/dashboard/brief`/`/dashboard/workflow*` pages themselves.
+- No pricing, auth, schema, or routing changes.
 
-### Technical scope
-- Update only frontend copy/presentation text.
-- Primary files to revise:
-  - `src/routes/_authenticated/dashboard/day.tsx`
-  - `src/lib/workshop-mode.ts`
-- No schema, workflow logic, authentication, pricing, routing, or layout changes.
-- Preserve existing cohort-aware date/time behavior and keep copy day-agnostic.
+### Files touched
+- `src/routes/_authenticated/dashboard/day.tsx` — add the two-path choice block, adjust bottom CTAs, refine pillar lead-in copy.
+
+### Open question to confirm during build
+The Hub catalog uses pillar split 4-5-4-4-3 (Foundation/Strategy/Operations/Finance/Governance) and the Workshop Workflow uses 5-5-4-4-2. The `/dashboard/day` pillar cards currently render from `STAGES` in `src/lib/workflow.ts` (the Workshop side). I will keep that as the canonical display on `/dashboard/day` and note in the Hub card subcopy that the Hub produces the same five pillars with a slightly different document split, so the founder isn't surprised when counts don't match exactly.
