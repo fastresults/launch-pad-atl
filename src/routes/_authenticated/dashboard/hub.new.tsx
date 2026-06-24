@@ -312,6 +312,22 @@ function Inner() {
             <div className="flex items-center justify-between gap-2">
               <Label htmlFor="concept">Business concept *</Label>
               <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                {/* TODO: remove after testing — dev-only random fill */}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="text-xs text-muted-foreground"
+                  onClick={() => {
+                    const sample = SAMPLE_CONCEPTS[Math.floor(Math.random() * SAMPLE_CONCEPTS.length)];
+                    setBusinessConcept(sample.concept);
+                    if (path === "competitor") setDiff(sample.diff);
+                    toast.success("Filled test concept");
+                  }}
+                >
+                  🧪 Fill test concept
+                </Button>
                 {readyFiles.length > 0 && (
                   <Button
                     type="button"
