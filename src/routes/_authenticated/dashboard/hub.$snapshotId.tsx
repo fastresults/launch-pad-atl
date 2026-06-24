@@ -421,6 +421,11 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         )}
       </div>
 
+      <BrandStudio snapshot={snapshot} />
+      <SocialStudio snapshot={snapshot} />
+
+
+
       {categories.map(([cat, items]) => (
         <section key={cat} className="space-y-3">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{cat}</h3>
