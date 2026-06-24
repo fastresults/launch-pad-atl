@@ -17,30 +17,32 @@ export default function WorkshopDayPage() {
     <div className="space-y-10">
       {/* Header */}
       <div>
-        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Workshop day</h1>
+        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Your workshop morning</h1>
         <p className="mt-2 text-muted-foreground">
-          One morning. {WORKFLOW.length} strategic documents. {PILLARS.length} pillars. $97.
+          {cohort
+            ? `${cohort.dateLabel} · ${EVENT.timeLabel}. Show up with an idea — leave with the ${WORKFLOW.length} documents that turn it into a real startup.`
+            : `One morning. Show up with an idea — leave with the ${WORKFLOW.length} documents that turn it into a real startup.`}
         </p>
       </div>
 
       {/* What you walk out with — hero strip */}
       <div className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-6 md:p-8">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary">
-          <Sparkles className="h-4 w-4" /> AI-first multi-document workflow
+          <Sparkles className="h-4 w-4" /> What you walk out with
         </div>
         <h2 className="mt-2 text-2xl md:text-3xl font-semibold tracking-tight">
-          You walk out with {WORKFLOW.length} board-ready documents.
+          Walk in with an idea. Walk out ready to execute Monday.
         </h2>
         <p className="mt-2 max-w-2xl text-sm md:text-base text-muted-foreground">
-          The AI generates while we coach. ~{TOTAL_DOC_MIN} minutes of document time, woven into a
-          {" "}{EVENT.durationLabel.toLowerCase()} morning so you have time to think — not just type.
+          You do the thinking out loud. Your AI cofounder writes everything down — the plan, the money math, the pitch, the boring-but-important stuff. By 11:30 AM you've got {WORKFLOW.length} documents in your Drive and a really clear head.
         </p>
       </div>
 
       {/* Cohort card */}
       {cohort ? (
         <div className="rounded-3xl border border-white/10 bg-card p-6 md:p-8">
-          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary">
+          <div className="text-xs text-muted-foreground">You're in. Here's the where and when.</div>
+          <div className="mt-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary">
             <Calendar className="h-4 w-4" /> {cohort.dateLabel}
           </div>
           <div className="mt-1 text-sm text-muted-foreground">{EVENT.timeLabel} · {EVENT.durationLabel}</div>
@@ -62,9 +64,11 @@ export default function WorkshopDayPage() {
       {/* The 5 pillars */}
       <section>
         <h2 className="mb-1 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-          The framework — 5 pillars, {WORKFLOW.length} documents
+          The 5 things every real startup needs
         </h2>
-        <p className="mb-4 text-sm text-muted-foreground">Each pillar generates as a coordinated set. Dependencies chain so later documents inherit your earlier decisions.</p>
+        <p className="mb-4 text-sm text-muted-foreground">
+          We move through them in order. Each one feeds the next, so by the time we hit the last pillar, every document already knows your numbers, your market, and your story.
+        </p>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {PILLARS.map((pillar) => {
             const docs = WORKFLOW.filter((d) => d.stageN === pillar.n);
@@ -95,7 +99,7 @@ export default function WorkshopDayPage() {
 
       {/* The morning, block by block */}
       <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">The morning, block by block</h2>
+        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">How the morning goes</h2>
         <ol className="space-y-2">
           {SCHEDULE_BLOCKS.map((b, i) => (
             <li
@@ -133,26 +137,26 @@ export default function WorkshopDayPage() {
 
       {/* What to bring */}
       <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">What to bring</h2>
+        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">Bring four things</h2>
         <ul className="space-y-2 text-sm">
-          <li className="rounded-xl border border-white/10 bg-card p-4">Your laptop (and charger).</li>
-          <li className="rounded-xl border border-white/10 bg-card p-4">Government-issued ID — for the Foundation pillar's filing packet.</li>
-          <li className="rounded-xl border border-white/10 bg-card p-4">Your idea — rough is fine. We'll shape it together in the brief.</li>
-          <li className="rounded-xl border border-white/10 bg-card p-4">Curiosity and one big question you want answered before the morning ends.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">Your laptop and charger. You're driving.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">A government-issued ID — we'll use it to set up your LLC paperwork.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">Your idea, even if it lives on a sticky note. We'll sharpen it together.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">One question you really want answered before you leave.</li>
         </ul>
         <p className="mt-3 text-xs text-muted-foreground">
-          Filing fees and any state submissions are handled from home after the workshop — nothing to pay on the spot.
+          Nothing to pay on the day. Any state filings happen from home afterward — we'll walk you through exactly what to click.
         </p>
       </section>
 
       {/* CTAs */}
       <div className="flex flex-wrap gap-3">
         <Link to="/dashboard/brief" className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:opacity-90">
-          Prep my brief
+          Start my brief
           <ArrowRight className="h-4 w-4" />
         </Link>
         <Link to="/dashboard/workflow" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-card px-6 py-3 text-base font-medium hover:bg-white/5">
-          See the full {WORKFLOW.length}-document workflow
+          Peek at all {WORKFLOW.length} documents
         </Link>
       </div>
     </div>
