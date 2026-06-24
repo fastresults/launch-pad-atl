@@ -113,7 +113,7 @@ function Framework() {
           <span className="text-gradient-brand">Built in one room, in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          {TOTAL_DELIVERABLES} deliverables across three stages. Each one built live for your idea, not pulled from a template. Consultants charge $50,000+ to produce this stack. You pay {WORKSHOP_PRICE_LABEL}.
+          {TOTAL_DELIVERABLES} deliverables across three stages — each one built live for your idea, never pulled from a template. A fraction of the cost of hiring it out, and yours to keep for {WORKSHOP_PRICE_LABEL}.
         </p>
 
         <div className="mt-14 space-y-14 md:space-y-20">
