@@ -1,80 +1,87 @@
-## What I audited
+## Goal
 
-Three sources of truth feed pricing and copy across the site:
+Rewrite all 8 `/build/[slug]` workshops so each page reads as a real, high-conversion workshop landing page — not a generic data record. Same structure, sharper copy, more concrete value, stronger psychological pull at every section.
 
-1. **`framework-deliverables.ts` → `BUILD_LAYER`** — the 8 capabilities on the homepage (titles + descriptions only, no prices).
-2. **`agency-services.ts` → `AGENCY_SERVICES` + `AGENCY_TRACKS`** — the `/services` page (prices, deliverables, tracks).
-3. **`build-workshops.ts` → `BUILD_WORKSHOPS[i].agencyService`** — the "Have us build it" upsell block on each `/build/[slug]` page (name + tagline + price + href).
+## Where the work happens
 
-The `BUILD_LAYER` titles match `AGENCY_SERVICES` capability names — that's already enforced by a dev-mode check. The drift is in the workshop pages' agency upsell block.
+A single file: `src/lib/build-workshops.ts`. Every visible string on `/build/[slug]` is data-driven from this file, so no route/component changes are needed. The 8 slugs:
 
-## Drift found (workshop "Have us build it" vs `/services`)
+1. `brand-identity` — $297
+2. `website-that-converts` — $397
+3. `social-presence` — $197
+4. `content-engine` — $297
+5. `ai-operating-system` — $397
+6. `email-crm-automation` — $397
+7. `sales-systems` — $397
+8. `legal-financial-ops` — $197
 
-| Capability | `/services` price | `/build/[slug]` upsell shows | Status |
-|---|---|---|---|
-| Brand identity | **From $2,900** · "Brand identity" service | $2,900 · **"Brand & Website Build"** | name wrong (bundles website) |
-| A website that converts | **From $4,800** · "Website that converts" | **$2,900** · "Brand & Website Build" | price + name wrong |
-| Social presence | **From $1,800 setup + $1,200/mo** | **$2,100/mo** · "Marketing Engine" | price + name wrong |
-| A content engine | **From $2,400/mo** | **$2,100/mo** · "Marketing Engine" | price + name wrong |
-| AI as your operating system | From $4,500 · "AI Ops" | $4,500 · "AI Ops Sprint" | OK |
-| Email, CRM, and automation | **From $3,200** | **$2,100/mo** · "Marketing Engine" | price + name wrong |
-| Sales systems | From $3,800 · "Sales systems" | $3,800 · "Sales System Sprint" | OK |
-| Legal, financial, ops | From $1,200 · "Legal/Fin/Ops" | $1,200 · **"Launch Kit"** | name wrong |
+## What each workshop page must do (the conversion model)
 
-Workshop tier prices ($197 / $297 / $397) are correctly mapped to the `/services` retail prices via `workshopPriceForRetailCents()` — no drift there.
+Top to bottom, the page should run this sequence in the visitor's head:
 
-`SERVICE_PACKAGES` in `framework-deliverables.ts` is dead code (no importers). Three of the legacy package names ("Brand & Website Build", "Marketing Engine", "Launch Kit") leaked into the workshop upsell blocks and are the source of the drift.
+1. **Hero** — name the desired end state in their language, anchor the price as trivial vs. the stakes
+2. **Pains** — make the cost of inaction specific and quantified
+3. **Walk-outs** — prove they leave with tangible artifacts, not "frameworks to think about"
+4. **Agenda** — show how a half-day actually produces those artifacts
+5. **Fit** — disqualify aggressively to raise trust + perceived selectivity
+6. **Decision moment** — remove pressure, frame the in-room choice (DIY / hire us / hire elsewhere)
+7. **Agency upsell** — the credit-back guarantee makes the workshop the obvious first step
+8. **FAQ** — kill the last 4 objections
 
-## Tracks sanity check
+Sections 6 and 7 are already strong and shared across pages — no per-workshop change needed. Sections 1–5 + per-workshop FAQ tone are where the lift comes from.
 
-After the 35% reduction:
-- **Launch** ($4,875) bundles Brand $2,900 + Website $4,800 + Legal $1,200 = $8,900 retail → ~45% off as a bundle. Plausible.
-- **Operate** ($5,200) bundles AI $4,500 + Sales $3,800 = $8,300 → ~37% off. Plausible.
-- **Growth** ($2,925/mo) bundles Social ($1,800 setup + $1,200/mo) + Content ($2,400/mo) + Email ($3,200 setup). The track is monthly-only and undercuts the sum of the monthly components alone ($3,600/mo) — that's an aggressive "from" anchor and ignores the setup fees. Flag for confirmation, do not silently change.
+## The per-workshop copy upgrade (applied to all 8 slugs)
 
-## Fix plan
+For each workshop I'll rewrite these fields:
 
-**Single principle:** `/services` (`AGENCY_SERVICES`) is the source of truth for retail price, service name, and CTA href. The workshop pages must read from it, not duplicate it.
+- **`oneLiner`** — make it a desire/outcome line in 10 words or less. Lead with what the buyer wants, not what we do. No category labels.
+- **`subhead`** — 2 sentences. First sentence names the wrong way most founders do it. Second sentence promises the specific shift the workshop delivers.
+- **`pains[3]`** — each pain gets a punchy headline that names a dollar-cost or time-cost outcome, plus a 1–2 sentence body with a concrete mechanism. Stop saying "you'll regret it" — show the math.
+- **`walkOuts[6]`** — every item is a noun phrase naming a real artifact (not a verb phrase about learning). Add specificity (counts, formats, examples) so it reads as deliverables, not topics.
+- **`agenda[4]`** — keep the time blocks. Tighten titles to verb phrases. Rewrite details so each block names: input → working session → output. Reader should believe the artifact is actually produced in that window.
+- **`forYou[3]`** — situational, present-tense. Specific enough that the right buyer thinks "this is me."
+- **`notForYou[3]`** — disqualify the tire-kicker, the not-ready-yet, and the unrealistic expectation. Keep them sharp and slightly funny; that's part of the brand voice.
 
-### 1. `src/lib/build-workshops.ts` — kill the duplicated `agencyService` block
-- Remove the inline `agencyService: { name, tagline, priceLabel, href }` from all 8 workshops.
-- Replace the type field with `agencyServiceTagline: string` only (the one piece of copy that's workshop-specific and worth keeping — e.g. "Site, copy, payments, and analytics — shipped live in 2 weeks").
-- Add a helper that resolves the rest from `AGENCY_SERVICES` by `slug`:
-  ```ts
-  // returns { name, priceLabel, href, tagline } for the slug
-  getWorkshopAgencyOffer(slug)
-  ```
-  `name` = service capability title (e.g. "A website that converts" → display as "Done-for-you: A website that converts"), `priceLabel` = `AGENCY_SERVICES[i].priceLabel`, `href` = `AGENCY_SERVICES[i].ctaHref`, `tagline` from the workshop.
+Common shared sections that already work — left untouched:
+- `priceCents` / `priceLabel` (already tiered correctly)
+- `agencyServiceTagline` (just rewrote in last pass)
+- `faq` via `makeCommonFaq()` (already consistent and tight)
 
-### 2. `src/routes/build.$slug.tsx` — consume the resolved offer
-- Replace `w.agencyService.name / tagline / priceLabel / href` with the resolved object so price + name + link always match `/services`.
-- No layout changes — same fields, just sourced from one place.
+## Workshop-specific angles (the differentiators I'll lean into)
 
-### 3. Rewrite the 8 `agencyServiceTagline` strings so they describe the matching service (not a legacy bundle)
-Specifically these were misaligned:
-- **Brand identity** → "Logo system, voice, and asset pack — shipped in 2 weeks." (drop "+ website")
-- **Website that converts** → keep current "Site, copy, payments, and analytics — shipped live in 2 weeks."
-- **Social presence** → "Two channels rebuilt, 30-day calendar shipped, posting cadence held."
-- **Content engine** → "Pillars, SEO map, and 8 anchor pieces a month — repurposed everywhere."
-- **AI OS** → keep current ("30 days, 10 workflows rewired around AI, documented").
-- **Email, CRM, automation** → "CRM live, 3 sequences shipped, deliverability fixed — in 3 weeks."
-- **Sales systems** → keep current.
-- **Legal/financial/ops** → "LLC, EIN, contracts, books — done in 10 business days."
+Each workshop needs a sharper, distinct positioning so the 8 pages don't bleed together:
 
-### 4. Add a dev-mode consistency check
-Mirror the existing `AGENCY_SERVICES` ↔ `BUILD_LAYER` dev check: warn if any `BUILD_WORKSHOPS[i].slug` lacks a matching `AGENCY_SERVICES` entry, or if the workshop tier (`priceCents`) doesn't match `workshopPriceForRetailCents()` applied to the resolved retail price. This makes future drift impossible to ship silently.
+- **Brand identity ($297)** — "premium perception in 3 seconds." Lean into pricing-power outcomes: bad brand = freelancer-tier rates.
+- **Website that converts ($397)** — "your homepage is a revenue surface, not a brochure." Conversion-rate math is the hero.
+- **Social presence ($197)** — "two channels, owned." Lean into focus and cadence over reach.
+- **Content engine ($297)** — "the only marketing line item that gets cheaper every month." Compounding asset framing.
+- **AI as your operating system ($397)** — "two people doing the work of ten." Workflow ROI math, not tool tourism.
+- **Email/CRM/automation ($397)** — "most revenue lives in touches 2, 5, and 12." Lifecycle LTV framing.
+- **Sales systems ($397)** — "stop closing on mood, start closing on system." Pipeline-as-forecast framing.
+- **Legal/financial/ops ($197)** — "the boring stuff that decides whether you're bankable." Risk-of-the-call-from-the-bank framing.
 
-### 5. Delete dead code
-- Remove the unused `SERVICE_PACKAGES` export and `ServicePackage` type from `framework-deliverables.ts` (no importers). This is what seeded the legacy bundle names; deleting it removes the temptation to repeat the mistake.
+Each one already gestures at this — the rewrite makes it the spine of the whole page so a visitor can describe the workshop in one sentence after scanning it.
 
-## Out of scope (will ask before touching)
+## Copy guardrails
 
-- Re-pricing any of the 8 services or 3 tracks. Specifically the **Growth Track $2,925/mo** anchor vs. the higher sum of its monthly components — flag only.
-- Changing workshop tier prices ($197/$297/$397) — they map cleanly today.
-- Visual / layout changes on any page.
+- 20-year conversion-copywriter voice (Adam Anderson). Second person, present tense, short clauses, em-dashes used as scalpels not decoration.
+- Specific over generic ("3 sequences written live in the room" > "you'll learn email sequencing").
+- One concrete number or proof point in every pain card and every walk-out where credible.
+- No empty intensifiers ("absolutely," "truly," "really").
+- No "framework," "deep dive," "unlock," "leverage" (verb), "elevate," "synergize."
+- Keep the existing workshop-shows-strategy-plus-tools-plus-process positioning the user just asked for. Every workshop page must reinforce that the buyer leaves with the strategy, the templates, and the tool stack.
+
+## Out of scope
+
+- No page layout or component changes.
+- No price changes.
+- No new sections, no new fields beyond what's already on `BuildWorkshop`.
+- No edits to `/services`, `/build`, or homepage copy — only the per-slug data.
+- No changes to the common FAQ helper (already rewritten last turn).
 
 ## Acceptance
 
-- Loading `/services`, the homepage, and any `/build/[slug]` shows the same price and the same service name for the same capability.
-- Clicking "Have us build it" from a workshop lands on the matching `/contact?service=...` URL used by the `/services` card.
-- Dev console warns on any future drift.
+- All 8 workshops have rewritten `oneLiner`, `subhead`, `pains`, `walkOuts`, `agenda`, `forYou`, `notForYou`.
+- A visitor skimming any `/build/[slug]` can answer in 10 seconds: what's the outcome, what artifacts do I walk out with, why does it cost what it costs, and what happens if I don't do this.
+- No two workshops sound interchangeable.
+- Typecheck passes; no shape changes to `BuildWorkshop`.

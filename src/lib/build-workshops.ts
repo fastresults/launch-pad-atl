@@ -67,6 +67,7 @@ function makeCommonFaq(priceLabel: string): FAQ[] {
 }
 
 export const BUILD_WORKSHOPS: BuildWorkshop[] = [
+  /* ─────────── 1. BRAND IDENTITY ─────────── */
   {
     slug: "brand-identity",
     priceCents: 29700,
@@ -74,70 +75,72 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     icon: Palette,
     title: "Brand Identity Workshop",
     capability: "Brand identity",
-    oneLiner: "Walk in with a name. Walk out with a brand people pay a premium for.",
+    oneLiner: "Charge premium prices. Stop looking like a Fiverr gig.",
     subhead:
-      "Logos are easy. A brand that earns trust in the first three seconds — before a single word is read — is a system. We build the system with you in one morning.",
+      "Most founders treat brand like a logo decision and pay for it every time they try to raise prices. In one morning we build the brand system — voice, archetype, palette, type, asset rules — that earns trust in three seconds and lets you quote 30% higher without flinching.",
     pains: [
       {
-        title: "A wrong-headed brand is a $20K mistake on a 12-month delay.",
-        body: "Founders pick a logo, slap it on a deck, and find out a year in that the brand contradicts what they actually sell. Then they pay to redo every asset.",
+        title: "A weak brand caps your pricing at freelancer rates — forever.",
+        body: "Buyers decide premium-vs-cheap in the first three seconds, before they read a word. If the visual fluency isn't there, you'll lose the price negotiation before it starts and never know why.",
       },
       {
-        title: "Premium pricing requires premium perception.",
-        body: "If your brand looks like a freelancer made it on Fiverr, you'll get freelancer-tier prices. The market reads visual fluency as competence — fair or not.",
+        title: "The $20K rebrand you'll pay for in month 13.",
+        body: "Founders pick a logo in a weekend, slap it on a deck, and discover a year in that the brand contradicts the actual offer. Then it's a full asset rebuild — site, deck, packaging, social — at agency rates.",
       },
       {
-        title: "AI generators don't replace a brand system.",
-        body: "They give you outputs. A brand system is the rules that make every future output consistent. Without it, every new asset looks like it's from a different company.",
+        title: "AI makes every asset look like it's from a different company.",
+        body: "Without a written brand system, every Midjourney render and Canva slide drifts. The market reads inconsistency as amateurism, and your CAC quietly climbs as trust leaks out.",
       },
     ],
     walkOuts: [
-      "Signed brand brief — what you stand for, who you stand against, how you sound",
-      "Brand archetype + voice guide your team and any AI can follow",
-      "Logo direction (3 concepts) with the rationale behind each",
-      "Color palette and typography system with usage rules",
-      "Mood board + visual reference library for designers to inherit",
-      "First-90-day brand rollout plan across your most visible surfaces",
+      "Signed brand brief — who you stand for, who you stand against, the one sentence you're allowed to mean",
+      "Brand archetype + voice guide your team (and any AI prompt) can follow without you in the room",
+      "3 logo directions with the buyer-psychology rationale behind each — pick one, kill two",
+      "Color palette and typography system with usage rules tight enough to hand to a freelancer",
+      "Mood board and visual reference library a designer can inherit on day one",
+      "90-day rollout map across your 10 most visible surfaces (site, deck, signature, social, packaging)",
     ],
     agenda: [
       {
         time: "8:45 – 9:15",
-        title: "Positioning lock",
+        title: "Lock the one sentence the brand is allowed to mean",
         detail:
-          "Before pixels: nail the one sentence your brand is allowed to mean. Without this, every design decision is a coin flip.",
+          "Input: your current positioning, top 3 competitors, last 5 sales calls. Working session: forced-choice exercise to compress the brand promise into one sentence. Output: the strategic sentence every design and copy decision will be tested against.",
       },
       {
         time: "9:15 – 10:15",
-        title: "Voice, archetype, and verbal identity",
+        title: "Build the archetype and voice guide",
         detail:
-          "Pick the archetype your buyer is already shopping for. Build a voice guide so your copy, emails, and AI prompts all sound like one company.",
+          "Input: 12 archetype options scored against your buyer. Working session: choose the archetype your market is already shopping for, then write the voice rules (tone, taboo words, sentence length, examples). Output: a voice guide your team and your AI prompts both inherit.",
       },
       {
         time: "10:30 – 11:15",
-        title: "Visual system — logo, color, type",
+        title: "Design the visual system — live",
         detail:
-          "Three logo directions. A color and typography system with usage rules. Live critique against your real competitors.",
+          "Input: 3 logo directions, 4 palette pairs, 2 typography systems. Working session: live critique against your real competitors using a 60-second-trust test. Output: a chosen direction with palette, type, and usage rules you can hand to a designer this week.",
       },
       {
         time: "11:15 – 11:30",
-        title: "Rollout decision",
+        title: "Map the 90-day rollout",
         detail:
-          "Map your top 10 visible surfaces. Decide what gets the new system first, what waits, and what gets retired.",
+          "Input: your top 10 visible surfaces. Working session: triage what gets the new system first, what waits, what gets retired. Output: a dated rollout plan with owners and dependencies.",
       },
     ],
     forYou: [
-      "You've validated the idea and are about to invest in a website, deck, or product packaging",
-      "Your current brand was made fast and now feels like a ceiling on pricing",
+      "You're about to spend money on a website, deck, or packaging and want the brand right first",
+      "Your current brand was made in a weekend and now feels like a ceiling on what you can charge",
       "You're tired of every new asset looking like it came from a different company",
     ],
     notForYou: [
-      "You haven't decided what you're selling or who it's for",
-      "You want a $300 logo and call it a day",
+      "You haven't decided what you sell or who you sell it to",
+      "You want a $300 logo on Fiverr and a fast exit",
       "You're hoping to debate font weights for six hours",
     ],
     agencyServiceTagline: "Logo system, voice, and full asset pack — shipped live in 2 weeks.",
     faq: makeCommonFaq("$297"),
   },
+
+  /* ─────────── 2. WEBSITE THAT CONVERTS ─────────── */
   {
     slug: "website-that-converts",
     priceCents: 39700,
@@ -145,70 +148,72 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     icon: Globe,
     title: "Website That Converts Workshop",
     capability: "A website that converts",
-    oneLiner: "Stop building a brochure. Build a revenue surface.",
+    oneLiner: "Turn your homepage into a revenue surface — not a brochure.",
     subhead:
-      "Most founder websites are digital pamphlets. Yours will be a conversion engine — wired to payments, analytics, and a clear next action on every page.",
+      "Most founder sites convert at under 1% and the owner can't tell you which page is broken. In one morning we wire your site for revenue: one clear job per page, the proof stack that closes, payment and analytics events live, and the copy that does the selling.",
     pains: [
       {
-        title: "Pretty sites don't pay rent. Converting sites do.",
-        body: "A site that looks great but converts at 0.4% is a $30K liability. A plain site that converts at 4% prints money. The difference is structure, not aesthetics.",
+        title: "A pretty site at 0.4% conversion is a $30K liability.",
+        body: "Doubling your conversion rate is worth more than doubling your traffic — and costs nothing to ship. Founders pay for design polish and ignore the structural decisions that actually move the rate.",
       },
       {
-        title: "No ICP, no conversion.",
-        body: "If your homepage doesn't make your ideal buyer feel seen in the first five seconds, paid traffic to it is expensive noise.",
+        title: "If your homepage doesn't make the ICP feel seen in 5 seconds, paid traffic is a tax.",
+        body: "Generic 'we help businesses grow' headlines bleed money on every ad click. The fix is buyer-language pulled from real calls and reviews — not a copywriter guessing in a vacuum.",
       },
       {
-        title: "Every undefined conversion event is a leak.",
-        body: "Most founders can't tell you what counts as a 'win' on their site. The analytics show traffic but no story. You can't optimize what you can't see.",
+        title: "Untracked events = invisible leaks.",
+        body: "Most founders can't name their site's #1 conversion event, let alone watch it. You can't optimize what GA4 isn't capturing — and 'looks like traffic is up' is not a strategy.",
       },
     ],
     walkOuts: [
-      "Sitemap and page-by-page purpose map (every page earns its keep)",
-      "Wireframe for your homepage and #1 conversion page",
-      "Page-by-page copy outline with hero, proof, offer, and CTA",
-      "Conversion event plan wired to GA4 + your CRM",
-      "Tech stack decision (no-code vs custom) with cost projections",
-      "Pre-launch QA checklist so the site ships without embarrassing leaks",
+      "Sitemap with a single job written on every page (every page earns its slot)",
+      "Wireframes for your homepage and #1 conversion page using the proof-stack pattern",
+      "Page-by-page copy outline: hero, proof, offer, objection, CTA — written in your buyer's words",
+      "Conversion event plan wired live to GA4 and your CRM (you'll see the first event fire)",
+      "Stack decision — Webflow vs Framer vs custom — with a 12-month cost projection",
+      "Pre-launch QA checklist (30 items) so you ship without an embarrassing leak on day one",
     ],
     agenda: [
       {
         time: "8:45 – 9:15",
-        title: "The one-job rule",
+        title: "Pick the one job the site exists to do",
         detail:
-          "Decide the single action your site exists to drive. Everything else is in service of that.",
+          "Input: your current funnel, last 90 days of revenue sources. Working session: force-rank candidate conversion events, choose the single one. Output: the one number every page on the site is now responsible for moving.",
       },
       {
         time: "9:15 – 10:15",
-        title: "Sitemap + wireframe your top two pages",
+        title: "Wireframe the homepage and #1 conversion page",
         detail:
-          "Live wireframing of homepage and #1 conversion page using the proof-stack framework. No design polish — structure first.",
+          "Input: the proof-stack template, your real testimonials and metrics. Working session: live wireframing in Figma — no design polish, structure first. Output: two pages laid out section-by-section, ready for copy.",
       },
       {
         time: "10:30 – 11:15",
-        title: "Copy that sells, not describes",
+        title: "Write copy that sells — not describes",
         detail:
-          "Write the hero, the offer, and the close for both pages using buyer-language we pull from your real customers (or competitor reviews if you're pre-launch).",
+          "Input: language from your last 5 sales calls (or top competitor reviews if pre-launch). Working session: draft hero, offer, and close together. Output: a complete copy outline you can hand to a writer or paste into your CMS.",
       },
       {
         time: "11:15 – 11:30",
-        title: "Wire the conversion plumbing",
+        title: "Wire events and ship the QA list",
         detail:
-          "Map events, integrations, and the stack. Decide build vs buy with real numbers.",
+          "Input: your GA4 / CRM logins. Working session: fire your first real conversion event in the room. Output: tagging plan, pre-launch QA checklist, and the stack decision in writing.",
       },
     ],
     forYou: [
-      "You're about to commission a site and don't want $15K of regret",
-      "Your current site looks fine but converts like a brick",
-      "You're spending on ads to a homepage you can't defend",
+      "You're paying for traffic that isn't converting and the analytics can't tell you why",
+      "Your site looks fine but you can't point to the line that closes the buyer",
+      "You're about to redesign and refuse to redo it again in a year",
     ],
     notForYou: [
       "You want a portfolio site for vibes",
       "You haven't picked the offer you're selling",
-      "You believe more sections will fix conversion",
+      "You believe adding more sections will fix conversion",
     ],
     agencyServiceTagline: "Site, copy, payments, and analytics — shipped live in 2–3 weeks.",
     faq: makeCommonFaq("$397"),
   },
+
+  /* ─────────── 3. SOCIAL PRESENCE ─────────── */
   {
     slug: "social-presence",
     priceCents: 19700,
@@ -216,69 +221,73 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     icon: Share2,
     title: "Social Presence Workshop",
     capability: "Social presence",
-    oneLiner: "Pick the two channels your buyers actually live on. Own them.",
+    oneLiner: "Pick two channels. Own them. Stop posting into the void.",
     subhead:
-      "Stop posting everywhere and being invisible. We'll choose two channels with surgical fit, rebuild your profiles to convert, and ship a 30-day calendar live in the room.",
+      "Posting to six platforms is the fastest way to dominate zero of them. In one morning we score every channel against your buyer, commit to two, rebuild your profiles to convert, and ship a 30-day calendar — real posts drafted, not 'ideas.'",
     pains: [
       {
-        title: "Posting on six platforms means dominating zero.",
-        body: "Distribution compounds when you concentrate. Spreading thin guarantees you'll quit in 90 days with nothing to show for it.",
+        title: "Spread thin, quit in 90 days, blame the algorithm.",
+        body: "Distribution compounds when you concentrate it. Every channel you 'maintain a presence on' is a tax on the two that could actually grow.",
       },
       {
-        title: "Your profile is a landing page in disguise.",
-        body: "If your bio doesn't make a stranger want to click in 1.5 seconds, the algorithm penalizes you and you blame 'reach.'",
+        title: "Your bio is a landing page in disguise — and yours is leaking.",
+        body: "If a stranger can't decide to click in 1.5 seconds, the platform shows your posts to fewer people next time. Then you call it 'reach,' not what it is: a profile problem.",
       },
       {
-        title: "No cadence, no compounding.",
-        body: "Algorithmic platforms reward reliable shipping. Random posting is the same as silence.",
+        title: "No cadence is the same as silence.",
+        body: "Algorithms reward predictable shipping. Random posting trains the platform to deprioritize you — and trains your audience that you're not serious.",
       },
     ],
     walkOuts: [
-      "Channel-fit scorecard — the two channels you commit to (and the four you stop)",
-      "Profile rewrites for the chosen channels (bio, links, banners)",
-      "30-day content calendar built live, by topic and format",
-      "Hook bank of 30+ proven openers for your niche",
-      "Posting cadence + the lightest tool stack to maintain it",
-      "Engagement playbook — what to comment, where, and to whom",
+      "Channel-fit scorecard — the two channels you commit to and the four you publicly stop",
+      "Profile rewrites for both channels: bio, link, banner, pinned post (drafted live)",
+      "30-day calendar — 20+ posts mapped to pillar, format, and ship date",
+      "Hook bank of 30+ proven openers for your niche, ready to remix",
+      "Weekly cadence and the lightest tool stack to actually hold it (Buffer or Notion + your phone)",
+      "Engagement playbook — what to comment, on whose posts, on what schedule, to be visible to buyers",
     ],
     agenda: [
       {
         time: "8:45 – 9:15",
-        title: "Channel fit, not channel hype",
+        title: "Score every channel and commit to two",
         detail:
-          "Score every major channel against your buyer, offer, and bandwidth. Commit to two. Walk away from the rest.",
+          "Input: 8 major channels scored against your buyer, offer, and bandwidth. Working session: rank them; commit to two; declare the four you're stopping. Output: a one-page channel decision you'll defend for the next 12 months.",
       },
       {
         time: "9:15 – 10:00",
-        title: "Rebuild your profile to convert",
+        title: "Rewrite the profiles to convert",
         detail:
-          "Bio formula, link strategy, banner, and pinned content. Critiqued live.",
+          "Input: the bio formula and link strategy. Working session: rewrite bio, banner, link block, and pinned post live, with critique. Output: profiles ready to copy-paste into both platforms.",
       },
       {
         time: "10:15 – 11:15",
-        title: "30-day calendar, built in the room",
+        title: "Build the 30-day calendar — in the room",
         detail:
-          "Pillars, formats, hooks. Real posts drafted, not 'ideas.'",
+          "Input: 3–4 content pillars, 5 proven post formats, your hook bank. Working session: draft 20 posts against pillar + format + hook. Output: a real calendar you can schedule on Monday, not an idea list.",
       },
       {
         time: "11:15 – 11:30",
-        title: "Cadence and stack",
-        detail: "Schedule, scheduling tool, and the minimum-effort weekly rhythm you'll actually keep.",
+        title: "Lock cadence and the weekly rhythm",
+        detail:
+          "Input: your real weekly bandwidth. Working session: pick the scheduling tool, set the post days, set the engagement window. Output: a 45-minute weekly routine you'll actually keep.",
       },
     ],
     forYou: [
-      "You're tired of posting into the void",
-      "You want a calendar instead of daily anxiety about what to post",
+      "You're posting and getting nothing back, and you're about to quit",
+      "You want a calendar instead of the daily 'what do I post' anxiety",
       "You're ready to be visible to the right 1,000 people, not invisible to a million",
     ],
     notForYou: [
-      "You want to chase viral hits",
+      "You're chasing viral hits",
       "You haven't decided what you sell",
       "You expect followers without shipping",
     ],
-    agencyServiceTagline: "Two channels rebuilt to convert, a 30-day calendar shipped, the cadence held — every month.",
+    agencyServiceTagline:
+      "Two channels rebuilt to convert, a 30-day calendar shipped, the cadence held — every month.",
     faq: makeCommonFaq("$197"),
   },
+
+  /* ─────────── 4. CONTENT ENGINE ─────────── */
   {
     slug: "content-engine",
     priceCents: 29700,
@@ -286,69 +295,73 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     icon: PenTool,
     title: "Content Engine Workshop",
     capability: "A content engine",
-    oneLiner: "Build the compounding asset that makes paid traffic optional.",
+    oneLiner: "Build the only marketing line item that gets cheaper every month.",
     subhead:
-      "Content done right is the only marketing line item that gets cheaper every month. We'll architect the engine — pillars, SEO, production flow, and repurposing — so it ships without grinding you to dust.",
+      "Paid traffic gets more expensive every quarter. Content compounds. In one morning we architect the engine — pillars, SEO map, production flow, and the repurposing system that turns one anchor piece into ten — so it ships without grinding you to dust.",
     pains: [
       {
-        title: "Random posts compound to nothing.",
-        body: "Without pillars and an SEO map, you produce a year of content and rank for zero things you sell.",
+        title: "A year of random posts, and you rank for nothing you sell.",
+        body: "Without pillars tied to buyer intent and a keyword map you can actually win, you produce volume and earn zero pipeline. Volume without strategy is the most expensive way to lose.",
       },
       {
-        title: "Founders are the bottleneck.",
-        body: "If 'content' lives in your head and your calendar, it dies the first week things get busy. Engines outlive moods.",
+        title: "If the engine lives in your head, it dies the first busy week.",
+        body: "Founder-as-engine is a 90-day ceiling. The fix is an assembly line — capture, draft, edit, ship, repurpose — with owners and deadlines that survive a launch crunch.",
       },
       {
         title: "One asset, one use, is rookie math.",
-        body: "A real engine produces one anchor and ten derivatives — across blog, social, email, and video — from the same source.",
+        body: "A real engine turns one anchor piece into 10 derivatives across blog, social, email, and video. Skip the repurposing flow and you're paying full price for a tenth of the reach.",
       },
     ],
     walkOuts: [
-      "3–5 pillar topics tied to your offer and buyer intent",
-      "SEO keyword map — what you can realistically rank for in 6 months",
-      "Content production system (capture, draft, edit, ship)",
-      "Repurposing flow — one anchor piece into 10 derivative assets",
-      "90-day editorial calendar, ready to execute",
-      "Measurement plan — the 3 metrics that prove it's working",
+      "3–5 content pillars tied to your offer and to buyer-intent keywords",
+      "SEO keyword map — the terms you can realistically rank for in 6 months (with difficulty scores)",
+      "Production system documented: capture → draft → edit → publish, with owners and SLAs",
+      "Repurposing flow — one anchor piece exploded into 10 derivative assets, with templates",
+      "90-day editorial calendar locked: titles, formats, ship dates, owner per asset",
+      "Measurement plan — the 3 metrics that prove the engine is working (and the 12 to ignore)",
     ],
     agenda: [
       {
         time: "8:45 – 9:15",
-        title: "Pillars and offer alignment",
+        title: "Pick pillars that lead to a buying decision",
         detail:
-          "Pick the pillars that lead to a buying decision, not the ones that just get clicks.",
+          "Input: your offer, ICP, top 3 competitor content libraries. Working session: rank candidate pillars by buyer-intent, not click potential. Output: 3–5 pillars locked, with a sentence each on why they sell.",
       },
       {
         time: "9:15 – 10:15",
-        title: "Keyword map + topical authority plan",
+        title: "Build the keyword map and topical authority plan",
         detail:
-          "Find the keywords you can win. Cluster them into a publishing roadmap.",
+          "Input: live keyword research against your pillars. Working session: cluster terms into a publishing roadmap, score by realistic win-ability. Output: a 6-month topical authority plan, prioritized.",
       },
       {
         time: "10:30 – 11:15",
-        title: "Production system + repurposing flow",
+        title: "Design the production system + repurposing flow",
         detail:
-          "Design the assembly line. Decide who does what, when, and with which tools.",
+          "Input: your team (or just you), your tool stack. Working session: map the assembly line — who captures, who drafts, who edits, who ships. Output: a documented workflow and the repurposing template (1 → 10).",
       },
       {
         time: "11:15 – 11:30",
-        title: "90 days, mapped",
-        detail: "Lock the first 90 days of titles, formats, and ship dates.",
+        title: "Lock the first 90 days",
+        detail:
+          "Input: the editorial calendar template. Working session: assign titles, formats, and ship dates to the next 90 days. Output: a calendar you can execute against on Monday.",
       },
     ],
     forYou: [
       "You're paying for ads and want to lower the cost of being known",
-      "You've published sporadically and have nothing to show for it",
-      "You want a system your team can run without you",
+      "You've published sporadically for a year and have nothing to show for it",
+      "You want a system your team can run without you on a content kick",
     ],
     notForYou: [
       "You want overnight traffic",
-      "You're unwilling to publish for 6 months before SEO compounds",
-      "You think AI can produce content with zero editing",
+      "You won't commit to publishing for 6 months while SEO compounds",
+      "You think AI can produce shippable content with zero editing",
     ],
-    agencyServiceTagline: "Pillars, SEO map, and 8 anchor pieces a month — repurposed across every channel.",
+    agencyServiceTagline:
+      "Pillars, SEO map, and 8 anchor pieces a month — repurposed across every channel.",
     faq: makeCommonFaq("$297"),
   },
+
+  /* ─────────── 5. AI AS YOUR OPERATING SYSTEM ─────────── */
   {
     slug: "ai-operating-system",
     priceCents: 39700,
@@ -358,66 +371,71 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     capability: "AI as your operating system",
     oneLiner: "Two people doing the work of ten. That's the bar in 2026.",
     subhead:
-      "AI isn't a feature — it's an operating system. We'll audit your workflows, automate five of them live, and hand you a prompt library and governance plan so the leverage compounds.",
+      "Buying ChatGPT seats isn't AI strategy. In one morning we audit your real workflows, automate five of them live in the room, and hand you the prompt library, model choices, and governance plan so the leverage compounds across your team — not just on your laptop.",
     pains: [
       {
-        title: "AI amplifies whatever it's pointed at.",
-        body: "Point it at a fuzzy strategy and you scale the fuzz. Point it at sharp inputs and it scales you. Most founders are doing the former and calling it 'using AI.'",
+        title: "AI amplifies whatever it's pointed at. Most teams are scaling fuzz.",
+        body: "Vague strategy + AI = vague output, faster. Sharp inputs + AI = a 10-person company. The difference isn't the model — it's the inputs no one is investing in.",
       },
       {
         title: "Tools without workflows are toys.",
-        body: "Buying ChatGPT seats doesn't transform a company. Mapping which decisions and outputs AI owns, end-to-end, does.",
+        body: "Seats don't transform companies. Mapping which decisions and outputs AI owns end-to-end does. Most 'AI rollouts' are seat counts with no workflow attached.",
       },
       {
         title: "No governance, no scale.",
-        body: "Without prompt standards, model choices, and quality gates, AI output is inconsistent — and inconsistency at scale is a brand problem.",
+        body: "Without prompt standards, model choices, and quality gates, output drifts the moment more than one person uses it. Inconsistency at scale is a brand problem and a legal one.",
       },
     ],
     walkOuts: [
-      "AI stack audit — what to keep, kill, and add (with cost math)",
-      "5 of your real workflows automated live in the room",
-      "Prompt library tuned to your brand voice and offer",
-      "Governance doc — model choice, quality gates, what AI never touches",
-      "ROI model — hours saved per week, per workflow",
-      "30-day rollout plan to onboard your team without revolt",
+      "AI stack audit — what to keep, kill, and add, with monthly cost math",
+      "5 of your real workflows automated live, with working outputs and your data",
+      "Prompt library tuned to your brand voice — 20+ prompts, organized and reusable",
+      "Governance doc: model choice per task, quality gates, what AI is never allowed to do alone",
+      "ROI model — hours and dollars saved per week, per workflow, with the formula",
+      "30-day rollout plan to onboard the team without revolt (training, ownership, KPI)",
     ],
     agenda: [
       {
         time: "8:45 – 9:15",
-        title: "Workflow audit",
-        detail: "Map your top 15 workflows. Score them for AI leverage. Pick 5 to attack today.",
+        title: "Audit and score your top 15 workflows",
+        detail:
+          "Input: a list of your team's recurring work. Working session: score each by AI leverage, risk, and frequency. Output: the 5 workflows we're attacking before lunch.",
       },
       {
         time: "9:15 – 10:30",
-        title: "Automate 5 workflows live",
+        title: "Automate 5 workflows — live, with your data",
         detail:
-          "Working tools, real outputs, your data. Not slideware.",
+          "Input: real tools (Claude/GPT, n8n or Zapier, your CRM). Working session: build, test, and iterate each automation in the room. Output: 5 working flows you can deploy to the team this week.",
       },
       {
         time: "10:45 – 11:15",
-        title: "Prompt library + governance",
+        title: "Build the prompt library + governance",
         detail:
-          "Build the prompt vault. Set the quality gates. Decide what AI is never allowed to do alone.",
+          "Input: voice guide, brand rules, risk tolerance. Working session: write and organize 20+ prompts, set quality gates, decide what AI never touches alone. Output: a prompt vault and a one-page governance doc.",
       },
       {
         time: "11:15 – 11:30",
-        title: "Rollout plan",
-        detail: "Sequence, owner, training, and the metric that proves it worked.",
+        title: "Sequence the 30-day rollout",
+        detail:
+          "Input: your team and current routines. Working session: pick owner, training cadence, and the one KPI that proves it worked. Output: a dated rollout plan with accountability.",
       },
     ],
     forYou: [
-      "You're a small team trying to operate like a big one",
-      "You've bought AI tools that nobody actually uses",
+      "You're a small team trying to operate like a big one — and you're hitting the headcount wall",
+      "You've bought AI tools nobody actually uses",
       "You're ready to compete on speed, not headcount",
     ],
     notForYou: [
       "You want a generic 'intro to ChatGPT' session",
-      "You expect AI to run your business with no humans in the loop",
-      "You haven't picked the offer yet — automate strategy first, then workflows",
+      "You expect AI to run the business with no humans in the loop",
+      "You haven't picked the offer yet — automate the strategy first, then workflows",
     ],
-    agencyServiceTagline: "30 days, 10 of your workflows rewired around AI — built, tested, and handed off with the prompt library.",
+    agencyServiceTagline:
+      "30 days, 10 of your workflows rewired around AI — built, tested, and handed off with the prompt library.",
     faq: makeCommonFaq("$397"),
   },
+
+  /* ─────────── 6. EMAIL, CRM & AUTOMATION ─────────── */
   {
     slug: "email-crm-automation",
     priceCents: 39700,
@@ -425,69 +443,73 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     icon: Mail,
     title: "Email, CRM & Automation Workshop",
     capability: "Email, CRM, and automation",
-    oneLiner: "Most revenue lives in the second, fifth, and twelfth touch. Build the machine that delivers them.",
+    oneLiner: "Most of your revenue is in touches 2, 5, and 12. Build the machine that sends them.",
     subhead:
-      "First-touch sales is for amateurs. Pros build the follow-up engine — segmented, automated, and on brand — that turns one-time interest into compounding revenue.",
+      "First-touch sales is for amateurs. Pros build the follow-up engine. In one morning we pick your CRM, map the lifecycle, write three sequences live, and fix the deliverability settings most founders don't know are quietly killing their open rates.",
     pains: [
       {
-        title: "No CRM = no memory.",
-        body: "Every conversation starts from zero. You forget who said what, when, and what to do next. The deal dies in your inbox.",
+        title: "No CRM = no memory = no deal.",
+        body: "Every conversation starts from zero. You forget who said what and what you owe them next. The deal doesn't die in a meeting — it dies in your inbox at 11pm.",
       },
       {
         title: "No lifecycle, no LTV.",
-        body: "Customers leave because no one talked to them after the sale. Email lifecycle is the cheapest LTV lift you'll ever buy.",
+        body: "Customers churn because no one talked to them after the sale. Lifecycle email is the cheapest LTV lift you'll ever buy — and the one most founders never set up.",
       },
       {
         title: "Manual follow-up is a tax on your future self.",
-        body: "Every hour you spend writing a follow-up email is an hour you don't spend selling. Automate the obvious so you can do the irreplaceable.",
+        body: "Every hour writing a 'just circling back' email is an hour you don't spend selling. Automate the obvious so you can do the irreplaceable.",
       },
     ],
     walkOuts: [
-      "CRM choice and setup blueprint (Hubspot, Attio, Folk — picked for you)",
-      "Lifecycle map — every touch from cold lead to repeat buyer",
-      "3 sequences written live (welcome, nurture, win-back)",
-      "Segmentation plan that earns higher open and reply rates",
-      "Automation blueprint — what triggers what, in which tool",
-      "Deliverability checklist so your sequences hit the inbox",
+      "CRM picked and set up: Hubspot, Attio, or Folk — chosen for your stage and team, not by hype",
+      "Lifecycle map — every touch from cold lead to repeat buyer, with trigger and owner",
+      "3 sequences written live: welcome (5 emails), nurture (7 emails), win-back (4 emails)",
+      "Segmentation plan that earns higher open and reply rates without sounding spammy",
+      "Automation blueprint — what fires what, in which tool, and how to debug it",
+      "Deliverability checklist: SPF, DKIM, DMARC, warmup plan, sender reputation rules",
     ],
     agenda: [
       {
         time: "8:45 – 9:15",
         title: "Pick the CRM and stop debating",
         detail:
-          "We'll match the right CRM to your stage, team, and offer — and end the analysis paralysis.",
+          "Input: your stage, team size, offer, current tools. Working session: score Hubspot vs Attio vs Folk against your reality. Output: a decision, with the setup tasks listed.",
       },
       {
         time: "9:15 – 10:15",
-        title: "Map the lifecycle",
+        title: "Map the lifecycle end-to-end",
         detail:
-          "Stranger → lead → buyer → repeat → advocate. Every stage gets a touch, a trigger, and an owner.",
+          "Input: your funnel and buyer journey. Working session: stranger → lead → buyer → repeat → advocate, with the trigger and owner at each stage. Output: a lifecycle diagram you can wire into the CRM this week.",
       },
       {
         time: "10:30 – 11:15",
-        title: "Write 3 sequences live",
+        title: "Write 3 sequences — live",
         detail:
-          "Welcome, nurture, win-back. Drafts done in the room, with subject lines you can ship.",
+          "Input: subject-line patterns that beat 40% open rates in 2026. Working session: draft welcome, nurture, and win-back together. Output: 16 emails ready to schedule, with the rationale documented for future edits.",
       },
       {
         time: "11:15 – 11:30",
-        title: "Automation + deliverability",
-        detail: "Wire the triggers. Set up SPF/DKIM. Avoid the spam folder.",
+        title: "Wire automation and lock deliverability",
+        detail:
+          "Input: your domain DNS access. Working session: set up SPF/DKIM/DMARC, configure the warmup plan, document the trigger logic. Output: a deliverability scorecard and your sending domain primed for the inbox.",
       },
     ],
     forYou: [
-      "You're losing deals in the inbox you can't see",
-      "You have a list but no sequences running against it",
-      "You want to stop manually writing follow-ups at 11 PM",
+      "You're losing deals in an inbox you can't see",
+      "You have a list and zero sequences running against it",
+      "You're done manually writing follow-ups at 11pm",
     ],
     notForYou: [
       "You have no offer and no audience yet",
       "You believe email is dead",
       "You want spam-cannon outreach without a list strategy",
     ],
-    agencyServiceTagline: "CRM picked and live, 3 production sequences shipped, deliverability fixed — in 3 weeks.",
+    agencyServiceTagline:
+      "CRM picked and live, 3 production sequences shipped, deliverability fixed — in 3 weeks.",
     faq: makeCommonFaq("$397"),
   },
+
+  /* ─────────── 7. SALES SYSTEMS ─────────── */
   {
     slug: "sales-systems",
     priceCents: 39700,
@@ -495,69 +517,73 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     icon: TrendingUp,
     title: "Sales Systems Workshop",
     capability: "Sales systems",
-    oneLiner: "A repeatable path from interested stranger to closed deal — written down, not vibed.",
+    oneLiner: "Stop closing on mood. Start closing on system.",
     subhead:
-      "Founders close on hustle. Companies close on system. We'll build your ICP, script, pipeline, and weekly sales rhythm so the next deal doesn't depend on how you feel that day.",
+      "Founders close on hustle. Companies close on system. In one morning we build your ICP scorecard, your discovery script, your pipeline stages with exit criteria, and the weekly rhythm that makes your forecast something investors can read — not something you guess.",
     pains: [
       {
-        title: "No ICP = expensive conversations.",
-        body: "Without a sharp ICP, you take every call. Most go nowhere. Each one steals time from a deal that would have closed.",
+        title: "No ICP = expensive conversations with people who'll never buy.",
+        body: "Without a sharp ICP, every call gets your time. Most go nowhere. Each one steals an hour from a deal that would have closed.",
       },
       {
-        title: "No script, no consistency.",
-        body: "Every founder thinks they 'wing it well.' Recording your calls says otherwise. A script is permission to stop reinventing the same conversation.",
+        title: "Recording your calls says you don't 'wing it well.'",
+        body: "Every founder believes they freestyle gracefully. The transcripts disagree. A written script is permission to stop reinventing the same conversation 40 times.",
       },
       {
         title: "Pipelines in your head are pipelines that leak.",
-        body: "If your forecast lives in your gut, it isn't a forecast. Investors and operators ask for pipeline math. Build the math.",
+        body: "If your forecast lives in your gut, it isn't a forecast. The first investor or board meeting that asks for pipeline math will end the conversation if you can't show it.",
       },
     ],
     walkOuts: [
-      "ICP scorecard — qualify in 90 seconds, disqualify faster",
-      "Sales script for your top conversation (discovery or demo)",
-      "Pipeline stages with exit criteria for each",
-      "Objection bank — your 8 most common, with handlers that close",
-      "Weekly sales rhythm — pipeline review, forecasting, accountability",
-      "Tool stack recommendation — CRM, dialer, scheduler",
+      "ICP scorecard — qualify a lead in 90 seconds, disqualify in 30",
+      "Sales script for your #1 conversation (discovery or demo) — 25 minutes, with a clear next step",
+      "Pipeline stages with exit criteria for each (what has to be true to advance)",
+      "Objection bank — your 8 most common objections, with handlers tested against real deals",
+      "Weekly sales rhythm — pipeline review, forecast call, accountability, in 30 minutes",
+      "Tool stack recommendation — CRM, dialer, scheduler — with cost math and switching cost",
     ],
     agenda: [
       {
         time: "8:45 – 9:15",
         title: "Define the ICP that buys fastest",
         detail:
-          "Stop selling to anyone with a pulse. Score and rank your buyer types by speed-to-close and LTV.",
+          "Input: your last 20 deals (won and lost). Working session: score buyer types by speed-to-close, LTV, and effort. Output: an ICP scorecard you can run any inbound through in 90 seconds.",
       },
       {
         time: "9:15 – 10:15",
         title: "Build the discovery script",
         detail:
-          "Questions that diagnose, not interrogate. A script you can run in 25 minutes that ends with a clear next step.",
+          "Input: the 12 questions that diagnose, not interrogate. Working session: draft your script live, role-play it twice, cut everything that doesn't earn its slot. Output: a 25-minute discovery you can run on Monday.",
       },
       {
         time: "10:30 – 11:15",
-        title: "Pipeline, stages, and objection bank",
+        title: "Set pipeline stages and pre-write the top 8 objections",
         detail:
-          "Set up the pipeline in your CRM. Define exit criteria. Pre-write the top 8 objections so they never catch you off guard.",
+          "Input: your CRM and current stages (or lack of them). Working session: define stages with exit criteria, pre-write handlers for your 8 most common objections. Output: a pipeline you can forecast against.",
       },
       {
         time: "11:15 – 11:30",
-        title: "Weekly rhythm",
-        detail: "The 30-minute pipeline review that prevents 90% of forecast misses.",
+        title: "Lock the weekly rhythm",
+        detail:
+          "Input: your real calendar. Working session: set the day, time, and 30-minute agenda for your pipeline review. Output: the recurring meeting that prevents 90% of forecast misses.",
       },
     ],
     forYou: [
-      "You're selling but can't explain why deals close (or don't)",
-      "You want a forecast you can show investors",
-      "You're hiring a first salesperson and need a repeatable motion",
+      "You're selling and can't explain why deals close (or don't)",
+      "You need a forecast you can show investors or a board",
+      "You're hiring your first salesperson and need a motion they can run",
     ],
     notForYou: [
       "You haven't talked to a paying customer yet",
       "You believe sales is purely art, never science",
       "You want a magic close line",
     ],
-    agencyServiceTagline: "ICP, script, pipeline in your CRM, and a 30-day handoff so your team runs it without you.",
+    agencyServiceTagline:
+      "ICP, script, pipeline in your CRM, and a 30-day handoff so your team runs it without you.",
     faq: makeCommonFaq("$397"),
   },
+
+  /* ─────────── 8. LEGAL, FINANCIAL & OPS ─────────── */
   {
     slug: "legal-financial-ops",
     priceCents: 19700,
@@ -565,54 +591,55 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     icon: Scale,
     title: "Legal, Financial & Operational Scaffolding Workshop",
     capability: "Legal, financial, and operational scaffolding",
-    oneLiner: "The boring stuff that keeps you legal, bankable, and impossible to embarrass.",
+    oneLiner: "The boring stuff that decides whether you're bankable.",
     subhead:
-      "Entity, contracts, books, payroll, insurance. Founders skip it until a customer, a bank, or an investor asks — and then it's a five-figure scramble. We'll set the scaffolding in one morning.",
+      "Founders skip the scaffolding until a customer, a bank, or an investor asks — and then it's a five-figure scramble and a deal you almost lost. In one morning we make the entity decision, lock the contract suite, set up the books, and hand you the operations calendar that keeps you out of trouble.",
     pains: [
       {
-        title: "Wrong entity = wrong tax bill.",
-        body: "LLC vs S-corp vs C-corp is a six-figure decision in disguise. Picking wrong now costs you for every year you operate.",
+        title: "Wrong entity is a six-figure tax mistake on a 5-year delay.",
+        body: "LLC vs S-corp vs C-corp isn't paperwork — it's the structural decision that determines your tax bill, your funding options, and your exit. Picking wrong now costs you every year you operate.",
       },
       {
-        title: "No contracts = no leverage.",
-        body: "Handshake deals die in disputes. A 4-page services agreement saves a 4-month lawsuit.",
+        title: "No contracts = no leverage when the dispute starts.",
+        body: "Handshake deals look fine until they're not. A 4-page services agreement saves a 4-month lawsuit and a relationship you didn't need to lose.",
       },
       {
-        title: "Messy books = no funding, no exit.",
-        body: "When a bank, investor, or buyer asks for financials, you have 5 business days. Without clean books, the conversation ends there.",
+        title: "Messy books = no funding, no loan, no exit.",
+        body: "When a bank, investor, or acquirer asks for financials, you have 5 business days. Without a clean monthly close, the conversation ends in the request email.",
       },
     ],
     walkOuts: [
-      "Entity decision — LLC / S-corp / C-corp with rationale",
-      "Contract checklist — services, NDAs, IP assignment, contractor agreements",
-      "Bookkeeping setup plan — tool, chart of accounts, monthly close rhythm",
-      "Payroll + contractor readiness — when to switch and how",
-      "Insurance + compliance checklist for your industry",
-      "Operations calendar — the 12 things you must do every month, on time",
+      "Entity decision in writing: LLC, S-corp, or C-corp, with the rationale and the tax math",
+      "Contract suite checklist: MSA, NDA, IP assignment, contractor agreement, terms of service",
+      "Bookkeeping setup plan: tool (QuickBooks or Xero), chart of accounts, monthly close rhythm",
+      "Payroll + contractor readiness — when to switch from 1099 to W-2 and the trigger criteria",
+      "Insurance + compliance checklist tailored to your industry (GL, E&O, cyber, workers' comp)",
+      "12-month operations calendar — every filing, renewal, and tax deadline, with owner",
     ],
     agenda: [
       {
         time: "8:45 – 9:15",
-        title: "Entity decision — done in one session",
+        title: "Make the entity decision — done in one session",
         detail:
-          "We'll walk you through the LLC/S-corp/C-corp choice using your real numbers and 3-year plan.",
+          "Input: your real numbers, state, partners, and 3-year revenue plan. Working session: run the LLC/S-corp/C-corp decision tree with your numbers. Output: a written entity recommendation with the tax math behind it.",
       },
       {
         time: "9:15 – 10:15",
-        title: "Contracts that actually protect you",
+        title: "Lock the contracts that actually protect you",
         detail:
-          "The 5 contracts every business needs. Templates you can adapt, with the clauses founders skip and regret.",
+          "Input: 5 contract templates every business needs. Working session: walk through clause-by-clause, mark the ones to adapt, flag the ones founders skip and regret. Output: a contract suite checklist with your specific edits noted.",
       },
       {
         time: "10:30 – 11:15",
-        title: "Books, payroll, and insurance",
+        title: "Set up books, payroll, and insurance",
         detail:
-          "Pick the bookkeeping stack. Decide payroll cadence. Identify the 2 insurance lines you can't operate without.",
+          "Input: your bank account, current tools, team structure. Working session: pick the bookkeeping stack, decide payroll cadence, identify the 2 insurance lines you can't operate without. Output: a setup plan with vendors and costs.",
       },
       {
         time: "11:15 – 11:30",
-        title: "Operations calendar",
-        detail: "The 12 monthly tasks that keep you out of trouble — automated where possible.",
+        title: "Build the 12-month operations calendar",
+        detail:
+          "Input: your state's filing schedule, your fiscal year. Working session: map every recurring deadline (taxes, renewals, filings, insurance). Output: a dated calendar with owners — automated reminders where possible.",
       },
     ],
     forYou: [
@@ -625,7 +652,8 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "You're not ready to commit to a business entity yet",
       "You're hoping to skip taxes",
     ],
-    agencyServiceTagline: "LLC, EIN, contracts, books, invoicing, insurance checklist — done in 10 business days.",
+    agencyServiceTagline:
+      "LLC, EIN, contracts, books, invoicing, insurance checklist — done in 10 business days.",
     faq: makeCommonFaq("$197"),
   },
 ];
@@ -639,12 +667,14 @@ export function getBuildWorkshop(slug: string): BuildWorkshop | undefined {
  * matching AGENCY_SERVICES entry. Single source of truth for service
  * name, retail price, and CTA href.
  */
-export function getWorkshopAgencyOffer(slug: string): {
-  name: string;
-  tagline: string;
-  priceLabel: string;
-  href: string;
-} | undefined {
+export function getWorkshopAgencyOffer(slug: string):
+  | {
+      name: string;
+      tagline: string;
+      priceLabel: string;
+      href: string;
+    }
+  | undefined {
   const w = getBuildWorkshop(slug);
   if (!w) return undefined;
   const svc = AGENCY_SERVICES.find((s) => s.slug === slug);
@@ -680,4 +710,3 @@ if (import.meta.env?.DEV) {
     }
   }
 }
-
