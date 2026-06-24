@@ -40,6 +40,11 @@ export interface VentureSnapshot {
   research_brief: any;
   status: SnapshotStatus;
   enrichment_progress: { stage?: string; progress?: number; message?: string; updatedAt?: string } | null;
+  concept_summary: string | null;
+  value_proposition: string | null;
+  concept_status: "draft" | "refining" | "locked";
+  concept_locked_at: string | null;
+  concept_iterations: any[];
   created_at: string;
   updated_at: string;
 }
