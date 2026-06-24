@@ -1964,54 +1964,81 @@ export type Database = {
       venture_snapshots: {
         Row: {
           business_concept: string | null
+          city: string | null
           company_name: string | null
           competitor_data: Json | null
+          country: string | null
           created_at: string
           differentiation_statement: string | null
           enrichment_progress: Json | null
           extracted_data: Json | null
+          founder_email: string | null
+          founder_name: string | null
+          founder_phone: string | null
           id: string
+          industry: string | null
           market_research: string | null
+          market_scope: string | null
+          region: string | null
           research_artifacts: Json | null
           research_brief: Json | null
           scraped_content: string | null
           status: Database["public"]["Enums"]["venture_snapshot_status"]
+          sub_industry: string | null
           updated_at: string
           user_id: string
           website_url: string | null
         }
         Insert: {
           business_concept?: string | null
+          city?: string | null
           company_name?: string | null
           competitor_data?: Json | null
+          country?: string | null
           created_at?: string
           differentiation_statement?: string | null
           enrichment_progress?: Json | null
           extracted_data?: Json | null
+          founder_email?: string | null
+          founder_name?: string | null
+          founder_phone?: string | null
           id?: string
+          industry?: string | null
           market_research?: string | null
+          market_scope?: string | null
+          region?: string | null
           research_artifacts?: Json | null
           research_brief?: Json | null
           scraped_content?: string | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
+          sub_industry?: string | null
           updated_at?: string
           user_id: string
           website_url?: string | null
         }
         Update: {
           business_concept?: string | null
+          city?: string | null
           company_name?: string | null
           competitor_data?: Json | null
+          country?: string | null
           created_at?: string
           differentiation_statement?: string | null
           enrichment_progress?: Json | null
           extracted_data?: Json | null
+          founder_email?: string | null
+          founder_name?: string | null
+          founder_phone?: string | null
           id?: string
+          industry?: string | null
           market_research?: string | null
+          market_scope?: string | null
+          region?: string | null
           research_artifacts?: Json | null
           research_brief?: Json | null
           scraped_content?: string | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
+          sub_industry?: string | null
           updated_at?: string
           user_id?: string
           website_url?: string | null
