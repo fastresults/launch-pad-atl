@@ -452,6 +452,29 @@ function Inner() {
                       if (path !== "manual") setWebsiteUrl(data.url);
                       setBusinessConcept(data.concept);
                       if (path === "competitor" && data.diff) setDiff(data.diff);
+
+                      // Fill founder + market fields so the form is one-click submittable
+                      const { data: userData } = await supabase.auth.getUser();
+                      const u = userData.user;
+                      const meta: any = u?.user_metadata ?? {};
+                      const ts = Date.now();
+                      if (!founderName.trim()) {
+                        setFounderName(meta.display_name || meta.name || meta.full_name || "Test Founder");
+                      }
+                      if (!founderEmail.trim()) {
+                        setFounderEmail(u?.email || `test+${ts}@example.com`);
+                      }
+                      if (!founderPhone.trim()) setFounderPhone("+1 555 010 0123");
+                      if (!city.trim()) setCity("Atlanta");
+                      if (!region.trim()) setRegion("Georgia");
+                      if (!country.trim()) setCountry("United States");
+                      setMarketScope("national");
+                      if (!industry.trim()) setIndustry(guessIndustry(data.concept));
+                      if (!subIndustry.trim()) {
+                        const firstSentence = String(data.concept).split(/[.!?]/)[0]?.trim() ?? "";
+                        if (firstSentence) setSubIndustry(firstSentence.slice(0, 60));
+                      }
+
                       toast.success(`Filled from ${data.company}`);
                     } catch (e) {
                       toast.error(e instanceof Error ? e.message : "Couldn't fill test concept");
