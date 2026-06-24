@@ -386,6 +386,58 @@ export function DocumentViewer({
         </div>
 
         <div className="max-h-[calc(88vh-72px)] overflow-y-auto bg-gradient-to-b from-background/40 to-transparent">
+          <div className="mx-auto mt-4 max-w-[72ch] px-6">
+            <div className="group relative overflow-hidden rounded-lg ring-1 ring-white/10">
+              <AspectRatio ratio={16 / 9}>
+                {heroUrl ? (
+                  <img
+                    src={heroUrl}
+                    alt={title}
+                    loading="eager"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-accent/20">
+                    {heroLoading ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Generating visual…
+                      </div>
+                    ) : heroPath ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => generateHero(false)}
+                        disabled={heroLoading}
+                      >
+                        <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                        Generate visual
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </AspectRatio>
+              {heroUrl && (
+                <button
+                  type="button"
+                  onClick={() => generateHero(true)}
+                  disabled={heroLoading}
+                  title="Regenerate visual"
+                  className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-1 text-[11px] text-white opacity-0 backdrop-blur transition group-hover:opacity-100 disabled:opacity-50"
+                >
+                  {heroLoading ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-3 w-3" />
+                  )}
+                  Regenerate
+                </button>
+              )}
+            </div>
+          </div>
+
           {tocOpen && headings.length >= 4 && (
             <nav className="mx-auto mt-4 max-w-[72ch] rounded-lg border border-white/10 bg-card/60 px-4 py-3">
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
