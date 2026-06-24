@@ -139,6 +139,8 @@ export default function App() {
             <Route path="/admin/review" element={<AdminReview />} />
             <Route path="/admin/registrations" element={<AdminRegistrations />} />
             <Route path="/admin/members" element={<AdminMembers />} />
+            <Route path="/admin/hub" element={<AdminHub />} />
+
             <Route path="/admin/media" element={<AdminMedia />} />
             <Route path="/admin/testimonials" element={<AdminTestimonials />} />
             <Route path="/admin/cohorts" element={<AdminCohorts />} />
