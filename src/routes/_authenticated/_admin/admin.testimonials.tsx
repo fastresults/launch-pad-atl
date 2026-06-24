@@ -233,34 +233,33 @@ function SettingsForm({
       </div>
 
       <div className="space-y-2">
-        <Label>Pause between videos (seconds)</Label>
+        <Label>Scroll speed (px / second)</Label>
         <Input
           type="number"
-          min={0}
-          max={30}
-          step={0.5}
-          value={s.pause_seconds}
-          onChange={(e) => set("pause_seconds", Number(e.target.value))}
+          min={10}
+          max={200}
+          step={5}
+          value={s.scroll_speed_px_s}
+          onChange={(e) => set("scroll_speed_px_s", Number(e.target.value))}
         />
+        <p className="text-xs text-muted-foreground">Lower = slower. Hover pauses the row.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:col-span-2">
-        <div className="flex items-center justify-between rounded-md border p-3">
-          <Label>Autoplay</Label>
-          <Switch checked={s.autoplay} onCheckedChange={(v) => set("autoplay", v)} />
-        </div>
-        <div className="flex items-center justify-between rounded-md border p-3">
-          <Label>Start muted</Label>
-          <Switch checked={s.start_muted} onCheckedChange={(v) => set("start_muted", v)} />
-        </div>
-        <div className="flex items-center justify-between rounded-md border p-3">
-          <Label>Loop</Label>
-          <Switch checked={s.loop} onCheckedChange={(v) => set("loop", v)} />
-        </div>
-        <div className="flex items-center justify-between rounded-md border p-3">
-          <Label>Show on mobile</Label>
-          <Switch checked={s.show_on_mobile} onCheckedChange={(v) => set("show_on_mobile", v)} />
-        </div>
+      <div className="space-y-2">
+        <Label>Direction</Label>
+        <select
+          className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+          value={s.direction}
+          onChange={(e) => set("direction", e.target.value as "left" | "right")}
+        >
+          <option value="left">Right → Left</option>
+          <option value="right">Left → Right</option>
+        </select>
+      </div>
+
+      <div className="flex items-center justify-between rounded-md border p-3 md:col-span-2">
+        <Label>Show on mobile</Label>
+        <Switch checked={s.show_on_mobile} onCheckedChange={(v) => set("show_on_mobile", v)} />
       </div>
 
       <div className="md:col-span-2 flex justify-end">
