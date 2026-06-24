@@ -238,7 +238,7 @@ export default function BuildWorkshopPage() {
               {w.agencyService.priceLabel}
             </p>
             <p className="mt-3 max-w-2xl text-sm opacity-90 md:text-base">
-              Attended the workshop? We'll knock the {w.priceLabel} off any engagement over $1,000.
+              The workshop hands you the strategy, templates, and tool stack to ship it yourself. Decide you'd rather we build it? We'll credit the {w.priceLabel} toward any engagement over $1,000.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
