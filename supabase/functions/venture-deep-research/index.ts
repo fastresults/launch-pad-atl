@@ -1,0 +1,458 @@
+// Founders Hub — Deep research pass before document generation.
+// Pipeline: scrape own site → discover competitors → scrape competitors
+// → industry/market research (Perplexity) → customer voice (Firecrawl /search on Reddit/HN)
+// → pricing benchmarks → AI synthesis into structured research_brief.
+//
+// Artifacts persist in venture_snapshots.research_artifacts so retries can skip
+// completed steps. The synthesized research_brief and extracted_data are written
+// at the end. Citations are preserved end-to-end.
+
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
+
+const FIRECRAWL_V2 = "https://api.firecrawl.dev/v2";
+
+// ============ Step utilities ============
+
+type Artifact = {
+  step: string;
+  source_url?: string;
+  fetched_at: string;
+  content: string;
+  metadata?: Record<string, unknown>;
+};
+
+async function updateProgress(
+  supabase: any,
+  id: string,
+  stage: string,
+  progress: number,
+  message: string,
+) {
+  await supabase
+    .from("venture_snapshots")
+    .update({
+      enrichment_progress: {
+        stage,
+        progress,
+        message,
+        updatedAt: new Date().toISOString(),
+      },
+    })
+    .eq("id", id);
+}
+
+async function appendArtifacts(supabase: any, id: string, artifacts: Artifact[]) {
+  const { data } = await supabase
+    .from("venture_snapshots")
+    .select("research_artifacts")
+    .eq("id", id)
+    .maybeSingle();
+  const existing = Array.isArray(data?.research_artifacts) ? data.research_artifacts : [];
+  await supabase
+    .from("venture_snapshots")
+    .update({ research_artifacts: [...existing, ...artifacts] })
+    .eq("id", id);
+}
+
+// ============ Firecrawl helpers ============
+
+async function fcScrape(url: string): Promise<{ markdown: string; title?: string } | null> {
+  if (!FIRECRAWL_API_KEY) return null;
+  try {
+    const res = await fetch(`${FIRECRAWL_V2}/scrape`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url,
+        formats: ["markdown"],
+        onlyMainContent: true,
+      }),
+      signal: AbortSignal.timeout(45_000),
+    });
+    if (!res.ok) {
+      console.error(`firecrawl scrape ${url} -> ${res.status}`);
+      return null;
+    }
+    const json = await res.json();
+    const md = json?.data?.markdown ?? json?.markdown ?? "";
+    const title = json?.data?.metadata?.title ?? json?.metadata?.title;
+    if (!md) return null;
+    return { markdown: md.slice(0, 12_000), title };
+  } catch (e) {
+    console.error("fcScrape error", url, e);
+    return null;
+  }
+}
+
+async function fcSearch(query: string, opts?: { limit?: number; tbs?: string }): Promise<
+  { url: string; title?: string; description?: string }[]
+> {
+  if (!FIRECRAWL_API_KEY) return [];
+  try {
+    const res = await fetch(`${FIRECRAWL_V2}/search`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query,
+        limit: opts?.limit ?? 8,
+        tbs: opts?.tbs,
+      }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!res.ok) {
+      console.error(`firecrawl search "${query}" -> ${res.status}`);
+      return [];
+    }
+    const json = await res.json();
+    const results = json?.data?.web ?? json?.web ?? json?.data ?? [];
+    return (Array.isArray(results) ? results : []).map((r: any) => ({
+      url: r.url,
+      title: r.title,
+      description: r.description ?? r.snippet,
+    })).filter((r: any) => r.url);
+  } catch (e) {
+    console.error("fcSearch error", query, e);
+    return [];
+  }
+}
+
+// ============ Perplexity helper ============
+
+async function pplxResearch(prompt: string): Promise<{ content: string; citations: string[] } | null> {
+  if (!PERPLEXITY_API_KEY) return null;
+  try {
+    const res = await fetch("https://api.perplexity.ai/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "sonar-pro",
+        messages: [
+          { role: "system", content: "You are a precise market analyst. Cite sources for every claim." },
+          { role: "user", content: prompt },
+        ],
+        search_recency_filter: "year",
+      }),
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!res.ok) {
+      console.error(`perplexity -> ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      return null;
+    }
+    const json = await res.json();
+    return {
+      content: json?.choices?.[0]?.message?.content ?? "",
+      citations: Array.isArray(json?.citations) ? json.citations : [],
+    };
+  } catch (e) {
+    console.error("pplx error", e);
+    return null;
+  }
+}
+
+// ============ Synthesis ============
+
+const SYNTH_SYSTEM = `You are an AI venture-intelligence analyst.
+You will receive a founder's concept plus a research corpus (own site, competitor pages, market analysis, customer voice, pricing).
+Your job is to synthesize a structured research_brief AND a 4-section extracted_data object.
+
+CRITICAL RULES:
+1. Only state facts present in SOURCES. If a fact is not in the sources, write "[needs founder input]".
+2. Cite source URLs in brackets like [https://example.com] right after every claim that came from a source.
+3. Be specific and plausible. Never write filler like "TBD" or "various".
+4. Return ONLY valid JSON matching the schema below — no markdown, no commentary.
+
+Schema:
+{
+  "research_brief": {
+    "company": { "summary": "", "positioning": "" },
+    "competitors": [{ "name": "", "url": "", "positioning": "", "pricing": "", "strengths": "", "weaknesses": "" }],
+    "market": { "size": "", "trends": "", "regulation": "", "tailwinds": "", "headwinds": "" },
+    "customer_voice": [{ "quote": "", "source_url": "", "theme": "" }],
+    "pricing_benchmarks": [{ "competitor": "", "tier": "", "price": "", "url": "" }],
+    "gaps": ["..."],
+    "confidence": { "company": 0, "competitors": 0, "market": 0, "customer_voice": 0, "pricing": 0, "overall": 0 }
+  },
+  "extracted_data": {
+    "foundation": { "company_name": "", "founder_name": "", "location": "", "industry": "", "concept": "", "problem": "" },
+    "market":     { "target_customers": "", "value_proposition": "", "differentiators": "", "market_size": "" },
+    "operations": { "revenue_model": "", "pricing": "", "key_processes": "", "team": "" },
+    "vision":     { "short_term_goals": "", "long_term_goals": "", "mission": "", "vision": "" }
+  }
+}`;
+
+async function synthesize(corpus: string): Promise<any> {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-3-flash-preview",
+      messages: [
+        { role: "system", content: SYNTH_SYSTEM },
+        { role: "user", content: corpus },
+      ],
+      response_format: { type: "json_object" },
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`Gateway ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  }
+  const json = await res.json();
+  const content = json?.choices?.[0]?.message?.content ?? "{}";
+  try {
+    return JSON.parse(content);
+  } catch {
+    // one retry with explicit "fix the JSON" prompt
+    const fix = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: "Return only valid JSON. Fix the following so it parses." },
+          { role: "user", content },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    });
+    const fjson = await fix.json();
+    return JSON.parse(fjson?.choices?.[0]?.message?.content ?? "{}");
+  }
+}
+
+// ============ Main pipeline ============
+
+async function runResearch(supabase: any, snapshotId: string) {
+  const { data: snap, error } = await supabase
+    .from("venture_snapshots")
+    .select("*")
+    .eq("id", snapshotId)
+    .maybeSingle();
+  if (error || !snap) throw new Error(error?.message ?? "Snapshot not found");
+
+  // reset artifacts on fresh run
+  await supabase.from("venture_snapshots").update({ research_artifacts: [] }).eq("id", snapshotId);
+
+  const concept = snap.business_concept ?? "";
+  const companyName = snap.company_name ?? "";
+  const ownUrl = snap.website_url ?? null;
+  const keyword = (companyName || concept.split(/[.\n]/)[0] || "").slice(0, 80);
+
+  // ---------- Step 1: Own/competitor seed scrape ----------
+  await updateProgress(supabase, snapshotId, "scraping", 10, "Scraping the seed website");
+  const ownArtifacts: Artifact[] = [];
+  if (ownUrl) {
+    const r = await fcScrape(ownUrl);
+    if (r) {
+      ownArtifacts.push({
+        step: "own_site",
+        source_url: ownUrl,
+        fetched_at: new Date().toISOString(),
+        content: r.markdown,
+        metadata: { title: r.title },
+      });
+    }
+  }
+  if (ownArtifacts.length) await appendArtifacts(supabase, snapshotId, ownArtifacts);
+
+  // ---------- Step 2: Discover competitors ----------
+  await updateProgress(supabase, snapshotId, "competitors", 25, "Discovering competitors");
+  const compQueries = [
+    `${keyword} alternatives`,
+    `${keyword} competitors comparison`,
+  ];
+  const compCandidates = new Map<string, { url: string; title?: string; description?: string }>();
+  for (const q of compQueries) {
+    const hits = await fcSearch(q, { limit: 6 });
+    for (const h of hits) {
+      const host = (() => { try { return new URL(h.url).hostname.replace(/^www\./, ""); } catch { return null; } })();
+      if (!host) continue;
+      // skip the founder's own domain and obvious aggregators
+      if (ownUrl && host && ownUrl.includes(host)) continue;
+      if (/^(g2|capterra|getapp|trustpilot|producthunt|reddit|medium|youtube|linkedin|wikipedia)\./i.test(host)) continue;
+      if (!compCandidates.has(host)) compCandidates.set(host, h);
+      if (compCandidates.size >= 5) break;
+    }
+    if (compCandidates.size >= 5) break;
+  }
+  await appendArtifacts(supabase, snapshotId, [{
+    step: "competitor_discovery",
+    fetched_at: new Date().toISOString(),
+    content: JSON.stringify(Array.from(compCandidates.values()), null, 2),
+  }]);
+
+  // ---------- Step 3: Scrape competitor homepages ----------
+  await updateProgress(supabase, snapshotId, "competitors", 40, "Scraping competitor pages");
+  const compArtifacts: Artifact[] = [];
+  for (const cand of Array.from(compCandidates.values()).slice(0, 5)) {
+    const r = await fcScrape(cand.url);
+    if (r) {
+      compArtifacts.push({
+        step: "competitor",
+        source_url: cand.url,
+        fetched_at: new Date().toISOString(),
+        content: r.markdown,
+        metadata: { title: r.title ?? cand.title, description: cand.description },
+      });
+    }
+  }
+  if (compArtifacts.length) await appendArtifacts(supabase, snapshotId, compArtifacts);
+
+  // ---------- Step 4: Industry/market via Perplexity ----------
+  await updateProgress(supabase, snapshotId, "market", 60, "Analyzing the market with Perplexity");
+  const marketPrompt = `Analyze the market for the following venture. Cover: (1) market size and growth, (2) major trends in the last 12 months, (3) regulatory or compliance considerations, (4) tailwinds, (5) headwinds. Cite sources.\n\nVenture: ${companyName}\nConcept: ${concept}`;
+  const market = await pplxResearch(marketPrompt);
+  if (market) {
+    await appendArtifacts(supabase, snapshotId, [{
+      step: "market_research",
+      fetched_at: new Date().toISOString(),
+      content: market.content,
+      metadata: { citations: market.citations, source: "perplexity:sonar-pro" },
+    }]);
+  }
+
+  // ---------- Step 5: Customer voice (Reddit/HN) ----------
+  await updateProgress(supabase, snapshotId, "voice", 75, "Gathering customer voice");
+  const voiceQueries = [
+    `${keyword} site:reddit.com problem OR complaint OR alternative`,
+    `${keyword} site:news.ycombinator.com`,
+  ];
+  const voiceHits: { url: string; title?: string; description?: string }[] = [];
+  for (const q of voiceQueries) {
+    const hits = await fcSearch(q, { limit: 5, tbs: "qdr:y" });
+    voiceHits.push(...hits);
+    if (voiceHits.length >= 8) break;
+  }
+  if (voiceHits.length) {
+    await appendArtifacts(supabase, snapshotId, [{
+      step: "customer_voice",
+      fetched_at: new Date().toISOString(),
+      content: voiceHits.slice(0, 10).map((h) => `- [${h.title ?? h.url}](${h.url})\n  ${h.description ?? ""}`).join("\n\n"),
+    }]);
+  }
+
+  // ---------- Step 6: Synthesis ----------
+  await updateProgress(supabase, snapshotId, "synthesis", 88, "Synthesizing research brief");
+
+  // Load all artifacts back to build corpus
+  const { data: fresh } = await supabase
+    .from("venture_snapshots")
+    .select("research_artifacts")
+    .eq("id", snapshotId)
+    .maybeSingle();
+  const artifacts: Artifact[] = fresh?.research_artifacts ?? [];
+
+  const corpus = [
+    `# Founder input`,
+    `Company name: ${companyName || "[not provided]"}`,
+    `Website: ${ownUrl ?? "[not provided]"}`,
+    `Concept: ${concept}`,
+    snap.differentiation_statement ? `Differentiation: ${snap.differentiation_statement}` : "",
+    ``,
+    `# Research corpus`,
+    ...artifacts.map((a) => `## ${a.step}${a.source_url ? ` — ${a.source_url}` : ""}\n${a.content}`),
+  ].filter(Boolean).join("\n\n");
+
+  // hard cap corpus to ~120k chars to stay within model limits
+  const cappedCorpus = corpus.length > 120_000 ? corpus.slice(0, 120_000) + "\n\n[truncated]" : corpus;
+
+  const result = await synthesize(cappedCorpus);
+  const research_brief = result?.research_brief ?? {};
+  const extracted_data = result?.extracted_data ?? {};
+
+  await updateProgress(supabase, snapshotId, "validation", 96, "Finalizing");
+
+  await supabase
+    .from("venture_snapshots")
+    .update({
+      scraped_content: ownArtifacts[0]?.content ?? null,
+      research_brief,
+      extracted_data,
+      status: "review",
+      enrichment_progress: {
+        stage: "complete",
+        progress: 100,
+        message: "Ready for review",
+        updatedAt: new Date().toISOString(),
+      },
+    })
+    .eq("id", snapshotId);
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  let snapshotId: string | undefined;
+  try {
+    const body = await req.json();
+    snapshotId = body.snapshotId;
+    if (!snapshotId) {
+      return new Response(JSON.stringify({ error: "snapshotId required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
+    if (!FIRECRAWL_API_KEY) throw new Error("FIRECRAWL_API_KEY missing — connect Firecrawl in Connectors");
+    if (!PERPLEXITY_API_KEY) console.warn("PERPLEXITY_API_KEY missing — market step will be skipped");
+
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    // Run in background so HTTP returns immediately
+    const work = runResearch(supabase, snapshotId!).catch(async (e) => {
+      console.error("deep research failed", e);
+      const message = e instanceof Error ? e.message : String(e);
+      await supabase
+        .from("venture_snapshots")
+        .update({
+          enrichment_progress: {
+            stage: "error",
+            progress: 0,
+            message,
+            updatedAt: new Date().toISOString(),
+          },
+        })
+        .eq("id", snapshotId!);
+    });
+
+    // @ts-ignore EdgeRuntime is provided by Supabase
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(work);
+    }
+
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

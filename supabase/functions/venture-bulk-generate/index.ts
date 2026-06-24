@@ -48,6 +48,11 @@ Produce a single document in clean Markdown. Use ## headings, short paragraphs, 
 Be specific, plausible, actionable. Never use filler like "TBD".
 Target ~600-900 words.
 
+CITATIONS:
+- When a claim comes from the research brief, cite it inline with footnote markers like [^1], [^2], reusing numbers when re-citing the same source.
+- At the very end of the document, before the QUALITY_SCORE line, output a "## Sources" section listing each footnote on its own line: [^1]: https://source-url — short label.
+- If a section has no research support, write the claim plainly without a footnote rather than inventing a source.
+
 After the markdown, on a final line, output exactly:
 QUALITY_SCORE: <0-100 integer>`;
 
@@ -55,7 +60,8 @@ QUALITY_SCORE: <0-100 integer>`;
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
     `Category: ${type.category}`,
-    `\n## Venture brief\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,
+    `\n## Venture brief (founder-reviewed)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,
+    snap.research_brief ? `\n## Research brief (use for evidence + citations)\n${JSON.stringify(snap.research_brief, null, 2)}` : "",
     depContext ? `\n## Upstream docs\n${depContext}` : "",
   ].filter(Boolean).join("\n\n");
 

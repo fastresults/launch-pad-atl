@@ -27,6 +27,8 @@ export interface VentureSnapshot {
   competitor_data: any;
   market_research: string | null;
   extracted_data: any;
+  research_artifacts: any[] | null;
+  research_brief: any;
   status: SnapshotStatus;
   enrichment_progress: { stage?: string; progress?: number; message?: string; updatedAt?: string } | null;
   created_at: string;
@@ -109,8 +111,8 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
     .single();
   if (error) throw new Error(error.message);
 
-  // Fire-and-forget enrichment edge function
-  void supabase.functions.invoke("venture-extract-concept", { body: { snapshotId: data.id } });
+  // Fire-and-forget deep research enrichment
+  void supabase.functions.invoke("venture-deep-research", { body: { snapshotId: data.id } });
 
   return { id: data.id };
 }
@@ -158,7 +160,7 @@ export async function retryEnrichment(input: any): Promise<void> {
     })
     .eq("id", id);
   if (error) throw new Error(error.message);
-  void supabase.functions.invoke("venture-extract-concept", { body: { snapshotId: id } });
+  void supabase.functions.invoke("venture-deep-research", { body: { snapshotId: id } });
 }
 
 export async function listDocumentTypes(): Promise<VentureDocumentType[]> {

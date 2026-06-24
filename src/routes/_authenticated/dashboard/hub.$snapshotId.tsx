@@ -146,7 +146,7 @@ function EnrichingStep({ snapshot, onRetry }: { snapshot: any; onRetry: () => vo
       </div>
       <Progress value={pct} />
       <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-        {["scraping", "research", "extraction", "validation"].map((stage) => (
+        {["scraping", "competitors", "market", "voice", "synthesis", "validation"].map((stage) => (
           <span key={stage} className={`rounded-full border px-2 py-0.5 ${
             prog.stage === stage ? "border-foreground text-foreground" : "border-white/10"
           }`}>{stage}</span>
@@ -248,9 +248,12 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
       <div>
         <h2 className="text-xl font-semibold">Review the brief</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          We've drafted this from your concept. Edit anything that's off — every document downstream uses this.
+          We've drafted this from your concept and the deep-research pass. Edit anything that's off — every document downstream uses this.
         </p>
       </div>
+
+      <ResearchPanel snapshot={snapshot} />
+
 
       {SECTIONS.map((section) => (
         <div key={section.key} className="space-y-3 rounded-2xl border border-white/10 bg-card p-5">
@@ -481,3 +484,116 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     </div>
   );
 }
+
+function ResearchPanel({ snapshot }: { snapshot: any }) {
+  const brief = snapshot.research_brief;
+  const artifacts: any[] = Array.isArray(snapshot.research_artifacts) ? snapshot.research_artifacts : [];
+  if (!brief && !artifacts.length) return null;
+
+  const competitors = brief?.competitors ?? [];
+  const market = brief?.market ?? {};
+  const voice = brief?.customer_voice ?? [];
+  const pricing = brief?.pricing_benchmarks ?? [];
+  const gaps: string[] = brief?.gaps ?? [];
+  const confidence = brief?.confidence ?? {};
+  const sources = artifacts
+    .filter((a) => a.source_url)
+    .map((a) => ({ url: a.source_url, label: a.metadata?.title ?? a.step }));
+
+  const overall = Math.round(confidence.overall ?? 0);
+
+  return (
+    <details open className="rounded-2xl border border-white/10 bg-card p-5">
+      <summary className="flex cursor-pointer items-center justify-between">
+        <span className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Deep research
+        </span>
+        <span className="text-xs text-muted-foreground">
+          {sources.length} sources · confidence {overall}/100
+        </span>
+      </summary>
+
+      {gaps.length > 0 && (
+        <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+          <div className="mb-1 font-medium text-amber-200">Needs your input</div>
+          <ul className="list-inside list-disc space-y-0.5 text-amber-100/80">
+            {gaps.slice(0, 6).map((g, i) => <li key={i}>{g}</li>)}
+          </ul>
+        </div>
+      )}
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        {competitors.length > 0 && (
+          <section>
+            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Competitors</h4>
+            <ul className="space-y-2 text-sm">
+              {competitors.slice(0, 5).map((c: any, i: number) => (
+                <li key={i} className="rounded-lg border border-white/10 p-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium">{c.name || c.url}</span>
+                    {c.url && <a href={c.url} target="_blank" rel="noreferrer" className="text-[11px] text-muted-foreground hover:text-foreground">↗</a>}
+                  </div>
+                  {c.positioning && <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{c.positioning}</p>}
+                  {c.pricing && <p className="mt-0.5 text-[11px] text-muted-foreground">Pricing: {c.pricing}</p>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {(market.size || market.trends || market.tailwinds) && (
+          <section>
+            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Market</h4>
+            <dl className="space-y-1.5 text-xs">
+              {market.size && <div><dt className="text-muted-foreground">Size</dt><dd>{market.size}</dd></div>}
+              {market.trends && <div><dt className="text-muted-foreground">Trends</dt><dd>{market.trends}</dd></div>}
+              {market.tailwinds && <div><dt className="text-muted-foreground">Tailwinds</dt><dd>{market.tailwinds}</dd></div>}
+              {market.headwinds && <div><dt className="text-muted-foreground">Headwinds</dt><dd>{market.headwinds}</dd></div>}
+            </dl>
+          </section>
+        )}
+
+        {voice.length > 0 && (
+          <section className="md:col-span-2">
+            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer voice</h4>
+            <ul className="space-y-1.5 text-xs">
+              {voice.slice(0, 4).map((v: any, i: number) => (
+                <li key={i} className="rounded border border-white/10 p-2">
+                  <p className="italic text-muted-foreground">"{v.quote}"</p>
+                  {v.source_url && <a href={v.source_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-[11px] text-muted-foreground hover:text-foreground">{v.theme ?? "source"} ↗</a>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {pricing.length > 0 && (
+          <section className="md:col-span-2">
+            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Pricing benchmarks</h4>
+            <ul className="space-y-1 text-xs">
+              {pricing.slice(0, 6).map((p: any, i: number) => (
+                <li key={i} className="flex flex-wrap gap-x-2"><span className="font-medium">{p.competitor}</span><span className="text-muted-foreground">{p.tier}</span><span>{p.price}</span></li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+
+      {sources.length > 0 && (
+        <details className="mt-4 text-xs">
+          <summary className="cursor-pointer text-muted-foreground">{sources.length} sources</summary>
+          <ul className="mt-2 space-y-0.5">
+            {sources.map((s, i) => (
+              <li key={i}>
+                <a href={s.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground">
+                  [{i + 1}] {s.label} — {s.url}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </details>
+  );
+}
+
