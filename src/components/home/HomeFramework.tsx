@@ -51,19 +51,20 @@ function Hero() {
       <div className="absolute inset-0 bg-background/65" />
       <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-24 lg:py-32">
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white/85 md:text-sm md:tracking-[0.2em]">
-          <Sparkles className="size-3.5" /> The Strategic Foundation Workshop · {WORKSHOP_PRICE_LABEL}
+          <Sparkles className="size-3.5" /> For founders starting a startup · {WORKSHOP_PRICE_LABEL}
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
           The strategic foundation every startup needs —{" "}
           <span className="text-gradient-brand">built in one morning.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          Twenty strategy deliverables a consultant would charge $50,000+ for. You get every one of them in a morning, for {WORKSHOP_PRICE_LABEL}.{" "}
+          Built for founders who want to hit the ground running. Twenty strategy deliverables a consultant would charge $50,000+ for — yours in a morning, for {WORKSHOP_PRICE_LABEL}.{" "}
           <span className="font-medium text-white">No upsell in the room.</span>
         </p>
         <p className="mt-4 max-w-2xl text-sm text-white/80 md:text-base">
           Coffee's on us. If you want help building the brand, the site, or the legal side after — we do that too. Your call, no pressure.
         </p>
+
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 md:mt-10">
           <Link
@@ -106,15 +107,16 @@ function Framework() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          The main attraction
+          What every founder walks out with
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
           Your complete strategic foundation.{" "}
           <span className="text-gradient-brand">Built in one room, in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          {TOTAL_DELIVERABLES} deliverables across three stages — each one built live for your idea, never pulled from a framework. A fraction of the cost of hiring it out, and yours to keep for {WORKSHOP_PRICE_LABEL}.
+          {TOTAL_DELIVERABLES} deliverables across three stages — each one built live for your startup, never pulled from a framework. A fraction of the cost of hiring it out, and yours to keep for {WORKSHOP_PRICE_LABEL}.
         </p>
+
 
         <div className="mt-14 space-y-14 md:space-y-20">
           {FRAMEWORK_STAGES.map((stage) => (
@@ -174,8 +176,9 @@ function HonestRoadmap() {
           <span className="text-gradient-brand">The business is what you build on top of it.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Every founder we've watched fail had the same problem: they skipped the foundation, then spent $50K on a website, brand, and ads that couldn't tell a coherent story. The workshop gives you the story, the frameworks, and the tool stack to ship it. After that, the modern build layer — site, social, content, AI, sales — is what turns the story into revenue.
+          Every founder we've watched fail had the same problem: they skipped the foundation, then spent $50K on a website, brand, and ads that couldn't tell a coherent story. The workshop gives founders the story, the frameworks, and the tool stack to ship it. After that, the modern build layer — site, social, content, AI, sales — is what turns the story into revenue.
         </p>
+
 
         {/* Act 1 — Why foundation first */}
         <div className="mt-12 md:mt-16">
@@ -220,8 +223,9 @@ function HonestRoadmap() {
             <Sparkles className="size-4 text-primary" /> The modern build layer — what comes next
           </div>
           <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-            In 2026, no startup wins on strategy alone. Eight capabilities turn the plan into a business that attracts customers, converts them, and keeps them coming back. Each half-day workshop hands over the strategy, the frameworks, and the exact tool stack to DIY it — from $197 — or we'll build it for you.
+            In 2026, no founder wins on strategy alone. Eight capabilities turn the plan into a startup that attracts customers, converts them, and keeps them coming back. Each half-day workshop hands over the strategy, the frameworks, and the exact tool stack to DIY it — from $197 — or we'll build it for you.
           </p>
+
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {BUILD_LAYER.map((b) => {
@@ -411,11 +415,12 @@ function BottomCTA() {
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-hero-gradient p-8 md:p-12 lg:p-16">
           <div className="relative max-w-3xl text-white">
             <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-              Stop turning the idea over in your head.
+              Stop turning the startup over in your head.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
-              {WORKSHOP_PRICE_LABEL} gets you in the room with Adam and a real plan you can start using Monday. If you want our team to build the brand, the site, or the launch after — we're a click away. If not, you keep the plan either way.
+              {WORKSHOP_PRICE_LABEL} gets you in the room with Adam and a real plan your startup can run with Monday. If you want our team to build the brand, the site, or the launch after — we're a click away. If not, you keep the plan either way.
             </p>
+
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4 md:mt-8">
               <Link
                 to="/register"
