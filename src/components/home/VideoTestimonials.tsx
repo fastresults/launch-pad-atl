@@ -1,12 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getTestimonialSettings,
   listPublishedTestimonials,
   type TestimonialWithUrls,
+  type TestimonialSliderSettings,
 } from "@/lib/testimonials.functions";
-import { ChevronLeft, ChevronRight, Volume2, VolumeX, Pause, Play } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const CARD_WIDTH_DESKTOP = 236; // 9:16 → 236 × 420
+const CARD_HEIGHT_DESKTOP = 420;
+const CARD_GAP = 16;
 
 export function VideoTestimonials() {
   const { data: settings } = useQuery({
@@ -20,201 +25,153 @@ export function VideoTestimonials() {
     staleTime: 5 * 60_000,
   });
 
-  const enabled = settings?.enabled ?? true;
-  if (!enabled || items.length === 0) return null;
-
-  return <Slider items={items} settings={settings!} />;
+  if (!settings?.enabled || items.length === 0) return null;
+  return <Marquee items={items} settings={settings} />;
 }
 
-function Slider({
+function Marquee({
   items,
   settings,
 }: {
   items: TestimonialWithUrls[];
-  settings: NonNullable<Awaited<ReturnType<typeof getTestimonialSettings>>>;
+  settings: TestimonialSliderSettings;
 }) {
-  const [index, setIndex] = useState(0);
-  const [muted, setMuted] = useState(settings.start_muted);
-  const [paused, setPaused] = useState(false);
-  const [hover, setHover] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const advanceTimer = useRef<number | null>(null);
-  const reducedMotion = useMemo(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    [],
-  );
+  // Duplicate enough times to comfortably fill > 2× viewport for a seamless loop
+  const minRepeats = Math.max(2, Math.ceil((typeof window !== "undefined" ? window.innerWidth : 1400) * 2 / (items.length * (CARD_WIDTH_DESKTOP + CARD_GAP))));
+  const loop = useMemo(() => {
+    const out: TestimonialWithUrls[] = [];
+    for (let i = 0; i < minRepeats; i++) out.push(...items);
+    return out;
+  }, [items, minRepeats]);
 
-  const next = useCallback(() => {
-    setIndex((i) => {
-      const n = i + 1;
-      if (n >= items.length) return settings.loop ? 0 : i;
-      return n;
-    });
-  }, [items.length, settings.loop]);
+  // One sequence width (single copy of items) — the marquee translates by this distance per cycle
+  const sequenceWidth = items.length * (CARD_WIDTH_DESKTOP + CARD_GAP);
+  const speed = Math.max(10, Math.min(200, settings.scroll_speed_px_s || 40));
+  const durationSec = sequenceWidth / speed;
+  const directionSign = settings.direction === "right" ? 1 : -1;
 
-  const prev = useCallback(() => {
-    setIndex((i) => {
-      const n = i - 1;
-      if (n < 0) return settings.loop ? items.length - 1 : 0;
-      return n;
-    });
-  }, [items.length, settings.loop]);
-
-  // Clear any pending advance timer
-  const clearAdvance = () => {
-    if (advanceTimer.current) {
-      window.clearTimeout(advanceTimer.current);
-      advanceTimer.current = null;
-    }
-  };
-
-  // Manage play/pause based on hover/paused state
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (hover || paused || reducedMotion || !settings.autoplay) {
-      v.pause();
-      clearAdvance();
-    } else {
-      v.play().catch(() => {/* autoplay blocked */});
-    }
-  }, [hover, paused, index, reducedMotion, settings.autoplay]);
-
-  // When current video ends, wait pause_seconds then advance
-  const onEnded = () => {
-    clearAdvance();
-    if (hover || paused || !settings.autoplay || reducedMotion) return;
-    advanceTimer.current = window.setTimeout(() => {
-      next();
-    }, Math.max(0, settings.pause_seconds) * 1000);
-  };
-
-  useEffect(() => () => clearAdvance(), []);
-
-  const current = items[index];
+  const reducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   return (
-    <section className="relative border-b border-border bg-background py-12 md:py-16">
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="mb-8 text-center md:mb-10">
-          <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-            {settings.heading}
-          </h2>
-          {settings.subheading && (
-            <p className="mt-2 text-sm text-muted-foreground md:text-base">
-              {settings.subheading}
-            </p>
-          )}
-        </div>
+    <section
+      className={cn(
+        "relative border-y border-border bg-background py-12 md:py-16",
+        !settings.show_on_mobile && "hidden md:block",
+      )}
+    >
+      {/* Heading inside container */}
+      <div className="mx-auto mb-8 max-w-6xl px-6 text-center md:mb-10">
+        <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
+          {settings.heading}
+        </h2>
+        {settings.subheading && (
+          <p className="mt-2 text-sm text-muted-foreground md:text-base">
+            {settings.subheading}
+          </p>
+        )}
+      </div>
 
+      {/* Edge-to-edge strip */}
+      <div
+        className="group/marquee relative w-full overflow-hidden"
+        style={{
+          maskImage:
+            "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
+        }}
+      >
         <div
-          className={cn(
-            "relative mx-auto overflow-hidden rounded-2xl bg-black shadow-xl",
-            !settings.show_on_mobile && "hidden md:block",
-          )}
-          style={{ maxWidth: 880 }}
-          onMouseEnter={() => setHover(true)}
-          onMouseLeave={() => setHover(false)}
-          onFocus={() => setHover(true)}
-          onBlur={() => setHover(false)}
+          className="flex w-max"
+          style={
+            reducedMotion
+              ? { overflowX: "auto" }
+              : {
+                  gap: `${CARD_GAP}px`,
+                  animation: `vt-marquee-${settings.direction} ${durationSec}s linear infinite`,
+                  animationPlayState: "running",
+                }
+          }
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLDivElement).style.animationPlayState = "paused";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLDivElement).style.animationPlayState = "running";
+          }}
         >
-          <div className="relative aspect-video w-full bg-black">
-            <video
-              key={current.id}
-              ref={videoRef}
-              src={current.video_url ?? undefined}
-              poster={current.poster_url ?? undefined}
-              muted={muted}
-              autoPlay={settings.autoplay && !reducedMotion}
-              playsInline
-              preload="metadata"
-              onEnded={onEnded}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-
-            {/* Caption overlay */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 md:p-6">
-              <div className="text-white">
-                <div className="text-sm font-medium md:text-base">
-                  {current.founder_name}
-                  {current.founder_role && (
-                    <span className="text-white/80"> · {current.founder_role}</span>
-                  )}
-                </div>
-                {current.startup_name && (
-                  <div className="text-xs text-white/80 md:text-sm">{current.startup_name}</div>
-                )}
-                {current.quote && (
-                  <p className="mt-2 max-w-2xl text-sm italic text-white/90 md:text-base">
-                    "{current.quote}"
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div className="absolute right-3 top-3 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setMuted((m) => !m)}
-                className="rounded-full bg-black/50 p-2 text-white backdrop-blur transition-colors hover:bg-black/70"
-                aria-label={muted ? "Unmute" : "Mute"}
-              >
-                {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaused((p) => !p)}
-                className="rounded-full bg-black/50 p-2 text-white backdrop-blur transition-colors hover:bg-black/70"
-                aria-label={paused ? "Play" : "Pause"}
-              >
-                {paused ? <Play className="size-4" /> : <Pause className="size-4" />}
-              </button>
-            </div>
-
-            {items.length > 1 && (
-              <>
-                <button
-                  type="button"
-                  onClick={prev}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white backdrop-blur transition-colors hover:bg-black/70"
-                  aria-label="Previous testimonial"
-                >
-                  <ChevronLeft className="size-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={next}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white backdrop-blur transition-colors hover:bg-black/70"
-                  aria-label="Next testimonial"
-                >
-                  <ChevronRight className="size-5" />
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Dots */}
-          {items.length > 1 && (
-            <div className="flex items-center justify-center gap-2 bg-black/90 py-3">
-              {items.map((it, i) => (
-                <button
-                  key={it.id}
-                  type="button"
-                  onClick={() => setIndex(i)}
-                  aria-label={`Show testimonial ${i + 1}`}
-                  className={cn(
-                    "h-2 rounded-full transition-all",
-                    i === index ? "w-6 bg-white" : "w-2 bg-white/40 hover:bg-white/70",
-                  )}
-                />
-              ))}
-            </div>
-          )}
+          {loop.map((it, i) => (
+            <TestimonialCard key={`${it.id}-${i}`} item={it} />
+          ))}
         </div>
       </div>
+
+      {/* Keyframes — translate by exactly one sequence width so loop is seamless */}
+      <style>{`
+        @keyframes vt-marquee-left {
+          from { transform: translate3d(0, 0, 0); }
+          to   { transform: translate3d(${directionSign * sequenceWidth}px, 0, 0); }
+        }
+        @keyframes vt-marquee-right {
+          from { transform: translate3d(${-sequenceWidth}px, 0, 0); }
+          to   { transform: translate3d(0, 0, 0); }
+        }
+      `}</style>
     </section>
+  );
+}
+
+function TestimonialCard({ item }: { item: TestimonialWithUrls }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [muted, setMuted] = useState(true);
+
+  return (
+    <div
+      className="group/card relative shrink-0 overflow-hidden rounded-2xl bg-black shadow-lg ring-1 ring-white/10"
+      style={{ width: CARD_WIDTH_DESKTOP, height: CARD_HEIGHT_DESKTOP }}
+    >
+      <video
+        ref={videoRef}
+        src={item.video_url ?? undefined}
+        poster={item.poster_url ?? undefined}
+        muted={muted}
+        loop
+        autoPlay
+        playsInline
+        preload="metadata"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+
+      {/* Mute toggle (only visible on card hover) */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setMuted((m) => {
+            const next = !m;
+            if (videoRef.current) videoRef.current.muted = next;
+            return next;
+          });
+        }}
+        className="absolute right-2 top-2 z-10 rounded-full bg-black/60 p-1.5 text-white opacity-0 backdrop-blur transition-opacity group-hover/card:opacity-100"
+        aria-label={muted ? "Unmute" : "Mute"}
+      >
+        {muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
+      </button>
+
+      {/* Caption */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 text-white">
+        <div className="text-sm font-semibold leading-tight">{item.founder_name}</div>
+        <div className="text-[11px] text-white/80">
+          {[item.founder_role, item.startup_name].filter(Boolean).join(" · ")}
+        </div>
+        {item.quote && (
+          <p className="mt-1.5 line-clamp-2 text-[12px] italic text-white/90">
+            "{item.quote}"
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
