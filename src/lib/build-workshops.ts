@@ -632,3 +632,51 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
 export function getBuildWorkshop(slug: string): BuildWorkshop | undefined {
   return BUILD_WORKSHOPS.find((w) => w.slug === slug);
 }
+
+/**
+ * Resolve the "Have us build it" offer for a workshop by reading the
+ * matching AGENCY_SERVICES entry. Single source of truth for service
+ * name, retail price, and CTA href.
+ */
+export function getWorkshopAgencyOffer(slug: string): {
+  name: string;
+  tagline: string;
+  priceLabel: string;
+  href: string;
+} | undefined {
+  const w = getBuildWorkshop(slug);
+  if (!w) return undefined;
+  const svc = AGENCY_SERVICES.find((s) => s.slug === slug);
+  if (!svc) return undefined;
+  return {
+    name: `Done-for-you: ${svc.capability}`,
+    tagline: w.agencyServiceTagline,
+    priceLabel: svc.priceLabel,
+    href: svc.ctaHref,
+  };
+}
+
+// Dev-mode drift guard: every workshop has a matching agency service,
+// and the workshop tier matches what workshopPriceForRetailCents() would pick
+// from the retail price label.
+if (import.meta.env?.DEV) {
+  for (const w of BUILD_WORKSHOPS) {
+    const svc = AGENCY_SERVICES.find((s) => s.slug === w.slug);
+    if (!svc) {
+      // eslint-disable-next-line no-console
+      console.warn(`[build-workshops] no AGENCY_SERVICES entry for slug "${w.slug}"`);
+      continue;
+    }
+    const m = svc.priceLabel.match(/\$([\d,]+)/);
+    if (!m) continue;
+    const retailCents = Number(m[1].replace(/,/g, "")) * 100;
+    const expected = workshopPriceForRetailCents(retailCents);
+    if (expected.cents !== w.priceCents) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[build-workshops] tier drift for "${w.slug}": retail ${svc.priceLabel} → expected ${expected.label}, got ${w.priceLabel}`,
+      );
+    }
+  }
+}
+
