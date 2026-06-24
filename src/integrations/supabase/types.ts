@@ -1463,6 +1463,9 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string | null
+          founders_hub_access: boolean
+          founders_hub_granted_at: string | null
+          founders_hub_granted_by: string | null
           id: string
           member_status: string
           rejected_reason: string | null
@@ -1477,6 +1480,9 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          founders_hub_access?: boolean
+          founders_hub_granted_at?: string | null
+          founders_hub_granted_by?: string | null
           id?: string
           member_status?: string
           rejected_reason?: string | null
@@ -1491,6 +1497,9 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          founders_hub_access?: boolean
+          founders_hub_granted_at?: string | null
+          founders_hub_granted_by?: string | null
           id?: string
           member_status?: string
           rejected_reason?: string | null
@@ -1760,6 +1769,240 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      venture_document_types: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          dependencies: string[]
+          description: string
+          estimated_minutes: number
+          free_tier: boolean
+          icon: string | null
+          name: string
+          sort_order: number
+          type: string
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          created_at?: string
+          dependencies?: string[]
+          description: string
+          estimated_minutes?: number
+          free_tier?: boolean
+          icon?: string | null
+          name: string
+          sort_order: number
+          type: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          dependencies?: string[]
+          description?: string
+          estimated_minutes?: number
+          free_tier?: boolean
+          icon?: string | null
+          name?: string
+          sort_order?: number
+          type?: string
+        }
+        Relationships: []
+      }
+      venture_documents: {
+        Row: {
+          content: string | null
+          content_version_history: Json
+          created_at: string
+          document_type: string
+          id: string
+          metadata: Json
+          quality_score: number | null
+          snapshot_id: string
+          status: Database["public"]["Enums"]["venture_document_status"]
+          updated_at: string
+          version: number
+          word_count: number | null
+        }
+        Insert: {
+          content?: string | null
+          content_version_history?: Json
+          created_at?: string
+          document_type: string
+          id?: string
+          metadata?: Json
+          quality_score?: number | null
+          snapshot_id: string
+          status?: Database["public"]["Enums"]["venture_document_status"]
+          updated_at?: string
+          version?: number
+          word_count?: number | null
+        }
+        Update: {
+          content?: string | null
+          content_version_history?: Json
+          created_at?: string
+          document_type?: string
+          id?: string
+          metadata?: Json
+          quality_score?: number | null
+          snapshot_id?: string
+          status?: Database["public"]["Enums"]["venture_document_status"]
+          updated_at?: string
+          version?: number
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_documents_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venture_generation_failures: {
+        Row: {
+          attempt: number
+          created_at: string
+          document_type: string
+          error: string | null
+          id: string
+          snapshot_id: string
+        }
+        Insert: {
+          attempt?: number
+          created_at?: string
+          document_type: string
+          error?: string | null
+          id?: string
+          snapshot_id: string
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          document_type?: string
+          error?: string | null
+          id?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_generation_failures_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venture_generation_jobs: {
+        Row: {
+          attempts: number
+          circuit_breaker_open: boolean
+          completed_at: string | null
+          created_at: string
+          current_document_type: string | null
+          error: string | null
+          id: string
+          progress_pct: number
+          snapshot_id: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["venture_job_status"]
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          circuit_breaker_open?: boolean
+          completed_at?: string | null
+          created_at?: string
+          current_document_type?: string | null
+          error?: string | null
+          id?: string
+          progress_pct?: number
+          snapshot_id: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["venture_job_status"]
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          circuit_breaker_open?: boolean
+          completed_at?: string | null
+          created_at?: string
+          current_document_type?: string | null
+          error?: string | null
+          id?: string
+          progress_pct?: number
+          snapshot_id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["venture_job_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_generation_jobs_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venture_snapshots: {
+        Row: {
+          business_concept: string | null
+          company_name: string | null
+          competitor_data: Json | null
+          created_at: string
+          differentiation_statement: string | null
+          enrichment_progress: Json | null
+          extracted_data: Json | null
+          id: string
+          market_research: string | null
+          scraped_content: string | null
+          status: Database["public"]["Enums"]["venture_snapshot_status"]
+          updated_at: string
+          user_id: string
+          website_url: string | null
+        }
+        Insert: {
+          business_concept?: string | null
+          company_name?: string | null
+          competitor_data?: Json | null
+          created_at?: string
+          differentiation_statement?: string | null
+          enrichment_progress?: Json | null
+          extracted_data?: Json | null
+          id?: string
+          market_research?: string | null
+          scraped_content?: string | null
+          status?: Database["public"]["Enums"]["venture_snapshot_status"]
+          updated_at?: string
+          user_id: string
+          website_url?: string | null
+        }
+        Update: {
+          business_concept?: string | null
+          company_name?: string | null
+          competitor_data?: Json | null
+          created_at?: string
+          differentiation_statement?: string | null
+          enrichment_progress?: Json | null
+          extracted_data?: Json | null
+          id?: string
+          market_research?: string | null
+          scraped_content?: string | null
+          status?: Database["public"]["Enums"]["venture_snapshot_status"]
+          updated_at?: string
+          user_id?: string
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -2040,6 +2283,21 @@ export type Database = {
         | "completed"
         | "failed"
         | "skipped"
+      venture_document_status: "pending" | "generating" | "complete" | "failed"
+      venture_job_status:
+        | "queued"
+        | "running"
+        | "paused"
+        | "completed"
+        | "failed"
+        | "canceled"
+      venture_snapshot_status:
+        | "input"
+        | "enriching"
+        | "review"
+        | "generating"
+        | "complete"
+        | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2199,6 +2457,23 @@ export const Constants = {
         "completed",
         "failed",
         "skipped",
+      ],
+      venture_document_status: ["pending", "generating", "complete", "failed"],
+      venture_job_status: [
+        "queued",
+        "running",
+        "paused",
+        "completed",
+        "failed",
+        "canceled",
+      ],
+      venture_snapshot_status: [
+        "input",
+        "enriching",
+        "review",
+        "generating",
+        "complete",
+        "archived",
       ],
     },
   },
