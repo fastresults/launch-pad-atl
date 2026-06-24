@@ -215,6 +215,9 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
         </div>
       )}
 
+      {!locked && <EpiphanyPanel snapshot={snapshot} onApplied={applyDraft} onChanged={onChanged} />}
+
+
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
         <button onClick={() => setShowHistory((v) => !v)} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
           <History className="h-3 w-3" />{iterations.length} iteration{iterations.length === 1 ? "" : "s"}
