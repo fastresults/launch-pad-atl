@@ -27,6 +27,7 @@ import {
   listFailures,
 } from "@/lib/foundersHub.functions";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
+import { ConceptStudio } from "@/components/hub/ConceptStudio";
 import {
   ArrowLeft,
   Loader2,
