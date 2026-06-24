@@ -191,6 +191,17 @@ QUALITY_SCORE: <0-100 integer>`;
     version: nextVersion,
     content_version_history: history.slice(0, 10),
   }, { onConflict: "snapshot_id,document_type" });
+
+  // Cache brand_tokens for fast read by Brand Studio + website_prd.
+  if (documentType === "visual_identity_brief") {
+    const m = raw.match(/```json\s*([\s\S]*?)```/);
+    if (m) {
+      try {
+        const tokens = JSON.parse(m[1]);
+        await supabase.from("venture_snapshots").update({ brand_tokens: tokens }).eq("id", snapshotId);
+      } catch { /* ignore parse error */ }
+    }
+  }
 }
 
 // Group document types into dependency layers (Kahn's algorithm).
