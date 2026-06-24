@@ -20,7 +20,7 @@ export default function BuildIndexPage() {
             <span className="text-gradient-brand">One business that actually runs.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            Strategy is the foundation. These eight capabilities are the building. Each is a half-day workshop — <span className="text-foreground">from $197</span> — taught by the people who'd otherwise charge you $5K+ to build it for you.
+            Strategy is the foundation. These eight capabilities are the building. Each half-day workshop — <span className="text-foreground">from $197</span> — hands you the strategy, the templates, and the exact tool stack to ship it yourself. Or hand it to the team that would otherwise charge you $5K+ to build it for you.
           </p>
         </div>
       </section>
@@ -81,7 +81,7 @@ export default function BuildIndexPage() {
               Skip the learning curve. Hand it to our team.
             </h2>
             <p className="mt-4 text-base opacity-90 md:text-lg">
-              Same crew that runs the workshops. We'll build the brand, the website, the systems, and the engines — so you can stay focused on customers.
+              Same crew that runs the workshops, using the same templates and tool stack we teach. We'll build the brand, the website, the systems, and the engines — so you can stay focused on customers.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link

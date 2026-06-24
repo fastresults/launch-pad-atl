@@ -51,7 +51,7 @@ function makeCommonFaq(priceLabel: string): FAQ[] {
   return [
     {
       q: `What's actually included for ${priceLabel}?`,
-      a: "The live half-day workshop, every template and worksheet we use, a recording you keep forever, and 30 days of follow-up access in our group channel to ask questions as you implement.",
+      a: "The strategy, the exact tool stack we use, and the step-by-step process to ship it yourself — delivered in a live half-day workshop. Plus every template and worksheet, a recording you keep forever, and 30 days of follow-up access in our group channel as you implement.",
     },
     {
       q: "Do I need to attend the Strategic Foundation Workshop first?",
@@ -63,7 +63,7 @@ function makeCommonFaq(priceLabel: string): FAQ[] {
     },
     {
       q: "Can your team just build this for me instead?",
-      a: `Yes — and that's the point. The workshop exists so you understand what good looks like before you hire anyone. If you decide to hand it to us, the ${priceLabel} credits toward any engagement over $1,000.`,
+      a: `Yes. The workshop is built to let you ship it yourself — strategy, templates, tool stack, the whole playbook. If you'd rather hand it to us, the ${priceLabel} credits toward any engagement over $1,000.`,
     },
   ];
 }

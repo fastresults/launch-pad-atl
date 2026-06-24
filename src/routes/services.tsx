@@ -48,7 +48,7 @@ function Hero() {
           <span className="text-gradient-brand">to start one business.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-          You attended the workshop — or you've already decided you'd rather buy the result than build it. Either way, here's what our team ships, capability by capability, on a fixed scope and a fixed clock.
+          You took the workshop and ran the playbook yourself — or you've already decided you'd rather buy the result than build it. Either way, here's what our team ships, capability by capability, on a fixed scope and a fixed clock.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
@@ -88,7 +88,7 @@ function CapabilityGrid() {
           <span className="text-gradient-brand">Shipped — not taught.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Every card below names what you'd otherwise build yourself in the matching workshop (from $197). Hire us when you'd rather own the result than the learning curve.
+          Every card below is the same scope a workshop hands you the strategy, templates, and tool stack to build yourself (from $197). Hire us when you'd rather own the result than the learning curve.
         </p>
 
         <div className="mt-10 grid gap-5 md:grid-cols-2">
@@ -134,7 +134,7 @@ function CapabilityGrid() {
                       to={s.workshopHref}
                       className="mt-1 inline-block text-xs text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      Or learn the strategy first — {getBuildWorkshop(s.slug)?.priceLabel ?? "$197"} workshop →
+                      Or DIY it — {getBuildWorkshop(s.slug)?.priceLabel ?? "$197"} workshop (strategy + tools + process) →
                     </Link>
                   </div>
                   <Link
@@ -369,7 +369,7 @@ function WorkshopBand() {
             <span className="text-gradient-brand">Hire us if it's a fit.</span>
           </h2>
           <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-            Take any of the eight workshops — $197, $297, or $397 depending on the capability. Decide in the room whether to DIY, hire someone else, or hand it to our team. If you hire us for any engagement over $1,000, your workshop fee is credited back. Either way, you leave with the strategy in writing.
+            Take any of the eight workshops — $197, $297, or $397 depending on the capability. You leave with the strategy, the templates, and the exact tool stack to ship it yourself. Decide in the room whether to DIY, hire someone else, or hand it to our team. If you hire us for any engagement over $1,000, your workshop fee is credited back.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link
@@ -396,7 +396,7 @@ function WorkshopBand() {
 const FAQS = [
   {
     q: "Do I have to take the workshop first?",
-    a: "No. But for $97, it's the cheapest insurance against hiring the wrong thing. Most founders who take it come back with a sharper scope and save more than they spend.",
+    a: "No. But it's the cheapest insurance against hiring the wrong thing — and it hands you the strategy, the templates, and the tool stack to actually ship it yourself if you want to. Most founders who take it come back with a sharper scope and save more than they spend.",
   },
   {
     q: "Can I bundle just two capabilities instead of a whole track?",
