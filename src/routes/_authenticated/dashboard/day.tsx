@@ -20,21 +20,21 @@ export default function WorkshopDayPage() {
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Your workshop morning</h1>
         <p className="mt-2 text-muted-foreground">
           {cohort
-            ? `${cohort.dateLabel} · ${EVENT.timeLabel}. Show up with an idea — leave with the ${WORKFLOW.length} documents that turn it into a real startup.`
-            : `One morning. Show up with an idea — leave with the ${WORKFLOW.length} documents that turn it into a real startup.`}
+            ? `${cohort.dateLabel} · ${EVENT.timeLabel}. By the end, you'll know what you're building, who it's for, how it makes money, and what to do first.`
+            : `One morning. By the end, you'll know what you're building, who it's for, how it makes money, and what to do first.`}
         </p>
       </div>
 
-      {/* What you walk out with — hero strip */}
+      {/* Walk-out value — hero strip */}
       <div className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-6 md:p-8">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary">
-          <Sparkles className="h-4 w-4" /> What you walk out with
+          <Sparkles className="h-4 w-4" /> What you walk out able to do
         </div>
         <h2 className="mt-2 text-2xl md:text-3xl font-semibold tracking-tight">
-          Walk in with an idea. Walk out ready to execute Monday.
+          Walk in with an idea. Walk out knowing what to do with it.
         </h2>
         <p className="mt-2 max-w-2xl text-sm md:text-base text-muted-foreground">
-          You do the thinking out loud. Your AI cofounder writes everything down — the plan, the money math, the pitch, the boring-but-important stuff. By 11:30 AM you've got {WORKFLOW.length} documents in your Drive and a really clear head.
+          You do the thinking out loud. Your AI cofounder turns it into a real plan you can use — who you serve, why people should care, how you'll price it, where your first customers come from, and what the money looks like. You leave with clear answers, a Monday-morning action plan, and the {WORKFLOW.length} founder-ready assets that back it all up.
         </p>
       </div>
 
@@ -64,10 +64,10 @@ export default function WorkshopDayPage() {
       {/* The 5 pillars */}
       <section>
         <h2 className="mb-1 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-          The 5 things every real startup needs
+          What you'll be able to do after this
         </h2>
         <p className="mb-4 text-sm text-muted-foreground">
-          We move through them in order. Each one feeds the next, so by the time we hit the last pillar, every document already knows your numbers, your market, and your story.
+          Five things every real startup needs to answer. We move through them in order so each answer feeds the next — by the end, your story, your numbers, and your next moves all line up.
         </p>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {PILLARS.map((pillar) => {
@@ -80,7 +80,8 @@ export default function WorkshopDayPage() {
                   <span className="text-xs tabular-nums text-muted-foreground">{minutes}m</span>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{pillar.description}</p>
-                <ul className="mt-4 space-y-1.5">
+                <div className="mt-3 text-[11px] uppercase tracking-wider text-muted-foreground/80">Working pieces you'll leave with</div>
+                <ul className="mt-2 space-y-1.5">
                   {docs.map((d) => (
                     <li key={d.key} className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-background/40 px-3 py-2 text-sm">
                       <span className="flex items-center gap-2 truncate">
@@ -139,10 +140,10 @@ export default function WorkshopDayPage() {
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">Bring four things</h2>
         <ul className="space-y-2 text-sm">
-          <li className="rounded-xl border border-white/10 bg-card p-4">Your laptop and charger. You're driving.</li>
-          <li className="rounded-xl border border-white/10 bg-card p-4">A government-issued ID — we'll use it to set up your LLC paperwork.</li>
-          <li className="rounded-xl border border-white/10 bg-card p-4">Your idea, even if it lives on a sticky note. We'll sharpen it together.</li>
-          <li className="rounded-xl border border-white/10 bg-card p-4">One question you really want answered before you leave.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">Your laptop and charger — you're driving the thinking, the AI handles the typing.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">A government-issued ID, so the legal setup for your startup is ready to go when you are.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">A rough idea we can sharpen into a real offer — sticky-note energy is fine.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">The one question you really want answered before you walk out the door.</li>
         </ul>
         <p className="mt-3 text-xs text-muted-foreground">
           Nothing to pay on the day. Any state filings happen from home afterward — we'll walk you through exactly what to click.
@@ -152,11 +153,11 @@ export default function WorkshopDayPage() {
       {/* CTAs */}
       <div className="flex flex-wrap gap-3">
         <Link to="/dashboard/brief" className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:opacity-90">
-          Start my brief
+          Start my founder brief
           <ArrowRight className="h-4 w-4" />
         </Link>
         <Link to="/dashboard/workflow" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-card px-6 py-3 text-base font-medium hover:bg-white/5">
-          Peek at all {WORKFLOW.length} documents
+          See what we build together
         </Link>
       </div>
     </div>
