@@ -23,6 +23,15 @@ export interface VentureSnapshot {
   website_url: string | null;
   business_concept: string | null;
   differentiation_statement: string | null;
+  founder_name: string | null;
+  founder_email: string | null;
+  founder_phone: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
+  market_scope: "local" | "regional" | "national" | "international" | null;
+  industry: string | null;
+  sub_industry: string | null;
   scraped_content: string | null;
   competitor_data: any;
   market_research: string | null;
