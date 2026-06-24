@@ -26,6 +26,34 @@ const MAX_FILES = 5;
 const MAX_BYTES = 20 * 1024 * 1024;
 const ACCEPT = ".pdf,.txt,.md,.markdown,text/plain,text/markdown,application/pdf";
 
+// TODO: remove after testing — dev-only sample concepts for faster manual QA
+const SAMPLE_CONCEPTS: { concept: string; diff: string }[] = [
+  {
+    concept: "We're building Loop, a B2B SaaS platform that turns scattered customer feedback from Intercom, Zendesk, sales calls, and app reviews into a single prioritized product backlog for mid-market SaaS teams. Product managers waste 6–10 hours a week stitching spreadsheets together just to answer 'what should we build next.' Loop ingests every channel, clusters themes with an LLM, weights them by ARR and churn risk, and pushes the top opportunities straight into Linear or Jira. Our wedge is the Intercom integration — once it's live, the rest of the workflow sells itself.",
+    diff: "Unlike Productboard or Canny, we don't ask customers to come to a portal. We pull signal from the tools they already use and weight by revenue impact, not upvote count.",
+  },
+  {
+    concept: "We're launching Tilt, a consumer marketplace that connects amateur home cooks in dense urban neighborhoods with neighbors who want fresh, home-cooked meals for less than takeout. Cooks list 2–3 dishes per week with a fixed pickup window; buyers subscribe by neighborhood and pay per meal. We handle payments, ratings, and food-safety onboarding. Starting in Brooklyn with a waitlist of 400 cooks, we monetize via a 15% take rate and a $4 buyer service fee.",
+    diff: "Existing players like Shef are centralized commissaries with shipping. We're hyper-local, pickup-only, and built around recurring neighborhood relationships.",
+  },
+  {
+    concept: "We're building Ledger, an embedded fintech API that lets vertical SaaS companies offer instant payouts to their gig-worker users without becoming a money transmitter. Today, platforms either wait 2–5 days on ACH or pay 1.5% to Stripe Instant. Ledger uses a sponsor-bank model plus a real-time risk engine to push funds in under 60 seconds at 40bps. Our first design partners are two trucking TMS platforms moving $80M/month in driver payouts.",
+    diff: "Stripe Connect treats payouts as an afterthought. We're payout-first, with underwriting and compliance tooling built specifically for vertical SaaS, not general marketplaces.",
+  },
+  {
+    concept: "We're starting Verdant, a climate-tech company that helps mid-size commercial building owners cut HVAC energy use by 18–25% using a $200 retrofit sensor kit and a control-loop SaaS layer. Most buildings under 100k sqft can't justify a full BMS overhaul, so they overcool and overheat by default. Verdant ships in 30 minutes, learns the building for two weeks, and then autonomously adjusts setpoints. We charge a flat $0.04/sqft/month and split utility savings with the owner.",
+    diff: "Unlike 75F or BrainBox, we don't require ripping out thermostats or a multi-month install. Plug-in retrofit, self-commissioning, and shared-savings pricing.",
+  },
+  {
+    concept: "We're building Cohort, a healthtech platform that runs group medical visits over video for chronic conditions like type 2 diabetes, hypertension, and prediabetes. Patients meet weekly with the same 6–8 peers and a clinician for 60 minutes, billed under existing CPT codes (99078, 99211). Outcomes match 1:1 care at a third of the cost, and clinicians earn 2–3x their per-hour rate. We sell to value-based primary care groups and self-insured employers.",
+    diff: "Omada and Livongo are app-first with async coaching. We're synchronous, clinician-led, and reimbursable on day one — no new contracts required.",
+  },
+  {
+    concept: "We're launching Forge, a developer tool that gives backend engineers a local-first preview environment for every pull request — a real database, real queues, real third-party sandboxes — spun up in under 8 seconds on their laptop. Today teams either share a staging environment that's always broken or pay $$$$ for ephemeral cloud envs. Forge uses content-addressed snapshots and a thin VM layer so every PR is reproducible and offline-friendly. Free for solo devs, $40/seat/month for teams.",
+    diff: "Unlike Railway or Render preview envs, we don't run in the cloud — we run on the dev's machine. Faster feedback loop, zero cloud bill, works on a plane.",
+  },
+];
+
 async function extractFileText(file: File): Promise<{ text: string; error?: string }> {
   const name = file.name.toLowerCase();
   const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
@@ -284,6 +312,21 @@ function Inner() {
             <div className="flex items-center justify-between gap-2">
               <Label htmlFor="concept">Business concept *</Label>
               <div className="flex items-center gap-2">
+                {/* TODO: remove after testing — dev-only random fill */}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="text-xs text-muted-foreground"
+                  onClick={() => {
+                    const sample = SAMPLE_CONCEPTS[Math.floor(Math.random() * SAMPLE_CONCEPTS.length)];
+                    setBusinessConcept(sample.concept);
+                    if (path === "competitor") setDiff(sample.diff);
+                    toast.success("Filled test concept");
+                  }}
+                >
+                  🧪 Fill test concept
+                </Button>
                 {readyFiles.length > 0 && (
                   <Button
                     type="button"
