@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { FoundersHubGate } from "@/components/hub/FoundersHubGate";
@@ -8,9 +8,54 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { createSnapshot } from "@/lib/foundersHub.functions";
-import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2 } from "lucide-react";
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { toast } from "sonner";
+
+type DroppedFile = {
+  id: string;
+  name: string;
+  size: number;
+  status: "reading" | "ready" | "error";
+  text?: string;
+  error?: string;
+};
+
+const MAX_FILES = 5;
+const MAX_BYTES = 20 * 1024 * 1024;
+const ACCEPT = ".pdf,.txt,.md,.markdown,text/plain,text/markdown,application/pdf";
+
+async function extractFileText(file: File): Promise<{ text: string; error?: string }> {
+  const name = file.name.toLowerCase();
+  const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
+  const isText = name.endsWith(".txt") || name.endsWith(".md") || name.endsWith(".markdown") ||
+    file.type === "text/plain" || file.type === "text/markdown";
+
+  if (isPdf) {
+    try {
+      const { extractText, getDocumentProxy } = await import("unpdf");
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const pdf = await getDocumentProxy(bytes);
+      const { text } = await extractText(pdf, { mergePages: true });
+      const merged = (Array.isArray(text) ? text.join("\n") : text).trim();
+      if (!merged) return { text: "", error: "PDF looks scanned (no text inside). Try a text-based export." };
+      return { text: merged };
+    } catch (e) {
+      return { text: "", error: e instanceof Error ? e.message : "Couldn't read PDF" };
+    }
+  }
+  if (isText) {
+    try {
+      const text = (await file.text()).trim();
+      if (!text) return { text: "", error: "File was empty" };
+      return { text };
+    } catch (e) {
+      return { text: "", error: e instanceof Error ? e.message : "Couldn't read file" };
+    }
+  }
+  return { text: "", error: "DOCX coming soon — export to PDF or paste the text below." };
+}
 
 type Path = "own" | "competitor" | "manual";
 
