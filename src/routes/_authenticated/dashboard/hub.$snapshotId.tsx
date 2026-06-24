@@ -319,6 +319,18 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Bulk run failed"),
   });
 
+  const cancel = useMutation({
+    mutationFn: (jobId: string) => cancelJob({ data: { jobId } }),
+    onSuccess: () => { toast.success("Cancel requested"); qc.invalidateQueries({ queryKey: ["hub"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Cancel failed"),
+  });
+
+  const failuresQ = useQuery({
+    queryKey: ["hub", "failures", snapshot.id],
+    queryFn: () => listFailures({ data: { snapshotId: snapshot.id } }),
+    refetchInterval: 10000,
+  });
+
   const types = typesQ.data ?? [];
   const docs = docsQ.data ?? [];
   const docByType = useMemo(() => new Map(docs.map((d) => [d.document_type, d])), [docs]);
