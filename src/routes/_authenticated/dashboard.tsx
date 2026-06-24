@@ -73,15 +73,19 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
+  const { foundersHubAccess, isAdmin } = useAuth();
+  const hubVisible = foundersHubAccess || isAdmin;
 
   const items: NavItem[] = [
     { to: "/dashboard", label: "Today", icon: Home },
     { to: "/dashboard/day", label: "Workshop day", icon: Calendar, hide: mode === "after" },
     { to: "/dashboard/brief", label: "My startup", icon: ClipboardList },
     { to: "/dashboard/workflow", label: "Plan (25 steps)", icon: ListChecks, dimmed: mode === "during" },
+    { to: "/dashboard/hub", label: "Founders Hub", icon: Sparkles, hide: !hubVisible },
     { to: "/dashboard/files", label: "My files", icon: FolderOpen },
     { to: "/dashboard/profile", label: "Account", icon: User },
   ];
+
 
   return (
     <Sidebar collapsible="icon">
