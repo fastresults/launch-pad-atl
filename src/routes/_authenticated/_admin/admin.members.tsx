@@ -169,6 +169,13 @@ export default function AdminMembersPage() {
                         <>
                           <Button
                             size="sm"
+                            variant={m.founders_hub_access ? "outline" : "default"}
+                            onClick={() => handleToggleHub(m.user_id, !m.founders_hub_access)}
+                          >
+                            {m.founders_hub_access ? "Lock Hub" : "Grant Hub"}
+                          </Button>
+                          <Button
+                            size="sm"
                             variant="destructive"
                             onClick={() => setPauseTarget({ userId: m.user_id, name })}
                           >
@@ -183,6 +190,7 @@ export default function AdminMembersPage() {
                           </Button>
                         </>
                       )}
+
                       {tab === "paused" && (
                         <>
                           <Button size="sm" onClick={() => handleApprove(m.user_id)}>
