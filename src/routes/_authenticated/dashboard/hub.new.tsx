@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { FoundersHubGate } from "@/components/hub/FoundersHubGate";
@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { createSnapshot } from "@/lib/foundersHub.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2 } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin } from "lucide-react";
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { toast } from "sonner";
 
@@ -97,7 +98,33 @@ function Inner() {
   const [dragOver, setDragOver] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [filling, setFilling] = useState(false);
+  // Founder + market context
+  const [founderName, setFounderName] = useState("");
+  const [founderEmail, setFounderEmail] = useState("");
+  const [founderPhone, setFounderPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [region, setRegion] = useState("");
+  const [country, setCountry] = useState("United States");
+  const [marketScope, setMarketScope] = useState<"local" | "regional" | "national" | "international">("local");
+  const [industry, setIndustry] = useState("");
+  const [subIndustry, setSubIndustry] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Prefill from authenticated user once
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const u = data.user;
+      if (!u) return;
+      const meta: any = u.user_metadata ?? {};
+      if (!founderEmail && u.email) setFounderEmail(u.email);
+      if (!founderName) {
+        const n = meta.display_name || meta.name || meta.full_name;
+        if (n) setFounderName(n);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const addFiles = useCallback(async (incoming: File[]) => {
     if (!incoming.length) return;
@@ -173,6 +200,15 @@ function Inner() {
           website_url: websiteUrl || undefined,
           business_concept: businessConcept,
           differentiation_statement: diff || undefined,
+          founder_name: founderName || undefined,
+          founder_email: founderEmail || undefined,
+          founder_phone: founderPhone || undefined,
+          city: city || undefined,
+          region: region || undefined,
+          country: country || undefined,
+          market_scope: marketScope,
+          industry: industry || undefined,
+          sub_industry: subIndustry || undefined,
         },
       }),
     onSuccess: ({ id }) => {
@@ -182,7 +218,11 @@ function Inner() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not create venture"),
   });
 
-  const canSubmit = businessConcept.trim().length >= 20 && !create.isPending &&
+  const founderReady = !!(
+    founderName.trim() && founderEmail.trim() && city.trim() && region.trim() &&
+    country.trim() && marketScope && industry.trim()
+  );
+  const canSubmit = businessConcept.trim().length >= 20 && !create.isPending && founderReady &&
     (path === "manual" ? !!companyName.trim() : !!websiteUrl.trim());
 
   return (
@@ -220,6 +260,79 @@ function Inner() {
           </button>
         ))}
       </div>
+
+      {/* Founder + market context */}
+      <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Founder & market</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          We use these to scope research and ground every document — especially when you're operating in a specific local market.
+        </p>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-1.5">
+            <Label htmlFor="fname">Your name <span className="text-red-500">*</span></Label>
+            <Input id="fname" value={founderName} onChange={(e) => setFounderName(e.target.value)} placeholder="Jane Doe" />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="femail">Contact email <span className="text-red-500">*</span></Label>
+            <Input id="femail" type="email" value={founderEmail} onChange={(e) => setFounderEmail(e.target.value)} placeholder="you@example.com" />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="fphone">Phone <span className="text-muted-foreground text-[10px]">(optional)</span></Label>
+            <Input id="fphone" type="tel" value={founderPhone} onChange={(e) => setFounderPhone(e.target.value)} placeholder="+1 555 123 4567" />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="country">Country <span className="text-red-500">*</span></Label>
+            <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="United States" />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="city">City / town <span className="text-red-500">*</span></Label>
+            <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Atlanta" />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="region">State / region <span className="text-red-500">*</span></Label>
+            <Input id="region" value={region} onChange={(e) => setRegion(e.target.value)} placeholder="Georgia" />
+          </div>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-1.5">
+            <Label>Market scope <span className="text-red-500">*</span></Label>
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+              {(["local", "regional", "national", "international"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setMarketScope(s)}
+                  className={`rounded-lg border px-2 py-1.5 text-xs capitalize transition ${
+                    marketScope === s ? "border-foreground bg-foreground text-background" : "border-white/10 hover:border-white/20"
+                  }`}
+                >{s}</button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {marketScope === "local" && "Operates in one city/metro — we'll prioritize local competitors and area-specific research."}
+              {marketScope === "regional" && "Serves a state or multi-state region."}
+              {marketScope === "national" && "Serves customers across one country."}
+              {marketScope === "international" && "Serves customers in multiple countries."}
+            </p>
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Industry <span className="text-red-500">*</span></Label>
+            <IndustryCombobox value={industry} onChange={setIndustry} />
+            <Input
+              className="mt-1"
+              value={subIndustry}
+              onChange={(e) => setSubIndustry(e.target.value)}
+              placeholder="Niche or sub-industry (optional) — e.g. specialty pour-over"
+            />
+          </div>
+        </div>
+      </div>
+
 
       <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
         <div className="grid gap-2">

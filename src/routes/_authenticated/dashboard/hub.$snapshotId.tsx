@@ -16,6 +16,7 @@ import {
   getSnapshot,
   retryEnrichment,
   updateExtractedData,
+  updateFounderContext,
   advanceToGenerate,
   listDocumentTypes,
   listSnapshotDocuments,
@@ -25,6 +26,7 @@ import {
   cancelJob,
   listFailures,
 } from "@/lib/foundersHub.functions";
+import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import {
   ArrowLeft,
   Loader2,
@@ -252,7 +254,11 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
         </p>
       </div>
 
+      <FounderMarketCard snapshot={snapshot} onSaved={onSaved} />
+
       <ResearchPanel snapshot={snapshot} />
+
+
 
 
       {SECTIONS.map((section) => (
@@ -464,7 +470,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
           <article className="space-y-3 text-sm leading-relaxed text-foreground/90 [&_h1]:mt-4 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:text-foreground [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-foreground [&_h3]:mt-3 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_p]:my-2 [&_strong]:text-foreground [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_a]:text-primary [&_a]:underline">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{viewerDoc?.content ?? ""}</ReactMarkdown>
           </article>
-          <div className="flex gap-2 pt-3">
+          <div className="flex flex-wrap gap-2 pt-3">
             <Button size="sm" variant="outline" onClick={() => {
               navigator.clipboard.writeText(viewerDoc?.content ?? "");
               toast.success("Copied");
@@ -478,6 +484,16 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               a.click();
               URL.revokeObjectURL(url);
             }}>Download .md</Button>
+            {viewerDoc?.document_type === "website_prd" && (
+              <Button size="sm" onClick={() => {
+                const content: string = viewerDoc?.content ?? "";
+                // Extract the first fenced code block from section 1
+                const m = content.match(/```[a-zA-Z]*\n([\s\S]*?)```/);
+                if (!m) { toast.error("Couldn't find the prompt block"); return; }
+                navigator.clipboard.writeText(m[1].trim());
+                toast.success("AI-builder prompt copied");
+              }}>Copy prompt only</Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -596,4 +612,81 @@ function ResearchPanel({ snapshot }: { snapshot: any }) {
     </details>
   );
 }
+
+function FounderMarketCard({ snapshot, onSaved }: { snapshot: any; onSaved: () => void }) {
+  const [form, setForm] = useState({
+    founder_name: snapshot.founder_name ?? "",
+    founder_email: snapshot.founder_email ?? "",
+    founder_phone: snapshot.founder_phone ?? "",
+    city: snapshot.city ?? "",
+    region: snapshot.region ?? "",
+    country: snapshot.country ?? "",
+    market_scope: (snapshot.market_scope ?? "local") as "local" | "regional" | "national" | "international",
+    industry: snapshot.industry ?? "",
+    sub_industry: snapshot.sub_industry ?? "",
+  });
+
+  const save = useMutation({
+    mutationFn: () => updateFounderContext({ data: { id: snapshot.id, ...form } }),
+    onSuccess: () => { toast.success("Saved"); onSaved(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
+  });
+
+  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v as any }));
+
+  return (
+    <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Founder & market</h3>
+        <Button size="sm" variant="outline" onClick={() => save.mutate()} disabled={save.isPending}>
+          {save.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save"}
+        </Button>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-1.5"><Label className="text-xs">Founder name</Label>
+          <Input value={form.founder_name} onChange={(e) => set("founder_name", e.target.value)} /></div>
+        <div className="grid gap-1.5"><Label className="text-xs">Contact email</Label>
+          <Input type="email" value={form.founder_email} onChange={(e) => set("founder_email", e.target.value)} /></div>
+        <div className="grid gap-1.5"><Label className="text-xs">Phone</Label>
+          <Input value={form.founder_phone} onChange={(e) => set("founder_phone", e.target.value)} /></div>
+        <div className="grid gap-1.5"><Label className="text-xs">Country</Label>
+          <Input value={form.country} onChange={(e) => set("country", e.target.value)} /></div>
+        <div className="grid gap-1.5"><Label className="text-xs">City / town</Label>
+          <Input value={form.city} onChange={(e) => set("city", e.target.value)} /></div>
+        <div className="grid gap-1.5"><Label className="text-xs">State / region</Label>
+          <Input value={form.region} onChange={(e) => set("region", e.target.value)} /></div>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-1.5">
+          <Label className="text-xs">Market scope</Label>
+          <div className="grid grid-cols-4 gap-1.5">
+            {(["local", "regional", "national", "international"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => set("market_scope", s)}
+                className={`rounded-lg border px-2 py-1.5 text-xs capitalize transition ${
+                  form.market_scope === s ? "border-foreground bg-foreground text-background" : "border-white/10 hover:border-white/20"
+                }`}
+              >{s}</button>
+            ))}
+          </div>
+        </div>
+        <div className="grid gap-1.5">
+          <Label className="text-xs">Industry</Label>
+          <IndustryCombobox value={form.industry} onChange={(v) => set("industry", v)} />
+          <Input
+            className="mt-1"
+            value={form.sub_industry}
+            onChange={(e) => set("sub_industry", e.target.value)}
+            placeholder="Niche (optional)"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
