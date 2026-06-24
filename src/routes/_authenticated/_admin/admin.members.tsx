@@ -11,7 +11,9 @@ import {
   markMemberContacted,
   pauseMember,
   restoreMemberToPending,
+  setFoundersHubAccess,
 } from "@/lib/members-admin.functions";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -59,6 +61,12 @@ export default function AdminMembersPage() {
     run(() => markMemberContacted({ data: { userId } }), "Marked as contacted");
   const handleRestoreToPending = (userId: string) =>
     run(() => restoreMemberToPending({ data: { userId } }), "Moved back to pending");
+  const handleToggleHub = (userId: string, grant: boolean) =>
+    run(
+      () => setFoundersHubAccess({ data: { userId, grant } }),
+      grant ? "Founders Hub unlocked" : "Founders Hub locked",
+    );
+
 
   const confirmPause = async (reason?: string) => {
     if (!pauseTarget) return;
@@ -138,6 +146,12 @@ export default function AdminMembersPage() {
                             {m.intake.startup_type}
                           </Badge>
                         )}
+                        {m.founders_hub_access && (
+                          <Badge className="bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/20 text-[10px]">
+                            Founders Hub
+                          </Badge>
+                        )}
+
                       </div>
                       {m.intake ? (
                         <div className="mt-1 truncate text-sm text-muted-foreground">
@@ -155,6 +169,13 @@ export default function AdminMembersPage() {
                         <>
                           <Button
                             size="sm"
+                            variant={m.founders_hub_access ? "outline" : "default"}
+                            onClick={() => handleToggleHub(m.user_id, !m.founders_hub_access)}
+                          >
+                            {m.founders_hub_access ? "Lock Hub" : "Grant Hub"}
+                          </Button>
+                          <Button
+                            size="sm"
                             variant="destructive"
                             onClick={() => setPauseTarget({ userId: m.user_id, name })}
                           >
@@ -169,6 +190,7 @@ export default function AdminMembersPage() {
                           </Button>
                         </>
                       )}
+
                       {tab === "paused" && (
                         <>
                           <Button size="sm" onClick={() => handleApprove(m.user_id)}>

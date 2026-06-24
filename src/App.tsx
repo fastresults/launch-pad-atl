@@ -40,6 +40,10 @@ const DashboardMedia = lazy(() => import("@/routes/_authenticated/dashboard/medi
 const DashboardProfile = lazy(() => import("@/routes/_authenticated/dashboard/profile"));
 const DashboardWorkflow = lazy(() => import("@/routes/_authenticated/dashboard/workflow"));
 const DashboardWorkflowKey = lazy(() => import("@/routes/_authenticated/dashboard/workflow.$key"));
+const HubLibrary = lazy(() => import("@/routes/_authenticated/dashboard/hub.index"));
+const HubNew = lazy(() => import("@/routes/_authenticated/dashboard/hub.new"));
+const HubSnapshot = lazy(() => import("@/routes/_authenticated/dashboard/hub.$snapshotId"));
+
 
 // Admin sub-pages
 const AdminIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.index"));
@@ -48,6 +52,8 @@ const AdminUsers = lazy(() => import("@/routes/_authenticated/_admin/admin.users
 const AdminReview = lazy(() => import("@/routes/_authenticated/_admin/admin.review"));
 const AdminRegistrations = lazy(() => import("@/routes/_authenticated/_admin/admin.registrations"));
 const AdminMembers = lazy(() => import("@/routes/_authenticated/_admin/admin.members"));
+const AdminHub = lazy(() => import("@/routes/_authenticated/_admin/admin.hub"));
+
 const AdminMedia = lazy(() => import("@/routes/_authenticated/_admin/admin.media"));
 const AdminTestimonials = lazy(() => import("@/routes/_authenticated/_admin/admin.testimonials"));
 const AdminCohorts = lazy(() => import("@/routes/_authenticated/_admin/admin.cohorts"));
@@ -120,7 +126,11 @@ export default function App() {
             <Route path="profile" element={<DashboardProfile />} />
             <Route path="workflow" element={<DashboardWorkflow />} />
             <Route path="workflow/:key" element={<DashboardWorkflowKey />} />
+            <Route path="hub" element={<HubLibrary />} />
+            <Route path="hub/new" element={<HubNew />} />
+            <Route path="hub/:snapshotId" element={<HubSnapshot />} />
           </Route>
+
 
           {/* Admin nested routes */}
           <Route element={<AdminLayout />}>
@@ -129,6 +139,8 @@ export default function App() {
             <Route path="/admin/review" element={<AdminReview />} />
             <Route path="/admin/registrations" element={<AdminRegistrations />} />
             <Route path="/admin/members" element={<AdminMembers />} />
+            <Route path="/admin/hub" element={<AdminHub />} />
+
             <Route path="/admin/media" element={<AdminMedia />} />
             <Route path="/admin/testimonials" element={<AdminTestimonials />} />
             <Route path="/admin/cohorts" element={<AdminCohorts />} />

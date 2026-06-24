@@ -9,7 +9,7 @@ import {
   SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
   SidebarFooter, SidebarHeader, useSidebar,
 } from "@/components/ui/sidebar";
-import { Home, Calendar, ClipboardList, ListChecks, FolderOpen, User } from "lucide-react";
+import { Home, Calendar, ClipboardList, ListChecks, FolderOpen, User, Sparkles } from "lucide-react";
 import { listCohorts } from "@/lib/cohorts.functions";
 import { getWorkshopMode } from "@/lib/workshop-mode";
 import { getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
@@ -41,6 +41,7 @@ function DashboardShell() {
   return (
     <div className="flex min-h-dvh w-full bg-background">
       <AppSidebar mode={state.mode} />
+
       <div className="flex flex-1 flex-col min-w-0">
         <RoomClock state={state} />
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-white/5 bg-background/80 px-4 backdrop-blur md:px-6">
@@ -72,15 +73,19 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
+  const { foundersHubAccess, isAdmin } = useAuth();
+  const hubVisible = foundersHubAccess || isAdmin;
 
   const items: NavItem[] = [
     { to: "/dashboard", label: "Today", icon: Home },
     { to: "/dashboard/day", label: "Workshop day", icon: Calendar, hide: mode === "after" },
     { to: "/dashboard/brief", label: "My startup", icon: ClipboardList },
     { to: "/dashboard/workflow", label: "Plan (25 steps)", icon: ListChecks, dimmed: mode === "during" },
+    { to: "/dashboard/hub", label: "Founders Hub", icon: Sparkles, hide: !hubVisible },
     { to: "/dashboard/files", label: "My files", icon: FolderOpen },
     { to: "/dashboard/profile", label: "Account", icon: User },
   ];
+
 
   return (
     <Sidebar collapsible="icon">

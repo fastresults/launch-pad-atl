@@ -19,7 +19,10 @@ export type MemberRow = {
   approved_at: string | null;
   created_at: string;
   intake: MemberIntake;
+  founders_hub_access: boolean;
+  founders_hub_granted_at: string | null;
 };
+
 
 function unwrap<T>(input: any): T {
   if (input && typeof input === "object" && "data" in input && Object.keys(input).length === 1) {
@@ -39,10 +42,11 @@ export async function listMembers(input?: any) {
   const { data: profiles, error } = await supabase
     .from("profiles")
     .select(
-      "user_id, email, display_name, member_status, approved_via, approved_at, created_at",
+      "user_id, email, display_name, member_status, approved_via, approved_at, created_at, founders_hub_access, founders_hub_granted_at",
     )
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
+
 
   const userIds = (profiles ?? []).map((p: any) => p.user_id);
   let intakeMap = new Map<string, any>();
@@ -64,6 +68,8 @@ export async function listMembers(input?: any) {
       approved_via: p.approved_via,
       approved_at: p.approved_at,
       created_at: p.created_at,
+      founders_hub_access: !!p.founders_hub_access,
+      founders_hub_granted_at: p.founders_hub_granted_at ?? null,
       intake: intake
         ? {
             startup_type: intake.startup_type,
@@ -73,6 +79,7 @@ export async function listMembers(input?: any) {
           }
         : null,
     };
+
   });
 
   const counts = {
@@ -163,3 +170,16 @@ export async function restoreMemberToPending(input: any) {
     .eq("user_id", userId);
   if (error) throw new Error(error.message);
 }
+
+export async function setFoundersHubAccess(input: any) {
+  const { userId, grant } = unwrap<{ userId: string; grant: boolean }>(input);
+  const me = (await supabase.auth.getUser()).data.user;
+  const patch: Record<string, any> = {
+    founders_hub_access: grant,
+    founders_hub_granted_at: grant ? new Date().toISOString() : null,
+    founders_hub_granted_by: grant ? me?.id ?? null : null,
+  };
+  const { error } = await supabase.from("profiles").update(patch).eq("user_id", userId);
+  if (error) throw new Error(error.message);
+}
+

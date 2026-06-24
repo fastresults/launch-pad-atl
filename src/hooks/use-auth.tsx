@@ -10,6 +10,7 @@ type AuthState = {
   roles: AppRole[];
   memberStatus: MemberStatus;
   approvedVia: "admin" | "payment" | null;
+  foundersHubAccess: boolean;
   loading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -17,6 +18,7 @@ type AuthState = {
   isApprovedMember: boolean;
   signOut: () => Promise<void>;
 };
+
 
 const AuthContext = createContext<AuthState | null>(null);
 
@@ -27,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [memberStatus, setMemberStatus] = useState<MemberStatus>("pending");
   const [approvedVia, setApprovedVia] = useState<"admin" | "payment" | null>(null);
+  const [foundersHubAccess, setFoundersHubAccess] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRoles([]);
           setMemberStatus("pending");
           setApprovedVia(null);
+          setFoundersHubAccess(false);
         }
         return;
       }
@@ -47,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRoles(res.roles);
           setMemberStatus(res.memberStatus);
           setApprovedVia(res.approvedVia);
+          setFoundersHubAccess(res.foundersHubAccess);
         }
       } catch (e) {
         console.error("Failed to load account", e);
@@ -54,9 +59,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRoles([]);
           setMemberStatus("pending");
           setApprovedVia(null);
+          setFoundersHubAccess(false);
         }
       }
     };
+
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
@@ -94,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roles,
     memberStatus,
     approvedVia,
+    foundersHubAccess,
     loading,
     isAuthenticated: !!user,
     isAdmin,
@@ -101,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isApprovedMember: isAdmin || memberStatus === "approved",
     signOut,
   };
+
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
