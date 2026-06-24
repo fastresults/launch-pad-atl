@@ -86,6 +86,30 @@ export default function AdminTestimonialsPage() {
         description="Manage the autoplay video testimonial slider that appears below the homepage hero."
       />
 
+      {/* Master on/off */}
+      {settings && (
+        <div className="rounded-lg border bg-card p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold">Homepage slider</h2>
+              <p className="text-sm text-muted-foreground">
+                Show or hide the video testimonial slider on the public homepage.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground min-w-[3rem] text-right">
+                {saveSettings.isPending ? "Saving…" : settings.enabled ? "On" : "Off"}
+              </span>
+              <Switch
+                checked={settings.enabled}
+                onCheckedChange={(v) => saveSettings.mutate({ enabled: v })}
+                disabled={saveSettings.isPending}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Settings */}
       <div className="rounded-lg border bg-card p-5">
         <h2 className="mb-4 text-lg font-semibold">Slider settings</h2>
@@ -97,6 +121,7 @@ export default function AdminTestimonialsPage() {
           />
         )}
       </div>
+
 
       {/* Testimonials */}
       <div className="rounded-lg border bg-card">
@@ -215,13 +240,6 @@ function SettingsForm({
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <div className="flex items-center justify-between rounded-md border p-3 md:col-span-2">
-        <div>
-          <Label>Show section on homepage</Label>
-          <p className="text-xs text-muted-foreground">Hide the entire slider when off.</p>
-        </div>
-        <Switch checked={s.enabled} onCheckedChange={(v) => set("enabled", v)} />
-      </div>
 
       <div className="space-y-2">
         <Label>Heading</Label>
