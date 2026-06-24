@@ -48,7 +48,7 @@ function Hero() {
           <span className="text-gradient-brand">to start one business.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-          You attended the workshop — or you've already decided you'd rather buy the result than build it. Either way, here's what our team ships, capability by capability, on a fixed scope and a fixed clock.
+          You took the workshop and ran the playbook yourself — or you've already decided you'd rather buy the result than build it. Either way, here's what our team ships, capability by capability, on a fixed scope and a fixed clock.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
