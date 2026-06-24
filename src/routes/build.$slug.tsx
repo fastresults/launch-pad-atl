@@ -292,7 +292,7 @@ export default function BuildWorkshopPage() {
             Keep building
           </p>
           <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            The other capabilities your business will need.
+            {w.sections.otherWorkshopsHeadline}
           </h2>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {otherWorkshops.map((o) => {
