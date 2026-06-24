@@ -125,11 +125,16 @@ QUALITY_SCORE: <0-100 integer>`;
     ? `\n## NORTH-STAR CONCEPT (locked by founder — every section must stay consistent with this)\nSummary (${snap.concept_summary.trim().split(/\s+/).filter(Boolean).length} words): ${snap.concept_summary}\nValue proposition: ${snap.value_proposition ?? ""}`
     : "";
 
+  const brandBlock = snap.brand_tokens
+    ? `\n## Brand tokens (reuse colors, fonts, mood when rendering visuals or builder prompts)\n${JSON.stringify(snap.brand_tokens, null, 2)}`
+    : "";
+
   const userPrompt = [
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
     `Category: ${type.category}`,
     conceptBlock,
+    brandBlock,
     `\n## Founder & market (always reflect these accurately)\n${JSON.stringify(founderCard, null, 2)}`,
     `\n## Venture brief (founder-reviewed)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,
     snap.research_brief ? `\n## Research brief (use for evidence + citations)\n${JSON.stringify(snap.research_brief, null, 2)}` : "",
