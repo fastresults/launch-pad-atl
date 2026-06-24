@@ -52,6 +52,8 @@ const AdminUsers = lazy(() => import("@/routes/_authenticated/_admin/admin.users
 const AdminReview = lazy(() => import("@/routes/_authenticated/_admin/admin.review"));
 const AdminRegistrations = lazy(() => import("@/routes/_authenticated/_admin/admin.registrations"));
 const AdminMembers = lazy(() => import("@/routes/_authenticated/_admin/admin.members"));
+const AdminHub = lazy(() => import("@/routes/_authenticated/_admin/admin.hub"));
+
 const AdminMedia = lazy(() => import("@/routes/_authenticated/_admin/admin.media"));
 const AdminTestimonials = lazy(() => import("@/routes/_authenticated/_admin/admin.testimonials"));
 const AdminCohorts = lazy(() => import("@/routes/_authenticated/_admin/admin.cohorts"));
