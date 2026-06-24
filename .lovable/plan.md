@@ -1,76 +1,77 @@
 
-## What changed
+## What you caught
 
-You've handed me the real $97 framework: **5 pillars, 20 documents, ~107 minutes of generation time**, run inside the published 8:45–11:30 AM ET window. That replaces the current 25-deliverable / 7-stage / 8:00 AM–4:30 PM model the dashboard inherited.
+Two things wrong with my last draft:
 
-### The 20-document framework (from your screenshot)
+1. **"Saturday morning" is a guess.** Cohorts can be scheduled any day. `cohort` already exposes `dateLabel` (e.g. *"Saturday, March 14, 2026"*) — I should use that or stay day-agnostic.
+2. **Tone wasn't anchored to the rest of the site.** The marketing pages have an established voice I should match, not reinvent:
+   - Home: *"One morning. Twenty deliverables built live for your startup — the positioning, the offer, the 90-day plan — and you walk out ready to execute on Monday."*
+   - Schedule: *"One morning. Four working stages. By 11:30 AM you walk out…"*, *"Idea in at 8:45 AM. Your full plan and a signed 90-day playbook in your hands by 11:30 AM."*
+   - Register: *"What you walk out with"*
 
-| Pillar | Subtitle | Documents (time) |
-|---|---|---|
-| **Foundation** — *Who you are and where you play* | Concept Brief (2m), Executive Summary (3m), Value Proposition (4m), Market Sizing (5m), Competitive Landscape (6m) — **20m** |
-| **Strategy** — *How you win and grow* | Business Plan (10m), Go-to-Market (7m), Pricing Strategy (5m), Customer Acquisition (6m), Partnership Strategy (4m) — **32m** |
-| **Operations** — *What you build and who builds it* | Product Roadmap (5m), Team Structure (4m), Operations Plan (6m), Technology Stack (5m) — **20m** |
-| **Finance** — *The numbers that matter* | Financial Model (8m), Funding Strategy (5m), Investor Memo (7m), Exit Strategy (4m) — **24m** |
-| **Governance** — *Risk, oversight, and readiness* | Risk Assessment (5m), Board Presentation (6m) — **11m** |
+The thread is: **one morning · walk out with · ready Monday**. Plain, confident, time-anchored, no day-of-week assumption, no price (they already paid).
 
-Total doc-generation budget: **107 min**. Workshop window: 165 min. Overhead for check-in + break + close: 30 min. Buffer: 28 min for live coaching while the AI runs.
+I'm also dropping the **`$97`** I'd put in the header — marketing uses tiered pricing (`WORKSHOP_PRICE_LABEL`) and the dashboard is a post-purchase surface anyway.
 
-### Morning schedule (replaces the fictional 7-stage day)
+## Voice rules (unchanged from last pass)
 
-```text
- 8:45–9:00  Check-in           Coffee, share idea in one line
- 9:00–9:25  Foundation         5 docs — concept → competitive landscape
- 9:25–10:00 Strategy           5 docs — plan, GTM, pricing, acquisition, partners
-10:00–10:10 Refreshment break
-10:10–10:35 Operations         4 docs — roadmap, team, ops, tech
-10:35–11:05 Finance            4 docs — model, funding, memo, exit
-11:05–11:20 Governance         2 docs — risk, board deck
-11:20–11:30 Close              Walk-out review of all 20 deliverables
-```
+- Talk to one person (*you*, *your*).
+- Plain English in the subs; doc names stay as-is because that's what you actually get.
+- Confidence without bragging. One dry aside per section, max. No exclamation marks. No emoji.
+- Specifics > adjectives. *"20 docs in your Drive"* beats *"comprehensive package."*
 
-## Plan
+## Copy changes (copy-only, no layout)
 
-### 1. Replace the workflow manifest — `src/lib/workflow.ts`
+### Page header
+- **H1:** `Workshop day` → **`Your workshop morning`**
+- **Sub (uses cohort context when present):**
+  - With cohort: **`{cohort.dateLabel} · 8:45–11:30 AM. Show up with an idea — leave with the 20 documents that turn it into a real startup.`**
+  - No cohort yet: **`One morning. Show up with an idea — leave with the 20 documents that turn it into a real startup.`**
 
-- Rewrite `STAGES` as the 5 pillars (`foundation`, `strategy`, `operations`, `finance`, `governance`) plus the existing `brief` (n=0) for intake.
-- Rewrite `WORKFLOW` as the 20 deliverables above, each with `key`, `label`, `short`, `stageN` (1–5), `stageLabel`, `estMinutes`, and an `intake` array on docs that need founder input (e.g. Concept Brief, Market Sizing, Pricing, Funding Strategy).
-- Keep the `WorkflowDeliverable` / `IntakeField` types and `WORKFLOW_BY_KEY` / `stageOf` helpers — they're consumed by `dashboard/workflow.tsx` and the AI pipeline.
+### Hero strip
+- **Eyebrow:** `AI-first multi-document workflow` → **`What you walk out with`**
+- **H2:** **`Walk in with an idea. Walk out ready to execute Monday.`**
+- **Body:** **`You do the thinking out loud. Your AI cofounder writes everything down — the plan, the money math, the pitch, the boring-but-important stuff. By 11:30 AM you've got 20 documents in your Drive and a really clear head.`**
 
-### 2. Database — `deliverable_types` table
+### Cohort card
+- Add tiny eyebrow above the date: **`You're in. Here's the where and when.`**
+- Keep all date/time/address values verbatim.
 
-The DB is the source of truth for prompts/deps and currently holds the old 25 keys. New migration to:
+### Pillars section
+- **Heading:** `The framework — 5 pillars, 20 documents` → **`The 5 things every real startup needs`**
+- **Sub:** **`We move through them in order. Each one feeds the next, so by the time we hit the last pillar, every document already knows your numbers, your market, and your story.`**
 
-- Soft-deactivate old keys (`UPDATE deliverable_types SET active = false WHERE key NOT IN (<new 20>)`) so existing rows in `attendee_deliverables` keep rendering.
-- Upsert the 20 new keys with: `label`, `description`, `stage_label`, `stage_n`, `sort_order`, `tier_required='founders'`, `default_model='google/gemini-2.5-flash'`, `depends_on_keys` (e.g. Executive Summary depends on Concept Brief; Investor Memo depends on Financial Model + Business Plan), `produces_context_key`, `requires_context_keys`, `output_kind='document'`, `user_can_trigger=true`, `auto_runnable=true`.
+### Schedule section + `SCHEDULE_BLOCKS` subtitles
+- **Heading:** `The morning, block by block` → **`How the morning goes`**
+- **Check-in:** **`Grab coffee. Settle in. Tell us your idea in one sentence — we'll take it from there.`**
+- **Foundation:** **`Lock in who you serve, what makes you worth picking, and why you'll win. 5 docs.`**
+- **Strategy:** **`Your plan, your pricing, and how you get your first customers. 5 docs.`**
+- **Refreshment break:** **`Stretch. Refill. Step outside for 10 minutes. Your AI keeps typing.`**
+- **Operations:** **`How the business actually runs Monday morning. 4 docs.`**
+- **Finance:** **`Money in, money out, and what you'll raise if you raise. 4 docs.`**
+- **Governance:** **`The grown-up stuff — what could go wrong and what to tell advisors. 2 docs.`**
+- **Close:** **`Hand on the door, 20 documents in your Drive. That's a wrap.`**
 
-I'll surface the migration via the migration tool so you can approve before it runs. No table schema changes — `deliverable_types` already has every column we need.
+### What to bring
+- **Heading:** `What to bring` → **`Bring four things`**
+- **Items:**
+  - **`Your laptop and charger. You're driving.`**
+  - **`A government-issued ID — we'll use it to set up your LLC paperwork.`**
+  - **`Your idea, even if it lives on a sticky note. We'll sharpen it together.`**
+  - **`One question you really want answered before you leave.`**
+- **Footnote:** **`Nothing to pay on the day. Any state filings happen from home afterward — we'll walk you through exactly what to click.`**
 
-### 3. Fix the schedule source — `src/lib/workshop-mode.ts`
+### CTAs
+- Primary: `Prep my brief` → **`Start my brief`**
+- Secondary: `See the full 20-document workflow` → **`Peek at all 20 documents`**
 
-Rewrite `SCHEDULE_BLOCKS` to the 7-block morning above (minute offsets from 8:45 AM = 0), set `WORKSHOP_END_MIN = 170`, and replace `FRIENDLY_STAGE` with a 5-entry pillar map. This automatically fixes `RoomClock` and `getWorkshopMode()` which feed the dashboard layout.
+## Words deliberately killed on this page
 
-### 4. Rewrite `/dashboard/day` — `src/routes/_authenticated/dashboard/day.tsx`
+`board-ready`, `funded company`, `strategic documents`, `multi-document workflow`, `coordinated set`, `dependencies chain`, day-of-week assumptions, `$97`, `weekend`. The footnote loses *"over the weekend"* in favor of *"afterward"* for the same reason.
 
-Drive every value from the corrected sources so it can't drift:
+## Files touched
 
-- **Header card:** `cohort.dateLabel`, `EVENT.timeLabel` (`8:45 AM – 11:30 AM ET`), `EVENT.durationLabel`, venue, calendar + directions buttons.
-- **Hero strip:** "$97 · 20 documents · 5 strategic pillars · one morning" with sub-line explaining the AI generates while you coach.
-- **5 pillar cards** (bento grid mirroring your screenshot, using semantic tokens — no hardcoded pastels): pillar name, one-line subtitle, list of its documents with minute badge, and a per-pillar total. Pulled from `WORKFLOW` grouped by `stageN`.
-- **Morning block-by-block timeline:** rendered from the new `SCHEDULE_BLOCKS`, time + duration + pillar chip + friendly subtitle.
-- **What to bring:** laptop + charger, government ID, your idea (rough is fine). Remove the on-the-spot debit-card filing line — Foundation/Strategy/Finance documents include the LLC packet path but filing happens from home.
-- **CTAs:** primary "Prep my brief" → `/dashboard/brief`; secondary "See the full 20-document workflow" → `/dashboard/workflow`.
+- `src/routes/_authenticated/dashboard/day.tsx` — header (now cohort-aware), hero, cohort eyebrow, pillars, schedule heading, what-to-bring, CTAs.
+- `src/lib/workshop-mode.ts` — `SCHEDULE_BLOCKS` subtitles (these also feed `RoomClock` on workshop morning, which is a bonus, not a regression).
 
-### 5. Audit consumers of the renamed stages
-
-`/dashboard/workflow`, `/dashboard/workflow.$key`, `/dashboard/hub`, `attendee_deliverables` UI, admin attendee views, and `curriculum-data.ts` (the marketing `STAGES`) all reference the old 7-stage model. For this turn I'll update only what `/dashboard/day` and the workflow manifest need; the marketing curriculum + admin views are a follow-up — flag at the end with a one-line list so you can decide what's next.
-
-### Files touched this turn
-
-- `src/lib/workflow.ts` — rewrite manifest
-- `src/lib/workshop-mode.ts` — rewrite schedule blocks + friendly stage map
-- `src/routes/_authenticated/dashboard/day.tsx` — full rewrite
-- New migration: upsert 20 new `deliverable_types`, deactivate old keys
-
-### Open question
-
-The screenshot is the canonical list, but **dependency chains** drive the AI multi-doc pipeline order. My defaults: Executive Summary ← Concept Brief; Value Prop ← Concept Brief; Market Sizing ← Concept Brief; Competitive Landscape ← Market Sizing; Business Plan ← all of Foundation; GTM ← Business Plan + Competitive Landscape; Pricing ← Value Prop + Market Sizing; Customer Acquisition ← GTM; Partnerships ← GTM; Roadmap ← Business Plan; Team ← Roadmap; Ops Plan ← Roadmap; Tech Stack ← Roadmap; Financial Model ← Pricing + Roadmap + Team; Funding Strategy ← Financial Model; Investor Memo ← Business Plan + Financial Model; Exit Strategy ← Investor Memo; Risk Assessment ← all prior; Board Deck ← all prior. Tell me if any of those are wrong before I write the migration.
+No layout, component, data, schema, or pricing changes.

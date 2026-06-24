@@ -18,14 +18,14 @@ export type ScheduleBlock = {
 // Minute offsets from cohort.startISO (8:45 AM = 0). Mirrors the published
 // SCHEDULE in src/lib/schedule-data.ts and the 5-pillar / 20-document framework.
 export const SCHEDULE_BLOCKS: ScheduleBlock[] = [
-  { startMin: 0, endMin: 15, kind: "checkin", title: "Check-in", subtitle: "Coffee, refreshments, share your idea in one line." },
-  { startMin: 15, endMin: 40, kind: "stage", stageN: 1, title: "Foundation", subtitle: "Who you are and where you play — 5 docs." },
-  { startMin: 40, endMin: 75, kind: "stage", stageN: 2, title: "Strategy", subtitle: "How you win and grow — 5 docs." },
-  { startMin: 75, endMin: 85, kind: "break", title: "Refreshment break", subtitle: "Refill coffee, stretch, regroup." },
-  { startMin: 85, endMin: 110, kind: "stage", stageN: 3, title: "Operations", subtitle: "What you build and who builds it — 4 docs." },
-  { startMin: 110, endMin: 140, kind: "stage", stageN: 4, title: "Finance", subtitle: "The numbers that matter — 4 docs." },
-  { startMin: 140, endMin: 155, kind: "stage", stageN: 5, title: "Governance", subtitle: "Risk, oversight, and readiness — 2 docs." },
-  { startMin: 155, endMin: 165, kind: "close", title: "You did it", subtitle: "Walk out with all 20 strategic documents." },
+  { startMin: 0, endMin: 15, kind: "checkin", title: "Check-in", subtitle: "Grab coffee. Settle in. Tell us your idea in one sentence — we'll take it from there." },
+  { startMin: 15, endMin: 40, kind: "stage", stageN: 1, title: "Foundation", subtitle: "Lock in who you serve, what makes you worth picking, and why you'll win. 5 docs." },
+  { startMin: 40, endMin: 75, kind: "stage", stageN: 2, title: "Strategy", subtitle: "Your plan, your pricing, and how you get your first customers. 5 docs." },
+  { startMin: 75, endMin: 85, kind: "break", title: "Refreshment break", subtitle: "Stretch. Refill. Step outside for 10 minutes. Your AI keeps typing." },
+  { startMin: 85, endMin: 110, kind: "stage", stageN: 3, title: "Operations", subtitle: "How the business actually runs Monday morning. 4 docs." },
+  { startMin: 110, endMin: 140, kind: "stage", stageN: 4, title: "Finance", subtitle: "Money in, money out, and what you'll raise if you raise. 4 docs." },
+  { startMin: 140, endMin: 155, kind: "stage", stageN: 5, title: "Governance", subtitle: "The grown-up stuff — what could go wrong and what to tell advisors. 2 docs." },
+  { startMin: 155, endMin: 165, kind: "close", title: "You did it", subtitle: "Hand on the door, 20 documents in your Drive. That's a wrap." },
 ];
 
 export const WORKSHOP_END_MIN = 170; // small buffer past 11:30 AM close
