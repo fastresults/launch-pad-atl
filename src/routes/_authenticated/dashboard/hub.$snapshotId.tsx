@@ -458,9 +458,9 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
           <DialogHeader>
             <DialogTitle>{viewerDoc?.document_type?.replace(/_/g, " ")}</DialogTitle>
           </DialogHeader>
-          <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
-            {viewerDoc?.content ?? ""}
-          </pre>
+          <article className="prose prose-invert prose-sm max-w-none prose-headings:text-foreground prose-p:text-foreground/90 prose-strong:text-foreground prose-li:text-foreground/90 prose-a:text-primary">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{viewerDoc?.content ?? ""}</ReactMarkdown>
+          </article>
           <div className="flex gap-2 pt-3">
             <Button size="sm" variant="outline" onClick={() => {
               navigator.clipboard.writeText(viewerDoc?.content ?? "");
