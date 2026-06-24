@@ -14,6 +14,7 @@ import {
   Send,
   BarChart3,
   Rocket,
+  Video,
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
@@ -41,6 +42,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
 
   
   { to: "/admin/media", label: "Media library", icon: ImageIcon, group: "Content", super: true },
+  { to: "/admin/testimonials", label: "Video testimonials", icon: Video, group: "Content" },
 
   { to: "/admin/social/setup", label: "Setup wizard", icon: Rocket, group: "Social", super: true },
   { to: "/admin/social/setup/intake", label: "AI Brand Intake", icon: Sparkles, group: "Social", super: true },

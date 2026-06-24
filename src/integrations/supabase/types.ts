@@ -1763,6 +1763,60 @@ export type Database = {
         }
         Relationships: []
       }
+      video_testimonials: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          duration_seconds: number | null
+          founder_name: string
+          founder_role: string | null
+          id: string
+          poster_bucket: string | null
+          poster_path: string | null
+          quote: string | null
+          sort_order: number
+          startup_name: string | null
+          status: string
+          updated_at: string
+          video_bucket: string
+          video_path: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number | null
+          founder_name: string
+          founder_role?: string | null
+          id?: string
+          poster_bucket?: string | null
+          poster_path?: string | null
+          quote?: string | null
+          sort_order?: number
+          startup_name?: string | null
+          status?: string
+          updated_at?: string
+          video_bucket?: string
+          video_path: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number | null
+          founder_name?: string
+          founder_role?: string | null
+          id?: string
+          poster_bucket?: string | null
+          poster_path?: string | null
+          quote?: string | null
+          sort_order?: number
+          startup_name?: string | null
+          status?: string
+          updated_at?: string
+          video_bucket?: string
+          video_path?: string
+        }
+        Relationships: []
+      }
       workshop_registrations: {
         Row: {
           assigned_tier: string | null
