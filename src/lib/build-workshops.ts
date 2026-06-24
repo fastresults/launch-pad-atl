@@ -10,6 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
+import { AGENCY_SERVICES } from "@/lib/agency-services";
 
 export type AgendaBlock = { time: string; title: string; detail: string };
 export type FAQ = { q: string; a: string };
@@ -28,12 +29,9 @@ export type BuildWorkshop = {
   agenda: AgendaBlock[];
   forYou: string[];
   notForYou: string[];
-  agencyService: {
-    name: string;
-    tagline: string;
-    priceLabel: string;
-    href: string;
-  };
+  /** Workshop-specific tagline for the "Have us build it instead" upsell.
+   *  Name, price, and CTA href are resolved from AGENCY_SERVICES by slug. */
+  agencyServiceTagline: string;
   faq: FAQ[];
 };
 
@@ -137,12 +135,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "You want a $300 logo and call it a day",
       "You're hoping to debate font weights for six hours",
     ],
-    agencyService: {
-      name: "Brand & Website Build",
-      tagline: "Logo, identity system, and a real website — delivered live in 2 weeks.",
-      priceLabel: "From $2,900",
-      href: "/contact?service=brand-website",
-    },
+    agencyServiceTagline: "Logo system, voice, and full asset pack — shipped live in 2 weeks.",
     faq: makeCommonFaq("$297"),
   },
   {
@@ -213,12 +206,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "You haven't picked the offer you're selling",
       "You believe more sections will fix conversion",
     ],
-    agencyService: {
-      name: "Brand & Website Build",
-      tagline: "Site, copy, payments, and analytics — shipped live in 2 weeks.",
-      priceLabel: "From $2,900",
-      href: "/contact?service=brand-website",
-    },
+    agencyServiceTagline: "Site, copy, payments, and analytics — shipped live in 2–3 weeks.",
     faq: makeCommonFaq("$397"),
   },
   {
@@ -288,12 +276,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "You haven't decided what you sell",
       "You expect followers without shipping",
     ],
-    agencyService: {
-      name: "Marketing Engine",
-      tagline: "Posts, videos, and outreach delivered monthly — on autopilot.",
-      priceLabel: "From $2,100/mo",
-      href: "/contact?service=marketing-engine",
-    },
+    agencyServiceTagline: "Two channels rebuilt to convert, a 30-day calendar shipped, the cadence held — every month.",
     faq: makeCommonFaq("$197"),
   },
   {
@@ -363,12 +346,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "You're unwilling to publish for 6 months before SEO compounds",
       "You think AI can produce content with zero editing",
     ],
-    agencyService: {
-      name: "Marketing Engine",
-      tagline: "We run your content engine — pillars, SEO, video, distribution.",
-      priceLabel: "From $2,100/mo",
-      href: "/contact?service=marketing-engine",
-    },
+    agencyServiceTagline: "Pillars, SEO map, and 8 anchor pieces a month — repurposed across every channel.",
     faq: makeCommonFaq("$297"),
   },
   {
@@ -437,12 +415,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "You expect AI to run your business with no humans in the loop",
       "You haven't picked the offer yet — automate strategy first, then workflows",
     ],
-    agencyService: {
-      name: "AI Ops Sprint",
-      tagline: "We embed for 30 days and rewire 10 workflows around AI — with documentation.",
-      priceLabel: "From $4,500",
-      href: "/contact?service=ai-ops-sprint",
-    },
+    agencyServiceTagline: "30 days, 10 of your workflows rewired around AI — built, tested, and handed off with the prompt library.",
     faq: makeCommonFaq("$397"),
   },
   {
@@ -512,12 +485,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "You believe email is dead",
       "You want spam-cannon outreach without a list strategy",
     ],
-    agencyService: {
-      name: "Marketing Engine",
-      tagline: "We set up the CRM, write the sequences, and run them monthly.",
-      priceLabel: "From $2,100/mo",
-      href: "/contact?service=marketing-engine",
-    },
+    agencyServiceTagline: "CRM picked and live, 3 production sequences shipped, deliverability fixed — in 3 weeks.",
     faq: makeCommonFaq("$397"),
   },
   {
@@ -587,12 +555,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "You believe sales is purely art, never science",
       "You want a magic close line",
     ],
-    agencyService: {
-      name: "Sales System Sprint",
-      tagline: "We build the script, pipeline, and 30-day handoff so your team runs it without you.",
-      priceLabel: "From $3,800",
-      href: "/contact?service=sales-system-sprint",
-    },
+    agencyServiceTagline: "ICP, script, pipeline in your CRM, and a 30-day handoff so your team runs it without you.",
     faq: makeCommonFaq("$397"),
   },
   {
@@ -662,12 +625,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "You're not ready to commit to a business entity yet",
       "You're hoping to skip taxes",
     ],
-    agencyService: {
-      name: "Launch Kit",
-      tagline: "LLC, EIN, contracts, bookkeeping, bank account — done for you.",
-      priceLabel: "From $1,200",
-      href: "/contact?service=launch-kit",
-    },
+    agencyServiceTagline: "LLC, EIN, contracts, books, invoicing, insurance checklist — done in 10 business days.",
     faq: makeCommonFaq("$197"),
   },
 ];
@@ -675,3 +633,51 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
 export function getBuildWorkshop(slug: string): BuildWorkshop | undefined {
   return BUILD_WORKSHOPS.find((w) => w.slug === slug);
 }
+
+/**
+ * Resolve the "Have us build it" offer for a workshop by reading the
+ * matching AGENCY_SERVICES entry. Single source of truth for service
+ * name, retail price, and CTA href.
+ */
+export function getWorkshopAgencyOffer(slug: string): {
+  name: string;
+  tagline: string;
+  priceLabel: string;
+  href: string;
+} | undefined {
+  const w = getBuildWorkshop(slug);
+  if (!w) return undefined;
+  const svc = AGENCY_SERVICES.find((s) => s.slug === slug);
+  if (!svc) return undefined;
+  return {
+    name: `Done-for-you: ${svc.capability}`,
+    tagline: w.agencyServiceTagline,
+    priceLabel: svc.priceLabel,
+    href: svc.ctaHref,
+  };
+}
+
+// Dev-mode drift guard: every workshop has a matching agency service,
+// and the workshop tier matches what workshopPriceForRetailCents() would pick
+// from the retail price label.
+if (import.meta.env?.DEV) {
+  for (const w of BUILD_WORKSHOPS) {
+    const svc = AGENCY_SERVICES.find((s) => s.slug === w.slug);
+    if (!svc) {
+      // eslint-disable-next-line no-console
+      console.warn(`[build-workshops] no AGENCY_SERVICES entry for slug "${w.slug}"`);
+      continue;
+    }
+    const m = svc.priceLabel.match(/\$([\d,]+)/);
+    if (!m) continue;
+    const retailCents = Number(m[1].replace(/,/g, "")) * 100;
+    const expected = workshopPriceForRetailCents(retailCents);
+    if (expected.cents !== w.priceCents) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[build-workshops] tier drift for "${w.slug}": retail ${svc.priceLabel} → expected ${expected.label}, got ${w.priceLabel}`,
+      );
+    }
+  }
+}
+
