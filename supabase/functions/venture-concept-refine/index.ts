@@ -120,6 +120,82 @@ async function actionCritique(supabase: any, snap: any) {
   return await callAI([{ role: "system", content: sys }, { role: "user", content: user }]);
 }
 
+// ===================== EPIPHANY ENGINE =====================
+// Multi-step pipeline: signal-mine → diverge → critique/merge → score → rank.
+// Returns up to 3 enhancement cards anchored in evidence.
+
+async function epiphanyPipeline(snap: any) {
+  const ctx = contextBlock(snap);
+
+  // Step 1 — signal mining
+  const signalsSys = `You extract sharp market signals from a research corpus.
+Return JSON: { "signals": [ { "id": "s1", "kind": "unmet_jtbd|competitor_gap|customer_complaint|pricing_anomaly|regulatory_tailwind|tech_enabler", "text": string, "source_hint": string } ] } — 10 to 20 items.`;
+  const signals = await callAI([
+    { role: "system", content: signalsSys },
+    { role: "user", content: `${ctx}\n\nMine signals from the research above.` },
+  ]);
+
+  // Step 2 — divergent ideas (forced 5-lens diversity)
+  const divergeSys = `You generate enhancement ideas that EXTEND the founder's locked concept (additive, not pivots).
+Return JSON: { "ideas": [ { "id": "i1", "lens": "product_feature|new_channel|new_monetization|segment_addon|ai_native", "title": string, "summary": string, "extends_concept": string (1 sentence on how it builds on the current concept), "signal_ids": string[] (cite at least one signal id) } ] } — 8 to 12 ideas, balanced across the 5 lenses.`;
+  const ideasRaw = await callAI([
+    { role: "system", content: divergeSys },
+    { role: "user", content: `${ctx}\n\nLocked concept:\n${snap.concept_summary ?? "(none)"}\nValue prop:\n${snap.value_proposition ?? "(none)"}\n\nSignals:\n${JSON.stringify(signals.signals ?? [])}\n\nGenerate enhancement ideas.` },
+  ]);
+
+  // Step 3 — critique/merge (drop weak, dedupe, must extend, must be testable)
+  const mergeSys = `You are a venture editor. Filter ideas: keep only those that (a) clearly EXTEND the locked concept (not replace it), (b) cite at least one signal id, (c) are testable in <=30 days by a small founding team. Merge near-duplicates. Return JSON: { "kept": [ ...same shape as input ideas, max 6 ] }.`;
+  const kept = await callAI([
+    { role: "system", content: mergeSys },
+    { role: "user", content: `Locked concept:\n${snap.concept_summary ?? "(none)"}\n\nIdeas to filter:\n${JSON.stringify(ideasRaw.ideas ?? [])}` },
+  ]);
+
+  // Step 4 — score viability + attractiveness with anchored rubric
+  const scoreSys = `You score venture enhancement ideas with this rubric.
+VIABILITY (100): demand_signal (0-20), competitive_whitespace (0-20), feasibility (0-20), time_to_revenue (0-20: <30d=20,<90d=15,<6mo=10,>6mo=5), defensibility (0-20).
+ATTRACTIVENESS (100): customer_pull (0-25), margin_upside (0-25), strategic_optionality (0-25), brand_lift (0-25).
+Each sub-score needs a 1-line justification AND cites at least one signal_id; if no evidence, justification must say "no_evidence" and that sub-score is capped at 50% of max.
+Return JSON: { "scored": [ { ...original idea fields, "why_now": string (1 sentence), "first_30_days": string[] (3 items), "risks": string[] (2 items), "viability": { "demand_signal": {"score": int, "why": string, "signals": string[]}, "competitive_whitespace": {...}, "feasibility": {...}, "time_to_revenue": {...}, "defensibility": {...}, "total": int }, "attractiveness": { "customer_pull": {...}, "margin_upside": {...}, "strategic_optionality": {...}, "brand_lift": {...}, "total": int }, "combined": int (viability.total + attractiveness.total) } ] }`;
+  const scored = await callAI([
+    { role: "system", content: scoreSys },
+    { role: "user", content: `Locked concept:\n${snap.concept_summary ?? "(none)"}\n\nSignals:\n${JSON.stringify(signals.signals ?? [])}\n\nIdeas:\n${JSON.stringify(kept.kept ?? [])}` },
+  ]);
+
+  // Step 5 — rank, pick top 3, exec note
+  const list = (scored.scored ?? []).filter((c: any) => c?.combined);
+  list.sort((a: any, b: any) => (b.combined - a.combined) || ((b.attractiveness?.total ?? 0) - (a.attractiveness?.total ?? 0)));
+  const top3 = list.slice(0, 3);
+
+  let exec_note = "";
+  if (top3.length > 0) {
+    try {
+      const note = await callAI([
+        { role: "system", content: `Return JSON: { "exec_note": string (2 sentences explaining why these three rose to the top) }` },
+        { role: "user", content: `Locked concept:\n${snap.concept_summary ?? "(none)"}\n\nTop ideas:\n${JSON.stringify(top3.map((c: any) => ({ title: c.title, lens: c.lens, combined: c.combined })))}` },
+      ]);
+      exec_note = note.exec_note ?? "";
+    } catch { /* optional */ }
+  }
+
+  return { signals: signals.signals ?? [], top3, exec_note };
+}
+
+async function actionFoldEnhancement(supabase: any, snap: any, card: any) {
+  const sys = `You rewrite a concept to FOLD IN a specific enhancement while staying ${WORD_MIN}-${WORD_MAX} words.
+Return JSON: { "summary": string (${WORD_MIN}-${WORD_MAX} words), "value_proposition": string, "delta": string }.`;
+  const user = `Current summary:\n${snap.concept_summary ?? "(none)"}\nCurrent value prop:\n${snap.value_proposition ?? "(none)"}\n\nFold in this enhancement:\n${JSON.stringify({ title: card.title, summary: card.summary, why_now: card.why_now })}\n\n${contextBlock(snap)}`;
+  let out = await callAI([{ role: "system", content: sys }, { role: "user", content: user }]);
+  const wcv = (out.summary ?? "").trim().split(/\s+/).filter(Boolean).length;
+  if (wcv < WORD_MIN || wcv > WORD_MAX) {
+    out = await callAI([
+      { role: "system", content: sys }, { role: "user", content: user },
+      { role: "assistant", content: JSON.stringify(out) },
+      { role: "user", content: `Summary was ${wcv} words. Rewrite to be EXACTLY ${WORD_MIN}-${WORD_MAX} words.` },
+    ]);
+  }
+  return out;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
