@@ -183,7 +183,7 @@ export const AGENCY_TRACKS: AgencyTrack[] = [
     outcome:
       "Brand, website, and the legal scaffolding to invoice on day one. Most founders' first three months — compressed into four weeks.",
     includedSlugs: ["brand-identity", "website-that-converts", "legal-financial-ops"],
-    priceLabel: "From $7,500",
+    priceLabel: "From $4,875",
     timelineLabel: "4–6 weeks",
     ctaHref: "/contact?track=launch",
   },
@@ -195,7 +195,7 @@ export const AGENCY_TRACKS: AgencyTrack[] = [
     outcome:
       "Distribution you own. Content that compounds. A follow-up machine that catches the revenue first-touch sales always misses.",
     includedSlugs: ["social-presence", "content-engine", "email-crm-automation"],
-    priceLabel: "From $4,500/mo",
+    priceLabel: "From $2,925/mo",
     timelineLabel: "Ongoing",
     featured: true,
     ctaHref: "/contact?track=growth",
@@ -208,7 +208,7 @@ export const AGENCY_TRACKS: AgencyTrack[] = [
     outcome:
       "AI built into how you ship. A sales motion that doesn't depend on your mood. The leverage every late-stage startup wishes it had earlier.",
     includedSlugs: ["ai-operating-system", "sales-systems"],
-    priceLabel: "From $8,000",
+    priceLabel: "From $5,200",
     timelineLabel: "30-day sprint",
     ctaHref: "/contact?track=operate",
   },
