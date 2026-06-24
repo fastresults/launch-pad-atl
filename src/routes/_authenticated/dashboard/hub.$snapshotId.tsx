@@ -359,13 +359,20 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               {completeCount} / {types.length} complete · ~{totalMin} min total
             </p>
           </div>
-          <Button onClick={() => bulk.mutate()} disabled={bulk.isPending || jobRunning}>
-            {bulk.isPending || jobRunning ? (
-              <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Running…</>
-            ) : (
-              <><Sparkles className="mr-1.5 h-4 w-4" />Generate all {types.length}</>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => bulk.mutate()} disabled={bulk.isPending || jobRunning}>
+              {bulk.isPending || jobRunning ? (
+                <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Running…</>
+              ) : (
+                <><Sparkles className="mr-1.5 h-4 w-4" />Generate all {types.length}</>
+              )}
+            </Button>
+            {jobRunning && job?.id && (
+              <Button variant="outline" size="sm" onClick={() => cancel.mutate(job.id)} disabled={cancel.isPending || job.cancel_requested}>
+                <XCircle className="mr-1 h-3 w-3" />{job.cancel_requested ? "Canceling…" : "Cancel"}
+              </Button>
             )}
-          </Button>
+          </div>
         </div>
         {job && (
           <div className="mt-4 space-y-1.5">
@@ -376,6 +383,20 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             <Progress value={job.progress_pct ?? 0} />
             {job.error && <p className="text-xs text-red-400">{job.error}</p>}
           </div>
+        )}
+        {(failuresQ.data?.length ?? 0) > 0 && (
+          <details className="mt-4 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-xs">
+            <summary className="cursor-pointer font-medium text-red-200">
+              {failuresQ.data.length} recent failure{failuresQ.data.length === 1 ? "" : "s"}
+            </summary>
+            <ul className="mt-2 space-y-1.5">
+              {failuresQ.data.slice(0, 8).map((f: any) => (
+                <li key={f.id} className="text-red-300/80">
+                  <span className="font-mono text-red-200">{f.document_type}</span> — {f.error}
+                </li>
+              ))}
+            </ul>
+          </details>
         )}
       </div>
 
