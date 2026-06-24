@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 // Layout guards
 import AuthenticatedLayout from "@/routes/_authenticated";
@@ -81,6 +82,7 @@ function Loading() {
 export default function App() {
   return (
     <Suspense fallback={<Loading />}>
+      <ScrollToTop />
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
