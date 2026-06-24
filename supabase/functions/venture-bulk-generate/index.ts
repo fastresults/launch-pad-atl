@@ -43,7 +43,9 @@ async function generateOne(supabase: any, snapshotId: string, documentType: stri
       .join("\n\n---\n\n");
   }
 
-  const systemPrompt = `You are an AI venture analyst writing investor-grade documents.
+  const isWebsitePrd = documentType === "website_prd";
+
+  const baseSystem = `You are an AI venture analyst writing investor-grade documents.
 Produce a single document in clean Markdown. Use ## headings, short paragraphs, bullets.
 Be specific, plausible, actionable. Never use filler like "TBD".
 Target ~600-900 words.
@@ -56,10 +58,56 @@ CITATIONS:
 After the markdown, on a final line, output exactly:
 QUALITY_SCORE: <0-100 integer>`;
 
+  const websitePrdSystem = `You are a senior product writer producing a Website PRD that doubles as a paste-ready prompt for an AI website builder (Lovable, v0, Bolt, Cursor).
+
+Output ONLY clean Markdown with these exact sections, in this order:
+
+# {Company} — Website PRD
+
+## 1. Paste-ready prompt
+A single fenced \`\`\` block containing a self-contained, copy-pasteable prompt for an AI website builder. Include: company name, who it's for, market scope and geography, industry, value proposition, pages to create, sections per page, primary CTA, brand voice (3-5 adjectives), color hint, and any constraints. 400-600 words. Read it as direct instructions to the AI builder.
+
+## 2. Sitemap
+Bulleted list of pages to build (Home, About, Services or Product, Pricing, Contact, Blog, etc. — only what fits this venture).
+
+## 3. Page-by-page copy
+For each page from the sitemap, give:
+- **H1** (one line)
+- **Sub-headline** (one sentence)
+- 3 sections, each with an **H2** and 2-3 sentence body
+- One primary **CTA** label
+
+## 4. SEO bundle
+- **Title** (<60 characters)
+- **Meta description** (<160 characters)
+- **Target keywords** — 8-12 keywords; if market scope is local, include geo-modified keywords like "<service> in <city>"
+- **OG image prompt** — one sentence to feed an image generator
+
+## 5. Tech checklist
+Bulleted: forms needed, analytics, integrations (Stripe? Calendly? booking?), legal pages (Privacy, Terms), accessibility notes.
+
+CITATIONS: only cite sources for factual market or competitor claims. Skip footnotes inside the fenced prompt block in section 1.
+
+End with a "## Sources" section listing any [^n] footnotes used, then on a final line output exactly:
+QUALITY_SCORE: <0-100 integer>`;
+
+  const systemPrompt = isWebsitePrd ? websitePrdSystem : baseSystem;
+
+  const founderCard = {
+    founder: { name: snap.founder_name, email: snap.founder_email, phone: snap.founder_phone },
+    location: { city: snap.city, region: snap.region, country: snap.country },
+    market_scope: snap.market_scope,
+    industry: snap.industry,
+    sub_industry: snap.sub_industry,
+    company_name: snap.company_name,
+    website_url: snap.website_url,
+  };
+
   const userPrompt = [
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
     `Category: ${type.category}`,
+    `\n## Founder & market (always reflect these accurately)\n${JSON.stringify(founderCard, null, 2)}`,
     `\n## Venture brief (founder-reviewed)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,
     snap.research_brief ? `\n## Research brief (use for evidence + citations)\n${JSON.stringify(snap.research_brief, null, 2)}` : "",
     depContext ? `\n## Upstream docs\n${depContext}` : "",
