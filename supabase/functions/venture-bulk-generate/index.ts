@@ -14,6 +14,59 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
+// ============== SPECIALIZED PROMPTS ==============
+const QUALITY_FOOTER = `\n\nEnd with a "## Sources" section listing any [^n] footnotes used, then on a final line output exactly:\nQUALITY_SCORE: <0-100 integer>`;
+
+const SPECIAL: Record<string, string> = {
+  website_prd: `You are a senior product writer producing a Website PRD that doubles as a paste-ready prompt for an AI website builder (Lovable, v0, Bolt, Cursor).
+Output clean Markdown with: # {Company} — Website PRD; ## 1. Paste-ready prompt (single fenced \`\`\` block, 400-600 words, self-contained instructions); ## 2. Sitemap; ## 3. Page-by-page copy (H1, sub-headline, 3 sections each with H2 + 2-3 sentence body, primary CTA); ## 4. SEO bundle (title <60ch, meta <160ch, 8-12 keywords with geo-modifiers when market scope is local, OG image prompt); ## 5. Tech checklist. Reuse upstream brand_tokens (colors/fonts) in the fenced prompt when present.${QUALITY_FOOTER}`,
+
+  brand_strategy_framework: `You are a brand strategist. Produce a recognized brand-strategy doc grounded in Simon Sinek's Golden Circle, Aaker's brand identity prism, and Jung's 12 archetypes.
+Output clean Markdown with: # {Company} — Brand Strategy; ## Purpose (Why); ## Vision (10-year picture); ## Mission (what we do today); ## Core Values (5 with short rationale); ## Audience Archetypes (2-3 named); ## Brand Promise (one sentence); ## Positioning Statement (use Geoffrey Moore template: "For [target] who [need], [brand] is the [category] that [benefit] unlike [alternative]."); ## Brand Pillars (3-5 with 1-line definitions); ## Personality (primary Jung archetype + 5-trait spectrum rated 1-5: serious↔playful, classic↔modern, etc.); ## Brand Essence (3-5 word phrase).${QUALITY_FOOTER}`,
+
+  brand_messaging_house: `You are a senior copy chief building a messaging architecture.
+Output clean Markdown with: # Messaging House; ## Tagline (primary + 3 alternates); ## Elevator Pitch (15-second / 30-second / 60-second versions); ## Brand Story (Donald Miller StoryBrand 7-part: Character, Problem, Guide, Plan, Call to Action, Failure, Success); ## Proof Points (4-6 evidenced bullets); ## Key Messages per Audience (one block per ICP); ## Language Rules (do-use list, do-not-use list, banned buzzwords).${QUALITY_FOOTER}`,
+
+  visual_identity_brief: `You are a brand designer. Produce a Visual Identity Brief AND a machine-readable brand-tokens block.
+Output clean Markdown with: # Visual Identity; ## Logo Direction (concept rationale + 3 mood pairings); ## Color System (table with role, hex, usage, AA contrast pair); ## Typography (heading + body pair with web-safe fallbacks); ## Iconography style; ## Photography direction; ## Layout principles; ## Accessibility checklist.
+## Brand Tokens (JSON)
+A SINGLE fenced \`\`\`json block, the ONLY JSON in the doc, with this exact shape:
+{"colors":{"primary":"#hex","secondary":"#hex","accent":"#hex","bg":"#hex","fg":"#hex","muted":"#hex"},"fonts":{"heading":"Font Name","body":"Font Name"},"radius":"sm|md|lg","mood":["adj1","adj2","adj3"]}
+## AI Logo Prompt
+A SINGLE fenced \`\`\` block: a paste-ready prompt for Midjourney/Ideogram (200-300 words, no JSON).${QUALITY_FOOTER}`,
+
+  brand_voice_tone_guide: `You are a voice & tone strategist.
+Output clean Markdown with: # Voice & Tone; ## Voice Attributes (4 dimensions each with two opposing poles and a 1-5 rating, e.g. Formal 1—5 Casual); ## Tone Shifts by Context (sales, support, crisis, social, error states); ## Reading Level target (Flesch grade); ## Before/After Rewrites (5 examples — bad copy → on-brand rewrite); ## Inclusive-Language Rules; ## Quick reference cheat-sheet.${QUALITY_FOOTER}`,
+
+  brand_guidelines_pdf: `You are compiling the consolidated brand guidelines book.
+Output clean Markdown with: # Brand Guidelines; ## Brand at a Glance (purpose, promise, positioning); ## Logo Usage (clear-space, min size, do/don'ts); ## Color (palette table with hex/RGB/usage); ## Typography (hierarchy table); ## Imagery & Iconography; ## Voice & Tone summary; ## Messaging quick-reference; ## Asset Usage (where each goes); ## File-naming convention; ## Approval Governance (who approves what). Reuse upstream brand_tokens and voice attributes when present.${QUALITY_FOOTER}`,
+
+  social_media_audit_setup: `You are a social media strategist.
+Output clean Markdown with: # Social Media Audit & Setup; ## Platform Fit Matrix (table of Instagram, TikTok, LinkedIn, X, YouTube, Facebook, Pinterest, Threads, Reddit with columns: Recommendation [Yes/Maybe/Skip], Why, Effort, Time-to-impact); ## Primary Platforms (deep dive on each Yes platform: handle availability checklist + 3 candidate handles, bio template x3 with character count, link-in-bio structure, profile-image and cover-image spec, pinned-post strategy, highlights or featured collections); ## Hashtag & Keyword Seeds (15-25 per primary platform, geo-tagged when market scope is local); ## Accounts to Engage With (25 named accounts derived from research_brief competitors + adjacent voices); ## First-Week Setup Checklist.${QUALITY_FOOTER}`,
+
+  content_strategy_pillars: `You are a content strategist.
+Output clean Markdown with: # Content Strategy; ## Content Pillars (4-6, each with: Pillar Name, JTBD it serves, % of mix, formats, voice notes, success metric); ## Content-to-Funnel Map (% allocation across TOFU/MOFU/BOFU/loyalty with rationale); ## POV Statements (3-5 strong opinions the brand holds); ## Topic Universe (20 evergreen topics + 10 timely topics); ## Banned Topics; ## Cadence (posts/week per platform).${QUALITY_FOOTER}`,
+
+  content_calendar_90day: `You are an editorial planner. Produce a 90-day calendar that is genuinely usable.
+Output clean Markdown with: # 90-Day Content Calendar; ## Weeks 1-4 (Drafted Posts) — for EACH of weeks 1-4 produce 3 posts per primary platform with: Day, Pillar, Platform, Format, Hook (first line), Full body draft, CTA, Hashtags, Asset notes (image/video prompt), Best-time slot; ## Weeks 5-12 (Outlined Briefs) — for each week, 3 brief outlines per platform (title + hook + 2-line angle + format + pillar); ## Batch Production Schedule (one shoot/write day per week with what to capture); ## Repurposing Matrix (1 long-form → 5 short-form derivatives template).${QUALITY_FOOTER}`,
+
+  launch_content_kit: `You are a launch strategist producing ready-to-paste assets.
+Output clean Markdown with: # Launch Content Kit; ## 10 Launch Posts — one block each for: Announcement, Founder Story, Problem Post, Solution Demo, Social Proof, FAQ, Hard CTA, Behind-the-Scenes, Manifesto, Partnership Ask. For each: Platform recommendation, Caption (paste-ready, with line breaks and emoji where appropriate), Image/Video prompt (paste-ready), Hashtags, Alt-text; ## 5 Email/DM Templates (warm intro, cold outreach, press pitch, customer ask, partner ask); ## Press One-Pager (headline, dek, 3 boilerplate paragraphs, founder bio 80 words, contact block).${QUALITY_FOOTER}`,
+
+  community_engagement_playbook: `You are a community manager.
+Output clean Markdown with: # Community Engagement Playbook; ## 10 Reply Scripts (positive comment, critical comment, question, complaint, sales-curious, troll, competitor mention, press inquiry, partnership inquiry, support issue); ## Comment-Prompt Formulas (5 templates that earn replies); ## DM Funnel (greeting → qualify → offer → close); ## UGC + Testimonial Collection Scripts (3 scripts with consent language); ## Crisis-Response Decision Tree (when to acknowledge / explain / escalate / silence); ## Daily Ritual (60-min/day breakdown with timeboxes); ## KPI Dashboard (reach, saves, shares, replies, profile visits → site visits → leads, with target ranges).${QUALITY_FOOTER}`,
+
+  influencer_partnership_brief: `You are a creator-partnerships lead.
+Output clean Markdown with: # Influencer & Partnership Brief; ## Tier Strategy (nano <10k / micro 10-100k / mid 100k-1M target counts and budgets); ## 25 Named Candidate Creators (derived from research_brief and industry context — table with Name/Handle, Tier, Platform, Audience fit, Estimated rate range, Why-this-creator); ## Outreach Scripts (cold DM x3 styles: warm intro / value-led / paid offer); ## Partnership Terms Template (deliverables, exclusivity, usage rights, payment, timeline); ## Performance Tracking template (UTM convention, conversion targets).${QUALITY_FOOTER}`,
+
+  paid_ads_starter_pack: `You are a performance marketer.
+Output clean Markdown with: # Paid Ads Starter Pack; ## Budget Tiers ($300, $1,000, $3,000 monthly — each with platform allocation table); ## Audience Definitions (3 saved audiences with parameters); ## Creative Concepts — for the top 2 recommended platforms, produce 3 ad creative concepts each with: Hook, Body copy, CTA, Visual prompt (paste-ready), Format; ## Conversion Tracking Setup (Pixel/CAPI checklist, event names, key conversions); ## Test-and-Iterate Framework (week-by-week test plan, learning matrix, kill criteria).${QUALITY_FOOTER}`,
+};
+
+function specializedPrompt(t: string): string | null {
+  return SPECIAL[t] ?? null;
+}
+
 // Inline single-doc generator (kept local so we don't share files across functions).
 async function generateOne(supabase: any, snapshotId: string, documentType: string) {
   const [{ data: snap }, { data: type }] = await Promise.all([
