@@ -10,6 +10,7 @@ type AuthState = {
   roles: AppRole[];
   memberStatus: MemberStatus;
   approvedVia: "admin" | "payment" | null;
+  foundersHubAccess: boolean;
   loading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -17,6 +18,7 @@ type AuthState = {
   isApprovedMember: boolean;
   signOut: () => Promise<void>;
 };
+
 
 const AuthContext = createContext<AuthState | null>(null);
 
