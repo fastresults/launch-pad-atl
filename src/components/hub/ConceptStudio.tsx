@@ -251,3 +251,174 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
     </div>
   );
 }
+
+function scoreColor(combined: number) {
+  if (combined >= 160) return "bg-emerald-500/20 text-emerald-300 border-emerald-500/40";
+  if (combined >= 130) return "bg-amber-500/20 text-amber-300 border-amber-500/40";
+  return "bg-white/10 text-muted-foreground border-white/10";
+}
+
+function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onApplied: (s: string, v: string) => Promise<void>; onChanged: () => void }) {
+  const lastRun = (snapshot.epiphany_runs ?? [])[0] ?? null;
+  const [top3, setTop3] = useState<any[]>(lastRun?.top3 ?? []);
+  const [execNote, setExecNote] = useState<string>(lastRun?.exec_note ?? "");
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const saved = Array.isArray(snapshot.saved_enhancements) ? snapshot.saved_enhancements : [];
+  const hasBrief = !!snapshot.research_brief && Object.keys(snapshot.research_brief).length > 0;
+
+  const run = useMutation({
+    mutationFn: (args: { action: string; payload?: any }) =>
+      refineConcept({ data: { snapshotId: snapshot.id, action: args.action, payload: args.payload } }),
+  });
+
+  const findEpiphany = async () => {
+    try {
+      const out = await run.mutateAsync({ action: "epiphany" });
+      setTop3(out.top3 ?? []);
+      setExecNote(out.exec_note ?? "");
+      toast.success(`Found ${(out.top3 ?? []).length} ideas`);
+      onChanged();
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const fold = async (card: any, savedId?: string) => {
+    try {
+      const out = await run.mutateAsync({ action: "fold_enhancement", payload: { card, id: savedId } });
+      await onApplied(out.summary, out.value_proposition);
+      toast.success(out.delta ? `Folded in: ${out.delta}` : "Folded into concept");
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const save = async (card: any) => {
+    try { await run.mutateAsync({ action: "save_enhancement", payload: { card } }); toast.success("Saved"); onChanged(); }
+    catch (e: any) { toast.error(e.message); }
+  };
+
+  const dismiss = async (id: string) => {
+    try { await run.mutateAsync({ action: "dismiss_enhancement", payload: { id } }); onChanged(); }
+    catch (e: any) { toast.error(e.message); }
+  };
+
+  return (
+    <div className="space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4 text-amber-400" />
+            <h4 className="text-sm font-semibold">Epiphany Engine</h4>
+            <Badge variant="outline" className="border-amber-500/40 text-[10px] text-amber-300">deep</Badge>
+          </div>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            Multi-pass AI: mines signals from your research, generates and scores enhancements, returns up to 3 vision-extending ideas with viability + attractiveness scores.
+          </p>
+        </div>
+        <Button size="sm" onClick={findEpiphany} disabled={run.isPending || !hasBrief}>
+          {run.isPending && run.variables?.action === "epiphany"
+            ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Thinking…</>
+            : <><Zap className="mr-1 h-3 w-3" />Find my epiphany</>}
+        </Button>
+      </div>
+      {!hasBrief && (
+        <p className="text-[11px] text-amber-300/80">Deep research must complete first.</p>
+      )}
+      {execNote && <p className="text-xs italic text-muted-foreground">{execNote}</p>}
+
+      {top3.length > 0 && (
+        <div className="space-y-2">
+          {top3.map((card: any, i: number) => {
+            const id = `e${i}`;
+            const open = expanded === id;
+            return (
+              <div key={id} className="rounded-lg border border-white/10 bg-card p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={`text-[10px] ${scoreColor(card.combined ?? 0)}`}>
+                        {card.combined ?? 0}
+                      </Badge>
+                      <Badge variant="outline" className="text-[10px]">{card.lens}</Badge>
+                      <div className="truncate text-sm font-medium">{card.title}</div>
+                    </div>
+                    {card.why_now && <p className="mt-1 text-[11px] text-amber-300/80">Why now: {card.why_now}</p>}
+                    <p className="mt-1 text-xs text-muted-foreground">{card.summary}</p>
+                    <div className="mt-1.5 flex gap-3 text-[10px] text-muted-foreground">
+                      <span>Viability <b className="text-foreground">{card.viability?.total ?? 0}</b>/100</span>
+                      <span>Attractiveness <b className="text-foreground">{card.attractiveness?.total ?? 0}</b>/100</span>
+                    </div>
+                  </div>
+                </div>
+
+                {open && (
+                  <div className="mt-2 space-y-2 border-t border-white/5 pt-2 text-[11px]">
+                    {card.first_30_days?.length > 0 && (
+                      <div>
+                        <div className="font-medium text-muted-foreground">First 30 days</div>
+                        <ul className="list-disc space-y-0.5 pl-4">
+                          {card.first_30_days.map((s: string, j: number) => <li key={j}>{s}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    {card.risks?.length > 0 && (
+                      <div>
+                        <div className="font-medium text-muted-foreground">Risks</div>
+                        <ul className="list-disc space-y-0.5 pl-4 text-amber-300/80">
+                          {card.risks.map((s: string, j: number) => <li key={j}>{s}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                      {["viability", "attractiveness"].map((dim) => (
+                        <div key={dim} className="rounded border border-white/5 p-1.5">
+                          <div className="text-[10px] font-medium uppercase text-muted-foreground">{dim}</div>
+                          {Object.entries(card[dim] ?? {}).filter(([k]) => k !== "total").map(([k, v]: any) => (
+                            <div key={k} className="flex justify-between gap-1">
+                              <span className="truncate">{k.replace(/_/g, " ")}</span>
+                              <span className="font-mono text-muted-foreground">{v?.score ?? "?"}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <Button size="sm" className="h-7 text-xs" onClick={() => fold(card)} disabled={run.isPending}>
+                    <Sparkles className="mr-1 h-3 w-3" />Fold into concept
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => save(card)} disabled={run.isPending}>
+                    <Bookmark className="mr-1 h-3 w-3" />Save
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setExpanded(open ? null : id)}>
+                    {open ? "Hide details" : "Details"}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {saved.filter((s: any) => s.status === "saved").length > 0 && (
+        <details className="rounded-lg border border-white/10 bg-background/40 p-2 text-xs">
+          <summary className="cursor-pointer font-medium text-muted-foreground">Saved for later ({saved.filter((s: any) => s.status === "saved").length})</summary>
+          <div className="mt-2 space-y-1.5">
+            {saved.filter((s: any) => s.status === "saved").map((s: any) => (
+              <div key={s.id} className="flex items-start justify-between gap-2 rounded border border-white/5 p-1.5">
+                <div className="min-w-0 flex-1 text-[11px]">
+                  <div className="font-medium">{s.card.title}</div>
+                  <div className="line-clamp-2 text-muted-foreground">{s.card.summary}</div>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => fold(s.card, s.id)} disabled={run.isPending}>Fold</Button>
+                  <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => dismiss(s.id)} disabled={run.isPending}><X className="h-3 w-3" /></Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+    </div>
+  );
+}
+
