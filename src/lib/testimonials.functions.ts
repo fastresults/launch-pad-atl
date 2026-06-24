@@ -46,7 +46,9 @@ export type TestimonialWithUrls = Testimonial & {
 };
 
 async function signUrl(bucket: string, path: string, expiresIn = 3600): Promise<string | null> {
-  if (!bucket || !path) return null;
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  if (!bucket) return null;
   const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresIn);
   if (error) return null;
   return data?.signedUrl ?? null;
