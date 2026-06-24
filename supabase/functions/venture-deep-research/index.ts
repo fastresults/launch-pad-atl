@@ -427,8 +427,12 @@ Venture context:
 
   const corpus = [
     `# Founder input`,
+    `Founder: ${snap.founder_name || "[not provided]"}${snap.founder_email ? ` <${snap.founder_email}>` : ""}`,
     `Company name: ${companyName || "[not provided]"}`,
     `Website: ${ownUrl ?? "[not provided]"}`,
+    `Industry: ${industry || "[not provided]"}${snap.sub_industry ? ` (niche: ${snap.sub_industry})` : ""}`,
+    `Location: ${geo || "[not provided]"}${country ? `, ${country}` : ""}`,
+    `Market scope: ${scope}`,
     `Concept: ${concept}`,
     snap.differentiation_statement ? `Differentiation: ${snap.differentiation_statement}` : "",
     ``,
