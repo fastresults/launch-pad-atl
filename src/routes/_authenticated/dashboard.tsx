@@ -68,7 +68,7 @@ function DashboardShell() {
   );
 }
 
-type NavItem = { to: string; label: string; icon: typeof Home; dimmed?: boolean; hide?: boolean };
+type NavItem = { to: string; label: string; tooltip: string; icon: typeof Home; dimmed?: boolean; hide?: boolean };
 
 function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"] }) {
   const { state } = useSidebar();
@@ -78,13 +78,51 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
   const hubVisible = foundersHubAccess || isAdmin;
 
   const items: NavItem[] = [
-    { to: "/dashboard", label: "Today", icon: Home },
-    { to: "/dashboard/day", label: "Workshop day", icon: Calendar, hide: mode === "after" },
-    { to: "/dashboard/brief", label: "My startup", icon: ClipboardList },
-    { to: "/dashboard/workflow", label: "Plan (25 steps)", icon: ListChecks, dimmed: mode === "during" },
-    { to: "/dashboard/hub", label: "Founders Hub", icon: Sparkles, hide: !hubVisible },
-    { to: "/dashboard/files", label: "My files", icon: FolderOpen },
-    { to: "/dashboard/profile", label: "Account", icon: User },
+    {
+      to: "/dashboard",
+      label: "Today",
+      tooltip: "Your daily check-in. Before workshop day you'll see a countdown and venue; during the workshop, the live block in session; after, your 90-day progress and the next action waiting on you.",
+      icon: Home,
+    },
+    {
+      to: "/dashboard/day",
+      label: "Workshop day",
+      tooltip: "Your reservation in one place: the date, the venue with directions, the block-by-block morning agenda, the four things to bring, and the two entry paths to choose between when you arrive.",
+      icon: Calendar,
+      hide: mode === "after",
+    },
+    {
+      to: "/dashboard/brief",
+      label: "Startup brief",
+      tooltip: "Answer ten questions by typing or by voice. The brief becomes the source every deliverable reads from — when it's complete and confirmed, your facilitator's AI can build the rest of your kit.",
+      icon: ClipboardList,
+    },
+    {
+      to: "/dashboard/workflow",
+      label: "Deliverables",
+      tooltip: "Generate your 20 investor-ready documents across five pillars. Build one at a time or run the remaining batch. Each card shows what's locked, what's queued, what's ready to read.",
+      icon: ListChecks,
+      dimmed: mode === "during",
+    },
+    {
+      to: "/dashboard/hub",
+      label: "Ventures",
+      tooltip: "Every startup concept you've explored, with its own 34-document workspace. Drop in a URL or describe an idea, then star favorites, archive what's noise, and reopen anything to keep refining.",
+      icon: Sparkles,
+      hide: !hubVisible,
+    },
+    {
+      to: "/dashboard/files",
+      label: "My files",
+      tooltip: "One shelf for everything yours: the documents your AI built for you, the PDFs and contracts you've uploaded, and the brand photos and logos you and your designer keep adding.",
+      icon: FolderOpen,
+    },
+    {
+      to: "/dashboard/profile",
+      label: "Founder profile",
+      tooltip: "Tell us about you, your startup, and your numbers — revenue, burn, runway. Every field you fill makes every deliverable sharper. Save each section as you go; finish when it feels right.",
+      icon: User,
+    },
   ];
 
 
@@ -99,19 +137,28 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.filter((i) => !i.hide).map((item) => {
-                const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
-                return (
-                  <SidebarMenuItem key={item.to}>
-                    <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
-                      <Link to={item.to} className={`flex items-center gap-3 ${item.dimmed ? "opacity-50" : ""}`}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              <TooltipProvider delayDuration={200}>
+                {items.filter((i) => !i.hide).map((item) => {
+                  const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
+                  return (
+                    <SidebarMenuItem key={item.to}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+                            <Link to={item.to} className={`flex items-center gap-3 ${item.dimmed ? "opacity-50" : ""}`}>
+                              <item.icon className="h-4 w-4" />
+                              <span>{item.label}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" align="center" className="max-w-xs text-sm leading-snug">
+                          {item.tooltip}
+                        </TooltipContent>
+                      </Tooltip>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </TooltipProvider>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
