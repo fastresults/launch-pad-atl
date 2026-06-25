@@ -55,9 +55,9 @@ export default function BriefWizard() {
   const [showPrefillDialog, setShowPrefillDialog] = useState(false);
 
   useEffect(() => {
-    if (!data?.brief) return;
+    if (!data) return;
     const init: Record<string, string> = {};
-    for (const f of BRIEF_FIELDS) init[f.key] = (data.brief[f.key as keyof typeof data.brief] as string) ?? "";
+    for (const f of BRIEF_FIELDS) init[f.key] = ((data as any)[f.key] as string) ?? "";
     setValues(init);
     if (initialized) return;
     const firstEmpty = BRIEF_FIELDS.findIndex((f) => !init[f.key]);
@@ -108,7 +108,7 @@ export default function BriefWizard() {
 
   const save = async (key: string) => {
     try {
-      await updateBriefField({ data: { field: key as never, value: values[key] ?? "" } });
+      await updateBriefField({ key: key as never, value: values[key] ?? "" });
       refetch();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed");
@@ -225,7 +225,7 @@ export default function BriefWizard() {
             totalBlocks={BRIEF_BLOCKS.length}
             summarize={
               checkpointBlock.kind === "qa"
-                ? () => summarizeBriefBlock({ data: { block: checkpointBlock.id as 1 | 2 | 3 } })
+                ? () => summarizeBriefBlock({ block: String(checkpointBlock.id), content: "" })
                 : checkpointBlock.kind === "founder"
                   ? () => summarizeFounderProfile()
                   : () => summarizeMarketProfile()
