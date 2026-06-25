@@ -28,6 +28,7 @@ import {
   unarchiveSnapshot,
   setFavorite,
 } from "@/lib/foundersHub.functions";
+import { getTrack } from "@/lib/tracks";
 import { Plus, ArrowRight, Sparkles, Star, MoreHorizontal, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
