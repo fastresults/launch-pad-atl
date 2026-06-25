@@ -20,6 +20,9 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
   const calendarDoc = docOf("content_calendar_90day");
   const launchDoc = docOf("launch_content_kit");
 
+  const platformMatrix = useMemo(() => parsePlatformMatrix(auditDoc?.content ?? ""), [auditDoc?.content]);
+  const weeks = useMemo(() => parseWeeks(calendarDoc?.content ?? ""), [calendarDoc?.content]);
+
   if (!auditDoc && !pillarsDoc && !calendarDoc && !launchDoc) {
     return (
       <div className="rounded-2xl border border-white/10 bg-card p-4 text-xs text-muted-foreground">
@@ -29,8 +32,6 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
     );
   }
 
-  const platformMatrix = useMemo(() => parsePlatformMatrix(auditDoc?.content ?? ""), [auditDoc?.content]);
-  const weeks = useMemo(() => parseWeeks(calendarDoc?.content ?? ""), [calendarDoc?.content]);
 
   const copy = (text: string) => { navigator.clipboard.writeText(text); toast.success("Copied"); };
 
