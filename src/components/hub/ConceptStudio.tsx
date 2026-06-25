@@ -106,10 +106,10 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-amber-400" />
+            <Sparkles className="h-4 w-4 text-status-warning" />
             <h3 className="text-base font-semibold">Concept Studio</h3>
             {locked
-              ? <Badge variant="outline" className="border-emerald-500/40 text-emerald-300"><Lock className="mr-1 h-3 w-3" />Locked</Badge>
+              ? <Badge variant="outline" className="border-status-success/40 text-status-success"><Lock className="mr-1 h-3 w-3" />Locked</Badge>
               : <Badge variant="outline">Refining</Badge>}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -128,7 +128,7 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Concept summary</Label>
-            <span className={`text-[10px] ${validWords ? "text-emerald-400" : "text-muted-foreground"}`}>
+            <span className={`text-[10px] ${validWords ? "text-status-success" : "text-muted-foreground"}`}>
               {sumWords} / {WORD_MIN}-{WORD_MAX} words
             </span>
           </div>
@@ -183,12 +183,12 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">{idea.summary}</p>
                     {idea.why_it_works && (
-                      <p className="mt-2 rounded-r-md border-l-2 border-emerald-500/60 bg-emerald-500/10 px-2 py-1 text-xs leading-snug text-emerald-700 dark:text-emerald-300">
+                      <p className="mt-2 rounded-r-md border-l-2 border-status-success/60 bg-status-success/10 px-2 py-1 text-xs leading-snug text-status-success">
                         <b>Why:</b> {idea.why_it_works}
                       </p>
                     )}
                     {idea.risks && (
-                      <p className="mt-1 rounded-r-md border-l-2 border-amber-500/60 bg-amber-500/10 px-2 py-1 text-xs leading-snug text-amber-800 dark:text-amber-300">
+                      <p className="mt-1 rounded-r-md border-l-2 border-status-warning/60 bg-status-warning/10 px-2 py-1 text-xs leading-snug text-status-warning">
                         <b>Risks:</b> {idea.risks}
                       </p>
                     )}
@@ -261,8 +261,8 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
 }
 
 function scoreColor(combined: number) {
-  if (combined >= 160) return "bg-emerald-500/20 text-emerald-300 border-emerald-500/40";
-  if (combined >= 130) return "bg-amber-500/20 text-amber-300 border-amber-500/40";
+  if (combined >= 160) return "bg-status-success/15 text-status-success border-status-success/40";
+  if (combined >= 130) return "bg-status-warning/15 text-status-warning border-status-warning/40";
   return "bg-white/10 text-muted-foreground border-white/10";
 }
 
@@ -315,13 +315,13 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
     (v?.payload?.card?.title === key || v?.payload?.id === key);
 
   return (
-    <div className="space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+    <div className="space-y-3 rounded-xl border border-status-warning/20 bg-status-warning/5 p-3">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <Zap className="h-4 w-4 text-amber-400" />
+            <Zap className="h-4 w-4 text-status-warning" />
             <h4 className="text-sm font-semibold">Epiphany Engine</h4>
-            <Badge variant="outline" className="border-amber-500/40 text-[10px] text-amber-300">deep</Badge>
+            <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">deep</Badge>
           </div>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
             Multi-pass AI: mines signals from your research, generates and scores enhancements, returns up to 3 vision-extending ideas with viability + attractiveness scores.
@@ -334,7 +334,7 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
         </Button>
       </div>
       {!hasBrief && (
-        <p className="text-[11px] text-amber-800 dark:text-amber-300">Deep research must complete first.</p>
+        <p className="text-[11px] text-status-warning">Deep research must complete first.</p>
       )}
       {execNote && <p className="text-xs italic text-muted-foreground">{execNote}</p>}
 
@@ -355,7 +355,7 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
                       <div className="truncate text-sm font-medium">{card.title}</div>
                     </div>
                     {card.why_now && (
-                      <p className="mt-1 rounded-r-md border-l-2 border-amber-500/60 bg-amber-500/10 px-2 py-1 text-xs leading-snug text-amber-800 dark:text-amber-300">
+                      <p className="mt-1 rounded-r-md border-l-2 border-status-warning/60 bg-status-warning/10 px-2 py-1 text-xs leading-snug text-status-warning">
                         <b>Why now:</b> {card.why_now}
                       </p>
                     )}
@@ -380,7 +380,7 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
                     {card.risks?.length > 0 && (
                       <div>
                         <div className="font-medium text-muted-foreground">Risks</div>
-                        <ul className="list-disc space-y-0.5 pl-4 text-amber-800 dark:text-amber-300">
+                        <ul className="list-disc space-y-0.5 pl-4 text-status-warning">
                           {card.risks.map((s: string, j: number) => <li key={j}>{s}</li>)}
                         </ul>
                       </div>

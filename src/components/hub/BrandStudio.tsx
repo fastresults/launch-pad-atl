@@ -73,7 +73,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
   return (
     <div className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
       <div className="flex items-center gap-2">
-        <Palette className="h-4 w-4 text-amber-400" />
+        <Palette className="h-4 w-4 text-status-warning" />
         <h3 className="text-sm font-semibold">Brand Studio</h3>
       </div>
 
@@ -138,7 +138,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
             <a key={i} href={a.url} target="_blank" rel="noreferrer" className="group block overflow-hidden rounded-lg border border-white/10 bg-background/40">
               {a.url ? (
                 <img src={a.url} className="aspect-square w-full object-cover transition group-hover:opacity-90" />
-              ) : <div className="aspect-square w-full p-3 text-[10px] text-red-400">{a.error}</div>}
+              ) : <div className="aspect-square w-full p-3 text-[10px] text-status-danger">{a.error}</div>}
             </a>
           ))}
         </div>

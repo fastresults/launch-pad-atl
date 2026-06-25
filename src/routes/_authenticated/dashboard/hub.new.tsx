@@ -293,11 +293,11 @@ function Inner() {
 
         <div className="grid gap-3 md:grid-cols-2">
           <div className="grid gap-1.5">
-            <Label htmlFor="fname">Your name <span className="text-red-500">*</span></Label>
+            <Label htmlFor="fname">Your name <span className="text-status-danger">*</span></Label>
             <Input id="fname" value={founderName} onChange={(e) => setFounderName(e.target.value)} placeholder="Jane Doe" />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="femail">Contact email <span className="text-red-500">*</span></Label>
+            <Label htmlFor="femail">Contact email <span className="text-status-danger">*</span></Label>
             <Input id="femail" type="email" value={founderEmail} onChange={(e) => setFounderEmail(e.target.value)} placeholder="you@example.com" />
           </div>
           <div className="grid gap-1.5">
@@ -305,22 +305,22 @@ function Inner() {
             <Input id="fphone" type="tel" value={founderPhone} onChange={(e) => setFounderPhone(e.target.value)} placeholder="+1 555 123 4567" />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="country">Country <span className="text-red-500">*</span></Label>
+            <Label htmlFor="country">Country <span className="text-status-danger">*</span></Label>
             <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="United States" />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="city">City / town <span className="text-red-500">*</span></Label>
+            <Label htmlFor="city">City / town <span className="text-status-danger">*</span></Label>
             <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Atlanta" />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="region">State / region <span className="text-red-500">*</span></Label>
+            <Label htmlFor="region">State / region <span className="text-status-danger">*</span></Label>
             <Input id="region" value={region} onChange={(e) => setRegion(e.target.value)} placeholder="Georgia" />
           </div>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
           <div className="grid gap-1.5">
-            <Label>Market scope <span className="text-red-500">*</span></Label>
+            <Label>Market scope <span className="text-status-danger">*</span></Label>
             <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
               {(["local", "regional", "national", "international"] as const).map((s) => (
                 <button
@@ -341,7 +341,7 @@ function Inner() {
             </p>
           </div>
           <div className="grid gap-1.5">
-            <Label>Industry <span className="text-red-500">*</span></Label>
+            <Label>Industry <span className="text-status-danger">*</span></Label>
             <IndustryCombobox value={industry} onChange={setIndustry} />
             <Input
               className="mt-1"
@@ -357,13 +357,13 @@ function Inner() {
           ref={trackSectionRef}
           className={`space-y-3 rounded-xl border bg-background/40 p-4 transition ${
             trackPulse
-              ? "border-red-400/70 ring-2 ring-red-400/40 animate-pulse"
+              ? "border-status-danger/70 ring-2 ring-status-danger/40 animate-pulse"
               : "border-white/10"
           }`}
         >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <Label className="text-sm">Track <span className="text-red-500">*</span></Label>
+              <Label className="text-sm">Track <span className="text-status-danger">*</span></Label>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 What kind of startup is this? We tune the tone &amp; framing of every document to match.
               </p>
@@ -472,8 +472,8 @@ function Inner() {
                   <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span className="min-w-0 flex-1 truncate">{f.name}</span>
                   <span className={`shrink-0 text-[11px] uppercase tracking-wider ${
-                    f.status === "ready" ? "text-emerald-400" :
-                    f.status === "error" ? "text-red-400" :
+                    f.status === "ready" ? "text-status-success" :
+                    f.status === "error" ? "text-status-danger" :
                     "text-muted-foreground"
                   }`}>
                     {f.status === "reading" ? "Reading…" : f.status === "ready" ? "Ready" : (f.error ?? "Couldn't read")}
