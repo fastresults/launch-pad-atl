@@ -866,6 +866,16 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
           setRewriteTarget(null);
         }}
       />
+      <IntakeGatewayDialog
+        target={intakeTarget}
+        onClose={() => setIntakeTarget(null)}
+        onSubmit={(answers) => {
+          if (intakeTarget) {
+            genOne.mutate({ documentType: intakeTarget.type, intakeAnswers: answers });
+          }
+          setIntakeTarget(null);
+        }}
+      />
     </div>
   );
 }
