@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { TRACKS, TRACK_BY_KEY, pickSeedForTrack, type TrackKey } from "@/lib/tracks";
+import { INDUSTRIES } from "@/lib/industries";
 import { createSnapshot } from "@/lib/foundersHub.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin, CheckCircle2 } from "lucide-react";
@@ -200,13 +201,66 @@ function Inner() {
     setDrafting(true);
     try {
       const { data, error } = await supabase.functions.invoke("venture-synthesize-concept", {
-        body: { sources: readyFiles.map((f) => ({ filename: f.name, text: f.text })) },
+        body: {
+          sources: readyFiles.map((f) => ({ filename: f.name, text: f.text })),
+          industryValues: INDUSTRIES.map((i) => i.value),
+        },
       });
       if (error) throw error;
       const concept = (data?.concept ?? "").trim();
       if (!concept) throw new Error("Empty draft from the model");
+
+      // Always replace concept (user already confirmed above if it was non-empty)
       setBusinessConcept(concept);
-      toast.success("Drafted from your files — edit as needed");
+      let applied = 1;
+
+      // Helpers — only apply when the target field is empty / still at default
+      const apply = (val: unknown, current: string, setter: (v: string) => void) => {
+        if (typeof val === "string" && val.trim() && !current.trim()) {
+          setter(val.trim());
+          applied++;
+        }
+      };
+      apply(data?.company_name, companyName, setCompanyName);
+      apply(data?.differentiation_statement, diff, setDiff);
+      apply(data?.founder_name, founderName, setFounderName);
+      apply(data?.founder_email, founderEmail, setFounderEmail);
+      apply(data?.founder_phone, founderPhone, setFounderPhone);
+      apply(data?.city, city, setCity);
+      apply(data?.region, region, setRegion);
+      apply(data?.sub_industry, subIndustry, setSubIndustry);
+      if (path === "manual" && typeof data?.website_url === "string" && data.website_url.trim() && !websiteUrl.trim()) {
+        setWebsiteUrl(data.website_url.trim());
+        applied++;
+      }
+      // Country: only override the "United States" default if model says otherwise
+      if (typeof data?.country === "string" && data.country.trim() && (!country.trim() || country === "United States")) {
+        if (data.country.trim() !== country) {
+          setCountry(data.country.trim());
+          applied++;
+        }
+      }
+      // Market scope: only override default "local"
+      const scope = data?.market_scope;
+      if (scope && ["local", "regional", "national", "international"].includes(scope) && marketScope === "local" && scope !== "local") {
+        setMarketScope(scope);
+        applied++;
+      }
+      // Industry: validate against our list
+      if (typeof data?.industry === "string" && data.industry && !industry) {
+        if (INDUSTRIES.some((i) => i.value === data.industry)) {
+          setIndustry(data.industry);
+          applied++;
+        }
+      }
+      // Track: validate, only override default "lifestyle"
+      const validTracks = TRACKS.map((t) => t.key) as string[];
+      if (typeof data?.track === "string" && validTracks.includes(data.track) && track === "lifestyle" && data.track !== "lifestyle") {
+        setTrack(data.track as TrackKey);
+        applied++;
+      }
+
+      toast.success(`Drafted ${applied} field${applied === 1 ? "" : "s"} from your file${readyFiles.length === 1 ? "" : "s"} — review and edit`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't draft from files");
     } finally {
@@ -478,8 +532,8 @@ function Inner() {
           >
             <Upload className="h-5 w-5 text-muted-foreground" />
             <div className="text-sm">
-              <span className="font-medium">Drop your pitch deck, one-pager, or notes</span>
-              <span className="text-muted-foreground"> — or click to browse</span>
+              <span className="font-medium">Drop your pitch deck, plan, one-pager, or notes</span>
+              <span className="text-muted-foreground"> — we'll fill out the whole form</span>
             </div>
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
               PDF · TXT · MD · up to {MAX_FILES} files, 20 MB each

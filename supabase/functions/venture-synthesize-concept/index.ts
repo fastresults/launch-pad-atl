@@ -1,6 +1,6 @@
-// Synthesizes a clean Business concept paragraph from text extracted client-side
-// out of one or more founder-uploaded documents (PDF, TXT, MD). Pure synthesis —
-// no DB writes.
+// Synthesizes a clean Business concept paragraph AND structured form fields
+// from text extracted client-side out of one or more founder-uploaded documents
+// (PDF, TXT, MD). Pure synthesis — no DB writes.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,18 +10,58 @@ const corsHeaders = {
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
-const PER_FILE_CAP = 20_000;
-const TOTAL_CAP = 60_000;
+const PER_FILE_CAP = 30_000;
+const TOTAL_CAP = 90_000;
 
-const SYSTEM_PROMPT = `You read founder-uploaded source documents (pitch decks, one-pagers, brand briefs, notes) and write a clean Business concept paragraph.
+// Track keys mirror src/lib/tracks.ts
+const TRACK_KEYS = [
+  "lifestyle",
+  "small_business",
+  "scalable_tech",
+  "marketplace",
+  "deep_tech",
+  "social_impact",
+  "corporate",
+] as const;
+
+const TRACK_HINT = `Track keys:
+- lifestyle: Main Street / single-location food, retail, services (cafés, restaurants, boutiques, salons)
+- small_business: regional SMB, multi-location, trades, B2B services
+- scalable_tech: VC-style software / SaaS / consumer app with national+ ambition
+- marketplace: two-sided / multi-vendor platforms connecting buyers and sellers
+- deep_tech: hardware, biotech, energy, robotics, science-heavy
+- social_impact: nonprofit, mission-driven, civic, education
+- corporate: internal venture inside an existing larger company`;
+
+const SYSTEM_PROMPT = `You read founder-uploaded source documents (business plans, pitch decks, one-pagers, brand briefs, notes) and produce a STRUCTURED JSON object that pre-fills a venture intake form.
+
+Output a single JSON object — no prose, no markdown, no code fences. Schema:
+
+{
+  "concept": string,                         // REQUIRED. 2–4 sentences. First-person plural ("We…"). What we're building, who it's for, why now. Plain confident voice. No buzzwords. Grounded in the sources.
+  "company_name": string | null,
+  "differentiation_statement": string | null, // 1–2 sentences on what makes this different / the edge.
+  "founder_name": string | null,
+  "founder_email": string | null,            // ONLY if literally present in the source. Never invent.
+  "founder_phone": string | null,            // ONLY if literally present.
+  "website_url": string | null,
+  "city": string | null,
+  "region": string | null,                   // US state, province, or region (full name, e.g. "Oklahoma")
+  "country": string | null,                  // e.g. "United States"
+  "market_scope": "local" | "regional" | "national" | "international" | null,
+  "industry": string | null,                 // MUST be an exact value from the provided INDUSTRY_VALUES list, or null.
+  "sub_industry": string | null,             // Free text refinement (e.g. "specialty coffee", "wood-fired pizza")
+  "track": "lifestyle" | "small_business" | "scalable_tech" | "marketplace" | "deep_tech" | "social_impact" | "corporate" | null
+}
 
 Rules:
-- 2 to 4 sentences. No headings, no bullets, no preamble like "Here is".
-- First-person plural ("We…").
-- Cover: what we're building, who it's for, and why now (or what's broken today).
-- Be specific and grounded in the source material. Never invent metrics, dates, or names that aren't in the sources.
-- Plain, confident voice. No buzzwords ("synergy", "revolutionary", "cutting-edge").
-- Output only the paragraph, nothing else.`;
+- Only populate a field when the document clearly supports it. Use null for anything uncertain.
+- Never fabricate emails, phones, URLs, names, or metrics.
+- "industry" MUST come from INDUSTRY_VALUES verbatim, or be null if nothing fits.
+- Infer "track" from cues (single-location food/retail/service → lifestyle; SMB chain/trades → small_business; venture-scale SaaS/app → scalable_tech; two-sided platform → marketplace; hardware/biotech → deep_tech; nonprofit/mission → social_impact; internal corporate venture → corporate).
+- Default country to "United States" only if a US state, ZIP, or city is named.
+- Concept paragraph: 2–4 sentences, no headings, no "Here is", no buzzwords ("synergy", "revolutionary", "cutting-edge").
+- Return ONLY the JSON object.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -29,6 +69,8 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const sources: Array<{ filename?: string; text?: string }> = Array.isArray(body?.sources) ? body.sources : [];
+    const industryValues: string[] = Array.isArray(body?.industryValues) ? body.industryValues : [];
+
     if (!sources.length) {
       return new Response(JSON.stringify({ error: "No sources provided" }), {
         status: 400,
@@ -56,7 +98,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    const userPrompt = `Source documents:\n\n${parts.join("\n\n---\n\n")}\n\nWrite the Business concept paragraph now.`;
+    const industryBlock = industryValues.length
+      ? `INDUSTRY_VALUES (use one of these verbatim for "industry", or null):\n${industryValues.join("\n")}`
+      : `INDUSTRY_VALUES: (none supplied — set "industry" to null)`;
+
+    const userPrompt = `${industryBlock}
+
+${TRACK_HINT}
+
+Source documents:
+
+${parts.join("\n\n---\n\n")}
+
+Return the JSON object now.`;
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -70,6 +124,7 @@ Deno.serve(async (req) => {
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userPrompt },
         ],
+        response_format: { type: "json_object" },
       }),
     });
 
@@ -83,15 +138,66 @@ Deno.serve(async (req) => {
     }
 
     const aiJson = await aiRes.json();
-    const concept = (aiJson?.choices?.[0]?.message?.content ?? "").trim();
-    if (!concept) {
+    const raw = (aiJson?.choices?.[0]?.message?.content ?? "").trim();
+    if (!raw) {
       return new Response(JSON.stringify({ error: "Empty response from model" }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ concept }), {
+    // Tolerate accidental code fences
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
+
+    let parsed: Record<string, unknown> = {};
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      // Fallback: treat the whole response as the concept paragraph
+      return new Response(JSON.stringify({ concept: cleaned }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const str = (v: unknown): string | null => {
+      if (typeof v !== "string") return null;
+      const t = v.trim();
+      return t.length ? t : null;
+    };
+
+    const concept = str(parsed.concept) ?? "";
+    if (!concept) {
+      return new Response(JSON.stringify({ error: "Model returned no concept" }), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const allowedScopes = new Set(["local", "regional", "national", "international"]);
+    const scope = str(parsed.market_scope);
+    const allowedTracks = new Set<string>(TRACK_KEYS as unknown as string[]);
+    const track = str(parsed.track);
+    const industry = str(parsed.industry);
+    const industryOk = industry && (industryValues.length === 0 || industryValues.includes(industry));
+
+    const out = {
+      concept,
+      company_name: str(parsed.company_name),
+      differentiation_statement: str(parsed.differentiation_statement),
+      founder_name: str(parsed.founder_name),
+      founder_email: str(parsed.founder_email),
+      founder_phone: str(parsed.founder_phone),
+      website_url: str(parsed.website_url),
+      city: str(parsed.city),
+      region: str(parsed.region),
+      country: str(parsed.country),
+      market_scope: scope && allowedScopes.has(scope) ? scope : null,
+      industry: industryOk ? industry : null,
+      sub_industry: str(parsed.sub_industry),
+      track: track && allowedTracks.has(track) ? track : null,
+    };
+
+    return new Response(JSON.stringify(out), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
