@@ -55,6 +55,7 @@ export type FrameworkStage = {
   name: string;
   intro: string;
   items: FrameworkDeliverable[];
+  bonus?: boolean;
 };
 
 // Mirrors the live `venture_document_types` table (active = true, ordered by
@@ -120,6 +121,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
   {
     number: "06",
     name: "Brand",
+    bonus: true,
     intro: "An identity worth premium pricing — system, not stickers.",
     items: [
       { icon: Compass, title: "Brand Strategy Framework" },
@@ -132,6 +134,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
   {
     number: "07",
     name: "Marketing",
+    bonus: true,
     intro: "The AI-builder prompt that ships your site in a weekend.",
     items: [
       { icon: Globe, title: "Website PRD (AI-builder prompt)" },
@@ -140,6 +143,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
   {
     number: "08",
     name: "Social & Content",
+    bonus: true,
     intro: "The distribution engine that earns attention on repeat.",
     items: [
       { icon: Share2, title: "Social Media Audit & Setup" },
