@@ -23,6 +23,7 @@ import { BriefPrefillDropzone } from "@/components/brief/BriefPrefillDropzone";
 import { BriefCompleteScreen } from "@/components/brief/BriefCompleteScreen";
 import { BriefPrefillReview } from "@/components/brief/BriefPrefillReview";
 import type { BriefPrefillResponse } from "@/lib/brief.functions";
+import { buildPrefillFromBrief } from "@/lib/brief-to-snapshot";
 import { ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
