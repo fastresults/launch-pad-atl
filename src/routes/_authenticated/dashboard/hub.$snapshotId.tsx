@@ -783,7 +783,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                       <Button
                         size="sm"
                         disabled={!depsMet || generating || jobRunning}
-                        onClick={() => genOne.mutate(t.type)}
+                        onClick={() => genOne.mutate({ documentType: t.type })}
                         title={!depsMet ? "Finish earlier documents first" : undefined}
                       >
                         {generating ? (
@@ -794,7 +794,12 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                       </Button>
                     )}
                     {isComplete && (
-                      <Button size="sm" variant="ghost" onClick={() => genOne.mutate(t.type)} disabled={jobRunning}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setRewriteTarget({ type: t.type, name: t.name })}
+                        disabled={jobRunning || generating}
+                      >
                         Rewrite
                       </Button>
                     )}
