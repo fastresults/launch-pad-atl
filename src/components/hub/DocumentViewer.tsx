@@ -123,9 +123,15 @@ function makeComponents(setHeadings: (h: { id: string; text: string }[]) => void
       3: "mt-5 mb-2 text-base font-semibold text-foreground",
       4: "mt-4 mb-1.5 text-sm font-semibold uppercase tracking-wide text-muted-foreground",
     }[level];
+    const isDeepDive = level === 2 && /mckinsey[-\s]*grade\s*assessment/i.test(text);
     return (
       <Tag id={id} className={cls}>
         {children}
+        {isDeepDive && (
+          <span className="ml-2 inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 align-middle text-[10px] font-medium uppercase tracking-wide text-primary">
+            Deep dive
+          </span>
+        )}
       </Tag>
     );
   };
