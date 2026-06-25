@@ -79,7 +79,13 @@ const SPECIAL: Record<string, string> = {
   paid_ads_starter_pack: `You are a performance marketer. Output Markdown: # Paid Ads Starter Pack; ## Budget Tiers ($300/$1k/$3k monthly with platform allocation); ## Audience Definitions (3 saved); ## Creative Concepts (top 2 platforms × 3 ads: Hook, Body, CTA, Visual prompt, Format); ## Conversion Tracking (Pixel/CAPI checklist, event names); ## Test-and-Iterate Framework (week-by-week plan, kill criteria).${QF}`,
 };
 
-export async function generateOne(supabase: any, snapshotId: string, documentType: string) {
+export async function generateOne(
+  supabase: any,
+  snapshotId: string,
+  documentType: string,
+  rewriteFeedback?: string,
+  rewriteTags?: string[],
+) {
   const [{ data: snap }, { data: type }] = await Promise.all([
     supabase.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle(),
     supabase.from("venture_document_types").select("*").eq("type", documentType).maybeSingle(),
@@ -157,6 +163,11 @@ QUALITY_SCORE: <0-100 integer reflecting completeness, specificity, and investor
     snap.research_brief ? `\n## Research brief (use for evidence + citations)\n${JSON.stringify(snap.research_brief, null, 2)}` : "",
     snap.business_concept ? `\n## Founder's raw concept\n${snap.business_concept}` : "",
     depContext ? `\n## Upstream documents you should build on\n${depContext}` : "",
+    (rewriteFeedback && rewriteFeedback.trim()) || (rewriteTags && rewriteTags.length)
+      ? `\n## Rewrite guidance from the founder (TOP PRIORITY — the previous version missed the mark, address every point below in this rewrite)\n${
+          rewriteTags && rewriteTags.length ? `Tags: ${rewriteTags.join(", ")}\n\n` : ""
+        }${rewriteFeedback?.trim() ?? ""}`
+      : "",
   ].filter(Boolean).join("\n\n");
 
   const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -246,7 +257,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { snapshotId, documentType } = await req.json();
+    const { snapshotId, documentType, rewriteFeedback, rewriteTags } = await req.json();
     if (!snapshotId || !documentType) {
       return new Response(JSON.stringify({ error: "snapshotId and documentType required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -259,7 +270,7 @@ Deno.serve(async (req) => {
     if (!gateSnap || gateSnap.concept_status !== "locked") {
       return new Response(JSON.stringify({ error: "Lock your concept summary before generating documents." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const result = await generateOne(supabase, snapshotId, documentType);
+    const result = await generateOne(supabase, snapshotId, documentType, rewriteFeedback, Array.isArray(rewriteTags) ? rewriteTags : undefined);
     return new Response(JSON.stringify({ ok: true, ...result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

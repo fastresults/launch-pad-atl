@@ -31,6 +31,7 @@ import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { TRACKS, getTrack, type TrackKey } from "@/lib/tracks";
 import { ConceptStudio } from "@/components/hub/ConceptStudio";
 import { DocumentViewer } from "@/components/hub/DocumentViewer";
+import { RewriteFeedbackDialog } from "@/components/hub/RewriteFeedbackDialog";
 import { BrandStudio } from "@/components/hub/BrandStudio";
 import { SocialStudio } from "@/components/hub/SocialStudio";
 import {
@@ -564,9 +565,11 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const [viewerDoc, setViewerDoc] = useState<any>(null);
   const [showHelper, setShowHelper] = useState(true);
   const [showFailures, setShowFailures] = useState(false);
+  const [rewriteTarget, setRewriteTarget] = useState<{ type: string; name: string } | null>(null);
 
   const genOne = useMutation({
-    mutationFn: (documentType: string) => generateDocument({ data: { snapshotId: snapshot.id, documentType } }),
+    mutationFn: (vars: { documentType: string; rewriteFeedback?: string; rewriteTags?: string[] }) =>
+      generateDocument({ data: { snapshotId: snapshot.id, ...vars } }),
     onSuccess: () => { toast.success("Document ready"); qc.invalidateQueries({ queryKey: ["hub"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Generation failed"),
   });
@@ -748,7 +751,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               const depsMet = deps.every((dep) => completedKeys.has(dep));
               const status = d?.status ?? "pending";
               const isComplete = status === "complete";
-              const generating = status === "generating" || (genOne.isPending && genOne.variables === t.type);
+              const generating = status === "generating" || (genOne.isPending && genOne.variables?.documentType === t.type);
               const Icon = isComplete ? CheckCircle2 : depsMet ? Circle : Lock;
               const tone = isComplete ? "text-status-success" : depsMet ? "text-foreground" : "text-muted-foreground";
 
@@ -781,7 +784,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                       <Button
                         size="sm"
                         disabled={!depsMet || generating || jobRunning}
-                        onClick={() => genOne.mutate(t.type)}
+                        onClick={() => genOne.mutate({ documentType: t.type })}
                         title={!depsMet ? "Finish earlier documents first" : undefined}
                       >
                         {generating ? (
@@ -792,7 +795,12 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                       </Button>
                     )}
                     {isComplete && (
-                      <Button size="sm" variant="ghost" onClick={() => genOne.mutate(t.type)} disabled={jobRunning}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setRewriteTarget({ type: t.type, name: t.name })}
+                        disabled={jobRunning || generating}
+                      >
                         Rewrite
                       </Button>
                     )}
@@ -822,6 +830,16 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       </details>
 
       <DocumentViewer doc={viewerDoc} open={viewerDoc !== null} onOpenChange={(o) => !o && setViewerDoc(null)} />
+      <RewriteFeedbackDialog
+        target={rewriteTarget}
+        onClose={() => setRewriteTarget(null)}
+        onSubmit={(feedback, tags) => {
+          if (rewriteTarget) {
+            genOne.mutate({ documentType: rewriteTarget.type, rewriteFeedback: feedback, rewriteTags: tags });
+          }
+          setRewriteTarget(null);
+        }}
+      />
     </div>
   );
 }
