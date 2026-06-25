@@ -396,11 +396,11 @@ export function DocumentViewer({
   };
 
   const onCopy = () => {
-    navigator.clipboard.writeText(content);
+    navigator.clipboard.writeText(exportContent);
     toast.success("Copied");
   };
   const onDownloadMd = () => {
-    const blob = new Blob([content], { type: "text/markdown" });
+    const blob = new Blob([exportContent], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -410,7 +410,7 @@ export function DocumentViewer({
   };
   const onDownloadDocx = async () => {
     try {
-      const blob = await markdownToDocxBlob(title, content, {
+      const blob = await markdownToDocxBlob(title, exportContent, {
         heroUrl: heroUrl ?? undefined,
         subtitle: doc?.document_type,
       });
@@ -425,7 +425,7 @@ export function DocumentViewer({
     }
   };
   const onPrint = () => {
-    const node = document.getElementById("doc-viewer-article");
+    const node = printRef.current ?? document.getElementById("doc-viewer-article");
     if (!node) return;
     renderToPrint(title, node.innerHTML);
   };
