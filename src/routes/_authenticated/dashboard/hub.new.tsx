@@ -661,18 +661,6 @@ function Inner() {
                   {filling ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
                   {filling ? "Scraping…" : "🧪 Fill test concept"}
                 </Button>
-                {readyFiles.length > 0 && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={draftFromFiles}
-                    disabled={drafting}
-                  >
-                    {drafting ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Wand2 className="mr-1.5 h-3.5 w-3.5" />}
-                    {drafting ? "Drafting…" : `Draft from ${readyFiles.length} file${readyFiles.length === 1 ? "" : "s"}`}
-                  </Button>
-                )}
                 <VoiceRecorder
                   size="sm"
                   context="Founder describing their business concept — what they're building, who it's for, and why it matters."
