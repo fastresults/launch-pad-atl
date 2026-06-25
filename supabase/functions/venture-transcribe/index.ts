@@ -1,4 +1,6 @@
-// Proxies an audio blob to Lovable AI Gateway speech-to-text and streams SSE back.
+// Proxies an audio blob to Lovable AI Gateway speech-to-text and returns the
+// final transcript as JSON. Buffers the upstream SSE so we can use
+// supabase.functions.invoke from the client (which is multipart-friendly).
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -42,7 +44,7 @@ Deno.serve(async (req) => {
     const upstream = new FormData();
     upstream.append("model", "openai/gpt-4o-mini-transcribe");
     upstream.append("file", file, `recording.${ext}`);
-    upstream.append("stream", "true");
+    // Buffered JSON response — no streaming.
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
       method: "POST",
@@ -58,12 +60,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    return new Response(res.body, {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-      },
+    const json = await res.json();
+    const text: string = json?.text ?? "";
+    return new Response(JSON.stringify({ text }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
