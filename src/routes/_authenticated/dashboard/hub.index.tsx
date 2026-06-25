@@ -27,9 +27,13 @@ import {
   archiveSnapshot,
   unarchiveSnapshot,
   setFavorite,
+  adminDeleteSnapshot,
 } from "@/lib/foundersHub.functions";
+import { useAuth } from "@/hooks/use-auth";
+import { Input } from "@/components/ui/input";
+import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { getTrack } from "@/lib/tracks";
-import { Plus, ArrowRight, Sparkles, Star, MoreHorizontal, Archive, RotateCcw } from "lucide-react";
+import { Plus, ArrowRight, Sparkles, Star, MoreHorizontal, Archive, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS_LABEL: Record<string, string> = {
