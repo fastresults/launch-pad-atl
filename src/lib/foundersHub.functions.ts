@@ -83,10 +83,45 @@ export async function listSnapshots(): Promise<VentureSnapshot[]> {
     .from("venture_snapshots")
     .select("*")
     .eq("user_id", await uid())
-    .neq("status", "archived")
-    .order("created_at", { ascending: false });
+    .order("is_favorite", { ascending: false })
+    .order("updated_at", { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []) as VentureSnapshot[];
+}
+
+export async function setFavorite(input: any): Promise<void> {
+  const { id, is_favorite } = unwrap<{ id: string; is_favorite: boolean }>(input);
+  const { error } = await supabase
+    .from("venture_snapshots")
+    .update({ is_favorite })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function unarchiveSnapshot(input: any): Promise<void> {
+  const { id } = unwrap<{ id: string }>(input);
+  // Decide where to restore to: complete if any docs exist, else review if extracted_data, else enriching
+  const { data: snap } = await supabase
+    .from("venture_snapshots")
+    .select("extracted_data")
+    .eq("id", id)
+    .maybeSingle();
+  const { count: docCount } = await supabase
+    .from("venture_documents")
+    .select("id", { count: "exact", head: true })
+    .eq("snapshot_id", id)
+    .eq("status", "complete");
+  const nextStatus =
+    (docCount ?? 0) > 0
+      ? "complete"
+      : snap?.extracted_data && Object.keys(snap.extracted_data).length > 0
+        ? "review"
+        : "enriching";
+  const { error } = await supabase
+    .from("venture_snapshots")
+    .update({ status: nextStatus })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export async function getSnapshot(input: any): Promise<VentureSnapshot | null> {
