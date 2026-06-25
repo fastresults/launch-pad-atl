@@ -94,3 +94,77 @@ export function getTrack(key: string | null | undefined): Track | null {
   if (!key) return null;
   return (TRACK_BY_KEY as Record<string, Track>)[key] ?? null;
 }
+
+// ===== Test-fill seeds — used by the dev "🧪 Fill test concept" button =====
+// Each seed is a real, public homepage we can scrape, paired with the
+// realistic defaults a founder on that track would type into the form.
+
+export type SeedEntry = {
+  url: string;
+  industry: string;
+  sub_industry?: string;
+  market_scope: "local" | "regional" | "national" | "international";
+  city?: string;
+  region?: string;
+  country?: string;
+};
+
+export const TRACK_SEEDS: Record<TrackKey, SeedEntry[]> = {
+  lifestyle: [
+    { url: "https://bluebottlecoffee.com", industry: "Food & Beverage", sub_industry: "Specialty coffee café", market_scope: "local", city: "Oakland", region: "California", country: "United States" },
+    { url: "https://www.equinox.com", industry: "Health & Fitness", sub_industry: "Premium gym", market_scope: "regional", city: "New York", region: "New York", country: "United States" },
+    { url: "https://www.drybar.com", industry: "Personal Care", sub_industry: "Blowout salon", market_scope: "regional", city: "Los Angeles", region: "California", country: "United States" },
+    { url: "https://www.soulcycle.com", industry: "Health & Fitness", sub_industry: "Boutique cycling studio", market_scope: "regional", city: "New York", region: "New York", country: "United States" },
+  ],
+  small_business: [
+    { url: "https://www.acehardware.com", industry: "Retail", sub_industry: "Independent hardware store", market_scope: "national", city: "Oak Brook", region: "Illinois", country: "United States" },
+    { url: "https://www.servpro.com", industry: "Home Services", sub_industry: "Restoration franchise", market_scope: "regional", city: "Gallatin", region: "Tennessee", country: "United States" },
+    { url: "https://www.hrblock.com", industry: "Professional Services", sub_industry: "Tax preparation", market_scope: "national", city: "Kansas City", region: "Missouri", country: "United States" },
+    { url: "https://www.midas.com", industry: "Automotive Services", sub_industry: "Auto repair franchise", market_scope: "regional", city: "Palm Beach Gardens", region: "Florida", country: "United States" },
+  ],
+  scalable_tech: [
+    { url: "https://linear.app", industry: "Software / SaaS", sub_industry: "Project management", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://vercel.com", industry: "Software / SaaS", sub_industry: "Developer infrastructure", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://resend.com", industry: "Software / SaaS", sub_industry: "Transactional email API", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://cal.com", industry: "Software / SaaS", sub_industry: "Scheduling", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://posthog.com", industry: "Software / SaaS", sub_industry: "Product analytics", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://supabase.com", industry: "Software / SaaS", sub_industry: "Backend-as-a-service", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://cursor.com", industry: "Software / SaaS", sub_industry: "AI code editor", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://www.notion.com", industry: "Software / SaaS", sub_industry: "Collaborative workspace", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://attio.com", industry: "Software / SaaS", sub_industry: "CRM", market_scope: "international", city: "London", region: "England", country: "United Kingdom" },
+  ],
+  marketplace: [
+    { url: "https://www.etsy.com", industry: "E-commerce", sub_industry: "Handmade goods marketplace", market_scope: "international", city: "Brooklyn", region: "New York", country: "United States" },
+    { url: "https://www.airbnb.com", industry: "Travel & Hospitality", sub_industry: "Short-term rental marketplace", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://www.upwork.com", industry: "Marketplace / Gig", sub_industry: "Freelance services", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://www.faire.com", industry: "Marketplace / Wholesale", sub_industry: "B2B retail wholesale", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+  ],
+  deep_tech: [
+    { url: "https://boomsupersonic.com", industry: "Aerospace", sub_industry: "Supersonic aviation", market_scope: "international", city: "Denver", region: "Colorado", country: "United States" },
+    { url: "https://www.ginkgobioworks.com", industry: "Biotech", sub_industry: "Synthetic biology platform", market_scope: "international", city: "Boston", region: "Massachusetts", country: "United States" },
+    { url: "https://www.anthropic.com", industry: "AI / ML", sub_industry: "Foundation models", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://cfs.energy", industry: "Energy", sub_industry: "Fusion energy", market_scope: "international", city: "Devens", region: "Massachusetts", country: "United States" },
+  ],
+  social_impact: [
+    { url: "https://www.warbyparker.com", industry: "Retail / Eyewear", sub_industry: "Buy-a-pair-give-a-pair", market_scope: "international", city: "New York", region: "New York", country: "United States" },
+    { url: "https://www.toms.com", industry: "Retail / Footwear", sub_industry: "One-for-one giving", market_scope: "international", city: "Los Angeles", region: "California", country: "United States" },
+    { url: "https://www.kiva.org", industry: "Nonprofit / Fintech", sub_industry: "Microloan platform", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://www.charitywater.org", industry: "Nonprofit", sub_industry: "Clean water", market_scope: "international", city: "New York", region: "New York", country: "United States" },
+  ],
+  corporate: [
+    { url: "https://www.palantir.com", industry: "Enterprise Software", sub_industry: "Government & defense analytics", market_scope: "international", city: "Denver", region: "Colorado", country: "United States" },
+    { url: "https://www.anduril.com", industry: "Defense Tech", sub_industry: "Autonomous defense systems", market_scope: "international", city: "Costa Mesa", region: "California", country: "United States" },
+    { url: "https://www.boozallen.com", industry: "Consulting", sub_industry: "Government consulting", market_scope: "national", city: "McLean", region: "Virginia", country: "United States" },
+    { url: "https://www.govtech.com", industry: "GovTech / Media", sub_industry: "Public-sector technology", market_scope: "national", city: "Folsom", region: "California", country: "United States" },
+  ],
+};
+
+export function pickSeedForTrack(key: TrackKey): SeedEntry {
+  const list = TRACK_SEEDS[key];
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+export const ALL_SEED_URLS: string[] = Object.values(TRACK_SEEDS).flatMap((arr) =>
+  arr.map((s) => s.url),
+);
+
