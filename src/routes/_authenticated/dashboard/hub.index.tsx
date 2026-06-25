@@ -250,6 +250,22 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
     onError: (e: any) => toast.error(e.message ?? "Couldn't restore"),
   });
 
+  const deleteMut = useMutation({
+    mutationFn: () => adminDeleteSnapshot({ data: { id: snapshot.id } }),
+    onSuccess: () => {
+      toast.success(`Deleted "${title}"`);
+      setConfirmDelete(false);
+      setDeleteText("");
+      qc.invalidateQueries({ queryKey: ["hub", "snapshots"] });
+      qc.invalidateQueries({ queryKey: ["admin", "hub", "snapshots"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Couldn't delete"),
+  });
+
+  const confirmPhrase = (snapshot.company_name?.trim() || "DELETE");
+  const deleteEnabled = deleteText.trim() === confirmPhrase && !deleteMut.isPending;
+  const jobActive = snapshot.status === "enriching" || snapshot.status === "generating";
+
   const stop = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
