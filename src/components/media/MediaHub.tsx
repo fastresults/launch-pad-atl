@@ -225,16 +225,14 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
 
   // ===== Folder / collection create =====
   const createFolderMu = useMutation({
-    mutationFn: (name: string) =>
-      createFolderFn({ data: { scope, ownerUserId: ownerUserId ?? null, name, parentId: folderId } }),
+    mutationFn: (name: string) => createFolderFn({ name }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["media-folders", scope, ownerUserId] });
       toast.success("Folder created");
     },
   });
   const createCollectionMu = useMutation({
-    mutationFn: (name: string) =>
-      createCollectionFn({ data: { scope, ownerUserId: ownerUserId ?? null, name } }),
+    mutationFn: (name: string) => createCollectionFn({ name }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["media-collections", scope, ownerUserId] });
       toast.success("Collection created");
