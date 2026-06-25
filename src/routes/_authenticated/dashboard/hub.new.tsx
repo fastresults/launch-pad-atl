@@ -125,6 +125,8 @@ function Inner() {
   const [subIndustry, setSubIndustry] = useState("");
   const [track, setTrack] = useState<TrackKey | "">("");
   const [showTrackHelp, setShowTrackHelp] = useState(false);
+  const [trackPulse, setTrackPulse] = useState(false);
+  const trackSectionRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Prefill from authenticated user once
