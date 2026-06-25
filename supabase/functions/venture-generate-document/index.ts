@@ -310,7 +310,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { snapshotId, documentType, rewriteFeedback, rewriteTags } = await req.json();
+    const { snapshotId, documentType, rewriteFeedback, rewriteTags, intakeAnswers } = await req.json();
     if (!snapshotId || !documentType) {
       return new Response(JSON.stringify({ error: "snapshotId and documentType required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -323,7 +323,14 @@ Deno.serve(async (req) => {
     if (!gateSnap || gateSnap.concept_status !== "locked") {
       return new Response(JSON.stringify({ error: "Lock your concept summary before generating documents." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const result = await generateOne(supabase, snapshotId, documentType, rewriteFeedback, Array.isArray(rewriteTags) ? rewriteTags : undefined);
+    const result = await generateOne(
+      supabase,
+      snapshotId,
+      documentType,
+      rewriteFeedback,
+      Array.isArray(rewriteTags) ? rewriteTags : undefined,
+      intakeAnswers && typeof intakeAnswers === "object" ? intakeAnswers : undefined,
+    );
     return new Response(JSON.stringify({ ok: true, ...result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
