@@ -138,8 +138,7 @@ async function generateOne(supabase: any, snapshotId: string, documentType: stri
   const baseSystem = `You are an AI venture analyst writing investor-grade documents.
 Produce a single document in clean Markdown. Use ## headings, short paragraphs, bullets.
 Be specific, plausible, actionable. Never use filler like "TBD".
-
-The "## Executive Summary" section targets ~500-700 words (shorter for brief doc types).${DEEP_DIVE}`;
+Target ~600-900 words.${QUALITY_FOOTER}`;
 
   const baseSystemPrompt = specializedPrompt(documentType) ?? baseSystem;
   const trackTone = snap.track ? TRACK_TONE[snap.track] : null;
