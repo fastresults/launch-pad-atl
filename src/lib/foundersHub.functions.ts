@@ -285,9 +285,14 @@ export async function listSnapshotDocuments(input: any): Promise<VentureDocument
 }
 
 export async function generateDocument(input: any): Promise<void> {
-  const { snapshotId, documentType } = unwrap<{ snapshotId: string; documentType: string }>(input);
+  const { snapshotId, documentType, rewriteFeedback, rewriteTags } = unwrap<{
+    snapshotId: string;
+    documentType: string;
+    rewriteFeedback?: string;
+    rewriteTags?: string[];
+  }>(input);
   const { data, error } = await supabase.functions.invoke("venture-generate-document", {
-    body: { snapshotId, documentType },
+    body: { snapshotId, documentType, rewriteFeedback, rewriteTags },
   });
   if (error) throw new Error(error.message);
   if (data && data.ok === false) throw new Error(data.error ?? "Generation failed");
