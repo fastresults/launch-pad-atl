@@ -172,7 +172,7 @@ A single blockquote (> ) of 2–3 sentences naming the ONE move for the next 30 
 3 sentences, signed-off feel. Address the founder by first name. Acknowledge the work they put into the workshop. Send them moving.
 
 STRICT RULES
-- Chapter 4 exit list and Chapter 5 Phase 1 MUST connect — Month 1 begins from Day-45 outcomes.
+- Chapter 6 exit list and Chapter 7 Phase 1 MUST connect — Month 1 begins from Day-45 outcomes.
 - Be aligned with the Executive Summary. Resolve contradictions inside the prose.
 - No footnote markers. No "Sources/References/Citations" sections. No [^1].
 - No doc-by-doc rehash. No filler. No emoji. No headings other than those listed.
