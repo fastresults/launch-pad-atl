@@ -199,7 +199,9 @@ export default function BriefWizard() {
     <div className="mx-auto max-w-2xl">
       <div className="flex items-center justify-between">
         <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {mode === "checkpoint" && checkpointBlock
+          {mode === "complete"
+            ? "Brief complete"
+            : mode === "checkpoint" && checkpointBlock
             ? `Checkpoint · ${checkpointBlock.title}`
             : mode === "founder"
               ? "About you"
@@ -218,7 +220,18 @@ export default function BriefWizard() {
         />
       </div>
 
-      {mode === "checkpoint" && checkpointBlock ? (
+      {mode === "complete" ? (
+        <div className="mt-10">
+          <BriefCompleteScreen
+            onGenerateFirst={() => navigate({ to: "/dashboard/hub" })}
+            onSeeDeliverables={() => navigate({ to: "/dashboard/deliverables" })}
+            onEditBrief={() => {
+              setMode("question");
+              setIdx(0);
+            }}
+          />
+        </div>
+      ) : mode === "checkpoint" && checkpointBlock ? (
         <div className="mt-10">
           {(() => {
             const qaAnswers =
