@@ -79,12 +79,17 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
       {tokens && (
         <div className="grid gap-3 md:grid-cols-2">
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Palette</div>
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Palette</div>
+              <button type="button" onClick={() => setShowHex((v) => !v)} className="text-[10px] text-muted-foreground hover:text-foreground">
+                {showHex ? "Hide codes" : "Show codes"}
+              </button>
+            </div>
             <div className="mt-1 flex flex-wrap gap-1.5">
               {Object.entries(tokens.colors ?? {}).map(([role, hex]: any) => (
                 <div key={role} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-background/40 px-2 py-1 text-[10px]">
                   <span className="h-3 w-3 rounded-full border border-white/20" style={{ background: hex }} />
-                  <span className="font-mono">{hex}</span>
+                  {showHex && <span className="font-mono">{hex}</span>}
                   <span className="text-muted-foreground">{role}</span>
                 </div>
               ))}
