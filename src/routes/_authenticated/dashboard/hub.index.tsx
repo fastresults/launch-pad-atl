@@ -203,7 +203,10 @@ function EmptyState({ tab }: { tab: Tab }) {
 
 function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: number; tab: Tab }) {
   const qc = useQueryClient();
+  const { isAdmin } = useAuth();
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
 
   const status = STATUS_LABEL[snapshot.status] ?? snapshot.status;
   const title = snapshot.company_name || snapshot.business_concept?.slice(0, 60) || "Untitled startup";
