@@ -103,6 +103,16 @@ const SPECIAL: Record<string, string> = {
   community_engagement_playbook: `You are a community manager. Output Markdown: # Community Engagement Playbook; ## 10 Reply Scripts; ## Comment-Prompt Formulas (5); ## DM Funnel; ## UGC Scripts (3 with consent); ## Crisis-Response Decision Tree; ## Daily Ritual (60 min/day timeboxes); ## KPI Dashboard (reach, saves, shares, replies, profile→site→lead with target ranges).${QF}`,
   influencer_partnership_brief: `You are a creator-partnerships lead. Output Markdown: # Influencer & Partnership Brief; ## Tier Strategy (nano/micro/mid counts + budgets); ## 25 Named Candidate Creators (table: Name/Handle, Tier, Platform, Audience fit, Rate range, Why); ## Outreach Scripts (cold DM x3); ## Partnership Terms Template; ## Performance Tracking.${QF}`,
   paid_ads_starter_pack: `You are a performance marketer. Output Markdown: # Paid Ads Starter Pack; ## Budget Tiers ($300/$1k/$3k monthly with platform allocation); ## Audience Definitions (3 saved); ## Creative Concepts (top 2 platforms × 3 ads: Hook, Body, CTA, Visual prompt, Format); ## Conversion Tracking (Pixel/CAPI checklist, event names); ## Test-and-Iterate Framework (week-by-week plan, kill criteria).${QF}`,
+  budget_pro_forma: `You are a CFO-grade financial analyst writing a Budget & Pro Forma for a founder. You will be given the founder's specific assumptions in an "## Intake answers" block — treat every number there as ground truth and propagate it through the model. Output Markdown:
+# {Company} — Budget & Pro Forma
+## Executive Summary (4-6 sentences: starting cash, break-even month, peak cash need / lowest cash month, runway, top 3 sensitivities, recommended funding ask if any)
+## Key Assumptions (markdown table echoing the founder's intake answers — Item / Value / Notes — plus any derived figures you computed)
+## 12-Month Operating Budget (markdown table; columns = M1..M12; rows = Revenue, COGS, Gross Profit, Gross Margin %, Payroll (incl. owner draw + planned hires phased by start month), Recurring Fixed Costs, One-Time Costs, Operating Expenses, EBITDA, Funding Inflows, Net Cash Flow, Ending Cash. Show currency with $ and thousands separators.)
+## 3-Year Pro Forma (annual table; columns = Y1 / Y2 / Y3; rows = Revenue, COGS, Gross Profit, OpEx, EBITDA, Cash Flow, Headcount EOY. Y1 must reconcile to the 12-month budget totals. Y2 and Y3 must clearly state the growth assumption used.)
+## Headcount Plan (table: Role / Start month / Monthly cost / Fully-loaded annual cost. Include the founder.)
+## Sensitivity Scenarios (3 short tables — Base / Downside (-30% revenue ramp) / Upside (+30% revenue ramp). For each: Break-even month, Lowest cash month, Lowest cash balance, Required funding to stay above $0.)
+## Funding Gap & Recommendation (1 short paragraph: when cash dips, how much to raise, what the money buys, and the suggested instrument given the track.)
+Numbers must reconcile across sections. Never use TBD or placeholders. If a required input is missing from the intake, make a clearly-labeled reasonable assumption in the Key Assumptions table.${QF}`,
 };
 
 export async function generateOne(
@@ -111,6 +121,7 @@ export async function generateOne(
   documentType: string,
   rewriteFeedback?: string,
   rewriteTags?: string[],
+  intakeAnswers?: Record<string, any>,
 ) {
   const [{ data: snap }, { data: type }] = await Promise.all([
     supabase.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle(),
@@ -119,11 +130,27 @@ export async function generateOne(
   if (!snap) throw new Error("Snapshot not found");
   if (!type) throw new Error(`Unknown document type: ${documentType}`);
 
-  // Mark as generating
+  // Resolve intake answers: prefer caller-provided, otherwise reuse any previously saved on the doc row.
+  let effectiveIntake: Record<string, any> | null =
+    intakeAnswers && Object.keys(intakeAnswers).length ? intakeAnswers : null;
+  if (!effectiveIntake) {
+    const { data: prior } = await supabase
+      .from("venture_documents")
+      .select("intake_answers")
+      .eq("snapshot_id", snapshotId)
+      .eq("document_type", documentType)
+      .maybeSingle();
+    if (prior?.intake_answers && Object.keys(prior.intake_answers).length) {
+      effectiveIntake = prior.intake_answers;
+    }
+  }
+
+  // Mark as generating (preserve any intake answers we resolved).
   await supabase.from("venture_documents").upsert({
     snapshot_id: snapshotId,
     document_type: documentType,
     status: "generating",
+    ...(effectiveIntake ? { intake_answers: effectiveIntake } : {}),
   }, { onConflict: "snapshot_id,document_type" });
 
   // Load dependency docs for context
@@ -182,6 +209,9 @@ Target ~600-900 words unless the doc type is brief.${OUTPUT_FOOTER}`;
     snap.research_brief ? `\n## Research brief (background evidence — synthesize as analyst judgment, NO footnotes or citations in the output)\n${JSON.stringify(snap.research_brief, null, 2)}` : "",
     snap.business_concept ? `\n## Founder's raw concept\n${snap.business_concept}` : "",
     depContext ? `\n## Upstream documents you should build on\n${depContext}` : "",
+    effectiveIntake
+      ? `\n## Intake answers (TOP PRIORITY — the founder provided these as the ground-truth assumptions for this document. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
+      : "",
     (rewriteFeedback && rewriteFeedback.trim()) || (rewriteTags && rewriteTags.length)
       ? `\n## Rewrite guidance from the founder (TOP PRIORITY — the previous version missed the mark, address every point below in this rewrite)\n${
           rewriteTags && rewriteTags.length ? `Tags: ${rewriteTags.join(", ")}\n\n` : ""
@@ -250,6 +280,7 @@ Target ~600-900 words unless the doc type is brief.${OUTPUT_FOOTER}`;
     quality_score: quality,
     version: nextVersion,
     content_version_history: history.slice(0, 10),
+    ...(effectiveIntake ? { intake_answers: effectiveIntake } : {}),
   }, { onConflict: "snapshot_id,document_type" });
 
   if (documentType === "visual_identity_brief") {
@@ -279,7 +310,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { snapshotId, documentType, rewriteFeedback, rewriteTags } = await req.json();
+    const { snapshotId, documentType, rewriteFeedback, rewriteTags, intakeAnswers } = await req.json();
     if (!snapshotId || !documentType) {
       return new Response(JSON.stringify({ error: "snapshotId and documentType required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -292,7 +323,14 @@ Deno.serve(async (req) => {
     if (!gateSnap || gateSnap.concept_status !== "locked") {
       return new Response(JSON.stringify({ error: "Lock your concept summary before generating documents." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const result = await generateOne(supabase, snapshotId, documentType, rewriteFeedback, Array.isArray(rewriteTags) ? rewriteTags : undefined);
+    const result = await generateOne(
+      supabase,
+      snapshotId,
+      documentType,
+      rewriteFeedback,
+      Array.isArray(rewriteTags) ? rewriteTags : undefined,
+      intakeAnswers && typeof intakeAnswers === "object" ? intakeAnswers : undefined,
+    );
     return new Response(JSON.stringify({ ok: true, ...result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

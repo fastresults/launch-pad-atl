@@ -324,13 +324,28 @@ async function runLayer(supabase: any, snapshotId: string, jobId: string, layer:
 }
 
 async function runJob(supabase: any, snapshotId: string, jobId: string) {
-  const { data: types } = await supabase
+  const { data: allTypes } = await supabase
     .from("venture_document_types")
     .select("*")
     .eq("active", true);
 
-  const layers = dependencyLayers(types ?? []);
-  const total = (types ?? []).length;
+  // Documents with an intake_schema require founder input — skip them in
+  // bulk runs unless the founder has already saved intake_answers for them.
+  const { data: savedIntakes } = await supabase
+    .from("venture_documents")
+    .select("document_type, intake_answers")
+    .eq("snapshot_id", snapshotId);
+  const haveAnswers = new Set(
+    (savedIntakes ?? [])
+      .filter((d: any) => d.intake_answers && Object.keys(d.intake_answers).length)
+      .map((d: any) => d.document_type),
+  );
+  const types = (allTypes ?? []).filter(
+    (t: any) => !t.intake_schema || haveAnswers.has(t.type),
+  );
+
+  const layers = dependencyLayers(types);
+  const total = types.length;
   const state = { done: 0, total, fails: 0, canceled: false };
 
   await supabase.from("venture_generation_jobs").update({

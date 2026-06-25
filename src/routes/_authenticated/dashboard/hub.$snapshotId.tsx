@@ -32,6 +32,7 @@ import { TRACKS, getTrack, type TrackKey } from "@/lib/tracks";
 import { ConceptStudio } from "@/components/hub/ConceptStudio";
 import { DocumentViewer } from "@/components/hub/DocumentViewer";
 import { RewriteFeedbackDialog } from "@/components/hub/RewriteFeedbackDialog";
+import { IntakeGatewayDialog, type IntakeTarget } from "@/components/hub/IntakeGatewayDialog";
 import { BrandStudio } from "@/components/hub/BrandStudio";
 import { SocialStudio } from "@/components/hub/SocialStudio";
 import {
@@ -566,9 +567,10 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const [showHelper, setShowHelper] = useState(true);
   const [showFailures, setShowFailures] = useState(false);
   const [rewriteTarget, setRewriteTarget] = useState<{ type: string; name: string } | null>(null);
+  const [intakeTarget, setIntakeTarget] = useState<IntakeTarget>(null);
 
   const genOne = useMutation({
-    mutationFn: (vars: { documentType: string; rewriteFeedback?: string; rewriteTags?: string[] }) =>
+    mutationFn: (vars: { documentType: string; rewriteFeedback?: string; rewriteTags?: string[]; intakeAnswers?: Record<string, any> }) =>
       generateDocument({ data: { snapshotId: snapshot.id, ...vars } }),
     onSuccess: () => { toast.success("Document ready"); qc.invalidateQueries({ queryKey: ["hub"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Generation failed"),
@@ -784,13 +786,25 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                       <Button
                         size="sm"
                         disabled={!depsMet || generating || jobRunning}
-                        onClick={() => genOne.mutate({ documentType: t.type })}
+                        onClick={() => {
+                          if (t.intake_schema) {
+                            setIntakeTarget({
+                              type: t.type,
+                              name: t.name,
+                              schema: t.intake_schema,
+                              initial: d?.intake_answers ?? null,
+                              isRegenerate: false,
+                            });
+                          } else {
+                            genOne.mutate({ documentType: t.type });
+                          }
+                        }}
                         title={!depsMet ? "Finish earlier documents first" : undefined}
                       >
                         {generating ? (
                           <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing…</>
                         ) : (
-                          <><Play className="mr-1 h-3 w-3" />Generate</>
+                          <><Play className="mr-1 h-3 w-3" />{t.intake_schema ? "Start" : "Generate"}</>
                         )}
                       </Button>
                     )}
@@ -798,10 +812,22 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => setRewriteTarget({ type: t.type, name: t.name })}
+                        onClick={() => {
+                          if (t.intake_schema) {
+                            setIntakeTarget({
+                              type: t.type,
+                              name: t.name,
+                              schema: t.intake_schema,
+                              initial: d?.intake_answers ?? null,
+                              isRegenerate: true,
+                            });
+                          } else {
+                            setRewriteTarget({ type: t.type, name: t.name });
+                          }
+                        }}
                         disabled={jobRunning || generating}
                       >
-                        Rewrite
+                        {t.intake_schema ? "Edit & regenerate" : "Rewrite"}
                       </Button>
                     )}
                   </div>
@@ -838,6 +864,16 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             genOne.mutate({ documentType: rewriteTarget.type, rewriteFeedback: feedback, rewriteTags: tags });
           }
           setRewriteTarget(null);
+        }}
+      />
+      <IntakeGatewayDialog
+        target={intakeTarget}
+        onClose={() => setIntakeTarget(null)}
+        onSubmit={(answers) => {
+          if (intakeTarget) {
+            genOne.mutate({ documentType: intakeTarget.type, intakeAnswers: answers });
+          }
+          setIntakeTarget(null);
         }}
       />
     </div>

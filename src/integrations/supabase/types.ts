@@ -1782,6 +1782,7 @@ export type Database = {
           estimated_minutes: number
           free_tier: boolean
           icon: string | null
+          intake_schema: Json | null
           name: string
           sort_order: number
           type: string
@@ -1795,6 +1796,7 @@ export type Database = {
           estimated_minutes?: number
           free_tier?: boolean
           icon?: string | null
+          intake_schema?: Json | null
           name: string
           sort_order: number
           type: string
@@ -1808,6 +1810,7 @@ export type Database = {
           estimated_minutes?: number
           free_tier?: boolean
           icon?: string | null
+          intake_schema?: Json | null
           name?: string
           sort_order?: number
           type?: string
@@ -1827,6 +1830,7 @@ export type Database = {
           hero_image_path: string | null
           hero_image_prompt: string | null
           id: string
+          intake_answers: Json | null
           metadata: Json
           quality_score: number | null
           snapshot_id: string
@@ -1847,6 +1851,7 @@ export type Database = {
           hero_image_path?: string | null
           hero_image_prompt?: string | null
           id?: string
+          intake_answers?: Json | null
           metadata?: Json
           quality_score?: number | null
           snapshot_id: string
@@ -1867,6 +1872,7 @@ export type Database = {
           hero_image_path?: string | null
           hero_image_prompt?: string | null
           id?: string
+          intake_answers?: Json | null
           metadata?: Json
           quality_score?: number | null
           snapshot_id?: string
