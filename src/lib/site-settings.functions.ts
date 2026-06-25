@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type SiteSettings = {
   registration_open: boolean;
   inquiry_notification_email: string | null;
+  show_business_ideas_scroller: boolean;
   [key: string]: unknown;
 };
 
@@ -24,9 +25,11 @@ export async function getPublicSiteSettings(): Promise<SiteSettings> {
   }
   const regOpen = map.get("registration_open");
   const inquiryEmail = map.get("inquiry_notification_email");
+  const showScroller = map.get("show_business_ideas_scroller");
   return {
     registration_open: regOpen === false ? false : true,
     inquiry_notification_email: typeof inquiryEmail === "string" ? inquiryEmail : null,
+    show_business_ideas_scroller: showScroller === false ? false : true,
   };
 }
 

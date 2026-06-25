@@ -1,43 +1,39 @@
-## Goal
+## Build: Business Ideas Scroller + Admin Toggle
 
-Subtly mark sections **06 Brand**, **07 Marketing**, and **08 Social & Content** as **bonuses** — without changing the layout, the numbered-block format, the card grid, hover effects, or any deliverable copy.
+### 1. New homepage section: `HomeBusinessIdeasScroller`
+- File: `src/components/home/HomeBusinessIdeasScroller.tsx`
+- Pulls from existing `BUSINESS_IDEAS` / `BUSINESS_CATEGORIES` in `src/lib/business-ideas.ts` (already 60 ideas across 6 categories — no new data).
+- Layout:
+  - Section heading: "60+ startup ideas founders are building" + sub: "Across online, main street, service, food, side hustle, and family-run — proof there's a clear path no matter what you're starting."
+  - Category filter chips (All / Online / Main Street / Service / Food / Side / Family) above the scroller, using existing token styles (primary/border like the BONUS pill, not raw colors).
+  - Auto-scrolling horizontal marquee (two rows, opposite directions) of compact idea cards: name, category label, offer line, and one stat (income potential). Pauses on hover. CSS-only animation (no extra deps).
+  - Filtering a category swaps the marquee content (still auto-scrolls).
+  - Mobile: single row, swipeable, drag to scrub.
+- Visual style matches existing Framework section (gradient borders, subtle bg, Sparkles accents). No hardcoded colors — semantic tokens only.
+- Placement: between `<Framework />` and `<HonestRoadmap />` in `HomeFramework.tsx`.
+- Conditionally rendered based on the new site setting (see step 3).
 
-## The change in one line
+### 2. Site setting key
+- New key in `site_settings`: `show_business_ideas_scroller` (boolean, default `true`).
+- Extend `SiteSettings` type and `getPublicSiteSettings()` in `src/lib/site-settings.functions.ts` to include this flag (default `true` when missing).
+- Public read of `site_settings` is already allowed by existing RLS (the homepage already calls `getPublicSiteSettings`).
 
-Add an optional `bonus?: boolean` flag to `FrameworkStage`, flip it `true` for stages 06/07/08, and render a small "BONUS" pill next to the stage name when the flag is on.
+### 3. Wire toggle into homepage
+- `HomeFramework.tsx` fetches site settings via `useQuery(["site-settings"], getPublicSiteSettings)` and only renders `<HomeBusinessIdeasScroller />` when `settings.show_business_ideas_scroller !== false`.
+- Default-true so it shows immediately after deploy; admin can hide it.
 
-## Where it shows up
+### 4. Admin toggle UI
+- New route: `src/routes/_authenticated/_admin/admin.settings.tsx` ("Site settings").
+- Adds nav entry in `src/lib/admin-nav.ts`: `{ to: "/admin/settings", label: "Site settings", icon: Settings, group: "System", super: true }`.
+- Page contents (super admin only):
+  - Card: "Homepage sections"
+    - Switch: **Business ideas scroller** — "Show the auto-scrolling list of 60+ startup ideas on the homepage between the Framework and Honest Roadmap sections." Saves via `updateSiteSetting({ key: "show_business_ideas_scroller", value: <bool> })`.
+  - Room left for future toggles (registration_open, etc.) without restructuring.
+- Optimistic toggle with toast feedback; invalidate `["site-settings"]` query.
 
-Inside the existing stage header in `HomeFramework.tsx` (the `<h3>` line that currently renders `{stage.name}`):
+### Files touched
+- New: `src/components/home/HomeBusinessIdeasScroller.tsx`, `src/routes/_authenticated/_admin/admin.settings.tsx`
+- Edit: `src/components/home/HomeFramework.tsx`, `src/lib/site-settings.functions.ts`, `src/lib/admin-nav.ts`
 
-```text
-[06]  Brand   [ ✦ BONUS ]
-      An identity worth premium pricing — system, not stickers.
-```
-
-- Pill sits **inline, to the right of the stage name**, baseline-aligned with the h3.
-- Style mirrors the existing hero accent pill (so it feels native to the page): rounded-full, `border-primary/40`, faint `bg-gradient-to-r from-primary/20 to-primary/5`, `text-white`, `text-[10px] md:text-xs`, `uppercase tracking-[0.18em]`, `px-2 py-0.5`, with a tiny `Sparkles` (size-3) icon.
-- Numbered "06/07/08" gradient digit, card grid, icons, hover state, spacing — all unchanged.
-
-The same pill also appears in the **register page** stage list (`RegisterFramework.tsx` already iterates `FRAMEWORK_STAGES`), so the bonus marker stays consistent across both surfaces.
-
-## Optional copy nudge (small, low-risk)
-
-Add one short sentence under the section's intro paragraph (line 135 area) to anchor *why* there are bonuses, without changing structure:
-
-> "Six core categories plus three bonus tracks — Brand, Marketing, and Social & Content — included at no extra cost."
-
-If you'd rather leave the intro paragraph exactly as it is and let the pills speak for themselves, say the word and I'll skip this line.
-
-## What is NOT changing
-
-- Section order, card counts (4/5/4/5/3/5/1/7), deliverable titles, icons, hover effects.
-- The numbered "06/07/08" gradient digits — bonus stages keep their numbers.
-- Visual styling of cards, grid, spacing, background.
-- DB, edge functions, dashboard — untouched.
-
-## Files touched
-
-- `src/lib/framework-deliverables.ts` — add `bonus?: boolean` to `FrameworkStage`, set `bonus: true` on stages 06, 07, 08.
-- `src/components/home/HomeFramework.tsx` — render the inline pill inside the stage header when `stage.bonus`; optional one-sentence copy add.
-- `src/components/register/RegisterFramework.tsx` — render the same pill inline next to `stage.name` in the aside list.
+### Not changed
+- `business-ideas.ts` data, DB schema (no migration — `site_settings` already exists with proper RLS), other admin pages, framework section, BONUS pills, pricing copy.
