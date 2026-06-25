@@ -567,6 +567,32 @@ function Inner() {
                 </li>
               ))}
             </ul>
+
+          {readyFiles.length > 0 && (
+            <div className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-sm">
+                <div className="font-medium">
+                  {processed ? "Processed — review the form below" : `${readyFiles.length} file${readyFiles.length === 1 ? "" : "s"} ready`}
+                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  {processed
+                    ? "We filled every field we could from your document. Pick a Track to unlock Create & enrich."
+                    : "Click Process document and we'll fill out the whole form for you."}
+                </div>
+              </div>
+              <Button
+                type="button"
+                onClick={draftFromFiles}
+                disabled={drafting}
+                className="shrink-0"
+              >
+                {drafting ? (
+                  <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Processing…</>
+                ) : (
+                  <><Wand2 className="mr-1.5 h-4 w-4" />{processed ? "Re-process" : "Process document"}</>
+                )}
+              </Button>
+            </div>
           )}
 
           <div className="grid gap-2">
