@@ -47,10 +47,10 @@ import {
 import { toast } from "sonner";
 
 const STEPS = [
-  { n: 1, key: "concept", label: "Concept" },
-  { n: 2, key: "enriching", label: "Enriching" },
+  { n: 1, key: "concept", label: "Your idea" },
+  { n: 2, key: "enriching", label: "Research" },
   { n: 3, key: "review", label: "Review" },
-  { n: 4, key: "generate", label: "Generate" },
+  { n: 4, key: "generate", label: "Write documents" },
 ];
 
 function statusToStep(status: string): number {
