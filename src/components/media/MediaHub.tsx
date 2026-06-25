@@ -299,7 +299,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
     const p = readPayload(e);
     if (!p || p.ids.length === 0) return;
     try {
-      await Promise.all(p.ids.map((id) => updateFn({ data: { id, folderId: targetFolderId } })));
+      await Promise.all(p.ids.map((id) => updateFn({ id, folder_id: targetFolderId })));
       toast.success(`Moved ${p.ids.length} file${p.ids.length === 1 ? "" : "s"}`);
       setSelectedIds(new Set());
       invalidate();
