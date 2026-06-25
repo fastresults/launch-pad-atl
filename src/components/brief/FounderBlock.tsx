@@ -40,6 +40,7 @@ export function FounderBlock({ onDone }: Props) {
   const [filename, setFilename] = useState<string>("");
   const [extracting, setExtracting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const [rightPerson, setRightPerson] = useState<string>((profile?.right_person_reason as string) ?? "");
   const [edge, setEdge] = useState<string>((profile?.unfair_advantage as string) ?? "");
