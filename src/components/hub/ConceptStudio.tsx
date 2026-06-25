@@ -182,8 +182,16 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
                       </Button>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">{idea.summary}</p>
-                    {idea.why_it_works && <p className="mt-1 text-[11px] text-emerald-300/80"><b>Why:</b> {idea.why_it_works}</p>}
-                    {idea.risks && <p className="text-[11px] text-amber-300/80"><b>Risks:</b> {idea.risks}</p>}
+                    {idea.why_it_works && (
+                      <p className="mt-2 rounded-r-md border-l-2 border-emerald-500/60 bg-emerald-500/10 px-2 py-1 text-xs leading-snug text-emerald-700 dark:text-emerald-300">
+                        <b>Why:</b> {idea.why_it_works}
+                      </p>
+                    )}
+                    {idea.risks && (
+                      <p className="mt-1 rounded-r-md border-l-2 border-amber-500/60 bg-amber-500/10 px-2 py-1 text-xs leading-snug text-amber-800 dark:text-amber-300">
+                        <b>Risks:</b> {idea.risks}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -195,7 +203,7 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
               <div className="text-xs font-medium text-muted-foreground">Red-team findings</div>
               <ul className="mt-1 list-disc space-y-1 pl-4 text-xs">
                 {(critique.weaknesses ?? []).map((w: any, i: number) => (
-                  <li key={i}><b>{w.issue}</b> — <span className="text-muted-foreground">{w.evidence}</span></li>
+                  <li key={i}><b>{w.issue}</b> — <span className="text-foreground/80">{w.evidence}</span></li>
                 ))}
               </ul>
               {critique.suggested_rewrite && (
