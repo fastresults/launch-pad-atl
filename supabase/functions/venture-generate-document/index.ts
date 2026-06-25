@@ -280,6 +280,7 @@ Target ~600-900 words unless the doc type is brief.${OUTPUT_FOOTER}`;
     quality_score: quality,
     version: nextVersion,
     content_version_history: history.slice(0, 10),
+    ...(effectiveIntake ? { intake_answers: effectiveIntake } : {}),
   }, { onConflict: "snapshot_id,document_type" });
 
   if (documentType === "visual_identity_brief") {
