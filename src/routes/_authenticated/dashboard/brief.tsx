@@ -108,7 +108,7 @@ export default function BriefWizard() {
 
   const save = async (key: string) => {
     try {
-      await updateBriefField({ data: { field: key as never, value: values[key] ?? "" } });
+      await updateBriefField({ key: key as never, value: values[key] ?? "" });
       refetch();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed");
