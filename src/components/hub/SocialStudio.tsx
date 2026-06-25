@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Share2, Copy, ExternalLink, Calendar, Rocket } from "lucide-react";
