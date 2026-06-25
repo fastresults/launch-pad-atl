@@ -31,6 +31,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
   const logoPrompt = visualDoc ? extractFenced(visualDoc.content) : null;
 
   const [assets, setAssets] = useState<any[]>([]);
+  const [showHex, setShowHex] = useState(false);
 
   const genLogo = useMutation({
     mutationFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo", count: 4 } }),
