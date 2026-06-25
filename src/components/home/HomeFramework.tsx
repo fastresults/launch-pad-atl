@@ -22,6 +22,7 @@ import {
   Check,
   Award,
   Sparkles,
+  Star,
   AlertTriangle,
 } from "lucide-react";
 
@@ -52,9 +53,15 @@ function Hero() {
       />
       <div className="absolute inset-0 bg-background/65" />
       <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-24 lg:py-32">
-        <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white/85 md:text-sm md:tracking-[0.2em]">
-          <Sparkles className="size-3.5" /> Built for first-time founders · {WORKSHOP_PRICE_LABEL}
-        </p>
+        <div className="mb-5 flex flex-col flex-wrap items-start gap-2 sm:flex-row sm:items-center">
+          <p className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white md:text-sm md:tracking-[0.2em]">
+            <Star className="size-3.5 fill-current" /> Atlanta's most founder-friendly accelerator
+          </p>
+          <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white/85 md:text-sm md:tracking-[0.2em]">
+            <Sparkles className="size-3.5" /> Built for first-time founders · {WORKSHOP_PRICE_LABEL}
+          </p>
+        </div>
+
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
           The strategic foundation every startup needs —{" "}
           <span className="text-gradient-brand">built in one morning.</span>
@@ -85,7 +92,18 @@ function Hero() {
           </Link>
         </div>
 
+        <p className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-white/70 md:text-sm">
+          <span>Atlanta-built</span>
+          <span aria-hidden>·</span>
+          <span>Founder-first</span>
+          <span aria-hidden>·</span>
+          <span>Coffee on us</span>
+          <span aria-hidden>·</span>
+          <span>No upsell in the room</span>
+        </p>
+
         <div className="mt-10 grid max-w-3xl grid-cols-1 gap-3 text-white/90 sm:grid-cols-2 lg:grid-cols-4 md:mt-12 md:gap-4">
+
           <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
           <Meta icon={<MapPin className="size-4" />} label={`${EVENT.venueCity}, ${EVENT.venueRegion}`} />
           <Meta icon={<Clock className="size-4" />} label="8:45–11:30 AM · Coffee included" />
