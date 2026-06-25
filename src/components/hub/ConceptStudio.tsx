@@ -347,7 +347,11 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
                       <Badge variant="outline" className="text-[10px]">{card.lens}</Badge>
                       <div className="truncate text-sm font-medium">{card.title}</div>
                     </div>
-                    {card.why_now && <p className="mt-1 text-[11px] text-amber-300/80">Why now: {card.why_now}</p>}
+                    {card.why_now && (
+                      <p className="mt-1 rounded-r-md border-l-2 border-amber-500/60 bg-amber-500/10 px-2 py-1 text-xs leading-snug text-amber-800 dark:text-amber-300">
+                        <b>Why now:</b> {card.why_now}
+                      </p>
+                    )}
                     <p className="mt-1 text-xs text-muted-foreground">{card.summary}</p>
                     <div className="mt-1.5 flex gap-3 text-[10px] text-muted-foreground">
                       <span>Viability <b className="text-foreground">{card.viability?.total ?? 0}</b>/100</span>
