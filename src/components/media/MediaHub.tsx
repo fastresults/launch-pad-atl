@@ -761,7 +761,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                     size="sm"
                     variant="destructive"
                     onClick={() => {
-                      if (confirm("Delete this file?")) removeAsset.mutate(selectedAsset.id);
+                      if (confirm("Delete this file?")) removeAsset.mutate(selectedAsset);
                     }}
                   >
                     <Trash2 className="mr-2 h-4 w-4" /> Delete
