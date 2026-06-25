@@ -104,6 +104,9 @@ export default function HubNewPage() {
 
 function Inner() {
   const nav = useNavigate();
+  const location = useLocation();
+  const prefill = (location.state as any)?.prefill;
+  const [fromBrief, setFromBrief] = useState<boolean>(!!prefill?.fromBrief);
   const [path, setPath] = useState<Path>("own");
   const [companyName, setCompanyName] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
