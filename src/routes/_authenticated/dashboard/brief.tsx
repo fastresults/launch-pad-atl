@@ -84,6 +84,7 @@ export default function BriefWizard() {
 
   // Approximate step number across all 5 blocks
   const stepNumber = useMemo(() => {
+    if (mode === "complete") return TOTAL_BRIEF_STEPS;
     let n = 0;
     if (mode === "question") {
       n = idx + 1;
