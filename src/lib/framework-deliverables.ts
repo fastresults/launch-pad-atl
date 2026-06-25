@@ -1,26 +1,41 @@
 import {
-  Compass,
-  Eye,
-  Scale,
-  Palette,
-  LayoutGrid,
-  Target,
-  DollarSign,
   FileText,
-  BarChart3,
-  LineChart,
-  Rocket,
-  Share2,
-  PenTool,
-  Megaphone,
-  TrendingUp,
-  Users,
-  Package,
-  Settings,
-  Banknote,
-  Zap,
-  Globe,
+  Eye,
+  AlertCircle,
   Sparkles,
+  BarChart3,
+  Users,
+  Crosshair,
+  Rocket,
+  MessageSquare,
+  Map,
+  Settings,
+  Handshake,
+  Megaphone,
+  LineChart,
+  Calculator,
+  Banknote,
+  ClipboardList,
+  Presentation,
+  Scale,
+  ShieldAlert,
+  Landmark,
+  Compass,
+  MessageCircle,
+  Palette,
+  Mic,
+  BookOpen,
+  Globe,
+  Share2,
+  Layers,
+  CalendarDays,
+  PartyPopper,
+  Heart,
+  Star,
+  Target,
+  PenTool,
+  TrendingUp,
+  Zap,
   Mail,
   type LucideIcon,
 } from "lucide-react";
@@ -42,49 +57,98 @@ export type FrameworkStage = {
   items: FrameworkDeliverable[];
 };
 
+// Mirrors the live `venture_document_types` table (active = true, ordered by
+// sort_order) so the homepage and the founder dashboard show an identical
+// framework. Deliverable titles match the DB `name` column verbatim.
 export const FRAMEWORK_STAGES: FrameworkStage[] = [
   {
     number: "01",
-    name: "Build your unshakeable foundation",
-    intro:
-      "Five deliverables. The bedrock every defensible startup is built on.",
+    name: "Foundation",
+    intro: "The bedrock every defensible startup is built on.",
     items: [
-      { icon: Compass, title: "Your idea, sharpened into a thesis" },
-      { icon: Eye, title: "A vision people want to follow" },
-      { icon: Scale, title: "Legally airtight from day one" },
-      { icon: Palette, title: "A brand worth premium pricing" },
-      { icon: LayoutGrid, title: "Your business model, on one page" },
+      { icon: FileText, title: "Executive Summary" },
+      { icon: Eye, title: "Vision & Mission" },
+      { icon: AlertCircle, title: "Problem / Solution Brief" },
+      { icon: Sparkles, title: "Value Proposition" },
     ],
   },
   {
     number: "02",
-    name: "Craft your winning strategy",
-    intro:
-      "Five deliverables. The strategic edge competitors will spend years trying to copy.",
+    name: "Strategy",
+    intro: "How you win — and how you compound the lead.",
     items: [
-      { icon: Target, title: "The gap your competitors left open" },
-      { icon: DollarSign, title: "Prices your customers gladly pay" },
-      { icon: FileText, title: "An investor-ready business plan" },
-      { icon: BarChart3, title: "Your market, sized and decoded" },
-      { icon: LineChart, title: "Numbers that survive investor scrutiny" },
+      { icon: BarChart3, title: "Market Analysis" },
+      { icon: Users, title: "Customer Personas" },
+      { icon: Crosshair, title: "Competitive Positioning" },
+      { icon: Rocket, title: "Go-to-Market Plan" },
+      { icon: MessageSquare, title: "Brand & Messaging" },
     ],
   },
   {
     number: "03",
-    name: "Launch with professional power",
-    intro:
-      "Ten deliverables. Everything you need to go from plan to paying customers.",
+    name: "Operations",
+    intro: "What you build, sell, and ship — week after week.",
     items: [
-      { icon: Rocket, title: "A launch the market notices" },
-      { icon: Share2, title: "Social channels ready to fire" },
-      { icon: PenTool, title: "Website copy that actually sells" },
-      { icon: Megaphone, title: "Marketing that owns your category" },
-      { icon: TrendingUp, title: "A repeatable, scalable sales system" },
-      { icon: Users, title: "Your customer, understood inside-out" },
-      { icon: Package, title: "A product customers can't put down" },
-      { icon: Settings, title: "Operations that run without you" },
-      { icon: Banknote, title: "A funding plan investors respect" },
-      { icon: Zap, title: "Growth tactics that compound fast" },
+      { icon: Map, title: "Product Roadmap" },
+      { icon: Settings, title: "Operating Plan" },
+      { icon: Handshake, title: "Sales Playbook" },
+      { icon: Megaphone, title: "Marketing Plan" },
+    ],
+  },
+  {
+    number: "04",
+    name: "Finance",
+    intro: "The numbers investors, banks, and you can trust.",
+    items: [
+      { icon: LineChart, title: "Financial Model" },
+      { icon: Calculator, title: "Unit Economics" },
+      { icon: Banknote, title: "Funding Strategy" },
+      { icon: ClipboardList, title: "Budget & Pro Forma" },
+      { icon: Presentation, title: "Pitch Deck Outline" },
+    ],
+  },
+  {
+    number: "05",
+    name: "Governance",
+    intro: "The legal and risk scaffolding that keeps you bankable.",
+    items: [
+      { icon: Scale, title: "Legal Structure Brief" },
+      { icon: ShieldAlert, title: "Risk Register" },
+      { icon: Landmark, title: "Board & Governance Plan" },
+    ],
+  },
+  {
+    number: "06",
+    name: "Brand",
+    intro: "An identity worth premium pricing — system, not stickers.",
+    items: [
+      { icon: Compass, title: "Brand Strategy Framework" },
+      { icon: MessageCircle, title: "Brand Messaging House" },
+      { icon: Palette, title: "Visual Identity Brief" },
+      { icon: Mic, title: "Brand Voice & Tone Guide" },
+      { icon: BookOpen, title: "Brand Guidelines Book" },
+    ],
+  },
+  {
+    number: "07",
+    name: "Marketing",
+    intro: "The AI-builder prompt that ships your site in a weekend.",
+    items: [
+      { icon: Globe, title: "Website PRD (AI-builder prompt)" },
+    ],
+  },
+  {
+    number: "08",
+    name: "Social & Content",
+    intro: "The distribution engine that earns attention on repeat.",
+    items: [
+      { icon: Share2, title: "Social Media Audit & Setup" },
+      { icon: Layers, title: "Content Strategy & Pillars" },
+      { icon: CalendarDays, title: "90-Day Content Calendar" },
+      { icon: PartyPopper, title: "Launch Content Kit" },
+      { icon: Heart, title: "Community Engagement Playbook" },
+      { icon: Star, title: "Influencer & Partnership Brief" },
+      { icon: Target, title: "Paid Ads Starter Pack" },
     ],
   },
 ];
@@ -94,6 +158,7 @@ export const FRAMEWORK_DELIVERABLES: FrameworkDeliverable[] =
   FRAMEWORK_STAGES.flatMap((s) => s.items);
 
 export const TOTAL_DELIVERABLES = FRAMEWORK_DELIVERABLES.length;
+
 
 export type FoundationReason = { title: string; body: string };
 
