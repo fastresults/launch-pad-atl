@@ -212,6 +212,7 @@ export async function updateFounderContext(input: any): Promise<void> {
     market_scope?: string;
     industry?: string;
     sub_industry?: string;
+    track?: string;
   }>(input);
   const { error } = await supabase.from("venture_snapshots").update(patch).eq("id", id);
   if (error) throw new Error(error.message);
