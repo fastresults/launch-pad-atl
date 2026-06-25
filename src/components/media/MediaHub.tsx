@@ -610,7 +610,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                       variant="secondary"
                       className="h-7 w-7"
                       title="Copy link"
-                      onClick={() => copyAssetUrl(a.id)}
+                      onClick={() => copyAssetUrl(a)}
                     >
                       <Link2 className="h-3.5 w-3.5" />
                     </Button>
