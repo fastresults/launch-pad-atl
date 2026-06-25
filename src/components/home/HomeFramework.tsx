@@ -16,6 +16,7 @@ import {
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroBg from "@/assets/hero-bg.png";
+import atlSeal from "@/assets/atl-founder-friendly-seal.svg";
 import {
   ArrowRight,
   Calendar,
@@ -63,7 +64,10 @@ function Hero() {
       />
       <div className="absolute inset-0 bg-background/65" />
       <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-24 lg:py-32">
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_auto]">
+          <div>
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white md:text-sm md:tracking-[0.2em]">
+
           <Star className="size-3.5 fill-current" /> Atlanta's most founder-friendly accelerator
         </p>
 
@@ -114,6 +118,17 @@ function Hero() {
           <Meta icon={<MapPin className="size-4" />} label={`${EVENT.venueCity}, ${EVENT.venueRegion}`} />
           <Meta icon={<Clock className="size-4" />} label="8:45–11:30 AM · Coffee included" />
           <Meta icon={<Users className="size-4" />} label={`${EVENT.capacity} seats per cohort`} />
+        </div>
+          </div>
+          <div className="hidden lg:flex justify-center">
+            <img
+              src={atlSeal}
+              alt="ATL Founder-Friendly Accelerator seal"
+              loading="eager"
+              decoding="async"
+              className="w-[340px] xl:w-[400px] drop-shadow-[0_8px_30px_rgba(0,0,0,0.45)]"
+            />
+          </div>
         </div>
       </div>
     </section>
