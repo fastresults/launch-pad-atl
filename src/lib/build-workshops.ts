@@ -93,7 +93,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceLabel: "$297",
     icon: Palette,
     title: "Brand Identity Workshop",
-    capability: "Brand identity",
+    capability: "Your brand in a day. No agency required.",
     oneLiner: "Charge premium prices. Stop looking like a Fiverr gig.",
     subhead:
       "Most founders treat brand like a logo decision and pay for it every time they try to raise prices. In one morning we build the brand system — voice, archetype, palette, type, asset rules — that earns trust in three seconds and lets you quote 30% higher without flinching.",
@@ -192,7 +192,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceLabel: "$397",
     icon: Globe,
     title: "Website That Converts Workshop",
-    capability: "A website that converts",
+    capability: "Build the site your customers actually buy from.",
     oneLiner: "Turn your homepage into a revenue surface — not a brochure.",
     subhead:
       "Most founder sites convert at under 1% and the owner can't tell you which page is broken. In one morning we wire your site for revenue: one clear job per page, the proof stack that closes, payment and analytics events live, and the copy that does the selling.",
@@ -291,7 +291,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceLabel: "$197",
     icon: Share2,
     title: "Social Presence Workshop",
-    capability: "Social presence",
+    capability: "30 days of content before you leave the room.",
     oneLiner: "Pick two channels. Own them. Stop posting into the void.",
     subhead:
       "Posting to six platforms is the fastest way to dominate zero of them. In one morning we score every channel against your buyer, commit to two, rebuild your profiles to convert, and ship a 30-day calendar — real posts drafted, not 'ideas.'",
@@ -391,7 +391,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceLabel: "$297",
     icon: PenTool,
     title: "Content Engine Workshop",
-    capability: "A content engine",
+    capability: "Rank, publish, repeat. Your content machine is live.",
     oneLiner: "Build the only marketing line item that gets cheaper every month.",
     subhead:
       "Paid traffic gets more expensive every quarter. Content compounds. In one morning we architect the engine — pillars, SEO map, production flow, and the repurposing system that turns one anchor piece into ten — so it ships without grinding you to dust.",
@@ -491,7 +491,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceLabel: "$397",
     icon: Sparkles,
     title: "AI as Your Operating System Workshop",
-    capability: "AI as your operating system",
+    capability: "Automate 5 real workflows. Today.",
     oneLiner: "Two people doing the work of ten. That's the bar in 2026.",
     subhead:
       "Buying ChatGPT seats isn't AI strategy. In one morning we audit your real workflows, automate five of them live in the room, and hand you the prompt library, model choices, and governance plan so the leverage compounds across your team — not just on your laptop.",
@@ -591,7 +591,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceLabel: "$397",
     icon: Mail,
     title: "Email, CRM & Automation Workshop",
-    capability: "Email, CRM, and automation",
+    capability: "16 emails written. Your sales machine is running.",
     oneLiner: "Most of your revenue is in touches 2, 5, and 12. Build the machine that sends them.",
     subhead:
       "First-touch sales is for amateurs. Pros build the follow-up engine. In one morning we pick your CRM, map the lifecycle, write three sequences live, and fix the deliverability settings most founders don't know are quietly killing their open rates.",
@@ -691,7 +691,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceLabel: "$397",
     icon: TrendingUp,
     title: "Sales Systems Workshop",
-    capability: "Sales systems",
+    capability: "Walk out with a sales script that qualifies and closes.",
     oneLiner: "Stop closing on mood. Start closing on system.",
     subhead:
       "Founders close on hustle. Companies close on system. In one morning we build your ICP scorecard, your discovery script, your pipeline stages with exit criteria, and the weekly rhythm that makes your forecast something investors can read — not something you guess.",
@@ -791,7 +791,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceLabel: "$197",
     icon: Scale,
     title: "Legal, Financial & Operational Scaffolding Workshop",
-    capability: "Legal, financial, and operational scaffolding",
+    capability: "Entity. Contracts. Books. Done.",
     oneLiner: "The boring stuff that decides whether you're bankable.",
     subhead:
       "Founders skip the scaffolding until a customer, a bank, or an investor asks — and then it's a five-figure scramble and a deal you almost lost. In one morning we make the entity decision, lock the contract suite, set up the books, and hand you the operations calendar that keeps you out of trouble.",
