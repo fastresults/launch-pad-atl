@@ -258,11 +258,35 @@ function Inner() {
         <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
           <Sparkles className="h-3.5 w-3.5" /> Step 1 of 4 — Concept
         </div>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Tell us about the venture</h1>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight">
+          {fromBrief ? "Your Startup Snapshot — ready to confirm" : "Tell us about the venture"}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Pick how you want us to enrich it. We'll pull context, then you review before generation.
+          {fromBrief
+            ? "We pre-filled this from your founder brief. Skim it, fix anything that's off, and pick your city/state — then we generate."
+            : "Pick how you want us to enrich it. We'll pull context, then you review before generation."}
         </p>
       </div>
+
+      {fromBrief && (
+        <div className="flex items-start gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <div className="flex-1">
+            <div className="font-medium">Pre-filled from your startup brief</div>
+            <div className="mt-0.5 text-muted-foreground">
+              Edit anything that's off. The only things we still need from you are your <strong>city / state</strong>{!industry ? " and " : ""}{!industry ? <strong>industry</strong> : null}.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFromBrief(false)}
+            className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
 
       <div className="grid gap-2 md:grid-cols-3">
         {([
