@@ -1,80 +1,102 @@
-## Goal
-After the kit finishes ("Your startup kit is ready"), give the founder one big, prominent action — directly under that banner — that produces a single, value-packed **Founder Roadmap & Workshop Synthesis**: what the workshop actually concluded about *their* venture, the top opportunities and risks, a tactical 45-day sprint, and a sequenced 12-month plan.
 
-## Where it goes
-Inserted in `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx`, immediately below the green "Your startup kit is ready" hero card (after line 731, before the helper / Your documents section). Only renders when `heroDone === true` (all docs complete). Full-width gradient/primary card with a large CTA — distinct from the smaller doc cards beneath.
+# Reimagine the Founder Roadmap
 
-## The CTA card
-- Title: **"Your Founder Roadmap"**
-- Subtitle: "One 12-minute read that turns your 34 documents into a clear, sequenced plan — what's strongest, what's risky, your next 45 days, and the 12-month path."
-- Primary button: **"Generate my Founder Roadmap"** (large, primary, sparkle icon). After it's generated → **"Open Founder Roadmap"** with a Regenerate ghost link.
-- Meta line once generated: word count · generated-at · quality score.
+The current roadmap reads like a checklist for a strategy partner — terse bullets, tables, and acronyms. For a founder leaving the workshop, it needs to feel like the **single document they'd hand to their co-founder, their spouse, an angel, or a VC** and have it land. That means narrative voice, momentum, encouragement grounded in their actual artifacts, and a much bigger sense of "look what you've built and where it goes."
 
-## What the roadmap contains
-Long-form markdown deliverable, explicitly NOT a TOC of the existing documents:
+This plan changes the **prompt + structure + presentation** of the roadmap. No new feature surface, no new buttons, no schema changes.
 
-1. **Executive Verdict** — 3-sentence partner-grade verdict + the single highest-leverage move.
-2. **What the Workshop Discovered About Your Venture** — synthesized named insights across all docs.
-3. **Your Strategic Position** — assets, differentiators, unknowns; "confidence map" table (Pillar / Strength / Confidence / What's missing).
-4. **Top 5 Opportunities** — ranked: move · why it works for this venture (cite relevant doc names) · expected outcome · effort (S/M/L) · which deliverable to execute from.
-5. **Top 5 Risks & How to De-risk Them** — ranked: mitigation + the deliverable that already addresses it.
-6. **Next 45 Days — Tactical Sprint Plan** — day-grouped action plan (Days 1–7, 8–21, 22–35, 36–45). Each item: concrete action, owner role, dependency, success metric, and which deliverable it pulls from. Designed to be executed Monday morning. Ends with an explicit "exit criteria" — what must be true on Day 45 to proceed into the 12-month plan.
-7. **12-Month Sequenced Plan** — month-by-month (M1–M12) milestones grouped into phases (e.g. Validate → Build → Scale). Each month: theme, 2–4 outcomes, KPIs, and the deliverable(s) it draws on. Aligned to and continuing from the 45-day exit criteria.
-8. **6 & 12-Month Milestones** — measurable targets (revenue, customers, hires, fundraise, product) anchored to the financial model and pricing.
-9. **Money & Runway Reality** — synthesized from `financial_model` and `budget_pro_forma` if present: starting cash, monthly burn, breakeven, funding gap, recommended raise size and timing.
-10. **Founder Operating Cadence** — weekly/monthly/quarterly rituals tailored to stage and track.
-11. **Read-Next Path Through Your Kit** — 5 ordered docs the founder should actually read first (not all 34), each with a one-line reason.
-12. **The Single Most Important Thing** — boxed callout: the one move that most changes their odds in the next 30 days.
+---
 
-Strict rules baked into the prompt: brutally specific to *this* venture (no platitudes), reference real numbers and ICP/positioning details, no citations/footnotes, no rehashing entire documents, the 45-day sprint and the 12-month plan must be internally consistent (the 12-month plan picks up exactly where the 45-day sprint ends).
+## What changes for the user
 
-## Implementation
+When they click **Open Founder Roadmap**:
 
-### 1. Migration — new persistence on `venture_snapshots`
-- `roadmap_content text`
-- `roadmap_status text` (`pending|generating|complete|failed`)
-- `roadmap_quality_score int`
-- `roadmap_generated_at timestamptz`
-- `roadmap_word_count int`
+- The dialog opens with a **cover** — venture name, tagline pulled from value-prop, a one-line verdict ("You are 72% of the way to a fundable seed story"), and a quick stat strip (documents synthesized, hours of work represented, addressable market, target ICP, recommended first-year revenue).
+- The body reads like a **narrative founder playbook**, not a strategy memo: warm, confident, second-person ("Here is what you've built…"), with named ICPs, real prices, real channels, real numbers from their kit woven into prose.
+- Sections feel like **chapters** rather than headers — each opens with a 2–3 sentence narrative lead-in before any list or table.
+- New emotional spine: **What you've built → Why it can win → The fight ahead → Your first 45 days → Your year → How to talk about this → The one thing.**
+- Designed to be printable and handed to an investor — investor-ready language, no "AI-ese," no doc-by-doc rehash, no jargon dumps.
 
-### 2. New edge function `venture-generate-roadmap`
-Mirrors `venture-generate-assessment`:
-- Input: `{ snapshotId }`.
-- Fetches snapshot + every completed `venture_documents` row (content + `intake_answers` + `deep_assessment`) + `venture_document_types` metadata.
-- Layered context bundle (venture brief → research brief → enrichment → exec summary → other docs with smart excerpts → deep assessments) under a ~120k-char budget with progressive truncation; exec summary, venture brief and financial docs protected from truncation.
-- System prompt enumerates the 12 sections above, the 45-day → 12-month continuity rule, no-doc-by-doc rule, alignment-with-exec-summary rule, and a final `QUALITY_SCORE` line (stripped from rendered output).
-- Model: `google/gemini-3-flash-preview`.
-- Persists the result + status transitions on `venture_snapshots`.
-- Reuses `GatewayError` pattern (429 / 402 / 403 messaging).
+---
 
-### 3. Client wrapper
-`src/lib/foundersHub.functions.ts` → add `generateRoadmap({ snapshotId })`.
+## New roadmap structure (rewritten system prompt)
 
-### 4. UI — `FounderRoadmapCard` (`src/components/hub/FounderRoadmapCard.tsx`)
-Empty / generating / complete / failed states; mutation + polling via snapshot refetch.
+The H1 stays `# Your Founder Roadmap`, then:
 
-### 5. UI — `FounderRoadmapDialog` (`src/components/hub/FounderRoadmapDialog.tsx`)
-Modeled on `DocumentViewer`: markdown render, jump-to-section sidebar auto-built from H2s (so the 45-day and 12-month sections each get their own anchor), sticky export bar with Copy / .md / .docx / Print, reusing existing `renderToPrint` + `markdownToDocxBlob`.
+1. **Cover & Verdict** — one paragraph that names the venture, what it is in one sentence, the founder by name, and a confident-but-honest verdict ("You are closer than you think, and here's why.").
+2. **The Stat Strip** — small markdown table the dialog renders as a hero band: # of artifacts synthesized, market size, target ICP, recommended Year-1 revenue, recommended raise size, breakeven month.
+3. **Chapter 1 — What You've Built** — narrative synthesis of the workshop's output: the concept in plain English, the wedge, the ICP as a human story, the pricing logic, the GTM motion. Written as prose, not bullets. Ends with a 1-line "Why this matters."
+4. **Chapter 2 — Why This Can Win** — the strategic case, written as if pitching the founder back to themselves. 3 narrative reasons, each anchored to a specific deliverable, each ending with a named proof point.
+5. **Chapter 3 — The Honest Fight Ahead** — the real risks, framed as challenges with named mitigations already in the kit. Encouraging tone: every risk paired with the deliverable that addresses it. No fear-mongering.
+6. **Chapter 4 — Your First 45 Days** — narrative sprint plan. Each horizon (Days 1–7 / 8–21 / 22–35 / 36–45) opens with a 1-paragraph theme ("This is your validation fortnight…") followed by 3–5 specific actions with owner, dependency, success metric, and which deliverable to pull from. Ends with **"By Day 45, you will have…"** — a confident, bolded outcomes list.
+7. **Chapter 5 — Your First Year** — month-by-month, but grouped into 3 named phases ("Validate," "Build," "Compound") each with a paragraph of narrative before the month list. Picks up exactly from Day-45 exit criteria. Each month: theme · 2-3 outcomes · KPI to watch · which deliverable powers it.
+8. **Chapter 6 — Money & Runway, In Plain English** — narrative version of financial reality: starting cash, monthly burn, breakeven month, funding gap, recommended raise size and timing — written as a paragraph a non-finance partner could read, then a tiny supporting table.
+9. **Chapter 7 — How to Talk About This** — the founder's communication kit: a 60-second pitch (verbatim, ready to read aloud), a 1-paragraph version for email, the 3 numbers to memorize, and the 3 questions an investor will ask with suggested answers anchored in the kit. This is the section that makes the doc shareable with VCs.
+10. **Chapter 8 — Your Operating Cadence** — weekly / monthly / quarterly rituals tailored to track and stage, written as habits not bullets.
+11. **Chapter 9 — Read Next** — the 5 most important documents from their kit to read first, each with a 1-line "why now."
+12. **The One Thing** — closing blockquote callout. A single move for the next 30 days that will most change their odds. Encouraging, specific, named.
+13. **Closing Note to the Founder** — 3-sentence personal-tone sign-off by name, acknowledging the work they did in the workshop and setting them moving.
 
-### 6. Route wiring
-`hub.$snapshotId.tsx`: mount `<FounderRoadmapCard>` directly after the hero when `heroDone`; render `<FounderRoadmapDialog>` alongside the other dialogs.
+Final line still emits `QUALITY_SCORE: <0-100>` for the meta strip.
+
+### Tone rules added to the prompt
+- Second person, warm, confident, never patronizing. No "you should." Use "you can," "you've already," "your next move is."
+- Every chapter opens with prose. Bullets/tables support prose, never replace it.
+- Use the founder's first name in Chapter 1 lead and the closing note.
+- Use the company name verbatim throughout.
+- Cite real numbers, real prices, real channels, real ICP names from the kit. Never generic.
+- No "AI-ese": no "leverage synergies," no "in today's fast-paced landscape," no "robust solution."
+- Investor-readable: a stranger should be able to read it and understand the business in 10 minutes.
+
+---
+
+## Dialog presentation upgrades
+
+The dialog stays the same component (`FounderRoadmapDialog.tsx`) — minor visual additions only, no new routes:
+
+- **Hero cover band** at the top of the scroll area: large venture name, tagline, verdict line, and the stat-strip chips (parsed from the first H2 "Stat Strip" table — rendered as colored chips, then that source table is hidden so it isn't duplicated).
+- **Chapter typography**: H2s render with a small "Chapter N" eyebrow label above them, a thin accent rule, and more generous top spacing. Feels like a book/report, not a memo.
+- **Reading meta strip** under the cover: "≈ N min read · N words · Synthesized from N documents · Generated <date>" — pulled from the existing word count + a count of completed docs passed in (already available via the parent route; pass `documentCount` as a new optional prop).
+- **Export bar** stays where it is. The DOCX/print stylesheet gets the same chapter-eyebrow + accent treatment so the printed PDF and the .docx look like a real workshop deliverable, not a markdown dump.
+- **Sidebar nav** keeps the H2 jump list but labels become "Ch. 1 — What You've Built," etc.
+
+No new dependencies. All purely presentational, parsed from the same markdown the edge function returns.
+
+---
 
 ## Files touched
-- New: `supabase/functions/venture-generate-roadmap/index.ts`
-- New: `supabase/migrations/<ts>_founder_roadmap.sql`
-- New: `src/components/hub/FounderRoadmapCard.tsx`
-- New: `src/components/hub/FounderRoadmapDialog.tsx`
-- Edited: `src/lib/foundersHub.functions.ts`
-- Edited: `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx`
-- Auto-regenerated: `src/integrations/supabase/types.ts`
 
-## Out of scope
-- New `venture_document_types` row — roadmap is a venture-level synthesis, not a kit doc.
-- Editable/feedback-driven regeneration (plain Regenerate only).
-- Email/PDF auto-delivery — handled via the dialog's existing export actions.
+- `supabase/functions/venture-generate-roadmap/index.ts`
+  - Replace `SYSTEM_PROMPT` with the new chapter-based, narrative-first prompt and tone rules above.
+  - Add a small instruction to emit the **Stat Strip** as the first H2 with a specific 2-column markdown table the UI can parse (`| Metric | Value |`).
+  - Keep model, budget, context bundle, citation stripping, and quality-score parsing unchanged.
+- `src/components/hub/FounderRoadmapDialog.tsx`
+  - Add cover band + stat-strip chip rendering (parse the first H2 "Stat Strip" table, then strip it from the rendered markdown).
+  - Add "Chapter N" eyebrow label to H2 headings (skip for "Stat Strip" and the closing "The One Thing"/"Closing Note").
+  - Add `documentCount?: number` prop and render the reading meta line.
+  - Tighten print CSS to mirror the new typography.
+- `src/components/hub/FounderRoadmapCard.tsx`
+  - Pass `documentCount` (already known from the hub's completed-docs list) into the dialog.
+  - Tiny copy refresh on the empty-state card to set expectations ("A narrative founder playbook synthesized from your entire workshop — designed to share with co-founders and investors.") — no layout change.
+
+No DB migration. No new edge function. No new component files. No new routes.
+
+---
 
 ## Verification
-- After full kit completes, the big CTA card appears directly under "Your startup kit is ready".
-- Click Generate → status flips to `generating` → completes → dialog opens with all 12 sections; the 45-day sprint reads as week-by-week tactical steps and the 12-month plan continues from its exit criteria.
-- Exports (Copy, .md, .docx, Print) deliver the full roadmap including both horizons.
-- Regenerate replaces prior content; failed state shows retry.
+
+1. On a snapshot with a completed kit, click **Generate** → wait for `complete`.
+2. Open the dialog and confirm: cover band renders with venture name + verdict, stat-strip chips appear (and the source table is not duplicated below), chapters have eyebrow labels, prose lead-ins precede every list/table.
+3. Spot-check Chapter 1, 4, 7 for: founder's first name used, real ICP name, real prices, no generic phrases, no doc-by-doc rehash.
+4. Confirm 45-day "By Day 45, you will have…" exit list flows directly into Chapter 5 Month 2.
+5. Export to `.docx` and Print → confirm both render the chapter typography cleanly.
+6. Regenerate → new content replaces old.
+
+---
+
+## Out of scope
+
+- No new schema columns, no new tables.
+- No new "share with investor" link/feature — the doc itself is the artifact.
+- No live editing or feedback-driven regeneration.
+- No PDF generation server-side (browser Print remains the path).
