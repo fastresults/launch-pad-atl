@@ -532,8 +532,8 @@ function Inner() {
           >
             <Upload className="h-5 w-5 text-muted-foreground" />
             <div className="text-sm">
-              <span className="font-medium">Drop your pitch deck, one-pager, or notes</span>
-              <span className="text-muted-foreground"> — or click to browse</span>
+              <span className="font-medium">Drop your pitch deck, plan, one-pager, or notes</span>
+              <span className="text-muted-foreground"> — we'll fill out the whole form</span>
             </div>
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
               PDF · TXT · MD · up to {MAX_FILES} files, 20 MB each
