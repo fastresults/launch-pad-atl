@@ -15,7 +15,65 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 // ============== SPECIALIZED PROMPTS ==============
-const QUALITY_FOOTER = `\n\nEnd with a "## Sources" section listing any [^n] footnotes used, then on a final line output exactly:\nQUALITY_SCORE: <0-100 integer>`;
+// Every doc renders in TWO parts: "## Executive Summary" (the per-doc spec below)
+// followed by "## McKinsey-Grade Assessment" (analytical deep dive). No citations.
+const DEEP_DIVE = `
+
+OUTPUT STRUCTURE — MANDATORY, applies to EVERY document type:
+
+Produce TWO sections in this exact order:
+
+## Executive Summary
+Follow the document-specific structure described above verbatim (headings, tables, JSON blocks, fenced prompt blocks all live inside this section). Keep it concise, scannable, investor-ready (~500-700 words; brief doc types can be shorter).
+
+---
+
+## McKinsey-Grade Assessment
+A rigorous, partner-level analytical deep dive tailored to THIS document type (~700-1100 words). Use these subsections (### h3) — adapt wording so they read natural for the doc, but cover every angle:
+
+### Situation & Context
+Frame the problem, the founder's position, and what's actually at stake. Reference specifics from the venture brief and research.
+
+### Key Assumptions
+Numbered list. For each: the assumption + confidence (High / Medium / Low) + why.
+
+### Pressure Test — What Could Go Wrong
+3-6 sharpest counter-arguments, market realities, competitive responses, or execution traps an experienced partner would raise.
+
+### Quantified Sensitivities / Scenarios
+Where the doc has any numbers (pricing, CAC, conversion, runway, market size, channel mix, etc.) include a small Markdown table with Base / Upside / Downside columns and the key drivers. If the doc is purely qualitative (e.g. brand voice), substitute a 2x2 or trade-off matrix.
+
+### Risks & Mitigations
+Table: Risk | Likelihood (H/M/L) | Impact (H/M/L) | Mitigation.
+
+### What Would Have to Be True
+3-5 crisp, testable conditions for this plan to succeed.
+
+### 30 / 60 / 90-Day Actions
+Concrete actions per horizon. Each action: owner role + verifiable outcome.
+
+### Confidence Summary
+1-2 sentences: overall confidence in this document, the biggest unknown, and the next single action that would most reduce risk.
+
+CITATION RULES — STRICT:
+- DO NOT use footnote markers ([^1], [^2], etc.).
+- DO NOT add a "## Sources", "## References", or "## Citations" section.
+- Present conclusions as analyst judgment grounded in the supplied research, not as footnoted quotes.
+
+After the markdown, on a final line, output exactly:
+QUALITY_SCORE: <0-100 integer reflecting completeness, specificity, investor-readiness, and analytical rigor of both sections>`;
+
+const QUALITY_FOOTER = DEEP_DIVE;
+
+// Remove footnote markers ([^1]) and any trailing Sources/References/Citations section.
+function stripCitations(md: string): string {
+  let out = md;
+  out = out.replace(/\n#{1,6}\s*(sources|references|citations|bibliography|footnotes)\s*[\s\S]*$/i, "");
+  out = out.replace(/\[\^[^\]]+\]/g, "");
+  out = out.replace(/^\s*\[\^[^\]]+\]:.*$/gm, "");
+  out = out.replace(/\n{3,}/g, "\n\n");
+  return out.trim();
+}
 
 // Track tone directives — mirrored from src/lib/tracks.ts. Keep in sync.
 const TRACK_TONE: Record<string, string> = {
