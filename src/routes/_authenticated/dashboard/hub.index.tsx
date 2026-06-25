@@ -214,13 +214,13 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
   const isFav = !!snapshot.is_favorite;
 
   const tone = isFav
-    ? "border-amber-500/40 bg-amber-500/5"
+    ? "border-status-warning/40 bg-status-warning/5"
     : isArchived
       ? "border-white/5 bg-card/60 opacity-80"
       : snapshot.status === "complete"
-        ? "border-emerald-500/30 bg-emerald-500/5"
+        ? "border-status-success/30 bg-status-success/5"
         : snapshot.status === "enriching" || snapshot.status === "generating"
-          ? "border-amber-500/30 bg-amber-500/5"
+          ? "border-status-warning/30 bg-status-warning/5"
           : "border-white/10";
 
   const favMut = useMutation({
@@ -280,9 +280,9 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
             type="button"
             aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
             onClick={(e) => { stop(e); favMut.mutate(!isFav); }}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-white/5 hover:text-amber-400"
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-white/5 hover:text-status-warning"
           >
-            <Star className={`h-4 w-4 ${isFav ? "fill-amber-400 text-amber-400" : ""}`} />
+            <Star className={`h-4 w-4 ${isFav ? "fill-status-warning text-status-warning" : ""}`} />
           </button>
         )}
         <DropdownMenu>
@@ -311,7 +311,7 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onSelect={() => setConfirmDelete(true)}
-                  className="text-red-400 focus:text-red-300"
+                  className="text-status-danger focus:text-status-danger"
                   title={jobActive ? "Job in progress — admin force delete" : undefined}
                 >
                   <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete venture (admin){jobActive ? " — force" : ""}
@@ -325,7 +325,7 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
       <Link to={`/dashboard/hub/${snapshot.id}`} className="block">
         <div className="pr-20">
           <div className="flex items-center gap-2">
-            {isFav && <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />}
+            {isFav && <Star className="h-3.5 w-3.5 fill-status-warning text-status-warning" />}
             <h3 className="truncate text-base font-semibold">{title}</h3>
           </div>
           {snapshot.website_url && (
@@ -376,7 +376,7 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
               <AlertDialogDescription asChild>
                 <div className="space-y-3 text-sm">
                   <p>
-                    This is an <span className="font-semibold text-red-300">admin-only, irreversible</span> action.
+                    This is an <span className="font-semibold text-status-danger">admin-only, irreversible</span> action.
                     It will permanently remove this venture and everything attached to it:
                   </p>
                   <ul className="list-inside list-disc text-xs text-muted-foreground">
@@ -409,7 +409,7 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
               <AlertDialogAction
                 disabled={!deleteEnabled}
                 onClick={(e) => { e.preventDefault(); if (deleteEnabled) deleteMut.mutate(); }}
-                className="bg-red-600 text-white hover:bg-red-500 disabled:opacity-40"
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-40"
               >
                 {deleteMut.isPending ? "Deleting…" : "Delete forever"}
               </AlertDialogAction>

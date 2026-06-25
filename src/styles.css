@@ -33,6 +33,11 @@
   --color-brand-orange: var(--brand-orange);
   --color-brand-magenta: var(--brand-magenta);
   --color-brand-violet: var(--brand-violet);
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-danger: var(--status-danger);
+  --color-status-info: var(--status-info);
+  --color-status-tip: var(--status-tip);
 }
 
 :root {
@@ -66,6 +71,13 @@
   --brand-orange: oklch(0.72 0.21 45);
   --brand-magenta: oklch(0.62 0.27 350);
   --brand-violet: oklch(0.55 0.27 295);
+
+  /* Workflow status colors: tuned for readable text on both light cards and dark surfaces */
+  --status-success: oklch(0.76 0.17 155);
+  --status-warning: oklch(0.82 0.16 80);
+  --status-danger: oklch(0.72 0.2 25);
+  --status-info: oklch(0.76 0.15 230);
+  --status-tip: oklch(0.76 0.16 310);
 
   /* Hero gradient: orange → hot magenta → electric blue (grey midpoint removed) */
   --gradient-hero: linear-gradient(
@@ -110,6 +122,12 @@
   --border: oklch(0.18 0.02 280 / 12%);
   --input: oklch(0.18 0.02 280 / 15%);
   --ring: oklch(0.58 0.28 290);
+
+  --status-success: oklch(0.42 0.14 155);
+  --status-warning: oklch(0.48 0.13 70);
+  --status-danger: oklch(0.48 0.18 25);
+  --status-info: oklch(0.44 0.16 245);
+  --status-tip: oklch(0.46 0.16 310);
 }
 
 @layer base {

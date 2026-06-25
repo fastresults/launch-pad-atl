@@ -40,7 +40,7 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
       <div className="flex items-center gap-2">
-        <Share2 className="h-4 w-4 text-sky-400" />
+        <Share2 className="h-4 w-4 text-status-info" />
         <h3 className="text-sm font-semibold">Social Studio</h3>
       </div>
 
@@ -105,14 +105,14 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
 }
 
 function recColor(rec: string) {
-  if (/yes/i.test(rec)) return "border-emerald-500/40 text-emerald-300";
-  if (/maybe/i.test(rec)) return "border-amber-500/40 text-amber-300";
+  if (/yes/i.test(rec)) return "border-status-success/40 text-status-success";
+  if (/maybe/i.test(rec)) return "border-status-warning/40 text-status-warning";
   return "border-white/10 text-muted-foreground";
 }
 
 function dotColor(rec: string) {
-  if (/yes/i.test(rec)) return "bg-emerald-400";
-  if (/maybe/i.test(rec)) return "bg-amber-400";
+  if (/yes/i.test(rec)) return "bg-status-success";
+  if (/maybe/i.test(rec)) return "bg-status-warning";
   return "bg-muted-foreground/40";
 }
 

@@ -48,7 +48,7 @@ export default function WorkflowPage() {
       </div>
 
       {!briefReady && (
-        <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/5 p-4 text-sm">
+        <div className="rounded-2xl border border-status-warning/30 bg-status-warning/5 p-4 text-sm">
           <Link to="/dashboard/brief" className="font-medium underline">Finish your Startup Brief</Link>
           {" "}first ({briefScore} / 10 fields done). AI needs it to generate good deliverables.
         </div>
@@ -67,7 +67,7 @@ export default function WorkflowPage() {
             <div className="grid gap-3 md:grid-cols-2">
               {items.map((d) => {
                 const Icon = d.generated ? CheckCircle2 : d.ready ? Circle : Lock;
-                const tone = d.generated ? "text-green-500" : d.ready ? "text-foreground" : "text-muted-foreground";
+                const tone = d.generated ? "text-status-success" : d.ready ? "text-foreground" : "text-muted-foreground";
                 return (
                   <div key={d.key} className="rounded-xl border border-white/10 bg-card p-4">
                     <div className="flex items-start justify-between gap-3">
@@ -115,7 +115,7 @@ export default function WorkflowPage() {
             {recent.steps.slice(0, 12).map((s, i) => (
               <li key={i} className="flex items-center justify-between gap-2">
                 <span className="truncate">{s.deliverable_key}</span>
-                <span className={s.status === "completed" ? "text-green-500" : s.status === "failed" ? "text-red-500" : "text-muted-foreground"}>
+                <span className={s.status === "completed" ? "text-status-success" : s.status === "failed" ? "text-status-danger" : "text-muted-foreground"}>
                   {s.status}
                 </span>
               </li>

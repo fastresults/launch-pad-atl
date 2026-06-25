@@ -119,7 +119,7 @@ function StepIndicator({ current }: { current: number }) {
         return (
           <li key={s.n} className={`flex items-center gap-1.5 rounded-full border px-3 py-1 ${
             active ? "border-foreground bg-foreground text-background"
-            : done ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+            : done ? "border-status-success/40 bg-status-success/10 text-status-success"
             : "border-white/10 text-muted-foreground"
           }`}>
             <span className="font-semibold">{s.n}</span>
@@ -161,17 +161,17 @@ function EnrichingStep({ snapshot, onRetry }: { snapshot: any; onRetry: () => vo
         ))}
       </div>
       {isError && (
-        <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/5 p-3 text-sm">
-          <AlertCircle className="mt-0.5 h-4 w-4 text-red-400" />
+        <div className="flex items-start gap-2 rounded-xl border border-status-danger/30 bg-status-danger/5 p-3 text-sm">
+          <AlertCircle className="mt-0.5 h-4 w-4 text-status-danger" />
           <div className="flex-1">
-            <div className="font-medium text-red-200">Enrichment failed</div>
-            <div className="text-xs text-red-700 dark:text-red-300">{prog.message ?? "Unknown error"}</div>
+            <div className="font-medium text-status-danger">Enrichment failed</div>
+            <div className="text-xs text-status-danger">{prog.message ?? "Unknown error"}</div>
           </div>
           <Button size="sm" variant="outline" onClick={() => retry.mutate()}><RefreshCw className="mr-1 h-3 w-3" />Retry</Button>
         </div>
       )}
       {!isError && isStale && (
-        <div className="flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
+        <div className="flex items-center justify-between rounded-xl border border-status-warning/30 bg-status-warning/5 p-3 text-sm">
           <span>Looks like enrichment may have stalled.</span>
           <Button size="sm" variant="outline" onClick={() => retry.mutate()}><RefreshCw className="mr-1 h-3 w-3" />Retry</Button>
         </div>
@@ -404,7 +404,7 @@ function ReviewSubStepper({
                   isActive
                     ? "border-foreground bg-foreground text-background"
                     : isDone
-                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:border-emerald-500/60"
+                      ? "border-status-success/40 bg-status-success/10 text-status-success hover:border-status-success/60"
                       : "border-white/10 text-muted-foreground hover:border-white/25"
                 }`}
               >
@@ -449,8 +449,8 @@ function SetupSubStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => voi
         {rows.map((r) => (
           <div key={r.label} className="flex items-center justify-between gap-3 border-b border-white/5 py-1.5 text-sm last:border-b-0">
             <dt className="text-muted-foreground">{r.label}</dt>
-            <dd className={`text-right ${r.missing ? "text-amber-300" : ""}`}>
-              {r.missing && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 align-middle" />}
+            <dd className={`text-right ${r.missing ? "text-status-warning" : ""}`}>
+              {r.missing && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-status-warning align-middle" />}
               {r.value}
             </dd>
           </div>
@@ -507,11 +507,11 @@ function FieldGroup({
                   {f.optional && <span className="ml-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">optional</span>}
                 </Label>
                 {filled ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300">
+                  <span className="inline-flex items-center gap-1 text-[11px] text-status-success">
                     <CheckCircle2 className="h-3 w-3" /> Looks good
                   </span>
                 ) : !f.optional ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-amber-300">
+                  <span className="inline-flex items-center gap-1 text-[11px] text-status-warning">
                     <Circle className="h-3 w-3" /> Needs your input
                   </span>
                 ) : null}
@@ -672,7 +672,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   return (
     <div className="space-y-6">
       {/* Hero next-action card */}
-      <div className={`rounded-2xl border p-6 ${heroDone ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/10 bg-card"}`}>
+      <div className={`rounded-2xl border p-6 ${heroDone ? "border-status-success/30 bg-status-success/5" : "border-white/10 bg-card"}`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h2 className="text-xl font-semibold">{heroTitle}</h2>
@@ -709,14 +709,14 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
           <button
             type="button"
             onClick={() => setShowFailures((v) => !v)}
-            className="mt-3 inline-flex items-center gap-1 text-xs text-amber-300 hover:text-amber-200"
+            className="mt-3 inline-flex items-center gap-1 text-xs text-status-warning hover:text-status-warning/80"
           >
             <AlertCircle className="h-3 w-3" />
             {failures.length} document{failures.length === 1 ? "" : "s"} need another try
           </button>
         )}
         {showFailures && failures.length > 0 && (
-          <ul className="mt-2 space-y-1 rounded-lg border border-amber-500/20 bg-amber-500/5 p-2 text-xs text-amber-100/80">
+          <ul className="mt-2 space-y-1 rounded-lg border border-status-warning/20 bg-status-warning/5 p-2 text-xs text-status-warning">
             {failures.slice(0, 6).map((f: any) => {
               const t = typeByKey.get(f.document_type) as any;
               return <li key={f.id}><span className="font-medium">{t?.name ?? f.document_type}</span> — {f.error}</li>;
@@ -750,7 +750,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               const isComplete = status === "complete";
               const generating = status === "generating" || (genOne.isPending && genOne.variables === t.type);
               const Icon = isComplete ? CheckCircle2 : depsMet ? Circle : Lock;
-              const tone = isComplete ? "text-emerald-400" : depsMet ? "text-foreground" : "text-muted-foreground";
+              const tone = isComplete ? "text-status-success" : depsMet ? "text-foreground" : "text-muted-foreground";
 
               let statusLine: string;
               if (isComplete) statusLine = "Ready to read";
@@ -855,9 +855,9 @@ function ResearchPanel({ snapshot }: { snapshot: any }) {
       </summary>
 
       {gaps.length > 0 && (
-        <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
-          <div className="mb-1 font-medium text-amber-200">Needs your input</div>
-          <ul className="list-inside list-disc space-y-0.5 text-amber-100/80">
+        <div className="mt-4 rounded-xl border border-status-warning/30 bg-status-warning/5 p-3 text-xs">
+          <div className="mb-1 font-medium text-status-warning">Needs your input</div>
+          <ul className="list-inside list-disc space-y-0.5 text-status-warning">
             {gaps.slice(0, 6).map((g, i) => <li key={i}>{g}</li>)}
           </ul>
         </div>

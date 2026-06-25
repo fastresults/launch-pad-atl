@@ -82,10 +82,10 @@ function CodeBlock({ inline, className, children }: any) {
 
 function Callout({ kind, children }: { kind: "info" | "warn" | "tip" | "success"; children: any }) {
   const cfg = {
-    info: { icon: Info, cls: "border-sky-400/30 bg-sky-400/5 text-sky-100", iconCls: "text-sky-400" },
-    warn: { icon: AlertTriangle, cls: "border-amber-400/30 bg-amber-400/5 text-amber-100", iconCls: "text-amber-400" },
-    tip: { icon: Lightbulb, cls: "border-violet-400/30 bg-violet-400/5 text-violet-100", iconCls: "text-violet-400" },
-    success: { icon: CheckCircle2, cls: "border-emerald-400/30 bg-emerald-400/5 text-emerald-100", iconCls: "text-emerald-400" },
+    info: { icon: Info, cls: "border-status-info/30 bg-status-info/5 text-status-info", iconCls: "text-status-info" },
+    warn: { icon: AlertTriangle, cls: "border-status-warning/30 bg-status-warning/5 text-status-warning", iconCls: "text-status-warning" },
+    tip: { icon: Lightbulb, cls: "border-status-tip/30 bg-status-tip/5 text-status-tip", iconCls: "text-status-tip" },
+    success: { icon: CheckCircle2, cls: "border-status-success/30 bg-status-success/5 text-status-success", iconCls: "text-status-success" },
   }[kind];
   const Icon = cfg.icon;
   return (
