@@ -163,6 +163,11 @@ QUALITY_SCORE: <0-100 integer reflecting completeness, specificity, and investor
     snap.research_brief ? `\n## Research brief (use for evidence + citations)\n${JSON.stringify(snap.research_brief, null, 2)}` : "",
     snap.business_concept ? `\n## Founder's raw concept\n${snap.business_concept}` : "",
     depContext ? `\n## Upstream documents you should build on\n${depContext}` : "",
+    (rewriteFeedback && rewriteFeedback.trim()) || (rewriteTags && rewriteTags.length)
+      ? `\n## Rewrite guidance from the founder (TOP PRIORITY — the previous version missed the mark, address every point below in this rewrite)\n${
+          rewriteTags && rewriteTags.length ? `Tags: ${rewriteTags.join(", ")}\n\n` : ""
+        }${rewriteFeedback?.trim() ?? ""}`
+      : "",
   ].filter(Boolean).join("\n\n");
 
   const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
