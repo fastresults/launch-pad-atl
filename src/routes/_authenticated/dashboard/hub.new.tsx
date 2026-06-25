@@ -409,7 +409,7 @@ function Inner() {
 
       <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
         <div className="grid gap-2">
-          <Label htmlFor="company">Company name {path === "manual" && <span className="text-red-500">*</span>}</Label>
+          <Label htmlFor="company">Company name {path === "manual" && <span className="text-status-danger">*</span>}</Label>
           <Input id="company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="e.g. Northbound Roasters" />
         </div>
 
