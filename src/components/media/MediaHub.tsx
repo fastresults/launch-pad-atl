@@ -253,16 +253,16 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
     setSelectedAsset(asset);
     setPreviewUrl(null);
     try {
-      const { url } = await getUrlFn({ data: { assetId: asset.id } });
+      const { url } = await getUrlFn({ path: asset.storage_path, bucket: asset.storage_bucket });
       setPreviewUrl(url);
     } catch (e) {
       toast.error((e as Error).message);
     }
   }
 
-  async function copyAssetUrl(assetId: string) {
+  async function copyAssetUrl(asset: Asset) {
     try {
-      const { url } = await getUrlFn({ data: { assetId } });
+      const { url } = await getUrlFn({ path: asset.storage_path, bucket: asset.storage_bucket });
       await navigator.clipboard.writeText(url);
       toast.success("Link copied (valid 1 hour)");
     } catch (e) {
