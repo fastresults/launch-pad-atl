@@ -20,6 +20,7 @@ import { BriefReview } from "@/components/brief/BriefReview";
 import { FounderBlock } from "@/components/brief/FounderBlock";
 import { MarketBlock } from "@/components/brief/MarketBlock";
 import { BriefPrefillDropzone } from "@/components/brief/BriefPrefillDropzone";
+import { BriefCompleteScreen } from "@/components/brief/BriefCompleteScreen";
 import { BriefPrefillReview } from "@/components/brief/BriefPrefillReview";
 import type { BriefPrefillResponse } from "@/lib/brief.functions";
 import { ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
@@ -31,7 +32,7 @@ const briefSearchSchema = z.object({
 });
 
 
-type Mode = "question" | "checkpoint" | "founder" | "market" | "review";
+type Mode = "question" | "checkpoint" | "founder" | "market" | "review" | "complete";
 
 export default function BriefWizard() {
   
@@ -152,8 +153,8 @@ export default function BriefWizard() {
       return;
     }
     if (checkpointBlock.kind === "market") {
-      toast.success("All done. Your AI has the full picture.");
-      navigate({ to: "/dashboard" });
+      setMode("complete");
+      setCheckpointBlock(null);
     }
   };
 
