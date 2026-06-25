@@ -225,7 +225,7 @@ export default function BriefWizard() {
             totalBlocks={BRIEF_BLOCKS.length}
             summarize={
               checkpointBlock.kind === "qa"
-                ? () => summarizeBriefBlock({ data: { block: checkpointBlock.id as 1 | 2 | 3 } })
+                ? () => summarizeBriefBlock({ block: String(checkpointBlock.id), content: "" })
                 : checkpointBlock.kind === "founder"
                   ? () => summarizeFounderProfile()
                   : () => summarizeMarketProfile()
