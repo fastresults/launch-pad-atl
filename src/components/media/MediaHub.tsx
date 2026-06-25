@@ -587,7 +587,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                   </div>
                   <div className="flex aspect-square items-center justify-center bg-muted/30">
                     {a.media_type === "image" && a.upload_status === "ready" ? (
-                      <AssetThumb assetId={a.id} />
+                      <AssetThumb path={a.storage_path} bucket={a.storage_bucket} />
                     ) : (
                       <Icon className="h-12 w-12 text-muted-foreground" />
                     )}
