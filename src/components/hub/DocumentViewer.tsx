@@ -648,6 +648,17 @@ export function DocumentViewer({
             </div>
           </div>
         </div>
+        {/* Offscreen, fully-rendered version used for Print/PDF so the deep
+            assessment is included whenever it's present. */}
+        <div
+          ref={printRef}
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-99999px", top: 0, width: "72ch", pointerEvents: "none" }}
+        >
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={assessmentComponents}>
+            {exportContent}
+          </ReactMarkdown>
+        </div>
       </DialogContent>
     </Dialog>
   );
