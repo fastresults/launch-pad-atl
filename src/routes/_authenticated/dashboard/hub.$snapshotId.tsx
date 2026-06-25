@@ -716,6 +716,7 @@ function FounderMarketCard({ snapshot, onSaved }: { snapshot: any; onSaved: () =
     market_scope: (snapshot.market_scope ?? "local") as "local" | "regional" | "national" | "international",
     industry: snapshot.industry ?? "",
     sub_industry: snapshot.sub_industry ?? "",
+    track: (snapshot.track ?? "") as TrackKey | "",
   });
 
   const save = useMutation({
