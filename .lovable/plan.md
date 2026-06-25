@@ -1,36 +1,38 @@
-## Refine Workshop Titles & Descriptions
+## Split title vs subtitle
 
-Update the 8 BUILD_LAYER items in `src/lib/framework-deliverables.ts` to use the punchier, outcome-based titles from the screenshot. Rewrite each description to reinforce the new headline (what you walk out with), keeping the same tone, length, and brand voice as today.
+Add a `subtitle` field to `BUILD_LAYER` so each card shows the short workshop name as the title and the punchy promise as the subtitle.
 
-### Title mapping (old → new)
+### Title / subtitle mapping
 
-| # | Old title | New title |
-|---|---|---|
-| 1 | Brand identity | Your brand in a day. No agency required. |
-| 2 | A website that converts | Build the site your customers actually buy from. |
-| 3 | Social presence | 30 days of content before you leave the room. |
-| 4 | A content engine | Rank, publish, repeat. Your content machine is live. |
-| 5 | AI as your operating system | Automate 5 real workflows. Today. |
-| 6 | Email, CRM, and automation | 16 emails written. Your sales machine is running. |
-| 7 | Sales systems | Walk out with a sales script that qualifies and closes. |
-| 8 | Legal, financial, and operational scaffolding | Entity. Contracts. Books. Done. |
+| Title (h3) | Subtitle (under title) |
+|---|---|
+| Build your brand | Your brand in a day. No agency required. |
+| Convert your website | Build the site your customers actually buy from. |
+| Own your social presence | 30 days of content before you leave the room. |
+| Engineer your content | Rank, publish, repeat. Your content machine is live. |
+| Run on AI | Automate 5 real workflows. Today. |
+| Automate your revenue | 16 emails written. Your sales machine is running. |
+| Close more sales | Walk out with a sales script that qualifies and closes. |
+| Scaffold your business | Entity. Contracts. Books. Done. |
 
-### Description refresh
+Existing `description` paragraphs stay as-is (the longer body copy under the subtitle).
 
-Each description rewritten to ladder up to its new headline — concrete deliverable + why it matters — same one-to-two-sentence rhythm. Example:
+### Files
 
-- **Your brand in a day** — "Logo, palette, type system, and guidelines — finished before you leave. No agency retainer, no six-week wait, no committee."
-- **Build the site your customers actually buy from** — "Not a brochure. A revenue surface wired to payments and analytics, written for the buyer you're actually trying to win."
-- **30 days of content** — "A month of on-brand posts, captions, and hooks — drafted, scheduled, and ready to publish the morning after the workshop."
-- **Rank, publish, repeat** — "An SEO-aware content engine with pillars, topics, and the next 90 days mapped — so traffic compounds instead of costing more every month."
-- **Automate 5 real workflows** — "Five AI workflows wired into your actual operation — drafting, qualifying, follow-up, reporting, support — so two people do the work of ten."
-- **16 emails, sales machine running** — "A 16-email nurture and follow-up sequence loaded into your CRM. Most revenue lives in the second, fifth, and twelfth touch — automated, on time, on brand."
-- **Sales script that qualifies and closes** — "A repeatable script and pipeline that moves a stranger to a signed deal — with the objections, the asks, and the close already written."
-- **Entity. Contracts. Books. Done.** — "LLC, EIN, operating agreement, client contracts, and a clean books setup — the boring scaffolding that keeps you legal, bankable, and ready to scale."
+1. `src/lib/framework-deliverables.ts` — add `subtitle: string` to `BuildLayerItem`, set old short names as `title` and current long lines as `subtitle`.
+2. `src/components/home/HomeFramework.tsx` — render subtitle between `<h3>` and the description paragraph in the BUILD_LAYER grid (around lines 299–304), styled smaller-than-title, italic-leaning, muted-foreground/serif accent to feel like a tagline.
+3. `src/lib/build-workshops.ts` + `src/lib/agency-services.ts` — revert `capability` strings back to the original short names ("Brand identity", "A website that converts", etc.) so workshop lookup keeps working. Use `capability === title` again (where title is now the short name).
 
-### Technical notes
+Wait — the new titles ("Build your brand", "Convert your website"…) don't match existing capability keys either. Simplest: change the lookup to use a new stable `slug` or `capability` field on `BuildLayerItem` that mirrors `BUILD_WORKSHOPS[].capability`. I'll add `capability: string` (= old short label, e.g. "Brand identity") to each BUILD_LAYER item and switch the lookup to `w.capability === b.capability`, leaving `build-workshops.ts` and `agency-services.ts` untouched.
 
-- Single file edit: `src/lib/framework-deliverables.ts` (BUILD_LAYER array, lines ~190–239).
-- `OUT_OF_SCOPE` alias at line 242 auto-derives from BUILD_LAYER titles — no extra change needed, but worth checking where it's consumed in case any UI shows it as a short label (likely safe; legacy alias).
-- Icons stay the same.
-- No DB or edge-function changes — these are presentation strings.
+### Final BuildLayerItem shape
+
+```ts
+type BuildLayerItem = {
+  icon: LucideIcon;
+  title: string;        // "Build your brand"
+  subtitle: string;     // "Your brand in a day. No agency required."
+  description: string;  // existing paragraph
+  capability: string;   // stable lookup key, e.g. "Brand identity"
+};
+```

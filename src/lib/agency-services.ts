@@ -30,7 +30,7 @@ export type AgencyService = {
 export const AGENCY_SERVICES: AgencyService[] = [
   {
     slug: "brand-identity",
-    capability: "Your brand in a day. No agency required.",
+    capability: "Brand identity",
     icon: Palette,
     oneLiner: "A premium brand system, shipped in 14 days — not a logo, a language.",
     deliverables: [
@@ -45,7 +45,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
   },
   {
     slug: "website-that-converts",
-    capability: "Build the site your customers actually buy from.",
+    capability: "A website that converts",
     icon: Globe,
     oneLiner: "A revenue surface — not a brochure — wired to payments and analytics on day one.",
     deliverables: [
@@ -60,7 +60,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
   },
   {
     slug: "social-presence",
-    capability: "30 days of content before you leave the room.",
+    capability: "Social presence",
     icon: Share2,
     oneLiner: "Two channels, owned. Profiles rebuilt to convert, a calendar shipped, cadence held.",
     deliverables: [
@@ -75,7 +75,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
   },
   {
     slug: "content-engine",
-    capability: "Rank, publish, repeat. Your content machine is live.",
+    capability: "A content engine",
     icon: PenTool,
     oneLiner: "Pillars, SEO map, and eight anchor pieces a month — repurposed across every channel.",
     deliverables: [
@@ -90,7 +90,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
   },
   {
     slug: "ai-operating-system",
-    capability: "Automate 5 real workflows. Today.",
+    capability: "AI as your operating system",
     icon: Sparkles,
     oneLiner: "Ten workflows rewired around AI, documented, and owned by your team — not by a vendor.",
     deliverables: [
@@ -105,7 +105,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
   },
   {
     slug: "email-crm-automation",
-    capability: "16 emails written. Your sales machine is running.",
+    capability: "Email, CRM, and automation",
     icon: Mail,
     oneLiner: "The follow-up machine. CRM live, sequences written, deliverability fixed — for good.",
     deliverables: [
@@ -120,7 +120,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
   },
   {
     slug: "sales-systems",
-    capability: "Walk out with a sales script that qualifies and closes.",
+    capability: "Sales systems",
     icon: TrendingUp,
     oneLiner: "A repeatable motion: ICP, script, pipeline, and the weekly rhythm that holds it together.",
     deliverables: [
@@ -135,7 +135,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
   },
   {
     slug: "legal-financial-ops",
-    capability: "Entity. Contracts. Books. Done.",
+    capability: "Legal, financial, and operational scaffolding",
     icon: Scale,
     oneLiner: "LLC, EIN, contracts, books, payroll — done, not promised.",
     deliverables: [
