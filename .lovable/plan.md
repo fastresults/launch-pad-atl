@@ -1,39 +1,90 @@
 ## Goal
 
-Raise the Foundation Workshop price from **$97** to **$197** everywhere it appears, including the one DB-bound write that records what each registrant paid.
+Restructure the homepage framework section so its categories and deliverables are a **1:1 match with the live `venture_document_types` table** that powers the founder dashboard / Founders Hub. The database is the source of truth; the homepage reflects it exactly.
 
-## Source-of-truth change
+## Source of truth (live from `venture_document_types`, `active = true`, ordered by `sort_order`)
 
-`src/lib/framework-deliverables.ts`:
+**8 categories · 34 deliverables**
 
-```ts
-export const WORKSHOP_PRICE_CENTS = 9700;   // → 19700
-export const WORKSHOP_PRICE_LABEL = "$97";  // → "$197"
-```
+| # | Category | Deliverables |
+|---|---|---|
+| 01 | **Foundation** (4) | Executive Summary · Vision & Mission · Problem / Solution Brief · Value Proposition |
+| 02 | **Strategy** (5) | Market Analysis · Customer Personas · Competitive Positioning · Go-to-Market Plan · Brand & Messaging |
+| 03 | **Operations** (4) | Product Roadmap · Operating Plan · Sales Playbook · Marketing Plan |
+| 04 | **Finance** (5) | Financial Model · Unit Economics · Funding Strategy · Budget & Pro Forma · Pitch Deck Outline |
+| 05 | **Governance** (3) | Legal Structure Brief · Risk Register · Board & Governance Plan |
+| 06 | **Brand** (5) | Brand Strategy Framework · Brand Messaging House · Visual Identity Brief · Brand Voice & Tone Guide · Brand Guidelines Book |
+| 07 | **Marketing** (1) | Website PRD (AI-builder prompt) |
+| 08 | **Social & Content** (7) | Social Media Audit & Setup · Content Strategy & Pillars · 90-Day Content Calendar · Launch Content Kit · Community Engagement Playbook · Influencer & Partnership Brief · Paid Ads Starter Pack |
 
-Every page that imports `WORKSHOP_PRICE_LABEL` (hero, framework section, registration page, CTAs, sticky bar, closing block) updates automatically.
+The current homepage shows 3 hand-written stages with 20 made-up titles — that's the mismatch we're fixing.
 
-## Hard-coded "$97" / `9700` leaks to fix manually
+## One open question to flag
 
-1. `src/components/site/Header.tsx:27` — `const ctaFull = "Reserve seat — $97"` → use `WORKSHOP_PRICE_LABEL` (import from `@/lib/framework-deliverables`).
-2. `src/components/home/HomeFramework.tsx:222` — code comment `{/* Act 2 — What $97 gets you */}` → `What $197 gets you` (cosmetic, but keeps grep clean).
-3. `src/components/register/RegisterFramework.tsx:72` — `price_paid_cents: 9700` in the registration insert → `WORKSHOP_PRICE_CENTS` (so this can never drift again).
+**Category "Marketing" has only Website PRD** in the database. On the homepage it will look thin as a standalone block. Two clean options — I'll proceed with **A** unless you say otherwise:
 
-## What is NOT changing (and why)
+- **A (default)** — Render exactly as DB says: 8 sections, with Marketing as a 1-item section. Pure 1:1.
+- **B** — Merge Website PRD into the "Brand" or "Social & Content" block on the homepage only (DB unchanged). Looks tidier but is no longer a true 1:1.
 
-- **Build Workshops** in `src/lib/build-workshops.ts` (the eight advanced half-day workshops priced at $197 / $297 / $397) — unrelated product line, already correct. The "from $197" copy on `/build`, `/services`, and the home Build section stays as-is.
-- **Cohort pricing** in `src/lib/cohorts.ts` (`DEFAULT_PRICING.foundersPriceCents = 67900`, `cohortPriceCents = 99700`) and the matching DB columns / admin form — these are a separate cohort-tier concept, not the Foundation Workshop seat price. Untouched unless you say otherwise.
-- **Existing rows in `registrations`** — historical `price_paid_cents = 9700` entries remain accurate (those founders did pay $97). Only new registrations will be recorded at 19,700.
-- **No DB migration needed.** No Stripe / checkout code references $97.
+## Single source-of-truth change
 
-## Verification after the edit
+Rewrite `FRAMEWORK_STAGES` in `src/lib/framework-deliverables.ts` to 8 categories, 34 deliverables, in `sort_order`. Keep the existing shape (`number`, `name`, `intro`, `items[]`) so the homepage and register page render automatically.
 
-- `grep -rn "\$97\|9700" src supabase` should return zero hits outside historical migrations and the `cohorts` defaults (67900 / 99700).
-- Spot-check: home hero pill area, hero subhead, both "Reserve a seat" CTAs, registration page price block, sticky header CTA, and `/services` + `/build` "from $197" lines (should still read $197 — unchanged).
+Deliverable card labels = the **exact `name` from the DB**, so a founder sees the identical wording on the marketing site and inside their hub.
+
+### Per-category intros (concise, benefit-led — content only, not structure)
+
+- **Foundation** — "The bedrock every defensible startup is built on."
+- **Strategy** — "How you win — and how you compound the lead."
+- **Operations** — "What you build, sell, and ship — week after week."
+- **Finance** — "The numbers investors, banks, and you can trust."
+- **Governance** — "The legal and risk scaffolding that keeps you bankable."
+- **Brand** — "An identity worth premium pricing — system, not stickers."
+- **Marketing** — "The AI-builder prompt that ships your site in a weekend."
+- **Social & Content** — "The distribution engine that earns attention on repeat."
+
+### Icon mapping (lucide-react)
+
+Foundation → FileText · Eye · AlertCircle · Sparkles
+Strategy → BarChart3 · Users · Crosshair · Rocket · MessageSquare
+Operations → Map · Settings · Handshake · Megaphone
+Finance → LineChart · Calculator · Banknote · ClipboardList · Presentation
+Governance → Scale · ShieldAlert · Landmark
+Brand → Compass · MessageCircle · Palette · Mic · BookOpen
+Marketing → Globe
+Social & Content → Share2 · Layers · CalendarDays · PartyPopper · Heart · Star · Megaphone (or Target)
+
+(Verified against `lucide-react` at edit time; substituted 1:1 if any are missing.)
+
+## Copy fixes downstream
+
+`src/components/home/HomeFramework.tsx`:
+
+- Line 135 — `"{TOTAL_DELIVERABLES} deliverables across three stages …"` → `"{TOTAL_DELIVERABLES} deliverables across eight categories — each one built live for your startup, never pulled from a framework. Yours to keep for {WORKSHOP_PRICE_LABEL}."` (`TOTAL_DELIVERABLES` will compute to **34** automatically.)
+- Line 180 — `"All ${TOTAL_DELIVERABLES} strategy deliverables — foundation, strategy, and launch"` → `"All ${TOTAL_DELIVERABLES} deliverables — Foundation, Strategy, Operations, Finance, Governance, Brand, Marketing, and Social & Content"`.
+- Any other "three stages" / "20 deliverables" copy in this file: swap to the new wording. Section heading stays.
+
+`src/components/register/RegisterFramework.tsx`:
+
+- Already iterates `FRAMEWORK_STAGES` — new categories render automatically.
+- Line 238 — `"20 deliverables total · built live with Adam · yours to keep"` → `"{TOTAL_DELIVERABLES} deliverables total · built live with Adam · yours to keep"`.
+
+## What is NOT changing
+
+- The DB (`venture_document_types`), edge functions, document generators, dashboard, Founders Hub — all untouched.
+- Hero, "why first" reasons, Build Layer, pricing, CTAs, sticky bar, registration form — untouched.
+- Visual styling of the framework cards — only contents change. (8 numbered blocks with 4/5/4/5/3/5/1/7 cards in DB order.)
+
+## Verification after edit
+
+1. `TOTAL_DELIVERABLES` evaluates to **34**.
+2. Home `/` framework section renders **8 numbered blocks (01–08)** with card counts **4 / 5 / 4 / 5 / 3 / 5 / 1 / 7**, titles matching the DB `name` values verbatim.
+3. Register page `/register` left-column pillar list renders the same 8 categories.
+4. `grep -n "three stages\|20 deliverables\|foundation, strategy, and launch"` returns zero hits in `src/`.
 
 ## Files touched
 
-- `src/lib/framework-deliverables.ts` (constant value + label)
-- `src/components/site/Header.tsx` (replace hard-coded string)
-- `src/components/home/HomeFramework.tsx` (one comment)
-- `src/components/register/RegisterFramework.tsx` (use constant instead of literal 9700)
+- `src/lib/framework-deliverables.ts` (rewrite `FRAMEWORK_STAGES`, update icon imports)
+- `src/components/home/HomeFramework.tsx` (two copy lines)
+- `src/components/register/RegisterFramework.tsx` (one copy line)
+- No DB or backend changes.
