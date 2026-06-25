@@ -184,61 +184,79 @@ export const FOUNDATION_FIRST_REASONS: FoundationReason[] = [
 export type BuildLayerItem = {
   icon: LucideIcon;
   title: string;
+  subtitle: string;
   description: string;
+  capability: string;
 };
 
 export const BUILD_LAYER: BuildLayerItem[] = [
   {
     icon: Palette,
-    title: "Your brand in a day. No agency required.",
+    title: "Build your brand",
+    subtitle: "Your brand in a day. No agency required.",
     description:
       "Logo, palette, type system, and guidelines — finished before you leave. No retainer, no six-week wait, no committee.",
+    capability: "Brand identity",
   },
   {
     icon: Globe,
-    title: "Build the site your customers actually buy from.",
+    title: "Convert your website",
+    subtitle: "Build the site your customers actually buy from.",
     description:
       "Not a brochure. A revenue surface wired to payments and analytics, written for the buyer you're actually trying to win.",
+    capability: "A website that converts",
   },
   {
     icon: Share2,
-    title: "30 days of content before you leave the room.",
+    title: "Own your social presence",
+    subtitle: "30 days of content before you leave the room.",
     description:
       "A month of on-brand posts, captions, and hooks — drafted, scheduled, and ready to publish the morning after the workshop.",
+    capability: "Social presence",
   },
   {
     icon: PenTool,
-    title: "Rank, publish, repeat. Your content machine is live.",
+    title: "Engineer your content",
+    subtitle: "Rank, publish, repeat. Your content machine is live.",
     description:
       "An SEO-aware content engine with pillars, topics, and the next 90 days mapped — so traffic compounds instead of costing more every month.",
+    capability: "A content engine",
   },
   {
     icon: Sparkles,
-    title: "Automate 5 real workflows. Today.",
+    title: "Run on AI",
+    subtitle: "Automate 5 real workflows. Today.",
     description:
       "Five AI workflows wired into your actual operation — drafting, qualifying, follow-up, reporting, support — so two people do the work of ten.",
+    capability: "AI as your operating system",
   },
   {
     icon: Mail,
-    title: "16 emails written. Your sales machine is running.",
+    title: "Automate your revenue",
+    subtitle: "16 emails written. Your sales machine is running.",
     description:
       "A 16-email nurture and follow-up sequence loaded and ready. Most revenue lives in the second, fifth, and twelfth touch — automated, on time, on brand.",
+    capability: "Email, CRM, and automation",
   },
   {
     icon: TrendingUp,
-    title: "Walk out with a sales script that qualifies and closes.",
+    title: "Close more sales",
+    subtitle: "Walk out with a sales script that qualifies and closes.",
     description:
       "A repeatable script and pipeline that moves a stranger to a signed deal — with the objections, the asks, and the close already written.",
+    capability: "Sales systems",
   },
   {
     icon: Scale,
-    title: "Entity. Contracts. Books. Done.",
+    title: "Scaffold your business",
+    subtitle: "Entity. Contracts. Books. Done.",
     description:
       "LLC, EIN, operating agreement, client contracts, and a clean books setup — the boring scaffolding that keeps you legal, bankable, and ready to scale.",
+    capability: "Legal, financial, and operational scaffolding",
   },
 ];
 
-
 // Kept as an alias for any legacy import — superseded by BUILD_LAYER.
 export const OUT_OF_SCOPE = BUILD_LAYER.map((b) => b.title);
+
 
