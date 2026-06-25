@@ -20,6 +20,7 @@ import { BriefReview } from "@/components/brief/BriefReview";
 import { FounderBlock } from "@/components/brief/FounderBlock";
 import { MarketBlock } from "@/components/brief/MarketBlock";
 import { BriefPrefillDropzone } from "@/components/brief/BriefPrefillDropzone";
+import { BriefCompleteScreen } from "@/components/brief/BriefCompleteScreen";
 import { BriefPrefillReview } from "@/components/brief/BriefPrefillReview";
 import type { BriefPrefillResponse } from "@/lib/brief.functions";
 import { ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
@@ -31,7 +32,7 @@ const briefSearchSchema = z.object({
 });
 
 
-type Mode = "question" | "checkpoint" | "founder" | "market" | "review";
+type Mode = "question" | "checkpoint" | "founder" | "market" | "review" | "complete";
 
 export default function BriefWizard() {
   
@@ -83,6 +84,7 @@ export default function BriefWizard() {
 
   // Approximate step number across all 5 blocks
   const stepNumber = useMemo(() => {
+    if (mode === "complete") return TOTAL_BRIEF_STEPS;
     let n = 0;
     if (mode === "question") {
       n = idx + 1;
@@ -152,8 +154,8 @@ export default function BriefWizard() {
       return;
     }
     if (checkpointBlock.kind === "market") {
-      toast.success("All done. Your AI has the full picture.");
-      navigate({ to: "/dashboard" });
+      setMode("complete");
+      setCheckpointBlock(null);
     }
   };
 
@@ -198,7 +200,9 @@ export default function BriefWizard() {
     <div className="mx-auto max-w-2xl">
       <div className="flex items-center justify-between">
         <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {mode === "checkpoint" && checkpointBlock
+          {mode === "complete"
+            ? "Brief complete"
+            : mode === "checkpoint" && checkpointBlock
             ? `Checkpoint · ${checkpointBlock.title}`
             : mode === "founder"
               ? "About you"
@@ -217,7 +221,18 @@ export default function BriefWizard() {
         />
       </div>
 
-      {mode === "checkpoint" && checkpointBlock ? (
+      {mode === "complete" ? (
+        <div className="mt-10">
+          <BriefCompleteScreen
+            onGenerateFirst={() => navigate({ to: "/dashboard/hub" })}
+            onSeeDeliverables={() => navigate({ to: "/dashboard/deliverables" })}
+            onEditBrief={() => {
+              setMode("question");
+              setIdx(0);
+            }}
+          />
+        </div>
+      ) : mode === "checkpoint" && checkpointBlock ? (
         <div className="mt-10">
           {(() => {
             const qaAnswers =
