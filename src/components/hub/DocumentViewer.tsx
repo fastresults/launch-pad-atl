@@ -388,6 +388,9 @@ export function DocumentViewer({
             <Button size="sm" variant="ghost" onClick={onDownloadMd}>
               <Download className="mr-1 h-3 w-3" />.md
             </Button>
+            <Button size="sm" variant="ghost" onClick={onDownloadDocx}>
+              <FileText className="mr-1 h-3 w-3" />.docx
+            </Button>
             <Button size="sm" variant="ghost" onClick={onPrint}>
               <Printer className="mr-1 h-3 w-3" />Print / PDF
             </Button>
