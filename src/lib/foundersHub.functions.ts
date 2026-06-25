@@ -32,6 +32,7 @@ export interface VentureSnapshot {
   market_scope: "local" | "regional" | "national" | "international" | null;
   industry: string | null;
   sub_industry: string | null;
+  track: string | null;
   scraped_content: string | null;
   competitor_data: any;
   market_research: string | null;
