@@ -282,7 +282,7 @@ function HonestRoadmap() {
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {BUILD_LAYER.map((b) => {
               const Icon = b.icon;
-              const workshop = BUILD_WORKSHOPS.find((w) => w.capability === b.title);
+              const workshop = BUILD_WORKSHOPS.find((w) => w.capability === b.capability);
               const href = workshop ? `/build/${workshop.slug}` : "/build";
               return (
                 <Link
@@ -299,9 +299,13 @@ function HonestRoadmap() {
                   <h3 className="text-base font-semibold leading-snug tracking-tight">
                     {b.title}
                   </h3>
+                  <p className="mt-1 font-serif text-sm italic leading-snug text-foreground/80">
+                    {b.subtitle}
+                  </p>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     {b.description}
                   </p>
+
                   <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-primary">
                     Learn more
                     <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
