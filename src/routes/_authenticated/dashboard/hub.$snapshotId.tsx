@@ -731,6 +731,9 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         )}
       </div>
 
+      {heroDone && <FounderRoadmapCard snapshot={snapshot} />}
+
+
       {showHelper && (
         <div className="flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-card/40 px-4 py-2 text-xs text-muted-foreground">
           <span>This page writes your full startup kit. Hit one button and we'll do the rest — you can read each document as it finishes.</span>
