@@ -17,6 +17,25 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 // ============== SPECIALIZED PROMPTS ==============
 const QUALITY_FOOTER = `\n\nEnd with a "## Sources" section listing any [^n] footnotes used, then on a final line output exactly:\nQUALITY_SCORE: <0-100 integer>`;
 
+// Track tone directives — mirrored from src/lib/tracks.ts. Keep in sync.
+const TRACK_TONE: Record<string, string> = {
+  lifestyle:
+    "TRACK — Lifestyle / Main Street: Write as a pragmatic operator coaching a sole founder. Optimize for cash flow, simplicity, low overhead, local credibility. Avoid VC jargon, TAM/SAM/SOM framing, hockey-stick growth, unicorn aspirations. Use concrete, plain-English tactics the owner can execute this week.",
+  small_business:
+    "TRACK — Small Business / Traditional: Write as a seasoned small-business advisor. Emphasize unit economics, margin, repeat customers, operational discipline, steady regional growth. Avoid venture-capital framing; prefer SBA / bank-financing realities and proven owner-operator playbooks.",
+  scalable_tech:
+    "TRACK — Scalable Tech / SaaS: Write as an early-stage tech operator briefing a venture-track founder. Lean into product-led growth, defensibility, retention/expansion, unit economics at scale, ICP precision, venture-readiness. Use SaaS metrics (ARR, NRR, CAC payback, magic number) where relevant.",
+  marketplace:
+    "TRACK — Marketplace / Platform: Write as a marketplace strategist. Always reason about both/all sides explicitly — supply and demand, liquidity, cold-start, take-rate, trust & safety, network effects. Call out which side is hardest to acquire and why.",
+  deep_tech:
+    "TRACK — Deep Tech / Frontier: Write as a deep-tech advisor. Treat technical risk, milestone-based de-risking, IP/moat, regulatory pathway, capital intensity, long time-to-revenue as first-class concerns. Reference grants, non-dilutive funding, strategic partners alongside venture capital. Avoid lean-startup 'launch in a weekend' framing.",
+  social_impact:
+    "TRACK — Social Enterprise / Impact: Write as an impact-venture advisor. Hold mission and revenue as co-equal. Use theory-of-change language, measurable impact metrics alongside financial ones, reference impact-aligned capital (grants, PRIs, blended finance). Avoid extractive growth-at-all-costs framing.",
+  corporate:
+    "TRACK — Corporate / Institutional: Write as a corporate-innovation advisor. Treat enterprise procurement, compliance, security review, parent-org politics, strategic alignment as first-class concerns. Use formal, board-ready language. Reference pilot-to-production motions, RFPs, channel partnerships rather than viral consumer growth.",
+};
+
+
 const SPECIAL: Record<string, string> = {
   website_prd: `You are a senior product writer producing a Website PRD that doubles as a paste-ready prompt for an AI website builder (Lovable, v0, Bolt, Cursor).
 Output clean Markdown with: # {Company} — Website PRD; ## 1. Paste-ready prompt (single fenced \`\`\` block, 400-600 words, self-contained instructions); ## 2. Sitemap; ## 3. Page-by-page copy (H1, sub-headline, 3 sections each with H2 + 2-3 sentence body, primary CTA); ## 4. SEO bundle (title <60ch, meta <160ch, 8-12 keywords with geo-modifiers when market scope is local, OG image prompt); ## 5. Tech checklist. Reuse upstream brand_tokens (colors/fonts) in the fenced prompt when present.${QUALITY_FOOTER}`,
