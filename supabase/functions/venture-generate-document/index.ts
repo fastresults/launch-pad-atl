@@ -103,6 +103,16 @@ const SPECIAL: Record<string, string> = {
   community_engagement_playbook: `You are a community manager. Output Markdown: # Community Engagement Playbook; ## 10 Reply Scripts; ## Comment-Prompt Formulas (5); ## DM Funnel; ## UGC Scripts (3 with consent); ## Crisis-Response Decision Tree; ## Daily Ritual (60 min/day timeboxes); ## KPI Dashboard (reach, saves, shares, replies, profile→site→lead with target ranges).${QF}`,
   influencer_partnership_brief: `You are a creator-partnerships lead. Output Markdown: # Influencer & Partnership Brief; ## Tier Strategy (nano/micro/mid counts + budgets); ## 25 Named Candidate Creators (table: Name/Handle, Tier, Platform, Audience fit, Rate range, Why); ## Outreach Scripts (cold DM x3); ## Partnership Terms Template; ## Performance Tracking.${QF}`,
   paid_ads_starter_pack: `You are a performance marketer. Output Markdown: # Paid Ads Starter Pack; ## Budget Tiers ($300/$1k/$3k monthly with platform allocation); ## Audience Definitions (3 saved); ## Creative Concepts (top 2 platforms × 3 ads: Hook, Body, CTA, Visual prompt, Format); ## Conversion Tracking (Pixel/CAPI checklist, event names); ## Test-and-Iterate Framework (week-by-week plan, kill criteria).${QF}`,
+  budget_pro_forma: `You are a CFO-grade financial analyst writing a Budget & Pro Forma for a founder. You will be given the founder's specific assumptions in an "## Intake answers" block — treat every number there as ground truth and propagate it through the model. Output Markdown:
+# {Company} — Budget & Pro Forma
+## Executive Summary (4-6 sentences: starting cash, break-even month, peak cash need / lowest cash month, runway, top 3 sensitivities, recommended funding ask if any)
+## Key Assumptions (markdown table echoing the founder's intake answers — Item / Value / Notes — plus any derived figures you computed)
+## 12-Month Operating Budget (markdown table; columns = M1..M12; rows = Revenue, COGS, Gross Profit, Gross Margin %, Payroll (incl. owner draw + planned hires phased by start month), Recurring Fixed Costs, One-Time Costs, Operating Expenses, EBITDA, Funding Inflows, Net Cash Flow, Ending Cash. Show currency with $ and thousands separators.)
+## 3-Year Pro Forma (annual table; columns = Y1 / Y2 / Y3; rows = Revenue, COGS, Gross Profit, OpEx, EBITDA, Cash Flow, Headcount EOY. Y1 must reconcile to the 12-month budget totals. Y2 and Y3 must clearly state the growth assumption used.)
+## Headcount Plan (table: Role / Start month / Monthly cost / Fully-loaded annual cost. Include the founder.)
+## Sensitivity Scenarios (3 short tables — Base / Downside (-30% revenue ramp) / Upside (+30% revenue ramp). For each: Break-even month, Lowest cash month, Lowest cash balance, Required funding to stay above $0.)
+## Funding Gap & Recommendation (1 short paragraph: when cash dips, how much to raise, what the money buys, and the suggested instrument given the track.)
+Numbers must reconcile across sections. Never use TBD or placeholders. If a required input is missing from the intake, make a clearly-labeled reasonable assumption in the Key Assumptions table.${QF}`,
 };
 
 export async function generateOne(
