@@ -130,11 +130,27 @@ export async function generateOne(
   if (!snap) throw new Error("Snapshot not found");
   if (!type) throw new Error(`Unknown document type: ${documentType}`);
 
-  // Mark as generating
+  // Resolve intake answers: prefer caller-provided, otherwise reuse any previously saved on the doc row.
+  let effectiveIntake: Record<string, any> | null =
+    intakeAnswers && Object.keys(intakeAnswers).length ? intakeAnswers : null;
+  if (!effectiveIntake) {
+    const { data: prior } = await supabase
+      .from("venture_documents")
+      .select("intake_answers")
+      .eq("snapshot_id", snapshotId)
+      .eq("document_type", documentType)
+      .maybeSingle();
+    if (prior?.intake_answers && Object.keys(prior.intake_answers).length) {
+      effectiveIntake = prior.intake_answers;
+    }
+  }
+
+  // Mark as generating (preserve any intake answers we resolved).
   await supabase.from("venture_documents").upsert({
     snapshot_id: snapshotId,
     document_type: documentType,
     status: "generating",
+    ...(effectiveIntake ? { intake_answers: effectiveIntake } : {}),
   }, { onConflict: "snapshot_id,document_type" });
 
   // Load dependency docs for context
