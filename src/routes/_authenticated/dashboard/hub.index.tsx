@@ -1,20 +1,46 @@
 // @ts-nocheck
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FoundersHubGate } from "@/components/hub/FoundersHubGate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { listSnapshots, listDocumentTypes } from "@/lib/foundersHub.functions";
-import { Plus, ArrowRight, Sparkles } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  listSnapshots,
+  listDocumentTypes,
+  archiveSnapshot,
+  unarchiveSnapshot,
+  setFavorite,
+} from "@/lib/foundersHub.functions";
+import { Plus, ArrowRight, Sparkles, Star, MoreHorizontal, Archive, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
 
 const STATUS_LABEL: Record<string, string> = {
   input: "Draft",
-  enriching: "Enriching",
+  enriching: "Researching",
   review: "Review",
-  generating: "Generating",
+  generating: "Writing",
   complete: "Complete",
   archived: "Archived",
 };
+
+type Tab = "active" | "favorites" | "archived";
 
 export default function HubLibraryPage() {
   return (
@@ -24,7 +50,22 @@ export default function HubLibraryPage() {
   );
 }
 
+function relativeTime(iso?: string) {
+  if (!iso) return "";
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60_000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `${d}d ago`;
+  const mo = Math.floor(d / 30);
+  return `${mo}mo ago`;
+}
+
 function LibraryInner() {
+  const [tab, setTab] = useState<Tab>("active");
   const { data: snapshots = [], isLoading } = useQuery({
     queryKey: ["hub", "snapshots"],
     queryFn: listSnapshots,
@@ -35,6 +76,15 @@ function LibraryInner() {
   });
   const totalDocs = types.length;
 
+  const buckets = useMemo(() => {
+    const active = snapshots.filter((s: any) => s.status !== "archived");
+    const favorites = active.filter((s: any) => s.is_favorite);
+    const archived = snapshots.filter((s: any) => s.status === "archived");
+    return { active, favorites, archived };
+  }, [snapshots]);
+
+  const visible = buckets[tab];
+
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -42,28 +92,33 @@ function LibraryInner() {
           <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5" /> Founders Hub
           </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Your ventures</h1>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Your startups</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Turn a single business concept into {totalDocs || 20} investor-ready documents.
+            Turn a single concept into {totalDocs || 20} investor-ready documents.
           </p>
         </div>
         <Button asChild>
           <Link to="/dashboard/hub/new">
-            <Plus className="mr-1.5 h-4 w-4" /> New venture
+            <Plus className="mr-1.5 h-4 w-4" /> New startup
           </Link>
         </Button>
       </div>
 
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-1.5 border-b border-white/5 pb-2">
+        <TabPill active={tab === "active"} onClick={() => setTab("active")} label="Active" count={buckets.active.length} />
+        <TabPill active={tab === "favorites"} onClick={() => setTab("favorites")} label="Favorites" count={buckets.favorites.length} icon={<Star className="h-3 w-3" />} />
+        <TabPill active={tab === "archived"} onClick={() => setTab("archived")} label="Archived" count={buckets.archived.length} icon={<Archive className="h-3 w-3" />} />
+      </div>
+
       {isLoading ? (
-        <div className="rounded-2xl border border-white/10 bg-card p-8 text-sm text-muted-foreground">
-          Loading…
-        </div>
-      ) : snapshots.length === 0 ? (
-        <EmptyState />
+        <div className="rounded-2xl border border-white/10 bg-card p-8 text-sm text-muted-foreground">Loading…</div>
+      ) : visible.length === 0 ? (
+        <EmptyState tab={tab} />
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {snapshots.map((s) => (
-            <SnapshotCard key={s.id} snapshot={s} totalDocs={totalDocs} />
+          {visible.map((s: any) => (
+            <SnapshotCard key={s.id} snapshot={s} totalDocs={totalDocs} tab={tab} />
           ))}
         </div>
       )}
@@ -71,55 +126,205 @@ function LibraryInner() {
   );
 }
 
-function EmptyState() {
+function TabPill({
+  active,
+  onClick,
+  label,
+  count,
+  icon,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  count: number;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${
+        active
+          ? "bg-foreground text-background"
+          : "border border-white/10 bg-card text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      {icon}
+      <span>{label}</span>
+      <span className={`rounded-full px-1.5 text-[10px] ${active ? "bg-background/20" : "bg-white/5"}`}>{count}</span>
+    </button>
+  );
+}
+
+function EmptyState({ tab }: { tab: Tab }) {
+  if (tab === "favorites") {
+    return (
+      <div className="rounded-2xl border border-dashed border-white/15 bg-card/40 p-10 text-center">
+        <Star className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
+        <h2 className="text-lg font-semibold">No favorites yet</h2>
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+          Tap the star on any startup to keep it pinned here.
+        </p>
+      </div>
+    );
+  }
+  if (tab === "archived") {
+    return (
+      <div className="rounded-2xl border border-dashed border-white/15 bg-card/40 p-10 text-center">
+        <Archive className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
+        <h2 className="text-lg font-semibold">Nothing archived</h2>
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+          Archive a startup to clear the noise — you can always restore it. Your documents stay safe.
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="rounded-2xl border border-dashed border-white/15 bg-card/40 p-10 text-center">
       <Sparkles className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
-      <h2 className="text-xl font-semibold">Start your first venture</h2>
+      <h2 className="text-xl font-semibold">Start your first startup</h2>
       <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
         Drop in a URL or describe your concept. We'll enrich it with market research,
         let you review the brief, then generate a full set of investor-ready documents.
       </p>
       <Button asChild className="mt-5">
         <Link to="/dashboard/hub/new">
-          <Plus className="mr-1.5 h-4 w-4" /> New venture
+          <Plus className="mr-1.5 h-4 w-4" /> New startup
         </Link>
       </Button>
     </div>
   );
 }
 
-function SnapshotCard({ snapshot, totalDocs }: { snapshot: any; totalDocs: number }) {
+function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: number; tab: Tab }) {
+  const qc = useQueryClient();
+  const [confirmArchive, setConfirmArchive] = useState(false);
+
   const status = STATUS_LABEL[snapshot.status] ?? snapshot.status;
-  const title = snapshot.company_name || snapshot.business_concept?.slice(0, 60) || "Untitled venture";
-  const tone =
-    snapshot.status === "complete"
-      ? "border-emerald-500/30 bg-emerald-500/5"
-      : snapshot.status === "enriching" || snapshot.status === "generating"
-        ? "border-amber-500/30 bg-amber-500/5"
-        : "border-white/10";
+  const title = snapshot.company_name || snapshot.business_concept?.slice(0, 60) || "Untitled startup";
+  const isArchived = snapshot.status === "archived";
+  const isFav = !!snapshot.is_favorite;
+
+  const tone = isFav
+    ? "border-amber-500/40 bg-amber-500/5"
+    : isArchived
+      ? "border-white/5 bg-card/60 opacity-80"
+      : snapshot.status === "complete"
+        ? "border-emerald-500/30 bg-emerald-500/5"
+        : snapshot.status === "enriching" || snapshot.status === "generating"
+          ? "border-amber-500/30 bg-amber-500/5"
+          : "border-white/10";
+
+  const favMut = useMutation({
+    mutationFn: (next: boolean) => setFavorite({ data: { id: snapshot.id, is_favorite: next } }),
+    onSuccess: (_, next) => {
+      toast.success(next ? "Favorited" : "Removed from favorites");
+      qc.invalidateQueries({ queryKey: ["hub", "snapshots"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Couldn't update"),
+  });
+
+  const archiveMut = useMutation({
+    mutationFn: () => archiveSnapshot({ data: { id: snapshot.id } }),
+    onSuccess: () => {
+      toast.success("Archived — find it in the Archived tab");
+      qc.invalidateQueries({ queryKey: ["hub", "snapshots"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Couldn't archive"),
+  });
+
+  const restoreMut = useMutation({
+    mutationFn: () => unarchiveSnapshot({ data: { id: snapshot.id } }),
+    onSuccess: () => {
+      toast.success("Restored to Active");
+      qc.invalidateQueries({ queryKey: ["hub", "snapshots"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Couldn't restore"),
+  });
+
+  const stop = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
 
   return (
-    <Link
-      to={`/dashboard/hub/${snapshot.id}`}
-      className={`group block rounded-2xl border ${tone} bg-card p-5 transition hover:border-white/30`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate text-base font-semibold">{title}</h3>
+    <div className={`group relative rounded-2xl border ${tone} bg-card p-5 transition hover:border-white/30`}>
+      {/* Card actions overlay */}
+      <div className="absolute right-3 top-3 z-10 flex items-center gap-1" onClick={stop}>
+        {!isArchived && (
+          <button
+            type="button"
+            aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
+            onClick={(e) => { stop(e); favMut.mutate(!isFav); }}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-white/5 hover:text-amber-400"
+          >
+            <Star className={`h-4 w-4 ${isFav ? "fill-amber-400 text-amber-400" : ""}`} />
+          </button>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="More actions"
+              onClick={stop}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-white/5 hover:text-foreground"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onClick={stop}>
+            {isArchived ? (
+              <DropdownMenuItem onSelect={() => restoreMut.mutate()}>
+                <RotateCcw className="mr-2 h-3.5 w-3.5" /> Restore to Active
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onSelect={() => setConfirmArchive(true)}>
+                <Archive className="mr-2 h-3.5 w-3.5" /> Archive
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <Link to={`/dashboard/hub/${snapshot.id}`} className="block">
+        <div className="pr-20">
+          <div className="flex items-center gap-2">
+            {isFav && <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />}
+            <h3 className="truncate text-base font-semibold">{title}</h3>
+          </div>
           {snapshot.website_url && (
             <p className="mt-0.5 truncate text-xs text-muted-foreground">{snapshot.website_url}</p>
           )}
         </div>
-        <Badge variant="outline" className="text-[10px] uppercase">{status}</Badge>
-      </div>
-      <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-        {snapshot.business_concept}
-      </p>
-      <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-        <span>0 / {totalDocs || 20} documents</span>
-        <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-      </div>
-    </Link>
+        <div className="mt-1">
+          <Badge variant="outline" className="text-[10px] uppercase">{status}</Badge>
+        </div>
+        <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
+          {snapshot.business_concept}
+        </p>
+        <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+          <span>
+            {totalDocs ? `0 / ${totalDocs} documents` : "0 documents"}
+            {snapshot.updated_at && <span className="ml-2 opacity-70">· {relativeTime(snapshot.updated_at)}</span>}
+          </span>
+          <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+        </div>
+      </Link>
+
+      <AlertDialog open={confirmArchive} onOpenChange={setConfirmArchive}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive this startup?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You can restore it from the Archived tab anytime. Your documents stay safe — nothing is deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => archiveMut.mutate()}>Archive</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }
