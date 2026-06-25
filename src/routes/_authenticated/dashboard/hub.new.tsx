@@ -226,6 +226,7 @@ function Inner() {
           market_scope: marketScope,
           industry: industry || undefined,
           sub_industry: subIndustry || undefined,
+          track: track || undefined,
         },
       }),
     onSuccess: ({ id }) => {
