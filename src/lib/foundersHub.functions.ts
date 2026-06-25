@@ -362,9 +362,8 @@ export async function adminDeleteSnapshot(input: any): Promise<void> {
     .maybeSingle();
   if (fetchErr) throw new Error(fetchErr.message);
   if (!snap) throw new Error("Venture not found");
-  if (snap.status === "enriching" || snap.status === "generating") {
-    throw new Error("Wait for the active job to finish before deleting");
-  }
+  // Admin force-delete: allow even if a job is in flight. FK cascades clean up
+  // venture_generation_jobs / failures so an orphaned job row won't linger.
 
   // Best-effort storage cleanup. Storage RLS allows admins to remove via the
   // existing storage policies; failures here are non-fatal — the row delete is
