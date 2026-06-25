@@ -7,9 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { FounderRoadmapDialog } from "./FounderRoadmapDialog";
 
-interface Props { snapshot: any; }
+interface Props { snapshot: any; documentCount?: number; }
 
-export function FounderRoadmapCard({ snapshot }: Props) {
+export function FounderRoadmapCard({ snapshot, documentCount }: Props) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
 
