@@ -1,8 +1,8 @@
 // @ts-nocheck
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Copy, Download, FileText, Loader2, Printer, X } from "lucide-react";
+import { Copy, Download, FileText, Printer, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
@@ -16,6 +16,7 @@ interface Props {
   generatedAt?: string | null;
   wordCount?: number | null;
   qualityScore?: number | null;
+  documentCount?: number | null;
 }
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -31,15 +32,15 @@ function downloadBlob(blob: Blob, filename: string) {
 
 function printMarkdownHtml(title: string, html: string) {
   const styles = `
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #111; max-width: 760px; margin: 32px auto; padding: 0 24px; line-height: 1.6; }
-    h1 { font-size: 28px; border-bottom: 2px solid #333; padding-bottom: 6px; margin-top: 24px; page-break-after: avoid; }
-    h2 { font-size: 20px; margin-top: 28px; page-break-after: avoid; }
-    h3 { font-size: 16px; margin-top: 20px; page-break-after: avoid; }
-    p, li { font-size: 13.5px; }
-    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+    body { font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif; color: #111; max-width: 760px; margin: 32px auto; padding: 0 24px; line-height: 1.65; }
+    h1 { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 30px; letter-spacing: -0.02em; margin-top: 24px; page-break-after: avoid; }
+    h2 { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 22px; letter-spacing: -0.01em; margin-top: 36px; padding-top: 14px; border-top: 1px solid #e5e5e5; page-break-after: avoid; }
+    h3 { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 15px; margin-top: 22px; color: #222; page-break-after: avoid; }
+    p, li { font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
     th, td { border: 1px solid #d0d0d0; padding: 8px 10px; text-align: left; vertical-align: top; }
     th { background: #f4f4f6; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
-    blockquote { border-left: 3px solid #6366f1; padding: 6px 14px; color: #444; background: #f7f7fb; margin: 12px 0; }
+    blockquote { border-left: 3px solid #6366f1; padding: 12px 18px; color: #1a1a1a; background: #f7f7fb; margin: 18px 0; font-style: italic; font-size: 15px; }
     hr { border: 0; border-top: 1px solid #ddd; margin: 24px 0; }
     @page { margin: 18mm; }
   `;
@@ -50,19 +51,87 @@ function printMarkdownHtml(title: string, html: string) {
   setTimeout(() => { w.focus(); w.print(); }, 250);
 }
 
-export function FounderRoadmapDialog({ open, onOpenChange, companyName, content, generatedAt, wordCount, qualityScore }: Props) {
+// Pull "## Cover & Verdict" body and "## Stat Strip" table out of the markdown,
+// return both + the remaining markdown without those two sections.
+function extractCoverAndStats(md: string) {
+  const lines = md.split("\n");
+  const out: string[] = [];
+  let cover = "";
+  const stats: { label: string; value: string }[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const h2 = line.match(/^##\s+(.+?)\s*$/);
+    if (h2) {
+      const heading = h2[1].toLowerCase();
+      if (heading.startsWith("cover") || heading === "cover & verdict") {
+        // capture body until next H2
+        const body: string[] = [];
+        i++;
+        while (i < lines.length && !/^##\s+/.test(lines[i])) { body.push(lines[i]); i++; }
+        cover = body.join("\n").trim();
+        continue;
+      }
+      if (heading.startsWith("stat strip") || heading === "stat strip") {
+        i++;
+        while (i < lines.length && !/^##\s+/.test(lines[i])) {
+          const row = lines[i].match(/^\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*$/);
+          if (row) {
+            const a = row[1].trim();
+            const b = row[2].trim();
+            if (a && b && !/^[-:\s]+$/.test(a) && a.toLowerCase() !== "metric") {
+              stats.push({ label: a, value: b });
+            }
+          }
+          i++;
+        }
+        continue;
+      }
+    }
+    out.push(line);
+    i++;
+  }
+  return { cover, stats, rest: out.join("\n").trim() };
+}
+
+// Map H2 heading text → chapter eyebrow label (or null for none)
+function chapterEyebrow(text: string): string | null {
+  const t = text.trim();
+  const m = t.match(/^Chapter\s+(\d+)\s*[—-]\s*(.+)$/i);
+  if (m) return `Chapter ${m[1]}`;
+  if (/^the one thing$/i.test(t)) return "The takeaway";
+  if (/^closing note$/i.test(t)) return "From your partner";
+  return null;
+}
+
+function chapterTitle(text: string): string {
+  const m = text.match(/^Chapter\s+\d+\s*[—-]\s*(.+)$/i);
+  return m ? m[1].trim() : text;
+}
+
+export function FounderRoadmapDialog({
+  open, onOpenChange, companyName, content, generatedAt, wordCount, qualityScore, documentCount,
+}: Props) {
   const title = `${companyName ?? "Your"} — Founder Roadmap`;
   const bodyRef = useRef<HTMLDivElement | null>(null);
 
-  // Build a section index from H2s for jump-to nav
+  const { cover, stats, rest } = useMemo(() => extractCoverAndStats(content || ""), [content]);
+
+  // Build a section index from H2s (from the cleaned `rest`)
   const sections = useMemo(() => {
-    const matches = [...content.matchAll(/^##\s+(.+)$/gm)];
+    const matches = [...rest.matchAll(/^##\s+(.+)$/gm)];
     return matches.map((m) => {
       const text = m[1].trim();
       const id = text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-      return { id, text };
+      const eyebrow = chapterEyebrow(text);
+      const navLabel = eyebrow && eyebrow.startsWith("Chapter")
+        ? `${eyebrow.replace("Chapter ", "Ch. ")} — ${chapterTitle(text)}`
+        : text;
+      return { id, text, navLabel };
     });
-  }, [content]);
+  }, [rest]);
+
+  const readMin = wordCount ? Math.max(1, Math.round(wordCount / 220)) : null;
 
   const onCopy = async () => {
     try { await navigator.clipboard.writeText(content); toast.success("Roadmap copied"); }
@@ -82,20 +151,42 @@ export function FounderRoadmapDialog({ open, onOpenChange, companyName, content,
   };
 
   const components = useMemo(() => ({
-    h2: ({ node, ...props }: any) => {
-      const text = String(props.children?.[0] ?? "");
+    h1: ({ node, ...props }: any) => (
+      <h1 className="text-3xl font-bold tracking-tight" {...props} />
+    ),
+    h2: ({ node, children, ...props }: any) => {
+      const text = String(Array.isArray(children) ? children[0] : children ?? "");
       const id = text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-      return <h2 id={id} className="mt-10 text-2xl font-semibold tracking-tight scroll-mt-24" {...props} />;
+      const eyebrow = chapterEyebrow(text);
+      const display = chapterTitle(text);
+      return (
+        <div className="mt-12 scroll-mt-24" id={id}>
+          {eyebrow && (
+            <div className="mb-2 flex items-center gap-3">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">{eyebrow}</span>
+              <span className="h-px flex-1 bg-border" />
+            </div>
+          )}
+          <h2 className="text-2xl font-semibold tracking-tight" {...props}>{display}</h2>
+        </div>
+      );
     },
-    h3: ({ node, ...props }: any) => <h3 className="mt-6 text-lg font-semibold" {...props} />,
-    h1: ({ node, ...props }: any) => <h1 className="text-3xl font-bold tracking-tight" {...props} />,
-    table: ({ node, ...props }: any) => <div className="my-4 overflow-x-auto"><table className="w-full text-sm border-collapse" {...props} /></div>,
-    th: ({ node, ...props }: any) => <th className="border border-border bg-muted px-3 py-2 text-left text-xs uppercase tracking-wide" {...props} />,
-    td: ({ node, ...props }: any) => <td className="border border-border px-3 py-2 align-top text-sm" {...props} />,
-    blockquote: ({ node, ...props }: any) => <blockquote className="my-4 border-l-4 border-primary bg-primary/5 px-4 py-3 text-sm italic" {...props} />,
-    p: ({ node, ...props }: any) => <p className="my-3 text-sm leading-relaxed" {...props} />,
-    li: ({ node, ...props }: any) => <li className="my-1 text-sm leading-relaxed" {...props} />,
-    hr: () => <hr className="my-8 border-border" />,
+    h3: ({ node, ...props }: any) => <h3 className="mt-7 text-base font-semibold text-foreground" {...props} />,
+    table: ({ node, ...props }: any) => (
+      <div className="my-5 overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm border-collapse" {...props} />
+      </div>
+    ),
+    th: ({ node, ...props }: any) => <th className="border-b border-border bg-muted/60 px-3 py-2 text-left text-[10px] uppercase tracking-wider text-muted-foreground" {...props} />,
+    td: ({ node, ...props }: any) => <td className="border-b border-border/60 px-3 py-2 align-top text-sm" {...props} />,
+    blockquote: ({ node, ...props }: any) => (
+      <blockquote className="my-6 rounded-r-lg border-l-4 border-primary bg-primary/5 px-5 py-4 text-base italic leading-relaxed text-foreground" {...props} />
+    ),
+    p: ({ node, ...props }: any) => <p className="my-4 text-[15px] leading-[1.75] text-foreground/90" {...props} />,
+    li: ({ node, ...props }: any) => <li className="my-1.5 text-[15px] leading-[1.7]" {...props} />,
+    hr: () => <hr className="my-10 border-border" />,
+    strong: ({ node, ...props }: any) => <strong className="font-semibold text-foreground" {...props} />,
+    em: ({ node, ...props }: any) => <em className="italic text-foreground/90" {...props} />,
   }), []);
 
   return (
@@ -109,7 +200,9 @@ export function FounderRoadmapDialog({ open, onOpenChange, companyName, content,
             <div className="truncate text-base font-semibold">{title}</div>
             <div className="text-[11px] text-muted-foreground">
               {generatedAt ? new Date(generatedAt).toLocaleString() : "Just generated"}
+              {readMin ? ` · ~${readMin} min read` : ""}
               {wordCount ? ` · ${wordCount.toLocaleString()} words` : ""}
+              {documentCount ? ` · synthesized from ${documentCount} documents` : ""}
               {typeof qualityScore === "number" ? ` · Quality ${qualityScore}/100` : ""}
             </div>
           </div>
@@ -125,7 +218,7 @@ export function FounderRoadmapDialog({ open, onOpenChange, companyName, content,
         <div className="grid h-[calc(92vh-56px)] grid-cols-[220px_1fr] overflow-hidden">
           {/* Section nav */}
           <aside className="hidden overflow-y-auto border-r border-border bg-muted/30 p-4 md:block">
-            <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Jump to</div>
+            <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Contents</div>
             <nav className="space-y-1">
               {sections.map((s) => (
                 <a key={s.id} href={`#${s.id}`}
@@ -135,18 +228,49 @@ export function FounderRoadmapDialog({ open, onOpenChange, companyName, content,
                      el?.scrollIntoView({ behavior: "smooth", block: "start" });
                    }}
                    className="block truncate rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
-                  {s.text}
+                  {s.navLabel}
                 </a>
               ))}
             </nav>
           </aside>
 
           {/* Body */}
-          <div className="overflow-y-auto px-6 py-6 md:px-10 md:py-8">
-            <div ref={bodyRef} className="prose prose-sm max-w-[72ch] dark:prose-invert">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-                {content}
-              </ReactMarkdown>
+          <div className="overflow-y-auto px-6 py-6 md:px-12 md:py-10">
+            <div ref={bodyRef} className="mx-auto max-w-[72ch]">
+              {/* Cover band */}
+              <div className="relative mb-10 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8">
+                <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-primary/20 blur-3xl" aria-hidden />
+                <div className="relative">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary">Founder Roadmap</div>
+                  <h1 className="mt-2 text-4xl font-bold tracking-tight leading-tight">
+                    {companyName ?? "Your venture"}
+                  </h1>
+                  {cover ? (
+                    <p className="mt-4 text-[15px] leading-relaxed text-foreground/90">{cover}</p>
+                  ) : (
+                    <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
+                      A narrative founder playbook synthesized from your entire workshop.
+                    </p>
+                  )}
+                  {stats.length > 0 && (
+                    <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {stats.map((s, idx) => (
+                        <div key={idx} className="rounded-lg border border-border bg-background/70 px-3 py-2.5">
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</div>
+                          <div className="mt-0.5 text-sm font-semibold text-foreground line-clamp-2">{s.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="prose-roadmap">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+                  {rest}
+                </ReactMarkdown>
+              </div>
             </div>
           </div>
         </div>
