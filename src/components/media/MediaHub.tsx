@@ -316,9 +316,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
     try {
       await Promise.all(
         p.ids.map((id) =>
-          toggleCollectionFn({
-            data: { collectionId: targetCollectionId, assetId: id, action: "add" },
-          }),
+          toggleCollectionFn({ collectionId: targetCollectionId, mediaId: id }),
         ),
       );
       toast.success(`Added ${p.ids.length} to collection`);
