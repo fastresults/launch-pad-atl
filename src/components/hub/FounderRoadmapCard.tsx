@@ -7,9 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { FounderRoadmapDialog } from "./FounderRoadmapDialog";
 
-interface Props { snapshot: any; }
+interface Props { snapshot: any; documentCount?: number; }
 
-export function FounderRoadmapCard({ snapshot }: Props) {
+export function FounderRoadmapCard({ snapshot, documentCount }: Props) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
 
@@ -58,9 +58,9 @@ export function FounderRoadmapCard({ snapshot }: Props) {
             </div>
             <h2 className="mt-2 text-2xl font-bold tracking-tight">Your Founder Roadmap</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              One 12-minute read that turns your full kit into a clear, sequenced plan —
-              what's strongest, what's risky, your <span className="font-medium text-foreground">next 45 days</span>,
-              and the <span className="font-medium text-foreground">12-month path</span>.
+              A narrative founder playbook synthesized from your entire workshop — written to share with
+              co-founders and investors. Cover, verdict, the <span className="font-medium text-foreground">first 45 days</span>,
+              your <span className="font-medium text-foreground">first year</span>, money, and how to talk about it.
             </p>
             {isComplete && (
               <div className="mt-2 text-[11px] text-muted-foreground">
@@ -112,6 +112,7 @@ export function FounderRoadmapCard({ snapshot }: Props) {
         generatedAt={snapshot?.roadmap_generated_at}
         wordCount={snapshot?.roadmap_word_count}
         qualityScore={snapshot?.roadmap_quality_score}
+        documentCount={documentCount}
       />
     </>
   );
