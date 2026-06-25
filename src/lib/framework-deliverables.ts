@@ -190,53 +190,54 @@ export type BuildLayerItem = {
 export const BUILD_LAYER: BuildLayerItem[] = [
   {
     icon: Palette,
-    title: "Brand identity",
+    title: "Your brand in a day. No agency required.",
     description:
-      "A logo and visual system that earn trust in the first three seconds — before a single word is read.",
+      "Logo, palette, type system, and guidelines — finished before you leave. No retainer, no six-week wait, no committee.",
   },
   {
     icon: Globe,
-    title: "A website that converts",
+    title: "Build the site your customers actually buy from.",
     description:
-      "Not a brochure. A revenue surface, wired to payments and analytics, that turns visitors into customers.",
+      "Not a brochure. A revenue surface wired to payments and analytics, written for the buyer you're actually trying to win.",
   },
   {
     icon: Share2,
-    title: "Social presence",
+    title: "30 days of content before you leave the room.",
     description:
-      "Distribution you own. The channels where your buyers already scroll, primed to keep showing up.",
+      "A month of on-brand posts, captions, and hooks — drafted, scheduled, and ready to publish the morning after the workshop.",
   },
   {
     icon: PenTool,
-    title: "A content engine",
+    title: "Rank, publish, repeat. Your content machine is live.",
     description:
-      "Ongoing posts, videos, and SEO that compound — so traffic stops costing more every month.",
+      "An SEO-aware content engine with pillars, topics, and the next 90 days mapped — so traffic compounds instead of costing more every month.",
   },
   {
     icon: Sparkles,
-    title: "AI as your operating system",
+    title: "Automate 5 real workflows. Today.",
     description:
-      "The unfair advantage. AI built into how you draft, design, qualify, and ship — so two people do the work of ten.",
+      "Five AI workflows wired into your actual operation — drafting, qualifying, follow-up, reporting, support — so two people do the work of ten.",
   },
   {
     icon: Mail,
-    title: "Email, CRM, and automation",
+    title: "16 emails written. Your sales machine is running.",
     description:
-      "The follow-up machine. Most revenue is in the second, fifth, twelfth touch — automated, on time, on brand.",
+      "A 16-email nurture and follow-up sequence loaded and ready. Most revenue lives in the second, fifth, and twelfth touch — automated, on time, on brand.",
   },
   {
     icon: TrendingUp,
-    title: "Sales systems",
+    title: "Walk out with a sales script that qualifies and closes.",
     description:
-      "A repeatable path from interested stranger to closed deal. Scripts, pipelines, and the playbook to run them.",
+      "A repeatable script and pipeline that moves a stranger to a signed deal — with the objections, the asks, and the close already written.",
   },
   {
     icon: Scale,
-    title: "Legal, financial, and operational scaffolding",
+    title: "Entity. Contracts. Books. Done.",
     description:
-      "LLC, EIN, contracts, books, payroll. The boring stuff that keeps you legal and bankable as you scale.",
+      "LLC, EIN, operating agreement, client contracts, and a clean books setup — the boring scaffolding that keeps you legal, bankable, and ready to scale.",
   },
 ];
+
 
 // Kept as an alias for any legacy import — superseded by BUILD_LAYER.
 export const OUT_OF_SCOPE = BUILD_LAYER.map((b) => b.title);
