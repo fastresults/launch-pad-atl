@@ -37,25 +37,15 @@ function buildVisualPrompt(opts: {
   industry?: string | null;
   brandTokens?: any;
 }): string {
-  const { docTitle, docType, contentSnippet, companyName, industry, brandTokens } = opts;
-  const colors = brandTokens?.colors
-    ? Object.entries(brandTokens.colors).map(([k, v]) => `${k} ${v}`).join(", ")
-    : null;
-  const mood = Array.isArray(brandTokens?.mood) ? brandTokens.mood.join(", ") : null;
-  const fonts = brandTokens?.fonts
-    ? `${brandTokens.fonts.heading ?? ""}/${brandTokens.fonts.body ?? ""}`
-    : null;
+  const { docTitle, docType, contentSnippet, companyName, industry } = opts;
 
   return [
-    `Create a 16:9 cinematic editorial illustration that visually represents the concept of a venture document titled "${docTitle}" (type: ${docType}).`,
+    `Create a 16:9 editorial illustration in the style of a New Yorker magazine cover or contents-page illustration, conceptually representing a business document titled "${docTitle}" (type: ${docType}).`,
     companyName ? `Company: ${companyName}.` : "",
     industry ? `Industry: ${industry}.` : "",
-    `The image should evoke the core ideas in this document summary: ${contentSnippet}`,
-    colors ? `Use a palette inspired by these brand colors: ${colors}.` : "",
-    mood ? `Mood: ${mood}.` : "",
-    fonts ? `(Brand typography reference only, do not render letterforms: ${fonts}.)` : "",
-    `Style: modern editorial illustration, conceptual, metaphor-rich, sophisticated, premium magazine quality, depth and atmosphere, soft cinematic lighting.`,
-    `STRICT RULES: NO text, NO words, NO letters, NO numbers, NO logos, NO watermarks, NO UI mockups, NO charts. Pure imagery only. 16:9 horizontal composition with strong focal point.`,
+    `The image should illustrate the core ideas in this document summary using a witty, restrained business metaphor: ${contentSnippet}`,
+    `Style: New Yorker magazine editorial illustration. Hand-drawn conceptual artwork with confident ink linework and flat, painterly gouache or watercolor shading. Limited muted corporate palette — cream paper background, soft navy, muted ochre, brick red, sage green. Recognizable real-world objects (briefcases, paper documents, hands, office plants, ladders, doors, paper boats, desks, coffee cups, chairs) arranged to illustrate the concept. Clean negative space, single clear focal point, slightly off-center composition. Sophisticated, understated, intelligent — looks like it belongs in a serious print magazine.`,
+    `STRICT RULES: NO 3D render, NO photorealism, NO neon, NO glowing particles, NO holograms, NO robot arms, NO sci-fi imagery, NO purple/cyan glow effects, NO abstract energy fields, NO text, NO words, NO letters, NO numbers, NO logos, NO watermarks, NO UI mockups, NO data charts. 16:9 horizontal composition.`,
   ].filter(Boolean).join(" ");
 }
 

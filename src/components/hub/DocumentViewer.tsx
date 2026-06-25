@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
 
 function titleCase(s: string) {
   return (s || "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -326,6 +327,19 @@ export function DocumentViewer({
     a.click();
     URL.revokeObjectURL(url);
   };
+  const onDownloadDocx = async () => {
+    try {
+      const blob = await markdownToDocxBlob(title, content);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${doc?.document_type}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Word export failed");
+    }
+  };
   const onPrint = () => {
     const node = document.getElementById("doc-viewer-article");
     if (!node) return;
@@ -373,6 +387,9 @@ export function DocumentViewer({
             </Button>
             <Button size="sm" variant="ghost" onClick={onDownloadMd}>
               <Download className="mr-1 h-3 w-3" />.md
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onDownloadDocx}>
+              <FileText className="mr-1 h-3 w-3" />.docx
             </Button>
             <Button size="sm" variant="ghost" onClick={onPrint}>
               <Printer className="mr-1 h-3 w-3" />Print / PDF
