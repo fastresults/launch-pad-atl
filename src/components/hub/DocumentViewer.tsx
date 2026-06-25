@@ -279,9 +279,68 @@ export function DocumentViewer({
   const [heroPath, setHeroPath] = useState<string | null>(doc?.hero_image_path ?? null);
   const [heroLoading, setHeroLoading] = useState(false);
 
+  // Deep assessment (on-demand McKinsey-grade analysis)
+  const [assessment, setAssessment] = useState<string | null>(doc?.deep_assessment ?? null);
+  const [assessmentStatus, setAssessmentStatus] = useState<string | null>(
+    doc?.deep_assessment_status ?? null,
+  );
+  const [assessmentError, setAssessmentError] = useState<string | null>(null);
+
   const components = useMemo(() => makeComponents(setHeadings), [doc?.content]);
+  const assessmentComponents = useMemo(() => makeComponents(() => {}), [assessment]);
   const title = titleCase(doc?.document_type ?? "");
   const content = doc?.content ?? "";
+
+  // Re-hydrate assessment state when the document changes
+  useEffect(() => {
+    setAssessment(doc?.deep_assessment ?? null);
+    setAssessmentStatus(doc?.deep_assessment_status ?? null);
+    setAssessmentError(null);
+  }, [doc?.snapshot_id, doc?.document_type, doc?.deep_assessment, doc?.deep_assessment_status]);
+
+  const runAssessment = async () => {
+    if (!doc?.snapshot_id || !doc?.document_type) return;
+    setAssessmentStatus("generating");
+    setAssessmentError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("venture-generate-assessment", {
+        body: { snapshotId: doc.snapshot_id, documentType: doc.document_type },
+      });
+      if (error) throw new Error(error.message);
+      if (data && data.ok === false) throw new Error(data.error ?? "Deep assessment failed");
+      // Fetch the freshly stored assessment
+      const { data: row } = await supabase
+        .from("venture_documents")
+        .select("deep_assessment, deep_assessment_status")
+        .eq("snapshot_id", doc.snapshot_id)
+        .eq("document_type", doc.document_type)
+        .maybeSingle();
+      setAssessment(row?.deep_assessment ?? null);
+      setAssessmentStatus(row?.deep_assessment_status ?? "complete");
+      toast.success("Deep assessment ready");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Deep assessment failed";
+      setAssessmentError(msg);
+      setAssessmentStatus("failed");
+      toast.error(msg);
+    }
+  };
+
+  const onCopyAssessment = () => {
+    if (!assessment) return;
+    navigator.clipboard.writeText(assessment);
+    toast.success("Assessment copied");
+  };
+  const onDownloadAssessment = () => {
+    if (!assessment) return;
+    const blob = new Blob([assessment], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${doc?.document_type}-deep-assessment.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // Reset hero state when the document changes
   useEffect(() => {
