@@ -100,33 +100,47 @@ One short paragraph. Name the founder by first name. Name the company. State in 
 A markdown table with exactly two columns, header row \`| Metric | Value |\`. Include 6 rows in this order: Target ICP, Market opportunity, Recommended Year-1 revenue, Recommended raise, Breakeven month, Confidence in story. Use real values from the kit (financial_model, market research, ICP doc). Keep each value under 50 characters. This is the only table allowed before Chapter 1.
 
 ## Chapter 1 — What You've Built
-Narrative prose, no bullets. In 4–6 paragraphs, tell the story of what the workshop produced: the concept in plain English, the wedge, the ICP as a human you can picture (job title, day, what frustrates them), the pricing logic and why it makes sense, the GTM motion. End with a single italicized line: *Why this matters:* …
+Narrative prose, no bullets. In 4–6 paragraphs, tell the story of what the workshop produced: the concept in plain English, the wedge, the ICP at a glance, the pricing logic and why it makes sense, the GTM motion. End with a single italicized line: *Why this matters:* …
 
-## Chapter 2 — Why This Can Win
-Open with one paragraph framing the strategic case. Then three numbered narrative arguments (1., 2., 3.) — each a short paragraph, each anchored to a specific deliverable by name (e.g. "your Competitive Landscape"), each ending with one concrete proof point from the kit.
+## Chapter 2 — Who You're Building For
+Open with one paragraph naming the ICP segment in plain English (drawn from customer_personas). Then a vivid 4–6 sentence **day-in-the-life vignette** of one named archetype: their job title, their context, what their Tuesday morning actually looks like, the friction they live with, and the moment your product enters their day. Then three short labeled blocks (bold lead-ins, not headings):
+**What they're trying to do** — the job-to-be-done in their words.
+**What they've already tried** — current workarounds and why those fall short.
+**What "good" looks like to them** — the outcome they will pay for.
+End with a markdown table: Trigger | Buying moment | Where to find them | What they need to hear first. 3–4 rows grounded in customer_personas and go_to_market_plan.
 
-## Chapter 3 — The Honest Fight Ahead
+## Chapter 3 — Why This Can Win
+Open with one paragraph framing the strategic case. Then three numbered narrative arguments (1., 2., 3.) — each a short paragraph, each anchored to a specific deliverable by name (e.g. "your Competitive Positioning"), each ending with one concrete proof point from the kit.
+
+## Chapter 4 — The Field You're Entering
+Open with one paragraph that reads the market like a strategist: who is already there, the shape of the market (fragmented / consolidating / dormant / hot), and where the white space sits. Then:
+**The players you will be compared to** — one paragraph naming 3–5 real competitors from competitive_positioning / market_analysis, with one line each on how they actually compete (price, channel, brand, depth).
+**Where you win** — markdown table: Competitor | How they win today | Where they're weak | Your move. 3–5 rows.
+**The shift in your favor** — one paragraph on the macro trend, regulation, behavior change, or technology shift that makes this the right moment.
+**What would have to be true for them to copy you** — 2–3 sentences honestly assessing defensibility.
+
+## Chapter 5 — The Honest Fight Ahead
 Open with one paragraph of encouragement framing risk as the work, not the verdict. Then a markdown table: Challenge | Why it's real | How you'll meet it | Deliverable already in your kit. 4–6 rows. No fear-mongering.
 
-## Chapter 4 — Your First 45 Days
+## Chapter 6 — Your First 45 Days
 Open with one paragraph: this is the sprint that turns plan into proof. Then four subsections, each opening with a 1–2 sentence theme paragraph before the action list.
-### Days 1–7 — Validation fortnight (theme line then 3–5 actions)
+### Days 1–7 — Validation fortnight
 ### Days 8–21 — First commitments
 ### Days 22–35 — Build the proof
 ### Days 36–45 — Pitch-ready
 Each action: concrete verb-first line · owner role · dependency · success metric · which deliverable it pulls from. End the chapter with a bold standalone line **By Day 45, you will have:** followed by a bullet list of 4–6 outcomes the founder will be able to show.
 
-## Chapter 5 — Your First Year
+## Chapter 7 — Your First Year
 Open with one paragraph that explicitly picks up from the Day-45 outcomes. Then three named phases as H3s, each with a 1-paragraph narrative lead before the month list:
 ### Phase 1 — Validate (Months 1–4)
 ### Phase 2 — Build (Months 5–8)
 ### Phase 3 — Compound (Months 9–12)
-Inside each phase, list each month with: month label · theme · 2–3 outcomes · the single KPI to watch · the deliverable that powers it. The year must be internally consistent with Chapter 4.
+Inside each phase, list each month with: month label · theme · 2–3 outcomes · the single KPI to watch · the deliverable that powers it. The year must be internally consistent with Chapter 6.
 
-## Chapter 6 — Money & Runway, In Plain English
+## Chapter 8 — Money & Runway, In Plain English
 Open with 2–3 sentences of plain-English narrative anyone could understand: starting cash, monthly burn, when money runs out, what to raise, when to raise it. Then a small supporting table: Starting cash · Monthly burn · Breakeven month · Funding gap · Recommended raise · Best window to raise. Use real numbers from financial_model and budget_pro_forma when present; if they're missing, say so plainly and state what should be modeled next.
 
-## Chapter 7 — How to Talk About This
+## Chapter 9 — How to Talk About This
 This is the chapter that makes the document shareable with investors. Use these subsections in order:
 ### Your 60-second pitch
 A ready-to-read-aloud paragraph, written in the founder's first-person voice ("We are…"), grounded in the kit. ~120 words.
@@ -137,11 +151,19 @@ Three lines, each: the number · what it means · why an investor will care.
 ### Three questions an investor will ask
 Three Q/A pairs. Each answer in 2–3 sentences, anchored to a deliverable by name.
 
-## Chapter 8 — Your Operating Cadence
+## Chapter 10 — Why This Matters
+Open with a personal-tone paragraph addressed to the founder by first name about why this work is worth their years. Then three labeled blocks (bold lead-ins, not headings):
+**The bigger shift you're part of** — one paragraph placing the venture inside a larger movement, industry change, or human need (drawn from vision_mission and market_analysis).
+**Who is better off if you win** — a short list of 3–5 lines naming concrete beneficiaries (customers, employees, partners, family, community). No slogans.
+**The story you'll get to tell in 5 years** — a 3-sentence forward-looking narrative, written as if the founder is recounting it on a stage. Specific, grounded in the kit's pricing and scale assumptions.
+Close the chapter with a single italic line: *This is why it's worth the next 1,000 days.*
+
+## Chapter 11 — Your Operating Cadence
 Open with one paragraph about the habits that compound. Then three labeled blocks (bold lead-ins, not headings): **Weekly**, **Monthly**, **Quarterly** — each with a 2–4 line cadence tailored to this venture's track and stage.
 
-## Chapter 9 — Read Next From Your Kit
+## Chapter 12 — Read Next From Your Kit
 Open with one short paragraph. Then a numbered list of exactly 5 documents from this kit, by their real names, in the order the founder should read them. Each line: **Document name** — one sentence on why now.
+
 
 ## The One Thing
 A single blockquote (> ) of 2–3 sentences naming the ONE move for the next 30 days that will most change their odds. Specific, named, encouraging.
