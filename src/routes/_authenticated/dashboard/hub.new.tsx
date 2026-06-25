@@ -698,10 +698,31 @@ function Inner() {
         )}
       </div>
 
-      <div className="flex justify-end">
-        <Button disabled={!canSubmit} onClick={() => create.mutate()}>
-          {create.isPending ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Creating…</> : "Create & enrich →"}
-        </Button>
+      <div className="flex flex-col items-end gap-2">
+        {!canSubmit && missingFields.length > 0 && (
+          <div className="text-xs text-muted-foreground">
+            Still needed: <span className="font-medium text-foreground">{missingFields.join(" · ")}</span>
+          </div>
+        )}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span tabIndex={canSubmit ? -1 : 0}>
+                <Button disabled={!canSubmit} onClick={() => create.mutate()}>
+                  {create.isPending ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Creating…</> : "Create & enrich →"}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            {!canSubmit && missingFields.length > 0 && (
+              <TooltipContent side="top" align="end" className="max-w-xs">
+                <div className="text-xs font-medium">Add these to continue:</div>
+                <ul className="mt-1 list-disc pl-4 text-xs">
+                  {missingFields.map((m) => <li key={m}>{m}</li>)}
+                </ul>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );
