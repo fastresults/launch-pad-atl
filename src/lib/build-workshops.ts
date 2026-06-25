@@ -92,9 +92,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceCents: 29700,
     priceLabel: "$297",
     icon: Palette,
-    title: "Brand Identity Workshop",
+    title: "Build your brand",
     capability: "Brand identity",
-    oneLiner: "Charge premium prices. Stop looking like a Fiverr gig.",
+    oneLiner: "Your brand in a day. No agency required.",
     subhead:
       "Most founders treat brand like a logo decision and pay for it every time they try to raise prices. In one morning we build the brand system — voice, archetype, palette, type, asset rules — that earns trust in three seconds and lets you quote 30% higher without flinching.",
     pains: [
@@ -191,9 +191,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceCents: 39700,
     priceLabel: "$397",
     icon: Globe,
-    title: "Website That Converts Workshop",
+    title: "Convert your website",
     capability: "A website that converts",
-    oneLiner: "Turn your homepage into a revenue surface — not a brochure.",
+    oneLiner: "Build the site your customers actually buy from.",
     subhead:
       "Most founder sites convert at under 1% and the owner can't tell you which page is broken. In one morning we wire your site for revenue: one clear job per page, the proof stack that closes, payment and analytics events live, and the copy that does the selling.",
     pains: [
@@ -290,9 +290,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceCents: 19700,
     priceLabel: "$197",
     icon: Share2,
-    title: "Social Presence Workshop",
+    title: "Own your social presence",
     capability: "Social presence",
-    oneLiner: "Pick two channels. Own them. Stop posting into the void.",
+    oneLiner: "30 days of content before you leave the room.",
     subhead:
       "Posting to six platforms is the fastest way to dominate zero of them. In one morning we score every channel against your buyer, commit to two, rebuild your profiles to convert, and ship a 30-day calendar — real posts drafted, not 'ideas.'",
     pains: [
@@ -390,9 +390,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceCents: 29700,
     priceLabel: "$297",
     icon: PenTool,
-    title: "Content Engine Workshop",
+    title: "Engineer your content",
     capability: "A content engine",
-    oneLiner: "Build the only marketing line item that gets cheaper every month.",
+    oneLiner: "Rank, publish, repeat. Your content machine is live.",
     subhead:
       "Paid traffic gets more expensive every quarter. Content compounds. In one morning we architect the engine — pillars, SEO map, production flow, and the repurposing system that turns one anchor piece into ten — so it ships without grinding you to dust.",
     pains: [
@@ -490,9 +490,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceCents: 39700,
     priceLabel: "$397",
     icon: Sparkles,
-    title: "AI as Your Operating System Workshop",
+    title: "Run on AI",
     capability: "AI as your operating system",
-    oneLiner: "Two people doing the work of ten. That's the bar in 2026.",
+    oneLiner: "Automate 5 real workflows. Today.",
     subhead:
       "Buying ChatGPT seats isn't AI strategy. In one morning we audit your real workflows, automate five of them live in the room, and hand you the prompt library, model choices, and governance plan so the leverage compounds across your team — not just on your laptop.",
     pains: [
@@ -590,9 +590,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceCents: 39700,
     priceLabel: "$397",
     icon: Mail,
-    title: "Email, CRM & Automation Workshop",
+    title: "Automate your revenue",
     capability: "Email, CRM, and automation",
-    oneLiner: "Most of your revenue is in touches 2, 5, and 12. Build the machine that sends them.",
+    oneLiner: "16 emails written. Your sales machine is running.",
     subhead:
       "First-touch sales is for amateurs. Pros build the follow-up engine. In one morning we pick your CRM, map the lifecycle, write three sequences live, and fix the deliverability settings most founders don't know are quietly killing their open rates.",
     pains: [
@@ -690,9 +690,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceCents: 39700,
     priceLabel: "$397",
     icon: TrendingUp,
-    title: "Sales Systems Workshop",
+    title: "Close more sales",
     capability: "Sales systems",
-    oneLiner: "Stop closing on mood. Start closing on system.",
+    oneLiner: "Walk out with a sales script that qualifies and closes.",
     subhead:
       "Founders close on hustle. Companies close on system. In one morning we build your ICP scorecard, your discovery script, your pipeline stages with exit criteria, and the weekly rhythm that makes your forecast something investors can read — not something you guess.",
     pains: [
@@ -790,9 +790,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceCents: 19700,
     priceLabel: "$197",
     icon: Scale,
-    title: "Legal, Financial & Operational Scaffolding Workshop",
+    title: "Scaffold your business",
     capability: "Legal, financial, and operational scaffolding",
-    oneLiner: "The boring stuff that decides whether you're bankable.",
+    oneLiner: "Entity. Contracts. Books. Done.",
     subhead:
       "Founders skip the scaffolding until a customer, a bank, or an investor asks — and then it's a five-figure scramble and a deal you almost lost. In one morning we make the entity decision, lock the contract suite, set up the books, and hand you the operations calendar that keeps you out of trouble.",
     pains: [
