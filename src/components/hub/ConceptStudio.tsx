@@ -307,6 +307,13 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
     catch (e: any) { toast.error(e.message); }
   };
 
+  const v = run.variables as { action?: string; payload?: any } | undefined;
+  const isBusy = (action: string, key: string | null) =>
+    run.isPending &&
+    v?.action === action &&
+    key !== null &&
+    (v?.payload?.card?.title === key || v?.payload?.id === key);
+
   return (
     <div className="space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
       <div className="flex items-start justify-between gap-3">
@@ -395,11 +402,15 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
                 )}
 
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  <Button size="sm" className="h-7 text-xs" onClick={() => fold(card)} disabled={run.isPending}>
-                    <Sparkles className="mr-1 h-3 w-3" />Fold into concept
+                  <Button size="sm" className="h-7 text-xs" onClick={() => fold(card)} disabled={isBusy("fold_enhancement", card.title)}>
+                    {isBusy("fold_enhancement", card.title)
+                      ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Folding…</>
+                      : <><Sparkles className="mr-1 h-3 w-3" />Fold into concept</>}
                   </Button>
-                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => save(card)} disabled={run.isPending}>
-                    <Bookmark className="mr-1 h-3 w-3" />Save
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => save(card)} disabled={isBusy("save_enhancement", card.title)}>
+                    {isBusy("save_enhancement", card.title)
+                      ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Saving…</>
+                      : <><Bookmark className="mr-1 h-3 w-3" />Save</>}
                   </Button>
                   <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setExpanded(open ? null : id)}>
                     {open ? "Hide details" : "Details"}
@@ -422,8 +433,8 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
                   <div className="line-clamp-2 text-muted-foreground">{s.card.summary}</div>
                 </div>
                 <div className="flex gap-1">
-                  <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => fold(s.card, s.id)} disabled={run.isPending}>Fold</Button>
-                  <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => dismiss(s.id)} disabled={run.isPending}><X className="h-3 w-3" /></Button>
+                  <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => fold(s.card, s.id)} disabled={isBusy("fold_enhancement", s.id)}>{isBusy("fold_enhancement", s.id) ? "Folding…" : "Fold"}</Button>
+                  <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => dismiss(s.id)} disabled={isBusy("dismiss_enhancement", s.id)}><X className="h-3 w-3" /></Button>
                 </div>
               </div>
             ))}
