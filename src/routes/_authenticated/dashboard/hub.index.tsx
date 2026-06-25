@@ -365,6 +365,60 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </AlertDialog>
+
+      {isAdmin && (
+        <AlertDialog
+          open={confirmDelete}
+          onOpenChange={(o) => { setConfirmDelete(o); if (!o) setDeleteText(""); }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this venture permanently?</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm">
+                  <p>
+                    This is an <span className="font-semibold text-red-300">admin-only, irreversible</span> action.
+                    It will permanently remove this venture and everything attached to it:
+                  </p>
+                  <ul className="list-inside list-disc text-xs text-muted-foreground">
+                    <li>The startup record</li>
+                    <li>All generated documents and revisions</li>
+                    <li>All generation jobs and failure logs</li>
+                    <li>Uploaded document images</li>
+                  </ul>
+                  <div className="rounded-lg border border-white/10 bg-muted/40 p-3 text-xs">
+                    <div><span className="text-muted-foreground">Venture:</span> <span className="font-medium">{title}</span></div>
+                    <div><span className="text-muted-foreground">Owner:</span> {snapshot.user_id}</div>
+                    <div><span className="text-muted-foreground">Created:</span> {snapshot.created_at ? new Date(snapshot.created_at).toLocaleString() : "—"}</div>
+                  </div>
+                  <div>
+                    <p className="mb-1.5">
+                      Type <span className="font-mono font-semibold text-foreground">{confirmPhrase}</span> to confirm.
+                    </p>
+                    <Input
+                      autoFocus={false}
+                      value={deleteText}
+                      onChange={(e) => setDeleteText(e.target.value)}
+                      placeholder={confirmPhrase}
+                    />
+                  </div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel autoFocus>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!deleteEnabled}
+                onClick={(e) => { e.preventDefault(); if (deleteEnabled) deleteMut.mutate(); }}
+                className="bg-red-600 text-white hover:bg-red-500 disabled:opacity-40"
+              >
+                {deleteMut.isPending ? "Deleting…" : "Delete forever"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
