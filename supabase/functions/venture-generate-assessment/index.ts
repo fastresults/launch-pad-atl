@@ -283,13 +283,24 @@ async function generateAssessment(
   let userPrompt = fitToBudget(sections, protectedIdx);
   if (guidance) userPrompt += "\n\n" + guidance;
 
+  const TRACK_ADDENDUM: Record<string, string> = {
+    lifestyle: `\n\nTRACK OVERRIDE — Main Street Startup (first-time founder opening a real small business: café, salon, trade, local service, indie product, small e-commerce brand). Tune the assessment accordingly:
+- Replace TAM modeling and venture-readiness scoring with: unit economics per transaction, breakeven covers/customers per day, neighborhood density and foot-traffic realism, repeat-purchase rate, word-of-mouth loops.
+- Pressure-test against HYPERLOCAL competitors within 5–10 miles, not category leaders.
+- 30/60/90 actions are framed as opening-week / first-100-customers actions, not fundraising actions.
+- Funding language: startup costs, working capital, owner draw, savings, friends & family, SBA microloan, revenue-based, local CDFI, grants. NOT Series A / pitch deck / VC.
+- Zero VC vocabulary (no TAM/SAM/SOM, no ARR/NRR/CAC payback, no hockey-stick, no unicorn). Plain English a non-technical owner can act on.`,
+  };
+  const trackAddendum = snap.track && TRACK_ADDENDUM[snap.track] ? TRACK_ADDENDUM[snap.track] : "";
+  const systemPrompt = SYSTEM_PROMPT + trackAddendum;
+
   const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "google/gemini-3-flash-preview",
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         {
           role: "user",
           content:

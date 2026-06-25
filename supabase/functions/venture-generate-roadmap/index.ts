@@ -297,13 +297,25 @@ async function generateRoadmap(supabase: any, snapshotId: string) {
   const bundle = buildContextBundle(snap, allDocs);
   const userPrompt = fitToBudget(bundle);
 
+  const TRACK_ADDENDUM: Record<string, string> = {
+    lifestyle: `\n\nTRACK OVERRIDE — Main Street Startup (first-time founder opening a real small business: café, salon, trade, local service, indie product, small e-commerce brand). Apply these adjustments to every chapter:
+- Chapter 4 "The Field You're Entering" focuses on HYPERLOCAL competitors within 5–10 miles, not category leaders.
+- Chapter 6 "Your First 45 Days" is framed as OPENING-WEEK milestones (permits, suppliers, soft launch, first 10 paying customers, first review on Google) — not fundraising milestones.
+- Chapter 8 "Money & Runway" replaces "raise / instrument" with startup costs, working capital, owner draw, and simple funding sources (savings, friends & family, SBA microloan, revenue-based financing, local CDFI, grants).
+- Chapter 9 "How to Talk About This" pitches a one-page lender/partner summary, NOT a VC pitch. The "investor will ask" Q&A becomes "a banker or local partner will ask".
+- Stat Strip: replace "Recommended raise" with "Startup costs to open" and "Market opportunity" with "Realistic Year-1 customer count".
+- Throughout: zero VC vocabulary (no TAM/SAM/SOM, no Series A, no ARR, no hockey-stick). Plain English, dollar figures, named local channels (Google Business Profile, neighborhood Instagram, foot traffic, referrals, partnerships with neighboring businesses).`,
+  };
+  const trackAddendum = snap.track && TRACK_ADDENDUM[snap.track] ? TRACK_ADDENDUM[snap.track] : "";
+  const systemPrompt = SYSTEM_PROMPT + trackAddendum;
+
   const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "google/gemini-3-flash-preview",
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
     }),

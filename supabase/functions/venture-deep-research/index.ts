@@ -363,8 +363,8 @@ async function runResearch(supabase: any, snapshotId: string) {
     ? `the international market across multiple countries`
     : `the ${country || "national"} market`;
   const TRACK_LENS: Record<string, string> = {
-    lifestyle: "Lens: lifestyle / main-street business — emphasize local foot traffic, owner-operator economics, simple cash flow. Skip TAM/SAM/SOM and VC framing.",
-    small_business: "Lens: traditional small business — emphasize margin, repeat customers, regional competition, SBA/bank-financing realities.",
+    lifestyle: "Lens: Main Street Startup (first-time founder opening a real small business). Emphasize HYPERLOCAL signal: foot-traffic patterns, neighborhood demographics within 1–3 miles, named direct competitors within 5–10 miles (not category leaders), local search demand, typical local pricing benchmarks, permits/licensing/zoning realities, supplier and landlord options, opening-week cash needs. Skip TAM/SAM/SOM, venture-readiness, and category-level competitive landscape.",
+    small_business: "Lens: Established Small Business (already operating with revenue and staff) — emphasize margin expansion, repeat customers, regional competition, multi-location economics, SBA / bank-financing realities.",
     scalable_tech: "Lens: scalable tech / SaaS — emphasize ICP, defensibility, retention/expansion, unit economics at scale, venture-readiness.",
     marketplace: "Lens: marketplace / platform — analyze both sides (supply and demand), liquidity, cold-start, take-rate, network effects.",
     deep_tech: "Lens: deep tech / frontier — emphasize technical risk, regulatory pathway, IP, capital intensity, long time-to-revenue, non-dilutive funding.",

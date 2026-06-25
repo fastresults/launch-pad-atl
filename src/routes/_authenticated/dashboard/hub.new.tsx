@@ -123,7 +123,7 @@ function Inner() {
   const [marketScope, setMarketScope] = useState<"local" | "regional" | "national" | "international">("local");
   const [industry, setIndustry] = useState("");
   const [subIndustry, setSubIndustry] = useState("");
-  const [track, setTrack] = useState<TrackKey | "">("");
+  const [track, setTrack] = useState<TrackKey | "">("lifestyle");
   const [showTrackHelp, setShowTrackHelp] = useState(false);
   const [trackPulse, setTrackPulse] = useState(false);
   const trackSectionRef = useRef<HTMLDivElement | null>(null);
@@ -378,23 +378,29 @@ function Inner() {
           </div>
           {showTrackHelp && (
             <p className="rounded-md bg-white/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
-              Tracks don't change which documents you get — they change the voice. A Main Street salon and a venture-backed SaaS shouldn't read the same plan. Pick the one closest to how you're building. You can change it later.
+              This workshop is built primarily for <strong>Main Street founders</strong> — first-time owners opening a café, salon, trade, local service, indie product, or small e-commerce brand. That's the default. Pick a different track only if you're building something materially different (venture-track SaaS, a two-sided marketplace, deep tech, etc.). Tracks don't change which 34 deliverables you get — they change the voice and framing. You can change this later.
             </p>
           )}
           <div className="grid gap-2 sm:grid-cols-2">
             {TRACKS.map((t) => {
               const selected = track === t.key;
+              const isDefault = t.key === "lifestyle";
               return (
                 <button
                   key={t.key}
                   type="button"
                   onClick={() => setTrack(t.key)}
-                  className={`group flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition ${
+                  className={`group relative flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition ${
                     selected
                       ? "border-primary bg-primary/10 ring-1 ring-primary"
                       : "border-white/10 hover:border-white/25 hover:bg-white/[0.02]"
                   }`}
                 >
+                  {isDefault && (
+                    <span className="absolute right-2 top-2 rounded-full bg-primary/20 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-primary">
+                      Most attendees
+                    </span>
+                  )}
                   <div className="text-sm font-medium">{t.label}</div>
                   <div className="text-[11px] leading-snug text-muted-foreground">{t.oneLiner}</div>
                 </button>

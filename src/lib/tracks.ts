@@ -22,21 +22,21 @@ export interface Track {
 export const TRACKS: Track[] = [
   {
     key: "lifestyle",
-    label: "Lifestyle / Main Street",
-    oneLiner: "Revenue over scale — local services & solo founders",
+    label: "Main Street Startup",
+    oneLiner: "First-time founders starting a real local or indie business",
     description:
-      "Businesses built around the founder's life, skill, or community. Local services, restaurants, salons, gyms, freelancers, solo consultants.",
+      "The default track for most workshop attendees. First-time founders launching a café, salon, fitness studio, trade, local service, indie product, small e-commerce brand, or solo professional practice. Focus is opening week, first 100 customers, first $10k in revenue — not raising venture capital.",
     tonePrompt:
-      "Write as a pragmatic operator coaching a sole founder running a lifestyle / main-street business. Optimize for cash flow, simplicity, low overhead, and local credibility. Avoid VC jargon, TAM/SAM/SOM framing, hockey-stick growth language, and 'unicorn' aspirations. Use concrete, plain-English tactics a non-technical owner can execute this week.",
+      "Write as a pragmatic operator coaching a first-time main-street founder opening a real small business — café, salon, trade, local service, indie product, small e-commerce brand, or solo practice. Optimize for opening week, first 100 customers, first $10k in monthly revenue, cash on hand, and word-of-mouth. Replace VC vocabulary entirely: instead of TAM/SAM/SOM, talk local market size and realistic first-year customer count; instead of 'pitch deck' or 'funding round', talk one-page lender/partner summary and simple funding sources (founder savings, friends & family, SBA microloan, revenue-based, local CDFI, grants). Skip ARR, CAC payback, hockey-stick, unicorn language. Use plain English a non-technical owner can act on this week. Use concrete dollar figures, real channels (local SEO, Google Business Profile, neighborhood Instagram, foot traffic, referrals, partnerships with neighboring businesses), and tactics they can execute without a team.",
   },
   {
     key: "small_business",
-    label: "Small Business / Traditional",
-    oneLiner: "Profit & longevity — shops, agencies, trades",
+    label: "Established Small Business",
+    oneLiner: "Already operating — growing margin, repeat customers, regional reach",
     description:
-      "Established business models run for profit and longevity. Retail shops, agencies, regional franchises, trades, professional services. Scalable within limits — not venture-track.",
+      "For founders who already have a running business with revenue, customers, and (usually) staff. Retail shops, agencies, regional franchises, trades, professional services looking to grow margin, expand locations, or systematize operations. Not venture-track.",
     tonePrompt:
-      "Write as a seasoned small-business advisor. Emphasize unit economics, margin, repeat customers, operational discipline, and steady regional growth. Avoid venture-capital framing; prefer SBA / bank-financing realities, owner-operator workflows, and proven playbooks over experimental ones.",
+      "Write as a seasoned small-business advisor coaching an owner who already has revenue, customers, and likely staff. Emphasize unit economics, margin expansion, repeat customers, operational discipline, multi-location or franchise economics, and steady regional growth. Reference SBA / bank-financing realities, owner-operator workflows, and proven playbooks. Avoid venture-capital framing entirely.",
   },
   {
     key: "scalable_tech",
@@ -111,10 +111,12 @@ export type SeedEntry = {
 
 export const TRACK_SEEDS: Record<TrackKey, SeedEntry[]> = {
   lifestyle: [
-    { url: "https://bluebottlecoffee.com", industry: "Food & Beverage", sub_industry: "Specialty coffee café", market_scope: "local", city: "Oakland", region: "California", country: "United States" },
-    { url: "https://www.equinox.com", industry: "Health & Fitness", sub_industry: "Premium gym", market_scope: "regional", city: "New York", region: "New York", country: "United States" },
-    { url: "https://www.drybar.com", industry: "Personal Care", sub_industry: "Blowout salon", market_scope: "regional", city: "Los Angeles", region: "California", country: "United States" },
-    { url: "https://www.soulcycle.com", industry: "Health & Fitness", sub_industry: "Boutique cycling studio", market_scope: "regional", city: "New York", region: "New York", country: "United States" },
+    { url: "https://bellinabakery.com", industry: "Food & Beverage", sub_industry: "Independent neighborhood bakery", market_scope: "local", city: "Atlanta", region: "Georgia", country: "United States" },
+    { url: "https://bluebottlecoffee.com", industry: "Food & Beverage", sub_industry: "Independent coffee shop", market_scope: "local", city: "Atlanta", region: "Georgia", country: "United States" },
+    { url: "https://www.drybar.com", industry: "Personal Care", sub_industry: "Neighborhood blowout salon", market_scope: "local", city: "Atlanta", region: "Georgia", country: "United States" },
+    { url: "https://www.detailgarage.com", industry: "Home & Auto Services", sub_industry: "Mobile auto detailing", market_scope: "local", city: "Atlanta", region: "Georgia", country: "United States" },
+    { url: "https://www.glossier.com", industry: "Beauty / Indie Brand", sub_industry: "Indie skincare e-commerce", market_scope: "national", city: "Atlanta", region: "Georgia", country: "United States" },
+    { url: "https://www.f45training.com", industry: "Health & Fitness", sub_industry: "Neighborhood fitness studio", market_scope: "local", city: "Atlanta", region: "Georgia", country: "United States" },
   ],
   small_business: [
     { url: "https://www.acehardware.com", industry: "Retail", sub_industry: "Independent hardware store", market_scope: "national", city: "Oak Brook", region: "Illinois", country: "United States" },
