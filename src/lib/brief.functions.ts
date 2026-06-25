@@ -21,3 +21,26 @@ export async function adminGetBrief(data: { userId: string }) {
 export async function summarizeBriefBlock(_data: { block: string; content: string }) {
   return { summary: "" };
 }
+
+export type BriefPrefillSuggestion = {
+  answer: string;
+  source_filename: string;
+  source_snippet: string;
+  confidence: "high" | "medium" | "low";
+};
+
+export type BriefPrefillResponse = {
+  suggestions: Record<BriefKey, BriefPrefillSuggestion>;
+  sourceFiles: string[];
+  warnings: string[];
+};
+
+export async function prefillBriefFromDocs(files: File[]): Promise<BriefPrefillResponse> {
+  const form = new FormData();
+  for (const f of files) form.append("files", f, f.name);
+  const { data, error } = await supabase.functions.invoke("brief-prefill", { body: form });
+  if (error) throw new Error(error.message);
+  if ((data as any)?.error) throw new Error((data as any).error);
+  return data as BriefPrefillResponse;
+}
+
