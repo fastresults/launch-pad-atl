@@ -28,6 +28,7 @@ import {
   unarchiveSnapshot,
   setFavorite,
 } from "@/lib/foundersHub.functions";
+import { getTrack } from "@/lib/tracks";
 import { Plus, ArrowRight, Sparkles, Star, MoreHorizontal, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
@@ -296,8 +297,11 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
             <p className="mt-0.5 truncate text-xs text-muted-foreground">{snapshot.website_url}</p>
           )}
         </div>
-        <div className="mt-1">
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
           <Badge variant="outline" className="text-[10px] uppercase">{status}</Badge>
+          {getTrack(snapshot.track) && (
+            <Badge variant="secondary" className="text-[10px]">{getTrack(snapshot.track)!.label}</Badge>
+          )}
         </div>
         <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
           {snapshot.business_concept}

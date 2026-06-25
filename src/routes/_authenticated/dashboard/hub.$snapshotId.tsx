@@ -27,6 +27,7 @@ import {
   listFailures,
 } from "@/lib/foundersHub.functions";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
+import { TRACKS, getTrack, type TrackKey } from "@/lib/tracks";
 import { ConceptStudio } from "@/components/hub/ConceptStudio";
 import { DocumentViewer } from "@/components/hub/DocumentViewer";
 import { BrandStudio } from "@/components/hub/BrandStudio";
@@ -715,6 +716,7 @@ function FounderMarketCard({ snapshot, onSaved }: { snapshot: any; onSaved: () =
     market_scope: (snapshot.market_scope ?? "local") as "local" | "regional" | "national" | "international",
     industry: snapshot.industry ?? "",
     sub_industry: snapshot.sub_industry ?? "",
+    track: (snapshot.track ?? "") as TrackKey | "",
   });
 
   const save = useMutation({
@@ -774,6 +776,30 @@ function FounderMarketCard({ snapshot, onSaved }: { snapshot: any; onSaved: () =
             onChange={(e) => set("sub_industry", e.target.value)}
             placeholder="Niche (optional)"
           />
+        </div>
+      </div>
+
+      <div className="grid gap-1.5">
+        <Label className="text-xs">Track</Label>
+        <div className="grid gap-1.5 sm:grid-cols-2">
+          {TRACKS.map((t) => {
+            const selected = form.track === t.key;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => set("track", t.key)}
+                className={`flex flex-col items-start gap-0.5 rounded-lg border p-2.5 text-left transition ${
+                  selected
+                    ? "border-primary bg-primary/10 ring-1 ring-primary"
+                    : "border-white/10 hover:border-white/25"
+                }`}
+              >
+                <div className="text-xs font-medium">{t.label}</div>
+                <div className="text-[10px] leading-snug text-muted-foreground">{t.oneLiner}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

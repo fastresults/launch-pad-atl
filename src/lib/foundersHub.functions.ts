@@ -32,6 +32,7 @@ export interface VentureSnapshot {
   market_scope: "local" | "regional" | "national" | "international" | null;
   industry: string | null;
   sub_industry: string | null;
+  track: string | null;
   scraped_content: string | null;
   competitor_data: any;
   market_research: string | null;
@@ -150,6 +151,7 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
     market_scope,
     industry,
     sub_industry,
+    track,
   } = unwrap<{
     company_name?: string;
     website_url?: string;
@@ -164,6 +166,7 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
     market_scope?: "local" | "regional" | "national" | "international";
     industry?: string;
     sub_industry?: string;
+    track?: string;
   }>(input);
 
   const { data, error } = await supabase
@@ -183,6 +186,7 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
       market_scope: market_scope ?? null,
       industry: industry ?? null,
       sub_industry: sub_industry ?? null,
+      track: track ?? null,
       status: "enriching",
       enrichment_progress: { stage: "queued", progress: 0, message: "Queued", updatedAt: new Date().toISOString() },
     })
@@ -208,6 +212,7 @@ export async function updateFounderContext(input: any): Promise<void> {
     market_scope?: string;
     industry?: string;
     sub_industry?: string;
+    track?: string;
   }>(input);
   const { error } = await supabase.from("venture_snapshots").update(patch).eq("id", id);
   if (error) throw new Error(error.message);

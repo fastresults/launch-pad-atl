@@ -1999,6 +1999,7 @@ export type Database = {
           scraped_content: string | null
           status: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry: string | null
+          track: string | null
           updated_at: string
           user_id: string
           value_proposition: string | null
@@ -2035,6 +2036,7 @@ export type Database = {
           scraped_content?: string | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry?: string | null
+          track?: string | null
           updated_at?: string
           user_id: string
           value_proposition?: string | null
@@ -2071,6 +2073,7 @@ export type Database = {
           scraped_content?: string | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry?: string | null
+          track?: string | null
           updated_at?: string
           user_id?: string
           value_proposition?: string | null

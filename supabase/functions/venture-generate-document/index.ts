@@ -43,6 +43,24 @@ function gatewayMessage(status: number, detail: string) {
   return "AI generation is currently unavailable. Please try again shortly.";
 }
 
+// Track tone directives — mirrored from src/lib/tracks.ts. Keep in sync.
+const TRACK_TONE: Record<string, string> = {
+  lifestyle:
+    "TRACK — Lifestyle / Main Street: Write as a pragmatic operator coaching a sole founder. Optimize for cash flow, simplicity, low overhead, and local credibility. Avoid VC jargon, TAM/SAM/SOM framing, hockey-stick growth, and unicorn aspirations. Use concrete, plain-English tactics a non-technical owner can execute this week.",
+  small_business:
+    "TRACK — Small Business / Traditional: Write as a seasoned small-business advisor. Emphasize unit economics, margin, repeat customers, operational discipline, and steady regional growth. Avoid venture-capital framing; prefer SBA / bank-financing realities and proven owner-operator playbooks.",
+  scalable_tech:
+    "TRACK — Scalable Tech / SaaS: Write as an early-stage tech operator briefing a venture-track founder. Lean into product-led growth, defensibility, retention/expansion, unit economics at scale, ICP precision, and venture-readiness. Use SaaS metrics (ARR, NRR, CAC payback, magic number) where relevant.",
+  marketplace:
+    "TRACK — Marketplace / Platform: Write as a marketplace strategist. Always reason about both/all sides explicitly — supply and demand, liquidity, cold-start, take-rate, trust & safety, network effects. Call out which side is hardest to acquire and why.",
+  deep_tech:
+    "TRACK — Deep Tech / Frontier: Write as a deep-tech advisor. Treat technical risk, milestone-based de-risking, IP/moat, regulatory pathway, capital intensity, and long time-to-revenue as first-class concerns. Reference grants, non-dilutive funding, and strategic partners alongside venture capital. Avoid lean-startup 'launch in a weekend' framing.",
+  social_impact:
+    "TRACK — Social Enterprise / Impact: Write as an impact-venture advisor. Hold mission and revenue as co-equal. Use theory-of-change language, measurable impact metrics alongside financial ones, and reference impact-aligned capital (grants, PRIs, blended finance). Avoid extractive growth-at-all-costs framing.",
+  corporate:
+    "TRACK — Corporate / Institutional: Write as a corporate-innovation / institutional-venture advisor. Treat enterprise procurement, compliance, security review, parent-org politics, and strategic alignment as first-class concerns. Use formal, board-ready language. Reference pilot-to-production motions, RFPs, and channel partnerships rather than viral consumer growth.",
+};
+
 // Specialized doc prompts (mirrors bulk-generate SPECIAL map).
 const QF = `\n\nEnd with a "## Sources" section listing any [^n] footnotes used, then on a final line output exactly:\nQUALITY_SCORE: <0-100 integer>`;
 const SPECIAL: Record<string, string> = {
@@ -103,7 +121,11 @@ CITATIONS:
 After the markdown, on a final line, output exactly:
 QUALITY_SCORE: <0-100 integer reflecting completeness, specificity, and investor-readiness>`;
 
-  const systemPrompt = SPECIAL[documentType] ?? baseSystem;
+  const baseSystemPrompt = SPECIAL[documentType] ?? baseSystem;
+  const trackTone = snap.track ? TRACK_TONE[snap.track] : null;
+  const systemPrompt = trackTone
+    ? `${baseSystemPrompt}\n\n${trackTone}`
+    : baseSystemPrompt;
 
   const founderCard = {
     founder: { name: snap.founder_name, email: snap.founder_email, phone: snap.founder_phone },
@@ -111,6 +133,7 @@ QUALITY_SCORE: <0-100 integer reflecting completeness, specificity, and investor
     market_scope: snap.market_scope,
     industry: snap.industry,
     sub_industry: snap.sub_industry,
+    track: snap.track,
     company_name: snap.company_name,
     website_url: snap.website_url,
   };

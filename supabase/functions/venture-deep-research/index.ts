@@ -362,8 +362,18 @@ async function runResearch(supabase: any, snapshotId: string) {
     : scope === "international"
     ? `the international market across multiple countries`
     : `the ${country || "national"} market`;
+  const TRACK_LENS: Record<string, string> = {
+    lifestyle: "Lens: lifestyle / main-street business — emphasize local foot traffic, owner-operator economics, simple cash flow. Skip TAM/SAM/SOM and VC framing.",
+    small_business: "Lens: traditional small business — emphasize margin, repeat customers, regional competition, SBA/bank-financing realities.",
+    scalable_tech: "Lens: scalable tech / SaaS — emphasize ICP, defensibility, retention/expansion, unit economics at scale, venture-readiness.",
+    marketplace: "Lens: marketplace / platform — analyze both sides (supply and demand), liquidity, cold-start, take-rate, network effects.",
+    deep_tech: "Lens: deep tech / frontier — emphasize technical risk, regulatory pathway, IP, capital intensity, long time-to-revenue, non-dilutive funding.",
+    social_impact: "Lens: social enterprise / impact — hold mission and revenue as co-equal; include impact metrics and impact-aligned capital.",
+    corporate: "Lens: corporate / institutional — emphasize enterprise procurement, compliance, parent-org alignment, pilot-to-production motions.",
+  };
+  const trackLens = snap.track ? TRACK_LENS[snap.track] : null;
   const marketPrompt = `Analyze ${scopeClause} for ${industryShort || "this venture"}${companyName ? ` (relevant to ${companyName})` : ""}.
-Cover concretely:
+${trackLens ? trackLens + "\n" : ""}Cover concretely:
 1. Market size and growth (with numbers when available, scoped to ${scopeClause}).
 2. Major trends in the last 12 months.
 3. Regulatory / licensing / compliance considerations for ${country || "the relevant jurisdiction"}${scope === "local" ? ` and ${region || city}` : ""}.
@@ -376,7 +386,7 @@ Venture context:
 - Concept: ${concept}
 - Industry: ${industry}${snap.sub_industry ? ` (niche: ${snap.sub_industry})` : ""}
 - Location: ${geo || country || "unspecified"}
-- Market scope: ${scope}`;
+- Market scope: ${scope}${snap.track ? `\n- Track: ${snap.track}` : ""}`;
   const market = await pplxResearch(marketPrompt);
   if (market) {
     await appendArtifacts(supabase, snapshotId, [{

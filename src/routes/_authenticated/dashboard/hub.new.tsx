@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
+import { TRACKS, type TrackKey } from "@/lib/tracks";
 import { createSnapshot } from "@/lib/foundersHub.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin } from "lucide-react";
@@ -122,6 +123,8 @@ function Inner() {
   const [marketScope, setMarketScope] = useState<"local" | "regional" | "national" | "international">("local");
   const [industry, setIndustry] = useState("");
   const [subIndustry, setSubIndustry] = useState("");
+  const [track, setTrack] = useState<TrackKey | "">("");
+  const [showTrackHelp, setShowTrackHelp] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Prefill from authenticated user once
@@ -223,6 +226,7 @@ function Inner() {
           market_scope: marketScope,
           industry: industry || undefined,
           sub_industry: subIndustry || undefined,
+          track: track || undefined,
         },
       }),
     onSuccess: ({ id }) => {
@@ -234,7 +238,7 @@ function Inner() {
 
   const founderReady = !!(
     founderName.trim() && founderEmail.trim() && city.trim() && region.trim() &&
-    country.trim() && marketScope && industry.trim()
+    country.trim() && marketScope && industry.trim() && !!track
   );
   const canSubmit = businessConcept.trim().length >= 20 && !create.isPending && founderReady &&
     (path === "manual" ? !!companyName.trim() : !!websiteUrl.trim());
@@ -345,7 +349,53 @@ function Inner() {
             />
           </div>
         </div>
+
+        {/* Track selector */}
+        <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <Label className="text-sm">Track <span className="text-red-500">*</span></Label>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                What kind of startup is this? We tune the tone &amp; framing of every document to match.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowTrackHelp((v) => !v)}
+              className="shrink-0 text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+            >
+              {showTrackHelp ? "Hide" : "What's this?"}
+            </button>
+          </div>
+          {showTrackHelp && (
+            <p className="rounded-md bg-white/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
+              Tracks don't change which documents you get — they change the voice. A Main Street salon and a venture-backed SaaS shouldn't read the same plan. Pick the one closest to how you're building. You can change it later.
+            </p>
+          )}
+          <div className="grid gap-2 sm:grid-cols-2">
+            {TRACKS.map((t) => {
+              const selected = track === t.key;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setTrack(t.key)}
+                  className={`group flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition ${
+                    selected
+                      ? "border-primary bg-primary/10 ring-1 ring-primary"
+                      : "border-white/10 hover:border-white/25 hover:bg-white/[0.02]"
+                  }`}
+                >
+                  <div className="text-sm font-medium">{t.label}</div>
+                  <div className="text-[11px] leading-snug text-muted-foreground">{t.oneLiner}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
+
+
 
 
       <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
