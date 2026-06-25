@@ -104,6 +104,12 @@ function recColor(rec: string) {
   return "border-white/10 text-muted-foreground";
 }
 
+function dotColor(rec: string) {
+  if (/yes/i.test(rec)) return "bg-emerald-400";
+  if (/maybe/i.test(rec)) return "bg-amber-400";
+  return "bg-muted-foreground/40";
+}
+
 // Very loose markdown parser — pulls "| Platform | Yes/Maybe/Skip | ..." style tables.
 function parsePlatformMatrix(md: string) {
   const out: { name: string; recommendation: string }[] = [];
