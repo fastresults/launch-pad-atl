@@ -123,6 +123,8 @@ function Inner() {
   const [marketScope, setMarketScope] = useState<"local" | "regional" | "national" | "international">("local");
   const [industry, setIndustry] = useState("");
   const [subIndustry, setSubIndustry] = useState("");
+  const [track, setTrack] = useState<TrackKey | "">("");
+  const [showTrackHelp, setShowTrackHelp] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Prefill from authenticated user once
