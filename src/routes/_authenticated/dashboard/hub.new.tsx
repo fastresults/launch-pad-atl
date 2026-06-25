@@ -283,12 +283,20 @@ function Inner() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not create venture"),
   });
 
-  const founderReady = !!(
-    founderName.trim() && founderEmail.trim() && city.trim() && region.trim() &&
-    country.trim() && marketScope && industry.trim() && !!track
-  );
-  const canSubmit = businessConcept.trim().length >= 20 && !create.isPending && founderReady &&
-    (path === "manual" ? !!companyName.trim() : !!websiteUrl.trim());
+  const missingFields: string[] = [];
+  if (businessConcept.trim().length < 20) missingFields.push("Business concept (min 20 chars)");
+  if (path === "manual" && !companyName.trim()) missingFields.push("Company name");
+  if (path !== "manual" && !websiteUrl.trim()) missingFields.push(path === "own" ? "Your website URL" : "Competitor URL");
+  if (!founderName.trim()) missingFields.push("Founder name");
+  if (!founderEmail.trim()) missingFields.push("Founder email");
+  if (!city.trim()) missingFields.push("City");
+  if (!region.trim()) missingFields.push("State / region");
+  if (!country.trim()) missingFields.push("Country");
+  if (!marketScope) missingFields.push("Market scope");
+  if (!industry.trim()) missingFields.push("Industry");
+  if (!track) missingFields.push("Track");
+  const canSubmit = missingFields.length === 0 && !create.isPending;
+
 
   return (
     <div className="space-y-6">
