@@ -55,9 +55,9 @@ export default function BriefWizard() {
   const [showPrefillDialog, setShowPrefillDialog] = useState(false);
 
   useEffect(() => {
-    if (!data?.brief) return;
+    if (!data) return;
     const init: Record<string, string> = {};
-    for (const f of BRIEF_FIELDS) init[f.key] = (data.brief[f.key as keyof typeof data.brief] as string) ?? "";
+    for (const f of BRIEF_FIELDS) init[f.key] = ((data as any)[f.key] as string) ?? "";
     setValues(init);
     if (initialized) return;
     const firstEmpty = BRIEF_FIELDS.findIndex((f) => !init[f.key]);
