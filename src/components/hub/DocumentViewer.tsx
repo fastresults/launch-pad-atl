@@ -556,6 +556,85 @@ export function DocumentViewer({
               {content}
             </ReactMarkdown>
           </article>
+
+          <div className="mx-auto mb-8 max-w-[72ch] px-6">
+            <div className="rounded-xl border border-primary/20 bg-card/80 p-5 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <h3 className="text-base font-semibold text-foreground">Deep assessment</h3>
+                    <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
+                      McKinsey-grade
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Partner-grade pressure test: assumptions, sensitivities, risks, and 30/60/90-day actions.
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+                  {assessment && assessmentStatus !== "generating" && (
+                    <>
+                      <Button size="sm" variant="ghost" onClick={onCopyAssessment}>
+                        <Copy className="mr-1 h-3 w-3" />Copy
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={onDownloadAssessment}>
+                        <Download className="mr-1 h-3 w-3" />.md
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={runAssessment}
+                    disabled={assessmentStatus === "generating"}
+                  >
+                    {assessmentStatus === "generating" ? (
+                      <>
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        Analyzing…
+                      </>
+                    ) : assessment ? (
+                      <>
+                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                        Regenerate
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                        Run deep assessment
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {assessmentStatus === "generating" && !assessment && (
+                <div className="mt-5 space-y-2">
+                  <div className="h-3 w-3/4 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-full animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-5/6 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+                  <p className="pt-2 text-xs text-muted-foreground">
+                    Usually takes 20–40 seconds. The document above stays readable.
+                  </p>
+                </div>
+              )}
+
+              {assessmentError && assessmentStatus === "failed" && (
+                <div className="mt-4 rounded-md border border-status-danger/30 bg-status-danger/5 p-3 text-sm text-status-danger">
+                  {assessmentError}
+                </div>
+              )}
+
+              {assessment && (
+                <div className="mt-5 border-t border-white/10 pt-4">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={assessmentComponents}>
+                    {assessment}
+                  </ReactMarkdown>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
