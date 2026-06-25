@@ -160,11 +160,29 @@ export function FounderBlock({ onDone }: Props) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex cursor-pointer flex-col gap-2 rounded-2xl border border-white/10 bg-card p-5 hover:border-primary/40">
+        <label
+          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!uploading) setIsDragging(true); }}
+          onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); if (!uploading) setIsDragging(true); }}
+          onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsDragging(false);
+            const f = e.dataTransfer.files?.[0];
+            if (f && !uploading) onFile(f);
+          }}
+          className={`flex cursor-pointer flex-col gap-2 rounded-2xl border-2 border-dashed p-5 transition-colors ${
+            isDragging
+              ? "border-primary bg-primary/10"
+              : "border-white/10 bg-card hover:border-primary/40"
+          }`}
+        >
           <div className="flex items-center gap-2 text-sm font-medium">
             <Upload className="h-4 w-4" /> Upload your resume
           </div>
-          <p className="text-xs text-muted-foreground">PDF or DOCX. Max 10MB.</p>
+          <p className="text-xs text-muted-foreground">
+            {isDragging ? "Drop to upload" : "Drag & drop, or choose a file. PDF or DOCX. Max 10MB."}
+          </p>
           <input
             type="file"
             accept=".pdf,.docx,.doc,application/pdf"
