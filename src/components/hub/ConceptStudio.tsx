@@ -327,7 +327,7 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
         </Button>
       </div>
       {!hasBrief && (
-        <p className="text-[11px] text-amber-300/80">Deep research must complete first.</p>
+        <p className="text-[11px] text-amber-800 dark:text-amber-300">Deep research must complete first.</p>
       )}
       {execNote && <p className="text-xs italic text-muted-foreground">{execNote}</p>}
 
