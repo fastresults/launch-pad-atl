@@ -811,7 +811,8 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                       value=""
                       onValueChange={(v) =>
                         toggleCollectionFn({
-                          data: { collectionId: v, assetId: selectedAsset.id, action: "add" },
+                          collectionId: v,
+                          mediaId: selectedAsset.id,
                         }).then(() => {
                           toast.success("Added to collection");
                           invalidate();
