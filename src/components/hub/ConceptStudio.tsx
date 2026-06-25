@@ -307,6 +307,13 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
     catch (e: any) { toast.error(e.message); }
   };
 
+  const v = run.variables as { action?: string; payload?: any } | undefined;
+  const isBusy = (action: string, key: string | null) =>
+    run.isPending &&
+    v?.action === action &&
+    key !== null &&
+    (v?.payload?.card?.title === key || v?.payload?.id === key);
+
   return (
     <div className="space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
       <div className="flex items-start justify-between gap-3">
