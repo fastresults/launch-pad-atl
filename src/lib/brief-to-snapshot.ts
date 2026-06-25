@@ -57,17 +57,30 @@ export async function buildPrefillFromBrief(): Promise<SnapshotPrefill | null> {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  // Optional profile/registration with location & name
-  let profile: any = null;
+  // Optional attendee profile (business_name, industry, full_name)
+  let attendeeProfile: any = null;
   try {
     const { data } = await supabase
-      .from("attendee_profile")
-      .select("*")
+      .from("attendee_profiles")
+      .select("full_name,business_name,industry")
       .eq("user_id", user.id)
       .maybeSingle();
-    profile = data;
+    attendeeProfile = data;
   } catch {
-    profile = null;
+    attendeeProfile = null;
+  }
+
+  // Public profile (display_name, email)
+  let pubProfile: any = null;
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("display_name,email")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    pubProfile = data;
+  } catch {
+    pubProfile = null;
   }
 
   const meta: any = user.user_metadata ?? {};
