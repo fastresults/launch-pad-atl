@@ -778,6 +778,30 @@ function FounderMarketCard({ snapshot, onSaved }: { snapshot: any; onSaved: () =
           />
         </div>
       </div>
+
+      <div className="grid gap-1.5">
+        <Label className="text-xs">Track</Label>
+        <div className="grid gap-1.5 sm:grid-cols-2">
+          {TRACKS.map((t) => {
+            const selected = form.track === t.key;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => set("track", t.key)}
+                className={`flex flex-col items-start gap-0.5 rounded-lg border p-2.5 text-left transition ${
+                  selected
+                    ? "border-primary bg-primary/10 ring-1 ring-primary"
+                    : "border-white/10 hover:border-white/25"
+                }`}
+              >
+                <div className="text-xs font-medium">{t.label}</div>
+                <div className="text-[10px] leading-snug text-muted-foreground">{t.oneLiner}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
