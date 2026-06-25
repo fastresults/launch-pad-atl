@@ -98,13 +98,17 @@ export async function buildPrefillFromBrief(): Promise<SnapshotPrefill | null> {
   ].filter(Boolean);
 
   const business_concept = conceptParts.join("\n\n");
-  const company_name = deriveCompanyName(pitch);
+  const company_name =
+    trimOrEmpty(attendeeProfile?.business_name) || deriveCompanyName(pitch);
 
   const fullName =
-    trimOrEmpty(profile?.full_name) ||
+    trimOrEmpty(attendeeProfile?.full_name) ||
+    trimOrEmpty(pubProfile?.display_name) ||
     trimOrEmpty(meta.display_name) ||
     trimOrEmpty(meta.name) ||
     trimOrEmpty(meta.full_name);
+
+  const guessed = guessIndustryFromText(`${pitch} ${offer} ${problem}`);
 
   return {
     fromBrief: true,
@@ -112,13 +116,13 @@ export async function buildPrefillFromBrief(): Promise<SnapshotPrefill | null> {
     business_concept,
     differentiation_statement: unique,
     founder_name: fullName,
-    founder_email: trimOrEmpty(user.email),
-    founder_phone: trimOrEmpty(profile?.phone) || trimOrEmpty(meta.phone),
-    city: trimOrEmpty(profile?.city),
-    region: trimOrEmpty(profile?.region) || trimOrEmpty(profile?.state),
-    country: trimOrEmpty(profile?.country) || "United States",
+    founder_email: trimOrEmpty(user.email) || trimOrEmpty(pubProfile?.email),
+    founder_phone: trimOrEmpty(meta.phone),
+    city: "",
+    region: "",
+    country: "United States",
     market_scope: "local",
-    industry: guessIndustryFromText(`${pitch} ${offer} ${problem}`),
+    industry: trimOrEmpty(attendeeProfile?.industry) || guessed,
     sub_industry: "",
     track: "lifestyle", // Main Street default
   };
