@@ -1,102 +1,102 @@
 
-# Reimagine the Founder Roadmap
+# Deepen the Founder Roadmap — Customer, Competition, Purpose
 
-The current roadmap reads like a checklist for a strategy partner — terse bullets, tables, and acronyms. For a founder leaving the workshop, it needs to feel like the **single document they'd hand to their co-founder, their spouse, an angel, or a VC** and have it land. That means narrative voice, momentum, encouragement grounded in their actual artifacts, and a much bigger sense of "look what you've built and where it goes."
+Three new chapters folded into the existing roadmap workflow. No new buttons, no new components, no schema changes — just a richer prompt and a dialog that knows how to render the new sections.
 
-This plan changes the **prompt + structure + presentation** of the roadmap. No new feature surface, no new buttons, no schema changes.
+## What the founder will see
 
----
+Inserted into the existing roadmap, in this order:
 
-## What changes for the user
+- **Chapter 2 — Who You're Building For** (new) — a vivid human portrait of the ICP, not a persona table.
+- **Chapter 4 — The Field You're Entering** (new) — the competitive landscape, written as a narrative read of the market, not a feature matrix.
+- **Chapter 10 — Why This Matters** (new) — the purpose chapter: why this venture is worth a founder's years, where it sits in a bigger shift, and what changes in the world if it works.
 
-When they click **Open Founder Roadmap**:
+Existing chapters renumber and shift accordingly. The cover, stat strip, "The One Thing," and Closing Note stay in place.
 
-- The dialog opens with a **cover** — venture name, tagline pulled from value-prop, a one-line verdict ("You are 72% of the way to a fundable seed story"), and a quick stat strip (documents synthesized, hours of work represented, addressable market, target ICP, recommended first-year revenue).
-- The body reads like a **narrative founder playbook**, not a strategy memo: warm, confident, second-person ("Here is what you've built…"), with named ICPs, real prices, real channels, real numbers from their kit woven into prose.
-- Sections feel like **chapters** rather than headers — each opens with a 2–3 sentence narrative lead-in before any list or table.
-- New emotional spine: **What you've built → Why it can win → The fight ahead → Your first 45 days → Your year → How to talk about this → The one thing.**
-- Designed to be printable and handed to an investor — investor-ready language, no "AI-ese," no doc-by-doc rehash, no jargon dumps.
+## New chapter specs (added to the system prompt)
 
----
+### Chapter 2 — Who You're Building For
+Open with one paragraph naming the ICP segment in plain English. Then a vivid 4–6 sentence **day-in-the-life vignette** of one named archetype (job title, context, what their Tuesday morning actually looks like, the moment your product enters their day). Follow with three short labeled blocks:
+- **What they're trying to do** — the job-to-be-done in their words.
+- **What they've already tried** — current workarounds and why those fall short.
+- **What "good" looks like to them** — the outcome they'll pay for.
+Close with a markdown table: **Trigger | Buying moment | Where to find them | What they need to hear first** — 3–4 rows grounded in icp_personas and go_to_market.
 
-## New roadmap structure (rewritten system prompt)
+### Chapter 4 — The Field You're Entering
+Open with one paragraph that reads the market like a strategist would: who's already there, what shape the market is in (fragmented / consolidating / dormant / hot), and where the white space sits. Then:
+- **The players you'll be compared to** — narrative paragraph naming 3–5 real competitors from the kit (competitor_research / market_research), one line each on how they actually compete (price, channel, brand, depth).
+- **Where you win** — markdown table: **Competitor | How they win today | Where they're weak | Your move**. 3–5 rows.
+- **The shift in your favor** — one paragraph on the macro trend, regulation, behavior change, or tech shift that makes this the right moment.
+- **What would have to be true for them to copy you** — 2–3 sentences honestly assessing defensibility.
 
-The H1 stays `# Your Founder Roadmap`, then:
+### Chapter 10 — Why This Matters
+Open with a personal-tone paragraph addressed to the founder by first name about why this work is worth their years. Then:
+- **The bigger shift you're part of** — one paragraph placing the venture inside a larger movement, industry change, or human need.
+- **Who is better off if you win** — a short list (3–5 lines) naming customers, employees, partners, family/community — concrete beneficiaries, not slogans.
+- **The story you'll get to tell in 5 years** — a 3-sentence forward-looking narrative, written as if the founder is recounting it on a stage. Specific, grounded in the kit's pricing/scale assumptions.
+- Close with a single italic line: *This is why it's worth the next 1,000 days.*
 
-1. **Cover & Verdict** — one paragraph that names the venture, what it is in one sentence, the founder by name, and a confident-but-honest verdict ("You are closer than you think, and here's why.").
-2. **The Stat Strip** — small markdown table the dialog renders as a hero band: # of artifacts synthesized, market size, target ICP, recommended Year-1 revenue, recommended raise size, breakeven month.
-3. **Chapter 1 — What You've Built** — narrative synthesis of the workshop's output: the concept in plain English, the wedge, the ICP as a human story, the pricing logic, the GTM motion. Written as prose, not bullets. Ends with a 1-line "Why this matters."
-4. **Chapter 2 — Why This Can Win** — the strategic case, written as if pitching the founder back to themselves. 3 narrative reasons, each anchored to a specific deliverable, each ending with a named proof point.
-5. **Chapter 3 — The Honest Fight Ahead** — the real risks, framed as challenges with named mitigations already in the kit. Encouraging tone: every risk paired with the deliverable that addresses it. No fear-mongering.
-6. **Chapter 4 — Your First 45 Days** — narrative sprint plan. Each horizon (Days 1–7 / 8–21 / 22–35 / 36–45) opens with a 1-paragraph theme ("This is your validation fortnight…") followed by 3–5 specific actions with owner, dependency, success metric, and which deliverable to pull from. Ends with **"By Day 45, you will have…"** — a confident, bolded outcomes list.
-7. **Chapter 5 — Your First Year** — month-by-month, but grouped into 3 named phases ("Validate," "Build," "Compound") each with a paragraph of narrative before the month list. Picks up exactly from Day-45 exit criteria. Each month: theme · 2-3 outcomes · KPI to watch · which deliverable powers it.
-8. **Chapter 6 — Money & Runway, In Plain English** — narrative version of financial reality: starting cash, monthly burn, breakeven month, funding gap, recommended raise size and timing — written as a paragraph a non-finance partner could read, then a tiny supporting table.
-9. **Chapter 7 — How to Talk About This** — the founder's communication kit: a 60-second pitch (verbatim, ready to read aloud), a 1-paragraph version for email, the 3 numbers to memorize, and the 3 questions an investor will ask with suggested answers anchored in the kit. This is the section that makes the doc shareable with VCs.
-10. **Chapter 8 — Your Operating Cadence** — weekly / monthly / quarterly rituals tailored to track and stage, written as habits not bullets.
-11. **Chapter 9 — Read Next** — the 5 most important documents from their kit to read first, each with a 1-line "why now."
-12. **The One Thing** — closing blockquote callout. A single move for the next 30 days that will most change their odds. Encouraging, specific, named.
-13. **Closing Note to the Founder** — 3-sentence personal-tone sign-off by name, acknowledging the work they did in the workshop and setting them moving.
+## Updated chapter order in the prompt
 
-Final line still emits `QUALITY_SCORE: <0-100>` for the meta strip.
+```
+Cover & Verdict
+Stat Strip
+Chapter 1  — What You've Built
+Chapter 2  — Who You're Building For        (NEW)
+Chapter 3  — Why This Can Win
+Chapter 4  — The Field You're Entering      (NEW)
+Chapter 5  — The Honest Fight Ahead
+Chapter 6  — Your First 45 Days
+Chapter 7  — Your First Year
+Chapter 8  — Money & Runway, In Plain English
+Chapter 9  — How to Talk About This
+Chapter 10 — Why This Matters               (NEW)
+Chapter 11 — Your Operating Cadence
+Chapter 12 — Read Next From Your Kit
+The One Thing
+Closing Note
+```
 
-### Tone rules added to the prompt
-- Second person, warm, confident, never patronizing. No "you should." Use "you can," "you've already," "your next move is."
-- Every chapter opens with prose. Bullets/tables support prose, never replace it.
-- Use the founder's first name in Chapter 1 lead and the closing note.
-- Use the company name verbatim throughout.
-- Cite real numbers, real prices, real channels, real ICP names from the kit. Never generic.
-- No "AI-ese": no "leverage synergies," no "in today's fast-paced landscape," no "robust solution."
-- Investor-readable: a stranger should be able to read it and understand the business in 10 minutes.
+The 45-day → 12-month continuity rule still applies (Chapter 6 → Chapter 7). All tone rules, "real names from the kit," and the QUALITY_SCORE trailer are preserved.
 
----
+## Context bundle additions (edge function)
 
-## Dialog presentation upgrades
+To make the new chapters specific, the existing `PROTECTED_TYPES` list (which keeps these docs un-truncated in the prompt) gains the doc types the new chapters lean on:
 
-The dialog stays the same component (`FounderRoadmapDialog.tsx`) — minor visual additions only, no new routes:
+- `competitor_research` / `competitive_landscape` (whichever exist in `venture_document_types`)
+- `market_research`
+- `brand_strategy` / `brand_positioning` (for the purpose chapter voice)
 
-- **Hero cover band** at the top of the scroll area: large venture name, tagline, verdict line, and the stat-strip chips (parsed from the first H2 "Stat Strip" table — rendered as colored chips, then that source table is hidden so it isn't duplicated).
-- **Chapter typography**: H2s render with a small "Chapter N" eyebrow label above them, a thin accent rule, and more generous top spacing. Feels like a book/report, not a memo.
-- **Reading meta strip** under the cover: "≈ N min read · N words · Synthesized from N documents · Generated <date>" — pulled from the existing word count + a count of completed docs passed in (already available via the parent route; pass `documentCount` as a new optional prop).
-- **Export bar** stays where it is. The DOCX/print stylesheet gets the same chapter-eyebrow + accent treatment so the printed PDF and the .docx look like a real workshop deliverable, not a markdown dump.
-- **Sidebar nav** keeps the H2 jump list but labels become "Ch. 1 — What You've Built," etc.
+The bundle already passes all completed docs, so the model has access; protecting these from truncation just guarantees the new chapters get real material to synthesize from. I'll first read `venture_document_types` to use the exact type slugs that exist before editing the protect list.
 
-No new dependencies. All purely presentational, parsed from the same markdown the edge function returns.
+## Dialog changes
 
----
+`FounderRoadmapDialog.tsx` already renders any `Chapter N — Title` H2 with the eyebrow and accent rule, so the three new chapters render correctly with **no code change required**. The sidebar nav auto-picks them up.
+
+Two tiny touches:
+- The `chapterEyebrow` matcher already handles `Chapter N — …`; confirm "Why This Matters" still renders the eyebrow (it will, since the prompt forces the `Chapter 10 — ` prefix).
+- No change to cover/stat-strip parsing.
 
 ## Files touched
 
 - `supabase/functions/venture-generate-roadmap/index.ts`
-  - Replace `SYSTEM_PROMPT` with the new chapter-based, narrative-first prompt and tone rules above.
-  - Add a small instruction to emit the **Stat Strip** as the first H2 with a specific 2-column markdown table the UI can parse (`| Metric | Value |`).
-  - Keep model, budget, context bundle, citation stripping, and quality-score parsing unchanged.
-- `src/components/hub/FounderRoadmapDialog.tsx`
-  - Add cover band + stat-strip chip rendering (parse the first H2 "Stat Strip" table, then strip it from the rendered markdown).
-  - Add "Chapter N" eyebrow label to H2 headings (skip for "Stat Strip" and the closing "The One Thing"/"Closing Note").
-  - Add `documentCount?: number` prop and render the reading meta line.
-  - Tighten print CSS to mirror the new typography.
-- `src/components/hub/FounderRoadmapCard.tsx`
-  - Pass `documentCount` (already known from the hub's completed-docs list) into the dialog.
-  - Tiny copy refresh on the empty-state card to set expectations ("A narrative founder playbook synthesized from your entire workshop — designed to share with co-founders and investors.") — no layout change.
+  - Rewrite `SYSTEM_PROMPT` to insert the three new chapters and renumber the rest. Tone rules, format rules, QUALITY_SCORE trailer unchanged.
+  - Extend `PROTECTED_TYPES` with the competitor/market/brand doc-type slugs that actually exist (verified against `venture_document_types` first).
 
-No DB migration. No new edge function. No new component files. No new routes.
-
----
+No other files change. No migration. No new components. No card copy change.
 
 ## Verification
 
-1. On a snapshot with a completed kit, click **Generate** → wait for `complete`.
-2. Open the dialog and confirm: cover band renders with venture name + verdict, stat-strip chips appear (and the source table is not duplicated below), chapters have eyebrow labels, prose lead-ins precede every list/table.
-3. Spot-check Chapter 1, 4, 7 for: founder's first name used, real ICP name, real prices, no generic phrases, no doc-by-doc rehash.
-4. Confirm 45-day "By Day 45, you will have…" exit list flows directly into Chapter 5 Month 2.
-5. Export to `.docx` and Print → confirm both render the chapter typography cleanly.
-6. Regenerate → new content replaces old.
-
----
+1. Regenerate the roadmap on the current snapshot.
+2. Open the dialog and confirm 15 H2 sections including the three new chapters at positions 2, 4, and 10, with eyebrow labels rendered.
+3. Spot-check **Chapter 2** for a real ICP vignette (named role, Tuesday-morning specifics, not generic).
+4. Spot-check **Chapter 4** for 3–5 real competitor names from the kit and a populated "Where you win" table.
+5. Spot-check **Chapter 10** for the founder's first name and a concrete "in 5 years" story tied to real numbers.
+6. Confirm the 45-day → 12-month continuity (Chapter 6 → Chapter 7) still holds.
+7. Export to .docx and Print → all three new chapters render cleanly.
 
 ## Out of scope
 
-- No new schema columns, no new tables.
-- No new "share with investor" link/feature — the doc itself is the artifact.
-- No live editing or feedback-driven regeneration.
-- No PDF generation server-side (browser Print remains the path).
+- No new chapters beyond these three.
+- No new "share with customer" or "share with investor" flows.
+- No schema changes, no new edge function, no new component files.
