@@ -16,6 +16,7 @@ import {
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroBg from "@/assets/hero-bg.png";
+import atlSeal from "@/assets/atl-founder-friendly-seal.svg";
 import {
   ArrowRight,
   Calendar,
