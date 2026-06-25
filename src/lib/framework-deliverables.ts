@@ -68,10 +68,10 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     name: "Foundation",
     intro: "The bedrock every defensible startup is built on.",
     items: [
-      { icon: FileText, title: "Executive Summary" },
-      { icon: Eye, title: "Vision & Mission" },
-      { icon: AlertCircle, title: "Problem / Solution Brief" },
-      { icon: Sparkles, title: "Value Proposition" },
+      { icon: FileText, title: "Executive Summary", tooltip: "A one-page snapshot of your startup — what you do, who it's for, how you make money, and why now. Hand it to a banker, partner, or future hire and they'll understand the business in 60 seconds flat." },
+      { icon: Eye, title: "Vision & Mission", tooltip: "The north-star statement that keeps every decision pointed the same direction. You'll stop chasing every shiny idea, say no faster, and rally future teammates and customers around a story they actually want to be part of." },
+      { icon: AlertCircle, title: "Problem / Solution Brief", tooltip: "A crisp account of the painful problem you solve and exactly how your offer removes it. You'll talk about your business in plain language that makes customers nod, buy faster, and tell their friends without you scripting it." },
+      { icon: Sparkles, title: "Value Proposition", tooltip: "The single sentence that explains why a customer should pick you over every alternative — including doing nothing. Drop it on your website, in your pitch, on your business card, and watch conversion and referrals climb immediately." },
     ],
   },
   {
@@ -79,11 +79,11 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     name: "Strategy",
     intro: "How you win — and how you compound the lead.",
     items: [
-      { icon: BarChart3, title: "Market Analysis" },
-      { icon: Users, title: "Customer Personas" },
-      { icon: Crosshair, title: "Competitive Positioning" },
-      { icon: Rocket, title: "Go-to-Market Plan" },
-      { icon: MessageSquare, title: "Brand & Messaging" },
+      { icon: BarChart3, title: "Market Analysis", tooltip: "A grounded read of how big the opportunity really is in your city, category, and price band. You'll stop guessing if demand is real and start sizing spend, hiring, and pricing decisions with actual numbers behind you." },
+      { icon: Users, title: "Customer Personas", tooltip: "Vivid profiles of the two or three people most likely to buy — their pain, budget, vocabulary, and buying triggers. Marketing stops being random; every ad, email, and conversation lands with someone you can picture by name." },
+      { icon: Crosshair, title: "Competitive Positioning", tooltip: "An honest map of who else is in the ring and the wedge only you can own. You'll stop competing on price, win the comparison conversation, and give customers a reason to choose you that competitors can't copy." },
+      { icon: Rocket, title: "Go-to-Market Plan", tooltip: "The exact sequence of channels, offers, and moves that get you from zero to your first paying customers. No more wondering what to do Monday — you walk out with the first ninety days mapped step by step." },
+      { icon: MessageSquare, title: "Brand & Messaging", tooltip: "The core message, tone, and proof points that make your brand feel like one voice everywhere. Your site, social, sales calls, and packaging finally line up — and customers start describing you the way you want to be described." },
     ],
   },
   {
@@ -91,10 +91,10 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     name: "Operations",
     intro: "What you build, sell, and ship — week after week.",
     items: [
-      { icon: Map, title: "Product Roadmap" },
-      { icon: Settings, title: "Operating Plan" },
-      { icon: Handshake, title: "Sales Playbook" },
-      { icon: Megaphone, title: "Marketing Plan" },
+      { icon: Map, title: "Product Roadmap", tooltip: "A clear sequence of what you'll launch, in what order, over the next twelve months. You'll stop building features no one asked for, ship the things that drive revenue first, and have a calendar customers can trust." },
+      { icon: Settings, title: "Operating Plan", tooltip: "The week-by-week workflow that turns your offer into something you can deliver reliably. You'll stop reinventing every order, free up hours each week, and have something a future hire can actually be trained to run." },
+      { icon: Handshake, title: "Sales Playbook", tooltip: "A repeatable script — discovery questions, objections, asks, closes — that moves a stranger to a signed deal. Close more conversations, stop discounting under pressure, and bring on help knowing the system will close without you." },
+      { icon: Megaphone, title: "Marketing Plan", tooltip: "Your channels, monthly spend, content cadence, and the metrics that tell you what's working. Marketing stops being a guessing game; you spend dollars where they return dollars and quietly turn off everything that doesn't." },
     ],
   },
   {
@@ -102,11 +102,11 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     name: "Finance",
     intro: "The numbers investors, banks, and you can trust.",
     items: [
-      { icon: LineChart, title: "Financial Model" },
-      { icon: Calculator, title: "Unit Economics" },
-      { icon: Banknote, title: "Funding Strategy" },
-      { icon: ClipboardList, title: "Budget & Pro Forma" },
-      { icon: Presentation, title: "Pitch Deck Outline" },
+      { icon: LineChart, title: "Financial Model", tooltip: "A twelve-month P&L and cash flow you can defend to a banker, partner, or yourself. You'll see exactly when cash gets tight, what a slow month does, and the few levers that actually change the trajectory." },
+      { icon: Calculator, title: "Unit Economics", tooltip: "The math on what one customer truly costs to win and what they pay back over time. You'll price with confidence, kill unprofitable offers, and finally know whether spending more on marketing makes you more money or less." },
+      { icon: Banknote, title: "Funding Strategy", tooltip: "A clear-eyed plan for how you'll fund the business — bootstrap, savings, grants, a loan, friends and family, or investors. You'll stop chasing the wrong kind of money and pursue the cheapest capital that actually fits." },
+      { icon: ClipboardList, title: "Budget & Pro Forma", tooltip: "A line-by-line budget and forecast tied to real assumptions about your market and pricing. You'll walk into a bank, an SBA meeting, or a landlord conversation with the document they expect — and be taken seriously immediately." },
+      { icon: Presentation, title: "Pitch Deck Outline", tooltip: "A tight slide-by-slide outline of the story that gets a partner, investor, or first big customer to lean in. You'll stop rebuilding decks from scratch and have a narrative spine you reuse for every important conversation." },
     ],
   },
   {
@@ -114,9 +114,9 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     name: "Governance",
     intro: "The legal and risk scaffolding that keeps you bankable.",
     items: [
-      { icon: Scale, title: "Legal Structure Brief" },
-      { icon: ShieldAlert, title: "Risk Register" },
-      { icon: Landmark, title: "Board & Governance Plan" },
+      { icon: Scale, title: "Legal Structure Brief", tooltip: "A plain-English recommendation on entity, ownership, and the contracts you actually need on day one. You'll set up the business correctly the first time, protect your personal assets, and avoid the legal cleanup bills founders pay later." },
+      { icon: ShieldAlert, title: "Risk Register", tooltip: "An honest list of what could derail the business — and the specific moves that defuse each one. You'll sleep better, get insurance priced right, and stop being blindsided by the predictable problems every small business hits." },
+      { icon: Landmark, title: "Board & Governance Plan", tooltip: "A lightweight structure for advisors, mentors, or partners who hold you accountable and open doors. You'll get smarter outside counsel in the room, make faster decisions, and look credible to banks, investors, and serious customers." },
     ],
   },
   {
@@ -125,11 +125,11 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     bonus: true,
     intro: "An identity worth premium pricing — system, not stickers.",
     items: [
-      { icon: Compass, title: "Brand Strategy Framework" },
-      { icon: MessageCircle, title: "Brand Messaging House" },
-      { icon: Palette, title: "Visual Identity Brief" },
-      { icon: Mic, title: "Brand Voice & Tone Guide" },
-      { icon: BookOpen, title: "Brand Guidelines Book" },
+      { icon: Compass, title: "Brand Strategy Framework", tooltip: "The strategic foundation under your brand — purpose, promise, audience, positioning. Every logo, color, and word downstream has a reason behind it, and you stop redoing your brand every time something feels off." },
+      { icon: MessageCircle, title: "Brand Messaging House", tooltip: "Your headline, supporting messages, and proof — organized so every page, post, and pitch pulls from the same well. You'll write faster, sound consistent everywhere, and stop staring at a blinking cursor wondering what to say." },
+      { icon: Palette, title: "Visual Identity Brief", tooltip: "A clear brief for the logo, colors, type, and visual feel — ready to hand to a designer or an AI tool. You'll skip months of revisions, get an identity you actually love, and look credible from day one." },
+      { icon: Mic, title: "Brand Voice & Tone Guide", tooltip: "How your brand sounds — word choice, rhythm, what to avoid — so anyone writing for you sounds like you. Founders, contractors, and AI tools all produce on-brand copy without you rewriting every sentence yourself." },
+      { icon: BookOpen, title: "Brand Guidelines Book", tooltip: "One document that holds your logo rules, colors, type, voice, and examples in one place. Hand it to any vendor, freelancer, or new hire and they'll produce on-brand work without forty rounds of feedback from you." },
     ],
   },
   {
@@ -138,7 +138,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     bonus: true,
     intro: "The AI-builder prompt that ships your site in a weekend.",
     items: [
-      { icon: Globe, title: "Website PRD (AI-builder prompt)" },
+      { icon: Globe, title: "Website PRD (AI-builder prompt)", tooltip: "A complete product requirements document — pages, copy, sections, calls to action — written so an AI builder can ship your site in a weekend. You'll skip the $20K agency quote and launch a real revenue-ready website fast." },
     ],
   },
   {
@@ -147,16 +147,17 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     bonus: true,
     intro: "The distribution engine that earns attention on repeat.",
     items: [
-      { icon: Share2, title: "Social Media Audit & Setup" },
-      { icon: Layers, title: "Content Strategy & Pillars" },
-      { icon: CalendarDays, title: "90-Day Content Calendar" },
-      { icon: PartyPopper, title: "Launch Content Kit" },
-      { icon: Heart, title: "Community Engagement Playbook" },
-      { icon: Star, title: "Influencer & Partnership Brief" },
-      { icon: Target, title: "Paid Ads Starter Pack" },
+      { icon: Share2, title: "Social Media Audit & Setup", tooltip: "A clean review of your current accounts plus the right handles, bios, and links across the platforms your customers actually use. You'll show up looking professional everywhere — and stop losing customers to a stale profile." },
+      { icon: Layers, title: "Content Strategy & Pillars", tooltip: "Three to five content themes that consistently attract your buyer and reinforce your positioning. You'll stop posting random updates, build a recognizable voice, and have a topic to write about every single time you sit down." },
+      { icon: CalendarDays, title: "90-Day Content Calendar", tooltip: "Ninety days of post ideas, hooks, and formats mapped out so you never stare at a blank calendar again. Show up consistently, build an audience that actually converts, and free hours every week from on-the-fly content decisions." },
+      { icon: PartyPopper, title: "Launch Content Kit", tooltip: "A ready-to-publish set of announcement posts, captions, emails, and graphics for your opening week. You'll launch loud instead of quietly, give friends and family something easy to share, and turn day one into real traction." },
+      { icon: Heart, title: "Community Engagement Playbook", tooltip: "The simple rules and templates for replies, DMs, reviews, and customer moments that turn followers into fans. You'll spend less time agonizing over what to say and build the kind of word-of-mouth that no ad budget can buy." },
+      { icon: Star, title: "Influencer & Partnership Brief", tooltip: "A short brief you can send to local influencers, complementary brands, or community partners. You'll unlock collaborations that put you in front of warm audiences for free — instead of paying for cold ads to strangers who don't know you." },
+      { icon: Target, title: "Paid Ads Starter Pack", tooltip: "A starter set of ad targets, hooks, and budgets tuned to your offer and your buyer. You'll launch your first paid campaign without burning rent money, learn fast what converts, and scale only what actually pays back." },
     ],
   },
 ];
+
 
 // Flat alias for surfaces that just need the full list of titles.
 export const FRAMEWORK_DELIVERABLES: FrameworkDeliverable[] =
