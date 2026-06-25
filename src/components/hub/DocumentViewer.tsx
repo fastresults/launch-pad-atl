@@ -327,6 +327,19 @@ export function DocumentViewer({
     a.click();
     URL.revokeObjectURL(url);
   };
+  const onDownloadDocx = async () => {
+    try {
+      const blob = await markdownToDocxBlob(title, content);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${doc?.document_type}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Word export failed");
+    }
+  };
   const onPrint = () => {
     const node = document.getElementById("doc-viewer-article");
     if (!node) return;
