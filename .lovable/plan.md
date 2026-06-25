@@ -1,67 +1,45 @@
-# Admin: View a member's dashboard
+# Document export + New Yorker-style hero image prompt
 
-## Problem
-On `/admin/members` there's no way for an admin to see what a given member sees in their dashboard (profile, ventures/hub, documents, deliverables). Today admins can only Grant/Lock Hub, Pause, or Reject.
+Two independent changes to the venture document viewer.
 
-## Recommendation
-Add a **read-only "View dashboard"** action per row that opens an admin-scoped mirror of that member's dashboard at `/admin/members/$userId/view`. This is safer and faster than true session impersonation:
+## 1. Add .docx export alongside .md and Print/PDF
 
-- No auth/session swap, no risk of leaving an admin "logged in as" someone.
-- Reuses existing dashboard components; data is fetched server-side with admin privileges.
-- Clearly badged as an admin view so it can't be confused with the member's real session.
+Today the viewer header has **Copy**, **.md**, and **Print / PDF**. Add a fourth action: **.docx** that downloads a Microsoft Word file of the document content (no hero image — purely the markdown body, same scope as the .md export). Copy and Print/PDF stay as-is.
 
-(True impersonation — minting a session for another user — is possible but requires service-role auth-admin calls and a session swap UX; recommend deferring unless you specifically need to *act* as the member.)
+**Approach:** convert the document's markdown to a DOCX in the browser using a small, well-supported lib so we don't need a new edge function. Two viable libs:
+- **`docx` (docx-js)** — lower-level builder. We'd parse markdown to AST (via the already-installed `remark-gfm` + `unified`/`remark-parse`) and emit `Paragraph`/`Heading`/`Table`/`TextRun` nodes. Highest fidelity, headings/lists/tables/bold/italic/links all preserved.
+- **`html-docx-js` / `html-to-docx`** — render markdown to HTML (we already do this with `ReactMarkdown`) then convert HTML → DOCX. Simpler, smaller diff, but table styling is less reliable.
 
-## UX
+**Recommended:** `docx` + a small markdown→docx mapper. We already render markdown server-side-style with `react-markdown`; for export we parse it once with `unified` and walk the AST. Pays off because the document set includes PRDs, plans, calendars — all heavy on tables and headings.
 
-On each member row in `/admin/members`, add a **"View dashboard"** button (ghost/outline, leftmost of the action group, with an `Eye` icon).
+**Wiring:**
+- New file `src/lib/markdown-to-docx.ts` — pure function `markdownToDocxBlob(title, markdown): Promise<Blob>`.
+- `src/components/hub/DocumentViewer.tsx` — add `onDownloadDocx` handler next to `onDownloadMd`, render a new `<Button>` with `FileText` icon and label `.docx`. File name `${doc.document_type}.docx`, mime `application/vnd.openxmlformats-officedocument.wordprocessingml.document`.
+- Add `docx` to `package.json`.
 
-Clicking it navigates to `/admin/members/$userId/view`, which renders:
+**Out of scope (won't do unless asked):**
+- Embedding the hero image into the DOCX.
+- DOCX styling that matches the in-app dark theme (Word defaults: black on white, sensible heading sizes).
+- Server-side rendering (no edge function — runs in the browser, no extra cost or latency).
 
-- Sticky **admin banner** at top: `Viewing as {name} ({email}) — read-only` + "Exit view" button back to `/admin/members`.
-- Tabbed layout mirroring the member dashboard sections:
-  1. **Profile** — `attendee_profiles`, `attendee_founder_profile`, `member_intakes`
-  2. **Hub / Ventures** — list of `venture_snapshots` for that user; clicking one opens the existing hub view (including the DocumentViewer with hero images) in read-only mode
-  3. **Documents** — `venture_documents` across snapshots
-  4. **Deliverables** — `attendee_deliverables` + revisions
-  5. **Goals / Brief / Filing** — quick summary cards
-- All write actions (buttons, inputs) disabled; any mutation hooks short-circuit when `adminViewMode === true`.
+## 2. New Yorker-style hero image prompt
 
-## Technical
+Current prompt in `supabase/functions/venture-document-image/index.ts` (`buildVisualPrompt`) asks for "cinematic editorial illustration … metaphor-rich … soft cinematic lighting" — that's what's producing the glowing-orb / robot-arms / sci-fi 3D renders you're seeing. Replace with a prompt that explicitly anchors on **New Yorker editorial illustration** language: hand-drawn feel, limited palette, conceptual, witty, restrained, no 3D render, no neon.
 
-### Route
-- New file: `src/routes/_authenticated/_admin/admin.members.$userId.view.tsx` (TanStack Router; sits inside the existing `_admin` guard so only admins can hit it).
+**New style block** (replaces lines 57–58 of `buildVisualPrompt`):
 
-### Data access
-Two options — pick based on existing RLS:
+> Style: New Yorker magazine editorial illustration. Hand-drawn conceptual artwork with confident ink linework and flat, painterly gouache/watercolor shading. Limited, muted, corporate palette (cream paper background, soft navy, muted ochre, brick red, sage). Witty business metaphor — recognizable real-world objects (briefcases, charts on paper, hands, office plants, ladders, doors, paper boats, etc.) arranged to illustrate the concept. Clean negative space, single clear focal point, slightly off-center composition. Sophisticated and understated — feels like it belongs on the contents page of a serious magazine.
+>
+> STRICT RULES: NO 3D render, NO photorealism, NO neon, NO glowing particles, NO holograms, NO robot arms, NO sci-fi imagery, NO purple/cyan glow effects, NO text, NO words, NO letters, NO numbers, NO logos, NO watermarks, NO UI mockups, NO charts with data. 16:9 horizontal composition.
 
-1. **Preferred:** add admin-read RLS policies (using `public.is_admin(auth.uid())`) to the member-owned tables that don't already have them: `attendee_profiles`, `attendee_founder_profile`, `attendee_goals`, `attendee_business_brief`, `attendee_filing_info`, `attendee_deliverables`, `deliverable_revisions`, `attendee_documents`, `member_intakes`, `venture_snapshots`, `venture_documents`. Then the admin route queries directly from the client with `eq('user_id', targetUserId)`.
-2. **Alternative:** add an edge function `admin-member-view` that takes `{ userId }`, verifies caller is admin via JWT + `is_admin`, and returns the aggregated payload using the service role. Use this if you don't want to broaden RLS.
+Also drop the `mood` line when `brandTokens.mood` contains words like "futuristic", "tech", "cinematic" — those push the model back toward the current sci-fi look. Simpler: stop passing `mood` and `colors` into the visual prompt at all for the hero image, since brand color tokens here ("electric purple", "neon cyan", etc.) are exactly what's producing the look the user doesn't want. Keep `companyName` and `industry` for relevance.
 
-Recommend **option 1** — cleaner, no new function, and the `is_admin` helper already exists.
+**Optional:** add a `style: "new_yorker" | "abstract"` field on the function input so we can A/B later, defaulting to `new_yorker`. Skip unless you want it now.
 
-### Read-only enforcement
-- Add a small `AdminViewContext` (`{ viewingUserId, isAdminView }`) provided by the route.
-- Existing dashboard components read it via hook; when `isAdminView`, hide action buttons and pass `readOnly` to the DocumentViewer / hub views.
-- For hub snapshot viewing, reuse `dashboard/hub.$snapshotId.tsx` rendering by extracting its body into a `HubSnapshotView` component that takes `{ snapshotId, userId, readOnly }`, then render it inside the admin route.
-
-### Hero images
-Admin signed-URL fetch in `DocumentViewer` will work as-is once the storage RLS includes an admin-read clause: add policy on `storage.objects` for `bucket_id = 'venture-doc-images' AND public.is_admin(auth.uid())`.
-
-### Members list change
-In `src/routes/_authenticated/_admin/admin.members.tsx`, add `<Button variant="outline" size="sm" asChild><Link to="/admin/members/$userId/view" params={{ userId: m.user_id }}><Eye /> View</Link></Button>` to each row's action group (all tabs, not just Approved).
+**Regeneration:** existing images aren't auto-replaced. The viewer's hover **Regenerate** button (already wired with `force: true`) will produce the new style on demand. Users can also delete `hero_image_path` rows to force regen on next view — not necessary for this change.
 
 ## Files touched
-- New: `src/routes/_authenticated/_admin/admin.members.$userId.view.tsx`
-- New: `src/components/admin/AdminViewBanner.tsx`
-- New: `src/components/admin/AdminViewContext.tsx`
-- New: `src/components/hub/HubSnapshotView.tsx` (extracted from `dashboard/hub.$snapshotId.tsx`)
-- Edit: `src/routes/_authenticated/_admin/admin.members.tsx` (add View button)
-- Edit: `src/components/hub/DocumentViewer.tsx` (respect `readOnly`)
-- Edit: `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` (delegate to `HubSnapshotView`)
-- Migration: admin-read RLS policies on member-owned tables + `venture-doc-images` storage bucket
-
-## Out of scope
-- True session impersonation / acting as the member
-- Editing member data from the admin view
-- Audit log of admin views (can add later: `admin_view_log` table with `admin_id`, `target_user_id`, `viewed_at`)
+- New: `src/lib/markdown-to-docx.ts`
+- Edit: `src/components/hub/DocumentViewer.tsx` (new button + handler)
+- Edit: `package.json` (add `docx`)
+- Edit: `supabase/functions/venture-document-image/index.ts` (`buildVisualPrompt` only)
