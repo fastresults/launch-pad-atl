@@ -203,7 +203,7 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
               <div className="text-xs font-medium text-muted-foreground">Red-team findings</div>
               <ul className="mt-1 list-disc space-y-1 pl-4 text-xs">
                 {(critique.weaknesses ?? []).map((w: any, i: number) => (
-                  <li key={i}><b>{w.issue}</b> — <span className="text-muted-foreground">{w.evidence}</span></li>
+                  <li key={i}><b>{w.issue}</b> — <span className="text-foreground/80">{w.evidence}</span></li>
                 ))}
               </ul>
               {critique.suggested_rewrite && (
