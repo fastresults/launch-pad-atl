@@ -155,32 +155,31 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
   const queryKey = ["media", scope, ownerUserId, folderId, collectionId, mediaType, search];
   const assetsQ = useQuery({
     queryKey,
-    queryFn: () =>
-      listFn({
-        data: {
-          scope,
-          ownerUserId: ownerUserId ?? null,
-          folderId: collectionId ? undefined : folderId,
-          collectionId,
-          mediaType: mediaType === "all" ? null : mediaType,
-          search: search || null,
-        },
-      }),
+    queryFn: () => listFn({ folderId: collectionId ? undefined : folderId ?? undefined }),
   });
 
   const foldersQ = useQuery({
     queryKey: ["media-folders", scope, ownerUserId],
-    queryFn: () => foldersFn({ data: { scope, ownerUserId: ownerUserId ?? null } }),
+    queryFn: () => foldersFn(),
   });
 
   const collectionsQ = useQuery({
     queryKey: ["media-collections", scope, ownerUserId],
-    queryFn: () => collectionsFn({ data: { scope, ownerUserId: ownerUserId ?? null } }),
+    queryFn: () => collectionsFn(),
   });
 
-  const assets = (assetsQ.data?.assets ?? []) as Asset[];
-  const folders = foldersQ.data?.folders ?? [];
-  const collections = collectionsQ.data?.collections ?? [];
+  const allAssets = (assetsQ.data ?? []) as Asset[];
+  const assets = allAssets.filter((a) => {
+    if (mediaType !== "all" && a.media_type !== mediaType) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      const hay = `${a.title ?? ""} ${a.original_name ?? ""} ${(a.tags ?? []).join(" ")}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const folders = (foldersQ.data ?? []) as Array<{ id: string; name: string }>;
+  const collections = (collectionsQ.data ?? []) as Array<{ id: string; name: string }>;
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["media"] });
 
