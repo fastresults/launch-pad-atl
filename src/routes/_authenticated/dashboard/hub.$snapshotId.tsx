@@ -47,10 +47,10 @@ import {
 import { toast } from "sonner";
 
 const STEPS = [
-  { n: 1, key: "concept", label: "Concept" },
-  { n: 2, key: "enriching", label: "Enriching" },
+  { n: 1, key: "concept", label: "Your idea" },
+  { n: 2, key: "enriching", label: "Research" },
   { n: 3, key: "review", label: "Review" },
-  { n: 4, key: "generate", label: "Generate" },
+  { n: 4, key: "generate", label: "Write documents" },
 ];
 
 function statusToStep(status: string): number {
@@ -87,10 +87,10 @@ function Inner() {
   return (
     <div className="space-y-6">
       <Link to="/dashboard/hub" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Back to ventures
+        <ArrowLeft className="h-4 w-4" /> Back to your startups
       </Link>
 
-      <StepIndicator current={step} />
+      {step < 4 && <StepIndicator current={step} />}
 
       {!snap ? (
         <div className="rounded-2xl border border-white/10 bg-card p-8 text-sm text-muted-foreground">Loading…</div>
@@ -328,22 +328,24 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   });
 
   const [viewerDoc, setViewerDoc] = useState<any>(null);
+  const [showHelper, setShowHelper] = useState(true);
+  const [showFailures, setShowFailures] = useState(false);
 
   const genOne = useMutation({
     mutationFn: (documentType: string) => generateDocument({ data: { snapshotId: snapshot.id, documentType } }),
-    onSuccess: () => { toast.success("Document generated"); qc.invalidateQueries({ queryKey: ["hub"] }); },
+    onSuccess: () => { toast.success("Document ready"); qc.invalidateQueries({ queryKey: ["hub"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Generation failed"),
   });
 
   const bulk = useMutation({
     mutationFn: () => bulkGenerate({ data: { snapshotId: snapshot.id } }),
-    onSuccess: () => { toast.success("Bulk generation started"); qc.invalidateQueries({ queryKey: ["hub"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Bulk run failed"),
+    onSuccess: () => { toast.success("We'll keep writing in the background"); qc.invalidateQueries({ queryKey: ["hub"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Couldn't start"),
   });
 
   const cancel = useMutation({
     mutationFn: (jobId: string) => cancelJob({ data: { jobId } }),
-    onSuccess: () => { toast.success("Cancel requested"); qc.invalidateQueries({ queryKey: ["hub"] }); },
+    onSuccess: () => { toast.success("Stopping…"); qc.invalidateQueries({ queryKey: ["hub"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Cancel failed"),
   });
 
@@ -356,11 +358,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const types = typesQ.data ?? [];
   const docs = docsQ.data ?? [];
   const docByType = useMemo(() => new Map(docs.map((d) => [d.document_type, d])), [docs]);
+  const typeByKey = useMemo(() => new Map(types.map((t: any) => [t.type, t])), [types]);
   const completedKeys = new Set(docs.filter((d) => d.status === "complete").map((d) => d.document_type));
-  const totalMin = types.reduce((s, t) => s + (t.estimated_minutes ?? 5), 0);
   const completeCount = completedKeys.size;
+  const total = types.length;
   const job = jobQ.data;
   const jobRunning = job?.status === "running" || job?.status === "queued";
+  const failures = failuresQ.data ?? [];
+
+  const currentDocLabel = job?.current_document_type
+    ? (typeByKey.get(job.current_document_type) as any)?.name ?? job.current_document_type
+    : null;
 
   const categories = useMemo(() => {
     const map = new Map<string, typeof types>();
@@ -371,105 +379,187 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     return Array.from(map.entries());
   }, [types]);
 
+  // ---- Hero state machine ----
+  let heroTitle: string;
+  let heroSub: string;
+  let heroPrimary: { label: string; onClick: () => void; disabled?: boolean; loading?: boolean } | null = null;
+  let heroSecondary: { label: string; onClick: () => void } | null = null;
+  let heroShowProgress = false;
+  let heroDone = false;
+
+  if (jobRunning) {
+    heroTitle = "We're writing your documents…";
+    heroSub = currentDocLabel
+      ? `Working on: ${currentDocLabel}. You can leave this page — we'll keep going in the background.`
+      : "You can leave this page — we'll keep going in the background.";
+    heroShowProgress = true;
+    if (job?.id) {
+      heroSecondary = { label: job.cancel_requested ? "Stopping…" : "Stop", onClick: () => cancel.mutate(job.id) };
+    }
+  } else if (completeCount === 0) {
+    heroTitle = "Let's build your startup kit";
+    heroSub = `We'll write ${total || "your"} documents — strategy, brand, social and launch. It takes a few hours. You can leave and come back any time.`;
+    heroPrimary = {
+      label: "Start writing",
+      onClick: () => bulk.mutate(),
+      disabled: bulk.isPending || !total,
+      loading: bulk.isPending,
+    };
+  } else if (completeCount < total) {
+    heroTitle = "Pick up where you left off";
+    heroSub = `${completeCount} of ${total} documents done. We'll write the rest for you.`;
+    heroShowProgress = true;
+    heroPrimary = {
+      label: "Continue writing",
+      onClick: () => bulk.mutate(),
+      disabled: bulk.isPending,
+      loading: bulk.isPending,
+    };
+  } else {
+    heroTitle = "Your startup kit is ready";
+    heroSub = `All ${total} documents are written. Open any one below to read or download.`;
+    heroDone = true;
+    heroPrimary = {
+      label: "View first document",
+      onClick: () => {
+        const first = docs.find((d: any) => d.status === "complete");
+        if (first) setViewerDoc(first);
+      },
+    };
+    heroSecondary = { label: "Regenerate all", onClick: () => bulk.mutate() };
+  }
+
+  const pct = jobRunning
+    ? (job?.progress_pct ?? 0)
+    : total > 0
+      ? Math.round((completeCount / total) * 100)
+      : 0;
+
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-white/10 bg-card p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-semibold">Generate your documents</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {completeCount} / {types.length} complete · ~{totalMin} min total
-            </p>
+      {/* Hero next-action card */}
+      <div className={`rounded-2xl border p-6 ${heroDone ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/10 bg-card"}`}>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl font-semibold">{heroTitle}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{heroSub}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={() => bulk.mutate()} disabled={bulk.isPending || jobRunning}>
-              {bulk.isPending || jobRunning ? (
-                <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Running…</>
-              ) : (
-                <><Sparkles className="mr-1.5 h-4 w-4" />Generate all {types.length}</>
-              )}
-            </Button>
-            {jobRunning && job?.id && (
-              <Button variant="outline" size="sm" onClick={() => cancel.mutate(job.id)} disabled={cancel.isPending || job.cancel_requested}>
-                <XCircle className="mr-1 h-3 w-3" />{job.cancel_requested ? "Canceling…" : "Cancel"}
+            {heroPrimary && (
+              <Button size="lg" onClick={heroPrimary.onClick} disabled={heroPrimary.disabled}>
+                {heroPrimary.loading ? (
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-1.5 h-4 w-4" />
+                )}
+                {heroPrimary.label}
+              </Button>
+            )}
+            {heroSecondary && (
+              <Button size="sm" variant="ghost" onClick={heroSecondary.onClick}>
+                {heroSecondary.label}
               </Button>
             )}
           </div>
         </div>
-        {job && (
+        {heroShowProgress && (
           <div className="mt-4 space-y-1.5">
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{job.status}{job.current_document_type ? ` · ${job.current_document_type}` : ""}</span>
-              <span>{job.progress_pct ?? 0}%</span>
+              <span>{completeCount} of {total} done</span>
+              <span>{pct}%</span>
             </div>
-            <Progress value={job.progress_pct ?? 0} />
-            {job.error && <p className="text-xs text-red-400">{job.error}</p>}
+            <Progress value={pct} />
           </div>
         )}
-        {(failuresQ.data?.length ?? 0) > 0 && (
-          <details className="mt-4 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-xs">
-            <summary className="cursor-pointer font-medium text-red-200">
-              {failuresQ.data.length} recent failure{failuresQ.data.length === 1 ? "" : "s"}
-            </summary>
-            <ul className="mt-2 space-y-1.5">
-              {failuresQ.data.slice(0, 8).map((f: any) => (
-                <li key={f.id} className="text-red-300/80">
-                  <span className="font-mono text-red-200">{f.document_type}</span> — {f.error}
-                </li>
-              ))}
-            </ul>
-          </details>
+        {failures.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowFailures((v) => !v)}
+            className="mt-3 inline-flex items-center gap-1 text-xs text-amber-300 hover:text-amber-200"
+          >
+            <AlertCircle className="h-3 w-3" />
+            {failures.length} document{failures.length === 1 ? "" : "s"} need another try
+          </button>
+        )}
+        {showFailures && failures.length > 0 && (
+          <ul className="mt-2 space-y-1 rounded-lg border border-amber-500/20 bg-amber-500/5 p-2 text-xs text-amber-100/80">
+            {failures.slice(0, 6).map((f: any) => {
+              const t = typeByKey.get(f.document_type) as any;
+              return <li key={f.id}><span className="font-medium">{t?.name ?? f.document_type}</span> — {f.error}</li>;
+            })}
+          </ul>
         )}
       </div>
 
-      <BrandStudio snapshot={snapshot} />
-      <SocialStudio snapshot={snapshot} />
+      {showHelper && (
+        <div className="flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-card/40 px-4 py-2 text-xs text-muted-foreground">
+          <span>This page writes your full startup kit. Hit one button and we'll do the rest — you can read each document as it finishes.</span>
+          <button type="button" onClick={() => setShowHelper(false)} className="text-muted-foreground hover:text-foreground">✕</button>
+        </div>
+      )}
 
-
+      {/* Document list */}
+      <div className="space-y-1">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your documents</h3>
+        <p className="text-xs text-muted-foreground">Read each one as it's ready, or generate them one at a time.</p>
+      </div>
 
       {categories.map(([cat, items]) => (
         <section key={cat} className="space-y-3">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{cat}</h3>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">{cat}</h4>
           <div className="grid gap-3 md:grid-cols-2">
             {items.map((t) => {
               const d = docByType.get(t.type);
-              const depsMet = (t.dependencies ?? []).every((dep: string) => completedKeys.has(dep));
+              const deps = (t.dependencies ?? []) as string[];
+              const depsMet = deps.every((dep) => completedKeys.has(dep));
               const status = d?.status ?? "pending";
-              const Icon = status === "complete" ? CheckCircle2 : depsMet ? Circle : Lock;
-              const tone = status === "complete" ? "text-emerald-400" : depsMet ? "text-foreground" : "text-muted-foreground";
-              const generating = status === "generating" || genOne.isPending && genOne.variables === t.type;
+              const isComplete = status === "complete";
+              const generating = status === "generating" || (genOne.isPending && genOne.variables === t.type);
+              const Icon = isComplete ? CheckCircle2 : depsMet ? Circle : Lock;
+              const tone = isComplete ? "text-emerald-400" : depsMet ? "text-foreground" : "text-muted-foreground";
+
+              let statusLine: string;
+              if (isComplete) statusLine = "Ready to read";
+              else if (generating) statusLine = "Writing now…";
+              else if (status === "failed") statusLine = "Needs another try";
+              else if (!depsMet) {
+                const missing = deps.find((dep) => !completedKeys.has(dep));
+                const missingLabel = missing ? ((typeByKey.get(missing) as any)?.name ?? missing) : "earlier documents";
+                statusLine = `Waiting on ${missingLabel}`;
+              } else statusLine = "Not started yet";
+
               return (
                 <div key={t.type} className="rounded-xl border border-white/10 bg-card p-4">
                   <div className="flex items-start gap-2">
                     <Icon className={`mt-0.5 h-4 w-4 ${tone}`} />
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="truncate text-sm font-medium">{t.name}</h4>
-                        {!depsMet && <Badge variant="outline" className="text-[10px]">Locked</Badge>}
-                        {status === "failed" && <Badge variant="destructive" className="text-[10px]">Failed</Badge>}
-                      </div>
+                      <h4 className="truncate text-sm font-medium">{t.name}</h4>
                       <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{t.description}</p>
-                      <div className="mt-1 text-[10px] text-muted-foreground">
-                        ~{t.estimated_minutes} min
-                        {d?.word_count ? ` · ${d.word_count} words` : ""}
-                        {d?.quality_score ? ` · quality ${d.quality_score}` : ""}
-                      </div>
+                      <div className="mt-1 text-[10px] text-muted-foreground">{statusLine} · ~{t.estimated_minutes} min</div>
                     </div>
                   </div>
                   <div className="mt-3 flex gap-2">
-                    <Button
-                      size="sm"
-                      variant={status === "complete" ? "outline" : "default"}
-                      disabled={!depsMet || generating || jobRunning}
-                      onClick={() => genOne.mutate(t.type)}
-                    >
-                      {generating ? (
-                        <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Generating…</>
-                      ) : status === "complete" ? "Regenerate" : (<><Play className="mr-1 h-3 w-3" />Generate</>)}
-                    </Button>
-                    {status === "complete" && d && (
-                      <Button size="sm" variant="ghost" onClick={() => setViewerDoc(d)}>
-                        <Eye className="mr-1 h-3 w-3" /> View
+                    {isComplete ? (
+                      <Button size="sm" onClick={() => setViewerDoc(d)}>
+                        <Eye className="mr-1 h-3 w-3" /> Read
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        disabled={!depsMet || generating || jobRunning}
+                        onClick={() => genOne.mutate(t.type)}
+                        title={!depsMet ? "Finish earlier documents first" : undefined}
+                      >
+                        {generating ? (
+                          <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing…</>
+                        ) : (
+                          <><Play className="mr-1 h-3 w-3" />Generate</>
+                        )}
+                      </Button>
+                    )}
+                    {isComplete && (
+                      <Button size="sm" variant="ghost" onClick={() => genOne.mutate(t.type)} disabled={jobRunning}>
+                        Rewrite
                       </Button>
                     )}
                   </div>
@@ -479,6 +569,23 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
           </div>
         </section>
       ))}
+
+      {/* Bonus tools - deferred */}
+      <details open={completeCount === total && total > 0} className="rounded-2xl border border-white/10 bg-card/40 p-4">
+        <summary className="cursor-pointer list-none">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <div className="text-sm font-semibold">Bonus tools (optional)</div>
+              <div className="text-xs text-muted-foreground">Generate logos, social posts and brand assets once your documents are ready.</div>
+            </div>
+            <span className="text-xs text-muted-foreground">Show / hide</span>
+          </div>
+        </summary>
+        <div className="mt-4 space-y-4">
+          <BrandStudio snapshot={snapshot} />
+          <SocialStudio snapshot={snapshot} />
+        </div>
+      </details>
 
       <DocumentViewer doc={viewerDoc} open={viewerDoc !== null} onOpenChange={(o) => !o && setViewerDoc(null)} />
     </div>

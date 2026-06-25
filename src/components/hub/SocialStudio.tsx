@@ -44,16 +44,17 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
 
       {platformMatrix.length > 0 && (
         <div>
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Platform fit</div>
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Where to post</div>
           <div className="mt-1 flex flex-wrap gap-1.5">
             {platformMatrix.map((p) => (
               <a
                 key={p.name}
                 href={`https://namechk.com/?q=${encodeURIComponent((snapshot.company_name || "").replace(/\s+/g, ""))}`}
                 target="_blank" rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-background/40 px-2 py-0.5 text-[11px] hover:bg-white/5"
+                title={`${p.recommendation === "Yes" ? "Recommended" : p.recommendation === "Maybe" ? "Worth trying" : "Skip for now"}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-background/40 px-2 py-0.5 text-[11px] hover:bg-white/5"
               >
-                <Badge variant="outline" className={`text-[9px] ${recColor(p.recommendation)}`}>{p.recommendation}</Badge>
+                <span className={`h-2 w-2 rounded-full ${dotColor(p.recommendation)}`} />
                 <span>{p.name}</span>
                 <ExternalLink className="h-2.5 w-2.5 text-muted-foreground" />
               </a>
@@ -101,6 +102,12 @@ function recColor(rec: string) {
   if (/yes/i.test(rec)) return "border-emerald-500/40 text-emerald-300";
   if (/maybe/i.test(rec)) return "border-amber-500/40 text-amber-300";
   return "border-white/10 text-muted-foreground";
+}
+
+function dotColor(rec: string) {
+  if (/yes/i.test(rec)) return "bg-emerald-400";
+  if (/maybe/i.test(rec)) return "bg-amber-400";
+  return "bg-muted-foreground/40";
 }
 
 // Very loose markdown parser — pulls "| Platform | Yes/Maybe/Skip | ..." style tables.
