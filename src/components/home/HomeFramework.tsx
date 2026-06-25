@@ -53,14 +53,10 @@ function Hero() {
       />
       <div className="absolute inset-0 bg-background/65" />
       <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-24 lg:py-32">
-        <div className="mb-5 flex flex-col flex-wrap items-start gap-2 sm:flex-row sm:items-center">
-          <p className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white md:text-sm md:tracking-[0.2em]">
-            <Star className="size-3.5 fill-current" /> Atlanta's most founder-friendly accelerator
-          </p>
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white/85 md:text-sm md:tracking-[0.2em]">
-            <Sparkles className="size-3.5" /> Built for first-time founders · {WORKSHOP_PRICE_LABEL}
-          </p>
-        </div>
+        <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white md:text-sm md:tracking-[0.2em]">
+          <Star className="size-3.5 fill-current" /> Atlanta's most founder-friendly accelerator
+        </p>
+
 
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
           The strategic foundation every startup needs —{" "}
