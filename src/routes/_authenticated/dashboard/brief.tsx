@@ -19,7 +19,10 @@ import { BlockCheckpoint } from "@/components/brief/BlockCheckpoint";
 import { BriefReview } from "@/components/brief/BriefReview";
 import { FounderBlock } from "@/components/brief/FounderBlock";
 import { MarketBlock } from "@/components/brief/MarketBlock";
-import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { BriefPrefillDropzone } from "@/components/brief/BriefPrefillDropzone";
+import { BriefPrefillReview } from "@/components/brief/BriefPrefillReview";
+import type { BriefPrefillResponse } from "@/lib/brief.functions";
+import { ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -46,6 +49,10 @@ export default function BriefWizard() {
   const [checkpointBlock, setCheckpointBlock] = useState<BriefBlock | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [editingFromReview, setEditingFromReview] = useState(false);
+  const [prefillData, setPrefillData] = useState<BriefPrefillResponse | null>(null);
+  const [prefillOpen, setPrefillOpen] = useState(false);
+  const [prefillDismissed, setPrefillDismissed] = useState(false);
+  const [showPrefillDialog, setShowPrefillDialog] = useState(false);
 
   useEffect(() => {
     if (!data?.brief) return;
@@ -244,6 +251,15 @@ export default function BriefWizard() {
         />
       ) : (
         <>
+          {answeredCount < 4 && !prefillDismissed && (
+            <div className="mt-8">
+              <BriefPrefillDropzone
+                onSuggestions={(r) => { setPrefillData(r); setPrefillOpen(true); }}
+                onDismiss={() => setPrefillDismissed(true)}
+              />
+            </div>
+          )}
+
           <div className="mt-10 space-y-6">
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight leading-tight">
               {current.label}
@@ -260,6 +276,16 @@ export default function BriefWizard() {
               multiline={current.multiline}
               context={current.label}
             />
+
+            {(answeredCount >= 4 || prefillDismissed) && (
+              <button
+                type="button"
+                onClick={() => setShowPrefillDialog(true)}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Sparkles className="h-3.5 w-3.5" /> Have existing docs? Pre-fill from them →
+              </button>
+            )}
           </div>
 
           <div className="mt-10 flex items-center justify-between gap-3">
@@ -313,6 +339,31 @@ export default function BriefWizard() {
           </div>
         </>
       )}
+
+      {/* Dialog-mode dropzone for users who already started typing */}
+      {showPrefillDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowPrefillDialog(false)}>
+          <div className="w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
+            <BriefPrefillDropzone
+              onSuggestions={(r) => { setShowPrefillDialog(false); setPrefillData(r); setPrefillOpen(true); }}
+              onDismiss={() => setShowPrefillDialog(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      <BriefPrefillReview
+        open={prefillOpen}
+        data={prefillData}
+        onClose={() => setPrefillOpen(false)}
+        onApplied={(accepted) => {
+          setValues((s) => ({ ...s, ...accepted }));
+          refetch();
+          setIdx(0);
+          setMode("question");
+          setPrefillDismissed(true);
+        }}
+      />
     </div>
   );
 }

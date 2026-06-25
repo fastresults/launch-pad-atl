@@ -1,61 +1,56 @@
-## What I got wrong last time
-I named things by *category* (AI workspace, Library) instead of by *the artifact the founder walks away with*. After reading each route, here's what each page actually delivers — and a label proposal rooted in that, not in tech vocabulary.
+## Goal
+Give founders a faster on-ramp to the Startup Brief: drop in one or more existing documents (deck, one-pager, business plan, notes, recording), and the AI pre-fills all 10 brief questions. The user then just **reviews and edits** each answer instead of writing from scratch.
 
-## What each page actually delivers → proposed label
+## Where it lives
+On `/dashboard/brief`, above the existing wizard. Shown as a dismissible banner **only when the brief is mostly empty** (≥ 7 of the 10 QA fields are blank). Once the user has typed real answers it gets out of the way — they can still re-open it from a small "Have existing docs? Pre-fill from them" link at the bottom of the question card.
 
-### 1. `dashboard/index.tsx` — currently **"Today"**
-**Delivers:** A context-aware home that changes by lifecycle phase — pre-workshop countdown + venue, in-session live block + raise-hand, post-workshop "Day X of 90" with the single next action.
-**Keep:** **Today**
-**Why:** Single-word, accurate, and the page literally changes every day. No better word exists for "your daily home."
+## User flow
+1. Banner card: **"Skip the typing. Drop your deck, one-pager, or notes — we'll fill in the answers."** with a drop zone + "Choose files" button.
+2. Accepted files: **PDF, DOCX, PPTX, TXT, MD, RTF, PNG/JPG (screenshots of slides), MP3/M4A/WAV/WEBM (voice memos)**. Up to **5 files**, **20 MB each** (Lovable upload cap), reject anything else with a clear inline message.
+3. Files upload → progress strip per file (Queued → Extracting → Reading → Done / Failed). Failures are surfaced inline; other files keep going.
+4. When extraction finishes, server calls the AI with the combined text and returns a draft for the **10 QA fields**. Frontend opens a **"Review what we found" sheet** listing all 10 questions side-by-side:
+    - Per question: the AI's suggested answer in an editable textarea, a small **source-snippet quote** ("from deck-v3.pdf, p.4") so the user trusts it, and a per-row **Use / Skip** toggle.
+    - Top actions: **Use all & continue**, **Use selected only**, **Discard**.
+5. Accepting writes each chosen answer through the existing `updateBriefField` server function (same path the wizard already uses) and drops the user on the wizard at **question 1** with the answers already populated, so they can step through and refine. The standard block checkpoints still run.
+6. The two non-QA blocks (Founder, Market) are **not** prefilled — they're separate intake; mention that in the success toast so the user knows there's more to do.
 
-### 2. `dashboard/day.tsx` — currently **"Workshop day"**
-**Delivers:** Pre-workshop orientation — your date, venue, the morning's block-by-block schedule, the "bring four things" checklist, and the two entry paths (Guided vs. Fast venture).
-**Change to:** **Workshop day** (keep) — or **"Your workshop"** if you want it to feel possessive.
-**Why:** "Workshop day" is already accurate; it's about *the day itself* — agenda, venue, what to bring. Don't fix what isn't broken.
+## Technical design
 
-### 3. `dashboard/brief.tsx` — currently **"My startup"**
-**Delivers:** The 10-question voice-or-type wizard that produces *the Brief* — the single source of truth every AI deliverable reads before generating. Has block checkpoints, a completeness score, and unlocks the rest of the system.
-**Change to:** **Startup brief**
-**Why:** The artifact is literally called "the brief" throughout the codebase and the UI ("BriefReview", "BriefCompleteCard", completeness score). "My startup" is a generic noun; "Startup brief" names the deliverable. The brief is also what *unlocks* generation downstream — so the label signals importance.
+### New Edge Function: `supabase/functions/brief-prefill/index.ts`
+- Auth: requires the user's Supabase JWT (same pattern as `venture-extract-concept`, `venture-transcribe`).
+- Body: `multipart/form-data` with up to 5 `files[]`. Server-side guards: count ≤ 5, each ≤ 20 MB, MIME allow-list above.
+- Extraction (per file, server-side, all in the same function to keep one round trip):
+    - PDF → `pdf-parse` (npm:) text extraction.
+    - DOCX → `mammoth` (npm:) `extractRawText`.
+    - PPTX → unzip + read `ppt/slides/*.xml` text nodes (lightweight, no native lib).
+    - TXT/MD/RTF → decode as UTF-8 (strip RTF control words for `.rtf`).
+    - Images (PNG/JPG) → Lovable AI Gateway `google/gemini-2.5-flash` vision with `image_url` content block, prompt: "transcribe all visible text and describe diagrams in plain language."
+    - Audio → Lovable AI Gateway `/v1/audio/transcriptions` with `openai/gpt-4o-mini-transcribe` (the same provider already wired in `venture-transcribe`).
+- Concatenate everything into a `sources` array of `{ filename, page?, text }`.
+- One AI call to **Gemini** (`google/gemini-3-flash-preview`) with AI SDK `Output.object`. Schema = the 10 BRIEF_FIELDS, each `{ answer: string, source_filename: string, source_snippet: string, confidence: "high" | "medium" | "low" }`. Prompt instructs: "Answer each in the founder's voice, ≤ 2 sentences (or the natural length the field calls for); if the docs don't say, return an empty string and confidence 'low'. Never invent facts." Allow empty strings — never fabricate.
+- Response: `{ suggestions: Record<BriefFieldKey, { answer, source_filename, source_snippet, confidence }>, sourceFiles: string[], warnings: string[] }`.
+- Errors: surface 400 (bad file), 413 (too big), 402/429/500 verbatim to the client with a readable message.
 
-### 4. `dashboard/workflow.tsx` — currently **"Plan (25 steps)"**
-**Delivers:** A control panel of **20 AI deliverables across 5 pillars**. The user generates them one-at-a-time or via "Run remaining," sees lock/dependency/in-progress/done state per card, and clicks "View" to read the finished doc.
-**Change to:** **Deliverables**
-**Why:** "Plan (25 steps)" is factually misleading — there is no 25-step plan, and the page is not a plan; it's a generator + viewer for 20 named documents. "Deliverables" matches what the workshop sells ("34 deliverables…") and matches the actual page content. The number-in-parens looked like a debug label.
+### Server client wrapper
+Add `prefillBriefFromDocs(files: File[])` to `src/lib/brief.functions.ts`. Returns the suggestions object. (Multipart POST; reuse the auth helper used by `voice.functions.ts`.)
 
-### 5. `dashboard/hub.index.tsx` — currently **"Founders Hub"**
-**Delivers:** A list of the founder's **ventures** (one card per startup concept). Each card → 34 documents for that concept. Star, archive, restore, delete. "New startup" button starts a new one.
-**Change to:** **Ventures** (preferred) or **Startup concepts**
-**Why:**
-- "Founders Hub" is our internal product name; for a Main Street founder it's a meaningless container word.
-- "Ventures" is what the DB, edge functions, and code call them (`venture-*` everywhere), and it cleanly describes the unit on screen — a list of distinct business concepts. It also disambiguates from #3 (singular brief for *your* startup) and #4 (the 20 workshop deliverables) — this is where you can keep multiple startup *concepts* side-by-side.
-- I want to flag that #3, #4, #5 all touch "startup stuff" and the IA is genuinely overlapping. The label choices above are the most distinct set I can give you without restructuring routes — please confirm if you'd rather we revisit IA.
+### New UI components
+- `src/components/brief/BriefPrefillDropzone.tsx` — banner + native drag/drop using HTML5 `dragenter/over/leave/drop` (no new dependency); shows file pills with per-file status. On success calls `onSuggestions(suggestions)`.
+- `src/components/brief/BriefPrefillReview.tsx` — `Sheet`/`Dialog` listing the 10 questions with editable textareas, source-snippet caption, per-row Use/Skip checkbox, header actions (Use all, Use selected, Discard). On confirm, iterates and calls `updateBriefField` once per accepted field, then closes.
 
-### 6. `dashboard/files.tsx` — currently **"My files"**
-**Delivers:** A 3-tile router → "Made by your AI" (deliverables), "Documents" (PDFs/contracts), "Photos & media" (logos/brand assets). No content of its own.
-**Change to:** **My files** (keep)
-**Why:** It's a navigation shelf, and "My files" maps to what a non-technical founder expects. "Library" sounded nicer but added cognitive load.
+### Wizard integration (`src/routes/_authenticated/dashboard/brief.tsx`)
+- When `mode === "question"` and `answeredCount < 4`, render `<BriefPrefillDropzone />` above the question card.
+- After `<VoiceField />`, render a small text link **"Have existing docs? Pre-fill from them →"** that opens the dropzone in a dialog regardless of `answeredCount`.
+- Suggestion-accept path writes values into local state immediately (so the wizard reflects them), then awaits `refetch()`; on success show `toast.success("We filled in {n} answers — review them and tweak as needed.")`.
 
-### 7. `dashboard/profile.tsx` — currently **"Account"**
-**Delivers:** Three-section intake — **Founder** (you), **Startup** (your company), **Financial** (revenue/burn/runway). Each saves independently. Ends with "Mark intake complete." Intro literally says *"The more we know, the more useful your generated deliverables will be."*
-**Change to:** **Founder profile**
-**Why:** This page has nothing to do with auth/billing/account settings — it's a rich profile that feeds the AI. "Account" sets the wrong expectation; "Founder profile" signals "tell us about you so the output gets sharper" (matching the page's own intro copy).
-
-## Tooltips (~30 words each, grounded in what each page actually does)
-- **Today** — "Your daily check-in. Before workshop day you'll see a countdown and venue; during the workshop, the live block in session; after, your 90-day progress and the next action waiting on you."
-- **Workshop day** — "Your reservation in one place: the date, the venue with directions, the block-by-block morning agenda, the four things to bring, and the two entry paths to choose between when you arrive."
-- **Startup brief** — "Answer ten questions by typing or by voice. The brief becomes the source every deliverable reads from — when it's complete and confirmed, your facilitator's AI can build the rest of your kit."
-- **Deliverables** — "Generate your 20 investor-ready documents across five pillars. Build one at a time or run the remaining batch. Each card shows what's locked, what's queued, what's ready to read."
-- **Ventures** — "Every startup concept you've explored, with its own 34-document workspace. Drop in a URL or describe an idea, then star favorites, archive what's noise, and reopen anything to keep refining."
-- **My files** — "One shelf for everything yours: the documents your AI built for you, the PDFs and contracts you've uploaded, and the brand photos and logos you and your designer keep adding."
-- **Founder profile** — "Tell us about you, your startup, and your numbers — revenue, burn, runway. Every field you fill makes every deliverable sharper. Save each section as you go; finish when it feels right."
-
-## Scope
-One file: `src/routes/_authenticated/dashboard.tsx` — update the `items: NavItem[]` array (new `label` strings + new `tooltip` field) and wrap each menu button in shadcn `Tooltip` (side="right", max-w-xs, delay 200ms). Add a single `TooltipProvider` in `AppSidebar`. No routes, no DB, no copy changes inside destination pages.
+## Out of scope
+- No new database tables. We don't persist the raw uploads; extracted text + suggestions live only in the request/response. If we want history later, that's a follow-up.
+- No changes to the Founder or Market blocks. They stay typed-only for now; surface that in the success toast.
+- No changes to the existing voice mic flow.
 
 ## Verification
-Playwright at 1280×1800: sign in (injected session), open `/dashboard`, hover **Startup brief**, **Deliverables**, **Ventures**, screenshot each, confirm the rich tooltip renders to the right of the sidebar in both expanded and collapsed states.
-
-## Two things I want your call on before I build
-1. **Ventures vs. Startup concepts** for #5 — "Ventures" is shorter and matches the codebase; "Startup concepts" is more plainspoken for a first-time founder. Pick one.
-2. **#3, #4, #5 overlap.** Brief (your one startup) + Deliverables (20 docs for your one startup) + Ventures (separate concepts, 34 docs each). If the dashboard really has two parallel doc-generation systems, no label set will fully fix the confusion — say the word and I'll plan an IA pass next.
+Playwright at 1280×1800 against `/dashboard/brief`:
+1. Drop a small PDF (sample one-pager) into the zone — confirm the per-file pill goes Queued → Extracting → Done, the review sheet opens with 10 editable rows and source snippets, "Use all & continue" fills the wizard, and the progress bar advances.
+2. Drop an unsupported file (`.zip`) — confirm an inline error and no upload attempt.
+3. Drop a 25 MB file — confirm the size guard rejects it inline.
+4. Open the review sheet, deselect a row, accept — confirm only the selected fields populate; the deselected field stays empty in the wizard.
