@@ -27,6 +27,7 @@ import {
   listFailures,
 } from "@/lib/foundersHub.functions";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
+import { TRACKS, getTrack, type TrackKey } from "@/lib/tracks";
 import { ConceptStudio } from "@/components/hub/ConceptStudio";
 import { DocumentViewer } from "@/components/hub/DocumentViewer";
 import { BrandStudio } from "@/components/hub/BrandStudio";
