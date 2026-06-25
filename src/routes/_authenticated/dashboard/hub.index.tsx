@@ -306,6 +306,19 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
                 <Archive className="mr-2 h-3.5 w-3.5" /> Archive
               </DropdownMenuItem>
             )}
+            {isAdmin && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={jobActive}
+                  onSelect={(e) => { if (jobActive) { e.preventDefault(); return; } setConfirmDelete(true); }}
+                  className="text-red-400 focus:text-red-300"
+                  title={jobActive ? "Wait for the active job to finish, then delete" : undefined}
+                >
+                  <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete venture (admin)
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
