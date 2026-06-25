@@ -73,7 +73,7 @@ function Hero() {
           <span className="text-gradient-brand">built in one morning.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          One morning. Twenty deliverables built live for your startup — the positioning, the offer, the 90-day plan — and you walk out ready to execute on Monday. {WORKSHOP_PRICE_LABEL}, yours to keep.{" "}
+          One morning. 34 deliverables built live for your startup — positioning, offer, brand, site, the 90-day plan — and you walk out ready to execute on Monday. {WORKSHOP_PRICE_LABEL}, yours to keep.{" "}
           <span className="font-medium text-white">No upsell in the room.</span>
         </p>
 
