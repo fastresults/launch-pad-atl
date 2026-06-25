@@ -31,6 +31,7 @@ import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { TRACKS, getTrack, type TrackKey } from "@/lib/tracks";
 import { ConceptStudio } from "@/components/hub/ConceptStudio";
 import { DocumentViewer } from "@/components/hub/DocumentViewer";
+import { RewriteFeedbackDialog } from "@/components/hub/RewriteFeedbackDialog";
 import { BrandStudio } from "@/components/hub/BrandStudio";
 import { SocialStudio } from "@/components/hub/SocialStudio";
 import {
