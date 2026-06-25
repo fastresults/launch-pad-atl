@@ -343,15 +343,13 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
     mutationFn: async () => {
       if (!selectedAsset) return;
       await updateFn({
-        data: {
-          id: selectedAsset.id,
-          title: editTitle,
-          description: editDesc,
-          tags: editTags
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean),
-        },
+        id: selectedAsset.id,
+        title: editTitle,
+        description: editDesc,
+        tags: editTags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
       });
     },
     onSuccess: () => {
@@ -361,7 +359,8 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
   });
 
   const removeAsset = useMutation({
-    mutationFn: (id: string) => deleteFn({ data: { id } }),
+    mutationFn: (asset: Asset) =>
+      deleteFn({ id: asset.id, path: asset.storage_path, bucket: asset.storage_bucket }),
     onSuccess: () => {
       toast.success("Deleted");
       setSelectedAsset(null);
