@@ -433,8 +433,8 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
                   <div className="line-clamp-2 text-muted-foreground">{s.card.summary}</div>
                 </div>
                 <div className="flex gap-1">
-                  <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => fold(s.card, s.id)} disabled={run.isPending}>Fold</Button>
-                  <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => dismiss(s.id)} disabled={run.isPending}><X className="h-3 w-3" /></Button>
+                  <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => fold(s.card, s.id)} disabled={isBusy("fold_enhancement", s.id)}>{isBusy("fold_enhancement", s.id) ? "Folding…" : "Fold"}</Button>
+                  <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => dismiss(s.id)} disabled={isBusy("dismiss_enhancement", s.id)}><X className="h-3 w-3" /></Button>
                 </div>
               </div>
             ))}
