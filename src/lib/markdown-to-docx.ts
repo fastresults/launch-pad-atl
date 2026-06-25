@@ -488,8 +488,10 @@ function mdToBlocks(md: string): (Paragraph | Table)[] {
         blocks.push(
           paragraphFromMd(text, {
             spacing: { after: 80, line: 320 },
-            numbering: ol ? { reference: "ol", level: indent } : undefined,
-            bullet: ul ? { level: indent } : undefined,
+            numbering: {
+              reference: ol ? "ol" : "ul-violet",
+              level: indent,
+            },
           }),
         );
         i++;
