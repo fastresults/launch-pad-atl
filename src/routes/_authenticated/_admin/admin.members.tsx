@@ -20,6 +20,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Eye } from "lucide-react";
 
 
 type Tab = "pending" | "approved" | "paused" | "rejected" | "no_intake";
@@ -165,6 +166,11 @@ export default function AdminMembersPage() {
                       )}
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-2">
+                      <Button asChild size="sm" variant="outline">
+                        <Link to={`/admin/members/${m.user_id}/view`}>
+                          <Eye className="mr-1 h-3 w-3" /> View dashboard
+                        </Link>
+                      </Button>
                       {tab === "approved" && (
                         <>
                           <Button
