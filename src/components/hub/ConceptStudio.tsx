@@ -402,11 +402,15 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
                 )}
 
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  <Button size="sm" className="h-7 text-xs" onClick={() => fold(card)} disabled={run.isPending}>
-                    <Sparkles className="mr-1 h-3 w-3" />Fold into concept
+                  <Button size="sm" className="h-7 text-xs" onClick={() => fold(card)} disabled={isBusy("fold_enhancement", card.title)}>
+                    {isBusy("fold_enhancement", card.title)
+                      ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Folding…</>
+                      : <><Sparkles className="mr-1 h-3 w-3" />Fold into concept</>}
                   </Button>
-                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => save(card)} disabled={run.isPending}>
-                    <Bookmark className="mr-1 h-3 w-3" />Save
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => save(card)} disabled={isBusy("save_enhancement", card.title)}>
+                    {isBusy("save_enhancement", card.title)
+                      ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Saving…</>
+                      : <><Bookmark className="mr-1 h-3 w-3" />Save</>}
                   </Button>
                   <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setExpanded(open ? null : id)}>
                     {open ? "Hide details" : "Details"}
