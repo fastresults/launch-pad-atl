@@ -87,10 +87,10 @@ function Inner() {
   return (
     <div className="space-y-6">
       <Link to="/dashboard/hub" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Back to ventures
+        <ArrowLeft className="h-4 w-4" /> Back to your startups
       </Link>
 
-      <StepIndicator current={step} />
+      {step < 4 && <StepIndicator current={step} />}
 
       {!snap ? (
         <div className="rounded-2xl border border-white/10 bg-card p-8 text-sm text-muted-foreground">Loading…</div>
