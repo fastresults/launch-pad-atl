@@ -48,6 +48,7 @@ const HubSnapshot = lazy(() => import("@/routes/_authenticated/dashboard/hub.$sn
 // Admin sub-pages
 const AdminIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.index"));
 const AdminUsers = lazy(() => import("@/routes/_authenticated/_admin/admin.users"));
+const AdminSettings = lazy(() => import("@/routes/_authenticated/_admin/admin.settings"));
 
 const AdminReview = lazy(() => import("@/routes/_authenticated/_admin/admin.review"));
 const AdminRegistrations = lazy(() => import("@/routes/_authenticated/_admin/admin.registrations"));
@@ -137,6 +138,7 @@ export default function App() {
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<AdminIndex />} />
             <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/review" element={<AdminReview />} />
             <Route path="/admin/registrations" element={<AdminRegistrations />} />
             <Route path="/admin/members" element={<AdminMembers />} />

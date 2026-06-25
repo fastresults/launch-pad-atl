@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { VideoTestimonials } from "@/components/home/VideoTestimonials";
+import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
+import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import { useEvent } from "@/lib/use-event";
 import {
   BUILD_LAYER,
@@ -27,12 +30,19 @@ import {
 } from "lucide-react";
 
 export function HomeFramework() {
+  const { data: settings } = useQuery({
+    queryKey: ["site-settings"],
+    queryFn: getPublicSiteSettings,
+    staleTime: 60_000,
+  });
+  const showScroller = settings?.show_business_ideas_scroller !== false;
   return (
     <div className="min-h-screen">
       <SiteHeader />
       <Hero />
       <VideoTestimonials />
       <Framework />
+      {showScroller && <HomeBusinessIdeasScroller />}
       <HonestRoadmap />
       <Facilitator />
       <ServicesTeaser />
