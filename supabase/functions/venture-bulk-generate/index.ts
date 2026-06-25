@@ -176,15 +176,8 @@ async function generateOne(supabase: any, snapshotId: string, documentType: stri
   const baseSystem = `You are an AI venture analyst writing investor-grade documents.
 Produce a single document in clean Markdown. Use ## headings, short paragraphs, bullets.
 Be specific, plausible, actionable. Never use filler like "TBD".
-Target ~600-900 words.
 
-CITATIONS:
-- When a claim comes from the research brief, cite it inline with footnote markers like [^1], [^2], reusing numbers when re-citing the same source.
-- At the very end of the document, before the QUALITY_SCORE line, output a "## Sources" section listing each footnote on its own line: [^1]: https://source-url — short label.
-- If a section has no research support, write the claim plainly without a footnote rather than inventing a source.
-
-After the markdown, on a final line, output exactly:
-QUALITY_SCORE: <0-100 integer>`;
+The "## Executive Summary" section targets ~500-700 words (shorter for brief doc types).${DEEP_DIVE}`;
 
   const baseSystemPrompt = specializedPrompt(documentType) ?? baseSystem;
   const trackTone = snap.track ? TRACK_TONE[snap.track] : null;
