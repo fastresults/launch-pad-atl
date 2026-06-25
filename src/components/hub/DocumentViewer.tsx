@@ -290,6 +290,18 @@ export function DocumentViewer({
   const assessmentComponents = useMemo(() => makeComponents(() => {}), [assessment]);
   const title = titleCase(doc?.document_type ?? "");
   const content = doc?.content ?? "";
+  const printRef = useRef<HTMLDivElement | null>(null);
+
+  const exportContent = useMemo(() => {
+    const hasAssessment =
+      assessment && assessment.trim().length > 0 && assessmentStatus === "complete";
+    if (!hasAssessment) return content;
+    const body = (content ?? "").trimEnd();
+    let extra = assessment!.trim();
+    // Avoid duplicating the canonical H2 heading
+    extra = extra.replace(/^#{1,6}\s*McKinsey[-\s]*Grade\s*Assessment\s*\n+/i, "");
+    return `${body}\n\n---\n\n## McKinsey-Grade Assessment\n\n${extra}\n`;
+  }, [content, assessment, assessmentStatus]);
 
   // Re-hydrate assessment state when the document changes
   useEffect(() => {
