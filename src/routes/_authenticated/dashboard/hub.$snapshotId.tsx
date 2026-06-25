@@ -830,6 +830,16 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       </details>
 
       <DocumentViewer doc={viewerDoc} open={viewerDoc !== null} onOpenChange={(o) => !o && setViewerDoc(null)} />
+      <RewriteFeedbackDialog
+        target={rewriteTarget}
+        onClose={() => setRewriteTarget(null)}
+        onSubmit={(feedback, tags) => {
+          if (rewriteTarget) {
+            genOne.mutate({ documentType: rewriteTarget.type, rewriteFeedback: feedback, rewriteTags: tags });
+          }
+          setRewriteTarget(null);
+        }}
+      />
     </div>
   );
 }
