@@ -238,7 +238,7 @@ function Inner() {
 
   const founderReady = !!(
     founderName.trim() && founderEmail.trim() && city.trim() && region.trim() &&
-    country.trim() && marketScope && industry.trim()
+    country.trim() && marketScope && industry.trim() && !!track
   );
   const canSubmit = businessConcept.trim().length >= 20 && !create.isPending && founderReady &&
     (path === "manual" ? !!companyName.trim() : !!websiteUrl.trim());
