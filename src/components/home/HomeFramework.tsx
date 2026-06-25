@@ -6,6 +6,7 @@ import { VideoTestimonials } from "@/components/home/VideoTestimonials";
 import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import { useEvent } from "@/lib/use-event";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   BUILD_LAYER,
   FOUNDATION_FIRST_REASONS,
