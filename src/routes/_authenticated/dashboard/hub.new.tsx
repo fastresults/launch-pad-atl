@@ -197,9 +197,6 @@ function Inner() {
 
   const draftFromFiles = async () => {
     if (!readyFiles.length || drafting) return;
-    if (businessConcept.trim() && !confirm("Replace what's in the concept field with a fresh draft from your files?")) {
-      return;
-    }
     setDrafting(true);
     try {
       const { data, error } = await supabase.functions.invoke("venture-synthesize-concept", {
@@ -212,63 +209,52 @@ function Inner() {
       const concept = (data?.concept ?? "").trim();
       if (!concept) throw new Error("Empty draft from the model");
 
-      // Always replace concept (user already confirmed above if it was non-empty)
+      // Process = overwrite. The button is the user's explicit "fill the whole form" intent.
       setBusinessConcept(concept);
-      let applied = 1;
+      const filled: string[] = ["business concept"];
 
-      // Helpers — only apply when the target field is empty / still at default
-      const apply = (val: unknown, current: string, setter: (v: string) => void) => {
-        if (typeof val === "string" && val.trim() && !current.trim()) {
+      const setIf = (val: unknown, setter: (v: string) => void, label: string) => {
+        if (typeof val === "string" && val.trim()) {
           setter(val.trim());
-          applied++;
+          filled.push(label);
         }
       };
-      apply(data?.company_name, companyName, setCompanyName);
-      apply(data?.differentiation_statement, diff, setDiff);
-      apply(data?.founder_name, founderName, setFounderName);
-      apply(data?.founder_email, founderEmail, setFounderEmail);
-      apply(data?.founder_phone, founderPhone, setFounderPhone);
-      apply(data?.city, city, setCity);
-      apply(data?.region, region, setRegion);
-      apply(data?.sub_industry, subIndustry, setSubIndustry);
-      if (path === "manual" && typeof data?.website_url === "string" && data.website_url.trim() && !websiteUrl.trim()) {
+      setIf(data?.company_name, setCompanyName, "company name");
+      setIf(data?.differentiation_statement, setDiff, "differentiation");
+      setIf(data?.founder_name, setFounderName, "founder name");
+      setIf(data?.founder_email, setFounderEmail, "founder email");
+      setIf(data?.founder_phone, setFounderPhone, "founder phone");
+      setIf(data?.city, setCity, "city");
+      setIf(data?.region, setRegion, "state / region");
+      setIf(data?.sub_industry, setSubIndustry, "sub-industry");
+      if (path === "manual" && typeof data?.website_url === "string" && data.website_url.trim()) {
         setWebsiteUrl(data.website_url.trim());
-        applied++;
+        filled.push("website");
       }
-      // Country: only override the "United States" default if model says otherwise
-      if (typeof data?.country === "string" && data.country.trim() && (!country.trim() || country === "United States")) {
-        if (data.country.trim() !== country) {
-          setCountry(data.country.trim());
-          applied++;
-        }
+      if (typeof data?.country === "string" && data.country.trim()) {
+        setCountry(data.country.trim());
+        filled.push("country");
       }
-      // Market scope: only override default "local"
       const scope = data?.market_scope;
-      if (scope && ["local", "regional", "national", "international"].includes(scope) && marketScope === "local" && scope !== "local") {
+      if (scope && ["local", "regional", "national", "international"].includes(scope)) {
         setMarketScope(scope);
-        applied++;
+        filled.push("market scope");
       }
-      // Industry: validate against our list
-      if (typeof data?.industry === "string" && data.industry && !industry) {
-        if (INDUSTRIES.some((i) => i.value === data.industry)) {
-          setIndustry(data.industry);
-          applied++;
-        }
+      if (typeof data?.industry === "string" && data.industry && INDUSTRIES.some((i) => i.value === data.industry)) {
+        setIndustry(data.industry);
+        filled.push("industry");
       }
-      // Track: validate, only override default "lifestyle"
-      const validTracks = TRACKS.map((t) => t.key) as string[];
-      if (typeof data?.track === "string" && validTracks.includes(data.track) && track === "lifestyle" && data.track !== "lifestyle") {
-        setTrack(data.track as TrackKey);
-        applied++;
-      }
+      // Track is intentionally left to the user.
 
-      toast.success(`Drafted ${applied} field${applied === 1 ? "" : "s"} from your file${readyFiles.length === 1 ? "" : "s"} — review and edit`);
+      setProcessed(true);
+      toast.success(`Filled ${filled.length} field${filled.length === 1 ? "" : "s"} — pick a Track and review`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't draft from files");
+      toast.error(e instanceof Error ? e.message : "Couldn't process the document");
     } finally {
       setDrafting(false);
     }
   };
+
 
   const create = useMutation({
     mutationFn: () =>
