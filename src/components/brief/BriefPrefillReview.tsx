@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,7 +50,7 @@ export function BriefPrefillReview({
   const [saving, setSaving] = useState(false);
 
   // Reset rows when data changes
-  useMemo(() => { setRows(initial); }, [initial]);
+  useEffect(() => { setRows(initial); }, [initial]);
 
   const update = (i: number, patch: Partial<Row>) =>
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
