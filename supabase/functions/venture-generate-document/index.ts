@@ -121,7 +121,11 @@ CITATIONS:
 After the markdown, on a final line, output exactly:
 QUALITY_SCORE: <0-100 integer reflecting completeness, specificity, and investor-readiness>`;
 
-  const systemPrompt = SPECIAL[documentType] ?? baseSystem;
+  const baseSystemPrompt = SPECIAL[documentType] ?? baseSystem;
+  const trackTone = snap.track ? TRACK_TONE[snap.track] : null;
+  const systemPrompt = trackTone
+    ? `${baseSystemPrompt}\n\n${trackTone}`
+    : baseSystemPrompt;
 
   const founderCard = {
     founder: { name: snap.founder_name, email: snap.founder_email, phone: snap.founder_phone },
@@ -129,6 +133,7 @@ QUALITY_SCORE: <0-100 integer reflecting completeness, specificity, and investor
     market_scope: snap.market_scope,
     industry: snap.industry,
     sub_industry: snap.sub_industry,
+    track: snap.track,
     company_name: snap.company_name,
     website_url: snap.website_url,
   };
