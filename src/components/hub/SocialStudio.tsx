@@ -74,7 +74,11 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
             {weeks.slice(0, 4).map((w) => (
               <details key={w.title} className="rounded-lg border border-white/10 bg-background/40 p-2 text-xs">
                 <summary className="cursor-pointer font-medium">{w.title}</summary>
-                <pre className="mt-1.5 max-h-48 overflow-auto whitespace-pre-wrap text-[11px] text-muted-foreground">{w.body}</pre>
+                <div className="mt-1.5 max-h-72 overflow-auto rounded-md border border-white/5 bg-background/40 p-2">
+                  <div className="prose prose-invert prose-sm max-w-none text-[11px] [&_table]:my-0 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-white/10 [&_th]:bg-white/5 [&_th]:px-2 [&_th]:py-1 [&_th]:text-left [&_td]:border [&_td]:border-white/10 [&_td]:px-2 [&_td]:py-1 [&_td]:align-top [&_p]:my-1">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{w.body}</ReactMarkdown>
+                  </div>
+                </div>
                 <Button size="sm" variant="ghost" className="mt-1 h-6 text-[10px]" onClick={() => copy(w.body)}>
                   <Copy className="mr-1 h-3 w-3" />Copy week
                 </Button>
