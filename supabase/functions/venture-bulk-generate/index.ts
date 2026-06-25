@@ -244,6 +244,7 @@ The "## Executive Summary" section targets ~500-700 words (shorter for brief doc
     quality = Math.max(0, Math.min(100, parseInt(qm[1], 10)));
     raw = raw.replace(/QUALITY_SCORE:\s*\d{1,3}\s*$/i, "").trim();
   }
+  raw = stripCitations(raw);
   const wordCount = raw.split(/\s+/).filter(Boolean).length;
 
   const { data: existing } = await supabase
