@@ -145,8 +145,13 @@ function Framework() {
                   {stage.number}
                 </span>
                 <div>
-                  <h3 className="text-xl font-semibold leading-tight tracking-tight md:text-2xl">
-                    {stage.name}
+                  <h3 className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xl font-semibold leading-tight tracking-tight md:text-2xl">
+                    <span>{stage.name}</span>
+                    {stage.bonus && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white md:text-xs">
+                        <Sparkles className="size-3" /> Bonus
+                      </span>
+                    )}
                   </h3>
                   <p className="mt-1 text-sm text-muted-foreground md:text-base">
                     {stage.intro}
