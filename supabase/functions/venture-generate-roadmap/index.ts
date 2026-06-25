@@ -22,9 +22,14 @@ const PROTECTED_TYPES = new Set([
   EXEC_SUMMARY_TYPE,
   "financial_model",
   "budget_pro_forma",
-  "pricing_strategy",
-  "go_to_market",
-  "icp_personas",
+  "value_proposition",
+  "go_to_market_plan",
+  "customer_personas",
+  "problem_solution",
+  "competitive_positioning",
+  "market_analysis",
+  "vision_mission",
+  "brand_strategy_framework",
 ]);
 
 class GatewayError extends Error {
