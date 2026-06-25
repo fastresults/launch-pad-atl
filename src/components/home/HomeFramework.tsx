@@ -219,7 +219,7 @@ function HonestRoadmap() {
           </div>
         </div>
 
-        {/* Act 2 — What $97 gets you */}
+        {/* Act 2 — What $197 gets you */}
         <div className="mt-12 md:mt-16">
           <div className="rounded-2xl border border-primary/40 bg-card p-6 md:p-8">
             <div className="mb-4 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-primary">

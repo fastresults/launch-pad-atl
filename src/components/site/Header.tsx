@@ -3,6 +3,7 @@ import { Link, NavLink } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
+import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
 import {
   Sheet,
   SheetContent,
@@ -24,7 +25,7 @@ const nav = [
 export function SiteHeader() {
   const { isAuthenticated, isAdmin, signOut } = useAuth();
   const [open, setOpen] = useState(false);
-  const ctaFull = "Reserve seat — $97";
+  const ctaFull = `Reserve seat — ${WORKSHOP_PRICE_LABEL}`;
   const ctaShort = "Reserve";
 
   const close = () => setOpen(false);
