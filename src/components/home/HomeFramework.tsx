@@ -132,7 +132,7 @@ function Framework() {
           <span className="text-gradient-brand">Built in one room, in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          {TOTAL_DELIVERABLES} deliverables across eight categories — each one built live for your startup, never pulled from a framework. Yours to keep for {WORKSHOP_PRICE_LABEL}.
+          {TOTAL_DELIVERABLES} deliverables across eight categories — generated live from your idea, your market, and your numbers, then refined with you in the room. Yours to keep, edit, and run with for {WORKSHOP_PRICE_LABEL}.
 
         </p>
 
