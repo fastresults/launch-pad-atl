@@ -1,44 +1,67 @@
-# Rewrite-with-feedback modal
+# Executive Summary + McKinsey deep dive, no citations
 
-When a user clicks **Rewrite** on a completed document card, intercept the click and open a modal that collects what was wrong and what to change. Feedback (typed or dictated) is passed into the regeneration prompt so the new version actually addresses their concerns.
+Every document keeps the concise, scannable executive-summary format on top. Below it, the AI appends a rigorous, McKinsey-style assessment tailored to that document type. Footnotes and "Sources" sections are removed everywhere.
 
-## UX flow
+## What changes for the founder
 
-1. User clicks **Rewrite** on a `Ready to read` document card.
-2. Modal opens titled "Rewrite [Document Name]" with:
-   - Short helper copy: "Tell us what's off and what you'd like changed. The next version will follow your guidance."
-   - Large textarea (auto-grow, ~6 rows).
-   - Mic button inside the textarea toolbar — tap to record, tap to stop. While recording: pulsing red dot + "Listening…" + elapsed seconds. Transcript streams/appends into the textarea so the user can edit before submitting.
-   - Optional quick-tag chips (multi-select) appended to the prompt: `Too generic`, `Wrong tone`, `Factually off`, `Too long`, `Too short`, `Missing detail`. Purely additive — not required.
-   - Footer: `Cancel` / `Rewrite with feedback` (primary, disabled until textarea or chips have content).
-3. On submit: close modal, fire existing `genOne.mutate(t.type)` flow with `{ rewriteFeedback, rewriteTags }` added, card shows existing "Writing…" state.
+When they open any document in the viewer they see two clearly separated parts:
 
-## Frontend changes
+1. **Executive Summary** — the current short-form, investor-ready layout (unchanged structure and length).
+2. **McKinsey-Grade Assessment** — a deeper, structured analysis specific to that document (e.g. for `business_model_canvas`: pressure-tested assumptions, unit-economics teardown, sensitivities, risks & mitigations, what would have to be true, 30/60/90 actions). Same brand styling, just longer and more analytical.
 
-- New `src/components/hub/RewriteFeedbackDialog.tsx` using shadcn `Dialog`, `Textarea`, `Button`, `Badge` chips. Light-surface styling using semantic tokens (`bg-card`, `text-foreground`, `text-muted-foreground`) — no hardcoded colors.
-- Voice capture via `MediaRecorder` (webm/mp4 auto-detected per `ai-speech-to-text` knowledge). On stop, POST blob to a new edge function `venture-transcribe` which proxies to Lovable AI `openai/gpt-4o-mini-transcribe` (streaming SSE). Deltas append to textarea live; final `done` event replaces with full text. Mic permission errors and empty-blob (<1KB) cases show inline messages and don't call the API.
-- `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx`:
-  - Add `const [rewriteTarget, setRewriteTarget] = useState<{type, name} | null>(null)`.
-  - Rewrite button `onClick={() => setRewriteTarget({ type: t.type, name: t.name })}` instead of calling `genOne.mutate` directly.
-  - Render `<RewriteFeedbackDialog target={rewriteTarget} onClose={() => setRewriteTarget(null)} onSubmit={(feedback, tags) => { genOne.mutate({ type: rewriteTarget.type, feedback, tags }); setRewriteTarget(null); }} />`.
-  - Update `genOne` mutation signature to accept `{ type, feedback?, tags? }` and pass them through.
-- `src/lib/foundersHub.functions.ts` `generateDocument`: accept and forward optional `rewriteFeedback` and `rewriteTags` in the function body.
+No `[^1]` markers, no `## Sources` section, no inline citation links. The deep dive still reasons over the research brief but presents conclusions as analyst judgment, not footnoted quotes.
 
-## Backend changes
+## Backend changes (single edge function)
 
-- `supabase/functions/venture-generate-document/index.ts`: read `rewriteFeedback` and `rewriteTags` from body. When present, append a `## Rewrite guidance from the founder` block to the system/user prompt (verbatim feedback + bullet list of selected tags) and treat as a regeneration of the existing document. No schema changes required.
-- New `supabase/functions/venture-transcribe/index.ts`: accepts `multipart/form-data` with `file`, forwards to `https://ai.gateway.lovable.dev/v1/audio/transcriptions` with `model=openai/gpt-4o-mini-transcribe`, `stream=true`, passes SSE body straight back. Uses `LOVABLE_API_KEY`. Filename extension derived from blob MIME (webm/mp4/mp3/wav). Verify JWT (default).
-- Register both functions in `supabase/config.toml` if not already auto-managed.
+`supabase/functions/venture-generate-document/index.ts` — `generateOne`:
+
+- **Prompt restructure.** The base system prompt and every entry in the `SPECIAL` map are rewritten to require a two-part output:
+  - `## Executive Summary` — current spec for that doc type (headings, tables, brand-token JSON, paste-ready prompt block for `website_prd`, etc. all preserved verbatim inside this section).
+  - `---`
+  - `## McKinsey-Grade Assessment` — a standardized analytical scaffold the model fills in with doc-specific substance:
+    - Situation & context
+    - Key assumptions (with confidence: high/med/low)
+    - Pressure test / what could go wrong
+    - Quantified sensitivities or scenarios where applicable (tables)
+    - Risks & mitigations
+    - "What would have to be true" for success
+    - 30 / 60 / 90-day actions
+    - Confidence summary
+  - For doc types where a deep dive maps to a more domain-specific frame (e.g. brand strategy → competitive positioning teardown; financial docs → driver tree + sensitivities; GTM → ICP scoring + channel economics), the scaffold above is adapted in the per-type SPECIAL prompt while keeping the same two-section shape.
+- **Remove citation directives.** Delete the `CITATIONS:` block and the `End with a "## Sources" section…` instruction from the base prompt and from every `SPECIAL` entry that includes `QF`. Replace `QF` with a new constant that only emits the trailing `QUALITY_SCORE:` line — no Sources section, no footnotes.
+- **Length target.** Bump guidance from ~600–900 words to ~1,200–1,800 words total (Executive Summary ~500–700, Deep Dive ~700–1,100). Brief doc types stay shorter.
+- **Sanitization pass on the model output.** Before persisting `content`:
+  - strip any `[^n]` markers
+  - strip any trailing `## Sources` / `## References` / `## Citations` section
+  - collapse leftover empty lines
+  This guarantees no citations ship even if the model ignores the prompt.
+- The existing `visual_identity_brief` brand-tokens JSON extraction and `website_prd` paste-ready prompt block continue to work because they live inside the Executive Summary section and the regex extractors operate on the whole document.
+- Rewrite-feedback block and quality scoring logic are unchanged.
+
+## Frontend changes (presentation only)
+
+`src/components/hub/DocumentViewer.tsx`:
+
+- Render the markdown as today. The `## McKinsey-Grade Assessment` H2 naturally appears as a section heading, and the `---` separator already renders as the styled gradient `<hr>`.
+- Small enhancement: when the rendered content contains an H2 whose text matches `McKinsey-Grade Assessment`, give it a subtle "Deep dive" pill badge next to the heading (visual cue only, no logic change). Optional polish; not required for the feature to work.
+- Table-of-contents auto-list already picks up the new H2, so users get a one-click jump to the deep dive.
+
+No changes to `ConceptStudio`, `BrandStudio`, `SocialStudio`, the hub route, or the rewrite-feedback dialog.
+
+## Migration of existing documents
+
+Existing rows in `venture_documents` keep their old content until the user clicks **Rewrite** (or bulk re-generates). No DB migration needed. We surface a small inline hint in `DocumentViewer` when a document has no `## McKinsey-Grade Assessment` heading: *"This document was generated before the deep-dive upgrade — click Rewrite to add the McKinsey-grade assessment."* (Optional, low effort.)
 
 ## Out of scope
 
-- Persisting feedback history per document (can be added later).
-- Non-document rewrites (Concept Studio already has its own critique loop).
-- Changing the prompt structure of unaffected documents.
+- Concept Studio output (already has its own structure).
+- Schema/DB changes — content stays in the same `content` column.
+- Changing the rewrite-feedback flow, quality scoring, or hero-image generation.
+- Adding a separate "deep dive" tab — keeping it as one scrollable document is simpler and matches the user's request ("below in the modal").
 
 ## Verification
 
-- Click Rewrite on Executive Summary → modal opens, textarea focused.
-- Type feedback → submit → card flips to "Writing…" → new document reflects feedback.
-- Record voice → transcript appears → edit → submit works.
-- Deny mic permission → inline error, modal still usable for typing.
+- Generate a fresh `executive_summary` doc → output contains both sections, no `[^…]`, no `## Sources`.
+- Generate `business_model_canvas`, `brand_strategy_framework`, `website_prd` → each keeps its specialized Executive Summary (incl. JSON / fenced prompt blocks) and gains a tailored McKinsey deep dive below.
+- Open an old document → renders as before; click Rewrite → new version has both sections.
+- Search rendered HTML for `[^` and `Sources` → no hits in newly generated docs.
