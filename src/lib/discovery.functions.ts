@@ -70,4 +70,15 @@ export async function summarizeMarketProfile() {
   return callSummarize("Your market & model", "market", answers);
 }
 
-export async function createResumeUploadUrl(_data: { filename: string }) { return { uploadUrl: "", path: "" }; }
+export async function createResumeUploadUrl(input: { filename: string; mime?: string } | { data: { filename: string; mime?: string } }) {
+  const payload: any = (input as any)?.data ?? input;
+  const filename = String(payload?.filename ?? "resume");
+  const userId = await uid();
+  const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const path = `${userId}/${Date.now()}-${safe}`;
+  const { data, error } = await supabase.storage
+    .from("attendee-docs")
+    .createSignedUploadUrl(path);
+  if (error) throw new Error(error.message);
+  return { path: data.path, signedUrl: data.signedUrl, token: data.token };
+}
