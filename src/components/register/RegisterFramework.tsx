@@ -13,6 +13,7 @@ import { getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
 import {
   FRAMEWORK_STAGES,
   TOTAL_DELIVERABLES,
+  WORKSHOP_PRICE_CENTS,
   WORKSHOP_PRICE_LABEL,
 } from "@/lib/framework-deliverables";
 import { ArrowRight, Check, CheckCircle2, Sparkles, CalendarDays } from "lucide-react";
@@ -69,7 +70,7 @@ export function RegisterFramework() {
         ...values,
         tier_interest: "cohort",
         assigned_tier: "cohort",
-        price_paid_cents: 9700,
+        price_paid_cents: WORKSHOP_PRICE_CENTS,
       });
       setSubmitted(true);
       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
