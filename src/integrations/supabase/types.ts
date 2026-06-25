@@ -1819,6 +1819,10 @@ export type Database = {
           content: string | null
           content_version_history: Json
           created_at: string
+          deep_assessment: string | null
+          deep_assessment_generated_at: string | null
+          deep_assessment_quality_score: number | null
+          deep_assessment_status: string | null
           document_type: string
           hero_image_path: string | null
           hero_image_prompt: string | null
@@ -1835,6 +1839,10 @@ export type Database = {
           content?: string | null
           content_version_history?: Json
           created_at?: string
+          deep_assessment?: string | null
+          deep_assessment_generated_at?: string | null
+          deep_assessment_quality_score?: number | null
+          deep_assessment_status?: string | null
           document_type: string
           hero_image_path?: string | null
           hero_image_prompt?: string | null
@@ -1851,6 +1859,10 @@ export type Database = {
           content?: string | null
           content_version_history?: Json
           created_at?: string
+          deep_assessment?: string | null
+          deep_assessment_generated_at?: string | null
+          deep_assessment_quality_score?: number | null
+          deep_assessment_status?: string | null
           document_type?: string
           hero_image_path?: string | null
           hero_image_prompt?: string | null

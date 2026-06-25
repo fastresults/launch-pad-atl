@@ -264,6 +264,10 @@ export function DocumentViewer({
         content: string;
         snapshot_id?: string;
         hero_image_path?: string | null;
+        deep_assessment?: string | null;
+        deep_assessment_status?: string | null;
+        deep_assessment_quality_score?: number | null;
+        deep_assessment_generated_at?: string | null;
       }
     | null;
   open: boolean;
@@ -275,9 +279,68 @@ export function DocumentViewer({
   const [heroPath, setHeroPath] = useState<string | null>(doc?.hero_image_path ?? null);
   const [heroLoading, setHeroLoading] = useState(false);
 
+  // Deep assessment (on-demand McKinsey-grade analysis)
+  const [assessment, setAssessment] = useState<string | null>(doc?.deep_assessment ?? null);
+  const [assessmentStatus, setAssessmentStatus] = useState<string | null>(
+    doc?.deep_assessment_status ?? null,
+  );
+  const [assessmentError, setAssessmentError] = useState<string | null>(null);
+
   const components = useMemo(() => makeComponents(setHeadings), [doc?.content]);
+  const assessmentComponents = useMemo(() => makeComponents(() => {}), [assessment]);
   const title = titleCase(doc?.document_type ?? "");
   const content = doc?.content ?? "";
+
+  // Re-hydrate assessment state when the document changes
+  useEffect(() => {
+    setAssessment(doc?.deep_assessment ?? null);
+    setAssessmentStatus(doc?.deep_assessment_status ?? null);
+    setAssessmentError(null);
+  }, [doc?.snapshot_id, doc?.document_type, doc?.deep_assessment, doc?.deep_assessment_status]);
+
+  const runAssessment = async () => {
+    if (!doc?.snapshot_id || !doc?.document_type) return;
+    setAssessmentStatus("generating");
+    setAssessmentError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("venture-generate-assessment", {
+        body: { snapshotId: doc.snapshot_id, documentType: doc.document_type },
+      });
+      if (error) throw new Error(error.message);
+      if (data && data.ok === false) throw new Error(data.error ?? "Deep assessment failed");
+      // Fetch the freshly stored assessment
+      const { data: row } = await supabase
+        .from("venture_documents")
+        .select("deep_assessment, deep_assessment_status")
+        .eq("snapshot_id", doc.snapshot_id)
+        .eq("document_type", doc.document_type)
+        .maybeSingle();
+      setAssessment(row?.deep_assessment ?? null);
+      setAssessmentStatus(row?.deep_assessment_status ?? "complete");
+      toast.success("Deep assessment ready");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Deep assessment failed";
+      setAssessmentError(msg);
+      setAssessmentStatus("failed");
+      toast.error(msg);
+    }
+  };
+
+  const onCopyAssessment = () => {
+    if (!assessment) return;
+    navigator.clipboard.writeText(assessment);
+    toast.success("Assessment copied");
+  };
+  const onDownloadAssessment = () => {
+    if (!assessment) return;
+    const blob = new Blob([assessment], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${doc?.document_type}-deep-assessment.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // Reset hero state when the document changes
   useEffect(() => {
@@ -493,6 +556,85 @@ export function DocumentViewer({
               {content}
             </ReactMarkdown>
           </article>
+
+          <div className="mx-auto mb-8 max-w-[72ch] px-6">
+            <div className="rounded-xl border border-primary/20 bg-card/80 p-5 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <h3 className="text-base font-semibold text-foreground">Deep assessment</h3>
+                    <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
+                      McKinsey-grade
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Partner-grade pressure test: assumptions, sensitivities, risks, and 30/60/90-day actions.
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+                  {assessment && assessmentStatus !== "generating" && (
+                    <>
+                      <Button size="sm" variant="ghost" onClick={onCopyAssessment}>
+                        <Copy className="mr-1 h-3 w-3" />Copy
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={onDownloadAssessment}>
+                        <Download className="mr-1 h-3 w-3" />.md
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={runAssessment}
+                    disabled={assessmentStatus === "generating"}
+                  >
+                    {assessmentStatus === "generating" ? (
+                      <>
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        Analyzing…
+                      </>
+                    ) : assessment ? (
+                      <>
+                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                        Regenerate
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                        Run deep assessment
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {assessmentStatus === "generating" && !assessment && (
+                <div className="mt-5 space-y-2">
+                  <div className="h-3 w-3/4 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-full animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-5/6 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+                  <p className="pt-2 text-xs text-muted-foreground">
+                    Usually takes 20–40 seconds. The document above stays readable.
+                  </p>
+                </div>
+              )}
+
+              {assessmentError && assessmentStatus === "failed" && (
+                <div className="mt-4 rounded-md border border-status-danger/30 bg-status-danger/5 p-3 text-sm text-status-danger">
+                  {assessmentError}
+                </div>
+              )}
+
+              {assessment && (
+                <div className="mt-5 border-t border-white/10 pt-4">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={assessmentComponents}>
+                    {assessment}
+                  </ReactMarkdown>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
