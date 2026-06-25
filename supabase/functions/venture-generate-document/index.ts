@@ -79,7 +79,13 @@ const SPECIAL: Record<string, string> = {
   paid_ads_starter_pack: `You are a performance marketer. Output Markdown: # Paid Ads Starter Pack; ## Budget Tiers ($300/$1k/$3k monthly with platform allocation); ## Audience Definitions (3 saved); ## Creative Concepts (top 2 platforms × 3 ads: Hook, Body, CTA, Visual prompt, Format); ## Conversion Tracking (Pixel/CAPI checklist, event names); ## Test-and-Iterate Framework (week-by-week plan, kill criteria).${QF}`,
 };
 
-export async function generateOne(supabase: any, snapshotId: string, documentType: string) {
+export async function generateOne(
+  supabase: any,
+  snapshotId: string,
+  documentType: string,
+  rewriteFeedback?: string,
+  rewriteTags?: string[],
+) {
   const [{ data: snap }, { data: type }] = await Promise.all([
     supabase.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle(),
     supabase.from("venture_document_types").select("*").eq("type", documentType).maybeSingle(),
