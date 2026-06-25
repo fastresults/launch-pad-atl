@@ -196,23 +196,24 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
           toast.error(`${file.name}: exceeds 100MB`);
           continue;
         }
-        const { uploadUrl, asset } = await createSignedFn({
-          data: {
-            scope,
-            ownerUserId: ownerUserId ?? null,
-            folderId,
-            filename: file.name,
-            mimeType: file.type || "application/octet-stream",
-            sizeBytes: file.size,
-          },
+        const contentType = file.type || "application/octet-stream";
+        const { uploadUrl, path } = await createSignedFn({
+          filename: file.name,
+          contentType,
         });
         const putRes = await fetch(uploadUrl, {
           method: "PUT",
-          headers: { "Content-Type": file.type || "application/octet-stream" },
+          headers: { "Content-Type": contentType },
           body: file,
         });
         if (!putRes.ok) throw new Error(`Upload failed: ${putRes.status}`);
-        await finalizeFn({ data: { assetId: asset.id } });
+        await finalizeFn({
+          path,
+          filename: file.name,
+          contentType,
+          folderId: folderId ?? undefined,
+          size: file.size,
+        });
         toast.success(`Uploaded ${file.name}`);
       } catch (e) {
         toast.error(`${file.name}: ${(e as Error).message}`);
