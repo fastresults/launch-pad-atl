@@ -18,8 +18,29 @@ export async function adminGetBrief(data: { userId: string }) {
   const { data: row } = await supabase.from("attendee_business_brief").select("*").eq("user_id", data.userId).maybeSingle();
   return row ?? {};
 }
-export async function summarizeBriefBlock(_data: { block: string; content: string }) {
-  return { summary: "" };
+export type CheckpointAnswer = { label: string; value: string };
+export type CheckpointSummary = { summary: string; bullets: string[]; cached?: boolean };
+
+export async function summarizeBriefBlock(args: {
+  block: string | number;
+  title?: string;
+  answers?: CheckpointAnswer[];
+  kind?: "qa" | "founder" | "market";
+  content?: string;
+}): Promise<CheckpointSummary> {
+  const { data, error } = await supabase.functions.invoke("brief-summarize-block", {
+    body: {
+      title: args.title ?? `Block ${args.block}`,
+      kind: args.kind ?? "qa",
+      answers: args.answers ?? [],
+    },
+  });
+  if (error) throw new Error(error.message);
+  if ((data as any)?.error) throw new Error((data as any).error);
+  return {
+    summary: (data as any)?.summary ?? "",
+    bullets: Array.isArray((data as any)?.bullets) ? (data as any).bullets : [],
+  };
 }
 
 export type BriefPrefillSuggestion = {
