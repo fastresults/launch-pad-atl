@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
-import { TRACKS, type TrackKey } from "@/lib/tracks";
+import { TRACKS, TRACK_BY_KEY, pickSeedForTrack, type TrackKey } from "@/lib/tracks";
 import { createSnapshot } from "@/lib/foundersHub.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin } from "lucide-react";
@@ -125,6 +125,8 @@ function Inner() {
   const [subIndustry, setSubIndustry] = useState("");
   const [track, setTrack] = useState<TrackKey | "">("");
   const [showTrackHelp, setShowTrackHelp] = useState(false);
+  const [trackPulse, setTrackPulse] = useState(false);
+  const trackSectionRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Prefill from authenticated user once
@@ -351,7 +353,14 @@ function Inner() {
         </div>
 
         {/* Track selector */}
-        <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+        <div
+          ref={trackSectionRef}
+          className={`space-y-3 rounded-xl border bg-background/40 p-4 transition ${
+            trackPulse
+              ? "border-red-400/70 ring-2 ring-red-400/40 animate-pulse"
+              : "border-white/10"
+          }`}
+        >
           <div className="flex items-start justify-between gap-3">
             <div>
               <Label className="text-sm">Track <span className="text-red-500">*</span></Label>
@@ -489,12 +498,19 @@ function Inner() {
                   className="text-xs text-muted-foreground"
                   disabled={filling}
                   onClick={async () => {
+                    if (!track) {
+                      toast.error("Pick a Track first — it shapes the test concept and research.");
+                      trackSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      setTrackPulse(true);
+                      setTimeout(() => setTrackPulse(false), 1600);
+                      return;
+                    }
                     setFilling(true);
                     try {
-                      const url = SEED_URLS[Math.floor(Math.random() * SEED_URLS.length)];
+                      const seed = pickSeedForTrack(track);
                       const { data, error } = await supabase.functions.invoke(
                         "dev-reverse-engineer-concept",
-                        { body: { url } },
+                        { body: { url: seed.url, track } },
                       );
                       if (error) throw error;
                       if (!data?.company || !data?.concept) throw new Error("Empty response");
@@ -503,7 +519,7 @@ function Inner() {
                       setBusinessConcept(data.concept);
                       if (path === "competitor" && data.diff) setDiff(data.diff);
 
-                      // Fill founder + market fields so the form is one-click submittable
+                      // Fill founder fields so the form is one-click submittable
                       const { data: userData } = await supabase.auth.getUser();
                       const u = userData.user;
                       const meta: any = u?.user_metadata ?? {};
@@ -515,17 +531,16 @@ function Inner() {
                         setFounderEmail(u?.email || `test+${ts}@example.com`);
                       }
                       if (!founderPhone.trim()) setFounderPhone("+1 555 010 0123");
-                      if (!city.trim()) setCity("Atlanta");
-                      if (!region.trim()) setRegion("Georgia");
-                      if (!country.trim()) setCountry("United States");
-                      setMarketScope("national");
-                      if (!industry.trim()) setIndustry(guessIndustry(data.concept));
-                      if (!subIndustry.trim()) {
-                        const firstSentence = String(data.concept).split(/[.!?]/)[0]?.trim() ?? "";
-                        if (firstSentence) setSubIndustry(firstSentence.slice(0, 60));
-                      }
 
-                      toast.success(`Filled from ${data.company}`);
+                      // Market context comes from the track seed, not hardcoded
+                      if (!city.trim() && seed.city) setCity(seed.city);
+                      if (!region.trim() && seed.region) setRegion(seed.region);
+                      if (!country.trim() && seed.country) setCountry(seed.country);
+                      setMarketScope(seed.market_scope);
+                      if (!industry.trim()) setIndustry(seed.industry);
+                      if (!subIndustry.trim() && seed.sub_industry) setSubIndustry(seed.sub_industry);
+
+                      toast.success(`Filled ${TRACK_BY_KEY[track].label} test — ${data.company}`);
                     } catch (e) {
                       toast.error(e instanceof Error ? e.message : "Couldn't fill test concept");
                     } finally {
