@@ -48,6 +48,7 @@ export type FrameworkDeliverable = {
   icon: LucideIcon;
   title: string;
   description?: string;
+  tooltip: string;
 };
 
 export type FrameworkStage = {
