@@ -1,75 +1,76 @@
-## Add Tracks to the Startup Workflow
+## Make "🧪 Fill test concept" track-aware
 
-Founders pick a **Track** when creating a startup. The track is persisted on the snapshot and injected into every AI prompt (deep research + document generation) as a tone/lens directive, so a Lifestyle / Main Street venture doesn't get the same VC-flavored copy as a Deep Tech one.
+Today the button picks a random URL from a SaaS-only seed list (Linear, Vercel, Supabase…) and hardcodes Atlanta / national / a SaaS-style concept. That's wrong for a Lifestyle / Main Street or Deep Tech founder testing the flow.
 
-### The 7 tracks
+New flow: **the selected Track drives everything the button does** — which seed company it pulls, what defaults it fills, and the tone of the reverse-engineered concept blurb.
 
-| Key | Label | One-liner |
-|---|---|---|
-| `lifestyle` | Lifestyle / Main Street | Revenue over scale — local services, solo founders |
-| `small_business` | Small Business / Traditional | Profit & longevity — shops, agencies, trades |
-| `scalable_tech` | Scalable Tech / SaaS | Exponential growth, low marginal cost — VC target |
-| `marketplace` | Marketplace / Platform | Multi-sided, network-effects driven |
-| `deep_tech` | Deep Tech / Frontier | High R&D, breakthrough-dependent |
-| `social_impact` | Social Enterprise / Impact | Mission-built into the model |
-| `corporate` | Corporate / Institutional | Spinouts, intrapreneurial, gov-tech |
+### 1. Require a Track first
 
-### UX
+- If no Track is selected when the user clicks the button, don't scrape. Show a toast: *"Pick a Track first — it shapes the test concept and research."* and scroll the Track picker into view + add a brief ring-pulse to it.
+- Button stays enabled (cheap UX), but the click short-circuits with the toast.
 
-**Hub create flow (`hub.new.tsx`)** — add a new "Track" block above Industry, in the founder/market context section.
+### 2. Per-track seed catalog
 
-- Renders as a 2-column grid of 7 selectable cards (radio behavior). Each card: label, one-liner, subtle icon. Selected = accent border + ring.
-- "What's this?" inline helper expands a short paragraph explaining tracks influence tone, not feature set.
-- Required to submit (added to `founderReady`).
-- Default: none selected (forces an explicit choice — this is the whole point).
+Replace `SEED_URLS` with a `TRACK_SEEDS: Record<TrackKey, SeedEntry[]>` map in `src/lib/tracks.ts` (kept next to track defs so both client and the edge function read the same source — edge function mirrors as a const, same pattern as `TRACK_TONE`).
 
-**Hub library (`hub.index.tsx`)** — show a small Track chip on each `SnapshotCard` (under company name) so founders can tell them apart at a glance. No filtering by track in this pass.
+Each `SeedEntry` carries enough to fill the form realistically:
 
-**Snapshot detail (`hub.$snapshotId.tsx`)** — Track chip in the header next to industry. Editable via existing "edit founder context" affordance.
-
-### Data
-
-One migration:
-
-```sql
-ALTER TABLE public.venture_snapshots
-  ADD COLUMN track text
-  CHECK (track IN (
-    'lifestyle','small_business','scalable_tech','marketplace',
-    'deep_tech','social_impact','corporate'
-  ));
+```ts
+type SeedEntry = {
+  url: string;
+  industry: string;       // matches IndustryCombobox values
+  sub_industry?: string;
+  market_scope: "local" | "regional" | "national" | "international";
+  city?: string; region?: string; country?: string;
+};
 ```
 
-Nullable so existing snapshots stay valid; new ones require it at the app layer.
+Initial catalog (3–4 per track, all real, public homepages):
 
-### Backend wiring
+- **lifestyle** — `https://bluebottlecoffee.com` (specialty café, Oakland CA, local), `https://www.equinox.com` (gym, NYC, regional), a local salon site, a freelance consultant landing page.
+- **small_business** — `https://www.aceshardware.com` (retail), `https://www.servprofranchise.com` (franchise), a regional law firm, a regional HVAC company.
+- **scalable_tech** — keep current set (Linear, Vercel, Resend, Cal, PostHog, Supabase, Cursor, Notion, Attio…). National/international, San Francisco.
+- **marketplace** — `https://www.etsy.com`, `https://www.airbnb.com`, `https://www.upwork.com`, `https://www.faire.com`.
+- **deep_tech** — `https://www.boomsupersonic.com`, `https://www.ginkgobioworks.com`, `https://www.anthropic.com`, `https://www.commonwealthfusion.com`.
+- **social_impact** — `https://www.warbyparker.com` (B-corp), `https://www.toms.com`, `https://www.kiva.org`, `https://www.charitywater.org`.
+- **corporate** — `https://www.palantir.com`, `https://www.anduril.com`, `https://www.govtech.com`, `https://www.boozallen.com`.
 
-- **`src/lib/foundersHub.functions.ts`**
-  - Add `track` to `VentureSnapshot` type.
-  - Accept `track` in `createSnapshot` and `updateFounderContext`.
+(Edge-function allowlist is the union of all of these.)
 
-- **`src/lib/tracks.ts`** (new) — single source of truth: `TRACKS` array (`key`, `label`, `oneLiner`, `tonePrompt`) consumed by UI and edge functions can mirror via inline copy. The `tonePrompt` is a ~3-sentence directive, e.g.:
-  - Lifestyle: "Write as a pragmatic operator coaching a sole founder. Optimize for cash flow, simplicity, and local credibility. Avoid VC jargon, TAM/SAM/SOM framing, and growth-at-all-costs language."
-  - Scalable Tech: "Write as an early-stage tech operator. Lean into product-led growth, defensibility, unit economics at scale, and venture-readiness."
-  - …etc per track.
+### 3. Button click logic (track-driven)
 
-- **`supabase/functions/venture-generate-document/index.ts`** — include the track's `tonePrompt` block in `systemPrompt` (appended after `baseSystem`), and add `track` to `founderCard`. Same constants duplicated in the function (no shared import across edge boundary).
+```text
+1. If !track → toast + scroll-to + return.
+2. seed = randomFrom(TRACK_SEEDS[track])
+3. Call dev-reverse-engineer-concept with { url: seed.url, track }
+4. On response:
+   - setCompanyName / setWebsiteUrl / setBusinessConcept / setDiff (as today)
+   - From the seed (not hardcoded): setIndustry, setSubIndustry (only when blank),
+     setMarketScope, setCity/Region/Country (only when blank)
+   - Drop the call to guessIndustry — seed already knows it
+   - Keep the founder name/email/phone fallback logic as-is
+5. Toast: "Filled with a {track.label} test — {company}"
+```
 
-- **`supabase/functions/venture-deep-research/index.ts`** — pass track tone into the market-research Perplexity prompt and customer-voice prompt so research framing matches (e.g. local foot traffic vs. ICP/PMF signals).
+### 4. Edge function (`dev-reverse-engineer-concept`)
 
-### Out of scope
+- Expand `ALLOWED_URLS` to the union of all track seeds.
+- Accept `track?: string` in the request body; validate against the 7 keys.
+- Inject a one-line track lens into the system prompt so the reverse-engineered concept blurb sounds like that track would write it:
+  - Lifestyle → "Write as a sole-founder lifestyle business — plain, local, no jargon."
+  - Scalable Tech → "Write as a venture-track SaaS founder — ICP and defensibility framing."
+  - …mirroring the `TRACK_TONE` map already in the function (this lens is shorter; just enough to shape the test blurb).
+- Return shape unchanged (`company`, `url`, `concept`, `diff`) — client doesn't need new fields, the seed entry is the source of truth for industry/location.
 
-- No filtering, grouping, or analytics by track yet.
-- No per-document-type overrides — track tone applies uniformly.
-- No retro-classifying old snapshots; they keep `track = null` and use the existing generic tone.
+### 5. Out of scope
+
+- No DB changes.
+- Not auto-selecting a Track from the URL — Track stays an explicit founder decision.
+- No new UI surface beyond the toast + scroll behavior; the button label stays "🧪 Fill test concept".
+- Real deep-research / market scope tuning is already handled by the previous tracks plan in `venture-deep-research` — this change only affects the test-fill button.
 
 ### Files touched
 
-- New migration adding `track` column
-- New `src/lib/tracks.ts`
-- `src/lib/foundersHub.functions.ts`
-- `src/routes/_authenticated/dashboard/hub.new.tsx`
-- `src/routes/_authenticated/dashboard/hub.index.tsx`
-- `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx`
-- `supabase/functions/venture-generate-document/index.ts`
-- `supabase/functions/venture-deep-research/index.ts`
+- `src/lib/tracks.ts` — add `SeedEntry` + `TRACK_SEEDS`
+- `src/routes/_authenticated/dashboard/hub.new.tsx` — gate on track, use `TRACK_SEEDS[track]`, apply seed defaults, scroll/ring behavior
+- `supabase/functions/dev-reverse-engineer-concept/index.ts` — expanded allowlist, accept `track`, track-lens prompt
