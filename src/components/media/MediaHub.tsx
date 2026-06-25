@@ -915,11 +915,11 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
   );
 }
 
-function AssetThumb({ assetId }: { assetId: string }) {
+function AssetThumb({ path, bucket }: { path: string; bucket?: string }) {
   const getUrlFn = (getAssetSignedUrl);
   const { data } = useQuery({
-    queryKey: ["asset-thumb", assetId],
-    queryFn: () => getUrlFn({ data: { assetId } }),
+    queryKey: ["asset-thumb", bucket ?? "user-media", path],
+    queryFn: () => getUrlFn({ path, bucket }),
     staleTime: 1000 * 60 * 30,
   });
   if (!data?.url) return <ImageIcon className="h-12 w-12 text-muted-foreground" />;
