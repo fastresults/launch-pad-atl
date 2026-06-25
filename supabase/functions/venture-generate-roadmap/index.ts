@@ -164,6 +164,15 @@ Open with one paragraph about the habits that compound. Then three labeled block
 ## Chapter 12 — Read Next From Your Kit
 Open with one short paragraph. Then a numbered list of exactly 5 documents from this kit, by their real names, in the order the founder should read them. Each line: **Document name** — one sentence on why now.
 
+## Chapter 13 — The Road Ahead, and Who's With You
+Open with one short paragraph that addresses the founder by first name and levels with them: every venture worth building costs hours, focus, capital, and a piece of their peace of mind. Name three things this specific venture will demand of them (pulled from the kit — e.g. fundraising stamina, hiring before they can afford it, selling before the product is finished). Honest, encouraging, never gloomy. Then three labeled blocks (bold lead-ins, not headings):
+**What the next year will actually ask of you** — 3–4 lines on hours, focus, capital, and personal energy. Plain language. No clichés.
+**The decisions that will define this year** — 3–4 lines naming concrete decisions specific to this venture: the first hire, the funding moment, the channel bet, the pricing call. Drawn from the kit.
+**How to stay standing** — 3–4 lines on building the right team early, securing the right funding (not just any funding), and managing stress and logistics so the work compounds instead of eroding the founder.
+Then a clearly framed closing block beginning with this exact bold line on its own:
+**You're not doing this alone — Team Evove is here.**
+Follow it with a 4–6 sentence paragraph in a warm partner voice, naming Team Evove as the standing extended team this founder can call on for advice, mentoring, and execution support — senior strategists, technologists, graphic designers, brand and growth specialists. Tie the offer specifically to where THIS venture is most likely to need help (pull from the weakest pillars surfaced in earlier chapters). End the paragraph with this exact italicized sentence: *Whenever you need a second brain, a second pair of hands, or a sounding board — Team Evove is one message away.*
+
 
 ## The One Thing
 A single blockquote (> ) of 2–3 sentences naming the ONE move for the next 30 days that will most change their odds. Specific, named, encouraging.
