@@ -365,7 +365,6 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      </AlertDialog>
 
       {isAdmin && (
         <AlertDialog
