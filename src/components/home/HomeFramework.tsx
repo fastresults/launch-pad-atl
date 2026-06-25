@@ -151,6 +151,7 @@ function Meta({ icon, label }: { icon: React.ReactNode; label: string }) {
 
 function Framework() {
   return (
+    <TooltipProvider delayDuration={150}>
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
