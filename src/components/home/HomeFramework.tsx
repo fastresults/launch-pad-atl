@@ -119,6 +119,17 @@ function Hero() {
           <Meta icon={<Clock className="size-4" />} label="8:45–11:30 AM · Coffee included" />
           <Meta icon={<Users className="size-4" />} label={`${EVENT.capacity} seats per cohort`} />
         </div>
+          </div>
+          <div className="hidden lg:flex justify-center">
+            <img
+              src={atlSeal}
+              alt="ATL Founder-Friendly Accelerator seal"
+              loading="eager"
+              decoding="async"
+              className="w-[340px] xl:w-[400px] drop-shadow-[0_8px_30px_rgba(0,0,0,0.45)]"
+            />
+          </div>
+        </div>
       </div>
     </section>
   );
