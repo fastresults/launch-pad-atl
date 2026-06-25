@@ -564,9 +564,11 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const [viewerDoc, setViewerDoc] = useState<any>(null);
   const [showHelper, setShowHelper] = useState(true);
   const [showFailures, setShowFailures] = useState(false);
+  const [rewriteTarget, setRewriteTarget] = useState<{ type: string; name: string } | null>(null);
 
   const genOne = useMutation({
-    mutationFn: (documentType: string) => generateDocument({ data: { snapshotId: snapshot.id, documentType } }),
+    mutationFn: (vars: { documentType: string; rewriteFeedback?: string; rewriteTags?: string[] }) =>
+      generateDocument({ data: { snapshotId: snapshot.id, ...vars } }),
     onSuccess: () => { toast.success("Document ready"); qc.invalidateQueries({ queryKey: ["hub"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Generation failed"),
   });
