@@ -786,7 +786,8 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                     value={selectedAsset.folder_id ?? "none"}
                     onValueChange={(v) =>
                       updateFn({
-                        data: { id: selectedAsset.id, folderId: v === "none" ? null : v },
+                        id: selectedAsset.id,
+                        folder_id: v === "none" ? null : v,
                       }).then(() => invalidate())
                     }
                   >
