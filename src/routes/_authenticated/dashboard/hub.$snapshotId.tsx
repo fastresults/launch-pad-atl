@@ -731,7 +731,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         )}
       </div>
 
-      {heroDone && <FounderRoadmapCard snapshot={snapshot} />}
+      {heroDone && <FounderRoadmapCard snapshot={snapshot} documentCount={completeCount} />}
 
 
       {showHelper && (
