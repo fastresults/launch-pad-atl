@@ -246,10 +246,11 @@ export async function listSnapshotDocuments(input: any): Promise<VentureDocument
 
 export async function generateDocument(input: any): Promise<void> {
   const { snapshotId, documentType } = unwrap<{ snapshotId: string; documentType: string }>(input);
-  const { error } = await supabase.functions.invoke("venture-generate-document", {
+  const { data, error } = await supabase.functions.invoke("venture-generate-document", {
     body: { snapshotId, documentType },
   });
   if (error) throw new Error(error.message);
+  if (data && data.ok === false) throw new Error(data.error ?? "Generation failed");
 }
 
 export async function bulkGenerate(input: any): Promise<void> {

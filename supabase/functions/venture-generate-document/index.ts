@@ -14,6 +14,35 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
+class GatewayError extends Error {
+  status: number;
+  detail: string;
+
+  constructor(status: number, detail: string) {
+    super(gatewayMessage(status, detail));
+    this.name = "GatewayError";
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
+function gatewayMessage(status: number, detail: string) {
+  const normalized = detail.toLowerCase();
+  if (status === 403 && normalized.includes("credit_limit_reached")) {
+    return "AI generation is paused because the workspace AI Gateway credit limit has been reached.";
+  }
+  if (status === 402 || normalized.includes("credits exhausted")) {
+    return "AI generation is paused because AI credits are exhausted.";
+  }
+  if (status === 429) {
+    return "AI generation is temporarily rate limited. Please try again in a few minutes.";
+  }
+  if (status === 401 || status === 403) {
+    return "AI generation is currently unavailable because the AI Gateway rejected the request.";
+  }
+  return "AI generation is currently unavailable. Please try again shortly.";
+}
+
 // Specialized doc prompts (mirrors bulk-generate SPECIAL map).
 const QF = `\n\nEnd with a "## Sources" section listing any [^n] footnotes used, then on a final line output exactly:\nQUALITY_SCORE: <0-100 integer>`;
 const SPECIAL: Record<string, string> = {
@@ -109,7 +138,7 @@ QUALITY_SCORE: <0-100 integer reflecting completeness, specificity, and investor
 
   const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+    headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "google/gemini-3-flash-preview",
       messages: [
@@ -126,7 +155,7 @@ QUALITY_SCORE: <0-100 integer reflecting completeness, specificity, and investor
     await supabase.from("venture_generation_failures").insert({
       snapshot_id: snapshotId, document_type: documentType, error: `Gateway ${aiRes.status}: ${txt.slice(0, 300)}`,
     });
-    throw new Error(`Gateway ${aiRes.status}`);
+    throw new GatewayError(aiRes.status, txt);
   }
 
   const aiJson = await aiRes.json();
@@ -211,6 +240,9 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, ...result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    return new Response(JSON.stringify({ error: message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (e instanceof GatewayError) {
+      return new Response(JSON.stringify({ ok: false, error: message, gatewayStatus: e.status }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    return new Response(JSON.stringify({ ok: false, error: message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
