@@ -14,6 +14,7 @@ import { createSnapshot } from "@/lib/foundersHub.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin, CheckCircle2 } from "lucide-react";
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
 type DroppedFile = {
@@ -116,6 +117,7 @@ function Inner() {
   const [files, setFiles] = useState<DroppedFile[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [drafting, setDrafting] = useState(false);
+  const [processed, setProcessed] = useState(false);
   const [filling, setFilling] = useState(false);
   // Founder + market context
   const [founderName, setFounderName] = useState(prefill?.founder_name ?? "");
@@ -195,9 +197,6 @@ function Inner() {
 
   const draftFromFiles = async () => {
     if (!readyFiles.length || drafting) return;
-    if (businessConcept.trim() && !confirm("Replace what's in the concept field with a fresh draft from your files?")) {
-      return;
-    }
     setDrafting(true);
     try {
       const { data, error } = await supabase.functions.invoke("venture-synthesize-concept", {
@@ -210,63 +209,52 @@ function Inner() {
       const concept = (data?.concept ?? "").trim();
       if (!concept) throw new Error("Empty draft from the model");
 
-      // Always replace concept (user already confirmed above if it was non-empty)
+      // Process = overwrite. The button is the user's explicit "fill the whole form" intent.
       setBusinessConcept(concept);
-      let applied = 1;
+      const filled: string[] = ["business concept"];
 
-      // Helpers — only apply when the target field is empty / still at default
-      const apply = (val: unknown, current: string, setter: (v: string) => void) => {
-        if (typeof val === "string" && val.trim() && !current.trim()) {
+      const setIf = (val: unknown, setter: (v: string) => void, label: string) => {
+        if (typeof val === "string" && val.trim()) {
           setter(val.trim());
-          applied++;
+          filled.push(label);
         }
       };
-      apply(data?.company_name, companyName, setCompanyName);
-      apply(data?.differentiation_statement, diff, setDiff);
-      apply(data?.founder_name, founderName, setFounderName);
-      apply(data?.founder_email, founderEmail, setFounderEmail);
-      apply(data?.founder_phone, founderPhone, setFounderPhone);
-      apply(data?.city, city, setCity);
-      apply(data?.region, region, setRegion);
-      apply(data?.sub_industry, subIndustry, setSubIndustry);
-      if (path === "manual" && typeof data?.website_url === "string" && data.website_url.trim() && !websiteUrl.trim()) {
+      setIf(data?.company_name, setCompanyName, "company name");
+      setIf(data?.differentiation_statement, setDiff, "differentiation");
+      setIf(data?.founder_name, setFounderName, "founder name");
+      setIf(data?.founder_email, setFounderEmail, "founder email");
+      setIf(data?.founder_phone, setFounderPhone, "founder phone");
+      setIf(data?.city, setCity, "city");
+      setIf(data?.region, setRegion, "state / region");
+      setIf(data?.sub_industry, setSubIndustry, "sub-industry");
+      if (path === "manual" && typeof data?.website_url === "string" && data.website_url.trim()) {
         setWebsiteUrl(data.website_url.trim());
-        applied++;
+        filled.push("website");
       }
-      // Country: only override the "United States" default if model says otherwise
-      if (typeof data?.country === "string" && data.country.trim() && (!country.trim() || country === "United States")) {
-        if (data.country.trim() !== country) {
-          setCountry(data.country.trim());
-          applied++;
-        }
+      if (typeof data?.country === "string" && data.country.trim()) {
+        setCountry(data.country.trim());
+        filled.push("country");
       }
-      // Market scope: only override default "local"
       const scope = data?.market_scope;
-      if (scope && ["local", "regional", "national", "international"].includes(scope) && marketScope === "local" && scope !== "local") {
+      if (scope && ["local", "regional", "national", "international"].includes(scope)) {
         setMarketScope(scope);
-        applied++;
+        filled.push("market scope");
       }
-      // Industry: validate against our list
-      if (typeof data?.industry === "string" && data.industry && !industry) {
-        if (INDUSTRIES.some((i) => i.value === data.industry)) {
-          setIndustry(data.industry);
-          applied++;
-        }
+      if (typeof data?.industry === "string" && data.industry && INDUSTRIES.some((i) => i.value === data.industry)) {
+        setIndustry(data.industry);
+        filled.push("industry");
       }
-      // Track: validate, only override default "lifestyle"
-      const validTracks = TRACKS.map((t) => t.key) as string[];
-      if (typeof data?.track === "string" && validTracks.includes(data.track) && track === "lifestyle" && data.track !== "lifestyle") {
-        setTrack(data.track as TrackKey);
-        applied++;
-      }
+      // Track is intentionally left to the user.
 
-      toast.success(`Drafted ${applied} field${applied === 1 ? "" : "s"} from your file${readyFiles.length === 1 ? "" : "s"} — review and edit`);
+      setProcessed(true);
+      toast.success(`Filled ${filled.length} field${filled.length === 1 ? "" : "s"} — pick a Track and review`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't draft from files");
+      toast.error(e instanceof Error ? e.message : "Couldn't process the document");
     } finally {
       setDrafting(false);
     }
   };
+
 
   const create = useMutation({
     mutationFn: () =>
@@ -295,12 +283,20 @@ function Inner() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not create venture"),
   });
 
-  const founderReady = !!(
-    founderName.trim() && founderEmail.trim() && city.trim() && region.trim() &&
-    country.trim() && marketScope && industry.trim() && !!track
-  );
-  const canSubmit = businessConcept.trim().length >= 20 && !create.isPending && founderReady &&
-    (path === "manual" ? !!companyName.trim() : !!websiteUrl.trim());
+  const missingFields: string[] = [];
+  if (businessConcept.trim().length < 20) missingFields.push("Business concept (min 20 chars)");
+  if (path === "manual" && !companyName.trim()) missingFields.push("Company name");
+  if (path !== "manual" && !websiteUrl.trim()) missingFields.push(path === "own" ? "Your website URL" : "Competitor URL");
+  if (!founderName.trim()) missingFields.push("Founder name");
+  if (!founderEmail.trim()) missingFields.push("Founder email");
+  if (!city.trim()) missingFields.push("City");
+  if (!region.trim()) missingFields.push("State / region");
+  if (!country.trim()) missingFields.push("Country");
+  if (!marketScope) missingFields.push("Market scope");
+  if (!industry.trim()) missingFields.push("Industry");
+  if (!track) missingFields.push("Track");
+  const canSubmit = missingFields.length === 0 && !create.isPending;
+
 
   return (
     <div className="space-y-6">
@@ -573,6 +569,33 @@ function Inner() {
             </ul>
           )}
 
+          {readyFiles.length > 0 && (
+            <div className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-sm">
+                <div className="font-medium">
+                  {processed ? "Processed — review the form below" : `${readyFiles.length} file${readyFiles.length === 1 ? "" : "s"} ready`}
+                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  {processed
+                    ? "We filled every field we could from your document. Pick a Track to unlock Create & enrich."
+                    : "Click Process document and we'll fill out the whole form for you."}
+                </div>
+              </div>
+              <Button
+                type="button"
+                onClick={draftFromFiles}
+                disabled={drafting}
+                className="shrink-0"
+              >
+                {drafting ? (
+                  <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Processing…</>
+                ) : (
+                  <><Wand2 className="mr-1.5 h-4 w-4" />{processed ? "Re-process" : "Process document"}</>
+                )}
+              </Button>
+            </div>
+          )}
+
           <div className="grid gap-2">
             <div className="flex items-center justify-between gap-2">
               <Label htmlFor="concept">Business concept *</Label>
@@ -638,18 +661,6 @@ function Inner() {
                   {filling ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
                   {filling ? "Scraping…" : "🧪 Fill test concept"}
                 </Button>
-                {readyFiles.length > 0 && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={draftFromFiles}
-                    disabled={drafting}
-                  >
-                    {drafting ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Wand2 className="mr-1.5 h-3.5 w-3.5" />}
-                    {drafting ? "Drafting…" : `Draft from ${readyFiles.length} file${readyFiles.length === 1 ? "" : "s"}`}
-                  </Button>
-                )}
                 <VoiceRecorder
                   size="sm"
                   context="Founder describing their business concept — what they're building, who it's for, and why it matters."
@@ -687,10 +698,31 @@ function Inner() {
         )}
       </div>
 
-      <div className="flex justify-end">
-        <Button disabled={!canSubmit} onClick={() => create.mutate()}>
-          {create.isPending ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Creating…</> : "Create & enrich →"}
-        </Button>
+      <div className="flex flex-col items-end gap-2">
+        {!canSubmit && missingFields.length > 0 && (
+          <div className="text-xs text-muted-foreground">
+            Still needed: <span className="font-medium text-foreground">{missingFields.join(" · ")}</span>
+          </div>
+        )}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span tabIndex={canSubmit ? -1 : 0}>
+                <Button disabled={!canSubmit} onClick={() => create.mutate()}>
+                  {create.isPending ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Creating…</> : "Create & enrich →"}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            {!canSubmit && missingFields.length > 0 && (
+              <TooltipContent side="top" align="end" className="max-w-xs">
+                <div className="text-xs font-medium">Add these to continue:</div>
+                <ul className="mt-1 list-disc pl-4 text-xs">
+                  {missingFields.map((m) => <li key={m}>{m}</li>)}
+                </ul>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );

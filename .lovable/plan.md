@@ -1,57 +1,47 @@
-# Draft full venture form from uploaded documents
+## Goal
 
-Today, when a user drops a PDF/TXT/MD into `/dashboard/hub/new` and clicks **Draft from N file(s)**, the `venture-synthesize-concept` Edge Function only returns a `concept` string. We populate the *Business concept* textarea and ignore everything else, even though the doc almost always contains company name, founder info, location, industry, differentiation, etc.
+Break the chicken-and-egg: once a document is uploaded, a single **Process document** action populates every field on the page (everything except Track), then the **Create & enrich** button unlocks automatically.
 
-This plan upgrades that flow so an uploaded document like *SampleFoodBusinessPlanOklahomaState.pdf* fills out the entire form (the same fields **Fill test concept** seeds), with confidence-aware merging so we never overwrite something the user already typed.
+## Changes
 
-## 1. Edge Function — `venture-synthesize-concept`
+### 1. Rename + reframe the upload action — `src/routes/_authenticated/dashboard/hub.new.tsx`
 
-- Keep the existing input shape (`{ sources: [{ filename, text }] }`).
-- Switch the prompt to ask the model for a **structured JSON object** covering every field on the form, plus a short concept paragraph. Use Gemini structured output (`response_format: json_object`) on `google/gemini-3-flash-preview`.
-- Schema returned:
-  ```ts
-  {
-    concept: string,                  // 3–5 sentences, second-person, grounded
-    company_name?: string,
-    differentiation_statement?: string,
-    founder_name?: string,
-    founder_email?: string,
-    founder_phone?: string,
-    city?: string,
-    region?: string,                  // US state or province
-    country?: string,                 // default "United States" when US address detected
-    market_scope?: "local" | "regional" | "national" | "international",
-    industry?: string,                // must match one of our INDUSTRIES keys
-    sub_industry?: string,
-    track?: "main_street" | "lifestyle" | "scalable" | "social",
-    website_url?: string,
-  }
-  ```
-- System prompt rules: only emit a field when the document clearly supports it; omit anything uncertain; never invent founder emails; map free-form industry text to the closest value in our `INDUSTRIES` list (passed in the prompt); infer `track` from cues (single-location food/retail → `main_street`, agency/freelance → `lifestyle`, VC-style scalable tech → `scalable`, nonprofit/mission → `social`); cap concept at ~120 words.
-- Keep response backwards compatible: still return `concept`, just add the other keys.
+- Rename the "Draft from N file(s)" button to **"Process document"** (with a `Sparkles`/`Wand2` icon).
+- Promote it from a small ghost button beside the concept textarea to a **primary CTA inside the dropzone card**, shown as soon as at least one file is `ready`.
+- While processing, show "Processing your document…" with a progress hint ("Reading → Extracting → Filling fields").
 
-## 2. Client — `src/routes/_authenticated/dashboard/hub.new.tsx`
+### 2. Make extraction fill *everything except Track* — same file + `supabase/functions/venture-synthesize-concept/index.ts`
 
-Rewrite `draftFromFiles()`:
+Today `draftFromFiles` already calls `venture-synthesize-concept` and maps results, but it intentionally **skips fields the user has already typed**. After Process, we instead:
 
-- Call the same Edge Function, read the full object.
-- Merge into form state with a "don't clobber user input" rule:
-  - For each field, only set it from the draft when the current value is empty/default (default check applies to `country`, `market_scope`, `track`).
-  - Always replace `businessConcept` — but keep the existing `confirm()` guard when the user has already typed something there.
-- Validate `industry` against `INDUSTRIES` keys before applying; drop if unknown.
-- Validate `track` against `TRACK_KEYS`; drop if unknown.
-- Update toast: `"Drafted N fields from your file — review and edit"` with the count of fields actually applied.
-- Rename the button label semantics in the existing component (still reads `Draft from N file(s)`) — no UI change needed, just behavior.
-- Update the dropzone helper copy under the icon from *"Drop your pitch deck, one-pager, or notes"* to *"Drop your pitch deck, plan, one-pager, or notes — we'll fill the whole form"* so users know it does more than seed the concept.
+- Map the full structured payload into: company name (or website URL), business concept, differentiation, founder name / email / phone, city, region, country, market scope, industry, sub-industry.
+- For any field the model couldn't infer, fall back to safe defaults so the form is always submittable:
+  - `country` → "United States"
+  - `marketScope` → "local"
+  - `founderName` / `founderEmail` → pulled from the signed-in user's profile/auth metadata
+  - `city` / `region` → left blank only if neither doc nor profile has them (highlighted, see step 4)
+- Keep Track untouched — user picks it.
 
-## 3. Edge cases / safety
+### 3. Scanned-PDF fallback — `venture-synthesize-concept`
 
-- Large PDFs: existing client-side `extractFileText` already pulls text via `pdfjs`; no change.
-- Multiple files: concatenate their text with file-name headers (already done) and let the model produce a single merged object.
-- Model failure / empty object: fall back to current behavior (apply only `concept` if present) and surface a clear error otherwise.
-- No schema/database changes. No new tables, secrets, or buckets.
+If the client-extracted text is shorter than ~50 useful characters (scanned PDF, image-only deck), the edge function falls back to Gemini vision OCR on the original file bytes before synthesising. Prevents the silent "nothing happened" case that's currently leaving fields empty.
+
+### 4. Surface what's still needed — `hub.new.tsx`
+
+- After processing, show a small **"Filled from your document"** summary card listing which fields were populated and which (if any) still need a human touch.
+- Replace the silent `disabled` on **Create & enrich** with a tooltip listing the exact missing fields (e.g., "Pick a Track" / "Add city").
+- Auto-scroll + pulse-highlight any still-missing field.
+
+### 5. Order of operations on the page
+
+```text
+Upload doc  →  [Process document]  →  fields auto-fill  →  Pick Track  →  [Create & enrich]
+```
+
+The legacy ghost "Draft from N files" button next to the concept textarea is removed to eliminate the duplicate path.
 
 ## Out of scope
 
-- Touching the separate `/dashboard/brief` dropzone (different flow, already handled by `brief-prefill`).
-- Auto-creating the snapshot — user still clicks **Create venture** after reviewing.
+- No backend/data-model changes beyond the edge function update.
+- Track inference is intentionally left to the user (per request).
+- "🧪 Fill test concept" dev helper stays as-is.
