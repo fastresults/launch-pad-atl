@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { FoundersHubGate } from "@/components/hub/FoundersHubGate";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { TRACKS, TRACK_BY_KEY, pickSeedForTrack, type TrackKey } from "@/lib/tracks";
 import { createSnapshot } from "@/lib/foundersHub.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin, CheckCircle2 } from "lucide-react";
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { toast } from "sonner";
 
@@ -104,26 +104,29 @@ export default function HubNewPage() {
 
 function Inner() {
   const nav = useNavigate();
-  const [path, setPath] = useState<Path>("own");
-  const [companyName, setCompanyName] = useState("");
+  const location = useLocation();
+  const prefill = (location.state as any)?.prefill;
+  const [fromBrief, setFromBrief] = useState<boolean>(!!prefill?.fromBrief);
+  const [path, setPath] = useState<Path>("manual");
+  const [companyName, setCompanyName] = useState(prefill?.company_name ?? "");
   const [websiteUrl, setWebsiteUrl] = useState("");
-  const [businessConcept, setBusinessConcept] = useState("");
-  const [diff, setDiff] = useState("");
+  const [businessConcept, setBusinessConcept] = useState(prefill?.business_concept ?? "");
+  const [diff, setDiff] = useState(prefill?.differentiation_statement ?? "");
   const [files, setFiles] = useState<DroppedFile[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [filling, setFilling] = useState(false);
   // Founder + market context
-  const [founderName, setFounderName] = useState("");
-  const [founderEmail, setFounderEmail] = useState("");
-  const [founderPhone, setFounderPhone] = useState("");
-  const [city, setCity] = useState("");
-  const [region, setRegion] = useState("");
-  const [country, setCountry] = useState("United States");
-  const [marketScope, setMarketScope] = useState<"local" | "regional" | "national" | "international">("local");
-  const [industry, setIndustry] = useState("");
-  const [subIndustry, setSubIndustry] = useState("");
-  const [track, setTrack] = useState<TrackKey | "">("lifestyle");
+  const [founderName, setFounderName] = useState(prefill?.founder_name ?? "");
+  const [founderEmail, setFounderEmail] = useState(prefill?.founder_email ?? "");
+  const [founderPhone, setFounderPhone] = useState(prefill?.founder_phone ?? "");
+  const [city, setCity] = useState(prefill?.city ?? "");
+  const [region, setRegion] = useState(prefill?.region ?? "");
+  const [country, setCountry] = useState(prefill?.country ?? "United States");
+  const [marketScope, setMarketScope] = useState<"local" | "regional" | "national" | "international">(prefill?.market_scope ?? "local");
+  const [industry, setIndustry] = useState(prefill?.industry ?? "");
+  const [subIndustry, setSubIndustry] = useState(prefill?.sub_industry ?? "");
+  const [track, setTrack] = useState<TrackKey | "">(prefill?.track ?? "lifestyle");
   const [showTrackHelp, setShowTrackHelp] = useState(false);
   const [trackPulse, setTrackPulse] = useState(false);
   const trackSectionRef = useRef<HTMLDivElement | null>(null);
@@ -255,11 +258,35 @@ function Inner() {
         <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
           <Sparkles className="h-3.5 w-3.5" /> Step 1 of 4 — Concept
         </div>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Tell us about the venture</h1>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight">
+          {fromBrief ? "Your Startup Snapshot — ready to confirm" : "Tell us about the venture"}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Pick how you want us to enrich it. We'll pull context, then you review before generation.
+          {fromBrief
+            ? "We pre-filled this from your founder brief. Skim it, fix anything that's off, and pick your city/state — then we generate."
+            : "Pick how you want us to enrich it. We'll pull context, then you review before generation."}
         </p>
       </div>
+
+      {fromBrief && (
+        <div className="flex items-start gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <div className="flex-1">
+            <div className="font-medium">Pre-filled from your startup brief</div>
+            <div className="mt-0.5 text-muted-foreground">
+              Edit anything that's off. The only things we still need from you are your <strong>city / state</strong>{!industry ? " and " : ""}{!industry ? <strong>industry</strong> : null}.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFromBrief(false)}
+            className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
 
       <div className="grid gap-2 md:grid-cols-3">
         {([

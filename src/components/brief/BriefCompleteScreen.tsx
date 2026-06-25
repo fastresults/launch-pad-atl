@@ -53,8 +53,8 @@ export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEdit
           Generate your first deliverable.
         </h2>
         <p className="mt-2 text-muted-foreground max-w-xl">
-          We'll start with your Startup Snapshot — a one-page read on your idea, market, and edge.
-          It takes about a minute.
+          We'll open your Startup Snapshot with your brief already filled in — review it, add your
+          city and state, then we generate.
         </p>
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
           <button

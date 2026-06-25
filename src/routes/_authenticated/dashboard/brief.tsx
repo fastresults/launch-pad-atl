@@ -23,6 +23,7 @@ import { BriefPrefillDropzone } from "@/components/brief/BriefPrefillDropzone";
 import { BriefCompleteScreen } from "@/components/brief/BriefCompleteScreen";
 import { BriefPrefillReview } from "@/components/brief/BriefPrefillReview";
 import type { BriefPrefillResponse } from "@/lib/brief.functions";
+import { buildPrefillFromBrief } from "@/lib/brief-to-snapshot";
 import { ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -224,7 +225,14 @@ export default function BriefWizard() {
       {mode === "complete" ? (
         <div className="mt-10">
           <BriefCompleteScreen
-            onGenerateFirst={() => navigate({ to: "/dashboard/hub" })}
+            onGenerateFirst={async () => {
+              try {
+                const prefill = await buildPrefillFromBrief();
+                navigate("/dashboard/hub/new", { state: { prefill } });
+              } catch {
+                navigate("/dashboard/hub/new");
+              }
+            }}
             onSeeDeliverables={() => navigate({ to: "/dashboard/deliverables" })}
             onEditBrief={() => {
               setMode("question");

@@ -1,72 +1,47 @@
+## The problem
 
-## Problem
+Right now `BriefCompleteScreen`'s primary CTA navigates to `/dashboard/hub`. For a brand-new founder this route shows an empty state ("Start your first startup") with a *New startup* button — so the CTA effectively goes nowhere useful. Tapping *New startup* then drops them into `/dashboard/hub/new`, a blank 4-step wizard that asks for company name, URL, concept, founder name/email, city/region/country, industry, sub-industry, track — **all things we either just collected in the brief or know from their profile**. The user is being asked to start over right after finishing onboarding. That's the dead end they're describing.
 
-After Block 5 of 5, the only thing that happens is a `toast.success("All done…")` and an instant redirect to `/dashboard`. A first-time founder is left thinking: *"That's it? What was the point? What do I do now?"*
+## The real next step
 
-There's no moment of arrival, no recap of what the brief unlocked, and no obvious next action.
-
-## What "good" looks like for a novice
-
-After they confirm the last checkpoint, they should land on a short, warm "You're set up — here's what's next" screen that:
-
-1. Celebrates the milestone (they just finished the foundation the rest of the workshop is built on).
-2. Tells them in plain language **what their brief now powers** (positioning, market read, deliverables, etc.).
-3. Gives **one obvious primary action** — generate their first deliverable in the Founders Hub — plus a couple of secondary actions.
-4. Leaves a clear back-door if they want to tweak their answers later.
-
-This turns the dead-end into a guided handoff.
+The brief already has: `one_line_pitch`, `problem_statement`, `offer_description`, `target_customer`, `unique_insight`, `business_model`, `pricing_idea`, `twelve_month_vision`, `inspiration_brands`. The user's profile/registration has: founder name, email, city, region, country, track (Main Street default). Together that's enough to walk into `/dashboard/hub/new` with the form **already filled in** and the user one click away from creating their first snapshot — which then auto-enriches and routes them into the snapshot view where deliverables actually generate.
 
 ## Plan
 
-### 1. Add a `complete` mode to the brief flow
-File: `src/routes/_authenticated/dashboard/brief.tsx`
+1. **Add brief → snapshot prefill helper** (`src/lib/brief-to-snapshot.ts`)
+   - Pulls the user's `attendee_business_brief` row plus profile (founder name/email/city/region/country/track if available).
+   - Maps:
+     - `business_concept` ← `[one_line_pitch] + "\n\n" + [problem_statement] + "\n\n" + [offer_description]` (trimmed, only non-empty)
+     - `differentiation_statement` ← `unique_insight`
+     - `company_name` ← derived from `one_line_pitch` first 4–6 words, user-editable
+     - `founder_name / email / city / region / country / track` ← profile
+     - `industry` ← left blank for the user to pick (the one thing the brief doesn't capture cleanly), with a soft suggestion via the existing `guessIndustry()` from the concept text
+   - Returns a plain object suitable for hub/new's form state.
 
-- Extend the `mode` union with `"complete"`.
-- In `continueFromCheckpoint`, when `checkpointBlock.kind === "market"`, set `mode = "complete"` **instead of** navigating away and firing a toast.
-- Keep the progress bar at 100% on this screen and change the eyebrow to `BRIEF COMPLETE`.
+2. **Update `hub.new.tsx` to accept prefill via router state / query param**
+   - Read `location.state?.prefill` (or `?from=brief` triggering a fetch).
+   - On mount, if prefill present: hydrate all form fields, jump straight to **Step 4 — Review** (or Step 3 with a single visible "Review your details" panel), and show a small banner: *"Pre-filled from your startup brief — edit anything that's off, then create."*
 
-### 2. New component: `BriefCompleteScreen`
-File: `src/components/brief/BriefCompleteScreen.tsx`
+3. **Wire the CTA**
+   - In `src/routes/_authenticated/dashboard/brief.tsx`, change `onGenerateFirst` from `navigate({ to: "/dashboard/hub" })` to `navigate("/dashboard/hub/new", { state: { prefill: await buildPrefillFromBrief() } })`.
+   - Same treatment for *See all 34 deliverables* — that should go to `/dashboard/hub/new` too (the only way to see deliverables generate is to have a snapshot), OR to the framework page if we want a read-only preview. Recommend keeping it as a secondary "Preview the 34 deliverables" link to `/dashboard#framework` so we don't double up.
 
-Sections (semantic tokens only — no hardcoded colors):
+4. **Copy update on `BriefCompleteScreen`**
+   - Subhead becomes: *"We'll open your Startup Snapshot with your brief already filled in — review it, then we generate."*
+   - Button label stays: *Generate your first deliverable →*
 
-- **Hero**
-  - Small celebratory eyebrow (`✓ Your founder brief is locked in`)
-  - H1: *"You've given the AI the full picture."*
-  - Subhead: one sentence explaining the brief now powers every deliverable.
+5. **Verify end-to-end via Playwright**
+   - Sign in with the injected session, complete-state brief, click the CTA, confirm hub/new lands on the Review step with `business_concept` populated and Create enabled.
 
-- **"Here's what your brief just unlocked"** — 3 short cards:
-  1. **Sharper positioning** — your story, your edge, the right person framing.
-  2. **A market read tuned to you** — industry, customer type, geography, channels.
-  3. **Deliverables that sound like you** — every doc generated from your own words.
+## What this does NOT change
 
-- **One obvious next step (primary CTA)**
-  - Big button: **"Generate your first deliverable →"** → routes to `/dashboard/hub` (or `/dashboard/hub/new` if that's the entry point — confirm during implementation by reading the hub route).
-  - Helper line under it: *"We'll start with your Startup Snapshot — it takes about a minute."*
-
-- **Secondary actions** (low-emphasis links/ghost buttons):
-  - *See all 34 deliverables* → `/dashboard` (deliverables grid)
-  - *Review or edit my brief* → re-enters the brief at the first QA block
-
-- **Reassurance line at the bottom**
-  - *"You can come back and refine any answer anytime — your brief stays live."*
-
-### 3. Wire `Edit my brief` re-entry
-- Reuse `editFromCheckpoint` style: setting `mode = "question"` and `idx = 0` is enough; the existing review/edit paths already handle the rest.
-
-### 4. Remove the abrupt redirect
-- Delete the `navigate({ to: "/dashboard" })` and `toast.success(...)` from the market branch of `continueFromCheckpoint` — the completion screen replaces both.
-
-### 5. Don't trap returning users
-- If someone navigates back to `/dashboard/brief` after they've already completed it, the existing question flow still works for editing. No change needed for v1, but worth verifying during implementation that landing on the page doesn't auto-show the complete screen — it should only appear as the result of pressing Continue on the final checkpoint.
-
-## Out of scope (intentionally)
-
-- No new backend fields, no `brief_completed_at` column, no analytics events — keep this a pure UX fix.
-- No confetti / heavy animation — a calm, confident handoff fits the existing tone better than fireworks.
-- No changes to earlier checkpoints — they already have a clear next step (the following block).
+- No edits to the brief wizard itself, no schema changes, no edge function changes.
+- The hub/new wizard still owns validation, enrichment, and snapshot creation — we're only pre-filling its inputs.
+- Industry stays a user choice (brief doesn't capture it), with a soft suggestion so it's still one click.
 
 ## Files touched
 
-- `src/routes/_authenticated/dashboard/brief.tsx` — add `complete` mode, render new screen, drop the redirect.
-- `src/components/brief/BriefCompleteScreen.tsx` — new component.
+- `src/lib/brief-to-snapshot.ts` (new)
+- `src/routes/_authenticated/dashboard/brief.tsx` (CTA wiring)
+- `src/routes/_authenticated/dashboard/hub.new.tsx` (consume prefill, jump to Review, banner)
+- `src/components/brief/BriefCompleteScreen.tsx` (subhead copy)
