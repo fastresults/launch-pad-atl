@@ -43,6 +43,20 @@ function gatewayMessage(status: number, detail: string) {
   return "AI generation is currently unavailable. Please try again shortly.";
 }
 
+// Remove footnote markers ([^1]) and any trailing Sources/References/Citations section.
+function stripCitations(md: string): string {
+  let out = md;
+  // Drop trailing Sources/References/Citations section (and everything after it).
+  out = out.replace(/\n#{1,6}\s*(sources|references|citations|bibliography|footnotes)\s*[\s\S]*$/i, "");
+  // Drop inline footnote markers like [^1], [^12].
+  out = out.replace(/\[\^[^\]]+\]/g, "");
+  // Drop standalone footnote definition lines like [^1]: https://...
+  out = out.replace(/^\s*\[\^[^\]]+\]:.*$/gm, "");
+  // Collapse 3+ blank lines.
+  out = out.replace(/\n{3,}/g, "\n\n");
+  return out.trim();
+}
+
 // Track tone directives — mirrored from src/lib/tracks.ts. Keep in sync.
 const TRACK_TONE: Record<string, string> = {
   lifestyle:
