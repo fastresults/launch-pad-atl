@@ -155,32 +155,31 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
   const queryKey = ["media", scope, ownerUserId, folderId, collectionId, mediaType, search];
   const assetsQ = useQuery({
     queryKey,
-    queryFn: () =>
-      listFn({
-        data: {
-          scope,
-          ownerUserId: ownerUserId ?? null,
-          folderId: collectionId ? undefined : folderId,
-          collectionId,
-          mediaType: mediaType === "all" ? null : mediaType,
-          search: search || null,
-        },
-      }),
+    queryFn: () => listFn({ folderId: collectionId ? undefined : folderId ?? undefined }),
   });
 
   const foldersQ = useQuery({
     queryKey: ["media-folders", scope, ownerUserId],
-    queryFn: () => foldersFn({ data: { scope, ownerUserId: ownerUserId ?? null } }),
+    queryFn: () => foldersFn(),
   });
 
   const collectionsQ = useQuery({
     queryKey: ["media-collections", scope, ownerUserId],
-    queryFn: () => collectionsFn({ data: { scope, ownerUserId: ownerUserId ?? null } }),
+    queryFn: () => collectionsFn(),
   });
 
-  const assets = (assetsQ.data?.assets ?? []) as Asset[];
-  const folders = foldersQ.data?.folders ?? [];
-  const collections = collectionsQ.data?.collections ?? [];
+  const allAssets = (assetsQ.data ?? []) as Asset[];
+  const assets = allAssets.filter((a) => {
+    if (mediaType !== "all" && a.media_type !== mediaType) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      const hay = `${a.title ?? ""} ${a.original_name ?? ""} ${(a.tags ?? []).join(" ")}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const folders = (foldersQ.data ?? []) as Array<{ id: string; name: string }>;
+  const collections = (collectionsQ.data ?? []) as Array<{ id: string; name: string }>;
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["media"] });
 
@@ -197,23 +196,24 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
           toast.error(`${file.name}: exceeds 100MB`);
           continue;
         }
-        const { uploadUrl, asset } = await createSignedFn({
-          data: {
-            scope,
-            ownerUserId: ownerUserId ?? null,
-            folderId,
-            filename: file.name,
-            mimeType: file.type || "application/octet-stream",
-            sizeBytes: file.size,
-          },
+        const contentType = file.type || "application/octet-stream";
+        const { uploadUrl, path } = await createSignedFn({
+          filename: file.name,
+          contentType,
         });
         const putRes = await fetch(uploadUrl, {
           method: "PUT",
-          headers: { "Content-Type": file.type || "application/octet-stream" },
+          headers: { "Content-Type": contentType },
           body: file,
         });
         if (!putRes.ok) throw new Error(`Upload failed: ${putRes.status}`);
-        await finalizeFn({ data: { assetId: asset.id } });
+        await finalizeFn({
+          path,
+          filename: file.name,
+          contentType,
+          folderId: folderId ?? undefined,
+          size: file.size,
+        });
         toast.success(`Uploaded ${file.name}`);
       } catch (e) {
         toast.error(`${file.name}: ${(e as Error).message}`);
@@ -225,16 +225,14 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
 
   // ===== Folder / collection create =====
   const createFolderMu = useMutation({
-    mutationFn: (name: string) =>
-      createFolderFn({ data: { scope, ownerUserId: ownerUserId ?? null, name, parentId: folderId } }),
+    mutationFn: (name: string) => createFolderFn({ name }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["media-folders", scope, ownerUserId] });
       toast.success("Folder created");
     },
   });
   const createCollectionMu = useMutation({
-    mutationFn: (name: string) =>
-      createCollectionFn({ data: { scope, ownerUserId: ownerUserId ?? null, name } }),
+    mutationFn: (name: string) => createCollectionFn({ name }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["media-collections", scope, ownerUserId] });
       toast.success("Collection created");
@@ -255,16 +253,16 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
     setSelectedAsset(asset);
     setPreviewUrl(null);
     try {
-      const { url } = await getUrlFn({ data: { assetId: asset.id } });
+      const { url } = await getUrlFn({ path: asset.storage_path, bucket: asset.storage_bucket });
       setPreviewUrl(url);
     } catch (e) {
       toast.error((e as Error).message);
     }
   }
 
-  async function copyAssetUrl(assetId: string) {
+  async function copyAssetUrl(asset: Asset) {
     try {
-      const { url } = await getUrlFn({ data: { assetId } });
+      const { url } = await getUrlFn({ path: asset.storage_path, bucket: asset.storage_bucket });
       await navigator.clipboard.writeText(url);
       toast.success("Link copied (valid 1 hour)");
     } catch (e) {
@@ -301,7 +299,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
     const p = readPayload(e);
     if (!p || p.ids.length === 0) return;
     try {
-      await Promise.all(p.ids.map((id) => updateFn({ data: { id, folderId: targetFolderId } })));
+      await Promise.all(p.ids.map((id) => updateFn({ id, folder_id: targetFolderId })));
       toast.success(`Moved ${p.ids.length} file${p.ids.length === 1 ? "" : "s"}`);
       setSelectedIds(new Set());
       invalidate();
@@ -318,9 +316,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
     try {
       await Promise.all(
         p.ids.map((id) =>
-          toggleCollectionFn({
-            data: { collectionId: targetCollectionId, assetId: id, action: "add" },
-          }),
+          toggleCollectionFn({ collectionId: targetCollectionId, mediaId: id }),
         ),
       );
       toast.success(`Added ${p.ids.length} to collection`);
@@ -347,15 +343,13 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
     mutationFn: async () => {
       if (!selectedAsset) return;
       await updateFn({
-        data: {
-          id: selectedAsset.id,
-          title: editTitle,
-          description: editDesc,
-          tags: editTags
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean),
-        },
+        id: selectedAsset.id,
+        title: editTitle,
+        description: editDesc,
+        tags: editTags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
       });
     },
     onSuccess: () => {
@@ -365,7 +359,8 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
   });
 
   const removeAsset = useMutation({
-    mutationFn: (id: string) => deleteFn({ data: { id } }),
+    mutationFn: (asset: Asset) =>
+      deleteFn({ id: asset.id, path: asset.storage_path, bucket: asset.storage_bucket }),
     onSuccess: () => {
       toast.success("Deleted");
       setSelectedAsset(null);
@@ -592,7 +587,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                   </div>
                   <div className="flex aspect-square items-center justify-center bg-muted/30">
                     {a.media_type === "image" && a.upload_status === "ready" ? (
-                      <AssetThumb assetId={a.id} />
+                      <AssetThumb path={a.storage_path} bucket={a.storage_bucket} />
                     ) : (
                       <Icon className="h-12 w-12 text-muted-foreground" />
                     )}
@@ -615,7 +610,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                       variant="secondary"
                       className="h-7 w-7"
                       title="Copy link"
-                      onClick={() => copyAssetUrl(a.id)}
+                      onClick={() => copyAssetUrl(a)}
                     >
                       <Link2 className="h-3.5 w-3.5" />
                     </Button>
@@ -672,7 +667,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                     </div>
                     <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded bg-muted/40">
                       {a.media_type === "image" && a.upload_status === "ready" ? (
-                        <AssetThumb assetId={a.id} />
+                        <AssetThumb path={a.storage_path} bucket={a.storage_bucket} />
                       ) : (
                         <Icon className="h-5 w-5 text-muted-foreground" />
                       )}
@@ -710,7 +705,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                         variant="ghost"
                         className="h-7 w-7"
                         title="Copy link"
-                        onClick={() => copyAssetUrl(a.id)}
+                        onClick={() => copyAssetUrl(a)}
                       >
                         <Link2 className="h-3.5 w-3.5" />
                       </Button>
@@ -758,7 +753,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => reprocessFn({ data: { assetId: selectedAsset.id } }).then(() => invalidate())}
+                    onClick={() => reprocessFn({}).then(() => invalidate())}
                   >
                     <Sparkles className="mr-2 h-4 w-4" /> Re-run AI
                   </Button>
@@ -766,7 +761,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                     size="sm"
                     variant="destructive"
                     onClick={() => {
-                      if (confirm("Delete this file?")) removeAsset.mutate(selectedAsset.id);
+                      if (confirm("Delete this file?")) removeAsset.mutate(selectedAsset);
                     }}
                   >
                     <Trash2 className="mr-2 h-4 w-4" /> Delete
@@ -791,7 +786,8 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                     value={selectedAsset.folder_id ?? "none"}
                     onValueChange={(v) =>
                       updateFn({
-                        data: { id: selectedAsset.id, folderId: v === "none" ? null : v },
+                        id: selectedAsset.id,
+                        folder_id: v === "none" ? null : v,
                       }).then(() => invalidate())
                     }
                   >
@@ -815,7 +811,8 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                       value=""
                       onValueChange={(v) =>
                         toggleCollectionFn({
-                          data: { collectionId: v, assetId: selectedAsset.id, action: "add" },
+                          collectionId: v,
+                          mediaId: selectedAsset.id,
                         }).then(() => {
                           toast.success("Added to collection");
                           invalidate();
@@ -920,11 +917,11 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
   );
 }
 
-function AssetThumb({ assetId }: { assetId: string }) {
+function AssetThumb({ path, bucket }: { path: string; bucket?: string }) {
   const getUrlFn = (getAssetSignedUrl);
   const { data } = useQuery({
-    queryKey: ["asset-thumb", assetId],
-    queryFn: () => getUrlFn({ data: { assetId } }),
+    queryKey: ["asset-thumb", bucket ?? "user-media", path],
+    queryFn: () => getUrlFn({ path, bucket }),
     staleTime: 1000 * 60 * 30,
   });
   if (!data?.url) return <ImageIcon className="h-12 w-12 text-muted-foreground" />;
