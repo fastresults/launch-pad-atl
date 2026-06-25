@@ -753,7 +753,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => reprocessFn({ data: { assetId: selectedAsset.id } }).then(() => invalidate())}
+                    onClick={() => reprocessFn({}).then(() => invalidate())}
                   >
                     <Sparkles className="mr-2 h-4 w-4" /> Re-run AI
                   </Button>
