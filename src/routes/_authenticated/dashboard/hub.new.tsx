@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { FoundersHubGate } from "@/components/hub/FoundersHubGate";
 import { Button } from "@/components/ui/button";
