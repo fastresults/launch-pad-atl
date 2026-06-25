@@ -49,6 +49,10 @@ export default function BriefWizard() {
   const [checkpointBlock, setCheckpointBlock] = useState<BriefBlock | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [editingFromReview, setEditingFromReview] = useState(false);
+  const [prefillData, setPrefillData] = useState<BriefPrefillResponse | null>(null);
+  const [prefillOpen, setPrefillOpen] = useState(false);
+  const [prefillDismissed, setPrefillDismissed] = useState(false);
+  const [showPrefillDialog, setShowPrefillDialog] = useState(false);
 
   useEffect(() => {
     if (!data?.brief) return;
