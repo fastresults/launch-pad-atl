@@ -226,8 +226,13 @@ export function RegisterFramework() {
                   <li key={stage.number} className="flex gap-3">
                     <Check className="mt-0.5 size-4 shrink-0 text-primary" />
                     <div>
-                      <div className="font-medium">
-                        Stage {Number(stage.number)} · {stage.items.length} deliverables
+                      <div className="flex flex-wrap items-center gap-2 font-medium">
+                        <span>Stage {Number(stage.number)} · {stage.items.length} deliverables</span>
+                        {stage.bonus && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.18em] text-white">
+                            <Sparkles className="size-2.5" /> Bonus
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs text-muted-foreground">{stage.name}</div>
                     </div>
