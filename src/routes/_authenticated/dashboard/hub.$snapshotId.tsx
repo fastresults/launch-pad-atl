@@ -750,7 +750,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               const depsMet = deps.every((dep) => completedKeys.has(dep));
               const status = d?.status ?? "pending";
               const isComplete = status === "complete";
-              const generating = status === "generating" || (genOne.isPending && genOne.variables === t.type);
+              const generating = status === "generating" || (genOne.isPending && genOne.variables?.documentType === t.type);
               const Icon = isComplete ? CheckCircle2 : depsMet ? Circle : Lock;
               const tone = isComplete ? "text-status-success" : depsMet ? "text-foreground" : "text-muted-foreground";
 
