@@ -373,7 +373,7 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
                     {card.risks?.length > 0 && (
                       <div>
                         <div className="font-medium text-muted-foreground">Risks</div>
-                        <ul className="list-disc space-y-0.5 pl-4 text-amber-300/80">
+                        <ul className="list-disc space-y-0.5 pl-4 text-amber-800 dark:text-amber-300">
                           {card.risks.map((s: string, j: number) => <li key={j}>{s}</li>)}
                         </ul>
                       </div>
