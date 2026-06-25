@@ -346,6 +346,61 @@ export async function adminListSnapshots() {
   return (data ?? []) as VentureSnapshot[];
 }
 
+// Admin-only hard delete. RLS already allows DELETE for is_admin(auth.uid()),
+// and FK cascades clean up venture_documents / venture_generation_jobs /
+// venture_generation_failures. We best-effort wipe the snapshot's storage
+// prefix in venture-doc-images first so we don't orphan files.
+export async function adminDeleteSnapshot(input: any): Promise<void> {
+  const { id } = unwrap<{ id: string }>(input);
+  if (!id) throw new Error("Missing snapshot id");
+
+  // Fetch owner so we can target the storage prefix `{user_id}/{snapshot_id}/`.
+  const { data: snap, error: fetchErr } = await supabase
+    .from("venture_snapshots")
+    .select("user_id, status")
+    .eq("id", id)
+    .maybeSingle();
+  if (fetchErr) throw new Error(fetchErr.message);
+  if (!snap) throw new Error("Venture not found");
+  if (snap.status === "enriching" || snap.status === "generating") {
+    throw new Error("Wait for the active job to finish before deleting");
+  }
+
+  // Best-effort storage cleanup. Storage RLS allows admins to remove via the
+  // existing storage policies; failures here are non-fatal — the row delete is
+  // what matters for the user-visible list.
+  try {
+    const prefix = `${snap.user_id}/${id}`;
+    const { data: files } = await supabase.storage
+      .from("venture-doc-images")
+      .list(prefix, { limit: 1000 });
+    const paths: string[] = [];
+    if (files?.length) {
+      // list returns immediate children; walk one level for document_type folders.
+      for (const entry of files) {
+        if (entry.name && entry.name.endsWith(".png")) {
+          paths.push(`${prefix}/${entry.name}`);
+        } else if (entry.name) {
+          const { data: sub } = await supabase.storage
+            .from("venture-doc-images")
+            .list(`${prefix}/${entry.name}`, { limit: 1000 });
+          for (const s of sub ?? []) paths.push(`${prefix}/${entry.name}/${s.name}`);
+        }
+      }
+    }
+    if (paths.length) await supabase.storage.from("venture-doc-images").remove(paths);
+  } catch (e) {
+    console.warn("[adminDeleteSnapshot] storage cleanup failed:", e);
+  }
+
+  const { error: delErr } = await supabase
+    .from("venture_snapshots")
+    .delete()
+    .eq("id", id);
+  if (delErr) throw new Error(delErr.message);
+}
+
+
 // Concept refinement gateway
 export async function refineConcept(input: any): Promise<any> {
   const { snapshotId, action, payload } = unwrap<{ snapshotId: string; action: string; payload?: any }>(input);

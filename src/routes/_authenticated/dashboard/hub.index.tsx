@@ -27,9 +27,13 @@ import {
   archiveSnapshot,
   unarchiveSnapshot,
   setFavorite,
+  adminDeleteSnapshot,
 } from "@/lib/foundersHub.functions";
+import { useAuth } from "@/hooks/use-auth";
+import { Input } from "@/components/ui/input";
+import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { getTrack } from "@/lib/tracks";
-import { Plus, ArrowRight, Sparkles, Star, MoreHorizontal, Archive, RotateCcw } from "lucide-react";
+import { Plus, ArrowRight, Sparkles, Star, MoreHorizontal, Archive, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -199,7 +203,10 @@ function EmptyState({ tab }: { tab: Tab }) {
 
 function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: number; tab: Tab }) {
   const qc = useQueryClient();
+  const { isAdmin } = useAuth();
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
 
   const status = STATUS_LABEL[snapshot.status] ?? snapshot.status;
   const title = snapshot.company_name || snapshot.business_concept?.slice(0, 60) || "Untitled startup";
@@ -243,6 +250,22 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
     onError: (e: any) => toast.error(e.message ?? "Couldn't restore"),
   });
 
+  const deleteMut = useMutation({
+    mutationFn: () => adminDeleteSnapshot({ data: { id: snapshot.id } }),
+    onSuccess: () => {
+      toast.success(`Deleted "${title}"`);
+      setConfirmDelete(false);
+      setDeleteText("");
+      qc.invalidateQueries({ queryKey: ["hub", "snapshots"] });
+      qc.invalidateQueries({ queryKey: ["admin", "hub", "snapshots"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Couldn't delete"),
+  });
+
+  const confirmPhrase = (snapshot.company_name?.trim() || "DELETE");
+  const deleteEnabled = deleteText.trim() === confirmPhrase && !deleteMut.isPending;
+  const jobActive = snapshot.status === "enriching" || snapshot.status === "generating";
+
   const stop = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -282,6 +305,19 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
               <DropdownMenuItem onSelect={() => setConfirmArchive(true)}>
                 <Archive className="mr-2 h-3.5 w-3.5" /> Archive
               </DropdownMenuItem>
+            )}
+            {isAdmin && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={jobActive}
+                  onSelect={(e) => { if (jobActive) { e.preventDefault(); return; } setConfirmDelete(true); }}
+                  className="text-red-400 focus:text-red-300"
+                  title={jobActive ? "Wait for the active job to finish, then delete" : undefined}
+                >
+                  <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete venture (admin)
+                </DropdownMenuItem>
+              </>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
@@ -329,6 +365,59 @@ function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {isAdmin && (
+        <AlertDialog
+          open={confirmDelete}
+          onOpenChange={(o) => { setConfirmDelete(o); if (!o) setDeleteText(""); }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this venture permanently?</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm">
+                  <p>
+                    This is an <span className="font-semibold text-red-300">admin-only, irreversible</span> action.
+                    It will permanently remove this venture and everything attached to it:
+                  </p>
+                  <ul className="list-inside list-disc text-xs text-muted-foreground">
+                    <li>The startup record</li>
+                    <li>All generated documents and revisions</li>
+                    <li>All generation jobs and failure logs</li>
+                    <li>Uploaded document images</li>
+                  </ul>
+                  <div className="rounded-lg border border-white/10 bg-muted/40 p-3 text-xs">
+                    <div><span className="text-muted-foreground">Venture:</span> <span className="font-medium">{title}</span></div>
+                    <div><span className="text-muted-foreground">Owner:</span> {snapshot.user_id}</div>
+                    <div><span className="text-muted-foreground">Created:</span> {snapshot.created_at ? new Date(snapshot.created_at).toLocaleString() : "—"}</div>
+                  </div>
+                  <div>
+                    <p className="mb-1.5">
+                      Type <span className="font-mono font-semibold text-foreground">{confirmPhrase}</span> to confirm.
+                    </p>
+                    <Input
+                      autoFocus={false}
+                      value={deleteText}
+                      onChange={(e) => setDeleteText(e.target.value)}
+                      placeholder={confirmPhrase}
+                    />
+                  </div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel autoFocus>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!deleteEnabled}
+                onClick={(e) => { e.preventDefault(); if (deleteEnabled) deleteMut.mutate(); }}
+                className="bg-red-600 text-white hover:bg-red-500 disabled:opacity-40"
+              >
+                {deleteMut.isPending ? "Deleting…" : "Delete forever"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
