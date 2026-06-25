@@ -151,6 +151,7 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
     market_scope,
     industry,
     sub_industry,
+    track,
   } = unwrap<{
     company_name?: string;
     website_url?: string;
@@ -165,6 +166,7 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
     market_scope?: "local" | "regional" | "national" | "international";
     industry?: string;
     sub_industry?: string;
+    track?: string;
   }>(input);
 
   const { data, error } = await supabase
@@ -184,6 +186,7 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
       market_scope: market_scope ?? null,
       industry: industry ?? null,
       sub_industry: sub_industry ?? null,
+      track: track ?? null,
       status: "enriching",
       enrichment_progress: { stage: "queued", progress: 0, message: "Queued", updatedAt: new Date().toISOString() },
     })
