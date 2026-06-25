@@ -1,67 +1,78 @@
-# Executive Summary + McKinsey deep dive, no citations
+# Deep Assessment on demand
 
-Every document keeps the concise, scannable executive-summary format on top. Below it, the AI appends a rigorous, McKinsey-style assessment tailored to that document type. Footnotes and "Sources" sections are removed everywhere.
+Strip the McKinsey-grade section back out of the default document generation. Each document is again just the **Executive Summary**. When the founder opens a document and wants more rigor, they click **Run deep assessment** in the viewer. A new edge function generates the McKinsey-grade analysis from the existing document + venture context and renders it below the document in the same modal.
 
-## What changes for the founder
+## UX flow
 
-When they open any document in the viewer they see two clearly separated parts:
+1. Founder opens a document → sees the current Executive Summary, nothing else.
+2. Below the document body the viewer shows a card:
+   - **Deep assessment** title + one-line description ("Partner-grade pressure test, assumptions, sensitivities, risks, and 30/60/90-day actions.").
+   - Primary button **Run deep assessment**.
+3. Click → button shows spinner + "Analyzing… (~30s)". Card disables, document stays readable.
+4. On success the card expands into the rendered McKinsey markdown (same `ReactMarkdown` pipeline, with the existing "Deep dive" pill). Footer shows `Regenerate` (with optional feedback, reusing the existing `RewriteFeedbackDialog`) and `Copy / Download` for the assessment alone.
+5. On failure (gateway error, rate limit, credits) the card shows a clear inline error and lets the user retry.
+6. If the document already has an assessment stored, render it immediately on open (no extra click). The button becomes `Regenerate deep assessment`.
 
-1. **Executive Summary** — the current short-form, investor-ready layout (unchanged structure and length).
-2. **McKinsey-Grade Assessment** — a deeper, structured analysis specific to that document (e.g. for `business_model_canvas`: pressure-tested assumptions, unit-economics teardown, sensitivities, risks & mitigations, what would have to be true, 30/60/90 actions). Same brand styling, just longer and more analytical.
+## Data model
 
-No `[^1]` markers, no `## Sources` section, no inline citation links. The deep dive still reasons over the research brief but presents conclusions as analyst judgment, not footnoted quotes.
+Add three columns to `venture_documents` (idempotent migration, default NULL):
 
-## Backend changes (single edge function)
+- `deep_assessment text`
+- `deep_assessment_status text` — `idle | generating | complete | failed`
+- `deep_assessment_quality_score int`
+- `deep_assessment_generated_at timestamptz`
 
-`supabase/functions/venture-generate-document/index.ts` — `generateOne`:
+No new tables, no RLS changes (existing per-document policies cover the new columns).
 
-- **Prompt restructure.** The base system prompt and every entry in the `SPECIAL` map are rewritten to require a two-part output:
-  - `## Executive Summary` — current spec for that doc type (headings, tables, brand-token JSON, paste-ready prompt block for `website_prd`, etc. all preserved verbatim inside this section).
-  - `---`
-  - `## McKinsey-Grade Assessment` — a standardized analytical scaffold the model fills in with doc-specific substance:
-    - Situation & context
-    - Key assumptions (with confidence: high/med/low)
-    - Pressure test / what could go wrong
-    - Quantified sensitivities or scenarios where applicable (tables)
-    - Risks & mitigations
-    - "What would have to be true" for success
-    - 30 / 60 / 90-day actions
-    - Confidence summary
-  - For doc types where a deep dive maps to a more domain-specific frame (e.g. brand strategy → competitive positioning teardown; financial docs → driver tree + sensitivities; GTM → ICP scoring + channel economics), the scaffold above is adapted in the per-type SPECIAL prompt while keeping the same two-section shape.
-- **Remove citation directives.** Delete the `CITATIONS:` block and the `End with a "## Sources" section…` instruction from the base prompt and from every `SPECIAL` entry that includes `QF`. Replace `QF` with a new constant that only emits the trailing `QUALITY_SCORE:` line — no Sources section, no footnotes.
-- **Length target.** Bump guidance from ~600–900 words to ~1,200–1,800 words total (Executive Summary ~500–700, Deep Dive ~700–1,100). Brief doc types stay shorter.
-- **Sanitization pass on the model output.** Before persisting `content`:
-  - strip any `[^n]` markers
-  - strip any trailing `## Sources` / `## References` / `## Citations` section
-  - collapse leftover empty lines
-  This guarantees no citations ship even if the model ignores the prompt.
-- The existing `visual_identity_brief` brand-tokens JSON extraction and `website_prd` paste-ready prompt block continue to work because they live inside the Executive Summary section and the regex extractors operate on the whole document.
-- Rewrite-feedback block and quality scoring logic are unchanged.
+## Backend
 
-## Frontend changes (presentation only)
+**New edge function** `supabase/functions/venture-generate-assessment/index.ts`:
 
-`src/components/hub/DocumentViewer.tsx`:
+- Input: `{ snapshotId, documentType, feedback?, tags? }`.
+- Loads the snapshot, the document row, and a few upstream dep docs (same loader pattern used by `venture-generate-document`).
+- Marks `deep_assessment_status = 'generating'`.
+- Calls `google/gemini-3-flash-preview` via Lovable AI Gateway with a focused system prompt: produce ONLY the `## McKinsey-Grade Assessment` markdown, using the same scaffold (Situation, Key Assumptions, Pressure Test, Quantified Sensitivities, Risks & Mitigations, What Would Have to Be True, 30/60/90, Confidence Summary). Strict no-citations rule, plus a `QUALITY_SCORE:` footer.
+- Sanitizes the output through the shared `stripCitations` helper.
+- Upserts `deep_assessment`, `deep_assessment_quality_score`, `deep_assessment_status = 'complete'`, `deep_assessment_generated_at = now()`.
+- Standard `GatewayError` translation for 402 / 403 / 429 / generic failures.
+- Registered in `supabase/config.toml`.
 
-- Render the markdown as today. The `## McKinsey-Grade Assessment` H2 naturally appears as a section heading, and the `---` separator already renders as the styled gradient `<hr>`.
-- Small enhancement: when the rendered content contains an H2 whose text matches `McKinsey-Grade Assessment`, give it a subtle "Deep dive" pill badge next to the heading (visual cue only, no logic change). Optional polish; not required for the feature to work.
-- Table-of-contents auto-list already picks up the new H2, so users get a one-click jump to the deep dive.
+**Existing functions** `venture-generate-document/index.ts` and `venture-bulk-generate/index.ts`:
 
-No changes to `ConceptStudio`, `BrandStudio`, `SocialStudio`, the hub route, or the rewrite-feedback dialog.
+- Remove the `DEEP_DIVE` constant from the system prompt path used for normal generation. Keep `stripCitations` and the strict "no footnotes / no Sources" rules — the no-citations behavior stays.
+- Replace `DEEP_DIVE` with a short `OUTPUT_FOOTER` constant that only contains:
+  - the citation-strict rules
+  - the `QUALITY_SCORE:` line directive
+- Target length returns to ~600-900 words (Executive Summary only).
+- Document generation never writes `deep_assessment_*` columns.
 
-## Migration of existing documents
+## Client
 
-Existing rows in `venture_documents` keep their old content until the user clicks **Rewrite** (or bulk re-generates). No DB migration needed. We surface a small inline hint in `DocumentViewer` when a document has no `## McKinsey-Grade Assessment` heading: *"This document was generated before the deep-dive upgrade — click Rewrite to add the McKinsey-grade assessment."* (Optional, low effort.)
+- `src/lib/foundersHub.functions.ts`: add `generateDeepAssessment({ snapshotId, documentType, feedback?, tags? })` wrapper that invokes the new edge function. Add a small reader helper or rely on the existing snapshot/documents query to surface the new columns (extend the `select` to include `deep_assessment*`).
+- `src/components/hub/DocumentViewer.tsx`:
+  - Accept the new columns on the `doc` prop (`deep_assessment`, `deep_assessment_status`, `deep_assessment_quality_score`).
+  - Below the article, render a `DeepAssessmentPanel` (new local component) that handles the three states: idle (button), generating (spinner + skeleton), complete (rendered markdown via the same `makeComponents` pipeline, with the Deep-dive pill preserved on the H2, plus Copy / Download / Regenerate controls).
+  - Regenerate reuses `RewriteFeedbackDialog` and calls `generateDeepAssessment` with the feedback/tags.
+  - Failed state shows toast + inline retry.
+- Whichever route/component opens the viewer (`hub.$snapshotId.tsx` and any list views) must include the new columns in its `venture_documents` `select`. No other UI changes elsewhere.
+
+## Migration plan for existing rows
+
+- The migration only adds nullable columns; existing rows remain untouched and load instantly.
+- Documents generated under the previous turn (which already contain an inline `## McKinsey-Grade Assessment` section in `content`) will still render that section as part of the document body. A small one-time data migration is **out of scope**; if the founder wants the new on-demand experience for those docs, they can click Rewrite to regenerate a clean Executive Summary, then click Run deep assessment. We surface this as a hint in the viewer when both an inline assessment heading and no `deep_assessment` value are present.
 
 ## Out of scope
 
-- Concept Studio output (already has its own structure).
-- Schema/DB changes — content stays in the same `content` column.
-- Changing the rewrite-feedback flow, quality scoring, or hero-image generation.
-- Adding a separate "deep dive" tab — keeping it as one scrollable document is simpler and matches the user's request ("below in the modal").
+- New tables, RLS changes, or schema changes beyond the four columns.
+- Bulk pre-generating assessments for every document.
+- Streaming the assessment response (returns as a single payload; viewer shows a skeleton during the ~20-40s call).
+- Changing Concept Studio, Brand Studio, Social Studio, or the rewrite-feedback flow itself.
 
 ## Verification
 
-- Generate a fresh `executive_summary` doc → output contains both sections, no `[^…]`, no `## Sources`.
-- Generate `business_model_canvas`, `brand_strategy_framework`, `website_prd` → each keeps its specialized Executive Summary (incl. JSON / fenced prompt blocks) and gains a tailored McKinsey deep dive below.
-- Open an old document → renders as before; click Rewrite → new version has both sections.
-- Search rendered HTML for `[^` and `Sources` → no hits in newly generated docs.
+- Open an existing (pre-change) document → renders Executive Summary; deep assessment card visible with `Run deep assessment` button.
+- Click button → spinner, then McKinsey section appears below with the Deep-dive pill, Copy/Download/Regenerate controls.
+- Reopen the modal → assessment loads instantly from the stored column.
+- Click Regenerate with feedback → new content replaces the old; `deep_assessment_generated_at` updates.
+- Run a fresh document generation → `content` contains only the Executive Summary, no `## McKinsey-Grade Assessment` block, no `[^…]`, no `## Sources`.
+- Force a gateway 402 → inline error card with retry; document still readable.
