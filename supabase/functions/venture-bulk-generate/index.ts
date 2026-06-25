@@ -128,7 +128,9 @@ CITATIONS:
 After the markdown, on a final line, output exactly:
 QUALITY_SCORE: <0-100 integer>`;
 
-  const systemPrompt = specializedPrompt(documentType) ?? baseSystem;
+  const baseSystemPrompt = specializedPrompt(documentType) ?? baseSystem;
+  const trackTone = snap.track ? TRACK_TONE[snap.track] : null;
+  const systemPrompt = trackTone ? `${baseSystemPrompt}\n\n${trackTone}` : baseSystemPrompt;
 
   const founderCard = {
     founder: { name: snap.founder_name, email: snap.founder_email, phone: snap.founder_phone },
