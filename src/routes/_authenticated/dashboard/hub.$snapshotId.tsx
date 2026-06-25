@@ -786,13 +786,25 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                       <Button
                         size="sm"
                         disabled={!depsMet || generating || jobRunning}
-                        onClick={() => genOne.mutate({ documentType: t.type })}
+                        onClick={() => {
+                          if (t.intake_schema) {
+                            setIntakeTarget({
+                              type: t.type,
+                              name: t.name,
+                              schema: t.intake_schema,
+                              initial: d?.intake_answers ?? null,
+                              isRegenerate: false,
+                            });
+                          } else {
+                            genOne.mutate({ documentType: t.type });
+                          }
+                        }}
                         title={!depsMet ? "Finish earlier documents first" : undefined}
                       >
                         {generating ? (
                           <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing…</>
                         ) : (
-                          <><Play className="mr-1 h-3 w-3" />Generate</>
+                          <><Play className="mr-1 h-3 w-3" />{t.intake_schema ? "Start" : "Generate"}</>
                         )}
                       </Button>
                     )}
@@ -800,10 +812,22 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => setRewriteTarget({ type: t.type, name: t.name })}
+                        onClick={() => {
+                          if (t.intake_schema) {
+                            setIntakeTarget({
+                              type: t.type,
+                              name: t.name,
+                              schema: t.intake_schema,
+                              initial: d?.intake_answers ?? null,
+                              isRegenerate: true,
+                            });
+                          } else {
+                            setRewriteTarget({ type: t.type, name: t.name });
+                          }
+                        }}
                         disabled={jobRunning || generating}
                       >
-                        Rewrite
+                        {t.intake_schema ? "Edit & regenerate" : "Rewrite"}
                       </Button>
                     )}
                   </div>
