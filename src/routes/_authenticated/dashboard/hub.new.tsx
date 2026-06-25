@@ -567,6 +567,7 @@ function Inner() {
                 </li>
               ))}
             </ul>
+          )}
 
           {readyFiles.length > 0 && (
             <div className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
