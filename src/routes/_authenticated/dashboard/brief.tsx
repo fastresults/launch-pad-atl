@@ -219,21 +219,39 @@ export default function BriefWizard() {
 
       {mode === "checkpoint" && checkpointBlock ? (
         <div className="mt-10">
-          <BlockCheckpoint
-            block={checkpointBlock}
-            blockIndex={checkpointBlock.id}
-            totalBlocks={BRIEF_BLOCKS.length}
-            summarize={
+          {(() => {
+            const qaAnswers =
               checkpointBlock.kind === "qa"
-                ? () => summarizeBriefBlock({ block: String(checkpointBlock.id), content: "" })
-                : checkpointBlock.kind === "founder"
-                  ? () => summarizeFounderProfile()
-                  : () => summarizeMarketProfile()
-            }
-            cacheKey={[checkpointBlock.kind, checkpointBlock.id]}
-            onContinue={continueFromCheckpoint}
-            onEdit={editFromCheckpoint}
-          />
+                ? checkpointBlock.fieldKeys.map((k) => ({
+                    label: BRIEF_FIELDS.find((f) => f.key === k)?.label ?? k,
+                    value: values[k] ?? "",
+                  }))
+                : [];
+            return (
+              <BlockCheckpoint
+                block={checkpointBlock}
+                blockIndex={checkpointBlock.id}
+                totalBlocks={BRIEF_BLOCKS.length}
+                answers={qaAnswers}
+                summarize={
+                  checkpointBlock.kind === "qa"
+                    ? () =>
+                        summarizeBriefBlock({
+                          block: checkpointBlock.id,
+                          title: checkpointBlock.title,
+                          kind: "qa",
+                          answers: qaAnswers,
+                        })
+                    : checkpointBlock.kind === "founder"
+                      ? () => summarizeFounderProfile()
+                      : () => summarizeMarketProfile()
+                }
+                cacheKey={[checkpointBlock.kind, checkpointBlock.id]}
+                onContinue={continueFromCheckpoint}
+                onEdit={editFromCheckpoint}
+              />
+            );
+          })()}
         </div>
       ) : mode === "founder" ? (
         <FounderBlock
