@@ -43,9 +43,9 @@ export default function BuildIndexPage() {
                     </span>
                   </div>
                   <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
-                    {w.capability}
+                    {w.title}
                   </h2>
-                  <p className="mt-2 text-sm text-muted-foreground md:text-base">
+                  <p className="mt-2 font-serif text-sm italic text-muted-foreground md:text-base">
                     {w.oneLiner}
                   </p>
                   <div className="mt-5 border-t border-white/10 pt-4">
