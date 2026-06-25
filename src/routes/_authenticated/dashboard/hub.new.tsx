@@ -117,6 +117,7 @@ function Inner() {
   const [files, setFiles] = useState<DroppedFile[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [drafting, setDrafting] = useState(false);
+  const [processed, setProcessed] = useState(false);
   const [filling, setFilling] = useState(false);
   // Founder + market context
   const [founderName, setFounderName] = useState(prefill?.founder_name ?? "");
