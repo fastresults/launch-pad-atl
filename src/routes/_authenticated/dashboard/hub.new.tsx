@@ -353,7 +353,14 @@ function Inner() {
         </div>
 
         {/* Track selector */}
-        <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+        <div
+          ref={trackSectionRef}
+          className={`space-y-3 rounded-xl border bg-background/40 p-4 transition ${
+            trackPulse
+              ? "border-red-400/70 ring-2 ring-red-400/40 animate-pulse"
+              : "border-white/10"
+          }`}
+        >
           <div className="flex items-start justify-between gap-3">
             <div>
               <Label className="text-sm">Track <span className="text-red-500">*</span></Label>
