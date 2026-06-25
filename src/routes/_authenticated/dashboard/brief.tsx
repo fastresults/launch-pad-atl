@@ -19,7 +19,10 @@ import { BlockCheckpoint } from "@/components/brief/BlockCheckpoint";
 import { BriefReview } from "@/components/brief/BriefReview";
 import { FounderBlock } from "@/components/brief/FounderBlock";
 import { MarketBlock } from "@/components/brief/MarketBlock";
-import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { BriefPrefillDropzone } from "@/components/brief/BriefPrefillDropzone";
+import { BriefPrefillReview } from "@/components/brief/BriefPrefillReview";
+import type { BriefPrefillResponse } from "@/lib/brief.functions";
+import { ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
