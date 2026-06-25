@@ -1,88 +1,75 @@
+## Add Tracks to the Startup Workflow
 
-# Active / Favorited / Archived startups on the Hub library
+Founders pick a **Track** when creating a startup. The track is persisted on the snapshot and injected into every AI prompt (deep research + document generation) as a tone/lens directive, so a Lifestyle / Main Street venture doesn't get the same VC-flavored copy as a Deep Tech one.
 
-## Goal
-Let founders organize their paid-for startups into **Active**, **Favorited**, and **Archived** buckets on `/dashboard/hub`. Archive is reversible. Nothing is permanently deletable from the UI.
+### The 7 tracks
 
-Also: rename the page heading from "Your ventures" → "Your startups" to match the project's Core memory rule ("startup", never "venture/business" in user-facing copy). Internal DB column names stay `venture_*`.
+| Key | Label | One-liner |
+|---|---|---|
+| `lifestyle` | Lifestyle / Main Street | Revenue over scale — local services, solo founders |
+| `small_business` | Small Business / Traditional | Profit & longevity — shops, agencies, trades |
+| `scalable_tech` | Scalable Tech / SaaS | Exponential growth, low marginal cost — VC target |
+| `marketplace` | Marketplace / Platform | Multi-sided, network-effects driven |
+| `deep_tech` | Deep Tech / Frontier | High R&D, breakthrough-dependent |
+| `social_impact` | Social Enterprise / Impact | Mission-built into the model |
+| `corporate` | Corporate / Institutional | Spinouts, intrapreneurial, gov-tech |
 
-## UX
+### UX
 
-### Tabs across the top of the library
-```text
-[ Active (4) ]  [ ★ Favorites (2) ]  [ Archived (1) ]            [ + New startup ]
-```
-- **Active** (default) — everything not archived. Favorites pinned to the top with a star ring.
-- **Favorites** — only starred startups.
-- **Archived** — only archived ones, with a "Restore" affordance.
+**Hub create flow (`hub.new.tsx`)** — add a new "Track" block above Industry, in the founder/market context section.
 
-Empty states per tab:
-- Active: existing empty state (already good).
-- Favorites: "No favorites yet. Tap the ★ on any startup to keep it pinned here."
-- Archived: "Nothing archived. Archive a startup to clear the noise — you can always restore it."
+- Renders as a 2-column grid of 7 selectable cards (radio behavior). Each card: label, one-liner, subtle icon. Selected = accent border + ring.
+- "What's this?" inline helper expands a short paragraph explaining tracks influence tone, not feature set.
+- Required to submit (added to `founderReady`).
+- Default: none selected (forces an explicit choice — this is the whole point).
 
-### Per-card actions (top-right of each card)
-A small actions row replaces nothing — the card itself still navigates to the snapshot. Actions sit on their own click-stopping row:
+**Hub library (`hub.index.tsx`)** — show a small Track chip on each `SnapshotCard` (under company name) so founders can tell them apart at a glance. No filtering by track in this pass.
 
-- **★ / ★ outline** — toggle favorite (instant, optimistic, toast "Favorited" / "Removed from favorites")
-- **⋯ menu** — opens a dropdown:
-  - In Active/Favorites: **Archive** (with confirm dialog: "Archive this startup? You can restore it from the Archived tab. Your documents stay safe.")
-  - In Archived: **Restore** (instant, toast "Restored to Active")
+**Snapshot detail (`hub.$snapshotId.tsx`)** — Track chip in the header next to industry. Editable via existing "edit founder context" affordance.
 
-Favorited cards get a subtle amber outline + filled star icon so they read as "kept" at a glance.
+### Data
 
-### Deletion
-**Not exposed in the UI.** The `deleteSnapshot` function stays in code for admin use but no button calls it. Copy on the archive confirm dialog reinforces "Your documents stay safe."
-
-## Sorting
-Inside each tab: favorites first (in Active tab only), then by `updated_at desc`. Add `Last updated 3d ago` to each card so users can see freshness.
-
-## Data model changes
-
-One backend migration:
+One migration:
 
 ```sql
 ALTER TABLE public.venture_snapshots
-  ADD COLUMN IF NOT EXISTS is_favorite boolean NOT NULL DEFAULT false;
-
-CREATE INDEX IF NOT EXISTS idx_venture_snapshots_user_status_fav
-  ON public.venture_snapshots (user_id, status, is_favorite, updated_at DESC);
+  ADD COLUMN track text
+  CHECK (track IN (
+    'lifestyle','small_business','scalable_tech','marketplace',
+    'deep_tech','social_impact','corporate'
+  ));
 ```
 
-(No new tables → no new GRANTs needed. Existing RLS on `venture_snapshots` already scopes by `user_id`.)
+Nullable so existing snapshots stay valid; new ones require it at the app layer.
 
-## Backend / function changes
+### Backend wiring
 
-`src/lib/foundersHub.functions.ts`:
-- Update `listSnapshots()` to accept `{ scope?: "active" | "favorites" | "archived" }` and filter accordingly:
-  - `active` → `status != 'archived'`
-  - `favorites` → `status != 'archived' AND is_favorite = true`
-  - `archived` → `status = 'archived'`
-- Add `setFavorite({ id, is_favorite })` updating just that column.
-- Add `unarchiveSnapshot({ id })` setting status back to its prior step. Since we don't track the pre-archive status, restore to `"input"` won't work — instead restore to `"complete"` if any docs exist, else `"review"` if extracted_data exists, else `"enriching"`. Compute server-side from the row.
-- Keep `archiveSnapshot` and `deleteSnapshot` as-is. `deleteSnapshot` is not called from the UI.
-- Add an `is_favorite: boolean` field to the `VentureSnapshot` type.
+- **`src/lib/foundersHub.functions.ts`**
+  - Add `track` to `VentureSnapshot` type.
+  - Accept `track` in `createSnapshot` and `updateFounderContext`.
 
-## UI changes
+- **`src/lib/tracks.ts`** (new) — single source of truth: `TRACKS` array (`key`, `label`, `oneLiner`, `tonePrompt`) consumed by UI and edge functions can mirror via inline copy. The `tonePrompt` is a ~3-sentence directive, e.g.:
+  - Lifestyle: "Write as a pragmatic operator coaching a sole founder. Optimize for cash flow, simplicity, and local credibility. Avoid VC jargon, TAM/SAM/SOM framing, and growth-at-all-costs language."
+  - Scalable Tech: "Write as an early-stage tech operator. Lean into product-led growth, defensibility, unit economics at scale, and venture-readiness."
+  - …etc per track.
 
-`src/routes/_authenticated/dashboard/hub.index.tsx`:
-- Add tab state (`useState<"active" | "favorites" | "archived">`), simple pill tab strip above the grid.
-- Fetch with `useQuery` keyed by scope; counts come from three lightweight parallel queries (or a single fetch-all + client-side bucket — simpler, fewer round-trips, fine for typical user volume).
-- Use a single fetch-all approach: `listSnapshots()` returns everything for the user, the page buckets in memory and renders the active tab. Counts on tabs come for free.
-- `SnapshotCard` gets:
-  - A favorite star button (top-right) and a `DropdownMenu` (⋯) with Archive / Restore.
-  - Conditional styling for `is_favorite` (amber border tint).
-  - `updated_at` relative time line.
-- Use the existing shadcn `DropdownMenu` and `AlertDialog` (confirm-dialog) components.
-- Rename "Your ventures" → "Your startups", "New venture" → "New startup", "+ New venture" empty-state CTA → "+ New startup". Page URL stays `/dashboard/hub`.
+- **`supabase/functions/venture-generate-document/index.ts`** — include the track's `tonePrompt` block in `systemPrompt` (appended after `baseSystem`), and add `track` to `founderCard`. Same constants duplicated in the function (no shared import across edge boundary).
 
-## What we are NOT doing
-- No new "folders" or "tags" — just the three buckets the user asked for.
-- No bulk select / multi-archive.
-- No permanent delete in the UI.
-- No changes to the snapshot detail page or generation flow.
+- **`supabase/functions/venture-deep-research/index.ts`** — pass track tone into the market-research Perplexity prompt and customer-voice prompt so research framing matches (e.g. local foot traffic vs. ICP/PMF signals).
 
-## Files touched
-- `src/routes/_authenticated/dashboard/hub.index.tsx` — tabs, card actions, copy.
-- `src/lib/foundersHub.functions.ts` — `setFavorite`, `unarchiveSnapshot`, expand `VentureSnapshot` type, return all rows from `listSnapshots`.
-- One Supabase migration adding `is_favorite` column + index.
+### Out of scope
+
+- No filtering, grouping, or analytics by track yet.
+- No per-document-type overrides — track tone applies uniformly.
+- No retro-classifying old snapshots; they keep `track = null` and use the existing generic tone.
+
+### Files touched
+
+- New migration adding `track` column
+- New `src/lib/tracks.ts`
+- `src/lib/foundersHub.functions.ts`
+- `src/routes/_authenticated/dashboard/hub.new.tsx`
+- `src/routes/_authenticated/dashboard/hub.index.tsx`
+- `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx`
+- `supabase/functions/venture-generate-document/index.ts`
+- `supabase/functions/venture-deep-research/index.ts`
