@@ -155,17 +155,23 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
   const queryKey = ["media", scope, ownerUserId, folderId, collectionId, mediaType, search];
   const assetsQ = useQuery({
     queryKey,
-    queryFn: () => listFn({ folderId: collectionId ? undefined : folderId ?? undefined }),
+    queryFn: () =>
+      listFn({
+        scope,
+        ownerUserId,
+        folderId: collectionId ? undefined : folderId ?? undefined,
+        collectionId: collectionId ?? undefined,
+      }),
   });
 
   const foldersQ = useQuery({
     queryKey: ["media-folders", scope, ownerUserId],
-    queryFn: () => foldersFn(),
+    queryFn: () => foldersFn({ scope, ownerUserId }),
   });
 
   const collectionsQ = useQuery({
     queryKey: ["media-collections", scope, ownerUserId],
-    queryFn: () => collectionsFn(),
+    queryFn: () => collectionsFn({ scope, ownerUserId }),
   });
 
   const allAssets = (assetsQ.data ?? []) as Asset[];
@@ -200,6 +206,8 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
         const { uploadUrl, path } = await createSignedFn({
           filename: file.name,
           contentType,
+          scope,
+          ownerUserId,
         });
         const putRes = await fetch(uploadUrl, {
           method: "PUT",
@@ -213,6 +221,8 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
           contentType,
           folderId: folderId ?? undefined,
           size: file.size,
+          scope,
+          ownerUserId,
         });
         toast.success(`Uploaded ${file.name}`);
       } catch (e) {
@@ -225,14 +235,14 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
 
   // ===== Folder / collection create =====
   const createFolderMu = useMutation({
-    mutationFn: (name: string) => createFolderFn({ name }),
+    mutationFn: (name: string) => createFolderFn({ name, scope, ownerUserId }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["media-folders", scope, ownerUserId] });
       toast.success("Folder created");
     },
   });
   const createCollectionMu = useMutation({
-    mutationFn: (name: string) => createCollectionFn({ name }),
+    mutationFn: (name: string) => createCollectionFn({ name, scope, ownerUserId }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["media-collections", scope, ownerUserId] });
       toast.success("Collection created");
@@ -586,7 +596,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                     <Checkbox checked={isSelected} />
                   </div>
                   <div className="flex aspect-square items-center justify-center bg-muted/30">
-                    {a.media_type === "image" && a.upload_status === "ready" ? (
+                    {a.media_type === "image" && ["ready", "complete"].includes(a.upload_status) ? (
                       <AssetThumb path={a.storage_path} bucket={a.storage_bucket} />
                     ) : (
                       <Icon className="h-12 w-12 text-muted-foreground" />
@@ -666,7 +676,7 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                       <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(a.id)} />
                     </div>
                     <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded bg-muted/40">
-                      {a.media_type === "image" && a.upload_status === "ready" ? (
+                      {a.media_type === "image" && ["ready", "complete"].includes(a.upload_status) ? (
                         <AssetThumb path={a.storage_path} bucket={a.storage_bucket} />
                       ) : (
                         <Icon className="h-5 w-5 text-muted-foreground" />
