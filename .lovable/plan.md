@@ -1,31 +1,33 @@
 ## Problem
 
-In `ConceptStudio` → "Alternative angles", each idea card renders:
+In `EpiphanyPanel` (`src/components/hub/ConceptStudio.tsx`) every card's Fold/Save/Details/Dismiss button is wired to `disabled={run.isPending}`. Because `run` is a single shared `useMutation`, pressing **Fold into concept** on card #1 disables and grays out the buttons on card #2 (and the saved-for-later rows) too, making it look like everything is processing.
 
-- **Why:** in `text-emerald-300/80`
-- **Risks:** in `text-amber-300/80`
-
-Those `*-300/80` tones were chosen for a dark surface, but the card (`bg-card`) renders on a near-white surface in the current Review/Hub context (see screenshot). The result: pale mint and pale yellow text on white — fails contrast and is hard to read. The same issue applies after "Use this" is pressed because the card stays in place.
+The same shared-mutation pattern exists in the Saved-for-later list (`fold` and `dismiss` buttons).
 
 ## Fix
 
-File: `src/components/hub/ConceptStudio.tsx` (lines 185–186, inside the `ideas.map` card).
+Scope the pending state to the specific card + action that's actually running by reading `run.variables` (the mutation already receives `{ action, payload: { card | id } }`).
 
-Replace the single-tone classes with a label+body treatment that holds up on both light and dark surfaces:
+File: `src/components/hub/ConceptStudio.tsx` — inside `EpiphanyPanel`.
 
-- Wrap Why/Risks in a small two-line block with a subtle tinted background and a darker text token.
-- Use semantic dual-tone classes so contrast works in light and dark modes:
-  - Why: `bg-emerald-500/10 text-emerald-700 dark:text-emerald-300` with a bold "Why" label.
-  - Risks: `bg-amber-500/10 text-amber-800 dark:text-amber-300` with a bold "Risks" label.
-- Bump font size from `text-[11px]` to `text-xs` and add `leading-snug` for readability.
-- Add a thin left border (`border-l-2 border-emerald-500/60` / `border-amber-500/60`) and `pl-2 py-1 rounded-r-md` so the rows read as callouts, not body copy.
-
-Apply the same treatment to the Red-team findings list (lines 196–200) where `text-muted-foreground` evidence text also gets washed out — switch to plain `text-foreground/80` so it stays legible on the white card.
-
-No logic, no copy, no layout changes beyond the inline styling of those two lines per card.
+1. Derive a small helper at the top of the render:
+   ```ts
+   const v = run.variables as { action?: string; payload?: any } | undefined;
+   const activeCardTitle = v?.payload?.card?.title ?? null; // top3 cards have no id, so match by title
+   const activeSavedId = v?.payload?.id ?? null;
+   const isBusy = (action: string, key: string | null) =>
+     run.isPending && v?.action === action && key !== null && (v.payload?.card?.title === key || v.payload?.id === key);
+   ```
+2. In the top3 card map, replace the three `disabled={run.isPending}` props:
+   - Fold button → `disabled={isBusy("fold_enhancement", card.title)}` and show `Loader2` + "Folding…" only while that specific card is folding.
+   - Save button → `disabled={isBusy("save_enhancement", card.title)}`.
+   - Details toggle stays enabled (never blocked by network).
+3. In the Saved-for-later list, replace `disabled={run.isPending}` on Fold and Dismiss with `isBusy("fold_enhancement", s.id)` and `isBusy("dismiss_enhancement", s.id)` respectively.
+4. Keep the top-level **Find my epiphany** button using `run.isPending && v?.action === "epiphany"` as it does today.
+5. No layout/copy changes beyond swapping the disabled prop and the in-button label/spinner for the active card.
 
 ## Out of scope
 
-- No changes to the "Use this" button behavior or the apply flow.
-- No changes to the Alternative angles list structure, ordering, or data.
-- No global token edits — fix is local to this component.
+- No changes to mutation logic, endpoints, or payload shape.
+- No optimistic UI or background-queue rework.
+- No styling/color changes — only the disabled-state scoping and a per-card spinner label.
