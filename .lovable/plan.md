@@ -1,64 +1,62 @@
+## Goal
 
-# Add an "Expectations + Team Evove" closing chapter to the Founder Roadmap
+Position the workshop as **Atlanta's most founder-friendly accelerator** in the hero — visible immediately, backed by light proof points — without touching the headline, subhead, CTAs, or meta row.
 
-One new chapter, placed at the tail of the roadmap right before the final blockquote and sign-off, that sets honest expectations about the founder journey and positions Team Evove as the standing extended team they can call on.
+## File
 
-## Where it goes
+`src/components/home/HomeFramework.tsx` — `Hero()` component (lines 45–97). No other files change.
 
-Insert as **Chapter 13 — The Road Ahead, and Who's With You**, immediately after Chapter 12 (Read Next From Your Kit) and **before** "The One Thing" and "Closing Note." This keeps the climactic single-move callout and personal sign-off as the true last words, while making sure the founder reads the expectations + Team Evove offer at the emotional crescendo of the document.
+## Changes
 
-Updated tail order:
+### 1. Replace the single eyebrow pill with a two-pill row (line 55–57)
+
+Before: one pill — `✨ Built for first-time founders · $497`
+
+After: two pills sitting side-by-side, wrapping on mobile:
+
+- Pill A (accent treatment, slightly stronger border + subtle gradient tint): `★ Atlanta's most founder-friendly accelerator`
+- Pill B (current style, unchanged): `✨ Built for first-time founders · $497`
+
+Same uppercase tracking, same height, same vertical position — just two chips instead of one. On mobile they stack; on `sm+` they sit in a row with a small gap.
+
+### 2. Add a thin proof-point strip above the meta row (between line 87 and 88)
+
+A single horizontal line of small, muted-white text with bullet separators — no boxes, no pills, just text so it reads as a quiet footnote, not a second CTA:
 
 ```
-…
-Chapter 12 — Read Next From Your Kit
-Chapter 13 — The Road Ahead, and Who's With You   (NEW)
-The One Thing
-Closing Note
+Atlanta-built · Founder-first · Coffee on us · No upsell in the room
 ```
 
-## What Chapter 13 says
+Sits between the CTA buttons and the existing `Calendar · MapPin · Clock · Users` meta grid. Small text (`text-xs md:text-sm`), `text-white/70`, dot separators, wraps gracefully on mobile.
 
-Tone: honest, encouraging, never gloomy. Not a sales pitch. It frames the work ahead and then names the standing crew the founder already has access to.
+### Why this phrasing (not "#1")
 
-Structure (added verbatim to the system prompt):
+"#1" implies a published ranking we'd have to cite. "Most founder-friendly" is a positioning claim — defensible, on-brand with the rest of the copy ("no upsell in the room", "coffee's on us", "built for first-time founders"), and reinforces the differentiator instead of making a numeric claim.
 
-> **## Chapter 13 — The Road Ahead, and Who's With You**
->
-> Open with one short paragraph, addressed to the founder by first name, that levels with them: every venture worth building costs hours, focus, money, and a piece of the founder's peace of mind. Name the three things this specifically will demand of them — pulled from the kit (e.g. fundraising stamina, hiring before you can afford it, selling before the product is finished). Encouraging, never gloomy.
->
-> Then three labeled blocks (bold lead-ins, not headings):
->
-> **What the next year will actually ask of you** — 3–4 lines on hours, focus, capital, and personal energy. Plain language. No clichés.
->
-> **The decisions that will define this year** — 3–4 lines naming concrete decisions specific to this venture: the first hire, the funding moment, the channel bet, the pricing call. Drawn from the kit.
->
-> **How to stay standing** — 3–4 lines on building the right team early, securing the right funding (not just any funding), and managing stress and logistics so the work compounds instead of eroding you.
->
-> Then a clearly framed closing block titled **You're not doing this alone — Team Evove is here.**
->
-> A 4–6 sentence paragraph in a warm partner voice, naming Team Evove as the standing extended team this founder can call on for advice, mentoring, and execution support: senior strategists, technologists, graphic designers, brand and growth specialists. Make it specific to where this venture is most likely to need help (pulled from the weakest pillars in earlier chapters). End with: *Whenever you need a second brain, a second pair of hands, or a sounding board — Team Evove is one message away.*
+The proof strip avoids invented stats (no "200+ founders launched", no "4.9★") — it only restates things already true on the page.
 
-Tone rules carried from existing prompt apply: second person, founder's first name where appropriate, company name verbatim, no "AI-ese," no slogans.
+## What is NOT changing
 
-## Files touched
+- Headline, subhead, "coffee's on us" paragraph — untouched
+- Both CTA buttons — untouched
+- Meta row (Calendar / MapPin / Clock / Users) — untouched
+- Background image, overlay, spacing rhythm — untouched
+- No new components, no new assets, no new dependencies
 
-- `supabase/functions/venture-generate-roadmap/index.ts`
-  - Add the **Chapter 13** block above into `SYSTEM_PROMPT`, between Chapter 12 and "The One Thing."
-  - Leave existing 45-day → 12-month continuity rule and QUALITY_SCORE trailer unchanged.
+## Visual layout after change
 
-No other files change. The dialog already renders `Chapter N — …` H2s with the eyebrow + accent rule and auto-adds the sidebar nav entry, so the new chapter shows up correctly with no UI code change. DOCX/print stylesheet already covers it.
+```text
+[★ Atlanta's most founder-friendly accelerator]  [✨ Built for first-time founders · $497]
 
-## Verification
+The strategic foundation every startup needs —
+built in one morning.
 
-1. Regenerate the roadmap on the current snapshot.
-2. Confirm a new H2 **Chapter 13 — The Road Ahead, and Who's With You** appears just before "The One Thing," with the "Chapter 13" eyebrow rendered.
-3. Spot-check: founder addressed by first name in the opening paragraph; specific decisions named (real hire, real funding moment, real channel) instead of generic founder advice.
-4. Spot-check the **Team Evove** closing block: warm partner voice, specifically tied to this venture's weakest pillars from earlier chapters, ends on the "one message away" sentence.
-5. Confirm "The One Thing" and "Closing Note" remain the final two sections.
-6. Export to .docx and Print → new chapter renders cleanly.
+One morning. Twenty deliverables…
+Coffee's on us…
 
-## Out of scope
+[ Reserve a seat — $497 ]   [ See our services ]
 
-- No new CTA, button, or contact form for Team Evove (the document itself is the touchpoint).
-- No schema changes, no new edge function, no new components.
+Atlanta-built · Founder-first · Coffee on us · No upsell in the room
+
+[📅 date]  [📍 city]  [⏰ time]  [👥 seats]
+```
