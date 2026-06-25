@@ -169,15 +169,11 @@ export async function generateOne(
   const baseSystem = `You are an AI venture analyst writing investor-grade documents.
 Produce a single document in clean Markdown. Use ## headings, short paragraphs, and bullet lists.
 Be specific, plausible, and actionable. Never use filler like "TBD" or "[insert ...]".
-Target ~600-900 words unless the doc type is brief.
 
-CITATIONS:
-- Cite research-brief claims inline with [^1], [^2] footnote markers (reuse numbers).
-- End with a "## Sources" section listing each footnote: [^1]: url — label.
+The "## Executive Summary" section targets ~500-700 words (shorter for brief doc types).${DEEP_DIVE}`;
 
-After the markdown, on a final line, output exactly:
-QUALITY_SCORE: <0-100 integer reflecting completeness, specificity, and investor-readiness>`;
-
+  // Always append the two-part / no-citations / quality-score appendix to per-doc specs
+  // (SPECIAL entries already include it via the QF constant; baseSystem includes it inline).
   const baseSystemPrompt = SPECIAL[documentType] ?? baseSystem;
   const trackTone = snap.track ? TRACK_TONE[snap.track] : null;
   const systemPrompt = trackTone
