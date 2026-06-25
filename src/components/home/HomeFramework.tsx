@@ -111,6 +111,9 @@ function Hero() {
           <span aria-hidden>·</span>
           <span>No upsell in the room</span>
         </p>
+        <p className="mt-2 max-w-2xl text-xs text-white/60 md:text-sm">
+          Built for Main Street founders — cafés, salons, trades, local services, indie brands, and first-time small e-commerce. Other tracks (SaaS, marketplace, deep tech) supported too.
+        </p>
 
         <div className="mt-10 grid max-w-3xl grid-cols-1 gap-3 text-white/90 sm:grid-cols-2 lg:grid-cols-4 md:mt-12 md:gap-4">
 
