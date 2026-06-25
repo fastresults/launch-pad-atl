@@ -165,7 +165,7 @@ function EnrichingStep({ snapshot, onRetry }: { snapshot: any; onRetry: () => vo
           <AlertCircle className="mt-0.5 h-4 w-4 text-red-400" />
           <div className="flex-1">
             <div className="font-medium text-red-200">Enrichment failed</div>
-            <div className="text-xs text-red-300/80">{prog.message ?? "Unknown error"}</div>
+            <div className="text-xs text-red-700 dark:text-red-300">{prog.message ?? "Unknown error"}</div>
           </div>
           <Button size="sm" variant="outline" onClick={() => retry.mutate()}><RefreshCw className="mr-1 h-3 w-3" />Retry</Button>
         </div>
