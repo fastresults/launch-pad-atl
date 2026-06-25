@@ -214,6 +214,7 @@ function Framework() {
         </div>
       </div>
     </section>
+    </TooltipProvider>
   );
 }
 
