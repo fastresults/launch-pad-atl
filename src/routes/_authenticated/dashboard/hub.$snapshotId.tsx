@@ -180,139 +180,371 @@ function EnrichingStep({ snapshot, onRetry }: { snapshot: any; onRetry: () => vo
   );
 }
 
-const SECTIONS: { key: string; label: string; fields: { key: string; label: string; multiline?: boolean }[] }[] = [
-  {
-    key: "foundation",
-    label: "Business Foundation",
-    fields: [
-      { key: "company_name", label: "Company name" },
-      { key: "founder_name", label: "Founder name" },
-      { key: "location", label: "Business location" },
-      { key: "industry", label: "Industry" },
-      { key: "concept", label: "Business concept", multiline: true },
-      { key: "problem", label: "Problem you solve", multiline: true },
-    ],
-  },
-  {
-    key: "market",
-    label: "Target Market & Value",
-    fields: [
-      { key: "target_customers", label: "Target customers", multiline: true },
-      { key: "value_proposition", label: "Value proposition", multiline: true },
-      { key: "differentiators", label: "Differentiators", multiline: true },
-      { key: "market_size", label: "Market size" },
-    ],
-  },
-  {
-    key: "operations",
-    label: "Business Model & Operations",
-    fields: [
-      { key: "revenue_model", label: "Revenue model", multiline: true },
-      { key: "pricing", label: "Pricing" },
-      { key: "key_processes", label: "Key processes", multiline: true },
-      { key: "team", label: "Team", multiline: true },
-    ],
-  },
-  {
-    key: "vision",
-    label: "Growth & Vision",
-    fields: [
-      { key: "short_term_goals", label: "Short-term goals (12 mo)", multiline: true },
-      { key: "long_term_goals", label: "Long-term goals (3-5 yr)", multiline: true },
-      { key: "mission", label: "Mission" },
-      { key: "vision", label: "Vision" },
-    ],
-  },
-];
+// Legacy SECTIONS shape kept for backwards-compat in any other consumers.
+// The Review wizard itself reads from REVIEW_SECTIONS in src/lib/reviewCopy.ts.
+const SECTIONS = REVIEW_SECTIONS.map((s) => ({
+  key: s.key,
+  label: s.key === "foundation" ? "Business Foundation"
+    : s.key === "market" ? "Target Market & Value"
+    : s.key === "operations" ? "Business Model & Operations"
+    : "Growth & Vision",
+  fields: s.fields.map((f) => ({ key: f.key, label: f.label, multiline: f.multiline })),
+}));
 
 function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void }) {
+  // Flat form state keyed by section→field; mirrors the persisted extracted_data shape.
   const [form, setForm] = useState<Record<string, Record<string, string>>>(() => {
     const ex = snapshot.extracted_data ?? {};
     const out: any = {};
-    for (const s of SECTIONS) {
+    for (const s of REVIEW_SECTIONS) {
       out[s.key] = {};
       for (const f of s.fields) out[s.key][f.key] = ex?.[s.key]?.[f.key] ?? "";
     }
     return out;
   });
 
-  const save = useMutation({
-    mutationFn: () => updateExtractedData({ data: { id: snapshot.id, extracted_data: form } }),
-    onSuccess: () => { toast.success("Saved"); onSaved(); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
-  });
+  const [active, setActive] = useState<SubStepKey>("setup");
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [savingNow, setSavingNow] = useState(false);
+  const dirtyRef = useRef(false);
+  const formRef = useRef(form);
+  formRef.current = form;
+
+  // Debounced auto-save: kicks in 800ms after the last edit. Replaces the old "Save draft" button.
+  useEffect(() => {
+    if (!dirtyRef.current) return;
+    const t = setTimeout(async () => {
+      try {
+        setSavingNow(true);
+        await updateExtractedData({ data: { id: snapshot.id, extracted_data: formRef.current } });
+        setSavedAt(new Date());
+        dirtyRef.current = false;
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Auto-save failed");
+      } finally {
+        setSavingNow(false);
+      }
+    }, 800);
+    return () => clearTimeout(t);
+  }, [form, snapshot.id]);
+
+  const setField = (section: string, key: string, value: string) => {
+    dirtyRef.current = true;
+    setForm((f) => ({ ...f, [section]: { ...f[section], [key]: value } }));
+  };
+
+  // Completeness per sub-step drives the dots in the sticky stepper.
+  const completeness = useMemo(() => {
+    const required = (section: string) =>
+      REVIEW_SECTIONS.find((s) => s.key === section)!.fields.filter((f) => !f.optional);
+    const allFilled = (section: string) =>
+      required(section).every((f) => isFieldFilled(form[section]?.[f.key]));
+    const setupOk =
+      !!snapshot.founder_name && !!snapshot.founder_email && !!snapshot.industry && !!snapshot.track;
+    return {
+      setup: setupOk,
+      story: allFilled("foundation"),
+      market: allFilled("market"),
+      model: allFilled("operations") && allFilled("vision"),
+      lock: snapshot.concept_status === "locked",
+    } as Record<SubStepKey, boolean>;
+  }, [form, snapshot]);
 
   const advance = useMutation({
     mutationFn: async () => {
-      await updateExtractedData({ data: { id: snapshot.id, extracted_data: form } });
+      await updateExtractedData({ data: { id: snapshot.id, extracted_data: formRef.current } });
       await advanceToGenerate({ data: { id: snapshot.id } });
     },
     onSuccess: () => { toast.success("On to generation"); onSaved(); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to continue"),
   });
 
+  const goNext = () => {
+    const idx = SUB_STEPS.findIndex((s) => s.key === active);
+    if (idx < SUB_STEPS.length - 1) setActive(SUB_STEPS[idx + 1].key);
+  };
+  const goPrev = () => {
+    const idx = SUB_STEPS.findIndex((s) => s.key === active);
+    if (idx > 0) setActive(SUB_STEPS[idx - 1].key);
+  };
+
+  const current = SUB_STEPS.find((s) => s.key === active)!;
+  const isLast = active === "lock";
+  const locked = snapshot.concept_status === "locked";
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-28">
       <div>
         <h2 className="text-xl font-semibold">Review the brief</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          We've drafted this from your concept and the deep-research pass. Edit anything that's off — every document downstream uses this.
+          Confirm what we got right. Fix what's off. Then continue.
         </p>
       </div>
 
-      <FounderMarketCard snapshot={snapshot} onSaved={onSaved} />
+      <ReviewSubStepper active={active} completeness={completeness} onJump={setActive} savedAt={savedAt} savingNow={savingNow} />
 
-      <ResearchPanel snapshot={snapshot} />
+      <div>
+        <h3 className="text-lg font-semibold">{current.title}</h3>
+        <p className="text-sm text-muted-foreground">{current.subtitle}</p>
+      </div>
 
-      <ConceptStudio snapshot={snapshot} onChanged={onSaved} />
+      {active === "setup" && (
+        <SetupSubStep snapshot={snapshot} onSaved={onSaved} />
+      )}
 
+      {active === "story" && (
+        <FieldGroup
+          sectionKey="foundation"
+          form={form}
+          setField={setField}
+          contextChips={[
+            { label: "Founder", value: snapshot.founder_name },
+            { label: "Industry", value: snapshot.industry },
+            { label: "Location", value: [snapshot.city, snapshot.region].filter(Boolean).join(", ") },
+          ]}
+        />
+      )}
 
+      {active === "market" && (
+        <FieldGroup sectionKey="market" form={form} setField={setField} />
+      )}
 
-
-
-
-      {SECTIONS.map((section) => (
-        <div key={section.key} className="space-y-3 rounded-2xl border border-white/10 bg-card p-5">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{section.label}</h3>
-          <div className="grid gap-3 md:grid-cols-2">
-            {section.fields.map((f) => (
-              <div key={f.key} className={`grid gap-1.5 ${f.multiline ? "md:col-span-2" : ""}`}>
-                <Label className="text-xs">{f.label}</Label>
-                {f.multiline ? (
-                  <Textarea
-                    rows={3}
-                    value={form[section.key][f.key]}
-                    onChange={(e) => setForm({ ...form, [section.key]: { ...form[section.key], [f.key]: e.target.value } })}
-                  />
-                ) : (
-                  <Input
-                    value={form[section.key][f.key]}
-                    onChange={(e) => setForm({ ...form, [section.key]: { ...form[section.key], [f.key]: e.target.value } })}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
+      {active === "model" && (
+        <div className="space-y-5">
+          <FieldGroup
+            sectionKey="operations"
+            form={form}
+            setField={setField}
+            heading="How you make money"
+          />
+          <FieldGroup
+            sectionKey="vision"
+            form={form}
+            setField={setField}
+            heading="Where you're going"
+            collapsedByDefault
+          />
         </div>
-      ))}
+      )}
 
-      <div className="flex items-center justify-end gap-2">
-        {snapshot.concept_status !== "locked" && (
-          <p className="mr-auto text-xs text-amber-300">
-            Lock your concept in Concept Studio above to unlock document generation.
-          </p>
-        )}
-        <Button variant="outline" onClick={() => save.mutate()} disabled={save.isPending}>
-          {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save draft"}
-        </Button>
-        <Button onClick={() => advance.mutate()} disabled={advance.isPending || snapshot.concept_status !== "locked"}>
-          {advance.isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
-          Continue to documents →
-        </Button>
+      {active === "lock" && (
+        <div className="space-y-5">
+          <ConceptStudio snapshot={snapshot} onChanged={onSaved} />
+          <details className="rounded-2xl border border-white/10 bg-card p-5">
+            <summary className="cursor-pointer text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Where this came from — research sources
+            </summary>
+            <div className="mt-4">
+              <ResearchPanel snapshot={snapshot} />
+            </div>
+          </details>
+        </div>
+      )}
+
+      {/* Sticky CTA bar — always visible, explains exactly what's blocking continue. */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+          <Button variant="ghost" onClick={goPrev} disabled={active === "setup"}>
+            ← Back
+          </Button>
+          <div className="hidden text-xs text-muted-foreground sm:block">
+            {savingNow ? "Saving…" : savedAt ? `Saved ${timeAgo(savedAt)}` : "Changes auto-save"}
+          </div>
+          {!isLast ? (
+            <Button onClick={goNext}>
+              Next: {SUB_STEPS[SUB_STEPS.findIndex((s) => s.key === active) + 1].label} →
+            </Button>
+          ) : (
+            <Button
+              onClick={() => advance.mutate()}
+              disabled={advance.isPending || !locked}
+              title={!locked ? "Lock your concept above to continue" : undefined}
+            >
+              {advance.isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
+              Continue to documents →
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
 }
+
+function timeAgo(d: Date): string {
+  const s = Math.max(1, Math.round((Date.now() - d.getTime()) / 1000));
+  if (s < 60) return `${s}s ago`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m ago`;
+  return d.toLocaleTimeString();
+}
+
+// Sticky sub-stepper with completeness dots. Lets advanced users jump around;
+// novices read it left-to-right as a checklist.
+function ReviewSubStepper({
+  active, completeness, onJump, savedAt, savingNow,
+}: {
+  active: SubStepKey;
+  completeness: Record<SubStepKey, boolean>;
+  onJump: (k: SubStepKey) => void;
+  savedAt: Date | null;
+  savingNow: boolean;
+}) {
+  return (
+    <div className="sticky top-0 z-20 -mx-2 rounded-2xl border border-white/10 bg-background/80 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <ol className="flex flex-wrap items-center gap-1.5 text-xs">
+        {SUB_STEPS.map((s, i) => {
+          const isActive = s.key === active;
+          const isDone = completeness[s.key];
+          return (
+            <li key={s.key} className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => onJump(s.key)}
+                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition ${
+                  isActive
+                    ? "border-foreground bg-foreground text-background"
+                    : isDone
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:border-emerald-500/60"
+                      : "border-white/10 text-muted-foreground hover:border-white/25"
+                }`}
+              >
+                {isDone ? <CheckCircle2 className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
+                <span className="font-semibold">3.{s.n}</span>
+                <span>{s.label}</span>
+              </button>
+              {i < SUB_STEPS.length - 1 && <span className="text-muted-foreground/40">·</span>}
+            </li>
+          );
+        })}
+        <li className="ml-auto text-[11px] text-muted-foreground">
+          {savingNow ? "Saving…" : savedAt ? `Saved ${timeAgo(savedAt)}` : "Auto-saves as you type"}
+        </li>
+      </ol>
+    </div>
+  );
+}
+
+// 3.1 — read-only summary of Founder & Market with a single "Edit details" affordance.
+// Avoids re-rendering the giant form (and the duplicate Track grid) on this page.
+function SetupSubStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const track = getTrack(snapshot.track as TrackKey | undefined);
+  const rows: { label: string; value: string; missing?: boolean }[] = [
+    { label: "Founder", value: snapshot.founder_name || "—", missing: !snapshot.founder_name },
+    { label: "Email", value: snapshot.founder_email || "—", missing: !snapshot.founder_email },
+    { label: "Phone", value: snapshot.founder_phone || "—" },
+    { label: "Location", value: [snapshot.city, snapshot.region, snapshot.country].filter(Boolean).join(", ") || "—" },
+    { label: "Market scope", value: snapshot.market_scope ? String(snapshot.market_scope) : "—" },
+    { label: "Industry", value: [snapshot.industry, snapshot.sub_industry].filter(Boolean).join(" · ") || "—", missing: !snapshot.industry },
+    { label: "Track", value: track?.label || "—", missing: !snapshot.track },
+  ];
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-white/10 bg-card p-5">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Founder & market</h3>
+        <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit details</Button>
+      </div>
+      <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+        {rows.map((r) => (
+          <div key={r.label} className="flex items-center justify-between gap-3 border-b border-white/5 py-1.5 text-sm last:border-b-0">
+            <dt className="text-muted-foreground">{r.label}</dt>
+            <dd className={`text-right ${r.missing ? "text-amber-300" : ""}`}>
+              {r.missing && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 align-middle" />}
+              {r.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="text-xs text-muted-foreground">
+        You chose your track on step 1. Use <button className="underline" onClick={() => setEditing(true)}>Edit details</button> if anything here is off.
+      </p>
+
+      <Dialog open={editing} onOpenChange={setEditing}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader><DialogTitle>Edit founder &amp; market</DialogTitle></DialogHeader>
+          <FounderMarketCard snapshot={snapshot} onSaved={() => { onSaved(); setEditing(false); }} />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Reusable per-section editor with plain-English helpers and per-field "Looks good" toggles.
+function FieldGroup({
+  sectionKey, form, setField, heading, collapsedByDefault, contextChips,
+}: {
+  sectionKey: "foundation" | "market" | "operations" | "vision";
+  form: Record<string, Record<string, string>>;
+  setField: (section: string, key: string, value: string) => void;
+  heading?: string;
+  collapsedByDefault?: boolean;
+  contextChips?: { label: string; value?: string }[];
+}) {
+  const section = REVIEW_SECTIONS.find((s) => s.key === sectionKey)!;
+  const [open, setOpen] = useState(!collapsedByDefault);
+
+  const body = (
+    <div className="space-y-4">
+      {contextChips && contextChips.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {contextChips.filter((c) => c.value).map((c) => (
+            <span key={c.label} className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground">
+              <span className="font-medium text-foreground/80">{c.label}:</span> {c.value}
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="grid gap-4 md:grid-cols-2">
+        {section.fields.map((f) => {
+          const value = form[sectionKey]?.[f.key] ?? "";
+          const filled = isFieldFilled(value);
+          return (
+            <div key={f.key} className={`grid gap-1.5 ${f.multiline ? "md:col-span-2" : ""}`}>
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-sm">
+                  {f.label}
+                  {f.optional && <span className="ml-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">optional</span>}
+                </Label>
+                {filled ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300">
+                    <CheckCircle2 className="h-3 w-3" /> Looks good
+                  </span>
+                ) : !f.optional ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] text-amber-300">
+                    <Circle className="h-3 w-3" /> Needs your input
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-xs text-muted-foreground">{f.helper}</p>
+              {f.multiline ? (
+                <Textarea rows={3} value={value} onChange={(e) => setField(sectionKey, f.key, e.target.value)} placeholder={f.example} />
+              ) : (
+                <Input value={value} onChange={(e) => setField(sectionKey, f.key, e.target.value)} placeholder={f.example} />
+              )}
+              {f.example && f.multiline && (
+                <p className="text-[11px] italic text-muted-foreground/70">e.g. {f.example}</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  if (!heading) return <div className="rounded-2xl border border-white/10 bg-card p-5">{body}</div>;
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-card p-5">
+      <button type="button" onClick={() => setOpen((v) => !v)} className="mb-3 flex w-full items-center justify-between text-left">
+        <span className="text-sm font-semibold">{heading}</span>
+        <span className="text-xs text-muted-foreground">{open ? "Hide" : "Show"}</span>
+      </button>
+      {open && body}
+    </div>
+  );
+}
+
 
 function GenerateStep({ snapshot }: { snapshot: any }) {
   const qc = useQueryClient();
