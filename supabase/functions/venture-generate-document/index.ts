@@ -209,6 +209,9 @@ Target ~600-900 words unless the doc type is brief.${OUTPUT_FOOTER}`;
     snap.research_brief ? `\n## Research brief (background evidence — synthesize as analyst judgment, NO footnotes or citations in the output)\n${JSON.stringify(snap.research_brief, null, 2)}` : "",
     snap.business_concept ? `\n## Founder's raw concept\n${snap.business_concept}` : "",
     depContext ? `\n## Upstream documents you should build on\n${depContext}` : "",
+    effectiveIntake
+      ? `\n## Intake answers (TOP PRIORITY — the founder provided these as the ground-truth assumptions for this document. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
+      : "",
     (rewriteFeedback && rewriteFeedback.trim()) || (rewriteTags && rewriteTags.length)
       ? `\n## Rewrite guidance from the founder (TOP PRIORITY — the previous version missed the mark, address every point below in this rewrite)\n${
           rewriteTags && rewriteTags.length ? `Tags: ${rewriteTags.join(", ")}\n\n` : ""
