@@ -1989,6 +1989,7 @@ export type Database = {
           founder_phone: string | null
           id: string
           industry: string | null
+          is_favorite: boolean
           market_research: string | null
           market_scope: string | null
           region: string | null
@@ -2024,6 +2025,7 @@ export type Database = {
           founder_phone?: string | null
           id?: string
           industry?: string | null
+          is_favorite?: boolean
           market_research?: string | null
           market_scope?: string | null
           region?: string | null
@@ -2059,6 +2061,7 @@ export type Database = {
           founder_phone?: string | null
           id?: string
           industry?: string | null
+          is_favorite?: boolean
           market_research?: string | null
           market_scope?: string | null
           region?: string | null
