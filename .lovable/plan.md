@@ -1,78 +1,39 @@
-# Deep Assessment on demand
+## Goal
+When a user has triggered the McKinsey-grade deep assessment, include it in every export path (Copy, .md, .docx, Print/PDF) appended below the executive summary. When no assessment exists, exports behave exactly as today.
 
-Strip the McKinsey-grade section back out of the default document generation. Each document is again just the **Executive Summary**. When the founder opens a document and wants more rigor, they click **Run deep assessment** in the viewer. A new edge function generates the McKinsey-grade analysis from the existing document + venture context and renders it below the document in the same modal.
+## Approach
+In `src/components/hub/DocumentViewer.tsx`, build a single `exportContent` string derived from the document body plus the assessment (when `assessmentStatus === "complete"` and `assessment` is non-empty), and route all four export handlers through it.
 
-## UX flow
+### Composition rule
+```
+<document content>
 
-1. Founder opens a document → sees the current Executive Summary, nothing else.
-2. Below the document body the viewer shows a card:
-   - **Deep assessment** title + one-line description ("Partner-grade pressure test, assumptions, sensitivities, risks, and 30/60/90-day actions.").
-   - Primary button **Run deep assessment**.
-3. Click → button shows spinner + "Analyzing… (~30s)". Card disables, document stays readable.
-4. On success the card expands into the rendered McKinsey markdown (same `ReactMarkdown` pipeline, with the existing "Deep dive" pill). Footer shows `Regenerate` (with optional feedback, reusing the existing `RewriteFeedbackDialog`) and `Copy / Download` for the assessment alone.
-5. On failure (gateway error, rate limit, credits) the card shows a clear inline error and lets the user retry.
-6. If the document already has an assessment stored, render it immediately on open (no extra click). The button becomes `Regenerate deep assessment`.
+---
 
-## Data model
+## McKinsey-Grade Assessment
 
-Add three columns to `venture_documents` (idempotent migration, default NULL):
+<deep assessment content, with any leading duplicate H2 stripped>
+```
+- Separator: a horizontal rule + the canonical H2 so the existing "Deep dive" pill renderer still fires in print/markdown viewers.
+- If the assessment string already starts with `## McKinsey-Grade Assessment` (the edge function emits it), don't duplicate the heading.
+- Trim trailing whitespace before concatenation.
 
-- `deep_assessment text`
-- `deep_assessment_status text` — `idle | generating | complete | failed`
-- `deep_assessment_quality_score int`
-- `deep_assessment_generated_at timestamptz`
+### Changes in `DocumentViewer.tsx`
+1. Add a `useMemo` `exportContent` that returns `content` alone when there's no completed assessment, otherwise the composed string above.
+2. `onCopy` → write `exportContent` to clipboard (toast unchanged).
+3. `onDownloadMd` → blob from `exportContent`; filename unchanged.
+4. `onDownloadDocx` → pass `exportContent` to `markdownToDocxBlob` (title, hero, subtitle unchanged) so the deep dive is rendered with the same heading/list styling as the body.
+5. `onPrint` → keep current behavior (prints rendered DOM of `#doc-viewer-article`, which already contains the assessment panel markdown when complete). Verify the assessment block sits inside that article container; if it currently renders outside, wrap it inside `#doc-viewer-article` (or include a print-only rendered copy) so `renderToPrint` captures it. No visual change to the on-screen layout.
+6. Existing "Copy / Download (.md)" buttons inside the deep-assessment panel (assessment-only) remain untouched — they're still useful for sharing just the analysis.
 
-No new tables, no RLS changes (existing per-document policies cover the new columns).
+### Out of scope
+- No backend, schema, prompt, or generation changes.
+- No change to the assessment panel UI, triggering, or regeneration flow.
+- No change to image/hero handling or PRD prompt copy.
+- Bulk export and other documents unaffected.
 
-## Backend
-
-**New edge function** `supabase/functions/venture-generate-assessment/index.ts`:
-
-- Input: `{ snapshotId, documentType, feedback?, tags? }`.
-- Loads the snapshot, the document row, and a few upstream dep docs (same loader pattern used by `venture-generate-document`).
-- Marks `deep_assessment_status = 'generating'`.
-- Calls `google/gemini-3-flash-preview` via Lovable AI Gateway with a focused system prompt: produce ONLY the `## McKinsey-Grade Assessment` markdown, using the same scaffold (Situation, Key Assumptions, Pressure Test, Quantified Sensitivities, Risks & Mitigations, What Would Have to Be True, 30/60/90, Confidence Summary). Strict no-citations rule, plus a `QUALITY_SCORE:` footer.
-- Sanitizes the output through the shared `stripCitations` helper.
-- Upserts `deep_assessment`, `deep_assessment_quality_score`, `deep_assessment_status = 'complete'`, `deep_assessment_generated_at = now()`.
-- Standard `GatewayError` translation for 402 / 403 / 429 / generic failures.
-- Registered in `supabase/config.toml`.
-
-**Existing functions** `venture-generate-document/index.ts` and `venture-bulk-generate/index.ts`:
-
-- Remove the `DEEP_DIVE` constant from the system prompt path used for normal generation. Keep `stripCitations` and the strict "no footnotes / no Sources" rules — the no-citations behavior stays.
-- Replace `DEEP_DIVE` with a short `OUTPUT_FOOTER` constant that only contains:
-  - the citation-strict rules
-  - the `QUALITY_SCORE:` line directive
-- Target length returns to ~600-900 words (Executive Summary only).
-- Document generation never writes `deep_assessment_*` columns.
-
-## Client
-
-- `src/lib/foundersHub.functions.ts`: add `generateDeepAssessment({ snapshotId, documentType, feedback?, tags? })` wrapper that invokes the new edge function. Add a small reader helper or rely on the existing snapshot/documents query to surface the new columns (extend the `select` to include `deep_assessment*`).
-- `src/components/hub/DocumentViewer.tsx`:
-  - Accept the new columns on the `doc` prop (`deep_assessment`, `deep_assessment_status`, `deep_assessment_quality_score`).
-  - Below the article, render a `DeepAssessmentPanel` (new local component) that handles the three states: idle (button), generating (spinner + skeleton), complete (rendered markdown via the same `makeComponents` pipeline, with the Deep-dive pill preserved on the H2, plus Copy / Download / Regenerate controls).
-  - Regenerate reuses `RewriteFeedbackDialog` and calls `generateDeepAssessment` with the feedback/tags.
-  - Failed state shows toast + inline retry.
-- Whichever route/component opens the viewer (`hub.$snapshotId.tsx` and any list views) must include the new columns in its `venture_documents` `select`. No other UI changes elsewhere.
-
-## Migration plan for existing rows
-
-- The migration only adds nullable columns; existing rows remain untouched and load instantly.
-- Documents generated under the previous turn (which already contain an inline `## McKinsey-Grade Assessment` section in `content`) will still render that section as part of the document body. A small one-time data migration is **out of scope**; if the founder wants the new on-demand experience for those docs, they can click Rewrite to regenerate a clean Executive Summary, then click Run deep assessment. We surface this as a hint in the viewer when both an inline assessment heading and no `deep_assessment` value are present.
-
-## Out of scope
-
-- New tables, RLS changes, or schema changes beyond the four columns.
-- Bulk pre-generating assessments for every document.
-- Streaming the assessment response (returns as a single payload; viewer shows a skeleton during the ~20-40s call).
-- Changing Concept Studio, Brand Studio, Social Studio, or the rewrite-feedback flow itself.
-
-## Verification
-
-- Open an existing (pre-change) document → renders Executive Summary; deep assessment card visible with `Run deep assessment` button.
-- Click button → spinner, then McKinsey section appears below with the Deep-dive pill, Copy/Download/Regenerate controls.
-- Reopen the modal → assessment loads instantly from the stored column.
-- Click Regenerate with feedback → new content replaces the old; `deep_assessment_generated_at` updates.
-- Run a fresh document generation → `content` contains only the Executive Summary, no `## McKinsey-Grade Assessment` block, no `[^…]`, no `## Sources`.
-- Force a gateway 402 → inline error card with retry; document still readable.
+### Verification
+- Open a document with no assessment → Copy/.md/.docx/Print produce today's output (byte-identical markdown).
+- Run deep assessment → all four exports now contain the executive summary followed by `---` and the `## McKinsey-Grade Assessment` section.
+- Re-run/regenerate assessment → exports reflect the latest version.
+- `.docx` opens cleanly with the deep-dive heading styled like other H2s; Print/PDF preview shows both sections in order.
