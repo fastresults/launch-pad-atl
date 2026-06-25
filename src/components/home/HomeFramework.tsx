@@ -6,6 +6,7 @@ import { VideoTestimonials } from "@/components/home/VideoTestimonials";
 import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import { useEvent } from "@/lib/use-event";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   BUILD_LAYER,
   FOUNDATION_FIRST_REASONS,
@@ -150,6 +151,7 @@ function Meta({ icon, label }: { icon: React.ReactNode; label: string }) {
 
 function Framework() {
   return (
+    <TooltipProvider delayDuration={150}>
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
@@ -190,13 +192,20 @@ function Framework() {
                 {stage.items.map((d) => {
                   const Icon = d.icon;
                   return (
-                    <li
-                      key={d.title}
-                      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-card px-5 py-4 transition-colors hover:border-white/20"
-                    >
-                      <Icon className="size-5 shrink-0 text-primary" />
-                      <span className="text-base font-medium tracking-tight">{d.title}</span>
-                    </li>
+                    <Tooltip key={d.title} delayDuration={150}>
+                      <TooltipTrigger asChild>
+                        <li
+                          tabIndex={0}
+                          className="flex cursor-help items-center gap-3 rounded-2xl border border-white/10 bg-card px-5 py-4 transition-colors hover:border-white/20 focus:outline-none focus-visible:border-primary/40"
+                        >
+                          <Icon className="size-5 shrink-0 text-primary" />
+                          <span className="text-base font-medium tracking-tight">{d.title}</span>
+                        </li>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" sideOffset={6} className="max-w-[320px] text-sm leading-relaxed">
+                        {d.tooltip}
+                      </TooltipContent>
+                    </Tooltip>
                   );
                 })}
               </ul>
@@ -205,6 +214,7 @@ function Framework() {
         </div>
       </div>
     </section>
+    </TooltipProvider>
   );
 }
 
