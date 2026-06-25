@@ -190,13 +190,20 @@ function Framework() {
                 {stage.items.map((d) => {
                   const Icon = d.icon;
                   return (
-                    <li
-                      key={d.title}
-                      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-card px-5 py-4 transition-colors hover:border-white/20"
-                    >
-                      <Icon className="size-5 shrink-0 text-primary" />
-                      <span className="text-base font-medium tracking-tight">{d.title}</span>
-                    </li>
+                    <Tooltip key={d.title} delayDuration={150}>
+                      <TooltipTrigger asChild>
+                        <li
+                          tabIndex={0}
+                          className="flex cursor-help items-center gap-3 rounded-2xl border border-white/10 bg-card px-5 py-4 transition-colors hover:border-white/20 focus:outline-none focus-visible:border-primary/40"
+                        >
+                          <Icon className="size-5 shrink-0 text-primary" />
+                          <span className="text-base font-medium tracking-tight">{d.title}</span>
+                        </li>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" sideOffset={6} className="max-w-[320px] text-sm leading-relaxed">
+                        {d.tooltip}
+                      </TooltipContent>
+                    </Tooltip>
                   );
                 })}
               </ul>
