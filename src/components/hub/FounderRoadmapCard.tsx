@@ -112,6 +112,7 @@ export function FounderRoadmapCard({ snapshot, documentCount }: Props) {
         generatedAt={snapshot?.roadmap_generated_at}
         wordCount={snapshot?.roadmap_word_count}
         qualityScore={snapshot?.roadmap_quality_score}
+        documentCount={documentCount}
       />
     </>
   );
