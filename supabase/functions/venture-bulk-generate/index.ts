@@ -138,6 +138,7 @@ QUALITY_SCORE: <0-100 integer>`;
     market_scope: snap.market_scope,
     industry: snap.industry,
     sub_industry: snap.sub_industry,
+    track: snap.track,
     company_name: snap.company_name,
     website_url: snap.website_url,
   };
