@@ -35,9 +35,9 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-background/70 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2 md:px-6">
-        <Link to="/" className="flex items-center font-semibold tracking-tight" aria-label="Atlanta Startup Workshop">
-          <StartupLabsLogo className="h-9 w-auto md:h-12 text-foreground" />
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-2 sm:gap-3 sm:px-4 md:px-6">
+        <Link to="/" className="flex min-w-0 shrink items-center font-semibold tracking-tight" aria-label="Atlanta Startup Workshop">
+          <StartupLabsLogo className="h-8 w-auto text-foreground sm:h-9 md:h-12" />
         </Link>
 
         {/* Desktop nav */}
@@ -68,13 +68,13 @@ export function SiteHeader() {
         </div>
 
         {/* Mobile */}
-        <div className="flex items-center gap-2 lg:hidden">
-          <Link to="/register" className="rounded-full bg-hero-gradient px-3.5 py-2 text-sm font-medium text-white">
+        <div className="flex shrink-0 items-center gap-1.5 lg:hidden">
+          <Link to="/register" className="rounded-full bg-hero-gradient px-3 py-1.5 text-xs font-medium text-white sm:text-sm">
             {ctaShort}
           </Link>
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <button aria-label="Open menu" className="inline-flex size-11 items-center justify-center rounded-full border border-white/15 text-foreground">
+              <button aria-label="Open menu" className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-white/15 text-foreground">
                 <Menu className="size-5" />
               </button>
             </SheetTrigger>
