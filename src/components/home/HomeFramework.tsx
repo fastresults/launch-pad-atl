@@ -126,7 +126,7 @@ function Hero() {
               alt="ATL Founder-Friendly Accelerator seal"
               loading="eager"
               decoding="async"
-              className="w-[340px] xl:w-[400px] drop-shadow-[0_8px_30px_rgba(0,0,0,0.45)]"
+              className="w-[340px] xl:w-[400px] opacity-30 drop-shadow-[0_8px_30px_rgba(0,0,0,0.45)]"
             />
           </div>
         </div>
