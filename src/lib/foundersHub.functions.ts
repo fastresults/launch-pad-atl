@@ -298,6 +298,20 @@ export async function generateDocument(input: any): Promise<void> {
   if (data && data.ok === false) throw new Error(data.error ?? "Generation failed");
 }
 
+export async function generateDeepAssessment(input: any): Promise<void> {
+  const { snapshotId, documentType, feedback, tags } = unwrap<{
+    snapshotId: string;
+    documentType: string;
+    feedback?: string;
+    tags?: string[];
+  }>(input);
+  const { data, error } = await supabase.functions.invoke("venture-generate-assessment", {
+    body: { snapshotId, documentType, feedback, tags },
+  });
+  if (error) throw new Error(error.message);
+  if (data && data.ok === false) throw new Error(data.error ?? "Deep assessment failed");
+}
+
 export async function bulkGenerate(input: any): Promise<void> {
   const { snapshotId } = unwrap<{ snapshotId: string }>(input);
   const { error } = await supabase.functions.invoke("venture-bulk-generate", {
