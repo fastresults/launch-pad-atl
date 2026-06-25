@@ -329,7 +329,10 @@ export function DocumentViewer({
   };
   const onDownloadDocx = async () => {
     try {
-      const blob = await markdownToDocxBlob(title, content);
+      const blob = await markdownToDocxBlob(title, content, {
+        heroUrl: heroUrl ?? undefined,
+        subtitle: doc?.document_type,
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
