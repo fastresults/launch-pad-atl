@@ -1,17 +1,15 @@
+# Fix stale hero copy in HomeFramework
+
 ## Problem
+`src/components/home/HomeFramework.tsx` line 76 still says **"Twenty deliverables"**, but the framework was restructured to **34 deliverables across 8 categories** (see `src/lib/framework-deliverables.ts` and the updated grid copy lower in the same file). The hero paragraph contradicts the grid directly below it.
 
-`workshop_registrations` has correct RLS policies (including "Anyone can submit a registration" for anon+authenticated), but the table has **no GRANTs** for `anon`, `authenticated`, or `service_role`. PostgREST therefore returns `permission denied for table workshop_registrations` before RLS is even evaluated.
+## Change
+Replace lines 76–77 paragraph with copy aligned to the current framework:
 
-## Fix
+> One morning. **34 deliverables built live for your startup** — positioning, offer, brand, site, the 90-day plan — and you walk out ready to execute on Monday. $197, yours to keep. **No upsell in the room.**
 
-Run a migration to add the missing Data API grants:
+Leave the second paragraph ("Coffee's on us…") and the proof-point pills unchanged.
 
-```sql
-GRANT INSERT ON public.workshop_registrations TO anon, authenticated;
-GRANT SELECT, UPDATE, DELETE ON public.workshop_registrations TO authenticated;
-GRANT ALL ON public.workshop_registrations TO service_role;
-```
-
-This matches the existing policies: anon can only INSERT; authenticated users get full CRUD gated by RLS (own rows / admin); edge functions use service_role.
-
-No code changes required.
+## Scope
+- Single file edit: `src/components/home/HomeFramework.tsx` (paragraph at lines 76–77).
+- No other files reference "Twenty deliverables." Grid section already uses the accurate "34 deliverables across eight categories" copy.
