@@ -35,6 +35,7 @@ import { RewriteFeedbackDialog } from "@/components/hub/RewriteFeedbackDialog";
 import { IntakeGatewayDialog, type IntakeTarget } from "@/components/hub/IntakeGatewayDialog";
 import { BrandStudio } from "@/components/hub/BrandStudio";
 import { SocialStudio } from "@/components/hub/SocialStudio";
+import { FounderRoadmapCard } from "@/components/hub/FounderRoadmapCard";
 import {
   ArrowLeft,
   Loader2,
