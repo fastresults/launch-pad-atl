@@ -121,6 +121,7 @@ export async function generateOne(
   documentType: string,
   rewriteFeedback?: string,
   rewriteTags?: string[],
+  intakeAnswers?: Record<string, any>,
 ) {
   const [{ data: snap }, { data: type }] = await Promise.all([
     supabase.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle(),
