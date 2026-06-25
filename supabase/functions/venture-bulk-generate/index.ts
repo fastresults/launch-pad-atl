@@ -210,7 +210,7 @@ The "## Executive Summary" section targets ~500-700 words (shorter for brief doc
     brandBlock,
     `\n## Founder & market (always reflect these accurately)\n${JSON.stringify(founderCard, null, 2)}`,
     `\n## Venture brief (founder-reviewed)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,
-    snap.research_brief ? `\n## Research brief (use for evidence + citations)\n${JSON.stringify(snap.research_brief, null, 2)}` : "",
+    snap.research_brief ? `\n## Research brief (background evidence — synthesize as analyst judgment, NO footnotes or citations in the output)\n${JSON.stringify(snap.research_brief, null, 2)}` : "",
     depContext ? `\n## Upstream docs\n${depContext}` : "",
   ].filter(Boolean).join("\n\n");
 
