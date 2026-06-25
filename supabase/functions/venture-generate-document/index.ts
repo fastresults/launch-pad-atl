@@ -62,7 +62,58 @@ const TRACK_TONE: Record<string, string> = {
 };
 
 // Specialized doc prompts (mirrors bulk-generate SPECIAL map).
-const QF = `\n\nEnd with a "## Sources" section listing any [^n] footnotes used, then on a final line output exactly:\nQUALITY_SCORE: <0-100 integer>`;
+//
+// Every doc is rendered in TWO parts:
+//   1. "## Executive Summary" — the concise, investor-ready structure spec'd per-doc below.
+//   2. "## McKinsey-Grade Assessment" — a rigorous analytical deep dive.
+// No citations, no footnotes, no Sources section.
+const DEEP_DIVE = `
+
+OUTPUT STRUCTURE — MANDATORY, applies to EVERY document type:
+
+Produce TWO sections in this exact order:
+
+## Executive Summary
+Follow the document-specific structure described above verbatim (headings, tables, JSON blocks, fenced prompt blocks all live inside this section). Keep it concise, scannable, investor-ready (~500-700 words; brief doc types can be shorter).
+
+---
+
+## McKinsey-Grade Assessment
+A rigorous, partner-level analytical deep dive tailored to THIS document type (~700-1100 words). Use these subsections (### h3) — adapt wording so they read natural for the doc, but cover every angle:
+
+### Situation & Context
+Frame the problem, the founder's position, and what's actually at stake. Reference specifics from the venture brief and research.
+
+### Key Assumptions
+Numbered list. For each: the assumption + confidence (High / Medium / Low) + why.
+
+### Pressure Test — What Could Go Wrong
+3-6 sharpest counter-arguments, market realities, competitive responses, or execution traps an experienced partner would raise.
+
+### Quantified Sensitivities / Scenarios
+Where the doc has any numbers (pricing, CAC, conversion, runway, market size, channel mix, etc.) include a small Markdown table with Base / Upside / Downside columns and the key drivers. If the doc is purely qualitative (e.g. brand voice), substitute a 2x2 or trade-off matrix.
+
+### Risks & Mitigations
+Table: Risk | Likelihood (H/M/L) | Impact (H/M/L) | Mitigation.
+
+### What Would Have to Be True
+3-5 crisp, testable conditions for this plan to succeed.
+
+### 30 / 60 / 90-Day Actions
+Concrete actions per horizon. Each action: owner role + verifiable outcome.
+
+### Confidence Summary
+1-2 sentences: overall confidence in this document, the biggest unknown, and the next single action that would most reduce risk.
+
+CITATION RULES — STRICT:
+- DO NOT use footnote markers ([^1], [^2], etc.).
+- DO NOT add a "## Sources", "## References", or "## Citations" section.
+- Present conclusions as analyst judgment grounded in the supplied research, not as footnoted quotes.
+
+After the markdown, on a final line, output exactly:
+QUALITY_SCORE: <0-100 integer reflecting completeness, specificity, investor-readiness, and analytical rigor of both sections>`;
+
+const QF = DEEP_DIVE;
 const SPECIAL: Record<string, string> = {
   website_prd: `You are a senior product writer producing a Website PRD that doubles as a paste-ready prompt for an AI website builder (Lovable, v0, Bolt, Cursor). Output Markdown: # {Company} — Website PRD; ## 1. Paste-ready prompt (single fenced \`\`\` block, 400-600 words); ## 2. Sitemap; ## 3. Page-by-page copy (H1, sub-headline, 3 sections H2 + 2-3 sentences, CTA); ## 4. SEO bundle (title <60ch, meta <160ch, 8-12 keywords with geo-modifiers when local, OG image prompt); ## 5. Tech checklist. Reuse upstream brand_tokens.${QF}`,
   brand_strategy_framework: `You are a brand strategist using Sinek Golden Circle + Aaker + Jung archetypes. Output Markdown: # {Company} — Brand Strategy; ## Purpose; ## Vision; ## Mission; ## Core Values (5); ## Audience Archetypes (2-3); ## Brand Promise; ## Positioning Statement (Geoffrey Moore: "For [target] who [need], [brand] is the [category] that [benefit] unlike [alternative]"); ## Brand Pillars (3-5); ## Personality (primary Jung archetype + 5-trait spectrum 1-5); ## Brand Essence (3-5 words).${QF}`,
