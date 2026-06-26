@@ -14,8 +14,8 @@ import { toast } from "sonner";
 
 export default function ProfilePage() {
   const qc = useQueryClient();
-  
-  
+  const [autoSyncTried, setAutoSyncTried] = useState(false);
+
   const { data } = useQuery({ queryKey: ["my", "profile"], queryFn: () => getMyProfile() });
 
   const [founder, setFounder] = useState({ full_name: "", headline: "", background: "", primary_goal: "" });
@@ -45,7 +45,27 @@ export default function ProfilePage() {
       monthly_burn: p.monthly_burn?.toString() ?? "",
       runway_months: p.runway_months?.toString() ?? "",
     });
-  }, [data]);
+
+    // Auto-pull from brief on first load if key fields are still empty.
+    if (!autoSyncTried) {
+      const sparse =
+        !p.headline && !p.background && !p.industry && !p.problem_solved &&
+        !p.value_prop && !p.target_market && !p.business_model && !p.primary_goal;
+      if (sparse) {
+        setAutoSyncTried(true);
+        syncProfileFromBrief()
+          .then((r) => {
+            if (r.fieldsFilled > 0) {
+              toast.success(`Pulled ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} from your brief.`);
+              qc.invalidateQueries({ queryKey: ["my", "profile"] });
+            }
+          })
+          .catch((e) => console.error("[profile auto-sync] failed", e));
+      } else {
+        setAutoSyncTried(true);
+      }
+    }
+  }, [data, autoSyncTried, qc]);
 
   const save = useMutation({
     mutationFn: (vars: { section: "founder" | "business" | "financial" | "complete"; data: Record<string, unknown> }) =>

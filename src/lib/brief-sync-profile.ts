@@ -19,11 +19,13 @@ function joinClean(parts: Array<string | null | undefined>, sep = " — "): stri
   return parts.map((p) => (p ?? "").toString().trim()).filter(Boolean).join(sep);
 }
 
-function archetypeToStage(arc?: string | null): string {
-  const a = (arc ?? "").toLowerCase();
+function archetypeToStage(arc?: string | string[] | null): string {
+  const raw = Array.isArray(arc) ? arc.join(" ") : (arc ?? "");
+  const a = raw.toLowerCase();
   if (!a) return "";
-  if (a.includes("launch") || a.includes("revenue") || a.includes("ecom")) return "launched";
+  if (a.includes("launched") || a.includes("revenue") || a.includes("scaling")) return "launched";
   if (a.includes("mvp") || a.includes("beta") || a.includes("pilot")) return "mvp";
+  // Pre-launch archetypes (main-street, service, creator, ecommerce/DTC, etc.)
   return "idea";
 }
 
@@ -41,23 +43,50 @@ export async function syncProfileFromBrief(opts: SyncOptions = {}): Promise<Sync
     supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle(),
   ]);
 
-  const brief = briefRes.data ?? {};
-  const founder = founderRes.data ?? {};
-  const market = marketRes.data ?? {};
-  const profile = profileRes.data ?? {};
+  const brief: any = briefRes.data ?? {};
+  const founder: any = founderRes.data ?? {};
+  const market: any = marketRes.data ?? {};
+  const profile: any = profileRes.data ?? {};
   const displayName = baseProfileRes.data?.display_name ?? "";
+
+  // attendee_founder_profile real columns: right_person_reason, unfair_advantage,
+  // raw_text, linkedin_url, extracted (jsonb). No full_name/headline/background columns.
+  const extracted: any = founder.extracted ?? {};
+
+  const headlineFromExtract =
+    extracted.headline || extracted.title || extracted.current_title || "";
+  const backgroundFromExtract =
+    extracted.summary || extracted.bio || extracted.about || "";
+  const skillsFromExtract: string[] = Array.isArray(extracted.skills) ? extracted.skills : [];
+
+  const founderBackgroundComposed = joinClean(
+    [
+      backgroundFromExtract || founder.raw_text || brief.origin_story,
+      founder.right_person_reason ? `Why I'm the right person: ${founder.right_person_reason}` : "",
+      founder.unfair_advantage ? `Unfair advantage: ${founder.unfair_advantage}` : "",
+    ],
+    "\n\n"
+  );
+
+  const valuePropComposed = joinClean(
+    [brief.unique_insight, brief.offer_description, founder.unfair_advantage],
+    " — "
+  );
 
   // Build the candidate values
   const candidate: Record<string, any> = {
-    full_name: founder.full_name || displayName,
-    headline: founder.headline || firstSentence(brief.one_line_pitch),
-    background: founder.background || brief.origin_story,
+    full_name: extracted.full_name || displayName,
+    headline: headlineFromExtract || firstSentence(brief.one_line_pitch),
+    background: founderBackgroundComposed,
     primary_goal: brief.twelve_month_vision,
     industry: market.industry,
     stage: archetypeToStage(market.archetype),
     problem_solved: brief.problem_statement,
-    value_prop: joinClean([brief.unique_insight, brief.offer_description]),
-    target_market: joinClean([brief.target_customer, market.geography, market.customer_type], " · "),
+    value_prop: valuePropComposed,
+    target_market: joinClean(
+      [brief.target_customer, market.geography, market.customer_type],
+      " · "
+    ),
     business_model: brief.business_model,
   };
 
@@ -65,9 +94,21 @@ export async function syncProfileFromBrief(opts: SyncOptions = {}): Promise<Sync
   const patch: Record<string, any> = {};
   for (const [k, v] of Object.entries(candidate)) {
     const existing = (profile as any)[k];
-    const isEmpty = existing === null || existing === undefined || String(existing).trim() === "";
-    const hasNew = v !== null && v !== undefined && String(v).trim() !== "";
+    const isEmpty =
+      existing === null ||
+      existing === undefined ||
+      (Array.isArray(existing) ? existing.length === 0 : String(existing).trim() === "");
+    const hasNew =
+      v !== null &&
+      v !== undefined &&
+      (Array.isArray(v) ? v.length > 0 : String(v).trim() !== "");
     if (isEmpty && hasNew) patch[k] = v;
+  }
+
+  // Skills (array merge)
+  const existingSkills: string[] = Array.isArray(profile.skills) ? profile.skills : [];
+  if (existingSkills.length === 0 && skillsFromExtract.length > 0) {
+    patch.skills = skillsFromExtract;
   }
 
   let markedComplete = false;
@@ -82,7 +123,10 @@ export async function syncProfileFromBrief(opts: SyncOptions = {}): Promise<Sync
     const { error } = await supabase
       .from("attendee_profiles")
       .upsert({ user_id: userId, ...patch }, { onConflict: "user_id" });
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[syncProfileFromBrief] upsert failed", error);
+      throw new Error(error.message);
+    }
   }
 
   return { fieldsFilled, markedComplete };
