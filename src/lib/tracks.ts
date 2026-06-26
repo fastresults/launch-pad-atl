@@ -118,11 +118,13 @@ export const TRACK_SEEDS: Record<TrackKey, SeedEntry[]> = {
     { url: "https://www.glossier.com", industry: "Beauty / Indie Brand", sub_industry: "Indie skincare e-commerce", market_scope: "national", city: "Atlanta", region: "Georgia", country: "United States" },
     { url: "https://www.f45training.com", industry: "Health & Fitness", sub_industry: "Neighborhood fitness studio", market_scope: "local", city: "Atlanta", region: "Georgia", country: "United States" },
   ],
-  small_business: [
-    { url: "https://www.acehardware.com", industry: "Retail", sub_industry: "Independent hardware store", market_scope: "national", city: "Oak Brook", region: "Illinois", country: "United States" },
-    { url: "https://www.servpro.com", industry: "Home Services", sub_industry: "Restoration franchise", market_scope: "regional", city: "Gallatin", region: "Tennessee", country: "United States" },
-    { url: "https://www.hrblock.com", industry: "Professional Services", sub_industry: "Tax preparation", market_scope: "national", city: "Kansas City", region: "Missouri", country: "United States" },
-    { url: "https://www.midas.com", industry: "Automotive Services", sub_industry: "Auto repair franchise", market_scope: "regional", city: "Palm Beach Gardens", region: "Florida", country: "United States" },
+  ecommerce_dtc: [
+    { url: "https://www.allbirds.com", industry: "Apparel & Footwear", sub_industry: "Sustainable DTC footwear", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://magicspoon.com", industry: "Food & Beverage", sub_industry: "DTC cereal brand", market_scope: "national", city: "New York", region: "New York", country: "United States" },
+    { url: "https://liquiddeath.com", industry: "Beverage", sub_industry: "DTC canned water brand", market_scope: "national", city: "Los Angeles", region: "California", country: "United States" },
+    { url: "https://oliveandjune.com", industry: "Beauty", sub_industry: "DTC nail care brand", market_scope: "national", city: "Los Angeles", region: "California", country: "United States" },
+    { url: "https://chamberlaincoffee.com", industry: "Food & Beverage", sub_industry: "Creator-led DTC coffee brand", market_scope: "national", city: "Los Angeles", region: "California", country: "United States" },
+    { url: "https://www.bombas.com", industry: "Apparel", sub_industry: "DTC sock & basics brand", market_scope: "national", city: "New York", region: "New York", country: "United States" },
   ],
   scalable_tech: [
     { url: "https://linear.app", industry: "Software / SaaS", sub_industry: "Project management", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
