@@ -274,7 +274,7 @@ function Inner() {
   };
 
   const draftFromFiles = async () => {
-    const hasFiles = readyFiles.length > 0;
+    const hasFiles = combinedDocs.length > 0;
     const hasUrls = readyUrls.length > 0;
     const hasDraft = businessConcept.trim().length >= 20;
     if (!hasFiles && !hasUrls && !hasDraft) return;
@@ -283,7 +283,7 @@ function Inner() {
     try {
       const { data, error } = await supabase.functions.invoke("venture-synthesize-concept", {
         body: {
-          sources: readyFiles.map((f) => ({ filename: f.name, text: f.text })),
+          sources: combinedDocs.map((d) => ({ filename: d.filename, text: d.text })),
           urls: readyUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text })),
           conceptDraft: hasDraft ? businessConcept.trim() : "",
           industryValues: INDUSTRIES.map((i) => i.value),
@@ -358,21 +358,32 @@ function Inner() {
           industry: industry || undefined,
           sub_industry: subIndustry || undefined,
           track: track || undefined,
-          source_materials: (readyFiles.length || readyUrls.length || businessConcept.trim())
+          source_materials: (combinedDocs.length || readyUrls.length || businessConcept.trim())
             ? {
-                documents: readyFiles.map((f) => ({ filename: f.name, text: f.text ?? "" })),
+                documents: combinedDocs.map((d) => ({ filename: d.filename, text: d.text })),
                 urls: readyUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text ?? "" })),
                 conceptDraft: businessConcept.trim(),
               }
             : undefined,
         },
       }),
-    onSuccess: ({ id }) => {
+    onSuccess: async ({ id }) => {
+      // Re-tag every uploaded/reused document onto this new venture so the
+      // file lives in the venture's library going forward.
+      const docIds = combinedDocs.map((d) => d.id).filter((x): x is string => !!x);
+      if (docIds.length) {
+        try {
+          await attachSourcesToSnapshot({ documentIds: docIds, snapshotId: id });
+        } catch (e) {
+          console.warn("Could not attach uploaded files to venture:", e);
+        }
+      }
       toast.success("Venture created — enriching now");
       nav(`/dashboard/hub/${id}`);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not create venture"),
   });
+
 
 
   const missingFields: string[] = [];
