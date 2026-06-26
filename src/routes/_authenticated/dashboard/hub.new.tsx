@@ -669,37 +669,46 @@ function Inner() {
             />
           </div>
 
-          {reusable.length > 0 && (
+          {groupedReusable.length > 0 && (
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Library className="h-4 w-4 text-primary" />
                 Reuse files you've already uploaded
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                These came from your Startup Brief or earlier uploads. Tick any you want to use as context here — no need to re-upload.
+                We found these in your library. Tick any to use as context here — no need to re-upload.
               </p>
-              <ul className="mt-2 space-y-1">
-                {reusable.map((r) => {
-                  const ready = !!(r.extracted_text ?? "").trim();
-                  return (
-                    <li key={r.id} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-background/40">
-                      <input
-                        type="checkbox"
-                        checked={!!reuseSelected[r.id]}
-                        disabled={!ready}
-                        onChange={(e) =>
-                          setReuseSelected((prev) => ({ ...prev, [r.id]: e.target.checked }))
-                        }
-                      />
-                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <span className="min-w-0 flex-1 truncate">{r.original_name}</span>
-                      <span className="shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground">
-                        {ready ? `${Math.round((r.extracted_text ?? "").length / 1000)}k chars` : r.extraction_error ? "Unreadable" : "Processing…"}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
+              <div className="mt-2 space-y-3">
+                {groupedReusable.map(([key, group]) => (
+                  <div key={key}>
+                    <div className="px-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                      {group.label}
+                    </div>
+                    <ul className="mt-1 space-y-1">
+                      {group.items.map((r) => {
+                        const ready = !!(r.extracted_text ?? "").trim();
+                        return (
+                          <li key={r.id} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-background/40">
+                            <input
+                              type="checkbox"
+                              checked={!!reuseSelected[r.id]}
+                              disabled={!ready}
+                              onChange={(e) =>
+                                setReuseSelected((prev) => ({ ...prev, [r.id]: e.target.checked }))
+                              }
+                            />
+                            <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span className="min-w-0 flex-1 truncate">{r.original_name}</span>
+                            <span className="shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground">
+                              {ready ? `${Math.round((r.extracted_text ?? "").length / 1000)}k chars` : r.extraction_error ? "Unreadable" : "Processing…"}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
