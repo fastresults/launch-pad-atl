@@ -352,12 +352,15 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // Identify caller from JWT (so we can check unlock grants).
+    // Identify caller from JWT — REQUIRED for every path.
     let callerId: string | null = null;
     const authHeader = req.headers.get("Authorization") ?? "";
     if (authHeader.startsWith("Bearer ")) {
       const { data: userData } = await supabase.auth.getUser(authHeader.slice(7));
       callerId = userData?.user?.id ?? null;
+    }
+    if (!callerId) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Gate: concept must be locked before any docs are generated.
@@ -370,31 +373,39 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Lock your concept summary before generating documents." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // If this is a full-bulk (no category) request, require an active unlock grant
-    // for (caller, snapshot). Per-category runs are always allowed for the owner.
-    const isAllBulk = !category || String(category).trim().length === 0;
-    if (isAllBulk) {
-      if (!callerId) {
-        return new Response(JSON.stringify({ error: "unlock_required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      // Admins always allowed; check role.
+    // Ownership / admin check applies to EVERY path (full bulk + per-category).
+    let isAdmin = false;
+    if (gateSnap.user_id !== callerId) {
       const { data: roleRow } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", callerId)
         .in("role", ["admin", "super_admin"]);
-      const isAdmin = (roleRow ?? []).length > 0;
+      isAdmin = (roleRow ?? []).length > 0;
       if (!isAdmin) {
-        const { data: grant } = await supabase
-          .from("bulk_unlock_grants")
-          .select("id")
-          .eq("user_id", callerId)
-          .eq("snapshot_id", snapshotId)
-          .is("revoked_at", null)
-          .maybeSingle();
-        if (!grant) {
-          return new Response(JSON.stringify({ error: "unlock_required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
+        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    } else {
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", callerId)
+        .in("role", ["admin", "super_admin"]);
+      isAdmin = (roleRow ?? []).length > 0;
+    }
+
+    // Full-bulk runs additionally require an unlock grant (non-admins).
+    const isAllBulk = !category || String(category).trim().length === 0;
+    if (isAllBulk && !isAdmin) {
+      const { data: grant } = await supabase
+        .from("bulk_unlock_grants")
+        .select("id")
+        .eq("user_id", callerId)
+        .eq("snapshot_id", snapshotId)
+        .is("revoked_at", null)
+        .maybeSingle();
+      if (!grant) {
+        return new Response(JSON.stringify({ error: "unlock_required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }
 
