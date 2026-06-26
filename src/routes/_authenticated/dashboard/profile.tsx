@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { } from 'react-router-dom';
 import { getMyProfile, upsertMyProfile } from "@/lib/attendee.functions";
+import { syncProfileFromBrief } from "@/lib/brief-sync-profile";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
