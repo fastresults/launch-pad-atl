@@ -50,6 +50,8 @@ const WorkshopStage = lazy(() => import("@/routes/_authenticated/workshop.$stage
 const AdminIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.index"));
 const AdminUsers = lazy(() => import("@/routes/_authenticated/_admin/admin.users"));
 const AdminSettings = lazy(() => import("@/routes/_authenticated/_admin/admin.settings"));
+const AdminDecks = lazy(() => import("@/routes/_authenticated/_admin/admin.decks"));
+const AdminDeckEditor = lazy(() => import("@/routes/_authenticated/_admin/admin.decks.$slug"));
 
 const AdminReview = lazy(() => import("@/routes/_authenticated/_admin/admin.review"));
 const AdminRegistrations = lazy(() => import("@/routes/_authenticated/_admin/admin.registrations"));
@@ -143,6 +145,8 @@ export default function App() {
             <Route path="/admin" element={<AdminIndex />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/decks" element={<AdminDecks />} />
+            <Route path="/admin/decks/:slug" element={<AdminDeckEditor />} />
             <Route path="/admin/review" element={<AdminReview />} />
             <Route path="/admin/registrations" element={<AdminRegistrations />} />
             <Route path="/admin/members" element={<AdminMembers />} />
