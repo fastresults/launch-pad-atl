@@ -511,6 +511,7 @@ export function DocumentViewer({
       const { uploadUrl, path } = await createDocumentUploadUrl({
         filename,
         contentType,
+        snapshotId: doc?.snapshot_id ?? null,
       });
       const up = await fetch(uploadUrl, {
         method: "PUT",
@@ -525,6 +526,7 @@ export function DocumentViewer({
         size: blob.size,
         kind: "deliverable",
         sourceVentureDocumentId: doc?.id ?? null,
+        snapshotId: doc?.snapshot_id ?? null,
       });
       setSavedCount((n) => n + 1);
       qc.invalidateQueries({ queryKey: ["my", "documents"] });
