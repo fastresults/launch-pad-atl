@@ -15,8 +15,13 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 const SYSTEM_PROMPT = `You are an AI venture-intelligence analyst.
-Given a founder's concept (and possibly a scraped web page), produce a complete, realistic ExtractedData object.
-Be specific, plausible, and concise. Never write filler or placeholder text. If the founder didn't specify a field, infer a reasonable answer from the concept.
+Given a founder's concept (and possibly a scraped web page and the founder's own uploaded source documents / URLs), produce a complete, realistic ExtractedData object.
+
+CRITICAL RULES:
+- When source material is provided, prefer extracting verbatim facts (pricing, team, processes, goals) from it over inference.
+- Only infer when sources are silent on a field, and only infer plausibly from the concept.
+- NEVER emit placeholder strings like "[needs founder input]", "TBD", "various", or "unknown". If a field is truly unknown, leave it as an empty string "".
+- Be specific and concise.
 
 Return ONLY valid JSON matching this exact shape (no markdown, no commentary):
 {
@@ -25,6 +30,7 @@ Return ONLY valid JSON matching this exact shape (no markdown, no commentary):
   "operations": { "revenue_model": "", "pricing": "", "key_processes": "", "team": "" },
   "vision":     { "short_term_goals": "", "long_term_goals": "", "mission": "", "vision": "" }
 }`;
+
 
 async function updateProgress(supabase: any, id: string, stage: string, progress: number, message: string) {
   await supabase
