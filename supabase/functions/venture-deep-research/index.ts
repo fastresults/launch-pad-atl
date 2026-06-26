@@ -514,6 +514,15 @@ Venture context:
       },
     })
     .eq("id", snapshotId);
+
+  // Compute the snapshot brain now that research is done. Fire-and-forget —
+  // downstream generators will compute it lazily if this fails.
+  try {
+    const { computeSnapshotBrain } = await import("../_shared/snapshot-brain.ts");
+    await computeSnapshotBrain(supabase, snapshotId);
+  } catch (e) {
+    console.warn("snapshot brain compute failed (will retry lazily)", e);
+  }
 }
 
 Deno.serve(async (req) => {

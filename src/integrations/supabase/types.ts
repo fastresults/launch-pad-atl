@@ -1049,6 +1049,7 @@ export type Database = {
           active: boolean
           auto_runnable: boolean
           bonus: boolean
+          context_keys: string[] | null
           created_at: string
           default_model: string
           depends_on_keys: string[] | null
@@ -1071,6 +1072,7 @@ export type Database = {
           active?: boolean
           auto_runnable?: boolean
           bonus?: boolean
+          context_keys?: string[] | null
           created_at?: string
           default_model?: string
           depends_on_keys?: string[] | null
@@ -1093,6 +1095,7 @@ export type Database = {
           active?: boolean
           auto_runnable?: boolean
           bonus?: boolean
+          context_keys?: string[] | null
           created_at?: string
           default_model?: string
           depends_on_keys?: string[] | null
@@ -2229,6 +2232,8 @@ export type Database = {
           roadmap_word_count: number | null
           saved_enhancements: Json
           scraped_content: string | null
+          snapshot_brain: Json | null
+          snapshot_brain_updated_at: string | null
           source_materials: Json | null
           status: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry: string | null
@@ -2272,6 +2277,8 @@ export type Database = {
           roadmap_word_count?: number | null
           saved_enhancements?: Json
           scraped_content?: string | null
+          snapshot_brain?: Json | null
+          snapshot_brain_updated_at?: string | null
           source_materials?: Json | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry?: string | null
@@ -2315,6 +2322,8 @@ export type Database = {
           roadmap_word_count?: number | null
           saved_enhancements?: Json
           scraped_content?: string | null
+          snapshot_brain?: Json | null
+          snapshot_brain_updated_at?: string | null
           source_materials?: Json | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry?: string | null
