@@ -8,7 +8,8 @@ import {
   getDocumentDownloadUrl,
   listMyDocuments,
 } from "@/lib/attendee.functions";
-import { getVentureDocumentById } from "@/lib/foundersHub.functions";
+import { findVentureDocumentByLabel, getVentureDocumentById } from "@/lib/foundersHub.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Eye, Loader2, Sparkles, Upload as UploadIcon } from "lucide-react";
