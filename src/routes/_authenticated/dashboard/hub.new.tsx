@@ -760,13 +760,13 @@ function Inner() {
             )}
           </div>
 
-          {(readyFiles.length > 0 || readyUrls.length > 0 || businessConcept.trim().length >= 20) && (
+          {(combinedDocs.length > 0 || readyUrls.length > 0 || businessConcept.trim().length >= 20) && (
             <div className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm">
                 <div className="font-medium">
                   {processed
                     ? "Processed — review the form below"
-                    : `Context ready · ${readyFiles.length} file${readyFiles.length === 1 ? "" : "s"}, ${readyUrls.length} URL${readyUrls.length === 1 ? "" : "s"}${businessConcept.trim().length >= 20 ? ", your draft" : ""}`}
+                    : `Context ready · ${combinedDocs.length} file${combinedDocs.length === 1 ? "" : "s"}, ${readyUrls.length} URL${readyUrls.length === 1 ? "" : "s"}${businessConcept.trim().length >= 20 ? ", your draft" : ""}`}
                 </div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
                   {processed
