@@ -64,14 +64,7 @@ function gatewayMessage(status: number, detail: string) {
   return "Founder Roadmap is currently unavailable. Please try again shortly.";
 }
 
-function stripCitations(md: string): string {
-  let out = md;
-  out = out.replace(/\n#{1,6}\s*(sources|references|citations|bibliography|footnotes)\s*[\s\S]*$/i, "");
-  out = out.replace(/\[\^[^\]]+\]/g, "");
-  out = out.replace(/^\s*\[\^[^\]]+\]:.*$/gm, "");
-  out = out.replace(/\n{3,}/g, "\n\n");
-  return out.trim();
-}
+// stripCitations is imported from _shared/deliverable-prompts.ts
 
 function smartExcerpt(md: string, budget: number): string {
   if (!md) return "";
