@@ -1,10 +1,12 @@
 // @ts-nocheck
+import { useEffect, useRef, useState } from "react";
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getMyWorkflow, runMyDeliverable, runMyRemaining, getMyRecentRuns } from "@/lib/userPipeline.functions";
 import { countAnsweredBriefFields } from "@/lib/brief-progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Circle, Lock, Loader2, Play, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,9 +34,14 @@ export default function WorkflowPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Run failed"),
   });
 
+  const [bulk, setBulk] = useState<{ startCount: number; target: number } | null>(null);
+
   const runAll = useMutation({
     mutationFn: () => runMyRemaining(),
-    onSuccess: () => { toast.success("Queued — generating your remaining deliverables"); qc.invalidateQueries({ queryKey: ["my"] }); },
+    onSuccess: () => {
+      toast.success("Queued — your co-founder is on it");
+      qc.invalidateQueries({ queryKey: ["my"] });
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Bulk run failed"),
   });
 
@@ -43,6 +50,33 @@ export default function WorkflowPage() {
 
   const items: WorkflowItem[] = (data?.items ?? []).filter((i: WorkflowItem) => i.stage_n >= 1);
   const totalDeliverables = items.length;
+  const triggerable = items.filter((i) => i.user_can_trigger !== false);
+  const generatedCount = triggerable.filter((i) => i.generated).length;
+  const remainingCount = triggerable.length - generatedCount;
+
+  // Track bulk-run progress: lock in a snapshot when the user clicks Run remaining,
+  // then watch generatedCount climb toward the target.
+  const justStarted = useRef(false);
+  useEffect(() => {
+    if (runAll.isSuccess && !justStarted.current && triggerable.length > 0) {
+      justStarted.current = true;
+      setBulk({ startCount: generatedCount, target: triggerable.length });
+    }
+  }, [runAll.isSuccess, triggerable.length, generatedCount]);
+
+  // Clear once everything is done or no active queued/running runs remain.
+  const activeRuns = (recent ?? []).filter((r: any) => r.status === "queued" || r.status === "running").length;
+  useEffect(() => {
+    if (!bulk) return;
+    if (generatedCount >= bulk.target || (runAll.isIdle && activeRuns === 0 && !runAll.isPending && generatedCount > bulk.startCount)) {
+      const t = setTimeout(() => { setBulk(null); justStarted.current = false; }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [bulk, generatedCount, activeRuns, runAll.isIdle, runAll.isPending]);
+
+  const bulkDone = bulk ? generatedCount - bulk.startCount : 0;
+  const bulkTotal = bulk ? bulk.target - bulk.startCount : 0;
+  const bulkPct = bulk && bulkTotal > 0 ? Math.min(100, Math.round((bulkDone / bulkTotal) * 100)) : 0;
 
   // Group items by stage, preserving DB sort order
   const byStage = new Map<number, { label: string; bonus: boolean; items: WorkflowItem[] }>();
@@ -57,6 +91,8 @@ export default function WorkflowPage() {
   }
   const stages = Array.from(byStage.entries()).sort((a, b) => a[0] - b[0]);
   const totalCategories = stages.length;
+  const bulkActive = !!bulk || runAll.isPending || activeRuns > 0;
+  const currentlyRunning = (recent ?? []).find((r: any) => r.status === "running") as any;
 
   return (
     <div className="space-y-8">
@@ -71,13 +107,46 @@ export default function WorkflowPage() {
         </div>
         <Button
           onClick={() => runAll.mutate()}
-          disabled={!briefReady || runAll.isPending}
+          disabled={!briefReady || bulkActive || remainingCount === 0}
           aria-label="Generate every deliverable that's still missing"
           title="Generate every deliverable that's still missing"
         >
-          {runAll.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Running…</> : <><Play className="mr-2 h-4 w-4" />Run remaining</>}
+          {bulkActive ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating…</>
+          ) : remainingCount === 0 ? (
+            <><CheckCircle2 className="mr-2 h-4 w-4" />All caught up</>
+          ) : (
+            <><Play className="mr-2 h-4 w-4" />Run remaining ({remainingCount})</>
+          )}
         </Button>
       </div>
+
+      {bulkActive && (
+        <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <div className="flex items-center gap-2 font-medium">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              {bulk
+                ? `Building your kit — ${bulkDone} of ${bulkTotal} new deliverables ready`
+                : "Queuing your remaining deliverables…"}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {generatedCount} / {triggerable.length} total
+            </div>
+          </div>
+          <Progress value={bulk ? bulkPct : 8} className="mt-3 h-2" />
+          <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+            <span>
+              {currentlyRunning?.options?.key
+                ? `Working on: ${currentlyRunning.options.key}`
+                : activeRuns > 0
+                ? `${activeRuns} run${activeRuns === 1 ? "" : "s"} in flight`
+                : "Warming up your co-founder…"}
+            </span>
+            <span>This page updates live — you can keep working elsewhere.</span>
+          </div>
+        </div>
+      )}
 
       {!briefReady && (
         <div className="rounded-2xl border border-status-warning/30 bg-status-warning/5 p-4 text-sm">
