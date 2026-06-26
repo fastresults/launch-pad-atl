@@ -98,3 +98,22 @@ export async function computeSnapshotBrain(supabase: any, snapshotId: string): P
 
   return brain;
 }
+
+/**
+ * Lazy variant: returns the cached brain on the snapshot if present, else
+ * computes & persists one. Safe to call from any generator.
+ */
+export async function ensureSnapshotBrain(supabase: any, snapshotId: string): Promise<VentureBrain | null> {
+  const { data: snap } = await supabase
+    .from("venture_snapshots")
+    .select("snapshot_brain")
+    .eq("id", snapshotId)
+    .maybeSingle();
+  if (snap?.snapshot_brain) return snap.snapshot_brain as VentureBrain;
+  try {
+    return await computeSnapshotBrain(supabase, snapshotId);
+  } catch (e) {
+    console.error("ensureSnapshotBrain failed", e);
+    return null;
+  }
+}
