@@ -7,8 +7,9 @@ import { countAnsweredBriefFields } from "@/lib/brief-progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, Circle, Lock, Loader2, Play, Sparkles } from "lucide-react";
+import { CheckCircle2, Circle, Lock, Loader2, Play, Sparkles, Presentation } from "lucide-react";
 import { toast } from "sonner";
+import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
 
 type WorkflowItem = {
   key: string;
