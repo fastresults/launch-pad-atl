@@ -207,16 +207,73 @@ function Inner() {
   }, []);
 
   const removeFile = (id: string) => setFiles((prev) => prev.filter((f) => f.id !== id));
+  const removeUrl = (id: string) => setScrapedUrls((prev) => prev.filter((u) => u.id !== id));
 
   const readyFiles = files.filter((f) => f.status === "ready" && (f.text ?? "").trim());
+  const readyUrls = scrapedUrls.filter((u) => u.status === "ready" && (u.text ?? "").trim());
+
+  const addUrl = async () => {
+    const raw = urlInput.trim();
+    if (!raw) return;
+    if (scrapedUrls.length >= MAX_URLS) {
+      toast.error(`Max ${MAX_URLS} URLs`);
+      return;
+    }
+    let normalized = raw;
+    if (!/^https?:\/\//i.test(normalized)) normalized = `https://${normalized}`;
+    try { new URL(normalized); } catch {
+      toast.error("That doesn't look like a valid URL");
+      return;
+    }
+    if (scrapedUrls.some((u) => u.url === normalized)) {
+      toast.error("Already added that URL");
+      return;
+    }
+    const entry: ScrapedUrl = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      url: normalized,
+      status: "scraping",
+    };
+    setScrapedUrls((prev) => [...prev, entry]);
+    setUrlInput("");
+    setScrapingUrl(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("venture-scrape-url", {
+        body: { urls: [normalized] },
+      });
+      if (error) throw error;
+      const r = data?.results?.[0];
+      if (!r) throw new Error("No result");
+      setScrapedUrls((curr) => curr.map((x) => x.id === entry.id ? {
+        ...x,
+        status: r.error ? "error" : "ready",
+        title: r.title ?? null,
+        text: r.text ?? "",
+        charCount: r.charCount ?? 0,
+        error: r.error,
+      } : x));
+    } catch (e) {
+      setScrapedUrls((curr) => curr.map((x) => x.id === entry.id ? {
+        ...x, status: "error", error: e instanceof Error ? e.message : "Scrape failed",
+      } : x));
+    } finally {
+      setScrapingUrl(false);
+    }
+  };
 
   const draftFromFiles = async () => {
-    if (!readyFiles.length || drafting) return;
+    const hasFiles = readyFiles.length > 0;
+    const hasUrls = readyUrls.length > 0;
+    const hasDraft = businessConcept.trim().length >= 20;
+    if (!hasFiles && !hasUrls && !hasDraft) return;
+    if (drafting) return;
     setDrafting(true);
     try {
       const { data, error } = await supabase.functions.invoke("venture-synthesize-concept", {
         body: {
           sources: readyFiles.map((f) => ({ filename: f.name, text: f.text })),
+          urls: readyUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text })),
+          conceptDraft: hasDraft ? businessConcept.trim() : "",
           industryValues: INDUSTRIES.map((i) => i.value),
         },
       });
