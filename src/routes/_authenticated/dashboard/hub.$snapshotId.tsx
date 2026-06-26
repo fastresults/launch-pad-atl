@@ -628,6 +628,16 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     return Array.from(map.entries());
   }, [types]);
 
+  // Per-category progress
+  const categoryProgress = useMemo(() => {
+    return categories.map(([cat, items]) => {
+      const done = items.filter((t: any) => completedKeys.has(t.type)).length;
+      return { cat, total: items.length, done, complete: done === items.length };
+    });
+  }, [categories, completedKeys]);
+
+  const nextCategory = categoryProgress.find((c) => !c.complete) ?? null;
+
   // ---- Hero state machine ----
   let heroTitle: string;
   let heroSub: string;
@@ -645,26 +655,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     if (job?.id) {
       heroSecondary = { label: job.cancel_requested ? "Stopping…" : "Stop", onClick: () => cancel.mutate(job.id) };
     }
-  } else if (completeCount === 0) {
-    heroTitle = "Let's build your startup kit";
-    heroSub = `We'll write ${total || "your"} documents — strategy, brand, social and launch. It takes a few hours. You can leave and come back any time.`;
-    heroPrimary = {
-      label: "Start writing",
-      onClick: () => bulk.mutate(),
-      disabled: bulk.isPending || !total,
-      loading: bulk.isPending,
-    };
-  } else if (completeCount < total) {
-    heroTitle = "Pick up where you left off";
-    heroSub = `${completeCount} of ${total} documents done. We'll write the rest for you.`;
-    heroShowProgress = true;
-    heroPrimary = {
-      label: "Continue writing",
-      onClick: () => bulk.mutate(),
-      disabled: bulk.isPending,
-      loading: bulk.isPending,
-    };
-  } else {
+  } else if (!nextCategory) {
     heroTitle = "Your startup kit is ready";
     heroSub = `All ${total} documents are written. Open any one below to read or download.`;
     heroDone = true;
@@ -675,7 +666,23 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         if (first) setViewerDoc(first);
       },
     };
-    heroSecondary = { label: "Regenerate all", onClick: () => bulk.mutate() };
+    heroSecondary = { label: "Generate all (re-run)", onClick: () => setShowUnlock(true) };
+  } else {
+    const isFirstRun = completeCount === 0;
+    heroTitle = isFirstRun
+      ? "Let's build your startup kit, one section at a time"
+      : "Pick up where you left off";
+    heroSub = isFirstRun
+      ? `We'll write your ${total} documents in guided sections — Foundation first, then Strategy, Operations, and the rest. Generate one section, read it, then move on.`
+      : `${completeCount} of ${total} done. Next up: ${nextCategory.cat} (${nextCategory.total - nextCategory.done} doc${nextCategory.total - nextCategory.done === 1 ? "" : "s"} left).`;
+    heroShowProgress = !isFirstRun;
+    heroPrimary = {
+      label: `Generate ${nextCategory.cat} (${nextCategory.total - nextCategory.done} doc${nextCategory.total - nextCategory.done === 1 ? "" : "s"})`,
+      onClick: () => bulk.mutate({ category: nextCategory.cat }),
+      disabled: bulk.isPending,
+      loading: bulk.isPending,
+    };
+    heroSecondary = { label: `Generate all ${total}`, onClick: () => setShowUnlock(true) };
   }
 
   const pct = jobRunning
