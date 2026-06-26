@@ -75,13 +75,14 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    const [{ data: deliv }, { data: type }, { data: all }, { data: brief }, { data: founder }, { data: market }] = await Promise.all([
+    const [{ data: deliv }, { data: type }, { data: all }, { data: brief }, { data: founder }, { data: market }, { data: primarySnap }] = await Promise.all([
       admin.from("attendee_deliverables").select("*").eq("user_id", userId).eq("deliverable_key", key).maybeSingle(),
       admin.from("deliverable_types").select("*").eq("key", key).maybeSingle(),
       admin.from("attendee_deliverables").select("deliverable_key, content_current").eq("user_id", userId),
       admin.from("attendee_business_brief").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_founder_profile").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_market_profile").select("*").eq("user_id", userId).maybeSingle(),
+      admin.from("venture_snapshots").select("id").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
 
     if (!deliv || !deliv.content_current) {
@@ -93,6 +94,22 @@ Deno.serve(async (req) => {
       .update({ deep_assessment_status: "generating" })
       .eq("user_id", userId)
       .eq("deliverable_key", key);
+
+    // Prefer shared venture context + snapshot brain when the user has a
+    // venture snapshot — gives Hub-grade rigor on the Workflow assessment.
+    let preambleBlock = "";
+    if (primarySnap?.id) {
+      try {
+        const ctx = await loadVentureContext(admin, primarySnap.id);
+        if (!ctx.brain) ctx.brain = await ensureSnapshotBrain(admin, primarySnap.id);
+        const brainBlock = ctx.brain
+          ? `\n\n## Snapshot brain (authoritative compressed venture summary)\n\`\`\`json\n${JSON.stringify(ctx.brain, null, 2)}\n\`\`\``
+          : "";
+        preambleBlock = `${compactPreamble(ctx)}${brainBlock}`;
+      } catch (e) {
+        console.warn("venture context unavailable, falling back to raw brief", e);
+      }
+    }
 
     const otherBlocks: string[] = [];
     for (const row of all ?? []) {
@@ -113,10 +130,10 @@ Deno.serve(async (req) => {
       `Deliverable under review: ${type?.label ?? key}`,
       type?.description ? `Purpose: ${type.description}` : "",
       "",
-      `## Founder's Startup Brief\n${JSON.stringify(brief ?? {}, null, 2)}`,
-      founder ? `\n## Founder profile\n${JSON.stringify(founder, null, 2)}` : "",
-      market ? `\n## Market profile\n${JSON.stringify(market, null, 2)}` : "",
-      otherBlocks.length ? `\n## All other generated deliverables for this founder\n${otherBlocks.join("\n\n---\n\n")}` : "",
+      preambleBlock
+        ? preambleBlock
+        : `## Founder's Startup Brief\n${JSON.stringify(brief ?? {}, null, 2)}${founder ? `\n\n## Founder profile\n${JSON.stringify(founder, null, 2)}` : ""}${market ? `\n\n## Market profile\n${JSON.stringify(market, null, 2)}` : ""}`,
+      otherBlocks.length ? `\n## Other completed deliverables for this founder (outline only)\n${otherBlocks.join("\n\n---\n\n")}` : "",
       `\n## The deliverable to assess (founder is reading this now)\n${targetMd}`,
       guidance,
     ].filter(Boolean).join("\n");
@@ -125,7 +142,7 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: MODELS.pro,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userPrompt },
