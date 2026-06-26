@@ -11,8 +11,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { VoiceField } from "@/components/voice/VoiceField";
 import { RewriteFeedbackDialog, type RewriteTarget } from "@/components/hub/RewriteFeedbackDialog";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { RichMarkdown } from "@/components/markdown/RichMarkdown";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 
 
@@ -41,7 +43,7 @@ export default function WorkflowDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("attendee_deliverables")
-        .select("content_current, content_ai, review_status, publish_status, ai_generated_at, deep_assessment, deep_assessment_status, deep_assessment_quality_score, deep_assessment_generated_at")
+        .select("content_current, content_ai, review_status, publish_status, ai_generated_at, deep_assessment, deep_assessment_status, deep_assessment_quality_score, deep_assessment_generated_at, hero_image_path")
         .eq("user_id", user!.id)
         .eq("deliverable_key", key)
         .maybeSingle();
@@ -84,6 +86,49 @@ export default function WorkflowDetail() {
   const assessmentStatus = deliverable?.deep_assessment_status ?? null;
   const assessmentText = deliverable?.deep_assessment ?? null;
   const assessmentScore = deliverable?.deep_assessment_quality_score ?? null;
+  const heroPath = deliverable?.hero_image_path ?? null;
+
+  // Hero image — signed URL + lazy generate
+  const [heroUrl, setHeroUrl] = useState<string | null>(null);
+  const [heroLoading, setHeroLoading] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!heroPath) { setHeroUrl(null); return; }
+      const { data } = await supabase.storage.from("venture-doc-images").createSignedUrl(heroPath, 3600);
+      if (alive && data?.signedUrl) setHeroUrl(data.signedUrl);
+    })();
+    return () => { alive = false; };
+  }, [heroPath]);
+
+  const generateHero = async (force = false) => {
+    if (!hasContent || !key) return;
+    setHeroLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("attendee-deliverable-image", {
+        body: { deliverableKey: key, force },
+      });
+      if (error) throw error;
+      if (data?.path) {
+        const { data: signed } = await supabase.storage.from("venture-doc-images").createSignedUrl(data.path, 3600);
+        if (signed?.signedUrl) setHeroUrl(signed.signedUrl);
+        refetch();
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Image generation failed");
+    } finally {
+      setHeroLoading(false);
+    }
+  };
+
+  // Auto-kick once when content exists but no hero yet
+  useEffect(() => {
+    if (hasContent && !heroPath && !heroLoading) {
+      generateHero(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasContent, heroPath]);
 
 
   return (
@@ -133,16 +178,42 @@ export default function WorkflowDetail() {
             Quick regenerate
           </Button>
         )}
+        {hasContent && (
+          <Button variant="ghost" size="sm" onClick={() => generateHero(true)} disabled={heroLoading}>
+            {heroLoading
+              ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating image…</>
+              : <><ImageIcon className="mr-2 h-4 w-4" />{heroPath ? "Regenerate image" : "Generate image"}</>}
+          </Button>
+        )}
       </div>
 
       {deliverable && hasContent && (
-        <article className="space-y-5 rounded-2xl border border-white/10 bg-card p-6">
+        <article className="space-y-5 rounded-2xl border border-border/60 bg-card p-6">
+          {(heroUrl || heroLoading) && (
+            <div className="overflow-hidden rounded-xl border border-border/60 bg-muted/30">
+              <AspectRatio ratio={16 / 9}>
+                {heroUrl ? (
+                  <img src={heroUrl} alt={content.title ?? wf?.label ?? "Document hero"} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Painting hero image…
+                  </div>
+                )}
+              </AspectRatio>
+            </div>
+          )}
           {content.title && <h2 className="text-xl font-semibold">{content.title}</h2>}
-          {content.summary && <p className="text-sm text-muted-foreground">{content.summary}</p>}
+          {content.summary && (
+            <RichMarkdown variant="compact" className="text-sm text-muted-foreground">
+              {content.summary}
+            </RichMarkdown>
+          )}
           {(content.sections ?? []).map((s, i) => (
             <section key={i}>
               <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{s.heading}</h3>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{s.body_markdown}</p>
+              <RichMarkdown variant="document" className="mt-1">
+                {s.body_markdown}
+              </RichMarkdown>
             </section>
           ))}
           {content.action_items && content.action_items.length > 0 && (
@@ -157,7 +228,7 @@ export default function WorkflowDetail() {
       )}
 
       {hasContent && (
-        <section className="space-y-3 rounded-2xl border border-white/10 bg-card p-6">
+        <section className="space-y-3 rounded-2xl border border-border/60 bg-card p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">McKinsey-grade deep assessment</h2>
@@ -177,15 +248,13 @@ export default function WorkflowDetail() {
           </div>
 
           {assessmentText && (
-            <div className="rounded-xl border border-white/10 bg-background/40 p-4">
+            <div className="rounded-xl border border-border/60 bg-background/40 p-4">
               {assessmentScore != null && (
                 <div className="mb-2 text-xs text-muted-foreground">
                   Quality score: <span className="font-semibold text-foreground">{assessmentScore}/100</span>
                 </div>
               )}
-              <div className="prose prose-sm max-w-none whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-                {assessmentText}
-              </div>
+              <RichMarkdown variant="assessment">{assessmentText}</RichMarkdown>
             </div>
           )}
         </section>

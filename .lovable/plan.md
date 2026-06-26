@@ -1,54 +1,73 @@
-## What happened
+# Plan: Rich Markdown Viewer + Matching Hero Images on Workflow Deliverables
 
-Both features still exist — they're just on the wrong page for the current Workflow flow.
+## Problem
 
-- **Rewrite with Feedback** lives in `src/components/hub/RewriteFeedbackDialog.tsx` and is wired into the Founders Hub document viewer at `/dashboard/hub/:snapshotId` (`hub.$snapshotId.tsx` line 863).
-- **Deep Assessment (McKinsey-grade)** lives in `src/components/hub/DocumentViewer.tsx` (line 708, "Run deep assessment"), backed by the `venture-generate-assessment` edge function and the `deep_assessment*` columns on `venture_documents`.
+On `/dashboard/workflow/:key`, sections and the McKinsey deep assessment render with `whitespace-pre-wrap` only. Markdown like `**bold**`, lists, tables, headings, and blockquotes show as raw asterisks/pipes (as in the screenshot). The Hub's `DocumentViewer` already has a polished `ReactMarkdown` renderer — workflow detail does not reuse it. Workflow deliverables also have no Nano Banana hero image, so they look stylistically different from the Hub documents.
 
-The Workflow page you're using (`/dashboard/workflow` → `/dashboard/workflow/:key`, file `src/routes/_authenticated/dashboard/workflow.$key.tsx`) is a thinner viewer that reads from `attendee_deliverables` via `runMyDeliverable`. Its only action is a plain `Regenerate` button (line 100). No feedback gateway, no deep-assessment trigger — that's why it feels like both features disappeared.
+## Part 1 — Shared Rich Markdown Renderer
 
-## Plan: restore both on the Workflow detail page
+Extract the `DocumentViewer` markdown setup into a reusable component so every document surface renders identically.
 
-### 1. Rewrite-with-Feedback gateway on `Regenerate`
+1. Create `src/components/markdown/RichMarkdown.tsx`
+   - Wraps `ReactMarkdown` with `remarkGfm` (tables, task lists, strikethrough, autolinks).
+   - Exports two presets:
+     - `<RichMarkdown variant="document">` — full styling (headings, hero callouts, numeric highlighting, code blocks, anchor TOC ids).
+     - `<RichMarkdown variant="assessment">` — denser, no TOC tracking.
+   - Components map covers: `h1-h4`, `p`, `strong`, `em`, `ul/ol/li`, `blockquote`, `table/thead/tbody/tr/th/td` (sticky header, zebra rows, numeric right-align), `code/pre` (with copy), `a` (external safe), `hr`, `img` (rounded, lazy), task-list checkboxes.
+   - Tailwind `prose prose-sm dark:prose-invert max-w-none` base + semantic token overrides — no hardcoded colors, all use `text-foreground`, `text-muted-foreground`, `border-border`, `bg-muted/40`.
 
-In `workflow.$key.tsx`:
-- Import `RewriteFeedbackDialog`.
-- Replace the direct `run.mutate()` call on the Regenerate button (only when a deliverable already exists) with opening the dialog.
-- On dialog submit, pass the feedback into `runMyDeliverable` via a new `feedback` field.
-- First-time Generate (no prior deliverable) skips the dialog and runs immediately — same as Hub behavior.
+2. Refactor `src/components/hub/DocumentViewer.tsx` to consume `RichMarkdown` (keep current behaviour; just delegate the components map).
 
-Server side:
-- Extend `runMyDeliverable` in `src/lib/userPipeline.functions.ts` to accept `{ key, runUpstream, feedback }`.
-- Thread `feedback` into the deliverable-generation edge function used by the workflow pipeline (mirroring how `venture-generate-document` already ingests `rewrite_feedback`). One small prompt block: "Founder rewrite guidance (highest priority): …".
+3. Update `src/routes/_authenticated/dashboard/workflow.$key.tsx`:
+   - Replace the raw `<p className="whitespace-pre-wrap">{s.body_markdown}</p>` (line 145) with `<RichMarkdown variant="document">{s.body_markdown}</RichMarkdown>`.
+   - Replace the raw `whitespace-pre-wrap` assessment block (line 186-188) with `<RichMarkdown variant="assessment">{assessmentText}</RichMarkdown>`.
+   - Also render `content.summary` through `RichMarkdown` so bolds/links in summaries work.
 
-### 2. Deep Assessment trigger in the Workflow viewer
+4. Audit other markdown surfaces and switch them to `RichMarkdown`:
+   - `FounderRoadmapDialog.tsx`
+   - `SocialStudio.tsx`
+   - `hub.$snapshotId.tsx`
+   - Any other `whitespace-pre-wrap` body that holds AI-generated text.
 
-In `workflow.$key.tsx`, below the rendered article:
-- Add a "Run deep assessment" panel (same UX as `DocumentViewer.tsx` lines ~700–760): button → loading → rendered markdown when complete, with quality score and generated-at timestamp.
-- Reuse the existing `venture-generate-assessment` edge function. Because that function targets `venture_documents`, we add a thin server helper (or a new edge function `attendee-generate-assessment`) that runs the same McKinsey-grade prompt against the Workflow's `attendee_deliverables` row and stores the result on that row.
+## Part 2 — Matching Nano Banana Hero on Workflow Deliverables
 
-Schema change (one migration):
-```sql
-ALTER TABLE public.attendee_deliverables
-  ADD COLUMN IF NOT EXISTS deep_assessment text,
-  ADD COLUMN IF NOT EXISTS deep_assessment_status text,
-  ADD COLUMN IF NOT EXISTS deep_assessment_quality_score int,
-  ADD COLUMN IF NOT EXISTS deep_assessment_generated_at timestamptz;
-```
-No new RLS — existing row-owner policies cover the new columns.
+Today only `venture_documents` get a hero via `venture-document-image`. `attendee_deliverables` (workflow detail page) get none.
 
-### 3. Carry assessment into exports
+1. Generalize the image function:
+   - Add a new edge function `attendee-deliverable-image` (mirrors `venture-document-image`) that:
+     - Reads from `attendee_deliverables` keyed by `(user_id, deliverable_key)`.
+     - Pulls company/industry context from `attendee_profiles` + the deliverable's own content snippet.
+     - Reuses the **exact same** `buildVisualPrompt` New Yorker editorial style block (extract it into a shared module `supabase/functions/_shared/hero-prompt.ts` and import from both functions so styles can never drift).
+     - Stores PNG at `{user_id}/workflow/{deliverable_key}/{version}.png` in `venture-doc-images` (already private, user-scoped).
+     - Writes `hero_image_path` + `hero_image_prompt` columns on `attendee_deliverables` (migration adds these columns if missing).
 
-Workflow detail currently has no Copy/Markdown/DOCX/PDF export (that lives only in `DocumentViewer`). Out of scope for this restoration — call it out and offer to port the export bar separately if you want parity with the Hub viewer.
+2. Migration (only if columns absent): add `hero_image_path text`, `hero_image_prompt text` to `public.attendee_deliverables`.
 
-### 4. Hub viewer
+3. UI on `workflow.$key.tsx`:
+   - At the top of the article card, render a 16:9 `AspectRatio` hero (same component used by `DocumentViewer`) once `hero_image_path` exists; show a signed URL via `supabase.storage.from('venture-doc-images').createSignedUrl(path, 3600)`.
+   - Lazy-trigger generation when the page loads a deliverable that has content but no `hero_image_path` (mirror the lazy pattern already in `DocumentViewer`).
+   - Add a small "Regenerate image" button next to "Quick regenerate".
 
-No changes — both features are already wired there. We're only restoring them on the Workflow path.
+4. Pipeline hook:
+   - In `supabase/functions/dashboard-pipeline-run/index.ts`, after a deliverable is marked `ready`, fire-and-forget a call to `attendee-deliverable-image` so the hero is ready next time the user opens it.
 
-## Files touched
+## Technical Details
 
-- `src/routes/_authenticated/dashboard/workflow.$key.tsx` — open RewriteFeedbackDialog on Regenerate; add Deep Assessment panel.
-- `src/lib/userPipeline.functions.ts` — accept and forward `feedback`; add `runAttendeeAssessment`.
-- `supabase/functions/<workflow-generate>/index.ts` — accept `feedback` and inject as guidance block.
-- New edge function `attendee-generate-assessment` (or extend an existing one) — McKinsey-grade prompt against `attendee_deliverables`.
-- One migration adding the four `deep_assessment*` columns to `attendee_deliverables`.
+- Markdown: `react-markdown` + `remark-gfm` already installed; no new deps.
+- Tables: GFM pipe tables; the renderer wraps `<table>` in an `overflow-x-auto` div so wide tables don't break layout.
+- Numeric cells: detect with the existing `NUMERIC_RE` regex from `DocumentViewer` and right-align + tabular-nums.
+- Style tokens only — no `text-white`/`bg-black`/hex colors in components.
+- Shared prompt module guarantees identical Nano Banana style across Hub and Workflow.
+- Storage path namespacing keeps Hub and Workflow images cleanly separated under the same bucket and RLS policies.
+
+## Files Touched
+
+- New: `src/components/markdown/RichMarkdown.tsx`
+- New: `supabase/functions/_shared/hero-prompt.ts`
+- New: `supabase/functions/attendee-deliverable-image/index.ts`
+- Edit: `src/components/hub/DocumentViewer.tsx` (delegate to RichMarkdown)
+- Edit: `src/routes/_authenticated/dashboard/workflow.$key.tsx` (RichMarkdown + hero)
+- Edit: `src/components/hub/FounderRoadmapDialog.tsx`, `SocialStudio.tsx`, `hub.$snapshotId.tsx` (where raw markdown is shown)
+- Edit: `supabase/functions/venture-document-image/index.ts` (import shared prompt)
+- Edit: `supabase/functions/dashboard-pipeline-run/index.ts` (kick image after ready)
+- Migration: add `hero_image_path` / `hero_image_prompt` to `attendee_deliverables` if missing
