@@ -210,7 +210,14 @@ function dependencyLayers(types: any[]): any[][] {
 
 const CONCURRENCY = 6;
 
-async function runLayer(supabase: any, snapshotId: string, jobId: string, layer: any[], state: { done: number; total: number; fails: number; canceled: boolean }) {
+async function runLayer(
+  supabase: any,
+  ctx: VentureContext,
+  jobId: string,
+  layer: any[],
+  state: { done: number; total: number; fails: number; canceled: boolean },
+) {
+  const snapshotId = ctx.snapshotId;
   const { data: existingDocs } = await supabase
     .from("venture_documents")
     .select("document_type, status")
@@ -237,7 +244,7 @@ async function runLayer(supabase: any, snapshotId: string, jobId: string, layer:
         heartbeat_at: new Date().toISOString(),
       }).eq("id", jobId);
       try {
-        await generateOne(supabase, snapshotId, t.type);
+        await generateOne(supabase, ctx, t.type);
         state.done++;
         state.fails = 0;
       } catch (_e) {
@@ -254,10 +261,22 @@ async function runLayer(supabase: any, snapshotId: string, jobId: string, layer:
 }
 
 async function runJob(supabase: any, snapshotId: string, jobId: string, category?: string | null) {
+  // Build venture context ONCE per job. Compute or reuse the brain ONCE
+  // before any docs run — subsequent generateOne() calls inherit both.
+  const ctx = await loadVentureContext(supabase, snapshotId);
+  if (!ctx.brain) {
+    try {
+      ctx.brain = await ensureSnapshotBrain(supabase, snapshotId);
+    } catch (e) {
+      console.warn("brain compute failed; falling back to raw blobs", e);
+    }
+  }
+
   const { data: allTypes } = await supabase
     .from("venture_document_types")
     .select("*")
     .eq("active", true);
+
 
   // Documents with an intake_schema require founder input — skip them in
   // bulk runs unless the founder has already saved intake_answers for them.
