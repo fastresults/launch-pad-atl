@@ -280,6 +280,11 @@ export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
                 <Label className="flex items-center gap-2 text-sm">
                   <span>{f.label}</span>
                   {f.required && <span className="text-status-danger">*</span>}
+                  {prefillSources[f.id] && (
+                    <span className="text-[10px] font-normal text-status-success">
+                      · {provenanceLabel(prefillSources[f.id])}
+                    </span>
+                  )}
                 </Label>
                 {f.help && <p className="text-xs text-muted-foreground">{f.help}</p>}
 
