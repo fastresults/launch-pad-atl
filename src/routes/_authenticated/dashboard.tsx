@@ -9,8 +9,8 @@ import {
   SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
   SidebarFooter, SidebarHeader, useSidebar,
 } from "@/components/ui/sidebar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Home, Calendar, ClipboardList, ListChecks, FolderOpen, User, Sparkles } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Home, Calendar, ClipboardList, ListChecks, FolderOpen, User, Sparkles, Info } from "lucide-react";
 import { listCohorts } from "@/lib/cohorts.functions";
 import { getWorkshopMode } from "@/lib/workshop-mode";
 import { getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
