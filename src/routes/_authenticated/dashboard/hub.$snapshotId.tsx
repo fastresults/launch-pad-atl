@@ -653,6 +653,21 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
   const nextCategory = categoryProgress.find((c) => !c.complete) ?? null;
 
+  // Per-category facilitator deck state: unlocked once every prior category is complete.
+  const deckStateByCat = useMemo(() => {
+    const m = new Map<string, { slug: string; available: boolean; unlocked: boolean; prevLabel?: string }>();
+    let allPriorDone = true;
+    let prevLabel: string | undefined;
+    for (const c of categoryProgress) {
+      const slug = slugify(c.cat);
+      const deck = STAGE_DECKS.find((d) => d.slug === slug);
+      m.set(c.cat, { slug, available: !!deck?.available, unlocked: allPriorDone, prevLabel });
+      if (!c.complete) allPriorDone = false;
+      prevLabel = c.cat;
+    }
+    return m;
+  }, [categoryProgress]);
+
   // ---- Hero state machine ----
   let heroTitle: string;
   let heroSub: string;
