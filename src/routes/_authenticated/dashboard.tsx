@@ -69,7 +69,7 @@ function DashboardShell() {
   );
 }
 
-type NavItem = { to: string; label: string; tooltip: string; icon: typeof Home; dimmed?: boolean; hide?: boolean };
+type NavItem = { key: DashboardNavKey; to: string; label: string; tooltip: string; icon: typeof Home; dimmed?: boolean; hide?: boolean };
 
 function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"] }) {
   const { state } = useSidebar();
