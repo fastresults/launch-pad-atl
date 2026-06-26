@@ -7,6 +7,7 @@
 // here — those still go through brief-prefill / venture-transcribe.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import mammoth from "npm:mammoth@1.7.2";
+import { markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
