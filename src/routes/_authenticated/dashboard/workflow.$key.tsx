@@ -41,7 +41,7 @@ export default function WorkflowDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("attendee_deliverables")
-        .select("content_current, content_ai, review_status, publish_status, ai_generated_at")
+        .select("content_current, content_ai, review_status, publish_status, ai_generated_at, deep_assessment, deep_assessment_status, deep_assessment_quality_score, deep_assessment_generated_at")
         .eq("user_id", user!.id)
         .eq("deliverable_key", key)
         .maybeSingle();
@@ -49,6 +49,7 @@ export default function WorkflowDetail() {
       return data;
     },
   });
+
 
   const [intake, setIntake] = useState<Record<string, string>>({});
   useEffect(() => {
