@@ -85,10 +85,12 @@ async function queueRun(userId: string, options: Record<string, unknown>) {
 export async function runMyDeliverable(input: any) {
   const { key } = unwrap<{ key: string }>(input);
   await queueRun(await uid(), { key });
+  return { queued: true };
 }
 
 export async function runMyRemaining() {
   await queueRun(await uid(), { bulk: true });
+  return { queued: true };
 }
 
 export async function adminRunForUser(input: any) {

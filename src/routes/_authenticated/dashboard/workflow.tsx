@@ -34,7 +34,7 @@ export default function WorkflowPage() {
 
   const runAll = useMutation({
     mutationFn: () => runMyRemaining(),
-    onSuccess: (r: any) => { toast.success(`Generated ${r.total - r.failed} / ${r.total}`); qc.invalidateQueries({ queryKey: ["my"] }); },
+    onSuccess: () => { toast.success("Queued — generating your remaining deliverables"); qc.invalidateQueries({ queryKey: ["my"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Bulk run failed"),
   });
 
