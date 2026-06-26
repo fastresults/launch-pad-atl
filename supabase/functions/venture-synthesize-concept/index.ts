@@ -16,7 +16,7 @@ const TOTAL_CAP = 90_000;
 // Track keys mirror src/lib/tracks.ts
 const TRACK_KEYS = [
   "lifestyle",
-  "small_business",
+  "ecommerce_dtc",
   "scalable_tech",
   "marketplace",
   "deep_tech",
@@ -26,7 +26,7 @@ const TRACK_KEYS = [
 
 const TRACK_HINT = `Track keys:
 - lifestyle: Main Street / single-location food, retail, services (cafés, restaurants, boutiques, salons)
-- small_business: regional SMB, multi-location, trades, B2B services
+- ecommerce_dtc: direct-to-consumer brand selling a physical product online (Shopify / Amazon / marketplaces) — apparel, beauty, food/beverage, home goods
 - scalable_tech: VC-style software / SaaS / consumer app with national+ ambition
 - marketplace: two-sided / multi-vendor platforms connecting buyers and sellers
 - deep_tech: hardware, biotech, energy, robotics, science-heavy
@@ -51,14 +51,14 @@ Output a single JSON object — no prose, no markdown, no code fences. Schema:
   "market_scope": "local" | "regional" | "national" | "international" | null,
   "industry": string | null,                 // MUST be an exact value from the provided INDUSTRY_VALUES list, or null.
   "sub_industry": string | null,             // Free text refinement (e.g. "specialty coffee", "wood-fired pizza")
-  "track": "lifestyle" | "small_business" | "scalable_tech" | "marketplace" | "deep_tech" | "social_impact" | "corporate" | null
+  "track": "lifestyle" | "ecommerce_dtc" | "scalable_tech" | "marketplace" | "deep_tech" | "social_impact" | "corporate" | null
 }
 
 Rules:
 - Only populate a field when the document clearly supports it. Use null for anything uncertain.
 - Never fabricate emails, phones, URLs, names, or metrics.
 - "industry" MUST come from INDUSTRY_VALUES verbatim, or be null if nothing fits.
-- Infer "track" from cues (single-location food/retail/service → lifestyle; SMB chain/trades → small_business; venture-scale SaaS/app → scalable_tech; two-sided platform → marketplace; hardware/biotech → deep_tech; nonprofit/mission → social_impact; internal corporate venture → corporate).
+- Infer "track" from cues (single-location food/retail/service → lifestyle; DTC product brand sold online → ecommerce_dtc; venture-scale SaaS/app → scalable_tech; two-sided platform → marketplace; hardware/biotech → deep_tech; nonprofit/mission → social_impact; internal corporate venture → corporate).
 - Default country to "United States" only if a US state, ZIP, or city is named.
 - Concept paragraph: 2–4 sentences, no headings, no "Here is", no buzzwords ("synergy", "revolutionary", "cutting-edge").
 - Return ONLY the JSON object.`;

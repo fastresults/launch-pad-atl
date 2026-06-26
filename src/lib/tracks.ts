@@ -3,7 +3,7 @@
 
 export type TrackKey =
   | "lifestyle"
-  | "small_business"
+  | "ecommerce_dtc"
   | "scalable_tech"
   | "marketplace"
   | "deep_tech"
@@ -30,13 +30,13 @@ export const TRACKS: Track[] = [
       "Write as a pragmatic operator coaching a first-time main-street founder opening a real small business — café, salon, trade, local service, indie product, small e-commerce brand, or solo practice. Optimize for opening week, first 100 customers, first $10k in monthly revenue, cash on hand, and word-of-mouth. Replace VC vocabulary entirely: instead of TAM/SAM/SOM, talk local market size and realistic first-year customer count; instead of 'pitch deck' or 'funding round', talk one-page lender/partner summary and simple funding sources (founder savings, friends & family, SBA microloan, revenue-based, local CDFI, grants). Skip ARR, CAC payback, hockey-stick, unicorn language. Use plain English a non-technical owner can act on this week. Use concrete dollar figures, real channels (local SEO, Google Business Profile, neighborhood Instagram, foot traffic, referrals, partnerships with neighboring businesses), and tactics they can execute without a team.",
   },
   {
-    key: "small_business",
-    label: "Established Small Business",
-    oneLiner: "Already operating — growing margin, repeat customers, regional reach",
+    key: "ecommerce_dtc",
+    label: "E-commerce / DTC Brand",
+    oneLiner: "Physical product, launching online-first",
     description:
-      "For founders who already have a running business with revenue, customers, and (usually) staff. Retail shops, agencies, regional franchises, trades, professional services looking to grow margin, expand locations, or systematize operations. Not venture-track.",
+      "First-time founders launching a direct-to-consumer brand — apparel, beauty, food/beverage, home goods, accessories — sold via their own Shopify, Amazon, or marketplaces. Focus is product-market fit on a single hero SKU, first 1,000 customers, paid + organic content engine, and repeat-purchase economics.",
     tonePrompt:
-      "Write as a seasoned small-business advisor coaching an owner who already has revenue, customers, and likely staff. Emphasize unit economics, margin expansion, repeat customers, operational discipline, multi-location or franchise economics, and steady regional growth. Reference SBA / bank-financing realities, owner-operator workflows, and proven playbooks. Avoid venture-capital framing entirely.",
+      "Write as a DTC operator coaching a first-time brand founder. Lead with hero-SKU clarity, COGS / landed cost / contribution margin, MOQ and supplier risk, packaging and unboxing, paid-social creative testing (Meta + TikTok), Shopify funnel basics, email/SMS as the owned channel, repeat-purchase rate and LTV, and fulfillment (3PL vs self-ship). Replace VC vocabulary with DTC realities — talk gross margin %, CAC by channel, AOV, contribution profit, blended ROAS, and payback in orders. Skip ARR/NRR/hockey-stick framing. Use concrete dollar figures and creator/UGC tactics a solo founder can execute this week.",
   },
   {
     key: "scalable_tech",
@@ -92,7 +92,9 @@ export const TRACK_BY_KEY: Record<TrackKey, Track> = TRACKS.reduce(
 
 export function getTrack(key: string | null | undefined): Track | null {
   if (!key) return null;
-  return (TRACK_BY_KEY as Record<string, Track>)[key] ?? null;
+  // Legacy alias: old snapshots may still have `small_business` stored.
+  const normalized = key === "small_business" ? "ecommerce_dtc" : key;
+  return (TRACK_BY_KEY as Record<string, Track>)[normalized] ?? null;
 }
 
 // ===== Test-fill seeds — used by the dev "🧪 Fill test concept" button =====
@@ -118,11 +120,13 @@ export const TRACK_SEEDS: Record<TrackKey, SeedEntry[]> = {
     { url: "https://www.glossier.com", industry: "Beauty / Indie Brand", sub_industry: "Indie skincare e-commerce", market_scope: "national", city: "Atlanta", region: "Georgia", country: "United States" },
     { url: "https://www.f45training.com", industry: "Health & Fitness", sub_industry: "Neighborhood fitness studio", market_scope: "local", city: "Atlanta", region: "Georgia", country: "United States" },
   ],
-  small_business: [
-    { url: "https://www.acehardware.com", industry: "Retail", sub_industry: "Independent hardware store", market_scope: "national", city: "Oak Brook", region: "Illinois", country: "United States" },
-    { url: "https://www.servpro.com", industry: "Home Services", sub_industry: "Restoration franchise", market_scope: "regional", city: "Gallatin", region: "Tennessee", country: "United States" },
-    { url: "https://www.hrblock.com", industry: "Professional Services", sub_industry: "Tax preparation", market_scope: "national", city: "Kansas City", region: "Missouri", country: "United States" },
-    { url: "https://www.midas.com", industry: "Automotive Services", sub_industry: "Auto repair franchise", market_scope: "regional", city: "Palm Beach Gardens", region: "Florida", country: "United States" },
+  ecommerce_dtc: [
+    { url: "https://www.allbirds.com", industry: "Apparel & Footwear", sub_industry: "Sustainable DTC footwear", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },
+    { url: "https://magicspoon.com", industry: "Food & Beverage", sub_industry: "DTC cereal brand", market_scope: "national", city: "New York", region: "New York", country: "United States" },
+    { url: "https://liquiddeath.com", industry: "Beverage", sub_industry: "DTC canned water brand", market_scope: "national", city: "Los Angeles", region: "California", country: "United States" },
+    { url: "https://oliveandjune.com", industry: "Beauty", sub_industry: "DTC nail care brand", market_scope: "national", city: "Los Angeles", region: "California", country: "United States" },
+    { url: "https://chamberlaincoffee.com", industry: "Food & Beverage", sub_industry: "Creator-led DTC coffee brand", market_scope: "national", city: "Los Angeles", region: "California", country: "United States" },
+    { url: "https://www.bombas.com", industry: "Apparel", sub_industry: "DTC sock & basics brand", market_scope: "national", city: "New York", region: "New York", country: "United States" },
   ],
   scalable_tech: [
     { url: "https://linear.app", industry: "Software / SaaS", sub_industry: "Project management", market_scope: "international", city: "San Francisco", region: "California", country: "United States" },

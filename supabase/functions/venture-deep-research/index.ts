@@ -364,7 +364,7 @@ async function runResearch(supabase: any, snapshotId: string) {
     : `the ${country || "national"} market`;
   const TRACK_LENS: Record<string, string> = {
     lifestyle: "Lens: Main Street Startup (first-time founder opening a real small business). Emphasize HYPERLOCAL signal: foot-traffic patterns, neighborhood demographics within 1–3 miles, named direct competitors within 5–10 miles (not category leaders), local search demand, typical local pricing benchmarks, permits/licensing/zoning realities, supplier and landlord options, opening-week cash needs. Skip TAM/SAM/SOM, venture-readiness, and category-level competitive landscape.",
-    small_business: "Lens: Established Small Business (already operating with revenue and staff) — emphasize margin expansion, repeat customers, regional competition, multi-location economics, SBA / bank-financing realities.",
+    ecommerce_dtc: "Lens: E-commerce / DTC Brand (first-time founder launching a physical product online) — emphasize hero-SKU selection, COGS / contribution margin, MOQ and supplier sourcing, paid-social creative economics (Meta + TikTok CAC), email/SMS as owned channel, repeat-purchase rate and LTV, 3PL vs self-ship. Skip TAM/SAM/SOM and venture-readiness; talk concrete unit economics and named competitor brands in the category.",
     scalable_tech: "Lens: scalable tech / SaaS — emphasize ICP, defensibility, retention/expansion, unit economics at scale, venture-readiness.",
     marketplace: "Lens: marketplace / platform — analyze both sides (supply and demand), liquidity, cold-start, take-rate, network effects.",
     deep_tech: "Lens: deep tech / frontier — emphasize technical risk, regulatory pathway, IP, capital intensity, long time-to-revenue, non-dilutive funding.",
