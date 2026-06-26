@@ -451,6 +451,51 @@ export function DocumentViewer({
     toast.success("AI-builder prompt copied");
   };
 
+  const onSaveToFiles = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const blob = await markdownToDocxBlob(title, exportContent, {
+        heroUrl: heroUrl ?? undefined,
+        subtitle: doc?.document_type,
+      });
+      const versionLabel = savedCount > 0 ? ` (v${savedCount + 1})` : "";
+      const filename = `${title}${versionLabel}.docx`;
+      const contentType =
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      const { uploadUrl, path } = await createDocumentUploadUrl({
+        filename,
+        contentType,
+      });
+      const up = await fetch(uploadUrl, {
+        method: "PUT",
+        body: blob,
+        headers: { "Content-Type": contentType },
+      });
+      if (!up.ok) throw new Error("Upload failed");
+      await finalizeDocument({
+        path,
+        label: filename,
+        contentType,
+        size: blob.size,
+        kind: "deliverable",
+      });
+      setSavedCount((n) => n + 1);
+      qc.invalidateQueries({ queryKey: ["my", "documents"] });
+      toast.success("Saved to My Files", {
+        description: "Find it any time under Dashboard → Documents.",
+        action: {
+          label: "View",
+          onClick: () => navigate("/dashboard/documents"),
+        },
+      });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
