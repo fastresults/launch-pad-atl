@@ -3,12 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { getMyCohort } from "@/lib/cohort.functions";
 import { listSnapshots } from "@/lib/foundersHub.functions";
 import { SCHEDULE_BLOCKS } from "@/lib/workshop-mode";
-import { WORKFLOW, STAGES } from "@/lib/workflow";
+import { FRAMEWORK_STAGES } from "@/lib/framework-deliverables";
 import { EVENT } from "@/lib/schedule-data";
-import { MapPin, Calendar, Clock, Sparkles, FileText, ArrowRight, Mic, Wand2 } from "lucide-react";
+import { MapPin, Calendar, Clock, Sparkles, ArrowRight, Mic, Wand2 } from "lucide-react";
 
-const PILLARS = STAGES.filter((s) => s.n >= 1);
-const TOTAL_DOC_MIN = WORKFLOW.reduce((sum, d) => sum + d.estMinutes, 0);
+const TOTAL_DELIVERABLES = FRAMEWORK_STAGES.reduce((n, s) => n + s.items.length, 0);
+const TOTAL_CATEGORIES = FRAMEWORK_STAGES.length;
+const CORE_CATEGORIES = FRAMEWORK_STAGES.filter((s) => !s.bonus).length;
+const BONUS_CATEGORIES = FRAMEWORK_STAGES.filter((s) => s.bonus).length;
 
 export default function WorkshopDayPage() {
   const { data } = useQuery({ queryKey: ["my", "cohort"], queryFn: () => getMyCohort(), staleTime: 60_000 });
@@ -23,8 +25,8 @@ export default function WorkshopDayPage() {
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Your workshop morning</h1>
         <p className="mt-2 text-muted-foreground">
           {cohort
-            ? `${cohort.dateLabel} · ${EVENT.timeLabel}. By the end, you'll know what you're building, who it's for, how it makes money, and what to do first.`
-            : `One morning. By the end, you'll know what you're building, who it's for, how it makes money, and what to do first.`}
+            ? `${cohort.dateLabel} · ${EVENT.timeLabel}. One focused morning with a founder coach — you walk out clear on what you're building, who it's for, how it makes money, and what to ship first.`
+            : `One focused morning with a founder coach. You walk out clear on what you're building, who it's for, how it makes money, and what to ship first.`}
         </p>
       </div>
 
@@ -36,8 +38,8 @@ export default function WorkshopDayPage() {
         <h2 className="mt-2 text-2xl md:text-3xl font-semibold tracking-tight">
           Walk in with an idea. Walk out knowing what to do with it.
         </h2>
-        <p className="mt-2 max-w-2xl text-sm md:text-base text-muted-foreground">
-          You do the thinking out loud. Your facilitator guides you through it — who you serve, why people should care, how you'll price it, where your first customers come from, and what the money looks like. You leave with clear answers, a Monday-morning action plan, and the {WORKFLOW.length} founder-ready assets that back it all up.
+        <p className="mt-2 max-w-3xl text-sm md:text-base text-muted-foreground">
+          You do the thinking out loud. Your coach guides you through it — who you serve, why people should care, how you price, where your first customers come from, and what the money really looks like. You leave with clear answers, a Monday-morning action plan, and {TOTAL_DELIVERABLES} founder-ready deliverables built for your startup across {TOTAL_CATEGORIES} categories — Foundation, Strategy, Operations, Finance, Governance, plus bonus Brand, Marketing, and Social &amp; Content tracks — waiting in your dashboard to refine and ship.
         </p>
       </div>
 
@@ -45,7 +47,7 @@ export default function WorkshopDayPage() {
       <section>
         <h2 className="mb-1 text-sm font-medium uppercase tracking-wide text-muted-foreground">Two ways to build it</h2>
         <p className="mb-4 text-sm text-muted-foreground">
-          Same five pillars, same {WORKFLOW.length} founder-ready deliverables. Pick the path that fits where you are right now.
+          Same {TOTAL_CATEGORIES} categories, same {TOTAL_DELIVERABLES} founder-ready deliverables. Pick the path that fits where you are right now.
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           {/* Card A — Guided in the room */}
@@ -53,9 +55,9 @@ export default function WorkshopDayPage() {
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-primary">
               <Mic className="h-3.5 w-3.5" /> Guided workshop path · recommended
             </div>
-            <h3 className="mt-2 text-lg font-semibold">Build it out loud with your facilitator</h3>
+            <h3 className="mt-2 text-lg font-semibold">Build it out loud with your coach</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Walk through each pillar one at a time. You talk it out, your facilitator keeps you moving, and the answers turn into your brief and your deliverables as you go. Best if it's your first time putting the idea into words.
+              We move through the {TOTAL_CATEGORIES} categories together, one at a time. You talk it out, your coach keeps you moving, and your answers turn into your brief and your deliverables as you go. Best if it's your first time putting the idea into words.
             </p>
             <div className="mt-4">
               <Link to="/dashboard/brief" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90">
@@ -69,9 +71,9 @@ export default function WorkshopDayPage() {
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               <Wand2 className="h-3.5 w-3.5" /> Fast venture path · head start
             </div>
-            <h3 className="mt-2 text-lg font-semibold">Drop in a link or a paragraph, get all {WORKFLOW.length} back</h3>
+            <h3 className="mt-2 text-lg font-semibold">Drop in a link or a paragraph, get all {TOTAL_DELIVERABLES} back</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Paste your site or describe the idea. We'll enrich it, build every deliverable in order, and hand it all back so you can show up Saturday with something to react to instead of starting from a blank page.
+              Paste your site or describe your startup. We enrich it, generate every deliverable in order, and hand it back so you can walk in Saturday with something to react to — not a blank page.
             </p>
             <div className="mt-4">
               <Link to="/dashboard/hub/new" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-background/50 px-4 py-2.5 text-sm font-medium hover:bg-white/5">
@@ -105,40 +107,44 @@ export default function WorkshopDayPage() {
         </div>
       )}
 
-      {/* The 5 pillars */}
+      {/* The categories */}
       <section>
         <h2 className="mb-1 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-          What you'll be able to do after this
+          The {TOTAL_CATEGORIES} categories we build for your startup
         </h2>
         <p className="mb-4 text-sm text-muted-foreground">
-          Five things every real startup needs to answer. We move through them in order so each answer feeds the next — by the end, your story, your numbers, and your next moves all line up.
+          {CORE_CATEGORIES} core categories every startup needs, plus {BONUS_CATEGORIES} bonus tracks for brand, marketing, and social. We move through them in order so each answer feeds the next — by the end, your story, your numbers, and your launch moves all line up.
         </p>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {PILLARS.map((pillar) => {
-            const docs = WORKFLOW.filter((d) => d.stageN === pillar.n);
-            const minutes = docs.reduce((s, d) => s + d.estMinutes, 0);
-            return (
-              <div key={pillar.n} className="rounded-2xl border border-white/10 bg-card p-5">
-                <div className="flex items-baseline justify-between gap-3">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-primary">{pillar.label}</div>
-                  <span className="text-xs tabular-nums text-muted-foreground">{minutes}m</span>
+          {FRAMEWORK_STAGES.map((stage) => (
+            <div key={stage.number} className="rounded-2xl border border-white/10 bg-card p-5">
+              <div className="flex items-baseline justify-between gap-3">
+                <div className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  {stage.number} · {stage.name}
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">{pillar.description}</p>
-                <div className="mt-3 text-[11px] uppercase tracking-wider text-muted-foreground/80">Working pieces you'll leave with</div>
-                <ul className="mt-2 space-y-1.5">
-                  {docs.map((d) => (
-                    <li key={d.key} className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-background/40 px-3 py-2 text-sm">
-                      <span className="flex items-center gap-2 truncate">
-                        <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        <span className="truncate">{d.label}</span>
-                      </span>
-                      <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{d.estMinutes}m</span>
-                    </li>
-                  ))}
-                </ul>
+                {stage.bonus && (
+                  <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                    Bonus
+                  </span>
+                )}
               </div>
-            );
-          })}
+              <p className="mt-1 text-sm text-muted-foreground">{stage.intro}</p>
+              <div className="mt-3 text-[11px] uppercase tracking-wider text-muted-foreground/80">
+                Deliverables you'll walk out with
+              </div>
+              <ul className="mt-2 space-y-1.5">
+                {stage.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.title} className="flex items-center gap-2 rounded-lg border border-white/5 bg-background/40 px-3 py-2 text-sm">
+                      <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{item.title}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -165,7 +171,7 @@ export default function WorkshopDayPage() {
                 <div className="flex flex-wrap items-baseline gap-2">
                   {b.stageN && (
                     <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                      Pillar {b.stageN}
+                      Category {b.stageN}
                     </span>
                   )}
                   <span className="font-medium">{b.title}</span>
@@ -184,10 +190,10 @@ export default function WorkshopDayPage() {
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">Bring four things</h2>
         <ul className="space-y-2 text-sm">
-          <li className="rounded-xl border border-white/10 bg-card p-4">Your laptop and charger — you're driving the thinking, your facilitator keeps you moving.</li>
-          <li className="rounded-xl border border-white/10 bg-card p-4">A government-issued ID, so the legal setup for your startup is ready to go when you are.</li>
-          <li className="rounded-xl border border-white/10 bg-card p-4">A rough idea we can sharpen into a real offer — sticky-note energy is fine.</li>
-          <li className="rounded-xl border border-white/10 bg-card p-4">The one question you really want answered before you walk out the door.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">Your laptop and charger — you drive the thinking, your coach keeps you moving.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">A government-issued ID, so the legal setup for your startup is ready to file when you are.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">A rough idea we can sharpen into a real offer — sticky-note energy is welcome.</li>
+          <li className="rounded-xl border border-white/10 bg-card p-4">The one question you most want answered before you walk out.</li>
         </ul>
         <p className="mt-3 text-xs text-muted-foreground">
           Nothing to pay on the day. Any state filings happen from home afterward — we'll walk you through exactly what to click.
@@ -197,7 +203,7 @@ export default function WorkshopDayPage() {
       {/* CTAs */}
       <div className="flex flex-wrap gap-3">
         <Link to="/dashboard/workflow" className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:opacity-90">
-          See what we build together
+          See all {TOTAL_DELIVERABLES} deliverables we build together
           <ArrowRight className="h-4 w-4" />
         </Link>
         {hasVentures && (
