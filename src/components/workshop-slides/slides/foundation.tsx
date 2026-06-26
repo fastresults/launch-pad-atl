@@ -226,44 +226,55 @@ export const foundationSlides: Slide[] = [
     title: "The four deliverables",
     render: () => (
       <SlideLayout stageKicker={KICKER} pageLabel={pl(5, 10)}>
-        <div>
-          <SlotText
-            slideId="deliverables-overview"
-            field="kicker"
-            defaultValue="What you walk out with"
-            as="div"
-            className="slide-kicker font-semibold text-primary mb-6"
-          />
-          <SlotText
-            slideId="deliverables-overview"
-            field="title"
-            defaultValue="Four founder-ready deliverables — built for your startup."
-            as="h2"
-            className="slide-title font-semibold tracking-tight mb-12"
-          />
-          <div className="grid grid-cols-2 gap-6">
-            {STAGE.items.map((item, i) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.title} className="flex items-start gap-6 rounded-2xl border bg-card p-8">
-                  <div className="rounded-2xl bg-primary/10 p-5 shrink-0">
-                    <Icon className="text-primary" style={{ width: 56, height: 56 }} strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <div className="slide-caption text-muted-foreground font-medium">
-                      {String(i + 1).padStart(2, "0")}
+        <div className="grid grid-cols-12 gap-10 items-center">
+          <div className="col-span-7">
+            <SlotText
+              slideId="deliverables-overview"
+              field="kicker"
+              defaultValue="What you walk out with"
+              as="div"
+              className="slide-kicker font-semibold text-primary mb-6"
+            />
+            <SlotText
+              slideId="deliverables-overview"
+              field="title"
+              defaultValue="Four founder-ready deliverables — built for your startup."
+              as="h2"
+              className="slide-title font-semibold tracking-tight mb-10"
+            />
+            <div className="grid grid-cols-1 gap-4">
+              {STAGE.items.map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.title} className="flex items-start gap-5 rounded-2xl border bg-card p-6">
+                    <div className="rounded-2xl bg-primary/10 p-4 shrink-0">
+                      <Icon className="text-primary" style={{ width: 40, height: 40 }} strokeWidth={1.5} />
                     </div>
-                    <SlotText
-                      slideId="deliverables-overview"
-                      field={`item.${i}.title`}
-                      defaultValue={item.title}
-                      as="div"
-                      className="slide-body-lg font-semibold tracking-tight"
-                    />
+                    <div>
+                      <div className="slide-caption text-muted-foreground font-medium">
+                        {String(i + 1).padStart(2, "0")}
+                      </div>
+                      <SlotText
+                        slideId="deliverables-overview"
+                        field={`item.${i}.title`}
+                        defaultValue={item.title}
+                        as="div"
+                        className="slide-body-lg font-semibold tracking-tight"
+                      />
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          </div>
+          <div className="col-span-5 flex items-center justify-center">
+            <SlotImage
+              slideId="deliverables-overview"
+              field="image"
+              defaultSrc="/decks/foundation/05-deliverables.jpg"
+              defaultAlt="Four hand tools neatly arranged on a craftsman's workbench"
+              className="w-full max-h-[760px] object-contain rounded-2xl"
+            />
           </div>
         </div>
       </SlideLayout>
