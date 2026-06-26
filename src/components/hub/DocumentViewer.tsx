@@ -319,6 +319,7 @@ export function DocumentViewer({
     setAssessment(doc?.deep_assessment ?? null);
     setAssessmentStatus(doc?.deep_assessment_status ?? null);
     setAssessmentError(null);
+    setSavedCount(0);
   }, [doc?.snapshot_id, doc?.document_type, doc?.deep_assessment, doc?.deep_assessment_status]);
 
   const runAssessment = async () => {
