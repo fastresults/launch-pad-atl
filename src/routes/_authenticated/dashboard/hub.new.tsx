@@ -83,36 +83,9 @@ function guessIndustry(concept: string): string {
   return "Software & SaaS";
 }
 
-async function extractFileText(file: File): Promise<{ text: string; error?: string }> {
-  const name = file.name.toLowerCase();
-  const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
-  const isText = name.endsWith(".txt") || name.endsWith(".md") || name.endsWith(".markdown") ||
-    file.type === "text/plain" || file.type === "text/markdown";
+// Text extraction now runs server-side in `venture-source-extract` so DOCX,
+// PDF (including scanned via Gemini OCR), images, and audio all work uniformly.
 
-  if (isPdf) {
-    try {
-      const { extractText, getDocumentProxy } = await import("unpdf");
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const pdf = await getDocumentProxy(bytes);
-      const { text } = await extractText(pdf, { mergePages: true });
-      const merged = (Array.isArray(text) ? text.join("\n") : text).trim();
-      if (!merged) return { text: "", error: "PDF looks scanned (no text inside). Try a text-based export." };
-      return { text: merged };
-    } catch (e) {
-      return { text: "", error: e instanceof Error ? e.message : "Couldn't read PDF" };
-    }
-  }
-  if (isText) {
-    try {
-      const text = (await file.text()).trim();
-      if (!text) return { text: "", error: "File was empty" };
-      return { text };
-    } catch (e) {
-      return { text: "", error: e instanceof Error ? e.message : "Couldn't read file" };
-    }
-  }
-  return { text: "", error: "DOCX coming soon — export to PDF or paste the text below." };
-}
 
 type Path = "own" | "competitor" | "manual";
 
