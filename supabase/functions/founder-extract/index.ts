@@ -165,6 +165,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Mark all of the user's snapshots brain-dirty so any future AI run
+    // rebuilds context with the freshly extracted founder facts.
+    await admin
+      .from("venture_snapshots")
+      .update({ snapshot_brain_dirty: true })
+      .eq("user_id", user.id);
+
     return new Response(JSON.stringify({ extracted, note }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
