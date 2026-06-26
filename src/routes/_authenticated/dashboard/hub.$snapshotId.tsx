@@ -429,116 +429,115 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
   );
 }
 
-type SourceFile = {
-  id: string;
-  name: string;
-  size: number;
-  status: "reading" | "ready" | "error";
-  text?: string;
-  error?: string;
-};
-
-async function extractSourceFileText(file: File): Promise<{ text: string; error?: string }> {
-  const name = file.name.toLowerCase();
-  const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
-  const isText = name.endsWith(".txt") || name.endsWith(".md") || name.endsWith(".markdown") ||
-    file.type === "text/plain" || file.type === "text/markdown";
-
-  if (isPdf) {
-    try {
-      const { extractText, getDocumentProxy } = await import("unpdf");
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const pdf = await getDocumentProxy(bytes);
-      const { text } = await extractText(pdf, { mergePages: true });
-      const merged = (Array.isArray(text) ? text.join("\n") : text).trim();
-      if (!merged) return { text: "", error: "PDF looks scanned. Export it as text or paste the content." };
-      return { text: merged };
-    } catch (e) {
-      return { text: "", error: e instanceof Error ? e.message : "Couldn't read PDF" };
-    }
-  }
-  if (isText) {
-    try {
-      const text = (await file.text()).trim();
-      if (!text) return { text: "", error: "File was empty" };
-      return { text };
-    } catch (e) {
-      return { text: "", error: e instanceof Error ? e.message : "Couldn't read file" };
-    }
-  }
-  return { text: "", error: "Use PDF, TXT, or Markdown for source enrichment." };
-}
-
+/**
+ * Source library for this venture — single source of truth for documents that
+ * feed enrichment. Reads `attendee_documents` scoped to `snapshot_id`, lets
+ * the founder add or remove files, and rebuilds `source_materials` (and
+ * triggers re-extraction) without ever asking them to re-upload something
+ * we already have.
+ */
 function SourceRecoveryPanel({ snapshot, onSaved }: { snapshot: any; onSaved: () => void }) {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [dragOver, setDragOver] = useState(false);
-  const [files, setFiles] = useState<SourceFile[]>([]);
+  const [sources, setSources] = useState<VentureSource[]>([]);
+  const [loadingSources, setLoadingSources] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [rebuilding, setRebuilding] = useState(false);
   const sm = snapshot.source_materials ?? null;
-  const existingCount = ((sm?.documents ?? []).length ?? 0) + ((sm?.urls ?? []).length ?? 0);
-  const hasWeakFields = JSON.stringify(snapshot.extracted_data ?? "").match(/needs founder input|unknown|tbd/i);
-  const readyFiles = files.filter((f) => f.status === "ready" && (f.text ?? "").trim());
-  const reading = files.some((f) => f.status === "reading");
+  const legacyDocCount = (sm?.documents ?? []).length ?? 0;
 
-  const addFiles = useCallback((incoming: File[]) => {
+  const refresh = useCallback(async () => {
+    setLoadingSources(true);
+    try {
+      const rows = await listVentureSources({ snapshotId: snapshot.id });
+      setSources(rows);
+    } finally {
+      setLoadingSources(false);
+    }
+  }, [snapshot.id]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const handleFiles = useCallback(async (incoming: File[]) => {
     const accepted = incoming.slice(0, 5).filter((f) => f.size <= 20 * 1024 * 1024);
     if (incoming.some((f) => f.size > 20 * 1024 * 1024)) toast.error("Some files were over 20 MB and were skipped");
-    const queued: SourceFile[] = accepted.map((f) => ({
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      name: f.name,
-      size: f.size,
-      status: "reading",
-    }));
-    setFiles((prev) => [...prev, ...queued]);
-    queued.forEach((entry, i) => {
-      const file = accepted[i];
-      extractSourceFileText(file).then(({ text, error }) => {
-        setFiles((curr) => curr.map((x) => x.id === entry.id
-          ? error ? { ...x, status: "error", error } : { ...x, status: "ready", text }
-          : x));
-      });
-    });
-  }, []);
+    if (!accepted.length) return;
+    setUploading(true);
+    try {
+      for (const file of accepted) {
+        try {
+          await uploadVentureSource({
+            file,
+            snapshotId: snapshot.id,
+            kind: "venture_source",
+            waitForExtraction: true,
+          });
+        } catch (e) {
+          toast.error(`${file.name}: ${e instanceof Error ? e.message : "Upload failed"}`);
+        }
+      }
+      await refresh();
+      toast.success("Saved to your venture library");
+    } finally {
+      setUploading(false);
+    }
+  }, [snapshot.id, refresh]);
 
-  const appendSources = useMutation({
-    mutationFn: () => appendSnapshotSources({
-      data: {
-        id: snapshot.id,
-        source_materials: {
-          documents: readyFiles.map((f) => ({ filename: f.name, text: f.text ?? "" })),
-          conceptDraft: snapshot.business_concept ?? "",
+  const rebuild = useMutation({
+    mutationFn: async () => {
+      setRebuilding(true);
+      const fresh = await listVentureSources({ snapshotId: snapshot.id });
+      await appendSnapshotSources({
+        data: {
+          id: snapshot.id,
+          source_materials: {
+            documents: fresh
+              .filter((s) => (s.extracted_text ?? "").trim().length > 0)
+              .map((s) => ({ filename: s.original_name, text: s.extracted_text ?? "" })),
+            conceptDraft: snapshot.business_concept ?? "",
+          },
         },
-      },
-    }),
+      });
+    },
     onSuccess: () => {
-      toast.success("Sources added — rebuilding the enriched brief now");
-      setFiles([]);
+      setRebuilding(false);
+      toast.success("Rebuilding the enriched brief from your library");
       onSaved();
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not add sources"),
+    onError: (e) => {
+      setRebuilding(false);
+      toast.error(e instanceof Error ? e.message : "Could not rebuild");
+    },
   });
 
-  if (existingCount > 0 && !hasWeakFields) return null;
+  const readyCount = sources.filter((s) => (s.extracted_text ?? "").trim().length > 0).length;
+  const totalCount = sources.length;
 
   return (
-    <div className="rounded-2xl border border-status-warning/30 bg-status-warning/5 p-4">
+    <div className="rounded-2xl border border-white/10 bg-card/40 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">Add source documents to strengthen this brief</h3>
+          <h3 className="text-sm font-semibold text-foreground">Venture source library</h3>
           <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
-            This startup currently has {existingCount} saved source {existingCount === 1 ? "item" : "items"}. Add the founder docs here and the review fields will rebuild from those sources.
+            {loadingSources ? "Loading…" : totalCount === 0
+              ? legacyDocCount > 0
+                ? `This venture has ${legacyDocCount} legacy source text${legacyDocCount === 1 ? "" : "s"} attached but no uploaded files. Add your founder docs once and they'll stay here for every future enrichment.`
+                : "Add the founder docs once. We'll keep them attached to this venture and feed them into every re-extraction."
+              : `${readyCount} of ${totalCount} file${totalCount === 1 ? "" : "s"} ready to use as context.`}
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
-          <Upload className="mr-1.5 h-3.5 w-3.5" /> Add docs
+        <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading}>
+          {uploading ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-1.5 h-3.5 w-3.5" />}
+          Add docs
         </Button>
       </div>
       <input
         ref={fileRef}
         type="file"
         multiple
-        accept=".pdf,.txt,.md,.markdown,text/plain,text/markdown,application/pdf"
+        accept=".pdf,.docx,.txt,.md,.markdown,.rtf,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,application/rtf,image/*"
         className="hidden"
-        onChange={(e) => addFiles(Array.from(e.target.files ?? []))}
+        onChange={(e) => { handleFiles(Array.from(e.target.files ?? [])); e.target.value = ""; }}
       />
       <div
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -546,36 +545,62 @@ function SourceRecoveryPanel({ snapshot, onSaved }: { snapshot: any; onSaved: ()
         onDrop={(e) => {
           e.preventDefault();
           setDragOver(false);
-          addFiles(Array.from(e.dataTransfer.files ?? []));
+          handleFiles(Array.from(e.dataTransfer.files ?? []));
         }}
         className={`mt-3 rounded-xl border border-dashed p-4 text-center text-sm transition ${dragOver ? "border-foreground bg-background" : "border-border bg-background/40"}`}
       >
-        Drop PDF, TXT, or Markdown source files here
+        Drop PDF, DOCX, TXT, Markdown, or image files here
       </div>
-      {files.length > 0 && (
-        <div className="mt-3 space-y-2">
-          {files.map((f) => (
-            <div key={f.id} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2 text-xs">
-              <span className="inline-flex min-w-0 items-center gap-2">
+      {sources.length > 0 && (
+        <ul className="mt-3 space-y-1.5">
+          {sources.map((s) => {
+            const ready = (s.extracted_text ?? "").trim().length > 0;
+            return (
+              <li key={s.id} className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs">
                 <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <span className="truncate">{f.name}</span>
-              </span>
-              <span className={f.status === "ready" ? "text-status-success" : f.status === "error" ? "text-status-danger" : "text-muted-foreground"}>
-                {f.status === "ready" ? "Ready" : f.status === "reading" ? "Reading…" : f.error}
-              </span>
-            </div>
-          ))}
-          <div className="flex justify-end">
-            <Button size="sm" onClick={() => appendSources.mutate()} disabled={appendSources.isPending || reading || readyFiles.length === 0}>
-              {appendSources.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1.5 h-3.5 w-3.5" />}
-              Rebuild enriched brief
-            </Button>
-          </div>
+                <span className="min-w-0 flex-1 truncate">{s.original_name}</span>
+                <span className={`shrink-0 ${ready ? "text-status-success" : s.extraction_error ? "text-status-danger" : "text-muted-foreground"}`}>
+                  {ready
+                    ? `${Math.round((s.extracted_text ?? "").length / 1000)}k chars`
+                    : s.extraction_error
+                      ? "Unreadable"
+                      : "Processing…"}
+                </span>
+                {s.extraction_error && (
+                  <button
+                    type="button"
+                    className="shrink-0 text-muted-foreground hover:text-foreground"
+                    aria-label="Retry extraction"
+                    onClick={async () => { await retryExtraction(s.id); await refresh(); }}
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="shrink-0 text-muted-foreground hover:text-foreground"
+                  aria-label="Remove"
+                  onClick={async () => { await deleteVentureSource(s.id); await refresh(); }}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {readyCount > 0 && (
+        <div className="mt-3 flex justify-end">
+          <Button size="sm" onClick={() => rebuild.mutate()} disabled={rebuilding}>
+            {rebuilding ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1.5 h-3.5 w-3.5" />}
+            Rebuild enriched brief from library
+          </Button>
         </div>
       )}
     </div>
   );
 }
+
 
 function timeAgo(d: Date): string {
   const s = Math.max(1, Math.round((Date.now() - d.getTime()) / 1000));
