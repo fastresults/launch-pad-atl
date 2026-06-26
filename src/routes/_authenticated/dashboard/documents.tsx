@@ -236,6 +236,17 @@ export default function DocumentsPage() {
           </tbody>
         </table>
       </div>
+
+      <DocumentViewer
+        doc={richDoc}
+        open={!!richDoc}
+        onOpenChange={(o) => { if (!o) setRichDoc(null); }}
+      />
+      <FilePreviewDialog
+        doc={previewDoc}
+        onClose={() => setPreviewDoc(null)}
+        onDelete={(id) => del.mutate(id)}
+      />
     </div>
   );
 }
