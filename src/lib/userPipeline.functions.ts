@@ -95,14 +95,20 @@ export async function runMyRemaining() {
   return { queued: true };
 }
 
+export async function forceRunMyRemaining() {
+  const result = await invokeRun({ bulk: true, forceRun: true, maxDocs: 3 });
+  return result ?? { queued: true };
+}
+
 export async function adminRunForUser(input: any) {
   const { userId, key, runUpstream, bulk } = unwrap<{
     userId: string;
     key?: string;
     runUpstream?: boolean;
     bulk?: boolean;
+    forceRun?: boolean;
   }>(input);
-  await invokeRun({ userId, key, runUpstream: !!runUpstream, bulk: !!bulk });
+  await invokeRun({ userId, key, runUpstream: !!runUpstream, bulk: !!bulk, forceRun: !!forceRun, maxDocs: forceRun ? 3 : undefined });
   return { total: 1, failed: 0 };
 }
 
