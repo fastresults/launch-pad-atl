@@ -1,6 +1,7 @@
 import { FRAMEWORK_STAGES } from "@/lib/framework-deliverables";
 import type { Slide } from "./SlideDeck";
 import { foundationSlides } from "./slides/foundation";
+import { strategySlides } from "./slides/strategy";
 
 export type StageDeck = {
   slug: string;
