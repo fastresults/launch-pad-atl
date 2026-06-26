@@ -99,44 +99,57 @@ export const foundationSlides: Slide[] = [
     title: "What breaks without it",
     render: () => (
       <SlideLayout stageKicker={KICKER} pageLabel={pl(3, 10)}>
-        <div>
-          <SlotText
-            slideId="what-breaks"
-            field="kicker"
-            defaultValue="What breaks without it"
-            as="div"
-            className="slide-kicker font-semibold text-primary mb-6"
-          />
-          <SlotText
-            slideId="what-breaks"
-            field="title"
-            defaultValue="Three expensive mistakes Foundation prevents."
-            as="h2"
-            className="slide-title font-semibold tracking-tight mb-14"
-          />
-          <div className="grid grid-cols-3 gap-8">
-            {FOUNDATION_FIRST_REASONS.map((r, i) => (
-              <div
-                key={r.title}
-                className="rounded-3xl border-2 border-destructive/20 bg-destructive/5 p-10 min-h-[420px] flex flex-col"
-              >
-                <AlertTriangle className="text-destructive mb-6" style={{ width: 56, height: 56 }} />
-                <SlotText
-                  slideId="what-breaks"
-                  field={`card.${i}.title`}
-                  defaultValue={r.title}
-                  as="h3"
-                  className="slide-body-lg font-semibold tracking-tight mb-5"
-                />
-                <SlotText
-                  slideId="what-breaks"
-                  field={`card.${i}.body`}
-                  defaultValue={r.body}
-                  as="p"
-                  className="slide-body text-muted-foreground"
-                />
-              </div>
-            ))}
+        <div className="grid grid-cols-12 gap-10 items-start">
+          <div className="col-span-7">
+            <SlotText
+              slideId="what-breaks"
+              field="kicker"
+              defaultValue="What breaks without it"
+              as="div"
+              className="slide-kicker font-semibold text-primary mb-6"
+            />
+            <SlotText
+              slideId="what-breaks"
+              field="title"
+              defaultValue="Three expensive mistakes Foundation prevents."
+              as="h2"
+              className="slide-title font-semibold tracking-tight mb-10"
+            />
+            <div className="grid grid-cols-1 gap-5">
+              {FOUNDATION_FIRST_REASONS.map((r, i) => (
+                <div
+                  key={r.title}
+                  className="rounded-2xl border-2 border-destructive/20 bg-destructive/5 p-6 flex gap-5"
+                >
+                  <AlertTriangle className="text-destructive shrink-0" style={{ width: 40, height: 40 }} />
+                  <div>
+                    <SlotText
+                      slideId="what-breaks"
+                      field={`card.${i}.title`}
+                      defaultValue={r.title}
+                      as="h3"
+                      className="slide-body-lg font-semibold tracking-tight mb-2"
+                    />
+                    <SlotText
+                      slideId="what-breaks"
+                      field={`card.${i}.body`}
+                      defaultValue={r.body}
+                      as="p"
+                      className="slide-body text-muted-foreground"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="col-span-5 flex items-center justify-center">
+            <SlotImage
+              slideId="what-breaks"
+              field="image"
+              defaultSrc="/decks/foundation/03-what-breaks.jpg"
+              defaultAlt="Three precarious towers of mismatched objects on uneven ground"
+              className="w-full max-h-[760px] object-contain rounded-2xl"
+            />
           </div>
         </div>
       </SlideLayout>
