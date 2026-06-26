@@ -347,16 +347,20 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
     (v?.payload?.card?.title === key || v?.payload?.id === key);
 
   return (
-    <div className="space-y-3 rounded-xl border border-status-warning/20 bg-status-warning/5 p-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
+    <div className="space-y-3 rounded-2xl border-2 border-status-warning/40 bg-gradient-to-br from-status-warning/10 via-card to-card p-5 shadow-[0_0_0_1px_hsl(var(--status-warning)/0.1)]">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="border-status-warning/40 text-[10px] uppercase tracking-wide text-status-warning">Step 2 · Stress-test</Badge>
             <Zap className="h-4 w-4 text-status-warning" />
-            <h4 className="text-sm font-semibold">Epiphany Engine</h4>
+            <h4 className="text-base font-semibold">Epiphany Engine</h4>
             <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">deep</Badge>
           </div>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">
-            Multi-pass AI: mines signals from your research, generates and scores enhancements, returns up to 3 vision-extending ideas with viability + attractiveness scores.
+          <p className="mt-1 text-sm text-foreground/80">
+            Challenge the concept itself — surface bigger swings you may have missed.
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            <b>When to use this:</b> before you lock, when you want AI to challenge assumptions rather than polish wording. Multi-pass: mines your research, generates and scores enhancements, returns up to 3 vision-extending ideas. <i>Takes ~60s.</i>
           </p>
         </div>
         <Button size="sm" onClick={findEpiphany} disabled={run.isPending || !hasBrief}>
@@ -369,6 +373,7 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
         <p className="text-[11px] text-status-warning">Deep research must complete first.</p>
       )}
       {execNote && <p className="text-xs italic text-muted-foreground">{execNote}</p>}
+
 
       {top3.length > 0 && (
         <div className="space-y-2">
