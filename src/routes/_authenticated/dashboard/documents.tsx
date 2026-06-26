@@ -255,6 +255,7 @@ export default function DocumentsPage() {
         doc={richDoc}
         open={!!richDoc}
         onOpenChange={(o) => { if (!o) setRichDoc(null); }}
+        autoGenerateHero={false}
       />
       <FilePreviewDialog
         doc={previewDoc}
