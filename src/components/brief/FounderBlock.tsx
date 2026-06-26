@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {  } from "react-router-dom";
 import { Upload, Link2, Sparkles, Loader2, ChevronRight } from "lucide-react";
@@ -34,17 +34,36 @@ export function FounderBlock({ onDone }: Props) {
       Array.isArray(extracted.skills) && (extracted.skills as unknown[]).length > 0 ||
       (typeof extracted.headline === "string" && extracted.headline.length > 0));
 
-  const [linkedinUrl, setLinkedinUrl] = useState<string>((profile?.linkedin_url as string) ?? "");
-  const [rawText, setRawText] = useState<string>((profile?.raw_text as string) ?? "");
-  const [filePath, setFilePath] = useState<string | null>((profile?.source_file_path as string) ?? null);
+  const [linkedinUrl, setLinkedinUrl] = useState<string>("");
+  const [rawText, setRawText] = useState<string>("");
+  const [filePath, setFilePath] = useState<string | null>(null);
   const [filename, setFilename] = useState<string>("");
   const [extracting, setExtracting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
-  const [rightPerson, setRightPerson] = useState<string>((profile?.right_person_reason as string) ?? "");
-  const [edge, setEdge] = useState<string>((profile?.unfair_advantage as string) ?? "");
+  const [rightPerson, setRightPerson] = useState<string>("");
+  const [edge, setEdge] = useState<string>("");
   const [extractNote, setExtractNote] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Hydrate local state once the saved row arrives, so returning users see
+  // their resume, LinkedIn, pasted text, and answers prefilled.
+  useEffect(() => {
+    if (hydrated || !profile) return;
+    setLinkedinUrl((profile.linkedin_url as string) ?? "");
+    setRawText((profile.raw_text as string) ?? "");
+    const sp = (profile.source_file_path as string) ?? null;
+    setFilePath(sp);
+    if (sp) {
+      const base = sp.split("/").pop() ?? "";
+      // Strip the "<timestamp>-" prefix we add at upload time.
+      setFilename(base.replace(/^\d+-/, ""));
+    }
+    setRightPerson((profile.right_person_reason as string) ?? "");
+    setEdge((profile.unfair_advantage as string) ?? "");
+    setHydrated(true);
+  }, [profile, hydrated]);
 
   const hasText = rawText.trim().length >= 20;
   const hasFile = !!filePath;

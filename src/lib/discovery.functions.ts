@@ -7,14 +7,20 @@ export interface ExtractedFounder { name?: string; bio?: string; experience?: st
 
 export async function getFounderProfile() {
   const { data } = await supabase.from("attendee_founder_profile").select("*").eq("user_id", await uid()).maybeSingle();
-  return data ?? {};
+  return { profile: data ?? null };
 }
 export async function upsertFounderProfile(data: any) {
   const payload = data?.data ?? data;
   const { error } = await supabase.from("attendee_founder_profile").upsert({ ...payload, user_id: await uid() }, { onConflict: "user_id" });
   if (error) throw new Error(error.message);
 }
-export async function extractFounderFromText(_data: { text?: string } | any) { return {}; }
+export async function extractFounderFromText(input: any) {
+  const payload = input?.data ?? input ?? {};
+  const { data, error } = await supabase.functions.invoke("founder-extract", { body: payload });
+  if (error) throw new Error(error.message);
+  if ((data as any)?.error) throw new Error((data as any).error);
+  return { extracted: (data as any)?.extracted ?? {}, note: (data as any)?.note ?? null };
+}
 export async function getMarketProfile() {
   const { data } = await supabase.from("attendee_market_profile").select("*").eq("user_id", await uid()).maybeSingle();
   return data ?? {};
@@ -38,8 +44,8 @@ async function callSummarize(title: string, kind: "founder" | "market", answers:
 }
 
 export async function summarizeFounderProfile() {
-  const row = await getFounderProfile();
-  const ex = (row?.extracted ?? {}) as Record<string, any>;
+  const { profile: row } = await getFounderProfile();
+  const ex = ((row as any)?.extracted ?? {}) as Record<string, any>;
   const roles = Array.isArray(ex.roles)
     ? ex.roles.map((r: any) => `${r.title}${r.company ? ` @ ${r.company}` : ""}`).join("; ")
     : "";
