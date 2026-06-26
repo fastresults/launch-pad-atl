@@ -113,13 +113,29 @@ export default function WorkflowDetail() {
         </section>
       )}
 
-      <div className="flex gap-2">
-        <Button onClick={() => run.mutate()} disabled={run.isPending}>
-          {run.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating…</> : deliverable ? "Regenerate" : "Generate"}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          onClick={() => {
+            if (hasContent) {
+              setRewriteTarget({ type: key, name: wf?.label ?? key });
+            } else {
+              run.mutate(undefined);
+            }
+          }}
+          disabled={run.isPending}
+        >
+          {run.isPending
+            ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating…</>
+            : hasContent ? "Rewrite with feedback" : "Generate"}
         </Button>
+        {hasContent && (
+          <Button variant="outline" onClick={() => run.mutate(undefined)} disabled={run.isPending}>
+            Quick regenerate
+          </Button>
+        )}
       </div>
 
-      {deliverable && (
+      {deliverable && hasContent && (
         <article className="space-y-5 rounded-2xl border border-white/10 bg-card p-6">
           {content.title && <h2 className="text-xl font-semibold">{content.title}</h2>}
           {content.summary && <p className="text-sm text-muted-foreground">{content.summary}</p>}
@@ -139,6 +155,51 @@ export default function WorkflowDetail() {
           )}
         </article>
       )}
+
+      {hasContent && (
+        <section className="space-y-3 rounded-2xl border border-white/10 bg-card p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">McKinsey-grade deep assessment</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Hardcore research, pressure-tests, hidden risks, and a 30/60/90 plan grounded in your whole venture context.
+              </p>
+            </div>
+            <Button
+              variant={assessmentText ? "outline" : "default"}
+              onClick={() => assess.mutate()}
+              disabled={assess.isPending || assessmentStatus === "generating"}
+            >
+              {assess.isPending || assessmentStatus === "generating"
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Running deep assessment…</>
+                : <><Sparkles className="mr-2 h-4 w-4" />{assessmentText ? "Re-run deep assessment" : "Run deep assessment"}</>}
+            </Button>
+          </div>
+
+          {assessmentText && (
+            <div className="rounded-xl border border-white/10 bg-background/40 p-4">
+              {assessmentScore != null && (
+                <div className="mb-2 text-xs text-muted-foreground">
+                  Quality score: <span className="font-semibold text-foreground">{assessmentScore}/100</span>
+                </div>
+              )}
+              <div className="prose prose-sm max-w-none whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                {assessmentText}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      <RewriteFeedbackDialog
+        target={rewriteTarget}
+        onClose={() => setRewriteTarget(null)}
+        onSubmit={(feedback, tags) => {
+          setRewriteTarget(null);
+          run.mutate({ feedback, tags });
+        }}
+      />
     </div>
   );
 }
+
