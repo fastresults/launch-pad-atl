@@ -138,6 +138,7 @@ export function FounderBlock({ onDone }: Props) {
         },
       });
       await refetch();
+      import("@/lib/brief-sync-profile").then((m) => m.syncProfileFromBrief().catch(() => {}));
       onDone();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed");

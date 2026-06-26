@@ -1,53 +1,56 @@
-# Save Generated Documents to "My Files"
-
-## The problem (in plain language)
-
-When a founder generates a deliverable (Executive Summary, Brand Brief, Roadmap, etc.) it lives inside the Venture Hub viewer. They can copy or download it locally, but it never lands in **Dashboard → My Files → Documents**, which is the place they instinctively look for "their stuff." Uploads they make manually show up there; AI-generated documents do not. That split confuses novices.
-
 ## Goal
+When a founder finishes (or meaningfully advances) the dashboard Startup Brief, automatically populate the Profile & Intake page (`/dashboard/profile`) so they don't have to retype anything. Mark intake complete when the brief is complete.
 
-From the document viewer modal, the user can press one obvious button — **Save to My Files** — and the document (plus optional deep assessment) appears under **Dashboard → Documents** as a normal file they can re-download, rename, or delete, without re-running the AI.
+## Source → Target mapping
 
-## User experience
+Source tables already filled by the brief workflow:
+- `attendee_business_brief` (10 Q&A fields)
+- `attendee_founder_profile` (Block 4 "About you" — full_name, background, headline, unfair_advantage, right_person_reason, linkedin_url)
+- `attendee_market_profile` (Block 5 "Market & model" — archetype, geography, industry, customer_type, channels, market_note)
 
-1. In the viewer header, next to Copy / Markdown / DOCX / PDF, add a primary-styled **Save to My Files** button with a bookmark icon.
-2. First click → saves a PDF (or DOCX, see "Format") snapshot of the current `exportContent` (executive summary + deep assessment if expanded) to the user's documents under kind `deliverable`. Toast: *"Saved to My Files. View it anytime in Dashboard → Documents."* with a "View" action that routes to `/dashboard/documents`.
-3. After save, the button flips to **Saved ✓ · Update** (secondary). Pressing Update re-saves a new version with a `(v2)` suffix so the user never loses an earlier copy.
-4. On the **Documents** page:
-   - Add a "Source" column showing either `Uploaded` or `Generated · <venture name>`.
-   - Add a filter chip row (All / Uploaded / Generated) so the list stays scannable as the library grows.
-   - Empty-state copy updated: *"Anything you upload or save from a deliverable lands here."*
-5. On the **My files** index card, update the Documents description to: *"Uploads and deliverables you've saved from your venture."*
+Target: `attendee_profiles` (the row the Profile page reads/writes).
 
-## Format
+Deterministic mapping (no AI required):
 
-Save as **PDF** by default (matches the existing PDF export path in the viewer and renders predictably for novices). Internally store `mime_type=application/pdf`, `kind=deliverable`, `original_name=<Document title>.pdf`. Future enhancement (out of scope): let the user pick PDF/DOCX in a small dropdown beside the button.
+| attendee_profiles field | Source |
+|---|---|
+| full_name | founder_profile.full_name → fallback profiles.display_name |
+| headline | founder_profile.headline → fallback first sentence of brief.one_line_pitch |
+| background | founder_profile.background → fallback brief.origin_story |
+| primary_goal | brief.twelve_month_vision |
+| business_name | extracted from brief.one_line_pitch / offer_description (best-effort; left blank if unclear) |
+| industry | market_profile.industry |
+| stage | market_profile.archetype mapped to "idea / mvp / launched" (default "idea") |
+| problem_solved | brief.problem_statement |
+| value_prop | brief.unique_insight + brief.offer_description condensed |
+| target_market | brief.target_customer + market_profile.geography + customer_type |
+| business_model | brief.business_model |
+| competitors | left as-is (not collected in brief) |
+| current_revenue / funding_raised / monthly_burn / runway_months | left untouched (financial block, not in brief) |
+| intake_completed_at | set when the brief reaches 10/10 |
 
-## Technical notes
+Existing non-empty values in `attendee_profiles` are preserved (never overwrite founder-edited fields). Empty/null fields are filled.
 
-- **No schema change required.** `attendee_documents` already supports arbitrary `kind` + `mime_type`. Reuse the existing storage flow: `createDocumentUploadUrl` → PUT to signed URL → `finalizeDocument`.
-- **DocumentViewer.tsx**: add `onSaveToFiles()` that
-  1. renders `exportContent` to a PDF Blob using the same path as `onDownloadPdf` (extract the existing logic into a shared helper that returns a Blob instead of triggering download),
-  2. calls `createDocumentUploadUrl({ kind: "deliverable", filename, mime: "application/pdf" })`,
-  3. PUTs the blob, then `finalizeDocument(...)`,
-  4. invalidates `["my","documents"]` and shows the toast with the "View" action (navigate via `useNavigate`).
-- Track save state locally (`saved`, `savedDocId`) so the button can toggle and the Update path can append `(v<n>)` based on a quick count of existing docs whose `original_name` starts with the same title.
-- **attendee.functions.ts**: confirm `finalizeDocument` accepts arbitrary `kind` strings; if it whitelists, add `deliverable` to the allowed set.
-- **documents.tsx**:
-  - Add `deliverable` to the `KINDS` list (label: "Saved deliverable") so the kind cell renders nicely and the filter has a value.
-  - Add the Source column + filter chips. Source = `Generated` when `kind === "deliverable"`, else `Uploaded`.
-  - Keep existing upload/download/delete behavior unchanged.
-- **files.tsx**: tweak the Documents card description string only.
+## Implementation
 
-## Out of scope
+1. **New client lib `src/lib/brief-sync-profile.ts`**
+   - `syncProfileFromBrief()`: reads the three source tables, computes the mapping above, and calls `upsertMyProfile` only with non-empty target fields that are currently empty on the profile row (merge-not-overwrite). Returns `{ fieldsFilled: number }`.
 
-- Auto-saving every generated document (would clutter the library; explicit user action is the whole point).
-- Versioned diff viewer — `(v2)` naming is enough for now.
-- Sharing or external links.
+2. **Auto-trigger points**
+   - `src/routes/_authenticated/dashboard/brief.tsx`: when `setMode("complete")` fires (line 158), call `syncProfileFromBrief()` and pass `intake_completed_at = now()`.
+   - `src/components/brief/FounderBlock.tsx` and `MarketBlock.tsx`: after their save, fire-and-forget `syncProfileFromBrief()` so the profile fills incrementally.
+   - Toast on success: "Profile updated from your brief — X fields filled."
 
-## Acceptance check
+3. **Manual trigger on Profile page** (`src/routes/_authenticated/dashboard/profile.tsx`)
+   - Add a header button "Pull from my brief" that calls `syncProfileFromBrief()` and refetches the profile query. Shows a small note: "Empty fields only — your edits are never overwritten."
 
-- Generate any deliverable, open the viewer, click **Save to My Files** → toast appears, navigating to `/dashboard/documents` shows the new row with Source = Generated and Download returns the same PDF.
-- Click **Update** → a `(v2)` row appears alongside the original.
-- Filter chips correctly partition Uploaded vs Generated.
-- Manual uploads still work exactly as before.
+4. **No DB migration needed.** All target columns already exist on `attendee_profiles`.
+
+## Why no edge function / no AI
+The mapping is 1:1 string copy from data the user already typed in their own words. Using an LLM would add latency, cost, and the risk of rewording the founder's voice. If polish is needed later (e.g., generating a `headline` when none exists), we can add an opt-in "Polish with AI" button on the profile page in a follow-up.
+
+## Acceptance
+- Finishing the brief navigates to the completion screen AND silently fills the Profile page.
+- Visiting `/dashboard/profile` right after shows full_name, headline, background, primary_goal, industry, stage, problem_solved, value_prop, target_market, business_model populated where source data existed.
+- Re-running the sync never clobbers a value the user has manually edited on the Profile page.
+- "Pull from my brief" button works idempotently.

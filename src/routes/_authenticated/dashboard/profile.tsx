@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { } from 'react-router-dom';
 import { getMyProfile, upsertMyProfile } from "@/lib/attendee.functions";
+import { syncProfileFromBrief } from "@/lib/brief-sync-profile";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,14 +57,34 @@ export default function ProfilePage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const pullFromBrief = useMutation({
+    mutationFn: () => syncProfileFromBrief(),
+    onSuccess: (r) => {
+      if (r.fieldsFilled > 0) toast.success(`Pulled ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} from your brief.`);
+      else toast.message("Nothing new to pull — your profile already has everything from the brief.");
+      qc.invalidateQueries({ queryKey: ["my", "profile"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <div className="space-y-10">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Profile & intake</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          The more we know, the more useful your generated deliverables will be.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">Profile & intake</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            The more we know, the more useful your generated deliverables will be.
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <Button variant="outline" onClick={() => pullFromBrief.mutate()} disabled={pullFromBrief.isPending}>
+            <Sparkles className="h-4 w-4 mr-2" />
+            {pullFromBrief.isPending ? "Pulling…" : "Pull from my brief"}
+          </Button>
+          <p className="text-[11px] text-muted-foreground">Empty fields only — your edits are never overwritten.</p>
+        </div>
       </div>
+
 
       <Section title="Founder">
         <Field label="Full name"><Input value={founder.full_name} onChange={(e) => setFounder({ ...founder, full_name: e.target.value })} /></Field>

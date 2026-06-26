@@ -24,6 +24,7 @@ import { BriefCompleteScreen } from "@/components/brief/BriefCompleteScreen";
 import { BriefPrefillReview } from "@/components/brief/BriefPrefillReview";
 import type { BriefPrefillResponse } from "@/lib/brief.functions";
 import { buildPrefillFromBrief } from "@/lib/brief-to-snapshot";
+import { syncProfileFromBrief } from "@/lib/brief-sync-profile";
 import { ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -157,6 +158,11 @@ export default function BriefWizard() {
     if (checkpointBlock.kind === "market") {
       setMode("complete");
       setCheckpointBlock(null);
+      syncProfileFromBrief({ markComplete: true })
+        .then((r) => {
+          if (r.fieldsFilled > 0) toast.success(`Profile updated from your brief — ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} filled.`);
+        })
+        .catch(() => { /* non-blocking */ });
     }
   };
 
