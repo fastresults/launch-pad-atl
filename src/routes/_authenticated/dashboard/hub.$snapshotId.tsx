@@ -37,6 +37,8 @@ import { BulkUnlockDialog } from "@/components/hub/BulkUnlockDialog";
 import { BrandStudio } from "@/components/hub/BrandStudio";
 import { SocialStudio } from "@/components/hub/SocialStudio";
 import { FounderRoadmapCard } from "@/components/hub/FounderRoadmapCard";
+import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
+import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
 import {
   ArrowLeft,
   Loader2,
@@ -48,6 +50,7 @@ import {
   AlertCircle,
   Eye,
   Sparkles,
+  Presentation,
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -602,6 +605,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   });
 
   const [showUnlock, setShowUnlock] = useState(false);
+  const [openDeckSlug, setOpenDeckSlug] = useState<string | null>(null);
 
   const cancel = useMutation({
     mutationFn: (jobId: string) => cancelJob({ data: { jobId } }),
@@ -648,6 +652,21 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   }, [categories, completedKeys]);
 
   const nextCategory = categoryProgress.find((c) => !c.complete) ?? null;
+
+  // Per-category facilitator deck state: unlocked once every prior category is complete.
+  const deckStateByCat = useMemo(() => {
+    const m = new Map<string, { slug: string; available: boolean; unlocked: boolean; prevLabel?: string }>();
+    let allPriorDone = true;
+    let prevLabel: string | undefined;
+    for (const c of categoryProgress) {
+      const slug = slugify(c.cat);
+      const deck = STAGE_DECKS.find((d) => d.slug === slug);
+      m.set(c.cat, { slug, available: !!deck?.available, unlocked: allPriorDone, prevLabel });
+      if (!c.complete) allPriorDone = false;
+      prevLabel = c.cat;
+    }
+    return m;
+  }, [categoryProgress]);
 
   // ---- Hero state machine ----
   let heroTitle: string;
@@ -800,26 +819,52 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         const catTotal = items.length;
         const catComplete = catDone === catTotal;
         const catGenerating = jobRunning && bulk.variables?.category === cat;
+        const deck = deckStateByCat.get(cat);
         return (
         <section key={cat} className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
               {cat} <span className="ml-1 normal-case text-muted-foreground/60">· {catDone}/{catTotal}</span>
             </h4>
-            <Button
-              size="sm"
-              variant={catComplete ? "ghost" : "outline"}
-              disabled={bulk.isPending || jobRunning}
-              onClick={() => bulk.mutate({ category: cat })}
-            >
-              {catGenerating ? (
-                <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
-              ) : catComplete ? (
-                <><RefreshCw className="mr-1 h-3 w-3" />Regenerate this section</>
-              ) : (
-                <><Sparkles className="mr-1 h-3 w-3" />Generate this section</>
+            <div className="flex flex-wrap items-center gap-2">
+              {deck && (
+                deck.unlocked && deck.available ? (
+                  <Button size="sm" variant="outline" onClick={() => setOpenDeckSlug(deck.slug)}>
+                    <Presentation className="mr-1 h-3 w-3" />
+                    Open facilitator deck
+                  </Button>
+                ) : !deck.available ? (
+                  <Button size="sm" variant="outline" disabled title="Deck coming soon">
+                    <Lock className="mr-1 h-3 w-3" />
+                    Deck coming soon
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled
+                    title={`Deck unlocks when ${deck.prevLabel ?? "the previous section"} is complete`}
+                  >
+                    <Lock className="mr-1 h-3 w-3" />
+                    Unlocks after {deck.prevLabel ?? "previous section"}
+                  </Button>
+                )
               )}
-            </Button>
+              <Button
+                size="sm"
+                variant={catComplete ? "ghost" : "outline"}
+                disabled={bulk.isPending || jobRunning}
+                onClick={() => bulk.mutate({ category: cat })}
+              >
+                {catGenerating ? (
+                  <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
+                ) : catComplete ? (
+                  <><RefreshCw className="mr-1 h-3 w-3" />Regenerate this section</>
+                ) : (
+                  <><Sparkles className="mr-1 h-3 w-3" />Generate this section</>
+                )}
+              </Button>
+            </div>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {items.map((t) => {
@@ -959,6 +1004,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         totalDocs={total}
         onUnlocked={() => bulk.mutate({ category: null })}
       />
+      <DeckDialog slug={openDeckSlug} onOpenChange={(o) => { if (!o) setOpenDeckSlug(null); }} />
     </div>
   );
 }
