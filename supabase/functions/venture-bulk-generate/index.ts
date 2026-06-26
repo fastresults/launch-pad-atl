@@ -25,6 +25,9 @@ import {
   specializedPrompt,
   stripCitations,
 } from "../_shared/deliverable-prompts.ts";
+import { aiFetch } from "../_shared/ai-fetch.ts";
+
+const MAX_USER_PROMPT_CHARS = 120_000;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -106,12 +109,12 @@ async function generateOne(
     effectiveIntake
       ? `\n## Intake answers (TOP PRIORITY — founder-supplied ground truth. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
       : "",
-  ].filter(Boolean).join("\n\n");
+  ].filter(Boolean).join("\n\n").slice(0, MAX_USER_PROMPT_CHARS);
 
   // S5 — Honor type.model_tier ('pro' | 'flash' | 'lite').
   const modelId = modelForTier(type.model_tier);
 
-  const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
