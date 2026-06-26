@@ -35,6 +35,7 @@ import {
   retryExtraction,
   type VentureSource,
 } from "@/lib/venture-sources";
+import { getCanonicalFounderContext, provenanceLabel } from "@/lib/canonical-context";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { TRACKS, getTrack, type TrackKey } from "@/lib/tracks";
 import { ConceptStudio } from "@/components/hub/ConceptStudio";
