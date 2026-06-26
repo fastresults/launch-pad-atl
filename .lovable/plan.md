@@ -1,25 +1,48 @@
-## Add facilitator decks to the Founders Hub (per snapshot), section-by-section
+## Problem
 
-**Where**
-`src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` — the venture workflow currently has a "Generate this section" button per category but no deck button. The `/dashboard/workflow` page already has this pattern; we'll mirror it here.
+In `DeckDialog.tsx` the slide stage is broken:
 
-**Changes (single file)**
+- `DialogContent` (shadcn) uses `grid` by default — so `flex-1` on the inner slide wrapper does nothing.
+- `ScaledSlide` measures its parent's height as ~0 and the scale calculation falls back to 1.
+- Result: the 1920×1080 slide renders unscaled, pushed to the bottom of the modal with a huge black void above it (exactly what the screenshot shows).
 
-1. **Imports:** add `Presentation`, `Lock` icons; `STAGE_DECKS`, `slugify` from `@/components/workshop-slides/registry`; `DeckDialog` from `@/components/workshop-slides/DeckDialog`.
+It's also missing facilitator UX basics: real fullscreen, slide counter that's actually visible, ESC to close hint, a thumbnail rail to jump between slides, and a progress bar.
 
-2. **Deck-state map:** alongside the existing `categories` derivation, compute a `deckStateByCat: Map<string, { slug; available; unlocked; prevLabel }>`. Walk categories in order; a category's deck `unlocked = true` only after all prior non-bonus categories have every deliverable complete (reusing `completedKeys` + `catComplete` logic already in scope). Bonus categories don't gate later decks. `available` is true when a deck with that slug exists in `STAGE_DECKS` and is marked available.
+## Plan
 
-3. **Dialog state:** `const [openDeckSlug, setOpenDeckSlug] = useState<string | null>(null)`.
+### 1. Fix the scaling/layout bug (root cause)
 
-4. **Category header buttons** (around line 805): keep "Generate this section" button, add a sibling button to its left:
-   - Unlocked + available → `Open facilitator deck` (outline, Presentation icon) → `setOpenDeckSlug(deck.slug)`.
-   - Locked (prior incomplete) → disabled `Unlocks after {prevLabel}` (Lock icon).
-   - Available but no deck authored → disabled `Deck coming soon`.
-   - Bonus categories always show as unlocked if a deck exists.
+Update `src/components/workshop-slides/DeckDialog.tsx`:
 
-5. **Dialog mount:** render `<DeckDialog slug={openDeckSlug} onOpenChange={(o) => { if (!o) setOpenDeckSlug(null); }} />` near the bottom of the JSX (where other dialogs live).
+- Add `flex flex-col` to `DialogContent` so children stack vertically.
+- Give the slide stage `flex-1 min-h-0` (the `min-h-0` is required or flex children won't shrink and `ResizeObserver` reports wrong height).
+- Render `ScaledSlide` inside an explicit `relative w-full h-full` wrapper so its parent has a real measured box.
 
-**Notes**
-- Slug mapping uses the same `slugify(category)` as the workflow page so existing decks (Foundation, Strategy, etc.) light up immediately for snapshots that share those labels.
-- No backend or schema changes; gating is purely client-side from `completedKeys`.
-- No changes to existing generate behavior or styling of "Generate this section".
+This alone makes the slide fill the modal correctly at any viewport.
+
+### 2. Make the modal feel like a real presenter
+
+Same file (`DeckDialog.tsx`):
+
+- **Top bar:** deck title (left) · slide title (center, truncated) · `Slide X / N` + `Esc` hint (right). Auto-hides after 3s of mouse inactivity, reappears on mousemove.
+- **Bottom bar:** thin progress bar (`width: (index+1)/total %`) plus a horizontally scrollable thumbnail strip. Each thumbnail is a mini `ScaledSlide` in a 160×90 box; clicking jumps to that index; current one gets a ring.
+- **Nav buttons:** keep ←/→ pills but also auto-hide with the chrome.
+- **Fullscreen toggle:** button in top bar (`Maximize2` icon) that calls `requestFullscreen()` on the dialog content; `F` key shortcut; handles `fullscreenchange` to sync state.
+- **Keyboard:** keep ←/→/Space; add `Home`/`End` (jump to first/last), `F` (fullscreen), and let `Esc` close as Dialog already does.
+
+### 3. Minor polish
+
+- Use `bg-background` instead of hard `bg-black` so it respects the design tokens.
+- Add `aria-label="Facilitator deck"` and live region announcing slide changes for screen readers.
+- Mobile/tablet: drop thumbnail rail under `md:` and stack the top bar onto two lines.
+
+### Files touched
+
+- `src/components/workshop-slides/DeckDialog.tsx` — layout fix + presenter UX (only file that changes).
+- No changes to `ScaledSlide`, `SlideDeck`, registry, or individual slides — the bug is purely in the modal wrapper.
+
+### Validation
+
+- Open any unlocked deck from `dashboard/hub/$snapshotId` and from `dashboard/workflow` — slide fills the modal at desktop, tablet, and mobile widths.
+- Resize the window: slide rescales smoothly via the existing `ResizeObserver`.
+- Arrow keys, thumbnail clicks, fullscreen toggle, and Esc all work.
