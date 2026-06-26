@@ -205,7 +205,7 @@ async function markStaleRunsFailed(admin: any, userId: string, currentRunId: str
   return staleIds.length;
 }
 
-async function runJob(admin: any, userId: string, runId: string, opts: { key?: string; bulk?: boolean; runUpstream?: boolean; forceRun?: boolean; maxDocs?: number }) {
+async function runJob(admin: any, userId: string, runId: string, opts: { key?: string; bulk?: boolean; runUpstream?: boolean; forceRun?: boolean; maxDocs?: number; feedback?: string; tags?: string[] }) {
   await admin.from("ai_pipeline_runs").update({ status: "running", started_at: new Date().toISOString() }).eq("id", runId);
 
   try {
