@@ -319,7 +319,7 @@ async function runLayer(supabase: any, snapshotId: string, jobId: string, layer:
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, pending.length || 1) }, () => worker()));
 }
 
-async function runJob(supabase: any, snapshotId: string, jobId: string) {
+async function runJob(supabase: any, snapshotId: string, jobId: string, category?: string | null) {
   const { data: allTypes } = await supabase
     .from("venture_document_types")
     .select("*")
@@ -336,7 +336,7 @@ async function runJob(supabase: any, snapshotId: string, jobId: string) {
       .filter((d: any) => d.intake_answers && Object.keys(d.intake_answers).length)
       .map((d: any) => d.document_type),
   );
-  const types = (allTypes ?? []).filter(
+  let types = (allTypes ?? []).filter(
     (t: any) => !t.intake_schema || haveAnswers.has(t.type),
   );
 
