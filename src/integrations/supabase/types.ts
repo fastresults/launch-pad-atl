@@ -851,6 +851,7 @@ export type Database = {
         Row: {
           active: boolean
           auto_runnable: boolean
+          bonus: boolean
           created_at: string
           default_model: string
           depends_on_keys: string[] | null
@@ -872,6 +873,7 @@ export type Database = {
         Insert: {
           active?: boolean
           auto_runnable?: boolean
+          bonus?: boolean
           created_at?: string
           default_model?: string
           depends_on_keys?: string[] | null
@@ -893,6 +895,7 @@ export type Database = {
         Update: {
           active?: boolean
           auto_runnable?: boolean
+          bonus?: boolean
           created_at?: string
           default_model?: string
           depends_on_keys?: string[] | null
@@ -2310,6 +2313,7 @@ export type Database = {
         Returns: {
           active: boolean
           auto_runnable: boolean
+          bonus: boolean
           created_at: string
           default_model: string
           depends_on_keys: string[]
