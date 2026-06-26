@@ -24,6 +24,7 @@ import { BriefCompleteScreen } from "@/components/brief/BriefCompleteScreen";
 import { BriefPrefillReview } from "@/components/brief/BriefPrefillReview";
 import type { BriefPrefillResponse } from "@/lib/brief.functions";
 import { buildPrefillFromBrief } from "@/lib/brief-to-snapshot";
+import { syncProfileFromBrief } from "@/lib/brief-sync-profile";
 import { ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
