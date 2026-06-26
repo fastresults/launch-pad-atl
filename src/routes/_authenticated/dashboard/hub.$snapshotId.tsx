@@ -819,26 +819,52 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         const catTotal = items.length;
         const catComplete = catDone === catTotal;
         const catGenerating = jobRunning && bulk.variables?.category === cat;
+        const deck = deckStateByCat.get(cat);
         return (
         <section key={cat} className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
               {cat} <span className="ml-1 normal-case text-muted-foreground/60">· {catDone}/{catTotal}</span>
             </h4>
-            <Button
-              size="sm"
-              variant={catComplete ? "ghost" : "outline"}
-              disabled={bulk.isPending || jobRunning}
-              onClick={() => bulk.mutate({ category: cat })}
-            >
-              {catGenerating ? (
-                <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
-              ) : catComplete ? (
-                <><RefreshCw className="mr-1 h-3 w-3" />Regenerate this section</>
-              ) : (
-                <><Sparkles className="mr-1 h-3 w-3" />Generate this section</>
+            <div className="flex flex-wrap items-center gap-2">
+              {deck && (
+                deck.unlocked && deck.available ? (
+                  <Button size="sm" variant="outline" onClick={() => setOpenDeckSlug(deck.slug)}>
+                    <Presentation className="mr-1 h-3 w-3" />
+                    Open facilitator deck
+                  </Button>
+                ) : !deck.available ? (
+                  <Button size="sm" variant="outline" disabled title="Deck coming soon">
+                    <Lock className="mr-1 h-3 w-3" />
+                    Deck coming soon
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled
+                    title={`Deck unlocks when ${deck.prevLabel ?? "the previous section"} is complete`}
+                  >
+                    <Lock className="mr-1 h-3 w-3" />
+                    Unlocks after {deck.prevLabel ?? "previous section"}
+                  </Button>
+                )
               )}
-            </Button>
+              <Button
+                size="sm"
+                variant={catComplete ? "ghost" : "outline"}
+                disabled={bulk.isPending || jobRunning}
+                onClick={() => bulk.mutate({ category: cat })}
+              >
+                {catGenerating ? (
+                  <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
+                ) : catComplete ? (
+                  <><RefreshCw className="mr-1 h-3 w-3" />Regenerate this section</>
+                ) : (
+                  <><Sparkles className="mr-1 h-3 w-3" />Generate this section</>
+                )}
+              </Button>
+            </div>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {items.map((t) => {
