@@ -230,12 +230,8 @@ export async function generateOne(
       : "",
   ].filter(Boolean).join("\n\n");
 
-
-  // S5 — Per-deliverable model tier. Heavy strategy / financial docs use Pro
-  // for deeper reasoning; everything else stays on Flash for speed + cost.
-  const modelId = type.model_tier === "pro"
-    ? "google/gemini-3.1-pro-preview"
-    : "google/gemini-3-flash-preview";
+  // S5 — Per-deliverable model tier ('pro' | 'flash' | 'lite').
+  const modelId = modelForTier(type.model_tier);
 
   const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
