@@ -578,10 +578,19 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   });
 
   const bulk = useMutation({
-    mutationFn: () => bulkGenerate({ data: { snapshotId: snapshot.id } }),
-    onSuccess: () => { toast.success("We'll keep writing in the background"); qc.invalidateQueries({ queryKey: ["hub"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Couldn't start"),
+    mutationFn: (vars: { category?: string | null } | undefined) => bulkGenerate({ data: { snapshotId: snapshot.id, category: vars?.category ?? null } }),
+    onSuccess: (_d, vars) => {
+      toast.success(vars?.category ? `Writing the ${vars.category} section…` : "We'll keep writing in the background");
+      qc.invalidateQueries({ queryKey: ["hub"] });
+    },
+    onError: (e) => {
+      const msg = e instanceof Error ? e.message : "Couldn't start";
+      if (msg === "unlock_required") setShowUnlock(true);
+      else toast.error(msg);
+    },
   });
+
+  const [showUnlock, setShowUnlock] = useState(false);
 
   const cancel = useMutation({
     mutationFn: (jobId: string) => cancelJob({ data: { jobId } }),
