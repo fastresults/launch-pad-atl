@@ -1,48 +1,55 @@
-## Goal
-Remove "Established Small Business" (a stage, not a startup archetype) and replace it with **E-commerce / DTC Brand** — a true founder archetype that maps cleanly onto the 21 launch deliverables.
+## Problem
 
-## Why
-"Established Small Business" describes an *operating* business, which contradicts the platform's pre-launch positioning and produces deliverables that don't fit (the 21 docs are launch artifacts). Every other track is keyed by archetype; this one was keyed by stage, causing the confusion the user reported. E-commerce / DTC is a high-frequency founder type currently uncovered by Main Street (no storefront) or SaaS (no software).
+The "Today" dashboard card and the brief intro show **"You're 0 of 10 done"** even when the user already has all 10 answers saved. Then clicking **Start** drops them into question 1 with pre-filled text — confusing, and there's no way to reset.
 
-## Changes
+Root cause: the card reads `brief.completeness_score` from the DB, which is initialized to `0` and never updated when individual fields are saved. The wizard itself counts answers correctly (`answeredCount` in `brief.tsx`), but the dashboard card and the welcome screen don't.
 
-### `src/lib/tracks.ts`
-1. Rename the `small_business` entry → `ecommerce_dtc`:
-   - `key: "ecommerce_dtc"`
-   - `label: "E-commerce / DTC Brand"`
-   - `oneLiner: "Physical product, launching online-first"`
-   - `description`: First-time founders launching a direct-to-consumer brand — apparel, beauty, food/beverage, home goods, accessories. Sold via own Shopify, Amazon, or marketplaces. Focus is product-market fit on a single hero SKU, first 1,000 customers, paid + organic content engine, repeat-purchase economics.
-   - `tonePrompt`: Write as a DTC operator coaching a first-time brand founder. Lead with hero-SKU clarity, COGS / landed cost / contribution margin, MOQ and supplier risk, packaging and unboxing, paid-social creative testing (Meta + TikTok), Shopify funnel basics, email/SMS as the owned channel, repeat-purchase rate and LTV, fulfillment (3PL vs self-ship). Replace VC vocabulary with DTC realities — talk gross margin %, CAC by channel, AOV, contribution profit, blended ROAS, payback in orders. Skip ARR/NRR. Use concrete dollar figures and creator/UGC tactics they can execute solo.
-2. Update `TrackKey` union: replace `"small_business"` with `"ecommerce_dtc"`.
-3. Update `TRACK_SEEDS`:
-   - New `ecommerce_dtc` array with launch-stage DTC exemplars: `allbirds.com`, `magicspoon.com`, `liquiddeath.com`, `oliveandjune.com`, `chamberlaincoffee.com`, `jollyranger`-type indie brands. Mix of categories (apparel, food, beverage, beauty), national market_scope, US-based.
-4. Add legacy-key safety in `getTrack()`: if `key === "small_business"`, return the new `ecommerce_dtc` track so old snapshots still render. Optional: surface a small "legacy track migrated" badge — skip for now unless needed.
+Note: the brief is **one record per user**, not per venture. So a "different venture" still shares the same 10 answers — the reset flow needs to make that explicit.
 
-### Edge Functions that switch on track key
-Replace any `small_business` branch with `ecommerce_dtc` and the new tone, in:
-- `supabase/functions/venture-deep-research/index.ts`
-- `supabase/functions/venture-synthesize-concept/index.ts`
-- `supabase/functions/venture-generate-document/index.ts`
-- `supabase/functions/venture-bulk-generate/index.ts`
-- `supabase/functions/venture-generate-assessment/index.ts`
-- `supabase/functions/venture-generate-roadmap/index.ts`
-- `supabase/functions/dev-reverse-engineer-concept/index.ts`
+## Plan
 
-If any branch references `small_business` literally, swap to `ecommerce_dtc`. The Main Street ("lifestyle") track remains unchanged and remains the "Most attendees" default.
+### 1. Compute answered count from real field values (frontend, no migration)
 
-### Frontend references
-- `src/lib/brief-to-snapshot.ts`: route any prior "established / operating / revenue" classifier output away from `small_business` → `ecommerce_dtc` only when DTC/product signals are present, otherwise `lifestyle`.
-- `src/routes/_authenticated/dashboard/hub.new.tsx`, `hub.$snapshotId.tsx`, `RegisterFramework.tsx`, `HomeFramework.tsx`, `services.tsx`, `business-ideas.ts`, `agency-services.ts`, `HomeBusinessIdeasScroller.tsx`: these read from `TRACKS` so they pick up automatically; spot-check for any hardcoded `small_business` strings or "Established Small Business" copy and update.
+In both `src/routes/_authenticated/dashboard/index.tsx` and `src/routes/_authenticated/dashboard/workflow.tsx` (and the admin attendee view), replace:
 
-### Database
-No migration. `venture_snapshots.track` is free-text. Legacy `small_business` rows continue working via the `getTrack()` fallback above.
+```ts
+const briefScore = brief.data?.brief?.completeness_score ?? 0;
+```
+
+with a helper that counts non-empty `BRIEF_FIELDS` keys on `brief.data.brief`. Add `src/lib/brief-progress.ts` exporting `countAnsweredBriefFields(brief)` so all surfaces share one source of truth.
+
+### 2. Surface "complete" state on the dashboard card
+
+In `dashboard/index.tsx` `BeforeMode` and `NoCohortMode`, when `briefScore === briefTotal`:
+- Eyebrow: `BRIEF COMPLETE`
+- Title: `Your startup brief is locked in.`
+- Body: `All 10 answers saved. Your facilitator's AI will read from this on workshop day.`
+- Primary CTA: `Review my answers` → `/dashboard/brief?review=1`
+- Secondary (ghost) CTA: `Start over` → opens a confirm dialog (see step 3)
+
+Replace the current `NextActionCard` branch with a small new `BriefStatusCard` component in `src/components/dashboard/BriefStatusCard.tsx` that handles the three states (empty / partial / complete). The existing `BriefCompleteCard` is workshop-day-specific copy, so keep it and add this new card for the pre-work surface.
+
+### 3. Reset / Start over flow
+
+- Add `resetMyBrief()` to `src/lib/brief.functions.ts` that clears all `BRIEF_FIELDS` keys back to empty string for the current user (`UPDATE brief SET ...=''` via the existing typed update). No DB migration needed.
+- `BriefStatusCard` triggers an `AlertDialog` ("This clears all 10 answers and sends you back to question 1. Your generated deliverables stay untouched. Continue?"). On confirm: call `resetMyBrief()`, invalidate the `["my","brief"]` query, navigate to `/dashboard/brief`.
+- Also add a small `Start over` link inside `dashboard/brief.tsx` review mode header so users who land there directly can reset without backing out.
+
+### 4. Fix the brief wizard welcome copy
+
+In `dashboard/brief.tsx`, when `answeredCount === total` and the user lands fresh, default `mode` to `"review"` (already does via `firstEmpty === -1`), but the welcome card in the dashboard previously sent them to question 1. With step 2's CTA pointing at `?review=1`, this is consistent.
 
 ## Out of scope
-- No change to pricing, deliverable count, or Main Street's "Most attendees" treatment.
-- No change to marketing-page hero copy beyond the track list.
-- No new track beyond the replacement.
 
-## Verification after build
-- Open `/dashboard/hub/new`: track grid shows 7 tracks with E-commerce / DTC Brand in slot 2; Main Street still flagged "Most attendees".
-- Pick E-commerce / DTC → submit → confirm snapshot stores `track: "ecommerce_dtc"` and the Hub detail page renders the new label and oneLiner.
-- Hit one document generation to confirm the new `tonePrompt` is injected (spot-check function logs or a generated doc's voice).
+- No per-venture brief — that would be a much larger schema change. If the user wants per-venture briefs later, we'd add a `venture_id` to the `brief` table and a venture-picker on the dashboard; flag for a follow-up.
+- We are not backfilling or maintaining `completeness_score` in the DB; the computed-from-fields approach makes it unnecessary and avoids drift.
+
+## Files touched
+
+- `src/lib/brief-progress.ts` (new)
+- `src/lib/brief.functions.ts` (+ `resetMyBrief`)
+- `src/components/dashboard/BriefStatusCard.tsx` (new)
+- `src/routes/_authenticated/dashboard/index.tsx`
+- `src/routes/_authenticated/dashboard/workflow.tsx`
+- `src/routes/_authenticated/dashboard/brief.tsx` (reset link in review header)
+- `src/routes/_authenticated/_admin/admin.attendees.$userId.workflow.tsx` (use shared counter)

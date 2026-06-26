@@ -1,6 +1,20 @@
-import { Link } from "react-router-dom";
-import { Pencil, ArrowLeft } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Pencil, ArrowLeft, RotateCcw } from "lucide-react";
 import { BRIEF_FIELDS } from "@/lib/workflow";
+import { resetMyBrief } from "@/lib/brief.functions";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Props = {
   values: Record<string, string>;
@@ -9,6 +23,21 @@ type Props = {
 };
 
 export function BriefReview({ values, onEdit, onContinueDiscovery }: Props) {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const reset = useMutation({
+    mutationFn: () => resetMyBrief(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my", "brief"] });
+      toast.success("Brief cleared. Starting fresh.");
+      setConfirmOpen(false);
+      navigate("/dashboard/brief");
+      // force the wizard to reinitialise to question 1
+      setTimeout(() => window.location.reload(), 50);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Reset failed"),
+  });
   return (
     <div className="mt-10 space-y-5">
       <div>
@@ -65,7 +94,35 @@ export function BriefReview({ values, onEdit, onContinueDiscovery }: Props) {
             Add background & market →
           </button>
         )}
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          className="ml-auto inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive"
+        >
+          <RotateCcw className="h-3.5 w-3.5" /> Start over
+        </button>
       </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear all answers?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This wipes every answer and sends you back to question 1. Your generated
+              deliverables and ventures stay untouched. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep my answers</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); reset.mutate(); }}
+              disabled={reset.isPending}
+            >
+              {reset.isPending ? "Clearing…" : "Yes, start over"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

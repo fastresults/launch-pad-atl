@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { } from 'react-router-dom';
 import { adminGetUserWorkflow, adminRunForUser } from "@/lib/userPipeline.functions";
 import { STAGES } from "@/lib/workflow";
+import { countAnsweredBriefFields, BRIEF_TOTAL } from "@/lib/brief-progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Circle, Lock, Loader2, Play } from "lucide-react";
@@ -34,7 +35,7 @@ export default function AdminAttendeeWorkflow() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Bulk run failed"),
   });
 
-  const briefScore = data?.brief?.completeness_score ?? 0;
+  const briefScore = countAnsweredBriefFields(data?.brief);
 
   return (
     <div className="space-y-8">

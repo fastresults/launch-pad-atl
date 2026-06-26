@@ -14,6 +14,14 @@ export async function updateBriefField(data: { key: BriefKey; value: string }) {
   const { error } = await supabase.from("attendee_business_brief").upsert({ user_id: userId, [data.key]: data.value }, { onConflict: "user_id" });
   if (error) throw new Error(error.message);
 }
+export async function resetMyBrief() {
+  const userId = await uid();
+  const { BRIEF_FIELD_KEYS } = await import("@/lib/brief-progress");
+  const wipe: Record<string, string> = {};
+  for (const k of BRIEF_FIELD_KEYS) wipe[k] = "";
+  const { error } = await supabase.from("attendee_business_brief").upsert({ user_id: userId, ...wipe, completeness_score: 0 }, { onConflict: "user_id" });
+  if (error) throw new Error(error.message);
+}
 export async function adminGetBrief(data: { userId: string }) {
   const { data: row } = await supabase.from("attendee_business_brief").select("*").eq("user_id", data.userId).maybeSingle();
   return row ?? {};
