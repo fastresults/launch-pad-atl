@@ -92,7 +92,9 @@ export const TRACK_BY_KEY: Record<TrackKey, Track> = TRACKS.reduce(
 
 export function getTrack(key: string | null | undefined): Track | null {
   if (!key) return null;
-  return (TRACK_BY_KEY as Record<string, Track>)[key] ?? null;
+  // Legacy alias: old snapshots may still have `small_business` stored.
+  const normalized = key === "small_business" ? "ecommerce_dtc" : key;
+  return (TRACK_BY_KEY as Record<string, Track>)[normalized] ?? null;
 }
 
 // ===== Test-fill seeds — used by the dev "🧪 Fill test concept" button =====
