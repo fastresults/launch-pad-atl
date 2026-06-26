@@ -50,6 +50,33 @@ export default function WorkflowPage() {
 
   const items: WorkflowItem[] = (data?.items ?? []).filter((i: WorkflowItem) => i.stage_n >= 1);
   const totalDeliverables = items.length;
+  const triggerable = items.filter((i) => i.user_can_trigger !== false);
+  const generatedCount = triggerable.filter((i) => i.generated).length;
+  const remainingCount = triggerable.length - generatedCount;
+
+  // Track bulk-run progress: lock in a snapshot when the user clicks Run remaining,
+  // then watch generatedCount climb toward the target.
+  const justStarted = useRef(false);
+  useEffect(() => {
+    if (runAll.isSuccess && !justStarted.current && triggerable.length > 0) {
+      justStarted.current = true;
+      setBulk({ startCount: generatedCount, target: triggerable.length });
+    }
+  }, [runAll.isSuccess, triggerable.length, generatedCount]);
+
+  // Clear once everything is done or no active queued/running runs remain.
+  const activeRuns = (recent ?? []).filter((r: any) => r.status === "queued" || r.status === "running").length;
+  useEffect(() => {
+    if (!bulk) return;
+    if (generatedCount >= bulk.target || (runAll.isIdle && activeRuns === 0 && !runAll.isPending && generatedCount > bulk.startCount)) {
+      const t = setTimeout(() => { setBulk(null); justStarted.current = false; }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [bulk, generatedCount, activeRuns, runAll.isIdle, runAll.isPending]);
+
+  const bulkDone = bulk ? generatedCount - bulk.startCount : 0;
+  const bulkTotal = bulk ? bulk.target - bulk.startCount : 0;
+  const bulkPct = bulk && bulkTotal > 0 ? Math.min(100, Math.round((bulkDone / bulkTotal) * 100)) : 0;
 
   // Group items by stage, preserving DB sort order
   const byStage = new Map<number, { label: string; bonus: boolean; items: WorkflowItem[] }>();
@@ -64,6 +91,8 @@ export default function WorkflowPage() {
   }
   const stages = Array.from(byStage.entries()).sort((a, b) => a[0] - b[0]);
   const totalCategories = stages.length;
+  const bulkActive = !!bulk || runAll.isPending || activeRuns > 0;
+  const currentlyRunning = (recent ?? []).find((r: any) => r.status === "running") as any;
 
   return (
     <div className="space-y-8">
