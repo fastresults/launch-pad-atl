@@ -84,13 +84,29 @@ Deno.serve(async (req) => {
 
     await updateProgress(supabase, snapshotId, "research", 40, "Analyzing the concept");
 
-    const userPrompt = [
+    const sm = snap.source_materials ?? null;
+    const PER_SOURCE_CAP = 12_000;
+    const cap = (s: unknown) => (typeof s === "string" ? s.slice(0, PER_SOURCE_CAP) : "");
+    const docBlocks: string[] = Array.isArray(sm?.documents)
+      ? sm.documents.map((d: any, i: number) => `--- DOCUMENT ${i + 1}: ${d.filename ?? "document"} ---\n${cap(d.text)}`)
+      : [];
+    const urlBlocks: string[] = Array.isArray(sm?.urls)
+      ? sm.urls.map((u: any, i: number) => `--- URL ${i + 1}: ${u.url ?? ""}${u.title ? ` (${u.title})` : ""} ---\n${cap(u.text)}`)
+      : [];
+
+    let userPrompt = [
       `Business concept:\n${snap.business_concept ?? ""}`,
       snap.company_name ? `Stated company name: ${snap.company_name}` : "",
       snap.website_url ? `Reference URL: ${snap.website_url}` : "",
       snap.differentiation_statement ? `Differentiation: ${snap.differentiation_statement}` : "",
       scraped ? `Scraped content:\n${scraped}` : "",
+      docBlocks.length ? `Founder-uploaded documents:\n${docBlocks.join("\n\n")}` : "",
+      urlBlocks.length ? `Founder-supplied URLs (scraped):\n${urlBlocks.join("\n\n")}` : "",
     ].filter(Boolean).join("\n\n");
+
+    // Final overall safety cap
+    if (userPrompt.length > 60_000) userPrompt = userPrompt.slice(0, 60_000) + "\n\n[truncated]";
+
 
     await updateProgress(supabase, snapshotId, "extraction", 65, "Generating structured brief");
 
