@@ -208,12 +208,9 @@ export default function WorkflowPage() {
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {group.items.map((d) => {
-              const comingSoon = d.user_can_trigger === false && !d.generated;
-              const Icon = d.generated ? CheckCircle2 : comingSoon ? Lock : d.deps_met ? Circle : Lock;
+              const Icon = d.generated ? CheckCircle2 : d.deps_met ? Circle : Lock;
               const tone = d.generated
                 ? "text-status-success"
-                : comingSoon
-                ? "text-muted-foreground"
                 : d.deps_met
                 ? "text-foreground"
                 : "text-muted-foreground";
@@ -228,8 +225,7 @@ export default function WorkflowPage() {
                       {d.description && <p className="mt-1 text-xs text-muted-foreground">{d.description}</p>}
                       <div className="mt-2 flex flex-wrap gap-1">
                         {d.generated && <Badge variant="secondary" className="text-xs">Generated</Badge>}
-                        {comingSoon && <Badge variant="outline" className="text-xs">Coming soon</Badge>}
-                        {!comingSoon && !d.deps_met && <Badge variant="outline" className="text-xs">Waiting on upstream</Badge>}
+                        {!d.generated && !d.deps_met && <Badge variant="outline" className="text-xs">Waiting on upstream</Badge>}
                       </div>
                     </div>
                   </div>
@@ -237,13 +233,13 @@ export default function WorkflowPage() {
                     <Button
                       size="sm"
                       variant={d.generated ? "outline" : "default"}
-                      disabled={!briefReady || runOne.isPending || comingSoon}
+                      disabled={!briefReady || runOne.isPending}
                       onClick={() => runOne.mutate(d.key)}
-                      title={comingSoon ? "Prompt for this deliverable is on its way" : undefined}
+                      title={!d.deps_met ? "We'll run upstream deliverables first, then this one." : undefined}
                     >
                       {runOne.isPending && runOne.variables === d.key ? (
                         <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Running…</>
-                      ) : d.generated ? "Regenerate" : comingSoon ? "Coming soon" : "Generate"}
+                      ) : d.generated ? "Regenerate" : "Generate"}
                     </Button>
                     {d.generated && (
                       <Button asChild size="sm" variant="ghost">
@@ -254,6 +250,7 @@ export default function WorkflowPage() {
                 </div>
               );
             })}
+
           </div>
         </section>
       ))}
