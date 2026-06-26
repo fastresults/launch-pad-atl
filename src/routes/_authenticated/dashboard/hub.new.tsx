@@ -127,6 +127,9 @@ function Inner() {
   const [businessConcept, setBusinessConcept] = useState(prefill?.business_concept ?? "");
   const [diff, setDiff] = useState(prefill?.differentiation_statement ?? "");
   const [files, setFiles] = useState<DroppedFile[]>([]);
+  const [scrapedUrls, setScrapedUrls] = useState<ScrapedUrl[]>([]);
+  const [urlInput, setUrlInput] = useState("");
+  const [scrapingUrl, setScrapingUrl] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [processed, setProcessed] = useState(false);
