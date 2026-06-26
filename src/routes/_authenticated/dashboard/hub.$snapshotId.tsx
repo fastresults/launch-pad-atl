@@ -237,16 +237,6 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
     setForm(buildReviewForm(snapshot));
   }, [snapshot.id, snapshot.updated_at]);
 
-  /*
-    const ex = snapshot.extracted_data ?? {};
-    const out: any = {};
-    for (const s of REVIEW_SECTIONS) {
-      out[s.key] = {};
-      for (const f of s.fields) out[s.key][f.key] = ex?.[s.key]?.[f.key] ?? "";
-    }
-    return out;
-  */
-
   // Debounced auto-save: kicks in 800ms after the last edit. Replaces the old "Save draft" button.
   useEffect(() => {
     if (!dirtyRef.current) return;
