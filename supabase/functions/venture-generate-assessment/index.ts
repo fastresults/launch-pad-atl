@@ -116,95 +116,51 @@ After the markdown, on a final line, output exactly:
 QUALITY_SCORE: <0-100 integer reflecting analytical rigor, specificity, and partner-readiness>`;
 
 function buildContextBundle(
-  snap: any,
+  ctx: any,
   allDocs: any[],
   type: any,
   documentType: string,
 ): { sections: string[]; provenance: string[] } {
   const deps: string[] = type.dependencies ?? [];
   const depSet = new Set(deps);
-  const provenance: string[] = ["venture brief"];
-
-  const founderCard = {
-    founder: { name: snap.founder_name, email: snap.founder_email, phone: snap.founder_phone },
-    location: { city: snap.city, region: snap.region, country: snap.country },
-    market_scope: snap.market_scope,
-    industry: snap.industry,
-    sub_industry: snap.sub_industry,
-    track: snap.track,
-    company_name: snap.company_name,
-    website_url: snap.website_url,
-  };
+  const provenance: string[] = ["venture preamble"];
 
   const sections: string[] = [];
-  sections.push(`# Document under review: ${type.name} (type: ${documentType})\nDescription: ${type.description}`);
+  sections.push(`# Document under review: ${type.name ?? documentType} (type: ${documentType})\nDescription: ${type.description ?? ""}`);
 
-  if (snap.concept_summary) {
-    sections.push(`## North-star concept\n${snap.concept_summary}\nValue proposition: ${snap.value_proposition ?? ""}`);
-  }
-  sections.push(`## Founder & market\n${JSON.stringify(founderCard, null, 2)}`);
-  sections.push(`## Venture brief (extracted_data)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`);
+  // 1. Compact authoritative preamble (replaces founder card + raw brief JSON)
+  sections.push(compactPreamble(ctx));
 
-  if (snap.research_brief) {
-    provenance.push("research brief");
-    sections.push(
-      `## Research brief (background evidence — synthesize as analyst judgment, NO citations in output)\n${JSON.stringify(snap.research_brief, null, 2)}`,
-    );
+  // 2. Snapshot brain — pick the slice relevant to THIS document
+  const slice = pickBrainSlice(ctx.brain, type.context_keys);
+  if (slice && Object.keys(slice).length) {
+    provenance.push("snapshot brain");
+    sections.push(`## Snapshot brain (relevant facts only)\n\`\`\`json\n${JSON.stringify(slice, null, 2)}\n\`\`\``);
   }
 
-  // Additional research-bearing fields on the snapshot
-  const extraResearchKeys = [
-    "enrichment_data",
-    "enrichment_summary",
-    "deep_research",
-    "market_research",
-    "competitor_research",
-  ];
-  const extraResearch: Record<string, any> = {};
-  for (const k of extraResearchKeys) {
-    if (snap[k] && (typeof snap[k] !== "object" || Object.keys(snap[k]).length)) {
-      extraResearch[k] = snap[k];
-    }
-  }
-  if (Object.keys(extraResearch).length) {
-    provenance.push("enrichment");
-    sections.push(`## Additional research / enrichment\n${JSON.stringify(extraResearch, null, 2)}`);
-  }
-
-  // Executive Summary (when it isn't the doc under review)
+  // 3. Executive Summary (when it isn't the doc under review) — always in full
   const execDoc = allDocs.find((d) => d.document_type === EXEC_SUMMARY_TYPE && d.document_type !== documentType);
   if (execDoc?.content) {
     provenance.push(EXEC_SUMMARY_TYPE);
-    sections.push(
-      `## EXEC SUMMARY — north-star narrative this assessment MUST align with\n${execDoc.content}`,
-    );
+    sections.push(`## EXEC SUMMARY — north-star narrative this assessment MUST align with\n${execDoc.content}`);
   }
 
-  // All other completed sibling docs (excluding the one under review and exec summary already shown)
-  const siblings = allDocs.filter(
-    (d) =>
-      d.content &&
-      d.document_type !== documentType &&
-      d.document_type !== EXEC_SUMMARY_TYPE,
+  // 4. Primary upstream deps — distilled summaries instead of full markdown
+  const primaryDeps = allDocs.filter(
+    (d) => d.content && d.document_type !== documentType && d.document_type !== EXEC_SUMMARY_TYPE && depSet.has(d.document_type),
   );
-  if (siblings.length) {
-    // Order: primary upstream deps first, then everything else
-    siblings.sort((a, b) => {
-      const aDep = depSet.has(a.document_type) ? 0 : 1;
-      const bDep = depSet.has(b.document_type) ? 0 : 1;
-      return aDep - bDep || a.document_type.localeCompare(b.document_type);
-    });
-    const blocks: string[] = [];
-    for (const d of siblings) {
-      const tag = depSet.has(d.document_type) ? "PRIMARY UPSTREAM" : "context";
-      const intake = d.intake_answers && Object.keys(d.intake_answers).length
-        ? `\n_intake answers:_ ${JSON.stringify(d.intake_answers)}\n`
-        : "";
-      const body = smartExcerpt(d.content, 1500);
-      blocks.push(`### ${d.document_type}  [${tag}]${intake}\n${body}`);
-      provenance.push(d.document_type);
-    }
-    sections.push(`## All completed deliverables for this venture\n${blocks.join("\n\n---\n\n")}`);
+  if (primaryDeps.length) {
+    provenance.push(...primaryDeps.map((d) => d.document_type));
+    sections.push(`## Primary upstream dependencies (distilled)\n${distillDeps(primaryDeps)}`);
+  }
+
+  // 5. Other completed siblings — distilled outline
+  const otherDocs = allDocs.filter(
+    (d) => d.content && d.document_type !== documentType && d.document_type !== EXEC_SUMMARY_TYPE && !depSet.has(d.document_type),
+  );
+  if (otherDocs.length) {
+    provenance.push(...otherDocs.map((d) => d.document_type));
+    sections.push(`## Other completed deliverables (outline only)\n${distillDeps(otherDocs)}`);
   }
 
   return { sections, provenance };
