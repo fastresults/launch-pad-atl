@@ -1,48 +1,24 @@
-# Why nothing landed on Profile & Intake
+## Why the page is empty
 
-Two real bugs, plus one UX gap. Your data is sitting in the brief tables — the sync just isn't moving it.
+`/dashboard/deliverables` reads from the legacy `attendee_deliverables` table (0 rows). All your real generated work lives in `venture_documents` (33 rows across your venture snapshot) — produced by the Hub flow (Concept Studio → Generate document → Deep assessment). The two systems were never wired together, so this page has always been blank for Hub users.
 
-## Root causes
+## Fix: point Deliverables at the real source
 
-1. **Schema mismatch (silent miss).** `brief-sync-profile.ts` reads `founder.full_name`, `founder.headline`, `founder.background` from `attendee_founder_profile` — but that table has **no such columns**. Its real fields are `right_person_reason`, `unfair_advantage`, `linkedin_url`, `raw_text`, and an `extracted` JSONB. So every "founder-derived" candidate is `undefined` and nothing gets written for them. It also never copies your `right_person_reason` / `unfair_advantage` answers anywhere.
+Rewrite `src/routes/_authenticated/dashboard/deliverables.tsx` to render `venture_documents`, grouped by venture snapshot.
 
-2. **Sync errors are swallowed.** Both `FounderBlock.tsx` and `MarketBlock.tsx` call sync as fire-and-forget with `.catch(() => {})`. If anything throws (mapping bug, network blip), you get no toast, no log, no DB write. The `attendee_profiles` row for your account still shows `updated_at = 2026-05-29` — the sync never reached the upsert this session.
+### What the user will see
+- Header: "Your deliverables" + count (e.g. "33 documents across 1 venture").
+- For each venture snapshot (newest first): venture name + one-line concept, then a grid of document cards.
+- Each card: category chip (from `framework-deliverables.ts`), title, status (Draft / Ready / Failed), updated date, and buttons: **Open** (launches the existing `DocumentViewer` modal with rewrite / deep assessment / export / save-to-files already built in) and **Open venture** (links to `/dashboard/hub/$snapshotId`).
+- Empty state only when the user truly has zero venture documents — with a CTA "Start a venture in the Hub" → `/dashboard/hub`.
+- Filter chips: All / Ready / Draft, plus a venture selector when there's more than one snapshot.
 
-3. **Mark-complete sync only fires at the very end.** The "merge into profile, set `intake_completed_at`" path only runs when you exit the **market checkpoint** into the complete screen. If you bounce to Profile mid-flow, nothing has been promoted yet beyond whatever the per-block syncs were supposed to do (and per #1/#2, they didn't).
+### Technical details
+- New helper in `src/lib/foundersHub.functions.ts` (or a new `deliverables.functions.ts`): `listMyVentureDocuments()` — joins `venture_documents` with `venture_snapshots` (name, concept) scoped to `auth.uid()`, ordered by `updated_at desc`.
+- Reuse existing `DocumentViewer` component — it already handles rewrite, deep assessment, exports, and save-to-My-Files, so no duplication.
+- Keep `listMyDeliverables` import out of this page. Leave the legacy function intact (still used by admin pipeline views) but stop surfacing the empty legacy table to founders.
+- Use `framework-deliverables.ts` to resolve category label/color from `document_type_key`.
 
-## Fix plan
-
-### 1. Rewrite `src/lib/brief-sync-profile.ts` mapping
-- Pull founder values from the actual schema:
-  - `headline` ← `founder.extracted.headline` || `firstSentence(brief.one_line_pitch)`
-  - `background` ← `founder.raw_text` || `founder.extracted.summary` || `brief.origin_story`
-  - `skills` ← `founder.extracted.skills` (array) when present and `profile.skills` is empty
-  - `full_name` ← `founder.extracted.full_name` || `profiles.display_name`
-- Append `right_person_reason` and `unfair_advantage` into `value_prop` (or a new line in `background`) so those answers actually surface on the Profile page.
-- Keep merge-not-overwrite semantics (only fill empty fields).
-- Improve `archetypeToStage`: "Main-street brick-and-mortar", "Service business", "Creator/Personal brand", "E-commerce/DTC" → default `idea` for pre-launch unless a "launched/revenue" archetype is chosen.
-- Return `{ fieldsFilled, fieldsAttempted, skipped }` so the UI can show real feedback.
-
-### 2. Make per-block sync reliable and visible
-In `FounderBlock.tsx` and `MarketBlock.tsx`:
-- Replace the fire-and-forget dynamic import with a top-level `import` and an `await` inside the save handler (still wrapped in try/catch so save success isn't blocked).
-- On failure, `console.error` + `toast.error("Couldn't sync to Profile — try the Pull from my brief button.")`.
-- On success with `fieldsFilled > 0`, optional small toast.
-
-### 3. Auto-sync on the Profile page load
-In `src/routes/_authenticated/dashboard/profile.tsx`:
-- On first mount, if `attendee_profiles` has key fields empty (`headline`, `background`, `industry`, `problem_solved`, `value_prop`, `target_market`, `business_model`, `primary_goal`) AND brief tables have data, call `syncProfileFromBrief()` automatically and refetch.
-- Keeps the existing "Pull from my brief" button for manual re-sync.
-
-### 4. Backfill your current row
-After the code fix, the next page load (or one click of "Pull from my brief") will populate your Profile from the brief data you've already entered — no DB migration needed since the sync is idempotent and merge-only.
-
-## Files touched
-- `src/lib/brief-sync-profile.ts` — mapping rewrite
-- `src/components/brief/FounderBlock.tsx` — awaited sync + error surfacing
-- `src/components/brief/MarketBlock.tsx` — same
-- `src/routes/_authenticated/dashboard/profile.tsx` — auto-sync on mount when profile is sparse
-
-## Out of scope
-- No schema changes to `attendee_founder_profile` or `attendee_profiles`.
-- No changes to the brief workflow steps or checkpoint flow.
+### Out of scope
+- No DB migration, no backfill — `attendee_deliverables` stays as-is for the admin/review pipeline.
+- No changes to Hub or generation logic.
