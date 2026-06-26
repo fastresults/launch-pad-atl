@@ -29,6 +29,7 @@ import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functi
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
+import { getSignedStorageUrl } from "@/lib/storageSignedUrl";
 
 function titleCase(s: string) {
   return (s || "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -284,6 +285,9 @@ export function DocumentViewer({
   const [heroUrl, setHeroUrl] = useState<string | null>(null);
   const [heroPath, setHeroPath] = useState<string | null>(doc?.hero_image_path ?? null);
   const [heroLoading, setHeroLoading] = useState(false);
+  const [heroSigning, setHeroSigning] = useState(false);
+  const [heroError, setHeroError] = useState<string | null>(null);
+  const [heroRetryNonce, setHeroRetryNonce] = useState(0);
 
   // Deep assessment (on-demand McKinsey-grade analysis)
   const [assessment, setAssessment] = useState<string | null>(doc?.deep_assessment ?? null);
@@ -371,22 +375,35 @@ export function DocumentViewer({
   useEffect(() => {
     setHeroPath(doc?.hero_image_path ?? null);
     setHeroUrl(null);
+    setHeroError(null);
   }, [doc?.snapshot_id, doc?.document_type, doc?.hero_image_path]);
 
   // Mint a signed URL when we have a path
   useEffect(() => {
     let cancelled = false;
-    if (!heroPath) return;
+    if (!heroPath) {
+      setHeroSigning(false);
+      return;
+    }
+    setHeroSigning(true);
+    setHeroError(null);
     (async () => {
-      const { data, error } = await supabase.storage
-        .from("venture-doc-images")
-        .createSignedUrl(heroPath, 3600);
-      if (!cancelled && !error && data?.signedUrl) setHeroUrl(data.signedUrl);
+      try {
+        const url = await getSignedStorageUrl("venture-doc-images", heroPath, 3600);
+        if (!cancelled) setHeroUrl(url);
+      } catch (e) {
+        if (!cancelled) {
+          setHeroUrl(null);
+          setHeroError(e instanceof Error ? e.message : "Saved visual could not be loaded");
+        }
+      } finally {
+        if (!cancelled) setHeroSigning(false);
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [heroPath]);
+  }, [heroPath, heroRetryNonce]);
 
   // Lazy hero image: auto-generate only once per (snapshot, document) when
   // there's no image AND no prior attempt. Status === 'failed' shows a Retry
@@ -410,6 +427,7 @@ export function DocumentViewer({
   const generateHero = async (force = false) => {
     if (!doc?.snapshot_id || !doc?.document_type) return;
     setHeroLoading(true);
+    setHeroError(null);
     try {
       const { data, error } = await supabase.functions.invoke("venture-document-image", {
         body: { snapshotId: doc.snapshot_id, documentType: doc.document_type, force },
@@ -419,9 +437,13 @@ export function DocumentViewer({
         setHeroPath(data.path);
         setHeroUrl(null); // force re-sign
         toast.success(force ? "New visual generated" : "Visual generated");
+      } else if (data?.skipped && data?.reason === "in_flight") {
+        setHeroError("Visual is already being generated. Reopen this document in a moment.");
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Image generation failed");
+      const msg = e instanceof Error ? e.message : "Image generation failed";
+      setHeroError(msg);
+      toast.error(msg);
     } finally {
       setHeroLoading(false);
     }
@@ -592,22 +614,40 @@ export function DocumentViewer({
           <div className="mx-auto mt-4 max-w-[72ch] px-6">
             <div className="group relative overflow-hidden rounded-lg ring-1 ring-white/10">
               <AspectRatio ratio={16 / 9}>
-                {heroUrl ? (
+                {heroUrl && !heroError ? (
                   <img
                     src={heroUrl}
                     alt={title}
                     loading="eager"
                     className="h-full w-full object-cover"
+                    onError={() => {
+                      setHeroUrl(null);
+                      setHeroError("Saved visual file could not be displayed.");
+                    }}
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-accent/20">
-                    {heroLoading ? (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-accent/20 p-6 text-center">
+                    {heroLoading || heroSigning ? (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Generating visual…
+                        {heroLoading ? "Generating visual…" : "Loading saved visual…"}
                       </div>
-                    ) : heroPath ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    ) : heroError ? (
+                      <div className="max-w-sm space-y-3">
+                        <p className="text-sm font-medium text-foreground">Visual unavailable</p>
+                        <p className="text-xs text-muted-foreground">{heroError}</p>
+                        <div className="flex flex-wrap justify-center gap-2">
+                          {heroPath && (
+                            <Button size="sm" variant="secondary" onClick={() => setHeroRetryNonce((n) => n + 1)}>
+                              Retry load
+                            </Button>
+                          )}
+                          <Button size="sm" onClick={() => generateHero(true)} disabled={heroLoading}>
+                            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                            Regenerate visual
+                          </Button>
+                        </div>
+                      </div>
                     ) : (
                       <Button
                         size="sm"

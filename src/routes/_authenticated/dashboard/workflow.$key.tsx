@@ -15,6 +15,7 @@ import { Loader2, Sparkles, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { RichMarkdown } from "@/components/markdown/RichMarkdown";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { getSignedStorageUrl } from "@/lib/storageSignedUrl";
 
 
 
@@ -91,13 +92,21 @@ export default function WorkflowDetail() {
   // Hero image — signed URL + lazy generate
   const [heroUrl, setHeroUrl] = useState<string | null>(null);
   const [heroLoading, setHeroLoading] = useState(false);
+  const [heroError, setHeroError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      if (!heroPath) { setHeroUrl(null); return; }
-      const { data } = await supabase.storage.from("venture-doc-images").createSignedUrl(heroPath, 3600);
-      if (alive && data?.signedUrl) setHeroUrl(data.signedUrl);
+      if (!heroPath) { setHeroUrl(null); setHeroError(null); return; }
+      try {
+        const url = await getSignedStorageUrl("venture-doc-images", heroPath, 3600);
+        if (alive) { setHeroUrl(url); setHeroError(null); }
+      } catch (e) {
+        if (alive) {
+          setHeroUrl(null);
+          setHeroError(e instanceof Error ? e.message : "Saved image could not be loaded");
+        }
+      }
     })();
     return () => { alive = false; };
   }, [heroPath]);
@@ -105,18 +114,23 @@ export default function WorkflowDetail() {
   const generateHero = async (force = false) => {
     if (!hasContent || !key) return;
     setHeroLoading(true);
+    setHeroError(null);
     try {
       const { data, error } = await supabase.functions.invoke("attendee-deliverable-image", {
         body: { deliverableKey: key, force },
       });
       if (error) throw error;
       if (data?.path) {
-        const { data: signed } = await supabase.storage.from("venture-doc-images").createSignedUrl(data.path, 3600);
-        if (signed?.signedUrl) setHeroUrl(signed.signedUrl);
+        const signedUrl = await getSignedStorageUrl("venture-doc-images", data.path, 3600);
+        setHeroUrl(signedUrl);
         refetch();
+      } else if (data?.skipped && data?.reason === "in_flight") {
+        setHeroError("Image generation is already running. Refresh this page in a moment.");
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Image generation failed");
+      const msg = e instanceof Error ? e.message : "Image generation failed";
+      setHeroError(msg);
+      toast.error(msg);
     } finally {
       setHeroLoading(false);
     }
@@ -194,11 +208,29 @@ export default function WorkflowDetail() {
 
       {deliverable && hasContent && (
         <article className="space-y-5 rounded-2xl border border-border/60 bg-card p-6">
-          {(heroUrl || heroLoading) && (
+          {(heroUrl || heroLoading || heroError) && (
             <div className="overflow-hidden rounded-xl border border-border/60 bg-muted/30">
               <AspectRatio ratio={16 / 9}>
-                {heroUrl ? (
-                  <img src={heroUrl} alt={content.title ?? wf?.label ?? "Document hero"} className="h-full w-full object-cover" />
+                {heroUrl && !heroError ? (
+                  <img
+                    src={heroUrl}
+                    alt={content.title ?? wf?.label ?? "Document hero"}
+                    className="h-full w-full object-cover"
+                    onError={() => {
+                      setHeroUrl(null);
+                      setHeroError("Saved image file could not be displayed.");
+                    }}
+                  />
+                ) : heroError ? (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-6 text-center text-xs text-muted-foreground">
+                    <div>
+                      <div className="text-sm font-medium text-foreground">Image unavailable</div>
+                      <div className="mt-1 max-w-sm">{heroError}</div>
+                    </div>
+                    <Button size="sm" onClick={() => generateHero(true)} disabled={heroLoading}>
+                      <ImageIcon className="mr-2 h-4 w-4" /> Regenerate image
+                    </Button>
+                  </div>
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Painting hero image…
