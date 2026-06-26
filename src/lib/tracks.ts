@@ -3,7 +3,7 @@
 
 export type TrackKey =
   | "lifestyle"
-  | "small_business"
+  | "ecommerce_dtc"
   | "scalable_tech"
   | "marketplace"
   | "deep_tech"
