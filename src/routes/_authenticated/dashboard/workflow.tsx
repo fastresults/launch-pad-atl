@@ -230,18 +230,50 @@ export default function WorkflowPage() {
         </div>
       )}
 
-      {stages.map(([n, group]) => (
+      {stages.map(([n, group]) => {
+        const deck = deckState.get(n);
+        return (
         <section key={n} className="space-y-3">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">Category {n}</div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold">{group.label}</h2>
-              {group.bonus && (
-                <Badge variant="secondary" className="gap-1 text-[10px] uppercase tracking-wide">
-                  <Sparkles className="h-3 w-3" /> Bonus
-                </Badge>
-              )}
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Category {n}</div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-semibold">{group.label}</h2>
+                {group.bonus && (
+                  <Badge variant="secondary" className="gap-1 text-[10px] uppercase tracking-wide">
+                    <Sparkles className="h-3 w-3" /> Bonus
+                  </Badge>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Facilitator: walk the room through this deck before generating.
+              </p>
             </div>
+            {deck && (
+              deck.unlocked && deck.available ? (
+                <Button asChild size="sm" variant="outline">
+                  <Link to={`/workshop/${deck.slug}`}>
+                    <Presentation className="mr-1 h-4 w-4" />
+                    Open facilitator deck
+                  </Link>
+                </Button>
+              ) : !deck.available ? (
+                <Button size="sm" variant="outline" disabled title="Deck coming soon">
+                  <Lock className="mr-1 h-4 w-4" />
+                  Deck coming soon
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled
+                  title={`Deck unlocks when ${deck.prevLabel ?? "the previous category"} is complete`}
+                >
+                  <Lock className="mr-1 h-4 w-4" />
+                  Unlocks after {deck.prevLabel ?? "previous category"}
+                </Button>
+              )
+            )}
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {group.items.map((d) => {
