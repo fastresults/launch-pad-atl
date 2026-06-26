@@ -287,6 +287,7 @@ export function DocumentViewer({
   const [heroLoading, setHeroLoading] = useState(false);
   const [heroSigning, setHeroSigning] = useState(false);
   const [heroError, setHeroError] = useState<string | null>(null);
+  const [heroRetryNonce, setHeroRetryNonce] = useState(0);
 
   // Deep assessment (on-demand McKinsey-grade analysis)
   const [assessment, setAssessment] = useState<string | null>(doc?.deep_assessment ?? null);
@@ -402,7 +403,7 @@ export function DocumentViewer({
     return () => {
       cancelled = true;
     };
-  }, [heroPath]);
+  }, [heroPath, heroRetryNonce]);
 
   // Lazy hero image: auto-generate only once per (snapshot, document) when
   // there's no image AND no prior attempt. Status === 'failed' shows a Retry
@@ -637,7 +638,7 @@ export function DocumentViewer({
                         <p className="text-xs text-muted-foreground">{heroError}</p>
                         <div className="flex flex-wrap justify-center gap-2">
                           {heroPath && (
-                            <Button size="sm" variant="secondary" onClick={() => setHeroPath(`${heroPath}?retry=${Date.now()}`)}>
+                            <Button size="sm" variant="secondary" onClick={() => setHeroRetryNonce((n) => n + 1)}>
                               Retry load
                             </Button>
                           )}
