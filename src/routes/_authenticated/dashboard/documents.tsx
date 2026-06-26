@@ -42,6 +42,9 @@ export default function DocumentsPage() {
   const [kind, setKind] = useState<(typeof KINDS)[number]["key"]>("other");
   const [uploading, setUploading] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
+  const [richDoc, setRichDoc] = useState<any | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<any | null>(null);
+  const [openingId, setOpeningId] = useState<string | null>(null);
 
   const { data } = useQuery({ queryKey: ["my", "documents"], queryFn: () => listMyDocuments() });
 
