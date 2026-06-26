@@ -11,7 +11,7 @@ export type StageDeck = {
   nextSlug?: string;
 };
 
-const slugify = (s: string) => s.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+export const slugify = (s: string) => s.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 // Build slug map from FRAMEWORK_STAGES so adding new decks is just authoring slides.
 const STAGE_SLUGS = FRAMEWORK_STAGES.map((s) => slugify(s.name));
