@@ -5,6 +5,14 @@
 // Persists onto venture_snapshots.roadmap_*.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  compactPreamble,
+  loadVentureContext,
+  pickBrainSlice,
+  type VentureContext,
+} from "../_shared/venture-context.ts";
+import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
+import { stripCitations } from "../_shared/deliverable-prompts.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
