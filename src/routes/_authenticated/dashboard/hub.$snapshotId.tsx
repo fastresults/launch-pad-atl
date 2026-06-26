@@ -211,17 +211,19 @@ const SECTIONS = REVIEW_SECTIONS.map((s) => ({
   fields: s.fields.map((f) => ({ key: f.key, label: f.label, multiline: f.multiline })),
 }));
 
+function buildReviewForm(snapshot: any): Record<string, Record<string, string>> {
+  const ex = snapshot.extracted_data ?? {};
+  const out: any = {};
+  for (const s of REVIEW_SECTIONS) {
+    out[s.key] = {};
+    for (const f of s.fields) out[s.key][f.key] = ex?.[s.key]?.[f.key] ?? "";
+  }
+  return out;
+}
+
 function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void }) {
   // Flat form state keyed by section→field; mirrors the persisted extracted_data shape.
-  const [form, setForm] = useState<Record<string, Record<string, string>>>(() => {
-    const ex = snapshot.extracted_data ?? {};
-    const out: any = {};
-    for (const s of REVIEW_SECTIONS) {
-      out[s.key] = {};
-      for (const f of s.fields) out[s.key][f.key] = ex?.[s.key]?.[f.key] ?? "";
-    }
-    return out;
-  });
+  const [form, setForm] = useState<Record<string, Record<string, string>>>(() => buildReviewForm(snapshot));
 
   const [active, setActive] = useState<SubStepKey>("setup");
   const [savedAt, setSavedAt] = useState<Date | null>(null);
@@ -229,6 +231,21 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
   const dirtyRef = useRef(false);
   const formRef = useRef(form);
   formRef.current = form;
+
+  useEffect(() => {
+    if (dirtyRef.current) return;
+    setForm(buildReviewForm(snapshot));
+  }, [snapshot.id, snapshot.updated_at]);
+
+  /*
+    const ex = snapshot.extracted_data ?? {};
+    const out: any = {};
+    for (const s of REVIEW_SECTIONS) {
+      out[s.key] = {};
+      for (const f of s.fields) out[s.key][f.key] = ex?.[s.key]?.[f.key] ?? "";
+    }
+    return out;
+  */
 
   // Debounced auto-save: kicks in 800ms after the last edit. Replaces the old "Save draft" button.
   useEffect(() => {
