@@ -65,12 +65,26 @@ export default function WorkflowDetail() {
   };
 
   const run = useMutation({
-    mutationFn: () => runMyDeliverable({ data: { key, runUpstream: true } }),
+    mutationFn: (vars?: { feedback?: string; tags?: string[] }) =>
+      runMyDeliverable({ data: { key, runUpstream: true, feedback: vars?.feedback, tags: vars?.tags } }),
     onSuccess: () => { toast.success("Generation complete"); refetch(); qc.invalidateQueries({ queryKey: ["my"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Run failed"),
   });
 
+  const [rewriteTarget, setRewriteTarget] = useState<RewriteTarget>(null);
+
+  const assess = useMutation({
+    mutationFn: () => runMyDeliverableAssessment({ data: { key } }),
+    onSuccess: () => { toast.success("Deep assessment ready"); refetch(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Assessment failed"),
+  });
+
   const content = (deliverable?.content_current ?? {}) as Content;
+  const hasContent = !!deliverable?.content_current && Object.keys(deliverable.content_current).length > 0;
+  const assessmentStatus = deliverable?.deep_assessment_status ?? null;
+  const assessmentText = deliverable?.deep_assessment ?? null;
+  const assessmentScore = deliverable?.deep_assessment_quality_score ?? null;
+
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
