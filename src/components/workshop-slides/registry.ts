@@ -19,7 +19,8 @@ const STAGE_SLUGS = FRAMEWORK_STAGES.map((s) => slugify(s.name));
 
 const DECK_SLIDES: Record<string, Slide[]> = {
   foundation: foundationSlides,
-  // strategy, operations, finance, governance, brand, marketing, social-and-content — coming next.
+  strategy: strategySlides,
+  // operations, finance, governance, brand, marketing, social-and-content — coming next.
 };
 
 export const STAGE_DECKS: StageDeck[] = FRAMEWORK_STAGES.map((s, i) => {
