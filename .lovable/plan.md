@@ -1,80 +1,128 @@
-# Document persistence — forensic findings & unification plan
+# AI-First Streamlining Audit
 
-## What I found (the clunk)
+A founder currently gets asked for the same handful of facts up to **5 times** before a single document is generated. The plumbing already exists to fix it — extractors, sync helpers, a unified document library — they're just not consistently wired at the surface level. This is an audit + a fix plan, no behavior changes shipped yet.
 
-A new founder (Michael Drew) hits **four separate drop zones** during onboarding, and **none of them share state with each other**. Each one stores (or fails to store) documents in a different place, so the user is asked to re-upload the same files repeatedly.
+## What I found (forensic, surface-by-surface)
 
-| # | Where the drop zone lives | What it does today | Where files end up |
-|---|---|---|---|
-| 1 | `FounderBlock.tsx` — "Tell us about you" in the Brief | Uploads resume → `attendee-docs` bucket; saves path on `attendee_founder_profile.source_file_path`; runs `founder-extract` | ✅ Persists (but isolated to founder profile) |
-| 2 | `BriefPrefillDropzone.tsx` — "Pre-fill brief from docs" | Sends files straight to `brief-prefill` edge function for AI parsing | ❌ **Files are never stored.** Throwaway. |
-| 3 | `hub.new.tsx` — "Drop notes / docs" on venture creation | Extracts text **client-side** (PDF/TXT/MD only), feeds `venture-synthesize-concept`, and on Create persists **text only** to `venture_snapshots.source_materials` JSONB | ⚠️ Text persists, raw files do NOT. No DOCX support. Not visible in My Files. |
-| 4 | `hub.$snapshotId.tsx` → `SourceRecoveryPanel` — "Re-extract from sources" | Yet another local drop zone, re-reads files client-side, overwrites `source_materials` | ⚠️ Same as #3. Doesn't show files already attached to this snapshot. |
-| 5 | `MediaHub.tsx` / `documents.tsx` — "My Files" | Uploads to `attendee-docs`, rows in `attendee_documents` with optional `snapshot_id` | ✅ Persists, but **never read by** brief-prefill, synthesize, extract, or deep-research. |
+The intake journey runs through **8 user-facing surfaces** before deliverables generate:
 
-### Why it feels broken
-- The same PDF the founder dropped into the Brief (#2) has to be dropped again on the venture creation page (#3) and again on the snapshot review page (#4).
-- Files uploaded via My Files (#5) and attached to a venture are invisible to the AI pipeline.
-- Nothing in the UI ever says *"I already have these — reuse them?"* because no surface reads from a single source of truth.
-- `hub.new` and `SourceRecoveryPanel` can't even handle DOCX (they only parse PDF/TXT/MD client-side), so users get told to "paste the text" — a regression vs. the brief-prefill path which handles DOCX server-side.
+```text
+Registration ─► Welcome (member_intakes) ─► Profile & Intake ─► Brief (10 Qs + FounderBlock + MarketBlock + drop-zone)
+       └─► Hub.new (concept + founder + market + source docs) ─► Hub review (Setup → Story → Market → Model → Lock)
+       └─► Per-deliverable Intake Gateway ─► Social Setup Intake
+```
 
-## The fix — one library per venture
+### The redundancy matrix (worst offenders)
 
-Make `attendee_documents` the single source of truth for venture context, and have every drop zone read/write through it.
+| Fact | Times asked | Where |
+|---|---|---|
+| Business concept | **5×** | registration, welcome, brief, hub.new, hub review / ConceptStudio |
+| Industry | **5×** | registration, MarketBlock, profile, hub.new, hub review, social setup |
+| Founder name | **5×** | auth, registration, hub.new, profile, hub review, social setup |
+| Problem statement | **4×** | welcome supporting_info, brief, profile, hub review |
+| Target customer | **4×** | brief, profile, hub review, deliverable intake |
+| Value prop / differentiators | **4×** | brief, profile, hub review, ConceptStudio |
+| Source docs (deck, resume, notes) | **3×** | brief drop-zone, FounderBlock resume, hub.new file drop |
+| Founder email & phone | **3×** | registration, hub.new, hub review |
+| Startup stage / archetype | **3×** | registration, welcome, MarketBlock |
+| Pricing | **3×** | brief, hub review, per-deliverable intake |
+| Geography | **2×** | MarketBlock, hub.new (and asked again in Market Sizing intake) |
+| Competitors | **2×** | hub enrichment auto-researches, then Competitive Landscape intake re-asks |
 
-### 1. Schema — one tiny addition
+### Why this happens (root causes, not symptoms)
 
-- Add `extracted_text TEXT` and `extracted_at TIMESTAMPTZ` to `attendee_documents` so we cache the parsed text once instead of re-parsing on every AI call.
-- Keep `attendee_documents.snapshot_id` (already exists) as the venture link.
-- Leave `venture_snapshots.source_materials` as a denormalized cache that always rebuilds from `attendee_documents` (no more "drop zone wrote text but never the file").
+1. **Each surface owns its own table.** Registration writes `workshop_registrations`, welcome writes `member_intakes`, brief writes `attendee_business_brief` / `attendee_founder_profile` / `attendee_market_profile`, profile writes `attendee_profiles`, hub.new writes `venture_snapshots`, hub review writes `venture_snapshots.extracted_data`. No surface routinely reads the previous one at load time.
 
-### 2. One shared upload helper
+2. **AI extractors exist but stop short.** We already have `brief-prefill`, `founder-extract`, `venture-source-extract`, `venture-synthesize-concept`, `venture-concept-refine`. They run inside one surface and don't propagate.
 
-Create `src/lib/venture-sources.ts` with:
-- `uploadVentureSource(file, snapshotId?)` → uploads to `attendee-docs`, inserts `attendee_documents` row, kicks off server-side text extraction (DOCX + PDF + images via the same path `brief-prefill` already uses), caches `extracted_text`.
-- `listVentureSources(snapshotId)` → returns files + cached text.
-- `attachOrphanSourcesToSnapshot(snapshotId, fileIds[])` → for files uploaded before a snapshot existed (Brief stage), reattach on venture creation.
+3. **The "reuse a file" widget hides the files we have.** `hub.new` calls `listVentureSources({ orphansOnly: true })`, so resumes/decks already tagged to the brief are invisible — forcing re-upload.
 
-### 3. Rewrite every drop zone to use the helper
+4. **Prefill helpers re-guess instead of reading.** `buildPrefillFromBrief` regex-guesses industry from raw brief text instead of reading `attendee_market_profile.industry` that the founder already typed.
 
-| Drop zone | New behavior |
-|---|---|
-| Founder identity (#1) | Still writes to `attendee_founder_profile`, **and** also creates an `attendee_documents` row tagged `kind='founder_bio'` so it shows in My Files and can be folded into venture context if the founder chooses. |
-| Brief prefill (#2) | Uploads via helper (snapshot_id NULL initially); after prefill completes, files stay in My Files instead of vanishing. On venture creation we offer "Use these N files as context." |
-| Hub.new (#3) | Lists any existing My Files / brief-prefill files at top with checkboxes ("Use these 3 files I already uploaded"). The drop zone now **uploads** (not just reads in-memory) via the helper and tags the resulting rows with the new `snapshot_id` once `createSnapshot` returns. Server-side text extraction means DOCX works. |
-| Source recovery (#4) | Replaced with a panel that shows the venture's current source library (from `attendee_documents` where `snapshot_id = current`), with "Add more" and per-file "Remove" + "Re-extract all." No more parallel in-memory state. |
-| My Files (#5) | Already works — gains a "Use in venture" affordance per file. |
+5. **No provenance UI.** Even where we prefill, the founder doesn't see "we got this from your brief" — so they retype out of distrust.
 
-### 4. AI functions read from the library, not from JSON snapshots
+6. **`syncProfileFromBrief` is one-way.** Brief → profile works; nothing flows brief/profile → hub.new, hub.new → social setup, or finance fields → deliverable intake.
 
-- `venture-extract-concept` and `venture-deep-research`: load source text by querying `attendee_documents` for `snapshot_id`, rather than from `venture_snapshots.source_materials`. `source_materials` becomes a build-time-derived cache that we still write for back-compat, but the functions prefer the live library.
-- `brief-prefill`: continues to accept ad-hoc files but **also** writes them through the helper so they don't disappear.
+---
 
-### 5. Backfill for existing users (including Michael)
+## Recommendations (ranked by founder-felt impact)
 
-One-time script:
-- For every `venture_snapshots.source_materials.documents[]` entry, create an `attendee_documents` row with `extracted_text` populated and `snapshot_id` set (no file blob — flagged `legacy_text_only=true`).
-- For every founder profile resume, ensure a matching `attendee_documents` row exists (`kind='founder_bio'`).
+### R1 — One canonical fact store, read by every surface
+Treat `attendee_profiles` + `attendee_business_brief` + `attendee_market_profile` + `attendee_founder_profile` as the **single canonical layer**. Add a thin `getCanonicalFounderContext(userId)` helper that returns one merged object (`{ identity, market, concept, financials, sources[] }`) and call it on mount in:
+- `hub.new` — prefill founder block, industry, market scope, city/region (currently always blank), concept, track (currently always "lifestyle").
+- Hub review `FounderMarketCard` — prefill from canonical, not from snapshot only.
+- Social Setup intake — prefill `description`, `industry`, `founder_name`, `website`.
+- Every `IntakeGatewayDialog` first-time render — seed `geography`, `competitors`, `pricing`, `cash_on_hand`, `personal_burn` from canonical before showing.
 
-### 6. UI signals so the founder knows it persisted
+Expected reduction: ~40% of fields auto-populated on first paint.
 
-- Brief, Hub.new, and Source Recovery all show the same "Your venture library (N files)" strip with thumbnails.
-- "Use this file again" pill appears whenever the user is on a drop zone and has already-uploaded files in scope.
-- One toast vocabulary: "Saved to your venture library" — never just "Uploaded."
+### R2 — One source-document library, no orphan filter
+Drop the `orphansOnly: true` filter in `hub.new` so docs uploaded for the Brief appear immediately as reusable context. Show them grouped ("From your Startup Brief / From a previous venture / Just uploaded"). Same widget on every surface that currently has a drop-zone (brief, hub.new, recovery, social setup intake).
 
-## Technical details
+Expected reduction: founders upload a pitch deck **once**, ever.
 
-- Files referenced for the rewrite: `src/components/brief/BriefPrefillDropzone.tsx`, `src/components/brief/FounderBlock.tsx`, `src/routes/_authenticated/dashboard/hub.new.tsx`, `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` (SourceRecoveryPanel), `src/components/media/MediaHub.tsx`, `src/lib/attendee.functions.ts`, `src/lib/foundersHub.functions.ts`.
-- Edge functions touched: `brief-prefill`, `venture-extract-concept`, `venture-deep-research`, `venture-synthesize-concept`, and a new `venture-source-extract` (server-side DOCX/PDF/image OCR using the same Lovable AI gateway path `brief-prefill` already uses).
-- Migration: `ALTER TABLE attendee_documents ADD COLUMN extracted_text text, ADD COLUMN extracted_at timestamptz, ADD COLUMN kind_extra jsonb`.
-- No schema break for `venture_snapshots.source_materials`; it stays as a read-cache.
+### R3 — Collapse "Welcome" into Brief block 0
+`member_intakes` collects `startup_type`, `startup_name`, `one_line_idea`, `supporting_info` — every one of those is collected again in the Brief within 60 seconds. Either:
+- **Drop the welcome step entirely** (recommended) and route new users straight to the Brief, OR
+- Keep welcome but auto-fill brief block 1 + MarketBlock archetype from `member_intakes` so the founder reviews instead of retypes.
 
-## Out of scope (for this pass)
+### R4 — Hub.new becomes a one-screen confirmation, not a re-intake
+For a founder who completed the Brief, hub.new should render as a **single review card** showing the prefilled venture (name, industry, concept, location, track) with one CTA: "Start enrichment." Hide the multi-step form behind a "Tweak details" disclosure. The form re-emerges only for founders who skipped the Brief.
 
-- The downstream document generation pipeline — that's the next forensic pass once persistence is solid.
-- Versioning of uploaded files (replace vs. append) — current behavior preserved.
-- Storage quota UI.
+### R5 — Hub Review's Setup/Story/Market/Model substeps must show provenance
+Each prefilled field gets a small grey tag: "from your Brief" / "from your resume" / "from your uploaded deck" / "AI extracted from sources". Founders edit with confidence instead of re-authoring out of doubt. Empty fields stay editable; filled fields collapse to one-line summaries with an "Edit" affordance.
 
-## Outcome
+### R6 — Per-deliverable Intake Gateway prefills from canonical + skips when complete
+- Market Sizing `geography` → read from `attendee_market_profile.geography` + `venture_snapshots.city/region/market_scope`.
+- Competitive Landscape `competitors` → read from enrichment data (already researched); only ask "any others we missed?"
+- Pricing Strategy `price_range` → read from `attendee_business_brief.pricing_idea`.
+- Financial Model `cash_on_hand` / `personal_burn` → read from `attendee_profiles.current_revenue` / `monthly_burn`.
+- Funding Strategy `raise_amount` → read from `attendee_profiles.funding_raised`.
+- **If all required fields are prefilled, skip the dialog entirely** and proceed to generation — show a toast "Generated using your saved context. [Review answers]".
 
-After this: a founder drops a deck once during Brief prefill. The same file appears in My Files, is auto-suggested on venture creation, becomes part of the venture's source library, is read directly by extract + deep-research, shows up in the review page's recovery panel, and never has to be re-uploaded.
+### R7 — Social Setup Intake reads the venture, doesn't ask again
+Auto-fill `description` from `venture_snapshots.business_concept` + `attendee_business_brief.unique_insight`, `industry` from canonical, `founder_name` from auth, `website` from `venture_snapshots.website_url`. Only `tone` is unique to this surface — that's the only field that should start blank.
+
+### R8 — Two-way sync, not one-way
+`syncProfileFromBrief` runs brief → profile. Add the reverse leg so when a founder edits Hub review or Profile, the canonical store updates and downstream surfaces (deliverable intake, social setup) see the new value.
+
+### R9 — Kill the duplicate founder identity card in Hub review
+`FounderMarketCard` in Hub review re-asks name/email/phone/country/city/region/industry/sub-industry/track — every field already on `venture_snapshots` from hub.new. Replace with a read-only summary + single "Edit" button that opens an inline editor, instead of a permanent re-entry form.
+
+### R10 — Registration drops the redundant fields
+`workshop_registrations.business_idea`, `industry`, `stage` are collected solely to qualify the lead, then collected again 5 minutes later in Welcome/Brief with more context. Either remove them from registration (lighter funnel) or pipe them straight into `member_intakes` + `attendee_market_profile` so they don't get re-asked.
+
+---
+
+## What's already in place we can build on
+
+- `attendee_documents.extracted_text` cache (built last turn) — every uploaded doc already carries its parsed text, so re-extraction is a DB read.
+- `uploadVentureSource` helper — single API every drop-zone now uses (brief, FounderBlock, hub.new, recovery).
+- `syncProfileFromBrief` — proven pattern; extend to other directions.
+- `venture-synthesize-concept` — can fill 12 hub.new fields from source docs; just needs to be called earlier and applied more broadly.
+
+---
+
+## Recommended sequencing (when you say go)
+
+**Phase 1 — Eliminate the duplicate uploads & duplicate identity entry (1 build cycle)**
+- R2 (remove orphan filter, group reusable docs)
+- R9 (collapse hub-review founder/market card into read-only summary)
+- R1-lite (ship `getCanonicalFounderContext` and wire hub.new + hub review prefill)
+
+**Phase 2 — Make the Brief the single intake (1 build cycle)**
+- R3 (drop or thin out Welcome)
+- R4 (hub.new becomes confirmation screen when Brief is complete)
+- R5 (provenance tags in hub review)
+
+**Phase 3 — Smart deliverable + social intake (1 build cycle)**
+- R6 (per-deliverable prefill & skip-when-complete)
+- R7 (social setup reads venture)
+- R8 (two-way sync)
+
+**Phase 4 — Funnel slim-down (small)**
+- R10 (registration trimmed or piped directly into canonical)
+
+Net effect: a founder who completes the Brief should hit "Generate" inside the Hub on a **single confirmation tap** with **zero re-entry** of any fact they've already provided.
+
+Want me to start with Phase 1?
