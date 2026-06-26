@@ -2217,6 +2217,7 @@ export type Database = {
           roadmap_word_count: number | null
           saved_enhancements: Json
           scraped_content: string | null
+          source_materials: Json | null
           status: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry: string | null
           track: string | null
@@ -2259,6 +2260,7 @@ export type Database = {
           roadmap_word_count?: number | null
           saved_enhancements?: Json
           scraped_content?: string | null
+          source_materials?: Json | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry?: string | null
           track?: string | null
@@ -2301,6 +2303,7 @@ export type Database = {
           roadmap_word_count?: number | null
           saved_enhancements?: Json
           scraped_content?: string | null
+          source_materials?: Json | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry?: string | null
           track?: string | null

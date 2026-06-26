@@ -1,0 +1,1 @@
+ALTER TABLE public.venture_snapshots ADD COLUMN IF NOT EXISTS source_materials jsonb;
