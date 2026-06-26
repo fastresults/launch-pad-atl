@@ -3,6 +3,7 @@
 // word concept summary + value proposition that anchors all 21 documents.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
