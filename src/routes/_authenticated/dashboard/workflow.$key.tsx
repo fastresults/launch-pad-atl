@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Link, useParams } from 'react-router-dom';
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { runMyDeliverable, runMyDeliverableAssessment } from "@/lib/userPipeline.functions";
