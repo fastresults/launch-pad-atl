@@ -340,6 +340,11 @@ async function runJob(supabase: any, snapshotId: string, jobId: string, category
     (t: any) => !t.intake_schema || haveAnswers.has(t.type),
   );
 
+  if (category && category.trim().length > 0) {
+    const wanted = category.trim().toLowerCase();
+    types = types.filter((t: any) => String(t.category ?? "").toLowerCase() === wanted);
+  }
+
   const layers = dependencyLayers(types);
   const total = types.length;
   const state = { done: 0, total, fails: 0, canceled: false };
