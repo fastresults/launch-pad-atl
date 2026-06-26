@@ -291,6 +291,12 @@ export function DocumentViewer({
   );
   const [assessmentError, setAssessmentError] = useState<string | null>(null);
 
+  // Save-to-My-Files state
+  const [saving, setSaving] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+
   const components = useMemo(() => makeComponents(setHeadings), [doc?.content]);
   const assessmentComponents = useMemo(() => makeComponents(() => {}), [assessment]);
   const title = titleCase(doc?.document_type ?? "");
