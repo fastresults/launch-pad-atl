@@ -36,14 +36,27 @@ export default function WorkflowPage() {
   const briefScore = countAnsweredBriefFields(data?.brief);
   const briefReady = briefScore >= 6;
 
+  const items = data?.items ?? [];
+  const totalDeliverables = items.length;
+  const totalCategories = new Set(items.filter((i) => i.stage_n >= 1).map((i) => i.stage_n)).size;
+
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Your workflow</h1>
-          <p className="mt-1 text-sm text-muted-foreground">20 documents, organized in 5 strategic pillars. AI generates each one from your brief and prior outputs.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {totalDeliverables > 0
+              ? `${totalDeliverables} founder-ready deliverables across ${totalCategories} categories. Each one is generated from your Startup Brief and the deliverables that came before it, so the whole package stays in sync with your startup.`
+              : "Your full deliverables package, generated from your Startup Brief and built in order so each piece feeds the next."}
+          </p>
         </div>
-        <Button onClick={() => runAll.mutate()} disabled={!briefReady || runAll.isPending}>
+        <Button
+          onClick={() => runAll.mutate()}
+          disabled={!briefReady || runAll.isPending}
+          aria-label="Generate every deliverable that's still missing"
+          title="Generate every deliverable that's still missing"
+        >
           {runAll.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Running…</> : <><Play className="mr-2 h-4 w-4" />Run remaining</>}
         </Button>
       </div>
@@ -51,7 +64,7 @@ export default function WorkflowPage() {
       {!briefReady && (
         <div className="rounded-2xl border border-status-warning/30 bg-status-warning/5 p-4 text-sm">
           <Link to="/dashboard/brief" className="font-medium underline">Finish your Startup Brief</Link>
-          {" "}first ({briefScore} / 10 fields done). AI needs it to generate good deliverables.
+          {" "}first ({briefScore} / 10 answered) — your coach needs it before AI can generate deliverables that actually sound like your startup.
         </div>
       )}
 
