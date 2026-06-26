@@ -1979,6 +1979,7 @@ export type Database = {
         Row: {
           active: boolean
           category: string
+          context_keys: string[] | null
           created_at: string
           dependencies: string[]
           description: string
@@ -1986,6 +1987,7 @@ export type Database = {
           free_tier: boolean
           icon: string | null
           intake_schema: Json | null
+          model_tier: string
           name: string
           sort_order: number
           type: string
@@ -1993,6 +1995,7 @@ export type Database = {
         Insert: {
           active?: boolean
           category: string
+          context_keys?: string[] | null
           created_at?: string
           dependencies?: string[]
           description: string
@@ -2000,6 +2003,7 @@ export type Database = {
           free_tier?: boolean
           icon?: string | null
           intake_schema?: Json | null
+          model_tier?: string
           name: string
           sort_order: number
           type: string
@@ -2007,6 +2011,7 @@ export type Database = {
         Update: {
           active?: boolean
           category?: string
+          context_keys?: string[] | null
           created_at?: string
           dependencies?: string[]
           description?: string
@@ -2014,6 +2019,7 @@ export type Database = {
           free_tier?: boolean
           icon?: string | null
           intake_schema?: Json | null
+          model_tier?: string
           name?: string
           sort_order?: number
           type?: string

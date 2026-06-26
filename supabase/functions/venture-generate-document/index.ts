@@ -295,17 +295,24 @@ Target ~600-900 words unless the doc type is brief.${OUTPUT_FOOTER}`;
   ].filter(Boolean).join("\n\n");
 
 
+  // S5 — Per-deliverable model tier. Heavy strategy / financial docs use Pro
+  // for deeper reasoning; everything else stays on Flash for speed + cost.
+  const modelId = type.model_tier === "pro"
+    ? "google/gemini-3.1-pro-preview"
+    : "google/gemini-3-flash-preview";
+
   const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: modelId,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
     }),
   });
+
 
   if (!aiRes.ok) {
     const txt = await aiRes.text();
