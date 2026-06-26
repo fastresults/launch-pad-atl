@@ -19,11 +19,11 @@ export default function ProfilePage() {
   const { data } = useQuery({ queryKey: ["my", "profile"], queryFn: () => getMyProfile() });
 
   const [founder, setFounder] = useState({ full_name: "", headline: "", background: "", primary_goal: "" });
-  const [business, setBusiness] = useState({ business_name: "", industry: "", stage: "", problem_solved: "", value_prop: "", target_market: "" });
+  const [business, setBusiness] = useState({ business_name: "", industry: "", stage: "", problem_solved: "", value_prop: "", target_market: "", business_model: "" });
   const [financial, setFinancial] = useState({ current_revenue: "", funding_raised: "", monthly_burn: "", runway_months: "" });
 
   useEffect(() => {
-    const p = data?.profile;
+    const p = data;
     if (!p) return;
     setFounder({
       full_name: p.full_name ?? "",
@@ -38,6 +38,7 @@ export default function ProfilePage() {
       problem_solved: p.problem_solved ?? "",
       value_prop: p.value_prop ?? "",
       target_market: p.target_market ?? "",
+      business_model: p.business_model ?? "",
     });
     setFinancial({
       current_revenue: p.current_revenue?.toString() ?? "",
@@ -46,30 +47,32 @@ export default function ProfilePage() {
       runway_months: p.runway_months?.toString() ?? "",
     });
 
-    // Auto-pull from brief on first load if key fields are still empty.
+    // Always merge the latest brief into empty profile fields on first load.
+    // This is intentionally forceful enough that completing the Startup Brief
+    // makes Profile & Intake usable without relying on the user to click a sync button.
     if (!autoSyncTried) {
-      const sparse =
-        !p.headline && !p.background && !p.industry && !p.problem_solved &&
-        !p.value_prop && !p.target_market && !p.business_model && !p.primary_goal;
-      if (sparse) {
-        setAutoSyncTried(true);
-        syncProfileFromBrief()
-          .then((r) => {
-            if (r.fieldsFilled > 0) {
-              toast.success(`Pulled ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} from your brief.`);
-              qc.invalidateQueries({ queryKey: ["my", "profile"] });
-            }
-          })
-          .catch((e) => console.error("[profile auto-sync] failed", e));
-      } else {
-        setAutoSyncTried(true);
-      }
+      setAutoSyncTried(true);
+      syncProfileFromBrief({ markComplete: true })
+        .then((r) => {
+          if (r.fieldsFilled > 0) {
+            toast.success(`Profile synced from your brief — ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} filled.`);
+            qc.invalidateQueries({ queryKey: ["my", "profile"] });
+          }
+        })
+        .catch((e) => {
+          console.error("[profile auto-sync] failed", e);
+          toast.error("Profile sync failed. Use Refresh from my brief to try again.");
+        });
     }
   }, [data, autoSyncTried, qc]);
 
   const save = useMutation({
     mutationFn: (vars: { section: "founder" | "business" | "financial" | "complete"; data: Record<string, unknown> }) =>
-      upsertMyProfile({ data: vars }),
+      upsertMyProfile(
+        vars.section === "complete"
+          ? { intake_completed_at: new Date().toISOString() }
+          : vars.data,
+      ),
     onSuccess: () => {
       toast.success("Saved");
       qc.invalidateQueries({ queryKey: ["my", "profile"] });
@@ -78,10 +81,10 @@ export default function ProfilePage() {
   });
 
   const pullFromBrief = useMutation({
-    mutationFn: () => syncProfileFromBrief(),
+    mutationFn: () => syncProfileFromBrief({ markComplete: true, overwrite: true }),
     onSuccess: (r) => {
-      if (r.fieldsFilled > 0) toast.success(`Pulled ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} from your brief.`);
-      else toast.message("Nothing new to pull — your profile already has everything from the brief.");
+      if (r.fieldsFilled > 0) toast.success(`Profile refreshed from your brief — ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} updated.`);
+      else toast.message("Your profile is already matched to your brief.");
       qc.invalidateQueries({ queryKey: ["my", "profile"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -99,9 +102,9 @@ export default function ProfilePage() {
         <div className="flex flex-col items-end gap-1">
           <Button variant="outline" onClick={() => pullFromBrief.mutate()} disabled={pullFromBrief.isPending}>
             <Sparkles className="h-4 w-4 mr-2" />
-            {pullFromBrief.isPending ? "Pulling…" : "Pull from my brief"}
+            {pullFromBrief.isPending ? "Refreshing…" : "Refresh from my brief"}
           </Button>
-          <p className="text-[11px] text-muted-foreground">Empty fields only — your edits are never overwritten.</p>
+          <p className="text-[11px] text-muted-foreground">Brings this page back in sync with your latest brief.</p>
         </div>
       </div>
 
@@ -121,6 +124,7 @@ export default function ProfilePage() {
         <Field label="Problem solved"><Textarea rows={3} value={business.problem_solved} onChange={(e) => setBusiness({ ...business, problem_solved: e.target.value })} /></Field>
         <Field label="Value proposition"><Textarea rows={3} value={business.value_prop} onChange={(e) => setBusiness({ ...business, value_prop: e.target.value })} /></Field>
         <Field label="Target market"><Textarea rows={3} value={business.target_market} onChange={(e) => setBusiness({ ...business, target_market: e.target.value })} /></Field>
+        <Field label="Business model"><Textarea rows={3} value={business.business_model} onChange={(e) => setBusiness({ ...business, business_model: e.target.value })} /></Field>
         <Button onClick={() => save.mutate({ section: "business", data: business })} disabled={save.isPending}>Save startup</Button>
       </Section>
 

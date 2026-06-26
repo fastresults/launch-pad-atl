@@ -19,6 +19,21 @@ function joinClean(parts: Array<string | null | undefined>, sep = " — "): stri
   return parts.map((p) => (p ?? "").toString().trim()).filter(Boolean).join(sep);
 }
 
+function deriveStartupName(pitch?: string | null): string {
+  const text = (pitch ?? "").trim();
+  if (!text) return "";
+  const patterns = [
+    /^(?:we are|we're|i am|i'm|this is)\s+([^,.;:!?]+(?:,\s*(?:llc|inc\.?|co\.?|company|studio|labs|group))?)/i,
+    /^([^,.;:!?]+?)\s+(?:helps?|is|makes?|builds?|brings?|provides?|offers?)\b/i,
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    const name = match?.[1]?.trim().replace(/^the\s+/i, "");
+    if (name && name.split(/\s+/).length <= 6) return name;
+  }
+  return "";
+}
+
 function archetypeToStage(arc?: string | string[] | null): string {
   const raw = Array.isArray(arc) ? arc.join(" ") : (arc ?? "");
   const a = raw.toLowerCase();
@@ -29,7 +44,7 @@ function archetypeToStage(arc?: string | string[] | null): string {
   return "idea";
 }
 
-export type SyncOptions = { markComplete?: boolean };
+export type SyncOptions = { markComplete?: boolean; overwrite?: boolean };
 export type SyncResult = { fieldsFilled: number; markedComplete: boolean };
 
 export async function syncProfileFromBrief(opts: SyncOptions = {}): Promise<SyncResult> {
@@ -79,6 +94,7 @@ export async function syncProfileFromBrief(opts: SyncOptions = {}): Promise<Sync
     headline: headlineFromExtract || firstSentence(brief.one_line_pitch),
     background: founderBackgroundComposed,
     primary_goal: brief.twelve_month_vision,
+    business_name: deriveStartupName(brief.one_line_pitch),
     industry: market.industry,
     stage: archetypeToStage(market.archetype),
     problem_solved: brief.problem_statement,
@@ -90,7 +106,8 @@ export async function syncProfileFromBrief(opts: SyncOptions = {}): Promise<Sync
     business_model: brief.business_model,
   };
 
-  // Merge-not-overwrite: only fill where profile is empty/null.
+  // Default: merge-not-overwrite. Force mode is used when the founder explicitly
+  // asks Profile & Intake to mirror the completed Startup Brief.
   const patch: Record<string, any> = {};
   for (const [k, v] of Object.entries(candidate)) {
     const existing = (profile as any)[k];
@@ -102,12 +119,12 @@ export async function syncProfileFromBrief(opts: SyncOptions = {}): Promise<Sync
       v !== null &&
       v !== undefined &&
       (Array.isArray(v) ? v.length > 0 : String(v).trim() !== "");
-    if (isEmpty && hasNew) patch[k] = v;
+    if ((opts.overwrite || isEmpty) && hasNew) patch[k] = v;
   }
 
   // Skills (array merge)
   const existingSkills: string[] = Array.isArray(profile.skills) ? profile.skills : [];
-  if (existingSkills.length === 0 && skillsFromExtract.length > 0) {
+  if ((opts.overwrite || existingSkills.length === 0) && skillsFromExtract.length > 0) {
     patch.skills = skillsFromExtract;
   }
 
