@@ -28,7 +28,8 @@ type DroppedFile = {
   id: string;
   name: string;
   size: number;
-  status: "reading" | "ready" | "error";
+  status: "uploading" | "ready" | "error";
+  documentId?: string;
   text?: string;
   error?: string;
 };
@@ -47,7 +48,7 @@ const MAX_URLS = 3;
 
 const MAX_FILES = 5;
 const MAX_BYTES = 20 * 1024 * 1024;
-const ACCEPT = ".pdf,.txt,.md,.markdown,text/plain,text/markdown,application/pdf";
+const ACCEPT = ".pdf,.txt,.md,.markdown,.docx,.rtf,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,application/rtf,image/*";
 
 // TODO: remove after testing — dev-only seed URLs for reverse-engineered test fills
 const SEED_URLS = [
