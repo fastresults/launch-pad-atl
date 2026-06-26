@@ -11,6 +11,8 @@ import { getWorkshopMode, formatMinutesLeft, FRIENDLY_STAGE, type WorkshopState 
 import { ProgressRing } from "@/components/dashboard/ProgressRing";
 import { NextActionCard } from "@/components/dashboard/NextActionCard";
 import { BriefCompleteCard } from "@/components/brief/BriefCompleteCard";
+import { BriefStatusCard } from "@/components/dashboard/BriefStatusCard";
+import { countAnsweredBriefFields, BRIEF_TOTAL } from "@/lib/brief-progress";
 import { Calendar, MapPin, Coffee, Sparkles, CheckCircle2, Hand } from "lucide-react";
 
 
