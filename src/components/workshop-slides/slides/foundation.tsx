@@ -41,7 +41,13 @@ export const foundationSlides: Slide[] = [
             as="p"
             className="slide-subtitle mt-10 text-white/80 max-w-[1200px]"
           />
-          <SlotImage slideId="cover" field="image" className="mt-12 max-h-[280px] rounded-2xl" />
+          <SlotImage
+            slideId="cover"
+            field="image"
+            defaultSrc="/decks/foundation/01-cover.jpg"
+            defaultAlt="Founder sketching a foundation blueprint at a drafting table"
+            className="mt-12 max-h-[420px] rounded-2xl"
+          />
         </div>
       </SlideLayout>
     ),
@@ -75,7 +81,13 @@ export const foundationSlides: Slide[] = [
             as="p"
             className="slide-body-lg mt-10 text-muted-foreground max-w-[1300px]"
           />
-          <SlotImage slideId="stakes" field="image" className="mt-10 max-h-[280px] rounded-2xl" />
+          <SlotImage
+            slideId="stakes"
+            field="image"
+            defaultSrc="/decks/foundation/02-stakes.jpg"
+            defaultAlt="A small house being lowered onto a single concrete footing"
+            className="mt-10 max-h-[420px] rounded-2xl"
+          />
         </div>
       </SlideLayout>
     ),
