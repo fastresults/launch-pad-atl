@@ -26,6 +26,18 @@ type DroppedFile = {
   error?: string;
 };
 
+type ScrapedUrl = {
+  id: string;
+  url: string;
+  status: "scraping" | "ready" | "error";
+  title?: string | null;
+  text?: string;
+  charCount?: number;
+  error?: string;
+};
+
+const MAX_URLS = 3;
+
 const MAX_FILES = 5;
 const MAX_BYTES = 20 * 1024 * 1024;
 const ACCEPT = ".pdf,.txt,.md,.markdown,text/plain,text/markdown,application/pdf";
