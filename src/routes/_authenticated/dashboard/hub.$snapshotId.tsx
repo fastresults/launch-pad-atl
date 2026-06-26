@@ -738,7 +738,7 @@ function SetupSubStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => voi
 
 // Reusable per-section editor with plain-English helpers and per-field "Looks good" toggles.
 function FieldGroup({
-  sectionKey, form, setField, heading, collapsedByDefault, contextChips,
+  sectionKey, form, setField, heading, collapsedByDefault, contextChips, provenanceMap,
 }: {
   sectionKey: "foundation" | "market" | "operations" | "vision";
   form: Record<string, Record<string, string>>;
@@ -746,6 +746,7 @@ function FieldGroup({
   heading?: string;
   collapsedByDefault?: boolean;
   contextChips?: { label: string; value?: string }[];
+  provenanceMap?: Record<string, string>;
 }) {
   const section = REVIEW_SECTIONS.find((s) => s.key === sectionKey)!;
   const [open, setOpen] = useState(!collapsedByDefault);
@@ -765,6 +766,8 @@ function FieldGroup({
         {section.fields.map((f) => {
           const value = form[sectionKey]?.[f.key] ?? "";
           const filled = isFieldFilled(value);
+          const provSource = provenanceMap?.[`${sectionKey}.${f.key}`] ?? "";
+          const provLabel = filled && provSource ? provenanceLabel(provSource) : "";
           return (
             <div key={f.key} className={`grid gap-1.5 ${f.multiline ? "md:col-span-2" : ""}`}>
               <div className="flex items-center justify-between gap-2">
@@ -788,7 +791,13 @@ function FieldGroup({
               ) : (
                 <Input value={value} onChange={(e) => setField(sectionKey, f.key, e.target.value)} placeholder={f.example} />
               )}
-              {f.example && f.multiline && (
+              {provLabel && (
+                <p className="text-[11px] text-muted-foreground/80">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary/60 align-middle mr-1.5" />
+                  Pulled in {provLabel} — edit if you want to refine it here.
+                </p>
+              )}
+              {f.example && f.multiline && !provLabel && (
                 <p className="text-[11px] italic text-muted-foreground/70">e.g. {f.example}</p>
               )}
             </div>
