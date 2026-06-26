@@ -148,11 +148,12 @@ export default function WorkflowPage() {
             {bulkActive ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating…</>
             ) : remainingCount === 0 ? (
-              <><CheckCircle2 className="mr-2 h-4 w-4" />All caught up</>
+              <><CheckCircle2 className="mr-2 h-4 w-4" />All {triggerable.length} ready</>
             ) : (
               <><Play className="mr-2 h-4 w-4" />Run remaining ({remainingCount})</>
             )}
           </Button>
+
         </div>
       </div>
 
