@@ -1,48 +1,117 @@
-## Problem
+## Goal
 
-In `DeckDialog.tsx` the slide stage is broken:
+Let admins edit facilitator decks — change copy, swap/replace images, and (optionally) generate new imagery with AI — without touching code. Authored slides stay as the canonical structure; admin edits live as **overrides** in the database and are merged in at render time. Public/user view is unchanged when no overrides exist.
 
-- `DialogContent` (shadcn) uses `grid` by default — so `flex-1` on the inner slide wrapper does nothing.
-- `ScaledSlide` measures its parent's height as ~0 and the scale calculation falls back to 1.
-- Result: the 1920×1080 slide renders unscaled, pushed to the bottom of the modal with a huge black void above it (exactly what the screenshot shows).
+## Architecture
 
-It's also missing facilitator UX basics: real fullscreen, slide counter that's actually visible, ESC to close hint, a thumbnail rail to jump between slides, and a progress bar.
+```text
+hardcoded slide (.tsx)  ─┐
+                         ├──► merge ──► rendered slide
+DB overrides (per slug)  ─┘
+```
 
-## Plan
+- Authored slides keep their current React form but expose **named editable slots** (text and image). Slots are addressed by `slideId.field` (e.g. `cover.title`, `what-breaks.image`).
+- DB stores overrides keyed by `(deck_slug, slide_id, field)`. Render walks the slot ids, swaps in any override before painting.
+- No override = exactly today's behavior. Reset = delete row.
 
-### 1. Fix the scaling/layout bug (root cause)
+## Data model
 
-Update `src/components/workshop-slides/DeckDialog.tsx`:
+New table `deck_slide_overrides`:
 
-- Add `flex flex-col` to `DialogContent` so children stack vertically.
-- Give the slide stage `flex-1 min-h-0` (the `min-h-0` is required or flex children won't shrink and `ResizeObserver` reports wrong height).
-- Render `ScaledSlide` inside an explicit `relative w-full h-full` wrapper so its parent has a real measured box.
+```text
+id uuid pk
+deck_slug text             -- 'foundation', 'strategy', ...
+slide_id  text             -- 'cover', 'stakes', 'what-breaks', ...
+field     text             -- 'kicker', 'title', 'subtitle', 'body', 'card.0.title', 'image'
+value_text text null       -- for text fields
+value_image_url text null  -- for image fields (lovable-assets URL or storage URL)
+value_image_alt text null
+updated_by uuid references auth.users(id)
+updated_at timestamptz default now()
+unique (deck_slug, slide_id, field)
+```
 
-This alone makes the slide fill the modal correctly at any viewport.
+- GRANT SELECT to `authenticated` (everyone needs to read overrides when viewing a deck).
+- GRANT INSERT/UPDATE/DELETE to `authenticated` but gate via RLS to admins only (`public.has_role(auth.uid(), 'admin')`).
+- Storage bucket `deck-images` (public read), admin-only write via RLS.
 
-### 2. Make the modal feel like a real presenter
+## Slot wiring (low-risk refactor of authored slides)
 
-Same file (`DeckDialog.tsx`):
+Introduce two tiny helpers in `src/components/workshop-slides/slots.tsx`:
 
-- **Top bar:** deck title (left) · slide title (center, truncated) · `Slide X / N` + `Esc` hint (right). Auto-hides after 3s of mouse inactivity, reappears on mousemove.
-- **Bottom bar:** thin progress bar (`width: (index+1)/total %`) plus a horizontally scrollable thumbnail strip. Each thumbnail is a mini `ScaledSlide` in a 160×90 box; clicking jumps to that index; current one gets a ring.
-- **Nav buttons:** keep ←/→ pills but also auto-hide with the chrome.
-- **Fullscreen toggle:** button in top bar (`Maximize2` icon) that calls `requestFullscreen()` on the dialog content; `F` key shortcut; handles `fullscreenchange` to sync state.
-- **Keyboard:** keep ←/→/Space; add `Home`/`End` (jump to first/last), `F` (fullscreen), and let `Esc` close as Dialog already does.
+- `<SlotText id="cover.title" defaultValue="Foundation.">…</SlotText>` → renders override text if present, else children/default.
+- `<SlotImage id="what-breaks.image" defaultSrc={img} alt="…" />` → swaps URL if override present.
 
-### 3. Minor polish
+Refactor authored slides to wrap editable text and images in these slots. The slot registry (`getSlot(deckSlug, slideId, field)`) reads from a React context that the deck loader hydrates once with overrides for the current deck.
 
-- Use `bg-background` instead of hard `bg-black` so it respects the design tokens.
-- Add `aria-label="Facilitator deck"` and live region announcing slide changes for screen readers.
-- Mobile/tablet: drop thumbnail rail under `md:` and stack the top bar onto two lines.
+This is the minimum change that makes every slide editable without rewriting them into a JSON schema. Authors can still add new slides in TSX; just wrap editable bits in slots.
 
-### Files touched
+## Admin editor UI
 
-- `src/components/workshop-slides/DeckDialog.tsx` — layout fix + presenter UX (only file that changes).
-- No changes to `ScaledSlide`, `SlideDeck`, registry, or individual slides — the bug is purely in the modal wrapper.
+New route: `/admin/decks` (admin-only, gated by `has_role`).
 
-### Validation
+- **Deck list** — one card per `STAGE_DECKS` entry showing title, # slides, "has overrides" badge, last edited.
+- **Deck editor** (`/admin/decks/$slug`) — two-pane layout:
+  - **Left: live preview** — uses the existing `ScaledSlide` shrunk into a fixed canvas; ←/→ to navigate; updates instantly as fields change (optimistic local state, save on blur or "Save changes").
+  - **Right: slot inspector** — auto-generated form listing every slot id detected on the current slide:
+    - Text slots → `Textarea` with character count and "Reset to default" button.
+    - Image slots → current image thumbnail + three actions:
+      1. **Upload** (drag-drop, stored via `lovable-assets` CLI path uploaded through an Edge Function to the `deck-images` bucket).
+      2. **Replace with URL** (paste any HTTPS URL).
+      3. **Generate with AI** — prompt box + style hints; calls a new Edge Function `deck-image-generate` that uses Lovable AI Gateway (`google/gemini-3.1-flash-image` default, with toggle for `openai/gpt-image-2`). Returns a streaming preview, saves the final to `deck-images` bucket, writes the override row.
+  - **Footer actions:** Save · Discard · Reset slide to default · Reset entire deck.
 
-- Open any unlocked deck from `dashboard/hub/$snapshotId` and from `dashboard/workflow` — slide fills the modal at desktop, tablet, and mobile widths.
-- Resize the window: slide rescales smoothly via the existing `ResizeObserver`.
-- Arrow keys, thumbnail clicks, fullscreen toggle, and Esc all work.
+- **AI copy assist** (optional but light to add): each text slot has a small "Rewrite with AI" button → modal with tone presets (Sharper, Friendlier, Shorter, Founder-flavored) + free-text instruction, powered by `google/gemini-3.5-flash` through an Edge Function `deck-copy-rewrite`. Returns 2-3 variants; admin picks one.
+
+- **Versioning lite:** every save bumps `updated_at` and writes a row to `deck_slide_override_history` (same shape + `version` int) so admins can revert. Keep the last 20 versions per field.
+
+## Edge Functions
+
+- `deck-image-generate` — accepts `{ prompt, model, slot_id, deck_slug, slide_id }`. Calls Lovable AI Gateway image endpoint with `stream:true`, uploads final PNG to `deck-images` bucket, returns public URL. Admin-only (verify JWT + `has_role`).
+- `deck-copy-rewrite` — accepts `{ current_text, tone, instruction }`. Returns 3 variants via `streamText`. Admin-only.
+- `deck-override-save` — single endpoint that upserts an override row and appends history. Admin-only.
+
+## Render path
+
+Update `DeckDialog.tsx` and any other deck consumer to:
+
+1. On open, query `deck_slide_overrides` for `deck_slug = slug`.
+2. Hydrate a `DeckOverridesProvider` context with the map.
+3. `SlotText` / `SlotImage` read from context.
+
+Cached client-side per session; invalidated when admin saves.
+
+## Files touched / created
+
+Created:
+- `supabase/migrations/<ts>_deck_overrides.sql` — table, history table, RLS, GRANTs.
+- Storage bucket `deck-images` (public) via tool, with admin-only write policies.
+- `supabase/functions/deck-image-generate/index.ts`
+- `supabase/functions/deck-copy-rewrite/index.ts`
+- `supabase/functions/deck-override-save/index.ts`
+- `src/components/workshop-slides/slots.tsx` — `SlotText`, `SlotImage`, `DeckOverridesProvider`, `useDeckOverrides`.
+- `src/lib/deck-overrides.ts` — fetch/save/reset helpers (TanStack Query).
+- `src/routes/_authenticated/admin/decks.tsx` — deck list.
+- `src/routes/_authenticated/admin/decks.$slug.tsx` — editor.
+- `src/components/admin/decks/SlotInspector.tsx`
+- `src/components/admin/decks/ImageSlotEditor.tsx` (upload / URL / AI tabs)
+- `src/components/admin/decks/TextSlotEditor.tsx` (with AI rewrite modal)
+- `src/components/admin/decks/DeckPreviewPane.tsx`
+
+Modified:
+- `src/components/workshop-slides/slides/foundation.tsx` — wrap editable text/images in `<SlotText>` / `<SlotImage>` (one-time pass, no visual change).
+- `src/components/workshop-slides/DeckDialog.tsx` — wrap children in `DeckOverridesProvider` with fetched overrides.
+- `src/routes/_authenticated/dashboard.tsx` sidebar — add "Facilitator decks" item under the existing Admin section, gated by `has_role`.
+
+Out of scope (call out so we don't scope creep):
+- Adding/removing slides or reordering them (editor only changes content, not structure). If you want structural edits later, that's a follow-up.
+- Public/non-admin authoring.
+- Localization of overrides.
+
+## Validation
+
+- Admin opens `/admin/decks/foundation`, edits the cover title, saves → opening the deck from the Hub shows the new title.
+- Replace the "What breaks" card image via AI generation → image appears in modal and in fullscreen.
+- "Reset slide" removes overrides, deck returns to authored default.
+- Non-admin user gets 403 on the admin routes and on the edge functions.
+- Non-admin user viewing the deck still sees admin overrides (overrides are public read).
