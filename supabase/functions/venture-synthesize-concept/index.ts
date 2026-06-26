@@ -69,17 +69,31 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const sources: Array<{ filename?: string; text?: string }> = Array.isArray(body?.sources) ? body.sources : [];
+    const urls: Array<{ url?: string; title?: string | null; text?: string }> = Array.isArray(body?.urls) ? body.urls : [];
+    const conceptDraft: string = typeof body?.conceptDraft === "string" ? body.conceptDraft.trim() : "";
     const industryValues: string[] = Array.isArray(body?.industryValues) ? body.industryValues : [];
 
-    if (!sources.length) {
-      return new Response(JSON.stringify({ error: "No sources provided" }), {
+    if (!sources.length && !urls.length && conceptDraft.length < 20) {
+      return new Response(JSON.stringify({ error: "Provide at least one source (file, URL, or ≥20 char concept draft)" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     let used = 0;
-    const parts: string[] = [];
+    const fileParts: string[] = [];
+    const urlParts: string[] = [];
+    // URLs first — they're noisier so cap them tighter when total cap is hit
+    for (const u of urls) {
+      const text = (u?.text ?? "").trim();
+      if (!text) continue;
+      const label = (u?.title || u?.url || "web source").toString().slice(0, 200);
+      const remaining = TOTAL_CAP - used;
+      if (remaining <= 0) break;
+      const slice = text.slice(0, Math.min(PER_FILE_CAP, remaining));
+      used += slice.length;
+      urlParts.push(`### ${label}\n${u?.url ? `(${u.url})\n` : ""}${slice}`);
+    }
     for (const s of sources) {
       const text = (s?.text ?? "").trim();
       if (!text) continue;
@@ -88,10 +102,10 @@ Deno.serve(async (req) => {
       if (remaining <= 0) break;
       const slice = text.slice(0, Math.min(PER_FILE_CAP, remaining));
       used += slice.length;
-      parts.push(`## ${name}\n${slice}`);
+      fileParts.push(`### ${name}\n${slice}`);
     }
 
-    if (!parts.length) {
+    if (!fileParts.length && !urlParts.length && conceptDraft.length < 20) {
       return new Response(JSON.stringify({ error: "Sources were empty after extraction" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
