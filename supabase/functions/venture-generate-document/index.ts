@@ -196,16 +196,9 @@ export async function generateOne(
     depContext = distillDeps(depDocs ?? []);
   }
 
-  const baseSystem = `You are an AI venture analyst writing investor-grade documents.
-Produce a single document in clean Markdown. Use ## headings, short paragraphs, and bullet lists.
-Be specific, plausible, and actionable. Never use filler like "TBD" or "[insert ...]".
-Target ~600-900 words unless the doc type is brief.${OUTPUT_FOOTER}`;
-
-  const baseSystemPrompt = SPECIAL[documentType] ?? baseSystem;
-  const trackTone = snap.track ? TRACK_TONE[snap.track] : null;
-  const systemPrompt = trackTone
-    ? `${baseSystemPrompt}\n\n${trackTone}`
-    : baseSystemPrompt;
+  const baseSystemPrompt = specializedPrompt(documentType) ?? BASE_SYSTEM_PROMPT;
+  const tone = trackTone(snap.track);
+  const systemPrompt = tone ? `${baseSystemPrompt}\n\n${tone}` : baseSystemPrompt;
 
   // Build the user prompt. If we have a brain, use the sliced brain JSON
   // instead of dumping raw extracted_data + research_brief. Saves ~70% of
