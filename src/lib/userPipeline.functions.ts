@@ -51,6 +51,8 @@ async function buildWorkflow(userId: string) {
       description: t.description,
       stage_n: t.stage_n,
       stage_label: t.stage_label,
+      bonus: !!t.bonus,
+      user_can_trigger: t.user_can_trigger !== false,
       generated: generatedKeys.has(t.key),
       deps_met,
     };
