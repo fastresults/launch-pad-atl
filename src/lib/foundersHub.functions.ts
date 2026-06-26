@@ -296,6 +296,35 @@ export async function getVentureDocumentById(input: any): Promise<VentureDocumen
   return (data ?? null) as VentureDocument | null;
 }
 
+export async function findVentureDocumentByLabel(input: any): Promise<VentureDocument | null> {
+  const { label } = unwrap<{ label: string }>(input);
+  if (!label) return null;
+  // Normalize: strip ".docx" and " (v2)" suffixes, lowercase, spaces -> underscores
+  const normalized = label
+    .replace(/\.docx$/i, "")
+    .replace(/\s*\(v\d+\)\s*$/i, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+  const userId = await uid();
+  const { data: snaps } = await supabase
+    .from("venture_snapshots")
+    .select("id")
+    .eq("user_id", userId);
+  const ids = (snaps ?? []).map((s: any) => s.id);
+  if (ids.length === 0) return null;
+  const { data, error } = await supabase
+    .from("venture_documents")
+    .select("*")
+    .in("snapshot_id", ids)
+    .eq("document_type", normalized)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data ?? null) as VentureDocument | null;
+}
+
 export async function generateDocument(input: any): Promise<void> {
   const { snapshotId, documentType, rewriteFeedback, rewriteTags, intakeAnswers } = unwrap<{
     snapshotId: string;

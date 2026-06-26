@@ -72,12 +72,17 @@ export function FilePreviewDialog({
             <iframe src={url} title={doc.original_name} className="h-[70vh] w-full rounded-lg bg-white" />
           )}
           {!loading && url && !image && !pdf && (
-            <div className="flex h-[420px] flex-col items-center justify-center gap-3 text-center">
+            <div className="flex h-[420px] flex-col items-center justify-center gap-3 text-center px-6">
               <FileText className="h-10 w-10 text-muted-foreground" />
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground max-w-md">
                 In-browser preview isn't available for this file type.
-                <br /> Use Download to open it in its native app.
+                <br /> Use <span className="font-medium text-foreground">Download</span> to open it in its native app.
               </div>
+              {doc.kind === "deliverable" && (
+                <div className="text-xs text-muted-foreground max-w-md">
+                  Tip: open the deliverable from the Hub to get the rich viewer with Markdown, DOCX, and PDF export.
+                </div>
+              )}
             </div>
           )}
         </div>
