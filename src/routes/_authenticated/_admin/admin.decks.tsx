@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { STAGE_DECKS } from "@/components/workshop-slides/registry";
+import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/badge";
-import { Presentation, Lock, ArrowRight } from "lucide-react";
+import { Presentation, Lock, ArrowRight, Play } from "lucide-react";
 
 async function fetchOverrideCounts() {
   const { data, error } = await supabase
@@ -19,6 +21,8 @@ async function fetchOverrideCounts() {
 }
 
 export default function AdminDecksPage() {
+  const [previewSlug, setPreviewSlug] = useState<string | null>(null);
+
   const { data: counts = {} } = useQuery({
     queryKey: ["deck-override-counts"],
     queryFn: fetchOverrideCounts,
@@ -29,7 +33,7 @@ export default function AdminDecksPage() {
     <div className="container mx-auto max-w-5xl space-y-6 px-4 py-6">
       <AdminPageHeader
         title="Facilitator decks"
-        description="Edit slide copy and swap or generate slide images for any workshop deck."
+        description="Preview the live deck, edit slide copy, or swap and generate slide images for any workshop deck."
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -69,12 +73,21 @@ export default function AdminDecksPage() {
               </div>
 
               {editable ? (
-                <Link
-                  to={`/admin/decks/${d.slug}`}
-                  className="mt-2 inline-flex items-center gap-1.5 self-start rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                >
-                  Edit deck <ArrowRight className="h-4 w-4" />
-                </Link>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewSlug(d.slug)}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-muted"
+                  >
+                    <Play className="h-4 w-4" /> Preview
+                  </button>
+                  <Link
+                    to={`/admin/decks/${d.slug}`}
+                    className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                  >
+                    Edit deck <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
               ) : (
                 <span className="mt-2 inline-flex items-center gap-1.5 self-start rounded-md bg-muted px-3 py-2 text-sm font-medium text-muted-foreground">
                   Locked
@@ -84,6 +97,8 @@ export default function AdminDecksPage() {
           );
         })}
       </div>
+
+      <DeckDialog slug={previewSlug} onOpenChange={(open) => !open && setPreviewSlug(null)} />
     </div>
   );
 }
