@@ -240,6 +240,36 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
   const formRef = useRef(form);
   formRef.current = form;
 
+  // R5 — provenance map: tells us which canonical source each field's value
+  // originated from, so FieldGroup can render "from your Brief" etc.
+  const [provenanceMap, setProvenanceMap] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const ctx = await getCanonicalFounderContext();
+      if (cancelled || !ctx) return;
+      // Map review-field path → canonical key → provenance label.
+      const fieldToCanonical: Record<string, string> = {
+        "foundation.company_name": "company_name",
+        "foundation.concept": "one_line_pitch",
+        "foundation.problem": "problem_statement",
+        "market.target_customers": "target_customer",
+        "market.value_proposition": "unique_insight",
+        "market.differentiators": "unique_insight",
+        "operations.revenue_model": "business_model",
+        "operations.pricing": "pricing_idea",
+        "vision.short_term_goals": "twelve_month_vision",
+      };
+      const out: Record<string, string> = {};
+      for (const [fieldPath, canonicalKey] of Object.entries(fieldToCanonical)) {
+        const src = ctx.provenance[canonicalKey];
+        if (src) out[fieldPath] = src;
+      }
+      setProvenanceMap(out);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   useEffect(() => {
     if (dirtyRef.current) return;
     setForm(buildReviewForm(snapshot));
