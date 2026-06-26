@@ -6,6 +6,14 @@
 // Invoked directly by src/lib/userPipeline.functions.ts — no polling worker.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  compactPreamble,
+  distillDeps,
+  loadVentureContext,
+  type VentureContext,
+} from "../_shared/venture-context.ts";
+import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
+import { MODELS, modelForTier } from "../_shared/models.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,8 +43,6 @@ type Content = {
   sections: { heading: string; body_markdown: string }[];
   action_items: string[];
 };
-
-const FALLBACK_MODEL = "google/gemini-2.5-flash";
 
 function safeJson(text: string): Content | null {
   // Strip ``` fences
@@ -69,16 +75,46 @@ function safeJson(text: string): Content | null {
 }
 
 async function generateOne(
-  admin: any,
-  userId: string,
   type: DType,
-  ctx: { brief: any; founder: any; market: any; upstream: Record<string, Content>; feedback?: string; tags?: string[]; previous?: Content | null },
+  ctx: {
+    venture: VentureContext | null;
+    brief: any;
+    founder: any;
+    market: any;
+    upstream: Record<string, Content>;
+    feedback?: string;
+    tags?: string[];
+    previous?: Content | null;
+  },
 ): Promise<Content> {
-  const model = type.default_model || FALLBACK_MODEL;
+  // Honor deliverable_types.default_model with safe tier mapping.
+  const model = modelForTier(type.default_model, MODELS.flash);
 
-  const upstreamText = Object.entries(ctx.upstream)
-    .map(([k, c]) => `### ${k}\n${c.summary}\n${c.sections.map((s) => `- ${s.heading}: ${s.body_markdown.slice(0, 280)}`).join("\n")}`)
-    .join("\n\n");
+  // Upstream dependencies: distilled, not full markdown dump.
+  const upstreamEntries = Object.entries(ctx.upstream);
+  const upstreamDistilled = upstreamEntries.length
+    ? distillDeps(
+        upstreamEntries.map(([k, c]) => ({
+          document_type: k,
+          content:
+            (c.summary ? c.summary + "\n\n" : "") +
+            c.sections.map((s) => `## ${s.heading}\n${s.body_markdown}`).join("\n\n"),
+        })),
+      )
+    : "";
+
+  // Preferred path: venture context + snapshot brain (shared with Hub).
+  let contextBlock: string;
+  if (ctx.venture) {
+    const brainBlock = ctx.venture.brain
+      ? `## Snapshot brain (authoritative compressed venture summary)\n\`\`\`json\n${JSON.stringify(ctx.venture.brain, null, 2)}\n\`\`\``
+      : "";
+    contextBlock = [compactPreamble(ctx.venture), brainBlock].filter(Boolean).join("\n\n");
+  } else {
+    // Fallback for users without a venture snapshot — keep current behavior
+    // but tighter: brief only (no raw founder/market dumps).
+    contextBlock = `## Founder's Startup Brief\n${JSON.stringify(ctx.brief ?? {}, null, 2)}`;
+  }
 
   const system = `You are a senior startup coach writing a single founder-ready deliverable.
 Output STRICT JSON (no markdown fences) with this shape:
@@ -105,16 +141,12 @@ Aim for 3-6 sections, 100-220 words each. Use plain English, concrete numbers, n
     type.description ? `Purpose: ${type.description}` : "",
     type.stage_label ? `Stage: ${type.stage_label}` : "",
     "",
-    "## Founder's Startup Brief",
-    JSON.stringify(ctx.brief ?? {}, null, 2),
-    ctx.founder ? `\n## Founder profile\n${JSON.stringify(ctx.founder, null, 2)}` : "",
-    ctx.market ? `\n## Market profile\n${JSON.stringify(ctx.market, null, 2)}` : "",
-    upstreamText ? `\n## Upstream deliverables (stay consistent)\n${upstreamText}` : "",
+    contextBlock,
+    upstreamDistilled ? `\n## Upstream deliverables (stay consistent — distilled)\n${upstreamDistilled}` : "",
     rewriteBlock ? `\n${rewriteBlock}` : "",
     "",
     "Return ONLY the JSON object.",
   ].filter(Boolean).join("\n");
-
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -209,13 +241,36 @@ async function runJob(admin: any, userId: string, runId: string, opts: { key?: s
   await admin.from("ai_pipeline_runs").update({ status: "running", started_at: new Date().toISOString() }).eq("id", runId);
 
   try {
-    const [{ data: allTypes }, { data: brief }, { data: founder }, { data: market }, { data: existing }] = await Promise.all([
+    const [{ data: allTypes }, { data: brief }, { data: founder }, { data: market }, { data: existing }, { data: primarySnap }] = await Promise.all([
       admin.from("deliverable_types").select("key,label,description,stage_label,depends_on_keys,default_model,user_can_trigger,auto_runnable,sort_order").eq("active", true).order("sort_order"),
       admin.from("attendee_business_brief").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_founder_profile").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_market_profile").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_deliverables").select("deliverable_key, content_current").eq("user_id", userId),
+      admin
+        .from("venture_snapshots")
+        .select("id")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
+
+    // Load shared venture context + brain once per job (not per doc). This is
+    // the same context surface the Hub generators use, so Workflow output now
+    // aligns with Hub output instead of reasoning off raw blobs.
+    let venture: VentureContext | null = null;
+    if (primarySnap?.id) {
+      try {
+        venture = await loadVentureContext(admin, primarySnap.id);
+        if (!venture.brain) {
+          venture.brain = await ensureSnapshotBrain(admin, primarySnap.id);
+        }
+      } catch (e) {
+        console.warn("loadVentureContext failed, falling back to raw brief", e);
+        venture = null;
+      }
+    }
 
     const typesByKey = new Map<string, DType>((allTypes ?? []).map((t: any) => [t.key, t]));
     const upstream: Record<string, Content> = {};
@@ -263,7 +318,8 @@ async function runJob(admin: any, userId: string, runId: string, opts: { key?: s
         }, { onConflict: "user_id,deliverable_key" });
 
         const isTarget = !!opts.key && t.key === opts.key;
-        const content = await generateOne(admin, userId, t, {
+        const content = await generateOne(t, {
+          venture,
           brief: brief ?? null,
           founder: founder ?? null,
           market: market ?? null,
