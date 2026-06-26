@@ -15,8 +15,13 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 const SYSTEM_PROMPT = `You are an AI venture-intelligence analyst.
-Given a founder's concept (and possibly a scraped web page), produce a complete, realistic ExtractedData object.
-Be specific, plausible, and concise. Never write filler or placeholder text. If the founder didn't specify a field, infer a reasonable answer from the concept.
+Given a founder's concept (and possibly a scraped web page and the founder's own uploaded source documents / URLs), produce a complete, realistic ExtractedData object.
+
+CRITICAL RULES:
+- When source material is provided, prefer extracting verbatim facts (pricing, team, processes, goals) from it over inference.
+- Only infer when sources are silent on a field, and only infer plausibly from the concept.
+- NEVER emit placeholder strings like "[needs founder input]", "TBD", "various", or "unknown". If a field is truly unknown, leave it as an empty string "".
+- Be specific and concise.
 
 Return ONLY valid JSON matching this exact shape (no markdown, no commentary):
 {
@@ -25,6 +30,7 @@ Return ONLY valid JSON matching this exact shape (no markdown, no commentary):
   "operations": { "revenue_model": "", "pricing": "", "key_processes": "", "team": "" },
   "vision":     { "short_term_goals": "", "long_term_goals": "", "mission": "", "vision": "" }
 }`;
+
 
 async function updateProgress(supabase: any, id: string, stage: string, progress: number, message: string) {
   await supabase
@@ -78,13 +84,29 @@ Deno.serve(async (req) => {
 
     await updateProgress(supabase, snapshotId, "research", 40, "Analyzing the concept");
 
-    const userPrompt = [
+    const sm = snap.source_materials ?? null;
+    const PER_SOURCE_CAP = 12_000;
+    const cap = (s: unknown) => (typeof s === "string" ? s.slice(0, PER_SOURCE_CAP) : "");
+    const docBlocks: string[] = Array.isArray(sm?.documents)
+      ? sm.documents.map((d: any, i: number) => `--- DOCUMENT ${i + 1}: ${d.filename ?? "document"} ---\n${cap(d.text)}`)
+      : [];
+    const urlBlocks: string[] = Array.isArray(sm?.urls)
+      ? sm.urls.map((u: any, i: number) => `--- URL ${i + 1}: ${u.url ?? ""}${u.title ? ` (${u.title})` : ""} ---\n${cap(u.text)}`)
+      : [];
+
+    let userPrompt = [
       `Business concept:\n${snap.business_concept ?? ""}`,
       snap.company_name ? `Stated company name: ${snap.company_name}` : "",
       snap.website_url ? `Reference URL: ${snap.website_url}` : "",
       snap.differentiation_statement ? `Differentiation: ${snap.differentiation_statement}` : "",
       scraped ? `Scraped content:\n${scraped}` : "",
+      docBlocks.length ? `Founder-uploaded documents:\n${docBlocks.join("\n\n")}` : "",
+      urlBlocks.length ? `Founder-supplied URLs (scraped):\n${urlBlocks.join("\n\n")}` : "",
     ].filter(Boolean).join("\n\n");
+
+    // Final overall safety cap
+    if (userPrompt.length > 60_000) userPrompt = userPrompt.slice(0, 60_000) + "\n\n[truncated]";
+
 
     await updateProgress(supabase, snapshotId, "extraction", 65, "Generating structured brief");
 

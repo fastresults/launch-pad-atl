@@ -289,16 +289,39 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
   const isLast = active === "lock";
   const locked = snapshot.concept_status === "locked";
 
+  const reextract = useMutation({
+    mutationFn: () => retryEnrichment({ data: { id: snapshot.id } }),
+    onSuccess: () => { toast.success("Re-extracting from your uploaded sources…"); onSaved(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Re-extract failed"),
+  });
+  const sm = snapshot.source_materials ?? null;
+  const hasSources = !!sm && (((sm.documents ?? []).length ?? 0) > 0 || ((sm.urls ?? []).length ?? 0) > 0);
+
   return (
     <div className="space-y-6 pb-28">
-      <div>
-        <h2 className="text-xl font-semibold">Review the brief</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Confirm what we got right. Fix what's off. Then continue.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold">Review the brief</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Confirm what we got right. Fix what's off. Then continue.
+          </p>
+        </div>
+        {hasSources && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => reextract.mutate()}
+            disabled={reextract.isPending}
+            title="Re-run extraction using the documents and URLs you uploaded"
+          >
+            {reextract.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1.5 h-3.5 w-3.5" />}
+            Re-extract from my sources
+          </Button>
+        )}
       </div>
 
       <ReviewSubStepper active={active} completeness={completeness} onJump={setActive} savedAt={savedAt} savingNow={savingNow} />
+
 
       <div>
         <h3 className="text-lg font-semibold">{current.title}</h3>

@@ -177,10 +177,12 @@ You will receive a founder's concept plus a research corpus (own site, competito
 Your job is to synthesize a structured research_brief AND a 4-section extracted_data object.
 
 CRITICAL RULES:
-1. Only state facts present in SOURCES. If a fact is not in the sources, write "[needs founder input]".
-2. Cite source URLs in brackets like [https://example.com] right after every claim that came from a source.
-3. Be specific and plausible. Never write filler like "TBD" or "various".
-4. Return ONLY valid JSON matching the schema below — no markdown, no commentary.
+1. Prefer verbatim facts from the founder's own uploaded documents/URLs over inference from research.
+2. Only state facts present in SOURCES. If a fact is not in the sources, leave the field as an empty string "".
+3. NEVER emit placeholder strings like "[needs founder input]", "TBD", "various", or "unknown".
+4. Cite source URLs in brackets like [https://example.com] right after every claim that came from an external source (skip citations for founder-uploaded documents).
+5. Return ONLY valid JSON matching the schema below — no markdown, no commentary.
+
 
 Schema:
 {
@@ -435,6 +437,17 @@ Venture context:
     .maybeSingle();
   const artifacts: Artifact[] = fresh?.research_artifacts ?? [];
 
+  // Founder's own uploaded source materials (highest priority signal).
+  const sm = snap.source_materials ?? null;
+  const PER_SOURCE_CAP = 12_000;
+  const cap = (s: unknown) => (typeof s === "string" ? s.slice(0, PER_SOURCE_CAP) : "");
+  const docBlocks: string[] = Array.isArray(sm?.documents)
+    ? sm.documents.map((d: any, i: number) => `### Document ${i + 1}: ${d.filename ?? "document"}\n${cap(d.text)}`)
+    : [];
+  const urlBlocks: string[] = Array.isArray(sm?.urls)
+    ? sm.urls.map((u: any, i: number) => `### URL ${i + 1}: ${u.url ?? ""}${u.title ? ` (${u.title})` : ""}\n${cap(u.text)}`)
+    : [];
+
   const corpus = [
     `# Founder input`,
     `Founder: ${snap.founder_name || "[not provided]"}${snap.founder_email ? ` <${snap.founder_email}>` : ""}`,
@@ -445,10 +458,13 @@ Venture context:
     `Market scope: ${scope}`,
     `Concept: ${concept}`,
     snap.differentiation_statement ? `Differentiation: ${snap.differentiation_statement}` : "",
+    docBlocks.length ? `\n# Founder-uploaded documents (authoritative — prefer over research)\n${docBlocks.join("\n\n")}` : "",
+    urlBlocks.length ? `\n# Founder-supplied URLs (authoritative — prefer over research)\n${urlBlocks.join("\n\n")}` : "",
     ``,
     `# Research corpus`,
     ...artifacts.map((a) => `## ${a.step}${a.source_url ? ` — ${a.source_url}` : ""}\n${a.content}`),
   ].filter(Boolean).join("\n\n");
+
 
   // hard cap corpus to ~120k chars to stay within model limits
   const cappedCorpus = corpus.length > 120_000 ? corpus.slice(0, 120_000) + "\n\n[truncated]" : corpus;

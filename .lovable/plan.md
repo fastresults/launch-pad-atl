@@ -1,61 +1,62 @@
+# Make uploaded sources actually populate the Review fields
 
-# New Yorker–style slide art for facilitator decks
+## What's broken
 
-## Goal
-Give every slide in every facilitator deck a hand-drawn, *New Yorker*–style illustration — no titles, no subtitles, no embedded text in the artwork. Ship Foundation first end-to-end, then proceed deck by deck (Strategy → Social & Content) on approval.
+On `hub.new`, users drop documents and add URLs. We extract their text in the browser, and the **Process document** button calls `venture-synthesize-concept` which fills the visible form on that page (company name, concept, differentiation, founder, location, industry).
 
-## Visual direction (shared across all 64 illustrations)
-- Style: classic *New Yorker* cartoon illustration — fine pen-and-ink linework, restrained crosshatching, soft muted watercolor washes, generous negative space, slightly wry editorial tone.
-- Composition: single conceptual scene per slide. No words, labels, signs, captions, logos, or UI inside the image.
-- Palette: warm off-white paper background, ink black, with one or two muted accent washes (sage, ochre, dusty rose, slate blue) — kept consistent across a deck so it reads as a set.
-- Aspect: 3:2 landscape (1536×1024) so it sits cleanly inside the existing `max-h-[280px] rounded-2xl` slot without cropping faces.
-- Generated via the agent-side `imagegen--generate_image` tool, `model: "premium.gemini"` (Nano Banana 2) for the editorial line quality, `transparent_background: false`. Each prompt will explicitly forbid text/letters/typography/watermarks.
+But when **Create & enrich** runs:
 
-## Foundation deck — 10 scenes
-Each slide gets one illustration. Concepts chosen to match the slide's idea without duplicating its words.
+1. `createSnapshot` only persists those scalar fields — the raw doc text and scraped URL bodies are thrown away.
+2. The snapshot row is then enriched by `venture-extract-concept` (and `venture-deep-research`), which **only** sees `business_concept`, `company_name`, `differentiation_statement`, and a re-scrape of `website_url`.
+3. So the AI fills `extracted_data.{foundation,market,operations,vision}` based on a 3-sentence blurb. Anything it can't infer comes back as `"[needs founder input]"`, which is what shows up empty/placeholder in the Review wizard (Story → Market → Model sub-steps).
 
-1. **Cover** — A founder at a drafting table sketching a building's foundation blueprint; coffee cup, T-square, calm morning light.
-2. **Stakes / why this exists** — A small house being lowered by crane onto a single concrete footing; bystanders watching from below.
-3. **What breaks without it** — Three precarious towers of mismatched objects (chairs, books, a teapot) leaning at different angles on uneven ground.
-4. **What good looks like** — A founder calmly answering four curious customers seated around a small café table.
-5. **The four deliverables** — A craftsman's workbench with four neatly arranged hand tools laid out on a linen cloth.
-6. **Deliverable 01 — Founder Profile** — A tailor measuring a founder for a bespoke jacket in front of a tall mirror.
-7. **Deliverable 02 — Business Concept** — A gardener transplanting a young sapling from a paper cup into rich soil.
-8. **Deliverable 03 — Value Proposition** — A lighthouse keeper aiming a single bright beam across a foggy harbor toward one small boat.
-9. **Deliverable 04 — Positioning Statement** — A chess player thoughtfully placing one piece on an otherwise empty board.
-10. **Recap / what's next** — A hiker pausing at a trail marker, looking up a long path that climbs into distant hills.
+Verified against snapshot `a430693d…`: `extracted_data.operations.pricing`, `operations.team`, `vision.short_term_goals`, `vision.long_term_goals` are all literal `"[needs founder input]"` strings — even though the user uploaded multiple docs that almost certainly contained that detail.
 
-(Concepts for Strategy through Social & Content will be drafted the same way once Foundation is approved — 10 scenes per deck, total 70 more.)
+## Fix
 
-## Implementation steps (Foundation)
+Carry the source material from `hub.new` all the way into the extraction prompt.
 
-1. **Generate art.** Call `imagegen--generate_image` 10× in parallel, saving to:
-   ```
-   public/decks/foundation/01-cover.jpg
-   public/decks/foundation/02-stakes.jpg
-   ...
-   public/decks/foundation/10-recap.jpg
-   ```
-   Every prompt ends with: *"editorial pen-and-ink illustration in the style of a classic New Yorker cartoon, soft muted watercolor wash, warm off-white paper, generous negative space, no text, no letters, no typography, no captions, no signage, no watermark."*
+### 1. Schema — store sources on the snapshot
 
-2. **Add SlotImage to the 8 slides that don't have one.** Each new slot uses a distinct `field` so admin overrides keep working:
-   - `what-breaks` → `<SlotImage field="image" defaultSrc="/decks/foundation/03-what-breaks.jpg" …/>` placed under the cards.
-   - `what-good`, `deliverables-overview`, `recap` → same pattern, sized `max-h-[220px]` so it doesn't push content off-canvas.
-   - `deliv-0..3` → extend `DeliverableSlide` with an optional `imageSrc` prop and a `SlotImage` rendered above or replacing the giant icon block; pass per-deliverable images from `foundation.tsx`.
+Add one column to `venture_snapshots`:
 
-3. **Wire defaults for the two existing slots.** Add `defaultSrc` (and `defaultAlt`) to the `cover` and `stakes` `SlotImage` calls pointing at the new files.
+- `source_materials jsonb` — `{ documents: [{ filename, text, charCount }], urls: [{ url, title, text, charCount }], conceptDraft: string }`
 
-4. **Verify in the deck viewer.** Open `/admin/decks` → Foundation → Preview, page through all 10 slides at 1920×1080, confirm no text artifacts and that images sit within the canvas without overlap.
+(`scraped_content` stays as-is for back-compat; `source_materials` is the new richer field.)
 
-5. **Wait for approval, then repeat** for Strategy, Operations, Finance, Governance, Brand, Marketing, Social & Content — one deck per turn so we can adjust style or concepts between decks.
+### 2. `createSnapshot` (`src/lib/foundersHub.functions.ts`)
 
-## Technical notes
-- `SlotImage` already supports `defaultSrc`/`defaultAlt`; no schema changes needed. Admin AI re-generation via `deck-image-generate` continues to work because we're only setting defaults, not writing override rows.
-- `DeliverableSlide.tsx` needs a small extension to accept an optional image and render it; the existing icon stays as a fallback when no `imageSrc` is passed, so other decks keep rendering until their art lands.
-- Files live in `public/decks/<stage>/` so they're served as static assets with long cache lifetimes — no DB writes, no storage bucket churn.
-- If any prompt is rejected by content moderation, retry once with a more abstract reframing (e.g. swap a human figure for an empty chair) before falling back to `premium.gpt`.
+Accept and persist `source_materials` from the client. Cap each text at ~40 KB and the array totals at ~150 KB to keep the row sane.
+
+### 3. `hub.new.tsx` → `create.mutationFn`
+
+Pass the already-extracted `readyFiles` and `readyUrls` plus the manual `businessConcept` draft into `createSnapshot` as `source_materials`. No new uploads, no new scrapes — we already have the text in memory from the Process step.
+
+### 4. `venture-extract-concept/index.ts`
+
+- Load `source_materials` from the row.
+- Build the user prompt with: business concept, differentiation, scraped website (existing), **plus** each uploaded document (filename + text) and each scraped URL (url + title + text), clearly delimited.
+- Tighten the system prompt: "When source material is provided, prefer extracting verbatim facts (pricing, team, goals, processes) from it over inference. Only infer when sources are silent. Never emit placeholder strings like '[needs founder input]'; leave the field empty if truly unknown."
+- Truncate per-source to ~12 KB and total user prompt to ~60 KB before sending to the gateway.
+
+### 5. `venture-deep-research/index.ts`
+
+Same treatment — pass `source_materials` excerpts into its research brief so the deeper passes (market size, competitors) build on the founder's own docs rather than ignoring them.
+
+### 6. Backfill (this snapshot specifically)
+
+For `a430693d-71cb-4407-bdf5-2d4eef62c2b1`: after the code lands, add a **Re-extract from sources** button on the `EnrichingStep` / Review header (or just reuse `retryEnrichment`) so Michael can re-run the extraction once. The next time he creates a venture, the pipeline picks the docs up automatically.
 
 ## Out of scope
-- Animating the illustrations.
-- Changing slide copy, layout grid, or the Slot system.
-- Backfilling the admin override table — defaults are enough; admins can still swap any image per-slide.
+
+- Re-uploading files to storage from `hub.new` — we already have their text client-side; saving the raw binaries can come later if needed.
+- Changing the Review wizard UI itself; once `extracted_data` is real, the existing fields display correctly.
+
+## Files touched
+
+- `supabase/migrations/<new>.sql` — add `source_materials jsonb` column.
+- `src/lib/foundersHub.functions.ts` — accept + persist `source_materials` in `createSnapshot`.
+- `src/routes/_authenticated/dashboard/hub.new.tsx` — include `readyFiles`/`readyUrls`/draft in the create payload.
+- `supabase/functions/venture-extract-concept/index.ts` — read column, fold into prompt, ban placeholder output.
+- `supabase/functions/venture-deep-research/index.ts` — same context injection.
+- `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` — small "Re-extract from my sources" affordance in the Review header for snapshots that already exist.

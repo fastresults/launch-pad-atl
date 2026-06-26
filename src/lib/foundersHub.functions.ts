@@ -152,6 +152,7 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
     industry,
     sub_industry,
     track,
+    source_materials,
   } = unwrap<{
     company_name?: string;
     website_url?: string;
@@ -167,7 +168,35 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
     industry?: string;
     sub_industry?: string;
     track?: string;
+    source_materials?: {
+      documents?: Array<{ filename?: string; text?: string }>;
+      urls?: Array<{ url?: string; title?: string | null; text?: string }>;
+      conceptDraft?: string;
+    };
   }>(input);
+
+  // Cap each text and overall payload so the row stays sane.
+  const PER_TEXT_CAP = 40_000;
+  const TOTAL_CAP = 150_000;
+  let used = 0;
+  const trim = (s: unknown) => {
+    if (typeof s !== "string") return "";
+    let t = s.length > PER_TEXT_CAP ? s.slice(0, PER_TEXT_CAP) : s;
+    if (used + t.length > TOTAL_CAP) t = t.slice(0, Math.max(0, TOTAL_CAP - used));
+    used += t.length;
+    return t;
+  };
+  const cleanedSources = source_materials
+    ? {
+        documents: (source_materials.documents ?? [])
+          .map((d) => ({ filename: d.filename ?? "document", text: trim(d.text), charCount: (d.text ?? "").length }))
+          .filter((d) => d.text.length > 0),
+        urls: (source_materials.urls ?? [])
+          .map((u) => ({ url: u.url ?? "", title: u.title ?? null, text: trim(u.text), charCount: (u.text ?? "").length }))
+          .filter((u) => u.text.length > 0),
+        conceptDraft: typeof source_materials.conceptDraft === "string" ? source_materials.conceptDraft.slice(0, 8_000) : "",
+      }
+    : null;
 
   const { data, error } = await supabase
     .from("venture_snapshots")
@@ -187,6 +216,7 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
       industry: industry ?? null,
       sub_industry: sub_industry ?? null,
       track: track ?? null,
+      source_materials: cleanedSources,
       status: "enriching",
       enrichment_progress: { stage: "queued", progress: 0, message: "Queued", updatedAt: new Date().toISOString() },
     })
@@ -199,6 +229,7 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
 
   return { id: data.id };
 }
+
 
 export async function updateFounderContext(input: any): Promise<void> {
   const { id, ...patch } = unwrap<{
