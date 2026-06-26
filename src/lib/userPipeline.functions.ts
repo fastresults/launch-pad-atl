@@ -75,21 +75,23 @@ export async function adminGetUserWorkflow(input: any) {
   return buildWorkflow(userId);
 }
 
-async function queueRun(userId: string, options: Record<string, unknown>) {
-  const { error } = await supabase
-    .from("ai_pipeline_runs")
-    .insert({ user_id: userId, status: "queued", options: options as any });
+async function invokeRun(payload: Record<string, unknown>) {
+  const { data, error } = await supabase.functions.invoke("dashboard-pipeline-run", {
+    body: payload,
+  });
   if (error) throw new Error(error.message);
+  if (data && data.ok === false) throw new Error(data.error ?? "Run failed");
+  return data;
 }
 
 export async function runMyDeliverable(input: any) {
-  const { key } = unwrap<{ key: string }>(input);
-  await queueRun(await uid(), { key });
+  const { key, runUpstream } = unwrap<{ key: string; runUpstream?: boolean }>(input);
+  await invokeRun({ key, runUpstream: !!runUpstream });
   return { queued: true };
 }
 
 export async function runMyRemaining() {
-  await queueRun(await uid(), { bulk: true });
+  await invokeRun({ bulk: true });
   return { queued: true };
 }
 
@@ -100,7 +102,7 @@ export async function adminRunForUser(input: any) {
     runUpstream?: boolean;
     bulk?: boolean;
   }>(input);
-  await queueRun(userId, { key, runUpstream, bulk });
+  await invokeRun({ userId, key, runUpstream: !!runUpstream, bulk: !!bulk });
   return { total: 1, failed: 0 };
 }
 

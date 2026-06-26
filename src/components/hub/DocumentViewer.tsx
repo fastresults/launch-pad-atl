@@ -387,6 +387,17 @@ export function DocumentViewer({
     };
   }, [heroPath]);
 
+  // Lazy hero image: auto-generate the first time a document is opened
+  // without one. Bulk generation no longer pre-renders hero images.
+  useEffect(() => {
+    if (!open) return;
+    if (heroPath || heroLoading) return;
+    if (!doc?.snapshot_id || !doc?.document_type) return;
+    if (!doc?.content) return; // only when there's a document body
+    generateHero(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, doc?.snapshot_id, doc?.document_type, doc?.content, heroPath]);
+
   const generateHero = async (force = false) => {
     if (!doc?.snapshot_id || !doc?.document_type) return;
     setHeroLoading(true);
