@@ -263,6 +263,7 @@ export function DocumentViewer({
   doc,
   open,
   onOpenChange,
+  autoGenerateHero = true,
 }: {
   doc:
     | {
@@ -279,6 +280,7 @@ export function DocumentViewer({
     | null;
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  autoGenerateHero?: boolean;
 }) {
   const [headings, setHeadings] = useState<{ id: string; text: string }[]>([]);
   const [tocOpen, setTocOpen] = useState(false);
