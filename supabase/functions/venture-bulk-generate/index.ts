@@ -309,7 +309,7 @@ async function runJob(supabase: any, snapshotId: string, jobId: string, category
   }).eq("id", jobId);
 
   for (const layer of layers) {
-    await runLayer(supabase, snapshotId, jobId, layer, state);
+    await runLayer(supabase, ctx, jobId, layer, state);
     if (state.canceled) {
       await supabase.from("venture_generation_jobs").update({
         status: "canceled",
