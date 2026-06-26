@@ -1,34 +1,39 @@
-## Goal
-On `/dashboard/workflow`, add a per-category "Open deck" entry that the facilitator can launch — but only once the previous category is fully generated (and the deck itself exists). This paces the facilitator through the schedule one stage at a time.
+## Goals
+1. Open facilitator decks in a modal dialog instead of navigating to `/workshop/{slug}`.
+2. Add a "Generate this category" button next to "Open facilitator deck" that runs every still-missing deliverable in that stage.
 
-## Gating rule
-For each stage group rendered in `workflow.tsx`:
-- **Unlocked when** every prior stage's triggerable items are `generated === true` AND a deck exists for that stage in `STAGE_DECKS` (`available === true`).
-- The very first stage (Foundation) is unlocked by default.
-- Bonus stages don't block downstream unlocks.
+## 1. Deck-in-modal
 
-## UI changes (workflow.tsx only)
-Inside the existing `stages.map(...)` section header:
-1. Compute `unlockedDeckSlugs` once per render:
-   - Walk `stages` in order, track `allPriorGenerated` boolean.
-   - A stage's deck is unlockable if `allPriorGenerated && deck.available`.
-   - After processing, AND the current stage's own completion into `allPriorGenerated` for the next iteration.
-2. Next to the stage `<h2>`, render a deck control:
-   - **Unlocked + available** → `<Button asChild>` linking to `/workshop/{slug}` labeled "Open facilitator deck" with a `Presentation` icon.
-   - **Locked (prior incomplete)** → disabled button "Deck unlocks when {previous stage name} is complete" with a `Lock` icon.
-   - **Coming soon (no slides yet)** → disabled "Deck coming soon" badge.
-3. Add a small helper line under the stage label: "Facilitator: walk the room through this deck before generating."
+New component `src/components/workshop-slides/DeckDialog.tsx`:
+- `<Dialog>` with a near-full-screen content panel (`max-w-[95vw] h-[90vh] p-0`).
+- Renders the existing `SlideDeck` (or `ScaledSlide` driver) inside.
+- Reuses keyboard nav (←/→/Space/Esc) — Esc closes the dialog via Radix's built-in handler.
+- Title bar with deck title + close button; the slide canvas owns the rest.
 
-## Technical notes
-- Map stage label → deck slug using the same `slugify` helper already in `registry.ts` (export it, or duplicate the 1-liner in `workflow.tsx`).
-- Source of truth for deck availability stays `STAGE_DECKS` from `@/components/workshop-slides/registry`.
-- Completion check uses the same `triggerable` filter already in the file (`user_can_trigger !== false`) scoped to that stage's items.
-- No DB, no backend, no edge function changes. Pure frontend.
+In `workflow.tsx`:
+- Replace the `<Link to={/workshop/{slug}}>` button with a stateful trigger that sets `openDeckSlug`.
+- Render `<DeckDialog slug={openDeckSlug} onOpenChange={...} />` once at the bottom of the page.
+- Keep the `/workshop/:stage` route intact for direct/fullscreen access (no removal).
+
+## 2. Per-category "Generate this category" button
+
+New helper in `src/lib/userPipeline.functions.ts` (or inline in workflow.tsx using existing `runMyDeliverable`):
+- Simplest path: in `workflow.tsx`, add a `runCategory` mutation that iterates the stage's triggerable, ungenerated items and calls `runMyDeliverable({ data: { key, runUpstream: true } })` sequentially.
+- Track a `runningCategoryStage: number | null` state so only that section's button shows the spinner; other categories stay interactive.
+- On finish, toast "Category ready" and invalidate `["my"]`.
+
+UI placement (in the stage header flex row already added):
+- Order: `[Generate this category]` `[Open facilitator deck]`.
+- Button states:
+  - Idle, items remaining → "Generate this category (N)" with `Play` icon.
+  - Running → "Generating…" with spinner, disabled.
+  - All done → "Category complete" with `CheckCircle2`, disabled, `variant="ghost"`.
+  - Brief not ready → disabled with tooltip "Finish your Startup Brief first".
 
 ## Files touched
-- `src/routes/_authenticated/dashboard/workflow.tsx` — add imports, gating logic, deck button in stage header.
-- `src/components/workshop-slides/registry.ts` — export `slugify` (tiny).
+- `src/components/workshop-slides/DeckDialog.tsx` (new)
+- `src/routes/_authenticated/dashboard/workflow.tsx` (state + dialog mount + per-category button + sequential runner)
 
 ## Out of scope
-- Authoring new decks (Foundation only for now, others stay locked behind "Deck coming soon" until built — matches existing day.tsx behavior).
-- Changing generation/unlock logic for deliverables themselves.
+- Changing the existing `/workshop/:stage` route, deck gating logic, or bulk "Run remaining" button at the top.
+- Authoring new decks (still only Foundation is available).
