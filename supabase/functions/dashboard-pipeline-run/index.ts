@@ -331,7 +331,10 @@ Deno.serve(async (req) => {
       runUpstream: !!body.runUpstream,
       forceRun: !!body.forceRun,
       maxDocs: typeof body.maxDocs === "number" ? Math.max(1, Math.min(5, Math.floor(body.maxDocs))) : undefined,
+      feedback: typeof body.feedback === "string" ? body.feedback.slice(0, 4000) : undefined,
+      tags: Array.isArray(body.tags) ? body.tags.filter((x: any) => typeof x === "string").slice(0, 12) : undefined,
     };
+
 
     // If targeting another user, require admin
     if (targetUserId !== callerId) {
