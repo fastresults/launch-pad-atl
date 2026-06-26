@@ -24,10 +24,10 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  getCanonicalFounderContext,
   provenanceLabel,
   type CanonicalFounderContext,
 } from "@/lib/canonical-context";
+import { useCanonicalContext } from "@/hooks/use-canonical-context";
 
 // Common intake field ids → canonical context lookups. Anything not listed
 // falls through to the field's schema default. Keep this conservative so we
