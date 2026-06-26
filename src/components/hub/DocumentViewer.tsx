@@ -490,6 +490,7 @@ export function DocumentViewer({
         contentType,
         size: blob.size,
         kind: "deliverable",
+        sourceVentureDocumentId: doc?.id ?? null,
       });
       setSavedCount((n) => n + 1);
       qc.invalidateQueries({ queryKey: ["my", "documents"] });
