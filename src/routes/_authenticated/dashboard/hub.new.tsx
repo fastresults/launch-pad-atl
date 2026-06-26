@@ -23,6 +23,7 @@ import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin, Check
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { useCanonicalContext } from "@/hooks/use-canonical-context";
 
 type DroppedFile = {
   id: string;
