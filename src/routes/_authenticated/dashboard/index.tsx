@@ -143,17 +143,7 @@ function BeforeMode({
           footnote="You're all set for Saturday. Just show up."
         />
       ) : (
-        <NextActionCard
-          eyebrow="Pre-work"
-          title={briefScore === 0 ? "Answer 10 quick questions about your startup." : "Pick up where you left off."}
-          description={
-            <>
-              You can talk instead of type. Your AI assistant uses these answers all day Saturday to build your 25 deliverables.
-              You're <strong className="text-foreground">{briefScore} of {briefTotal}</strong> done.
-            </>
-          }
-          primary={{ to: "/dashboard/brief", label: briefScore === 0 ? "Start" : "Keep going" }}
-        />
+        <BriefStatusCard answered={briefScore} total={briefTotal} />
       )}
 
       <WalkOutPreview />
