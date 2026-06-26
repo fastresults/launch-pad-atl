@@ -8,10 +8,13 @@ import {
   getDocumentDownloadUrl,
   listMyDocuments,
 } from "@/lib/attendee.functions";
+import { getVentureDocumentById } from "@/lib/foundersHub.functions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Sparkles, Upload as UploadIcon } from "lucide-react";
+import { Eye, Loader2, Sparkles, Upload as UploadIcon } from "lucide-react";
 import { toast } from "sonner";
+import { DocumentViewer } from "@/components/hub/DocumentViewer";
+import { FilePreviewDialog } from "@/components/files/FilePreviewDialog";
 
 const KINDS = [
   { key: "pitch_deck", label: "Pitch deck" },
