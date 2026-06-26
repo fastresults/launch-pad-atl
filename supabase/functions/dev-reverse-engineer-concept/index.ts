@@ -11,11 +11,13 @@ const ALLOWED_URLS = new Set<string>([
   "https://www.equinox.com",
   "https://www.drybar.com",
   "https://www.soulcycle.com",
-  // small_business
-  "https://www.acehardware.com",
-  "https://www.servpro.com",
-  "https://www.hrblock.com",
-  "https://www.midas.com",
+  // ecommerce_dtc
+  "https://www.allbirds.com",
+  "https://magicspoon.com",
+  "https://liquiddeath.com",
+  "https://oliveandjune.com",
+  "https://chamberlaincoffee.com",
+  "https://www.bombas.com",
   // scalable_tech
   "https://linear.app",
   "https://vercel.com",
@@ -51,8 +53,8 @@ const ALLOWED_URLS = new Set<string>([
 const TRACK_LENS: Record<string, string> = {
   lifestyle:
     "Voice: sole-founder lifestyle / main-street business. Plain English, no VC jargon, no TAM talk. Speak about real customers, local roots, and the founder's craft.",
-  small_business:
-    "Voice: established small-business owner. Talk margin, repeat customers, regional reach, operational discipline. No venture framing.",
+  ecommerce_dtc:
+    "Voice: DTC brand founder launching a physical product online. Talk hero SKU, contribution margin, paid-social creative, email/SMS, repeat purchase, 3PL. No venture framing.",
   scalable_tech:
     "Voice: venture-track SaaS founder. ICP precision, defensibility, retention/expansion, growth motion. SaaS metrics where natural.",
   marketplace:
