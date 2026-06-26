@@ -326,6 +326,9 @@ export type Database = {
       attendee_documents: {
         Row: {
           created_at: string
+          extracted_at: string | null
+          extracted_text: string | null
+          extraction_error: string | null
           id: string
           kind: string
           mime_type: string | null
@@ -334,10 +337,14 @@ export type Database = {
           snapshot_id: string | null
           source_venture_document_id: string | null
           storage_path: string
+          used_in_brief: boolean
           user_id: string
         }
         Insert: {
           created_at?: string
+          extracted_at?: string | null
+          extracted_text?: string | null
+          extraction_error?: string | null
           id?: string
           kind: string
           mime_type?: string | null
@@ -346,10 +353,14 @@ export type Database = {
           snapshot_id?: string | null
           source_venture_document_id?: string | null
           storage_path: string
+          used_in_brief?: boolean
           user_id: string
         }
         Update: {
           created_at?: string
+          extracted_at?: string | null
+          extracted_text?: string | null
+          extraction_error?: string | null
           id?: string
           kind?: string
           mime_type?: string | null
@@ -358,6 +369,7 @@ export type Database = {
           snapshot_id?: string | null
           source_venture_document_id?: string | null
           storage_path?: string
+          used_in_brief?: boolean
           user_id?: string
         }
         Relationships: [
