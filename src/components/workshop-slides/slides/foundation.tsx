@@ -169,39 +169,50 @@ export const foundationSlides: Slide[] = [
       ];
       return (
         <SlideLayout stageKicker={KICKER} pageLabel={pl(4, 10)}>
-          <div className="max-w-[1500px]">
-            <SlotText
-              slideId="what-good"
-              field="kicker"
-              defaultValue="What good looks like"
-              as="div"
-              className="slide-kicker font-semibold text-primary mb-6"
-            />
-            <SlotText
-              slideId="what-good"
-              field="title"
-              defaultValue="A founder who can answer four questions in plain language."
-              as="h2"
-              className="slide-title font-semibold tracking-tight mb-12"
-            />
-            <div className="grid grid-cols-2 gap-6">
-              {defaults.map((q, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-5 rounded-2xl bg-primary/5 border border-primary/15 p-8"
-                >
-                  <CheckCircle2
-                    className="text-primary shrink-0 mt-1"
-                    style={{ width: 44, height: 44 }}
-                  />
-                  <SlotText
-                    slideId="what-good"
-                    field={`q.${i}`}
-                    defaultValue={q}
-                    className="slide-body-lg font-medium"
-                  />
-                </div>
-              ))}
+          <div className="grid grid-cols-12 gap-10 items-center">
+            <div className="col-span-7">
+              <SlotText
+                slideId="what-good"
+                field="kicker"
+                defaultValue="What good looks like"
+                as="div"
+                className="slide-kicker font-semibold text-primary mb-6"
+              />
+              <SlotText
+                slideId="what-good"
+                field="title"
+                defaultValue="A founder who can answer four questions in plain language."
+                as="h2"
+                className="slide-title font-semibold tracking-tight mb-10"
+              />
+              <div className="grid grid-cols-1 gap-4">
+                {defaults.map((q, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-5 rounded-2xl bg-primary/5 border border-primary/15 p-6"
+                  >
+                    <CheckCircle2
+                      className="text-primary shrink-0 mt-1"
+                      style={{ width: 36, height: 36 }}
+                    />
+                    <SlotText
+                      slideId="what-good"
+                      field={`q.${i}`}
+                      defaultValue={q}
+                      className="slide-body-lg font-medium"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="col-span-5 flex items-center justify-center">
+              <SlotImage
+                slideId="what-good"
+                field="image"
+                defaultSrc="/decks/foundation/04-what-good.jpg"
+                defaultAlt="A founder calmly answering four curious customers at a cafe table"
+                className="w-full max-h-[760px] object-contain rounded-2xl"
+              />
             </div>
           </div>
         </SlideLayout>
