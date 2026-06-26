@@ -348,20 +348,7 @@ function NoCohortMode({ briefScore, briefTotal, pitch }: { briefScore: number; b
           ? "Your brief is locked in. We'll email you the moment your workshop date is set."
           : "We haven't matched you to a workshop date yet. While you wait, start your brief."}
       </p>
-      {done ? (
-        <BriefCompleteCard
-          pitch={pitch}
-          secondary={{ to: "/dashboard/workflow", label: "Browse the 25 deliverables →" }}
-          footnote="No workshop date yet — we'll be in touch soon."
-        />
-      ) : (
-        <NextActionCard
-          eyebrow="Start here"
-          title={briefScore === 0 ? "Answer 10 quick questions about your startup." : "Pick up where you left off."}
-          description={`You're ${briefScore} of ${briefTotal} done.`}
-          primary={{ to: "/dashboard/brief", label: briefScore === 0 ? "Start" : "Keep going" }}
-        />
-      )}
+      <BriefStatusCard answered={briefScore} total={briefTotal} />
     </>
   );
 }
