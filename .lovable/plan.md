@@ -1,24 +1,43 @@
 ## Problem
 
-When the user clicks "Run remaining" on `/dashboard/workflow`, the request succeeds (a bulk run is queued) but the UI throws:
-
-```
-Cannot read properties of undefined (reading 'total')
-```
-
-## Root cause
-
-`runMyRemaining()` in `src/lib/userPipeline.functions.ts` queues a bulk pipeline run and returns `undefined` (no body). But the mutation's `onSuccess` in `src/routes/_authenticated/dashboard/workflow.tsx` (line 37) reads `r.total - r.failed` / `r.total`, which blows up when `r` is undefined.
-
-The shape with `{ total, failed }` only ever existed on `adminRunForUser`, which runs synchronously. The user-facing path is async (queue-based), so those fields don't apply.
+In `deliverable_types`, only ~11 of 34 rows have `user_can_trigger = true` and `auto_runnable = true`. The other 23 are flagged `false`, which is why they render as locked "Coming soon" cards even though the banner says "All caught up." That mismatch is the bug.
 
 ## Fix
 
-1. `src/lib/userPipeline.functions.ts` — return a small status object from `runMyRemaining()` (and `runMyDeliverable()` for consistency): `{ queued: true }`.
-2. `src/routes/_authenticated/dashboard/workflow.tsx` — update the `runAll` mutation's `onSuccess` to show a "Queued — generating remaining deliverables" toast instead of referencing `r.total`. Keep `qc.invalidateQueries` so the list refreshes; the existing 3–5s `refetchInterval` on `getMyWorkflow` / `getMyRecentRuns` will surface progress as runs complete.
-3. No DB, RLS, or edge-function changes required.
+### 1. Database — unlock all 34 deliverables
 
-## Verification
+Single migration that flips every active row:
 
-- Click "Run remaining" → see "Queued…" toast, no runtime error.
-- Recent runs panel begins showing the queued runs within a few seconds.
+```sql
+UPDATE public.deliverable_types
+   SET user_can_trigger = true,
+       auto_runnable    = true
+ WHERE active = true;
+```
+
+No schema change, no RLS change. The existing `depends_on_keys` graph stays intact, so order/sequencing during a "Run remaining" pass is preserved — items still wait for their upstream deliverables to finish, they just no longer sit behind a hard `Coming soon` gate.
+
+### 2. UI — drop the "Coming soon" treatment
+
+In `src/routes/_authenticated/dashboard/workflow.tsx` (and the admin mirror at `src/routes/_authenticated/_admin/admin.attendees.$userId.workflow.tsx`):
+
+- Remove the `comingSoon` branch (lines ~210, 230, 245). Every card now shows either Generate / Regenerate, with the existing "Waiting on upstream" pill when `deps_met` is false but the user has not yet generated the upstream items.
+- Keep the Generate button enabled even when `deps_met` is false — clicking it triggers our bulk runner, which already resolves dependencies in order.
+
+### 3. Auto-kick generation for the locked ones
+
+When the workflow page loads and detects deliverables that are now unlocked but never generated, call the existing `forceRunMyRemaining` loop once (silently, with the same sticky progress card we already built) so the user sees the remaining 23 deliverables start generating instead of having to press anything.
+
+A one-time `localStorage` flag (`workflow.autokick.v1`) prevents it from re-triggering on every visit.
+
+### 4. Banner copy
+
+Replace the misleading "All caught up" pill with a live count:
+
+- `X of 34 ready` when some are pending
+- `All 34 ready` only when every deliverable has a generated document
+
+## Out of scope
+
+- No changes to `depends_on_keys`, RLS, edge functions, or the bulk-generation engine.
+- Bonus Brand / Marketing / Social tracks are included in the unlock since they're part of the 34.

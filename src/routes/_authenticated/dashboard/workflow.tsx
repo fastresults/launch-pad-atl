@@ -84,6 +84,22 @@ export default function WorkflowPage() {
     }
   }, [bulk, generatedCount, activeRuns, runAll.isIdle, runAll.isPending]);
 
+  // One-time auto-kick: after the big unlock, automatically start generating
+  // any deliverables that were previously gated as "Coming soon".
+  useEffect(() => {
+    if (!briefReady || runAll.isPending || forceRun.isPending || bulk) return;
+    if (remainingCount === 0) return;
+    try {
+      const KEY = "workflow.autokick.v1";
+      if (typeof window === "undefined") return;
+      if (window.localStorage.getItem(KEY)) return;
+      window.localStorage.setItem(KEY, String(Date.now()));
+      runAll.mutate();
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [briefReady, remainingCount]);
+
+
   const bulkDone = bulk ? generatedCount - bulk.startCount : 0;
   const bulkTotal = bulk ? bulk.target - bulk.startCount : 0;
   const bulkPct = bulk && bulkTotal > 0 ? Math.min(100, Math.round((bulkDone / bulkTotal) * 100)) : 0;
@@ -148,11 +164,12 @@ export default function WorkflowPage() {
             {bulkActive ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating…</>
             ) : remainingCount === 0 ? (
-              <><CheckCircle2 className="mr-2 h-4 w-4" />All caught up</>
+              <><CheckCircle2 className="mr-2 h-4 w-4" />All {triggerable.length} ready</>
             ) : (
               <><Play className="mr-2 h-4 w-4" />Run remaining ({remainingCount})</>
             )}
           </Button>
+
         </div>
       </div>
 
@@ -207,12 +224,9 @@ export default function WorkflowPage() {
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {group.items.map((d) => {
-              const comingSoon = d.user_can_trigger === false && !d.generated;
-              const Icon = d.generated ? CheckCircle2 : comingSoon ? Lock : d.deps_met ? Circle : Lock;
+              const Icon = d.generated ? CheckCircle2 : d.deps_met ? Circle : Lock;
               const tone = d.generated
                 ? "text-status-success"
-                : comingSoon
-                ? "text-muted-foreground"
                 : d.deps_met
                 ? "text-foreground"
                 : "text-muted-foreground";
@@ -227,8 +241,7 @@ export default function WorkflowPage() {
                       {d.description && <p className="mt-1 text-xs text-muted-foreground">{d.description}</p>}
                       <div className="mt-2 flex flex-wrap gap-1">
                         {d.generated && <Badge variant="secondary" className="text-xs">Generated</Badge>}
-                        {comingSoon && <Badge variant="outline" className="text-xs">Coming soon</Badge>}
-                        {!comingSoon && !d.deps_met && <Badge variant="outline" className="text-xs">Waiting on upstream</Badge>}
+                        {!d.generated && !d.deps_met && <Badge variant="outline" className="text-xs">Waiting on upstream</Badge>}
                       </div>
                     </div>
                   </div>
@@ -236,13 +249,13 @@ export default function WorkflowPage() {
                     <Button
                       size="sm"
                       variant={d.generated ? "outline" : "default"}
-                      disabled={!briefReady || runOne.isPending || comingSoon}
+                      disabled={!briefReady || runOne.isPending}
                       onClick={() => runOne.mutate(d.key)}
-                      title={comingSoon ? "Prompt for this deliverable is on its way" : undefined}
+                      title={!d.deps_met ? "We'll run upstream deliverables first, then this one." : undefined}
                     >
                       {runOne.isPending && runOne.variables === d.key ? (
                         <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Running…</>
-                      ) : d.generated ? "Regenerate" : comingSoon ? "Coming soon" : "Generate"}
+                      ) : d.generated ? "Regenerate" : "Generate"}
                     </Button>
                     {d.generated && (
                       <Button asChild size="sm" variant="ghost">
@@ -253,6 +266,7 @@ export default function WorkflowPage() {
                 </div>
               );
             })}
+
           </div>
         </section>
       ))}
