@@ -331,6 +331,7 @@ export type Database = {
           mime_type: string | null
           original_name: string
           size_bytes: number | null
+          snapshot_id: string | null
           source_venture_document_id: string | null
           storage_path: string
           user_id: string
@@ -342,6 +343,7 @@ export type Database = {
           mime_type?: string | null
           original_name: string
           size_bytes?: number | null
+          snapshot_id?: string | null
           source_venture_document_id?: string | null
           storage_path: string
           user_id: string
@@ -353,11 +355,19 @@ export type Database = {
           mime_type?: string | null
           original_name?: string
           size_bytes?: number | null
+          snapshot_id?: string | null
           source_venture_document_id?: string | null
           storage_path?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "attendee_documents_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "attendee_documents_source_venture_document_id_fkey"
             columns: ["source_venture_document_id"]

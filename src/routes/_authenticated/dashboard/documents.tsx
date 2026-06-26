@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createDocumentUploadUrl,
@@ -7,12 +8,22 @@ import {
   finalizeDocument,
   getDocumentDownloadUrl,
   listMyDocuments,
+  updateDocumentVenture,
 } from "@/lib/attendee.functions";
-import { findVentureDocumentByLabel, getVentureDocumentById } from "@/lib/foundersHub.functions";
+import {
+  findVentureDocumentByLabel,
+  getVentureDocumentById,
+  listSnapshots,
+} from "@/lib/foundersHub.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Eye, Loader2, Sparkles, Upload as UploadIcon } from "lucide-react";
+import { Eye, Loader2, Sparkles, Upload as UploadIcon, FolderInput } from "lucide-react";
 import { toast } from "sonner";
 import { DocumentViewer } from "@/components/hub/DocumentViewer";
 import { FilePreviewDialog } from "@/components/files/FilePreviewDialog";
@@ -33,6 +44,8 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: "uploaded", label: "Uploaded" },
 ];
 
+const UNASSIGNED = "__unassigned__";
+
 function kindLabel(k: string) {
   return KINDS.find((x) => x.key === k)?.label ?? k;
 }
@@ -40,7 +53,17 @@ function kindLabel(k: string) {
 export default function DocumentsPage() {
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const ventureFilter = searchParams.get("venture") ?? "all"; // "all" | "__unassigned__" | snapshotId
+  const setVentureFilter = (v: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (v === "all") next.delete("venture");
+    else next.set("venture", v);
+    setSearchParams(next, { replace: true });
+  };
+
   const [kind, setKind] = useState<(typeof KINDS)[number]["key"]>("other");
+  const [uploadSnapshotId, setUploadSnapshotId] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
   const [richDoc, setRichDoc] = useState<any | null>(null);
@@ -48,18 +71,40 @@ export default function DocumentsPage() {
   const [openingId, setOpeningId] = useState<string | null>(null);
 
   const { data } = useQuery({ queryKey: ["my", "documents"], queryFn: () => listMyDocuments() });
+  const { data: snapshots = [] } = useQuery({
+    queryKey: ["my", "snapshots", "list"],
+    queryFn: () => listSnapshots(),
+  });
+
+  const ventureNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const s of snapshots) m.set(s.id, s.company_name || "Untitled venture");
+    return m;
+  }, [snapshots]);
 
   const docs = useMemo(() => {
     const list = Array.isArray(data) ? data : (data?.documents ?? []);
-    if (filter === "generated") return list.filter((d: any) => d.kind === "deliverable");
-    if (filter === "uploaded") return list.filter((d: any) => d.kind !== "deliverable");
-    return list;
-  }, [data, filter]);
+    let out = list;
+    if (filter === "generated") out = out.filter((d: any) => d.kind === "deliverable");
+    else if (filter === "uploaded") out = out.filter((d: any) => d.kind !== "deliverable");
+    if (ventureFilter === UNASSIGNED) out = out.filter((d: any) => !d.snapshot_id);
+    else if (ventureFilter !== "all") out = out.filter((d: any) => d.snapshot_id === ventureFilter);
+    return out;
+  }, [data, filter, ventureFilter]);
 
   const del = useMutation({
     mutationFn: (id: string) => deleteMyDocument({ id }),
     onSuccess: () => {
       toast.success("Deleted");
+      qc.invalidateQueries({ queryKey: ["my", "documents"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const move = useMutation({
+    mutationFn: (args: { id: string; snapshotId: string | null }) => updateDocumentVenture(args),
+    onSuccess: () => {
+      toast.success("Moved");
       qc.invalidateQueries({ queryKey: ["my", "documents"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -71,9 +116,11 @@ export default function DocumentsPage() {
     setUploading(true);
     try {
       const contentType = f.type || "application/octet-stream";
+      const snapshotId = uploadSnapshotId || null;
       const { uploadUrl, path } = await createDocumentUploadUrl({
         filename: f.name,
         contentType,
+        snapshotId,
       });
       const up = await fetch(uploadUrl, {
         method: "PUT",
@@ -87,6 +134,7 @@ export default function DocumentsPage() {
         label: f.name,
         size: f.size,
         contentType,
+        snapshotId,
       });
       toast.success("Uploaded");
       qc.invalidateQueries({ queryKey: ["my", "documents"] });
@@ -104,7 +152,6 @@ export default function DocumentsPage() {
   };
 
   const onView = async (d: any) => {
-    // Rich viewer for saved deliverables — try the stored link, then a name-based fallback.
     if (d.kind === "deliverable") {
       setOpeningId(d.id);
       try {
@@ -114,7 +161,6 @@ export default function DocumentsPage() {
         if (!vdoc) {
           vdoc = await findVentureDocumentByLabel({ label: d.original_name ?? "" });
           if (vdoc) {
-            // Persist the recovered link so future opens are instant.
             await supabase
               .from("attendee_documents")
               .update({ source_venture_document_id: vdoc.id })
@@ -138,12 +184,28 @@ export default function DocumentsPage() {
     setPreviewDoc(d);
   };
 
+  const ventureChip = (key: string, label: string) => (
+    <button
+      key={key}
+      type="button"
+      onClick={() => setVentureFilter(key)}
+      className={cn(
+        "rounded-full border px-3 py-1 text-xs transition",
+        ventureFilter === key
+          ? "border-primary/40 bg-primary/10 text-primary"
+          : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground",
+      )}
+    >
+      {label}
+    </button>
+  );
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Documents</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Uploads and deliverables you've saved from your venture, all in one place.
+          Each startup gets its own folder. Switch ventures below or save files unassigned.
         </p>
       </div>
 
@@ -160,11 +222,36 @@ export default function DocumentsPage() {
             </option>
           ))}
         </select>
+        {snapshots.length > 0 && (
+          <select
+            value={uploadSnapshotId}
+            onChange={(e) => setUploadSnapshotId(e.target.value)}
+            className="rounded-md border border-white/10 bg-background px-3 py-2 text-sm"
+            title="Save to which venture"
+          >
+            <option value="">Unassigned</option>
+            {snapshots.map((s: any) => (
+              <option key={s.id} value={s.id}>
+                {s.company_name || "Untitled venture"}
+              </option>
+            ))}
+          </select>
+        )}
         <input ref={fileRef} type="file" className="text-sm" />
         <Button onClick={onUpload} disabled={uploading}>
           {uploading ? "Uploading…" : "Upload"}
         </Button>
       </div>
+
+      {snapshots.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          {ventureChip("all", "All ventures")}
+          {snapshots.map((s: any) =>
+            ventureChip(s.id, s.company_name || "Untitled venture"),
+          )}
+          {ventureChip(UNASSIGNED, "Unassigned")}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         {FILTERS.map((f) => (
@@ -189,18 +276,29 @@ export default function DocumentsPage() {
           <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-4 py-3">File</th>
+              <th className="px-4 py-3">Venture</th>
               <th className="px-4 py-3">Source</th>
               <th className="px-4 py-3">Kind</th>
               <th className="px-4 py-3">Size</th>
-              <th className="px-4 py-3 w-48">Actions</th>
+              <th className="px-4 py-3 w-56">Actions</th>
             </tr>
           </thead>
           <tbody>
             {docs.map((d: any) => {
               const generated = d.kind === "deliverable";
+              const ventureName = d.snapshot_id ? ventureNameById.get(d.snapshot_id) : null;
               return (
                 <tr key={d.id} className="border-t border-white/5">
                   <td className="px-4 py-3">{d.original_name}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {ventureName ? (
+                      <span className="inline-flex items-center rounded-full border border-white/10 px-2 py-0.5 text-[11px]">
+                        {ventureName}
+                      </span>
+                    ) : (
+                      <span className="text-xs italic text-muted-foreground/60">Unassigned</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     {generated ? (
                       <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] text-primary">
@@ -216,7 +314,7 @@ export default function DocumentsPage() {
                   <td className="px-4 py-3 text-muted-foreground">
                     {Math.round((d.size_bytes ?? 0) / 1024)} KB
                   </td>
-                  <td className="px-4 py-3 space-x-2">
+                  <td className="px-4 py-3 space-x-1">
                     <Button
                       size="sm"
                       variant="outline"
@@ -233,6 +331,34 @@ export default function DocumentsPage() {
                     <Button size="sm" variant="outline" onClick={() => onDownload(d.storage_path)}>
                       Download
                     </Button>
+                    {snapshots.length > 0 && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button size="sm" variant="ghost" title="Move to venture">
+                            <FolderInput className="h-3 w-3" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="end" className="w-56 p-1">
+                          <button
+                            type="button"
+                            className="block w-full rounded px-2 py-1.5 text-left text-xs hover:bg-white/5"
+                            onClick={() => move.mutate({ id: d.id, snapshotId: null })}
+                          >
+                            Unassigned
+                          </button>
+                          {snapshots.map((s: any) => (
+                            <button
+                              key={s.id}
+                              type="button"
+                              className="block w-full rounded px-2 py-1.5 text-left text-xs hover:bg-white/5"
+                              onClick={() => move.mutate({ id: d.id, snapshotId: s.id })}
+                            >
+                              {s.company_name || "Untitled venture"}
+                            </button>
+                          ))}
+                        </PopoverContent>
+                      </Popover>
+                    )}
                     <Button size="sm" variant="ghost" onClick={() => del.mutate(d.id)}>
                       Delete
                     </Button>
@@ -242,8 +368,10 @@ export default function DocumentsPage() {
             })}
             {docs.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                  Anything you upload or save from a deliverable lands here.
+                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                  {ventureFilter !== "all"
+                    ? "Nothing saved for this venture yet — open a deliverable and hit Save to My Files."
+                    : "Anything you upload or save from a deliverable lands here."}
                 </td>
               </tr>
             )}
