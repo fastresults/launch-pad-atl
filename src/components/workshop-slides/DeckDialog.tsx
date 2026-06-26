@@ -200,6 +200,7 @@ export function DeckDialog({ slug, onOpenChange }: Props) {
             </button>
           ))}
         </div>
+        </DeckOverridesProvider>
       </DialogContent>
     </Dialog>
   );
