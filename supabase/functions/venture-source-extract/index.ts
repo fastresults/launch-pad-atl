@@ -120,8 +120,40 @@ Deno.serve(async (req) => {
       extraction_error: extractionError,
     }).eq("id", documentId);
 
-    // New source material → brain is stale. Next AI call will recompute.
+    // New source material → brain is stale, AND keep venture_snapshots.source_materials
+    // denormalized JSONB in sync so loadVentureContext (which reads the JSONB blob)
+    // sees the new document immediately. Without this, files uploaded after venture
+    // creation were silently invisible to every AI generator.
     if (doc.snapshot_id && text) {
+      try {
+        const { data: snap } = await admin
+          .from("venture_snapshots")
+          .select("source_materials")
+          .eq("id", doc.snapshot_id)
+          .maybeSingle();
+        const sm = (snap?.source_materials && typeof snap.source_materials === "object")
+          ? { ...snap.source_materials } as Record<string, any>
+          : {};
+        const docs: any[] = Array.isArray(sm.documents) ? [...sm.documents] : [];
+        const entry = {
+          id: documentId,
+          filename: doc.original_name ?? "file",
+          mime_type: doc.mime_type ?? null,
+          text,
+          extracted_at: new Date().toISOString(),
+        };
+        const existingIdx = docs.findIndex((d) => d && d.id === documentId);
+        if (existingIdx >= 0) docs[existingIdx] = entry;
+        else docs.push(entry);
+        // Cap at most-recent 25 to keep the JSONB blob bounded.
+        sm.documents = docs.slice(-25);
+        await admin
+          .from("venture_snapshots")
+          .update({ source_materials: sm })
+          .eq("id", doc.snapshot_id);
+      } catch (e) {
+        console.warn("source_materials sync failed", e);
+      }
       markSnapshotBrainDirty(admin, doc.snapshot_id).catch(() => {});
     }
 

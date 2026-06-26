@@ -20,8 +20,9 @@ export function useCanonicalContext(opts?: { enabled?: boolean }) {
     queryKey: CANONICAL_CONTEXT_QUERY_KEY,
     queryFn: getCanonicalFounderContext,
     enabled: opts?.enabled ?? true,
-    // The underlying tables don't change second-to-second; cache for 2 min.
-    staleTime: 2 * 60 * 1000,
+    // Cache for 30s — keeps consecutive component mounts cheap but bounds
+    // how long stale data can linger after a writeback that forgot to invalidate.
+    staleTime: 30 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 }
