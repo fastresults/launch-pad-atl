@@ -1,8 +1,22 @@
 // Founders Hub — generate one venture document.
 // Loads the snapshot + document_type spec + any dependency docs, asks the
 // Lovable AI Gateway to produce markdown, scores it, and persists the row.
+//
+// Context flow (post AI-first refactor):
+//   1. loadVentureContext()  — single read, shared with every AI function
+//   2. compactPreamble()     — ~600-token venture preamble (replaces 8-12KB of raw JSON)
+//   3. pickBrainSlice()      — only the brain keys this deliverable needs
+//   4. distillDeps()         — upstream docs as 3-5 bullet summaries, not full markdown
+//   5. writeBackIntake()     — intake answers flow into canonical store for future docs
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  compactPreamble,
+  distillDeps,
+  loadVentureContext,
+  pickBrainSlice,
+} from "../_shared/venture-context.ts";
+import { computeSnapshotBrain } from "../_shared/snapshot-brain.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +27,60 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+
+// Intake → canonical writeback map. When a deliverable's intake collects one
+// of these fields, persist it back to attendee_profiles / brief tables so the
+// next deliverable's intake (and the Profile page) reuses it automatically.
+const INTAKE_TO_PROFILE: Record<string, string> = {
+  monthly_burn: "monthly_burn",
+  current_revenue: "current_revenue",
+  funding_raised: "funding_raised",
+  runway_months: "runway_months",
+  business_model: "business_model",
+  target_market: "target_market",
+  target_customer: "target_market",
+  problem_solved: "problem_solved",
+  primary_goal: "primary_goal",
+};
+const INTAKE_TO_BRIEF: Record<string, string> = {
+  pricing_idea: "pricing_idea",
+  offer_description: "offer_description",
+  unique_insight: "unique_insight",
+  twelve_month_vision: "twelve_month_vision",
+};
+
+async function writeBackIntake(
+  supabase: any,
+  userId: string | null,
+  answers: Record<string, any> | null,
+) {
+  if (!userId || !answers) return;
+  const profilePatch: Record<string, any> = {};
+  const briefPatch: Record<string, any> = {};
+  for (const [k, v] of Object.entries(answers)) {
+    if (v === null || v === undefined || v === "") continue;
+    if (INTAKE_TO_PROFILE[k]) profilePatch[INTAKE_TO_PROFILE[k]] = v;
+    if (INTAKE_TO_BRIEF[k]) briefPatch[INTAKE_TO_BRIEF[k]] = v;
+  }
+  const ops: Promise<any>[] = [];
+  if (Object.keys(profilePatch).length) {
+    ops.push(
+      supabase
+        .from("attendee_profiles")
+        .upsert({ user_id: userId, ...profilePatch }, { onConflict: "user_id" }),
+    );
+  }
+  if (Object.keys(briefPatch).length) {
+    ops.push(
+      supabase
+        .from("attendee_business_brief")
+        .upsert({ user_id: userId, ...briefPatch }, { onConflict: "user_id" }),
+    );
+  }
+  if (ops.length) await Promise.allSettled(ops);
+}
+
+
 
 class GatewayError extends Error {
   status: number;
