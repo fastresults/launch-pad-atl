@@ -11,8 +11,15 @@ import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { TRACKS, TRACK_BY_KEY, pickSeedForTrack, type TrackKey } from "@/lib/tracks";
 import { INDUSTRIES } from "@/lib/industries";
 import { createSnapshot } from "@/lib/foundersHub.functions";
+import {
+  uploadVentureSource,
+  attachSourcesToSnapshot,
+  listVentureSources,
+  deleteVentureSource,
+  type VentureSource,
+} from "@/lib/venture-sources";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin, CheckCircle2, Link2, Globe } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin, CheckCircle2, Link2, Globe, Library } from "lucide-react";
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
@@ -21,7 +28,8 @@ type DroppedFile = {
   id: string;
   name: string;
   size: number;
-  status: "reading" | "ready" | "error";
+  status: "uploading" | "ready" | "error";
+  documentId?: string;
   text?: string;
   error?: string;
 };
@@ -40,7 +48,7 @@ const MAX_URLS = 3;
 
 const MAX_FILES = 5;
 const MAX_BYTES = 20 * 1024 * 1024;
-const ACCEPT = ".pdf,.txt,.md,.markdown,text/plain,text/markdown,application/pdf";
+const ACCEPT = ".pdf,.txt,.md,.markdown,.docx,.rtf,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,application/rtf,image/*";
 
 // TODO: remove after testing — dev-only seed URLs for reverse-engineered test fills
 const SEED_URLS = [
@@ -75,36 +83,9 @@ function guessIndustry(concept: string): string {
   return "Software & SaaS";
 }
 
-async function extractFileText(file: File): Promise<{ text: string; error?: string }> {
-  const name = file.name.toLowerCase();
-  const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
-  const isText = name.endsWith(".txt") || name.endsWith(".md") || name.endsWith(".markdown") ||
-    file.type === "text/plain" || file.type === "text/markdown";
+// Text extraction now runs server-side in `venture-source-extract` so DOCX,
+// PDF (including scanned via Gemini OCR), images, and audio all work uniformly.
 
-  if (isPdf) {
-    try {
-      const { extractText, getDocumentProxy } = await import("unpdf");
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const pdf = await getDocumentProxy(bytes);
-      const { text } = await extractText(pdf, { mergePages: true });
-      const merged = (Array.isArray(text) ? text.join("\n") : text).trim();
-      if (!merged) return { text: "", error: "PDF looks scanned (no text inside). Try a text-based export." };
-      return { text: merged };
-    } catch (e) {
-      return { text: "", error: e instanceof Error ? e.message : "Couldn't read PDF" };
-    }
-  }
-  if (isText) {
-    try {
-      const text = (await file.text()).trim();
-      if (!text) return { text: "", error: "File was empty" };
-      return { text };
-    } catch (e) {
-      return { text: "", error: e instanceof Error ? e.message : "Couldn't read file" };
-    }
-  }
-  return { text: "", error: "DOCX coming soon — export to PDF or paste the text below." };
-}
 
 type Path = "own" | "competitor" | "manual";
 
@@ -166,51 +147,82 @@ function Inner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const addFiles = useCallback(async (incoming: File[]) => {
-    if (!incoming.length) return;
-    setFiles((prev) => {
-      const room = MAX_FILES - prev.length;
-      if (room <= 0) {
-        toast.error(`Max ${MAX_FILES} files`);
-        return prev;
-      }
-      const accepted = incoming.slice(0, room).filter((f) => {
-        if (f.size > MAX_BYTES) {
-          toast.error(`${f.name} is over 20 MB`);
-          return false;
-        }
-        return true;
-      });
-      const queued: DroppedFile[] = accepted.map((f) => ({
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        name: f.name,
-        size: f.size,
-        status: "reading",
-      }));
-      // Kick off extraction outside of setState
-      queued.forEach((entry, i) => {
-        const file = accepted[i];
-        extractFileText(file).then(({ text, error }) => {
-          setFiles((curr) =>
-            curr.map((x) =>
-              x.id === entry.id
-                ? error
-                  ? { ...x, status: "error", error }
-                  : { ...x, status: "ready", text }
-                : x,
-            ),
-          );
-        });
-      });
-      return [...prev, ...queued];
-    });
+  // Files the user uploaded earlier (e.g. during the Startup Brief) that
+  // aren't attached to any venture yet — we offer to reuse them here.
+  const [reusable, setReusable] = useState<VentureSource[]>([]);
+  const [reuseSelected, setReuseSelected] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    listVentureSources({ orphansOnly: true })
+      .then((rows) => setReusable(rows))
+      .catch(() => {});
   }, []);
 
-  const removeFile = (id: string) => setFiles((prev) => prev.filter((f) => f.id !== id));
+  const addFiles = useCallback(async (incoming: File[]) => {
+    if (!incoming.length) return;
+    const room = MAX_FILES - files.length;
+    if (room <= 0) {
+      toast.error(`Max ${MAX_FILES} files`);
+      return;
+    }
+    const accepted = incoming.slice(0, room).filter((f) => {
+      if (f.size > MAX_BYTES) {
+        toast.error(`${f.name} is over 20 MB`);
+        return false;
+      }
+      return true;
+    });
+    const queued: DroppedFile[] = accepted.map((f) => ({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: f.name,
+      size: f.size,
+      status: "uploading",
+    }));
+    setFiles((prev) => [...prev, ...queued]);
+
+    queued.forEach(async (entry, i) => {
+      const file = accepted[i];
+      try {
+        const row = await uploadVentureSource({ file, kind: "venture_source", waitForExtraction: true });
+        const text = (row.extracted_text ?? "").trim();
+        setFiles((curr) =>
+          curr.map((x) =>
+            x.id === entry.id
+              ? row.extraction_error || !text
+                ? { ...x, status: "error", documentId: row.id, error: row.extraction_error ?? "Couldn't read file" }
+                : { ...x, status: "ready", documentId: row.id, text }
+              : x,
+          ),
+        );
+      } catch (e) {
+        setFiles((curr) =>
+          curr.map((x) =>
+            x.id === entry.id
+              ? { ...x, status: "error", error: e instanceof Error ? e.message : "Upload failed" }
+              : x,
+          ),
+        );
+      }
+    });
+  }, [files.length]);
+
+  const removeFile = (id: string) => {
+    const target = files.find((f) => f.id === id);
+    setFiles((prev) => prev.filter((f) => f.id !== id));
+    if (target?.documentId) {
+      deleteVentureSource(target.documentId).catch(() => {});
+    }
+  };
   const removeUrl = (id: string) => setScrapedUrls((prev) => prev.filter((u) => u.id !== id));
 
+  const reusedIds = Object.entries(reuseSelected).filter(([, v]) => v).map(([k]) => k);
+  const reusedFiles = reusable.filter((r) => reusedIds.includes(r.id));
   const readyFiles = files.filter((f) => f.status === "ready" && (f.text ?? "").trim());
   const readyUrls = scrapedUrls.filter((u) => u.status === "ready" && (u.text ?? "").trim());
+  // Combined view used to drive the synthesize + createSnapshot calls.
+  const combinedDocs = [
+    ...reusedFiles.map((r) => ({ filename: r.original_name, text: r.extracted_text ?? "", id: r.id })),
+    ...readyFiles.map((f) => ({ filename: f.name, text: f.text ?? "", id: f.documentId })),
+  ];
 
   const addUrl = async () => {
     const raw = urlInput.trim();
@@ -262,7 +274,7 @@ function Inner() {
   };
 
   const draftFromFiles = async () => {
-    const hasFiles = readyFiles.length > 0;
+    const hasFiles = combinedDocs.length > 0;
     const hasUrls = readyUrls.length > 0;
     const hasDraft = businessConcept.trim().length >= 20;
     if (!hasFiles && !hasUrls && !hasDraft) return;
@@ -271,7 +283,7 @@ function Inner() {
     try {
       const { data, error } = await supabase.functions.invoke("venture-synthesize-concept", {
         body: {
-          sources: readyFiles.map((f) => ({ filename: f.name, text: f.text })),
+          sources: combinedDocs.map((d) => ({ filename: d.filename, text: d.text })),
           urls: readyUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text })),
           conceptDraft: hasDraft ? businessConcept.trim() : "",
           industryValues: INDUSTRIES.map((i) => i.value),
@@ -346,21 +358,32 @@ function Inner() {
           industry: industry || undefined,
           sub_industry: subIndustry || undefined,
           track: track || undefined,
-          source_materials: (readyFiles.length || readyUrls.length || businessConcept.trim())
+          source_materials: (combinedDocs.length || readyUrls.length || businessConcept.trim())
             ? {
-                documents: readyFiles.map((f) => ({ filename: f.name, text: f.text ?? "" })),
+                documents: combinedDocs.map((d) => ({ filename: d.filename, text: d.text })),
                 urls: readyUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text ?? "" })),
                 conceptDraft: businessConcept.trim(),
               }
             : undefined,
         },
       }),
-    onSuccess: ({ id }) => {
+    onSuccess: async ({ id }) => {
+      // Re-tag every uploaded/reused document onto this new venture so the
+      // file lives in the venture's library going forward.
+      const docIds = combinedDocs.map((d) => d.id).filter((x): x is string => !!x);
+      if (docIds.length) {
+        try {
+          await attachSourcesToSnapshot({ documentIds: docIds, snapshotId: id });
+        } catch (e) {
+          console.warn("Could not attach uploaded files to venture:", e);
+        }
+      }
       toast.success("Venture created — enriching now");
       nav(`/dashboard/hub/${id}`);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not create venture"),
   });
+
 
 
   const missingFields: string[] = [];
@@ -612,7 +635,7 @@ function Inner() {
               <span className="text-muted-foreground"> — we'll fill out the whole form</span>
             </div>
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              PDF · TXT · MD · up to {MAX_FILES} files, 20 MB each
+              PDF · DOCX · TXT · MD · PNG / JPG · up to {MAX_FILES} files, 20 MB each
             </div>
             <input
               ref={fileInputRef}
@@ -628,6 +651,40 @@ function Inner() {
             />
           </div>
 
+          {reusable.length > 0 && (
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Library className="h-4 w-4 text-primary" />
+                Reuse files you've already uploaded
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                These came from your Startup Brief or earlier uploads. Tick any you want to use as context here — no need to re-upload.
+              </p>
+              <ul className="mt-2 space-y-1">
+                {reusable.map((r) => {
+                  const ready = !!(r.extracted_text ?? "").trim();
+                  return (
+                    <li key={r.id} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-background/40">
+                      <input
+                        type="checkbox"
+                        checked={!!reuseSelected[r.id]}
+                        disabled={!ready}
+                        onChange={(e) =>
+                          setReuseSelected((prev) => ({ ...prev, [r.id]: e.target.checked }))
+                        }
+                      />
+                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 flex-1 truncate">{r.original_name}</span>
+                      <span className="shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground">
+                        {ready ? `${Math.round((r.extracted_text ?? "").length / 1000)}k chars` : r.extraction_error ? "Unreadable" : "Processing…"}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
           {files.length > 0 && (
             <ul className="space-y-1.5">
               {files.map((f) => (
@@ -639,7 +696,7 @@ function Inner() {
                     f.status === "error" ? "text-status-danger" :
                     "text-muted-foreground"
                   }`}>
-                    {f.status === "reading" ? "Reading…" : f.status === "ready" ? "Ready" : (f.error ?? "Couldn't read")}
+                    {f.status === "uploading" ? "Uploading…" : f.status === "ready" ? "Saved" : (f.error ?? "Couldn't read")}
                   </span>
                   <button type="button" onClick={() => removeFile(f.id)} className="shrink-0 text-muted-foreground hover:text-foreground" aria-label="Remove file">
                     <X className="h-4 w-4" />
@@ -648,6 +705,7 @@ function Inner() {
               ))}
             </ul>
           )}
+
 
           {/* URL scrape row */}
           <div className="rounded-xl border border-white/10 bg-background/40 p-4">
@@ -702,13 +760,13 @@ function Inner() {
             )}
           </div>
 
-          {(readyFiles.length > 0 || readyUrls.length > 0 || businessConcept.trim().length >= 20) && (
+          {(combinedDocs.length > 0 || readyUrls.length > 0 || businessConcept.trim().length >= 20) && (
             <div className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm">
                 <div className="font-medium">
                   {processed
                     ? "Processed — review the form below"
-                    : `Context ready · ${readyFiles.length} file${readyFiles.length === 1 ? "" : "s"}, ${readyUrls.length} URL${readyUrls.length === 1 ? "" : "s"}${businessConcept.trim().length >= 20 ? ", your draft" : ""}`}
+                    : `Context ready · ${combinedDocs.length} file${combinedDocs.length === 1 ? "" : "s"}, ${readyUrls.length} URL${readyUrls.length === 1 ? "" : "s"}${businessConcept.trim().length >= 20 ? ", your draft" : ""}`}
                 </div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
                   {processed

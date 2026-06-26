@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import { Upload, FileText, Loader2, X, CheckCircle2, AlertCircle } from "lucide-react";
 import { prefillBriefFromDocs, type BriefPrefillResponse } from "@/lib/brief.functions";
+import { uploadVentureSource } from "@/lib/venture-sources";
 import { toast } from "sonner";
+
 
 const ACCEPT = ".pdf,.docx,.txt,.md,.rtf,.png,.jpg,.jpeg,.webp,.mp3,.m4a,.wav,.webm,.ogg,.mp4";
 const MAX_FILES = 5;
@@ -47,6 +49,15 @@ export function BriefPrefillDropzone({
     }
     setBusy(true);
     try {
+      // Persist each file into the user's venture library (no snapshot yet —
+      // they become reusable orphans that the Hub creation flow can attach).
+      // Fire and forget on persistence; don't block pre-fill if storage fails.
+      Promise.allSettled(
+        ok.map((file) =>
+          uploadVentureSource({ file, kind: "brief_source", usedInBrief: true }),
+        ),
+      ).catch(() => {});
+
       const result = await prefillBriefFromDocs(ok);
       onSuggestions(result);
     } catch (e) {
@@ -55,6 +66,7 @@ export function BriefPrefillDropzone({
       setBusy(false);
     }
   };
+
 
   return (
     <div className="mb-8 rounded-2xl border border-primary/20 bg-primary/5 p-5">
