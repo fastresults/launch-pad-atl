@@ -346,6 +346,13 @@ function Inner() {
           industry: industry || undefined,
           sub_industry: subIndustry || undefined,
           track: track || undefined,
+          source_materials: (readyFiles.length || readyUrls.length || businessConcept.trim())
+            ? {
+                documents: readyFiles.map((f) => ({ filename: f.name, text: f.text ?? "" })),
+                urls: readyUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text ?? "" })),
+                conceptDraft: businessConcept.trim(),
+              }
+            : undefined,
         },
       }),
     onSuccess: ({ id }) => {
@@ -354,6 +361,7 @@ function Inner() {
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not create venture"),
   });
+
 
   const missingFields: string[] = [];
   if (businessConcept.trim().length < 20) missingFields.push("Business concept (min 20 chars)");
