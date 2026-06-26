@@ -1,5 +1,6 @@
 import type { FrameworkDeliverable } from "@/lib/framework-deliverables";
 import { SlideLayout } from "./SlideLayout";
+import { SlotImage } from "./slots";
 
 type Props = {
   stageKicker: string;
@@ -8,6 +9,11 @@ type Props = {
   total: number;
   deliverable: FrameworkDeliverable;
   variant?: "light" | "dark";
+  /** Slide id used for the image slot — must be unique within the deck. */
+  slideId?: string;
+  /** Default illustration src (New Yorker–style art). Falls back to the deliverable icon. */
+  imageSrc?: string;
+  imageAlt?: string;
 };
 
 /**
@@ -15,7 +21,17 @@ type Props = {
  * Reads icon + title + tooltip from FRAMEWORK_STAGES so the other 7 stages
  * inherit this layout for free.
  */
-export function DeliverableSlide({ stageKicker, pageLabel, index, total, deliverable, variant = "light" }: Props) {
+export function DeliverableSlide({
+  stageKicker,
+  pageLabel,
+  index,
+  total,
+  deliverable,
+  variant = "light",
+  slideId,
+  imageSrc,
+  imageAlt,
+}: Props) {
   const Icon = deliverable.icon;
   return (
     <SlideLayout stageKicker={stageKicker} pageLabel={pageLabel} variant={variant}>
@@ -30,9 +46,19 @@ export function DeliverableSlide({ stageKicker, pageLabel, index, total, deliver
           </p>
         </div>
         <div className="col-span-5 flex items-center justify-center">
-          <div className="rounded-[48px] bg-primary/10 ring-1 ring-primary/20 p-20">
-            <Icon className="text-primary" style={{ width: 280, height: 280 }} strokeWidth={1.25} />
-          </div>
+          {imageSrc && slideId ? (
+            <SlotImage
+              slideId={slideId}
+              field="image"
+              defaultSrc={imageSrc}
+              defaultAlt={imageAlt ?? deliverable.title}
+              className="max-h-[640px] w-full object-contain rounded-2xl"
+            />
+          ) : (
+            <div className="rounded-[48px] bg-primary/10 ring-1 ring-primary/20 p-20">
+              <Icon className="text-primary" style={{ width: 280, height: 280 }} strokeWidth={1.25} />
+            </div>
+          )}
         </div>
       </div>
     </SlideLayout>

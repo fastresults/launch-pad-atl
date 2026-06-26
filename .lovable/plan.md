@@ -1,65 +1,61 @@
 
-# Facilitator decks — Strategy through Social & Content
+# New Yorker–style slide art for facilitator decks
 
-Author seven new decks that mirror the Foundation deck's rhythm and polish, one stage per turn so you can review each before the next. Every deck stays editable from `/admin/decks/:slug` via the existing slot system — no new infrastructure.
+## Goal
+Give every slide in every facilitator deck a hand-drawn, *New Yorker*–style illustration — no titles, no subtitles, no embedded text in the artwork. Ship Foundation first end-to-end, then proceed deck by deck (Strategy → Social & Content) on approval.
 
-## Sequence (one per turn)
+## Visual direction (shared across all 64 illustrations)
+- Style: classic *New Yorker* cartoon illustration — fine pen-and-ink linework, restrained crosshatching, soft muted watercolor washes, generous negative space, slightly wry editorial tone.
+- Composition: single conceptual scene per slide. No words, labels, signs, captions, logos, or UI inside the image.
+- Palette: warm off-white paper background, ink black, with one or two muted accent washes (sage, ochre, dusty rose, slate blue) — kept consistent across a deck so it reads as a set.
+- Aspect: 3:2 landscape (1536×1024) so it sits cleanly inside the existing `max-h-[280px] rounded-2xl` slot without cropping faces.
+- Generated via the agent-side `imagegen--generate_image` tool, `model: "premium.gemini"` (Nano Banana 2) for the editorial line quality, `transparent_background: false`. Each prompt will explicitly forbid text/letters/typography/watermarks.
 
-1. Strategy (5 deliverables)
-2. Operations (4)
-3. Finance (5)
-4. Governance (3)
-5. Brand — bonus (5)
-6. Marketing — bonus (1, adapted pattern)
-7. Social & Content — bonus (7)
+## Foundation deck — 10 scenes
+Each slide gets one illustration. Concepts chosen to match the slide's idea without duplicating its words.
 
-After each deck lands, the next one becomes the active turn. You can pause, redirect, or request edits at any boundary.
+1. **Cover** — A founder at a drafting table sketching a building's foundation blueprint; coffee cup, T-square, calm morning light.
+2. **Stakes / why this exists** — A small house being lowered by crane onto a single concrete footing; bystanders watching from below.
+3. **What breaks without it** — Three precarious towers of mismatched objects (chairs, books, a teapot) leaning at different angles on uneven ground.
+4. **What good looks like** — A founder calmly answering four curious customers seated around a small café table.
+5. **The four deliverables** — A craftsman's workbench with four neatly arranged hand tools laid out on a linen cloth.
+6. **Deliverable 01 — Founder Profile** — A tailor measuring a founder for a bespoke jacket in front of a tall mirror.
+7. **Deliverable 02 — Business Concept** — A gardener transplanting a young sapling from a paper cup into rich soil.
+8. **Deliverable 03 — Value Proposition** — A lighthouse keeper aiming a single bright beam across a foggy harbor toward one small boat.
+9. **Deliverable 04 — Positioning Statement** — A chess player thoughtfully placing one piece on an otherwise empty board.
+10. **Recap / what's next** — A hiker pausing at a trail marker, looking up a long path that climbs into distant hills.
 
-## Deck blueprint (per stage)
+(Concepts for Strategy through Social & Content will be drafted the same way once Foundation is approved — 10 scenes per deck, total 70 more.)
 
-Each deck = 10 slides (Marketing collapses to 8 because it has one deliverable). Same `SlideLayout`, same kicker pattern (`NN · STAGE NAME`), same dark cover + dark recap bookends, every text/image wrapped in `SlotText` / `SlotImage` so admins can edit.
+## Implementation steps (Foundation)
 
-```text
-1.  Cover (dark)              — stage number, name, one-sentence promise, hero image slot
-2.  Why this stage exists     — the stakes; what compounds if you nail it
-3.  What breaks without it    — 3 destructive-tone cards (stage-specific failure modes)
-4.  What good looks like      — 3–4 plain-language questions a founder can now answer
-5.  The N deliverables        — grid of all items in the stage with icons from framework
-6.  Deliverable 1 detail      — uses existing DeliverableSlide
-7.  Deliverable 2 detail
-8.  Deliverable 3 detail
-9.  Deliverable N detail      — slides 6..(5+N), pageLabel auto-counts
-10. Recap + what's next (dark)— hands off to the next stage by name
-```
+1. **Generate art.** Call `imagegen--generate_image` 10× in parallel, saving to:
+   ```
+   public/decks/foundation/01-cover.jpg
+   public/decks/foundation/02-stakes.jpg
+   ...
+   public/decks/foundation/10-recap.jpg
+   ```
+   Every prompt ends with: *"editorial pen-and-ink illustration in the style of a classic New Yorker cartoon, soft muted watercolor wash, warm off-white paper, generous negative space, no text, no letters, no typography, no captions, no signage, no watermark."*
 
-Marketing variant (1 deliverable): cover, stakes, what breaks, what good, the deliverable detail (full slide), a "what your site must do" companion slide, recap → 7 slides. Final deck still ends in the dark recap pointing to Social & Content.
+2. **Add SlotImage to the 8 slides that don't have one.** Each new slot uses a distinct `field` so admin overrides keep working:
+   - `what-breaks` → `<SlotImage field="image" defaultSrc="/decks/foundation/03-what-breaks.jpg" …/>` placed under the cards.
+   - `what-good`, `deliverables-overview`, `recap` → same pattern, sized `max-h-[220px]` so it doesn't push content off-canvas.
+   - `deliv-0..3` → extend `DeliverableSlide` with an optional `imageSrc` prop and a `SlotImage` rendered above or replacing the giant icon block; pass per-deliverable images from `foundation.tsx`.
 
-## Stage-specific content
+3. **Wire defaults for the two existing slots.** Add `defaultSrc` (and `defaultAlt`) to the `cover` and `stakes` `SlotImage` calls pointing at the new files.
 
-For each stage I'll write fresh, workshop-grade copy in the same voice as Foundation — founder-friendly, concrete, no jargon, Atlanta/Main-Street aware. Specifically per stage:
+4. **Verify in the deck viewer.** Open `/admin/decks` → Foundation → Preview, page through all 10 slides at 1920×1080, confirm no text artifacts and that images sit within the canvas without overlap.
 
-- **Strategy** — failure modes: random marketing, copycat positioning, no GTM sequence. Good = can name buyer, wedge, first 90-day motion, one-line brand promise.
-- **Operations** — failure modes: hero-mode delivery, no repeatable sale, marketing as guesswork. Good = workflow a hire can run, repeatable close, channel mix with ROI.
-- **Finance** — failure modes: cash surprises, mispriced unit economics, wrong capital source. Good = defensible P&L, payback math, funding plan, bank-ready budget, pitch spine.
-- **Governance** — failure modes: wrong entity, uninsured risk, no accountability. Good = entity + contracts set, risks mapped, advisor cadence.
-- **Brand** — failure modes: logo without strategy, inconsistent voice, redo loop. Good = strategy → messaging → visual → voice → guidelines that anyone can apply.
-- **Marketing** — failure modes: $20K agency quotes, vaporware sites, copy that doesn't convert. Good = PRD an AI builder can ship in a weekend.
-- **Social & Content** — failure modes: random posting, stale profiles, paid spend with no payback. Good = audited presence, pillars, 90-day calendar, launch kit, community + partnerships + paid starter.
+5. **Wait for approval, then repeat** for Strategy, Operations, Finance, Governance, Brand, Marketing, Social & Content — one deck per turn so we can adjust style or concepts between decks.
 
-The "what breaks" and "what good looks like" copy lives co-located inside each stage's slide file (small `STAGE_BREAKS` / `STAGE_QUESTIONS` arrays) so each deck is self-contained and easy to edit. No changes to `framework-deliverables.ts`.
-
-## Wiring
-
-- Add `src/components/workshop-slides/slides/strategy.tsx` (this turn) exporting `strategySlides: Slide[]`.
-- Register in `registry.ts`: `strategy: strategySlides`. The existing slug map already expects it, so the deck flips to `available: true` and the workflow page unlocks it once Foundation is complete.
-- Repeat per turn for `operations.tsx`, `finance.tsx`, `governance.tsx`, `brand.tsx`, `marketing.tsx`, `social-and-content.tsx`.
+## Technical notes
+- `SlotImage` already supports `defaultSrc`/`defaultAlt`; no schema changes needed. Admin AI re-generation via `deck-image-generate` continues to work because we're only setting defaults, not writing override rows.
+- `DeliverableSlide.tsx` needs a small extension to accept an optional image and render it; the existing icon stays as a fallback when no `imageSrc` is passed, so other decks keep rendering until their art lands.
+- Files live in `public/decks/<stage>/` so they're served as static assets with long cache lifetimes — no DB writes, no storage bucket churn.
+- If any prompt is rejected by content moderation, retry once with a more abstract reframing (e.g. swap a human figure for an empty chair) before falling back to `premium.gpt`.
 
 ## Out of scope
-
-- No schema or edge-function changes.
-- No edits to the admin editor, DeckDialog, or slot system — they already handle any new deck the moment it's registered.
-- No regeneration of Foundation's content.
-
-## This turn delivers
-
-Strategy deck (10 slides) + registry entry. Review it in the modal at `/dashboard/workflow` → Strategy → "Open facilitator deck", then say "next" (or give edits) and I'll build Operations.
+- Animating the illustrations.
+- Changing slide copy, layout grid, or the Slot system.
+- Backfilling the admin override table — defaults are enough; admins can still swap any image per-slide.
