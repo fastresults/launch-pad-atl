@@ -131,31 +131,57 @@ function Inner() {
   const trackSectionRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Prefill from authenticated user once
+  // Prefill from canonical context (Profile + Brief + MarketBlock + auth).
+  // This runs even when the user didn't navigate from the Brief-complete
+  // screen, so any fact they've already typed flows in automatically.
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.auth.getUser();
-      const u = data.user;
-      if (!u) return;
-      const meta: any = u.user_metadata ?? {};
-      if (!founderEmail && u.email) setFounderEmail(u.email);
-      if (!founderName) {
-        const n = meta.display_name || meta.name || meta.full_name;
-        if (n) setFounderName(n);
+      const { getCanonicalFounderContext } = await import("@/lib/canonical-context");
+      const ctx = await getCanonicalFounderContext();
+      if (!ctx) return;
+      // Never overwrite a value the user (or an explicit prefill) already set.
+      setFounderName((cur) => cur || ctx.identity.full_name);
+      setFounderEmail((cur) => cur || ctx.identity.email);
+      setFounderPhone((cur) => cur || ctx.identity.phone);
+      setCompanyName((cur) => cur || ctx.concept.company_name);
+      setBusinessConcept((cur) => cur || ctx.concept.business_concept_blob);
+      setDiff((cur) => cur || ctx.concept.differentiation);
+      setIndustry((cur) => cur || ctx.market.industry);
+      setMarketScope((cur) => (cur ? cur : (ctx.market.market_scope || "local")));
+      if (ctx.market.industry || ctx.concept.business_concept_blob) {
+        setFromBrief((cur) => cur || true);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Files the user uploaded earlier (e.g. during the Startup Brief) that
-  // aren't attached to any venture yet — we offer to reuse them here.
+  // Every file the founder has ever uploaded — Brief, Founder identity, other
+  // ventures. We surface them all here so they never need to re-upload.
+  // Each row carries provenance (kind / snapshot_id) so we can group them.
   const [reusable, setReusable] = useState<VentureSource[]>([]);
   const [reuseSelected, setReuseSelected] = useState<Record<string, boolean>>({});
   useEffect(() => {
-    listVentureSources({ orphansOnly: true })
+    listVentureSources()
       .then((rows) => setReusable(rows))
       .catch(() => {});
   }, []);
+
+  // Group reusable files by source so the UI can render labelled sections.
+  const groupedReusable = (() => {
+    const groups: Record<string, { label: string; items: VentureSource[] }> = {
+      brief: { label: "From your Startup Brief", items: [] },
+      founder: { label: "From your founder profile", items: [] },
+      other: { label: "From previous ventures", items: [] },
+      unassigned: { label: "Recently uploaded", items: [] },
+    };
+    for (const r of reusable) {
+      if (r.used_in_brief || r.kind === "brief_source") groups.brief.items.push(r);
+      else if (r.kind === "founder_bio") groups.founder.items.push(r);
+      else if (r.snapshot_id) groups.other.items.push(r);
+      else groups.unassigned.items.push(r);
+    }
+    return Object.entries(groups).filter(([, g]) => g.items.length > 0);
+  })();
 
   const addFiles = useCallback(async (incoming: File[]) => {
     if (!incoming.length) return;
@@ -651,37 +677,46 @@ function Inner() {
             />
           </div>
 
-          {reusable.length > 0 && (
+          {groupedReusable.length > 0 && (
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Library className="h-4 w-4 text-primary" />
                 Reuse files you've already uploaded
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                These came from your Startup Brief or earlier uploads. Tick any you want to use as context here — no need to re-upload.
+                We found these in your library. Tick any to use as context here — no need to re-upload.
               </p>
-              <ul className="mt-2 space-y-1">
-                {reusable.map((r) => {
-                  const ready = !!(r.extracted_text ?? "").trim();
-                  return (
-                    <li key={r.id} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-background/40">
-                      <input
-                        type="checkbox"
-                        checked={!!reuseSelected[r.id]}
-                        disabled={!ready}
-                        onChange={(e) =>
-                          setReuseSelected((prev) => ({ ...prev, [r.id]: e.target.checked }))
-                        }
-                      />
-                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <span className="min-w-0 flex-1 truncate">{r.original_name}</span>
-                      <span className="shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground">
-                        {ready ? `${Math.round((r.extracted_text ?? "").length / 1000)}k chars` : r.extraction_error ? "Unreadable" : "Processing…"}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
+              <div className="mt-2 space-y-3">
+                {groupedReusable.map(([key, group]) => (
+                  <div key={key}>
+                    <div className="px-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                      {group.label}
+                    </div>
+                    <ul className="mt-1 space-y-1">
+                      {group.items.map((r) => {
+                        const ready = !!(r.extracted_text ?? "").trim();
+                        return (
+                          <li key={r.id} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-background/40">
+                            <input
+                              type="checkbox"
+                              checked={!!reuseSelected[r.id]}
+                              disabled={!ready}
+                              onChange={(e) =>
+                                setReuseSelected((prev) => ({ ...prev, [r.id]: e.target.checked }))
+                              }
+                            />
+                            <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span className="min-w-0 flex-1 truncate">{r.original_name}</span>
+                            <span className="shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground">
+                              {ready ? `${Math.round((r.extracted_text ?? "").length / 1000)}k chars` : r.extraction_error ? "Unreadable" : "Processing…"}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

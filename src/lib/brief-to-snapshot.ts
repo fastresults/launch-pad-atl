@@ -1,5 +1,9 @@
 // @ts-nocheck
-import { supabase } from "@/integrations/supabase/client";
+// Build a hub.new prefill from the canonical founder context.
+// Previously this re-queried tables and regex-guessed industry; now it just
+// reads from `getCanonicalFounderContext` so what the founder typed in the
+// Brief / MarketBlock / Profile flows straight through.
+import { getCanonicalFounderContext } from "@/lib/canonical-context";
 
 export type SnapshotPrefill = {
   fromBrief: true;
@@ -15,115 +19,37 @@ export type SnapshotPrefill = {
   market_scope: "local" | "regional" | "national" | "international";
   industry: string;
   sub_industry: string;
-  track: string; // TrackKey, but kept loose to avoid import cycles
+  track: string;
 };
 
-function trimOrEmpty(v?: string | null) {
-  return (v ?? "").toString().trim();
-}
-
-function deriveCompanyName(pitch: string): string {
-  const cleaned = trimOrEmpty(pitch).replace(/^["'`]+|["'`]+$/g, "");
-  if (!cleaned) return "";
-  // Take the part before the first em-dash, hyphen-with-space, colon, or period
-  const seg = cleaned.split(/[—\-:.]\s|[—:]/)[0].trim();
-  const words = seg.split(/\s+/).slice(0, 5).join(" ");
-  return words.length > 60 ? words.slice(0, 60) : words;
-}
-
-function guessIndustryFromText(text: string): string {
-  const c = text.toLowerCase();
-  if (/\b(bank|payment|fintech|invoic|payroll|ledger|treasury|card)\b/.test(c)) return "Financial Services";
-  if (/\b(developer|api|sdk|devtool|deploy|infrastructure|database|observability)\b/.test(c)) return "Developer Tools";
-  if (/\b(ai|llm|model|agent|machine learning|gpt)\b/.test(c)) return "Artificial Intelligence";
-  if (/\b(shop|store|ecommerce|e-commerce|retail|merchandise)\b/.test(c)) return "E-commerce & Retail";
-  if (/\b(marketing|seo|crm|sales|outreach|campaign|newsletter)\b/.test(c)) return "Marketing & Sales";
-  if (/\b(health|clinic|patient|medical|wellness|therapy)\b/.test(c)) return "Healthcare";
-  if (/\b(school|learn|education|course|tutor|student)\b/.test(c)) return "Education";
-  if (/\b(notes|productivity|workflow|collaborat|task|project management)\b/.test(c)) return "Productivity Software";
-  if (/\b(cafe|coffee|restaurant|bakery|salon|barber|boutique|trade|local service)\b/.test(c)) return "Local Services";
-  return "";
+function archetypeToTrack(archetype: string): string {
+  const a = (archetype || "").toLowerCase();
+  if (a.includes("main") || a.includes("local") || a.includes("brick")) return "lifestyle";
+  if (a.includes("ecommerce") || a.includes("dtc") || a.includes("brand")) return "ecommerce";
+  if (a.includes("service") || a.includes("agency") || a.includes("consult")) return "service";
+  if (a.includes("saas") || a.includes("software") || a.includes("tech")) return "saas";
+  if (a.includes("creator") || a.includes("media") || a.includes("content")) return "creator";
+  return "lifestyle";
 }
 
 export async function buildPrefillFromBrief(): Promise<SnapshotPrefill | null> {
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData?.user;
-  if (!user) return null;
-
-  // Brief row
-  const { data: brief } = await supabase
-    .from("attendee_business_brief")
-    .select("*")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  // Optional attendee profile (business_name, industry, full_name)
-  let attendeeProfile: any = null;
-  try {
-    const { data } = await supabase
-      .from("attendee_profiles")
-      .select("full_name,business_name,industry")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    attendeeProfile = data;
-  } catch {
-    attendeeProfile = null;
-  }
-
-  // Public profile (display_name, email)
-  let pubProfile: any = null;
-  try {
-    const { data } = await supabase
-      .from("profiles")
-      .select("display_name,email")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    pubProfile = data;
-  } catch {
-    pubProfile = null;
-  }
-
-  const meta: any = user.user_metadata ?? {};
-  const pitch = trimOrEmpty(brief?.one_line_pitch);
-  const problem = trimOrEmpty(brief?.problem_statement);
-  const offer = trimOrEmpty(brief?.offer_description);
-  const target = trimOrEmpty(brief?.target_customer);
-  const unique = trimOrEmpty(brief?.unique_insight);
-
-  const conceptParts = [
-    pitch && `What we're building: ${pitch}`,
-    problem && `Problem we're solving: ${problem}`,
-    offer && `What we offer: ${offer}`,
-    target && `Who it's for: ${target}`,
-  ].filter(Boolean);
-
-  const business_concept = conceptParts.join("\n\n");
-  const company_name =
-    trimOrEmpty(attendeeProfile?.business_name) || deriveCompanyName(pitch);
-
-  const fullName =
-    trimOrEmpty(attendeeProfile?.full_name) ||
-    trimOrEmpty(pubProfile?.display_name) ||
-    trimOrEmpty(meta.display_name) ||
-    trimOrEmpty(meta.name) ||
-    trimOrEmpty(meta.full_name);
-
-  const guessed = guessIndustryFromText(`${pitch} ${offer} ${problem}`);
+  const ctx = await getCanonicalFounderContext();
+  if (!ctx) return null;
 
   return {
     fromBrief: true,
-    company_name,
-    business_concept,
-    differentiation_statement: unique,
-    founder_name: fullName,
-    founder_email: trimOrEmpty(user.email) || trimOrEmpty(pubProfile?.email),
-    founder_phone: trimOrEmpty(meta.phone),
-    city: "",
-    region: "",
-    country: "United States",
-    market_scope: "local",
-    industry: trimOrEmpty(attendeeProfile?.industry) || guessed,
-    sub_industry: "",
-    track: "lifestyle", // Main Street default
+    company_name: ctx.concept.company_name,
+    business_concept: ctx.concept.business_concept_blob,
+    differentiation_statement: ctx.concept.differentiation,
+    founder_name: ctx.identity.full_name,
+    founder_email: ctx.identity.email,
+    founder_phone: ctx.identity.phone,
+    city: ctx.market.city,
+    region: ctx.market.region,
+    country: ctx.market.country || "United States",
+    market_scope: (ctx.market.market_scope || "local") as SnapshotPrefill["market_scope"],
+    industry: ctx.market.industry,
+    sub_industry: ctx.market.sub_industry,
+    track: archetypeToTrack(ctx.market.archetype),
   };
 }
