@@ -43,6 +43,7 @@ const DashboardWorkflowKey = lazy(() => import("@/routes/_authenticated/dashboar
 const HubLibrary = lazy(() => import("@/routes/_authenticated/dashboard/hub.index"));
 const HubNew = lazy(() => import("@/routes/_authenticated/dashboard/hub.new"));
 const HubSnapshot = lazy(() => import("@/routes/_authenticated/dashboard/hub.$snapshotId"));
+const WorkshopStage = lazy(() => import("@/routes/_authenticated/workshop.$stage"));
 
 
 // Admin sub-pages
@@ -113,6 +114,9 @@ export default function App() {
         <Route element={<AuthenticatedLayout />}>
           <Route path="/welcome" element={<WelcomePage />} />
           <Route path="/paused" element={<PausedPage />} />
+          <Route path="/workshop/:stage" element={<WorkshopStage />} />
+
+
 
           {/* Dashboard nested routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>
