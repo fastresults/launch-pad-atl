@@ -177,10 +177,12 @@ You will receive a founder's concept plus a research corpus (own site, competito
 Your job is to synthesize a structured research_brief AND a 4-section extracted_data object.
 
 CRITICAL RULES:
-1. Only state facts present in SOURCES. If a fact is not in the sources, write "[needs founder input]".
-2. Cite source URLs in brackets like [https://example.com] right after every claim that came from a source.
-3. Be specific and plausible. Never write filler like "TBD" or "various".
-4. Return ONLY valid JSON matching the schema below — no markdown, no commentary.
+1. Prefer verbatim facts from the founder's own uploaded documents/URLs over inference from research.
+2. Only state facts present in SOURCES. If a fact is not in the sources, leave the field as an empty string "".
+3. NEVER emit placeholder strings like "[needs founder input]", "TBD", "various", or "unknown".
+4. Cite source URLs in brackets like [https://example.com] right after every claim that came from an external source (skip citations for founder-uploaded documents).
+5. Return ONLY valid JSON matching the schema below — no markdown, no commentary.
+
 
 Schema:
 {
