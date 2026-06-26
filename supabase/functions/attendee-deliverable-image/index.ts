@@ -79,16 +79,30 @@ Deno.serve(async (req) => {
 
     const { data: deliverable } = await admin
       .from("attendee_deliverables")
-      .select("user_id, content_current, hero_image_path")
+      .select("id, user_id, content_current, hero_image_path, hero_image_status, hero_image_started_at")
       .eq("user_id", ownerId)
       .eq("deliverable_key", deliverableKey)
       .maybeSingle();
     if (!deliverable) {
       return new Response(JSON.stringify({ error: "Deliverable not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    if (deliverable.hero_image_path && !force) {
+    if (deliverable.hero_image_path && deliverable.hero_image_status === "ready" && !force) {
       return new Response(JSON.stringify({ ok: true, path: deliverable.hero_image_path, skipped: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Atomic claim: skip if another invocation is mid-flight (or stale > 3 min)
+    const staleCutoff = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+    const { data: claim } = await admin
+      .from("attendee_deliverables")
+      .update({ hero_image_status: "generating", hero_image_started_at: new Date().toISOString(), hero_image_error: null })
+      .eq("id", deliverable.id)
+      .or(`hero_image_status.is.null,hero_image_status.eq.failed,hero_image_status.eq.ready,hero_image_started_at.lt.${staleCutoff}`)
+      .select("id")
+      .maybeSingle();
+    if (!claim && !force) {
+      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "in_flight" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const previousPath = deliverable.hero_image_path;
 
     const { data: type } = await admin
       .from("deliverable_types")
