@@ -138,13 +138,13 @@ export async function generateOne(
   const snap = ctx.snap;
   if (!type) throw new Error(`Unknown document type: ${documentType}`);
 
-  // Ensure a snapshot brain exists — compute on demand if missing. This is
-  // the compounded context every later deliverable will reuse.
-  if (!ctx.brain && (snap.concept_summary || snap.research_brief || snap.business_concept)) {
+  // Ensure a snapshot brain exists AND is fresh (recomputes when dirty —
+  // dirty flag is set by source-extract / intake-writeback / concept-refine).
+  if (snap.concept_summary || snap.research_brief || snap.business_concept) {
     try {
-      ctx.brain = await computeSnapshotBrain(supabase, snapshotId);
+      ctx.brain = await ensureSnapshotBrain(supabase, snapshotId);
     } catch (e) {
-      console.warn("brain compute failed, falling back to raw blobs", e);
+      console.warn("brain ensure failed, falling back to raw blobs", e);
     }
   }
 
