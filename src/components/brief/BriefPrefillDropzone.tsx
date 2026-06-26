@@ -54,9 +54,10 @@ export function BriefPrefillDropzone({
       // Fire and forget on persistence; don't block pre-fill if storage fails.
       Promise.allSettled(
         ok.map((file) =>
-          uploadVentureSource({ file, kind: "brief_prefill", usedInBrief: true }),
+          uploadVentureSource({ file, kind: "brief_source", usedInBrief: true }),
         ),
       ).catch(() => {});
+
       const result = await prefillBriefFromDocs(ok);
       onSuggestions(result);
     } catch (e) {
