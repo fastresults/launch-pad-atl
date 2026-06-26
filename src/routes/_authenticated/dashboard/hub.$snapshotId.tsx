@@ -50,6 +50,7 @@ import {
   AlertCircle,
   Eye,
   Sparkles,
+  Presentation,
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
