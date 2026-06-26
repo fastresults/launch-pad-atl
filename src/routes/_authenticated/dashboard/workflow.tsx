@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Circle, Lock, Loader2, Play, Sparkles, Presentation } from "lucide-react";
 import { toast } from "sonner";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
+import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
 
 type WorkflowItem = {
   key: string;
@@ -36,6 +37,26 @@ export default function WorkflowPage() {
   });
 
   const [bulk, setBulk] = useState<{ startCount: number; target: number } | null>(null);
+  const [openDeckSlug, setOpenDeckSlug] = useState<string | null>(null);
+  const [runningCategoryStage, setRunningCategoryStage] = useState<number | null>(null);
+
+  const runCategory = async (stageN: number, keys: string[]) => {
+    if (keys.length === 0) return;
+    setRunningCategoryStage(stageN);
+    try {
+      for (const key of keys) {
+        try {
+          await runMyDeliverable({ data: { key, runUpstream: true } });
+        } catch (e) {
+          toast.error(`${key}: ${e instanceof Error ? e.message : "failed"}`);
+        }
+      }
+      toast.success("Category ready");
+      qc.invalidateQueries({ queryKey: ["my"] });
+    } finally {
+      setRunningCategoryStage(null);
+    }
+  };
 
   const runAll = useMutation({
     mutationFn: () => runMyRemaining(),
@@ -249,31 +270,59 @@ export default function WorkflowPage() {
                 Facilitator: walk the room through this deck before generating.
               </p>
             </div>
-            {deck && (
-              deck.unlocked && deck.available ? (
-                <Button asChild size="sm" variant="outline">
-                  <Link to={`/workshop/${deck.slug}`}>
+            <div className="flex flex-wrap items-center gap-2">
+              {(() => {
+                const stageTrig = group.items.filter((i) => i.user_can_trigger !== false);
+                const remainingKeys = stageTrig.filter((i) => !i.generated).map((i) => i.key);
+                const allDone = stageTrig.length > 0 && remainingKeys.length === 0;
+                const isRunning = runningCategoryStage === n;
+                if (allDone) {
+                  return (
+                    <Button size="sm" variant="ghost" disabled>
+                      <CheckCircle2 className="mr-1 h-4 w-4 text-status-success" />
+                      Category complete
+                    </Button>
+                  );
+                }
+                return (
+                  <Button
+                    size="sm"
+                    onClick={() => runCategory(n, remainingKeys)}
+                    disabled={!briefReady || isRunning || remainingKeys.length === 0}
+                    title={!briefReady ? "Finish your Startup Brief first" : undefined}
+                  >
+                    {isRunning ? (
+                      <><Loader2 className="mr-1 h-4 w-4 animate-spin" />Generating…</>
+                    ) : (
+                      <><Play className="mr-1 h-4 w-4" />Generate this category ({remainingKeys.length})</>
+                    )}
+                  </Button>
+                );
+              })()}
+              {deck && (
+                deck.unlocked && deck.available ? (
+                  <Button size="sm" variant="outline" onClick={() => setOpenDeckSlug(deck.slug)}>
                     <Presentation className="mr-1 h-4 w-4" />
                     Open facilitator deck
-                  </Link>
-                </Button>
-              ) : !deck.available ? (
-                <Button size="sm" variant="outline" disabled title="Deck coming soon">
-                  <Lock className="mr-1 h-4 w-4" />
-                  Deck coming soon
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled
-                  title={`Deck unlocks when ${deck.prevLabel ?? "the previous category"} is complete`}
-                >
-                  <Lock className="mr-1 h-4 w-4" />
-                  Unlocks after {deck.prevLabel ?? "previous category"}
-                </Button>
-              )
-            )}
+                  </Button>
+                ) : !deck.available ? (
+                  <Button size="sm" variant="outline" disabled title="Deck coming soon">
+                    <Lock className="mr-1 h-4 w-4" />
+                    Deck coming soon
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled
+                    title={`Deck unlocks when ${deck.prevLabel ?? "the previous category"} is complete`}
+                  >
+                    <Lock className="mr-1 h-4 w-4" />
+                    Unlocks after {deck.prevLabel ?? "previous category"}
+                  </Button>
+                )
+              )}
+            </div>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {group.items.map((d) => {
@@ -339,6 +388,8 @@ export default function WorkflowPage() {
           </ul>
         </section>
       )}
+
+      <DeckDialog slug={openDeckSlug} onOpenChange={(o) => { if (!o) setOpenDeckSlug(null); }} />
     </div>
   );
 }
