@@ -319,7 +319,7 @@ async function runLayer(supabase: any, snapshotId: string, jobId: string, layer:
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, pending.length || 1) }, () => worker()));
 }
 
-async function runJob(supabase: any, snapshotId: string, jobId: string) {
+async function runJob(supabase: any, snapshotId: string, jobId: string, category?: string | null) {
   const { data: allTypes } = await supabase
     .from("venture_document_types")
     .select("*")
@@ -336,9 +336,14 @@ async function runJob(supabase: any, snapshotId: string, jobId: string) {
       .filter((d: any) => d.intake_answers && Object.keys(d.intake_answers).length)
       .map((d: any) => d.document_type),
   );
-  const types = (allTypes ?? []).filter(
+  let types = (allTypes ?? []).filter(
     (t: any) => !t.intake_schema || haveAnswers.has(t.type),
   );
+
+  if (category && category.trim().length > 0) {
+    const wanted = category.trim().toLowerCase();
+    types = types.filter((t: any) => String(t.category ?? "").toLowerCase() === wanted);
+  }
 
   const layers = dependencyLayers(types);
   const total = types.length;
@@ -379,7 +384,9 @@ async function runJob(supabase: any, snapshotId: string, jobId: string) {
     current_document_type: null,
   }).eq("id", jobId);
 
-  await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);
+  if (!category) {
+    await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);
+  }
 }
 
 
@@ -387,19 +394,55 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { snapshotId } = await req.json();
+    const { snapshotId, category } = await req.json();
     if (!snapshotId) return new Response(JSON.stringify({ error: "snapshotId required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
+    // Identify caller from JWT (so we can check unlock grants).
+    let callerId: string | null = null;
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (authHeader.startsWith("Bearer ")) {
+      const { data: userData } = await supabase.auth.getUser(authHeader.slice(7));
+      callerId = userData?.user?.id ?? null;
+    }
+
     // Gate: concept must be locked before any docs are generated.
     const { data: gateSnap } = await supabase
       .from("venture_snapshots")
-      .select("concept_status")
+      .select("concept_status, user_id")
       .eq("id", snapshotId)
       .maybeSingle();
     if (!gateSnap || gateSnap.concept_status !== "locked") {
       return new Response(JSON.stringify({ error: "Lock your concept summary before generating documents." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // If this is a full-bulk (no category) request, require an active unlock grant
+    // for (caller, snapshot). Per-category runs are always allowed for the owner.
+    const isAllBulk = !category || String(category).trim().length === 0;
+    if (isAllBulk) {
+      if (!callerId) {
+        return new Response(JSON.stringify({ error: "unlock_required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      // Admins always allowed; check role.
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", callerId)
+        .in("role", ["admin", "super_admin"]);
+      const isAdmin = (roleRow ?? []).length > 0;
+      if (!isAdmin) {
+        const { data: grant } = await supabase
+          .from("bulk_unlock_grants")
+          .select("id")
+          .eq("user_id", callerId)
+          .eq("snapshot_id", snapshotId)
+          .is("revoked_at", null)
+          .maybeSingle();
+        if (!grant) {
+          return new Response(JSON.stringify({ error: "unlock_required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
     }
 
     // Reuse a running job if there is one
@@ -423,16 +466,18 @@ Deno.serve(async (req) => {
       jobId = created.id;
     }
 
+    const categoryArg = isAllBulk ? null : String(category);
+
     // Run in the background so the HTTP response returns immediately.
     // @ts-ignore: EdgeRuntime is provided by Supabase Edge Functions runtime.
     if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
       // @ts-ignore
-      EdgeRuntime.waitUntil(runJob(supabase, snapshotId, jobId!));
+      EdgeRuntime.waitUntil(runJob(supabase, snapshotId, jobId!, categoryArg));
     } else {
-      runJob(supabase, snapshotId, jobId!).catch((e) => console.error("bulk job failed", e));
+      runJob(supabase, snapshotId, jobId!, categoryArg).catch((e) => console.error("bulk job failed", e));
     }
 
-    return new Response(JSON.stringify({ ok: true, jobId }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ ok: true, jobId, category: categoryArg }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return new Response(JSON.stringify({ error: message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });

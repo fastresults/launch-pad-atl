@@ -731,6 +731,65 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_unlock_codes: {
+        Row: {
+          code_hash: string
+          created_at: string
+          revoked_at: string | null
+          set_by: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          revoked_at?: string | null
+          set_by?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          revoked_at?: string | null
+          set_by?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bulk_unlock_grants: {
+        Row: {
+          granted_at: string
+          id: string
+          revoked_at: string | null
+          snapshot_id: string
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          id?: string
+          revoked_at?: string | null
+          snapshot_id: string
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          id?: string
+          revoked_at?: string | null
+          snapshot_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_unlock_grants_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cohorts: {
         Row: {
           cohort_date: string
@@ -2310,6 +2369,19 @@ export type Database = {
       }
     }
     Functions: {
+      admin_clear_bulk_unlock_default: { Args: never; Returns: undefined }
+      admin_clear_user_bulk_unlock: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
+      admin_set_bulk_unlock_default: {
+        Args: { _code: string }
+        Returns: undefined
+      }
+      admin_set_user_bulk_unlock: {
+        Args: { _code: string; _user_id: string }
+        Returns: undefined
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -2381,6 +2453,10 @@ export type Database = {
       sync_cohort_seat_cache: {
         Args: { _cohort_id: string }
         Returns: undefined
+      }
+      verify_bulk_unlock: {
+        Args: { _code: string; _snapshot_id: string; _user_id: string }
+        Returns: boolean
       }
     }
     Enums: {

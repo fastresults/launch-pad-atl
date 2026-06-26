@@ -33,6 +33,7 @@ import { ConceptStudio } from "@/components/hub/ConceptStudio";
 import { DocumentViewer } from "@/components/hub/DocumentViewer";
 import { RewriteFeedbackDialog } from "@/components/hub/RewriteFeedbackDialog";
 import { IntakeGatewayDialog, type IntakeTarget } from "@/components/hub/IntakeGatewayDialog";
+import { BulkUnlockDialog } from "@/components/hub/BulkUnlockDialog";
 import { BrandStudio } from "@/components/hub/BrandStudio";
 import { SocialStudio } from "@/components/hub/SocialStudio";
 import { FounderRoadmapCard } from "@/components/hub/FounderRoadmapCard";
@@ -578,10 +579,19 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   });
 
   const bulk = useMutation({
-    mutationFn: () => bulkGenerate({ data: { snapshotId: snapshot.id } }),
-    onSuccess: () => { toast.success("We'll keep writing in the background"); qc.invalidateQueries({ queryKey: ["hub"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Couldn't start"),
+    mutationFn: (vars: { category?: string | null } | undefined) => bulkGenerate({ data: { snapshotId: snapshot.id, category: vars?.category ?? null } }),
+    onSuccess: (_d, vars) => {
+      toast.success(vars?.category ? `Writing the ${vars.category} section…` : "We'll keep writing in the background");
+      qc.invalidateQueries({ queryKey: ["hub"] });
+    },
+    onError: (e) => {
+      const msg = e instanceof Error ? e.message : "Couldn't start";
+      if (msg === "unlock_required") setShowUnlock(true);
+      else toast.error(msg);
+    },
   });
+
+  const [showUnlock, setShowUnlock] = useState(false);
 
   const cancel = useMutation({
     mutationFn: (jobId: string) => cancelJob({ data: { jobId } }),
@@ -619,6 +629,16 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     return Array.from(map.entries());
   }, [types]);
 
+  // Per-category progress
+  const categoryProgress = useMemo(() => {
+    return categories.map(([cat, items]) => {
+      const done = items.filter((t: any) => completedKeys.has(t.type)).length;
+      return { cat, total: items.length, done, complete: done === items.length };
+    });
+  }, [categories, completedKeys]);
+
+  const nextCategory = categoryProgress.find((c) => !c.complete) ?? null;
+
   // ---- Hero state machine ----
   let heroTitle: string;
   let heroSub: string;
@@ -636,26 +656,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     if (job?.id) {
       heroSecondary = { label: job.cancel_requested ? "Stopping…" : "Stop", onClick: () => cancel.mutate(job.id) };
     }
-  } else if (completeCount === 0) {
-    heroTitle = "Let's build your startup kit";
-    heroSub = `We'll write ${total || "your"} documents — strategy, brand, social and launch. It takes a few hours. You can leave and come back any time.`;
-    heroPrimary = {
-      label: "Start writing",
-      onClick: () => bulk.mutate(),
-      disabled: bulk.isPending || !total,
-      loading: bulk.isPending,
-    };
-  } else if (completeCount < total) {
-    heroTitle = "Pick up where you left off";
-    heroSub = `${completeCount} of ${total} documents done. We'll write the rest for you.`;
-    heroShowProgress = true;
-    heroPrimary = {
-      label: "Continue writing",
-      onClick: () => bulk.mutate(),
-      disabled: bulk.isPending,
-      loading: bulk.isPending,
-    };
-  } else {
+  } else if (!nextCategory) {
     heroTitle = "Your startup kit is ready";
     heroSub = `All ${total} documents are written. Open any one below to read or download.`;
     heroDone = true;
@@ -666,7 +667,23 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         if (first) setViewerDoc(first);
       },
     };
-    heroSecondary = { label: "Regenerate all", onClick: () => bulk.mutate() };
+    heroSecondary = { label: "Generate all (re-run)", onClick: () => setShowUnlock(true) };
+  } else {
+    const isFirstRun = completeCount === 0;
+    heroTitle = isFirstRun
+      ? "Let's build your startup kit, one section at a time"
+      : "Pick up where you left off";
+    heroSub = isFirstRun
+      ? `We'll write your ${total} documents in guided sections — Foundation first, then Strategy, Operations, and the rest. Generate one section, read it, then move on.`
+      : `${completeCount} of ${total} done. Next up: ${nextCategory.cat} (${nextCategory.total - nextCategory.done} doc${nextCategory.total - nextCategory.done === 1 ? "" : "s"} left).`;
+    heroShowProgress = !isFirstRun;
+    heroPrimary = {
+      label: `Generate ${nextCategory.cat} (${nextCategory.total - nextCategory.done} doc${nextCategory.total - nextCategory.done === 1 ? "" : "s"})`,
+      onClick: () => bulk.mutate({ category: nextCategory.cat }),
+      disabled: bulk.isPending,
+      loading: bulk.isPending,
+    };
+    heroSecondary = { label: `Generate all ${total}`, onClick: () => setShowUnlock(true) };
   }
 
   const pct = jobRunning
@@ -744,12 +761,56 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       {/* Document list */}
       <div className="space-y-1">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your documents</h3>
-        <p className="text-xs text-muted-foreground">Read each one as it's ready, or generate them one at a time.</p>
+        <p className="text-xs text-muted-foreground">Sections unlock in order. Use the per-section button to generate a whole section at once, or hit Generate on any single document.</p>
       </div>
 
-      {categories.map(([cat, items]) => (
+      {/* Category stepper */}
+      {categoryProgress.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {categoryProgress.map((c, i) => {
+            const active = !jobRunning && nextCategory?.cat === c.cat;
+            const tone = c.complete
+              ? "border-status-success/40 bg-status-success/10 text-status-success"
+              : active
+                ? "border-primary/50 bg-primary/10 text-foreground"
+                : "border-white/10 text-muted-foreground";
+            return (
+              <span key={c.cat} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${tone}`}>
+                <span className="font-medium">{i + 1}. {c.cat}</span>
+                <span className="opacity-70">{c.done}/{c.total}</span>
+                {c.complete && <CheckCircle2 className="h-3 w-3" />}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {categories.map(([cat, items]) => {
+        const catDone = items.filter((t: any) => completedKeys.has(t.type)).length;
+        const catTotal = items.length;
+        const catComplete = catDone === catTotal;
+        const catGenerating = jobRunning && bulk.variables?.category === cat;
+        return (
         <section key={cat} className="space-y-3">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">{cat}</h4>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
+              {cat} <span className="ml-1 normal-case text-muted-foreground/60">· {catDone}/{catTotal}</span>
+            </h4>
+            <Button
+              size="sm"
+              variant={catComplete ? "ghost" : "outline"}
+              disabled={bulk.isPending || jobRunning}
+              onClick={() => bulk.mutate({ category: cat })}
+            >
+              {catGenerating ? (
+                <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
+              ) : catComplete ? (
+                <><RefreshCw className="mr-1 h-3 w-3" />Regenerate this section</>
+              ) : (
+                <><Sparkles className="mr-1 h-3 w-3" />Generate this section</>
+              )}
+            </Button>
+          </div>
           <div className="grid gap-3 md:grid-cols-2">
             {items.map((t) => {
               const d = docByType.get(t.type);
@@ -840,7 +901,8 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             })}
           </div>
         </section>
-      ))}
+        );
+      })}
 
       {/* Bonus tools - deferred */}
       <details open={completeCount === total && total > 0} className="rounded-2xl border border-white/10 bg-card/40 p-4">
@@ -879,6 +941,13 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
           }
           setIntakeTarget(null);
         }}
+      />
+      <BulkUnlockDialog
+        open={showUnlock}
+        onOpenChange={setShowUnlock}
+        snapshotId={snapshot.id}
+        totalDocs={total}
+        onUnlocked={() => bulk.mutate({ category: null })}
       />
     </div>
   );
