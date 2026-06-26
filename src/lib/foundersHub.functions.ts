@@ -313,13 +313,105 @@ export async function generateDeepAssessment(input: any): Promise<void> {
   if (data && data.ok === false) throw new Error(data.error ?? "Deep assessment failed");
 }
 
-export async function bulkGenerate(input: any): Promise<void> {
+export async function bulkGenerate(input: any): Promise<{ ok?: boolean; jobId?: string; category?: string | null }> {
+  const { snapshotId, category } = unwrap<{ snapshotId: string; category?: string | null }>(input);
+  const { data, error } = await supabase.functions.invoke("venture-bulk-generate", {
+    body: { snapshotId, category: category ?? null },
+  });
+  if (error) {
+    // Edge function may return a structured error like "unlock_required".
+    const ctx = (error as any)?.context;
+    if (ctx?.body) {
+      try {
+        const parsed = typeof ctx.body === "string" ? JSON.parse(ctx.body) : ctx.body;
+        if (parsed?.error === "unlock_required") throw new Error("unlock_required");
+      } catch (_e) { /* fall through */ }
+    }
+    throw new Error(error.message);
+  }
+  if (data && (data as any).error === "unlock_required") throw new Error("unlock_required");
+  return data ?? {};
+}
+
+export async function hasBulkUnlockGrant(input: any): Promise<boolean> {
   const { snapshotId } = unwrap<{ snapshotId: string }>(input);
-  const { error } = await supabase.functions.invoke("venture-bulk-generate", {
-    body: { snapshotId },
+  const userId = await uid();
+  const { data } = await supabase
+    .from("bulk_unlock_grants")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("snapshot_id", snapshotId)
+    .is("revoked_at", null)
+    .maybeSingle();
+  return !!data;
+}
+
+export async function verifyBulkUnlock(input: any): Promise<boolean> {
+  const { snapshotId, code } = unwrap<{ snapshotId: string; code: string }>(input);
+  const userId = await uid();
+  const { data, error } = await supabase.rpc("verify_bulk_unlock", {
+    _user_id: userId,
+    _snapshot_id: snapshotId,
+    _code: code,
   });
   if (error) throw new Error(error.message);
+  return data === true;
 }
+
+export async function adminSetBulkUnlockDefault(input: any): Promise<void> {
+  const { code } = unwrap<{ code: string }>(input);
+  const { error } = await supabase.rpc("admin_set_bulk_unlock_default", { _code: code });
+  if (error) throw new Error(error.message);
+}
+
+export async function adminClearBulkUnlockDefault(): Promise<void> {
+  const { error } = await supabase.rpc("admin_clear_bulk_unlock_default");
+  if (error) throw new Error(error.message);
+}
+
+export async function adminSetUserBulkUnlock(input: any): Promise<void> {
+  const { userId, code } = unwrap<{ userId: string; code: string }>(input);
+  const { error } = await supabase.rpc("admin_set_user_bulk_unlock", { _user_id: userId, _code: code });
+  if (error) throw new Error(error.message);
+}
+
+export async function adminClearUserBulkUnlock(input: any): Promise<void> {
+  const { userId } = unwrap<{ userId: string }>(input);
+  const { error } = await supabase.rpc("admin_clear_user_bulk_unlock", { _user_id: userId });
+  if (error) throw new Error(error.message);
+}
+
+export async function adminListUserBulkUnlocks(): Promise<Array<{ user_id: string; updated_at: string; email: string | null; display_name: string | null }>> {
+  const { data: codes } = await supabase
+    .from("bulk_unlock_codes")
+    .select("user_id, updated_at")
+    .is("revoked_at", null)
+    .order("updated_at", { ascending: false });
+  const list = codes ?? [];
+  if (list.length === 0) return [];
+  const ids = list.map((r: any) => r.user_id);
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("user_id, email, display_name")
+    .in("user_id", ids);
+  const byId = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
+  return list.map((r: any) => ({
+    user_id: r.user_id,
+    updated_at: r.updated_at,
+    email: byId.get(r.user_id)?.email ?? null,
+    display_name: byId.get(r.user_id)?.display_name ?? null,
+  }));
+}
+
+export async function adminHasBulkUnlockDefault(): Promise<boolean> {
+  const { data } = await supabase
+    .from("site_settings")
+    .select("key")
+    .eq("key", "bulk_unlock_default")
+    .maybeSingle();
+  return !!data;
+}
+
 
 export async function getActiveJob(input: any) {
   const { snapshotId } = unwrap<{ snapshotId: string }>(input);
