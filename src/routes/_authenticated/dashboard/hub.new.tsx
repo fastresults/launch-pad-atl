@@ -131,17 +131,25 @@ function Inner() {
   const trackSectionRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Prefill from authenticated user once
+  // Prefill from canonical context (Profile + Brief + MarketBlock + auth).
+  // This runs even when the user didn't navigate from the Brief-complete
+  // screen, so any fact they've already typed flows in automatically.
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.auth.getUser();
-      const u = data.user;
-      if (!u) return;
-      const meta: any = u.user_metadata ?? {};
-      if (!founderEmail && u.email) setFounderEmail(u.email);
-      if (!founderName) {
-        const n = meta.display_name || meta.name || meta.full_name;
-        if (n) setFounderName(n);
+      const { getCanonicalFounderContext } = await import("@/lib/canonical-context");
+      const ctx = await getCanonicalFounderContext();
+      if (!ctx) return;
+      // Never overwrite a value the user (or an explicit prefill) already set.
+      setFounderName((cur) => cur || ctx.identity.full_name);
+      setFounderEmail((cur) => cur || ctx.identity.email);
+      setFounderPhone((cur) => cur || ctx.identity.phone);
+      setCompanyName((cur) => cur || ctx.concept.company_name);
+      setBusinessConcept((cur) => cur || ctx.concept.business_concept_blob);
+      setDiff((cur) => cur || ctx.concept.differentiation);
+      setIndustry((cur) => cur || ctx.market.industry);
+      setMarketScope((cur) => (cur ? cur : (ctx.market.market_scope || "local")));
+      if (ctx.market.industry || ctx.concept.business_concept_blob) {
+        setFromBrief((cur) => cur || true);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
