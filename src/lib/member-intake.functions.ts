@@ -54,7 +54,7 @@ export async function submitMyIntake(data: { startup_type: string; startup_name?
       if (!existingMarket?.archetype) {
         await supabase
           .from("attendee_market_profile")
-          .upsert({ user_id: userId, archetype }, { onConflict: "user_id" });
+          .upsert({ user_id: userId, archetype: [archetype] } as any, { onConflict: "user_id" });
       }
     }
 
