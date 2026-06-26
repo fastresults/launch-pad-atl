@@ -269,6 +269,7 @@ export function DocumentViewer({
         content: string;
         snapshot_id?: string;
         hero_image_path?: string | null;
+        hero_image_status?: string | null;
         deep_assessment?: string | null;
         deep_assessment_status?: string | null;
         deep_assessment_quality_score?: number | null;
@@ -387,16 +388,24 @@ export function DocumentViewer({
     };
   }, [heroPath]);
 
-  // Lazy hero image: auto-generate the first time a document is opened
-  // without one. Bulk generation no longer pre-renders hero images.
+  // Lazy hero image: auto-generate only once per (snapshot, document) when
+  // there's no image AND no prior attempt. Status === 'failed' shows a Retry
+  // button instead. A ref guard prevents a second invocation if the user
+  // reopens before the first call finishes (race-free; server also locks).
+  const autoFiredRef = useRef<string | null>(null);
   useEffect(() => {
     if (!open) return;
     if (heroPath || heroLoading) return;
     if (!doc?.snapshot_id || !doc?.document_type) return;
-    if (!doc?.content) return; // only when there's a document body
+    if (!doc?.content) return;
+    const status = doc?.hero_image_status ?? null;
+    if (status === "generating" || status === "failed") return;
+    const key = `${doc.snapshot_id}:${doc.document_type}`;
+    if (autoFiredRef.current === key) return;
+    autoFiredRef.current = key;
     generateHero(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, doc?.snapshot_id, doc?.document_type, doc?.content, heroPath]);
+  }, [open, doc?.snapshot_id, doc?.document_type, doc?.content, heroPath, doc?.hero_image_status]);
 
   const generateHero = async (force = false) => {
     if (!doc?.snapshot_id || !doc?.document_type) return;

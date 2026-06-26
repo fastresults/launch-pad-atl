@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Link, useParams } from 'react-router-dom';
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { runMyDeliverable, runMyDeliverableAssessment } from "@/lib/userPipeline.functions";
@@ -43,7 +43,7 @@ export default function WorkflowDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("attendee_deliverables")
-        .select("content_current, content_ai, review_status, publish_status, ai_generated_at, deep_assessment, deep_assessment_status, deep_assessment_quality_score, deep_assessment_generated_at, hero_image_path")
+        .select("content_current, content_ai, review_status, publish_status, ai_generated_at, deep_assessment, deep_assessment_status, deep_assessment_quality_score, deep_assessment_generated_at, hero_image_path, hero_image_status")
         .eq("user_id", user!.id)
         .eq("deliverable_key", key)
         .maybeSingle();
@@ -122,13 +122,18 @@ export default function WorkflowDetail() {
     }
   };
 
-  // Auto-kick once when content exists but no hero yet
+  // Auto-kick once per (key) per mount when content exists, no hero yet,
+  // and no prior attempt (status is null). 'failed' shows a Retry button.
+  const autoFiredRef = useRef<string | null>(null);
+  const heroStatus = deliverable?.hero_image_status ?? null;
   useEffect(() => {
-    if (hasContent && !heroPath && !heroLoading) {
-      generateHero(false);
-    }
+    if (!hasContent || heroPath || heroLoading || !key) return;
+    if (heroStatus === "generating" || heroStatus === "failed") return;
+    if (autoFiredRef.current === key) return;
+    autoFiredRef.current = key;
+    generateHero(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasContent, heroPath]);
+  }, [hasContent, heroPath, key, heroStatus]);
 
 
   return (

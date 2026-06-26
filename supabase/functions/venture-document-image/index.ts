@@ -102,16 +102,30 @@ Deno.serve(async (req) => {
 
     const { data: doc } = await admin
       .from("venture_documents")
-      .select("content, hero_image_path")
+      .select("id, content, hero_image_path, hero_image_status, hero_image_started_at")
       .eq("snapshot_id", snapshotId)
       .eq("document_type", documentType)
       .maybeSingle();
     if (!doc) {
       return new Response(JSON.stringify({ error: "Document not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    if (doc.hero_image_path && !force) {
+    if (doc.hero_image_path && doc.hero_image_status === "ready" && !force) {
       return new Response(JSON.stringify({ ok: true, path: doc.hero_image_path, skipped: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Atomic claim: only run if not already generating (or stale > 3 min).
+    const staleCutoff = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+    const { data: claim } = await admin
+      .from("venture_documents")
+      .update({ hero_image_status: "generating", hero_image_started_at: new Date().toISOString(), hero_image_error: null })
+      .eq("id", doc.id)
+      .or(`hero_image_status.is.null,hero_image_status.eq.failed,hero_image_status.eq.ready,hero_image_started_at.lt.${staleCutoff}`)
+      .select("id")
+      .maybeSingle();
+    if (!claim && !force) {
+      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "in_flight" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const previousPath = doc.hero_image_path;
 
     const { data: typeRow } = await admin
       .from("venture_document_types")
@@ -143,6 +157,9 @@ Deno.serve(async (req) => {
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
+      await admin.from("venture_documents")
+        .update({ hero_image_status: "failed", hero_image_error: `Gateway ${aiRes.status}: ${txt.slice(0, 200)}` })
+        .eq("id", doc.id);
       await admin.from("venture_generation_failures").insert({
         snapshot_id: snapshotId,
         document_type: documentType,
@@ -177,6 +194,9 @@ Deno.serve(async (req) => {
       }
     }
     if (!b64) {
+      await admin.from("venture_documents")
+        .update({ hero_image_status: "failed", hero_image_error: "No image returned by model" })
+        .eq("id", doc.id);
       await admin.from("venture_generation_failures").insert({
         snapshot_id: snapshotId,
         document_type: documentType,
@@ -186,21 +206,28 @@ Deno.serve(async (req) => {
     }
 
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-    const path = nextPath(ownerId, snapshotId, documentType, doc.hero_image_path);
+    const path = nextPath(ownerId, snapshotId, documentType, previousPath);
 
     const { error: upErr } = await admin.storage.from(BUCKET).upload(path, bytes, {
       contentType: "image/png",
       upsert: true,
     });
     if (upErr) {
+      await admin.from("venture_documents")
+        .update({ hero_image_status: "failed", hero_image_error: `Upload: ${upErr.message}` })
+        .eq("id", doc.id);
       return new Response(JSON.stringify({ error: `Upload failed: ${upErr.message}` }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     await admin
       .from("venture_documents")
-      .update({ hero_image_path: path, hero_image_prompt: prompt })
-      .eq("snapshot_id", snapshotId)
-      .eq("document_type", documentType);
+      .update({ hero_image_path: path, hero_image_prompt: prompt, hero_image_status: "ready", hero_image_error: null })
+      .eq("id", doc.id);
+
+    // Best-effort: delete the previous version to avoid orphaned files
+    if (previousPath && previousPath !== path) {
+      await admin.storage.from(BUCKET).remove([previousPath]).catch(() => {});
+    }
 
     return new Response(JSON.stringify({ ok: true, path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {

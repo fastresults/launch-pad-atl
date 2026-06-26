@@ -231,8 +231,11 @@ export type Database = {
           deep_assessment_quality_score: number | null
           deep_assessment_status: string | null
           deliverable_key: string
+          hero_image_error: string | null
           hero_image_path: string | null
           hero_image_prompt: string | null
+          hero_image_started_at: string | null
+          hero_image_status: string | null
           id: string
           last_run_id: string | null
           publish_at: string | null
@@ -258,8 +261,11 @@ export type Database = {
           deep_assessment_quality_score?: number | null
           deep_assessment_status?: string | null
           deliverable_key: string
+          hero_image_error?: string | null
           hero_image_path?: string | null
           hero_image_prompt?: string | null
+          hero_image_started_at?: string | null
+          hero_image_status?: string | null
           id?: string
           last_run_id?: string | null
           publish_at?: string | null
@@ -285,8 +291,11 @@ export type Database = {
           deep_assessment_quality_score?: number | null
           deep_assessment_status?: string | null
           deliverable_key?: string
+          hero_image_error?: string | null
           hero_image_path?: string | null
           hero_image_prompt?: string | null
+          hero_image_started_at?: string | null
+          hero_image_status?: string | null
           id?: string
           last_run_id?: string | null
           publish_at?: string | null
@@ -1918,8 +1927,11 @@ export type Database = {
           deep_assessment_quality_score: number | null
           deep_assessment_status: string | null
           document_type: string
+          hero_image_error: string | null
           hero_image_path: string | null
           hero_image_prompt: string | null
+          hero_image_started_at: string | null
+          hero_image_status: string | null
           id: string
           intake_answers: Json | null
           metadata: Json
@@ -1939,8 +1951,11 @@ export type Database = {
           deep_assessment_quality_score?: number | null
           deep_assessment_status?: string | null
           document_type: string
+          hero_image_error?: string | null
           hero_image_path?: string | null
           hero_image_prompt?: string | null
+          hero_image_started_at?: string | null
+          hero_image_status?: string | null
           id?: string
           intake_answers?: Json | null
           metadata?: Json
@@ -1960,8 +1975,11 @@ export type Database = {
           deep_assessment_quality_score?: number | null
           deep_assessment_status?: string | null
           document_type?: string
+          hero_image_error?: string | null
           hero_image_path?: string | null
           hero_image_prompt?: string | null
+          hero_image_started_at?: string | null
+          hero_image_status?: string | null
           id?: string
           intake_answers?: Json | null
           metadata?: Json

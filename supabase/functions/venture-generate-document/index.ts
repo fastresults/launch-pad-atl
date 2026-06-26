@@ -294,11 +294,14 @@ Target ~600-900 words unless the doc type is brief.${OUTPUT_FOOTER}`;
   }
 
   // Fire-and-forget hero image generation (Nano Banana Pro). Best-effort.
+  // Force regeneration when the content has actually changed (rewrite path);
+  // otherwise the image function will no-op if one already exists.
+  const forceImage = nextVersion > 1;
   try {
     fetch(`${SUPABASE_URL}/functions/v1/venture-document-image`, {
       method: "POST",
       headers: { Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ snapshotId, documentType }),
+      body: JSON.stringify({ snapshotId, documentType, force: forceImage }),
     }).catch(() => {});
   } catch { /* ignore */ }
 
