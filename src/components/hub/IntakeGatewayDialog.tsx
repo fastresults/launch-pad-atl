@@ -23,6 +23,39 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  getCanonicalFounderContext,
+  provenanceLabel,
+  type CanonicalFounderContext,
+} from "@/lib/canonical-context";
+
+// Common intake field ids → canonical context lookups. Anything not listed
+// falls through to the field's schema default. Keep this conservative so we
+// don't accidentally overwrite legitimately different per-deliverable inputs.
+const CANONICAL_FIELD_MAP: Record<string, (c: CanonicalFounderContext) => { v: any; src: string }> = {
+  company_name: (c) => ({ v: c.concept.company_name, src: c.provenance.company_name ?? "" }),
+  business_name: (c) => ({ v: c.concept.company_name, src: c.provenance.company_name ?? "" }),
+  industry: (c) => ({ v: c.market.industry, src: c.provenance.industry ?? "" }),
+  stage: (c) => ({ v: c.market.stage, src: c.provenance.stage ?? "" }),
+  customer_type: (c) => ({ v: c.market.customer_type, src: c.provenance.customer_type ?? "" }),
+  target_customer: (c) => ({ v: c.concept.target_customer, src: c.provenance.target_customer ?? "" }),
+  target_market: (c) => ({ v: c.concept.target_customer, src: c.provenance.target_customer ?? "" }),
+  one_line_pitch: (c) => ({ v: c.concept.one_line_pitch, src: c.provenance.one_line_pitch ?? "" }),
+  problem_statement: (c) => ({ v: c.concept.problem_statement, src: c.provenance.problem_statement ?? "" }),
+  offer_description: (c) => ({ v: c.concept.offer_description, src: c.provenance.offer_description ?? "" }),
+  business_model: (c) => ({ v: c.concept.business_model, src: c.provenance.business_model ?? "" }),
+  pricing_idea: (c) => ({ v: c.concept.pricing_idea, src: c.provenance.pricing_idea ?? "" }),
+  unique_insight: (c) => ({ v: c.concept.unique_insight, src: c.provenance.unique_insight ?? "" }),
+  twelve_month_vision: (c) => ({ v: c.concept.twelve_month_vision, src: c.provenance.twelve_month_vision ?? "" }),
+  founder_name: (c) => ({ v: c.identity.full_name, src: c.provenance.full_name ?? "" }),
+  full_name: (c) => ({ v: c.identity.full_name, src: c.provenance.full_name ?? "" }),
+  email: (c) => ({ v: c.identity.email, src: c.provenance.email ?? "" }),
+  phone: (c) => ({ v: c.identity.phone, src: c.provenance.phone ?? "" }),
+  current_revenue: (c) => ({ v: c.financials.current_revenue ?? "", src: c.financials.current_revenue != null ? "profile" : "" }),
+  monthly_burn: (c) => ({ v: c.financials.monthly_burn ?? "", src: c.financials.monthly_burn != null ? "profile" : "" }),
+  runway_months: (c) => ({ v: c.financials.runway_months ?? "", src: c.financials.runway_months != null ? "profile" : "" }),
+  funding_raised: (c) => ({ v: c.financials.funding_raised ?? "", src: c.financials.funding_raised != null ? "profile" : "" }),
+};
 
 /**
  * Field shapes supported by intake_schema:
