@@ -90,6 +90,8 @@ export default function ProfilePage() {
     onSuccess: () => {
       toast.success("Saved");
       qc.invalidateQueries({ queryKey: ["my", "profile"] });
+      invalidateCanonical();
+      void markAllMySnapshotBrainsDirty();
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -100,6 +102,8 @@ export default function ProfilePage() {
       if (r.fieldsFilled > 0) toast.success(`Profile refreshed from your brief — ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} updated.`);
       else toast.message("Your profile is already matched to your brief.");
       qc.invalidateQueries({ queryKey: ["my", "profile"] });
+      invalidateCanonical();
+      void markAllMySnapshotBrainsDirty();
     },
     onError: (e: Error) => toast.error(e.message),
   });
