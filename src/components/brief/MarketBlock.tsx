@@ -85,7 +85,16 @@ export function MarketBlock({ onDone }: Props) {
           market_note: note.trim() || null,
         },
       });
-      import("@/lib/brief-sync-profile").then((m) => m.syncProfileFromBrief().catch(() => {}));
+      try {
+        const { syncProfileFromBrief } = await import("@/lib/brief-sync-profile");
+        const r = await syncProfileFromBrief();
+        if (r.fieldsFilled > 0) {
+          toast.success(`Profile updated — ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} filled from your brief.`);
+        }
+      } catch (syncErr) {
+        console.error("[MarketBlock] sync failed", syncErr);
+        toast.error("Couldn't sync to Profile — try the 'Pull from my brief' button there.");
+      }
       onDone();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed");
