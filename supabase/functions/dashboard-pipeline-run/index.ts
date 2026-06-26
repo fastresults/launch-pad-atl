@@ -262,12 +262,17 @@ async function runJob(admin: any, userId: string, runId: string, opts: { key?: s
           review_status: "pending_review",
         }, { onConflict: "user_id,deliverable_key" });
 
+        const isTarget = !!opts.key && t.key === opts.key;
         const content = await generateOne(admin, userId, t, {
           brief: brief ?? null,
           founder: founder ?? null,
           market: market ?? null,
           upstream,
+          feedback: isTarget ? opts.feedback : undefined,
+          tags: isTarget ? opts.tags : undefined,
+          previous: isTarget ? (upstream[t.key] ?? null) : null,
         });
+
 
         await admin.from("attendee_deliverables").update({
           content_current: content as any,
