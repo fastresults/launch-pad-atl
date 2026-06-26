@@ -322,6 +322,7 @@ export type Database = {
           mime_type: string | null
           original_name: string
           size_bytes: number | null
+          source_venture_document_id: string | null
           storage_path: string
           user_id: string
         }
@@ -332,6 +333,7 @@ export type Database = {
           mime_type?: string | null
           original_name: string
           size_bytes?: number | null
+          source_venture_document_id?: string | null
           storage_path: string
           user_id: string
         }
@@ -342,10 +344,19 @@ export type Database = {
           mime_type?: string | null
           original_name?: string
           size_bytes?: number | null
+          source_venture_document_id?: string | null
           storage_path?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "attendee_documents_source_venture_document_id_fkey"
+            columns: ["source_venture_document_id"]
+            isOneToOne: false
+            referencedRelation: "venture_documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       attendee_filing_info: {
         Row: {
