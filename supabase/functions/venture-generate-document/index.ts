@@ -21,7 +21,6 @@ import { trackTone } from "../_shared/track-tones.ts";
 import {
   BASE_SYSTEM_PROMPT,
   modelForTier,
-  OUTPUT_FOOTER,
   specializedPrompt,
   stripCitations,
 } from "../_shared/deliverable-prompts.ts";
