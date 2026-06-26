@@ -5,7 +5,8 @@ import { listSnapshots } from "@/lib/foundersHub.functions";
 import { SCHEDULE_BLOCKS } from "@/lib/workshop-mode";
 import { FRAMEWORK_STAGES } from "@/lib/framework-deliverables";
 import { EVENT } from "@/lib/schedule-data";
-import { MapPin, Calendar, Clock, Sparkles, ArrowRight, Mic, Wand2 } from "lucide-react";
+import { MapPin, Calendar, Clock, Sparkles, ArrowRight, Mic, Wand2, Play, Lock, Presentation } from "lucide-react";
+import { STAGE_DECKS } from "@/components/workshop-slides/registry";
 
 const TOTAL_DELIVERABLES = FRAMEWORK_STAGES.reduce((n, s) => n + s.items.length, 0);
 const TOTAL_CATEGORIES = FRAMEWORK_STAGES.length;
@@ -42,6 +43,11 @@ export default function WorkshopDayPage() {
           You do the thinking out loud. Your coach guides you through it — who you serve, why people should care, how you price, where your first customers come from, and what the money really looks like. You leave with clear answers, a Monday-morning action plan, and {TOTAL_DELIVERABLES} founder-ready deliverables built for your startup across {TOTAL_CATEGORIES} categories — Foundation, Strategy, Operations, Finance, Governance, plus bonus Brand, Marketing, and Social &amp; Content tracks — waiting in your dashboard to refine and ship.
         </p>
       </div>
+
+      {/* Workshop decks — one per stage */}
+      <WorkshopDecksSection />
+
+
 
       {/* Two ways to build it */}
       <section>
