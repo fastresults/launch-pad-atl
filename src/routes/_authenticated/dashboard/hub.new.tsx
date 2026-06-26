@@ -147,15 +147,33 @@ function Inner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Files the user uploaded earlier (e.g. during the Startup Brief) that
-  // aren't attached to any venture yet — we offer to reuse them here.
+  // Every file the founder has ever uploaded — Brief, Founder identity, other
+  // ventures. We surface them all here so they never need to re-upload.
+  // Each row carries provenance (kind / snapshot_id) so we can group them.
   const [reusable, setReusable] = useState<VentureSource[]>([]);
   const [reuseSelected, setReuseSelected] = useState<Record<string, boolean>>({});
   useEffect(() => {
-    listVentureSources({ orphansOnly: true })
+    listVentureSources()
       .then((rows) => setReusable(rows))
       .catch(() => {});
   }, []);
+
+  // Group reusable files by source so the UI can render labelled sections.
+  const groupedReusable = (() => {
+    const groups: Record<string, { label: string; items: VentureSource[] }> = {
+      brief: { label: "From your Startup Brief", items: [] },
+      founder: { label: "From your founder profile", items: [] },
+      other: { label: "From previous ventures", items: [] },
+      unassigned: { label: "Recently uploaded", items: [] },
+    };
+    for (const r of reusable) {
+      if (r.used_in_brief || r.kind === "brief_source") groups.brief.items.push(r);
+      else if (r.kind === "founder_bio") groups.founder.items.push(r);
+      else if (r.snapshot_id) groups.other.items.push(r);
+      else groups.unassigned.items.push(r);
+    }
+    return Object.entries(groups).filter(([, g]) => g.items.length > 0);
+  })();
 
   const addFiles = useCallback(async (incoming: File[]) => {
     if (!incoming.length) return;
