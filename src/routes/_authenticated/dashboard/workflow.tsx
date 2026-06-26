@@ -1,22 +1,27 @@
 // @ts-nocheck
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { } from 'react-router-dom';
 import { getMyWorkflow, runMyDeliverable, runMyRemaining, getMyRecentRuns } from "@/lib/userPipeline.functions";
-import { STAGES } from "@/lib/workflow";
 import { countAnsweredBriefFields } from "@/lib/brief-progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Circle, Lock, Loader2, Play } from "lucide-react";
+import { CheckCircle2, Circle, Lock, Loader2, Play, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
+type WorkflowItem = {
+  key: string;
+  label: string;
+  description?: string;
+  stage_n: number;
+  stage_label: string;
+  bonus?: boolean;
+  user_can_trigger?: boolean;
+  generated: boolean;
+  deps_met: boolean;
+};
 
 export default function WorkflowPage() {
   const qc = useQueryClient();
-  
-  
-  
-  
 
   const { data } = useQuery({ queryKey: ["my", "workflow"], queryFn: () => getMyWorkflow(), refetchInterval: 5000 });
   const { data: recent } = useQuery({ queryKey: ["my", "recent-runs"], queryFn: () => getMyRecentRuns(), refetchInterval: 3000 });
@@ -29,16 +34,29 @@ export default function WorkflowPage() {
 
   const runAll = useMutation({
     mutationFn: () => runMyRemaining(),
-    onSuccess: (r) => { toast.success(`Generated ${r.total - r.failed} / ${r.total}`); qc.invalidateQueries({ queryKey: ["my"] }); },
+    onSuccess: (r: any) => { toast.success(`Generated ${r.total - r.failed} / ${r.total}`); qc.invalidateQueries({ queryKey: ["my"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Bulk run failed"),
   });
 
   const briefScore = countAnsweredBriefFields(data?.brief);
   const briefReady = briefScore >= 6;
 
-  const items = data?.items ?? [];
+  const items: WorkflowItem[] = (data?.items ?? []).filter((i: WorkflowItem) => i.stage_n >= 1);
   const totalDeliverables = items.length;
-  const totalCategories = new Set(items.filter((i) => i.stage_n >= 1).map((i) => i.stage_n)).size;
+
+  // Group items by stage, preserving DB sort order
+  const byStage = new Map<number, { label: string; bonus: boolean; items: WorkflowItem[] }>();
+  for (const it of items) {
+    const g = byStage.get(it.stage_n);
+    if (g) {
+      g.items.push(it);
+      if (it.bonus) g.bonus = true;
+    } else {
+      byStage.set(it.stage_n, { label: it.stage_label, bonus: !!it.bonus, items: [it] });
+    }
+  }
+  const stages = Array.from(byStage.entries()).sort((a, b) => a[0] - b[0]);
+  const totalCategories = stages.length;
 
   return (
     <div className="space-y-8">
@@ -47,7 +65,7 @@ export default function WorkflowPage() {
           <h1 className="text-3xl font-semibold tracking-tight">Your workflow</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {totalDeliverables > 0
-              ? `${totalDeliverables} founder-ready deliverables across ${totalCategories} categories. Each one is generated from your Startup Brief and the deliverables that came before it, so the whole package stays in sync with your startup.`
+              ? `${totalDeliverables} founder-ready deliverables across ${totalCategories} categories — including bonus Brand, Marketing, and Social & Content tracks. Each one is generated from your Startup Brief and the deliverables that came before it, so the whole package stays in sync with your startup.`
               : "Your full deliverables package, generated from your Startup Brief and built in order so each piece feeds the next."}
           </p>
         </div>
@@ -68,65 +86,76 @@ export default function WorkflowPage() {
         </div>
       )}
 
-      {STAGES.filter((s) => s.n >= 1).map((stage) => {
-        const items = (data?.items ?? []).filter((i) => i.stage_n === stage.n);
-        if (!items.length) return null;
-        return (
-          <section key={stage.n} className="space-y-3">
-            <div>
-              <div className="text-xs uppercase tracking-wide text-muted-foreground">Category {stage.n}</div>
-              <h2 className="text-xl font-semibold">{stage.label}</h2>
-              <p className="text-sm text-muted-foreground">{stage.description}</p>
+      {stages.map(([n, group]) => (
+        <section key={n} className="space-y-3">
+          <div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Category {n}</div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold">{group.label}</h2>
+              {group.bonus && (
+                <Badge variant="secondary" className="gap-1 text-[10px] uppercase tracking-wide">
+                  <Sparkles className="h-3 w-3" /> Bonus
+                </Badge>
+              )}
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              {items.map((d) => {
-                const Icon = d.generated ? CheckCircle2 : d.ready ? Circle : Lock;
-                const tone = d.generated ? "text-status-success" : d.ready ? "text-foreground" : "text-muted-foreground";
-                return (
-                  <div key={d.key} className="rounded-xl border border-white/10 bg-card p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <Icon className={`h-4 w-4 ${tone}`} />
-                          <h3 className="truncate text-sm font-medium">{d.label}</h3>
-                        </div>
-                        {d.description && <p className="mt-1 text-xs text-muted-foreground">{d.description}</p>}
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {d.generated && <Badge variant="secondary" className="text-xs">Generated</Badge>}
-                          {!d.deps_met && <Badge variant="outline" className="text-xs">Waiting on upstream</Badge>}
-                        </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {group.items.map((d) => {
+              const comingSoon = d.user_can_trigger === false && !d.generated;
+              const Icon = d.generated ? CheckCircle2 : comingSoon ? Lock : d.deps_met ? Circle : Lock;
+              const tone = d.generated
+                ? "text-status-success"
+                : comingSoon
+                ? "text-muted-foreground"
+                : d.deps_met
+                ? "text-foreground"
+                : "text-muted-foreground";
+              return (
+                <div key={d.key} className="rounded-xl border border-white/10 bg-card p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Icon className={`h-4 w-4 ${tone}`} />
+                        <h3 className="truncate text-sm font-medium">{d.label}</h3>
+                      </div>
+                      {d.description && <p className="mt-1 text-xs text-muted-foreground">{d.description}</p>}
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {d.generated && <Badge variant="secondary" className="text-xs">Generated</Badge>}
+                        {comingSoon && <Badge variant="outline" className="text-xs">Coming soon</Badge>}
+                        {!comingSoon && !d.deps_met && <Badge variant="outline" className="text-xs">Waiting on upstream</Badge>}
                       </div>
                     </div>
-                    <div className="mt-3 flex gap-2">
-                      <Button
-                        size="sm"
-                        variant={d.generated ? "outline" : "default"}
-                        disabled={!briefReady || runOne.isPending || !d.user_can_trigger}
-                        onClick={() => runOne.mutate(d.key)}
-                      >
-                        {runOne.isPending && runOne.variables === d.key ? (
-                          <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Running…</>
-                        ) : d.generated ? "Regenerate" : "Generate"}
-                      </Button>
-                      {d.generated && (
-                        <Button asChild size="sm" variant="ghost">
-                          <Link to={`/dashboard/workflow/${d.key}`}>View</Link>
-                        </Button>
-                      )}
-                    </div>
                   </div>
-                );
-              })}
-            </div>
-          </section>
-        );
-      })}
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={d.generated ? "outline" : "default"}
+                      disabled={!briefReady || runOne.isPending || comingSoon}
+                      onClick={() => runOne.mutate(d.key)}
+                      title={comingSoon ? "Prompt for this deliverable is on its way" : undefined}
+                    >
+                      {runOne.isPending && runOne.variables === d.key ? (
+                        <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Running…</>
+                      ) : d.generated ? "Regenerate" : comingSoon ? "Coming soon" : "Generate"}
+                    </Button>
+                    {d.generated && (
+                      <Button asChild size="sm" variant="ghost">
+                        <Link to={`/dashboard/workflow/${d.key}`}>View</Link>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ))}
 
       {recent && recent.steps && recent.steps.length > 0 && (
         <section>
           <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-muted-foreground">Recent activity</h2>
           <ul className="space-y-1 rounded-xl border border-white/10 bg-card p-4 text-xs">
-            {recent.steps.slice(0, 12).map((s, i) => (
+            {recent.steps.slice(0, 12).map((s: any, i: number) => (
               <li key={i} className="flex items-center justify-between gap-2">
                 <span className="truncate">{s.deliverable_key}</span>
                 <span className={s.status === "completed" ? "text-status-success" : s.status === "failed" ? "text-status-danger" : "text-muted-foreground"}>
