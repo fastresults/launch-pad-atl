@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import {  } from "react-router-dom";
 import { Upload, Link2, Sparkles, Loader2, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
 import {
   getFounderProfile,
   extractFounderFromText,
