@@ -12,7 +12,7 @@ import { TRACKS, TRACK_BY_KEY, pickSeedForTrack, type TrackKey } from "@/lib/tra
 import { INDUSTRIES } from "@/lib/industries";
 import { createSnapshot } from "@/lib/foundersHub.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin, CheckCircle2, Link2, Globe } from "lucide-react";
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
@@ -25,6 +25,18 @@ type DroppedFile = {
   text?: string;
   error?: string;
 };
+
+type ScrapedUrl = {
+  id: string;
+  url: string;
+  status: "scraping" | "ready" | "error";
+  title?: string | null;
+  text?: string;
+  charCount?: number;
+  error?: string;
+};
+
+const MAX_URLS = 3;
 
 const MAX_FILES = 5;
 const MAX_BYTES = 20 * 1024 * 1024;
@@ -115,6 +127,9 @@ function Inner() {
   const [businessConcept, setBusinessConcept] = useState(prefill?.business_concept ?? "");
   const [diff, setDiff] = useState(prefill?.differentiation_statement ?? "");
   const [files, setFiles] = useState<DroppedFile[]>([]);
+  const [scrapedUrls, setScrapedUrls] = useState<ScrapedUrl[]>([]);
+  const [urlInput, setUrlInput] = useState("");
+  const [scrapingUrl, setScrapingUrl] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [processed, setProcessed] = useState(false);
@@ -192,16 +207,73 @@ function Inner() {
   }, []);
 
   const removeFile = (id: string) => setFiles((prev) => prev.filter((f) => f.id !== id));
+  const removeUrl = (id: string) => setScrapedUrls((prev) => prev.filter((u) => u.id !== id));
 
   const readyFiles = files.filter((f) => f.status === "ready" && (f.text ?? "").trim());
+  const readyUrls = scrapedUrls.filter((u) => u.status === "ready" && (u.text ?? "").trim());
+
+  const addUrl = async () => {
+    const raw = urlInput.trim();
+    if (!raw) return;
+    if (scrapedUrls.length >= MAX_URLS) {
+      toast.error(`Max ${MAX_URLS} URLs`);
+      return;
+    }
+    let normalized = raw;
+    if (!/^https?:\/\//i.test(normalized)) normalized = `https://${normalized}`;
+    try { new URL(normalized); } catch {
+      toast.error("That doesn't look like a valid URL");
+      return;
+    }
+    if (scrapedUrls.some((u) => u.url === normalized)) {
+      toast.error("Already added that URL");
+      return;
+    }
+    const entry: ScrapedUrl = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      url: normalized,
+      status: "scraping",
+    };
+    setScrapedUrls((prev) => [...prev, entry]);
+    setUrlInput("");
+    setScrapingUrl(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("venture-scrape-url", {
+        body: { urls: [normalized] },
+      });
+      if (error) throw error;
+      const r = data?.results?.[0];
+      if (!r) throw new Error("No result");
+      setScrapedUrls((curr) => curr.map((x) => x.id === entry.id ? {
+        ...x,
+        status: r.error ? "error" : "ready",
+        title: r.title ?? null,
+        text: r.text ?? "",
+        charCount: r.charCount ?? 0,
+        error: r.error,
+      } : x));
+    } catch (e) {
+      setScrapedUrls((curr) => curr.map((x) => x.id === entry.id ? {
+        ...x, status: "error", error: e instanceof Error ? e.message : "Scrape failed",
+      } : x));
+    } finally {
+      setScrapingUrl(false);
+    }
+  };
 
   const draftFromFiles = async () => {
-    if (!readyFiles.length || drafting) return;
+    const hasFiles = readyFiles.length > 0;
+    const hasUrls = readyUrls.length > 0;
+    const hasDraft = businessConcept.trim().length >= 20;
+    if (!hasFiles && !hasUrls && !hasDraft) return;
+    if (drafting) return;
     setDrafting(true);
     try {
       const { data, error } = await supabase.functions.invoke("venture-synthesize-concept", {
         body: {
           sources: readyFiles.map((f) => ({ filename: f.name, text: f.text })),
+          urls: readyUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text })),
+          conceptDraft: hasDraft ? businessConcept.trim() : "",
           industryValues: INDUSTRIES.map((i) => i.value),
         },
       });
@@ -569,16 +641,71 @@ function Inner() {
             </ul>
           )}
 
-          {readyFiles.length > 0 && (
+          {/* URL scrape row */}
+          <div className="rounded-xl border border-white/10 bg-background/40 p-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Link2 className="h-4 w-4 text-muted-foreground" />
+              Or paste a URL — your site, a competitor, a relevant article
+            </div>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              We'll scrape the page and use it as context. Up to {MAX_URLS} URLs.
+            </p>
+            <div className="mt-3 flex gap-2">
+              <Input
+                type="url"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addUrl(); } }}
+                placeholder="https://example.com"
+                disabled={scrapingUrl || scrapedUrls.length >= MAX_URLS}
+              />
+              <Button
+                type="button"
+                onClick={addUrl}
+                disabled={scrapingUrl || !urlInput.trim() || scrapedUrls.length >= MAX_URLS}
+                className="shrink-0"
+              >
+                {scrapingUrl ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Globe className="mr-1.5 h-4 w-4" />}
+                Fetch
+              </Button>
+            </div>
+            {scrapedUrls.length > 0 && (
+              <ul className="mt-3 space-y-1.5">
+                {scrapedUrls.map((u) => (
+                  <li key={u.id} className="flex items-center gap-2 rounded-lg border border-white/10 bg-card px-3 py-2 text-sm">
+                    <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 flex-1 truncate">
+                      <span className="font-medium">{u.title || u.url}</span>
+                      {u.title && <span className="ml-1 text-xs text-muted-foreground">· {u.url}</span>}
+                    </span>
+                    <span className={`shrink-0 text-[11px] uppercase tracking-wider ${
+                      u.status === "ready" ? "text-status-success" :
+                      u.status === "error" ? "text-status-danger" :
+                      "text-muted-foreground"
+                    }`}>
+                      {u.status === "scraping" ? "Scraping…" : u.status === "ready" ? `${u.charCount ?? 0} chars` : (u.error ?? "Failed")}
+                    </span>
+                    <button type="button" onClick={() => removeUrl(u.id)} className="shrink-0 text-muted-foreground hover:text-foreground" aria-label="Remove URL">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {(readyFiles.length > 0 || readyUrls.length > 0 || businessConcept.trim().length >= 20) && (
             <div className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm">
                 <div className="font-medium">
-                  {processed ? "Processed — review the form below" : `${readyFiles.length} file${readyFiles.length === 1 ? "" : "s"} ready`}
+                  {processed
+                    ? "Processed — review the form below"
+                    : `Context ready · ${readyFiles.length} file${readyFiles.length === 1 ? "" : "s"}, ${readyUrls.length} URL${readyUrls.length === 1 ? "" : "s"}${businessConcept.trim().length >= 20 ? ", your draft" : ""}`}
                 </div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
                   {processed
-                    ? "We filled every field we could from your document. Pick a Track to unlock Create & enrich."
-                    : "Click Process document and we'll fill out the whole form for you."}
+                    ? "We filled every field we could. Pick a Track to unlock Create & enrich."
+                    : "We'll fold all of it together and fill out the whole form."}
                 </div>
               </div>
               <Button
@@ -590,7 +717,7 @@ function Inner() {
                 {drafting ? (
                   <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Processing…</>
                 ) : (
-                  <><Wand2 className="mr-1.5 h-4 w-4" />{processed ? "Re-process" : "Process document"}</>
+                  <><Wand2 className="mr-1.5 h-4 w-4" />{processed ? "Re-process" : "Use my context to fill the form"}</>
                 )}
               </Button>
             </div>
