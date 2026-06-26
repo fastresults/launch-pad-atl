@@ -208,15 +208,10 @@ export default function WorkshopDayPage() {
 
       {/* CTAs */}
       <div className="flex flex-wrap gap-3">
-        <Link to="/dashboard/workflow" className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:opacity-90">
+        <Link to="/dashboard/hub" className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:opacity-90">
           See all {TOTAL_DELIVERABLES} deliverables we build together
           <ArrowRight className="h-4 w-4" />
         </Link>
-        {hasVentures && (
-          <Link to="/dashboard/hub" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-card px-6 py-3 text-base font-medium hover:bg-white/5">
-            Browse your ventures
-          </Link>
-        )}
       </div>
     </div>
   );
