@@ -116,13 +116,16 @@ Deno.serve(async (req) => {
       ? `INDUSTRY_VALUES (use one of these verbatim for "industry", or null):\n${industryValues.join("\n")}`
       : `INDUSTRY_VALUES: (none supplied — set "industry" to null)`;
 
+    const sections: string[] = [];
+    if (urlParts.length) sections.push(`WEB SOURCES (scraped pages):\n\n${urlParts.join("\n\n---\n\n")}`);
+    if (fileParts.length) sections.push(`UPLOADED DOCUMENTS:\n\n${fileParts.join("\n\n---\n\n")}`);
+    if (conceptDraft) sections.push(`FOUNDER'S OWN DRAFT (verbatim, treat as primary intent):\n\n${conceptDraft}`);
+
     const userPrompt = `${industryBlock}
 
 ${TRACK_HINT}
 
-Source documents:
-
-${parts.join("\n\n---\n\n")}
+${sections.join("\n\n===\n\n")}
 
 Return the JSON object now.`;
 
