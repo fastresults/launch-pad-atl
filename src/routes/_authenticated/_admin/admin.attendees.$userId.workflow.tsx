@@ -35,6 +35,12 @@ export default function AdminAttendeeWorkflow() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Bulk run failed"),
   });
 
+  const forceRun = useMutation({
+    mutationFn: () => adminRunForUser({ data: { userId, bulk: true, forceRun: true } }),
+    onSuccess: () => { toast.success("Force run restarted unfinished deliverables"); qc.invalidateQueries({ queryKey: ["admin", "workflow", userId] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Force run failed"),
+  });
+
   const briefScore = countAnsweredBriefFields(data?.brief);
 
   return (
@@ -49,9 +55,14 @@ export default function AdminAttendeeWorkflow() {
             Brief {briefScore} / 10 · Filing {data?.filingPresent ? "on file" : "pending"} · Run any deliverable on behalf of this attendee.
           </p>
         </div>
-        <Button onClick={() => runAll.mutate()} disabled={runAll.isPending}>
-          {runAll.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Running…</> : <><Play className="mr-2 h-4 w-4" />Run remaining</>}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => forceRun.mutate()} disabled={runAll.isPending || forceRun.isPending} variant="secondary">
+            {forceRun.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Force running…</> : <><Play className="mr-2 h-4 w-4" />Force run remaining</>}
+          </Button>
+          <Button onClick={() => runAll.mutate()} disabled={runAll.isPending || forceRun.isPending}>
+            {runAll.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Running…</> : <><Play className="mr-2 h-4 w-4" />Run remaining</>}
+          </Button>
+        </div>
       </div>
 
       {STAGES.filter((s) => s.n >= 1).map((stage) => {
