@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import { Upload, FileText, Loader2, X, CheckCircle2, AlertCircle } from "lucide-react";
 import { prefillBriefFromDocs, type BriefPrefillResponse } from "@/lib/brief.functions";
+import { uploadVentureSource } from "@/lib/venture-sources";
 import { toast } from "sonner";
+
 
 const ACCEPT = ".pdf,.docx,.txt,.md,.rtf,.png,.jpg,.jpeg,.webp,.mp3,.m4a,.wav,.webm,.ogg,.mp4";
 const MAX_FILES = 5;
