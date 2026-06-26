@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, createElement, type ReactNode, type ElementType } from "react";
 
 /**
  * Map of slot key -> override value.
@@ -55,24 +55,24 @@ export function SlotText({
   slideId,
   field,
   defaultValue,
-  as: As = "span",
+  as = "span",
   className,
 }: {
   slideId: string;
   field: string;
   defaultValue: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
   className?: string;
 }) {
   const ctx = useCtx();
   if (!ctx) {
-    return <As className={className}>{defaultValue}</As>;
+    return createElement(as, { className }, defaultValue);
   }
   const key = slotKey(ctx.deckSlug, slideId, field);
   const override = ctx.overrides[key]?.text;
   ctx.onSlotMount?.(key, { kind: "text", text: defaultValue });
   const value = override ?? defaultValue;
-  return <As className={className}>{value}</As>;
+  return createElement(as, { className }, value);
 }
 
 /**
