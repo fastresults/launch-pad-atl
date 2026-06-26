@@ -192,8 +192,8 @@ async function generateAssessment(
   feedback?: string,
   tags?: string[],
 ) {
-  const [{ data: snap }, { data: doc }, { data: type }, { data: allDocs }] = await Promise.all([
-    supabase.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle(),
+  const [ctx, { data: doc }, { data: type }, { data: allDocs }] = await Promise.all([
+    loadVentureContext(supabase, snapshotId),
     supabase.from("venture_documents").select("*").eq("snapshot_id", snapshotId).eq("document_type", documentType).maybeSingle(),
     supabase.from("venture_document_types").select("*").eq("type", documentType).maybeSingle(),
     supabase
@@ -202,9 +202,13 @@ async function generateAssessment(
       .eq("snapshot_id", snapshotId)
       .eq("status", "complete"),
   ]);
-  if (!snap) throw new Error("Snapshot not found");
   if (!doc || !doc.content) throw new Error("Document must be generated before running a deep assessment");
   if (!type) throw new Error(`Unknown document type: ${documentType}`);
+
+  // Ensure brain exists (lazy compute on first deep assessment for this venture)
+  if (!ctx.brain) {
+    ctx.brain = await ensureSnapshotBrain(supabase, snapshotId);
+  }
 
   await supabase
     .from("venture_documents")
@@ -212,7 +216,7 @@ async function generateAssessment(
     .eq("snapshot_id", snapshotId)
     .eq("document_type", documentType);
 
-  const { sections, provenance } = buildContextBundle(snap, allDocs ?? [], type, documentType);
+  const { sections, provenance } = buildContextBundle(ctx, allDocs ?? [], type, documentType);
 
   // The document under review — always last, always full
   const docSectionIdx = sections.length;
@@ -225,14 +229,12 @@ async function generateAssessment(
       }${feedback?.trim() ?? ""}`
     : "";
 
-  // Protect: doc under review, venture brief (idx 2), founder card (idx 1), title (idx 0), concept (if present)
+  // Protect: title, preamble, brain slice, exec summary, doc under review
   const protectedIdx = new Set<number>([0, docSectionIdx]);
-  // Mark founder card, concept summary, venture brief as protected
   sections.forEach((s, i) => {
     if (
-      s.startsWith("## Founder & market") ||
-      s.startsWith("## Venture brief") ||
-      s.startsWith("## North-star concept") ||
+      s.startsWith("## Venture preamble") ||
+      s.startsWith("## Snapshot brain") ||
       s.startsWith("## EXEC SUMMARY")
     ) {
       protectedIdx.add(i);
@@ -250,14 +252,15 @@ async function generateAssessment(
 - Funding language: startup costs, working capital, owner draw, savings, friends & family, SBA microloan, revenue-based, local CDFI, grants. NOT Series A / pitch deck / VC.
 - Zero VC vocabulary (no TAM/SAM/SOM, no ARR/NRR/CAC payback, no hockey-stick, no unicorn). Plain English a non-technical owner can act on.`,
   };
-  const trackAddendum = snap.track && TRACK_ADDENDUM[snap.track] ? TRACK_ADDENDUM[snap.track] : "";
+  const trackAddendum = ctx.snap.track && TRACK_ADDENDUM[ctx.snap.track] ? TRACK_ADDENDUM[ctx.snap.track] : "";
   const systemPrompt = SYSTEM_PROMPT + trackAddendum;
 
+  // Deep assessments are the highest-rigor surface — route to Gemini Pro.
   const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: "google/gemini-3-pro-preview",
       messages: [
         { role: "system", content: systemPrompt },
         {
