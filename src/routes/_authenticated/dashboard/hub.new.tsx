@@ -641,16 +641,71 @@ function Inner() {
             </ul>
           )}
 
-          {readyFiles.length > 0 && (
+          {/* URL scrape row */}
+          <div className="rounded-xl border border-white/10 bg-background/40 p-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Link2 className="h-4 w-4 text-muted-foreground" />
+              Or paste a URL — your site, a competitor, a relevant article
+            </div>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              We'll scrape the page and use it as context. Up to {MAX_URLS} URLs.
+            </p>
+            <div className="mt-3 flex gap-2">
+              <Input
+                type="url"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addUrl(); } }}
+                placeholder="https://example.com"
+                disabled={scrapingUrl || scrapedUrls.length >= MAX_URLS}
+              />
+              <Button
+                type="button"
+                onClick={addUrl}
+                disabled={scrapingUrl || !urlInput.trim() || scrapedUrls.length >= MAX_URLS}
+                className="shrink-0"
+              >
+                {scrapingUrl ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Globe className="mr-1.5 h-4 w-4" />}
+                Fetch
+              </Button>
+            </div>
+            {scrapedUrls.length > 0 && (
+              <ul className="mt-3 space-y-1.5">
+                {scrapedUrls.map((u) => (
+                  <li key={u.id} className="flex items-center gap-2 rounded-lg border border-white/10 bg-card px-3 py-2 text-sm">
+                    <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 flex-1 truncate">
+                      <span className="font-medium">{u.title || u.url}</span>
+                      {u.title && <span className="ml-1 text-xs text-muted-foreground">· {u.url}</span>}
+                    </span>
+                    <span className={`shrink-0 text-[11px] uppercase tracking-wider ${
+                      u.status === "ready" ? "text-status-success" :
+                      u.status === "error" ? "text-status-danger" :
+                      "text-muted-foreground"
+                    }`}>
+                      {u.status === "scraping" ? "Scraping…" : u.status === "ready" ? `${u.charCount ?? 0} chars` : (u.error ?? "Failed")}
+                    </span>
+                    <button type="button" onClick={() => removeUrl(u.id)} className="shrink-0 text-muted-foreground hover:text-foreground" aria-label="Remove URL">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {(readyFiles.length > 0 || readyUrls.length > 0 || businessConcept.trim().length >= 20) && (
             <div className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm">
                 <div className="font-medium">
-                  {processed ? "Processed — review the form below" : `${readyFiles.length} file${readyFiles.length === 1 ? "" : "s"} ready`}
+                  {processed
+                    ? "Processed — review the form below"
+                    : `Context ready · ${readyFiles.length} file${readyFiles.length === 1 ? "" : "s"}, ${readyUrls.length} URL${readyUrls.length === 1 ? "" : "s"}${businessConcept.trim().length >= 20 ? ", your draft" : ""}`}
                 </div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
                   {processed
-                    ? "We filled every field we could from your document. Pick a Track to unlock Create & enrich."
-                    : "Click Process document and we'll fill out the whole form for you."}
+                    ? "We filled every field we could. Pick a Track to unlock Create & enrich."
+                    : "We'll fold all of it together and fill out the whole form."}
                 </div>
               </div>
               <Button
@@ -662,7 +717,7 @@ function Inner() {
                 {drafting ? (
                   <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Processing…</>
                 ) : (
-                  <><Wand2 className="mr-1.5 h-4 w-4" />{processed ? "Re-process" : "Process document"}</>
+                  <><Wand2 className="mr-1.5 h-4 w-4" />{processed ? "Re-process" : "Use my context to fill the form"}</>
                 )}
               </Button>
             </div>
