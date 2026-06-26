@@ -30,8 +30,13 @@ export async function listMyDocuments() {
   return data ?? [];
 }
 
-export async function createDocumentUploadUrl(data: { filename: string; contentType: string }) {
-  const path = `${await uid()}/${Date.now()}-${data.filename}`;
+export async function createDocumentUploadUrl(data: {
+  filename: string;
+  contentType: string;
+  snapshotId?: string | null;
+}) {
+  const folder = data.snapshotId ?? "unassigned";
+  const path = `${await uid()}/${folder}/${Date.now()}-${data.filename}`;
   const { data: res, error } = await supabase.storage
     .from("attendee-docs")
     .createSignedUploadUrl(path);
@@ -46,6 +51,7 @@ export async function finalizeDocument(data: {
   size?: number;
   kind?: string;
   sourceVentureDocumentId?: string | null;
+  snapshotId?: string | null;
 }) {
   const { error } = await supabase.from("attendee_documents").insert({
     user_id: await uid(),
@@ -55,7 +61,17 @@ export async function finalizeDocument(data: {
     size_bytes: data.size ?? null,
     kind: data.kind ?? "other",
     source_venture_document_id: data.sourceVentureDocumentId ?? null,
+    snapshot_id: data.snapshotId ?? null,
   });
+  if (error) throw new Error(error.message);
+}
+
+export async function updateDocumentVenture(data: { id: string; snapshotId: string | null }) {
+  const { error } = await supabase
+    .from("attendee_documents")
+    .update({ snapshot_id: data.snapshotId })
+    .eq("id", data.id)
+    .eq("user_id", await uid());
   if (error) throw new Error(error.message);
 }
 
