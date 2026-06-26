@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
+  appendSnapshotSources,
   getSnapshot,
   retryEnrichment,
   updateExtractedData,
@@ -52,6 +53,8 @@ import {
   Sparkles,
   Presentation,
   XCircle,
+  Upload,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -208,17 +211,19 @@ const SECTIONS = REVIEW_SECTIONS.map((s) => ({
   fields: s.fields.map((f) => ({ key: f.key, label: f.label, multiline: f.multiline })),
 }));
 
+function buildReviewForm(snapshot: any): Record<string, Record<string, string>> {
+  const ex = snapshot.extracted_data ?? {};
+  const out: any = {};
+  for (const s of REVIEW_SECTIONS) {
+    out[s.key] = {};
+    for (const f of s.fields) out[s.key][f.key] = ex?.[s.key]?.[f.key] ?? "";
+  }
+  return out;
+}
+
 function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void }) {
   // Flat form state keyed by section→field; mirrors the persisted extracted_data shape.
-  const [form, setForm] = useState<Record<string, Record<string, string>>>(() => {
-    const ex = snapshot.extracted_data ?? {};
-    const out: any = {};
-    for (const s of REVIEW_SECTIONS) {
-      out[s.key] = {};
-      for (const f of s.fields) out[s.key][f.key] = ex?.[s.key]?.[f.key] ?? "";
-    }
-    return out;
-  });
+  const [form, setForm] = useState<Record<string, Record<string, string>>>(() => buildReviewForm(snapshot));
 
   const [active, setActive] = useState<SubStepKey>("setup");
   const [savedAt, setSavedAt] = useState<Date | null>(null);
@@ -226,6 +231,11 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
   const dirtyRef = useRef(false);
   const formRef = useRef(form);
   formRef.current = form;
+
+  useEffect(() => {
+    if (dirtyRef.current) return;
+    setForm(buildReviewForm(snapshot));
+  }, [snapshot.id, snapshot.updated_at]);
 
   // Debounced auto-save: kicks in 800ms after the last edit. Replaces the old "Save draft" button.
   useEffect(() => {
@@ -320,6 +330,8 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
         )}
       </div>
 
+      <SourceRecoveryPanel snapshot={snapshot} onSaved={onSaved} />
+
       <ReviewSubStepper active={active} completeness={completeness} onJump={setActive} savedAt={savedAt} savingNow={savingNow} />
 
 
@@ -406,6 +418,154 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+type SourceFile = {
+  id: string;
+  name: string;
+  size: number;
+  status: "reading" | "ready" | "error";
+  text?: string;
+  error?: string;
+};
+
+async function extractSourceFileText(file: File): Promise<{ text: string; error?: string }> {
+  const name = file.name.toLowerCase();
+  const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
+  const isText = name.endsWith(".txt") || name.endsWith(".md") || name.endsWith(".markdown") ||
+    file.type === "text/plain" || file.type === "text/markdown";
+
+  if (isPdf) {
+    try {
+      const { extractText, getDocumentProxy } = await import("unpdf");
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const pdf = await getDocumentProxy(bytes);
+      const { text } = await extractText(pdf, { mergePages: true });
+      const merged = (Array.isArray(text) ? text.join("\n") : text).trim();
+      if (!merged) return { text: "", error: "PDF looks scanned. Export it as text or paste the content." };
+      return { text: merged };
+    } catch (e) {
+      return { text: "", error: e instanceof Error ? e.message : "Couldn't read PDF" };
+    }
+  }
+  if (isText) {
+    try {
+      const text = (await file.text()).trim();
+      if (!text) return { text: "", error: "File was empty" };
+      return { text };
+    } catch (e) {
+      return { text: "", error: e instanceof Error ? e.message : "Couldn't read file" };
+    }
+  }
+  return { text: "", error: "Use PDF, TXT, or Markdown for source enrichment." };
+}
+
+function SourceRecoveryPanel({ snapshot, onSaved }: { snapshot: any; onSaved: () => void }) {
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [files, setFiles] = useState<SourceFile[]>([]);
+  const sm = snapshot.source_materials ?? null;
+  const existingCount = ((sm?.documents ?? []).length ?? 0) + ((sm?.urls ?? []).length ?? 0);
+  const hasWeakFields = JSON.stringify(snapshot.extracted_data ?? "").match(/needs founder input|unknown|tbd/i);
+  const readyFiles = files.filter((f) => f.status === "ready" && (f.text ?? "").trim());
+  const reading = files.some((f) => f.status === "reading");
+
+  const addFiles = useCallback((incoming: File[]) => {
+    const accepted = incoming.slice(0, 5).filter((f) => f.size <= 20 * 1024 * 1024);
+    if (incoming.some((f) => f.size > 20 * 1024 * 1024)) toast.error("Some files were over 20 MB and were skipped");
+    const queued: SourceFile[] = accepted.map((f) => ({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: f.name,
+      size: f.size,
+      status: "reading",
+    }));
+    setFiles((prev) => [...prev, ...queued]);
+    queued.forEach((entry, i) => {
+      const file = accepted[i];
+      extractSourceFileText(file).then(({ text, error }) => {
+        setFiles((curr) => curr.map((x) => x.id === entry.id
+          ? error ? { ...x, status: "error", error } : { ...x, status: "ready", text }
+          : x));
+      });
+    });
+  }, []);
+
+  const appendSources = useMutation({
+    mutationFn: () => appendSnapshotSources({
+      data: {
+        id: snapshot.id,
+        source_materials: {
+          documents: readyFiles.map((f) => ({ filename: f.name, text: f.text ?? "" })),
+          conceptDraft: snapshot.business_concept ?? "",
+        },
+      },
+    }),
+    onSuccess: () => {
+      toast.success("Sources added — rebuilding the enriched brief now");
+      setFiles([]);
+      onSaved();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not add sources"),
+  });
+
+  if (existingCount > 0 && !hasWeakFields) return null;
+
+  return (
+    <div className="rounded-2xl border border-status-warning/30 bg-status-warning/5 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">Add source documents to strengthen this brief</h3>
+          <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
+            This startup currently has {existingCount} saved source {existingCount === 1 ? "item" : "items"}. Add the founder docs here and the review fields will rebuild from those sources.
+          </p>
+        </div>
+        <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
+          <Upload className="mr-1.5 h-3.5 w-3.5" /> Add docs
+        </Button>
+      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        multiple
+        accept=".pdf,.txt,.md,.markdown,text/plain,text/markdown,application/pdf"
+        className="hidden"
+        onChange={(e) => addFiles(Array.from(e.target.files ?? []))}
+      />
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          addFiles(Array.from(e.dataTransfer.files ?? []));
+        }}
+        className={`mt-3 rounded-xl border border-dashed p-4 text-center text-sm transition ${dragOver ? "border-foreground bg-background" : "border-border bg-background/40"}`}
+      >
+        Drop PDF, TXT, or Markdown source files here
+      </div>
+      {files.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {files.map((f) => (
+            <div key={f.id} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2 text-xs">
+              <span className="inline-flex min-w-0 items-center gap-2">
+                <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <span className="truncate">{f.name}</span>
+              </span>
+              <span className={f.status === "ready" ? "text-status-success" : f.status === "error" ? "text-status-danger" : "text-muted-foreground"}>
+                {f.status === "ready" ? "Ready" : f.status === "reading" ? "Reading…" : f.error}
+              </span>
+            </div>
+          ))}
+          <div className="flex justify-end">
+            <Button size="sm" onClick={() => appendSources.mutate()} disabled={appendSources.isPending || reading || readyFiles.length === 0}>
+              {appendSources.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1.5 h-3.5 w-3.5" />}
+              Rebuild enriched brief
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

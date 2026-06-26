@@ -49,6 +49,11 @@ export interface VentureSnapshot {
   epiphany_runs: any[];
   saved_enhancements: any[];
   brand_tokens: any;
+  source_materials?: {
+    documents?: Array<{ filename?: string; text?: string; charCount?: number }>;
+    urls?: Array<{ url?: string; title?: string | null; text?: string; charCount?: number }>;
+    conceptDraft?: string;
+  } | null;
   created_at: string;
   updated_at: string;
 }
@@ -228,6 +233,84 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
   void supabase.functions.invoke("venture-deep-research", { body: { snapshotId: data.id } });
 
   return { id: data.id };
+}
+
+export async function appendSnapshotSources(input: any): Promise<void> {
+  const { id, source_materials } = unwrap<{
+    id: string;
+    source_materials?: {
+      documents?: Array<{ filename?: string; text?: string }>;
+      urls?: Array<{ url?: string; title?: string | null; text?: string }>;
+      conceptDraft?: string;
+    };
+  }>(input);
+
+  const { data: snap, error: loadErr } = await supabase
+    .from("venture_snapshots")
+    .select("source_materials,business_concept")
+    .eq("id", id)
+    .eq("user_id", await uid())
+    .maybeSingle();
+  if (loadErr) throw new Error(loadErr.message);
+  if (!snap) throw new Error("Startup not found");
+
+  const existing = snap.source_materials ?? {};
+  const PER_TEXT_CAP = 40_000;
+  const TOTAL_CAP = 180_000;
+  let used = 0;
+  const trim = (s: unknown) => {
+    if (typeof s !== "string") return "";
+    let t = s.trim();
+    if (t.length > PER_TEXT_CAP) t = t.slice(0, PER_TEXT_CAP);
+    if (used + t.length > TOTAL_CAP) t = t.slice(0, Math.max(0, TOTAL_CAP - used));
+    used += t.length;
+    return t;
+  };
+
+  const seenDocs = new Set<string>();
+  const documents = [...(existing.documents ?? []), ...(source_materials?.documents ?? [])]
+    .map((d: any) => ({ filename: d.filename ?? "document", text: trim(d.text), charCount: (d.text ?? "").length }))
+    .filter((d) => {
+      const key = `${d.filename}:${d.text.slice(0, 200)}`;
+      if (!d.text || seenDocs.has(key)) return false;
+      seenDocs.add(key);
+      return true;
+    });
+
+  const seenUrls = new Set<string>();
+  const urls = [...(existing.urls ?? []), ...(source_materials?.urls ?? [])]
+    .map((u: any) => ({ url: u.url ?? "", title: u.title ?? null, text: trim(u.text), charCount: (u.text ?? "").length }))
+    .filter((u) => {
+      const key = u.url || `${u.title}:${u.text.slice(0, 200)}`;
+      if (!u.text || seenUrls.has(key)) return false;
+      seenUrls.add(key);
+      return true;
+    });
+
+  const conceptDraft =
+    typeof source_materials?.conceptDraft === "string" && source_materials.conceptDraft.trim()
+      ? source_materials.conceptDraft.trim().slice(0, 8_000)
+      : typeof existing.conceptDraft === "string" && existing.conceptDraft.trim()
+        ? existing.conceptDraft.trim().slice(0, 8_000)
+        : (snap.business_concept ?? "").slice(0, 8_000);
+
+  const { error } = await supabase
+    .from("venture_snapshots")
+    .update({
+      source_materials: { documents, urls, conceptDraft },
+      status: "enriching",
+      enrichment_progress: {
+        stage: "queued",
+        progress: 0,
+        message: "Rebuilding your brief from the source documents",
+        updatedAt: new Date().toISOString(),
+      },
+    })
+    .eq("id", id)
+    .eq("user_id", await uid());
+  if (error) throw new Error(error.message);
+
+  void supabase.functions.invoke("venture-deep-research", { body: { snapshotId: id } });
 }
 
 
