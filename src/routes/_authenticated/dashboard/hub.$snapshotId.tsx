@@ -387,6 +387,7 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
           sectionKey="foundation"
           form={form}
           setField={setField}
+          provenanceMap={provenanceMap}
           contextChips={[
             { label: "Founder", value: snapshot.founder_name },
             { label: "Industry", value: snapshot.industry },
@@ -396,7 +397,7 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
       )}
 
       {active === "market" && (
-        <FieldGroup sectionKey="market" form={form} setField={setField} />
+        <FieldGroup sectionKey="market" form={form} setField={setField} provenanceMap={provenanceMap} />
       )}
 
       {active === "model" && (
@@ -405,12 +406,14 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
             sectionKey="operations"
             form={form}
             setField={setField}
+            provenanceMap={provenanceMap}
             heading="How you make money"
           />
           <FieldGroup
             sectionKey="vision"
             form={form}
             setField={setField}
+            provenanceMap={provenanceMap}
             heading="Where you're going"
             collapsedByDefault
           />
