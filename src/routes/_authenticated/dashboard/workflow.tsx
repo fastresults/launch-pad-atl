@@ -322,7 +322,7 @@ export default function WorkflowPage() {
 
           </div>
         </section>
-      ))}
+      );})}
 
       {recent && recent.steps && recent.steps.length > 0 && (
         <section>
