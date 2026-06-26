@@ -226,6 +226,10 @@ export type Database = {
           content_current: Json | null
           content_source: Database["public"]["Enums"]["deliverable_content_source"]
           created_at: string
+          deep_assessment: string | null
+          deep_assessment_generated_at: string | null
+          deep_assessment_quality_score: number | null
+          deep_assessment_status: string | null
           deliverable_key: string
           id: string
           last_run_id: string | null
@@ -247,6 +251,10 @@ export type Database = {
           content_current?: Json | null
           content_source?: Database["public"]["Enums"]["deliverable_content_source"]
           created_at?: string
+          deep_assessment?: string | null
+          deep_assessment_generated_at?: string | null
+          deep_assessment_quality_score?: number | null
+          deep_assessment_status?: string | null
           deliverable_key: string
           id?: string
           last_run_id?: string | null
@@ -268,6 +276,10 @@ export type Database = {
           content_current?: Json | null
           content_source?: Database["public"]["Enums"]["deliverable_content_source"]
           created_at?: string
+          deep_assessment?: string | null
+          deep_assessment_generated_at?: string | null
+          deep_assessment_quality_score?: number | null
+          deep_assessment_status?: string | null
           deliverable_key?: string
           id?: string
           last_run_id?: string | null

@@ -85,10 +85,21 @@ async function invokeRun(payload: Record<string, unknown>) {
 }
 
 export async function runMyDeliverable(input: any) {
-  const { key, runUpstream } = unwrap<{ key: string; runUpstream?: boolean }>(input);
-  await invokeRun({ key, runUpstream: !!runUpstream });
+  const { key, runUpstream, feedback, tags } = unwrap<{ key: string; runUpstream?: boolean; feedback?: string; tags?: string[] }>(input);
+  await invokeRun({ key, runUpstream: !!runUpstream, feedback, tags });
   return { queued: true };
 }
+
+export async function runMyDeliverableAssessment(input: any) {
+  const { key, feedback, tags } = unwrap<{ key: string; feedback?: string; tags?: string[] }>(input);
+  const { data, error } = await supabase.functions.invoke("attendee-generate-assessment", {
+    body: { key, feedback, tags },
+  });
+  if (error) throw new Error(error.message);
+  if (data && data.error) throw new Error(data.error);
+  return data;
+}
+
 
 export async function runMyRemaining() {
   await invokeRun({ bulk: true });

@@ -72,7 +72,7 @@ async function generateOne(
   admin: any,
   userId: string,
   type: DType,
-  ctx: { brief: any; founder: any; market: any; upstream: Record<string, Content> },
+  ctx: { brief: any; founder: any; market: any; upstream: Record<string, Content>; feedback?: string; tags?: string[]; previous?: Content | null },
 ): Promise<Content> {
   const model = type.default_model || FALLBACK_MODEL;
 
@@ -90,6 +90,16 @@ Output STRICT JSON (no markdown fences) with this shape:
 }
 Aim for 3-6 sections, 100-220 words each. Use plain English, concrete numbers, named channels. No filler, no citations, no footnotes.`;
 
+  const hasFeedback = (ctx.feedback && ctx.feedback.trim()) || (ctx.tags && ctx.tags.length);
+  const rewriteBlock = hasFeedback
+    ? [
+        "## Rewrite guidance from the founder (TOP PRIORITY — the previous version missed the mark, address every point below in this rewrite)",
+        ctx.tags && ctx.tags.length ? `Tags: ${ctx.tags.join(", ")}` : "",
+        ctx.feedback?.trim() ?? "",
+        ctx.previous ? `\n## Previous version (rewrite this — don't repeat its mistakes)\n${JSON.stringify(ctx.previous).slice(0, 4000)}` : "",
+      ].filter(Boolean).join("\n")
+    : "";
+
   const user = [
     `# Deliverable: ${type.label}`,
     type.description ? `Purpose: ${type.description}` : "",
@@ -100,9 +110,11 @@ Aim for 3-6 sections, 100-220 words each. Use plain English, concrete numbers, n
     ctx.founder ? `\n## Founder profile\n${JSON.stringify(ctx.founder, null, 2)}` : "",
     ctx.market ? `\n## Market profile\n${JSON.stringify(ctx.market, null, 2)}` : "",
     upstreamText ? `\n## Upstream deliverables (stay consistent)\n${upstreamText}` : "",
+    rewriteBlock ? `\n${rewriteBlock}` : "",
     "",
     "Return ONLY the JSON object.",
   ].filter(Boolean).join("\n");
+
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -193,7 +205,7 @@ async function markStaleRunsFailed(admin: any, userId: string, currentRunId: str
   return staleIds.length;
 }
 
-async function runJob(admin: any, userId: string, runId: string, opts: { key?: string; bulk?: boolean; runUpstream?: boolean; forceRun?: boolean; maxDocs?: number }) {
+async function runJob(admin: any, userId: string, runId: string, opts: { key?: string; bulk?: boolean; runUpstream?: boolean; forceRun?: boolean; maxDocs?: number; feedback?: string; tags?: string[] }) {
   await admin.from("ai_pipeline_runs").update({ status: "running", started_at: new Date().toISOString() }).eq("id", runId);
 
   try {
@@ -250,12 +262,17 @@ async function runJob(admin: any, userId: string, runId: string, opts: { key?: s
           review_status: "pending_review",
         }, { onConflict: "user_id,deliverable_key" });
 
+        const isTarget = !!opts.key && t.key === opts.key;
         const content = await generateOne(admin, userId, t, {
           brief: brief ?? null,
           founder: founder ?? null,
           market: market ?? null,
           upstream,
+          feedback: isTarget ? opts.feedback : undefined,
+          tags: isTarget ? opts.tags : undefined,
+          previous: isTarget ? (upstream[t.key] ?? null) : null,
         });
+
 
         await admin.from("attendee_deliverables").update({
           content_current: content as any,
@@ -314,7 +331,10 @@ Deno.serve(async (req) => {
       runUpstream: !!body.runUpstream,
       forceRun: !!body.forceRun,
       maxDocs: typeof body.maxDocs === "number" ? Math.max(1, Math.min(5, Math.floor(body.maxDocs))) : undefined,
+      feedback: typeof body.feedback === "string" ? body.feedback.slice(0, 4000) : undefined,
+      tags: Array.isArray(body.tags) ? body.tags.filter((x: any) => typeof x === "string").slice(0, 12) : undefined,
     };
+
 
     // If targeting another user, require admin
     if (targetUserId !== callerId) {
