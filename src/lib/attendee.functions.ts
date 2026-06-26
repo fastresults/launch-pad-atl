@@ -39,7 +39,14 @@ export async function createDocumentUploadUrl(data: { filename: string; contentT
   return { uploadUrl: res.signedUrl, path };
 }
 
-export async function finalizeDocument(data: { path: string; label: string; contentType?: string; size?: number; kind?: string }) {
+export async function finalizeDocument(data: {
+  path: string;
+  label: string;
+  contentType?: string;
+  size?: number;
+  kind?: string;
+  sourceVentureDocumentId?: string | null;
+}) {
   const { error } = await supabase.from("attendee_documents").insert({
     user_id: await uid(),
     storage_path: data.path,
@@ -47,6 +54,7 @@ export async function finalizeDocument(data: { path: string; label: string; cont
     mime_type: data.contentType ?? null,
     size_bytes: data.size ?? null,
     kind: data.kind ?? "other",
+    source_venture_document_id: data.sourceVentureDocumentId ?? null,
   });
   if (error) throw new Error(error.message);
 }

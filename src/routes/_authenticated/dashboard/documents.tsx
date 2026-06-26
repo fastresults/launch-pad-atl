@@ -8,10 +8,13 @@ import {
   getDocumentDownloadUrl,
   listMyDocuments,
 } from "@/lib/attendee.functions";
+import { getVentureDocumentById } from "@/lib/foundersHub.functions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Sparkles, Upload as UploadIcon } from "lucide-react";
+import { Eye, Loader2, Sparkles, Upload as UploadIcon } from "lucide-react";
 import { toast } from "sonner";
+import { DocumentViewer } from "@/components/hub/DocumentViewer";
+import { FilePreviewDialog } from "@/components/files/FilePreviewDialog";
 
 const KINDS = [
   { key: "pitch_deck", label: "Pitch deck" },
@@ -39,6 +42,9 @@ export default function DocumentsPage() {
   const [kind, setKind] = useState<(typeof KINDS)[number]["key"]>("other");
   const [uploading, setUploading] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
+  const [richDoc, setRichDoc] = useState<any | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<any | null>(null);
+  const [openingId, setOpeningId] = useState<string | null>(null);
 
   const { data } = useQuery({ queryKey: ["my", "documents"], queryFn: () => listMyDocuments() });
 
@@ -94,6 +100,28 @@ export default function DocumentsPage() {
   const onDownload = async (path: string) => {
     const { url } = await getDocumentDownloadUrl({ path });
     window.open(url, "_blank");
+  };
+
+  const onView = async (d: any) => {
+    // Rich viewer for saved deliverables that still have a source link.
+    if (d.kind === "deliverable" && d.source_venture_document_id) {
+      setOpeningId(d.id);
+      try {
+        const vdoc = await getVentureDocumentById({ id: d.source_venture_document_id });
+        if (vdoc) {
+          setRichDoc(vdoc);
+          return;
+        }
+        toast.message("Original source not found", {
+          description: "Showing the saved file instead.",
+        });
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Couldn't load the source document");
+      } finally {
+        setOpeningId(null);
+      }
+    }
+    setPreviewDoc(d);
   };
 
   return (
@@ -175,6 +203,19 @@ export default function DocumentsPage() {
                     {Math.round((d.size_bytes ?? 0) / 1024)} KB
                   </td>
                   <td className="px-4 py-3 space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onView(d)}
+                      disabled={openingId === d.id}
+                    >
+                      {openingId === d.id ? (
+                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                      ) : (
+                        <Eye className="mr-1 h-3 w-3" />
+                      )}
+                      View
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => onDownload(d.storage_path)}>
                       Download
                     </Button>
@@ -195,6 +236,17 @@ export default function DocumentsPage() {
           </tbody>
         </table>
       </div>
+
+      <DocumentViewer
+        doc={richDoc}
+        open={!!richDoc}
+        onOpenChange={(o) => { if (!o) setRichDoc(null); }}
+      />
+      <FilePreviewDialog
+        doc={previewDoc}
+        onClose={() => setPreviewDoc(null)}
+        onDelete={(id) => del.mutate(id)}
+      />
     </div>
   );
 }
