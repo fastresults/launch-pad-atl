@@ -271,6 +271,11 @@ export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
         </DialogHeader>
 
         <div className="space-y-5">
+          {Object.keys(prefillSources).length > 0 && (
+            <div className="rounded-md border border-status-success/30 bg-status-success/10 px-3 py-2 text-xs text-status-success">
+              Prefilled {Object.keys(prefillSources).length} field{Object.keys(prefillSources).length === 1 ? "" : "s"} from what you've already shared. Review, edit anything that's off, then generate.
+            </div>
+          )}
           {fields.map((f) => {
             const v = values[f.id];
             const isRec = recordingFor === f.id;
