@@ -44,8 +44,8 @@ async function callSummarize(title: string, kind: "founder" | "market", answers:
 }
 
 export async function summarizeFounderProfile() {
-  const row = await getFounderProfile();
-  const ex = (row?.extracted ?? {}) as Record<string, any>;
+  const { profile: row } = await getFounderProfile();
+  const ex = ((row as any)?.extracted ?? {}) as Record<string, any>;
   const roles = Array.isArray(ex.roles)
     ? ex.roles.map((r: any) => `${r.title}${r.company ? ` @ ${r.company}` : ""}`).join("; ")
     : "";
