@@ -5,7 +5,7 @@ import { FileText, Image, Sparkles } from "lucide-react";
 export default function FilesIndex() {
   const sections = [
     { to: "/dashboard/deliverables", label: "Made by your AI", desc: "The 25 deliverables your AI assistant builds for you.", icon: Sparkles },
-    { to: "/dashboard/documents", label: "Documents", desc: "PDFs, contracts, and other docs.", icon: FileText },
+    { to: "/dashboard/documents", label: "Documents", desc: "Uploads and deliverables you've saved from your venture.", icon: FileText },
     { to: "/dashboard/media", label: "Photos & media", desc: "Logos, brand assets, photos.", icon: Image },
   ] as const;
 

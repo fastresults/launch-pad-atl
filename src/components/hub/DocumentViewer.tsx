@@ -19,8 +19,13 @@ import {
   Sparkles,
   RefreshCw,
   Loader2,
+  Bookmark,
+  BookmarkCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
@@ -286,6 +291,12 @@ export function DocumentViewer({
   );
   const [assessmentError, setAssessmentError] = useState<string | null>(null);
 
+  // Save-to-My-Files state
+  const [saving, setSaving] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+
   const components = useMemo(() => makeComponents(setHeadings), [doc?.content]);
   const assessmentComponents = useMemo(() => makeComponents(() => {}), [assessment]);
   const title = titleCase(doc?.document_type ?? "");
@@ -308,6 +319,7 @@ export function DocumentViewer({
     setAssessment(doc?.deep_assessment ?? null);
     setAssessmentStatus(doc?.deep_assessment_status ?? null);
     setAssessmentError(null);
+    setSavedCount(0);
   }, [doc?.snapshot_id, doc?.document_type, doc?.deep_assessment, doc?.deep_assessment_status]);
 
   const runAssessment = async () => {
@@ -439,6 +451,51 @@ export function DocumentViewer({
     toast.success("AI-builder prompt copied");
   };
 
+  const onSaveToFiles = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const blob = await markdownToDocxBlob(title, exportContent, {
+        heroUrl: heroUrl ?? undefined,
+        subtitle: doc?.document_type,
+      });
+      const versionLabel = savedCount > 0 ? ` (v${savedCount + 1})` : "";
+      const filename = `${title}${versionLabel}.docx`;
+      const contentType =
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      const { uploadUrl, path } = await createDocumentUploadUrl({
+        filename,
+        contentType,
+      });
+      const up = await fetch(uploadUrl, {
+        method: "PUT",
+        body: blob,
+        headers: { "Content-Type": contentType },
+      });
+      if (!up.ok) throw new Error("Upload failed");
+      await finalizeDocument({
+        path,
+        label: filename,
+        contentType,
+        size: blob.size,
+        kind: "deliverable",
+      });
+      setSavedCount((n) => n + 1);
+      qc.invalidateQueries({ queryKey: ["my", "documents"] });
+      toast.success("Saved to My Files", {
+        description: "Find it any time under Dashboard → Documents.",
+        action: {
+          label: "View",
+          onClick: () => navigate("/dashboard/documents"),
+        },
+      });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -477,6 +534,30 @@ export function DocumentViewer({
             </Button>
             <Button size="sm" variant="ghost" onClick={onPrint}>
               <Printer className="mr-1 h-3 w-3" />Print / PDF
+            </Button>
+            <Button
+              size="sm"
+              variant={savedCount > 0 ? "outline" : "default"}
+              onClick={onSaveToFiles}
+              disabled={saving}
+              title={
+                savedCount > 0
+                  ? "Save a new version to your Documents library"
+                  : "Save this deliverable to Dashboard → Documents"
+              }
+            >
+              {saving ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : savedCount > 0 ? (
+                <BookmarkCheck className="mr-1.5 h-3.5 w-3.5" />
+              ) : (
+                <Bookmark className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              {saving
+                ? "Saving…"
+                : savedCount > 0
+                  ? "Saved ✓ · Update"
+                  : "Save to My Files"}
             </Button>
             {doc?.document_type === "website_prd" && (
               <Button size="sm" onClick={onCopyPrdPrompt}>

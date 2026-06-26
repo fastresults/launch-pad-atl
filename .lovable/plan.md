@@ -1,67 +1,53 @@
-## Why the previous fix wasn't enough
+# Save Generated Documents to "My Files"
 
-`/dashboard/workflow` doesn't just render hardcoded numbers — it renders whatever `getMyWorkflow()` returns, which is driven by the `deliverable_types` table. The table currently has only **22 active rows across 5 stages** (Foundation / Strategy / Operations / Finance / Governance). That's why the page still says "20 founder-ready deliverables across 5 categories" — the data source itself is outdated.
+## The problem (in plain language)
 
-The homepage and `/dashboard/day` show the right shape because they read `FRAMEWORK_STAGES` from `src/lib/framework-deliverables.ts` (35 items / 8 categories, including the Brand, Marketing, and Social bonus tracks). The workflow page never will until the database matches.
+When a founder generates a deliverable (Executive Summary, Brand Brief, Roadmap, etc.) it lives inside the Venture Hub viewer. They can copy or download it locally, but it never lands in **Dashboard → My Files → Documents**, which is the place they instinctively look for "their stuff." Uploads they make manually show up there; AI-generated documents do not. That split confuses novices.
 
-## Plan
+## Goal
 
-### 1. Sync `deliverable_types` to the live framework (SQL migration)
+From the document viewer modal, the user can press one obvious button — **Save to My Files** — and the document (plus optional deep assessment) appears under **Dashboard → Documents** as a normal file they can re-download, rename, or delete, without re-running the AI.
 
-Make the table the single source of truth that matches `FRAMEWORK_STAGES`:
+## User experience
 
-- Renumber the 5 existing categories to `stage_n` 1–5 with labels Foundation, Strategy, Operations, Finance, Governance.
-- Map existing active rows to the new framework titles where they correspond (e.g. `executive_summary`, `value_proposition`, `market_sizing → market_analysis`, `competitive_landscape → competitive_positioning`, `business_plan → brand_messaging`, etc.). Keep old keys as aliases (`active=false`) so generated docs aren't lost.
-- Insert the **missing rows** so every framework deliverable exists:
-  - Foundation: `problem_solution_brief`
-  - Strategy: `customer_personas`
-  - Operations: `sales_playbook`, `marketing_plan`
-  - Finance: `unit_economics`, `budget_proforma`, `pitch_deck_outline`
-  - Governance: `legal_structure_brief`, `risk_register`, `board_governance_plan`
-  - **Category 6 — Brand (bonus):** `brand_strategy_framework`, `brand_messaging_house`, `visual_identity_brief`, `brand_voice_tone_guide`, `brand_guidelines_book`
-  - **Category 7 — Marketing (bonus):** `website_prd`
-  - **Category 8 — Social & Content (bonus):** `social_audit_setup`, `content_strategy_pillars`, `content_calendar_90`, `launch_content_kit`, `community_engagement_playbook`, `influencer_partnership_brief`, `paid_ads_starter_pack`
-- For every new row: set `active=true`, `sort_order` (`stage_n * 100 + position`), `stage_label`, `description`, `user_can_trigger=true`. Mark bonus-category rows so the UI can badge them.
+1. In the viewer header, next to Copy / Markdown / DOCX / PDF, add a primary-styled **Save to My Files** button with a bookmark icon.
+2. First click → saves a PDF (or DOCX, see "Format") snapshot of the current `exportContent` (executive summary + deep assessment if expanded) to the user's documents under kind `deliverable`. Toast: *"Saved to My Files. View it anytime in Dashboard → Documents."* with a "View" action that routes to `/dashboard/documents`.
+3. After save, the button flips to **Saved ✓ · Update** (secondary). Pressing Update re-saves a new version with a `(v2)` suffix so the user never loses an earlier copy.
+4. On the **Documents** page:
+   - Add a "Source" column showing either `Uploaded` or `Generated · <venture name>`.
+   - Add a filter chip row (All / Uploaded / Generated) so the list stays scannable as the library grows.
+   - Empty-state copy updated: *"Anything you upload or save from a deliverable lands here."*
+5. On the **My files** index card, update the Documents description to: *"Uploads and deliverables you've saved from your venture."*
 
-Grants/RLS unchanged — the table already exists.
+## Format
 
-### 2. Add a `bonus` flag column (optional but tidy)
+Save as **PDF** by default (matches the existing PDF export path in the viewer and renders predictably for novices). Internally store `mime_type=application/pdf`, `kind=deliverable`, `original_name=<Document title>.pdf`. Future enhancement (out of scope): let the user pick PDF/DOCX in a small dropdown beside the button.
 
-`ALTER TABLE deliverable_types ADD COLUMN bonus boolean default false`, then mark Brand/Marketing/Social rows true. UI shows a "Bonus" badge alongside category headers.
+## Technical notes
 
-### 3. Update `src/lib/userPipeline.functions.ts`
+- **No schema change required.** `attendee_documents` already supports arbitrary `kind` + `mime_type`. Reuse the existing storage flow: `createDocumentUploadUrl` → PUT to signed URL → `finalizeDocument`.
+- **DocumentViewer.tsx**: add `onSaveToFiles()` that
+  1. renders `exportContent` to a PDF Blob using the same path as `onDownloadPdf` (extract the existing logic into a shared helper that returns a Blob instead of triggering download),
+  2. calls `createDocumentUploadUrl({ kind: "deliverable", filename, mime: "application/pdf" })`,
+  3. PUTs the blob, then `finalizeDocument(...)`,
+  4. invalidates `["my","documents"]` and shows the toast with the "View" action (navigate via `useNavigate`).
+- Track save state locally (`saved`, `savedDocId`) so the button can toggle and the Update path can append `(v<n>)` based on a quick count of existing docs whose `original_name` starts with the same title.
+- **attendee.functions.ts**: confirm `finalizeDocument` accepts arbitrary `kind` strings; if it whitelists, add `deliverable` to the allowed set.
+- **documents.tsx**:
+  - Add `deliverable` to the `KINDS` list (label: "Saved deliverable") so the kind cell renders nicely and the filter has a value.
+  - Add the Source column + filter chips. Source = `Generated` when `kind === "deliverable"`, else `Uploaded`.
+  - Keep existing upload/download/delete behavior unchanged.
+- **files.tsx**: tweak the Documents card description string only.
 
-Return the new columns (`bonus`) so the UI can render them. No logic changes.
+## Out of scope
 
-### 4. Update `src/lib/workflow.ts`
+- Auto-saving every generated document (would clutter the library; explicit user action is the whole point).
+- Versioned diff viewer — `(v2)` naming is enough for now.
+- Sharing or external links.
 
-Rewrite `STAGES` and `WORKFLOW` to mirror the new framework (8 stages, 35 deliverables). Keep `BRIEF_FIELDS` untouched. This file is used by intake forms, so each new key gets a minimal `intake` array (or none) — defaults are safe.
+## Acceptance check
 
-### 5. Update `src/routes/_authenticated/dashboard/workflow.tsx`
-
-- Iterate `STAGES.filter(n >= 1)` (now 1–8) so all 8 categories render.
-- Render the bonus pill when `stage.bonus` is true.
-- The dynamic counts already work — they'll now read 35 deliverables across 8 categories straight from the data.
-- Refine the subhead to match the warmer tone used on `/dashboard/day` and explicitly call out the bonus tracks ("…including bonus Brand, Marketing, and Social tracks").
-
-### 6. Prompt coverage for new keys (honest scope note)
-
-The 13 net-new rows won't have `prompt_template`s yet, so trying to generate them will fail until prompts are authored. Two options:
-
-- **(a) Ship now, prompts later** — rows appear in the UI as "Coming soon" / disabled `user_can_trigger=false` until prompts land. This fixes the cosmetics and category counts immediately.
-- **(b) Author all 13 prompts in this same change** — much bigger, slower.
-
-Recommend **(a)** so the count/category complaint is resolved this pass; prompts can be added per category in follow-ups.
-
-### Files touched
-
-- `supabase/migrations/<timestamp>_workflow_framework_sync.sql` (new)
-- `src/lib/workflow.ts`
-- `src/lib/userPipeline.functions.ts`
-- `src/routes/_authenticated/dashboard/workflow.tsx`
-
-### Verification
-
-- Reload `/dashboard/workflow`: header shows "35 founder-ready deliverables across 8 categories"; 8 category sections render with Brand/Marketing/Social badged as bonus.
-- Already-generated deliverables (e.g. `executive_summary`) still show as Generated.
-- `/dashboard/day` and homepage Framework remain unchanged (still source from `FRAMEWORK_STAGES`).
+- Generate any deliverable, open the viewer, click **Save to My Files** → toast appears, navigating to `/dashboard/documents` shows the new row with Source = Generated and Download returns the same PDF.
+- Click **Update** → a `(v2)` row appears alongside the original.
+- Filter chips correctly partition Uploaded vs Generated.
+- Manual uploads still work exactly as before.
