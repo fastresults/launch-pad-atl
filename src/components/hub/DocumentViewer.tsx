@@ -269,6 +269,7 @@ export function DocumentViewer({
         content: string;
         snapshot_id?: string;
         hero_image_path?: string | null;
+        hero_image_status?: string | null;
         deep_assessment?: string | null;
         deep_assessment_status?: string | null;
         deep_assessment_quality_score?: number | null;
