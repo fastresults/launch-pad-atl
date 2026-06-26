@@ -942,6 +942,13 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
           setIntakeTarget(null);
         }}
       />
+      <BulkUnlockDialog
+        open={showUnlock}
+        onOpenChange={setShowUnlock}
+        snapshotId={snapshot.id}
+        totalDocs={total}
+        onUnlocked={() => bulk.mutate({ category: null })}
+      />
     </div>
   );
 }
