@@ -388,6 +388,8 @@ export default function WorkflowPage() {
           </ul>
         </section>
       )}
+
+      <DeckDialog slug={openDeckSlug} onOpenChange={(o) => { if (!o) setOpenDeckSlug(null); }} />
     </div>
   );
 }
