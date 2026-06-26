@@ -178,9 +178,10 @@ Your job is to synthesize a structured research_brief AND a 4-section extracted_
 
 CRITICAL RULES:
 1. Prefer verbatim facts from the founder's own uploaded documents/URLs over inference from research.
-2. Only state facts present in SOURCES. If a fact is not in the sources, leave the field as an empty string "".
+2. Build a founder-ready brief: use sourced facts first, then make clearly reasonable strategic inferences from the venture concept when sources are thin.
 3. NEVER emit placeholder strings like "[needs founder input]", "TBD", "various", or "unknown".
-4. Cite source URLs in brackets like [https://example.com] right after every claim that came from an external source (skip citations for founder-uploaded documents).
+4. If a field cannot be supported or reasonably inferred, return an empty string "". Do not explain missing data inside the field.
+5. Cite source URLs in brackets like [https://example.com] right after every claim that came from an external source (skip citations for founder-uploaded documents).
 5. Return ONLY valid JSON matching the schema below — no markdown, no commentary.
 
 
@@ -202,6 +203,29 @@ Schema:
     "vision":     { "short_term_goals": "", "long_term_goals": "", "mission": "", "vision": "" }
   }
 }`;
+
+function sanitizeModelOutput(value: unknown): unknown {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (/\[(?:needs founder input|not provided|unknown|tbd|todo|n\/a)\]/i.test(trimmed)) return "";
+    if (/^(?:needs founder input|not provided|unknown|tbd|todo|n\/a|various)$/i.test(trimmed)) return "";
+    return trimmed.replace(/\s*\[(?:needs founder input|not provided|unknown|tbd|todo|n\/a)\]\s*/gi, "").trim();
+  }
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => sanitizeModelOutput(item))
+      .filter((item) => !(typeof item === "string" && item.length === 0));
+  }
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+      out[key] = sanitizeModelOutput(nested);
+    }
+    return out;
+  }
+  return value;
+}
 
 async function synthesize(corpus: string): Promise<any> {
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -470,8 +494,8 @@ Venture context:
   const cappedCorpus = corpus.length > 120_000 ? corpus.slice(0, 120_000) + "\n\n[truncated]" : corpus;
 
   const result = await synthesize(cappedCorpus);
-  const research_brief = result?.research_brief ?? {};
-  const extracted_data = result?.extracted_data ?? {};
+  const research_brief = sanitizeModelOutput(result?.research_brief ?? {});
+  const extracted_data = sanitizeModelOutput(result?.extracted_data ?? {});
 
   await updateProgress(supabase, snapshotId, "validation", 96, "Finalizing");
 
