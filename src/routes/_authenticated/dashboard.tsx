@@ -18,6 +18,7 @@ import { RoomClock } from "@/components/dashboard/RoomClock";
 import { AIWorklogPill } from "@/components/dashboard/AIWorklogPill";
 import { HelpFab } from "@/components/dashboard/HelpFab";
 import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
+import { getPublicSiteSettings, DEFAULT_DASHBOARD_NAV_VISIBILITY, type DashboardNavKey } from "@/lib/site-settings.functions";
 
 export default function DashboardLayout() {
   return (
@@ -68,7 +69,7 @@ function DashboardShell() {
   );
 }
 
-type NavItem = { to: string; label: string; tooltip: string; icon: typeof Home; dimmed?: boolean; hide?: boolean };
+type NavItem = { key: DashboardNavKey; to: string; label: string; tooltip: string; icon: typeof Home; dimmed?: boolean; hide?: boolean };
 
 function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"] }) {
   const { state } = useSidebar();
@@ -77,14 +78,23 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
   const { foundersHubAccess, isAdmin } = useAuth();
   const hubVisible = foundersHubAccess || isAdmin;
 
+  const { data: siteSettings } = useQuery({
+    queryKey: ["site-settings", "nav"],
+    queryFn: getPublicSiteSettings,
+    staleTime: 60_000,
+  });
+  const visibility = siteSettings?.dashboard_nav_visibility ?? DEFAULT_DASHBOARD_NAV_VISIBILITY;
+
   const items: NavItem[] = [
     {
+      key: "today",
       to: "/dashboard",
       label: "Today",
       tooltip: "Your daily check-in. Before workshop day you'll see a countdown and venue; during the workshop, the live block in session; after, your 90-day progress and the next action waiting on you.",
       icon: Home,
     },
     {
+      key: "workshop",
       to: "/dashboard/day",
       label: "Workshop day",
       tooltip: "Your reservation in one place: the date, the venue with directions, the block-by-block morning agenda, the four things to bring, and the two entry paths to choose between when you arrive.",
@@ -92,12 +102,14 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       hide: mode === "after",
     },
     {
+      key: "brief",
       to: "/dashboard/brief",
       label: "Startup brief",
       tooltip: "Answer ten questions by typing or by voice. The brief becomes the source every deliverable reads from — when it's complete and confirmed, your facilitator's AI can build the rest of your kit.",
       icon: ClipboardList,
     },
     {
+      key: "deliverables",
       to: "/dashboard/workflow",
       label: "Deliverables",
       tooltip: "Generate your 20 investor-ready documents across five pillars. Build one at a time or run the remaining batch. Each card shows what's locked, what's queued, what's ready to read.",
@@ -105,6 +117,7 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       dimmed: mode === "during",
     },
     {
+      key: "hub",
       to: "/dashboard/hub",
       label: "Ventures",
       tooltip: "Every startup concept you've explored, with its own 34-document workspace. Drop in a URL or describe an idea, then star favorites, archive what's noise, and reopen anything to keep refining.",
@@ -112,12 +125,14 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       hide: !hubVisible,
     },
     {
+      key: "files",
       to: "/dashboard/files",
       label: "My files",
       tooltip: "One shelf for everything yours: the documents your AI built for you, the PDFs and contracts you've uploaded, and the brand photos and logos you and your designer keep adding.",
       icon: FolderOpen,
     },
     {
+      key: "profile",
       to: "/dashboard/profile",
       label: "Founder profile",
       tooltip: "Tell us about you, your startup, and your numbers — revenue, burn, runway. Every field you fill makes every deliverable sharper. Save each section as you go; finish when it feels right.",
@@ -125,6 +140,12 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
     },
   ];
 
+  // Admins always see all items (with a "Hidden" badge); regular users only see enabled items.
+  const visibleItems = items.filter((i) => {
+    if (i.hide) return false;
+    if (isAdmin) return true;
+    return visibility[i.key] !== false;
+  });
 
   return (
     <Sidebar collapsible="icon">
@@ -137,15 +158,21 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.filter((i) => !i.hide).map((item) => {
+              {visibleItems.map((item) => {
                 const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
+                const adminHidden = isAdmin && visibility[item.key] === false;
                 return (
                   <SidebarMenuItem key={item.to}>
                     <div className="relative flex items-center">
                       <SidebarMenuButton asChild isActive={active} tooltip={item.label} className="pr-9">
-                        <Link to={item.to} className={`flex items-center gap-3 ${item.dimmed ? "opacity-50" : ""}`}>
+                        <Link to={item.to} className={`flex items-center gap-3 ${item.dimmed || adminHidden ? "opacity-50" : ""}`}>
                           <item.icon className="h-4 w-4" />
                           <span className="flex-1">{item.label}</span>
+                          {adminHidden && !collapsed && (
+                            <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                              Hidden
+                            </span>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                       {!collapsed && (
@@ -167,6 +194,7 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
                             {item.tooltip}
                           </PopoverContent>
                         </Popover>
+
                       )}
                     </div>
                   </SidebarMenuItem>

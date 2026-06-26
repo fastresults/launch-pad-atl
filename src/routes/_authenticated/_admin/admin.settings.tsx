@@ -6,7 +6,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getPublicSiteSettings, updateSiteSetting } from "@/lib/site-settings.functions";
+import { getPublicSiteSettings, updateSiteSetting, DASHBOARD_NAV_KEYS, DEFAULT_DASHBOARD_NAV_VISIBILITY, type DashboardNavKey, type DashboardNavVisibility } from "@/lib/site-settings.functions";
+import { Home, Calendar, ClipboardList, ListChecks, Sparkles, FolderOpen, User } from "lucide-react";
 import {
   adminSetBulkUnlockDefault,
   adminClearBulkUnlockDefault,
@@ -69,8 +70,101 @@ export default function AdminSettingsPage() {
         </div>
       </section>
 
+      <DashboardNavSettings
+        value={data?.dashboard_nav_visibility ?? DEFAULT_DASHBOARD_NAV_VISIBILITY}
+        loading={isLoading}
+        onSave={(next) => mutate.mutate({ key: "dashboard_nav_visibility", value: next })}
+        saving={mutate.isPending}
+      />
+
       <BulkUnlockSettings />
     </div>
+  );
+}
+
+const NAV_META: Record<DashboardNavKey, { label: string; icon: typeof Home; helper: string }> = {
+  today: { label: "Today", icon: Home, helper: "Daily check-in landing page with countdown and next action." },
+  workshop: { label: "Workshop day", icon: Calendar, helper: "Reservation details, venue, agenda for the cohort day." },
+  brief: { label: "Startup brief", icon: ClipboardList, helper: "The 10-question brief that feeds every deliverable." },
+  deliverables: { label: "Deliverables", icon: ListChecks, helper: "Generate and view the 20 investor-ready documents." },
+  hub: { label: "Ventures", icon: Sparkles, helper: "Concept explorer with a 34-document workspace per venture." },
+  files: { label: "My files", icon: FolderOpen, helper: "Saved documents, uploads, brand media and PDFs." },
+  profile: { label: "Founder profile", icon: User, helper: "Founder details, startup info and financial snapshot." },
+};
+
+function DashboardNavSettings({
+  value,
+  loading,
+  saving,
+  onSave,
+}: {
+  value: DashboardNavVisibility;
+  loading: boolean;
+  saving: boolean;
+  onSave: (next: DashboardNavVisibility) => void;
+}) {
+  const enabledCount = DASHBOARD_NAV_KEYS.filter((k) => value[k] !== false).length;
+
+  function toggle(key: DashboardNavKey, checked: boolean) {
+    if (!checked && enabledCount <= 1 && value[key] !== false) {
+      toast.error("At least one navigation item must stay enabled.");
+      return;
+    }
+    onSave({ ...value, [key]: checked });
+  }
+
+  return (
+    <section className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
+      <h2 className="mb-1 text-lg font-semibold">Dashboard navigation</h2>
+      <p className="mb-6 text-sm text-muted-foreground">
+        Turn individual sidebar items on or off for every founder. Admins always see the full list with a
+        "Hidden" badge so you can still navigate while configuring.
+      </p>
+
+      <div className="space-y-2">
+        {DASHBOARD_NAV_KEYS.map((key) => {
+          const meta = NAV_META[key];
+          const Icon = meta.icon;
+          const checked = value[key] !== false;
+          return (
+            <div
+              key={key}
+              className="flex items-start justify-between gap-6 rounded-lg border border-border/60 bg-background/50 p-4"
+            >
+              <div className="flex flex-1 items-start gap-3">
+                <Icon className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <Label htmlFor={`nav-${key}`} className="text-sm font-medium">
+                    {meta.label}
+                  </Label>
+                  <p className="mt-1 text-xs text-muted-foreground">{meta.helper}</p>
+                </div>
+              </div>
+              <Switch
+                id={`nav-${key}`}
+                checked={checked}
+                disabled={loading || saving}
+                onCheckedChange={(c) => toggle(key, c)}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">
+          {enabledCount} of {DASHBOARD_NAV_KEYS.length} visible to founders
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={loading || saving}
+          onClick={() => onSave(DEFAULT_DASHBOARD_NAV_VISIBILITY)}
+        >
+          Reset to defaults
+        </Button>
+      </div>
+    </section>
   );
 }
 
