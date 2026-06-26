@@ -35,7 +35,8 @@ import {
   retryExtraction,
   type VentureSource,
 } from "@/lib/venture-sources";
-import { getCanonicalFounderContext, provenanceLabel } from "@/lib/canonical-context";
+import { provenanceLabel } from "@/lib/canonical-context";
+import { useCanonicalContext } from "@/hooks/use-canonical-context";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { TRACKS, getTrack, type TrackKey } from "@/lib/tracks";
 import { ConceptStudio } from "@/components/hub/ConceptStudio";
@@ -243,32 +244,27 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
   // R5 — provenance map: tells us which canonical source each field's value
   // originated from, so FieldGroup can render "from your Brief" etc.
   const [provenanceMap, setProvenanceMap] = useState<Record<string, string>>({});
+  const { data: canonicalCtx } = useCanonicalContext();
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const ctx = await getCanonicalFounderContext();
-      if (cancelled || !ctx) return;
-      // Map review-field path → canonical key → provenance label.
-      const fieldToCanonical: Record<string, string> = {
-        "foundation.company_name": "company_name",
-        "foundation.concept": "one_line_pitch",
-        "foundation.problem": "problem_statement",
-        "market.target_customers": "target_customer",
-        "market.value_proposition": "unique_insight",
-        "market.differentiators": "unique_insight",
-        "operations.revenue_model": "business_model",
-        "operations.pricing": "pricing_idea",
-        "vision.short_term_goals": "twelve_month_vision",
-      };
-      const out: Record<string, string> = {};
-      for (const [fieldPath, canonicalKey] of Object.entries(fieldToCanonical)) {
-        const src = ctx.provenance[canonicalKey];
-        if (src) out[fieldPath] = src;
-      }
-      setProvenanceMap(out);
-    })();
-    return () => { cancelled = true; };
-  }, []);
+    if (!canonicalCtx) return;
+    const fieldToCanonical: Record<string, string> = {
+      "foundation.company_name": "company_name",
+      "foundation.concept": "one_line_pitch",
+      "foundation.problem": "problem_statement",
+      "market.target_customers": "target_customer",
+      "market.value_proposition": "unique_insight",
+      "market.differentiators": "unique_insight",
+      "operations.revenue_model": "business_model",
+      "operations.pricing": "pricing_idea",
+      "vision.short_term_goals": "twelve_month_vision",
+    };
+    const out: Record<string, string> = {};
+    for (const [fieldPath, canonicalKey] of Object.entries(fieldToCanonical)) {
+      const src = canonicalCtx.provenance[canonicalKey];
+      if (src) out[fieldPath] = src;
+    }
+    setProvenanceMap(out);
+  }, [canonicalCtx]);
 
   useEffect(() => {
     if (dirtyRef.current) return;

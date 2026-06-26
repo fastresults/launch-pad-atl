@@ -23,6 +23,7 @@ import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin, Check
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { useCanonicalContext } from "@/hooks/use-canonical-context";
 
 type DroppedFile = {
   id: string;
@@ -131,29 +132,25 @@ function Inner() {
   const trackSectionRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Prefill from canonical context (Profile + Brief + MarketBlock + auth).
-  // This runs even when the user didn't navigate from the Brief-complete
-  // screen, so any fact they've already typed flows in automatically.
+  // Prefill from canonical context (shared TanStack Query cache — no
+  // duplicate reads if Hub Workflow or Profile already loaded it).
+  const { data: canonicalCtx } = useCanonicalContext();
   useEffect(() => {
-    (async () => {
-      const { getCanonicalFounderContext } = await import("@/lib/canonical-context");
-      const ctx = await getCanonicalFounderContext();
-      if (!ctx) return;
-      // Never overwrite a value the user (or an explicit prefill) already set.
-      setFounderName((cur) => cur || ctx.identity.full_name);
-      setFounderEmail((cur) => cur || ctx.identity.email);
-      setFounderPhone((cur) => cur || ctx.identity.phone);
-      setCompanyName((cur) => cur || ctx.concept.company_name);
-      setBusinessConcept((cur) => cur || ctx.concept.business_concept_blob);
-      setDiff((cur) => cur || ctx.concept.differentiation);
-      setIndustry((cur) => cur || ctx.market.industry);
-      setMarketScope((cur) => (cur ? cur : (ctx.market.market_scope || "local")));
-      if (ctx.market.industry || ctx.concept.business_concept_blob) {
-        setFromBrief((cur) => cur || true);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!canonicalCtx) return;
+    const ctx = canonicalCtx;
+    // Never overwrite a value the user (or an explicit prefill) already set.
+    setFounderName((cur) => cur || ctx.identity.full_name);
+    setFounderEmail((cur) => cur || ctx.identity.email);
+    setFounderPhone((cur) => cur || ctx.identity.phone);
+    setCompanyName((cur) => cur || ctx.concept.company_name);
+    setBusinessConcept((cur) => cur || ctx.concept.business_concept_blob);
+    setDiff((cur) => cur || ctx.concept.differentiation);
+    setIndustry((cur) => cur || ctx.market.industry);
+    setMarketScope((cur) => (cur ? cur : (ctx.market.market_scope || "local")));
+    if (ctx.market.industry || ctx.concept.business_concept_blob) {
+      setFromBrief((cur) => cur || true);
+    }
+  }, [canonicalCtx]);
 
   // Every file the founder has ever uploaded — Brief, Founder identity, other
   // ventures. We surface them all here so they never need to re-upload.

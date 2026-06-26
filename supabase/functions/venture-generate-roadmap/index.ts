@@ -5,6 +5,14 @@
 // Persists onto venture_snapshots.roadmap_*.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  compactPreamble,
+  loadVentureContext,
+  pickBrainSlice,
+  type VentureContext,
+} from "../_shared/venture-context.ts";
+import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
+import { stripCitations } from "../_shared/deliverable-prompts.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,14 +64,7 @@ function gatewayMessage(status: number, detail: string) {
   return "Founder Roadmap is currently unavailable. Please try again shortly.";
 }
 
-function stripCitations(md: string): string {
-  let out = md;
-  out = out.replace(/\n#{1,6}\s*(sources|references|citations|bibliography|footnotes)\s*[\s\S]*$/i, "");
-  out = out.replace(/\[\^[^\]]+\]/g, "");
-  out = out.replace(/^\s*\[\^[^\]]+\]:.*$/gm, "");
-  out = out.replace(/\n{3,}/g, "\n\n");
-  return out.trim();
-}
+// stripCitations is imported from _shared/deliverable-prompts.ts
 
 function smartExcerpt(md: string, budget: number): string {
   if (!md) return "";
@@ -190,44 +191,35 @@ STRICT RULES
 After the markdown, on a final line, output exactly:
 QUALITY_SCORE: <0-100 integer reflecting specificity, actionability, narrative quality, and partner-readiness>`;
 
-function buildContextBundle(snap: any, allDocs: any[]) {
-  const founderCard = {
-    founder: { name: snap.founder_name, email: snap.founder_email, phone: snap.founder_phone },
-    location: { city: snap.city, region: snap.region, country: snap.country },
-    market_scope: snap.market_scope,
-    industry: snap.industry,
-    sub_industry: snap.sub_industry,
-    track: snap.track,
-    company_name: snap.company_name,
-    website_url: snap.website_url,
-  };
-
+function buildContextBundle(ctx: VentureContext, allDocs: any[]) {
+  const snap = ctx.snap;
   const sections: { protect: boolean; body: string }[] = [];
+
+  // Compact preamble (founder + location + concept + tokens + confirmed numbers)
+  // replaces the legacy founderCard JSON dump + raw extracted_data dump.
   sections.push({ protect: true, body: `# Venture: ${snap.company_name ?? "(unnamed)"}` });
-  if (snap.concept_summary) {
+  sections.push({ protect: true, body: compactPreamble(ctx) });
+
+  // Brain slice — every key, since the roadmap synthesizes across the entire venture.
+  const brainSlice = pickBrainSlice(ctx.brain, null);
+  if (brainSlice) {
     sections.push({
       protect: true,
-      body: `## North-star concept\n${snap.concept_summary}\nValue proposition: ${snap.value_proposition ?? ""}`,
+      body: `## Venture brain (compressed, authoritative)\n${JSON.stringify(brainSlice, null, 2)}`,
+    });
+  } else if (snap.extracted_data) {
+    // Fallback when no brain yet — keep the raw blob.
+    sections.push({
+      protect: true,
+      body: `## Venture brief (fallback)\n${JSON.stringify(snap.extracted_data, null, 2)}`,
     });
   }
-  sections.push({ protect: true, body: `## Founder & market\n${JSON.stringify(founderCard, null, 2)}` });
-  sections.push({
-    protect: true,
-    body: `## Venture brief (extracted_data)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,
-  });
 
   if (snap.research_brief) {
     sections.push({
       protect: false,
       body: `## Research brief (background evidence — NO citations in output)\n${JSON.stringify(snap.research_brief, null, 2)}`,
     });
-  }
-  const extraResearch: Record<string, any> = {};
-  for (const k of ["enrichment_data", "enrichment_summary", "deep_research", "market_research", "competitor_research"]) {
-    if (snap[k] && (typeof snap[k] !== "object" || Object.keys(snap[k]).length)) extraResearch[k] = snap[k];
-  }
-  if (Object.keys(extraResearch).length) {
-    sections.push({ protect: false, body: `## Additional research / enrichment\n${JSON.stringify(extraResearch, null, 2)}` });
   }
 
   // Executive Summary first, untouched
@@ -278,15 +270,17 @@ function fitToBudget(sections: { protect: boolean; body: string }[]): string {
 }
 
 async function generateRoadmap(supabase: any, snapshotId: string) {
-  const [{ data: snap }, { data: allDocs }] = await Promise.all([
-    supabase.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle(),
-    supabase
-      .from("venture_documents")
-      .select("document_type, content, intake_answers, deep_assessment, status")
-      .eq("snapshot_id", snapshotId)
-      .eq("status", "complete"),
-  ]);
-  if (!snap) throw new Error("Snapshot not found");
+  // Shared builder: single read for snap + brief + founder + market + profile
+  // + brain + source materials. Eliminates the per-function snapshot reload.
+  const ctx = await loadVentureContext(supabase, snapshotId);
+  // Honor the brain dirty flag — recompute if intake / source / concept changed.
+  try { ctx.brain = await ensureSnapshotBrain(supabase, snapshotId); } catch { /* fall through to fallback */ }
+
+  const { data: allDocs } = await supabase
+    .from("venture_documents")
+    .select("document_type, content, intake_answers, deep_assessment, status")
+    .eq("snapshot_id", snapshotId)
+    .eq("status", "complete");
   if (!allDocs || !allDocs.length) throw new Error("No completed documents to synthesize");
 
   await supabase
@@ -294,8 +288,9 @@ async function generateRoadmap(supabase: any, snapshotId: string) {
     .update({ roadmap_status: "generating" })
     .eq("id", snapshotId);
 
-  const bundle = buildContextBundle(snap, allDocs);
+  const bundle = buildContextBundle(ctx, allDocs);
   const userPrompt = fitToBudget(bundle);
+  const snap = ctx.snap;
 
   const TRACK_ADDENDUM: Record<string, string> = {
     lifestyle: `\n\nTRACK OVERRIDE — Main Street Startup (first-time founder opening a real small business: café, salon, trade, local service, indie product, small e-commerce brand). Apply these adjustments to every chapter:

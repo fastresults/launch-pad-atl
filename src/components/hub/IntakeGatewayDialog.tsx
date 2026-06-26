@@ -24,10 +24,10 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  getCanonicalFounderContext,
   provenanceLabel,
   type CanonicalFounderContext,
 } from "@/lib/canonical-context";
+import { useCanonicalContext } from "@/hooks/use-canonical-context";
 
 // Common intake field ids → canonical context lookups. Anything not listed
 // falls through to the field's schema default. Keep this conservative so we
@@ -103,9 +103,11 @@ export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<number | null>(null);
 
-  // Seed values when target changes — pulls from canonical context for any
-  // field id that maps to a known fact, so founders don't re-type identity,
-  // industry, financials, etc.
+  // Shared TanStack Query cache — does not re-fetch if Hub / Workflow /
+  // Profile already loaded it in this session (P5).
+  const { data: ctx } = useCanonicalContext({ enabled: !!target });
+
+  // Seed values when target or canonical context changes.
   useEffect(() => {
     if (!target) {
       stopTracks();
@@ -113,34 +115,28 @@ export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
       setPrefillSources({});
       return;
     }
-    let cancelled = false;
-    (async () => {
-      const ctx = await getCanonicalFounderContext().catch(() => null);
-      if (cancelled) return;
-      const seed: Record<string, any> = {};
-      const sources: Record<string, string> = {};
-      for (const f of fields) {
-        const fromInitial = target.initial?.[f.id];
-        if (fromInitial !== undefined && fromInitial !== null && String(fromInitial).length > 0) {
-          seed[f.id] = fromInitial;
+    const seed: Record<string, any> = {};
+    const sources: Record<string, string> = {};
+    for (const f of fields) {
+      const fromInitial = target.initial?.[f.id];
+      if (fromInitial !== undefined && fromInitial !== null && String(fromInitial).length > 0) {
+        seed[f.id] = fromInitial;
+        continue;
+      }
+      const mapper = ctx ? CANONICAL_FIELD_MAP[f.id] : null;
+      if (mapper) {
+        const { v, src } = mapper(ctx!);
+        if (v !== "" && v !== null && v !== undefined) {
+          seed[f.id] = v;
+          if (src) sources[f.id] = src;
           continue;
         }
-        const mapper = ctx ? CANONICAL_FIELD_MAP[f.id] : null;
-        if (mapper) {
-          const { v, src } = mapper(ctx!);
-          if (v !== "" && v !== null && v !== undefined) {
-            seed[f.id] = v;
-            if (src) sources[f.id] = src;
-            continue;
-          }
-        }
-        seed[f.id] = defaultForField(f);
       }
-      setValues(seed);
-      setPrefillSources(sources);
-    })();
-    return () => { cancelled = true; };
-  }, [target?.type, target?.initial]);
+      seed[f.id] = defaultForField(f);
+    }
+    setValues(seed);
+    setPrefillSources(sources);
+  }, [target?.type, target?.initial, ctx]);
 
   useEffect(() => () => stopTracks(), []);
 
