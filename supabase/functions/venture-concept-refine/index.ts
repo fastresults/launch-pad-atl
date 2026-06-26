@@ -39,13 +39,38 @@ async function callAI(messages: any[], jsonMode = true) {
   const j = await res.json();
   const raw = j.choices?.[0]?.message?.content ?? "";
   if (!jsonMode) return raw;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    const m = raw.match(/\{[\s\S]*\}/);
-    if (m) return JSON.parse(m[0]);
-    throw new Error("AI returned invalid JSON");
+  return repairAndParseJson(raw);
+}
+
+function repairAndParseJson(s: string): any {
+  const tryParse = (x: string) => { try { return JSON.parse(x); } catch { return undefined; } };
+  let v = tryParse(s);
+  if (v !== undefined) return v;
+  const m = s.match(/\{[\s\S]*\}/);
+  let candidate = m ? m[0] : s;
+  candidate = candidate
+    .replace(/```json|```/g, "")
+    .replace(/,\s*([}\]])/g, "$1")
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+  v = tryParse(candidate);
+  if (v !== undefined) return v;
+  let braces = 0, brackets = 0, inStr = false, esc = false;
+  for (const c of candidate) {
+    if (esc) { esc = false; continue; }
+    if (c === "\\") { esc = true; continue; }
+    if (c === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (c === "{") braces++;
+    else if (c === "}") braces--;
+    else if (c === "[") brackets++;
+    else if (c === "]") brackets--;
   }
+  if (inStr) candidate += '"';
+  while (brackets-- > 0) candidate += "]";
+  while (braces-- > 0) candidate += "}";
+  v = tryParse(candidate);
+  if (v !== undefined) return v;
+  throw new Error("AI returned invalid JSON");
 }
 
 function contextBlock(snap: any) {
