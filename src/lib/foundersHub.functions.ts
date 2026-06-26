@@ -284,6 +284,18 @@ export async function listSnapshotDocuments(input: any): Promise<VentureDocument
   return (data ?? []) as VentureDocument[];
 }
 
+export async function getVentureDocumentById(input: any): Promise<VentureDocument | null> {
+  const { id } = unwrap<{ id: string }>(input);
+  if (!id) return null;
+  const { data, error } = await supabase
+    .from("venture_documents")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data ?? null) as VentureDocument | null;
+}
+
 export async function generateDocument(input: any): Promise<void> {
   const { snapshotId, documentType, rewriteFeedback, rewriteTags, intakeAnswers } = unwrap<{
     snapshotId: string;
