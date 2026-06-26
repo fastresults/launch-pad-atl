@@ -112,8 +112,6 @@ export default function BriefWizard() {
     return n;
   }, [mode, checkpointBlock, idx]);
 
-  const save = async (key: string) => {
-    try {
   const invalidateCanonical = useInvalidateCanonicalContext();
 
   const save = async (key: string) => {
