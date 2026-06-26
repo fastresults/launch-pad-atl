@@ -1,57 +1,41 @@
-## Goal
+# Fix: "View" on saved deliverables shows blank preview, no exports
 
-In `/dashboard/documents`, add a **View** action under the Actions column. For rows that came from a generated deliverable, View opens the same rich modal you get inside the Hub (Copy / Markdown / DOCX / PDF, hero image, deep assessment, rewrite). For uploaded files, View opens a lightweight in-app preview so the user doesn't have to download to peek.
+## What's happening
 
-## Why this needs more than a button
+The `Executive Summary.docx` you clicked was saved to *My Files* before we added the link between saved files and their original venture document. The `documents.tsx` "View" handler only opens the rich `DocumentViewer` (with Copy / Markdown / DOCX / PDF + preview) when the row has `source_venture_document_id`. Yours is `NULL`, so it falls back to the generic `FilePreviewDialog`, which can't preview `.docx` in-browser and only shows Delete/Download.
 
-The Documents page currently lists rows from `attendee_documents`. When you "Save to My Files" from the Hub's `DocumentViewer`, we currently write only the rendered DOCX into Storage — we do **not** keep a link back to the source `venture_documents` row (which is what holds the markdown, hero image, and deep-assessment content the modal needs). So a "View" button has nothing rich to render today.
+New saves done after the last change already store the link, but every file saved before then is orphaned.
 
-Fix: persist that link at save time, then resolve it at view time.
+## Plan
 
-## Changes
+### 1. Backfill existing saved deliverables (DB migration)
+Match orphaned `attendee_documents` rows (kind = `deliverable`, `source_venture_document_id IS NULL`) back to their source by `user_id` + normalized title:
 
-### 1. Link saved deliverables back to their source (DB + save flow)
+- Strip the ` (v2)` / `.docx` suffix from `original_name`
+- Find the most recent `venture_documents` row owned by the same user with a matching `title`
+- Update `source_venture_document_id`
 
-- Migration: add nullable column `attendee_documents.source_venture_document_id uuid` referencing `venture_documents(id) on delete set null`, plus an index on it.
-- `finalizeDocument` (`src/lib/attendee.functions.ts`) accepts an optional `sourceVentureDocumentId` and writes it.
-- `DocumentViewer.tsx` "Save to My Files" passes the current `doc.id` as `sourceVentureDocumentId` so future views can rehydrate the rich content.
-- Backfill is not required; old rows will simply fall back to the lightweight preview (see #4).
+This recovers View → rich viewer for every previously-saved file where the source still exists.
 
-### 2. New `listMyDocuments` shape
+### 2. Resilient lookup at View time (frontend fallback)
+In `src/routes/_authenticated/dashboard/documents.tsx` `onView`:
 
-Update `listMyDocuments` to also return `source_venture_document_id`. No UI break — extra field.
+- If a deliverable row has no `source_venture_document_id`, try a name-based lookup before falling back.
+- Add a small helper `findVentureDocumentByTitle({ title })` in `src/lib/foundersHub.functions.ts` that returns the latest match for the current user.
+- On hit: open `DocumentViewer` and persist the link (`UPDATE attendee_documents SET source_venture_document_id = ...`) so future opens are instant.
+- On miss (source was deleted): show a clearer empty state inside `FilePreviewDialog` explaining that the original venture document is gone, with Download still available.
 
-### 3. Rich preview for generated rows
-
-- In `src/routes/_authenticated/dashboard/documents.tsx`, add a **View** button (left of Download) in the Actions cell.
-- Click handler:
-  - If `kind === "deliverable"` **and** `source_venture_document_id` is set: lazy-load the venture document via a new helper `getVentureDocumentById({ id })` in `src/lib/foundersHub.functions.ts` (selects the full row with markdown, hero_image_path, deep_assessment, etc., scoped to the caller's user_id through RLS). Pass it into the existing `<DocumentViewer doc={…} onClose={…} />`.
-  - Reuses every existing export action (Copy, Markdown, DOCX, PDF) and the deep-assessment trigger — no duplication.
-- Show a small loading state on the row while the venture doc is being fetched.
-
-### 4. Lightweight preview for uploads and legacy saved rows
-
-For everything else (PDFs, images, DOCX uploads, or saved-deliverable rows missing the link), open a new small `FilePreviewDialog`:
-
-- PDFs and images → render inline in an iframe / `<img>` using a signed URL (same `getDocumentDownloadUrl`).
-- DOCX / other binaries → show the filename, size, kind, and a prominent **Download** button (browsers can't natively render DOCX; we don't add a converter for this).
-- Dialog header always includes Download and Delete so the modal is a real "do everything for this file" surface, matching the user's request.
-
-### 5. Small UX polish
-
-- Table Actions cell becomes: `View · Download · Delete` with consistent button sizes; on narrow screens collapse to icon buttons.
-- Keep the existing filter chips (All / Generated / Uploaded) untouched.
+### 3. Improve `FilePreviewDialog` for .docx
+Even when we genuinely can't find the source, give a better UX:
+- Render the saved doc's metadata (title, size, saved date)
+- Add a "Download .docx" primary button and keep Delete
+- Add a one-line tip: "For full preview and Markdown / PDF export, open this from the Hub or regenerate it."
 
 ## Files touched
-
-- `supabase/migrations/<new>.sql` — add `source_venture_document_id` column + index.
-- `src/lib/attendee.functions.ts` — extend `finalizeDocument`, expose new field from `listMyDocuments`.
-- `src/lib/foundersHub.functions.ts` — add `getVentureDocumentById`.
-- `src/components/hub/DocumentViewer.tsx` — pass `sourceVentureDocumentId` when saving.
-- `src/components/files/FilePreviewDialog.tsx` *(new)* — lightweight preview for uploads.
-- `src/routes/_authenticated/dashboard/documents.tsx` — View button + dialog wiring.
+- New DB migration: backfill `attendee_documents.source_venture_document_id`
+- `src/lib/foundersHub.functions.ts` — add `findVentureDocumentByTitle`
+- `src/routes/_authenticated/dashboard/documents.tsx` — fallback lookup + persist link
+- `src/components/files/FilePreviewDialog.tsx` — clearer empty state for orphaned docx
 
 ## Out of scope
-
-- Server-side DOCX → HTML rendering for uploaded Word files.
-- Editing files in place. View is read-only; rewrite stays inside the Hub's DocumentViewer for deliverable rows that have it.
+- Re-parsing the stored `.docx` back into markdown to render in the rich viewer (heavyweight, only needed if the source venture document was deleted — rare).
