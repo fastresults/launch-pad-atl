@@ -19,7 +19,7 @@ export default function ProfilePage() {
   const { data } = useQuery({ queryKey: ["my", "profile"], queryFn: () => getMyProfile() });
 
   const [founder, setFounder] = useState({ full_name: "", headline: "", background: "", primary_goal: "" });
-  const [business, setBusiness] = useState({ business_name: "", industry: "", stage: "", problem_solved: "", value_prop: "", target_market: "" });
+  const [business, setBusiness] = useState({ business_name: "", industry: "", stage: "", problem_solved: "", value_prop: "", target_market: "", business_model: "" });
   const [financial, setFinancial] = useState({ current_revenue: "", funding_raised: "", monthly_burn: "", runway_months: "" });
 
   useEffect(() => {
@@ -38,6 +38,7 @@ export default function ProfilePage() {
       problem_solved: p.problem_solved ?? "",
       value_prop: p.value_prop ?? "",
       target_market: p.target_market ?? "",
+      business_model: p.business_model ?? "",
     });
     setFinancial({
       current_revenue: p.current_revenue?.toString() ?? "",
@@ -46,24 +47,22 @@ export default function ProfilePage() {
       runway_months: p.runway_months?.toString() ?? "",
     });
 
-    // Auto-pull from brief on first load if key fields are still empty.
+    // Always merge the latest brief into empty profile fields on first load.
+    // This is intentionally forceful enough that completing the Startup Brief
+    // makes Profile & Intake usable without relying on the user to click a sync button.
     if (!autoSyncTried) {
-      const sparse =
-        !p.headline && !p.background && !p.industry && !p.problem_solved &&
-        !p.value_prop && !p.target_market && !p.business_model && !p.primary_goal;
-      if (sparse) {
-        setAutoSyncTried(true);
-        syncProfileFromBrief({ markComplete: true })
-          .then((r) => {
-            if (r.fieldsFilled > 0) {
-              toast.success(`Pulled ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} from your brief.`);
-              qc.invalidateQueries({ queryKey: ["my", "profile"] });
-            }
-          })
-          .catch((e) => console.error("[profile auto-sync] failed", e));
-      } else {
-        setAutoSyncTried(true);
-      }
+      setAutoSyncTried(true);
+      syncProfileFromBrief({ markComplete: true })
+        .then((r) => {
+          if (r.fieldsFilled > 0) {
+            toast.success(`Profile synced from your brief — ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} filled.`);
+            qc.invalidateQueries({ queryKey: ["my", "profile"] });
+          }
+        })
+        .catch((e) => {
+          console.error("[profile auto-sync] failed", e);
+          toast.error("Profile sync failed. Use Refresh from my brief to try again.");
+        });
     }
   }, [data, autoSyncTried, qc]);
 
@@ -125,6 +124,7 @@ export default function ProfilePage() {
         <Field label="Problem solved"><Textarea rows={3} value={business.problem_solved} onChange={(e) => setBusiness({ ...business, problem_solved: e.target.value })} /></Field>
         <Field label="Value proposition"><Textarea rows={3} value={business.value_prop} onChange={(e) => setBusiness({ ...business, value_prop: e.target.value })} /></Field>
         <Field label="Target market"><Textarea rows={3} value={business.target_market} onChange={(e) => setBusiness({ ...business, target_market: e.target.value })} /></Field>
+        <Field label="Business model"><Textarea rows={3} value={business.business_model} onChange={(e) => setBusiness({ ...business, business_model: e.target.value })} /></Field>
         <Button onClick={() => save.mutate({ section: "business", data: business })} disabled={save.isPending}>Save startup</Button>
       </Section>
 

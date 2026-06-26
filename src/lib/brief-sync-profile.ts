@@ -19,6 +19,21 @@ function joinClean(parts: Array<string | null | undefined>, sep = " — "): stri
   return parts.map((p) => (p ?? "").toString().trim()).filter(Boolean).join(sep);
 }
 
+function deriveStartupName(pitch?: string | null): string {
+  const text = (pitch ?? "").trim();
+  if (!text) return "";
+  const patterns = [
+    /^(?:we are|we're|i am|i'm|this is)\s+([^,.;:!?]+(?:,\s*(?:llc|inc\.?|co\.?|company|studio|labs|group))?)/i,
+    /^([^,.;:!?]+?)\s+(?:helps?|is|makes?|builds?|brings?|provides?|offers?)\b/i,
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    const name = match?.[1]?.trim().replace(/^the\s+/i, "");
+    if (name && name.split(/\s+/).length <= 6) return name;
+  }
+  return "";
+}
+
 function archetypeToStage(arc?: string | string[] | null): string {
   const raw = Array.isArray(arc) ? arc.join(" ") : (arc ?? "");
   const a = raw.toLowerCase();
@@ -79,6 +94,7 @@ export async function syncProfileFromBrief(opts: SyncOptions = {}): Promise<Sync
     headline: headlineFromExtract || firstSentence(brief.one_line_pitch),
     background: founderBackgroundComposed,
     primary_goal: brief.twelve_month_vision,
+    business_name: deriveStartupName(brief.one_line_pitch),
     industry: market.industry,
     stage: archetypeToStage(market.archetype),
     problem_solved: brief.problem_statement,
