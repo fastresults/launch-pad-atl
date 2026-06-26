@@ -102,16 +102,30 @@ Deno.serve(async (req) => {
 
     const { data: doc } = await admin
       .from("venture_documents")
-      .select("content, hero_image_path")
+      .select("id, content, hero_image_path, hero_image_status, hero_image_started_at")
       .eq("snapshot_id", snapshotId)
       .eq("document_type", documentType)
       .maybeSingle();
     if (!doc) {
       return new Response(JSON.stringify({ error: "Document not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    if (doc.hero_image_path && !force) {
+    if (doc.hero_image_path && doc.hero_image_status === "ready" && !force) {
       return new Response(JSON.stringify({ ok: true, path: doc.hero_image_path, skipped: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Atomic claim: only run if not already generating (or stale > 3 min).
+    const staleCutoff = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+    const { data: claim } = await admin
+      .from("venture_documents")
+      .update({ hero_image_status: "generating", hero_image_started_at: new Date().toISOString(), hero_image_error: null })
+      .eq("id", doc.id)
+      .or(`hero_image_status.is.null,hero_image_status.eq.failed,hero_image_status.eq.ready,hero_image_started_at.lt.${staleCutoff}`)
+      .select("id")
+      .maybeSingle();
+    if (!claim && !force) {
+      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "in_flight" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const previousPath = doc.hero_image_path;
 
     const { data: typeRow } = await admin
       .from("venture_document_types")
