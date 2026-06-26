@@ -605,6 +605,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   });
 
   const [showUnlock, setShowUnlock] = useState(false);
+  const [openDeckSlug, setOpenDeckSlug] = useState<string | null>(null);
 
   const cancel = useMutation({
     mutationFn: (jobId: string) => cancelJob({ data: { jobId } }),
