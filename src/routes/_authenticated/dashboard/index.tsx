@@ -35,8 +35,9 @@ export default function TodayPage() {
   }, []);
 
   const state = getWorkshopMode(new Date(), cohort.data?.cohort ?? null);
-  const briefScore = brief.data?.brief?.completeness_score ?? 0;
-  const briefTotal = 10;
+  const briefRow = brief.data ?? null;
+  const briefScore = countAnsweredBriefFields(briefRow);
+  const briefTotal = BRIEF_TOTAL;
   const briefReady = briefScore >= 6;
   const filingReady = !!filing.data?.filing?.llc_name;
   const items = wf.data?.items ?? [];
