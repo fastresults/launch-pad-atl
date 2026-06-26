@@ -102,163 +102,195 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
   const iterations = Array.isArray(snapshot.concept_iterations) ? snapshot.concept_iterations : [];
 
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-status-warning" />
-            <h3 className="text-base font-semibold">Concept Studio</h3>
-            {locked
-              ? <Badge variant="outline" className="border-status-success/40 text-status-success"><Lock className="mr-1 h-3 w-3" />Locked</Badge>
-              : <Badge variant="outline">Refining</Badge>}
+    <div className="space-y-4">
+      {/* ───────── STEP 1 · CONCEPT STUDIO ───────── */}
+      <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="text-[10px] uppercase tracking-wide">Step 1 · Sharpen</Badge>
+              <Sparkles className="h-4 w-4 text-status-warning" />
+              <h3 className="text-base font-semibold">Concept Studio</h3>
+              {locked
+                ? <Badge variant="outline" className="border-status-success/40 text-status-success"><Lock className="mr-1 h-3 w-3" />Locked</Badge>
+                : <Badge variant="outline">Refining</Badge>}
+            </div>
+            <p className="mt-1 text-sm text-foreground/80">
+              Sharpen the wording of a concept you already believe in.
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              <b>When to use this:</b> the concept is roughly right and you just need a tight {WORD_MIN}–{WORD_MAX} word north-star + value prop. This locks the language used across all 21 documents.
+            </p>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Lock a tight {WORD_MIN}–{WORD_MAX} word summary + value proposition. This becomes the north-star for all 21 documents.
-          </p>
+          {!locked && !snapshot.concept_summary && (
+            <Button size="sm" variant="outline" onClick={draft} disabled={run.isPending}>
+              {run.isPending && run.variables?.action === "draft" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              Draft from research
+            </Button>
+          )}
         </div>
-        {!locked && !snapshot.concept_summary && (
-          <Button size="sm" variant="outline" onClick={draft} disabled={run.isPending}>
-            {run.isPending && run.variables?.action === "draft" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-            Draft from research
-          </Button>
+
+        <div className="grid gap-3">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Concept summary</Label>
+              <span className={`text-[10px] ${validWords ? "text-status-success" : "text-muted-foreground"}`}>
+                {sumWords} / {WORD_MIN}-{WORD_MAX} words
+              </span>
+            </div>
+            <Textarea rows={4} value={summary} disabled={locked}
+              onChange={(e) => setSummary(e.target.value)}
+              placeholder="50-60 word concept: who it's for, the problem, your offer, your unfair edge." />
+            {!locked && (
+              <Button size="sm" variant="ghost" onClick={draft} disabled={run.isPending} className="h-7 px-2 text-xs">
+                <Sparkles className="mr-1 h-3 w-3" />Regenerate from research
+              </Button>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Competitive value proposition</Label>
+            <Textarea rows={2} value={vp} disabled={locked}
+              onChange={(e) => setVp(e.target.value)}
+              placeholder="1-2 sentences. Why customers pick you over the alternatives." />
+          </div>
+        </div>
+
+        {!locked && (
+          <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Refine & innovate</div>
+            <Textarea rows={2} placeholder="Optional hint — e.g. 'challenge our pricing model', 'serve underserved segment X'"
+              value={innovatePrompt} onChange={(e) => setInnovatePrompt(e.target.value)} />
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={brainstorm} disabled={run.isPending}>
+                <Lightbulb className="mr-1 h-3 w-3" />Brainstorm alternatives
+              </Button>
+              <Button size="sm" variant="outline" onClick={innovate} disabled={run.isPending}>
+                <Rocket className="mr-1 h-3 w-3" />Push further
+              </Button>
+              <Button size="sm" variant="outline" onClick={critiqueRun} disabled={run.isPending}>
+                <ShieldAlert className="mr-1 h-3 w-3" />Red-team critique
+              </Button>
+              {run.isPending && <Loader2 className="ml-1 h-4 w-4 animate-spin self-center text-muted-foreground" />}
+            </div>
+
+            {ideas && ideas.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-muted-foreground">Alternative angles</div>
+                <div className="grid gap-2">
+                  {ideas.map((idea, i) => (
+                    <div key={i} className="rounded-lg border border-white/10 bg-card p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="text-sm font-medium">{idea.title}</div>
+                        <Button size="sm" variant="outline" className="h-7 text-xs"
+                          onClick={() => applyDraft(idea.summary, idea.value_proposition)}>
+                          <CheckCircle2 className="mr-1 h-3 w-3" />Use this
+                        </Button>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">{idea.summary}</p>
+                      {idea.why_it_works && (
+                        <p className="mt-2 rounded-r-md border-l-2 border-status-success/60 bg-status-success/10 px-2 py-1 text-xs leading-snug text-status-success">
+                          <b>Why:</b> {idea.why_it_works}
+                        </p>
+                      )}
+                      {idea.risks && (
+                        <p className="mt-1 rounded-r-md border-l-2 border-status-warning/60 bg-status-warning/10 px-2 py-1 text-xs leading-snug text-status-warning">
+                          <b>Risks:</b> {idea.risks}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {critique && (
+              <div className="rounded-lg border border-white/10 bg-card p-3">
+                <div className="text-xs font-medium text-muted-foreground">Red-team findings</div>
+                <ul className="mt-1 list-disc space-y-1 pl-4 text-xs">
+                  {(critique.weaknesses ?? []).map((w: any, i: number) => (
+                    <li key={i}><b>{w.issue}</b> — <span className="text-foreground/80">{w.evidence}</span></li>
+                  ))}
+                </ul>
+                {critique.suggested_rewrite && (
+                  <div className="mt-2 flex items-start justify-between gap-2 rounded-md bg-background/60 p-2 text-xs">
+                    <div>
+                      <div className="font-medium">Suggested rewrite</div>
+                      <div className="text-muted-foreground">{critique.suggested_rewrite.summary}</div>
+                    </div>
+                    <Button size="sm" variant="outline" className="h-7 text-xs"
+                      onClick={() => applyDraft(critique.suggested_rewrite.summary, critique.suggested_rewrite.value_proposition)}>
+                      Apply
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      <div className="grid gap-3">
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs">Concept summary</Label>
-            <span className={`text-[10px] ${validWords ? "text-status-success" : "text-muted-foreground"}`}>
-              {sumWords} / {WORD_MIN}-{WORD_MAX} words
-            </span>
-          </div>
-          <Textarea rows={4} value={summary} disabled={locked}
-            onChange={(e) => setSummary(e.target.value)}
-            placeholder="50-60 word concept: who it's for, the problem, your offer, your unfair edge." />
-          {!locked && (
-            <Button size="sm" variant="ghost" onClick={draft} disabled={run.isPending} className="h-7 px-2 text-xs">
-              <Sparkles className="mr-1 h-3 w-3" />Regenerate from research
-            </Button>
-          )}
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs">Competitive value proposition</Label>
-          <Textarea rows={2} value={vp} disabled={locked}
-            onChange={(e) => setVp(e.target.value)}
-            placeholder="1-2 sentences. Why customers pick you over the alternatives." />
-        </div>
-      </div>
-
+      {/* ───────── DIVIDER ───────── */}
       {!locked && (
-        <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-3">
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Refine & innovate</div>
-          <Textarea rows={2} placeholder="Optional hint — e.g. 'challenge our pricing model', 'serve underserved segment X'"
-            value={innovatePrompt} onChange={(e) => setInnovatePrompt(e.target.value)} />
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" onClick={brainstorm} disabled={run.isPending}>
-              <Lightbulb className="mr-1 h-3 w-3" />Brainstorm alternatives
-            </Button>
-            <Button size="sm" variant="outline" onClick={innovate} disabled={run.isPending}>
-              <Rocket className="mr-1 h-3 w-3" />Push further
-            </Button>
-            <Button size="sm" variant="outline" onClick={critiqueRun} disabled={run.isPending}>
-              <ShieldAlert className="mr-1 h-3 w-3" />Red-team critique
-            </Button>
-            {run.isPending && <Loader2 className="ml-1 h-4 w-4 animate-spin self-center text-muted-foreground" />}
-          </div>
-
-          {ideas && ideas.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-xs font-medium text-muted-foreground">Alternative angles</div>
-              <div className="grid gap-2">
-                {ideas.map((idea, i) => (
-                  <div key={i} className="rounded-lg border border-white/10 bg-card p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="text-sm font-medium">{idea.title}</div>
-                      <Button size="sm" variant="outline" className="h-7 text-xs"
-                        onClick={() => applyDraft(idea.summary, idea.value_proposition)}>
-                        <CheckCircle2 className="mr-1 h-3 w-3" />Use this
-                      </Button>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">{idea.summary}</p>
-                    {idea.why_it_works && (
-                      <p className="mt-2 rounded-r-md border-l-2 border-status-success/60 bg-status-success/10 px-2 py-1 text-xs leading-snug text-status-success">
-                        <b>Why:</b> {idea.why_it_works}
-                      </p>
-                    )}
-                    {idea.risks && (
-                      <p className="mt-1 rounded-r-md border-l-2 border-status-warning/60 bg-status-warning/10 px-2 py-1 text-xs leading-snug text-status-warning">
-                        <b>Risks:</b> {idea.risks}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {critique && (
-            <div className="rounded-lg border border-white/10 bg-card p-3">
-              <div className="text-xs font-medium text-muted-foreground">Red-team findings</div>
-              <ul className="mt-1 list-disc space-y-1 pl-4 text-xs">
-                {(critique.weaknesses ?? []).map((w: any, i: number) => (
-                  <li key={i}><b>{w.issue}</b> — <span className="text-foreground/80">{w.evidence}</span></li>
-                ))}
-              </ul>
-              {critique.suggested_rewrite && (
-                <div className="mt-2 flex items-start justify-between gap-2 rounded-md bg-background/60 p-2 text-xs">
-                  <div>
-                    <div className="font-medium">Suggested rewrite</div>
-                    <div className="text-muted-foreground">{critique.suggested_rewrite.summary}</div>
-                  </div>
-                  <Button size="sm" variant="outline" className="h-7 text-xs"
-                    onClick={() => applyDraft(critique.suggested_rewrite.summary, critique.suggested_rewrite.value_proposition)}>
-                    Apply
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
+        <div className="flex items-center gap-3 px-2">
+          <div className="h-px flex-1 bg-white/10" />
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Optional deep pass</span>
+          <div className="h-px flex-1 bg-white/10" />
         </div>
       )}
 
+      {/* ───────── STEP 2 · EPIPHANY ENGINE ───────── */}
       {!locked && <EpiphanyPanel snapshot={snapshot} onApplied={applyDraft} onChanged={onChanged} />}
 
-
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
-        <button onClick={() => setShowHistory((v) => !v)} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-          <History className="h-3 w-3" />{iterations.length} iteration{iterations.length === 1 ? "" : "s"}
-        </button>
-        {locked ? (
-          <Button size="sm" variant="outline" onClick={unlock} disabled={run.isPending}>
-            <Unlock className="mr-1 h-3 w-3" />Unlock & revise
-          </Button>
-        ) : (
-          <Button size="sm" onClick={lock} disabled={!canLock || run.isPending}>
-            <Lock className="mr-1 h-3 w-3" />Lock concept
-          </Button>
-        )}
+      {/* ───────── DIVIDER ───────── */}
+      <div className="flex items-center gap-3 px-2">
+        <div className="h-px flex-1 bg-white/10" />
+        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Ready?</span>
+        <div className="h-px flex-1 bg-white/10" />
       </div>
 
-      {showHistory && iterations.length > 0 && (
-        <div className="max-h-60 space-y-1.5 overflow-y-auto rounded-lg border border-white/10 bg-background/40 p-2 text-xs">
-          {iterations.map((it: any) => (
-            <div key={it.id} className="rounded border border-white/5 bg-card p-2">
-              <div className="flex justify-between text-[10px] text-muted-foreground">
-                <span className="font-mono">{it.kind}</span>
-                <span>{new Date(it.created_at).toLocaleString()}</span>
-              </div>
-              {it.output?.summary && (
-                <div className="mt-1 line-clamp-3 text-[11px]">{it.output.summary}</div>
-              )}
-            </div>
-          ))}
+      {/* ───────── LOCK & CONTINUE ───────── */}
+      <div className="rounded-2xl border border-white/10 bg-card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setShowHistory((v) => !v)} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+              <History className="h-3 w-3" />{iterations.length} iteration{iterations.length === 1 ? "" : "s"}
+            </button>
+            <span className={`text-[11px] ${validWords ? "text-status-success" : "text-muted-foreground"}`}>
+              {validWords ? "✓ concept length OK" : `${sumWords}/${WORD_MIN}-${WORD_MAX} words`}
+            </span>
+          </div>
+          {locked ? (
+            <Button size="sm" variant="outline" onClick={unlock} disabled={run.isPending}>
+              <Unlock className="mr-1 h-3 w-3" />Unlock & revise
+            </Button>
+          ) : (
+            <Button size="sm" onClick={lock} disabled={!canLock || run.isPending}>
+              <Lock className="mr-1 h-3 w-3" />Lock concept
+            </Button>
+          )}
         </div>
-      )}
+
+        {showHistory && iterations.length > 0 && (
+          <div className="mt-3 max-h-60 space-y-1.5 overflow-y-auto rounded-lg border border-white/10 bg-background/40 p-2 text-xs">
+            {iterations.map((it: any) => (
+              <div key={it.id} className="rounded border border-white/5 bg-card p-2">
+                <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <span className="font-mono">{it.kind}</span>
+                  <span>{new Date(it.created_at).toLocaleString()}</span>
+                </div>
+                {it.output?.summary && (
+                  <div className="mt-1 line-clamp-3 text-[11px]">{it.output.summary}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
 
 function scoreColor(combined: number) {
   if (combined >= 160) return "bg-status-success/15 text-status-success border-status-success/40";
