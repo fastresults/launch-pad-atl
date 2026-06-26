@@ -120,6 +120,11 @@ Deno.serve(async (req) => {
       extraction_error: extractionError,
     }).eq("id", documentId);
 
+    // New source material → brain is stale. Next AI call will recompute.
+    if (doc.snapshot_id && text) {
+      markSnapshotBrainDirty(admin, doc.snapshot_id).catch(() => {});
+    }
+
     return new Response(JSON.stringify({ ok: true, charCount: text.length, error: extractionError }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
