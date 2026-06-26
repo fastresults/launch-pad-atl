@@ -138,6 +138,9 @@ Deno.serve(async (req) => {
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
+      await admin.from("attendee_deliverables")
+        .update({ hero_image_status: "failed", hero_image_error: `Gateway ${aiRes.status}: ${txt.slice(0, 200)}` })
+        .eq("id", deliverable.id);
       return new Response(JSON.stringify({ error: `Image gateway ${aiRes.status}`, detail: txt.slice(0, 300) }), {
         status: aiRes.status === 429 || aiRes.status === 402 ? aiRes.status : 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -165,25 +168,34 @@ Deno.serve(async (req) => {
       }
     }
     if (!b64) {
+      await admin.from("attendee_deliverables")
+        .update({ hero_image_status: "failed", hero_image_error: "No image returned by model" })
+        .eq("id", deliverable.id);
       return new Response(JSON.stringify({ error: "No image returned by model" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-    const path = nextPath(ownerId, deliverableKey, deliverable.hero_image_path);
+    const path = nextPath(ownerId, deliverableKey, previousPath);
 
     const { error: upErr } = await admin.storage.from(BUCKET).upload(path, bytes, {
       contentType: "image/png",
       upsert: true,
     });
     if (upErr) {
+      await admin.from("attendee_deliverables")
+        .update({ hero_image_status: "failed", hero_image_error: `Upload: ${upErr.message}` })
+        .eq("id", deliverable.id);
       return new Response(JSON.stringify({ error: `Upload failed: ${upErr.message}` }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     await admin
       .from("attendee_deliverables")
-      .update({ hero_image_path: path, hero_image_prompt: prompt })
-      .eq("user_id", ownerId)
-      .eq("deliverable_key", deliverableKey);
+      .update({ hero_image_path: path, hero_image_prompt: prompt, hero_image_status: "ready", hero_image_error: null })
+      .eq("id", deliverable.id);
+
+    if (previousPath && previousPath !== path) {
+      await admin.storage.from(BUCKET).remove([previousPath]).catch(() => {});
+    }
 
     return new Response(JSON.stringify({ ok: true, path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
