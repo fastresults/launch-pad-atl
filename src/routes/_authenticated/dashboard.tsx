@@ -18,6 +18,7 @@ import { RoomClock } from "@/components/dashboard/RoomClock";
 import { AIWorklogPill } from "@/components/dashboard/AIWorklogPill";
 import { HelpFab } from "@/components/dashboard/HelpFab";
 import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
+import { getPublicSiteSettings, DEFAULT_DASHBOARD_NAV_VISIBILITY, type DashboardNavKey } from "@/lib/site-settings.functions";
 
 export default function DashboardLayout() {
   return (
