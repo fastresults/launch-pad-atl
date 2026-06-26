@@ -68,12 +68,10 @@ export default function WelcomePage() {
     setSubmitting(true);
     try {
       await submitMyIntake({
-        data: {
-          startup_type: startupType as any,
-          startup_name: startupName || null,
-          one_line_idea: oneLineIdea,
-          supporting_info: supportingInfo || null,
-        },
+        startup_type: startupType as any,
+        startup_name: startupName || null,
+        one_line_idea: oneLineIdea,
+        supporting_info: supportingInfo || null,
       });
       toast.success("Got it — we'll be in touch.");
       intakeQ.refetch();
