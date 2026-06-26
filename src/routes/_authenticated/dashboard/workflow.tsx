@@ -37,6 +37,26 @@ export default function WorkflowPage() {
   });
 
   const [bulk, setBulk] = useState<{ startCount: number; target: number } | null>(null);
+  const [openDeckSlug, setOpenDeckSlug] = useState<string | null>(null);
+  const [runningCategoryStage, setRunningCategoryStage] = useState<number | null>(null);
+
+  const runCategory = async (stageN: number, keys: string[]) => {
+    if (keys.length === 0) return;
+    setRunningCategoryStage(stageN);
+    try {
+      for (const key of keys) {
+        try {
+          await runMyDeliverable({ data: { key, runUpstream: true } });
+        } catch (e) {
+          toast.error(`${key}: ${e instanceof Error ? e.message : "failed"}`);
+        }
+      }
+      toast.success("Category ready");
+      qc.invalidateQueries({ queryKey: ["my"] });
+    } finally {
+      setRunningCategoryStage(null);
+    }
+  };
 
   const runAll = useMutation({
     mutationFn: () => runMyRemaining(),
