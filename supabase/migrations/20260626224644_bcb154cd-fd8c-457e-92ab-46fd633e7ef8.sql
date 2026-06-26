@@ -1,0 +1,1 @@
+ALTER TABLE public.venture_snapshots ADD COLUMN IF NOT EXISTS snapshot_brain_dirty boolean NOT NULL DEFAULT false;
