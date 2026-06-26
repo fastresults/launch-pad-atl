@@ -4,7 +4,18 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { } from 'react-router-dom';
 import { getMyProfile, upsertMyProfile } from "@/lib/attendee.functions";
 import { syncProfileFromBrief } from "@/lib/brief-sync-profile";
-import { Sparkles } from "lucide-react";
+import { Sparkles, RotateCcw } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
