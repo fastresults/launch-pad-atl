@@ -318,7 +318,8 @@ async function runJob(admin: any, userId: string, runId: string, opts: { key?: s
         }, { onConflict: "user_id,deliverable_key" });
 
         const isTarget = !!opts.key && t.key === opts.key;
-        const content = await generateOne(admin, userId, t, {
+        const content = await generateOne(t, {
+          venture,
           brief: brief ?? null,
           founder: founder ?? null,
           market: market ?? null,
