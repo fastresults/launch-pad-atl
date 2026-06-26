@@ -158,6 +158,11 @@ export default function BriefWizard() {
     if (checkpointBlock.kind === "market") {
       setMode("complete");
       setCheckpointBlock(null);
+      syncProfileFromBrief({ markComplete: true })
+        .then((r) => {
+          if (r.fieldsFilled > 0) toast.success(`Profile updated from your brief — ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} filled.`);
+        })
+        .catch(() => { /* non-blocking */ });
     }
   };
 
