@@ -136,15 +136,7 @@ function BeforeMode({
       </div>
 
       {/* The one next thing */}
-      {briefDone ? (
-        <BriefCompleteCard
-          pitch={pitch}
-          secondary={{ to: "/dashboard/day", label: "What to bring →" }}
-          footnote="You're all set for Saturday. Just show up."
-        />
-      ) : (
-        <BriefStatusCard answered={briefScore} total={briefTotal} />
-      )}
+      <BriefStatusCard answered={briefScore} total={briefTotal} />
 
       <WalkOutPreview />
     </>
