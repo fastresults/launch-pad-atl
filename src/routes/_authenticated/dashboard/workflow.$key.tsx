@@ -3,15 +3,17 @@ import { Link, useParams } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { runMyDeliverable } from "@/lib/userPipeline.functions";
+import { runMyDeliverable, runMyDeliverableAssessment } from "@/lib/userPipeline.functions";
 import { getMyIntake, updateMyIntake } from "@/lib/stageIntake.functions";
 import { WORKFLOW_BY_KEY } from "@/lib/workflow";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { VoiceField } from "@/components/voice/VoiceField";
-import { Loader2 } from "lucide-react";
+import { RewriteFeedbackDialog, type RewriteTarget } from "@/components/hub/RewriteFeedbackDialog";
+import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+
 
 
 type Section = { heading: string; body_markdown: string };
