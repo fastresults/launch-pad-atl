@@ -101,6 +101,38 @@ export default function ProfilePage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const resetProfile = useMutation({
+    mutationFn: async () => {
+      await upsertMyProfile({
+        full_name: null,
+        headline: null,
+        background: null,
+        primary_goal: null,
+        business_name: null,
+        industry: null,
+        stage: null,
+        problem_solved: null,
+        value_prop: null,
+        target_market: null,
+        business_model: null,
+        current_revenue: null,
+        funding_raised: null,
+        monthly_burn: null,
+        runway_months: null,
+        intake_completed_at: null,
+      });
+    },
+    onSuccess: () => {
+      setFounder({ full_name: "", headline: "", background: "", primary_goal: "" });
+      setBusiness({ business_name: "", industry: "", stage: "", problem_solved: "", value_prop: "", target_market: "", business_model: "" });
+      setFinancial({ current_revenue: "", funding_raised: "", monthly_burn: "", runway_months: "" });
+      setAutoSyncTried(true);
+      toast.success("Profile reset — fields are blank.");
+      qc.invalidateQueries({ queryKey: ["my", "profile"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <div className="space-y-10">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -111,13 +143,36 @@ export default function ProfilePage() {
           </p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <Button variant="outline" onClick={() => pullFromBrief.mutate()} disabled={pullFromBrief.isPending}>
-            <Sparkles className="h-4 w-4 mr-2" />
-            {pullFromBrief.isPending ? "Refreshing…" : "Refresh from my brief"}
-          </Button>
-          <p className="text-[11px] text-muted-foreground">Brings this page back in sync with your latest brief.</p>
+          <div className="flex items-center gap-2">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" disabled={resetProfile.isPending}>
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  {resetProfile.isPending ? "Resetting…" : "Reset profile"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset your Profile & Intake?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will blank out every field in your Profile & Intake. You can refresh from your brief anytime to rebuild it.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => resetProfile.mutate()}>Reset profile</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Button variant="outline" onClick={() => pullFromBrief.mutate()} disabled={pullFromBrief.isPending}>
+              <Sparkles className="h-4 w-4 mr-2" />
+              {pullFromBrief.isPending ? "Refreshing…" : "Refresh from my brief"}
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">Reset clears every field. Refresh syncs from your latest brief.</p>
         </div>
       </div>
+
 
 
       <Section title="Founder">
