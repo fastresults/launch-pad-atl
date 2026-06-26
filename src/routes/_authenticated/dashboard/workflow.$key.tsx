@@ -11,8 +11,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { VoiceField } from "@/components/voice/VoiceField";
 import { RewriteFeedbackDialog, type RewriteTarget } from "@/components/hub/RewriteFeedbackDialog";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { RichMarkdown } from "@/components/markdown/RichMarkdown";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 
 
