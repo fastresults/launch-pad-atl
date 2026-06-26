@@ -147,51 +147,82 @@ function Inner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const addFiles = useCallback(async (incoming: File[]) => {
-    if (!incoming.length) return;
-    setFiles((prev) => {
-      const room = MAX_FILES - prev.length;
-      if (room <= 0) {
-        toast.error(`Max ${MAX_FILES} files`);
-        return prev;
-      }
-      const accepted = incoming.slice(0, room).filter((f) => {
-        if (f.size > MAX_BYTES) {
-          toast.error(`${f.name} is over 20 MB`);
-          return false;
-        }
-        return true;
-      });
-      const queued: DroppedFile[] = accepted.map((f) => ({
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        name: f.name,
-        size: f.size,
-        status: "reading",
-      }));
-      // Kick off extraction outside of setState
-      queued.forEach((entry, i) => {
-        const file = accepted[i];
-        extractFileText(file).then(({ text, error }) => {
-          setFiles((curr) =>
-            curr.map((x) =>
-              x.id === entry.id
-                ? error
-                  ? { ...x, status: "error", error }
-                  : { ...x, status: "ready", text }
-                : x,
-            ),
-          );
-        });
-      });
-      return [...prev, ...queued];
-    });
+  // Files the user uploaded earlier (e.g. during the Startup Brief) that
+  // aren't attached to any venture yet — we offer to reuse them here.
+  const [reusable, setReusable] = useState<VentureSource[]>([]);
+  const [reuseSelected, setReuseSelected] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    listVentureSources({ orphansOnly: true })
+      .then((rows) => setReusable(rows))
+      .catch(() => {});
   }, []);
 
-  const removeFile = (id: string) => setFiles((prev) => prev.filter((f) => f.id !== id));
+  const addFiles = useCallback(async (incoming: File[]) => {
+    if (!incoming.length) return;
+    const room = MAX_FILES - files.length;
+    if (room <= 0) {
+      toast.error(`Max ${MAX_FILES} files`);
+      return;
+    }
+    const accepted = incoming.slice(0, room).filter((f) => {
+      if (f.size > MAX_BYTES) {
+        toast.error(`${f.name} is over 20 MB`);
+        return false;
+      }
+      return true;
+    });
+    const queued: DroppedFile[] = accepted.map((f) => ({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: f.name,
+      size: f.size,
+      status: "uploading",
+    }));
+    setFiles((prev) => [...prev, ...queued]);
+
+    queued.forEach(async (entry, i) => {
+      const file = accepted[i];
+      try {
+        const row = await uploadVentureSource({ file, kind: "venture_source", waitForExtraction: true });
+        const text = (row.extracted_text ?? "").trim();
+        setFiles((curr) =>
+          curr.map((x) =>
+            x.id === entry.id
+              ? row.extraction_error || !text
+                ? { ...x, status: "error", documentId: row.id, error: row.extraction_error ?? "Couldn't read file" }
+                : { ...x, status: "ready", documentId: row.id, text }
+              : x,
+          ),
+        );
+      } catch (e) {
+        setFiles((curr) =>
+          curr.map((x) =>
+            x.id === entry.id
+              ? { ...x, status: "error", error: e instanceof Error ? e.message : "Upload failed" }
+              : x,
+          ),
+        );
+      }
+    });
+  }, [files.length]);
+
+  const removeFile = (id: string) => {
+    const target = files.find((f) => f.id === id);
+    setFiles((prev) => prev.filter((f) => f.id !== id));
+    if (target?.documentId) {
+      deleteVentureSource(target.documentId).catch(() => {});
+    }
+  };
   const removeUrl = (id: string) => setScrapedUrls((prev) => prev.filter((u) => u.id !== id));
 
+  const reusedIds = Object.entries(reuseSelected).filter(([, v]) => v).map(([k]) => k);
+  const reusedFiles = reusable.filter((r) => reusedIds.includes(r.id));
   const readyFiles = files.filter((f) => f.status === "ready" && (f.text ?? "").trim());
   const readyUrls = scrapedUrls.filter((u) => u.status === "ready" && (u.text ?? "").trim());
+  // Combined view used to drive the synthesize + createSnapshot calls.
+  const combinedDocs = [
+    ...reusedFiles.map((r) => ({ filename: r.original_name, text: r.extracted_text ?? "", id: r.id })),
+    ...readyFiles.map((f) => ({ filename: f.name, text: f.text ?? "", id: f.documentId })),
+  ];
 
   const addUrl = async () => {
     const raw = urlInput.trim();
