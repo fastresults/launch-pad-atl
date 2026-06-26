@@ -85,6 +85,7 @@ export function MarketBlock({ onDone }: Props) {
           market_note: note.trim() || null,
         },
       });
+      import("@/lib/brief-sync-profile").then((m) => m.syncProfileFromBrief().catch(() => {}));
       onDone();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed");
