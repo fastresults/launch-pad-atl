@@ -25,14 +25,14 @@ export default function DeliverablesPage() {
 
       {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
 
-      {data && data.deliverables.length === 0 && (
+      {data && (Array.isArray(data) ? data : (data.deliverables ?? [])).length === 0 && (
         <div className="rounded-2xl border border-white/10 bg-card p-10 text-center text-sm text-muted-foreground">
           No deliverables published yet. Check back after intake is complete.
         </div>
       )}
 
       <div className="space-y-6">
-        {(data?.deliverables ?? []).map((d) => {
+        {(Array.isArray(data) ? data : (data?.deliverables ?? [])).map((d) => {
           const c = (d.content_current ?? {}) as Content;
           const type = d.deliverable_types as { label?: string; description?: string | null; stage_label?: string | null } | null;
           return (
