@@ -32,7 +32,7 @@ export default function WorkflowPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Bulk run failed"),
   });
 
-  const briefScore = data?.brief?.completeness_score ?? 0;
+  const briefScore = countAnsweredBriefFields(data?.brief);
   const briefReady = briefScore >= 6;
 
   return (
