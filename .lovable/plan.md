@@ -1,43 +1,54 @@
-## Problem
+## What happened
 
-In `deliverable_types`, only ~11 of 34 rows have `user_can_trigger = true` and `auto_runnable = true`. The other 23 are flagged `false`, which is why they render as locked "Coming soon" cards even though the banner says "All caught up." That mismatch is the bug.
+Both features still exist — they're just on the wrong page for the current Workflow flow.
 
-## Fix
+- **Rewrite with Feedback** lives in `src/components/hub/RewriteFeedbackDialog.tsx` and is wired into the Founders Hub document viewer at `/dashboard/hub/:snapshotId` (`hub.$snapshotId.tsx` line 863).
+- **Deep Assessment (McKinsey-grade)** lives in `src/components/hub/DocumentViewer.tsx` (line 708, "Run deep assessment"), backed by the `venture-generate-assessment` edge function and the `deep_assessment*` columns on `venture_documents`.
 
-### 1. Database — unlock all 34 deliverables
+The Workflow page you're using (`/dashboard/workflow` → `/dashboard/workflow/:key`, file `src/routes/_authenticated/dashboard/workflow.$key.tsx`) is a thinner viewer that reads from `attendee_deliverables` via `runMyDeliverable`. Its only action is a plain `Regenerate` button (line 100). No feedback gateway, no deep-assessment trigger — that's why it feels like both features disappeared.
 
-Single migration that flips every active row:
+## Plan: restore both on the Workflow detail page
 
+### 1. Rewrite-with-Feedback gateway on `Regenerate`
+
+In `workflow.$key.tsx`:
+- Import `RewriteFeedbackDialog`.
+- Replace the direct `run.mutate()` call on the Regenerate button (only when a deliverable already exists) with opening the dialog.
+- On dialog submit, pass the feedback into `runMyDeliverable` via a new `feedback` field.
+- First-time Generate (no prior deliverable) skips the dialog and runs immediately — same as Hub behavior.
+
+Server side:
+- Extend `runMyDeliverable` in `src/lib/userPipeline.functions.ts` to accept `{ key, runUpstream, feedback }`.
+- Thread `feedback` into the deliverable-generation edge function used by the workflow pipeline (mirroring how `venture-generate-document` already ingests `rewrite_feedback`). One small prompt block: "Founder rewrite guidance (highest priority): …".
+
+### 2. Deep Assessment trigger in the Workflow viewer
+
+In `workflow.$key.tsx`, below the rendered article:
+- Add a "Run deep assessment" panel (same UX as `DocumentViewer.tsx` lines ~700–760): button → loading → rendered markdown when complete, with quality score and generated-at timestamp.
+- Reuse the existing `venture-generate-assessment` edge function. Because that function targets `venture_documents`, we add a thin server helper (or a new edge function `attendee-generate-assessment`) that runs the same McKinsey-grade prompt against the Workflow's `attendee_deliverables` row and stores the result on that row.
+
+Schema change (one migration):
 ```sql
-UPDATE public.deliverable_types
-   SET user_can_trigger = true,
-       auto_runnable    = true
- WHERE active = true;
+ALTER TABLE public.attendee_deliverables
+  ADD COLUMN IF NOT EXISTS deep_assessment text,
+  ADD COLUMN IF NOT EXISTS deep_assessment_status text,
+  ADD COLUMN IF NOT EXISTS deep_assessment_quality_score int,
+  ADD COLUMN IF NOT EXISTS deep_assessment_generated_at timestamptz;
 ```
+No new RLS — existing row-owner policies cover the new columns.
 
-No schema change, no RLS change. The existing `depends_on_keys` graph stays intact, so order/sequencing during a "Run remaining" pass is preserved — items still wait for their upstream deliverables to finish, they just no longer sit behind a hard `Coming soon` gate.
+### 3. Carry assessment into exports
 
-### 2. UI — drop the "Coming soon" treatment
+Workflow detail currently has no Copy/Markdown/DOCX/PDF export (that lives only in `DocumentViewer`). Out of scope for this restoration — call it out and offer to port the export bar separately if you want parity with the Hub viewer.
 
-In `src/routes/_authenticated/dashboard/workflow.tsx` (and the admin mirror at `src/routes/_authenticated/_admin/admin.attendees.$userId.workflow.tsx`):
+### 4. Hub viewer
 
-- Remove the `comingSoon` branch (lines ~210, 230, 245). Every card now shows either Generate / Regenerate, with the existing "Waiting on upstream" pill when `deps_met` is false but the user has not yet generated the upstream items.
-- Keep the Generate button enabled even when `deps_met` is false — clicking it triggers our bulk runner, which already resolves dependencies in order.
+No changes — both features are already wired there. We're only restoring them on the Workflow path.
 
-### 3. Auto-kick generation for the locked ones
+## Files touched
 
-When the workflow page loads and detects deliverables that are now unlocked but never generated, call the existing `forceRunMyRemaining` loop once (silently, with the same sticky progress card we already built) so the user sees the remaining 23 deliverables start generating instead of having to press anything.
-
-A one-time `localStorage` flag (`workflow.autokick.v1`) prevents it from re-triggering on every visit.
-
-### 4. Banner copy
-
-Replace the misleading "All caught up" pill with a live count:
-
-- `X of 34 ready` when some are pending
-- `All 34 ready` only when every deliverable has a generated document
-
-## Out of scope
-
-- No changes to `depends_on_keys`, RLS, edge functions, or the bulk-generation engine.
-- Bonus Brand / Marketing / Social tracks are included in the unlock since they're part of the 34.
+- `src/routes/_authenticated/dashboard/workflow.$key.tsx` — open RewriteFeedbackDialog on Regenerate; add Deep Assessment panel.
+- `src/lib/userPipeline.functions.ts` — accept and forward `feedback`; add `runAttendeeAssessment`.
+- `supabase/functions/<workflow-generate>/index.ts` — accept `feedback` and inject as guidance block.
+- New edge function `attendee-generate-assessment` (or extend an existing one) — McKinsey-grade prompt against `attendee_deliverables`.
+- One migration adding the four `deep_assessment*` columns to `attendee_deliverables`.
