@@ -1,6 +1,7 @@
 import { FRAMEWORK_STAGES } from "@/lib/framework-deliverables";
 import type { Slide } from "./SlideDeck";
 import { foundationSlides } from "./slides/foundation";
+import { strategySlides } from "./slides/strategy";
 
 export type StageDeck = {
   slug: string;
@@ -18,7 +19,8 @@ const STAGE_SLUGS = FRAMEWORK_STAGES.map((s) => slugify(s.name));
 
 const DECK_SLIDES: Record<string, Slide[]> = {
   foundation: foundationSlides,
-  // strategy, operations, finance, governance, brand, marketing, social-and-content — coming next.
+  strategy: strategySlides,
+  // operations, finance, governance, brand, marketing, social-and-content — coming next.
 };
 
 export const STAGE_DECKS: StageDeck[] = FRAMEWORK_STAGES.map((s, i) => {
