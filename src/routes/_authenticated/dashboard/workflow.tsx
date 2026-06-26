@@ -107,13 +107,46 @@ export default function WorkflowPage() {
         </div>
         <Button
           onClick={() => runAll.mutate()}
-          disabled={!briefReady || runAll.isPending}
+          disabled={!briefReady || bulkActive || remainingCount === 0}
           aria-label="Generate every deliverable that's still missing"
           title="Generate every deliverable that's still missing"
         >
-          {runAll.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Running…</> : <><Play className="mr-2 h-4 w-4" />Run remaining</>}
+          {bulkActive ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating…</>
+          ) : remainingCount === 0 ? (
+            <><CheckCircle2 className="mr-2 h-4 w-4" />All caught up</>
+          ) : (
+            <><Play className="mr-2 h-4 w-4" />Run remaining ({remainingCount})</>
+          )}
         </Button>
       </div>
+
+      {bulkActive && (
+        <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <div className="flex items-center gap-2 font-medium">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              {bulk
+                ? `Building your kit — ${bulkDone} of ${bulkTotal} new deliverables ready`
+                : "Queuing your remaining deliverables…"}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {generatedCount} / {triggerable.length} total
+            </div>
+          </div>
+          <Progress value={bulk ? bulkPct : 8} className="mt-3 h-2" />
+          <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+            <span>
+              {currentlyRunning?.options?.key
+                ? `Working on: ${currentlyRunning.options.key}`
+                : activeRuns > 0
+                ? `${activeRuns} run${activeRuns === 1 ? "" : "s"} in flight`
+                : "Warming up your co-founder…"}
+            </span>
+            <span>This page updates live — you can keep working elsewhere.</span>
+          </div>
+        </div>
+      )}
 
       {!briefReady && (
         <div className="rounded-2xl border border-status-warning/30 bg-status-warning/5 p-4 text-sm">
