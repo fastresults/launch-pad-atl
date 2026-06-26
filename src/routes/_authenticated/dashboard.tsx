@@ -141,34 +141,34 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
                 const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
                 return (
                   <SidebarMenuItem key={item.to}>
-                    <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
-                      <Link to={item.to} className={`flex items-center gap-3 ${item.dimmed ? "opacity-50" : ""}`}>
-                        <item.icon className="h-4 w-4" />
-                        <span className="flex-1">{item.label}</span>
-                        {!collapsed && (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <button
-                                type="button"
-                                aria-label={`What is ${item.label}?`}
-                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                                className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                              >
-                                <Info className="h-3.5 w-3.5" />
-                              </button>
-                            </PopoverTrigger>
-                            <PopoverContent
-                              side="right"
-                              align="start"
-                              className="max-w-[260px] text-xs leading-snug"
-                              onClick={(e) => e.stopPropagation()}
+                    <div className="relative flex items-center">
+                      <SidebarMenuButton asChild isActive={active} tooltip={item.label} className="pr-9">
+                        <Link to={item.to} className={`flex items-center gap-3 ${item.dimmed ? "opacity-50" : ""}`}>
+                          <item.icon className="h-4 w-4" />
+                          <span className="flex-1">{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                      {!collapsed && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              aria-label={`What is ${item.label}?`}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 z-10"
                             >
-                              {item.tooltip}
-                            </PopoverContent>
-                          </Popover>
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
+                              <Info className="h-3.5 w-3.5" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            side="right"
+                            align="start"
+                            className="max-w-[260px] text-xs leading-snug z-50"
+                          >
+                            {item.tooltip}
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                    </div>
                   </SidebarMenuItem>
                 );
               })}
