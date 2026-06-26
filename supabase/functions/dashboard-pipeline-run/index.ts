@@ -6,6 +6,14 @@
 // Invoked directly by src/lib/userPipeline.functions.ts — no polling worker.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  compactPreamble,
+  distillDeps,
+  loadVentureContext,
+  type VentureContext,
+} from "../_shared/venture-context.ts";
+import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
+import { MODELS, modelForTier } from "../_shared/models.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,8 +43,6 @@ type Content = {
   sections: { heading: string; body_markdown: string }[];
   action_items: string[];
 };
-
-const FALLBACK_MODEL = "google/gemini-2.5-flash";
 
 function safeJson(text: string): Content | null {
   // Strip ``` fences
