@@ -86,6 +86,49 @@ export default function WorkflowDetail() {
   const assessmentStatus = deliverable?.deep_assessment_status ?? null;
   const assessmentText = deliverable?.deep_assessment ?? null;
   const assessmentScore = deliverable?.deep_assessment_quality_score ?? null;
+  const heroPath = deliverable?.hero_image_path ?? null;
+
+  // Hero image — signed URL + lazy generate
+  const [heroUrl, setHeroUrl] = useState<string | null>(null);
+  const [heroLoading, setHeroLoading] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!heroPath) { setHeroUrl(null); return; }
+      const { data } = await supabase.storage.from("venture-doc-images").createSignedUrl(heroPath, 3600);
+      if (alive && data?.signedUrl) setHeroUrl(data.signedUrl);
+    })();
+    return () => { alive = false; };
+  }, [heroPath]);
+
+  const generateHero = async (force = false) => {
+    if (!hasContent || !key) return;
+    setHeroLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("attendee-deliverable-image", {
+        body: { deliverableKey: key, force },
+      });
+      if (error) throw error;
+      if (data?.path) {
+        const { data: signed } = await supabase.storage.from("venture-doc-images").createSignedUrl(data.path, 3600);
+        if (signed?.signedUrl) setHeroUrl(signed.signedUrl);
+        refetch();
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Image generation failed");
+    } finally {
+      setHeroLoading(false);
+    }
+  };
+
+  // Auto-kick once when content exists but no hero yet
+  useEffect(() => {
+    if (hasContent && !heroPath && !heroLoading) {
+      generateHero(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasContent, heroPath]);
 
 
   return (
