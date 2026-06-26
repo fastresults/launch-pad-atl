@@ -92,9 +92,19 @@ function Inner() {
 
   return (
     <div className="space-y-6">
-      <Link to="/dashboard/hub" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Back to your startups
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link to="/dashboard/hub" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4" /> Back to your startups
+        </Link>
+        {snapshotId && (
+          <Link
+            to={`/dashboard/documents?venture=${snapshotId}`}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            View this venture's files →
+          </Link>
+        )}
+      </div>
 
       {step < 4 && <StepIndicator current={step} />}
 
