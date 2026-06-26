@@ -1,6 +1,11 @@
 // On-demand McKinsey-grade deep assessment for a Workflow (attendee_deliverables) row.
-// Mirrors `venture-generate-assessment` but reads from / writes to attendee_deliverables.
+// Mirrors `venture-generate-assessment` and now reuses the same shared
+// venture-context + snapshot brain when the user has a primary snapshot, so
+// the Workflow assessment quality matches the Hub assessment quality.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { compactPreamble, loadVentureContext } from "../_shared/venture-context.ts";
+import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
+import { MODELS } from "../_shared/models.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
