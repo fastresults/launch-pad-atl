@@ -1004,6 +1004,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         totalDocs={total}
         onUnlocked={() => bulk.mutate({ category: null })}
       />
+      <DeckDialog slug={openDeckSlug} onOpenChange={(o) => { if (!o) setOpenDeckSlug(null); }} />
     </div>
   );
 }
