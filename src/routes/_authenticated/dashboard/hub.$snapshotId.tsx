@@ -900,7 +900,8 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             })}
           </div>
         </section>
-      ))}
+        );
+      })}
 
       {/* Bonus tools - deferred */}
       <details open={completeCount === total && total > 0} className="rounded-2xl border border-white/10 bg-card/40 p-4">
