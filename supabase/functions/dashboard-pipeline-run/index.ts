@@ -75,16 +75,46 @@ function safeJson(text: string): Content | null {
 }
 
 async function generateOne(
-  admin: any,
-  userId: string,
   type: DType,
-  ctx: { brief: any; founder: any; market: any; upstream: Record<string, Content>; feedback?: string; tags?: string[]; previous?: Content | null },
+  ctx: {
+    venture: VentureContext | null;
+    brief: any;
+    founder: any;
+    market: any;
+    upstream: Record<string, Content>;
+    feedback?: string;
+    tags?: string[];
+    previous?: Content | null;
+  },
 ): Promise<Content> {
-  const model = type.default_model || FALLBACK_MODEL;
+  // Honor deliverable_types.default_model with safe tier mapping.
+  const model = modelForTier(type.default_model, MODELS.flash);
 
-  const upstreamText = Object.entries(ctx.upstream)
-    .map(([k, c]) => `### ${k}\n${c.summary}\n${c.sections.map((s) => `- ${s.heading}: ${s.body_markdown.slice(0, 280)}`).join("\n")}`)
-    .join("\n\n");
+  // Upstream dependencies: distilled, not full markdown dump.
+  const upstreamEntries = Object.entries(ctx.upstream);
+  const upstreamDistilled = upstreamEntries.length
+    ? distillDeps(
+        upstreamEntries.map(([k, c]) => ({
+          document_type: k,
+          content:
+            (c.summary ? c.summary + "\n\n" : "") +
+            c.sections.map((s) => `## ${s.heading}\n${s.body_markdown}`).join("\n\n"),
+        })),
+      )
+    : "";
+
+  // Preferred path: venture context + snapshot brain (shared with Hub).
+  let contextBlock: string;
+  if (ctx.venture) {
+    const brainBlock = ctx.venture.brain
+      ? `## Snapshot brain (authoritative compressed venture summary)\n\`\`\`json\n${JSON.stringify(ctx.venture.brain, null, 2)}\n\`\`\``
+      : "";
+    contextBlock = [compactPreamble(ctx.venture), brainBlock].filter(Boolean).join("\n\n");
+  } else {
+    // Fallback for users without a venture snapshot — keep current behavior
+    // but tighter: brief only (no raw founder/market dumps).
+    contextBlock = `## Founder's Startup Brief\n${JSON.stringify(ctx.brief ?? {}, null, 2)}`;
+  }
 
   const system = `You are a senior startup coach writing a single founder-ready deliverable.
 Output STRICT JSON (no markdown fences) with this shape:
@@ -111,16 +141,12 @@ Aim for 3-6 sections, 100-220 words each. Use plain English, concrete numbers, n
     type.description ? `Purpose: ${type.description}` : "",
     type.stage_label ? `Stage: ${type.stage_label}` : "",
     "",
-    "## Founder's Startup Brief",
-    JSON.stringify(ctx.brief ?? {}, null, 2),
-    ctx.founder ? `\n## Founder profile\n${JSON.stringify(ctx.founder, null, 2)}` : "",
-    ctx.market ? `\n## Market profile\n${JSON.stringify(ctx.market, null, 2)}` : "",
-    upstreamText ? `\n## Upstream deliverables (stay consistent)\n${upstreamText}` : "",
+    contextBlock,
+    upstreamDistilled ? `\n## Upstream deliverables (stay consistent — distilled)\n${upstreamDistilled}` : "",
     rewriteBlock ? `\n${rewriteBlock}` : "",
     "",
     "Return ONLY the JSON object.",
   ].filter(Boolean).join("\n");
-
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
