@@ -23,6 +23,39 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  getCanonicalFounderContext,
+  provenanceLabel,
+  type CanonicalFounderContext,
+} from "@/lib/canonical-context";
+
+// Common intake field ids → canonical context lookups. Anything not listed
+// falls through to the field's schema default. Keep this conservative so we
+// don't accidentally overwrite legitimately different per-deliverable inputs.
+const CANONICAL_FIELD_MAP: Record<string, (c: CanonicalFounderContext) => { v: any; src: string }> = {
+  company_name: (c) => ({ v: c.concept.company_name, src: c.provenance.company_name ?? "" }),
+  business_name: (c) => ({ v: c.concept.company_name, src: c.provenance.company_name ?? "" }),
+  industry: (c) => ({ v: c.market.industry, src: c.provenance.industry ?? "" }),
+  stage: (c) => ({ v: c.market.stage, src: c.provenance.stage ?? "" }),
+  customer_type: (c) => ({ v: c.market.customer_type, src: c.provenance.customer_type ?? "" }),
+  target_customer: (c) => ({ v: c.concept.target_customer, src: c.provenance.target_customer ?? "" }),
+  target_market: (c) => ({ v: c.concept.target_customer, src: c.provenance.target_customer ?? "" }),
+  one_line_pitch: (c) => ({ v: c.concept.one_line_pitch, src: c.provenance.one_line_pitch ?? "" }),
+  problem_statement: (c) => ({ v: c.concept.problem_statement, src: c.provenance.problem_statement ?? "" }),
+  offer_description: (c) => ({ v: c.concept.offer_description, src: c.provenance.offer_description ?? "" }),
+  business_model: (c) => ({ v: c.concept.business_model, src: c.provenance.business_model ?? "" }),
+  pricing_idea: (c) => ({ v: c.concept.pricing_idea, src: c.provenance.pricing_idea ?? "" }),
+  unique_insight: (c) => ({ v: c.concept.unique_insight, src: c.provenance.unique_insight ?? "" }),
+  twelve_month_vision: (c) => ({ v: c.concept.twelve_month_vision, src: c.provenance.twelve_month_vision ?? "" }),
+  founder_name: (c) => ({ v: c.identity.full_name, src: c.provenance.full_name ?? "" }),
+  full_name: (c) => ({ v: c.identity.full_name, src: c.provenance.full_name ?? "" }),
+  email: (c) => ({ v: c.identity.email, src: c.provenance.email ?? "" }),
+  phone: (c) => ({ v: c.identity.phone, src: c.provenance.phone ?? "" }),
+  current_revenue: (c) => ({ v: c.financials.current_revenue ?? "", src: c.financials.current_revenue != null ? "profile" : "" }),
+  monthly_burn: (c) => ({ v: c.financials.monthly_burn ?? "", src: c.financials.monthly_burn != null ? "profile" : "" }),
+  runway_months: (c) => ({ v: c.financials.runway_months ?? "", src: c.financials.runway_months != null ? "profile" : "" }),
+  funding_raised: (c) => ({ v: c.financials.funding_raised ?? "", src: c.financials.funding_raised != null ? "profile" : "" }),
+};
 
 /**
  * Field shapes supported by intake_schema:
@@ -61,6 +94,7 @@ function isFilled(v: any) {
 export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
   const fields: IntakeField[] = target?.schema?.fields ?? [];
   const [values, setValues] = useState<Record<string, any>>({});
+  const [prefillSources, setPrefillSources] = useState<Record<string, string>>({});
   const [recordingFor, setRecordingFor] = useState<string | null>(null);
   const [transcribingFor, setTranscribingFor] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -69,19 +103,43 @@ export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<number | null>(null);
 
-  // Seed values when target changes
+  // Seed values when target changes — pulls from canonical context for any
+  // field id that maps to a known fact, so founders don't re-type identity,
+  // industry, financials, etc.
   useEffect(() => {
     if (!target) {
       stopTracks();
       setValues({});
+      setPrefillSources({});
       return;
     }
-    const seed: Record<string, any> = {};
-    for (const f of fields) {
-      const fromInitial = target.initial?.[f.id];
-      seed[f.id] = fromInitial !== undefined && fromInitial !== null ? fromInitial : defaultForField(f);
-    }
-    setValues(seed);
+    let cancelled = false;
+    (async () => {
+      const ctx = await getCanonicalFounderContext().catch(() => null);
+      if (cancelled) return;
+      const seed: Record<string, any> = {};
+      const sources: Record<string, string> = {};
+      for (const f of fields) {
+        const fromInitial = target.initial?.[f.id];
+        if (fromInitial !== undefined && fromInitial !== null && String(fromInitial).length > 0) {
+          seed[f.id] = fromInitial;
+          continue;
+        }
+        const mapper = ctx ? CANONICAL_FIELD_MAP[f.id] : null;
+        if (mapper) {
+          const { v, src } = mapper(ctx!);
+          if (v !== "" && v !== null && v !== undefined) {
+            seed[f.id] = v;
+            if (src) sources[f.id] = src;
+            continue;
+          }
+        }
+        seed[f.id] = defaultForField(f);
+      }
+      setValues(seed);
+      setPrefillSources(sources);
+    })();
+    return () => { cancelled = true; };
   }, [target?.type, target?.initial]);
 
   useEffect(() => () => stopTracks(), []);
@@ -213,6 +271,11 @@ export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
         </DialogHeader>
 
         <div className="space-y-5">
+          {Object.keys(prefillSources).length > 0 && (
+            <div className="rounded-md border border-status-success/30 bg-status-success/10 px-3 py-2 text-xs text-status-success">
+              Prefilled {Object.keys(prefillSources).length} field{Object.keys(prefillSources).length === 1 ? "" : "s"} from what you've already shared. Review, edit anything that's off, then generate.
+            </div>
+          )}
           {fields.map((f) => {
             const v = values[f.id];
             const isRec = recordingFor === f.id;
@@ -222,6 +285,11 @@ export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
                 <Label className="flex items-center gap-2 text-sm">
                   <span>{f.label}</span>
                   {f.required && <span className="text-status-danger">*</span>}
+                  {prefillSources[f.id] && (
+                    <span className="text-[10px] font-normal text-status-success">
+                      · {provenanceLabel(prefillSources[f.id])}
+                    </span>
+                  )}
                 </Label>
                 {f.help && <p className="text-xs text-muted-foreground">{f.help}</p>}
 
