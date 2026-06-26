@@ -243,14 +243,10 @@ Target ~600-900 words.${QUALITY_FOOTER}`;
     }
   }
 
-  // Fire-and-forget hero image (Nano Banana Pro). Best-effort.
-  try {
-    fetch(`${SUPABASE_URL}/functions/v1/venture-document-image`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ snapshotId, documentType }),
-    }).catch(() => {});
-  } catch { /* ignore */ }
+  // Hero image generation is intentionally NOT triggered here.
+  // It is now lazy — DocumentViewer fires `venture-document-image` the first
+  // time a founder opens a document. This saves ~$0.56 + ~30 s per doc in
+  // bulk runs, since most docs are never opened during the build phase.
 }
 
 // Group document types into dependency layers (Kahn's algorithm).
