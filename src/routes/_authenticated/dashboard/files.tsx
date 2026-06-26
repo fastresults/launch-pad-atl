@@ -4,7 +4,7 @@ import { FileText, Image, Sparkles } from "lucide-react";
 
 export default function FilesIndex() {
   const sections = [
-    { to: "/dashboard/deliverables", label: "Built by your AI co-founder", desc: "The 35 founder-ready drops your AI cranks out — pitch, plan, strategy, the whole vibe.", icon: Sparkles },
+    { to: "/dashboard/deliverables", label: "Built with your co-founder", desc: "The 35 founder-ready drops your co-founder helps you craft — pitch, plan, strategy, the whole vibe.", icon: Sparkles },
     { to: "/dashboard/documents", label: "Your docs vault", desc: "Stuff you upload + deliverables you saved from the Hub. Receipts on lock.", icon: FileText },
     { to: "/dashboard/media", label: "Brand & visuals", desc: "Logos, palettes, photos, content drops — your startup's whole aesthetic in one place.", icon: Image },
   ] as const;
@@ -13,7 +13,8 @@ export default function FilesIndex() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">My files</h1>
-        <p className="mt-2 text-muted-foreground">Your startup's home base — everything your AI built and everything you brought to the table.</p>
+        <p className="mt-2 text-muted-foreground">Your startup's home base — everything you've built together and everything you brought to the table.</p>
+
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {sections.map((s) => (
