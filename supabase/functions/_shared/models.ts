@@ -9,7 +9,7 @@ export const MODELS = {
   /** Cheap, structured-output friendly; use for brain/summarization/extraction. */
   flashLite: "google/gemini-3.1-flash-lite",
   /** Highest-rigor reasoning — strategic decks, deep assessments, financial models. */
-  pro: "google/gemini-3.1-pro-preview",
+  pro: "google/gemini-3-pro-preview",
   /** Image generation (standard quality, Nano Banana). */
   flashImage: "google/gemini-3.1-flash-image",
   /** Image generation (Pro / Nano Banana Pro) — for hero artwork. */
