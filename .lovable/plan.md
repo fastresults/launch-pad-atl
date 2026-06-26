@@ -1,37 +1,15 @@
-## Admin Toggle for Dashboard Navigation
+## Add "Reset profile" button next to "Refresh from my brief"
 
-Give admins a single, intuitive control panel to show/hide each item in the user dashboard sidebar (Today, Workshop day, Startup brief, Deliverables, Ventures, My files, Founder profile).
+### UI change (`src/routes/_authenticated/dashboard/profile.tsx`)
+- Add a secondary `Button` (outline, with `RotateCcw` icon) labeled **"Reset profile"** placed to the left of the existing "Refresh from my brief" button in the header.
+- Helper caption beneath: "Clears every field so you can start fresh."
+- Clicking opens a shadcn `AlertDialog` confirming: *"This will blank out every field in your Profile & Intake. You can refresh from your brief anytime to rebuild it. Continue?"* with Cancel / Reset profile actions.
 
-### 1. Storage (site_settings)
-Add a single row in `site_settings` with key `dashboard_nav_visibility` whose value is a JSON map:
-```
-{ today: true, workshop: true, brief: true, deliverables: true, hub: true, files: true, profile: true }
-```
-- Defaults: all `true`.
-- Read access: `authenticated` (so the sidebar can read it).
-- Write access: admins only (via existing `has_role` policy pattern already used by `site_settings`).
+### Behavior
+- On confirm, call `upsertMyProfile` with all founder/business/financial fields set to `null` plus `intake_completed_at: null`.
+- Locally reset the three `useState` objects (`founder`, `business`, `financial`) to empty strings so the UI clears immediately.
+- Invalidate the `["my","profile"]` query and toast "Profile reset — fields are blank."
+- Also set `autoSyncTried = true` (already true after mount) to prevent the auto-sync effect from refilling fields right after reset.
 
-No schema migration needed beyond inserting/upserting this row — `site_settings` already exists.
-
-### 2. Admin UI — `src/routes/_authenticated/admin/settings.tsx`
-Add a new card: **"Dashboard navigation"**.
-- Renders the 7 nav items in the same order/icons as the live sidebar (mirroring the screenshot) so it's visually 1:1 with what the user sees.
-- Each row: icon + label + short helper text + shadcn `Switch`.
-- Sticky "Save changes" footer + per-toggle optimistic save with toast feedback.
-- "Reset to defaults" button (all on).
-- Guardrail: at least one item must stay enabled (prevents locking users out of the dashboard entirely). If admin tries to disable the last one, switch is blocked with a tooltip.
-
-### 3. Sidebar consumption — `src/routes/_authenticated/dashboard.tsx` (and/or `AppSidebar`)
-- Fetch `dashboard_nav_visibility` once on mount via a small `useDashboardNavVisibility()` hook (React Query, cached).
-- Filter the nav items array by the visibility map before rendering.
-- Admins themselves always see all items (with a small "Hidden for users" badge next to disabled ones) so they can still navigate and preview while configuring.
-- If a user lands directly on a hidden route via URL, redirect to `/dashboard` (the Today page or first-enabled item).
-
-### 4. Keys & mapping
-Stable keys used everywhere (DB, hook, sidebar filter):
-`today`, `workshop`, `brief`, `deliverables`, `hub`, `files`, `profile`.
-
-### Technical notes
-- Reuse existing `site_settings` get/set helpers (already used by the bulk-unlock toggle and business-ideas scroller toggle).
-- Hook invalidates on save so the sidebar updates live without reload.
-- No changes to route definitions — purely a presentation/guard layer.
+### Scope
+- Frontend-only. No DB migration, no schema change, no edge function. Existing `upsertMyProfile` already accepts arbitrary partial updates.
