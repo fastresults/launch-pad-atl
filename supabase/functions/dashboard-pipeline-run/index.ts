@@ -241,13 +241,36 @@ async function runJob(admin: any, userId: string, runId: string, opts: { key?: s
   await admin.from("ai_pipeline_runs").update({ status: "running", started_at: new Date().toISOString() }).eq("id", runId);
 
   try {
-    const [{ data: allTypes }, { data: brief }, { data: founder }, { data: market }, { data: existing }] = await Promise.all([
+    const [{ data: allTypes }, { data: brief }, { data: founder }, { data: market }, { data: existing }, { data: primarySnap }] = await Promise.all([
       admin.from("deliverable_types").select("key,label,description,stage_label,depends_on_keys,default_model,user_can_trigger,auto_runnable,sort_order").eq("active", true).order("sort_order"),
       admin.from("attendee_business_brief").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_founder_profile").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_market_profile").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_deliverables").select("deliverable_key, content_current").eq("user_id", userId),
+      admin
+        .from("venture_snapshots")
+        .select("id")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
+
+    // Load shared venture context + brain once per job (not per doc). This is
+    // the same context surface the Hub generators use, so Workflow output now
+    // aligns with Hub output instead of reasoning off raw blobs.
+    let venture: VentureContext | null = null;
+    if (primarySnap?.id) {
+      try {
+        venture = await loadVentureContext(admin, primarySnap.id);
+        if (!venture.brain) {
+          venture.brain = await ensureSnapshotBrain(admin, primarySnap.id);
+        }
+      } catch (e) {
+        console.warn("loadVentureContext failed, falling back to raw brief", e);
+        venture = null;
+      }
+    }
 
     const typesByKey = new Map<string, DType>((allTypes ?? []).map((t: any) => [t.key, t]));
     const upstream: Record<string, Content> = {};
