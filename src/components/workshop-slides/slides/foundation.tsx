@@ -2,6 +2,7 @@ import { FRAMEWORK_STAGES, FOUNDATION_FIRST_REASONS } from "@/lib/framework-deli
 import { ArrowRight, CheckCircle2, AlertTriangle } from "lucide-react";
 import { SlideLayout } from "../SlideLayout";
 import { DeliverableSlide } from "../DeliverableSlide";
+import { SlotText, SlotImage } from "../slots";
 import type { Slide } from "../SlideDeck";
 
 const STAGE = FRAMEWORK_STAGES[0]; // Foundation
@@ -19,13 +20,28 @@ export const foundationSlides: Slide[] = [
     render: () => (
       <SlideLayout stageKicker={KICKER} pageLabel={pl(1, 10)} variant="dark">
         <div className="max-w-[1400px]">
-          <div className="slide-kicker font-semibold text-white/60 mb-10">
-            Stage {STAGE.number} of {String(TOTAL_STAGES).padStart(2, "0")}
-          </div>
-          <h1 className="slide-title-lg font-semibold tracking-tight">Foundation.</h1>
-          <p className="slide-subtitle mt-10 text-white/80 max-w-[1200px]">
-            The bedrock every defensible startup is built on. Get this right and everything downstream gets easier, sharper, faster.
-          </p>
+          <SlotText
+            slideId="cover"
+            field="kicker"
+            defaultValue={`Stage ${STAGE.number} of ${String(TOTAL_STAGES).padStart(2, "0")}`}
+            as="div"
+            className="slide-kicker font-semibold text-white/60 mb-10"
+          />
+          <SlotText
+            slideId="cover"
+            field="title"
+            defaultValue="Foundation."
+            as="h1"
+            className="slide-title-lg font-semibold tracking-tight"
+          />
+          <SlotText
+            slideId="cover"
+            field="subtitle"
+            defaultValue="The bedrock every defensible startup is built on. Get this right and everything downstream gets easier, sharper, faster."
+            as="p"
+            className="slide-subtitle mt-10 text-white/80 max-w-[1200px]"
+          />
+          <SlotImage slideId="cover" field="image" className="mt-12 max-h-[280px] rounded-2xl" />
         </div>
       </SlideLayout>
     ),
@@ -38,34 +54,75 @@ export const foundationSlides: Slide[] = [
     render: () => (
       <SlideLayout stageKicker={KICKER} pageLabel={pl(2, 10)}>
         <div className="max-w-[1500px]">
-          <div className="slide-kicker font-semibold text-primary mb-8">Why this stage exists</div>
+          <SlotText
+            slideId="stakes"
+            field="kicker"
+            defaultValue="Why this stage exists"
+            as="div"
+            className="slide-kicker font-semibold text-primary mb-8"
+          />
           <h2 className="slide-title font-semibold tracking-tight">
-            Everything downstream — your brand, your site, your pitch, your pricing —{" "}
-            <span className="text-primary">inherits whatever you decide here.</span>
+            <SlotText
+              slideId="stakes"
+              field="title"
+              defaultValue="Everything downstream — your brand, your site, your pitch, your pricing — inherits whatever you decide here."
+            />
           </h2>
-          <p className="slide-body-lg mt-10 text-muted-foreground max-w-[1300px]">
-            Skip Foundation and you'll pay for it later in redos, refunds, and ad spend that doesn't convert.
-          </p>
+          <SlotText
+            slideId="stakes"
+            field="body"
+            defaultValue="Skip Foundation and you'll pay for it later in redos, refunds, and ad spend that doesn't convert."
+            as="p"
+            className="slide-body-lg mt-10 text-muted-foreground max-w-[1300px]"
+          />
+          <SlotImage slideId="stakes" field="image" className="mt-10 max-h-[280px] rounded-2xl" />
         </div>
       </SlideLayout>
     ),
   },
 
-  // 3. What breaks without it (3 cards from FOUNDATION_FIRST_REASONS)
+  // 3. What breaks without it
   {
     id: "what-breaks",
     title: "What breaks without it",
     render: () => (
       <SlideLayout stageKicker={KICKER} pageLabel={pl(3, 10)}>
         <div>
-          <div className="slide-kicker font-semibold text-primary mb-6">What breaks without it</div>
-          <h2 className="slide-title font-semibold tracking-tight mb-14">Three expensive mistakes Foundation prevents.</h2>
+          <SlotText
+            slideId="what-breaks"
+            field="kicker"
+            defaultValue="What breaks without it"
+            as="div"
+            className="slide-kicker font-semibold text-primary mb-6"
+          />
+          <SlotText
+            slideId="what-breaks"
+            field="title"
+            defaultValue="Three expensive mistakes Foundation prevents."
+            as="h2"
+            className="slide-title font-semibold tracking-tight mb-14"
+          />
           <div className="grid grid-cols-3 gap-8">
-            {FOUNDATION_FIRST_REASONS.map((r) => (
-              <div key={r.title} className="rounded-3xl border-2 border-destructive/20 bg-destructive/5 p-10 min-h-[420px] flex flex-col">
+            {FOUNDATION_FIRST_REASONS.map((r, i) => (
+              <div
+                key={r.title}
+                className="rounded-3xl border-2 border-destructive/20 bg-destructive/5 p-10 min-h-[420px] flex flex-col"
+              >
                 <AlertTriangle className="text-destructive mb-6" style={{ width: 56, height: 56 }} />
-                <h3 className="slide-body-lg font-semibold tracking-tight mb-5">{r.title}</h3>
-                <p className="slide-body text-muted-foreground">{r.body}</p>
+                <SlotText
+                  slideId="what-breaks"
+                  field={`card.${i}.title`}
+                  defaultValue={r.title}
+                  as="h3"
+                  className="slide-body-lg font-semibold tracking-tight mb-5"
+                />
+                <SlotText
+                  slideId="what-breaks"
+                  field={`card.${i}.body`}
+                  defaultValue={r.body}
+                  as="p"
+                  className="slide-body text-muted-foreground"
+                />
               </div>
             ))}
           </div>
@@ -78,29 +135,53 @@ export const foundationSlides: Slide[] = [
   {
     id: "what-good",
     title: "What good looks like",
-    render: () => (
-      <SlideLayout stageKicker={KICKER} pageLabel={pl(4, 10)}>
-        <div className="max-w-[1500px]">
-          <div className="slide-kicker font-semibold text-primary mb-6">What good looks like</div>
-          <h2 className="slide-title font-semibold tracking-tight mb-12">
-            A founder who can answer four questions in plain language.
-          </h2>
-          <div className="grid grid-cols-2 gap-6">
-            {[
-              "Who exactly do you serve?",
-              "What painful problem do you solve?",
-              "Why now — and why you?",
-              "Why pick you over every alternative?",
-            ].map((q) => (
-              <div key={q} className="flex items-start gap-5 rounded-2xl bg-primary/5 border border-primary/15 p-8">
-                <CheckCircle2 className="text-primary shrink-0 mt-1" style={{ width: 44, height: 44 }} />
-                <span className="slide-body-lg font-medium">{q}</span>
-              </div>
-            ))}
+    render: () => {
+      const defaults = [
+        "Who exactly do you serve?",
+        "What painful problem do you solve?",
+        "Why now — and why you?",
+        "Why pick you over every alternative?",
+      ];
+      return (
+        <SlideLayout stageKicker={KICKER} pageLabel={pl(4, 10)}>
+          <div className="max-w-[1500px]">
+            <SlotText
+              slideId="what-good"
+              field="kicker"
+              defaultValue="What good looks like"
+              as="div"
+              className="slide-kicker font-semibold text-primary mb-6"
+            />
+            <SlotText
+              slideId="what-good"
+              field="title"
+              defaultValue="A founder who can answer four questions in plain language."
+              as="h2"
+              className="slide-title font-semibold tracking-tight mb-12"
+            />
+            <div className="grid grid-cols-2 gap-6">
+              {defaults.map((q, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-5 rounded-2xl bg-primary/5 border border-primary/15 p-8"
+                >
+                  <CheckCircle2
+                    className="text-primary shrink-0 mt-1"
+                    style={{ width: 44, height: 44 }}
+                  />
+                  <SlotText
+                    slideId="what-good"
+                    field={`q.${i}`}
+                    defaultValue={q}
+                    className="slide-body-lg font-medium"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </SlideLayout>
-    ),
+        </SlideLayout>
+      );
+    },
   },
 
   // 5. The four deliverables
@@ -110,10 +191,20 @@ export const foundationSlides: Slide[] = [
     render: () => (
       <SlideLayout stageKicker={KICKER} pageLabel={pl(5, 10)}>
         <div>
-          <div className="slide-kicker font-semibold text-primary mb-6">What you walk out with</div>
-          <h2 className="slide-title font-semibold tracking-tight mb-12">
-            Four founder-ready deliverables — built for your startup.
-          </h2>
+          <SlotText
+            slideId="deliverables-overview"
+            field="kicker"
+            defaultValue="What you walk out with"
+            as="div"
+            className="slide-kicker font-semibold text-primary mb-6"
+          />
+          <SlotText
+            slideId="deliverables-overview"
+            field="title"
+            defaultValue="Four founder-ready deliverables — built for your startup."
+            as="h2"
+            className="slide-title font-semibold tracking-tight mb-12"
+          />
           <div className="grid grid-cols-2 gap-6">
             {STAGE.items.map((item, i) => {
               const Icon = item.icon;
@@ -126,7 +217,13 @@ export const foundationSlides: Slide[] = [
                     <div className="slide-caption text-muted-foreground font-medium">
                       {String(i + 1).padStart(2, "0")}
                     </div>
-                    <div className="slide-body-lg font-semibold tracking-tight">{item.title}</div>
+                    <SlotText
+                      slideId="deliverables-overview"
+                      field={`item.${i}.title`}
+                      defaultValue={item.title}
+                      as="div"
+                      className="slide-body-lg font-semibold tracking-tight"
+                    />
                   </div>
                 </div>
               );
@@ -161,15 +258,31 @@ export const foundationSlides: Slide[] = [
       return (
         <SlideLayout stageKicker={KICKER} pageLabel={pl(10, 10)} variant="dark">
           <div className="max-w-[1500px]">
-            <div className="slide-kicker font-semibold text-white/60 mb-10">Recap · what's next</div>
-            <h2 className="slide-title font-semibold tracking-tight">
-              Foundation locks the truth.
-            </h2>
+            <SlotText
+              slideId="recap"
+              field="kicker"
+              defaultValue="Recap · what's next"
+              as="div"
+              className="slide-kicker font-semibold text-white/60 mb-10"
+            />
+            <SlotText
+              slideId="recap"
+              field="title"
+              defaultValue="Foundation locks the truth."
+              as="h2"
+              className="slide-title font-semibold tracking-tight"
+            />
             <p className="slide-subtitle mt-10 text-white/80 max-w-[1300px]">
-              Next up — <span className="text-primary font-semibold">{next.number} {next.name}</span>: {next.intro.toLowerCase()}
+              Next up — <span className="text-primary font-semibold">{next.number} {next.name}</span>:{" "}
+              {next.intro.toLowerCase()}
             </p>
             <div className="mt-16 inline-flex items-center gap-4 px-8 py-5 rounded-2xl bg-primary text-primary-foreground slide-body-lg font-semibold">
-              Open the {next.name} deck <ArrowRight style={{ width: 36, height: 36 }} />
+              <SlotText
+                slideId="recap"
+                field="cta"
+                defaultValue={`Open the ${next.name} deck`}
+              />
+              <ArrowRight style={{ width: 36, height: 36 }} />
             </div>
           </div>
         </SlideLayout>
