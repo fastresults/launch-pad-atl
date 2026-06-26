@@ -19,8 +19,13 @@ import {
   Sparkles,
   RefreshCw,
   Loader2,
+  Bookmark,
+  BookmarkCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
