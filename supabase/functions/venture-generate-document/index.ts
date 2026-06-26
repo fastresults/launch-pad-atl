@@ -16,7 +16,15 @@ import {
   loadVentureContext,
   pickBrainSlice,
 } from "../_shared/venture-context.ts";
-import { computeSnapshotBrain } from "../_shared/snapshot-brain.ts";
+import { ensureSnapshotBrain, markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
+import { trackTone } from "../_shared/track-tones.ts";
+import {
+  BASE_SYSTEM_PROMPT,
+  modelForTier,
+  OUTPUT_FOOTER,
+  specializedPrompt,
+  stripCitations,
+} from "../_shared/deliverable-prompts.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
