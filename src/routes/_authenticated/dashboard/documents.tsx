@@ -102,6 +102,28 @@ export default function DocumentsPage() {
     window.open(url, "_blank");
   };
 
+  const onView = async (d: any) => {
+    // Rich viewer for saved deliverables that still have a source link.
+    if (d.kind === "deliverable" && d.source_venture_document_id) {
+      setOpeningId(d.id);
+      try {
+        const vdoc = await getVentureDocumentById({ id: d.source_venture_document_id });
+        if (vdoc) {
+          setRichDoc(vdoc);
+          return;
+        }
+        toast.message("Original source not found", {
+          description: "Showing the saved file instead.",
+        });
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Couldn't load the source document");
+      } finally {
+        setOpeningId(null);
+      }
+    }
+    setPreviewDoc(d);
+  };
+
   return (
     <div className="space-y-8">
       <div>
