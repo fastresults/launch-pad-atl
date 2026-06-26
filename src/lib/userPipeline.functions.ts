@@ -95,14 +95,35 @@ export async function runMyRemaining() {
   return { queued: true };
 }
 
+export async function forceRunMyRemaining() {
+  let totalDone = 0;
+  let totalFailed = 0;
+  let staleRunsReset = 0;
+  let remaining = 1;
+  let runs = 0;
+
+  while (remaining > 0 && runs < 12) {
+    const result = await invokeRun({ bulk: true, forceRun: true, maxDocs: 3 });
+    runs += 1;
+    totalDone += Number(result?.done ?? 0);
+    totalFailed += Number(result?.failed ?? 0);
+    staleRunsReset += Number(result?.staleRunsReset ?? 0);
+    remaining = Number(result?.remaining ?? 0);
+    if (Number(result?.attempted ?? 0) === 0) break;
+  }
+
+  return { ok: true, done: totalDone, failed: totalFailed, remaining, staleRunsReset, runs };
+}
+
 export async function adminRunForUser(input: any) {
   const { userId, key, runUpstream, bulk } = unwrap<{
     userId: string;
     key?: string;
     runUpstream?: boolean;
     bulk?: boolean;
+    forceRun?: boolean;
   }>(input);
-  await invokeRun({ userId, key, runUpstream: !!runUpstream, bulk: !!bulk });
+  await invokeRun({ userId, key, runUpstream: !!runUpstream, bulk: !!bulk, forceRun: !!forceRun, maxDocs: forceRun ? 3 : undefined });
   return { total: 1, failed: 0 };
 }
 

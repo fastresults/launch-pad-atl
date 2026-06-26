@@ -155,7 +155,45 @@ function layers(types: DType[]): DType[][] {
   return out;
 }
 
-async function runJob(admin: any, userId: string, runId: string, opts: { key?: string; bulk?: boolean; runUpstream?: boolean }) {
+async function markStaleRunsFailed(admin: any, userId: string, currentRunId: string) {
+  const now = Date.now();
+  const queuedCutoff = now - 2 * 60 * 1000;
+  const runningCutoff = now - 15 * 60 * 1000;
+
+  const { data: active } = await admin
+    .from("ai_pipeline_runs")
+    .select("id,status,created_at,started_at")
+    .eq("user_id", userId)
+    .in("status", ["queued", "running"])
+    .neq("id", currentRunId)
+    .limit(100);
+
+  const staleIds = (active ?? [])
+    .filter((r: any) => {
+      const createdAt = r.created_at ? new Date(r.created_at).getTime() : 0;
+      const startedAt = r.started_at ? new Date(r.started_at).getTime() : 0;
+      if (r.status === "queued") return createdAt > 0 && createdAt < queuedCutoff;
+      if (r.status === "running") return startedAt > 0 && startedAt < runningCutoff;
+      return false;
+    })
+    .map((r: any) => r.id);
+
+  if (!staleIds.length) return 0;
+
+  await admin
+    .from("ai_pipeline_runs")
+    .update({
+      status: "failed",
+      finished_at: new Date().toISOString(),
+      error: "Restarted by Force run remaining after the previous generation appeared stuck.",
+    })
+    .in("id", staleIds);
+
+  console.log(`Force run marked ${staleIds.length} stale pipeline run(s) failed for ${userId}`);
+  return staleIds.length;
+}
+
+async function runJob(admin: any, userId: string, runId: string, opts: { key?: string; bulk?: boolean; runUpstream?: boolean; forceRun?: boolean; maxDocs?: number }) {
   await admin.from("ai_pipeline_runs").update({ status: "running", started_at: new Date().toISOString() }).eq("id", runId);
 
   try {
@@ -200,7 +238,9 @@ async function runJob(admin: any, userId: string, runId: string, opts: { key?: s
       throw new Error("Must pass { key } or { bulk: true }");
     }
 
-    const ordered = layers(targets).flat();
+    const orderedAll = layers(targets).flat();
+    const maxDocs = Number.isFinite(opts.maxDocs) && opts.maxDocs! > 0 ? Math.floor(opts.maxDocs!) : null;
+    const ordered = maxDocs ? orderedAll.slice(0, maxDocs) : orderedAll;
     let done = 0, failed = 0;
     for (const t of ordered) {
       try {
@@ -233,11 +273,15 @@ async function runJob(admin: any, userId: string, runId: string, opts: { key?: s
       }
     }
 
+    const remaining = Math.max(orderedAll.length - done, 0);
+
     await admin.from("ai_pipeline_runs").update({
-      status: failed > 0 && done === 0 ? "failed" : "completed",
+      status: failed > 0 && done === 0 ? "failed" : remaining > 0 ? "partial" : "completed",
       finished_at: new Date().toISOString(),
       error: failed > 0 ? `${failed} of ${ordered.length} failed` : null,
     }).eq("id", runId);
+
+    return { total: orderedAll.length, attempted: ordered.length, done, failed, remaining };
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     await admin.from("ai_pipeline_runs").update({
@@ -264,7 +308,13 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const targetUserId = body.userId ?? callerId;
-    const opts = { key: body.key as string | undefined, bulk: !!body.bulk, runUpstream: !!body.runUpstream };
+    const opts = {
+      key: body.key as string | undefined,
+      bulk: !!body.bulk,
+      runUpstream: !!body.runUpstream,
+      forceRun: !!body.forceRun,
+      maxDocs: typeof body.maxDocs === "number" ? Math.max(1, Math.min(5, Math.floor(body.maxDocs))) : undefined,
+    };
 
     // If targeting another user, require admin
     if (targetUserId !== callerId) {
@@ -282,6 +332,12 @@ Deno.serve(async (req) => {
       options: opts as any,
     }).select("id").single();
     if (runErr) throw new Error(runErr.message);
+
+    if (opts.forceRun) {
+      const staleRunsReset = await markStaleRunsFailed(admin, targetUserId, run.id);
+      const result = await runJob(admin, targetUserId, run.id, opts);
+      return new Response(JSON.stringify({ ok: true, runId: run.id, staleRunsReset, ...result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // Run in background so the HTTP response returns immediately.
     // @ts-ignore EdgeRuntime is provided by Supabase Edge Functions runtime

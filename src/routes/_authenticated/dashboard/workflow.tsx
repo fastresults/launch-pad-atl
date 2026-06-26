@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getMyWorkflow, runMyDeliverable, runMyRemaining, getMyRecentRuns } from "@/lib/userPipeline.functions";
+import { forceRunMyRemaining, getMyWorkflow, runMyDeliverable, runMyRemaining, getMyRecentRuns } from "@/lib/userPipeline.functions";
 import { countAnsweredBriefFields } from "@/lib/brief-progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +43,16 @@ export default function WorkflowPage() {
       qc.invalidateQueries({ queryKey: ["my"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Bulk run failed"),
+  });
+
+  const forceRun = useMutation({
+    mutationFn: () => forceRunMyRemaining(),
+    onSuccess: (r: any) => {
+      const made = r?.done ?? r?.attempted ?? 0;
+      toast.success(made > 0 ? `Force run restarted — ${made} deliverables advanced` : "Force run restarted generation");
+      qc.invalidateQueries({ queryKey: ["my"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Force run failed"),
   });
 
   const briefScore = countAnsweredBriefFields(data?.brief);
@@ -91,7 +101,15 @@ export default function WorkflowPage() {
   }
   const stages = Array.from(byStage.entries()).sort((a, b) => a[0] - b[0]);
   const totalCategories = stages.length;
-  const bulkActive = !!bulk || runAll.isPending || activeRuns > 0;
+  const now = Date.now();
+  const staleRuns = (recent ?? []).filter((r: any) => {
+    const createdAt = r.created_at ? new Date(r.created_at).getTime() : 0;
+    const startedAt = r.started_at ? new Date(r.started_at).getTime() : 0;
+    return (r.status === "queued" && createdAt > 0 && now - createdAt > 2 * 60 * 1000)
+      || (r.status === "running" && startedAt > 0 && now - startedAt > 15 * 60 * 1000);
+  });
+  const hasStuckRuns = staleRuns.length > 0;
+  const bulkActive = !!bulk || runAll.isPending || forceRun.isPending || activeRuns > 0;
   const currentlyRunning = (recent ?? []).find((r: any) => r.status === "running") as any;
 
   return (
@@ -105,20 +123,37 @@ export default function WorkflowPage() {
               : "Your full deliverables package, generated from your Startup Brief and built in order so each piece feeds the next."}
           </p>
         </div>
-        <Button
-          onClick={() => runAll.mutate()}
-          disabled={!briefReady || bulkActive || remainingCount === 0}
-          aria-label="Generate every deliverable that's still missing"
-          title="Generate every deliverable that's still missing"
-        >
-          {bulkActive ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating…</>
-          ) : remainingCount === 0 ? (
-            <><CheckCircle2 className="mr-2 h-4 w-4" />All caught up</>
-          ) : (
-            <><Play className="mr-2 h-4 w-4" />Run remaining ({remainingCount})</>
+        <div className="flex flex-wrap gap-2">
+          {hasStuckRuns && remainingCount > 0 && (
+            <Button
+              onClick={() => forceRun.mutate()}
+              disabled={!briefReady || forceRun.isPending}
+              aria-label="Force restart stuck generation"
+              title="Restart only the generation work that appears stuck"
+              variant="secondary"
+            >
+              {forceRun.isPending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Force running…</>
+              ) : (
+                <><Sparkles className="mr-2 h-4 w-4" />Force run remaining</>
+              )}
+            </Button>
           )}
-        </Button>
+          <Button
+            onClick={() => runAll.mutate()}
+            disabled={!briefReady || bulkActive || remainingCount === 0}
+            aria-label="Generate every deliverable that's still missing"
+            title="Generate every deliverable that's still missing"
+          >
+            {bulkActive ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating…</>
+            ) : remainingCount === 0 ? (
+              <><CheckCircle2 className="mr-2 h-4 w-4" />All caught up</>
+            ) : (
+              <><Play className="mr-2 h-4 w-4" />Run remaining ({remainingCount})</>
+            )}
+          </Button>
+        </div>
       </div>
 
       {bulkActive && (
@@ -137,7 +172,9 @@ export default function WorkflowPage() {
           <Progress value={bulk ? bulkPct : 8} className="mt-3 h-2" />
           <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
             <span>
-              {currentlyRunning?.options?.key
+              {hasStuckRuns
+                ? "Generation looks stuck — use Force run remaining to restart only unfinished work."
+                : currentlyRunning?.options?.key
                 ? `Working on: ${currentlyRunning.options.key}`
                 : activeRuns > 0
                 ? `${activeRuns} run${activeRuns === 1 ? "" : "s"} in flight`
