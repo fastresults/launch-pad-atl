@@ -203,6 +203,19 @@ export default function DocumentsPage() {
                     {Math.round((d.size_bytes ?? 0) / 1024)} KB
                   </td>
                   <td className="px-4 py-3 space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onView(d)}
+                      disabled={openingId === d.id}
+                    >
+                      {openingId === d.id ? (
+                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                      ) : (
+                        <Eye className="mr-1 h-3 w-3" />
+                      )}
+                      View
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => onDownload(d.storage_path)}>
                       Download
                     </Button>
