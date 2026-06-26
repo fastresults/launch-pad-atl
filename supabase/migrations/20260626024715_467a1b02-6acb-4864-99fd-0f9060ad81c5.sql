@@ -1,0 +1,1 @@
+UPDATE public.deliverable_types SET user_can_trigger = true, auto_runnable = true WHERE active = true;
