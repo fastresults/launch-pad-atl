@@ -760,12 +760,56 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       {/* Document list */}
       <div className="space-y-1">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your documents</h3>
-        <p className="text-xs text-muted-foreground">Read each one as it's ready, or generate them one at a time.</p>
+        <p className="text-xs text-muted-foreground">Sections unlock in order. Use the per-section button to generate a whole section at once, or hit Generate on any single document.</p>
       </div>
 
-      {categories.map(([cat, items]) => (
+      {/* Category stepper */}
+      {categoryProgress.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {categoryProgress.map((c, i) => {
+            const active = !jobRunning && nextCategory?.cat === c.cat;
+            const tone = c.complete
+              ? "border-status-success/40 bg-status-success/10 text-status-success"
+              : active
+                ? "border-primary/50 bg-primary/10 text-foreground"
+                : "border-white/10 text-muted-foreground";
+            return (
+              <span key={c.cat} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${tone}`}>
+                <span className="font-medium">{i + 1}. {c.cat}</span>
+                <span className="opacity-70">{c.done}/{c.total}</span>
+                {c.complete && <CheckCircle2 className="h-3 w-3" />}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {categories.map(([cat, items]) => {
+        const catDone = items.filter((t: any) => completedKeys.has(t.type)).length;
+        const catTotal = items.length;
+        const catComplete = catDone === catTotal;
+        const catGenerating = jobRunning && bulk.variables?.category === cat;
+        return (
         <section key={cat} className="space-y-3">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">{cat}</h4>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
+              {cat} <span className="ml-1 normal-case text-muted-foreground/60">· {catDone}/{catTotal}</span>
+            </h4>
+            <Button
+              size="sm"
+              variant={catComplete ? "ghost" : "outline"}
+              disabled={bulk.isPending || jobRunning}
+              onClick={() => bulk.mutate({ category: cat })}
+            >
+              {catGenerating ? (
+                <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
+              ) : catComplete ? (
+                <><RefreshCw className="mr-1 h-3 w-3" />Regenerate this section</>
+              ) : (
+                <><Sparkles className="mr-1 h-3 w-3" />Generate this section</>
+              )}
+            </Button>
+          </div>
           <div className="grid gap-3 md:grid-cols-2">
             {items.map((t) => {
               const d = docByType.get(t.type);
