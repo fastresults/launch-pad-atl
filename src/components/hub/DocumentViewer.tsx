@@ -414,6 +414,7 @@ export function DocumentViewer({
   const autoFiredRef = useRef<string | null>(null);
   useEffect(() => {
     if (!open) return;
+    if (!autoGenerateHero) return;
     if (heroPath || heroLoading) return;
     if (!doc?.snapshot_id || !doc?.document_type) return;
     if (!doc?.content) return;
@@ -424,7 +425,7 @@ export function DocumentViewer({
     autoFiredRef.current = key;
     generateHero(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, doc?.snapshot_id, doc?.document_type, doc?.content, heroPath, doc?.hero_image_status]);
+  }, [open, doc?.snapshot_id, doc?.document_type, doc?.content, heroPath, doc?.hero_image_status, autoGenerateHero]);
 
   const generateHero = async (force = false) => {
     if (!doc?.snapshot_id || !doc?.document_type) return;
