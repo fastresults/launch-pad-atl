@@ -118,6 +118,26 @@ export default function WorkflowPage() {
   }
   const stages = Array.from(byStage.entries()).sort((a, b) => a[0] - b[0]);
   const totalCategories = stages.length;
+
+  // Compute deck unlock state: a stage's deck unlocks only after every prior
+  // (non-bonus) stage has all its triggerable items generated.
+  const deckState = new Map<number, { slug: string; available: boolean; unlocked: boolean; prevLabel?: string }>();
+  {
+    let allPriorGenerated = true;
+    let prevLabel: string | undefined;
+    for (const [n, group] of stages) {
+      const slug = slugify(group.label);
+      const deck = STAGE_DECKS.find((d) => d.slug === slug);
+      const available = !!deck?.available;
+      deckState.set(n, { slug, available, unlocked: allPriorGenerated, prevLabel });
+      if (!group.bonus) {
+        const stageTriggerable = group.items.filter((i) => i.user_can_trigger !== false);
+        const stageDone = stageTriggerable.length > 0 && stageTriggerable.every((i) => i.generated);
+        allPriorGenerated = allPriorGenerated && stageDone;
+        prevLabel = group.label;
+      }
+    }
+  }
   const now = Date.now();
   const staleRuns = (recent ?? []).filter((r: any) => {
     const createdAt = r.created_at ? new Date(r.created_at).getTime() : 0;
