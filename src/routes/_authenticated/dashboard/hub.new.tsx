@@ -12,7 +12,7 @@ import { TRACKS, TRACK_BY_KEY, pickSeedForTrack, type TrackKey } from "@/lib/tra
 import { INDUSTRIES } from "@/lib/industries";
 import { createSnapshot } from "@/lib/foundersHub.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Upload, FileText, X, Wand2, MapPin, CheckCircle2, Link2, Globe } from "lucide-react";
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
