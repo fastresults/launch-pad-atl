@@ -74,7 +74,13 @@ export default function WorkflowPage() {
         return (
           <section key={stage.n} className="space-y-3">
             <div>
-              <div className="text-xs uppercase tracking-wide text-muted-foreground">Stage {stage.n}</div>
+      {STAGES.filter((s) => s.n >= 1).map((stage) => {
+        const items = (data?.items ?? []).filter((i) => i.stage_n === stage.n);
+        if (!items.length) return null;
+        return (
+          <section key={stage.n} className="space-y-3">
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Category {stage.n}</div>
               <h2 className="text-xl font-semibold">{stage.label}</h2>
               <p className="text-sm text-muted-foreground">{stage.description}</p>
             </div>
