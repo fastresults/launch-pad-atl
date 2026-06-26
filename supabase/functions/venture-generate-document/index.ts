@@ -170,6 +170,9 @@ export async function generateOne(
     writeBackIntake(supabase, ctx.userId, intakeAnswers).catch((e) =>
       console.warn("intake writeback failed", e),
     );
+    // Intake → canonical → brain. Mark dirty so the NEXT generation step
+    // recomputes the brain with these new facts.
+    markSnapshotBrainDirty(supabase, snapshotId).catch(() => {});
   }
 
   // Mark as generating (preserve any intake answers we resolved).
