@@ -84,6 +84,22 @@ export default function WorkflowPage() {
     }
   }, [bulk, generatedCount, activeRuns, runAll.isIdle, runAll.isPending]);
 
+  // One-time auto-kick: after the big unlock, automatically start generating
+  // any deliverables that were previously gated as "Coming soon".
+  useEffect(() => {
+    if (!briefReady || runAll.isPending || forceRun.isPending || bulk) return;
+    if (remainingCount === 0) return;
+    try {
+      const KEY = "workflow.autokick.v1";
+      if (typeof window === "undefined") return;
+      if (window.localStorage.getItem(KEY)) return;
+      window.localStorage.setItem(KEY, String(Date.now()));
+      runAll.mutate();
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [briefReady, remainingCount]);
+
+
   const bulkDone = bulk ? generatedCount - bulk.startCount : 0;
   const bulkTotal = bulk ? bulk.target - bulk.startCount : 0;
   const bulkPct = bulk && bulkTotal > 0 ? Math.min(100, Math.round((bulkDone / bulkTotal) * 100)) : 0;
