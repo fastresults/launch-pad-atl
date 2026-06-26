@@ -282,19 +282,31 @@ export const foundationSlides: Slide[] = [
   },
 
   // 6-9. One slide per deliverable
-  ...STAGE.items.map((item, i) => ({
-    id: `deliv-${i}`,
-    title: item.title,
-    render: () => (
-      <DeliverableSlide
-        stageKicker={KICKER}
-        pageLabel={pl(6 + i, 10)}
-        index={i + 1}
-        total={TOTAL_DELIVS}
-        deliverable={item}
-      />
-    ),
-  })),
+  ...STAGE.items.map((item, i) => {
+    const delivImages = [
+      { src: "/decks/foundation/06-deliv-1.jpg", alt: "Tailor measuring a founder for a bespoke jacket" },
+      { src: "/decks/foundation/07-deliv-2.jpg", alt: "Gardener transplanting a young sapling into rich soil" },
+      { src: "/decks/foundation/08-deliv-3.jpg", alt: "Lighthouse keeper aiming a beam at one small boat" },
+      { src: "/decks/foundation/09-deliv-4.jpg", alt: "Chess player placing one piece on an empty board" },
+    ];
+    const art = delivImages[i];
+    return {
+      id: `deliv-${i}`,
+      title: item.title,
+      render: () => (
+        <DeliverableSlide
+          stageKicker={KICKER}
+          pageLabel={pl(6 + i, 10)}
+          index={i + 1}
+          total={TOTAL_DELIVS}
+          deliverable={item}
+          slideId={`deliv-${i}`}
+          imageSrc={art?.src}
+          imageAlt={art?.alt}
+        />
+      ),
+    };
+  }),
 
   // 10. Recap + what's next
   {
@@ -304,32 +316,43 @@ export const foundationSlides: Slide[] = [
       const next = FRAMEWORK_STAGES[1];
       return (
         <SlideLayout stageKicker={KICKER} pageLabel={pl(10, 10)} variant="dark">
-          <div className="max-w-[1500px]">
-            <SlotText
-              slideId="recap"
-              field="kicker"
-              defaultValue="Recap · what's next"
-              as="div"
-              className="slide-kicker font-semibold text-white/60 mb-10"
-            />
-            <SlotText
-              slideId="recap"
-              field="title"
-              defaultValue="Foundation locks the truth."
-              as="h2"
-              className="slide-title font-semibold tracking-tight"
-            />
-            <p className="slide-subtitle mt-10 text-white/80 max-w-[1300px]">
-              Next up — <span className="text-primary font-semibold">{next.number} {next.name}</span>:{" "}
-              {next.intro.toLowerCase()}
-            </p>
-            <div className="mt-16 inline-flex items-center gap-4 px-8 py-5 rounded-2xl bg-primary text-primary-foreground slide-body-lg font-semibold">
+          <div className="grid grid-cols-12 gap-10 items-center">
+            <div className="col-span-7">
               <SlotText
                 slideId="recap"
-                field="cta"
-                defaultValue={`Open the ${next.name} deck`}
+                field="kicker"
+                defaultValue="Recap · what's next"
+                as="div"
+                className="slide-kicker font-semibold text-white/60 mb-8"
               />
-              <ArrowRight style={{ width: 36, height: 36 }} />
+              <SlotText
+                slideId="recap"
+                field="title"
+                defaultValue="Foundation locks the truth."
+                as="h2"
+                className="slide-title font-semibold tracking-tight"
+              />
+              <p className="slide-subtitle mt-8 text-white/80">
+                Next up — <span className="text-primary font-semibold">{next.number} {next.name}</span>:{" "}
+                {next.intro.toLowerCase()}
+              </p>
+              <div className="mt-12 inline-flex items-center gap-4 px-8 py-5 rounded-2xl bg-primary text-primary-foreground slide-body-lg font-semibold">
+                <SlotText
+                  slideId="recap"
+                  field="cta"
+                  defaultValue={`Open the ${next.name} deck`}
+                />
+                <ArrowRight style={{ width: 36, height: 36 }} />
+              </div>
+            </div>
+            <div className="col-span-5 flex items-center justify-center">
+              <SlotImage
+                slideId="recap"
+                field="image"
+                defaultSrc="/decks/foundation/10-recap.jpg"
+                defaultAlt="Hiker pausing at a trail marker looking up a winding path into distant hills"
+                className="w-full max-h-[760px] object-contain rounded-2xl"
+              />
             </div>
           </div>
         </SlideLayout>
