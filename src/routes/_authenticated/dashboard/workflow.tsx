@@ -270,31 +270,59 @@ export default function WorkflowPage() {
                 Facilitator: walk the room through this deck before generating.
               </p>
             </div>
-            {deck && (
-              deck.unlocked && deck.available ? (
-                <Button asChild size="sm" variant="outline">
-                  <Link to={`/workshop/${deck.slug}`}>
+            <div className="flex flex-wrap items-center gap-2">
+              {(() => {
+                const stageTrig = group.items.filter((i) => i.user_can_trigger !== false);
+                const remainingKeys = stageTrig.filter((i) => !i.generated).map((i) => i.key);
+                const allDone = stageTrig.length > 0 && remainingKeys.length === 0;
+                const isRunning = runningCategoryStage === n;
+                if (allDone) {
+                  return (
+                    <Button size="sm" variant="ghost" disabled>
+                      <CheckCircle2 className="mr-1 h-4 w-4 text-status-success" />
+                      Category complete
+                    </Button>
+                  );
+                }
+                return (
+                  <Button
+                    size="sm"
+                    onClick={() => runCategory(n, remainingKeys)}
+                    disabled={!briefReady || isRunning || remainingKeys.length === 0}
+                    title={!briefReady ? "Finish your Startup Brief first" : undefined}
+                  >
+                    {isRunning ? (
+                      <><Loader2 className="mr-1 h-4 w-4 animate-spin" />Generating…</>
+                    ) : (
+                      <><Play className="mr-1 h-4 w-4" />Generate this category ({remainingKeys.length})</>
+                    )}
+                  </Button>
+                );
+              })()}
+              {deck && (
+                deck.unlocked && deck.available ? (
+                  <Button size="sm" variant="outline" onClick={() => setOpenDeckSlug(deck.slug)}>
                     <Presentation className="mr-1 h-4 w-4" />
                     Open facilitator deck
-                  </Link>
-                </Button>
-              ) : !deck.available ? (
-                <Button size="sm" variant="outline" disabled title="Deck coming soon">
-                  <Lock className="mr-1 h-4 w-4" />
-                  Deck coming soon
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled
-                  title={`Deck unlocks when ${deck.prevLabel ?? "the previous category"} is complete`}
-                >
-                  <Lock className="mr-1 h-4 w-4" />
-                  Unlocks after {deck.prevLabel ?? "previous category"}
-                </Button>
-              )
-            )}
+                  </Button>
+                ) : !deck.available ? (
+                  <Button size="sm" variant="outline" disabled title="Deck coming soon">
+                    <Lock className="mr-1 h-4 w-4" />
+                    Deck coming soon
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled
+                    title={`Deck unlocks when ${deck.prevLabel ?? "the previous category"} is complete`}
+                  >
+                    <Lock className="mr-1 h-4 w-4" />
+                    Unlocks after {deck.prevLabel ?? "previous category"}
+                  </Button>
+                )
+              )}
+            </div>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {group.items.map((d) => {
