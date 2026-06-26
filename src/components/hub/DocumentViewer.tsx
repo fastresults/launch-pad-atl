@@ -535,6 +535,30 @@ export function DocumentViewer({
             <Button size="sm" variant="ghost" onClick={onPrint}>
               <Printer className="mr-1 h-3 w-3" />Print / PDF
             </Button>
+            <Button
+              size="sm"
+              variant={savedCount > 0 ? "outline" : "default"}
+              onClick={onSaveToFiles}
+              disabled={saving}
+              title={
+                savedCount > 0
+                  ? "Save a new version to your Documents library"
+                  : "Save this deliverable to Dashboard → Documents"
+              }
+            >
+              {saving ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : savedCount > 0 ? (
+                <BookmarkCheck className="mr-1.5 h-3.5 w-3.5" />
+              ) : (
+                <Bookmark className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              {saving
+                ? "Saving…"
+                : savedCount > 0
+                  ? "Saved ✓ · Update"
+                  : "Save to My Files"}
+            </Button>
             {doc?.document_type === "website_prd" && (
               <Button size="sm" onClick={onCopyPrdPrompt}>
                 Copy prompt only
