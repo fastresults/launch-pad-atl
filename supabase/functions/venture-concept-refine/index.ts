@@ -3,6 +3,7 @@
 // word concept summary + value proposition that anchors all 21 documents.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -343,6 +344,12 @@ Deno.serve(async (req) => {
       result = { ok: true, summary: folded.summary, value_proposition: folded.value_proposition, delta: folded.delta };
     } else {
       throw new Error(`Unknown action: ${action}`);
+    }
+
+    // Concept-changing actions invalidate the brain so the next deliverable
+    // is regenerated from the new concept rather than a stale summary.
+    if (["lock", "fold_enhancement", "unlock"].includes(action)) {
+      markSnapshotBrainDirty(supabase, snapshot_id).catch(() => {});
     }
 
     return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

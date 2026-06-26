@@ -2239,6 +2239,7 @@ export type Database = {
           saved_enhancements: Json
           scraped_content: string | null
           snapshot_brain: Json | null
+          snapshot_brain_dirty: boolean
           snapshot_brain_updated_at: string | null
           source_materials: Json | null
           status: Database["public"]["Enums"]["venture_snapshot_status"]
@@ -2284,6 +2285,7 @@ export type Database = {
           saved_enhancements?: Json
           scraped_content?: string | null
           snapshot_brain?: Json | null
+          snapshot_brain_dirty?: boolean
           snapshot_brain_updated_at?: string | null
           source_materials?: Json | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
@@ -2329,6 +2331,7 @@ export type Database = {
           saved_enhancements?: Json
           scraped_content?: string | null
           snapshot_brain?: Json | null
+          snapshot_brain_dirty?: boolean
           snapshot_brain_updated_at?: string | null
           source_materials?: Json | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]

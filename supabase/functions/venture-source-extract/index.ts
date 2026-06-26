@@ -7,6 +7,7 @@
 // here — those still go through brief-prefill / venture-transcribe.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import mammoth from "npm:mammoth@1.7.2";
+import { markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -118,6 +119,11 @@ Deno.serve(async (req) => {
       extracted_at: new Date().toISOString(),
       extraction_error: extractionError,
     }).eq("id", documentId);
+
+    // New source material → brain is stale. Next AI call will recompute.
+    if (doc.snapshot_id && text) {
+      markSnapshotBrainDirty(admin, doc.snapshot_id).catch(() => {});
+    }
 
     return new Response(JSON.stringify({ ok: true, charCount: text.length, error: extractionError }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

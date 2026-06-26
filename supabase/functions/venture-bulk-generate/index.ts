@@ -1,8 +1,30 @@
-// Founders Hub — bulk-generate all 20 venture documents in dependency order.
-// Creates a venture_generation_jobs row, then runs each doc inline with a
-// circuit breaker. Idempotent on (snapshot_id, document_type).
+// Founders Hub — bulk-generate every active venture document in dependency order.
+//
+// Post-AI-first-refactor pipeline (mirrors venture-generate-document so both
+// paths produce identical quality for a given document_type):
+//   1. loadVentureContext()  — single read, reused for every doc in this job
+//   2. ensureSnapshotBrain() — compute once per job (or reuse cached/clean)
+//   3. compactPreamble()     — ~600-token venture preamble per doc
+//   4. pickBrainSlice()      — only the brain keys this deliverable needs
+//   5. distillDeps()         — upstream docs as 3-5 bullet summaries
+//   6. modelForTier()        — pro / flash / lite routing per doc
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  compactPreamble,
+  distillDeps,
+  loadVentureContext,
+  pickBrainSlice,
+  type VentureContext,
+} from "../_shared/venture-context.ts";
+import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
+import { trackTone } from "../_shared/track-tones.ts";
+import {
+  BASE_SYSTEM_PROMPT,
+  modelForTier,
+  specializedPrompt,
+  stripCitations,
+} from "../_shared/deliverable-prompts.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,105 +36,20 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
-// ============== SPECIALIZED PROMPTS ==============
-// Documents produce only the executive-summary content. A separate edge function
-// (`venture-generate-assessment`) produces the McKinsey-grade deep dive on demand.
-const QUALITY_FOOTER = `
-
-OUTPUT RULES — STRICT:
-- DO NOT use footnote markers ([^1], [^2], etc.).
-- DO NOT add a "## Sources", "## References", or "## Citations" section.
-- Present claims as analyst judgment grounded in the supplied research, not as footnoted quotes.
-
-After the markdown, on a final line, output exactly:
-QUALITY_SCORE: <0-100 integer>`;
-
-// Remove footnote markers ([^1]) and any trailing Sources/References/Citations section.
-function stripCitations(md: string): string {
-  let out = md;
-  out = out.replace(/\n#{1,6}\s*(sources|references|citations|bibliography|footnotes)\s*[\s\S]*$/i, "");
-  out = out.replace(/\[\^[^\]]+\]/g, "");
-  out = out.replace(/^\s*\[\^[^\]]+\]:.*$/gm, "");
-  out = out.replace(/\n{3,}/g, "\n\n");
-  return out.trim();
-}
-
-// Track tone directives — mirrored from src/lib/tracks.ts. Keep in sync.
-const TRACK_TONE: Record<string, string> = {
-  lifestyle:
-    "TRACK — Main Street Startup (DEFAULT for ~80% of workshop attendees): Write as a pragmatic operator coaching a FIRST-TIME main-street founder opening a real small business — café, salon, trade, local service, indie product, small e-commerce brand, or solo practice. Optimize for opening week, first 100 customers, first $10k in monthly revenue, cash on hand, and word-of-mouth. STRICTLY REPLACE every piece of VC vocabulary: instead of TAM/SAM/SOM use 'local market size + realistic first-year customer count'; instead of 'pitch deck / funding round / Series A' use 'one-page lender or partner summary' and simple funding sources (founder savings, friends & family, SBA microloan, revenue-based financing, local CDFI, grants); skip ARR, NRR, CAC payback, magic number, hockey-stick, unicorn. Use plain English a non-technical owner can act on this week. Prefer concrete dollar figures, named local channels (Google Business Profile, local SEO, neighborhood Instagram/TikTok, foot traffic, referrals, partnerships with neighboring businesses) over abstract growth loops. Budgets are owner-draw + single location by default; do not assume a hiring plan unless the intake specifies it.",
-  ecommerce_dtc:
-    "TRACK — E-commerce / DTC Brand: Write as a DTC operator coaching a FIRST-TIME brand founder launching a physical product online (Shopify, Amazon, marketplaces). Lead with hero-SKU clarity, COGS / landed cost / contribution margin, MOQ and supplier risk, packaging and unboxing, paid-social creative testing (Meta + TikTok), email/SMS as the owned channel, repeat-purchase rate and LTV, and 3PL vs self-ship fulfillment. Replace VC vocabulary with DTC realities: gross margin %, CAC by channel, AOV, contribution profit, blended ROAS, payback in orders. Skip ARR/NRR/hockey-stick. Use concrete dollar figures and creator/UGC tactics a solo founder can run this week.",
-  scalable_tech:
-    "TRACK — Scalable Tech / SaaS: Write as an early-stage tech operator briefing a venture-track founder. Lean into product-led growth, defensibility, retention/expansion, unit economics at scale, ICP precision, venture-readiness. Use SaaS metrics (ARR, NRR, CAC payback, magic number) where relevant.",
-  marketplace:
-    "TRACK — Marketplace / Platform: Write as a marketplace strategist. Always reason about both/all sides explicitly — supply and demand, liquidity, cold-start, take-rate, trust & safety, network effects. Call out which side is hardest to acquire and why.",
-  deep_tech:
-    "TRACK — Deep Tech / Frontier: Write as a deep-tech advisor. Treat technical risk, milestone-based de-risking, IP/moat, regulatory pathway, capital intensity, long time-to-revenue as first-class concerns. Reference grants, non-dilutive funding, strategic partners alongside venture capital. Avoid lean-startup 'launch in a weekend' framing.",
-  social_impact:
-    "TRACK — Social Enterprise / Impact: Write as an impact-venture advisor. Hold mission and revenue as co-equal. Use theory-of-change language, measurable impact metrics alongside financial ones, reference impact-aligned capital (grants, PRIs, blended finance). Avoid extractive growth-at-all-costs framing.",
-  corporate:
-    "TRACK — Corporate / Institutional: Write as a corporate-innovation advisor. Treat enterprise procurement, compliance, security review, parent-org politics, strategic alignment as first-class concerns. Use formal, board-ready language. Reference pilot-to-production motions, RFPs, channel partnerships rather than viral consumer growth.",
-};
-
-
-const SPECIAL: Record<string, string> = {
-  website_prd: `You are a senior product writer producing a Website PRD that doubles as a paste-ready prompt for an AI website builder (Lovable, v0, Bolt, Cursor).
-Output clean Markdown with: # {Company} — Website PRD; ## 1. Paste-ready prompt (single fenced \`\`\` block, 400-600 words, self-contained instructions); ## 2. Sitemap; ## 3. Page-by-page copy (H1, sub-headline, 3 sections each with H2 + 2-3 sentence body, primary CTA); ## 4. SEO bundle (title <60ch, meta <160ch, 8-12 keywords with geo-modifiers when market scope is local, OG image prompt); ## 5. Tech checklist. Reuse upstream brand_tokens (colors/fonts) in the fenced prompt when present.${QUALITY_FOOTER}`,
-
-  brand_strategy_framework: `You are a brand strategist. Produce a recognized brand-strategy doc grounded in Simon Sinek's Golden Circle, Aaker's brand identity prism, and Jung's 12 archetypes.
-Output clean Markdown with: # {Company} — Brand Strategy; ## Purpose (Why); ## Vision (10-year picture); ## Mission (what we do today); ## Core Values (5 with short rationale); ## Audience Archetypes (2-3 named); ## Brand Promise (one sentence); ## Positioning Statement (use Geoffrey Moore template: "For [target] who [need], [brand] is the [category] that [benefit] unlike [alternative]."); ## Brand Pillars (3-5 with 1-line definitions); ## Personality (primary Jung archetype + 5-trait spectrum rated 1-5: serious↔playful, classic↔modern, etc.); ## Brand Essence (3-5 word phrase).${QUALITY_FOOTER}`,
-
-  brand_messaging_house: `You are a senior copy chief building a messaging architecture.
-Output clean Markdown with: # Messaging House; ## Tagline (primary + 3 alternates); ## Elevator Pitch (15-second / 30-second / 60-second versions); ## Brand Story (Donald Miller StoryBrand 7-part: Character, Problem, Guide, Plan, Call to Action, Failure, Success); ## Proof Points (4-6 evidenced bullets); ## Key Messages per Audience (one block per ICP); ## Language Rules (do-use list, do-not-use list, banned buzzwords).${QUALITY_FOOTER}`,
-
-  visual_identity_brief: `You are a brand designer. Produce a Visual Identity Brief AND a machine-readable brand-tokens block.
-Output clean Markdown with: # Visual Identity; ## Logo Direction (concept rationale + 3 mood pairings); ## Color System (table with role, hex, usage, AA contrast pair); ## Typography (heading + body pair with web-safe fallbacks); ## Iconography style; ## Photography direction; ## Layout principles; ## Accessibility checklist.
-## Brand Tokens (JSON)
-A SINGLE fenced \`\`\`json block, the ONLY JSON in the doc, with this exact shape:
-{"colors":{"primary":"#hex","secondary":"#hex","accent":"#hex","bg":"#hex","fg":"#hex","muted":"#hex"},"fonts":{"heading":"Font Name","body":"Font Name"},"radius":"sm|md|lg","mood":["adj1","adj2","adj3"]}
-## AI Logo Prompt
-A SINGLE fenced \`\`\` block: a paste-ready prompt for Midjourney/Ideogram (200-300 words, no JSON).${QUALITY_FOOTER}`,
-
-  brand_voice_tone_guide: `You are a voice & tone strategist.
-Output clean Markdown with: # Voice & Tone; ## Voice Attributes (4 dimensions each with two opposing poles and a 1-5 rating, e.g. Formal 1—5 Casual); ## Tone Shifts by Context (sales, support, crisis, social, error states); ## Reading Level target (Flesch grade); ## Before/After Rewrites (5 examples — bad copy → on-brand rewrite); ## Inclusive-Language Rules; ## Quick reference cheat-sheet.${QUALITY_FOOTER}`,
-
-  brand_guidelines_pdf: `You are compiling the consolidated brand guidelines book.
-Output clean Markdown with: # Brand Guidelines; ## Brand at a Glance (purpose, promise, positioning); ## Logo Usage (clear-space, min size, do/don'ts); ## Color (palette table with hex/RGB/usage); ## Typography (hierarchy table); ## Imagery & Iconography; ## Voice & Tone summary; ## Messaging quick-reference; ## Asset Usage (where each goes); ## File-naming convention; ## Approval Governance (who approves what). Reuse upstream brand_tokens and voice attributes when present.${QUALITY_FOOTER}`,
-
-  social_media_audit_setup: `You are a social media strategist.
-Output clean Markdown with: # Social Media Audit & Setup; ## Platform Fit Matrix (table of Instagram, TikTok, LinkedIn, X, YouTube, Facebook, Pinterest, Threads, Reddit with columns: Recommendation [Yes/Maybe/Skip], Why, Effort, Time-to-impact); ## Primary Platforms (deep dive on each Yes platform: handle availability checklist + 3 candidate handles, bio template x3 with character count, link-in-bio structure, profile-image and cover-image spec, pinned-post strategy, highlights or featured collections); ## Hashtag & Keyword Seeds (15-25 per primary platform, geo-tagged when market scope is local); ## Accounts to Engage With (25 named accounts derived from research_brief competitors + adjacent voices); ## First-Week Setup Checklist.${QUALITY_FOOTER}`,
-
-  content_strategy_pillars: `You are a content strategist.
-Output clean Markdown with: # Content Strategy; ## Content Pillars (4-6, each with: Pillar Name, JTBD it serves, % of mix, formats, voice notes, success metric); ## Content-to-Funnel Map (% allocation across TOFU/MOFU/BOFU/loyalty with rationale); ## POV Statements (3-5 strong opinions the brand holds); ## Topic Universe (20 evergreen topics + 10 timely topics); ## Banned Topics; ## Cadence (posts/week per platform).${QUALITY_FOOTER}`,
-
-  content_calendar_90day: `You are an editorial planner. Produce a 90-day calendar that is genuinely usable.
-Output clean Markdown with: # 90-Day Content Calendar; ## Weeks 1-4 (Drafted Posts) — for EACH of weeks 1-4 produce 3 posts per primary platform with: Day, Pillar, Platform, Format, Hook (first line), Full body draft, CTA, Hashtags, Asset notes (image/video prompt), Best-time slot; ## Weeks 5-12 (Outlined Briefs) — for each week, 3 brief outlines per platform (title + hook + 2-line angle + format + pillar); ## Batch Production Schedule (one shoot/write day per week with what to capture); ## Repurposing Matrix (1 long-form → 5 short-form derivatives template).${QUALITY_FOOTER}`,
-
-  launch_content_kit: `You are a launch strategist producing ready-to-paste assets.
-Output clean Markdown with: # Launch Content Kit; ## 10 Launch Posts — one block each for: Announcement, Founder Story, Problem Post, Solution Demo, Social Proof, FAQ, Hard CTA, Behind-the-Scenes, Manifesto, Partnership Ask. For each: Platform recommendation, Caption (paste-ready, with line breaks and emoji where appropriate), Image/Video prompt (paste-ready), Hashtags, Alt-text; ## 5 Email/DM Templates (warm intro, cold outreach, press pitch, customer ask, partner ask); ## Press One-Pager (headline, dek, 3 boilerplate paragraphs, founder bio 80 words, contact block).${QUALITY_FOOTER}`,
-
-  community_engagement_playbook: `You are a community manager.
-Output clean Markdown with: # Community Engagement Playbook; ## 10 Reply Scripts (positive comment, critical comment, question, complaint, sales-curious, troll, competitor mention, press inquiry, partnership inquiry, support issue); ## Comment-Prompt Formulas (5 templates that earn replies); ## DM Funnel (greeting → qualify → offer → close); ## UGC + Testimonial Collection Scripts (3 scripts with consent language); ## Crisis-Response Decision Tree (when to acknowledge / explain / escalate / silence); ## Daily Ritual (60-min/day breakdown with timeboxes); ## KPI Dashboard (reach, saves, shares, replies, profile visits → site visits → leads, with target ranges).${QUALITY_FOOTER}`,
-
-  influencer_partnership_brief: `You are a creator-partnerships lead.
-Output clean Markdown with: # Influencer & Partnership Brief; ## Tier Strategy (nano <10k / micro 10-100k / mid 100k-1M target counts and budgets); ## 25 Named Candidate Creators (derived from research_brief and industry context — table with Name/Handle, Tier, Platform, Audience fit, Estimated rate range, Why-this-creator); ## Outreach Scripts (cold DM x3 styles: warm intro / value-led / paid offer); ## Partnership Terms Template (deliverables, exclusivity, usage rights, payment, timeline); ## Performance Tracking template (UTM convention, conversion targets).${QUALITY_FOOTER}`,
-
-  paid_ads_starter_pack: `You are a performance marketer.
-Output clean Markdown with: # Paid Ads Starter Pack; ## Budget Tiers ($300, $1,000, $3,000 monthly — each with platform allocation table); ## Audience Definitions (3 saved audiences with parameters); ## Creative Concepts — for the top 2 recommended platforms, produce 3 ad creative concepts each with: Hook, Body copy, CTA, Visual prompt (paste-ready), Format; ## Conversion Tracking Setup (Pixel/CAPI checklist, event names, key conversions); ## Test-and-Iterate Framework (week-by-week test plan, learning matrix, kill criteria).${QUALITY_FOOTER}`,
-};
-
-function specializedPrompt(t: string): string | null {
-  return SPECIAL[t] ?? null;
-}
-
-// Inline single-doc generator (kept local so we don't share files across functions).
-async function generateOne(supabase: any, snapshotId: string, documentType: string) {
-  const [{ data: snap }, { data: type }] = await Promise.all([
-    supabase.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle(),
-    supabase.from("venture_document_types").select("*").eq("type", documentType).maybeSingle(),
-  ]);
-  if (!snap) throw new Error("Snapshot not found");
+// Slim per-doc generator. Accepts a pre-loaded ctx so the same context is
+// reused across the whole bulk job (we only refresh dep docs per call).
+async function generateOne(
+  supabase: any,
+  ctx: VentureContext,
+  documentType: string,
+) {
+  const snapshotId = ctx.snapshotId;
+  const snap = ctx.snap;
+  const { data: type } = await supabase
+    .from("venture_document_types")
+    .select("*")
+    .eq("type", documentType)
+    .maybeSingle();
   if (!type) throw new Error(`Unknown document type: ${documentType}`);
 
   await supabase.from("venture_documents").upsert({
@@ -121,6 +58,7 @@ async function generateOne(supabase: any, snapshotId: string, documentType: stri
     status: "generating",
   }, { onConflict: "snapshot_id,document_type" });
 
+  // Load + distill upstream dependency docs (no more full-markdown dumping).
   const deps: string[] = type.dependencies ?? [];
   let depContext = "";
   if (deps.length) {
@@ -129,57 +67,55 @@ async function generateOne(supabase: any, snapshotId: string, documentType: stri
       .select("document_type, content")
       .eq("snapshot_id", snapshotId)
       .in("document_type", deps);
-    depContext = (depDocs ?? [])
-      .filter((d: any) => d.content)
-      .map((d: any) => `## ${d.document_type}\n${d.content}`)
-      .join("\n\n---\n\n");
+    depContext = distillDeps(depDocs ?? []);
   }
 
-  const baseSystem = `You are an AI venture analyst writing investor-grade documents.
-Produce a single document in clean Markdown. Use ## headings, short paragraphs, bullets.
-Be specific, plausible, actionable. Never use filler like "TBD".
-Target ~600-900 words.${QUALITY_FOOTER}`;
+  // Pick up any intake answers the founder previously saved for this doc.
+  const { data: priorRow } = await supabase
+    .from("venture_documents")
+    .select("intake_answers")
+    .eq("snapshot_id", snapshotId)
+    .eq("document_type", documentType)
+    .maybeSingle();
+  const effectiveIntake = priorRow?.intake_answers && Object.keys(priorRow.intake_answers).length
+    ? priorRow.intake_answers
+    : null;
 
-  const baseSystemPrompt = specializedPrompt(documentType) ?? baseSystem;
-  const trackTone = snap.track ? TRACK_TONE[snap.track] : null;
-  const systemPrompt = trackTone ? `${baseSystemPrompt}\n\n${trackTone}` : baseSystemPrompt;
+  // System prompt: specialized first, fallback to base; layer track tone on top.
+  const baseSystemPrompt = specializedPrompt(documentType) ?? BASE_SYSTEM_PROMPT;
+  const tone = trackTone(snap.track);
+  const systemPrompt = tone ? `${baseSystemPrompt}\n\n${tone}` : baseSystemPrompt;
 
-  const founderCard = {
-    founder: { name: snap.founder_name, email: snap.founder_email, phone: snap.founder_phone },
-    location: { city: snap.city, region: snap.region, country: snap.country },
-    market_scope: snap.market_scope,
-    industry: snap.industry,
-    sub_industry: snap.sub_industry,
-    track: snap.track,
-    company_name: snap.company_name,
-    website_url: snap.website_url,
-  };
-
-  const conceptBlock = snap.concept_summary
-    ? `\n## NORTH-STAR CONCEPT (locked by founder — every section must stay consistent with this)\nSummary (${snap.concept_summary.trim().split(/\s+/).filter(Boolean).length} words): ${snap.concept_summary}\nValue proposition: ${snap.value_proposition ?? ""}`
-    : "";
-
-  const brandBlock = snap.brand_tokens
-    ? `\n## Brand tokens (reuse colors, fonts, mood when rendering visuals or builder prompts)\n${JSON.stringify(snap.brand_tokens, null, 2)}`
-    : "";
+  // User prompt: compact preamble + brain slice (or raw fallback) + distilled deps.
+  const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
+  const preamble = compactPreamble(ctx);
 
   const userPrompt = [
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
     `Category: ${type.category}`,
-    conceptBlock,
-    brandBlock,
-    `\n## Founder & market (always reflect these accurately)\n${JSON.stringify(founderCard, null, 2)}`,
-    `\n## Venture brief (founder-reviewed)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,
-    snap.research_brief ? `\n## Research brief (background evidence — synthesize as analyst judgment, NO footnotes or citations in the output)\n${JSON.stringify(snap.research_brief, null, 2)}` : "",
-    depContext ? `\n## Upstream docs\n${depContext}` : "",
+    preamble,
+    brainSlice
+      ? `\n## Venture brain (compressed, authoritative — every section must reflect these)\n${JSON.stringify(brainSlice, null, 2)}`
+      : `\n## Venture brief (fallback — brain not yet computed)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,
+    // Only inject the raw research brief when brain isn't available.
+    !ctx.brain && snap.research_brief
+      ? `\n## Research brief (background evidence — synthesize as analyst judgment, NO footnotes or citations)\n${JSON.stringify(snap.research_brief, null, 2).slice(0, 8000)}`
+      : "",
+    depContext ? `\n## Upstream documents you should build on (distilled)\n${depContext}` : "",
+    effectiveIntake
+      ? `\n## Intake answers (TOP PRIORITY — founder-supplied ground truth. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
+      : "",
   ].filter(Boolean).join("\n\n");
+
+  // S5 — Honor type.model_tier ('pro' | 'flash' | 'lite').
+  const modelId = modelForTier(type.model_tier);
 
   const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+    headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: modelId,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -243,11 +179,9 @@ Target ~600-900 words.${QUALITY_FOOTER}`;
     }
   }
 
-  // Hero image generation is intentionally NOT triggered here.
-  // It is now lazy — DocumentViewer fires `venture-document-image` the first
-  // time a founder opens a document. This saves ~$0.56 + ~30 s per doc in
-  // bulk runs, since most docs are never opened during the build phase.
+  // Hero image generation is lazy (DocumentViewer fires it on first open).
 }
+
 
 // Group document types into dependency layers (Kahn's algorithm).
 // Each layer can run fully in parallel since all its deps are in earlier layers.
@@ -276,7 +210,14 @@ function dependencyLayers(types: any[]): any[][] {
 
 const CONCURRENCY = 6;
 
-async function runLayer(supabase: any, snapshotId: string, jobId: string, layer: any[], state: { done: number; total: number; fails: number; canceled: boolean }) {
+async function runLayer(
+  supabase: any,
+  ctx: VentureContext,
+  jobId: string,
+  layer: any[],
+  state: { done: number; total: number; fails: number; canceled: boolean },
+) {
+  const snapshotId = ctx.snapshotId;
   const { data: existingDocs } = await supabase
     .from("venture_documents")
     .select("document_type, status")
@@ -303,7 +244,7 @@ async function runLayer(supabase: any, snapshotId: string, jobId: string, layer:
         heartbeat_at: new Date().toISOString(),
       }).eq("id", jobId);
       try {
-        await generateOne(supabase, snapshotId, t.type);
+        await generateOne(supabase, ctx, t.type);
         state.done++;
         state.fails = 0;
       } catch (_e) {
@@ -320,10 +261,22 @@ async function runLayer(supabase: any, snapshotId: string, jobId: string, layer:
 }
 
 async function runJob(supabase: any, snapshotId: string, jobId: string, category?: string | null) {
+  // Build venture context ONCE per job. Compute or reuse the brain ONCE
+  // before any docs run — subsequent generateOne() calls inherit both.
+  const ctx = await loadVentureContext(supabase, snapshotId);
+  if (!ctx.brain) {
+    try {
+      ctx.brain = await ensureSnapshotBrain(supabase, snapshotId);
+    } catch (e) {
+      console.warn("brain compute failed; falling back to raw blobs", e);
+    }
+  }
+
   const { data: allTypes } = await supabase
     .from("venture_document_types")
     .select("*")
     .eq("active", true);
+
 
   // Documents with an intake_schema require founder input — skip them in
   // bulk runs unless the founder has already saved intake_answers for them.
@@ -356,7 +309,7 @@ async function runJob(supabase: any, snapshotId: string, jobId: string, category
   }).eq("id", jobId);
 
   for (const layer of layers) {
-    await runLayer(supabase, snapshotId, jobId, layer, state);
+    await runLayer(supabase, ctx, jobId, layer, state);
     if (state.canceled) {
       await supabase.from("venture_generation_jobs").update({
         status: "canceled",

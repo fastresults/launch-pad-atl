@@ -2,10 +2,12 @@
 // deliverable reuses instead of rebuilding context from scratch.
 //
 // Computed by calling the gateway once with structured output, persisted to
-// venture_snapshots.snapshot_brain. Refreshed only when source materials or
-// research brief change (caller decides — we just expose the function).
+// venture_snapshots.snapshot_brain. Refreshed whenever upstream data changes
+// (new uploaded source, new intake writeback, concept refine, etc.) — set
+// `snapshot_brain_dirty=true` from those code paths and ensureSnapshotBrain
+// will recompute on next demand.
 
-import type { VentureBrain } from "./venture-context.ts";
+import { compactPreamble, loadVentureContext, renderSources, type VentureBrain } from "./venture-context.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
@@ -30,46 +32,27 @@ Rules:
 - Use plain English. No buzzwords, no TBD, no placeholders.`;
 
 export async function computeSnapshotBrain(supabase: any, snapshotId: string): Promise<VentureBrain> {
-  const { data: snap } = await supabase
-    .from("venture_snapshots")
-    .select("*")
-    .eq("id", snapshotId)
-    .maybeSingle();
-  if (!snap) throw new Error("Snapshot not found");
-
-  const sm = snap.source_materials ?? {};
-  const docText = Array.isArray(sm.documents)
-    ? sm.documents.map((d: any, i: number) => `### Doc ${i + 1}: ${d.filename ?? ""}\n${String(d.text ?? "").slice(0, 4000)}`).join("\n\n")
-    : "";
-  const urlText = Array.isArray(sm.urls)
-    ? sm.urls.map((u: any, i: number) => `### URL ${i + 1}: ${u.url ?? ""}\n${String(u.text ?? "").slice(0, 3000)}`).join("\n\n")
-    : "";
+  // Build input from the same canonical context every generator uses, so the
+  // brain stays in lockstep with what the rest of the pipeline reasons over.
+  const ctx = await loadVentureContext(supabase, snapshotId);
 
   const userPrompt = [
-    `# Snapshot facts`,
-    `Company: ${snap.company_name ?? ""}`,
-    `Founder: ${snap.founder_name ?? ""}`,
-    `Industry: ${snap.industry ?? ""}${snap.sub_industry ? ` / ${snap.sub_industry}` : ""}`,
-    `Track: ${snap.track ?? "lifestyle"}`,
-    `Location: ${[snap.city, snap.region, snap.country].filter(Boolean).join(", ")} (scope: ${snap.market_scope ?? "local"})`,
-    snap.concept_summary ? `Concept: ${snap.concept_summary}` : "",
-    snap.value_proposition ? `Value prop: ${snap.value_proposition}` : "",
-    snap.differentiation_statement ? `Differentiation: ${snap.differentiation_statement}` : "",
-    snap.business_concept ? `\n## Founder's raw concept\n${snap.business_concept}` : "",
-    snap.extracted_data ? `\n## Extracted brief\n${JSON.stringify(snap.extracted_data).slice(0, 6000)}` : "",
-    snap.research_brief ? `\n## Research brief\n${JSON.stringify(snap.research_brief).slice(0, 10000)}` : "",
-    docText ? `\n## Founder-uploaded documents\n${docText}` : "",
-    urlText ? `\n## Founder-supplied URLs\n${urlText}` : "",
+    compactPreamble(ctx),
+    ctx.snap.business_concept ? `\n## Founder's raw concept\n${ctx.snap.business_concept}` : "",
+    ctx.sources.documents.length || ctx.sources.urls.length
+      ? `\n## Founder-supplied source materials\n${renderSources(ctx, 4000)}`
+      : "",
   ].filter(Boolean).join("\n\n");
 
+  // Brain is a small, structured task — use flash-lite for ~5x cost savings.
   const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: "google/gemini-3.1-flash-lite",
       messages: [
         { role: "system", content: BRAIN_SYSTEM },
-        { role: "user", content: userPrompt.slice(0, 60_000) },
+        { role: "user", content: userPrompt.slice(0, 40_000) },
       ],
       response_format: { type: "json_object" },
     }),
@@ -85,35 +68,59 @@ export async function computeSnapshotBrain(supabase: any, snapshotId: string): P
   try {
     brain = JSON.parse(content);
   } catch {
-    // Salvage: strip code fences and retry
     const cleaned = String(content).replace(/^```(?:json)?\s*|\s*```$/g, "").trim();
     brain = JSON.parse(cleaned);
   }
   brain.generated_at = new Date().toISOString();
 
+  // Persist and clear the dirty flag in one round-trip.
   await supabase
     .from("venture_snapshots")
-    .update({ snapshot_brain: brain, snapshot_brain_updated_at: brain.generated_at })
+    .update({
+      snapshot_brain: brain,
+      snapshot_brain_updated_at: brain.generated_at,
+      snapshot_brain_dirty: false,
+    })
     .eq("id", snapshotId);
 
   return brain;
 }
 
 /**
- * Lazy variant: returns the cached brain on the snapshot if present, else
- * computes & persists one. Safe to call from any generator.
+ * Lazy variant: returns the cached brain on the snapshot when present AND
+ * clean. Recomputes when missing or when snapshot_brain_dirty=true (set by
+ * the source-extract / intake-writeback / concept-refine paths).
  */
 export async function ensureSnapshotBrain(supabase: any, snapshotId: string): Promise<VentureBrain | null> {
   const { data: snap } = await supabase
     .from("venture_snapshots")
-    .select("snapshot_brain")
+    .select("snapshot_brain, snapshot_brain_dirty")
     .eq("id", snapshotId)
     .maybeSingle();
-  if (snap?.snapshot_brain) return snap.snapshot_brain as VentureBrain;
+  if (snap?.snapshot_brain && !snap?.snapshot_brain_dirty) {
+    return snap.snapshot_brain as VentureBrain;
+  }
   try {
     return await computeSnapshotBrain(supabase, snapshotId);
   } catch (e) {
     console.error("ensureSnapshotBrain failed", e);
-    return null;
+    return (snap?.snapshot_brain as VentureBrain) ?? null;
+  }
+}
+
+/**
+ * Mark the snapshot brain as stale. Fire-and-forget from any code path that
+ * mutates upstream source data (new uploaded document, scraped URL, intake
+ * writeback, concept refine). Cheap (single UPDATE) and idempotent.
+ */
+export async function markSnapshotBrainDirty(supabase: any, snapshotId: string): Promise<void> {
+  if (!snapshotId) return;
+  try {
+    await supabase
+      .from("venture_snapshots")
+      .update({ snapshot_brain_dirty: true })
+      .eq("id", snapshotId);
+  } catch (e) {
+    console.warn("markSnapshotBrainDirty failed", e);
   }
 }
