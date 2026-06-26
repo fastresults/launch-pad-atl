@@ -94,6 +94,7 @@ function isFilled(v: any) {
 export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
   const fields: IntakeField[] = target?.schema?.fields ?? [];
   const [values, setValues] = useState<Record<string, any>>({});
+  const [prefillSources, setPrefillSources] = useState<Record<string, string>>({});
   const [recordingFor, setRecordingFor] = useState<string | null>(null);
   const [transcribingFor, setTranscribingFor] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -102,19 +103,43 @@ export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<number | null>(null);
 
-  // Seed values when target changes
+  // Seed values when target changes — pulls from canonical context for any
+  // field id that maps to a known fact, so founders don't re-type identity,
+  // industry, financials, etc.
   useEffect(() => {
     if (!target) {
       stopTracks();
       setValues({});
+      setPrefillSources({});
       return;
     }
-    const seed: Record<string, any> = {};
-    for (const f of fields) {
-      const fromInitial = target.initial?.[f.id];
-      seed[f.id] = fromInitial !== undefined && fromInitial !== null ? fromInitial : defaultForField(f);
-    }
-    setValues(seed);
+    let cancelled = false;
+    (async () => {
+      const ctx = await getCanonicalFounderContext().catch(() => null);
+      if (cancelled) return;
+      const seed: Record<string, any> = {};
+      const sources: Record<string, string> = {};
+      for (const f of fields) {
+        const fromInitial = target.initial?.[f.id];
+        if (fromInitial !== undefined && fromInitial !== null && String(fromInitial).length > 0) {
+          seed[f.id] = fromInitial;
+          continue;
+        }
+        const mapper = ctx ? CANONICAL_FIELD_MAP[f.id] : null;
+        if (mapper) {
+          const { v, src } = mapper(ctx!);
+          if (v !== "" && v !== null && v !== undefined) {
+            seed[f.id] = v;
+            if (src) sources[f.id] = src;
+            continue;
+          }
+        }
+        seed[f.id] = defaultForField(f);
+      }
+      setValues(seed);
+      setPrefillSources(sources);
+    })();
+    return () => { cancelled = true; };
   }, [target?.type, target?.initial]);
 
   useEffect(() => () => stopTracks(), []);
