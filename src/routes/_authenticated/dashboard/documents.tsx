@@ -123,7 +123,7 @@ export default function DocumentsPage() {
                 </td>
               </tr>
             ))}
-            {data && data.documents.length === 0 && (
+            {data && (data.documents ?? []).length === 0 && (
               <tr>
                 <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No documents yet.</td>
               </tr>
