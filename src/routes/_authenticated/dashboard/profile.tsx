@@ -136,6 +136,8 @@ export default function ProfilePage() {
       setAutoSyncTried(true);
       toast.success("Profile reset — fields are blank.");
       qc.invalidateQueries({ queryKey: ["my", "profile"] });
+      invalidateCanonical();
+      void markAllMySnapshotBrainsDirty();
     },
     onError: (e: Error) => toast.error(e.message),
   });
