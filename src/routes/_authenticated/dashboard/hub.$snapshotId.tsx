@@ -37,6 +37,8 @@ import { BulkUnlockDialog } from "@/components/hub/BulkUnlockDialog";
 import { BrandStudio } from "@/components/hub/BrandStudio";
 import { SocialStudio } from "@/components/hub/SocialStudio";
 import { FounderRoadmapCard } from "@/components/hub/FounderRoadmapCard";
+import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
+import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
 import {
   ArrowLeft,
   Loader2,
