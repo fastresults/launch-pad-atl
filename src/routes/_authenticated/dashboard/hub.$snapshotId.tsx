@@ -265,7 +265,6 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
     }
     setProvenanceMap(out);
   }, [canonicalCtx]);
-  }, []);
 
   useEffect(() => {
     if (dirtyRef.current) return;
