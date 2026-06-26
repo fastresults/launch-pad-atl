@@ -134,6 +134,24 @@ export function FounderBlock({ onDone }: Props) {
       if (!res.ok) throw new Error("Upload failed");
       setFilePath(path);
       setFilename(file.name);
+      // Mirror the resume into the unified venture library so it persists
+      // across the rest of the founder journey (Hub creation, recovery, etc.)
+      // without ever asking the founder to re-upload. Best-effort: don't
+      // block extraction if the library write fails.
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        if (auth.user) {
+          await supabase.from("attendee_documents").insert({
+            user_id: auth.user.id,
+            storage_path: path,
+            original_name: file.name,
+            mime_type: file.type || null,
+            size_bytes: file.size,
+            kind: "founder_bio",
+            used_in_brief: true,
+          });
+        }
+      } catch { /* non-fatal */ }
       // Auto-trigger extraction so the user doesn't also have to paste text.
       if (file.name.toLowerCase().endsWith(".pdf")) {
         toast.success("Uploaded. Reading your resume…");
@@ -141,6 +159,7 @@ export function FounderBlock({ onDone }: Props) {
       } else {
         toast.success("Uploaded. Click below to extract — or paste the text for DOCX files.");
       }
+
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Upload failed");
     } finally {
