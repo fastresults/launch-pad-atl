@@ -346,6 +346,12 @@ Deno.serve(async (req) => {
       throw new Error(`Unknown action: ${action}`);
     }
 
+    // Concept-changing actions invalidate the brain so the next deliverable
+    // is regenerated from the new concept rather than a stale summary.
+    if (["lock", "fold_enhancement", "unlock"].includes(action)) {
+      markSnapshotBrainDirty(supabase, snapshot_id).catch(() => {});
+    }
+
     return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
