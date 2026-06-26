@@ -1,47 +1,69 @@
 ## Goal
+Make Concept Studio and Epiphany Engine feel like two distinct, purposeful steps — not one continuous form — and explain to the founder *why* each exists and *when* to use it.
 
-Break the chicken-and-egg: once a document is uploaded, a single **Process document** action populates every field on the page (everything except Track), then the **Create & enrich** button unlocks automatically.
+## Problem today
+- Both modules live inside one undifferentiated card on the "Lock your concept" page.
+- Epiphany Engine sits visually as a footer banner inside Concept Studio, so founders read it as just another button.
+- No narrative explains the relationship: *Concept Studio = tighten what you have. Epiphany Engine = stress-test it with deep AI before you lock.*
+- The "Lock concept" CTA shares the Concept Studio card, making Epiphany feel optional/ignorable rather than a deliberate detour.
 
-## Changes
-
-### 1. Rename + reframe the upload action — `src/routes/_authenticated/dashboard/hub.new.tsx`
-
-- Rename the "Draft from N file(s)" button to **"Process document"** (with a `Sparkles`/`Wand2` icon).
-- Promote it from a small ghost button beside the concept textarea to a **primary CTA inside the dropzone card**, shown as soon as at least one file is `ready`.
-- While processing, show "Processing your document…" with a progress hint ("Reading → Extracting → Filling fields").
-
-### 2. Make extraction fill *everything except Track* — same file + `supabase/functions/venture-synthesize-concept/index.ts`
-
-Today `draftFromFiles` already calls `venture-synthesize-concept` and maps results, but it intentionally **skips fields the user has already typed**. After Process, we instead:
-
-- Map the full structured payload into: company name (or website URL), business concept, differentiation, founder name / email / phone, city, region, country, market scope, industry, sub-industry.
-- For any field the model couldn't infer, fall back to safe defaults so the form is always submittable:
-  - `country` → "United States"
-  - `marketScope` → "local"
-  - `founderName` / `founderEmail` → pulled from the signed-in user's profile/auth metadata
-  - `city` / `region` → left blank only if neither doc nor profile has them (highlighted, see step 4)
-- Keep Track untouched — user picks it.
-
-### 3. Scanned-PDF fallback — `venture-synthesize-concept`
-
-If the client-extracted text is shorter than ~50 useful characters (scanned PDF, image-only deck), the edge function falls back to Gemini vision OCR on the original file bytes before synthesising. Prevents the silent "nothing happened" case that's currently leaving fields empty.
-
-### 4. Surface what's still needed — `hub.new.tsx`
-
-- After processing, show a small **"Filled from your document"** summary card listing which fields were populated and which (if any) still need a human touch.
-- Replace the silent `disabled` on **Create & enrich** with a tooltip listing the exact missing fields (e.g., "Pick a Track" / "Add city").
-- Auto-scroll + pulse-highlight any still-missing field.
-
-### 5. Order of operations on the page
+## Proposed structure
 
 ```text
-Upload doc  →  [Process document]  →  fields auto-fill  →  Pick Track  →  [Create & enrich]
+Lock your concept
+One last look, then we start writing.
+
+┌─ STEP 1 ─ Concept Studio ──────────── "Sharpen" ──┐
+│ Tighten your 50–60 word north-star + value prop.  │
+│ Use this when the concept is roughly right and    │
+│ you just need to crisp the language.              │
+│                                                   │
+│ [Concept summary] [Value prop]                    │
+│ Refine & innovate: Brainstorm / Push / Red-team   │
+└───────────────────────────────────────────────────┘
+
+  ── Optional deep pass ──
+
+┌─ STEP 2 ─ Epiphany Engine ─── "Stress-test" ─ deep ┐  (distinct accent card)
+│ Multi-pass AI mines your research, scores 3        │
+│ vision-extending ideas on viability + attract-     │
+│ iveness. Use this when you want to challenge       │
+│ assumptions before locking.                        │
+│                                                    │
+│ Why it's separate: it rewrites your concept's      │
+│ ambition, not just its wording. Takes ~60s.        │
+│                                                    │
+│ [ Find my epiphany ]                               │
+└────────────────────────────────────────────────────┘
+
+  ── Ready? ──
+
+┌─ Lock & continue ─────────────────────────────────┐
+│ 0 iterations · concept length OK                  │
+│           [ Lock concept ]  [ Continue → ]        │
+└───────────────────────────────────────────────────┘
 ```
 
-The legacy ghost "Draft from N files" button next to the concept textarea is removed to eliminate the duplicate path.
+## Visual differentiation
+- **Concept Studio**: existing neutral card, sparkle icon, "Sharpen" pill.
+- **Epiphany Engine**: promoted to its own full card with the amber/violet gradient accent already used for the "deep" badge, lightning icon, "Stress-test" pill, distinct border. Clearly outside the Concept Studio card.
+- A short divider label between them ("Optional deep pass") signals they're sequential, not nested.
+- **Lock & continue**: pulled into its own slim footer card so the lock action is no longer hiding inside Concept Studio.
+
+## Copy additions (guidance microcopy)
+- Concept Studio subhead: "Sharpen the wording of a concept you already believe in."
+- Epiphany Engine subhead: "Challenge the concept itself — surface bigger swings you may have missed."
+- Tiny "When to use this" line under each header.
+- After an Epiphany result is applied, show a one-line trace in Concept Studio: *"Updated from Epiphany Engine · revert"*.
+
+## Implementation scope
+Frontend only — `src/components/hub/ConceptStudio.tsx` and its parent on `hub.$snapshotId.tsx`:
+1. Extract the Epiphany Engine block out of `ConceptStudio.tsx` into a new sibling component `EpiphanyEngineCard.tsx` rendered after Concept Studio.
+2. Extract the lock/iterations footer into a `ConceptLockBar.tsx` rendered after Epiphany.
+3. Add step chips ("Step 1 · Sharpen", "Step 2 · Stress-test"), section subheads, and the "When to use this" microcopy.
+4. Apply distinct accent treatment to the Epiphany card (gradient border + tinted background using existing semantic tokens — no hardcoded colors).
+5. Keep all existing handlers/props intact; this is presentational restructuring.
 
 ## Out of scope
-
-- No backend/data-model changes beyond the edge function update.
-- Track inference is intentionally left to the user (per request).
-- "🧪 Fill test concept" dev helper stays as-is.
+- No changes to generation logic, Edge Functions, or DB.
+- No changes to the "Brainstorm / Push / Red-team" actions themselves.
