@@ -7,6 +7,7 @@ import { financeSlides } from "./slides/finance";
 import { governanceSlides } from "./slides/governance";
 import { brandSlides } from "./slides/brand";
 import { marketingSlides } from "./slides/marketing";
+import { socialContentSlides } from "./slides/social-content";
 
 export type StageDeck = {
   slug: string;
@@ -30,7 +31,7 @@ const DECK_SLIDES: Record<string, Slide[]> = {
   governance: governanceSlides,
   brand: brandSlides,
   marketing: marketingSlides,
-  // social-and-content — coming next.
+  "social-and-content": socialContentSlides,
 };
 
 export const STAGE_DECKS: StageDeck[] = FRAMEWORK_STAGES.map((s, i) => {
