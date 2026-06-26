@@ -282,3 +282,20 @@ export function provenanceLabel(source: string): string {
     default: return "";
   }
 }
+
+// Mark every venture_snapshot owned by the current user as brain-dirty.
+// Triggered after canonical writes (brief, profile, intake) so the next
+// AI run rebuilds the compressed reasoning blob from fresh canonical data.
+export async function markAllMySnapshotBrainsDirty(): Promise<void> {
+  try {
+    const { data: u } = await supabase.auth.getUser();
+    const uid = u?.user?.id;
+    if (!uid) return;
+    await supabase
+      .from("venture_snapshots")
+      .update({ snapshot_brain_dirty: true })
+      .eq("user_id", uid);
+  } catch (e) {
+    console.warn("[markAllMySnapshotBrainsDirty] failed", e);
+  }
+}

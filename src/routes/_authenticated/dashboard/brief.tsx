@@ -25,6 +25,8 @@ import { BriefPrefillReview } from "@/components/brief/BriefPrefillReview";
 import type { BriefPrefillResponse } from "@/lib/brief.functions";
 import { buildPrefillFromBrief } from "@/lib/brief-to-snapshot";
 import { syncProfileFromBrief } from "@/lib/brief-sync-profile";
+import { markAllMySnapshotBrainsDirty } from "@/lib/canonical-context";
+import { useInvalidateCanonicalContext } from "@/hooks/use-canonical-context";
 import { ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -110,10 +112,14 @@ export default function BriefWizard() {
     return n;
   }, [mode, checkpointBlock, idx]);
 
+  const invalidateCanonical = useInvalidateCanonicalContext();
+
   const save = async (key: string) => {
     try {
       await updateBriefField({ key: key as never, value: values[key] ?? "" });
       refetch();
+      invalidateCanonical();
+      void markAllMySnapshotBrainsDirty();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed");
     }

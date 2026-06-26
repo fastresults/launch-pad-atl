@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { } from 'react-router-dom';
 import { getMyProfile, upsertMyProfile } from "@/lib/attendee.functions";
 import { syncProfileFromBrief } from "@/lib/brief-sync-profile";
+import { markAllMySnapshotBrainsDirty } from "@/lib/canonical-context";
+import { useInvalidateCanonicalContext } from "@/hooks/use-canonical-context";
 import { Sparkles, RotateCcw } from "lucide-react";
 import {
   AlertDialog,
@@ -25,6 +27,7 @@ import { toast } from "sonner";
 
 export default function ProfilePage() {
   const qc = useQueryClient();
+  const invalidateCanonical = useInvalidateCanonicalContext();
   const [autoSyncTried, setAutoSyncTried] = useState(false);
 
   const { data } = useQuery({ queryKey: ["my", "profile"], queryFn: () => getMyProfile() });
@@ -87,6 +90,8 @@ export default function ProfilePage() {
     onSuccess: () => {
       toast.success("Saved");
       qc.invalidateQueries({ queryKey: ["my", "profile"] });
+      invalidateCanonical();
+      void markAllMySnapshotBrainsDirty();
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -97,6 +102,8 @@ export default function ProfilePage() {
       if (r.fieldsFilled > 0) toast.success(`Profile refreshed from your brief — ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} updated.`);
       else toast.message("Your profile is already matched to your brief.");
       qc.invalidateQueries({ queryKey: ["my", "profile"] });
+      invalidateCanonical();
+      void markAllMySnapshotBrainsDirty();
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -129,6 +136,8 @@ export default function ProfilePage() {
       setAutoSyncTried(true);
       toast.success("Profile reset — fields are blank.");
       qc.invalidateQueries({ queryKey: ["my", "profile"] });
+      invalidateCanonical();
+      void markAllMySnapshotBrainsDirty();
     },
     onError: (e: Error) => toast.error(e.message),
   });
