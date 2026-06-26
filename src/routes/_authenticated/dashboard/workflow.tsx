@@ -1,10 +1,12 @@
 // @ts-nocheck
+import { useEffect, useRef, useState } from "react";
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getMyWorkflow, runMyDeliverable, runMyRemaining, getMyRecentRuns } from "@/lib/userPipeline.functions";
 import { countAnsweredBriefFields } from "@/lib/brief-progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Circle, Lock, Loader2, Play, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
