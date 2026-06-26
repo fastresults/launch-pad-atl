@@ -104,11 +104,24 @@ export default function DocumentsPage() {
   };
 
   const onView = async (d: any) => {
-    // Rich viewer for saved deliverables that still have a source link.
-    if (d.kind === "deliverable" && d.source_venture_document_id) {
+    // Rich viewer for saved deliverables — try the stored link, then a name-based fallback.
+    if (d.kind === "deliverable") {
       setOpeningId(d.id);
       try {
-        const vdoc = await getVentureDocumentById({ id: d.source_venture_document_id });
+        let vdoc = d.source_venture_document_id
+          ? await getVentureDocumentById({ id: d.source_venture_document_id })
+          : null;
+        if (!vdoc) {
+          vdoc = await findVentureDocumentByLabel({ label: d.original_name ?? "" });
+          if (vdoc) {
+            // Persist the recovered link so future opens are instant.
+            await supabase
+              .from("attendee_documents")
+              .update({ source_venture_document_id: vdoc.id })
+              .eq("id", d.id);
+            qc.invalidateQueries({ queryKey: ["my", "documents"] });
+          }
+        }
         if (vdoc) {
           setRichDoc(vdoc);
           return;
