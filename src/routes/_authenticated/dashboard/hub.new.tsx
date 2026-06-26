@@ -447,13 +447,41 @@ function Inner() {
         </p>
       </div>
 
-      {fromBrief && (
+      {/* R4 — Confirmation card. When canonical context filled the form, show
+          one prominent "Create venture" CTA at the top so the founder doesn't
+          have to scroll through a form they don't need to edit. The full form
+          stays available below in a "Review every field" disclosure. */}
+      {fromBrief && missingFields.length === 0 && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-primary/40 bg-primary/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+            <div>
+              <div className="text-base font-semibold">Looks right — ready to create</div>
+              <div className="mt-0.5 text-sm text-muted-foreground">
+                We pulled everything from your Startup Brief, Profile, and previous answers. Scroll down to tweak any detail, or create the venture now and we'll start enriching.
+              </div>
+            </div>
+          </div>
+          <Button
+            type="button"
+            size="lg"
+            disabled={!canSubmit}
+            onClick={() => create.mutate()}
+            className="shrink-0"
+          >
+            {create.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+            Create & start enrichment
+          </Button>
+        </div>
+      )}
+
+      {fromBrief && missingFields.length > 0 && (
         <div className="flex items-start gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <div className="flex-1">
-            <div className="font-medium">Pre-filled from your startup brief</div>
+            <div className="font-medium">Pre-filled from your founder context</div>
             <div className="mt-0.5 text-muted-foreground">
-              Edit anything that's off. The only things we still need from you are your <strong>city / state</strong>{!industry ? " and " : ""}{!industry ? <strong>industry</strong> : null}.
+              A few things still need your input: <strong>{missingFields.slice(0, 3).join(", ")}</strong>{missingFields.length > 3 ? `, +${missingFields.length - 3} more` : ""}.
             </div>
           </div>
           <button

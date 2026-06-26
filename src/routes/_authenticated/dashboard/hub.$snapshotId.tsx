@@ -35,6 +35,7 @@ import {
   retryExtraction,
   type VentureSource,
 } from "@/lib/venture-sources";
+import { getCanonicalFounderContext, provenanceLabel } from "@/lib/canonical-context";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { TRACKS, getTrack, type TrackKey } from "@/lib/tracks";
 import { ConceptStudio } from "@/components/hub/ConceptStudio";
@@ -239,6 +240,36 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
   const formRef = useRef(form);
   formRef.current = form;
 
+  // R5 — provenance map: tells us which canonical source each field's value
+  // originated from, so FieldGroup can render "from your Brief" etc.
+  const [provenanceMap, setProvenanceMap] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const ctx = await getCanonicalFounderContext();
+      if (cancelled || !ctx) return;
+      // Map review-field path → canonical key → provenance label.
+      const fieldToCanonical: Record<string, string> = {
+        "foundation.company_name": "company_name",
+        "foundation.concept": "one_line_pitch",
+        "foundation.problem": "problem_statement",
+        "market.target_customers": "target_customer",
+        "market.value_proposition": "unique_insight",
+        "market.differentiators": "unique_insight",
+        "operations.revenue_model": "business_model",
+        "operations.pricing": "pricing_idea",
+        "vision.short_term_goals": "twelve_month_vision",
+      };
+      const out: Record<string, string> = {};
+      for (const [fieldPath, canonicalKey] of Object.entries(fieldToCanonical)) {
+        const src = ctx.provenance[canonicalKey];
+        if (src) out[fieldPath] = src;
+      }
+      setProvenanceMap(out);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   useEffect(() => {
     if (dirtyRef.current) return;
     setForm(buildReviewForm(snapshot));
@@ -356,6 +387,7 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
           sectionKey="foundation"
           form={form}
           setField={setField}
+          provenanceMap={provenanceMap}
           contextChips={[
             { label: "Founder", value: snapshot.founder_name },
             { label: "Industry", value: snapshot.industry },
@@ -365,7 +397,7 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
       )}
 
       {active === "market" && (
-        <FieldGroup sectionKey="market" form={form} setField={setField} />
+        <FieldGroup sectionKey="market" form={form} setField={setField} provenanceMap={provenanceMap} />
       )}
 
       {active === "model" && (
@@ -374,12 +406,14 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
             sectionKey="operations"
             form={form}
             setField={setField}
+            provenanceMap={provenanceMap}
             heading="How you make money"
           />
           <FieldGroup
             sectionKey="vision"
             form={form}
             setField={setField}
+            provenanceMap={provenanceMap}
             heading="Where you're going"
             collapsedByDefault
           />
@@ -704,7 +738,7 @@ function SetupSubStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => voi
 
 // Reusable per-section editor with plain-English helpers and per-field "Looks good" toggles.
 function FieldGroup({
-  sectionKey, form, setField, heading, collapsedByDefault, contextChips,
+  sectionKey, form, setField, heading, collapsedByDefault, contextChips, provenanceMap,
 }: {
   sectionKey: "foundation" | "market" | "operations" | "vision";
   form: Record<string, Record<string, string>>;
@@ -712,6 +746,7 @@ function FieldGroup({
   heading?: string;
   collapsedByDefault?: boolean;
   contextChips?: { label: string; value?: string }[];
+  provenanceMap?: Record<string, string>;
 }) {
   const section = REVIEW_SECTIONS.find((s) => s.key === sectionKey)!;
   const [open, setOpen] = useState(!collapsedByDefault);
@@ -731,6 +766,8 @@ function FieldGroup({
         {section.fields.map((f) => {
           const value = form[sectionKey]?.[f.key] ?? "";
           const filled = isFieldFilled(value);
+          const provSource = provenanceMap?.[`${sectionKey}.${f.key}`] ?? "";
+          const provLabel = filled && provSource ? provenanceLabel(provSource) : "";
           return (
             <div key={f.key} className={`grid gap-1.5 ${f.multiline ? "md:col-span-2" : ""}`}>
               <div className="flex items-center justify-between gap-2">
@@ -754,7 +791,13 @@ function FieldGroup({
               ) : (
                 <Input value={value} onChange={(e) => setField(sectionKey, f.key, e.target.value)} placeholder={f.example} />
               )}
-              {f.example && f.multiline && (
+              {provLabel && (
+                <p className="text-[11px] text-muted-foreground/80">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary/60 align-middle mr-1.5" />
+                  Pulled in {provLabel} — edit if you want to refine it here.
+                </p>
+              )}
+              {f.example && f.multiline && !provLabel && (
                 <p className="text-[11px] italic text-muted-foreground/70">e.g. {f.example}</p>
               )}
             </div>
