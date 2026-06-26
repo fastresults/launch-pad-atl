@@ -191,12 +191,22 @@ export async function generateOne(
   rewriteTags?: string[],
   intakeAnswers?: Record<string, any>,
 ) {
-  const [{ data: snap }, { data: type }] = await Promise.all([
-    supabase.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle(),
+  const [ctx, { data: type }] = await Promise.all([
+    loadVentureContext(supabase, snapshotId),
     supabase.from("venture_document_types").select("*").eq("type", documentType).maybeSingle(),
   ]);
-  if (!snap) throw new Error("Snapshot not found");
+  const snap = ctx.snap;
   if (!type) throw new Error(`Unknown document type: ${documentType}`);
+
+  // Ensure a snapshot brain exists — compute on demand if missing. This is
+  // the compounded context every later deliverable will reuse.
+  if (!ctx.brain && (snap.concept_summary || snap.research_brief || snap.business_concept)) {
+    try {
+      ctx.brain = await computeSnapshotBrain(supabase, snapshotId);
+    } catch (e) {
+      console.warn("brain compute failed, falling back to raw blobs", e);
+    }
+  }
 
   // Resolve intake answers: prefer caller-provided, otherwise reuse any previously saved on the doc row.
   let effectiveIntake: Record<string, any> | null =
@@ -213,6 +223,15 @@ export async function generateOne(
     }
   }
 
+  // Write fresh intake answers back into canonical store (S4). Best-effort —
+  // never blocks generation. Compounds: next deliverable's intake prefills
+  // from these, the Profile page shows them, and re-runs reuse them.
+  if (intakeAnswers && Object.keys(intakeAnswers).length) {
+    writeBackIntake(supabase, ctx.userId, intakeAnswers).catch((e) =>
+      console.warn("intake writeback failed", e),
+    );
+  }
+
   // Mark as generating (preserve any intake answers we resolved).
   await supabase.from("venture_documents").upsert({
     snapshot_id: snapshotId,
@@ -221,7 +240,8 @@ export async function generateOne(
     ...(effectiveIntake ? { intake_answers: effectiveIntake } : {}),
   }, { onConflict: "snapshot_id,document_type" });
 
-  // Load dependency docs for context
+  // Load dependency docs and distill them to bullet summaries (S3 — replaces
+  // raw 600-900-word markdown dumps per upstream).
   const deps: string[] = type.dependencies ?? [];
   let depContext = "";
   if (deps.length) {
@@ -230,10 +250,7 @@ export async function generateOne(
       .select("document_type, content")
       .eq("snapshot_id", snapshotId)
       .in("document_type", deps);
-    depContext = (depDocs ?? [])
-      .filter((d: any) => d.content)
-      .map((d: any) => `## ${d.document_type}\n${d.content}`)
-      .join("\n\n---\n\n");
+    depContext = distillDeps(depDocs ?? []);
   }
 
   const baseSystem = `You are an AI venture analyst writing investor-grade documents.
@@ -247,38 +264,28 @@ Target ~600-900 words unless the doc type is brief.${OUTPUT_FOOTER}`;
     ? `${baseSystemPrompt}\n\n${trackTone}`
     : baseSystemPrompt;
 
-  const founderCard = {
-    founder: { name: snap.founder_name, email: snap.founder_email, phone: snap.founder_phone },
-    location: { city: snap.city, region: snap.region, country: snap.country },
-    market_scope: snap.market_scope,
-    industry: snap.industry,
-    sub_industry: snap.sub_industry,
-    track: snap.track,
-    company_name: snap.company_name,
-    website_url: snap.website_url,
-  };
-
-  const conceptBlock = snap.concept_summary
-    ? `\n## NORTH-STAR CONCEPT (locked by founder — every section must stay consistent with this)\nSummary: ${snap.concept_summary}\nValue proposition: ${snap.value_proposition ?? ""}`
-    : "";
-
-  const brandBlock = snap.brand_tokens
-    ? `\n## Brand tokens (reuse colors, fonts, mood when rendering visuals or builder prompts)\n${JSON.stringify(snap.brand_tokens, null, 2)}`
-    : "";
+  // Build the user prompt. If we have a brain, use the sliced brain JSON
+  // instead of dumping raw extracted_data + research_brief. Saves ~70% of
+  // the previous prompt size and eliminates signal dilution.
+  const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
+  const preamble = compactPreamble(ctx);
 
   const userPrompt = [
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
     `Category: ${type.category}`,
-    conceptBlock,
-    brandBlock,
-    `\n## Founder & market (always reflect these accurately)\n${JSON.stringify(founderCard, null, 2)}`,
-    `\n## Venture brief (extracted_data)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,
-    snap.research_brief ? `\n## Research brief (background evidence — synthesize as analyst judgment, NO footnotes or citations in the output)\n${JSON.stringify(snap.research_brief, null, 2)}` : "",
-    snap.business_concept ? `\n## Founder's raw concept\n${snap.business_concept}` : "",
-    depContext ? `\n## Upstream documents you should build on\n${depContext}` : "",
+    preamble,
+    brainSlice
+      ? `\n## Venture brain (compressed, authoritative — every section must reflect these)\n${JSON.stringify(brainSlice, null, 2)}`
+      : `\n## Venture brief (fallback — brain not yet computed)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,
+    // Only dump the raw research brief when the brain doesn't yet exist.
+    !ctx.brain && snap.research_brief
+      ? `\n## Research brief (background evidence — synthesize as analyst judgment, NO footnotes or citations in the output)\n${JSON.stringify(snap.research_brief, null, 2).slice(0, 8000)}`
+      : "",
+    !ctx.brain && snap.business_concept ? `\n## Founder's raw concept\n${snap.business_concept}` : "",
+    depContext ? `\n## Upstream documents you should build on (distilled)\n${depContext}` : "",
     effectiveIntake
-      ? `\n## Intake answers (TOP PRIORITY — the founder provided these as the ground-truth assumptions for this document. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
+      ? `\n## Intake answers (TOP PRIORITY — the founder provided these as ground-truth assumptions. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
       : "",
     (rewriteFeedback && rewriteFeedback.trim()) || (rewriteTags && rewriteTags.length)
       ? `\n## Rewrite guidance from the founder (TOP PRIORITY — the previous version missed the mark, address every point below in this rewrite)\n${
@@ -286,6 +293,7 @@ Target ~600-900 words unless the doc type is brief.${OUTPUT_FOOTER}`;
         }${rewriteFeedback?.trim() ?? ""}`
       : "",
   ].filter(Boolean).join("\n\n");
+
 
   const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
