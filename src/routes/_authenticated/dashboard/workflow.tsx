@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Circle, Lock, Loader2, Play, Sparkles, Presentation } from "lucide-react";
 import { toast } from "sonner";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
+import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
 
 type WorkflowItem = {
   key: string;
