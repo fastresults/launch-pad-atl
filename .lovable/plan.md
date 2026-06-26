@@ -1,95 +1,71 @@
-## AI-first audit — round 2 findings
+# AI-first audit — round 3 findings
 
-After S1–S5 shipped, I traced every AI surface end-to-end. The shared context builder + brain + tier routing now power **only 2 of the 11 generation functions**. The biggest cost & quality leaks have moved — they're no longer in the on-demand assessment path, they're now concentrated in the bulk path and a few stale-data paths.
+Rounds 1 and 2 cleaned up the Hub side: `venture-generate-document`, `venture-generate-assessment`, `venture-generate-roadmap`, and `venture-bulk-generate` now all share `loadVentureContext` + `compactPreamble` + `snapshot_brain` + tier routing, and brain freshness propagates on every relevant write.
+
+Walking the rest of the codebase top-to-bottom, the **Hub path is clean**, but the **Workflow path (`attendee_deliverables`)** and a few sibling AI functions are still on the old "dump everything raw" pattern. Net result: founders on the Workflow surface and on the on-demand assessment surface get materially worse results than founders on the Hub, even though both surfaces sit on the same canonical tables.
 
 ### Findings (ranked by impact)
 
-**F1 — Bulk generator bypasses everything we built (CRITICAL)**
-`venture-bulk-generate/index.ts` has its own inline `generateOne()` that re-queries the snapshot, dumps the full founder card + the full `extracted_data` blob + the full `research_brief` JSON + every upstream doc verbatim, all on a single hard-coded `gemini-3-flash-preview`. This is the path the founder triggers via *Run Remaining* / *Start writing* — it runs 30+ times per venture. None of the S1/S2/S3/S5 work touches it. Net result: ~70% of the wins we just shipped are not realized on the main path.
+**F1 — `dashboard-pipeline-run` is the new bulk leak (CRITICAL).**
+This is the worker behind *Run remaining* / per-deliverable triggers on `/dashboard/workflow`. It dumps the full brief + full founder + full market JSON into every prompt, hits a flat `gemini-2.5-flash` regardless of `default_model`, and never touches the snapshot brain, venture context, sources, or canonical resolver. Every founder run on this surface is reasoning off raw blobs while the Hub reasons off the brain. ~30 deliverables × full-blob prompt = the round-1/round-2 wins are skipped on this entire surface.
 
-**F2 — Snapshot brain is never refreshed**
-`computeSnapshotBrain` runs once (first deep-research call or first document generation), then the snapshot is frozen. Subsequent uploads, URL scrapes, new intake answers, or rewrites with feedback do not invalidate it. After 2-3 hours of workshop work the brain is stale and every generator downstream is reasoning off old facts.
+**F2 — `attendee-generate-assessment` duplicates `venture-generate-assessment` on raw blobs.**
+389-line near-twin still on Flash, still injecting the full brief + founder + market + every other deliverable verbatim. The Hub path was upgraded to Pro + brain in round 2; this one was not. Same product concept, two qualities.
 
-**F3 — Intake answers write back to canonical store but not the brain**
-S4 pushes intake answers into `attendee_profiles` / `attendee_business_brief`, but the brain (which is the only thing later generators see) isn't recomputed. So learnings don't actually compound — they sit in tables nobody reads at generation time.
+**F3 — `venture-deep-research` synthesizer still dumps raw corpus, ignores brain.**
+The synthesizer call (line 230) hand-builds a corpus string and runs it through Flash. It already produces the inputs the brain depends on, so it should *also* invalidate the brain (it does the opposite — it overwrites `research_brief` and `extracted_data`, then never flips `snapshot_brain_dirty`). Result: brain goes stale the moment deep-research finishes.
 
-**F4 — Two parallel assessment functions**
-`venture-generate-assessment` was refactored last turn. `attendee-generate-assessment` is a near-duplicate older sibling still on Flash with its own raw-blob prompt. Two code paths, one user-facing concept.
+**F4 — `venture-concept-refine` doesn't mark brain dirty.**
+Round 2 added the dirty flag for source-extract and generate-document writebacks, but the rewrite-with-feedback path was missed. Founder rewrites concept → brain still reflects the pre-rewrite version → next document generation contradicts the new concept.
 
-**F5 — No tier routing on bulk path**
-Even with `venture_document_types.model_tier` populated, the bulk generator ignores it. Executive Summary, Financial Model, Pitch Deck all currently run on Flash during bulk. Conversely, lightweight docs (taglines, hashtag lists, calendar entries) could run on `gemini-3.1-flash-lite` for ~5x cost savings.
+**F5 — Canonical reads are still duplicated 4 ways on the frontend.**
+`useCanonicalContext` exists, but `hub.$snapshotId.tsx`, `dashboard/workflow.tsx`, `dashboard/profile.tsx`, and `IntakeGatewayDialog` still each load brief/profile/market individually in some places. The hook is wired but underused — there are ~6 places that re-fetch the same tables instead of subscribing to it.
 
-**F6 — Brain computation itself is overweight**
-Brain prompt dumps up to 60K chars of source text + full research brief into Flash to produce 1500 chars out. Compact preamble + 6K capped sources would produce an equivalent brain on flash-lite at ~10% the cost.
+**F6 — `deliverables-ask` rebuilds context per question.**
+The Ask-or-Search Edge Function pulls every deliverable + brief + market on every question and stuffs them all into the prompt. No brain reuse, no top-K retrieval — at 30 deliverables this prompt is already ~80KB and growing as founders generate more.
 
-**F7 — Track-tone block is duplicated across 5 functions**
-Same 8-track tone dictionary is copy-pasted in bulk-generate, generate-document, deep-research, generate-assessment, generate-roadmap. Drift is already happening (some have `ecommerce_dtc`, some don't).
+**F7 — `brief-prefill` doesn't write back to canonical.**
+Dropping a document into the Brief intake extracts answers, but the result lives only in `attendee_business_brief` after the user clicks save. The same extraction should also touch `attendee_profiles` / `attendee_market_profile` / `attendee_founder_profile` the same way the Hub intake gateway does. Today the founder has to retype the same data on the Profile page.
 
-**F8 — Roadmap & deep-research still inject raw research_brief**
-The brain already condenses research into `market_facts[]` + `differentiators[]`. These two functions still re-stuff the original JSON on top — duplicative tokens, contradictory facts when brain and brief drift.
-
-**F9 — No streaming anywhere**
-Every generate-document call is a blocking POST. Founder stares at a spinner for 15–30s per doc. SSE via `streamText` + `toUIMessageStreamResponse` would let the UI render as the model writes — same total time, dramatically better perceived speed and the user can read & cancel mid-doc.
-
-**F10 — `venture-source-extract` doesn't dirty the brain**
-When a founder drops a new doc and we cache its `extracted_text`, brain stays stale until the next manual deep-research or document run.
-
-**F11 — Specialized prompts live inside `venture-bulk-generate`**
-The 13 specialized doc prompts (website_prd, brand_strategy, etc.) are ~3KB each inside bulk-generate. The on-demand `venture-generate-document` doesn't import them — it falls back to the generic prompt. Same deliverable, two qualities, depending on entry point.
+**F8 — Two model namespaces drift across functions.**
+`google/gemini-3-flash-preview`, `gemini-3.5-flash`, `gemini-2.5-flash`, `gemini-3.1-flash-lite`, `gemini-3-pro-preview`, `gemini-3.1-pro-preview` are all in use simultaneously across 13 functions. No single source of truth → impossible to do a coordinated bump.
 
 ---
 
 ### Proposed streamlining (4 packages, in order)
 
-**P1 — Unify the bulk generator on shared context (highest-impact, lowest-risk)**
-Refactor `venture-bulk-generate.generateOne()` to:
-- Call `loadVentureContext()` once per job (not per doc) and pass the ctx into each generation.
-- Replace founder card + extracted_data + research_brief dump with `compactPreamble(ctx)` + `pickBrainSlice(ctx.brain, type.context_keys)`.
-- Replace full upstream-doc dumps with `distillDeps(depDocs)`.
-- Honor `type.model_tier` → route between `gemini-3.1-pro-preview` and `gemini-3-flash-preview` (and add `gemini-3.1-flash-lite` for light docs marked `tier=lite`).
-- Add `type.model_tier='lite'` to the catalog for the 8-10 light deliverables (taglines, hashtag seeds, content calendar entries, alt-text variants).
+**P1 — Unify the Workflow worker on shared context (highest impact).**
+Refactor `dashboard-pipeline-run.generateOne()` to call `loadVentureContext` (resolving a venture from the user's primary snapshot, or all snapshots if multi-venture), emit `compactPreamble` + `pickBrainSlice` instead of raw JSON, distill upstream deliverables via `distillDeps`, and honor `deliverable_types.default_model` properly with a tier fallback. Mirrors what `venture-bulk-generate` already does on the Hub side.
 
-Expected: ~60-70% prompt-token reduction on bulk runs, +1 quality tier on the 5 strategic docs, ~30% net cost drop.
+**P2 — Collapse the two assessment functions.**
+Delete `attendee-generate-assessment` and route its one caller (`userPipeline.functions.ts:runMyDeliverableAssessment`) to `venture-generate-assessment` with an `attendee_deliverable_key` mode. Single code path, Pro routing, brain-driven. Removes ~170 lines.
 
-**P2 — Move shared prompts & track tones into `_shared/`**
-- Create `supabase/functions/_shared/track-tones.ts` (single source of truth).
-- Create `supabase/functions/_shared/deliverable-prompts.ts` exporting the specialized prompt map.
-- Import from both `venture-bulk-generate` and `venture-generate-document` so single-doc regeneration matches bulk output exactly.
+**P3 — Close the brain freshness loops.**
+- `venture-deep-research` → `markSnapshotBrainDirty(snapshotId)` after writing `research_brief` + `extracted_data`.
+- `venture-concept-refine` → `markSnapshotBrainDirty` after a successful rewrite.
+- `brief-prefill` → write extracted fields back to `attendee_profiles` / `attendee_market_profile` / `attendee_founder_profile` and call the client-side `markAllMySnapshotBrainsDirty` from the dropzone's success handler.
 
-**P3 — Brain freshness loop (compounding learnings)**
-- Add `snapshot_brain_dirty` boolean to `venture_snapshots`.
-- Triggers / writebacks that set it to true:
-  - `venture-source-extract` after caching new text
-  - `venture-generate-document` after writing intake_answers to canonical
-  - `venture-concept-refine` after a rewrite-with-feedback
-- Modify `ensureSnapshotBrain` to recompute when dirty (cheap on flash-lite per P4).
-- Result: brain truly compounds across the session.
+**P4 — Centralize models + tighten frontend canonical use.**
+- Create `supabase/functions/_shared/models.ts` exporting `MODELS.flash`, `MODELS.flashLite`, `MODELS.pro`, `MODELS.proImage`. Replace every literal string in the 13 functions. One file to bump models project-wide.
+- Convert remaining duplicate brief/profile reads in `hub.$snapshotId.tsx`, `dashboard/workflow.tsx`, `dashboard/profile.tsx`, `IntakeGatewayDialog.tsx` to `useCanonicalContext`. Removes ~5 redundant table reads per page load.
 
-**P4 — Slim the brain computer itself**
-- Switch `computeSnapshotBrain` to `gemini-3.1-flash-lite`.
-- Feed it `compactPreamble(ctx)` + `renderSources(ctx, 4000)` instead of raw snapshot dump.
-- Drop `extracted_data` & full `research_brief` from the prompt — those are already captured in the preamble fields.
+### Optional follow-ons
 
----
-
-### Optional follow-ons (smaller wins)
-
-- **F9 / streaming**: convert `venture-generate-document` to `streamText` + `toUIMessageStreamResponse` and consume in `DocumentViewer` for per-doc render. Best UX gain after P1.
-- **F4 / merge assessments**: delete `attendee-generate-assessment` and route its one caller (`src/lib/userPipeline.functions.ts:95`) to `venture-generate-assessment`. Removes 389 lines of dup.
-- **F8 / strip raw research_brief from roadmap & deep-research prompts** once brain is reliable.
+- **F6 / deliverables-ask retrieval**: switch to top-K semantic search over deliverable summaries instead of dumping all. Requires `pgvector` and an embed pass on document writes — separate plan.
+- **Streaming**: convert `venture-generate-document` + `dashboard-pipeline-run` to `streamText` for per-section render. UX win, no quality change.
 
 ### Scope of this round
 
-If you approve, I'll execute **P1 + P2 + P3 + P4** as one batch (they share files and are independently testable). The optional follow-ons (streaming, merge assessments) I'll list as separate "say go" items because each has UI surface area.
+If you approve, I'll execute **P1 + P2 + P3 + P4** as one batch. They share the shared/ module surface and are independently testable. F6 (retrieval) and streaming stay as separate "say go" items.
 
 ### Technical notes
 
-- No schema changes other than `snapshot_brain_dirty boolean` on `venture_snapshots` and a `tier='lite'` enum value (already free-text). RLS/GRANT unchanged.
-- All four packages are server-side. No client code changes required for P1-P4.
-- Backward compatible: existing snapshots without a brain fall back to the current behavior on first hit, then upgrade.
+- **No schema changes.** Reuses `snapshot_brain_dirty`, `default_model`, and the canonical tables already in place.
+- All four packages are mostly server-side. P4's frontend half touches 4 files for read-path cleanup only — no behavior change.
+- Backward compatible: ventures without a brain fall back to current behavior on first hit, then upgrade.
 
-Estimated effect on a full venture run (35 deliverables):
-- Prompt tokens: ~−65%
-- Wall-clock: ~−20% (smaller prompts decode faster on Flash, fewer Pro calls in absolute terms)
-- Credits: ~−35% net (Pro routing adds cost on 5 docs, lite routing removes it on 10, smaller prompts dominate)
-- Quality: strict +1 tier on Exec Summary / Financial Model / Pitch Deck / GTM / Budget; equivalent elsewhere.
+Estimated effect on a full Workflow run (30+ deliverables):
+- Prompt tokens: **~−60%** on the Workflow surface (currently 0% optimized).
+- Wall-clock: ~−15% (smaller Flash prompts, no extra Pro routing here).
+- Quality: strict +1 tier on the Workflow assessments and on any deliverable currently flagged Pro/Pro-Image in `deliverable_types`.
+- Maintenance: one models file, one assessment function, one context resolver — drift surface eliminated.
