@@ -122,13 +122,18 @@ export default function WorkflowDetail() {
     }
   };
 
-  // Auto-kick once when content exists but no hero yet
+  // Auto-kick once per (key) per mount when content exists, no hero yet,
+  // and no prior attempt (status is null). 'failed' shows a Retry button.
+  const autoFiredRef = useRef<string | null>(null);
+  const heroStatus = deliverable?.hero_image_status ?? null;
   useEffect(() => {
-    if (hasContent && !heroPath && !heroLoading) {
-      generateHero(false);
-    }
+    if (!hasContent || heroPath || heroLoading || !key) return;
+    if (heroStatus === "generating" || heroStatus === "failed") return;
+    if (autoFiredRef.current === key) return;
+    autoFiredRef.current = key;
+    generateHero(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasContent, heroPath]);
+  }, [hasContent, heroPath, key, heroStatus]);
 
 
   return (
