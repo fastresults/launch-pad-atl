@@ -94,7 +94,35 @@ export function BriefReview({ values, onEdit, onContinueDiscovery }: Props) {
             Add background & market →
           </button>
         )}
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          className="ml-auto inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive"
+        >
+          <RotateCcw className="h-3.5 w-3.5" /> Start over
+        </button>
       </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear all answers?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This wipes every answer and sends you back to question 1. Your generated
+              deliverables and ventures stay untouched. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep my answers</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); reset.mutate(); }}
+              disabled={reset.isPending}
+            >
+              {reset.isPending ? "Clearing…" : "Yes, start over"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
