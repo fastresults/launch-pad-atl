@@ -28,6 +28,13 @@ import {
   cancelJob,
   listFailures,
 } from "@/lib/foundersHub.functions";
+import {
+  uploadVentureSource,
+  listVentureSources,
+  deleteVentureSource,
+  retryExtraction,
+  type VentureSource,
+} from "@/lib/venture-sources";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { TRACKS, getTrack, type TrackKey } from "@/lib/tracks";
 import { ConceptStudio } from "@/components/hub/ConceptStudio";
