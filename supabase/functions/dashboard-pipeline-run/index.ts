@@ -14,6 +14,9 @@ import {
 } from "../_shared/venture-context.ts";
 import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
 import { MODELS, modelForTier } from "../_shared/models.ts";
+import { aiFetch } from "../_shared/ai-fetch.ts";
+
+const MAX_USER_PROMPT_CHARS = 120_000;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -146,9 +149,9 @@ Aim for 3-6 sections, 100-220 words each. Use plain English, concrete numbers, n
     rewriteBlock ? `\n${rewriteBlock}` : "",
     "",
     "Return ONLY the JSON object.",
-  ].filter(Boolean).join("\n");
+  ].filter(Boolean).join("\n").slice(0, MAX_USER_PROMPT_CHARS);
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
