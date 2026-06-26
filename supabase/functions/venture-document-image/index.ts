@@ -194,6 +194,9 @@ Deno.serve(async (req) => {
       }
     }
     if (!b64) {
+      await admin.from("venture_documents")
+        .update({ hero_image_status: "failed", hero_image_error: "No image returned by model" })
+        .eq("id", doc.id);
       await admin.from("venture_generation_failures").insert({
         snapshot_id: snapshotId,
         document_type: documentType,
@@ -203,21 +206,28 @@ Deno.serve(async (req) => {
     }
 
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-    const path = nextPath(ownerId, snapshotId, documentType, doc.hero_image_path);
+    const path = nextPath(ownerId, snapshotId, documentType, previousPath);
 
     const { error: upErr } = await admin.storage.from(BUCKET).upload(path, bytes, {
       contentType: "image/png",
       upsert: true,
     });
     if (upErr) {
+      await admin.from("venture_documents")
+        .update({ hero_image_status: "failed", hero_image_error: `Upload: ${upErr.message}` })
+        .eq("id", doc.id);
       return new Response(JSON.stringify({ error: `Upload failed: ${upErr.message}` }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     await admin
       .from("venture_documents")
-      .update({ hero_image_path: path, hero_image_prompt: prompt })
-      .eq("snapshot_id", snapshotId)
-      .eq("document_type", documentType);
+      .update({ hero_image_path: path, hero_image_prompt: prompt, hero_image_status: "ready", hero_image_error: null })
+      .eq("id", doc.id);
+
+    // Best-effort: delete the previous version to avoid orphaned files
+    if (previousPath && previousPath !== path) {
+      await admin.storage.from(BUCKET).remove([previousPath]).catch(() => {});
+    }
 
     return new Response(JSON.stringify({ ok: true, path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
