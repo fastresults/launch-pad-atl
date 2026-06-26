@@ -1,8 +1,11 @@
 // Founders Hub — on-demand McKinsey-grade deep assessment for a single document.
-// Builds a full venture-context bundle (brief, research, every completed doc,
-// the Executive Summary) so the deep dive aligns with the rest of the venture.
+// Uses the shared venture-context builder so the deep dive aligns with the rest
+// of the venture and avoids duplicating raw blobs the snapshot brain already
+// summarizes. Routes to Gemini Pro because this is the highest-rigor surface.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { compactPreamble, distillDeps, loadVentureContext, pickBrainSlice } from "../_shared/venture-context.ts";
+import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
