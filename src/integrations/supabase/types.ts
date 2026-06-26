@@ -904,6 +904,84 @@ export type Database = {
         }
         Relationships: []
       }
+      deck_slide_override_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          deck_slug: string
+          field: string
+          id: string
+          slide_id: string
+          value_image_alt: string | null
+          value_image_url: string | null
+          value_text: string | null
+          version: number
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          deck_slug: string
+          field: string
+          id?: string
+          slide_id: string
+          value_image_alt?: string | null
+          value_image_url?: string | null
+          value_text?: string | null
+          version?: number
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          deck_slug?: string
+          field?: string
+          id?: string
+          slide_id?: string
+          value_image_alt?: string | null
+          value_image_url?: string | null
+          value_text?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
+      deck_slide_overrides: {
+        Row: {
+          created_at: string
+          deck_slug: string
+          field: string
+          id: string
+          slide_id: string
+          updated_at: string
+          updated_by: string | null
+          value_image_alt: string | null
+          value_image_url: string | null
+          value_text: string | null
+        }
+        Insert: {
+          created_at?: string
+          deck_slug: string
+          field: string
+          id?: string
+          slide_id: string
+          updated_at?: string
+          updated_by?: string | null
+          value_image_alt?: string | null
+          value_image_url?: string | null
+          value_text?: string | null
+        }
+        Update: {
+          created_at?: string
+          deck_slug?: string
+          field?: string
+          id?: string
+          slide_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          value_image_alt?: string | null
+          value_image_url?: string | null
+          value_text?: string | null
+        }
+        Relationships: []
+      }
       deliverable_revisions: {
         Row: {
           action: string

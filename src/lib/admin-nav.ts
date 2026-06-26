@@ -44,6 +44,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
 
   
   { to: "/admin/media", label: "Media library", icon: ImageIcon, group: "Content", super: true },
+  { to: "/admin/decks", label: "Facilitator decks", icon: Sparkles, group: "Content" },
   { to: "/admin/testimonials", label: "Video testimonials", icon: Video, group: "Content" },
 
   { to: "/admin/social/setup", label: "Setup wizard", icon: Rocket, group: "Social", super: true },

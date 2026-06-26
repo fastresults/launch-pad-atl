@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
 import { ScaledSlide } from "./ScaledSlide";
 import { getDeck } from "./registry";
+import { DeckOverridesProvider } from "./slots";
+import { fetchDeckOverrides } from "@/lib/deck-overrides.functions";
 
 type Props = {
   slug: string | null;
@@ -17,6 +20,13 @@ export function DeckDialog({ slug, onOpenChange }: Props) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { data: overrides = {} } = useQuery({
+    queryKey: ["deck-overrides", slug],
+    queryFn: () => fetchDeckOverrides(slug!),
+    enabled: !!slug,
+    staleTime: 30_000,
+  });
 
   useEffect(() => {
     setIndex(0);
@@ -97,6 +107,7 @@ export function DeckDialog({ slug, onOpenChange }: Props) {
         className="max-w-[96vw] w-[96vw] h-[92vh] p-0 gap-0 overflow-hidden bg-background border-border flex flex-col"
       >
         <DialogTitle className="sr-only">{deck?.title ?? "Facilitator deck"}</DialogTitle>
+        <DeckOverridesProvider deckSlug={slug ?? ""} overrides={overrides}>
 
         <div
           ref={stageRef}
@@ -189,6 +200,7 @@ export function DeckDialog({ slug, onOpenChange }: Props) {
             </button>
           ))}
         </div>
+        </DeckOverridesProvider>
       </DialogContent>
     </Dialog>
   );
