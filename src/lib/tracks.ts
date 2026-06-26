@@ -30,13 +30,13 @@ export const TRACKS: Track[] = [
       "Write as a pragmatic operator coaching a first-time main-street founder opening a real small business — café, salon, trade, local service, indie product, small e-commerce brand, or solo practice. Optimize for opening week, first 100 customers, first $10k in monthly revenue, cash on hand, and word-of-mouth. Replace VC vocabulary entirely: instead of TAM/SAM/SOM, talk local market size and realistic first-year customer count; instead of 'pitch deck' or 'funding round', talk one-page lender/partner summary and simple funding sources (founder savings, friends & family, SBA microloan, revenue-based, local CDFI, grants). Skip ARR, CAC payback, hockey-stick, unicorn language. Use plain English a non-technical owner can act on this week. Use concrete dollar figures, real channels (local SEO, Google Business Profile, neighborhood Instagram, foot traffic, referrals, partnerships with neighboring businesses), and tactics they can execute without a team.",
   },
   {
-    key: "small_business",
-    label: "Established Small Business",
-    oneLiner: "Already operating — growing margin, repeat customers, regional reach",
+    key: "ecommerce_dtc",
+    label: "E-commerce / DTC Brand",
+    oneLiner: "Physical product, launching online-first",
     description:
-      "For founders who already have a running business with revenue, customers, and (usually) staff. Retail shops, agencies, regional franchises, trades, professional services looking to grow margin, expand locations, or systematize operations. Not venture-track.",
+      "First-time founders launching a direct-to-consumer brand — apparel, beauty, food/beverage, home goods, accessories — sold via their own Shopify, Amazon, or marketplaces. Focus is product-market fit on a single hero SKU, first 1,000 customers, paid + organic content engine, and repeat-purchase economics.",
     tonePrompt:
-      "Write as a seasoned small-business advisor coaching an owner who already has revenue, customers, and likely staff. Emphasize unit economics, margin expansion, repeat customers, operational discipline, multi-location or franchise economics, and steady regional growth. Reference SBA / bank-financing realities, owner-operator workflows, and proven playbooks. Avoid venture-capital framing entirely.",
+      "Write as a DTC operator coaching a first-time brand founder. Lead with hero-SKU clarity, COGS / landed cost / contribution margin, MOQ and supplier risk, packaging and unboxing, paid-social creative testing (Meta + TikTok), Shopify funnel basics, email/SMS as the owned channel, repeat-purchase rate and LTV, and fulfillment (3PL vs self-ship). Replace VC vocabulary with DTC realities — talk gross margin %, CAC by channel, AOV, contribution profit, blended ROAS, and payback in orders. Skip ARR/NRR/hockey-stick framing. Use concrete dollar figures and creator/UGC tactics a solo founder can execute this week.",
   },
   {
     key: "scalable_tech",
