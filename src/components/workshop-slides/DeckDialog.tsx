@@ -107,6 +107,7 @@ export function DeckDialog({ slug, onOpenChange }: Props) {
         className="max-w-[96vw] w-[96vw] h-[92vh] p-0 gap-0 overflow-hidden bg-background border-border flex flex-col"
       >
         <DialogTitle className="sr-only">{deck?.title ?? "Facilitator deck"}</DialogTitle>
+        <DeckOverridesProvider deckSlug={slug ?? ""} overrides={overrides}>
 
         <div
           ref={stageRef}
