@@ -29,7 +29,7 @@ function archetypeToStage(arc?: string | string[] | null): string {
   return "idea";
 }
 
-export type SyncOptions = { markComplete?: boolean };
+export type SyncOptions = { markComplete?: boolean; overwrite?: boolean };
 export type SyncResult = { fieldsFilled: number; markedComplete: boolean };
 
 export async function syncProfileFromBrief(opts: SyncOptions = {}): Promise<SyncResult> {
@@ -90,7 +90,8 @@ export async function syncProfileFromBrief(opts: SyncOptions = {}): Promise<Sync
     business_model: brief.business_model,
   };
 
-  // Merge-not-overwrite: only fill where profile is empty/null.
+  // Default: merge-not-overwrite. Force mode is used when the founder explicitly
+  // asks Profile & Intake to mirror the completed Startup Brief.
   const patch: Record<string, any> = {};
   for (const [k, v] of Object.entries(candidate)) {
     const existing = (profile as any)[k];
@@ -102,12 +103,12 @@ export async function syncProfileFromBrief(opts: SyncOptions = {}): Promise<Sync
       v !== null &&
       v !== undefined &&
       (Array.isArray(v) ? v.length > 0 : String(v).trim() !== "");
-    if (isEmpty && hasNew) patch[k] = v;
+    if ((opts.overwrite || isEmpty) && hasNew) patch[k] = v;
   }
 
   // Skills (array merge)
   const existingSkills: string[] = Array.isArray(profile.skills) ? profile.skills : [];
-  if (existingSkills.length === 0 && skillsFromExtract.length > 0) {
+  if ((opts.overwrite || existingSkills.length === 0) && skillsFromExtract.length > 0) {
     patch.skills = skillsFromExtract;
   }
 

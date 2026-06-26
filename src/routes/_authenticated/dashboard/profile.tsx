@@ -23,7 +23,7 @@ export default function ProfilePage() {
   const [financial, setFinancial] = useState({ current_revenue: "", funding_raised: "", monthly_burn: "", runway_months: "" });
 
   useEffect(() => {
-    const p = data?.profile;
+    const p = data;
     if (!p) return;
     setFounder({
       full_name: p.full_name ?? "",
@@ -53,7 +53,7 @@ export default function ProfilePage() {
         !p.value_prop && !p.target_market && !p.business_model && !p.primary_goal;
       if (sparse) {
         setAutoSyncTried(true);
-        syncProfileFromBrief()
+        syncProfileFromBrief({ markComplete: true })
           .then((r) => {
             if (r.fieldsFilled > 0) {
               toast.success(`Pulled ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} from your brief.`);
@@ -69,7 +69,11 @@ export default function ProfilePage() {
 
   const save = useMutation({
     mutationFn: (vars: { section: "founder" | "business" | "financial" | "complete"; data: Record<string, unknown> }) =>
-      upsertMyProfile({ data: vars }),
+      upsertMyProfile(
+        vars.section === "complete"
+          ? { intake_completed_at: new Date().toISOString() }
+          : vars.data,
+      ),
     onSuccess: () => {
       toast.success("Saved");
       qc.invalidateQueries({ queryKey: ["my", "profile"] });
@@ -78,10 +82,10 @@ export default function ProfilePage() {
   });
 
   const pullFromBrief = useMutation({
-    mutationFn: () => syncProfileFromBrief(),
+    mutationFn: () => syncProfileFromBrief({ markComplete: true, overwrite: true }),
     onSuccess: (r) => {
-      if (r.fieldsFilled > 0) toast.success(`Pulled ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} from your brief.`);
-      else toast.message("Nothing new to pull — your profile already has everything from the brief.");
+      if (r.fieldsFilled > 0) toast.success(`Profile refreshed from your brief — ${r.fieldsFilled} field${r.fieldsFilled === 1 ? "" : "s"} updated.`);
+      else toast.message("Your profile is already matched to your brief.");
       qc.invalidateQueries({ queryKey: ["my", "profile"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -99,9 +103,9 @@ export default function ProfilePage() {
         <div className="flex flex-col items-end gap-1">
           <Button variant="outline" onClick={() => pullFromBrief.mutate()} disabled={pullFromBrief.isPending}>
             <Sparkles className="h-4 w-4 mr-2" />
-            {pullFromBrief.isPending ? "Pulling…" : "Pull from my brief"}
+            {pullFromBrief.isPending ? "Refreshing…" : "Refresh from my brief"}
           </Button>
-          <p className="text-[11px] text-muted-foreground">Empty fields only — your edits are never overwritten.</p>
+          <p className="text-[11px] text-muted-foreground">Brings this page back in sync with your latest brief.</p>
         </div>
       </div>
 
