@@ -6,7 +6,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getPublicSiteSettings, updateSiteSetting } from "@/lib/site-settings.functions";
+import { getPublicSiteSettings, updateSiteSetting, DASHBOARD_NAV_KEYS, DEFAULT_DASHBOARD_NAV_VISIBILITY, type DashboardNavKey, type DashboardNavVisibility } from "@/lib/site-settings.functions";
+import { Home, Calendar, ClipboardList, ListChecks, Sparkles, FolderOpen, User } from "lucide-react";
 import {
   adminSetBulkUnlockDefault,
   adminClearBulkUnlockDefault,
