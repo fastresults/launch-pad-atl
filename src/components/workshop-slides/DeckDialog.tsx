@@ -21,6 +21,13 @@ export function DeckDialog({ slug, onOpenChange }: Props) {
   const stageRef = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const { data: overrides = {} } = useQuery({
+    queryKey: ["deck-overrides", slug],
+    queryFn: () => fetchDeckOverrides(slug!),
+    enabled: !!slug,
+    staleTime: 30_000,
+  });
+
   useEffect(() => {
     setIndex(0);
   }, [slug]);
