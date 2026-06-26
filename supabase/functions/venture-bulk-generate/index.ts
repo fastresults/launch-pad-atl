@@ -274,7 +274,7 @@ function dependencyLayers(types: any[]): any[][] {
   return layers;
 }
 
-const CONCURRENCY = 4;
+const CONCURRENCY = 6;
 
 async function runLayer(supabase: any, snapshotId: string, jobId: string, layer: any[], state: { done: number; total: number; fails: number; canceled: boolean }) {
   const { data: existingDocs } = await supabase
