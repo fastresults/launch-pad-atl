@@ -43,9 +43,9 @@ export default function TodayPage() {
   const items = wf.data?.items ?? [];
   const generated = items.filter((i) => i.generated).length;
   const total = items.length;
-  const firstName = (brief.data?.brief?.one_line_pitch || "").split(" ")[0] || null;
+  const firstName = (briefRow?.one_line_pitch || "").split(" ")[0] || null;
 
-  const pitch = brief.data?.brief?.one_line_pitch ?? null;
+  const pitch = briefRow?.one_line_pitch ?? null;
 
   return (
     <div className="space-y-8">
