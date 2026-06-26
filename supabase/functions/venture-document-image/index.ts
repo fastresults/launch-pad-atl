@@ -157,6 +157,9 @@ Deno.serve(async (req) => {
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
+      await admin.from("venture_documents")
+        .update({ hero_image_status: "failed", hero_image_error: `Gateway ${aiRes.status}: ${txt.slice(0, 200)}` })
+        .eq("id", doc.id);
       await admin.from("venture_generation_failures").insert({
         snapshot_id: snapshotId,
         document_type: documentType,
