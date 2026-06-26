@@ -384,7 +384,9 @@ async function runJob(supabase: any, snapshotId: string, jobId: string, category
     current_document_type: null,
   }).eq("id", jobId);
 
-  await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);
+  if (!category) {
+    await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);
+  }
 }
 
 
