@@ -180,9 +180,9 @@ function Inner() {
       .map((r) => {
         const name = r.original_name ?? "source";
         const lower = name.toLowerCase();
-        const isUrlCapture =
-          (r.kind === "brief_source" || r.used_in_brief) &&
-          (lower.endsWith(".md") || lower.endsWith(".markdown"));
+        // Any .md/.markdown source in our pipeline is a scraped URL or a
+        // brief capture — render with the globe icon.
+        const isUrlCapture = lower.endsWith(".md") || lower.endsWith(".markdown");
         const isAudio = /\.(mp3|m4a|wav|webm|ogg)$/i.test(name);
         const isImage = /\.(png|jpe?g|webp|gif)$/i.test(name);
         let origin: "brief" | "founder" | "venture" | "other" = "other";
@@ -195,6 +195,14 @@ function Inner() {
 
   const memoryEmpty = memoryChips.length === 0;
   const showCollectionUI = memoryEmpty || addMoreOpen;
+
+  // Append a freshly-saved source to the in-page memory so it shows up as a
+  // pill in the "Your source memory" row immediately, instead of lingering in
+  // a separate "SAVED" list below the dropzone.
+  const appendToMemory = useCallback((row: VentureSource) => {
+    setReusable((prev) => (prev.some((r) => r.id === row.id) ? prev : [row, ...prev]));
+    setReuseSelected((prev) => ({ ...prev, [row.id]: true }));
+  }, []);
 
 
   const addFiles = useCallback(
@@ -225,15 +233,20 @@ function Inner() {
         try {
           const row = await uploadVentureSource({ file, kind: "venture_source", waitForExtraction: true });
           const text = (row.extracted_text ?? "").trim();
-          setFiles((curr) =>
-            curr.map((x) =>
-              x.id === entry.id
-                ? row.extraction_error || !text
+          if (row.extraction_error || !text) {
+            // Keep the failed entry visible so the founder can see why & retry.
+            setFiles((curr) =>
+              curr.map((x) =>
+                x.id === entry.id
                   ? { ...x, status: "error", documentId: row.id, error: row.extraction_error ?? "Couldn't read file" }
-                  : { ...x, status: "ready", documentId: row.id, text }
-                : x,
-            ),
-          );
+                  : x,
+              ),
+            );
+          } else {
+            // Success → promote into memory chips and drop the transient row.
+            appendToMemory(row);
+            setFiles((curr) => curr.filter((x) => x.id !== entry.id));
+          }
         } catch (e) {
           setFiles((curr) =>
             curr.map((x) =>
@@ -245,7 +258,7 @@ function Inner() {
         }
       });
     },
-    [files.length],
+    [files.length, appendToMemory],
   );
 
   const removeFile = (id: string) => {
@@ -300,20 +313,43 @@ function Inner() {
       if (error) throw error;
       const r = data?.results?.[0];
       if (!r) throw new Error("No result");
-      setScrapedUrls((curr) =>
-        curr.map((x) =>
-          x.id === entry.id
-            ? {
-                ...x,
-                status: r.error ? "error" : "ready",
-                title: r.title ?? null,
-                text: r.text ?? "",
-                charCount: r.charCount ?? 0,
-                error: r.error,
-              }
-            : x,
-        ),
-      );
+      const text = (r?.text ?? "").trim();
+      if (r.error || !text) {
+        setScrapedUrls((curr) =>
+          curr.map((x) =>
+            x.id === entry.id
+              ? { ...x, status: "error", error: r.error ?? "No content" }
+              : x,
+          ),
+        );
+      } else {
+        // Persist the scrape as a venture source so it shows as a chip in
+        // "Your source memory" alongside uploads.
+        try {
+          const host = new URL(normalized).hostname.replace(/^www\./, "");
+          const baseName = (r.title || host).replace(/[^\w\-.]+/g, "_").slice(0, 80) || "link";
+          const md = `# ${r.title || normalized}\n\nSource: ${normalized}\n\n${text}`;
+          const file = new File([md], `${baseName}.md`, { type: "text/markdown" });
+          const row = await uploadVentureSource({ file, kind: "venture_source", waitForExtraction: true });
+          appendToMemory(row);
+          setScrapedUrls((curr) => curr.filter((x) => x.id !== entry.id));
+        } catch (persistErr) {
+          // Fall back to keeping the URL in its own list if persistence fails.
+          setScrapedUrls((curr) =>
+            curr.map((x) =>
+              x.id === entry.id
+                ? {
+                    ...x,
+                    status: "ready",
+                    title: r.title ?? null,
+                    text,
+                    charCount: r.charCount ?? text.length,
+                  }
+                : x,
+            ),
+          );
+        }
+      }
     } catch (e) {
       setScrapedUrls((curr) =>
         curr.map((x) =>
