@@ -147,12 +147,12 @@ Deno.serve(async (req) => {
       brandTokens: snap.brand_tokens,
     });
 
-    // Call Lovable AI Gateway — Nano Banana Pro via chat-completions image shape.
+    // Call Lovable AI Gateway — image model via chat-completions image shape.
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-3-pro-image",
+        model: imageModel,
         messages: [{ role: "user", content: prompt }],
         modalities: ["image", "text"],
       }),
