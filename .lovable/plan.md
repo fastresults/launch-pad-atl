@@ -1,27 +1,22 @@
-# Workflow audit — findings (15)
+# Workflow hardening — status
 
-## 🔴 CRITICAL (4) — raw fetch / open endpoints
-- **F1** `venture-source-extract/index.ts:41` — `geminiTranscribe` uses raw `fetch`. Replace with `aiFetch`.
-- **F2** `venture-synthesize-concept` + `venture-scrape-url` — no auth. Add `requireUser`.
-- **F3** `venture-deep-research/index.ts:232,256` — two raw `fetch` calls. Replace with `aiFetch`.
-- **F4** `venture-concept-refine/index.ts:27` — entire `callAI()` raw. Replace with `aiFetch`.
+## ✅ Package A (shipped)
+- F1/F3/F4 raw fetch → aiFetch (source-extract, deep-research, concept-refine)
+- F2 auth gates on synthesize-concept + scrape-url
+- F8 deck_slide_override_history INSERT revoked from authenticated
 
-## 🟠 HIGH (4)
-- **F5** Auth header mismatch: `venture-bulk-generate` uses `Lovable-API-Key`, `dashboard-pipeline-run` uses `Authorization: Bearer`. Standardize.
-- **F6** `sweep_stuck_generations` skips `ai_pipeline_runs` queued state. Add UPDATE.
-- **F7** In-flight unique index 23505 surfaces as 500. Catch in `generateOne` and return 409.
-- **F8** `deck_slide_override_history` INSERT grant exposed to `authenticated`. Revoke; service_role only.
+## ✅ Package B (shipped this round)
+- F5 venture-bulk-generate now uses `Authorization: Bearer` (matches every other worker)
+- F6 sweep_stuck_generations extended to ai_pipeline_runs + ai_pipeline_steps (15-min cutoff)
+- F7 venture-generate-document catches 23505 / `venture_documents_inflight_unique` → friendly 409
+- F11 runLayer catch in bulk-generate now records a `venture_generation_failures` row instead of swallowing
 
-## 🟡 MEDIUM (7)
-- **F9** `venture-concept-refine` `apply` action skips dirty mark.
-- **F10** `venture-sources.ts:143` doesn't `invalidateCanonicalContext()` after extract.
-- **F11** `venture-bulk-generate runLayer` catch swallows errors without `venture_generation_failures` row.
-- **F12** `venture-scrape-url` SSRF guard misses decimal-encoded IPs.
-- **F13** `venture-generate-document:178` fire-and-forget `writeBackIntake` races `markSnapshotBrainDirty`. Await it.
-- **F14** `venture-job-watchdog` not confirmed scheduled; status name `paused` inconsistent.
-- **F15** `venture-deep-research` never calls `markSnapshotBrainDirty` after writing `research_brief`.
+## ✅ Package C (shipped this round)
+- F9 venture-concept-refine `apply` action now marks brain dirty
+- F12 venture-scrape-url SSRF guard rejects decimal / hex / octal / numeric-only IPv4 and all IPv6 literals
+- F13 venture-generate-document awaits `writeBackIntake` before flagging brain dirty
+- F15 venture-deep-research explicitly marks brain dirty before recomputing after research_brief change
 
-## Recommended next-round plan (HARDENING-2)
-- Package A (CRITICAL+F8): close raw-fetch + open-endpoint + privilege-escalation holes. ~30 min, 5 file edits + 1 migration.
-- Package B (HIGH): friendly 409 on inflight collision, header standardization, sweeper coverage. ~30 min.
-- Package C (MEDIUM): dirty-mark coverage (F9/F13/F15) + cache invalidation (F10) + SSRF (F12) + failure logging (F11) + watchdog cron (F14).
+## Deferred (intentionally not in this round)
+- F10 invalidate `useCanonicalContext` after `uploadVentureSource`. Tradeoff: would couple a non-React lib to TanStack Query. 30s staleTime in `use-canonical-context.ts` masks the gap; revisit if users report stale prefill.
+- F14 venture-job-watchdog cron schedule confirmation. Sweeper now covers pipeline runs, so the watchdog gap is reduced; full scheduling pass deferred.

@@ -517,10 +517,11 @@ Venture context:
     })
     .eq("id", snapshotId);
 
-  // Compute the snapshot brain now that research is done. Fire-and-forget —
-  // downstream generators will compute it lazily if this fails.
+  // F15: research_brief just changed — flag the brain dirty so anything
+  // downstream that reads the cached brain re-derives from fresh research.
   try {
-    const { computeSnapshotBrain } = await import("../_shared/snapshot-brain.ts");
+    const { computeSnapshotBrain, markSnapshotBrainDirty } = await import("../_shared/snapshot-brain.ts");
+    await markSnapshotBrainDirty(supabase, snapshotId);
     await computeSnapshotBrain(supabase, snapshotId);
   } catch (e) {
     console.warn("snapshot brain compute failed (will retry lazily)", e);

@@ -21,6 +21,16 @@ type ScrapeResult = {
   error?: string;
 };
 
+function isPrivateIPv4(parts: number[]): boolean {
+  if (parts.length !== 4 || parts.some((p) => !Number.isFinite(p) || p < 0 || p > 255)) return false;
+  const [a, b] = parts;
+  if (a === 10 || a === 127 || a === 0) return true;
+  if (a === 169 && b === 254) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  return false;
+}
+
 function isSafeUrl(raw: string): { ok: true; url: URL } | { ok: false; error: string } {
   let u: URL;
   try { u = new URL(raw); } catch { return { ok: false, error: "Invalid URL" }; }
@@ -29,10 +39,39 @@ function isSafeUrl(raw: string): { ok: true; url: URL } | { ok: false; error: st
   if (
     host === "localhost" ||
     host.endsWith(".localhost") ||
-    /^(127\.|10\.|192\.168\.|169\.254\.|0\.)/.test(host) ||
-    /^172\.(1[6-9]|2\d|3[0-1])\./.test(host) ||
-    host === "::1"
+    host === "::1" ||
+    host.startsWith("[::") ||           // any IPv6 literal — too risky to allow
+    host.endsWith(".internal") ||
+    host.endsWith(".local")
   ) return { ok: false, error: "Private/loopback hosts are blocked" };
+
+  // F12: catch IPv4 in dotted, decimal, octal, or hex form.
+  //   dotted   → 127.0.0.1
+  //   decimal  → 2130706433
+  //   octal    → 0177.0.0.1
+  //   hex      → 0x7f000001
+  if (/^\d+$/.test(host)) {
+    // single decimal integer
+    const n = Number(host);
+    if (Number.isFinite(n)) {
+      const parts = [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff];
+      if (isPrivateIPv4(parts)) return { ok: false, error: "Private IP is blocked" };
+    }
+    return { ok: false, error: "Numeric-only hosts are blocked" };
+  }
+  if (/^0x[0-9a-f]+$/i.test(host)) {
+    return { ok: false, error: "Hex-encoded hosts are blocked" };
+  }
+  if (/^[\d.]+$/.test(host)) {
+    // dotted-quad — accept each segment as decimal/octal/hex.
+    const segs = host.split(".");
+    const parts = segs.map((s) => {
+      if (/^0x[0-9a-f]+$/i.test(s)) return parseInt(s, 16);
+      if (/^0\d+$/.test(s)) return parseInt(s, 8);
+      return Number(s);
+    });
+    if (isPrivateIPv4(parts)) return { ok: false, error: "Private IP is blocked" };
+  }
   return { ok: true, url: u };
 }
 
