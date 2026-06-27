@@ -350,7 +350,7 @@ function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; tot
         </p>
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            {totalDocs ? `0 / ${totalDocs} documents` : "0 documents"}
+            {totalDocs ? `${snapshot.doc_count ?? 0} / ${totalDocs} documents` : `${snapshot.doc_count ?? 0} documents`}
             {snapshot.updated_at && <span className="ml-2 opacity-70">· {relativeTime(snapshot.updated_at)}</span>}
           </span>
           <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
