@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
     const payload: Record<string, unknown> = {
       user_id: user.id,
       source,
-      raw_text: raw_text ?? null,
+      raw_text: raw_text ?? (extractedResumeText && extractedResumeText.length > 80 ? extractedResumeText.slice(0, 18000) : null),
       linkedin_url: linkedin_url ?? null,
       source_file_path: source_file_path ?? null,
     };
