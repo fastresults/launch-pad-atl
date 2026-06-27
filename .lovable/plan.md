@@ -25,3 +25,9 @@
 - F17 removed admin cohort test harness route + UI entry (route deleted, App.tsx + admin.cohorts.tsx cleaned)
 - F18 `setUserRole` now routes through `admin_set_user_role` SECURITY DEFINER RPC with is_admin check, super_admin-only escalation, and last-super_admin protection
 - F21 `handle_new_user` serialized via `pg_advisory_xact_lock` and bootstrap now checks for any existing super_admin instead of counting auth.users (eliminates concurrent-signup race)
+
+## ✅ Package E3/E4 (shipped)
+- F22 brand-intake + brand-creative admin gate switched to service-role `is_admin` RPC (single authoritative read, closes TOCTOU window)
+- F25 storage.objects "Public can read deck-images" replaced with authenticated-only SELECT (app uses signed URLs — no UI impact)
+- F26 inquiry_messages.author_id now defaults to `auth.uid()` so admin replies record their identity automatically
+- F27 member_intakes UPDATE policy gained `WITH CHECK` so users can't reassign an intake to another user_id
