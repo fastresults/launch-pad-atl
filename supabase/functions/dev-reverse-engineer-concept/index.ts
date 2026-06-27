@@ -124,16 +124,26 @@ Deno.serve(async (req) => {
     return "";
   }
   try {
-    let r = await scrape({ url, formats: ["markdown"], onlyMainContent: true });
-    if (!r.ok) return json(r.status, { error: `Firecrawl: ${r.fcJson?.error ?? "request failed"}` });
-    markdown = pickContent(r.fcJson);
-    if (!markdown.trim()) {
-      // Retry with JS wait + fuller formats for JS-heavy / bot-protected sites
-      r = await scrape({ url, formats: ["markdown", "html", "summary"], onlyMainContent: false, waitFor: 2500 });
-      if (r.ok) markdown = pickContent(r.fcJson);
+    const attempts: Record<string, unknown>[] = [
+      { url, formats: ["markdown"], onlyMainContent: true },
+      { url, formats: ["markdown", "html", "summary"], onlyMainContent: false, waitFor: 2500 },
+      { url, formats: ["markdown", "html", "summary"], onlyMainContent: false, waitFor: 5000, proxy: "stealth", mobile: false },
+      { url, formats: ["summary", "html"], onlyMainContent: false, waitFor: 8000, proxy: "stealth" },
+    ];
+    let lastErr = "";
+    for (const body of attempts) {
+      const r = await scrape(body);
+      if (!r.ok) {
+        lastErr = String(r.fcJson?.error ?? `status ${r.status}`);
+        continue;
+      }
+      markdown = pickContent(r.fcJson);
+      if (markdown.trim()) break;
     }
     markdown = markdown.slice(0, 12000);
-    if (!markdown.trim()) return json(502, { error: "Firecrawl returned no content for this URL. Try a different seed site." });
+    if (!markdown.trim()) {
+      return json(502, { error: `Firecrawl returned no content for this URL${lastErr ? ` (${lastErr})` : ""}. Try a different seed site.` });
+    }
   } catch (e) {
     return json(502, { error: `Firecrawl fetch failed: ${e instanceof Error ? e.message : String(e)}` });
   }
