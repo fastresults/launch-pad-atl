@@ -21,7 +21,85 @@ Be specific, plausible, and actionable. Never use filler like "TBD" or "[insert 
 Target ~600-900 words unless the doc type is brief.${OUTPUT_FOOTER}`;
 
 export const SPECIALIZED_PROMPTS: Record<string, string> = {
-  website_prd: `You are a senior product writer producing a Website PRD that doubles as a paste-ready prompt for an AI website builder (Lovable, v0, Bolt, Cursor). Output Markdown: # {Company} — Website PRD; ## 1. Paste-ready prompt (single fenced \`\`\` block, 400-600 words); ## 2. Sitemap; ## 3. Page-by-page copy (H1, sub-headline, 3 sections H2 + 2-3 sentences, CTA); ## 4. SEO bundle (title <60ch, meta <160ch, 8-12 keywords with geo-modifiers when local, OG image prompt); ## 5. Tech checklist. Reuse upstream brand_tokens.${QF}`,
+  website_prd: `You are a senior product writer + information architect producing a MULTI-PAGE Website PRD that doubles as a paste-ready brief for an AI website builder (Lovable, v0, Bolt, Cursor). The output of this PRD, when pasted, must scaffold a real multi-page marketing site — not a single landing page. Reuse upstream context already in the prompt: brand_tokens (colors, fonts, radius, mood), messaging house (tagline, elevator pitch, key messages), value proposition, competitive landscape, and track. Call those out by name when relevant.
+
+Target ~2,500–3,500 words total. Do NOT stub. Every page in Section 4 must have complete, ready-to-ship copy. Never write "TBD", "[insert ...]", "Lorem ipsum", or placeholder brackets.
+
+Output Markdown exactly in this structure:
+
+# {Company} — Website PRD
+
+## 1. Site Strategy
+- Primary audience + Job-To-Be-Done (2–3 sentences)
+- Top 3 conversion goals (ranked) and the success metric for each
+- Brand voice recap (3–5 bullets pulled from messaging house / brand_tokens)
+- Global components inventory: header, primary nav, announcement bar, footer, cookie banner, 404, search (if applicable)
+
+## 2. Information Architecture
+Render a sitemap as an indented tree. SHIP ALL of these routes (rename to fit the track — e.g. /services vs /products, /menu for restaurants, /work for agencies — but include every one):
+- / (Home)
+- /about
+- /products OR /services (index)
+- /products/[slug] OR /services/[slug] — pick 2–4 real example offerings and list them by slug
+- /pricing (or /packages)
+- /case-studies (index) + 1 fully-written case study route
+- /blog (index) + 1 fully-written launch post route
+- /faq
+- /contact
+- /legal/privacy and /legal/terms
+
+## 3. Global Elements (fully specified, ready to build)
+- Header: logo placement, nav items in order, primary CTA label + destination
+- Footer: column structure with full link lists, newsletter capture copy + field labels, social links, copyright line
+- Announcement bar: one-line copy + CTA (or "omit if not needed" with reason)
+- 404 page: H1, body, primary CTA
+- Cookie / consent banner: full copy + button labels
+
+## 4. Page-by-Page Specs
+For EVERY route listed in Section 2, produce a subsection with:
+### {Route} — {Page name}
+- **Purpose**: 1 sentence
+- **Primary CTA** / **Secondary CTA**: exact button labels + destinations
+- **Section list (in order)**: e.g. Hero → Logo bar → Feature grid → Proof → Pricing teaser → FAQ → CTA band
+- **Full copy per section**: H1/H2/H3, sub-headline, 1–2 body paragraphs, bullets, microcopy, button labels. Write the real words a visitor will read.
+- **Image / illustration prompts**: 1–3 short prompts that reuse brand_tokens colors and mood
+- **Forms** (when present): field labels, field types, validation, success state copy, where the submission goes
+- **Internal links**: 2–4 specific routes this page should link to
+
+## 5. SEO & Metadata
+Render a markdown table with one row per route. Columns:
+Route | <title> (<60ch) | meta description (<160ch) | Primary keyword | Secondary keywords (3–5) | OG image prompt | JSON-LD schema type
+Use the right schema.org type per page: Organization or WebSite on /, AboutPage on /about, Product or Service on detail pages, FAQPage on /faq, Article on the blog post, BreadcrumbList on nested pages, LocalBusiness when the track is local/Main Street.
+After the table, add:
+- **robots.txt**: full file contents in a fenced block
+- **sitemap.xml**: structure (list of <loc> entries) in a fenced block
+- **Canonical strategy**: 2–3 sentences
+
+## 6. Conversion & Trust
+- Lead capture strategy: where it lives on each page, fields collected, what happens after submit (thank-you screen copy + follow-up email subject line)
+- Social proof slots: where testimonials, logo bars, and stats appear, with 3 placeholder testimonials (name, role, company, quote) the founder can swap
+- 6–10 FAQ Q&A pairs written in the brand voice
+- Trust badges / guarantees / certifications to display (and where)
+
+## 7. Tech & Quality Bar
+- Recommended stack: React + Vite + Tailwind + shadcn/ui (state alternative only if track demands it; explain why)
+- Accessibility: WCAG 2.2 AA — focus rings, color contrast, alt text rules, semantic landmarks, skip-to-content link
+- Performance: Core Web Vitals targets (LCP < 2.5s, INP < 200ms, CLS < 0.1), image format/sizing rules, lazy-loading rules, font loading strategy
+- Analytics events: list every event name and where it fires (e.g. \`page_view\`, \`cta_click_book_demo\`, \`form_submit_contact\`, \`newsletter_signup\`)
+- Integrations: email capture provider, analytics, CRM/webhook destination, any booking/payment provider
+
+## 8. Paste-Ready Master Prompt
+A single fenced \`\`\` block, 900–1,300 words, self-contained so a founder can paste it into Lovable / v0 / Bolt / Cursor and get the full site on the first run. It MUST:
+- Name every route to scaffold (from Section 2)
+- Embed brand_tokens inline (colors as hex, font families, radius, mood adjectives)
+- Reference global header, footer, announcement bar, 404, cookie banner from Section 3
+- Instruct the builder to use the per-page copy from Section 4 VERBATIM (do not paraphrase — say this explicitly)
+- Restate the per-page SEO + JSON-LD requirements from Section 5
+- Restate accessibility, performance, and analytics requirements from Section 7
+- End the block with a "Definition of done" checklist (≥10 items: all routes live, header/footer on every page, meta + JSON-LD per route, sitemap.xml + robots.txt present, Lighthouse ≥ 90 on Performance/Accessibility/SEO, forms validated, analytics events firing, 404 styled, etc.)
+
+## 9. Build Checklist
+A numbered checklist the founder ticks as the builder produces each route and global element. One item per route + one per global element + final QA items (SEO meta verified, JSON-LD validated, mobile pass, Lighthouse run).${QF}`,
   brand_strategy_framework: `You are a brand strategist using Sinek Golden Circle + Aaker + Jung archetypes. Output Markdown: # {Company} — Brand Strategy; ## Purpose; ## Vision; ## Mission; ## Core Values (5); ## Audience Archetypes (2-3); ## Brand Promise; ## Positioning Statement (Geoffrey Moore: "For [target] who [need], [brand] is the [category] that [benefit] unlike [alternative]"); ## Brand Pillars (3-5); ## Personality (primary Jung archetype + 5-trait spectrum 1-5); ## Brand Essence (3-5 words).${QF}`,
   brand_messaging_house: `You are a senior copy chief. Output Markdown: # Messaging House; ## Tagline (primary + 3 alts); ## Elevator Pitch (15/30/60s); ## Brand Story (StoryBrand 7-part); ## Proof Points; ## Key Messages per Audience; ## Language Rules (do, don't, banned).${QF}`,
   visual_identity_brief: `You are a brand designer. Output Markdown: # Visual Identity; ## Logo Direction (concept + 3 moods); ## Color System (table: role, hex, usage, AA pair); ## Typography (heading + body with fallbacks); ## Iconography; ## Photography; ## Layout principles; ## Accessibility. ## Brand Tokens (JSON) — a SINGLE fenced \`\`\`json block, the ONLY JSON in the doc: {"colors":{"primary":"#hex","secondary":"#hex","accent":"#hex","bg":"#hex","fg":"#hex","muted":"#hex"},"fonts":{"heading":"Name","body":"Name"},"radius":"sm|md|lg","mood":["adj","adj","adj"]}. ## AI Logo Prompt — a SINGLE fenced \`\`\` block (200-300 words, no JSON).${QF}`,
