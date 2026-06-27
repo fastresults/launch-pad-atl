@@ -8,10 +8,12 @@
 // gateway submit, brief save) succeeds — call `invalidateCanonicalContext`
 // from the mutation's onSuccess.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import {
   getCanonicalFounderContext,
   type CanonicalFounderContext,
 } from "@/lib/canonical-context";
+import { VENTURE_SOURCES_CHANGED_EVENT } from "@/lib/venture-sources";
 
 export const CANONICAL_CONTEXT_QUERY_KEY = ["canonical-founder-context"] as const;
 
