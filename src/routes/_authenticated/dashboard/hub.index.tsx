@@ -392,7 +392,13 @@ function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; tot
                     <li>All generation jobs and failure logs</li>
                     <li>Uploaded document images</li>
                   </ul>
+                  {isLast && (
+                    <div className="rounded-lg border border-status-warning/40 bg-status-warning/10 p-3 text-xs text-status-warning-foreground dark:text-status-warning">
+                      <strong>Heads up:</strong> this is your last venture. Deleting it will also clear your Founder Brief, Profile intake, and Market answers so your next startup starts fresh.
+                    </div>
+                  )}
                   <div className="rounded-lg border border-white/10 bg-muted/40 p-3 text-xs">
+
                     <div><span className="text-muted-foreground">Venture:</span> <span className="font-medium">{title}</span></div>
                     <div><span className="text-muted-foreground">Owner:</span> {snapshot.user_id}</div>
                     <div><span className="text-muted-foreground">Created:</span> {snapshot.created_at ? new Date(snapshot.created_at).toLocaleString() : "—"}</div>
