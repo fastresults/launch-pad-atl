@@ -553,37 +553,117 @@ function Inner() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-xs font-semibold uppercase tracking-wider text-primary">Step 1</div>
-            <h2 className="mt-0.5 text-lg font-semibold">Give us something to work with</h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">{intakeStatus}</p>
+            <h2 className="mt-0.5 text-lg font-semibold">
+              {memoryEmpty ? "Give us something to work with" : "Your source memory"}
+            </h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {memoryEmpty
+                ? intakeStatus
+                : "Here's everything we're already using as your single source of truth. We'll carry all of it into this startup snapshot."}
+            </p>
           </div>
           {drafting && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
         </div>
 
-        {/* Tabs */}
-        <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-background/40 p-1 sm:grid-cols-4">
-          {([
-            { k: "upload", label: "Upload", icon: Upload },
-            { k: "link", label: "Paste a link", icon: Link2 },
-            { k: "speak", label: "Speak", icon: Mic },
-            { k: "type", label: "Type", icon: TypeIcon },
-          ] as { k: IntakeTab; label: string; icon: any }[]).map((t) => {
-            const Icon = t.icon;
-            const active = intakeTab === t.k;
-            return (
-              <button
-                key={t.k}
-                type="button"
-                onClick={() => setIntakeTab(t.k)}
-                className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm transition ${
-                  active ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
+        {/* Memory chips — what we already have in collective memory */}
+        {!memoryEmpty && (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {memoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin }) => {
+                const ready = !!(row.extracted_text ?? "").trim();
+                const Icon = isUrlCapture ? Globe : isAudio ? Mic : isImage ? FileText : FileText;
+                const selected = !!reuseSelected[row.id];
+                const dot = !ready
+                  ? "bg-status-danger"
+                  : selected
+                    ? "bg-status-success"
+                    : "bg-muted-foreground/40";
+                const originLabel =
+                  origin === "brief" ? "Brief" : origin === "founder" ? "Founder" : origin === "venture" ? "Venture" : "Library";
+                return (
+                  <div
+                    key={row.id}
+                    title={
+                      ready
+                        ? `${Math.round((row.extracted_text ?? "").length / 1000)}k chars · from ${originLabel}`
+                        : row.extraction_error
+                          ? `Couldn't read · from ${originLabel}`
+                          : `Processing… · from ${originLabel}`
+                    }
+                    className={`group inline-flex max-w-[260px] items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
+                      selected
+                        ? "border-primary/40 bg-primary/10"
+                        : "border-white/10 bg-background/40 opacity-60"
+                    }`}
+                  >
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
+                    <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setReuseSelected((prev) => ({ ...prev, [row.id]: !prev[row.id] }))
+                      }
+                      className="shrink-0 text-muted-foreground hover:text-foreground"
+                      aria-label={selected ? "Don't use for this venture" : "Use for this venture"}
+                    >
+                      {selected ? <X className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Anything else? */}
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-background/40 p-3">
+              <div className="text-sm">
+                <span className="font-medium">Anything else you want to add to memory?</span>{" "}
+                <span className="text-muted-foreground">
+                  We use what's above as your single source of truth.
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={addMoreOpen ? "outline" : "ghost"}
+                  onClick={() => setAddMoreOpen((v) => !v)}
+                >
+                  {addMoreOpen ? "Hide" : "Yes, add more"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tabs (collection UI) — shown only when memory is empty or founder opted to add more */}
+        {showCollectionUI && (
+          <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-background/40 p-1 sm:grid-cols-4">
+            {([
+              { k: "upload", label: "Upload", icon: Upload },
+              { k: "link", label: "Paste a link", icon: Link2 },
+              { k: "speak", label: "Speak", icon: Mic },
+              { k: "type", label: "Type", icon: TypeIcon },
+            ] as { k: IntakeTab; label: string; icon: any }[]).map((t) => {
+              const Icon = t.icon;
+              const active = intakeTab === t.k;
+              return (
+                <button
+                  key={t.k}
+                  type="button"
+                  onClick={() => setIntakeTab(t.k)}
+                  className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm transition ${
+                    active ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
 
         {/* Upload tab */}
         {intakeTab === "upload" && (
