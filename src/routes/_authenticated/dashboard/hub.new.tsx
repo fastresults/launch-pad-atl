@@ -180,9 +180,9 @@ function Inner() {
       .map((r) => {
         const name = r.original_name ?? "source";
         const lower = name.toLowerCase();
-        const isUrlCapture =
-          (r.kind === "brief_source" || r.used_in_brief) &&
-          (lower.endsWith(".md") || lower.endsWith(".markdown"));
+        // Any .md/.markdown source in our pipeline is a scraped URL or a
+        // brief capture — render with the globe icon.
+        const isUrlCapture = lower.endsWith(".md") || lower.endsWith(".markdown");
         const isAudio = /\.(mp3|m4a|wav|webm|ogg)$/i.test(name);
         const isImage = /\.(png|jpe?g|webp|gif)$/i.test(name);
         let origin: "brief" | "founder" | "venture" | "other" = "other";
