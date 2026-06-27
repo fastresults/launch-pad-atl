@@ -92,10 +92,12 @@ function isFilled(v: any) {
   return v !== null && v !== undefined && String(v).trim().length > 0;
 }
 
-export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
+export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: Props) {
   const fields: IntakeField[] = target?.schema?.fields ?? [];
   const [values, setValues] = useState<Record<string, any>>({});
   const [prefillSources, setPrefillSources] = useState<Record<string, string>>({});
+  const [aiEstimateFields, setAiEstimateFields] = useState<Set<string>>(new Set());
+  const [estimating, setEstimating] = useState(false);
   const [recordingFor, setRecordingFor] = useState<string | null>(null);
   const [transcribingFor, setTranscribingFor] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
