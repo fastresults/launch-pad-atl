@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
-import { TRACKS, TRACK_BY_KEY, pickSeedForTrack, type TrackKey } from "@/lib/tracks";
+import { TRACKS, TRACK_BY_KEY, pickSeedForTrack, TRACK_SEEDS, type TrackKey, type SeedEntry } from "@/lib/tracks";
 import { INDUSTRIES } from "@/lib/industries";
 import { createSnapshot } from "@/lib/foundersHub.functions";
 import {
@@ -109,6 +109,7 @@ function Inner() {
   const [processed, setProcessed] = useState(false);
   const [aiFilled, setAiFilled] = useState<Record<string, boolean>>({});
   const [filling, setFilling] = useState(false);
+  const [seedUrlChoice, setSeedUrlChoice] = useState<string>(""); // "" = random
 
   // Founder + market context
   const [founderName, setFounderName] = useState(prefill?.founder_name ?? "");
@@ -830,7 +831,23 @@ function Inner() {
 
         {/* Dev-only test fill */}
         {import.meta.env.DEV && (
-          <div className="flex justify-end">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {track && TRACK_SEEDS[track]?.length > 0 && (
+              <select
+                value={seedUrlChoice}
+                onChange={(e) => setSeedUrlChoice(e.target.value)}
+                disabled={filling}
+                className="h-8 rounded-md border border-input bg-background px-2 text-xs text-muted-foreground"
+                aria-label="Dev seed picker"
+              >
+                <option value="">Random seed</option>
+                {TRACK_SEEDS[track].map((s) => (
+                  <option key={s.url} value={s.url}>
+                    {s.url.replace(/^https?:\/\/(www\.)?/, "")}
+                  </option>
+                ))}
+              </select>
+            )}
             <Button
               type="button"
               size="sm"
@@ -843,13 +860,37 @@ function Inner() {
                   return;
                 }
                 setFilling(true);
+                // Build attempt order: chosen seed first (if any), then the rest shuffled.
+                const allSeeds = TRACK_SEEDS[track];
+                const chosen = seedUrlChoice
+                  ? allSeeds.find((s) => s.url === seedUrlChoice)
+                  : pickSeedForTrack(track);
+                const rest = allSeeds.filter((s) => s.url !== chosen?.url);
+                for (let i = rest.length - 1; i > 0; i--) {
+                  const j = Math.floor(Math.random() * (i + 1));
+                  [rest[i], rest[j]] = [rest[j], rest[i]];
+                }
+                const attempts: SeedEntry[] = [chosen!, ...rest].filter(Boolean);
+                let lastErr: string | null = null;
+                let seedUsed: SeedEntry | null = null;
+                let data: any = null;
                 try {
-                  const seed = pickSeedForTrack(track);
-                  const { data, error } = await supabase.functions.invoke("dev-reverse-engineer-concept", {
-                    body: { url: seed.url, track },
-                  });
-                  if (error) throw error;
-                  if (!data?.company || !data?.concept) throw new Error("Empty response");
+                  for (const seed of attempts) {
+                    const res = await supabase.functions.invoke("dev-reverse-engineer-concept", {
+                      body: { url: seed.url, track },
+                    });
+                    if (!res.error && res.data?.company && res.data?.concept) {
+                      seedUsed = seed;
+                      data = res.data;
+                      break;
+                    }
+                    lastErr = res.error
+                      ? `${seed.url.replace(/^https?:\/\//, "")}: ${res.error.message ?? "failed"}`
+                      : `${seed.url.replace(/^https?:\/\//, "")}: empty response`;
+                  }
+                  if (!data || !seedUsed) {
+                    throw new Error(lastErr ?? "All seeds failed");
+                  }
                   setCompanyName(data.company);
                   if (path !== "manual") setWebsiteUrl(data.url);
                   setBusinessConcept(data.concept);
@@ -862,13 +903,15 @@ function Inner() {
                     setFounderName(meta.display_name || meta.name || meta.full_name || "Test Founder");
                   if (!founderEmail.trim()) setFounderEmail(u?.email || `test+${ts}@example.com`);
                   if (!founderPhone.trim()) setFounderPhone("+1 555 010 0123");
-                  if (!city.trim() && seed.city) setCity(seed.city);
-                  if (!region.trim() && seed.region) setRegion(seed.region);
-                  if (!country.trim() && seed.country) setCountry(seed.country);
-                  setMarketScope(seed.market_scope);
-                  if (!industry.trim()) setIndustry(seed.industry);
-                  if (!subIndustry.trim() && seed.sub_industry) setSubIndustry(seed.sub_industry);
-                  toast.success(`Filled ${TRACK_BY_KEY[track].label} test — ${data.company}`);
+                  if (!city.trim() && seedUsed.city) setCity(seedUsed.city);
+                  if (!region.trim() && seedUsed.region) setRegion(seedUsed.region);
+                  if (!country.trim() && seedUsed.country) setCountry(seedUsed.country);
+                  setMarketScope(seedUsed.market_scope);
+                  if (!industry.trim()) setIndustry(seedUsed.industry);
+                  if (!subIndustry.trim() && seedUsed.sub_industry) setSubIndustry(seedUsed.sub_industry);
+                  toast.success(
+                    `Filled ${TRACK_BY_KEY[track].label} test — ${data.company} (${seedUsed.url.replace(/^https?:\/\/(www\.)?/, "")})`,
+                  );
                 } catch (e) {
                   toast.error(e instanceof Error ? e.message : "Couldn't fill test concept");
                 } finally {

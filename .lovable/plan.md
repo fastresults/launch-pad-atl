@@ -1,65 +1,40 @@
-# Streamlining the Create-Venture flow
+# "Fill test concept (dev)" — what it is and what happened
 
-## What's working today
-- Multi-source intake exists: file drop, URL scrape, voice, reusable library, draft text.
-- `venture-synthesize-concept` already fills ~10 fields from any combination of those sources.
-- Canonical-context prefill pulls from Brief/Profile.
+## What this button does
 
-## What's hurting novices
-1. **Wrong order.** The form opens with 12 founder/market inputs *before* the AI intake card. Novices fill manually before realizing the dropzone would have done it.
-2. **Too many top-level choices.** The "I have a website / Patterned from competitor / Manual" path cards duplicate the dropzone + URL + textarea below and add a decision they don't need.
-3. **AI fill is a hidden second click.** After uploading a file the user must scroll, find "Use my context to fill the form", and press it. Most novices won't.
-4. **Track selector is buried inside Founder & market** and pulses red when the test button is clicked — confusing dependency.
-5. **Five intake surfaces stacked flat** (dropzone, library, URL, mic, textarea) read as a wall. No clear "do one of these" framing.
-6. **Submit gate is invisible.** Disabled button + hover tooltip only — user can't tell what's missing without hunting.
-7. **Dev-only "🧪 Fill test concept" button is visible in the production UI.**
-8. **Country defaults to United States but city/region are still required** with no autodetect hint.
+It's a developer-only shortcut that lives at the bottom of `/dashboard/hub/new` Step 1. Its only purpose is to save you typing while testing the New Venture flow:
 
-## Recommended restructure
+1. You pick a Track (Tech / SaaS, E-commerce, Main Street, etc.).
+2. The button picks a real seed homepage URL for that track (e.g. Glossier for DTC, Bellina Bakery for Main Street).
+3. It calls the `dev-reverse-engineer-concept` edge function, which scrapes that URL with Firecrawl and asks the AI to reverse-engineer a plausible business concept, company name, city/region/industry.
+4. It pre-fills the founder + company fields on the form so you can hit "Create & enrich" immediately.
 
-New page reads top-to-bottom as three named steps:
+It is gated behind `import.meta.env.DEV`, so it only appears in the local/preview dev build — it does **not** ship to production.
 
-```text
-Step 1 — Give us something to work with   [AI Intake card, hero]
-Step 2 — Confirm what we found            [Pre-filled review card]
-Step 3 — Pick your track & create         [Track + primary CTA]
-```
+## What happened
 
-### Step 1 — AI Intake (single hero card, replaces today's path picker + concept block position)
-- One card, tabbed: **Upload · Paste a link · Speak · Type**. Default tab = Upload.
-- Reusable library renders as a collapsible "Or pick from files you've already uploaded" inside the Upload tab.
-- **Auto-synthesize on first ready input.** As soon as one file finishes extraction, one URL finishes scraping, or the textarea passes 20 chars + 2s idle, fire `venture-synthesize-concept` automatically. Show a single inline status: "Reading your sources…" → "Filled 9 fields — scroll to confirm".
-- Keep a manual "Re-process" button for when the user adds more sources.
-- Remove the three Path cards. `path` state stays internally (default `manual`); if the synth returns a `website_url`, switch to `own` silently so we still scrape it during enrichment.
+Two errors fired in sequence today:
 
-### Step 2 — Confirm what we found (collapsible review card)
-- Renders the existing Founder & market + Company fields, but:
-  - **Collapsed by default** when every required field is filled (shows a 1-line summary: "Jane Doe · Atlanta, GA · Coffee shop · Local"). Expand to edit.
-  - **Auto-expanded** when any required field is empty, with empty fields highlighted at the top of the card and a "Jump to next" link.
-- Field-level "AI-filled" pill on inputs populated by synth, so the user knows what to double-check.
-- Move the "Looks right — ready to create" hero banner here, above the card, when `missingFields.length === 0`.
+1. **`URL not on allowlist`** — the seed for the selected track wasn't in the edge function's allowlist. Fixed by adding Bellina Bakery, Detail Garage, Glossier, and F45.
+2. **`Firecrawl returned no markdown`** — Firecrawl scraped the page but returned an empty markdown body (common for JS-heavy or bot-protected homepages). Fixed by retrying with `waitFor: 2500`, requesting `markdown + html + summary`, turning off `onlyMainContent`, and falling back to stripped HTML if markdown is still empty.
 
-### Step 3 — Track + Create
-- Lift Track out of Founder & market into its own small card right above the primary CTA. Same 6 tiles; "Most attendees" badge stays.
-- Primary CTA becomes a sticky bottom bar on mobile (`Create & start enrichment`).
-- Replace the disabled-button tooltip with an inline checklist directly above the CTA: list each missing field as a clickable chip that scrolls to and focuses the input.
+So the button itself isn't broken — it's a dev convenience that has been failing because the seed sites it points at don't always cooperate with a single Firecrawl pass.
 
-### Smaller cleanups
-- Gate `🧪 Fill test concept` behind `import.meta.env.DEV` or an admin flag.
-- Default `track` stays `lifestyle`, but show a small "Change track" link instead of forcing a visible 6-tile selector if the user came `fromBrief` and track is already set.
-- Mic button gets a one-line helper the first time it's used ("Tap and tell us what you're building — 30 seconds is plenty").
-- Inline character counter on the concept textarea turns green at 20 chars instead of just showing a number.
-- Add a quiet "We never share your uploads" line under the dropzone — novice trust.
+## Options for what to do next
 
-## Files to change
-- `src/routes/_authenticated/dashboard/hub.new.tsx` — reorder sections, add auto-synth effect, collapsible review, missing-field chips, dev-gate test button.
-- New `src/components/hub/AIIntakeCard.tsx` — tabbed Upload/Link/Speak/Type wrapper to keep `hub.new.tsx` readable.
-- New `src/components/hub/ConfirmFieldsCard.tsx` — collapsible review wrapper around the existing inputs.
-- No backend, schema, or Edge Function changes — synth, scrape, and upload paths are reused as-is.
+Pick one:
 
-## Out of scope
-- Changing what the AI extracts.
-- Changing the 4-step "Create venture" copy at the top (kept for orientation).
-- Touching Hub list, snapshot detail, or workflow pages.
+- **A. Leave as-is.** It's already dev-only and the two recent fixes should make it work for the current seed set. No further work.
+- **B. Harden it.** Add: (i) automatic fallback to a different seed in the same track if the first one returns nothing, (ii) clearer toast messages naming the seed that failed, (iii) a small dev-only seed picker so you can choose which site to scrape instead of it being random.
+- **C. Remove it.** Delete the button + the `dev-reverse-engineer-concept` function entirely. Cleanest, but you lose the one-click test path for QA.
+- **D. Hide it for everyone except admins in production.** Replace the `import.meta.env.DEV` gate with an `is_admin` check so you can use it on the live site too.
 
-Approve and I'll implement.
+## Recommendation
+
+Go with **B (Harden it)**. Concretely:
+
+1. In `hub.new.tsx`, on a Firecrawl/empty-response error, automatically retry once with the next seed for that track before surfacing the toast.
+2. Surface the seed URL in the error toast so it's obvious which site failed.
+3. Add a tiny dev-only `<select>` next to the button listing the seeds for the active track, defaulting to "Random".
+
+No production code paths or user-facing UI change.
