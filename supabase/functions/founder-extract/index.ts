@@ -140,10 +140,11 @@ Deno.serve(async (req) => {
     if (raw_text && raw_text.trim().length >= 20) {
       corpus += `PASTED BACKGROUND:\n${raw_text.trim()}\n\n`;
     }
+    let extractedResumeText = "";
     if (source_file_path) {
-      const resumeText = await downloadResumeText(admin, source_file_path);
-      if (resumeText && resumeText.length > 80) {
-        corpus += `RESUME (extracted text):\n${resumeText.slice(0, 18000)}\n\n`;
+      extractedResumeText = await downloadResumeText(admin, source_file_path);
+      if (extractedResumeText && extractedResumeText.length > 80) {
+        corpus += `RESUME (extracted text):\n${extractedResumeText.slice(0, 18000)}\n\n`;
       }
     }
     if (linkedin_url) {
