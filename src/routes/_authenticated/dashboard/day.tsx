@@ -230,53 +230,64 @@ function minutesToClock(min: number): string {
 function WorkshopDecksSection() {
   return (
     <section>
-      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary mb-1">
-        <Presentation className="h-4 w-4" /> Stage decks · set the stage before each block
-      </div>
-      <h2 className="text-2xl font-semibold tracking-tight">Workshop decks</h2>
-      <p className="mt-1 mb-4 text-sm text-muted-foreground">
-        One presentation per stage — what you're about to build, why it matters, and what you'll walk out with. Open one before the block, present it fullscreen, then dive in.
-      </p>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {STAGE_DECKS.map((d) => {
-          const slideCount = d.slides.length;
-          if (d.available) {
-            return (
-              <Link
-                key={d.slug}
-                to={`/workshop/${d.slug}`}
-                className="group flex flex-col rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-4 hover:border-primary/60 transition"
-              >
-                <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-primary">
-                  <span>Stage {d.stageNumber}</span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5">
-                    <Play className="h-3 w-3" /> {slideCount} slides
-                  </span>
-                </div>
-                <div className="mt-2 text-base font-semibold tracking-tight">{d.title}</div>
-                <div className="mt-1 text-xs text-muted-foreground">Open deck →</div>
-              </Link>
-            );
-          }
-          return (
-            <div
-              key={d.slug}
-              className="flex flex-col rounded-2xl border bg-muted/30 p-4 opacity-70"
-              aria-disabled
-            >
-              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                <span>Stage {d.stageNumber}</span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
-                  <Lock className="h-3 w-3" /> Soon
-                </span>
+      <Accordion type="single" collapsible className="rounded-2xl border bg-card">
+        <AccordionItem value="decks" className="border-b-0">
+          <AccordionTrigger className="px-5 hover:no-underline">
+            <div className="text-left">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary mb-1">
+                <Presentation className="h-4 w-4" /> Stage decks · set the stage before each block
               </div>
-              <div className="mt-2 text-base font-semibold tracking-tight">{d.title}</div>
-              <div className="mt-1 text-xs text-muted-foreground">Coming next</div>
+              <h2 className="text-2xl font-semibold tracking-tight">Workshop decks</h2>
             </div>
-          );
-        })}
-      </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-5">
+            <p className="mt-1 mb-4 text-sm text-muted-foreground">
+              One presentation per stage — what you're about to build, why it matters, and what you'll walk out with. Open one before the block, present it fullscreen, then dive in.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {STAGE_DECKS.map((d) => {
+                const slideCount = d.slides.length;
+                if (d.available) {
+                  return (
+                    <Link
+                      key={d.slug}
+                      to={`/workshop/${d.slug}`}
+                      className="group flex flex-col rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-4 hover:border-primary/60 transition"
+                    >
+                      <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-primary">
+                        <span>Stage {d.stageNumber}</span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5">
+                          <Play className="h-3 w-3" /> {slideCount} slides
+                        </span>
+                      </div>
+                      <div className="mt-2 text-base font-semibold tracking-tight">{d.title}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">Open deck →</div>
+                    </Link>
+                  );
+                }
+                return (
+                  <div
+                    key={d.slug}
+                    className="flex flex-col rounded-2xl border bg-muted/30 p-4 opacity-70"
+                    aria-disabled
+                  >
+                    <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      <span>Stage {d.stageNumber}</span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
+                        <Lock className="h-3 w-3" /> Soon
+                      </span>
+                    </div>
+                    <div className="mt-2 text-base font-semibold tracking-tight">{d.title}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">Coming next</div>
+                  </div>
+                );
+              })}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </section>
   );
+
 }
 
