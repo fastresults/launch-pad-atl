@@ -196,6 +196,14 @@ function Inner() {
   const memoryEmpty = memoryChips.length === 0;
   const showCollectionUI = memoryEmpty || addMoreOpen;
 
+  // Append a freshly-saved source to the in-page memory so it shows up as a
+  // pill in the "Your source memory" row immediately, instead of lingering in
+  // a separate "SAVED" list below the dropzone.
+  const appendToMemory = useCallback((row: VentureSource) => {
+    setReusable((prev) => (prev.some((r) => r.id === row.id) ? prev : [row, ...prev]));
+    setReuseSelected((prev) => ({ ...prev, [row.id]: true }));
+  }, []);
+
 
   const addFiles = useCallback(
     async (incoming: File[]) => {
