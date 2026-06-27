@@ -427,19 +427,19 @@ export function DocumentViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, doc?.snapshot_id, doc?.document_type, doc?.content, heroPath, doc?.hero_image_status, autoGenerateHero]);
 
-  const generateHero = async (force = false) => {
+  const generateHero = async (force = false, quality?: "fast" | "hq") => {
     if (!doc?.snapshot_id || !doc?.document_type) return;
     setHeroLoading(true);
     setHeroError(null);
     try {
       const { data, error } = await supabase.functions.invoke("venture-document-image", {
-        body: { snapshotId: doc.snapshot_id, documentType: doc.document_type, force },
+        body: { snapshotId: doc.snapshot_id, documentType: doc.document_type, force, quality },
       });
       if (error) throw new Error(error.message);
       if (data?.path) {
         setHeroPath(data.path);
         setHeroUrl(null); // force re-sign
-        toast.success(force ? "New visual generated" : "Visual generated");
+        toast.success(quality === "hq" ? "HQ visual generated" : force ? "New visual generated" : "Visual generated");
       } else if (data?.skipped && data?.reason === "in_flight") {
         setHeroError("Visual is already being generated. Reopen this document in a moment.");
       }
