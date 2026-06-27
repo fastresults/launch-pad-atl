@@ -741,59 +741,8 @@ function Inner() {
               </ul>
             )}
 
-            {groupedReusable.length > 0 && (
-              <div className="rounded-xl border border-primary/20 bg-primary/5">
-                <button
-                  type="button"
-                  onClick={() => setShowLibrary((v) => !v)}
-                  className="flex w-full items-center justify-between gap-2 p-3 text-left text-sm font-medium"
-                >
-                  <span className="flex items-center gap-2">
-                    <Library className="h-4 w-4 text-primary" />
-                    Or pick from files you've already uploaded
-                  </span>
-                  {showLibrary ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </button>
-                {showLibrary && (
-                  <div className="space-y-3 px-3 pb-3">
-                    {groupedReusable.map(([key, group]) => (
-                      <div key={key}>
-                        <div className="px-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                          {group.label}
-                        </div>
-                        <ul className="mt-1 space-y-1">
-                          {group.items.map((r) => {
-                            const ready = !!(r.extracted_text ?? "").trim();
-                            return (
-                              <li
-                                key={r.id}
-                                className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-background/40"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={!!reuseSelected[r.id]}
-                                  disabled={!ready}
-                                  onChange={(e) => setReuseSelected((prev) => ({ ...prev, [r.id]: e.target.checked }))}
-                                />
-                                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                <span className="min-w-0 flex-1 truncate">{r.original_name}</span>
-                                <span className="shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground">
-                                  {ready
-                                    ? `${Math.round((r.extracted_text ?? "").length / 1000)}k chars`
-                                    : r.extraction_error
-                                      ? "Unreadable"
-                                      : "Processing…"}
-                                </span>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Library accordion removed — memory chips above are the single source of truth. */}
+
           </div>
         )}
 
