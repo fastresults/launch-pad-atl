@@ -11,6 +11,17 @@
 // prefill before a venture exists). Once a venture is created we re-tag.
 import { supabase } from "@/integrations/supabase/client";
 
+// F10: notify the React layer that founder context may have changed so
+// `useCanonicalContext` can refetch. We dispatch a window CustomEvent rather
+// than import TanStack Query here — keeps this lib framework-agnostic.
+const VENTURE_SOURCES_CHANGED_EVENT = "venture-sources:changed";
+function notifySourcesChanged() {
+  if (typeof window !== "undefined") {
+    try { window.dispatchEvent(new CustomEvent(VENTURE_SOURCES_CHANGED_EVENT)); } catch { /* noop */ }
+  }
+}
+export { VENTURE_SOURCES_CHANGED_EVENT };
+
 export type VentureSourceKind = "founder_bio" | "brief_source" | "venture_source" | "other";
 
 export interface VentureSource {
@@ -93,8 +104,9 @@ export async function uploadVentureSource(opts: {
     await Promise.race([extractPromise, new Promise((r) => setTimeout(r, 30_000))]);
     const fresh = await supabase
       .from("attendee_documents").select("*").eq("id", row.id).maybeSingle();
-    if (fresh.data) return fresh.data as VentureSource;
+    if (fresh.data) { notifySourcesChanged(); return fresh.data as VentureSource; }
   }
+  notifySourcesChanged();
   return row as VentureSource;
 }
 
@@ -125,6 +137,7 @@ export async function attachSourcesToSnapshot(opts: { documentIds: string[]; sna
     .in("id", opts.documentIds)
     .eq("user_id", await uid());
   if (error) throw new Error(error.message);
+  notifySourcesChanged();
 }
 
 export async function deleteVentureSource(id: string): Promise<void> {
@@ -136,12 +149,14 @@ export async function deleteVentureSource(id: string): Promise<void> {
   }
   const { error } = await supabase.from("attendee_documents").delete().eq("id", id).eq("user_id", userId);
   if (error) throw new Error(error.message);
+  notifySourcesChanged();
 }
 
 /** Manually retry extraction for a file. */
 export async function retryExtraction(documentId: string): Promise<void> {
   const { error } = await supabase.functions.invoke("venture-source-extract", { body: { documentId } });
   if (error) throw new Error(error.message);
+  notifySourcesChanged();
 }
 
 /**
