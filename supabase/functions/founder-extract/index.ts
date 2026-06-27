@@ -2,6 +2,7 @@
 // Persists raw_text, linkedin_url, source_file_path, and extracted JSON into
 // public.attendee_founder_profile for the calling user.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import mammoth from "npm:mammoth@1.7.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,19 +37,70 @@ const EXTRACT_SCHEMA = {
   additionalProperties: false,
 };
 
+const TEXT_EXT = new Set(["txt", "md", "markdown", "rtf"]);
+const IMAGE_MIMES = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
+
+function stripRtf(s: string) {
+  return s.replace(/\\par[d]?/g, "\n").replace(/\{\*?\\[^{}]+}|[{}]|\\[A-Za-z]+-?\d* ?/g, "").replace(/\r/g, "").trim();
+}
+
+function bytesToDataUrl(bytes: Uint8Array, mime: string) {
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  return `data:${mime};base64,${btoa(binary)}`;
+}
+
+async function geminiTranscribe(content: any[]): Promise<string> {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: "Extract the readable text from the attached document or image, verbatim. Preserve paragraph breaks. Do not summarize. Output only the extracted text — no preamble." },
+        { role: "user", content },
+      ],
+    }),
+  });
+  if (!res.ok) throw new Error(`Gateway ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const j = await res.json();
+  return (j?.choices?.[0]?.message?.content ?? "").toString();
+}
+
 async function downloadResumeText(admin: any, path: string): Promise<string> {
   const { data, error } = await admin.storage.from("attendee-docs").download(path);
   if (error || !data) return "";
-  // Best-effort: read PDF/DOCX as text. Real text extraction varies; for PDF we
-  // fall back to raw bytes-as-utf8 which usually yields readable strings for
-  // text-based PDFs. Users with scanned PDFs should paste text instead.
   try {
-    const buf = new Uint8Array(await data.arrayBuffer());
-    const decoder = new TextDecoder("utf-8", { fatal: false });
-    const txt = decoder.decode(buf);
-    // Strip binary noise; keep printable ASCII + common whitespace.
-    return txt.replace(/[^\x09\x0A\x0D\x20-\x7E]+/g, " ").replace(/\s{2,}/g, " ").trim();
-  } catch {
+    const bytes = new Uint8Array(await data.arrayBuffer());
+    const lower = path.toLowerCase();
+    const ext = lower.split(".").pop() ?? "";
+    const mime = (data as Blob).type ?? "";
+
+    if (TEXT_EXT.has(ext) || mime.startsWith("text/")) {
+      const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+      return (ext === "rtf" || mime.includes("rtf") ? stripRtf(text) : text).trim();
+    }
+    if (ext === "docx" || mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      const { value } = await mammoth.extractRawText({ buffer: bytes });
+      return (value ?? "").trim();
+    }
+    if (ext === "pdf" || mime === "application/pdf") {
+      return (await geminiTranscribe([
+        { type: "text", text: `Extract all readable text from this PDF resume.` },
+        { type: "file", file: { filename: path.split("/").pop() ?? "resume.pdf", file_data: bytesToDataUrl(bytes, "application/pdf") } },
+      ])).trim();
+    }
+    if (IMAGE_MIMES.has(mime) || ["png", "jpg", "jpeg", "webp"].includes(ext)) {
+      const m = mime || (ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg");
+      return (await geminiTranscribe([
+        { type: "text", text: `OCR all readable text from this resume image.` },
+        { type: "image_url", image_url: { url: bytesToDataUrl(bytes, m) } },
+      ])).trim();
+    }
+    return "";
+  } catch (e) {
+    console.error("[founder-extract] resume extract failed", e);
     return "";
   }
 }
@@ -88,10 +140,11 @@ Deno.serve(async (req) => {
     if (raw_text && raw_text.trim().length >= 20) {
       corpus += `PASTED BACKGROUND:\n${raw_text.trim()}\n\n`;
     }
+    let extractedResumeText = "";
     if (source_file_path) {
-      const resumeText = await downloadResumeText(admin, source_file_path);
-      if (resumeText && resumeText.length > 80) {
-        corpus += `RESUME (extracted text):\n${resumeText.slice(0, 18000)}\n\n`;
+      extractedResumeText = await downloadResumeText(admin, source_file_path);
+      if (extractedResumeText && extractedResumeText.length > 80) {
+        corpus += `RESUME (extracted text):\n${extractedResumeText.slice(0, 18000)}\n\n`;
       }
     }
     if (linkedin_url) {
@@ -146,7 +199,7 @@ Deno.serve(async (req) => {
     const payload: Record<string, unknown> = {
       user_id: user.id,
       source,
-      raw_text: raw_text ?? null,
+      raw_text: raw_text ?? (extractedResumeText && extractedResumeText.length > 80 ? extractedResumeText.slice(0, 18000) : null),
       linkedin_url: linkedin_url ?? null,
       source_file_path: source_file_path ?? null,
     };
