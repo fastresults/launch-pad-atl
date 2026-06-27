@@ -1,6 +1,8 @@
 // Scrapes 1-3 founder-provided URLs and returns markdown + title for use as
 // context in venture-synthesize-concept. Uses the Firecrawl REST v2 API.
 
+import { requireUser } from "../_shared/auth.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -97,6 +99,8 @@ async function scrapeFallback(url: string, note: string): Promise<ScrapeResult> 
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const auth = await requireUser(req, corsHeaders);
+  if (auth.error) return auth.error;
   try {
     const body = await req.json().catch(() => ({}));
     const raw: unknown = body?.urls;

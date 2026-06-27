@@ -2,6 +2,9 @@
 // from text extracted client-side out of one or more founder-uploaded documents
 // (PDF, TXT, MD). Pure synthesis — no DB writes.
 
+import { requireUser } from "../_shared/auth.ts";
+import { aiFetch } from "../_shared/ai-fetch.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -66,6 +69,9 @@ Rules:
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const auth = await requireUser(req, corsHeaders);
+  if (auth.error) return auth.error;
+
   try {
     const body = await req.json().catch(() => ({}));
     const sources: Array<{ filename?: string; text?: string }> = Array.isArray(body?.sources) ? body.sources : [];
@@ -129,7 +135,7 @@ ${sections.join("\n\n===\n\n")}
 
 Return the JSON object now.`;
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,

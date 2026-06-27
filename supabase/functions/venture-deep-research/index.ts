@@ -9,6 +9,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
+import { aiFetch } from "../_shared/ai-fetch.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -229,7 +230,7 @@ function sanitizeModelOutput(value: unknown): unknown {
 }
 
 async function synthesize(corpus: string): Promise<any> {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -253,7 +254,7 @@ async function synthesize(corpus: string): Promise<any> {
     return JSON.parse(content);
   } catch {
     // one retry with explicit "fix the JSON" prompt
-    const fix = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const fix = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
