@@ -153,32 +153,6 @@ export default function BriefWizard() {
     [values],
   );
 
-  const [resetting, setResetting] = useState(false);
-
-  async function handleResetLeftover() {
-    setResetting(true);
-    try {
-      const uid = (await supabase.auth.getUser()).data.user?.id;
-      if (!uid) throw new Error("Not signed in");
-      const { error } = await supabase.rpc("reset_founder_workspace", { _user_id: uid });
-      if (error) throw error;
-      toast.success("Cleared. Your brief is fresh.");
-      qc.invalidateQueries({ queryKey: ["my", "brief"] });
-      qc.invalidateQueries({ queryKey: ["my", "profile"] });
-      qc.invalidateQueries({ queryKey: ["attendee", "profile"] });
-      setValues({});
-      setIdx(0);
-      setMode("question");
-      setInitialized(false);
-      await refetch();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Couldn't reset");
-    } finally {
-      setResetting(false);
-    }
-  }
-
-
   const founderBlock = BRIEF_BLOCKS.find((b) => b.kind === "founder")!;
   const marketBlock = BRIEF_BLOCKS.find((b) => b.kind === "market")!;
 
