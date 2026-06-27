@@ -62,7 +62,7 @@ const AdminHub = lazy(() => import("@/routes/_authenticated/_admin/admin.hub"));
 const AdminMedia = lazy(() => import("@/routes/_authenticated/_admin/admin.media"));
 const AdminTestimonials = lazy(() => import("@/routes/_authenticated/_admin/admin.testimonials"));
 const AdminCohorts = lazy(() => import("@/routes/_authenticated/_admin/admin.cohorts"));
-const AdminCohortsTest = lazy(() => import("@/routes/_authenticated/_admin/admin.cohorts.test"));
+
 const AdminAttendees = lazy(() => import("@/routes/_authenticated/_admin/admin.attendees"));
 const AdminAttendeesUserIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.attendees.$userId.index"));
 const AdminAttendeesUserWorkflow = lazy(() => import("@/routes/_authenticated/_admin/admin.attendees.$userId.workflow"));
