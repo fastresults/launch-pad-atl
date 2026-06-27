@@ -27,6 +27,9 @@ import { buildPrefillFromBrief } from "@/lib/brief-to-snapshot";
 import { syncProfileFromBrief } from "@/lib/brief-sync-profile";
 import { markAllMySnapshotBrainsDirty } from "@/lib/canonical-context";
 import { useInvalidateCanonicalContext } from "@/hooks/use-canonical-context";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
