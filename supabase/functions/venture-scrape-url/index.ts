@@ -99,6 +99,8 @@ async function scrapeFallback(url: string, note: string): Promise<ScrapeResult> 
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const auth = await requireUser(req, corsHeaders);
+  if (auth.error) return auth.error;
   try {
     const body = await req.json().catch(() => ({}));
     const raw: unknown = body?.urls;
