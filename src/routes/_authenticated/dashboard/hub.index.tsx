@@ -123,7 +123,7 @@ function LibraryInner() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {visible.map((s: any) => (
-            <SnapshotCard key={s.id} snapshot={s} totalDocs={totalDocs} tab={tab} />
+            <SnapshotCard key={s.id} snapshot={s} totalDocs={totalDocs} tab={tab} isLast={snapshots.length === 1} />
           ))}
         </div>
       )}
