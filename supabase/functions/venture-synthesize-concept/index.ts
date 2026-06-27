@@ -69,6 +69,9 @@ Rules:
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const auth = await requireUser(req, corsHeaders);
+  if (auth.error) return auth.error;
+
   try {
     const body = await req.json().catch(() => ({}));
     const sources: Array<{ filename?: string; text?: string }> = Array.isArray(body?.sources) ? body.sources : [];
