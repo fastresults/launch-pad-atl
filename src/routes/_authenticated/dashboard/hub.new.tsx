@@ -350,6 +350,14 @@ function Inner() {
           );
         }
       }
+    } catch (e) {
+      setScrapedUrls((curr) =>
+        curr.map((x) =>
+          x.id === entry.id
+            ? { ...x, status: "error", error: e instanceof Error ? e.message : "Scrape failed" }
+            : x,
+        ),
+      );
     } finally {
       setScrapingUrl(false);
     }
