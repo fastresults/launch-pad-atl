@@ -837,7 +837,7 @@ function Inner() {
         )}
 
         {/* Type tab */}
-        {intakeTab === "type" && (
+        {showCollectionUI && intakeTab === "type" && (
           <div className="space-y-2">
             <Label htmlFor="concept-type">Describe what you're building</Label>
             <Textarea
