@@ -1,6 +1,8 @@
 // Scrapes 1-3 founder-provided URLs and returns markdown + title for use as
 // context in venture-synthesize-concept. Uses the Firecrawl REST v2 API.
 
+import { requireUser } from "../_shared/auth.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
