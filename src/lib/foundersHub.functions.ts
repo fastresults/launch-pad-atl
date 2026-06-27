@@ -692,6 +692,7 @@ export async function adminDeleteSnapshot(input: any): Promise<void> {
     .delete()
     .eq("id", id);
   if (delErr) throw new Error(delErr.message);
+  if (snap.user_id) await resetWorkspaceIfEmpty(snap.user_id);
 }
 
 
