@@ -27,6 +27,9 @@ import { buildPrefillFromBrief } from "@/lib/brief-to-snapshot";
 import { syncProfileFromBrief } from "@/lib/brief-sync-profile";
 import { markAllMySnapshotBrainsDirty } from "@/lib/canonical-context";
 import { useInvalidateCanonicalContext } from "@/hooks/use-canonical-context";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -82,6 +85,51 @@ export default function BriefWizard() {
     () => BRIEF_FIELDS.filter((f) => (values[f.key] ?? "").trim().length > 0).length,
     [values],
   );
+
+  // Fallback: detect leftover answers from prior ventures and offer a one-click reset.
+  const qc = useQueryClient();
+  const [ventureCount, setVentureCount] = useState<number | null>(null);
+  const [staleDismissed, setStaleDismissed] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const uid = (await supabase.auth.getUser()).data.user?.id;
+      if (!uid || !alive) return;
+      const { count } = await supabase
+        .from("venture_snapshots")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", uid);
+      if (alive) setVentureCount(count ?? 0);
+    })();
+    return () => { alive = false; };
+  }, []);
+  const showStaleBanner =
+    ventureCount === 0 && answeredCount > 0 && !staleDismissed && mode !== "complete";
+
+  async function handleResetLeftover() {
+    setResetting(true);
+    try {
+      const uid = (await supabase.auth.getUser()).data.user?.id;
+      if (!uid) throw new Error("Not signed in");
+      const { error } = await supabase.rpc("reset_founder_workspace", { _user_id: uid });
+      if (error) throw error;
+      toast.success("Cleared. Your brief is fresh.");
+      qc.invalidateQueries({ queryKey: ["my", "brief"] });
+      qc.invalidateQueries({ queryKey: ["my", "profile"] });
+      qc.invalidateQueries({ queryKey: ["attendee", "profile"] });
+      setValues({});
+      setIdx(0);
+      setMode("question");
+      setInitialized(false);
+      await refetch();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Couldn't reset");
+    } finally {
+      setResetting(false);
+    }
+  }
+
 
   const founderBlock = BRIEF_BLOCKS.find((b) => b.kind === "founder")!;
   const marketBlock = BRIEF_BLOCKS.find((b) => b.kind === "market")!;
@@ -211,6 +259,33 @@ export default function BriefWizard() {
 
   return (
     <div className="mx-auto max-w-2xl">
+      {showStaleBanner && (
+        <div className="mb-4 rounded-xl border border-status-warning/40 bg-status-warning/10 p-4 text-sm">
+          <div className="font-semibold text-foreground">Leftover answers from a deleted venture</div>
+          <p className="mt-1 text-muted-foreground">
+            You don't have any active ventures, but your brief still has answers from a previous one.
+            Clear them so your next startup starts fresh.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={handleResetLeftover}
+              disabled={resetting}
+              className="rounded-md bg-status-warning px-3 py-1.5 text-xs font-medium text-status-warning-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              {resetting ? "Clearing…" : "Reset brief & profile"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStaleDismissed(true)}
+              className="rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Keep them
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {mode === "complete"

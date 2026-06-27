@@ -2608,6 +2608,7 @@ export type Database = {
           price_cents: number
         }[]
       }
+      reset_founder_workspace: { Args: { _user_id: string }; Returns: string[] }
       sweep_stuck_generations: { Args: never; Returns: undefined }
       sync_cohort_seat_cache: {
         Args: { _cohort_id: string }

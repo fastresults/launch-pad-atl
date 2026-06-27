@@ -1,33 +1,49 @@
-# Workflow hardening — status
+## Goal
 
-## ✅ Package A (shipped)
-- F1/F3/F4 raw fetch → aiFetch (source-extract, deep-research, concept-refine)
-- F2 auth gates on synthesize-concept + scrape-url
-- F8 deck_slide_override_history INSERT revoked from authenticated
+When a user deletes their final venture (zero `venture_snapshots` remain), automatically wipe every founder/brief field that was populated from earlier venture work, so screens like `/dashboard/brief` and `/dashboard/profile` open fresh — no leftover answers from the prior startup.
 
-## ✅ Package B (shipped this round)
-- F5 venture-bulk-generate now uses `Authorization: Bearer` (matches every other worker)
-- F6 sweep_stuck_generations extended to ai_pipeline_runs + ai_pipeline_steps (15-min cutoff)
-- F7 venture-generate-document catches 23505 / `venture_documents_inflight_unique` → friendly 409
-- F11 runLayer catch in bulk-generate now records a `venture_generation_failures` row instead of swallowing
+## Scope of "fields to reset"
 
-## ✅ Package C (shipped this round)
-- F9 venture-concept-refine `apply` action now marks brain dirty
-- F12 venture-scrape-url SSRF guard rejects decimal / hex / octal / numeric-only IPv4 and all IPv6 literals
-- F13 venture-generate-document awaits `writeBackIntake` before flagging brain dirty
-- F15 venture-deep-research explicitly marks brain dirty before recomputing after research_brief change
+Per-user tables that currently survive venture deletion and cause pre-population:
 
-## Deferred (intentionally not in this round)
-- F10 invalidate `useCanonicalContext` after `uploadVentureSource`. Tradeoff: would couple a non-React lib to TanStack Query. 30s staleTime in `use-canonical-context.ts` masks the gap; revisit if users report stale prefill.
-- F14 venture-job-watchdog cron schedule confirmation. Sweeper now covers pipeline runs, so the watchdog gap is reduced; full scheduling pass deferred.
+- `attendee_business_brief` — the 10 brief answers + completeness_score
+- `attendee_founder_profile` — right_person_reason, unfair_advantage, etc.
+- `attendee_founder_memory` — synthesized founder context
+- `attendee_market_profile`
+- `attendee_goals`
+- `attendee_stage_intake`
+- `attendee_filing_info`
+- `attendee_profiles` — only venture-derived fields (industry, stage, business idea summary). Identity fields (full_name, email, avatar, contact info) are preserved.
 
-## ✅ Package E2 (shipped)
-- F17 removed admin cohort test harness route + UI entry (route deleted, App.tsx + admin.cohorts.tsx cleaned)
-- F18 `setUserRole` now routes through `admin_set_user_role` SECURITY DEFINER RPC with is_admin check, super_admin-only escalation, and last-super_admin protection
-- F21 `handle_new_user` serialized via `pg_advisory_xact_lock` and bootstrap now checks for any existing super_admin instead of counting auth.users (eliminates concurrent-signup race)
+`venture_documents`, `venture_generation_jobs`, `attendee_documents` already cascade off `venture_snapshots`, so they need no extra work.
 
-## ✅ Package E3/E4 (shipped)
-- F22 brand-intake + brand-creative admin gate switched to service-role `is_admin` RPC (single authoritative read, closes TOCTOU window)
-- F25 storage.objects "Public can read deck-images" replaced with authenticated-only SELECT (app uses signed URLs — no UI impact)
-- F26 inquiry_messages.author_id now defaults to `auth.uid()` so admin replies record their identity automatically
-- F27 member_intakes UPDATE policy gained `WITH CHECK` so users can't reassign an intake to another user_id
+## Approach
+
+1. **New SECURITY DEFINER RPC `reset_founder_workspace(_user_id uuid)`**
+   - Caller must be the owner (`auth.uid() = _user_id`) or an admin.
+   - Verifies `SELECT count(*) FROM venture_snapshots WHERE user_id = _user_id = 0` before wiping (guard against accidental calls while a venture still exists).
+   - Deletes rows from the per-user tables above; for `attendee_profiles`, performs an UPDATE that nulls only venture-derived columns.
+   - Returns the list of tables cleared (for the toast).
+
+2. **Wire it into deletion paths in `src/lib/foundersHub.functions.ts`**
+   - `deleteSnapshot` (user path) and `adminForceDeleteSnapshot` (admin path): after a successful delete, query remaining snapshot count for that user; if zero, invoke `reset_founder_workspace`.
+   - Emit a `venture-sources:changed` event and invalidate the relevant React Query keys (`["my","brief"]`, `["my","profile"]`, `["my","founder-memory"]`, hub list) so the UI re-reads empty data immediately.
+
+3. **Confirmation UX in the Hub delete dialog**
+   - When the snapshot being deleted is the user's last one, the existing confirm dialog gains a second line: "This is your last venture. Deleting it will also clear your Founder Brief, Profile intake, and Market answers so your next venture starts fresh." (Plain language, no scary jargon.)
+   - Admin force-delete shows the equivalent warning.
+
+4. **Defensive client-side fallback**
+   - On mount of `/dashboard/brief` and `/dashboard/profile`, if `venture_snapshots` count is 0 AND brief/profile rows still contain data, surface a one-time "Reset leftover answers" banner that calls the same RPC. Covers users whose prior deletions happened before this change shipped.
+
+## Out of scope
+
+- Manual "Reset profile" button on the Profile page (already exists) — unchanged.
+- Cohort registration, role, and member-status data — preserved.
+- Any deck/asset cleanup beyond what cascades today.
+
+## Technical notes
+
+- All writes go through the new RPC so RLS and the "zero ventures" guard live in one place.
+- Migration adds the function + GRANT EXECUTE TO authenticated, service_role.
+- No schema changes to existing tables.
