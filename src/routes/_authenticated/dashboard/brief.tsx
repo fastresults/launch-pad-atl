@@ -273,20 +273,31 @@ export default function BriefWizard() {
     return (
       <div className="mx-auto max-w-2xl py-16">
         <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-          Preparing a fresh workspace…
+          Getting your workspace ready…
         </div>
       </div>
     );
   }
 
-  if (workspaceCheckError) {
+  if (ventureCount === 0 && !emptyStateDismissed) {
     return (
-      <div className="mx-auto max-w-2xl py-16">
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-sm">
-          <div className="font-semibold text-foreground">We couldn't prepare your workspace.</div>
-          <p className="mt-1 text-muted-foreground">{workspaceCheckError}</p>
-        </div>
-      </div>
+      <BriefEmptyState
+        resetSucceeded={resetSucceeded}
+        resetWarning={workspaceCheckError}
+        onStartBlank={() => {
+          setEmptyStateDismissed(true);
+          setMode("question");
+          setIdx(0);
+          setInitialized(true);
+        }}
+        onUploadPrefill={() => {
+          setEmptyStateDismissed(true);
+          setMode("question");
+          setIdx(0);
+          setInitialized(true);
+          setShowPrefillDialog(true);
+        }}
+      />
     );
   }
 
