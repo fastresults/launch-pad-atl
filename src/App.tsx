@@ -156,7 +156,7 @@ export default function App() {
             <Route path="/admin/media" element={<AdminMedia />} />
             <Route path="/admin/testimonials" element={<AdminTestimonials />} />
             <Route path="/admin/cohorts" element={<AdminCohorts />} />
-            <Route path="/admin/cohorts/test" element={<AdminCohortsTest />} />
+            
             <Route path="/admin/attendees" element={<AdminAttendees />} />
             <Route path="/admin/attendees/:userId" element={<AdminAttendeesUserIndex />} />
             <Route path="/admin/attendees/:userId/workflow" element={<AdminAttendeesUserWorkflow />} />
