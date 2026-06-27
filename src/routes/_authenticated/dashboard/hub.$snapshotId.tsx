@@ -1112,7 +1112,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               >
                 {catGenerating ? (
                   <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
-                ) : catComplete ? (
+                ) : catDone > 0 ? (
                   <><RefreshCw className="mr-1 h-3 w-3" />Regenerate this section</>
                 ) : (
                   <><Sparkles className="mr-1 h-3 w-3" />Generate this section</>
