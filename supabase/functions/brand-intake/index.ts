@@ -243,17 +243,16 @@ Deno.serve(async (req) => {
     if (claimsErr || !claims?.claims?.sub) return json({ error: "Unauthorized" }, 401);
     const userId = claims.claims.sub as string;
 
-    // Admin gate
-    const { data: roleRows } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    const roles = (roleRows ?? []).map((r: any) => r.role);
-    if (!roles.includes("admin") && !roles.includes("super_admin")) {
+    const admin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // F22: admin gate via service-role is_admin RPC (single authoritative
+    // read; closes the small TOCTOU window between a user-scoped roles read
+    // and the subsequent privileged writes).
+    const { data: isAdminRes, error: adminErr } = await admin.rpc("is_admin", { _user_id: userId });
+    if (adminErr || !isAdminRes) {
       return json({ error: "Forbidden" }, 403);
     }
 
-    const admin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const body = await req.json().catch(() => ({})) as any;
     const action = body?.action ?? "generate";
 
