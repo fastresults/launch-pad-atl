@@ -253,14 +253,21 @@ function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; tot
   const deleteMut = useMutation({
     mutationFn: () => adminDeleteSnapshot({ data: { id: snapshot.id } }),
     onSuccess: () => {
-      toast.success(`Deleted "${title}"`);
+      toast.success(isLast ? `Deleted "${title}" — workspace reset` : `Deleted "${title}"`);
       setConfirmDelete(false);
       setDeleteText("");
       qc.invalidateQueries({ queryKey: ["hub", "snapshots"] });
       qc.invalidateQueries({ queryKey: ["admin", "hub", "snapshots"] });
+      if (isLast) {
+        qc.invalidateQueries({ queryKey: ["my", "brief"] });
+        qc.invalidateQueries({ queryKey: ["my", "profile"] });
+        qc.invalidateQueries({ queryKey: ["my", "founder-memory"] });
+        qc.invalidateQueries({ queryKey: ["attendee", "profile"] });
+      }
     },
     onError: (e: any) => toast.error(e.message ?? "Couldn't delete"),
   });
+
 
   const confirmPhrase = (snapshot.company_name?.trim() || "DELETE");
   const deleteEnabled = deleteText.trim() === confirmPhrase && !deleteMut.isPending;
