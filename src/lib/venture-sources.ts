@@ -149,12 +149,14 @@ export async function deleteVentureSource(id: string): Promise<void> {
   }
   const { error } = await supabase.from("attendee_documents").delete().eq("id", id).eq("user_id", userId);
   if (error) throw new Error(error.message);
+  notifySourcesChanged();
 }
 
 /** Manually retry extraction for a file. */
 export async function retryExtraction(documentId: string): Promise<void> {
   const { error } = await supabase.functions.invoke("venture-source-extract", { body: { documentId } });
   if (error) throw new Error(error.message);
+  notifySourcesChanged();
 }
 
 /**
