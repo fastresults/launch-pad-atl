@@ -100,26 +100,18 @@ export async function setUserRole(input: any) {
   const { userId, role } = args;
   if (!userId || !role) throw new Error("Missing userId or role");
 
-  // The UI passes role: "admin" | "user" as the *desired* state.
-  // Interpret "user" as remove-admin, "admin" as add-admin, unless an explicit action is given.
+  // F18: server-side enforcement. The UI passes role: "admin" | "user" as the
+  // desired state. Interpret "user" as remove-admin, "admin" as add-admin
+  // unless an explicit action is given.
   const action: "add" | "remove" =
     args.action ?? (role === "user" ? "remove" : "add");
   const targetRole = role === "user" ? "admin" : role;
 
-  if (action === "add") {
-    const { error } = await supabase
-      .from("user_roles")
-      .upsert(
-        { user_id: userId, role: targetRole },
-        { onConflict: "user_id,role" },
-      );
-    if (error) throw new Error(error.message);
-  } else {
-    const { error } = await supabase
-      .from("user_roles")
-      .delete()
-      .eq("user_id", userId)
-      .eq("role", targetRole);
-    if (error) throw new Error(error.message);
-  }
+  const { error } = await supabase.rpc("admin_set_user_role", {
+    _user_id: userId,
+    _role: targetRole,
+    _action: action,
+  });
+  if (error) throw new Error(error.message);
 }
+

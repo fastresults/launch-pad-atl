@@ -62,7 +62,7 @@ const AdminHub = lazy(() => import("@/routes/_authenticated/_admin/admin.hub"));
 const AdminMedia = lazy(() => import("@/routes/_authenticated/_admin/admin.media"));
 const AdminTestimonials = lazy(() => import("@/routes/_authenticated/_admin/admin.testimonials"));
 const AdminCohorts = lazy(() => import("@/routes/_authenticated/_admin/admin.cohorts"));
-const AdminCohortsTest = lazy(() => import("@/routes/_authenticated/_admin/admin.cohorts.test"));
+
 const AdminAttendees = lazy(() => import("@/routes/_authenticated/_admin/admin.attendees"));
 const AdminAttendeesUserIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.attendees.$userId.index"));
 const AdminAttendeesUserWorkflow = lazy(() => import("@/routes/_authenticated/_admin/admin.attendees.$userId.workflow"));
@@ -156,7 +156,7 @@ export default function App() {
             <Route path="/admin/media" element={<AdminMedia />} />
             <Route path="/admin/testimonials" element={<AdminTestimonials />} />
             <Route path="/admin/cohorts" element={<AdminCohorts />} />
-            <Route path="/admin/cohorts/test" element={<AdminCohortsTest />} />
+            
             <Route path="/admin/attendees" element={<AdminAttendees />} />
             <Route path="/admin/attendees/:userId" element={<AdminAttendeesUserIndex />} />
             <Route path="/admin/attendees/:userId/workflow" element={<AdminAttendeesUserWorkflow />} />

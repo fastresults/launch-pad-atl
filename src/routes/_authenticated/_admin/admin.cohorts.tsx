@@ -224,11 +224,6 @@ export default function CohortsAdminPage() {
           description="Create cohorts with dates, capacity, and pricing. Drives the programming founders see in their dashboard."
         />
         <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link to="/admin/cohorts/test">
-              <FlaskConical className="mr-1.5 size-4" /> Test registration flow
-            </Link>
-          </Button>
           <Button
             onClick={() => {
               setForm(emptyForm());
