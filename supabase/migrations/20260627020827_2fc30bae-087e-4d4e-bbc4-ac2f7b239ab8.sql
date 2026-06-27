@@ -1,0 +1,1 @@
+UPDATE public.deliverable_types SET default_model = 'google/gemini-3-pro-preview' WHERE key = 'website_prd';
