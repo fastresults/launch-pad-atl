@@ -11,6 +11,17 @@
 // prefill before a venture exists). Once a venture is created we re-tag.
 import { supabase } from "@/integrations/supabase/client";
 
+// F10: notify the React layer that founder context may have changed so
+// `useCanonicalContext` can refetch. We dispatch a window CustomEvent rather
+// than import TanStack Query here — keeps this lib framework-agnostic.
+const VENTURE_SOURCES_CHANGED_EVENT = "venture-sources:changed";
+function notifySourcesChanged() {
+  if (typeof window !== "undefined") {
+    try { window.dispatchEvent(new CustomEvent(VENTURE_SOURCES_CHANGED_EVENT)); } catch { /* noop */ }
+  }
+}
+export { VENTURE_SOURCES_CHANGED_EVENT };
+
 export type VentureSourceKind = "founder_bio" | "brief_source" | "venture_source" | "other";
 
 export interface VentureSource {
