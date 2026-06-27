@@ -1,35 +1,49 @@
-# AI-first audit — round 3 results
+# Production hardening — what shipped this round
 
-Shipped in this round:
+## Phase 1 — Locked the doors (CRITICAL)
+- New `supabase/functions/_shared/ai-fetch.ts` — 90s AbortSignal timeout + exponential backoff (1s/3s/9s) on 429/500/502/503/504 + Retry-After honoring.
+- New `supabase/functions/_shared/auth.ts` — `requireUser` (JWT validation) + `requireSnapshotOwner` (snapshot ownership or admin).
+- Auth gates added to previously-unprotected endpoints:
+  - `venture-generate-document`
+  - `venture-generate-assessment`
+  - `venture-generate-roadmap`
+  - `venture-deep-research`
+  - `brief-prefill`
+- `venture-bulk-generate` — fixed category-run auth bypass. Caller JWT is now **required for every path**, snapshot ownership is verified for every path, and the unlock-grant requirement still applies to full-bulk runs.
+- Gateway calls migrated to `aiFetch` in: `_shared/snapshot-brain.ts`, `venture-generate-document`, `venture-generate-assessment`, `venture-generate-roadmap`, `venture-bulk-generate/generateOne`, `dashboard-pipeline-run/generateOne`, `brief-prefill`. Longer timeouts (120s) on Pro-model surfaces.
 
-**P1 — `dashboard-pipeline-run` now uses shared context.**
-- Loads `loadVentureContext` + `ensureSnapshotBrain` once per job using the user's most recent venture snapshot (when present).
-- `generateOne()` emits `compactPreamble(ctx) + snapshot_brain` instead of dumping raw brief/founder/market JSON.
-- Upstream deliverables now go through `distillDeps()` instead of full inline markdown.
-- Model selection switched from flat `gemini-2.5-flash` to `modelForTier(type.default_model, MODELS.flash)`, honoring per-type tier.
-- Fallback path retained (brief-only) for users without a venture snapshot.
+## Phase 2 — Stop double-spending (HIGH)
+- Migration: partial unique index `venture_documents_inflight_unique ON (snapshot_id, document_type) WHERE status='generating'` — second concurrent generate of the same deliverable now fails at the DB instead of double-spending AI.
+- Migration: partial unique index `venture_generation_jobs_inflight_unique ON (snapshot_id) WHERE status IN ('queued','running')`.
+- Migration: `sweep_stuck_generations()` function — marks any `venture_documents` / `venture_generation_jobs` / roadmap / deep-assessment stuck in `generating` for more than 10 minutes as `failed` so users can retry.
+- Scheduled `cron.schedule('sweep-stuck-generations', '*/5 * * * *', ...)` — sweeper runs every 5 minutes.
 
-**P2 — `attendee-generate-assessment` now matches Hub-grade rigor.**
-- Loads venture context + snapshot brain when a snapshot exists; falls back to brief/founder/market JSON otherwise.
-- Switched from `gemini-3-flash-preview` to `MODELS.pro` (gemini-3-pro-preview) — Workflow assessments now reason at the same tier as Hub assessments.
+## Phase 4 — Fix the silent source bug (HIGH)
+- `venture-source-extract` now denormalizes new uploads into `venture_snapshots.source_materials.documents` (capped at 25 most-recent entries) so files attached after venture creation are immediately visible to `loadVentureContext` instead of being silently invisible to AI.
 
-**P3 — Brain freshness already covered.**
-- `venture-deep-research` actively recomputes brain at end of pipeline.
-- `venture-concept-refine`, `venture-source-extract`, `venture-generate-document` already call `markSnapshotBrainDirty`.
-- No new wiring required.
+## Phase 5 — Prompt size caps (HIGH quick wins)
+- `venture-generate-document/generateOne`: user prompt capped at 120k chars.
+- `venture-bulk-generate/generateOne`: user prompt capped at 120k chars.
+- `dashboard-pipeline-run/generateOne`: user prompt capped at 120k chars.
+- `_shared/venture-context.ts/renderSources`: capped at 10 most-recent documents + 10 URLs.
 
-**P4 — Models centralized.**
-- New `supabase/functions/_shared/models.ts` exports `MODELS.{flash, flashLite, pro, flashImage, proImage, stt}` and `modelForTier()`.
-- `dashboard-pipeline-run` and `attendee-generate-assessment` migrated.
-- Remaining functions can be migrated mechanically in a follow-up; no behavior drift.
+## Phase 6 — Observability (MEDIUM)
+- Migration: `Users read own pipeline runs` SELECT policy on `ai_pipeline_runs` (workflow page no longer silently returns no rows).
+- Failure logging added: `venture-generate-assessment` and `venture-generate-roadmap` now insert into `venture_generation_failures` on gateway errors, matching the existing single-doc pattern.
 
-Estimated effect on a full Workflow run (30+ deliverables):
-- Prompt tokens: ~−60% on the Workflow surface (was 0% optimized; now matches Hub).
-- Wall-clock: ~−15% per run from smaller prompts.
-- Quality: strict +1 tier on Workflow deep assessments; Pro routing now used.
+## Phase 7 — Polish (LOW)
+- `useCanonicalContext` `staleTime` reduced from 2 min to 30s.
 
-Not shipped this round (deferred — separate "say go" items):
-- Frontend canonical-context cleanup across `hub.$snapshotId.tsx`, `dashboard/workflow.tsx`, `dashboard/profile.tsx`, `IntakeGatewayDialog`.
-- Remaining 9 Edge Functions still inline model id strings — migrate to `MODELS` when next touched.
-- Top-K retrieval for `deliverables-ask` (requires pgvector).
-- Streaming UI for `venture-generate-document` and `dashboard-pipeline-run`.
+## Deferred to next round (explicitly out of scope)
+- Background-execution refactor for `venture-generate-roadmap` and `venture-generate-assessment` (Phase 3): both routed to Pro now with 120s `aiFetch` timeouts which should cover most cases; full background extraction needs UI polling work too.
+- Per-user daily AI call ceiling table `ai_call_counts` + RPC (Phase 5.1): backend has no standard rate-limit primitive yet and the user has accepted that gap.
+- Frontend per-document in-flight Set tracking + cross-disable category buttons + server-side autokick flag (Phase 2.4): UI hardening, separate PR.
+- Snapshot-brain advisory-lock for parallel recompute (Phase 7.3): edge-case dual-cost, low priority.
+- Zod schemas at every entry (Phase 7.1): mechanical, do when next touching each function.
+- Remaining 9 functions still doing raw `fetch` to gateway: migrate as each is next touched.
+
+## Verification
+- `bunx tsgo --noEmit`: clean.
+- Edge function curl tests: all three sampled endpoints (`venture-generate-roadmap`, `venture-generate-document`, `venture-deep-research`) reach their auth gate; subsequent ownership/concept-locked gates also fire.
+- pg_cron schedule confirmed (schedule id 7).
+- Migration linter warnings: pre-existing, not introduced by this PR.

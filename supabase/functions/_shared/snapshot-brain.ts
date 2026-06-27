@@ -8,6 +8,7 @@
 // will recompute on next demand.
 
 import { compactPreamble, loadVentureContext, renderSources, type VentureBrain } from "./venture-context.ts";
+import { aiFetch } from "./ai-fetch.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
@@ -45,7 +46,7 @@ export async function computeSnapshotBrain(supabase: any, snapshotId: string): P
   ].filter(Boolean).join("\n\n");
 
   // Brain is a small, structured task — use flash-lite for ~5x cost savings.
-  const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -56,7 +57,7 @@ export async function computeSnapshotBrain(supabase: any, snapshotId: string): P
       ],
       response_format: { type: "json_object" },
     }),
-  });
+  }, { timeoutMs: 60_000 });
 
   if (!aiRes.ok) {
     const txt = await aiRes.text();

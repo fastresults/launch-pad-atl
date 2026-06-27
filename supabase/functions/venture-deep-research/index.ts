@@ -8,6 +8,7 @@
 // at the end. Citations are preserved end-to-end.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -533,17 +534,18 @@ Deno.serve(async (req) => {
     const body = await req.json();
     snapshotId = body.snapshotId;
     if (!snapshotId) {
-      return new Response(JSON.stringify({ error: "snapshotId required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "snapshotId required" }, 400, corsHeaders);
     }
 
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
     if (!FIRECRAWL_API_KEY) throw new Error("FIRECRAWL_API_KEY missing — connect Firecrawl in Connectors");
     if (!PERPLEXITY_API_KEY) console.warn("PERPLEXITY_API_KEY missing — market step will be skipped");
 
+    const auth = await requireUser(req, corsHeaders);
+    if (auth.error) return auth.error;
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+    const own = await requireSnapshotOwner(supabase, snapshotId!, auth.userId!, corsHeaders);
+    if (own.error) return own.error;
 
     // Run in background so HTTP returns immediately
     const work = runResearch(supabase, snapshotId!).catch(async (e) => {

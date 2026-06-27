@@ -15,6 +15,8 @@
 // in the docs, the model returns empty `answer` and confidence "low".
 
 import mammoth from "npm:mammoth@1.7.2";
+import { aiFetch } from "../_shared/ai-fetch.ts";
+import { jsonResponse, requireUser } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -184,6 +186,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    const auth = await requireUser(req, corsHeaders);
+    if (auth.error) return auth.error;
     const inForm = await req.formData();
     const fileEntries = inForm.getAll("files").filter((f): f is File => f instanceof File);
     if (fileEntries.length === 0) {
@@ -232,7 +236,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -246,7 +250,7 @@ Deno.serve(async (req) => {
         ],
         response_format: { type: "json_object" },
       }),
-    });
+    }, { timeoutMs: 90_000 });
 
     if (!aiRes.ok) {
       const txt = await aiRes.text().catch(() => "");

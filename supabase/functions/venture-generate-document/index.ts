@@ -24,6 +24,10 @@ import {
   specializedPrompt,
   stripCitations,
 } from "../_shared/deliverable-prompts.ts";
+import { aiFetch } from "../_shared/ai-fetch.ts";
+import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
+
+const MAX_USER_PROMPT_CHARS = 120_000;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -227,12 +231,12 @@ export async function generateOne(
           rewriteTags && rewriteTags.length ? `Tags: ${rewriteTags.join(", ")}\n\n` : ""
         }${rewriteFeedback?.trim() ?? ""}`
       : "",
-  ].filter(Boolean).join("\n\n");
+  ].filter(Boolean).join("\n\n").slice(0, MAX_USER_PROMPT_CHARS);
 
   // S5 — Per-deliverable model tier ('pro' | 'flash' | 'lite').
   const modelId = modelForTier(type.model_tier);
 
-  const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -243,6 +247,7 @@ export async function generateOne(
       ],
     }),
   });
+
 
 
   if (!aiRes.ok) {
@@ -329,16 +334,15 @@ Deno.serve(async (req) => {
   try {
     const { snapshotId, documentType, rewriteFeedback, rewriteTags, intakeAnswers } = await req.json();
     if (!snapshotId || !documentType) {
-      return new Response(JSON.stringify({ error: "snapshotId and documentType required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return jsonResponse({ error: "snapshotId and documentType required" }, 400, corsHeaders);
     }
+    const auth = await requireUser(req, corsHeaders);
+    if (auth.error) return auth.error;
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-    const { data: gateSnap } = await supabase
-      .from("venture_snapshots")
-      .select("concept_status")
-      .eq("id", snapshotId)
-      .maybeSingle();
-    if (!gateSnap || gateSnap.concept_status !== "locked") {
-      return new Response(JSON.stringify({ error: "Lock your concept summary before generating documents." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const own = await requireSnapshotOwner(supabase, snapshotId, auth.userId!, corsHeaders);
+    if (own.error) return own.error;
+    if (!own.snapshot || own.snapshot.concept_status !== "locked") {
+      return jsonResponse({ error: "Lock your concept summary before generating documents." }, 409, corsHeaders);
     }
     const result = await generateOne(
       supabase,

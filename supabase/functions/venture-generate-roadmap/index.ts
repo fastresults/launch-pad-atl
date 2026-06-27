@@ -13,6 +13,8 @@ import {
 } from "../_shared/venture-context.ts";
 import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
 import { stripCitations } from "../_shared/deliverable-prompts.ts";
+import { aiFetch } from "../_shared/ai-fetch.ts";
+import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -304,7 +306,7 @@ async function generateRoadmap(supabase: any, snapshotId: string) {
   const trackAddendum = snap.track && TRACK_ADDENDUM[snap.track] ? TRACK_ADDENDUM[snap.track] : "";
   const systemPrompt = SYSTEM_PROMPT + trackAddendum;
 
-  const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -314,7 +316,7 @@ async function generateRoadmap(supabase: any, snapshotId: string) {
         { role: "user", content: userPrompt },
       ],
     }),
-  });
+  }, { timeoutMs: 120_000 });
 
   if (!aiRes.ok) {
     const txt = await aiRes.text();
@@ -322,6 +324,11 @@ async function generateRoadmap(supabase: any, snapshotId: string) {
       .from("venture_snapshots")
       .update({ roadmap_status: "failed" })
       .eq("id", snapshotId);
+    await supabase.from("venture_generation_failures").insert({
+      snapshot_id: snapshotId,
+      document_type: "founder_roadmap",
+      error: `Roadmap gateway ${aiRes.status}: ${txt.slice(0, 300)}`,
+    });
     throw new GatewayError(aiRes.status, txt);
   }
 
@@ -359,12 +366,13 @@ Deno.serve(async (req) => {
   try {
     const { snapshotId } = await req.json();
     if (!snapshotId) {
-      return new Response(JSON.stringify({ error: "snapshotId required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "snapshotId required" }, 400, corsHeaders);
     }
+    const auth = await requireUser(req, corsHeaders);
+    if (auth.error) return auth.error;
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+    const own = await requireSnapshotOwner(supabase, snapshotId, auth.userId!, corsHeaders);
+    if (own.error) return own.error;
     const result = await generateRoadmap(supabase, snapshotId);
     return new Response(JSON.stringify({ ok: true, ...result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

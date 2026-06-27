@@ -6,6 +6,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { compactPreamble, distillDeps, loadVentureContext, pickBrainSlice } from "../_shared/venture-context.ts";
 import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
+import { aiFetch } from "../_shared/ai-fetch.ts";
+import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -256,7 +258,7 @@ async function generateAssessment(
   const systemPrompt = SYSTEM_PROMPT + trackAddendum;
 
   // Deep assessments are the highest-rigor surface — route to Gemini Pro.
-  const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -271,7 +273,7 @@ async function generateAssessment(
         },
       ],
     }),
-  });
+  }, { timeoutMs: 120_000 });
 
   if (!aiRes.ok) {
     const txt = await aiRes.text();
@@ -280,6 +282,11 @@ async function generateAssessment(
       .update({ deep_assessment_status: "failed" })
       .eq("snapshot_id", snapshotId)
       .eq("document_type", documentType);
+    await supabase.from("venture_generation_failures").insert({
+      snapshot_id: snapshotId,
+      document_type: documentType,
+      error: `Assessment gateway ${aiRes.status}: ${txt.slice(0, 300)}`,
+    });
     throw new GatewayError(aiRes.status, txt);
   }
 
@@ -318,12 +325,13 @@ Deno.serve(async (req) => {
   try {
     const { snapshotId, documentType, feedback, tags } = await req.json();
     if (!snapshotId || !documentType) {
-      return new Response(
-        JSON.stringify({ error: "snapshotId and documentType required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      return jsonResponse({ error: "snapshotId and documentType required" }, 400, corsHeaders);
     }
+    const auth = await requireUser(req, corsHeaders);
+    if (auth.error) return auth.error;
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+    const own = await requireSnapshotOwner(supabase, snapshotId, auth.userId!, corsHeaders);
+    if (own.error) return own.error;
     const result = await generateAssessment(
       supabase,
       snapshotId,

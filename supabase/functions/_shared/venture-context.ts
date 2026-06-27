@@ -163,10 +163,14 @@ export function distillDeps(
  * should rely on the snapshot brain instead).
  */
 export function renderSources(ctx: VentureContext, perSourceCap = 6000): string {
-  const docBlocks = ctx.sources.documents.map(
+  // Cap injected documents to the most-recent 10 to keep prompts bounded
+  // even when a venture has many uploads attached.
+  const docs = ctx.sources.documents.slice(-10);
+  const urls = ctx.sources.urls.slice(-10);
+  const docBlocks = docs.map(
     (d, i) => `### Doc ${i + 1}: ${d.filename}\n${d.text.slice(0, perSourceCap)}`,
   );
-  const urlBlocks = ctx.sources.urls.map(
+  const urlBlocks = urls.map(
     (u, i) => `### URL ${i + 1}: ${u.url}${u.title ? ` (${u.title})` : ""}\n${u.text.slice(0, perSourceCap)}`,
   );
   return [...docBlocks, ...urlBlocks].join("\n\n");
