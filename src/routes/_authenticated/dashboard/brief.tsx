@@ -86,6 +86,51 @@ export default function BriefWizard() {
     [values],
   );
 
+  // Fallback: detect leftover answers from prior ventures and offer a one-click reset.
+  const qc = useQueryClient();
+  const [ventureCount, setVentureCount] = useState<number | null>(null);
+  const [staleDismissed, setStaleDismissed] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const uid = (await supabase.auth.getUser()).data.user?.id;
+      if (!uid || !alive) return;
+      const { count } = await supabase
+        .from("venture_snapshots")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", uid);
+      if (alive) setVentureCount(count ?? 0);
+    })();
+    return () => { alive = false; };
+  }, []);
+  const showStaleBanner =
+    ventureCount === 0 && answeredCount > 0 && !staleDismissed && mode !== "complete";
+
+  async function handleResetLeftover() {
+    setResetting(true);
+    try {
+      const uid = (await supabase.auth.getUser()).data.user?.id;
+      if (!uid) throw new Error("Not signed in");
+      const { error } = await supabase.rpc("reset_founder_workspace", { _user_id: uid });
+      if (error) throw error;
+      toast.success("Cleared. Your brief is fresh.");
+      qc.invalidateQueries({ queryKey: ["my", "brief"] });
+      qc.invalidateQueries({ queryKey: ["my", "profile"] });
+      qc.invalidateQueries({ queryKey: ["attendee", "profile"] });
+      setValues({});
+      setIdx(0);
+      setMode("question");
+      setInitialized(false);
+      await refetch();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Couldn't reset");
+    } finally {
+      setResetting(false);
+    }
+  }
+
+
   const founderBlock = BRIEF_BLOCKS.find((b) => b.kind === "founder")!;
   const marketBlock = BRIEF_BLOCKS.find((b) => b.kind === "market")!;
 
