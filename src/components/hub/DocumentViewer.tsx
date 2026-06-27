@@ -427,19 +427,19 @@ export function DocumentViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, doc?.snapshot_id, doc?.document_type, doc?.content, heroPath, doc?.hero_image_status, autoGenerateHero]);
 
-  const generateHero = async (force = false) => {
+  const generateHero = async (force = false, quality?: "fast" | "hq") => {
     if (!doc?.snapshot_id || !doc?.document_type) return;
     setHeroLoading(true);
     setHeroError(null);
     try {
       const { data, error } = await supabase.functions.invoke("venture-document-image", {
-        body: { snapshotId: doc.snapshot_id, documentType: doc.document_type, force },
+        body: { snapshotId: doc.snapshot_id, documentType: doc.document_type, force, quality },
       });
       if (error) throw new Error(error.message);
       if (data?.path) {
         setHeroPath(data.path);
         setHeroUrl(null); // force re-sign
-        toast.success(force ? "New visual generated" : "Visual generated");
+        toast.success(quality === "hq" ? "HQ visual generated" : force ? "New visual generated" : "Visual generated");
       } else if (data?.skipped && data?.reason === "in_flight") {
         setHeroError("Visual is already being generated. Reopen this document in a moment.");
       }
@@ -668,20 +668,32 @@ export function DocumentViewer({
                 )}
               </AspectRatio>
               {heroUrl && (
-                <button
-                  type="button"
-                  onClick={() => generateHero(true)}
-                  disabled={heroLoading}
-                  title="Regenerate visual"
-                  className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-1 text-[11px] text-white opacity-0 backdrop-blur transition group-hover:opacity-100 disabled:opacity-50"
-                >
-                  {heroLoading ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <RefreshCw className="h-3 w-3" />
-                  )}
-                  Regenerate
-                </button>
+                <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition group-hover:opacity-100">
+                  <button
+                    type="button"
+                    onClick={() => generateHero(true)}
+                    disabled={heroLoading}
+                    title="Regenerate visual (fast)"
+                    className="inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-1 text-[11px] text-white backdrop-blur disabled:opacity-50"
+                  >
+                    {heroLoading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-3 w-3" />
+                    )}
+                    Regenerate
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => generateHero(true, "hq")}
+                    disabled={heroLoading}
+                    title="Regenerate in HQ (slower, higher quality)"
+                    className="inline-flex items-center gap-1 rounded-md bg-primary/80 px-2 py-1 text-[11px] text-primary-foreground backdrop-blur disabled:opacity-50"
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    HQ
+                  </button>
+                </div>
               )}
             </div>
           </div>

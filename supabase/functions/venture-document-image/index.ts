@@ -80,10 +80,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { snapshotId, documentType, force } = await req.json();
+    const { snapshotId, documentType, force, quality } = await req.json();
     if (!snapshotId || !documentType) {
       return new Response(JSON.stringify({ error: "snapshotId and documentType required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    // Default to Nano Banana 2 (Flash) — ~3-5x faster than Pro with comparable
+    // quality for editorial illustrations. Pass quality:"hq" to opt into Pro.
+    const imageModel = quality === "hq" ? "google/gemini-3-pro-image" : "google/gemini-3.1-flash-image";
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -144,12 +147,12 @@ Deno.serve(async (req) => {
       brandTokens: snap.brand_tokens,
     });
 
-    // Call Lovable AI Gateway — Nano Banana Pro via chat-completions image shape.
+    // Call Lovable AI Gateway — image model via chat-completions image shape.
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-3-pro-image",
+        model: imageModel,
         messages: [{ role: "user", content: prompt }],
         modalities: ["image", "text"],
       }),
@@ -211,6 +214,7 @@ Deno.serve(async (req) => {
     const { error: upErr } = await admin.storage.from(BUCKET).upload(path, bytes, {
       contentType: "image/png",
       upsert: true,
+      cacheControl: "31536000",
     });
     if (upErr) {
       await admin.from("venture_documents")
