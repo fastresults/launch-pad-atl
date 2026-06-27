@@ -2,6 +2,9 @@
 // from text extracted client-side out of one or more founder-uploaded documents
 // (PDF, TXT, MD). Pure synthesis — no DB writes.
 
+import { requireUser } from "../_shared/auth.ts";
+import { aiFetch } from "../_shared/ai-fetch.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
