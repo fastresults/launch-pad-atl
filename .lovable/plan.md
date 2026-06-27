@@ -1,55 +1,53 @@
-# Add URL scraping to the Startup Brief pre-fill
+# Why your resume didn't parse
 
-## The gap
+The network log tells the whole story. The `founder-extract` edge function returned:
 
-`BriefPrefillDropzone` (the very first context-capture step on `/dashboard/brief`) only accepts file drops. Anything the founder *also* has on the web — their existing site, a Notion page, a LinkedIn "About", a Substack post — has no way in here. That breaks the "single source of truth, captured once, persists everywhere" promise we just hardened: a URL the founder mentions on day one can't follow them into Hub generation later.
+```json
+{"extracted":{"headline":"%PDF-1.3","roles":[],"skills":[],"industries":[]}}
+```
 
-The scraping pipeline already exists (`venture-scrape-url`, Firecrawl-backed, with a fallback fetcher and SSRF guards) and persistent founder context already exists (`attendee_documents` → `canonical-context` → snapshot `source_materials`). They just aren't wired into the brief intake.
+`%PDF-1.3` is literally the first 8 bytes of a PDF file. That means the function read the PDF as raw bytes and never actually extracted the text — so the AI saw binary garbage, gave up, and the only "text" it could latch onto was the PDF file header.
 
-## What changes
+## Root cause
 
-### 1. `src/components/brief/BriefPrefillDropzone.tsx` — add a URL input row
+`supabase/functions/founder-extract/index.ts` has a `downloadResumeText` helper that does this:
 
-Under the file list, add a compact URL field:
+```ts
+const buf = new Uint8Array(await data.arrayBuffer());
+const decoder = new TextDecoder("utf-8", { fatal: false });
+const txt = decoder.decode(buf);  // ← decoding PDF binary as UTF-8
+return txt.replace(/[^\x09\x0A\x0D\x20-\x7E]+/g, " ")...
+```
 
-- Single input + "Add" button, accumulates up to **3 URLs** as removable chips (same visual language as the file chips already there).
-- Client-side validation: must parse as `http(s)://` URL; trim; dedupe.
-- Update the header copy from *"Skip the typing. Drop your deck, one-pager, or notes."* to *"Skip the typing. Drop docs or paste links — your site, a Notion page, anything that already describes the startup."*
-- Update the helper line under the dropzone to mention "+ up to 3 URLs".
-- Enable the "Pre-fill my answers" button when **either** at least one valid file **or** at least one URL is present (today it only checks files).
+PDFs are not UTF-8 text. They're a compressed binary container. UTF-8 decoding strips out everything readable and leaves only the file-format header (`%PDF-1.3`), which is exactly what we saw in the response.
 
-### 2. On "Pre-fill", scrape URLs first, then run the existing flow
+The irony: we already have a working PDF extractor — `venture-source-extract` uses Gemini's file-attachment mode for PDFs and `mammoth` for DOCX. `founder-extract` was built before that and never got upgraded.
 
-In `runPrefill`:
+## The fix
 
-1. If URLs exist, call `supabase.functions.invoke("venture-scrape-url", { body: { urls } })` (already deployed, returns `{ results: [{ url, title, text, error }] }`).
-2. For each successful scrape (`text` non-empty, no `error`):
-   - Build a synthetic `.md` File in the browser:
-     `new File([\`# \${title ?? url}\n\nSource: \${url}\n\n\${text}\`], \`\${hostname}.md\`, { type: "text/markdown" })`.
-   - Call `uploadVentureSource({ file, kind: "brief_source", usedInBrief: true })` so the scraped page lives as a real `attendee_documents` row with `extracted_text` already populated — identical persistence path to dropped docs. This is what makes it "stick" through the whole workflow (canonical context → hub.new prefill → snapshot source_materials → all deliverable generation).
-   - Add the same synthetic File to the FormData passed to `brief-prefill` so the LLM uses it for the 10 answers in the same call.
-3. For each failed scrape, surface a per-URL toast (`"<url>: <error>"`) but don't block — proceed with whatever did succeed.
-4. If **all** inputs (files + URLs) failed validation/scraping, show the existing "Add at least one valid file" toast, reworded to "Add at least one valid file or URL".
+Replace `downloadResumeText` in `founder-extract` with the same extraction logic used by `venture-source-extract`:
 
-### 3. `supabase/functions/brief-prefill/index.ts` — no functional change needed
+1. **PDF** → send to Gemini as a file attachment (`type: "file"` with base64 data URL) and ask it to extract verbatim text. Handles both text-based and scanned PDFs (Gemini OCRs scanned pages automatically).
+2. **DOCX** → `mammoth.extractRawText`.
+3. **TXT / MD / RTF** → decode as UTF-8 (RTF gets a control-word strip).
+4. **PNG / JPG / WebP** → Gemini OCR via `image_url`.
 
-The function already accepts arbitrary `.md` files via the `TEXT_MIMES` / filename branch and renders them as `--- FILE: <name> ---` text blocks to Gemini. Scraped pages will appear to the model identically to dropped markdown notes, with the URL and title in the body so the model can cite them in `source_filename` / `source_snippet`.
+Then the existing AI call that builds the founder profile will see real resume text instead of `%PDF-1.3`, and `headline`, `roles`, `skills`, `industries`, `wins` will populate correctly.
 
-(Optional polish, only if scope allows: prefer using the hostname in the synthetic filename — e.g. `acme-co.com.md` — so the brief review screen shows a recognizable source attribution.)
+Bonus: we'll also write the extracted resume text into `attendee_founder_profile.raw_text` so the canonical context (snapshot-brain / loadVentureContext) picks it up downstream — right now even if extraction worked, the raw text was only used transiently and discarded.
 
-### 4. Nothing else touched
+## Files to change
 
-- `venture-scrape-url`: unchanged (already production-hardened with Firecrawl + fallback + SSRF checks).
-- `venture-sources.ts`, canonical-context, `brief-to-snapshot.ts`: unchanged — scraped pages land in `attendee_documents` with `used_in_brief = true, snapshot_id = null` exactly like dropped files, so they're already picked up by every downstream consumer.
+- `supabase/functions/founder-extract/index.ts`
+  - Replace `downloadResumeText` with a proper multi-format extractor (lift the helpers from `venture-source-extract/index.ts`: `bytesToDataUrl`, `geminiTranscribe`, mammoth import, RTF/TXT branches).
+  - On successful extraction, include the extracted text in the upsert payload as `raw_text` (only when `raw_text` wasn't already supplied by the user) so canonical context can use it.
+  - Keep the existing 18 KB truncation when feeding the extraction model.
 
-## Technical notes
+No frontend changes. No schema changes. No new env vars (`LOVABLE_API_KEY` is already in scope).
 
-- Scraping is best-effort: a single bad URL must not abort the pre-fill. Use `Promise.allSettled` style handling and report per-URL failures.
-- Cap synthetic markdown at the same `PER_URL_CAP` (30 KB) the edge function already enforces — the function returns pre-capped text, so just pass it through.
-- Persistence is the whole point: do **not** scrape inline-only. The `uploadVentureSource` call is what makes the source survive past this screen.
-- No DB migrations, no new edge functions, no new env vars (Firecrawl already wired).
+## Verification
 
-## Out of scope
-
-- Crawling multi-page sites (single-page scrape only, as today's `venture-scrape-url` does).
-- A separate "Add URL" surface elsewhere in the brief — `hub.new.tsx` already has its own URL ingestion; this plan only fixes the *first* capture point so the brief stage stops being doc-only.
+After deploy, upload the same resume again from Tell-us-about-you. Expected:
+- `founder-extract` returns an `extracted` object with a real `headline` (e.g. "Founder & CEO, OPEN Interactive") and populated `roles`, `skills`, `industries`, `wins`.
+- `attendee_founder_profile.raw_text` contains the resume text.
+- The "Tell us about you" panel renders the extracted bullets instead of staying blank.

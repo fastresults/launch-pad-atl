@@ -2,6 +2,7 @@
 // Persists raw_text, linkedin_url, source_file_path, and extracted JSON into
 // public.attendee_founder_profile for the calling user.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import mammoth from "npm:mammoth@1.7.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
