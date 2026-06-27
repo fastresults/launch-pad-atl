@@ -2532,6 +2532,14 @@ export type Database = {
         Args: { _code: string; _user_id: string }
         Returns: undefined
       }
+      admin_set_user_role: {
+        Args: {
+          _action: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: undefined
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
