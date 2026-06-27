@@ -2600,6 +2600,7 @@ export type Database = {
           price_cents: number
         }[]
       }
+      sweep_stuck_generations: { Args: never; Returns: undefined }
       sync_cohort_seat_cache: {
         Args: { _cohort_id: string }
         Returns: undefined
