@@ -313,28 +313,43 @@ function Inner() {
       if (error) throw error;
       const r = data?.results?.[0];
       if (!r) throw new Error("No result");
-      setScrapedUrls((curr) =>
-        curr.map((x) =>
-          x.id === entry.id
-            ? {
-                ...x,
-                status: r.error ? "error" : "ready",
-                title: r.title ?? null,
-                text: r.text ?? "",
-                charCount: r.charCount ?? 0,
-                error: r.error,
-              }
-            : x,
-        ),
-      );
-    } catch (e) {
-      setScrapedUrls((curr) =>
-        curr.map((x) =>
-          x.id === entry.id
-            ? { ...x, status: "error", error: e instanceof Error ? e.message : "Scrape failed" }
-            : x,
-        ),
-      );
+      const text = (r?.text ?? "").trim();
+      if (r.error || !text) {
+        setScrapedUrls((curr) =>
+          curr.map((x) =>
+            x.id === entry.id
+              ? { ...x, status: "error", error: r.error ?? "No content" }
+              : x,
+          ),
+        );
+      } else {
+        // Persist the scrape as a venture source so it shows as a chip in
+        // "Your source memory" alongside uploads.
+        try {
+          const host = new URL(normalized).hostname.replace(/^www\./, "");
+          const baseName = (r.title || host).replace(/[^\w\-.]+/g, "_").slice(0, 80) || "link";
+          const md = `# ${r.title || normalized}\n\nSource: ${normalized}\n\n${text}`;
+          const file = new File([md], `${baseName}.md`, { type: "text/markdown" });
+          const row = await uploadVentureSource({ file, kind: "venture_source", waitForExtraction: true });
+          appendToMemory(row);
+          setScrapedUrls((curr) => curr.filter((x) => x.id !== entry.id));
+        } catch (persistErr) {
+          // Fall back to keeping the URL in its own list if persistence fails.
+          setScrapedUrls((curr) =>
+            curr.map((x) =>
+              x.id === entry.id
+                ? {
+                    ...x,
+                    status: "ready",
+                    title: r.title ?? null,
+                    text,
+                    charCount: r.charCount ?? text.length,
+                  }
+                : x,
+            ),
+          );
+        }
+      }
     } finally {
       setScrapingUrl(false);
     }
