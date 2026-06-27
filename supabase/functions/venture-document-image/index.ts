@@ -214,6 +214,7 @@ Deno.serve(async (req) => {
     const { error: upErr } = await admin.storage.from(BUCKET).upload(path, bytes, {
       contentType: "image/png",
       upsert: true,
+      cacheControl: "31536000",
     });
     if (upErr) {
       await admin.from("venture_documents")
