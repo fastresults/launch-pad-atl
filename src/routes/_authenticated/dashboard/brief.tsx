@@ -38,6 +38,12 @@ const briefSearchSchema = z.object({
   review: z.coerce.number().optional(),
 });
 
+const emptyBriefValues = () => {
+  const empty: Record<string, string> = {};
+  for (const f of BRIEF_FIELDS) empty[f.key] = "";
+  return empty;
+};
+
 
 type Mode = "question" | "checkpoint" | "founder" | "market" | "review" | "complete";
 
@@ -50,8 +56,16 @@ export default function BriefWizard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const search = Object.fromEntries(searchParams.entries());
-  const { data, refetch } = useQuery({ queryKey: ["my", "brief"], queryFn: () => getMyBrief() });
-  const [values, setValues] = useState<Record<string, string>>({});
+  const qc = useQueryClient();
+  const [workspaceChecked, setWorkspaceChecked] = useState(false);
+  const [workspaceResetting, setWorkspaceResetting] = useState(false);
+  const [workspaceCheckError, setWorkspaceCheckError] = useState<string | null>(null);
+  const { data, refetch, isLoading: briefLoading } = useQuery({
+    queryKey: ["my", "brief"],
+    queryFn: () => getMyBrief(),
+    enabled: workspaceChecked,
+  });
+  const [values, setValues] = useState<Record<string, string>>(() => emptyBriefValues());
   const [idx, setIdx] = useState(0);
   const [mode, setMode] = useState<Mode>("question");
   const [checkpointBlock, setCheckpointBlock] = useState<BriefBlock | null>(null);
@@ -61,9 +75,62 @@ export default function BriefWizard() {
   const [prefillOpen, setPrefillOpen] = useState(false);
   const [prefillDismissed, setPrefillDismissed] = useState(false);
   const [showPrefillDialog, setShowPrefillDialog] = useState(false);
+  const [ventureCount, setVentureCount] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!data) return;
+    let alive = true;
+    (async () => {
+      setWorkspaceResetting(true);
+      setWorkspaceCheckError(null);
+      try {
+        const uid = (await supabase.auth.getUser()).data.user?.id;
+        if (!uid) throw new Error("Not signed in");
+
+        const { count, error } = await supabase
+          .from("venture_snapshots")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", uid);
+        if (error) throw error;
+
+        const nextVentureCount = count ?? 0;
+        if (!alive) return;
+        setVentureCount(nextVentureCount);
+
+        if (nextVentureCount === 0) {
+          const { error: resetError } = await supabase.rpc("reset_founder_workspace", { _user_id: uid });
+          if (resetError) throw resetError;
+          if (!alive) return;
+
+          setValues(emptyBriefValues());
+          setIdx(0);
+          setMode("question");
+          setCheckpointBlock(null);
+          setEditingFromReview(false);
+          setPrefillData(null);
+          setPrefillOpen(false);
+          setPrefillDismissed(false);
+          setShowPrefillDialog(false);
+          setInitialized(true);
+          qc.invalidateQueries({ queryKey: ["my", "brief"] });
+          qc.invalidateQueries({ queryKey: ["my", "profile"] });
+          qc.invalidateQueries({ queryKey: ["attendee", "profile"] });
+          qc.invalidateQueries({ queryKey: ["attendee", "founder", "profile"] });
+          qc.invalidateQueries({ queryKey: ["attendee", "market", "profile"] });
+        }
+      } catch (e: any) {
+        if (!alive) return;
+        setWorkspaceCheckError(e?.message ?? "Couldn't prepare your workspace");
+      } finally {
+        if (!alive) return;
+        setWorkspaceResetting(false);
+        setWorkspaceChecked(true);
+      }
+    })();
+    return () => { alive = false; };
+  }, [qc]);
+
+  useEffect(() => {
+    if (!workspaceChecked || ventureCount === 0 || !data) return;
     const init: Record<string, string> = {};
     for (const f of BRIEF_FIELDS) init[f.key] = ((data as any)[f.key] as string) ?? "";
     setValues(init);
@@ -76,7 +143,7 @@ export default function BriefWizard() {
       setIdx(firstEmpty);
     }
     setInitialized(true);
-  }, [data, initialized, search.review]);
+  }, [data, initialized, search.review, ventureCount, workspaceChecked]);
 
   const total = BRIEF_FIELDS.length;
   const current = BRIEF_FIELDS[idx];
@@ -85,51 +152,6 @@ export default function BriefWizard() {
     () => BRIEF_FIELDS.filter((f) => (values[f.key] ?? "").trim().length > 0).length,
     [values],
   );
-
-  // Fallback: detect leftover answers from prior ventures and offer a one-click reset.
-  const qc = useQueryClient();
-  const [ventureCount, setVentureCount] = useState<number | null>(null);
-  const [staleDismissed, setStaleDismissed] = useState(false);
-  const [resetting, setResetting] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const uid = (await supabase.auth.getUser()).data.user?.id;
-      if (!uid || !alive) return;
-      const { count } = await supabase
-        .from("venture_snapshots")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", uid);
-      if (alive) setVentureCount(count ?? 0);
-    })();
-    return () => { alive = false; };
-  }, []);
-  const showStaleBanner =
-    ventureCount === 0 && answeredCount > 0 && !staleDismissed && mode !== "complete";
-
-  async function handleResetLeftover() {
-    setResetting(true);
-    try {
-      const uid = (await supabase.auth.getUser()).data.user?.id;
-      if (!uid) throw new Error("Not signed in");
-      const { error } = await supabase.rpc("reset_founder_workspace", { _user_id: uid });
-      if (error) throw error;
-      toast.success("Cleared. Your brief is fresh.");
-      qc.invalidateQueries({ queryKey: ["my", "brief"] });
-      qc.invalidateQueries({ queryKey: ["my", "profile"] });
-      qc.invalidateQueries({ queryKey: ["attendee", "profile"] });
-      setValues({});
-      setIdx(0);
-      setMode("question");
-      setInitialized(false);
-      await refetch();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Couldn't reset");
-    } finally {
-      setResetting(false);
-    }
-  }
-
 
   const founderBlock = BRIEF_BLOCKS.find((b) => b.kind === "founder")!;
   const marketBlock = BRIEF_BLOCKS.find((b) => b.kind === "market")!;
@@ -237,6 +259,27 @@ export default function BriefWizard() {
     if (idx > 0) setIdx(idx - 1);
   };
 
+  if (!workspaceChecked || workspaceResetting || briefLoading) {
+    return (
+      <div className="mx-auto max-w-2xl py-16">
+        <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+          Preparing a fresh workspace…
+        </div>
+      </div>
+    );
+  }
+
+  if (workspaceCheckError) {
+    return (
+      <div className="mx-auto max-w-2xl py-16">
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-sm">
+          <div className="font-semibold text-foreground">We couldn't prepare your workspace.</div>
+          <p className="mt-1 text-muted-foreground">{workspaceCheckError}</p>
+        </div>
+      </div>
+    );
+  }
+
   if (mode === "review") {
     return (
       <div className="mx-auto max-w-2xl">
@@ -259,33 +302,6 @@ export default function BriefWizard() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      {showStaleBanner && (
-        <div className="mb-4 rounded-xl border border-status-warning/40 bg-status-warning/10 p-4 text-sm">
-          <div className="font-semibold text-foreground">Leftover answers from a deleted venture</div>
-          <p className="mt-1 text-muted-foreground">
-            You don't have any active ventures, but your brief still has answers from a previous one.
-            Clear them so your next startup starts fresh.
-          </p>
-          <div className="mt-3 flex gap-2">
-            <button
-              type="button"
-              onClick={handleResetLeftover}
-              disabled={resetting}
-              className="rounded-md bg-status-warning px-3 py-1.5 text-xs font-medium text-status-warning-foreground hover:opacity-90 disabled:opacity-50"
-            >
-              {resetting ? "Clearing…" : "Reset brief & profile"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setStaleDismissed(true)}
-              className="rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
-            >
-              Keep them
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="flex items-center justify-between">
         <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {mode === "complete"

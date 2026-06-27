@@ -1,49 +1,34 @@
-## Goal
+I understand the gap: the previous implementation only reset after deletion and showed a fallback banner on the brief page. It did not guarantee that stale brief/profile fields are cleared before the page renders when the user loads `/dashboard/brief` with zero ventures.
 
-When a user deletes their final venture (zero `venture_snapshots` remain), automatically wipe every founder/brief field that was populated from earlier venture work, so screens like `/dashboard/brief` and `/dashboard/profile` open fresh — no leftover answers from the prior startup.
+## Plan
 
-## Scope of "fields to reset"
+1. **Add a required “workspace freshness” check on brief load**
+   - When `/dashboard/brief` loads, first check the authenticated user’s venture count.
+   - If `venture_snapshots` count is `0`, immediately call the existing backend reset routine: `reset_founder_workspace(user_id)`.
+   - This clears the stale brief, founder profile, founder memory, market profile, goals, stage intake, filing info, and venture-specific profile fields.
 
-Per-user tables that currently survive venture deletion and cause pre-population:
+2. **Prevent stale answers from flashing onscreen**
+   - Add a local loading gate such as `workspaceChecked` / `workspaceResetting`.
+   - Do not render `BriefReview`, the “Your answers” screen, or populated question fields until the zero-venture check finishes.
+   - While checking, show a neutral loading state like “Preparing a fresh workspace…” so users never see old startup data.
 
-- `attendee_business_brief` — the 10 brief answers + completeness_score
-- `attendee_founder_profile` — right_person_reason, unfair_advantage, etc.
-- `attendee_founder_memory` — synthesized founder context
-- `attendee_market_profile`
-- `attendee_goals`
-- `attendee_stage_intake`
-- `attendee_filing_info`
-- `attendee_profiles` — only venture-derived fields (industry, stage, business idea summary). Identity fields (full_name, email, avatar, contact info) are preserved.
+3. **Reinitialize the brief state after reset**
+   - After reset succeeds:
+     - Clear local `values` to empty strings for every brief field.
+     - Set `idx` back to `0`.
+     - Set `mode` to `question`.
+     - Mark `initialized` as complete only after the cleared data is applied.
+     - Invalidate/refetch related queries: brief, profile, founder profile, market/profile data.
 
-`venture_documents`, `venture_generation_jobs`, `attendee_documents` already cascade off `venture_snapshots`, so they need no extra work.
+4. **Remove the weak fallback behavior**
+   - Remove or bypass the “Leftover answers from a deleted venture” banner path for this route.
+   - The correct behavior should not require the user to notice a warning or click “Reset”; it should happen automatically when there are no ventures.
 
-## Approach
+5. **Make the logic safe and non-destructive**
+   - Keep the backend guard already in `reset_founder_workspace`: it refuses to reset if any venture still exists.
+   - That means even if the frontend check is stale or duplicated, the backend will not wipe active-venture data.
 
-1. **New SECURITY DEFINER RPC `reset_founder_workspace(_user_id uuid)`**
-   - Caller must be the owner (`auth.uid() = _user_id`) or an admin.
-   - Verifies `SELECT count(*) FROM venture_snapshots WHERE user_id = _user_id = 0` before wiping (guard against accidental calls while a venture still exists).
-   - Deletes rows from the per-user tables above; for `attendee_profiles`, performs an UPDATE that nulls only venture-derived columns.
-   - Returns the list of tables cleared (for the toast).
-
-2. **Wire it into deletion paths in `src/lib/foundersHub.functions.ts`**
-   - `deleteSnapshot` (user path) and `adminForceDeleteSnapshot` (admin path): after a successful delete, query remaining snapshot count for that user; if zero, invoke `reset_founder_workspace`.
-   - Emit a `venture-sources:changed` event and invalidate the relevant React Query keys (`["my","brief"]`, `["my","profile"]`, `["my","founder-memory"]`, hub list) so the UI re-reads empty data immediately.
-
-3. **Confirmation UX in the Hub delete dialog**
-   - When the snapshot being deleted is the user's last one, the existing confirm dialog gains a second line: "This is your last venture. Deleting it will also clear your Founder Brief, Profile intake, and Market answers so your next venture starts fresh." (Plain language, no scary jargon.)
-   - Admin force-delete shows the equivalent warning.
-
-4. **Defensive client-side fallback**
-   - On mount of `/dashboard/brief` and `/dashboard/profile`, if `venture_snapshots` count is 0 AND brief/profile rows still contain data, surface a one-time "Reset leftover answers" banner that calls the same RPC. Covers users whose prior deletions happened before this change shipped.
-
-## Out of scope
-
-- Manual "Reset profile" button on the Profile page (already exists) — unchanged.
-- Cohort registration, role, and member-status data — preserved.
-- Any deck/asset cleanup beyond what cascades today.
-
-## Technical notes
-
-- All writes go through the new RPC so RLS and the "zero ventures" guard live in one place.
-- Migration adds the function + GRANT EXECUTE TO authenticated, service_role.
-- No schema changes to existing tables.
+6. **Verify the workflow**
+   - Test the page with zero ventures and existing stale brief data: it should load empty at Question 1, not the “Your answers” review screen.
+   - Test with one or more ventures: existing brief/profile fields should remain untouched.
+   - Test refresh/revisit behavior: no stale answers should reappear after reload.
