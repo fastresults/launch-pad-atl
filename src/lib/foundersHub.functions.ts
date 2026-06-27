@@ -92,7 +92,20 @@ export async function listSnapshots(): Promise<VentureSnapshot[]> {
     .order("is_favorite", { ascending: false })
     .order("updated_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data ?? []) as VentureSnapshot[];
+  const snaps = (data ?? []) as VentureSnapshot[];
+  if (snaps.length === 0) return snaps;
+
+  const ids = snaps.map((s) => s.id);
+  const { data: docs } = await supabase
+    .from("venture_documents")
+    .select("snapshot_id,status")
+    .in("snapshot_id", ids)
+    .eq("status", "complete");
+  const counts = new Map<string, number>();
+  for (const d of (docs ?? []) as { snapshot_id: string }[]) {
+    counts.set(d.snapshot_id, (counts.get(d.snapshot_id) ?? 0) + 1);
+  }
+  return snaps.map((s) => ({ ...(s as any), doc_count: counts.get(s.id) ?? 0 })) as VentureSnapshot[];
 }
 
 export async function setFavorite(input: any): Promise<void> {
