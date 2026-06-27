@@ -747,7 +747,7 @@ function Inner() {
         )}
 
         {/* Link tab */}
-        {intakeTab === "link" && (
+        {showCollectionUI && intakeTab === "link" && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               Paste a URL — your site, a competitor, or a relevant article. Up to {MAX_URLS}.
