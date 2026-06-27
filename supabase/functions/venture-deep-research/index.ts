@@ -230,7 +230,7 @@ function sanitizeModelOutput(value: unknown): unknown {
 }
 
 async function synthesize(corpus: string): Promise<any> {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
