@@ -255,8 +255,56 @@ export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: P
     [fields, values],
   );
 
+  const emptyCount = useMemo(
+    () => fields.filter((f) => !isFilled(values[f.id])).length,
+    [fields, values],
+  );
+
+  async function handleEstimate() {
+    if (!target || !snapshotId) {
+      toast.error("Add a venture first so we can ground the estimate.");
+      return;
+    }
+    setEstimating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("venture-estimate-intake", {
+        body: {
+          snapshot_id: snapshotId,
+          deliverable_type: target.type,
+          schema: target.schema,
+          current_values: values,
+        },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      const estimates = (data?.estimates ?? {}) as Record<string, any>;
+      const filledIds: string[] = [];
+      setValues((cur) => {
+        const next = { ...cur };
+        for (const f of fields) {
+          if (estimates[f.id] === undefined) continue;
+          if (!isFilled(cur[f.id])) {
+            next[f.id] = estimates[f.id];
+            filledIds.push(f.id);
+          }
+        }
+        return next;
+      });
+      if (filledIds.length === 0) {
+        toast.info("Nothing to estimate — your fields are already filled.");
+      } else {
+        setAiEstimateFields((s) => new Set([...s, ...filledIds]));
+        toast.success(`Estimated ${filledIds.length} field${filledIds.length === 1 ? "" : "s"}. Review and edit before generating.`);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't estimate — try answering manually.");
+    } finally {
+      setEstimating(false);
+    }
+  }
+
   const canSubmit =
-    missingRequired.length === 0 && !recordingFor && !transcribingFor && target !== null;
+    missingRequired.length === 0 && !recordingFor && !transcribingFor && !estimating && target !== null;
 
   const open = target !== null;
 
