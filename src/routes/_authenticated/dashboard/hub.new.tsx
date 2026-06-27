@@ -154,28 +154,48 @@ function Inner() {
   // Reusable library
   const [reusable, setReusable] = useState<VentureSource[]>([]);
   const [reuseSelected, setReuseSelected] = useState<Record<string, boolean>>({});
-  const [showLibrary, setShowLibrary] = useState(false);
+  const [addMoreOpen, setAddMoreOpen] = useState(false);
   useEffect(() => {
     listVentureSources()
-      .then((rows) => setReusable(rows))
+      .then((rows) => {
+        setReusable(rows);
+        // Auto-attach everything readable from the founder's existing memory
+        // (brief sources, scraped URLs, founder bio, prior uploads). The
+        // founder shouldn't have to re-check boxes for what we already have.
+        setReuseSelected((prev) => {
+          const next = { ...prev };
+          for (const r of rows) {
+            if ((r.extracted_text ?? "").trim()) next[r.id] = true;
+          }
+          return next;
+        });
+      })
       .catch(() => {});
   }, []);
 
-  const groupedReusable = useMemo(() => {
-    const groups: Record<string, { label: string; items: VentureSource[] }> = {
-      brief: { label: "From your Startup Brief", items: [] },
-      founder: { label: "From your founder profile", items: [] },
-      other: { label: "From previous ventures", items: [] },
-      unassigned: { label: "Recently uploaded", items: [] },
-    };
-    for (const r of reusable) {
-      if (r.used_in_brief || r.kind === "brief_source") groups.brief.items.push(r);
-      else if (r.kind === "founder_bio") groups.founder.items.push(r);
-      else if (r.snapshot_id) groups.other.items.push(r);
-      else groups.unassigned.items.push(r);
-    }
-    return Object.entries(groups).filter(([, g]) => g.items.length > 0);
+  // Memory chips = every readable source already on file for this founder.
+  const memoryChips = useMemo(() => {
+    return reusable
+      .filter((r) => !!(r.extracted_text ?? "").trim() || r.extraction_error)
+      .map((r) => {
+        const name = r.original_name ?? "source";
+        const lower = name.toLowerCase();
+        const isUrlCapture =
+          (r.kind === "brief_source" || r.used_in_brief) &&
+          (lower.endsWith(".md") || lower.endsWith(".markdown"));
+        const isAudio = /\.(mp3|m4a|wav|webm|ogg)$/i.test(name);
+        const isImage = /\.(png|jpe?g|webp|gif)$/i.test(name);
+        let origin: "brief" | "founder" | "venture" | "other" = "other";
+        if (r.used_in_brief || r.kind === "brief_source") origin = "brief";
+        else if (r.kind === "founder_bio") origin = "founder";
+        else if (r.snapshot_id) origin = "venture";
+        return { row: r, name, isUrlCapture, isAudio, isImage, origin };
+      });
   }, [reusable]);
+
+  const memoryEmpty = memoryChips.length === 0;
+  const showCollectionUI = memoryEmpty || addMoreOpen;
+
 
   const addFiles = useCallback(
     async (incoming: File[]) => {
