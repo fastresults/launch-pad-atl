@@ -20,3 +20,8 @@
 ## Deferred (intentionally not in this round)
 - F10 invalidate `useCanonicalContext` after `uploadVentureSource`. Tradeoff: would couple a non-React lib to TanStack Query. 30s staleTime in `use-canonical-context.ts` masks the gap; revisit if users report stale prefill.
 - F14 venture-job-watchdog cron schedule confirmation. Sweeper now covers pipeline runs, so the watchdog gap is reduced; full scheduling pass deferred.
+
+## ✅ Package E2 (shipped)
+- F17 removed admin cohort test harness route + UI entry (route deleted, App.tsx + admin.cohorts.tsx cleaned)
+- F18 `setUserRole` now routes through `admin_set_user_role` SECURITY DEFINER RPC with is_admin check, super_admin-only escalation, and last-super_admin protection
+- F21 `handle_new_user` serialized via `pg_advisory_xact_lock` and bootstrap now checks for any existing super_admin instead of counting auth.users (eliminates concurrent-signup race)
