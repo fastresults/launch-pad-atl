@@ -101,27 +101,39 @@ Deno.serve(async (req) => {
   }
   if (!ALLOWED_URLS.has(url)) return json(400, { error: "URL not on allowlist" });
 
-  // 1. Scrape via Firecrawl v2
+  // 1. Scrape via Firecrawl v2 (with fallback for JS-heavy sites)
   let markdown = "";
-  try {
+  async function scrape(body: Record<string, unknown>) {
     const fc = await fetch("https://api.firecrawl.dev/v2/scrape", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${firecrawlKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        url,
-        formats: ["markdown"],
-        onlyMainContent: true,
-      }),
+      body: JSON.stringify(body),
     });
-    const fcJson = await fc.json();
-    if (!fc.ok) {
-      return json(fc.status, { error: `Firecrawl: ${fcJson?.error ?? fc.statusText}` });
+    const fcJson = await fc.json().catch(() => ({} as any));
+    return { ok: fc.ok, status: fc.status, fcJson };
+  }
+  function pickContent(fcJson: any): string {
+    const d = fcJson?.data ?? fcJson;
+    const md = d?.markdown ?? d?.summary ?? "";
+    if (md && String(md).trim()) return String(md);
+    const html = d?.html ?? d?.rawHtml ?? "";
+    if (html) return String(html).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    return "";
+  }
+  try {
+    let r = await scrape({ url, formats: ["markdown"], onlyMainContent: true });
+    if (!r.ok) return json(r.status, { error: `Firecrawl: ${r.fcJson?.error ?? "request failed"}` });
+    markdown = pickContent(r.fcJson);
+    if (!markdown.trim()) {
+      // Retry with JS wait + fuller formats for JS-heavy / bot-protected sites
+      r = await scrape({ url, formats: ["markdown", "html", "summary"], onlyMainContent: false, waitFor: 2500 });
+      if (r.ok) markdown = pickContent(r.fcJson);
     }
-    markdown = (fcJson?.data?.markdown ?? fcJson?.markdown ?? "").toString().slice(0, 12000);
-    if (!markdown.trim()) return json(502, { error: "Firecrawl returned no markdown" });
+    markdown = markdown.slice(0, 12000);
+    if (!markdown.trim()) return json(502, { error: "Firecrawl returned no content for this URL. Try a different seed site." });
   } catch (e) {
     return json(502, { error: `Firecrawl fetch failed: ${e instanceof Error ? e.message : String(e)}` });
   }
