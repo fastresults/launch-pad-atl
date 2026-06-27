@@ -1,104 +1,64 @@
+# Plan: Auto-Estimate button on Intake Gateway (Budget & Pro Forma + all intake forms)
+
 ## Problem
-Today's `website_prd` deliverable (in `supabase/functions/_shared/deliverable-prompts.ts`) produces a single, compact PRD: one paste-ready prompt, a sitemap, light page copy (H1 + sub + 3 H2s with 2–3 sentences), an SEO bundle, and a tech checklist. When founders paste it into Lovable / v0 / Bolt, the result is a thin one-pager. We want a true multi-page site brief with enough depth that the AI builder produces a real marketing site on the first paste.
+When a deliverable like **Budget & Pro Forma** opens its intake pop-up, novice founders see a long list of numeric inputs (revenue, burn, headcount, capex, etc.) and stall. They need a one-click way to let the AI propose reasonable defaults grounded in everything we already know about their venture.
 
-## Goal
-Upgrade ONLY the `website_prd` prompt so the output is:
-1. A complete multi-page information architecture (8–12 pages, not just sections of a one-pager).
-2. Fully-written page copy for every page (not stubs).
-3. A richer paste-ready master prompt that tells the builder to scaffold all routes, components, and global elements.
-4. Per-page SEO, schema.org JSON-LD, and OG metadata.
-5. Conversion + trust assets (CTAs, social proof slots, FAQs, lead capture, legal).
-6. Accessibility, performance, and analytics requirements.
+## Solution
+Add a prominent **"Estimate for me"** button at the top of the `IntakeGatewayDialog`. One click → AI reads the full canonical venture context (brief, profile, prior documents, source materials) and fills every empty field with its best estimate. Each filled field gets a small "AI estimate — edit me" badge so the user knows it's a guess they should validate.
 
-No UI, schema, edge-function plumbing, or other deliverable types change. Same model tier, same export pipeline, same DocumentViewer.
-
-## New Output Structure (replaces current sections 1–5)
+## UX
 
 ```text
-# {Company} — Website PRD
-
-## 1. Site Strategy
-   - Primary audience, JTBD, top 3 conversion goals, success metrics
-   - Brand voice recap (pulled from upstream brand_tokens / messaging house)
-   - Global components: header, mega-nav, footer, cookie banner, announcement bar
-
-## 2. Information Architecture (multi-page)
-   Required routes (adapt names to track, but ship ALL of these):
-   - / (Home)
-   - /about
-   - /products  OR  /services  (index)
-   - /products/[slug]  OR  /services/[slug]  — 2–4 example detail pages fully written
-   - /pricing
-   - /case-studies (index) + 1 fully-written case study
-   - /blog (index) + 1 fully-written launch post
-   - /faq
-   - /contact
-   - /legal/privacy, /legal/terms (short, generated)
-   Sitemap shown as a tree.
-
-## 3. Global Elements (fully specified)
-   - Header nav items + CTA
-   - Footer columns, newsletter capture, social links
-   - 404 page copy
-   - Cookie / consent banner copy
-
-## 4. Page-by-Page Specs  (for EVERY route above)
-   For each page:
-   - Purpose + primary CTA + secondary CTA
-   - Section list in order (Hero, Logo bar, Feature grid, Proof, Pricing, FAQ, CTA band, etc.)
-   - Full copy per section: H1/H2, sub-headline, body paragraph(s), bullets, CTA labels
-   - Image / illustration prompts (1–3 per page) reusing brand_tokens
-   - Form fields when applicable (Contact, Newsletter, Lead magnet)
-   - Internal links to other routes
-
-## 5. SEO & Metadata (per page table)
-   Columns: Route | <title> (<60ch) | meta description (<160ch) | primary keyword | secondary keywords | OG image prompt | JSON-LD schema type (Organization, Product, Service, Article, FAQPage, BreadcrumbList, LocalBusiness when local)
-   Plus: robots.txt, sitemap.xml structure, canonical strategy.
-
-## 6. Conversion & Trust
-   - Lead capture strategy (where, what fields, what happens next)
-   - Social proof slots (testimonials, logos, stats) with placeholder content the founder can swap
-   - 6–10 FAQ Q&A pairs
-   - Trust badges / certifications / guarantees
-
-## 7. Tech & Quality Bar
-   - Framework hint (React + Vite + Tailwind + shadcn unless track suggests otherwise)
-   - Accessibility: WCAG 2.2 AA, focus states, alt text, semantic landmarks
-   - Performance: image sizes, lazy loading, Core Web Vitals targets
-   - Analytics events list (page_view, cta_click_{name}, form_submit_{name})
-   - Integrations: email capture provider, analytics, CRM webhook
-
-## 8. Paste-Ready Master Prompt  (single fenced ``` block, 900–1300 words)
-   Self-contained brief for an AI website builder. Must explicitly:
-   - Name every route to scaffold
-   - Reference global header/footer/nav
-   - Embed brand_tokens (colors, fonts, radius, mood) inline
-   - Tell the builder to use the per-page copy from section 4 verbatim
-   - Include the SEO + JSON-LD requirements from section 5
-   - Include accessibility + performance + analytics requirements
-   - End with a "Definition of done" checklist
-
-## 9. Build Checklist
-   Ordered checklist a founder can tick as the builder produces each route.
+┌─ Budget & Pro Forma — quick inputs ─────────────┐
+│ Answer a few questions...                       │
+│                                                 │
+│ ╔═════════════════════════════════════════════╗ │
+│ ║  ✨ Not sure? Let AI estimate from your     ║ │
+│ ║     venture context.                        ║ │
+│ ║                       [ Estimate for me ]   ║ │
+│ ╚═════════════════════════════════════════════╝ │
+│                                                 │
+│  Monthly burn *           [AI estimate · edit]  │
+│  $ 12,500                                       │
+│                                                 │
+│  Headcount Y1 *           [AI estimate · edit]  │
+│  3                                               │
+│  ...                                             │
+│                            [Cancel] [Generate]   │
+└─────────────────────────────────────────────────┘
 ```
 
-## Prompt Changes
-- Edit only the `website_prd` entry in `SPECIALIZED_PROMPTS` (`supabase/functions/_shared/deliverable-prompts.ts`).
-- Keep the existing `${QF}` footer (no citations, QUALITY_SCORE).
-- Add explicit length guidance: target ~2,500–3,500 words total markdown; the paste-ready prompt itself 900–1,300 words.
-- Reinforce: "Do not stub. Every page in section 4 must have complete copy. No 'TBD' or '[insert]'."
-- Reuse upstream context already injected by `venture-generate-document` (brand_tokens, messaging house, value prop, competitive landscape, track) — call those out by name so the model pulls them through.
+- Banner sits above the field list, only when at least one field is empty.
+- Button shows spinner + "Estimating…" while running.
+- Only **empty** fields are overwritten (never clobber what the user typed or what was already prefilled from canonical context).
+- Each AI-filled field gets an amber `AI estimate` chip next to the label (distinct from the green "prefilled" chip) so users see what to review.
+- Toast on success: "Filled N fields. Review and edit before generating."
+- On failure (no context, AI error): toast with friendly message, button re-enables.
 
-## Model Tier
-Bump `website_prd` to the `pro` tier in `modelForTier` routing inside `venture-generate-document` (and `venture-bulk-generate` if it routes per-type) so the longer, structured output is reliable. If routing is centralized via `modelForTier`, add `website_prd` to the pro list; otherwise leave model selection unchanged and rely on the prompt.
+## Technical Implementation
 
-## Out of Scope
-- No changes to `DocumentViewer`, export formats, deep assessment, image generation, or other deliverable prompts.
-- No new edge functions, DB columns, or UI.
-- No changes to how the doc is surfaced in the hub.
+### 1. New Edge Function `venture-estimate-intake`
+- Input: `{ snapshot_id, deliverable_type, schema, current_values }`
+- Loads canonical venture context via existing `_shared/venture-context.ts` (same source feeding deep assessment / roadmap).
+- Builds a compact prompt: schema (field id, label, type, help text, units) + venture context summary + instruction to return strict JSON `{ field_id: value }` for empty fields only, using realistic, conservative estimates and flagging assumptions.
+- Model: `google/gemini-3-flash-preview` (fast, cheap, JSON-friendly) via `aiFetch`.
+- Returns `{ estimates: Record<string, any>, notes?: string }`.
+- Standard auth + RLS check that user owns the snapshot.
 
-## Verification
-1. Generate / Regenerate the Website PRD on an existing venture.
-2. Confirm the markdown contains sections 1–9, a sitemap tree, ≥8 fully-written page specs, a per-page SEO table with JSON-LD types, and one ~1,000-word fenced master prompt block.
-3. Copy the master prompt into Lovable in a scratch project and confirm it scaffolds a multi-page site (not a one-pager).
-4. Confirm DOCX / PDF / Markdown exports still render cleanly (no broken tables, no footnote markers).
+### 2. `IntakeGatewayDialog.tsx` changes
+- Add `snapshot_id` prop (the dialog is already invoked from hub pages that know it).
+- Add `estimating` state, `aiEstimateFields` Set<string> for chip rendering.
+- `handleEstimate()`: invoke edge function with current `values` and `target.schema`; merge only into empty fields; record ids in `aiEstimateFields`; show toast.
+- Render banner + button above the field map (hide when no empty fields remain).
+- Render amber chip on labels where `aiEstimateFields.has(f.id)`.
+- For `rows`-type fields, if AI returns an array, replace empty rows array with it.
+
+### 3. Caller updates
+- `ConceptStudio.tsx`, `hub.$snapshotId.tsx`, `workflow.$key.tsx` — anywhere `<IntakeGatewayDialog>` mounts, pass the current `snapshot_id`.
+
+## Out of scope
+- No schema changes, no new tables.
+- No changes to existing prefill-from-canonical-context logic — estimate is a separate, explicit user action.
+- Doesn't change the downstream generation flow; it just fills the form.
+
+Approve and I'll build it.
