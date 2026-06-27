@@ -77,6 +77,8 @@ export default function BriefWizard() {
   const [prefillDismissed, setPrefillDismissed] = useState(false);
   const [showPrefillDialog, setShowPrefillDialog] = useState(false);
   const [ventureCount, setVentureCount] = useState<number | null>(null);
+  const [emptyStateDismissed, setEmptyStateDismissed] = useState(false);
+  const [resetSucceeded, setResetSucceeded] = useState(false);
 
   useEffect(() => {
     let alive = true;
