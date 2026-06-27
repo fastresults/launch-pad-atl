@@ -76,6 +76,7 @@ export type IntakeTarget = {
 
 interface Props {
   target: IntakeTarget;
+  snapshotId?: string | null;
   onClose: () => void;
   onSubmit: (answers: Record<string, any>) => void;
 }
