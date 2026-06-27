@@ -101,8 +101,15 @@ export default function BriefWizard() {
 
         if (nextVentureCount === 0) {
           const { error: resetError } = await supabase.rpc("reset_founder_workspace", { _user_id: uid });
-          if (resetError) throw resetError;
           if (!alive) return;
+          if (resetError) {
+            // Non-fatal: surface as a soft warning, still show the empty state.
+            console.warn("[brief] reset_founder_workspace failed:", resetError);
+            setWorkspaceCheckError(resetError.message ?? "Couldn't fully clear previous answers");
+            setResetSucceeded(false);
+          } else {
+            setResetSucceeded(true);
+          }
 
           setValues(emptyBriefValues());
           setIdx(0);
