@@ -20,6 +20,7 @@ import { BriefReview } from "@/components/brief/BriefReview";
 import { FounderBlock } from "@/components/brief/FounderBlock";
 import { MarketBlock } from "@/components/brief/MarketBlock";
 import { BriefPrefillDropzone } from "@/components/brief/BriefPrefillDropzone";
+import { BriefEmptyState } from "@/components/brief/BriefEmptyState";
 import { BriefCompleteScreen } from "@/components/brief/BriefCompleteScreen";
 import { BriefPrefillReview } from "@/components/brief/BriefPrefillReview";
 import type { BriefPrefillResponse } from "@/lib/brief.functions";
@@ -76,6 +77,8 @@ export default function BriefWizard() {
   const [prefillDismissed, setPrefillDismissed] = useState(false);
   const [showPrefillDialog, setShowPrefillDialog] = useState(false);
   const [ventureCount, setVentureCount] = useState<number | null>(null);
+  const [emptyStateDismissed, setEmptyStateDismissed] = useState(false);
+  const [resetSucceeded, setResetSucceeded] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -98,8 +101,15 @@ export default function BriefWizard() {
 
         if (nextVentureCount === 0) {
           const { error: resetError } = await supabase.rpc("reset_founder_workspace", { _user_id: uid });
-          if (resetError) throw resetError;
           if (!alive) return;
+          if (resetError) {
+            // Non-fatal: surface as a soft warning, still show the empty state.
+            console.warn("[brief] reset_founder_workspace failed:", resetError);
+            setWorkspaceCheckError(resetError.message ?? "Couldn't fully clear previous answers");
+            setResetSucceeded(false);
+          } else {
+            setResetSucceeded(true);
+          }
 
           setValues(emptyBriefValues());
           setIdx(0);
@@ -263,20 +273,31 @@ export default function BriefWizard() {
     return (
       <div className="mx-auto max-w-2xl py-16">
         <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-          Preparing a fresh workspace…
+          Getting your workspace ready…
         </div>
       </div>
     );
   }
 
-  if (workspaceCheckError) {
+  if (ventureCount === 0 && !emptyStateDismissed) {
     return (
-      <div className="mx-auto max-w-2xl py-16">
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-sm">
-          <div className="font-semibold text-foreground">We couldn't prepare your workspace.</div>
-          <p className="mt-1 text-muted-foreground">{workspaceCheckError}</p>
-        </div>
-      </div>
+      <BriefEmptyState
+        resetSucceeded={resetSucceeded}
+        resetWarning={workspaceCheckError}
+        onStartBlank={() => {
+          setEmptyStateDismissed(true);
+          setMode("question");
+          setIdx(0);
+          setInitialized(true);
+        }}
+        onUploadPrefill={() => {
+          setEmptyStateDismissed(true);
+          setMode("question");
+          setIdx(0);
+          setInitialized(true);
+          setShowPrefillDialog(true);
+        }}
+      />
     );
   }
 
