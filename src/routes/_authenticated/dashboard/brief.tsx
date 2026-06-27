@@ -259,6 +259,33 @@ export default function BriefWizard() {
 
   return (
     <div className="mx-auto max-w-2xl">
+      {showStaleBanner && (
+        <div className="mb-4 rounded-xl border border-status-warning/40 bg-status-warning/10 p-4 text-sm">
+          <div className="font-semibold text-foreground">Leftover answers from a deleted venture</div>
+          <p className="mt-1 text-muted-foreground">
+            You don't have any active ventures, but your brief still has answers from a previous one.
+            Clear them so your next startup starts fresh.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={handleResetLeftover}
+              disabled={resetting}
+              className="rounded-md bg-status-warning px-3 py-1.5 text-xs font-medium text-status-warning-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              {resetting ? "Clearing…" : "Reset brief & profile"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStaleDismissed(true)}
+              className="rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Keep them
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {mode === "complete"
