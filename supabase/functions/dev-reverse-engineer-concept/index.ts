@@ -7,10 +7,14 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 // Mirrors TRACK_SEEDS in src/lib/tracks.ts. Keep in sync.
 const ALLOWED_URLS = new Set<string>([
   // lifestyle
+  "https://bellinabakery.com",
   "https://bluebottlecoffee.com",
   "https://www.equinox.com",
   "https://www.drybar.com",
   "https://www.soulcycle.com",
+  "https://www.detailgarage.com",
+  "https://www.glossier.com",
+  "https://www.f45training.com",
   // ecommerce_dtc
   "https://www.allbirds.com",
   "https://magicspoon.com",
