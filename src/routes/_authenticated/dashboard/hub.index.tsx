@@ -201,7 +201,7 @@ function EmptyState({ tab }: { tab: Tab }) {
   );
 }
 
-function SnapshotCard({ snapshot, totalDocs, tab }: { snapshot: any; totalDocs: number; tab: Tab }) {
+function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; totalDocs: number; tab: Tab; isLast?: boolean }) {
   const qc = useQueryClient();
   const { isAdmin } = useAuth();
   const [confirmArchive, setConfirmArchive] = useState(false);
