@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
-import { TRACKS, TRACK_BY_KEY, pickSeedForTrack, type TrackKey } from "@/lib/tracks";
+import { TRACKS, TRACK_BY_KEY, pickSeedForTrack, TRACK_SEEDS, type TrackKey, type SeedEntry } from "@/lib/tracks";
 import { INDUSTRIES } from "@/lib/industries";
 import { createSnapshot } from "@/lib/foundersHub.functions";
 import {
