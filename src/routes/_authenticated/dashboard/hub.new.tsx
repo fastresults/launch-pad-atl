@@ -109,6 +109,7 @@ function Inner() {
   const [processed, setProcessed] = useState(false);
   const [aiFilled, setAiFilled] = useState<Record<string, boolean>>({});
   const [filling, setFilling] = useState(false);
+  const [seedUrlChoice, setSeedUrlChoice] = useState<string>(""); // "" = random
 
   // Founder + market context
   const [founderName, setFounderName] = useState(prefill?.founder_name ?? "");
