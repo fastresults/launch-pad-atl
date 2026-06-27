@@ -37,7 +37,7 @@ function bytesToDataUrl(bytes: Uint8Array, mime: string) {
 }
 
 async function geminiTranscribe(content: any[]): Promise<string> {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
