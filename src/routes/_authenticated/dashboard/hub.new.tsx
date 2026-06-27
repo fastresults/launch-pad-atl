@@ -812,7 +812,7 @@ function Inner() {
         )}
 
         {/* Speak tab */}
-        {intakeTab === "speak" && (
+        {showCollectionUI && intakeTab === "speak" && (
           <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4 text-center">
             <p className="text-sm text-muted-foreground">
               Tap and tell us what you're building — 30 seconds is plenty. We'll transcribe it into your concept.
