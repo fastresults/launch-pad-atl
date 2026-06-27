@@ -233,15 +233,20 @@ function Inner() {
         try {
           const row = await uploadVentureSource({ file, kind: "venture_source", waitForExtraction: true });
           const text = (row.extracted_text ?? "").trim();
-          setFiles((curr) =>
-            curr.map((x) =>
-              x.id === entry.id
-                ? row.extraction_error || !text
+          if (row.extraction_error || !text) {
+            // Keep the failed entry visible so the founder can see why & retry.
+            setFiles((curr) =>
+              curr.map((x) =>
+                x.id === entry.id
                   ? { ...x, status: "error", documentId: row.id, error: row.extraction_error ?? "Couldn't read file" }
-                  : { ...x, status: "ready", documentId: row.id, text }
-                : x,
-            ),
-          );
+                  : x,
+              ),
+            );
+          } else {
+            // Success → promote into memory chips and drop the transient row.
+            appendToMemory(row);
+            setFiles((curr) => curr.filter((x) => x.id !== entry.id));
+          }
         } catch (e) {
           setFiles((curr) =>
             curr.map((x) =>
@@ -253,7 +258,7 @@ function Inner() {
         }
       });
     },
-    [files.length],
+    [files.length, appendToMemory],
   );
 
   const removeFile = (id: string) => {
