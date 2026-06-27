@@ -361,8 +361,36 @@ export async function archiveSnapshot(input: any): Promise<void> {
 
 export async function deleteSnapshot(input: any): Promise<void> {
   const { id } = unwrap<{ id: string }>(input);
+  const userId = (await supabase.auth.getUser()).data.user?.id;
   const { error } = await supabase.from("venture_snapshots").delete().eq("id", id);
   if (error) throw new Error(error.message);
+  if (userId) await resetWorkspaceIfEmpty(userId);
+}
+
+/**
+ * If the user has zero ventures remaining, wipe all venture-derived founder/brief
+ * data so the next venture starts from a clean slate. Best-effort: surfaces but
+ * does not throw on RPC failure so the delete itself is still reported as success.
+ */
+export async function resetWorkspaceIfEmpty(userId: string): Promise<boolean> {
+  try {
+    const { count, error: cntErr } = await supabase
+      .from("venture_snapshots")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+    if (cntErr) throw cntErr;
+    if ((count ?? 0) > 0) return false;
+    const { error: rpcErr } = await supabase.rpc("reset_founder_workspace", { _user_id: userId });
+    if (rpcErr) throw rpcErr;
+    try {
+      window.dispatchEvent(new CustomEvent("venture-sources:changed"));
+      window.dispatchEvent(new CustomEvent("founder-workspace:reset"));
+    } catch {}
+    return true;
+  } catch (e) {
+    console.warn("[resetWorkspaceIfEmpty] failed:", e);
+    return false;
+  }
 }
 
 export async function retryEnrichment(input: any): Promise<void> {
