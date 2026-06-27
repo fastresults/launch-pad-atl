@@ -137,6 +137,7 @@ export async function attachSourcesToSnapshot(opts: { documentIds: string[]; sna
     .in("id", opts.documentIds)
     .eq("user_id", await uid());
   if (error) throw new Error(error.message);
+  notifySourcesChanged();
 }
 
 export async function deleteVentureSource(id: string): Promise<void> {
