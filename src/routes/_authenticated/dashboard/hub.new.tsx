@@ -154,28 +154,48 @@ function Inner() {
   // Reusable library
   const [reusable, setReusable] = useState<VentureSource[]>([]);
   const [reuseSelected, setReuseSelected] = useState<Record<string, boolean>>({});
-  const [showLibrary, setShowLibrary] = useState(false);
+  const [addMoreOpen, setAddMoreOpen] = useState(false);
   useEffect(() => {
     listVentureSources()
-      .then((rows) => setReusable(rows))
+      .then((rows) => {
+        setReusable(rows);
+        // Auto-attach everything readable from the founder's existing memory
+        // (brief sources, scraped URLs, founder bio, prior uploads). The
+        // founder shouldn't have to re-check boxes for what we already have.
+        setReuseSelected((prev) => {
+          const next = { ...prev };
+          for (const r of rows) {
+            if ((r.extracted_text ?? "").trim()) next[r.id] = true;
+          }
+          return next;
+        });
+      })
       .catch(() => {});
   }, []);
 
-  const groupedReusable = useMemo(() => {
-    const groups: Record<string, { label: string; items: VentureSource[] }> = {
-      brief: { label: "From your Startup Brief", items: [] },
-      founder: { label: "From your founder profile", items: [] },
-      other: { label: "From previous ventures", items: [] },
-      unassigned: { label: "Recently uploaded", items: [] },
-    };
-    for (const r of reusable) {
-      if (r.used_in_brief || r.kind === "brief_source") groups.brief.items.push(r);
-      else if (r.kind === "founder_bio") groups.founder.items.push(r);
-      else if (r.snapshot_id) groups.other.items.push(r);
-      else groups.unassigned.items.push(r);
-    }
-    return Object.entries(groups).filter(([, g]) => g.items.length > 0);
+  // Memory chips = every readable source already on file for this founder.
+  const memoryChips = useMemo(() => {
+    return reusable
+      .filter((r) => !!(r.extracted_text ?? "").trim() || r.extraction_error)
+      .map((r) => {
+        const name = r.original_name ?? "source";
+        const lower = name.toLowerCase();
+        const isUrlCapture =
+          (r.kind === "brief_source" || r.used_in_brief) &&
+          (lower.endsWith(".md") || lower.endsWith(".markdown"));
+        const isAudio = /\.(mp3|m4a|wav|webm|ogg)$/i.test(name);
+        const isImage = /\.(png|jpe?g|webp|gif)$/i.test(name);
+        let origin: "brief" | "founder" | "venture" | "other" = "other";
+        if (r.used_in_brief || r.kind === "brief_source") origin = "brief";
+        else if (r.kind === "founder_bio") origin = "founder";
+        else if (r.snapshot_id) origin = "venture";
+        return { row: r, name, isUrlCapture, isAudio, isImage, origin };
+      });
   }, [reusable]);
+
+  const memoryEmpty = memoryChips.length === 0;
+  const showCollectionUI = memoryEmpty || addMoreOpen;
+
 
   const addFiles = useCallback(
     async (incoming: File[]) => {
@@ -533,40 +553,120 @@ function Inner() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-xs font-semibold uppercase tracking-wider text-primary">Step 1</div>
-            <h2 className="mt-0.5 text-lg font-semibold">Give us something to work with</h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">{intakeStatus}</p>
+            <h2 className="mt-0.5 text-lg font-semibold">
+              {memoryEmpty ? "Give us something to work with" : "Your source memory"}
+            </h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {memoryEmpty
+                ? intakeStatus
+                : "Here's everything we're already using as your single source of truth. We'll carry all of it into this startup snapshot."}
+            </p>
           </div>
           {drafting && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
         </div>
 
-        {/* Tabs */}
-        <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-background/40 p-1 sm:grid-cols-4">
-          {([
-            { k: "upload", label: "Upload", icon: Upload },
-            { k: "link", label: "Paste a link", icon: Link2 },
-            { k: "speak", label: "Speak", icon: Mic },
-            { k: "type", label: "Type", icon: TypeIcon },
-          ] as { k: IntakeTab; label: string; icon: any }[]).map((t) => {
-            const Icon = t.icon;
-            const active = intakeTab === t.k;
-            return (
-              <button
-                key={t.k}
-                type="button"
-                onClick={() => setIntakeTab(t.k)}
-                className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm transition ${
-                  active ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
+        {/* Memory chips — what we already have in collective memory */}
+        {!memoryEmpty && (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {memoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin }) => {
+                const ready = !!(row.extracted_text ?? "").trim();
+                const Icon = isUrlCapture ? Globe : isAudio ? Mic : isImage ? FileText : FileText;
+                const selected = !!reuseSelected[row.id];
+                const dot = !ready
+                  ? "bg-status-danger"
+                  : selected
+                    ? "bg-status-success"
+                    : "bg-muted-foreground/40";
+                const originLabel =
+                  origin === "brief" ? "Brief" : origin === "founder" ? "Founder" : origin === "venture" ? "Venture" : "Library";
+                return (
+                  <div
+                    key={row.id}
+                    title={
+                      ready
+                        ? `${Math.round((row.extracted_text ?? "").length / 1000)}k chars · from ${originLabel}`
+                        : row.extraction_error
+                          ? `Couldn't read · from ${originLabel}`
+                          : `Processing… · from ${originLabel}`
+                    }
+                    className={`group inline-flex max-w-[260px] items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
+                      selected
+                        ? "border-primary/40 bg-primary/10"
+                        : "border-white/10 bg-background/40 opacity-60"
+                    }`}
+                  >
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
+                    <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setReuseSelected((prev) => ({ ...prev, [row.id]: !prev[row.id] }))
+                      }
+                      className="shrink-0 text-muted-foreground hover:text-foreground"
+                      aria-label={selected ? "Don't use for this venture" : "Use for this venture"}
+                    >
+                      {selected ? <X className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Anything else? */}
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-background/40 p-3">
+              <div className="text-sm">
+                <span className="font-medium">Anything else you want to add to memory?</span>{" "}
+                <span className="text-muted-foreground">
+                  We use what's above as your single source of truth.
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={addMoreOpen ? "outline" : "ghost"}
+                  onClick={() => setAddMoreOpen((v) => !v)}
+                >
+                  {addMoreOpen ? "Hide" : "Yes, add more"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tabs (collection UI) — shown only when memory is empty or founder opted to add more */}
+        {showCollectionUI && (
+          <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-background/40 p-1 sm:grid-cols-4">
+            {([
+              { k: "upload", label: "Upload", icon: Upload },
+              { k: "link", label: "Paste a link", icon: Link2 },
+              { k: "speak", label: "Speak", icon: Mic },
+              { k: "type", label: "Type", icon: TypeIcon },
+            ] as { k: IntakeTab; label: string; icon: any }[]).map((t) => {
+              const Icon = t.icon;
+              const active = intakeTab === t.k;
+              return (
+                <button
+                  key={t.k}
+                  type="button"
+                  onClick={() => setIntakeTab(t.k)}
+                  className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm transition ${
+                    active ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
 
         {/* Upload tab */}
-        {intakeTab === "upload" && (
+        {showCollectionUI && intakeTab === "upload" && (
           <div className="space-y-3">
             <div
               onDragOver={(e) => {
@@ -641,64 +741,13 @@ function Inner() {
               </ul>
             )}
 
-            {groupedReusable.length > 0 && (
-              <div className="rounded-xl border border-primary/20 bg-primary/5">
-                <button
-                  type="button"
-                  onClick={() => setShowLibrary((v) => !v)}
-                  className="flex w-full items-center justify-between gap-2 p-3 text-left text-sm font-medium"
-                >
-                  <span className="flex items-center gap-2">
-                    <Library className="h-4 w-4 text-primary" />
-                    Or pick from files you've already uploaded
-                  </span>
-                  {showLibrary ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </button>
-                {showLibrary && (
-                  <div className="space-y-3 px-3 pb-3">
-                    {groupedReusable.map(([key, group]) => (
-                      <div key={key}>
-                        <div className="px-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                          {group.label}
-                        </div>
-                        <ul className="mt-1 space-y-1">
-                          {group.items.map((r) => {
-                            const ready = !!(r.extracted_text ?? "").trim();
-                            return (
-                              <li
-                                key={r.id}
-                                className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-background/40"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={!!reuseSelected[r.id]}
-                                  disabled={!ready}
-                                  onChange={(e) => setReuseSelected((prev) => ({ ...prev, [r.id]: e.target.checked }))}
-                                />
-                                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                <span className="min-w-0 flex-1 truncate">{r.original_name}</span>
-                                <span className="shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground">
-                                  {ready
-                                    ? `${Math.round((r.extracted_text ?? "").length / 1000)}k chars`
-                                    : r.extraction_error
-                                      ? "Unreadable"
-                                      : "Processing…"}
-                                </span>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Library accordion removed — memory chips above are the single source of truth. */}
+
           </div>
         )}
 
         {/* Link tab */}
-        {intakeTab === "link" && (
+        {showCollectionUI && intakeTab === "link" && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               Paste a URL — your site, a competitor, or a relevant article. Up to {MAX_URLS}.
@@ -763,7 +812,7 @@ function Inner() {
         )}
 
         {/* Speak tab */}
-        {intakeTab === "speak" && (
+        {showCollectionUI && intakeTab === "speak" && (
           <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4 text-center">
             <p className="text-sm text-muted-foreground">
               Tap and tell us what you're building — 30 seconds is plenty. We'll transcribe it into your concept.
@@ -788,7 +837,7 @@ function Inner() {
         )}
 
         {/* Type tab */}
-        {intakeTab === "type" && (
+        {showCollectionUI && intakeTab === "type" && (
           <div className="space-y-2">
             <Label htmlFor="concept-type">Describe what you're building</Label>
             <Textarea

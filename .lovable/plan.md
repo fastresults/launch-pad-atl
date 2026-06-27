@@ -1,53 +1,60 @@
-# Why your resume didn't parse
+## Approach
 
-The network log tells the whole story. The `founder-extract` edge function returned:
+On `/dashboard/hub/new` Step 1, replace the second dropzone with a **memory-first** experience:
 
-```json
-{"extracted":{"headline":"%PDF-1.3","roles":[],"skills":[],"industries":[]}}
+1. Show everything already in the founder's collective memory as compact icon chips.
+2. Ask a single, clear question: *"Anything else you want to add to memory?"*
+3. Only reveal upload/link/speak/type controls if they say yes.
+
+Source memory is **never re-collected by default** — it is shown back as confirmation.
+
+## Step 1 layout (new)
+
+```text
+─────────────────────────────────────────────────────────────
+  STEP 1
+  Your source memory
+
+  Here's everything we're already using as your single source
+  of truth. We'll carry all of it into this startup snapshot.
+
+  [📄 deck.pdf]  [📄 notes.docx]  [🔗 yoursite.com]
+  [🎙 voice-memo.m4a]  [📄 resume.pdf]  [📄 notion-export.md]
+
+       ┌───────────────────────────────────────────┐
+       │ Anything else you want to add to memory?  │
+       │     [ No, continue ]   [ Yes, add more ]  │
+       └───────────────────────────────────────────┘
+─────────────────────────────────────────────────────────────
 ```
 
-`%PDF-1.3` is literally the first 8 bytes of a PDF file. That means the function read the PDF as raw bytes and never actually extracted the text — so the AI saw binary garbage, gave up, and the only "text" it could latch onto was the PDF file header.
+If **No, continue** → jump straight to Step 2 (review snapshot). All remembered sources are auto-attached.
 
-## Root cause
+If **Yes, add more** → reveal the existing Upload / Paste link / Speak / Type controls inline, below the icon row. Anything new is added to memory with `used_in_brief = true` so it persists for all downstream documents.
 
-`supabase/functions/founder-extract/index.ts` has a `downloadResumeText` helper that does this:
+## Icon chip rules
 
-```ts
-const buf = new Uint8Array(await data.arrayBuffer());
-const decoder = new TextDecoder("utf-8", { fatal: false });
-const txt = decoder.decode(buf);  // ← decoding PDF binary as UTF-8
-return txt.replace(/[^\x09\x0A\x0D\x20-\x7E]+/g, " ")...
-```
+Each chip shows:
 
-PDFs are not UTF-8 text. They're a compressed binary container. UTF-8 decoding strips out everything readable and leaves only the file-format header (`%PDF-1.3`), which is exactly what we saw in the response.
+- An icon based on type: document (PDF/DOCX/TXT/MD), image, audio, or link.
+- The filename or hostname, truncated.
+- A subtle status dot: ready (green), processing (muted), unreadable (warning).
+- Hover/tap tooltip with size or char count.
+- Small **×** to remove from memory for this venture (does not delete from the workspace library).
 
-The irony: we already have a working PDF extractor — `venture-source-extract` uses Gemini's file-attachment mode for PDFs and `mammoth` for DOCX. `founder-extract` was built before that and never got upgraded.
+If memory is empty (rare — founder skipped pre-brief collection), Step 1 falls back to: *"We don't have any source material yet. Add some so we can build your snapshot."* and shows the controls immediately.
 
-## The fix
+## Behavior
 
-Replace `downloadResumeText` in `founder-extract` with the same extraction logic used by `venture-source-extract`:
+- On mount, `listVentureSources()` returns rows. Filter to `used_in_brief === true || kind === 'brief_source'` plus any other usable kinds (founder bio, prior brief uploads, scraped URLs persisted as `.md`).
+- Auto-select all readable items into `reuseSelected` so they flow into the existing `combinedDocs` pipeline without any user action.
+- Default state of the **Add more** controls: collapsed.
+- Hide the existing "Or pick from files you've already uploaded" accordion entirely — it duplicates the icon row.
 
-1. **PDF** → send to Gemini as a file attachment (`type: "file"` with base64 data URL) and ask it to extract verbatim text. Handles both text-based and scanned PDFs (Gemini OCRs scanned pages automatically).
-2. **DOCX** → `mammoth.extractRawText`.
-3. **TXT / MD / RTF** → decode as UTF-8 (RTF gets a control-word strip).
-4. **PNG / JPG / WebP** → Gemini OCR via `image_url`.
+## Files
 
-Then the existing AI call that builds the founder profile will see real resume text instead of `%PDF-1.3`, and `headline`, `roles`, `skills`, `industries`, `wins` will populate correctly.
+- `src/routes/_authenticated/dashboard/hub.new.tsx` — replace Step 1 layout with icon row + memory question + collapsible "add more" controls; auto-attach memory; remove the legacy library accordion.
 
-Bonus: we'll also write the extracted resume text into `attendee_founder_profile.raw_text` so the canonical context (snapshot-brain / loadVentureContext) picks it up downstream — right now even if extraction worked, the raw text was only used transiently and discarded.
+## No backend changes
 
-## Files to change
-
-- `supabase/functions/founder-extract/index.ts`
-  - Replace `downloadResumeText` with a proper multi-format extractor (lift the helpers from `venture-source-extract/index.ts`: `bytesToDataUrl`, `geminiTranscribe`, mammoth import, RTF/TXT branches).
-  - On successful extraction, include the extracted text in the upsert payload as `raw_text` (only when `raw_text` wasn't already supplied by the user) so canonical context can use it.
-  - Keep the existing 18 KB truncation when feeding the extraction model.
-
-No frontend changes. No schema changes. No new env vars (`LOVABLE_API_KEY` is already in scope).
-
-## Verification
-
-After deploy, upload the same resume again from Tell-us-about-you. Expected:
-- `founder-extract` returns an `extracted` object with a real `headline` (e.g. "Founder & CEO, OPEN Interactive") and populated `roles`, `skills`, `industries`, `wins`.
-- `attendee_founder_profile.raw_text` contains the resume text.
-- The "Tell us about you" panel renders the extracted bullets instead of staying blank.
+The source memory layer (`venture_sources`, `used_in_brief`, scraped-URL persistence) already exists. This is a Step 1 UI rework only.
