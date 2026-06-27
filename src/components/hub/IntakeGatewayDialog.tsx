@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Mic, Plus, Square, Trash2 } from "lucide-react";
+import { Loader2, Mic, Plus, Sparkles, Square, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -76,6 +76,7 @@ export type IntakeTarget = {
 
 interface Props {
   target: IntakeTarget;
+  snapshotId?: string | null;
   onClose: () => void;
   onSubmit: (answers: Record<string, any>) => void;
 }
@@ -91,10 +92,12 @@ function isFilled(v: any) {
   return v !== null && v !== undefined && String(v).trim().length > 0;
 }
 
-export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
+export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: Props) {
   const fields: IntakeField[] = target?.schema?.fields ?? [];
   const [values, setValues] = useState<Record<string, any>>({});
   const [prefillSources, setPrefillSources] = useState<Record<string, string>>({});
+  const [aiEstimateFields, setAiEstimateFields] = useState<Set<string>>(new Set());
+  const [estimating, setEstimating] = useState(false);
   const [recordingFor, setRecordingFor] = useState<string | null>(null);
   const [transcribingFor, setTranscribingFor] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -113,8 +116,10 @@ export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
       stopTracks();
       setValues({});
       setPrefillSources({});
+      setAiEstimateFields(new Set());
       return;
     }
+    setAiEstimateFields(new Set());
     const seed: Record<string, any> = {};
     const sources: Record<string, string> = {};
     for (const f of fields) {
@@ -250,8 +255,56 @@ export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
     [fields, values],
   );
 
+  const emptyCount = useMemo(
+    () => fields.filter((f) => !isFilled(values[f.id])).length,
+    [fields, values],
+  );
+
+  async function handleEstimate() {
+    if (!target || !snapshotId) {
+      toast.error("Add a venture first so we can ground the estimate.");
+      return;
+    }
+    setEstimating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("venture-estimate-intake", {
+        body: {
+          snapshot_id: snapshotId,
+          deliverable_type: target.type,
+          schema: target.schema,
+          current_values: values,
+        },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      const estimates = (data?.estimates ?? {}) as Record<string, any>;
+      const filledIds: string[] = [];
+      setValues((cur) => {
+        const next = { ...cur };
+        for (const f of fields) {
+          if (estimates[f.id] === undefined) continue;
+          if (!isFilled(cur[f.id])) {
+            next[f.id] = estimates[f.id];
+            filledIds.push(f.id);
+          }
+        }
+        return next;
+      });
+      if (filledIds.length === 0) {
+        toast.info("Nothing to estimate — your fields are already filled.");
+      } else {
+        setAiEstimateFields((s) => new Set([...s, ...filledIds]));
+        toast.success(`Estimated ${filledIds.length} field${filledIds.length === 1 ? "" : "s"}. Review and edit before generating.`);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't estimate — try answering manually.");
+    } finally {
+      setEstimating(false);
+    }
+  }
+
   const canSubmit =
-    missingRequired.length === 0 && !recordingFor && !transcribingFor && target !== null;
+    missingRequired.length === 0 && !recordingFor && !transcribingFor && !estimating && target !== null;
 
   const open = target !== null;
 
@@ -267,6 +320,32 @@ export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
         </DialogHeader>
 
         <div className="space-y-5">
+          {snapshotId && emptyCount > 0 && (
+            <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-2.5">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <div className="text-xs leading-relaxed">
+                  <p className="font-medium text-foreground">Not sure what to enter?</p>
+                  <p className="text-muted-foreground">
+                    Let AI estimate the {emptyCount} empty field{emptyCount === 1 ? "" : "s"} from everything we know about your venture. You can edit anything before generating.
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleEstimate}
+                disabled={estimating}
+                className="shrink-0"
+              >
+                {estimating ? (
+                  <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Estimating…</>
+                ) : (
+                  <><Sparkles className="mr-1.5 h-3.5 w-3.5" /> Estimate for me</>
+                )}
+              </Button>
+            </div>
+          )}
           {Object.keys(prefillSources).length > 0 && (
             <div className="rounded-md border border-status-success/30 bg-status-success/10 px-3 py-2 text-xs text-status-success">
               Prefilled {Object.keys(prefillSources).length} field{Object.keys(prefillSources).length === 1 ? "" : "s"} from what you've already shared. Review, edit anything that's off, then generate.
@@ -284,6 +363,11 @@ export function IntakeGatewayDialog({ target, onClose, onSubmit }: Props) {
                   {prefillSources[f.id] && (
                     <span className="text-[10px] font-normal text-status-success">
                       · {provenanceLabel(prefillSources[f.id])}
+                    </span>
+                  )}
+                  {aiEstimateFields.has(f.id) && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
+                      <Sparkles className="h-2.5 w-2.5" /> AI estimate · edit me
                     </span>
                   )}
                 </Label>
