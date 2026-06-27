@@ -104,8 +104,9 @@ export async function uploadVentureSource(opts: {
     await Promise.race([extractPromise, new Promise((r) => setTimeout(r, 30_000))]);
     const fresh = await supabase
       .from("attendee_documents").select("*").eq("id", row.id).maybeSingle();
-    if (fresh.data) return fresh.data as VentureSource;
+    if (fresh.data) { notifySourcesChanged(); return fresh.data as VentureSource; }
   }
+  notifySourcesChanged();
   return row as VentureSource;
 }
 
