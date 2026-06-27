@@ -7,6 +7,7 @@ import { FRAMEWORK_STAGES } from "@/lib/framework-deliverables";
 import { EVENT } from "@/lib/schedule-data";
 import { MapPin, Calendar, Clock, Sparkles, ArrowRight, Mic, Wand2, Play, Lock, Presentation } from "lucide-react";
 import { STAGE_DECKS } from "@/components/workshop-slides/registry";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const TOTAL_DELIVERABLES = FRAMEWORK_STAGES.reduce((n, s) => n + s.items.length, 0);
 const TOTAL_CATEGORIES = FRAMEWORK_STAGES.length;
