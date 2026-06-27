@@ -8,6 +8,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import mammoth from "npm:mammoth@1.7.2";
 import { markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
+import { aiFetch } from "../_shared/ai-fetch.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
