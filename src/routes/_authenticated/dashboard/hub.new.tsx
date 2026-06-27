@@ -666,7 +666,7 @@ function Inner() {
 
 
         {/* Upload tab */}
-        {intakeTab === "upload" && (
+        {showCollectionUI && intakeTab === "upload" && (
           <div className="space-y-3">
             <div
               onDragOver={(e) => {
