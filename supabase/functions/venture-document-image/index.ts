@@ -80,10 +80,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { snapshotId, documentType, force } = await req.json();
+    const { snapshotId, documentType, force, quality } = await req.json();
     if (!snapshotId || !documentType) {
       return new Response(JSON.stringify({ error: "snapshotId and documentType required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    // Default to Nano Banana 2 (Flash) — ~3-5x faster than Pro with comparable
+    // quality for editorial illustrations. Pass quality:"hq" to opt into Pro.
+    const imageModel = quality === "hq" ? "google/gemini-3-pro-image" : "google/gemini-3.1-flash-image";
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
