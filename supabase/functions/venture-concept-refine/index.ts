@@ -349,7 +349,9 @@ Deno.serve(async (req) => {
 
     // Concept-changing actions invalidate the brain so the next deliverable
     // is regenerated from the new concept rather than a stale summary.
-    if (["lock", "fold_enhancement", "unlock"].includes(action)) {
+    // F9: include `apply` — it writes a new concept_summary + value_proposition
+    // directly into the snapshot, so the brain must be recomputed.
+    if (["lock", "unlock", "apply", "fold_enhancement"].includes(action)) {
       markSnapshotBrainDirty(supabase, snapshot_id).catch(() => {});
     }
 

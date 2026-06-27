@@ -170,12 +170,15 @@ export async function generateOne(
   // never blocks generation. Compounds: next deliverable's intake prefills
   // from these, the Profile page shows them, and re-runs reuse them.
   if (intakeAnswers && Object.keys(intakeAnswers).length) {
-    writeBackIntake(supabase, ctx.userId, intakeAnswers).catch((e) =>
-      console.warn("intake writeback failed", e),
-    );
-    // Intake → canonical → brain. Mark dirty so the NEXT generation step
-    // recomputes the brain with these new facts.
-    markSnapshotBrainDirty(supabase, snapshotId).catch(() => {});
+    // F13: await so the writeback completes BEFORE we mark the brain dirty.
+    // Previously fire-and-forget raced markSnapshotBrainDirty and the next
+    // generator could recompute the brain with stale facts.
+    try {
+      await writeBackIntake(supabase, ctx.userId, intakeAnswers);
+    } catch (e) {
+      console.warn("intake writeback failed", e);
+    }
+    await markSnapshotBrainDirty(supabase, snapshotId).catch(() => {});
   }
 
   // Mark as generating (preserve any intake answers we resolved).
@@ -357,6 +360,14 @@ Deno.serve(async (req) => {
     const message = e instanceof Error ? e.message : String(e);
     if (e instanceof GatewayError) {
       return new Response(JSON.stringify({ ok: false, error: message, gatewayStatus: e.status }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    // F7: friendly 409 when the partial unique inflight index trips —
+    // another worker is already generating this same document.
+    if (/venture_documents_inflight_unique|duplicate key value/i.test(message)) {
+      return new Response(
+        JSON.stringify({ ok: false, error: "This document is already being generated. Please wait for it to finish before retrying." }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
     return new Response(JSON.stringify({ ok: false, error: message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }

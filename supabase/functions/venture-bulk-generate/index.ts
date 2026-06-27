@@ -116,7 +116,7 @@ async function generateOne(
 
   const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: modelId,
       messages: [
@@ -250,8 +250,17 @@ async function runLayer(
         await generateOne(supabase, ctx, t.type);
         state.done++;
         state.fails = 0;
-      } catch (_e) {
+      } catch (e) {
         state.fails++;
+        // F11: never let a runLayer crash swallow the failure silently.
+        const msg = e instanceof Error ? e.message : String(e);
+        try {
+          await supabase.from("venture_generation_failures").insert({
+            snapshot_id: snapshotId,
+            document_type: t.type,
+            error: `runLayer: ${msg.slice(0, 300)}`,
+          });
+        } catch { /* logging best-effort */ }
       }
       await supabase.from("venture_generation_jobs").update({
         progress_pct: Math.round((state.done / state.total) * 100),
