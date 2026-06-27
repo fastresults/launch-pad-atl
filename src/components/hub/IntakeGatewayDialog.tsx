@@ -116,8 +116,10 @@ export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: P
       stopTracks();
       setValues({});
       setPrefillSources({});
+      setAiEstimateFields(new Set());
       return;
     }
+    setAiEstimateFields(new Set());
     const seed: Record<string, any> = {};
     const sources: Record<string, string> = {};
     for (const f of fields) {
