@@ -20,6 +20,7 @@ import { BriefReview } from "@/components/brief/BriefReview";
 import { FounderBlock } from "@/components/brief/FounderBlock";
 import { MarketBlock } from "@/components/brief/MarketBlock";
 import { BriefPrefillDropzone } from "@/components/brief/BriefPrefillDropzone";
+import { BriefEmptyState } from "@/components/brief/BriefEmptyState";
 import { BriefCompleteScreen } from "@/components/brief/BriefCompleteScreen";
 import { BriefPrefillReview } from "@/components/brief/BriefPrefillReview";
 import type { BriefPrefillResponse } from "@/lib/brief.functions";
