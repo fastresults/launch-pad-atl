@@ -1175,12 +1175,20 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 statusLine = `Waiting on ${missingLabel}`;
               } else statusLine = "Not started yet";
 
+              const stale = isStale(d);
               return (
-                <div key={t.type} className="rounded-xl border border-white/10 bg-card p-4">
+                <div key={t.type} className={`rounded-xl border bg-card p-4 ${stale ? "border-status-warning/40" : "border-white/10"}`}>
                   <div className="flex items-start gap-2">
                     <Icon className={`mt-0.5 h-4 w-4 ${tone}`} />
                     <div className="min-w-0 flex-1">
-                      <h4 className="truncate text-sm font-medium">{t.name}</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="truncate text-sm font-medium">{t.name}</h4>
+                        {stale && (
+                          <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">
+                            Concept updated
+                          </Badge>
+                        )}
+                      </div>
                       <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{t.description}</p>
                       <div className="mt-1 text-[10px] text-muted-foreground">{statusLine} · ~{t.estimated_minutes} min</div>
                     </div>
