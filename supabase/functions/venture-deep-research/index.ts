@@ -232,6 +232,12 @@ function sanitizeModelOutput(value: unknown): unknown {
 }
 
 async function synthesize(corpus: string): Promise<any> {
+  // Use the Pro model when the corpus is large enough that depth matters
+  // (founder uploaded substantial source material). Flash is fine for small
+  // corpora and keeps latency/cost down.
+  const model = corpus.length > 5_000
+    ? "google/gemini-3.1-pro-preview"
+    : "google/gemini-3-flash-preview";
   const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -239,7 +245,7 @@ async function synthesize(corpus: string): Promise<any> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model,
       messages: [
         { role: "system", content: SYNTH_SYSTEM },
         { role: "user", content: corpus },
@@ -271,6 +277,30 @@ async function synthesize(corpus: string): Promise<any> {
     const fjson = await fix.json();
     return JSON.parse(fjson?.choices?.[0]?.message?.content ?? "{}");
   }
+}
+
+// Deep-merge AI-produced extracted_data over the founder's existing edits.
+// Rule: keep the longer string per leaf, unless the new value is materially
+// longer (≥ 1.5×) — protects founder-confirmed copy from being shortened.
+function mergeExtracted(existing: any, next: any): any {
+  if (typeof next === "string") {
+    const a = typeof existing === "string" ? existing.trim() : "";
+    const b = next.trim();
+    if (!b) return a;
+    if (!a) return b;
+    return b.length >= a.length * 1.5 ? b : (b.length > a.length ? b : a);
+  }
+  if (Array.isArray(next)) {
+    return next.length ? next : (Array.isArray(existing) ? existing : []);
+  }
+  if (next && typeof next === "object") {
+    const out: Record<string, unknown> = { ...(existing && typeof existing === "object" ? existing : {}) };
+    for (const [k, v] of Object.entries(next)) {
+      out[k] = mergeExtracted((existing ?? {})[k], v);
+    }
+    return out;
+  }
+  return next ?? existing;
 }
 
 // ============ Main pipeline ============
