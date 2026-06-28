@@ -270,6 +270,8 @@ export async function generateOne(
 
   const aiJson = await aiRes.json();
   let raw = aiJson.choices?.[0]?.message?.content ?? "";
+  const finishReason = aiJson.choices?.[0]?.finish_reason ?? aiJson.choices?.[0]?.finishReason ?? "";
+  const truncated = String(finishReason).toLowerCase() === "length";
 
   // Extract quality score line
   let quality = 75;
@@ -281,6 +283,14 @@ export async function generateOne(
 
   // Strip any citation residue the model may have produced despite instructions.
   raw = stripCitations(raw);
+
+  if (truncated) {
+    quality = Math.min(quality, 60);
+    if (!raw.includes("<!-- TRUNCATED -->")) {
+      raw = `${raw}\n\n<!-- TRUNCATED -->\n`;
+    }
+  }
+
 
   const wordCount = raw.split(/\s+/).filter(Boolean).length;
 
