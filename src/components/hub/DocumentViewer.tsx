@@ -512,43 +512,27 @@ export function DocumentViewer({
     renderToPrint(title, node.innerHTML);
   };
   const onCopyPrdPrompt = async () => {
-    // Collect every fenced block with its language tag and position.
-    const blocks: Array<{ lang: string; body: string; index: number }> = [];
-    const re = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
-    let match: RegExpExecArray | null;
-    while ((match = re.exec(content)) !== null) {
-      blocks.push({ lang: (match[1] || "").toLowerCase(), body: match[2].trim(), index: match.index });
-    }
-    if (blocks.length === 0) {
-      toast.error("Couldn't find the prompt block");
+    if (!prdMasterPrompt) {
+      toast.error("Couldn't find the builder prompt — regenerate this PRD.");
       return;
     }
-
-    // 1) Prefer the first fenced block after the "Paste-Ready Master Prompt" heading.
-    let chosen: string | null = null;
-    const headingMatch = content.match(/^#{1,6}\s*(?:section\s*)?8[\.\)]?\s*[^\n]*paste[- ]ready[^\n]*$/im)
-      ?? content.match(/^#{1,6}[^\n]*paste[- ]ready master prompt[^\n]*$/im);
-    if (headingMatch && headingMatch.index !== undefined) {
-      const after = blocks.find((b) => b.index > headingMatch.index!);
-      if (after) chosen = after.body;
-    }
-
-    // 2) Fallback: largest text-ish block (skip robots/xml/json/yaml/txt).
-    if (!chosen) {
-      const skip = new Set(["xml", "json", "yaml", "yml", "robots", "txt", "html", "css", "js", "ts", "tsx", "jsx", "bash", "sh"]);
-      const textish = blocks.filter((b) => !skip.has(b.lang));
-      const pool = textish.length > 0 ? textish : blocks;
-      chosen = pool.reduce((a, b) => (b.body.length > a.body.length ? b : a)).body;
-    }
-
     try {
-      await navigator.clipboard.writeText(chosen);
-      const words = chosen.split(/\s+/).filter(Boolean).length;
-      toast.success(`Master AI-builder prompt copied (~${words} words)`);
+      await navigator.clipboard.writeText(prdMasterPrompt);
+      const words = prdMasterPrompt.split(/\s+/).filter(Boolean).length;
+      toast.success(`Builder prompt copied (~${words.toLocaleString()} words)`);
     } catch {
-      toast.error("Clipboard blocked — copy manually from Section 8.");
+      toast.error("Clipboard blocked — select & copy from the panel.");
     }
   };
+
+  const onOpenPrdPromptInTab = () => {
+    if (!prdMasterPrompt) return;
+    const blob = new Blob([prdMasterPrompt], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener,noreferrer");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  };
+
 
   const onSaveToFiles = async () => {
     if (saving) return;
