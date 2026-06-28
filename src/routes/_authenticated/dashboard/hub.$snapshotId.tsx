@@ -1285,6 +1285,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       />
       <IntakeGatewayDialog
         target={intakeTarget}
+        snapshotId={snapshot.id}
         onClose={() => setIntakeTarget(null)}
         onSubmit={(answers) => {
           if (intakeTarget) {
