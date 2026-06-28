@@ -823,14 +823,34 @@ export function DocumentViewer({
                       </Button>
                     </div>
                   </div>
-                  <details className="mt-4 group">
-                    <summary className="cursor-pointer select-none text-xs font-medium text-muted-foreground hover:text-foreground">
-                      Preview prompt
-                    </summary>
-                    <pre className="mt-2 max-h-72 overflow-auto rounded-md border border-white/10 bg-background/80 p-3 text-[11.5px] leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                  {prdPromptIncomplete && (
+                    <div className="mt-4 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <p>
+                          This builder prompt looks incomplete (likely truncated mid-generation). Regenerate the PRD from the Hub to get the full 1,800–2,400-word brief covering sections 1–11.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">Preview prompt</span>
+                      <button
+                        type="button"
+                        onClick={() => setPrdPreviewExpanded((v) => !v)}
+                        className="text-[11px] font-medium text-primary hover:underline"
+                      >
+                        {prdPreviewExpanded ? "Collapse" : "View full prompt"}
+                      </button>
+                    </div>
+                    <pre
+                      className={`overflow-auto rounded-md border border-white/10 bg-background/80 p-3 text-[11.5px] leading-relaxed text-foreground/90 whitespace-pre-wrap ${prdPreviewExpanded ? "max-h-[80vh]" : "max-h-[420px]"}`}
+                    >
                       {prdMasterPrompt}
                     </pre>
-                  </details>
+                  </div>
+
                 </div>
               ) : (
                 <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-900 dark:text-amber-200">
