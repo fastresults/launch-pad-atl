@@ -237,13 +237,18 @@ export async function generateOne(
   ].filter(Boolean).join("\n\n").slice(0, MAX_USER_PROMPT_CHARS);
 
   // S5 — Per-deliverable model tier ('pro' | 'flash' | 'lite').
-  const modelId = modelForTier(type.model_tier);
+  // website_prd is force-upgraded to Pro + extra output tokens so the
+  // 1,800–2,400-word master prompt block can finish without truncation.
+  const isPrd = documentType === "website_prd";
+  const modelId = isPrd ? modelForTier("pro") : modelForTier(type.model_tier);
+  const maxTokens = isPrd ? 24000 : 16000;
 
   const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: modelId,
+      max_tokens: maxTokens,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
