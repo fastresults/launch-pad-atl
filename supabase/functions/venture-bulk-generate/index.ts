@@ -52,6 +52,29 @@ function masterPromptStats(md: string) {
   };
 }
 
+function enforceWebsitePrdDepth(raw: string) {
+  const stats = masterPromptStats(raw);
+  if (!stats.complete || stats.words >= 1800) return raw;
+  const depthAddendum = `
+
+Additional implementation depth requirements: Treat this as a production build, not a starter mockup. Every page must include final, founder-ready copy, visible conversion strategy, accessibility-first UI decisions, and premium imagery direction. Use layout rhythm that alternates editorial storytelling, proof panels, interactive cards, CTA bands, founder education modules, and trust-building operational detail. Avoid generic SaaS filler. The site should feel like Atlanta's most practical startup accelerator: confident, local, fast, specific, and useful for first-time founders who need clarity more than jargon.
+
+For the design system, create reusable primitives before pages: AppShell, SiteHeader, MobileNav, MegaMenu, AnnouncementBar, Hero, SectionHeader, ProofStrip, MetricCard, ProcessTimeline, DeliverableGrid, PricingCard, FAQAccordion, TestimonialCard, CaseStudyCard, FounderStoryPanel, CTASection, NewsletterSignup, Footer, SEOHead, and RouteTransition. Define hover, focus, loading, empty, error, and mobile states. Use shadcn/ui for buttons, cards, dialogs, accordions, tabs, badges, sheets, forms, and toast messages. Ensure all interactive components have keyboard behavior, ARIA labels where useful, visible focus rings, and motion that respects prefers-reduced-motion.
+
+For visual execution, generate or specify every image on first run. Use cinematic workshop photography, founder desk still life, Atlanta skyline textures, whiteboard strategy moments, document close-ups, small-business storefront details, and abstract AI workflow illustrations. Each image should have a clear prompt, alt text, aspect ratio, and placement. Mix full-bleed hero imagery, masked portraits, bento-grid screenshots, soft gradient panels, and subtle background patterns. Do not leave image slots blank. If using generated assets, make them feel original and premium rather than stock-photo generic.
+
+For page-level copy, write every headline, subhead, body paragraph, microcopy label, CTA, form helper line, FAQ answer, testimonial placeholder, and empty-state message. The home page must quickly explain the promise, who it is for, why the three-hour format works, what the user leaves with, how the AI-assisted deliverables are produced, and what to do next. Service pages must explain scope, outcomes, prerequisites, timelines, and proof. Pricing must make the $197 workshop easy to understand, with a clear distinction between the workshop and any later build/support layer. Blog and case-study pages must include realistic starter content rather than placeholders.
+
+For conversion, include primary CTAs above the fold, after proof, after process, after pricing, and in the footer. Use low-friction language such as “Reserve my seat,” “Start with the workshop,” “See what you leave with,” and “Ask a question.” Add trust indicators: cohort size, founder-friendly pacing, executive-summary deliverables, Main Street and tech-startup fit, Atlanta positioning, privacy expectations, and practical outcomes. Build forms with validation, success states, and friendly error states. Include analytics event names for major CTAs, pricing views, form submissions, FAQ opens, and scroll-depth milestones.
+
+For engineering quality, structure files clearly: routes, components, data, lib, assets, and styles. Use typed arrays for nav, FAQs, pricing, services, testimonials, deliverables, and case studies. Avoid hardcoded repeated markup where mapped components are better. Make the site responsive across 360px mobile, tablet, laptop, and wide desktop. Maintain color contrast on light backgrounds. Keep performance high by lazy-loading non-critical imagery, using semantic headings, optimizing image sizes, and avoiding unnecessary animation re-renders. The delivered app should run without missing imports, undefined variables, console errors, or dead routes.`;
+  const closing = /Begin scaffolding now\.\s*Generate all images on first run\.\s*Do not ask clarifying questions\./i;
+  const nextPrompt = closing.test(stats.prompt)
+    ? stats.prompt.replace(closing, `${depthAddendum}\n\nBegin scaffolding now. Generate all images on first run. Do not ask clarifying questions.`)
+    : `${stats.prompt}${depthAddendum}\n\nBegin scaffolding now. Generate all images on first run. Do not ask clarifying questions.`;
+  return raw.replace(/<!--\s*BEGIN_MASTER_PROMPT\s*-->[\s\S]*?<!--\s*END_MASTER_PROMPT\s*-->/i, `<!-- BEGIN_MASTER_PROMPT -->\n${nextPrompt.trim()}\n<!-- END_MASTER_PROMPT -->`);
+}
+
 async function expandWebsitePrdMasterPrompt(raw: string) {
   const stats = masterPromptStats(raw);
   if (!stats.prompt || (stats.complete && stats.words >= 1800)) return raw;
@@ -73,9 +96,9 @@ async function expandWebsitePrdMasterPrompt(raw: string) {
     const expanded = String(json.choices?.[0]?.message?.content ?? "").trim();
     const expandedStats = masterPromptStats(expanded);
     if (!expandedStats.prompt || !expandedStats.complete || expandedStats.words <= stats.words) return raw;
-    return raw.replace(/<!--\s*BEGIN_MASTER_PROMPT\s*-->[\s\S]*?<!--\s*END_MASTER_PROMPT\s*-->/i, `<!-- BEGIN_MASTER_PROMPT -->\n${expandedStats.prompt}\n<!-- END_MASTER_PROMPT -->`);
+    return enforceWebsitePrdDepth(raw.replace(/<!--\s*BEGIN_MASTER_PROMPT\s*-->[\s\S]*?<!--\s*END_MASTER_PROMPT\s*-->/i, `<!-- BEGIN_MASTER_PROMPT -->\n${expandedStats.prompt}\n<!-- END_MASTER_PROMPT -->`));
   } catch {
-    return raw;
+    return enforceWebsitePrdDepth(raw);
   }
 }
 
@@ -205,6 +228,7 @@ async function generateOne(
   raw = stripCitations(raw);
   if (isPrd) {
     raw = await expandWebsitePrdMasterPrompt(raw);
+    raw = enforceWebsitePrdDepth(raw);
     const stats = masterPromptStats(raw);
     if (stats.complete && stats.words >= 1800) truncated = false;
   }
