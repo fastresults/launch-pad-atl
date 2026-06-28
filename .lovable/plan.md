@@ -1,47 +1,34 @@
-## Why the prompt looks broken
+## What the logs and screenshot show
 
-Two compounding bugs:
+- The attached viewer is correctly detecting that the Website PRD builder prompt is incomplete, but the UX only warns the user and leaves them with a short/legacy prompt preview.
+- Recent AI Gateway logs do not show a fresh Website PRD regeneration in the latest visible calls; the inspected calls were Founder Roadmap (`log_id 019f0be5-49ce-7dea-904b-3db656316736`, 2026-06-28T01:43:55Z, Flash, ~5,118 output tokens) and Budget & Pro Forma (`log_id 019f0be1-0b54-7b35-9d9f-f87fa73f9130`, 2026-06-28T01:39:52Z, Pro, ~9,390 output tokens). So the screenshot appears to be showing an older/incomplete PRD document that has not been repaired.
+- Code review found a second generation path still not aligned: `venture-generate-document` has the newer Pro + `max_tokens` logic, but `venture-bulk-generate` still uses the default document tier and does not set `max_tokens`, so Website PRDs generated through bulk/run-remaining can still be shorter or lower-quality than the single-doc path.
 
-1. **Generation truncation.** `venture-generate-document` calls the AI gateway with **no `max_tokens`**, so Gemini stops at its default (~8k tokens). The PRD is huge (sections 1–9 plus an 1,800–2,400-word master prompt), so it gets cut off — usually somewhere inside Section 7 or 8. That's why the visible builder block "starts at number six" and never reaches the closing fence.
-2. **Brittle extraction.** `prdMasterPrompt` in `DocumentViewer.tsx` looks for the first fenced ```` ``` ```` block after the "Paste-Ready" heading. When the AI re-uses `## 6`, `## 7` *inside* the block (per the spec's "restate" instruction) and/or truncates before the closing fence, the regex either grabs the wrong block or falls back to "largest text block" — which is the partial Section 6–7 slice you're seeing.
+## Plan
 
-## Fix
+1. **Make Website PRD generation consistent in every path**
+   - Update `venture-bulk-generate` so `website_prd` is force-routed to the Pro model, same as single-document generation.
+   - Add high `max_tokens` for `website_prd` in bulk generation.
+   - Add `finish_reason` / truncation detection in bulk generation and mark incomplete output with `<!-- TRUNCATED -->`, matching the single-document path.
 
-### 1. Stop the truncation (`supabase/functions/venture-generate-document/index.ts`)
-- Add `max_tokens: 16000` to the chat-completions body. For `website_prd` specifically, bump to `24000` and force `modelForTier("pro")` (Gemini 3.1 Pro / 1M context, generous output) regardless of the per-type tier so the PRD can finish.
-- Detect truncation: if `aiJson.choices?.[0]?.finish_reason` is `length` or the body has no closing fence after the `## 8` heading, mark `quality` ≤ 60 and append a `<!-- TRUNCATED -->` marker so the viewer can warn.
+2. **Add a one-click repair action inside the PRD viewer**
+   - When the viewer detects an incomplete Website PRD builder prompt, replace the passive warning-only state with a prominent action: **Regenerate full Website PRD**.
+   - The action will call the existing document generation flow for `website_prd`, then refresh the viewer when complete.
+   - Keep the warning, but make it actionable so the user does not have to hunt through the Hub.
 
-### 2. Make the master prompt deterministically extractable (`supabase/functions/_shared/deliverable-prompts.ts`)
-Rewrite Section 8 in the `website_prd` prompt to require:
-- The block is wrapped in HTML-comment delimiters **outside** the code fence:
-  ```text
-  <!-- BEGIN_MASTER_PROMPT -->
-  ```text
-  …1,800–2,400 words…
-  ```
-  <!-- END_MASTER_PROMPT -->
-  ```
-- The block begins with the literal first line `# AI Builder Brief — {Company} Website` and uses numbered subsections `1) Role + outcome` … `11) Definition of Done`. Forbid re-using the parent doc's `## 6`, `## 7` numbering inside the block.
-- Restated per-route copy, SEO, and a11y appear under those numbered subsections, not under duplicated `## 6` / `## 7` headings.
+3. **Prevent copying a known-bad prompt without context**
+   - If the builder prompt is incomplete, change the copy behavior to warn the user before copying or require regeneration first.
+   - The goal is that users do not unknowingly paste a partial prompt into Lovable/v0/Bolt/Cursor.
 
-### 3. Robust extraction (`src/components/hub/DocumentViewer.tsx`, `prdMasterPrompt` memo)
-Resolution order:
-1. Match `<!-- BEGIN_MASTER_PROMPT -->([\s\S]*?)<!-- END_MASTER_PROMPT -->`, then strip a single outer ```` ```text … ``` ```` fence if present.
-2. Else slice from the `## 8 … Paste-Ready Master Prompt` heading to the next H2 (`## 9` or EOF); strip an outer fence if present.
-3. Else current largest-text-block fallback (kept only as last resort).
+4. **Tighten prompt extraction and validation**
+   - Treat a builder prompt as complete only if it contains all required numbered sections `1)` through `11)` and the closing instruction.
+   - If delimiters are missing, sections are missing, or the word count is below the expected threshold, the UI should label it as incomplete and show the repair CTA.
 
-Validate the result:
-- If length < 800 words **or** missing the literal `Role + outcome` marker **or** the document contains `<!-- TRUNCATED -->`, set a `prdPromptIncomplete` flag.
+5. **Improve the preview panel so users can trust what they see**
+   - Show completion metadata: word count, sections detected, and whether delimiters were found.
+   - Keep the full prompt visible/expandable, but make incomplete status visually unmistakable.
 
-### 4. Viewer UX (`DocumentViewer.tsx` hero panel)
-- When `prdPromptIncomplete`, render an amber banner above the Copy/Open buttons: "This builder prompt looks incomplete — regenerate the PRD to get the full 1,800–2,400-word brief." with a "Regenerate now" button wired to the existing regenerate mutation.
-- Replace the `<details>` preview with an always-visible scroll container `max-h-[420px] overflow-auto` plus a "View full prompt" button that expands to `max-h-[80vh]`, so users can actually see sections 1–11 instead of landing mid-document.
-- Reset `scrollTop = 0` on mount so the preview opens at the top of the prompt, not at the tail.
-
-### 5. Backfill
-No migration needed. Existing PRDs stay as-is; the next regeneration produces a complete, delimited, non-truncated builder prompt that the viewer extracts cleanly and copies in full.
-
-## Files touched
-- `supabase/functions/venture-generate-document/index.ts` — `max_tokens`, forced Pro for `website_prd`, truncation marker
-- `supabase/functions/_shared/deliverable-prompts.ts` — Section 8 rewrite + delimiters
-- `src/components/hub/DocumentViewer.tsx` — extraction, incompleteness warning, scrollable preview, expand toggle
+6. **Validate after implementation**
+   - Generate/repair a Website PRD from the viewer.
+   - Confirm the AI Gateway call uses the Pro model with the larger token allowance.
+   - Confirm the resulting prompt displays sections 1–11, copies fully, and no incomplete warning remains.

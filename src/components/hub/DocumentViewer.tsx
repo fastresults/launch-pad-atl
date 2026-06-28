@@ -302,13 +302,15 @@ export function DocumentViewer({
   const [saving, setSaving] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
   const [prdPreviewExpanded, setPrdPreviewExpanded] = useState(false);
+  const [prdRepairing, setPrdRepairing] = useState(false);
+  const [contentOverride, setContentOverride] = useState<string | null>(null);
   const navigate = useNavigate();
   const qc = useQueryClient();
 
   const components = useMemo(() => makeComponents(setHeadings), [doc?.content]);
   const assessmentComponents = useMemo(() => makeComponents(() => {}), [assessment]);
   const title = titleCase(doc?.document_type ?? "");
-  const content = doc?.content ?? "";
+  const content = contentOverride ?? doc?.content ?? "";
   const printRef = useRef<HTMLDivElement | null>(null);
 
   const exportContent = useMemo(() => {
@@ -361,11 +363,34 @@ export function DocumentViewer({
 
   const prdPromptIncomplete = useMemo(() => {
     if (!prdMasterPrompt) return false;
-    if (content?.includes("<!-- TRUNCATED -->")) return true;
     const words = prdMasterPrompt.split(/\s+/).filter(Boolean).length;
-    if (words < 800) return true;
-    if (!/role\s*\+\s*outcome|1\)\s*role/i.test(prdMasterPrompt)) return true;
+    const missingSections = Array.from({ length: 11 }, (_, i) => i + 1).filter(
+      (n) => !new RegExp(`(?:^|\\n)\\s*${n}\\)\\s+`, "i").test(prdMasterPrompt),
+    );
+    const hasDelimiters = /<!--\s*BEGIN_MASTER_PROMPT\s*-->/i.test(content) && /<!--\s*END_MASTER_PROMPT\s*-->/i.test(content);
+    const hasClosingInstruction = /Begin scaffolding now\.\s*Generate all images on first run\.\s*Do not ask clarifying questions\./i.test(prdMasterPrompt);
+    if (content?.includes("<!-- TRUNCATED -->")) return true;
+    if (!hasDelimiters) return true;
+    if (words < 1800) return true;
+    if (missingSections.length > 0) return true;
+    if (!hasClosingInstruction) return true;
     return false;
+  }, [prdMasterPrompt, content]);
+
+  const prdPromptMeta = useMemo(() => {
+    if (!prdMasterPrompt) {
+      return { words: 0, sectionsFound: 0, missingSections: Array.from({ length: 11 }, (_, i) => i + 1), hasDelimiters: false, hasClosingInstruction: false };
+    }
+    const missingSections = Array.from({ length: 11 }, (_, i) => i + 1).filter(
+      (n) => !new RegExp(`(?:^|\\n)\\s*${n}\\)\\s+`, "i").test(prdMasterPrompt),
+    );
+    return {
+      words: prdMasterPrompt.split(/\s+/).filter(Boolean).length,
+      sectionsFound: 11 - missingSections.length,
+      missingSections,
+      hasDelimiters: /<!--\s*BEGIN_MASTER_PROMPT\s*-->/i.test(content) && /<!--\s*END_MASTER_PROMPT\s*-->/i.test(content),
+      hasClosingInstruction: /Begin scaffolding now\.\s*Generate all images on first run\.\s*Do not ask clarifying questions\./i.test(prdMasterPrompt),
+    };
   }, [prdMasterPrompt, content]);
 
 
@@ -376,7 +401,41 @@ export function DocumentViewer({
     setAssessmentStatus(doc?.deep_assessment_status ?? null);
     setAssessmentError(null);
     setSavedCount(0);
+    setContentOverride(null);
   }, [doc?.snapshot_id, doc?.document_type, doc?.deep_assessment, doc?.deep_assessment_status]);
+
+  const regenerateWebsitePrd = async () => {
+    if (!doc?.snapshot_id) return;
+    setPrdRepairing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("venture-generate-document", {
+        body: {
+          snapshotId: doc.snapshot_id,
+          documentType: "website_prd",
+          rewriteFeedback: "The paste-ready master prompt shown in the viewer is incomplete or truncated. Regenerate the entire Website PRD and make Section 8 complete, self-contained, delimiter-wrapped, 1,800-2,400 words, with numbered sections 1 through 11 and the exact closing instruction.",
+          rewriteTags: ["Fix incomplete Website PRD builder prompt", "Regenerate full sections 1-11"],
+        },
+      });
+      if (error) throw new Error(error.message);
+      if (data && data.ok === false) throw new Error(data.error ?? "Website PRD regeneration failed");
+
+      const { data: row, error: rowError } = await supabase
+        .from("venture_documents")
+        .select("content")
+        .eq("snapshot_id", doc.snapshot_id)
+        .eq("document_type", "website_prd")
+        .maybeSingle();
+      if (rowError) throw new Error(rowError.message);
+      setContentOverride(row?.content ?? null);
+      setPrdPreviewExpanded(true);
+      qc.invalidateQueries({ queryKey: ["hub"] });
+      toast.success("Full Website PRD regenerated");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Website PRD regeneration failed");
+    } finally {
+      setPrdRepairing(false);
+    }
+  };
 
   const runAssessment = async () => {
     if (!doc?.snapshot_id || !doc?.document_type) return;
@@ -540,6 +599,10 @@ export function DocumentViewer({
       toast.error("Couldn't find the builder prompt — regenerate this PRD.");
       return;
     }
+    if (prdPromptIncomplete) {
+      toast.error("This builder prompt is incomplete — regenerate the full Website PRD first.");
+      return;
+    }
     try {
       await navigator.clipboard.writeText(prdMasterPrompt);
       const words = prdMasterPrompt.split(/\s+/).filter(Boolean).length;
@@ -551,6 +614,10 @@ export function DocumentViewer({
 
   const onOpenPrdPromptInTab = () => {
     if (!prdMasterPrompt) return;
+    if (prdPromptIncomplete) {
+      toast.error("This builder prompt is incomplete — regenerate the full Website PRD first.");
+      return;
+    }
     const blob = new Blob([prdMasterPrompt], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank", "noopener,noreferrer");
@@ -825,11 +892,31 @@ export function DocumentViewer({
                   </div>
                   {prdPromptIncomplete && (
                     <div className="mt-4 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200">
-                      <div className="flex items-start gap-2">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex min-w-0 flex-1 items-start gap-2">
                         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                        <p>
-                          This builder prompt looks incomplete (likely truncated mid-generation). Regenerate the PRD from the Hub to get the full 1,800–2,400-word brief covering sections 1–11.
-                        </p>
+                          <div>
+                            <p>
+                              This builder prompt looks incomplete. Regenerate the full PRD here to get the 1,800–2,400-word brief covering sections 1–11 before copying.
+                            </p>
+                            <p className="mt-1 opacity-90">
+                              Found {prdPromptMeta.sectionsFound}/11 sections · {prdPromptMeta.words.toLocaleString()} words · delimiters {prdPromptMeta.hasDelimiters ? "present" : "missing"}
+                            </p>
+                          </div>
+                        </div>
+                        <Button size="sm" onClick={regenerateWebsitePrd} disabled={prdRepairing}>
+                          {prdRepairing ? (
+                            <>
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                              Regenerating…
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                              Regenerate full PRD
+                            </>
+                          )}
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -844,6 +931,17 @@ export function DocumentViewer({
                         {prdPreviewExpanded ? "Collapse" : "View full prompt"}
                       </button>
                     </div>
+                    <div className="mb-2 flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+                      <span className="rounded-md border border-border bg-background/70 px-2 py-0.5">
+                        Sections {prdPromptMeta.sectionsFound}/11
+                      </span>
+                      <span className="rounded-md border border-border bg-background/70 px-2 py-0.5">
+                        Delimiters {prdPromptMeta.hasDelimiters ? "found" : "missing"}
+                      </span>
+                      <span className="rounded-md border border-border bg-background/70 px-2 py-0.5">
+                        Closing instruction {prdPromptMeta.hasClosingInstruction ? "found" : "missing"}
+                      </span>
+                    </div>
                     <pre
                       className={`overflow-auto rounded-md border border-white/10 bg-background/80 p-3 text-[11.5px] leading-relaxed text-foreground/90 whitespace-pre-wrap ${prdPreviewExpanded ? "max-h-[80vh]" : "max-h-[420px]"}`}
                     >
@@ -854,7 +952,8 @@ export function DocumentViewer({
                 </div>
               ) : (
                 <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-900 dark:text-amber-200">
-                  <div className="flex items-start gap-2">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex min-w-0 flex-1 items-start gap-2">
                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                     <div>
                       <p className="font-medium">Builder prompt missing</p>
@@ -862,6 +961,20 @@ export function DocumentViewer({
                         This PRD was generated before the award-grade builder-prompt upgrade. Regenerate to get a paste-ready, image-rich, multi-page site prompt.
                       </p>
                     </div>
+                    </div>
+                    <Button size="sm" onClick={regenerateWebsitePrd} disabled={prdRepairing || !doc?.snapshot_id}>
+                      {prdRepairing ? (
+                        <>
+                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          Regenerating…
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                          Regenerate full PRD
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </div>
               )}

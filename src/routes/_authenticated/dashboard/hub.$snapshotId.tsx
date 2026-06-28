@@ -1161,12 +1161,14 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               const depsMet = deps.every((dep) => completedKeys.has(dep));
               const status = d?.status ?? "pending";
               const isComplete = status === "complete";
+              const hasReadableContent = Boolean(d?.content && String(d.content).trim().length > 0);
               const generating = status === "generating" || (genOne.isPending && genOne.variables?.documentType === t.type);
               const Icon = isComplete ? CheckCircle2 : depsMet ? Circle : Lock;
               const tone = isComplete ? "text-status-success" : depsMet ? "text-foreground" : "text-muted-foreground";
 
               let statusLine: string;
               if (isComplete) statusLine = "Ready to read";
+              else if (generating && hasReadableContent) statusLine = "Updating… previous version available";
               else if (generating) statusLine = "Writing now…";
               else if (status === "failed") statusLine = "Needs another try";
               else if (!depsMet) {
@@ -1194,7 +1196,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                     </div>
                   </div>
                   <div className="mt-3 flex gap-2">
-                    {isComplete ? (
+                    {isComplete || hasReadableContent ? (
                       <Button size="sm" onClick={() => setViewerDoc(d)}>
                         <Eye className="mr-1 h-3 w-3" /> Read
                       </Button>
