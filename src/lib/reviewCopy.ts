@@ -139,7 +139,7 @@ export const SUB_STEPS = [
   { n: 2, key: "story", label: "Story", title: "Your story", subtitle: "What you're building, and the problem behind it." },
   { n: 3, key: "market", label: "Market", title: "Your market", subtitle: "Who you serve and why they'll pick you." },
   { n: 4, key: "model", label: "Model", title: "Your model", subtitle: "How you'll make money — and where you're headed." },
-  { n: 5, key: "lock", label: "Lock", title: "Lock your concept", subtitle: "One last look, then we start writing." },
+  { n: 5, key: "lock", label: "Lock", title: "Lock your concept", subtitle: "Use the two AI studios below to refine, then lock." },
 ] as const;
 
 export type SubStepKey = (typeof SUB_STEPS)[number]["key"];
