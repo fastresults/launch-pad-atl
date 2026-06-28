@@ -1,52 +1,39 @@
-## Make Concept Studio a distinct AI studio (not a sub-section of "Lock your concept")
+# Always-visible AI Estimate button in Budget & Pro Forma intake
 
-**Problem.** Inside the Lock review step, the Concept Studio renders as a plain `bg-card` block with the same chrome as every other card. It looks like part of the lock screen. Its sibling, the Epiphany Engine, gets a bold amber-gradient treatment that clearly signals "separate AI tool." Concept Studio deserves equal weight.
+## Why it's missing today
 
-**Goal.** Two visually distinct, paired AI studios stacked above the lock card:
-1. **AI Studio · 01 — Concept Studio** (primary/blue tone)
-2. **AI Studio · 02 — Epiphany Engine** (existing amber tone)
-…then the lock & continue card.
+The button already exists in `src/components/hub/IntakeGatewayDialog.tsx` (the green/primary "Estimate for me" CTA), but it's gated by:
 
----
-
-### Changes
-
-**1. `src/components/hub/ConceptStudio.tsx` — promote Step 1**
-
-Replace the flat wrapper around Concept Studio with a branded studio container mirroring Epiphany's gravitas in a different hue:
-- Wrapper: `rounded-2xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card p-5 shadow-[0_0_0_1px_hsl(var(--primary)/0.1)]`
-- Add a tracked uppercase kicker `AI STUDIO · 01` in primary color above the title.
-- Title to `text-lg font-semibold`; Sparkles icon inside a `h-8 w-8 rounded-full bg-primary/15` chip.
-- Recolor the Refining/Locked badge in primary tones.
-- Promote "Draft from research" to a filled primary button so the entry CTA is unmistakable.
-- Wrap the summary + VP fields in an inner `rounded-xl bg-background/40 p-4` panel so the studio reads as a framed workspace.
-
-**2. Insert a "studios intro" band between the page header and Step 1**
-
-Above the Concept Studio card, render a divider band matching the existing "Optional deep pass" style:
-
-```text
-──────  TWO AI STUDIOS BEFORE YOU LOCK  ──────
-   Sharpen the wording, then optionally stress-test the idea.
+```ts
+{snapshotId && emptyCount > 0 && ( ... button ... )}
 ```
 
-Gives the eye a clean hand-off from "Lock your concept" header into the AI tooling.
+For the Budget & Pro Forma schema, every numeric field ships with a `default` value (25000, 4000, 99, 30%, 2000, 25000, "January", etc.). Those defaults seed `values` on open, so `isFilled()` returns true for almost every field and `emptyCount` collapses to ~1 (just "Primary revenue model"). When the user is on a venture where defaults look "filled", the banner + button disappear entirely — which is exactly what the screenshot shows.
 
-**3. Pair the studios visually**
+This also means even when shown, the estimator skips any field that already has a default, so it can never produce a true context-grounded set of numbers for this dialog.
 
-Tighten the visual rhyme so Concept Studio and Epiphany read as siblings:
-- Epiphany kicker → `AI STUDIO · 02` (amber), mirroring `AI STUDIO · 01` (primary).
-- Match icon-chip pattern: Zap in `h-8 w-8 rounded-full bg-status-warning/15`.
-- Keep the existing "Optional deep pass" divider between them.
+## Fix
 
-**4. Re-tone the page header in `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` (+ `src/lib/reviewCopy.ts`)**
+Scope: `src/components/hub/IntakeGatewayDialog.tsx` only (UI/presentation). No edge function or schema changes.
 
-Soften the page-level "Lock your concept / One last look…" so it doesn't compete with the studios that follow. Add a single helper line: *"Use the two studios below to refine, then lock."* This reframes the screen as "studios → lock" instead of "lock screen with stuff inside."
+1. **Always render the AI estimate panel** when `snapshotId` is present and the schema has at least one field. Drop the `emptyCount > 0` gate.
+2. **Two-mode estimate**:
+   - Default click → "Estimate empty fields" (current behavior — fills only blanks).
+   - Secondary action → "Re-estimate all fields" which sends `current_values: {}` to `venture-estimate-intake` so the model returns values for every field, then overwrites the form (with a confirm toast). This is what the user is asking for: top-to-bottom estimate based on venture context.
+3. **Copy update** in the panel so it reads naturally whether fields are empty or pre-defaulted:
+   - Headline: "Let AI fill this from your venture context"
+   - Sub: "We'll use everything we know — uploads, brief, concept, financials — to suggest realistic numbers. Edit anything before generating."
+4. **AI-estimate badge** already exists per field; reuse it for both modes so the user sees which values came from the model vs. their own edits.
+5. **Guard**: if `snapshotId` is missing, show a muted helper line ("Save the venture to enable AI estimates") instead of hiding the panel silently.
 
----
+## Technical notes
 
-### Technical notes
+- `handleEstimate(mode: "empty" | "all")` — when `"all"`, pass `current_values: {}` in the invoke body and replace values for every returned key regardless of `isFilled`.
+- Keep the existing "Nothing to estimate" toast only for the "empty" path.
+- No changes needed to `venture-estimate-intake/index.ts` — it already returns estimates for any field id present in the digest's `emptyIds`. By sending empty `current_values`, every field becomes eligible.
+- No design-token or color changes; reuse existing `primary/5` panel styling.
 
-- All color via existing semantic tokens (`--primary`, `--status-warning`, `--card`, `--background`). No hardcoded colors; light/dark preserved.
-- Pure presentation. No logic, mutations, Edge Function, or DB changes.
-- No changes to Step 2 (Epiphany) behavior or the lock/unlock flow.
+## Out of scope
+
+- Schema edits (defaults stay; they're useful as placeholders).
+- Other intake dialogs — same component already serves them, so the fix applies globally.
