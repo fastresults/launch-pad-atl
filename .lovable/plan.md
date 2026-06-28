@@ -1,62 +1,52 @@
-# Fix "Rebuild enriched brief from library" — actually enrich
+## Make Concept Studio a distinct AI studio (not a sub-section of "Lock your concept")
 
-## What's broken today
+**Problem.** Inside the Lock review step, the Concept Studio renders as a plain `bg-card` block with the same chrome as every other card. It looks like part of the lock screen. Its sibling, the Epiphany Engine, gets a bold amber-gradient treatment that clearly signals "separate AI tool." Concept Studio deserves equal weight.
 
-`SourceRecoveryPanel.rebuild` in `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` (lines 517-542) only:
+**Goal.** Two visually distinct, paired AI studios stacked above the lock card:
+1. **AI Studio · 01 — Concept Studio** (primary/blue tone)
+2. **AI Studio · 02 — Epiphany Engine** (existing amber tone)
+…then the lock & continue card.
 
-1. Reads the venture library (`listVentureSources`)
-2. Appends their text into `venture_snapshots.source_materials.documents`
-3. Toasts "Rebuilding…" and calls `onSaved()`
+---
 
-It **never** triggers an AI pass. That's why the form fields stay as the same one-line answers the user is seeing in the screenshots ("Transactional workshop fees, à la carte…", "$197 for the core workshop…", etc.). The button is a no-op on content quality.
+### Changes
 
-Separately, even when `Re-extract from my sources` is clicked, `venture-deep-research`'s synthesis prompt asks for short string values per field — so output stays shallow even with rich source material.
+**1. `src/components/hub/ConceptStudio.tsx` — promote Step 1**
 
-## Plan
+Replace the flat wrapper around Concept Studio with a branded studio container mirroring Epiphany's gravitas in a different hue:
+- Wrapper: `rounded-2xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card p-5 shadow-[0_0_0_1px_hsl(var(--primary)/0.1)]`
+- Add a tracked uppercase kicker `AI STUDIO · 01` in primary color above the title.
+- Title to `text-lg font-semibold`; Sparkles icon inside a `h-8 w-8 rounded-full bg-primary/15` chip.
+- Recolor the Refining/Locked badge in primary tones.
+- Promote "Draft from research" to a filled primary button so the entry CTA is unmistakable.
+- Wrap the summary + VP fields in an inner `rounded-xl bg-background/40 p-4` panel so the studio reads as a framed workspace.
 
-### 1. Make Rebuild trigger real enrichment (frontend)
+**2. Insert a "studios intro" band between the page header and Step 1**
 
-`src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` — `SourceRecoveryPanel.rebuild`:
+Above the Concept Studio card, render a divider band matching the existing "Optional deep pass" style:
 
-- After `appendSnapshotSources(...)`, call `retryEnrichment({ data: { id: snapshot.id } })` so `status='enriching'` is set and `venture-deep-research` runs against the freshly-attached library.
-- Change the toast to "Re-enriching brief from your full library — this takes ~30–60s."
-- The parent `ReviewStep` already flips to the enrichment progress UI when `status==='enriching'` (line 129), so the user gets live progress automatically.
-- Also fire `window.dispatchEvent(new CustomEvent("venture-sources:changed"))` and `qc.invalidateQueries({ queryKey: ["hub","snapshot",snapshot.id] })` after the call so the UI updates instantly.
+```text
+──────  TWO AI STUDIOS BEFORE YOU LOCK  ──────
+   Sharpen the wording, then optionally stress-test the idea.
+```
 
-### 2. Upgrade the synthesis to "enrich", not just "extract"
+Gives the eye a clean hand-off from "Lock your concept" header into the AI tooling.
 
-`supabase/functions/venture-deep-research/index.ts` — `SYNTH_SYSTEM` + user prompt:
+**3. Pair the studios visually**
 
-- Add an explicit **enrichment contract** to the system prompt:
-  - Each field must be 2–4 sentences (or 3–6 bullets where the field benefits from it — differentiators, target_customers segments, key_processes), grounded in cited snippets from the library.
-  - Pull concrete proof points: named segments, numbers, geographies, channels, pricing tiers, competitor names, and quotes pulled verbatim from `source_materials.documents` / `urls`.
-  - Never collapse to a single comma list when the library supports detail.
-  - Preserve any **user-edited** value that is already longer than the AI draft (pass current `extracted_data` as "DO NOT shorten these confirmed answers; only deepen or add"). This protects the manually-curated text in the screenshots.
-- Switch model for this call to `google/gemini-3.1-pro-preview` when combined library text > 5,000 chars; keep `gemini-3-flash-preview` otherwise. (Pro handles the longer-context grounding the user expects.)
-- Raise per-section length caps in the response schema (e.g. `target_customers`, `value_proposition`, `differentiators`, `monetization`, `pricing`, `key_processes`, `team`) and add `evidence` arrays per field so we can later show provenance.
+Tighten the visual rhyme so Concept Studio and Epiphany read as siblings:
+- Epiphany kicker → `AI STUDIO · 02` (amber), mirroring `AI STUDIO · 01` (primary).
+- Match icon-chip pattern: Zap in `h-8 w-8 rounded-full bg-status-warning/15`.
+- Keep the existing "Optional deep pass" divider between them.
 
-### 3. Field-by-field enrichment writeback
+**4. Re-tone the page header in `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` (+ `src/lib/reviewCopy.ts`)**
 
-In `venture-deep-research`'s writeback (around line 500):
+Soften the page-level "Lock your concept / One last look…" so it doesn't compete with the studios that follow. Add a single helper line: *"Use the two studios below to refine, then lock."* This reframes the screen as "studios → lock" instead of "lock screen with stuff inside."
 
-- Deep-merge new `extracted_data` over existing instead of replacing — for every field, keep the longer of (existing, new) unless `new` adds net-new substance; this prevents wiping the user's good answers.
-- Mark `enrichment_progress.last_enriched_at` and `enriched_field_count` so the Review screen can show a "Just enriched 9 fields" banner.
+---
 
-### 4. UX polish on the Review screen
+### Technical notes
 
-`hub.$snapshotId.tsx` Review header (around line 354-365):
-
-- Group `Re-extract from my sources` and `Rebuild enriched brief from library` into one primary action labeled **"Re-enrich from full library"** (the current two-button split confuses scope). Keep a small "View sources" affordance to open the library panel.
-- After enrichment completes, surface a toast: "Enriched N fields with M new evidence snippets."
-
-## Technical notes
-
-- Files touched: `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx`, `supabase/functions/venture-deep-research/index.ts`. No schema changes.
-- `retryEnrichment` already exists and already invokes `venture-deep-research` — we're just chaining it after the source-merge.
-- Model swap stays inside Lovable AI Gateway allowlist (`google/gemini-3.1-pro-preview` already in use elsewhere).
-- Existing `enrichment_progress` polling (3s interval, line 102) covers the long-running call without extra work.
-
-## Out of scope
-
-- Per-field "regenerate just this" buttons (separate ask).
-- Citations UI for the new `evidence` arrays — schema lands now, UI lands when you ask for it.
+- All color via existing semantic tokens (`--primary`, `--status-warning`, `--card`, `--background`). No hardcoded colors; light/dark preserved.
+- Pure presentation. No logic, mutations, Edge Function, or DB changes.
+- No changes to Step 2 (Epiphany) behavior or the lock/unlock flow.
