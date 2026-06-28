@@ -301,6 +301,7 @@ export function DocumentViewer({
   // Save-to-My-Files state
   const [saving, setSaving] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
+  const [prdPreviewExpanded, setPrdPreviewExpanded] = useState(false);
   const navigate = useNavigate();
   const qc = useQueryClient();
 
@@ -321,29 +322,52 @@ export function DocumentViewer({
     return `${body}\n\n---\n\n## McKinsey-Grade Assessment\n\n${extra}\n`;
   }, [content, assessment, assessmentStatus]);
 
-  // Extract the Section 8 "Paste-Ready Master Prompt" fenced block for the PRD viewer.
+  // Extract the Section 8 "Paste-Ready Master Prompt" for the PRD viewer.
+  // Resolution order: BEGIN/END delimiters → Section 8 slice → largest fenced block.
   const prdMasterPrompt = useMemo<string | null>(() => {
     if (doc?.document_type !== "website_prd" || !content) return null;
-    const blocks: Array<{ lang: string; body: string; index: number }> = [];
+    const stripOuterFence = (s: string) => {
+      const m = s.match(/^\s*```[a-zA-Z0-9_-]*\n([\s\S]*?)\n```\s*$/);
+      return (m ? m[1] : s).trim();
+    };
+
+    // 1. Delimiter pair (preferred — new prompts emit this).
+    const delim = content.match(/<!--\s*BEGIN_MASTER_PROMPT\s*-->([\s\S]*?)<!--\s*END_MASTER_PROMPT\s*-->/i);
+    if (delim && delim[1].trim()) return stripOuterFence(delim[1]);
+
+    // 2. Slice from "## 8 … Paste-Ready" heading to next H2 (or EOF).
+    const h8 = content.match(/^#{1,6}\s*(?:section\s*)?8[\.\)]?\s*[^\n]*paste[- ]ready[^\n]*$/im);
+    if (h8 && h8.index !== undefined) {
+      const start = h8.index + h8[0].length;
+      const rest = content.slice(start);
+      const nextH = rest.match(/\n#{1,6}\s+\S/);
+      const slice = (nextH ? rest.slice(0, nextH.index) : rest).trim();
+      if (slice.length > 200) return stripOuterFence(slice);
+    }
+
+    // 3. Last resort: largest text-ish fenced block.
+    const blocks: Array<{ lang: string; body: string }> = [];
     const re = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
     let m: RegExpExecArray | null;
     while ((m = re.exec(content)) !== null) {
-      blocks.push({ lang: (m[1] || "").toLowerCase(), body: m[2].trim(), index: m.index });
+      blocks.push({ lang: (m[1] || "").toLowerCase(), body: m[2].trim() });
     }
     if (blocks.length === 0) return null;
-    const heading =
-      content.match(/^#{1,6}\s*(?:section\s*)?8[\.\)]?\s*[^\n]*paste[- ]ready[^\n]*$/im) ??
-      content.match(/^#{1,6}[^\n]*paste[- ]ready master prompt[^\n]*$/im) ??
-      content.match(/^#{1,6}[^\n]*builder prompt[^\n]*$/im);
-    if (heading && heading.index !== undefined) {
-      const after = blocks.find((b) => b.index > heading.index!);
-      if (after) return after.body;
-    }
-    const skip = new Set(["xml", "json", "yaml", "yml", "robots", "txt", "html", "css", "js", "ts", "tsx", "jsx", "bash", "sh"]);
+    const skip = new Set(["xml", "json", "yaml", "yml", "robots", "html", "css", "js", "ts", "tsx", "jsx", "bash", "sh"]);
     const textish = blocks.filter((b) => !skip.has(b.lang));
     const pool = textish.length > 0 ? textish : blocks;
     return pool.reduce((a, b) => (b.body.length > a.body.length ? b : a)).body;
   }, [doc?.document_type, content]);
+
+  const prdPromptIncomplete = useMemo(() => {
+    if (!prdMasterPrompt) return false;
+    if (content?.includes("<!-- TRUNCATED -->")) return true;
+    const words = prdMasterPrompt.split(/\s+/).filter(Boolean).length;
+    if (words < 800) return true;
+    if (!/role\s*\+\s*outcome|1\)\s*role/i.test(prdMasterPrompt)) return true;
+    return false;
+  }, [prdMasterPrompt, content]);
+
 
 
   // Re-hydrate assessment state when the document changes
@@ -799,14 +823,34 @@ export function DocumentViewer({
                       </Button>
                     </div>
                   </div>
-                  <details className="mt-4 group">
-                    <summary className="cursor-pointer select-none text-xs font-medium text-muted-foreground hover:text-foreground">
-                      Preview prompt
-                    </summary>
-                    <pre className="mt-2 max-h-72 overflow-auto rounded-md border border-white/10 bg-background/80 p-3 text-[11.5px] leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                  {prdPromptIncomplete && (
+                    <div className="mt-4 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <p>
+                          This builder prompt looks incomplete (likely truncated mid-generation). Regenerate the PRD from the Hub to get the full 1,800–2,400-word brief covering sections 1–11.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">Preview prompt</span>
+                      <button
+                        type="button"
+                        onClick={() => setPrdPreviewExpanded((v) => !v)}
+                        className="text-[11px] font-medium text-primary hover:underline"
+                      >
+                        {prdPreviewExpanded ? "Collapse" : "View full prompt"}
+                      </button>
+                    </div>
+                    <pre
+                      className={`overflow-auto rounded-md border border-white/10 bg-background/80 p-3 text-[11.5px] leading-relaxed text-foreground/90 whitespace-pre-wrap ${prdPreviewExpanded ? "max-h-[80vh]" : "max-h-[420px]"}`}
+                    >
                       {prdMasterPrompt}
                     </pre>
-                  </details>
+                  </div>
+
                 </div>
               ) : (
                 <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-900 dark:text-amber-200">
