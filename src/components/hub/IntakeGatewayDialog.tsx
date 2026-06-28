@@ -260,7 +260,7 @@ export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: P
     [fields, values],
   );
 
-  async function handleEstimate() {
+  async function handleEstimate(mode: "empty" | "all" = "empty") {
     if (!target || !snapshotId) {
       toast.error("Add a venture first so we can ground the estimate.");
       return;
@@ -272,7 +272,8 @@ export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: P
           snapshot_id: snapshotId,
           deliverable_type: target.type,
           schema: target.schema,
-          current_values: values,
+          // For "all" mode, send empty current_values so every field is eligible.
+          current_values: mode === "all" ? {} : values,
         },
       });
       if (error) throw new Error(error.message);
@@ -283,7 +284,7 @@ export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: P
         const next = { ...cur };
         for (const f of fields) {
           if (estimates[f.id] === undefined) continue;
-          if (!isFilled(cur[f.id])) {
+          if (mode === "all" || !isFilled(cur[f.id])) {
             next[f.id] = estimates[f.id];
             filledIds.push(f.id);
           }
@@ -291,10 +292,18 @@ export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: P
         return next;
       });
       if (filledIds.length === 0) {
-        toast.info("Nothing to estimate — your fields are already filled.");
+        toast.info(
+          mode === "empty"
+            ? "Nothing to estimate — your fields are already filled."
+            : "AI didn't return new values — try again in a moment.",
+        );
       } else {
         setAiEstimateFields((s) => new Set([...s, ...filledIds]));
-        toast.success(`Estimated ${filledIds.length} field${filledIds.length === 1 ? "" : "s"}. Review and edit before generating.`);
+        toast.success(
+          mode === "all"
+            ? `Re-estimated ${filledIds.length} field${filledIds.length === 1 ? "" : "s"} from venture context. Review and edit before generating.`
+            : `Estimated ${filledIds.length} field${filledIds.length === 1 ? "" : "s"}. Review and edit before generating.`,
+        );
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't estimate — try answering manually.");
