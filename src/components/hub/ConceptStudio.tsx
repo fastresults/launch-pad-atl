@@ -103,19 +103,39 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
 
   return (
     <div className="space-y-4">
+      {/* ───────── STUDIOS INTRO BAND ───────── */}
+      {!locked && (
+        <div className="space-y-1 px-2 text-center">
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Two AI studios before you lock
+            </span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Sharpen the wording, then optionally stress-test the idea.
+          </p>
+        </div>
+      )}
+
       {/* ───────── STEP 1 · CONCEPT STUDIO ───────── */}
-      <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
+      <div className="space-y-4 rounded-2xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card p-5 shadow-[0_0_0_1px_hsl(var(--primary)/0.1)]">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className="text-[10px] uppercase tracking-wide">Step 1 · Sharpen</Badge>
-              <Sparkles className="h-4 w-4 text-status-warning" />
-              <h3 className="text-base font-semibold">Concept Studio</h3>
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-primary">
+              AI Studio · 01
+            </div>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold">Concept Studio</h3>
               {locked
                 ? <Badge variant="outline" className="border-status-success/40 text-status-success"><Lock className="mr-1 h-3 w-3" />Locked</Badge>
-                : <Badge variant="outline">Refining</Badge>}
+                : <Badge variant="outline" className="border-primary/40 text-primary">Refining</Badge>}
             </div>
-            <p className="mt-1 text-sm text-foreground/80">
+            <p className="mt-2 text-sm text-foreground/80">
               Sharpen the wording of a concept you already believe in.
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -123,14 +143,14 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
             </p>
           </div>
           {!locked && !snapshot.concept_summary && (
-            <Button size="sm" variant="outline" onClick={draft} disabled={run.isPending}>
+            <Button size="sm" onClick={draft} disabled={run.isPending}>
               {run.isPending && run.variables?.action === "draft" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
               Draft from research
             </Button>
           )}
         </div>
 
-        <div className="grid gap-3">
+        <div className="grid gap-3 rounded-xl bg-background/40 p-4">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label className="text-xs">Concept summary</Label>
@@ -229,6 +249,7 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
           </div>
         )}
       </div>
+
 
       {/* ───────── DIVIDER ───────── */}
       {!locked && (
@@ -350,13 +371,17 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
     <div className="space-y-3 rounded-2xl border-2 border-status-warning/40 bg-gradient-to-br from-status-warning/10 via-card to-card p-5 shadow-[0_0_0_1px_hsl(var(--status-warning)/0.1)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="border-status-warning/40 text-[10px] uppercase tracking-wide text-status-warning">Step 2 · Stress-test</Badge>
-            <Zap className="h-4 w-4 text-status-warning" />
-            <h4 className="text-base font-semibold">Epiphany Engine</h4>
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-status-warning">
+            AI Studio · 02
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-status-warning/15">
+              <Zap className="h-4 w-4 text-status-warning" />
+            </div>
+            <h4 className="text-lg font-semibold">Epiphany Engine</h4>
             <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">deep</Badge>
           </div>
-          <p className="mt-1 text-sm text-foreground/80">
+          <p className="mt-2 text-sm text-foreground/80">
             Challenge the concept itself — surface bigger swings you may have missed.
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
