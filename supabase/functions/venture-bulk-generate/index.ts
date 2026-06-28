@@ -195,7 +195,7 @@ async function generateOne(
   const aiJson = await aiRes.json();
   let raw = aiJson.choices?.[0]?.message?.content ?? "";
   const finishReason = aiJson.choices?.[0]?.finish_reason ?? aiJson.choices?.[0]?.finishReason ?? "";
-  const truncated = String(finishReason).toLowerCase() === "length";
+  let truncated = String(finishReason).toLowerCase() === "length";
   let quality = 75;
   const qm = raw.match(/QUALITY_SCORE:\s*(\d{1,3})/i);
   if (qm) {
@@ -205,6 +205,8 @@ async function generateOne(
   raw = stripCitations(raw);
   if (isPrd) {
     raw = await expandWebsitePrdMasterPrompt(raw);
+    const stats = masterPromptStats(raw);
+    if (stats.complete && stats.words >= 1800) truncated = false;
   }
   if (truncated) {
     quality = Math.min(quality, 60);

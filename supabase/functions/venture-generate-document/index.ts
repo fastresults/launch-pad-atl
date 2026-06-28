@@ -328,7 +328,7 @@ export async function generateOne(
   const aiJson = await aiRes.json();
   let raw = aiJson.choices?.[0]?.message?.content ?? "";
   const finishReason = aiJson.choices?.[0]?.finish_reason ?? aiJson.choices?.[0]?.finishReason ?? "";
-  const truncated = String(finishReason).toLowerCase() === "length";
+  let truncated = String(finishReason).toLowerCase() === "length";
 
   // Extract quality score line
   let quality = 75;
@@ -343,6 +343,8 @@ export async function generateOne(
 
   if (isPrd) {
     raw = await expandWebsitePrdMasterPrompt(raw);
+    const stats = masterPromptStats(raw);
+    if (stats.complete && stats.words >= 1800) truncated = false;
   }
 
   if (truncated) {
