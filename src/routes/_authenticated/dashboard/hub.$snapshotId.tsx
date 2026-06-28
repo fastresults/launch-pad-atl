@@ -1060,6 +1060,21 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         </div>
       )}
 
+      {/* Stale-concept banner */}
+      {staleCount > 0 && (
+        <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-status-warning/40 bg-status-warning/10 px-4 py-3 text-sm text-status-warning">
+          <div className="flex items-start gap-2">
+            <RefreshCw className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <div className="font-medium">Concept changed since last generation</div>
+              <div className="text-xs opacity-90">
+                {staleCount} document{staleCount === 1 ? "" : "s"} {staleCount === 1 ? "was" : "were"} written before your latest concept update. Rewrite to bring them in line.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Document list */}
       <div className="space-y-1">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your documents</h3>
