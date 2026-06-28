@@ -506,6 +506,12 @@ Venture context:
     ? sm.urls.map((u: any, i: number) => `### URL ${i + 1}: ${u.url ?? ""}${u.title ? ` (${u.title})` : ""}\n${cap(u.text)}`)
     : [];
 
+  // Hand the model the founder's existing answers so it deepens instead of
+  // replacing what they've already confirmed.
+  const existingExtracted = (snap.extracted_data && typeof snap.extracted_data === "object")
+    ? snap.extracted_data
+    : null;
+
   const corpus = [
     `# Founder input`,
     `Founder: ${snap.founder_name || "[not provided]"}${snap.founder_email ? ` <${snap.founder_email}>` : ""}`,
@@ -516,6 +522,9 @@ Venture context:
     `Market scope: ${scope}`,
     `Concept: ${concept}`,
     snap.differentiation_statement ? `Differentiation: ${snap.differentiation_statement}` : "",
+    existingExtracted
+      ? `\n# Existing extracted_data (founder-confirmed — DO NOT shorten substantive values; only deepen with new evidence)\n\`\`\`json\n${JSON.stringify(existingExtracted, null, 2).slice(0, 20_000)}\n\`\`\``
+      : "",
     docBlocks.length ? `\n# Founder-uploaded documents (authoritative — prefer over research)\n${docBlocks.join("\n\n")}` : "",
     urlBlocks.length ? `\n# Founder-supplied URLs (authoritative — prefer over research)\n${urlBlocks.join("\n\n")}` : "",
     ``,
@@ -529,7 +538,9 @@ Venture context:
 
   const result = await synthesize(cappedCorpus);
   const research_brief = sanitizeModelOutput(result?.research_brief ?? {});
-  const extracted_data = sanitizeModelOutput(result?.extracted_data ?? {});
+  const ai_extracted = sanitizeModelOutput(result?.extracted_data ?? {});
+  // Deep-merge: protect founder-confirmed copy, only deepen/expand.
+  const extracted_data = mergeExtracted(existingExtracted ?? {}, ai_extracted);
 
   await updateProgress(supabase, snapshotId, "validation", 96, "Finalizing");
 
@@ -545,9 +556,11 @@ Venture context:
         progress: 100,
         message: "Ready for review",
         updatedAt: new Date().toISOString(),
+        last_enriched_at: new Date().toISOString(),
       },
     })
     .eq("id", snapshotId);
+
 
   // F15: research_brief just changed — flag the brain dirty so anything
   // downstream that reads the cached brain re-derives from fresh research.
