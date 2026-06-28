@@ -329,31 +329,53 @@ export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: P
         </DialogHeader>
 
         <div className="space-y-5">
-          {snapshotId && emptyCount > 0 && (
-            <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-2.5">
-                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <div className="text-xs leading-relaxed">
-                  <p className="font-medium text-foreground">Not sure what to enter?</p>
-                  <p className="text-muted-foreground">
-                    Let AI estimate the {emptyCount} empty field{emptyCount === 1 ? "" : "s"} from everything we know about your venture. You can edit anything before generating.
-                  </p>
+          {fields.length > 0 && (
+            snapshotId ? (
+              <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-2.5">
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <div className="text-xs leading-relaxed">
+                    <p className="font-medium text-foreground">Let AI fill this from your venture context</p>
+                    <p className="text-muted-foreground">
+                      We'll use everything we know — uploads, brief, concept, financials — to suggest realistic numbers. Edit anything before generating.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  {emptyCount > 0 && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEstimate("empty")}
+                      disabled={estimating}
+                    >
+                      {estimating ? (
+                        <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Estimating…</>
+                      ) : (
+                        <><Sparkles className="mr-1.5 h-3.5 w-3.5" /> Fill {emptyCount} empty</>
+                      )}
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => handleEstimate("all")}
+                    disabled={estimating}
+                  >
+                    {estimating ? (
+                      <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Estimating…</>
+                    ) : (
+                      <><Sparkles className="mr-1.5 h-3.5 w-3.5" /> Estimate all from context</>
+                    )}
+                  </Button>
                 </div>
               </div>
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleEstimate}
-                disabled={estimating}
-                className="shrink-0"
-              >
-                {estimating ? (
-                  <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Estimating…</>
-                ) : (
-                  <><Sparkles className="mr-1.5 h-3.5 w-3.5" /> Estimate for me</>
-                )}
-              </Button>
-            </div>
+            ) : (
+              <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+                Save the venture to enable AI estimates for these fields.
+              </div>
+            )
           )}
           {Object.keys(prefillSources).length > 0 && (
             <div className="rounded-md border border-status-success/30 bg-status-success/10 px-3 py-2 text-xs text-status-success">
