@@ -321,29 +321,52 @@ export function DocumentViewer({
     return `${body}\n\n---\n\n## McKinsey-Grade Assessment\n\n${extra}\n`;
   }, [content, assessment, assessmentStatus]);
 
-  // Extract the Section 8 "Paste-Ready Master Prompt" fenced block for the PRD viewer.
+  // Extract the Section 8 "Paste-Ready Master Prompt" for the PRD viewer.
+  // Resolution order: BEGIN/END delimiters → Section 8 slice → largest fenced block.
   const prdMasterPrompt = useMemo<string | null>(() => {
     if (doc?.document_type !== "website_prd" || !content) return null;
-    const blocks: Array<{ lang: string; body: string; index: number }> = [];
+    const stripOuterFence = (s: string) => {
+      const m = s.match(/^\s*```[a-zA-Z0-9_-]*\n([\s\S]*?)\n```\s*$/);
+      return (m ? m[1] : s).trim();
+    };
+
+    // 1. Delimiter pair (preferred — new prompts emit this).
+    const delim = content.match(/<!--\s*BEGIN_MASTER_PROMPT\s*-->([\s\S]*?)<!--\s*END_MASTER_PROMPT\s*-->/i);
+    if (delim && delim[1].trim()) return stripOuterFence(delim[1]);
+
+    // 2. Slice from "## 8 … Paste-Ready" heading to next H2 (or EOF).
+    const h8 = content.match(/^#{1,6}\s*(?:section\s*)?8[\.\)]?\s*[^\n]*paste[- ]ready[^\n]*$/im);
+    if (h8 && h8.index !== undefined) {
+      const start = h8.index + h8[0].length;
+      const rest = content.slice(start);
+      const nextH = rest.match(/\n#{1,6}\s+\S/);
+      const slice = (nextH ? rest.slice(0, nextH.index) : rest).trim();
+      if (slice.length > 200) return stripOuterFence(slice);
+    }
+
+    // 3. Last resort: largest text-ish fenced block.
+    const blocks: Array<{ lang: string; body: string }> = [];
     const re = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
     let m: RegExpExecArray | null;
     while ((m = re.exec(content)) !== null) {
-      blocks.push({ lang: (m[1] || "").toLowerCase(), body: m[2].trim(), index: m.index });
+      blocks.push({ lang: (m[1] || "").toLowerCase(), body: m[2].trim() });
     }
     if (blocks.length === 0) return null;
-    const heading =
-      content.match(/^#{1,6}\s*(?:section\s*)?8[\.\)]?\s*[^\n]*paste[- ]ready[^\n]*$/im) ??
-      content.match(/^#{1,6}[^\n]*paste[- ]ready master prompt[^\n]*$/im) ??
-      content.match(/^#{1,6}[^\n]*builder prompt[^\n]*$/im);
-    if (heading && heading.index !== undefined) {
-      const after = blocks.find((b) => b.index > heading.index!);
-      if (after) return after.body;
-    }
-    const skip = new Set(["xml", "json", "yaml", "yml", "robots", "txt", "html", "css", "js", "ts", "tsx", "jsx", "bash", "sh"]);
+    const skip = new Set(["xml", "json", "yaml", "yml", "robots", "html", "css", "js", "ts", "tsx", "jsx", "bash", "sh"]);
     const textish = blocks.filter((b) => !skip.has(b.lang));
     const pool = textish.length > 0 ? textish : blocks;
     return pool.reduce((a, b) => (b.body.length > a.body.length ? b : a)).body;
   }, [doc?.document_type, content]);
+
+  const prdPromptIncomplete = useMemo(() => {
+    if (!prdMasterPrompt) return false;
+    if (content?.includes("<!-- TRUNCATED -->")) return true;
+    const words = prdMasterPrompt.split(/\s+/).filter(Boolean).length;
+    if (words < 800) return true;
+    if (!/role\s*\+\s*outcome|1\)\s*role/i.test(prdMasterPrompt)) return true;
+    return false;
+  }, [prdMasterPrompt, content]);
+
 
 
   // Re-hydrate assessment state when the document changes
