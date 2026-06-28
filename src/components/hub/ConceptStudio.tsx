@@ -371,13 +371,17 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
     <div className="space-y-3 rounded-2xl border-2 border-status-warning/40 bg-gradient-to-br from-status-warning/10 via-card to-card p-5 shadow-[0_0_0_1px_hsl(var(--status-warning)/0.1)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="border-status-warning/40 text-[10px] uppercase tracking-wide text-status-warning">Step 2 · Stress-test</Badge>
-            <Zap className="h-4 w-4 text-status-warning" />
-            <h4 className="text-base font-semibold">Epiphany Engine</h4>
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-status-warning">
+            AI Studio · 02
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-status-warning/15">
+              <Zap className="h-4 w-4 text-status-warning" />
+            </div>
+            <h4 className="text-lg font-semibold">Epiphany Engine</h4>
             <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">deep</Badge>
           </div>
-          <p className="mt-1 text-sm text-foreground/80">
+          <p className="mt-2 text-sm text-foreground/80">
             Challenge the concept itself — surface bigger swings you may have missed.
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
