@@ -243,18 +243,29 @@ export async function generateOne(
   const modelId = isPrd ? modelForTier("flash") : modelForTier(type.model_tier);
   const maxTokens = isPrd ? 16000 : 16000;
 
-  const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: modelId,
-      max_tokens: maxTokens,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-    }),
-  }, { timeoutMs: isPrd ? 180_000 : 90_000, retries: isPrd ? 0 : 2 });
+  let aiRes: Response;
+  try {
+    aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: modelId,
+        max_tokens: maxTokens,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      }),
+    }, { timeoutMs: isPrd ? 180_000 : 90_000, retries: isPrd ? 0 : 2 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    await supabase.from("venture_documents").update({ status: "failed" })
+      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
+    await supabase.from("venture_generation_failures").insert({
+      snapshot_id: snapshotId, document_type: documentType, error: `Gateway request failed: ${msg.slice(0, 300)}`,
+    });
+    throw e;
+  }
 
 
 
