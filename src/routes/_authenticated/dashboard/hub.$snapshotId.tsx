@@ -892,6 +892,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const jobRunning = job?.status === "running" || job?.status === "queued";
   const failures = failuresQ.data ?? [];
 
+  // Stale = doc was generated before the concept was last locked/updated.
+  const conceptChangedAt = snapshot?.concept_locked_at ?? snapshot?.updated_at ?? null;
+  const isStale = (d: any) => {
+    if (!d || d.status !== "complete" || !conceptChangedAt) return false;
+    const docAt = d.updated_at ? new Date(d.updated_at).getTime() : 0;
+    const cAt = new Date(conceptChangedAt).getTime();
+    return docAt > 0 && cAt > 0 && cAt - docAt > 60_000; // 60s grace
+  };
+  const staleDocs = docs.filter(isStale);
+  const staleCount = staleDocs.length;
+
   const currentDocLabel = job?.current_document_type
     ? (typeByKey.get(job.current_document_type) as any)?.name ?? job.current_document_type
     : null;
@@ -1049,6 +1060,21 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         </div>
       )}
 
+      {/* Stale-concept banner */}
+      {staleCount > 0 && (
+        <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-status-warning/40 bg-status-warning/10 px-4 py-3 text-sm text-status-warning">
+          <div className="flex items-start gap-2">
+            <RefreshCw className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <div className="font-medium">Concept changed since last generation</div>
+              <div className="text-xs opacity-90">
+                {staleCount} document{staleCount === 1 ? "" : "s"} {staleCount === 1 ? "was" : "were"} written before your latest concept update. Rewrite to bring them in line.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Document list */}
       <div className="space-y-1">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your documents</h3>
@@ -1149,12 +1175,20 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 statusLine = `Waiting on ${missingLabel}`;
               } else statusLine = "Not started yet";
 
+              const stale = isStale(d);
               return (
-                <div key={t.type} className="rounded-xl border border-white/10 bg-card p-4">
+                <div key={t.type} className={`rounded-xl border bg-card p-4 ${stale ? "border-status-warning/40" : "border-white/10"}`}>
                   <div className="flex items-start gap-2">
                     <Icon className={`mt-0.5 h-4 w-4 ${tone}`} />
                     <div className="min-w-0 flex-1">
-                      <h4 className="truncate text-sm font-medium">{t.name}</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="truncate text-sm font-medium">{t.name}</h4>
+                        {stale && (
+                          <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">
+                            Concept updated
+                          </Badge>
+                        )}
+                      </div>
                       <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{t.description}</p>
                       <div className="mt-1 text-[10px] text-muted-foreground">{statusLine} · ~{t.estimated_minutes} min</div>
                     </div>
