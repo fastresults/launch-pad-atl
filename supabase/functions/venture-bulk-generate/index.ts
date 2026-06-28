@@ -111,14 +111,19 @@ async function generateOne(
       : "",
   ].filter(Boolean).join("\n\n").slice(0, MAX_USER_PROMPT_CHARS);
 
-  // S5 — Honor type.model_tier ('pro' | 'flash' | 'lite').
-  const modelId = modelForTier(type.model_tier);
+  // S5 — Honor type.model_tier ('pro' | 'flash' | 'lite'), except website_prd.
+  // Website PRDs need Pro + a larger output budget so the paste-ready
+  // builder prompt can finish in both single-doc and bulk-generation paths.
+  const isPrd = documentType === "website_prd";
+  const modelId = isPrd ? modelForTier("pro") : modelForTier(type.model_tier);
+  const maxTokens = isPrd ? 24000 : 16000;
 
   const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+    headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: modelId,
+      max_tokens: maxTokens,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -138,6 +143,8 @@ async function generateOne(
 
   const aiJson = await aiRes.json();
   let raw = aiJson.choices?.[0]?.message?.content ?? "";
+  const finishReason = aiJson.choices?.[0]?.finish_reason ?? aiJson.choices?.[0]?.finishReason ?? "";
+  const truncated = String(finishReason).toLowerCase() === "length";
   let quality = 75;
   const qm = raw.match(/QUALITY_SCORE:\s*(\d{1,3})/i);
   if (qm) {
@@ -145,6 +152,12 @@ async function generateOne(
     raw = raw.replace(/QUALITY_SCORE:\s*\d{1,3}\s*$/i, "").trim();
   }
   raw = stripCitations(raw);
+  if (truncated) {
+    quality = Math.min(quality, 60);
+    if (!raw.includes("<!-- TRUNCATED -->")) {
+      raw = `${raw}\n\n<!-- TRUNCATED -->\n`;
+    }
+  }
   const wordCount = raw.split(/\s+/).filter(Boolean).length;
 
   const { data: existing } = await supabase
