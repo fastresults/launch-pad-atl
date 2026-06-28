@@ -892,6 +892,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const jobRunning = job?.status === "running" || job?.status === "queued";
   const failures = failuresQ.data ?? [];
 
+  // Stale = doc was generated before the concept was last locked/updated.
+  const conceptChangedAt = snapshot?.concept_locked_at ?? snapshot?.updated_at ?? null;
+  const isStale = (d: any) => {
+    if (!d || d.status !== "complete" || !conceptChangedAt) return false;
+    const docAt = d.updated_at ? new Date(d.updated_at).getTime() : 0;
+    const cAt = new Date(conceptChangedAt).getTime();
+    return docAt > 0 && cAt > 0 && cAt - docAt > 60_000; // 60s grace
+  };
+  const staleDocs = docs.filter(isStale);
+  const staleCount = staleDocs.length;
+
   const currentDocLabel = job?.current_document_type
     ? (typeByKey.get(job.current_document_type) as any)?.name ?? job.current_document_type
     : null;
