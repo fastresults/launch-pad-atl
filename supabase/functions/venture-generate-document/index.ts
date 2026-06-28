@@ -39,6 +39,52 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
+function masterPromptStats(md: string) {
+  const m = md.match(/<!--\s*BEGIN_MASTER_PROMPT\s*-->([\s\S]*?)<!--\s*END_MASTER_PROMPT\s*-->/i);
+  const prompt = (m?.[1] ?? "").trim();
+  const missingSections = Array.from({ length: 11 }, (_, i) => i + 1).filter(
+    (n) => !new RegExp(`(?:^|\n)\s*${n}\)\s+`, "i").test(prompt),
+  );
+  return {
+    prompt,
+    words: prompt.split(/\s+/).filter(Boolean).length,
+    complete: Boolean(m) && missingSections.length === 0 && /Begin scaffolding now\.\s*Generate all images on first run\.\s*Do not ask clarifying questions\./i.test(prompt),
+  };
+}
+
+async function expandWebsitePrdMasterPrompt(raw: string) {
+  const stats = masterPromptStats(raw);
+  if (!stats.prompt || (stats.complete && stats.words >= 1800)) return raw;
+  try {
+    const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: modelForTier("flash"),
+        max_tokens: 12000,
+        messages: [
+          {
+            role: "system",
+            content: "You expand an AI website-builder master prompt. Return ONLY the delimiter-wrapped master prompt. No commentary, no code fences.",
+          },
+          {
+            role: "user",
+            content: `Expand the master prompt below to 1,800-2,400 words while preserving all facts, exact numbered sections 1) through 11), and the exact closing line. Each numbered section must be substantive and implementation-ready.\n\n${stats.prompt}`,
+          },
+        ],
+      }),
+    }, { timeoutMs: 180_000, retries: 0 });
+    if (!res.ok) return raw;
+    const json = await res.json();
+    const expanded = String(json.choices?.[0]?.message?.content ?? "").trim();
+    const expandedStats = masterPromptStats(expanded);
+    if (!expandedStats.prompt || !expandedStats.complete || expandedStats.words <= stats.words) return raw;
+    return raw.replace(/<!--\s*BEGIN_MASTER_PROMPT\s*-->[\s\S]*?<!--\s*END_MASTER_PROMPT\s*-->/i, `<!-- BEGIN_MASTER_PROMPT -->\n${expandedStats.prompt}\n<!-- END_MASTER_PROMPT -->`);
+  } catch {
+    return raw;
+  }
+}
+
 // Intake → canonical writeback map. When a deliverable's intake collects one
 // of these fields, persist it back to attendee_profiles / brief tables so the
 // next deliverable's intake (and the Profile page) reuses it automatically.
@@ -294,6 +340,10 @@ export async function generateOne(
 
   // Strip any citation residue the model may have produced despite instructions.
   raw = stripCitations(raw);
+
+  if (isPrd) {
+    raw = await expandWebsitePrdMasterPrompt(raw);
+  }
 
   if (truncated) {
     quality = Math.min(quality, 60);
