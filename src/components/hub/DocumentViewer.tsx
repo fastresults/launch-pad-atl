@@ -486,14 +486,43 @@ export function DocumentViewer({
     if (!node) return;
     renderToPrint(title, node.innerHTML);
   };
-  const onCopyPrdPrompt = () => {
-    const m = content.match(/```[a-zA-Z]*\n([\s\S]*?)```/);
-    if (!m) {
+  const onCopyPrdPrompt = async () => {
+    // Collect every fenced block with its language tag and position.
+    const blocks: Array<{ lang: string; body: string; index: number }> = [];
+    const re = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
+    let match: RegExpExecArray | null;
+    while ((match = re.exec(content)) !== null) {
+      blocks.push({ lang: (match[1] || "").toLowerCase(), body: match[2].trim(), index: match.index });
+    }
+    if (blocks.length === 0) {
       toast.error("Couldn't find the prompt block");
       return;
     }
-    navigator.clipboard.writeText(m[1].trim());
-    toast.success("AI-builder prompt copied");
+
+    // 1) Prefer the first fenced block after the "Paste-Ready Master Prompt" heading.
+    let chosen: string | null = null;
+    const headingMatch = content.match(/^#{1,6}\s*(?:section\s*)?8[\.\)]?\s*[^\n]*paste[- ]ready[^\n]*$/im)
+      ?? content.match(/^#{1,6}[^\n]*paste[- ]ready master prompt[^\n]*$/im);
+    if (headingMatch && headingMatch.index !== undefined) {
+      const after = blocks.find((b) => b.index > headingMatch.index!);
+      if (after) chosen = after.body;
+    }
+
+    // 2) Fallback: largest text-ish block (skip robots/xml/json/yaml/txt).
+    if (!chosen) {
+      const skip = new Set(["xml", "json", "yaml", "yml", "robots", "txt", "html", "css", "js", "ts", "tsx", "jsx", "bash", "sh"]);
+      const textish = blocks.filter((b) => !skip.has(b.lang));
+      const pool = textish.length > 0 ? textish : blocks;
+      chosen = pool.reduce((a, b) => (b.body.length > a.body.length ? b : a)).body;
+    }
+
+    try {
+      await navigator.clipboard.writeText(chosen);
+      const words = chosen.split(/\s+/).filter(Boolean).length;
+      toast.success(`Master AI-builder prompt copied (~${words} words)`);
+    } catch {
+      toast.error("Clipboard blocked — copy manually from Section 8.");
+    }
   };
 
   const onSaveToFiles = async () => {
