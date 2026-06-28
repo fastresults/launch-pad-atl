@@ -321,6 +321,31 @@ export function DocumentViewer({
     return `${body}\n\n---\n\n## McKinsey-Grade Assessment\n\n${extra}\n`;
   }, [content, assessment, assessmentStatus]);
 
+  // Extract the Section 8 "Paste-Ready Master Prompt" fenced block for the PRD viewer.
+  const prdMasterPrompt = useMemo<string | null>(() => {
+    if (doc?.document_type !== "website_prd" || !content) return null;
+    const blocks: Array<{ lang: string; body: string; index: number }> = [];
+    const re = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(content)) !== null) {
+      blocks.push({ lang: (m[1] || "").toLowerCase(), body: m[2].trim(), index: m.index });
+    }
+    if (blocks.length === 0) return null;
+    const heading =
+      content.match(/^#{1,6}\s*(?:section\s*)?8[\.\)]?\s*[^\n]*paste[- ]ready[^\n]*$/im) ??
+      content.match(/^#{1,6}[^\n]*paste[- ]ready master prompt[^\n]*$/im) ??
+      content.match(/^#{1,6}[^\n]*builder prompt[^\n]*$/im);
+    if (heading && heading.index !== undefined) {
+      const after = blocks.find((b) => b.index > heading.index!);
+      if (after) return after.body;
+    }
+    const skip = new Set(["xml", "json", "yaml", "yml", "robots", "txt", "html", "css", "js", "ts", "tsx", "jsx", "bash", "sh"]);
+    const textish = blocks.filter((b) => !skip.has(b.lang));
+    const pool = textish.length > 0 ? textish : blocks;
+    return pool.reduce((a, b) => (b.body.length > a.body.length ? b : a)).body;
+  }, [doc?.document_type, content]);
+
+
   // Re-hydrate assessment state when the document changes
   useEffect(() => {
     setAssessment(doc?.deep_assessment ?? null);
