@@ -174,18 +174,20 @@ async function pplxResearch(prompt: string): Promise<{ content: string; citation
 
 // ============ Synthesis ============
 
-const SYNTH_SYSTEM = `You are an AI venture-intelligence analyst.
-You will receive a founder's concept plus a research corpus (own site, competitor pages, market analysis, customer voice, pricing).
-Your job is to synthesize a structured research_brief AND a 4-section extracted_data object.
+const SYNTH_SYSTEM = `You are an AI venture-intelligence analyst writing an investor-grade brief.
+You will receive a founder's concept, a research corpus (own site, competitor pages, market analysis, customer voice, pricing), and optionally an EXISTING extracted_data object the founder has already edited.
 
 CRITICAL RULES:
 1. Prefer verbatim facts from the founder's own uploaded documents/URLs over inference from research.
-2. Build a founder-ready brief: use sourced facts first, then make clearly reasonable strategic inferences from the venture concept when sources are thin.
-3. NEVER emit placeholder strings like "[needs founder input]", "TBD", "various", or "unknown".
-4. If a field cannot be supported or reasonably inferred, return an empty string "". Do not explain missing data inside the field.
-5. Cite source URLs in brackets like [https://example.com] right after every claim that came from an external source (skip citations for founder-uploaded documents).
-5. Return ONLY valid JSON matching the schema below — no markdown, no commentary.
-
+2. ENRICH, do not just extract. Every extracted_data field must be substantive and grounded:
+   - Short-answer fields (company_name, founder_name, location, industry, market_size, pricing): one tight, specific line.
+   - Narrative fields (concept, problem, target_customers, value_proposition, differentiators, revenue_model, key_processes, team, short_term_goals, long_term_goals, mission, vision): 2–4 full sentences OR a short bullet list (use "- " bullets joined with newlines inside the string), grounded in concrete proof points pulled from the corpus — named segments, geographies, channels, pricing tiers, competitor names, numbers, and verbatim quotes where available.
+   - Never collapse a narrative field to a single comma-separated list when the corpus supports detail.
+3. PRESERVE THE FOUNDER'S EDITS. If an EXISTING extracted_data value is present and substantive (≥ 40 characters), keep it verbatim and only DEEPEN it — append a new paragraph with additional context, never shorten or rephrase what the founder confirmed.
+4. NEVER emit placeholder strings like "[needs founder input]", "TBD", "various", or "unknown".
+5. If a field cannot be supported or reasonably inferred, return an empty string "". Do not explain missing data inside the field.
+6. Cite source URLs in brackets like [https://example.com] right after every claim that came from an external source (skip citations for founder-uploaded documents).
+7. Return ONLY valid JSON matching the schema below — no markdown, no commentary, no code fences.
 
 Schema:
 {
