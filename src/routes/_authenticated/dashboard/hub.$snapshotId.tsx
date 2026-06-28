@@ -514,6 +514,7 @@ function SourceRecoveryPanel({ snapshot, onSaved }: { snapshot: any; onSaved: ()
     }
   }, [snapshot.id, refresh]);
 
+  const qc = useQueryClient();
   const rebuild = useMutation({
     mutationFn: async () => {
       setRebuilding(true);
@@ -529,10 +530,16 @@ function SourceRecoveryPanel({ snapshot, onSaved }: { snapshot: any; onSaved: ()
           },
         },
       });
+      // Actually trigger the AI enrichment pass against the freshly-merged
+      // library. Without this, the form fields never change and the button
+      // is a no-op on content quality.
+      await retryEnrichment({ data: { id: snapshot.id } });
     },
     onSuccess: () => {
       setRebuilding(false);
-      toast.success("Rebuilding the enriched brief from your library");
+      toast.success("Re-enriching your brief from the full library — this takes ~30–60s.");
+      try { window.dispatchEvent(new CustomEvent("venture-sources:changed")); } catch {}
+      qc.invalidateQueries({ queryKey: ["hub", "snapshot", snapshot.id] });
       onSaved();
     },
     onError: (e) => {

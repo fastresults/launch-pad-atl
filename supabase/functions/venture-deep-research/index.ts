@@ -174,18 +174,20 @@ async function pplxResearch(prompt: string): Promise<{ content: string; citation
 
 // ============ Synthesis ============
 
-const SYNTH_SYSTEM = `You are an AI venture-intelligence analyst.
-You will receive a founder's concept plus a research corpus (own site, competitor pages, market analysis, customer voice, pricing).
-Your job is to synthesize a structured research_brief AND a 4-section extracted_data object.
+const SYNTH_SYSTEM = `You are an AI venture-intelligence analyst writing an investor-grade brief.
+You will receive a founder's concept, a research corpus (own site, competitor pages, market analysis, customer voice, pricing), and optionally an EXISTING extracted_data object the founder has already edited.
 
 CRITICAL RULES:
 1. Prefer verbatim facts from the founder's own uploaded documents/URLs over inference from research.
-2. Build a founder-ready brief: use sourced facts first, then make clearly reasonable strategic inferences from the venture concept when sources are thin.
-3. NEVER emit placeholder strings like "[needs founder input]", "TBD", "various", or "unknown".
-4. If a field cannot be supported or reasonably inferred, return an empty string "". Do not explain missing data inside the field.
-5. Cite source URLs in brackets like [https://example.com] right after every claim that came from an external source (skip citations for founder-uploaded documents).
-5. Return ONLY valid JSON matching the schema below — no markdown, no commentary.
-
+2. ENRICH, do not just extract. Every extracted_data field must be substantive and grounded:
+   - Short-answer fields (company_name, founder_name, location, industry, market_size, pricing): one tight, specific line.
+   - Narrative fields (concept, problem, target_customers, value_proposition, differentiators, revenue_model, key_processes, team, short_term_goals, long_term_goals, mission, vision): 2–4 full sentences OR a short bullet list (use "- " bullets joined with newlines inside the string), grounded in concrete proof points pulled from the corpus — named segments, geographies, channels, pricing tiers, competitor names, numbers, and verbatim quotes where available.
+   - Never collapse a narrative field to a single comma-separated list when the corpus supports detail.
+3. PRESERVE THE FOUNDER'S EDITS. If an EXISTING extracted_data value is present and substantive (≥ 40 characters), keep it verbatim and only DEEPEN it — append a new paragraph with additional context, never shorten or rephrase what the founder confirmed.
+4. NEVER emit placeholder strings like "[needs founder input]", "TBD", "various", or "unknown".
+5. If a field cannot be supported or reasonably inferred, return an empty string "". Do not explain missing data inside the field.
+6. Cite source URLs in brackets like [https://example.com] right after every claim that came from an external source (skip citations for founder-uploaded documents).
+7. Return ONLY valid JSON matching the schema below — no markdown, no commentary, no code fences.
 
 Schema:
 {
@@ -230,6 +232,12 @@ function sanitizeModelOutput(value: unknown): unknown {
 }
 
 async function synthesize(corpus: string): Promise<any> {
+  // Use the Pro model when the corpus is large enough that depth matters
+  // (founder uploaded substantial source material). Flash is fine for small
+  // corpora and keeps latency/cost down.
+  const model = corpus.length > 5_000
+    ? "google/gemini-3.1-pro-preview"
+    : "google/gemini-3-flash-preview";
   const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -237,7 +245,7 @@ async function synthesize(corpus: string): Promise<any> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model,
       messages: [
         { role: "system", content: SYNTH_SYSTEM },
         { role: "user", content: corpus },
@@ -269,6 +277,30 @@ async function synthesize(corpus: string): Promise<any> {
     const fjson = await fix.json();
     return JSON.parse(fjson?.choices?.[0]?.message?.content ?? "{}");
   }
+}
+
+// Deep-merge AI-produced extracted_data over the founder's existing edits.
+// Rule: keep the longer string per leaf, unless the new value is materially
+// longer (≥ 1.5×) — protects founder-confirmed copy from being shortened.
+function mergeExtracted(existing: any, next: any): any {
+  if (typeof next === "string") {
+    const a = typeof existing === "string" ? existing.trim() : "";
+    const b = next.trim();
+    if (!b) return a;
+    if (!a) return b;
+    return b.length >= a.length * 1.5 ? b : (b.length > a.length ? b : a);
+  }
+  if (Array.isArray(next)) {
+    return next.length ? next : (Array.isArray(existing) ? existing : []);
+  }
+  if (next && typeof next === "object") {
+    const out: Record<string, unknown> = { ...(existing && typeof existing === "object" ? existing : {}) };
+    for (const [k, v] of Object.entries(next)) {
+      out[k] = mergeExtracted((existing ?? {})[k], v);
+    }
+    return out;
+  }
+  return next ?? existing;
 }
 
 // ============ Main pipeline ============
@@ -474,6 +506,12 @@ Venture context:
     ? sm.urls.map((u: any, i: number) => `### URL ${i + 1}: ${u.url ?? ""}${u.title ? ` (${u.title})` : ""}\n${cap(u.text)}`)
     : [];
 
+  // Hand the model the founder's existing answers so it deepens instead of
+  // replacing what they've already confirmed.
+  const existingExtracted = (snap.extracted_data && typeof snap.extracted_data === "object")
+    ? snap.extracted_data
+    : null;
+
   const corpus = [
     `# Founder input`,
     `Founder: ${snap.founder_name || "[not provided]"}${snap.founder_email ? ` <${snap.founder_email}>` : ""}`,
@@ -484,6 +522,9 @@ Venture context:
     `Market scope: ${scope}`,
     `Concept: ${concept}`,
     snap.differentiation_statement ? `Differentiation: ${snap.differentiation_statement}` : "",
+    existingExtracted
+      ? `\n# Existing extracted_data (founder-confirmed — DO NOT shorten substantive values; only deepen with new evidence)\n\`\`\`json\n${JSON.stringify(existingExtracted, null, 2).slice(0, 20_000)}\n\`\`\``
+      : "",
     docBlocks.length ? `\n# Founder-uploaded documents (authoritative — prefer over research)\n${docBlocks.join("\n\n")}` : "",
     urlBlocks.length ? `\n# Founder-supplied URLs (authoritative — prefer over research)\n${urlBlocks.join("\n\n")}` : "",
     ``,
@@ -497,7 +538,9 @@ Venture context:
 
   const result = await synthesize(cappedCorpus);
   const research_brief = sanitizeModelOutput(result?.research_brief ?? {});
-  const extracted_data = sanitizeModelOutput(result?.extracted_data ?? {});
+  const ai_extracted = sanitizeModelOutput(result?.extracted_data ?? {});
+  // Deep-merge: protect founder-confirmed copy, only deepen/expand.
+  const extracted_data = mergeExtracted(existingExtracted ?? {}, ai_extracted);
 
   await updateProgress(supabase, snapshotId, "validation", 96, "Finalizing");
 
@@ -513,9 +556,11 @@ Venture context:
         progress: 100,
         message: "Ready for review",
         updatedAt: new Date().toISOString(),
+        last_enriched_at: new Date().toISOString(),
       },
     })
     .eq("id", snapshotId);
+
 
   // F15: research_brief just changed — flag the brain dirty so anything
   // downstream that reads the cached brain re-derives from fresh research.

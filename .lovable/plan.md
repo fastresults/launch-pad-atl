@@ -1,31 +1,62 @@
-## Goal
-When the founder adds a new source from the "Anything else?" controls (Upload / Paste a link / Speak / Type), it should appear as a pill in the **Your source memory** row alongside `plan-v1.md` and `business-case.md` — instead of (or in addition to) the separate "SAVED" list below the dropzone.
+# Fix "Rebuild enriched brief from library" — actually enrich
 
-## Where it breaks today
-In `src/routes/_authenticated/dashboard/hub.new.tsx`:
-- Memory chips are derived from `reusable` (sources loaded once on mount via `listReusableVentureSources`).
-- New uploads land in a separate `files` state and render in their own list at the bottom (the "SAVED" row in the screenshot).
-- Scraped URLs land in `scrapedUrls`; typed/spoken notes land in their own buffers. None of these append to `reusable`, so the top chip row never updates.
+## What's broken today
 
-## Changes
+`SourceRecoveryPanel.rebuild` in `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` (lines 517-542) only:
 
-1. **Single source of truth for chips.** After every successful add — `uploadVentureSource` (Upload), `venture-scrape-url` (Paste a link), audio transcription save (Speak), and text save (Type) — append the returned `VentureSource` row into `reusable` so `memoryChips` picks it up automatically. Mark it auto-selected in `reuseSelected` so it carries into enrichment.
+1. Reads the venture library (`listVentureSources`)
+2. Appends their text into `venture_snapshots.source_materials.documents`
+3. Toasts "Rebuilding…" and calls `onSaved()`
 
-2. **Replace the duplicate "SAVED" file list.** Stop rendering the per-file row at the bottom for successful uploads — the chip in the memory row is the confirmation. Keep an inline status only while a file is still `uploading` or in `error` (so the founder sees progress / can retry). Once `ready`, remove from `files` (it now lives as a chip).
+It **never** triggers an AI pass. That's why the form fields stay as the same one-line answers the user is seeing in the screenshots ("Transactional workshop fees, à la carte…", "$197 for the core workshop…", etc.). The button is a no-op on content quality.
 
-3. **Same treatment for the other tabs.**
-   - **Paste a link:** on successful scrape, persist via `uploadVentureSource` (synthetic `.md`) and push the row into `reusable`; remove the separate scraped-URL list item.
-   - **Speak / Type:** when the founder saves a transcript / note, persist as a venture source and push into `reusable` so it shows as a pill too.
+Separately, even when `Re-extract from my sources` is clicked, `venture-deep-research`'s synthesis prompt asks for short string values per field — so output stays shallow even with rich source material.
 
-4. **Chip metadata for new items.** Extend the `memoryChips` mapper so newly added venture sources get sensible icon/label treatment (PDF/DOCX → file icon, scraped URL → globe, audio → mic, image → image icon). Origin defaults to `"venture"` for anything added on this screen.
+## Plan
 
-5. **Re-process banner.** Keep the existing "Added more sources? Re-run the fill." prompt — it stays relevant because new chips now feed the same pipeline.
+### 1. Make Rebuild trigger real enrichment (frontend)
 
-## Out of scope
-- No backend / schema changes. `uploadVentureSource` already returns the row we need.
-- No change to how enrichment consumes sources — it already reads from `reuseSelected` + `files`.
+`src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` — `SourceRecoveryPanel.rebuild`:
+
+- After `appendSnapshotSources(...)`, call `retryEnrichment({ data: { id: snapshot.id } })` so `status='enriching'` is set and `venture-deep-research` runs against the freshly-attached library.
+- Change the toast to "Re-enriching brief from your full library — this takes ~30–60s."
+- The parent `ReviewStep` already flips to the enrichment progress UI when `status==='enriching'` (line 129), so the user gets live progress automatically.
+- Also fire `window.dispatchEvent(new CustomEvent("venture-sources:changed"))` and `qc.invalidateQueries({ queryKey: ["hub","snapshot",snapshot.id] })` after the call so the UI updates instantly.
+
+### 2. Upgrade the synthesis to "enrich", not just "extract"
+
+`supabase/functions/venture-deep-research/index.ts` — `SYNTH_SYSTEM` + user prompt:
+
+- Add an explicit **enrichment contract** to the system prompt:
+  - Each field must be 2–4 sentences (or 3–6 bullets where the field benefits from it — differentiators, target_customers segments, key_processes), grounded in cited snippets from the library.
+  - Pull concrete proof points: named segments, numbers, geographies, channels, pricing tiers, competitor names, and quotes pulled verbatim from `source_materials.documents` / `urls`.
+  - Never collapse to a single comma list when the library supports detail.
+  - Preserve any **user-edited** value that is already longer than the AI draft (pass current `extracted_data` as "DO NOT shorten these confirmed answers; only deepen or add"). This protects the manually-curated text in the screenshots.
+- Switch model for this call to `google/gemini-3.1-pro-preview` when combined library text > 5,000 chars; keep `gemini-3-flash-preview` otherwise. (Pro handles the longer-context grounding the user expects.)
+- Raise per-section length caps in the response schema (e.g. `target_customers`, `value_proposition`, `differentiators`, `monetization`, `pricing`, `key_processes`, `team`) and add `evidence` arrays per field so we can later show provenance.
+
+### 3. Field-by-field enrichment writeback
+
+In `venture-deep-research`'s writeback (around line 500):
+
+- Deep-merge new `extracted_data` over existing instead of replacing — for every field, keep the longer of (existing, new) unless `new` adds net-new substance; this prevents wiping the user's good answers.
+- Mark `enrichment_progress.last_enriched_at` and `enriched_field_count` so the Review screen can show a "Just enriched 9 fields" banner.
+
+### 4. UX polish on the Review screen
+
+`hub.$snapshotId.tsx` Review header (around line 354-365):
+
+- Group `Re-extract from my sources` and `Rebuild enriched brief from library` into one primary action labeled **"Re-enrich from full library"** (the current two-button split confuses scope). Keep a small "View sources" affordance to open the library panel.
+- After enrichment completes, surface a toast: "Enriched N fields with M new evidence snippets."
 
 ## Technical notes
-- File: `src/routes/_authenticated/dashboard/hub.new.tsx`.
-- New helper `appendToMemory(row: VentureSource)` to `setReusable(prev => [row, ...prev])` and `setReuseSelected(prev => ({ ...prev, [row.id]: true }))`.
-- Guard against double-append if a re-process path also returns the same row id.
+
+- Files touched: `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx`, `supabase/functions/venture-deep-research/index.ts`. No schema changes.
+- `retryEnrichment` already exists and already invokes `venture-deep-research` — we're just chaining it after the source-merge.
+- Model swap stays inside Lovable AI Gateway allowlist (`google/gemini-3.1-pro-preview` already in use elsewhere).
+- Existing `enrichment_progress` polling (3s interval, line 102) covers the long-running call without extra work.
+
+## Out of scope
+
+- Per-field "regenerate just this" buttons (separate ask).
+- Citations UI for the new `evidence` arrays — schema lands now, UI lands when you ask for it.
