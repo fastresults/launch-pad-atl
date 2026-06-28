@@ -240,7 +240,7 @@ export async function generateOne(
   // website_prd is force-upgraded to Pro + extra output tokens so the
   // 1,800–2,400-word master prompt block can finish without truncation.
   const isPrd = documentType === "website_prd";
-  const modelId = isPrd ? modelForTier("pro") : modelForTier(type.model_tier);
+  const modelId = isPrd ? modelForTier("flash") : modelForTier(type.model_tier);
   const maxTokens = isPrd ? 16000 : 16000;
 
   const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

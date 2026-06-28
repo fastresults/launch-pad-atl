@@ -112,10 +112,10 @@ async function generateOne(
   ].filter(Boolean).join("\n\n").slice(0, MAX_USER_PROMPT_CHARS);
 
   // S5 — Honor type.model_tier ('pro' | 'flash' | 'lite'), except website_prd.
-  // Website PRDs need Pro + a larger output budget so the paste-ready
-  // builder prompt can finish in both single-doc and bulk-generation paths.
+  // Website PRDs need a larger output budget, but must remain fast enough for
+  // the edge runtime; Flash with max_tokens is more reliable than slow Pro.
   const isPrd = documentType === "website_prd";
-  const modelId = isPrd ? modelForTier("pro") : modelForTier(type.model_tier);
+  const modelId = isPrd ? modelForTier("flash") : modelForTier(type.model_tier);
   const maxTokens = isPrd ? 16000 : 16000;
 
   const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

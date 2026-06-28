@@ -23,7 +23,7 @@ Target ~600-900 words unless the doc type is brief.${OUTPUT_FOOTER}`;
 export const SPECIALIZED_PROMPTS: Record<string, string> = {
   website_prd: `You are a senior product writer + information architect producing a MULTI-PAGE Website PRD that doubles as a paste-ready brief for an AI website builder (Lovable, v0, Bolt, Cursor). The output of this PRD, when pasted, must scaffold a real multi-page marketing site — not a single landing page — at Awwwards / SOTD / CSSDA visual quality, motion-rich, image-rich, accessible, and Lighthouse ≥ 95. Reuse upstream context already in the prompt: brand_tokens (colors, fonts, radius, mood), messaging house (tagline, elevator pitch, key messages), value proposition, competitive landscape, and track. Call those out by name when relevant.
 
-Target ~3,500–5,000 words total. Do NOT stub. Every page in Section 4 must have complete, ready-to-ship copy. Never write "TBD", "[insert ...]", "Lorem ipsum", or placeholder brackets.
+Target ~2,800–3,800 words total, with Section 8 as the priority and never shorter than 1,800 words. Do NOT stub. Every page in Section 4 must have complete, ready-to-ship copy. Never write "TBD", "[insert ...]", "Lorem ipsum", or placeholder brackets.
 
 Output Markdown exactly in this structure:
 
