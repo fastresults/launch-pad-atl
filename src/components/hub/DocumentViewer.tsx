@@ -760,6 +760,70 @@ export function DocumentViewer({
               </ol>
             </nav>
           )}
+
+          {doc?.document_type === "website_prd" && (
+            <div className="mx-auto mt-6 max-w-[72ch] px-6">
+              {prdMasterPrompt ? (
+                <div className="relative overflow-hidden rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 via-background to-accent/10 p-5 shadow-md">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        <h3 className="text-base font-semibold text-foreground">
+                          Paste-Ready Builder Prompt
+                        </h3>
+                        <span className="rounded-full border border-primary/30 bg-primary/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
+                          Award-grade
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Paste this into Lovable, v0, Bolt or Cursor to scaffold the full multi-page site — brand tokens, components, motion, imagery and SEO all included.
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                        <span className="rounded-md border border-white/10 bg-background/60 px-2 py-0.5">
+                          ~{prdMasterPrompt.split(/\s+/).filter(Boolean).length.toLocaleString()} words
+                        </span>
+                        <span className="rounded-md border border-white/10 bg-background/60 px-2 py-0.5">
+                          ~{Math.max(1, Math.round(prdMasterPrompt.split(/\s+/).filter(Boolean).length / 220))} min read
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+                      <Button size="sm" onClick={onCopyPrdPrompt}>
+                        <Copy className="mr-1.5 h-3.5 w-3.5" />
+                        Copy builder prompt
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={onOpenPrdPromptInTab}>
+                        <FileText className="mr-1.5 h-3.5 w-3.5" />
+                        Open in new tab
+                      </Button>
+                    </div>
+                  </div>
+                  <details className="mt-4 group">
+                    <summary className="cursor-pointer select-none text-xs font-medium text-muted-foreground hover:text-foreground">
+                      Preview prompt
+                    </summary>
+                    <pre className="mt-2 max-h-72 overflow-auto rounded-md border border-white/10 bg-background/80 p-3 text-[11.5px] leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                      {prdMasterPrompt}
+                    </pre>
+                  </details>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-900 dark:text-amber-200">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <div>
+                      <p className="font-medium">Builder prompt missing</p>
+                      <p className="mt-1 text-xs opacity-90">
+                        This PRD was generated before the award-grade builder-prompt upgrade. Regenerate to get a paste-ready, image-rich, multi-page site prompt.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <article id="doc-viewer-article" className="mx-auto max-w-[72ch] px-6 py-6">
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
               {content}
