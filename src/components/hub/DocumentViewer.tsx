@@ -301,6 +301,7 @@ export function DocumentViewer({
   // Save-to-My-Files state
   const [saving, setSaving] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
+  const [prdPreviewExpanded, setPrdPreviewExpanded] = useState(false);
   const navigate = useNavigate();
   const qc = useQueryClient();
 
