@@ -43,7 +43,7 @@ function masterPromptStats(md: string) {
   const m = md.match(/<!--\s*BEGIN_MASTER_PROMPT\s*-->([\s\S]*?)<!--\s*END_MASTER_PROMPT\s*-->/i);
   const prompt = (m?.[1] ?? "").trim();
   const missingSections = Array.from({ length: 11 }, (_, i) => i + 1).filter(
-    (n) => !new RegExp(`(?:^|\n)\s*${n}\)\s+`, "i").test(prompt),
+    (n) => !new RegExp(String.raw`(?:^|\n)\s*${n}\)\s+`, "i").test(prompt),
   );
   return {
     prompt,
