@@ -1,0 +1,308 @@
+// Venture Style Preview — generates brand-aware preview thumbnails for
+// Social Studio Step 4 "Pick a look". One thumbnail per art direction.
+// Uses the same multimodal pipeline as venture-social-cover (logo + palette
+// tile -> Gemini multimodal, OpenAI text-only fallback) so the previews
+// look like what Step 5 will actually produce.
+
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { loadVentureContext } from "../_shared/venture-context.ts";
+import { ART_DIRECTIONS, type ArtDirectionId, type AssetSpec } from "../_shared/social-platform-specs.ts";
+import { buildCoverArtPrompt } from "../_shared/cover-art-director.ts";
+import { buildCanvasPlan, type CanvasPlan } from "../_shared/canvas-plan.ts";
+import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
+import { runContrastQa } from "../_shared/image-qa.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+const AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/images/generations";
+const MODEL_MULTIMODAL = "google/gemini-3-pro-image";
+const MODEL_FALLBACK = "openai/gpt-image-2";
+const BUCKET = "user-media";
+const SIGNED_TTL = 60 * 60 * 24 * 7;
+
+// Synthetic asset spec used for preview tiles. Square, headline-led card.
+const PREVIEW_ASSET: AssetSpec = {
+  kind: "pinned_post",
+  label: "Style preview",
+  width: 1080,
+  height: 1080,
+  guidance: "square preview tile, focal headline upper portion, generous whitespace",
+  modelSize: "1024x1024",
+};
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function b64ToBytes(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function bytesToB64(bytes: Uint8Array): string {
+  let s = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    s += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(s);
+}
+
+function mimeFromPath(p: string): string {
+  const ext = (p.split(".").pop() || "").toLowerCase();
+  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+  if (ext === "webp") return "image/webp";
+  if (ext === "svg") return "image/svg+xml";
+  return "image/png";
+}
+
+async function fetchPrimaryLogo(admin: any, kit: any): Promise<string | null> {
+  try {
+    const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
+    if (!logos.length) return null;
+    const primary = logos.find((l) => l?.primary) ?? logos[0];
+    const path = primary?.path || primary?.storage_path;
+    if (!path) return null;
+    const { data, error } = await admin.storage.from(BUCKET).download(path);
+    if (error || !data) return null;
+    const buf = new Uint8Array(await data.arrayBuffer());
+    if (buf.byteLength > 4 * 1024 * 1024) return null;
+    const mime = primary?.contentType || mimeFromPath(path);
+    if (mime === "image/svg+xml") return null;
+    return `data:${mime};base64,${bytesToB64(buf)}`;
+  } catch (e) {
+    console.error("fetchPrimaryLogo failed", e);
+    return null;
+  }
+}
+
+async function callMultimodal(prompt: string, imagesDataUrls: string[], apiKey: string): Promise<string> {
+  const content: any[] = [{ type: "text", text: prompt }];
+  for (const url of imagesDataUrls) if (url) content.push({ type: "image_url", image_url: { url } });
+  const res = await fetch(AI_GATEWAY, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: MODEL_MULTIMODAL,
+      messages: [{ role: "user", content }],
+      modalities: ["image", "text"],
+    }),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    let parsed: any = {};
+    try { parsed = JSON.parse(text); } catch { /* */ }
+    const err: any = new Error(parsed?.error?.message || `Multimodal gateway error (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = JSON.parse(text);
+  const b64 = data?.data?.[0]?.b64_json;
+  if (!b64) { const e: any = new Error("Multimodal gateway returned no image"); e.status = 502; throw e; }
+  return b64;
+}
+
+async function callTextOnly(prompt: string, size: string, apiKey: string): Promise<string> {
+  const res = await fetch(AI_GATEWAY, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: MODEL_FALLBACK, prompt, size, quality: "medium", n: 1 }),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    let parsed: any = {};
+    try { parsed = JSON.parse(text); } catch { /* */ }
+    const err: any = new Error(parsed?.error?.message || `Fallback gateway error (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = JSON.parse(text);
+  const b64 = data?.data?.[0]?.b64_json;
+  if (!b64) throw new Error("Fallback gateway returned no image");
+  return b64;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  try {
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!apiKey) return json({ error: "LOVABLE_API_KEY not configured" }, 500);
+
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const client = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claims, error: claimsErr } = await client.auth.getClaims(token);
+    if (claimsErr || !claims?.claims?.sub) return json({ error: "Unauthorized" }, 401);
+    const userId = claims.claims.sub as string;
+
+    const admin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    const body = (await req.json().catch(() => ({}))) as any;
+    const action = body?.action ?? "generate";
+    const snapshotId = body?.snapshotId as string | undefined;
+    if (!snapshotId) return json({ error: "snapshotId required" }, 400);
+
+    const { data: snap } = await admin
+      .from("venture_snapshots")
+      .select("id, user_id")
+      .eq("id", snapshotId)
+      .maybeSingle();
+    if (!snap || snap.user_id !== userId) return json({ error: "Forbidden" }, 403);
+
+    if (action === "list") {
+      const { data } = await admin
+        .from("venture_style_previews")
+        .select("*")
+        .eq("snapshot_id", snapshotId);
+      return json({ previews: data ?? [] });
+    }
+
+    if (action !== "generate") return json({ error: `Unknown action: ${action}` }, 400);
+
+    const { data: kit } = await admin
+      .from("venture_brand_kits")
+      .select("*")
+      .eq("snapshot_id", snapshotId)
+      .maybeSingle();
+    if (!kit || kit.status !== "locked") {
+      return json({ error: "Brand Wizard must be completed and locked.", code: "BRAND_NOT_LOCKED" }, 400);
+    }
+
+    const direction = String(body?.direction || "editorial") as ArtDirectionId;
+    if (!ART_DIRECTIONS.some((d) => d.id === direction)) {
+      return json({ error: `Unknown direction: ${direction}` }, 400);
+    }
+    const userFeedback = typeof body?.feedback === "string" ? body.feedback.slice(0, 600) : "";
+
+    const ctx = await loadVentureContext(admin, snapshotId);
+    const logoDataUrl = await fetchPrimaryLogo(admin, kit);
+
+    const plan: CanvasPlan = buildCanvasPlan({ kit, asset: PREVIEW_ASSET, direction });
+
+    let paletteTileDataUrl: string | null = null;
+    try { paletteTileDataUrl = bytesToDataUrl(buildPaletteTilePngBytes(plan)); }
+    catch (e) { console.warn("palette tile failed", e); }
+
+    const buildPrompt = (retryNote?: string) =>
+      buildCoverArtPrompt({
+        platform: "Style preview",
+        asset: PREVIEW_ASSET,
+        direction,
+        kit,
+        ctx,
+        plan,
+        hasLogoImage: !!logoDataUrl,
+        retryNote,
+        userFeedback,
+      });
+
+    const generate = async (retryNote?: string) => {
+      const prompt = buildPrompt(retryNote);
+      const refs = [logoDataUrl, paletteTileDataUrl].filter(Boolean) as string[];
+      try {
+        if (refs.length) {
+          const b64 = await callMultimodal(prompt, refs, apiKey);
+          return { b64, modelUsed: MODEL_MULTIMODAL, prompt };
+        }
+        const b64 = await callTextOnly(prompt, PREVIEW_ASSET.modelSize, apiKey);
+        return { b64, modelUsed: MODEL_FALLBACK, prompt };
+      } catch (e: any) {
+        const status = e?.status;
+        if (refs.length && status !== 402 && status !== 429) {
+          const b64 = await callTextOnly(prompt, PREVIEW_ASSET.modelSize, apiKey);
+          return { b64, modelUsed: MODEL_FALLBACK + " (multimodal fallback)", prompt };
+        }
+        throw e;
+      }
+    };
+
+    let result: { b64: string; modelUsed: string; prompt: string };
+    try {
+      result = await generate();
+    } catch (e: any) {
+      const out: any = { error: e?.message ?? "Generation failed", upstreamStatus: e?.status };
+      if (e?.status === 402) { out.code = "PAYMENT_REQUIRED"; out.reason = "ai_credits_exhausted"; }
+      else if (e?.status === 429) { out.code = "RATE_LIMITED"; }
+      return json(out, 200);
+    }
+
+    let bytes = b64ToBytes(result.b64);
+    let qa = runContrastQa(bytes, plan);
+    if (!qa.ok) {
+      try {
+        const retryNote = `Previous attempt: ${qa.observed.dominantFg} on ${qa.observed.dominantBg} (${qa.observed.ratio}:1). Use ONLY surface=${plan.surface}, ink=${plan.ink}, accent=${plan.accent}. Fill background with ${plan.surface} exactly.`;
+        const retry = await generate(retryNote);
+        const retryBytes = b64ToBytes(retry.b64);
+        const retryQa = runContrastQa(retryBytes, plan);
+        if (retryQa.observed.ratio > qa.observed.ratio) {
+          bytes = retryBytes; qa = retryQa; result = retry;
+        }
+      } catch (e) { console.warn("QA retry failed", e); }
+    }
+
+    // Delete previous storage object if any (we upsert one preview per direction).
+    const { data: existing } = await admin
+      .from("venture_style_previews")
+      .select("id, storage_path")
+      .eq("snapshot_id", snapshotId)
+      .eq("direction", direction)
+      .maybeSingle();
+    if (existing?.storage_path) {
+      await admin.storage.from(BUCKET).remove([existing.storage_path]).catch(() => {});
+    }
+
+    const fileId = crypto.randomUUID();
+    const storagePath = `style-preview/${userId}/${snapshotId}/${direction}-${fileId}.png`;
+    const { error: upErr } = await admin.storage
+      .from(BUCKET)
+      .upload(storagePath, bytes, { contentType: "image/png", upsert: false });
+    if (upErr) throw upErr;
+
+    const { data: signed } = await admin.storage.from(BUCKET).createSignedUrl(storagePath, SIGNED_TTL);
+    const expiresAt = new Date(Date.now() + SIGNED_TTL * 1000).toISOString();
+
+    const row = {
+      snapshot_id: snapshotId,
+      user_id: userId,
+      direction,
+      storage_path: storagePath,
+      signed_url: signed?.signedUrl ?? null,
+      signed_url_expires_at: expiresAt,
+      canvas_plan: plan as any,
+      qa_status: qa.ok ? "pass" : "fail",
+      qa_notes: qa as any,
+      prompt_used: result.prompt,
+      model_used: result.modelUsed,
+      last_feedback: userFeedback || null,
+      brand_kit_locked_at: kit.locked_at,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: saved, error: insErr } = await admin
+      .from("venture_style_previews")
+      .upsert(row, { onConflict: "snapshot_id,direction" })
+      .select()
+      .single();
+    if (insErr) throw insErr;
+
+    return json({ preview: saved });
+  } catch (e) {
+    console.error("venture-style-preview error", e);
+    return json({ error: (e as Error).message ?? "Internal error" }, 500);
+  }
+});
