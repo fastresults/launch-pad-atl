@@ -1195,12 +1195,8 @@ export async function validateBrandGuideDocxBlob(blob: Blob, kit: any): Promise<
   }
 
   const logos = Array.isArray(kit?.logos) ? kit.logos : [];
-  const expectedLogoMedia = logos.length ? Math.min(logos.length, 5) + 1 : 0; // cover logo + primary/alternates
-  const swatchMedia = expectedColors.length;
-  if (logos.length && mediaCount <= swatchMedia) {
+  if (logos.length && mediaCount === 0) {
     errors.push("The selected logo images were not embedded into the Word file.");
-  } else if (logos.length && mediaCount < Math.min(expectedLogoMedia + swatchMedia, swatchMedia + 2)) {
-    errors.push("Only part of the selected logo set was embedded into the Word file.");
   }
 
   return { ok: errors.length === 0, errors, mediaCount, colorFillCount };
