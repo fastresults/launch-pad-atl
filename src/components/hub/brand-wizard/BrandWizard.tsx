@@ -782,8 +782,9 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
     }
     setSaving(true);
     try {
-      const title = `${snapshot.company_name || "Brand"} — Style Guide`;
-      const blob = await markdownToDocxBlob(title, fresh.guide_markdown, { subtitle: "Brand Style Guide" });
+      const companyName = snapshot.company_name || "Brand";
+      const title = `${companyName} - Style Guide`;
+      const blob = await brandKitToDocxBlob(fresh, companyName);
       const filename = `${title}.docx`;
       const contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
       const { uploadUrl, path } = await createDocumentUploadUrl({ filename, contentType, snapshotId: snapshot.id });
