@@ -1,57 +1,95 @@
 ## Goal
-Make the Brand Wizard a hard prerequisite for the **Website PRD (AI-builder prompt)** deliverable, and feed the locked Brand Kit (palette, typography, logo, voice, full style guide) into the Website PRD generation as primary workflow context — not an optional hint.
+Give the Brand Wizard two entry tracks at Step 1:
+
+- **Track A — "I already have a brand"** (new): user drops their logo file(s) and pastes their live website URL. We scrape the site with Firecrawl + extract colors/typography/voice from the logo and site, propose a derived palette/typography/voice for confirmation, then jump straight to Step 5 (Review) and generate the style guide.
+- **Track B — "Build a brand from scratch"** (existing flow): unchanged — DNA → palette → typography → moodboard/logo → review.
 
 ## Why
-The Website PRD output exists to be pasted into AI website builders (Lovable, v0, Bolt). If brand tokens, fonts, logo URL, and voice rules aren't authoritative inputs, the builder picks generic defaults and the user gets a generic site. Today the PRD only loosely references `brand_tokens` from the snapshot and can run before the Brand Wizard is completed.
+Many workshop users (especially Main Street / e-commerce) already operate under a brand. Forcing them through the generative wizard discards their real identity and produces a Website PRD that doesn't match their live site. Track A makes the Brand Kit reflect what already exists so downstream deliverables (Website PRD, Social Kit) stay on-brand.
 
-## Changes
+## UX
 
-### 1. Gate the deliverable in the UI (Marketing section card)
-File: `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx`
+### Step 1 becomes a track picker
+File: `src/components/hub/brand-wizard/BrandWizard.tsx` (and a new `Step1TrackPicker.tsx`).
 
-- Read brand kit status with `getBrandKit(snapshotId)` once at the top of `GenerateStep` (TanStack Query, keyed by snapshot id).
-- Treat `website_prd` as having a synthetic dependency on a locked brand kit (`status === "locked"`). When not locked:
-  - Show `Lock` icon + status line: `Complete the Brand Wizard to unlock`.
-  - Disable **Generate** / **Start** and **Rewrite** buttons with tooltip.
-  - Replace the disabled CTA with a secondary **Open Brand Wizard** button that scrolls to / opens the Brand Studio section.
-  - If the bulk **Generate this section** button for Marketing is clicked while the kit isn't locked, intercept and toast: `Finish the Brand Wizard first — it powers the Website PRD.`
-- Mirror the same gate in `bulkGenerate` flow client-side (skip `website_prd` if kit unlocked, with toast).
+Two large cards:
+1. **"I already have a brand"** — "Upload your logo + paste your website. We'll extract your colors, fonts, and voice."
+2. **"Help me build one"** — current DNA flow.
 
-### 2. Gate at generation time (server)
-File: `supabase/functions/venture-generate-document/index.ts` (and `venture-bulk-generate/index.ts`)
+Selection is persisted on `venture_brand_kits.dna.track = 'existing' | 'new'` so users can resume.
 
-- Before running `website_prd`, load `venture_brand_kits` row for the snapshot. If missing or `status !== 'locked'`, return a structured error: `{ error: "brand_kit_required", message: "Lock your Brand Wizard before generating the Website PRD." }` and mark the document `status='pending'` (not `failed`) so the UI shows the gate, not a retry state.
+### Track A wizard steps
+1. **Upload & URL** (new `ExistingBrandIntake.tsx`)
+   - Logo dropzone (PNG/SVG/JPG, up to 4 files: primary, mark, wordmark, alt). Uploaded to `venture-doc-images` bucket via existing signed-URL helper. Persisted on `kit.logos[]` with a `source: 'uploaded'` flag.
+   - Website URL input (validated, optional but encouraged).
+   - Optional "About / voice notes" textarea.
+   - CTA: **Analyze my brand** → calls new edge action `extract-existing`.
+2. **Review extracted brand** (new `ExtractedBrandReview.tsx`)
+   - Shows derived palette (swatches + hex), typography pairing, voice bullets, and a moodboard built from the site's hero/OG image.
+   - Each section has an **Edit** button that drops the user into the existing palette / typography / voice pickers pre-seeded with the extracted values (so they can override anything).
+3. **Review & Lock** → reuses existing Step 5 (`VisualBrandGuide` preview + Generate Style Guide + Save to My Files).
 
-### 3. Make Brand Kit primary context for Website PRD
-Files: `supabase/functions/_shared/venture-context.ts`, `supabase/functions/_shared/deliverable-prompts.ts`, `venture-generate-document/index.ts`.
+Skip Steps 2–4 of the generative flow entirely for Track A unless the user clicks Edit on a section.
 
-- Extend `compactPreamble` (or add a `brandKitBlock(kit)` helper) so when a brand kit is locked the prompt prepends an authoritative block:
-  ```
-  ## BRAND KIT (LOCKED — use verbatim, do not invent)
-  - Primary logo: <signed url>  (alt: "<company> logo")
-  - Palette: { primary: #..., secondary: #..., accent: #..., neutrals: [...], semantic: {...} }
-  - Typography: heading "<font>" (Google Font URL), body "<font>", scale + weights
-  - Voice & tone: <3–5 bullets>
-  - Style guide excerpt: <first ~800 chars of guide_markdown>
-  ```
-- Only fetch + inject this block for deliverables that declare brand dependency (start with `website_prd`; later: `social_kit`, `landing_page`, etc.). Use a typed `requires_brand_kit: true` flag on the deliverable definition.
-- Rewrite the `website_prd` prompt in `deliverable-prompts.ts` to:
-  - Open with: "You MUST use the BRAND KIT block above verbatim. Do not propose alternate colors, fonts, or logos."
-  - Require the output's Brand voice recap, color tokens, typography, and image prompts to cite the exact hex values, font names, and logo URL from the block.
-  - Drop the legacy "brand_tokens (colors, fonts, radius, mood)" soft reference.
+### Reset & switch tracks
+Existing `resetBrandKit` already wipes the row. Add a "Switch track" link on Step 1 of either flow that calls reset after confirmation.
 
-### 4. Stale flag
-- When the brand kit is updated/re-locked after a Website PRD has been generated, mark the PRD stale (reuse the existing `isStale` mechanism by comparing `brand_kit.locked_at` against `doc.updated_at` for `website_prd`).
+## Backend
 
-### 5. Surface the dependency in the UI catalog
-- Add a small "Requires Brand Kit" badge on the Website PRD card so users understand the gate before they try to generate.
+### New edge action: `venture-brand-wizard` → `action: 'extract-existing'`
+File: `supabase/functions/venture-brand-wizard/index.ts`.
 
-## Out of scope
-- No changes to other deliverables in this pass. Once the pattern is in place we can opt social/marketing deliverables into `requires_brand_kit` in a follow-up.
-- No DB schema migrations needed — `venture_brand_kits.status` and `locked_at` already exist.
+Input: `{ snapshotId, websiteUrl?, logoPaths: string[], voiceNotes?: string }`.
+
+Pipeline:
+1. **Scrape site with Firecrawl** (already linked connector; key is `FIRECRAWL_API_KEY`). Use `formats: ['markdown','branding','screenshot','summary']` on the homepage and (best-effort) `/about`. The `branding` format returns colors, fonts, logo, OG image — that's the primary source of truth.
+2. **Logo color extraction**: download each uploaded logo via signed URL, run a Deno-side quantizer (small `npm:get-image-colors` or a hand-rolled k-means on a downsampled PNG) to pull 4–6 dominant non-background colors. Reconcile with Firecrawl branding palette (prefer logo for primary/secondary, site for neutrals/accents).
+3. **Typography reconciliation**: take Firecrawl branding `fonts[]` / `typography.fontFamilies`. Map to nearest Google Font (lookup table + fuzzy match); if none, fall back to the closest pairing from the existing typography generator and flag `auto_mapped: true`.
+4. **Voice synthesis**: feed scraped markdown summary + voice notes to Gemini (`google/gemini-2.5-flash`, JSON) to produce 3–5 voice bullets, tone words, and do/don't pairs — same shape as the existing voice step.
+5. **Moodboard**: store the site screenshot + OG image + extracted logo URLs as moodboard entries.
+6. **Persist** to `venture_brand_kits`:
+   - `dna = { track: 'existing', source_url, voice_notes }`
+   - `palette = { name: 'Extracted from <domain>', colors: {...}, rationale, source: 'extracted' }`
+   - `typography = { heading, body, source: 'extracted', auto_mapped }`
+   - `voice = { bullets, tone, dos, donts, source: 'extracted' }`
+   - `moodboard = [...]`, `logos = [...uploaded with primary flag]`
+   - `step = 5`, `status = 'draft'` (user still has to lock via Generate Style Guide).
+7. Return the full kit so the UI hydrates Step 2 (Extracted review) immediately.
+
+### Style-guide prompt awareness
+File: `supabase/functions/venture-brand-wizard/index.ts` `generateGuide()`.
+- When `kit.dna.track === 'existing'`, prepend an instruction: *"This brand already exists. Treat the palette, typography, logo, and voice as ground truth — describe and codify them, do not propose replacements. Reference the source URL where relevant."*
+- Skip the "personality spectrum" speculation section in favor of an "Existing brand audit" section noting what was extracted vs. inferred.
+
+### Website PRD gate stays
+The existing brand-kit gate on `website_prd` already covers both tracks (a locked kit is a locked kit regardless of origin). No change there — Track A users still must hit "Generate Style Guide" which sets `status='locked'`.
+
+## Data
+No schema migration needed:
+- `venture_brand_kits.dna` (jsonb) holds `track`, `source_url`, `voice_notes`.
+- `logos[]` already supports arbitrary entries; add `source: 'uploaded' | 'generated'` and `primary: boolean`.
+- `palette/typography/voice` already jsonb — add a `source` discriminator.
+
+## Files
+
+New:
+- `src/components/hub/brand-wizard/Step1TrackPicker.tsx`
+- `src/components/hub/brand-wizard/ExistingBrandIntake.tsx`
+- `src/components/hub/brand-wizard/ExtractedBrandReview.tsx`
+
+Edited:
+- `src/components/hub/brand-wizard/BrandWizard.tsx` — branch on `kit.dna.track`; route Track A through the 3-step path, Track B through current 5-step path.
+- `src/lib/brandKit.functions.ts` — add `extractExistingBrand(snapshotId, payload)` wrapping the new edge action.
+- `supabase/functions/venture-brand-wizard/index.ts` — add `extract-existing` action, Firecrawl call, logo color extraction, voice synthesis, persistence; tweak `generateGuide()` for existing-brand mode.
+- `supabase/functions/_shared/venture-context.ts` — extend `brandKitBlock` to include `track` + `source_url` so downstream deliverables know the brand is real, not generated.
 
 ## Verification
-1. New venture, no brand kit → Website PRD card shows Lock + "Open Brand Wizard" CTA; bulk Marketing generate skips it with toast.
-2. Run Brand Wizard, lock it → Website PRD unlocks, generates, and output references exact hex/font/logo from the kit.
-3. Re-open Brand Wizard, change palette, re-lock → Website PRD card shows "Brand updated" stale badge.
-4. Direct edge-function call without locked kit returns `brand_kit_required` error; doc stays pending.
+1. Track A: upload PNG logo + paste a live URL → extracted palette/typography/voice appears within ~15s; user can edit any section; Generate Style Guide produces a locked kit; Website PRD unlocks and references the extracted hex/fonts verbatim.
+2. Track A with no URL (logo only): still produces a palette from the logo, typography falls back with `auto_mapped` badge shown in the review step.
+3. Track B: unchanged 5-step flow still works end-to-end.
+4. Reset → switch tracks → re-run: prior kit fully cleared, no leakage between tracks.
+5. Firecrawl 402/insufficient credits: surfaces a clear error in the intake step with a retry; logo-only fallback still works.
+
+## Out of scope
+- Auto-detecting which track to suggest from the snapshot (could be a follow-up: if `brief` mentions an existing site, default the picker to Track A).
+- Reverse-engineering full component styles (buttons, radii). Step 1 — palette/typography/voice/logo only.

@@ -191,12 +191,13 @@ export type BrandKitRow = {
   voice?: any;
   logos?: any[] | null;
   guide_markdown?: string | null;
+  dna?: any;
 };
 
 export async function loadBrandKit(supabase: any, snapshotId: string): Promise<BrandKitRow | null> {
   const { data } = await supabase
     .from("venture_brand_kits")
-    .select("status, locked_at, palette, typography, voice, logos, guide_markdown")
+    .select("status, locked_at, palette, typography, voice, logos, guide_markdown, dna")
     .eq("snapshot_id", snapshotId)
     .maybeSingle();
   return (data ?? null) as BrandKitRow | null;
@@ -209,7 +210,13 @@ export async function loadBrandKit(supabase: any, snapshotId: string): Promise<B
 export function brandKitBlock(kit: BrandKitRow | null): string {
   if (!kit || kit.status !== "locked") return "";
   const lines: string[] = [];
-  lines.push("## BRAND KIT (LOCKED — authoritative, use VERBATIM, do not invent alternates)");
+  const track = kit.dna?.track;
+  const sourceUrl = kit.dna?.source_url;
+  if (track === "existing") {
+    lines.push(`## BRAND KIT (LOCKED — EXISTING brand, extracted from ${sourceUrl ?? "uploaded assets"}; treat as ground truth, do not modernize or replace)`);
+  } else {
+    lines.push("## BRAND KIT (LOCKED — authoritative, use VERBATIM, do not invent alternates)");
+  }
   const logos = Array.isArray(kit.logos) ? kit.logos : [];
   const primaryLogo = logos.find((l: any) => l && l.primary) ?? logos[0];
   if (primaryLogo?.url) {
