@@ -90,7 +90,7 @@ export function FilePreviewDialog({
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [docxHtml, setDocxHtml] = useState<string | null>(null);
+  // docx rendering happens in <DocxPreview /> directly from the signed URL
   const [textBody, setTextBody] = useState<string | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
 
