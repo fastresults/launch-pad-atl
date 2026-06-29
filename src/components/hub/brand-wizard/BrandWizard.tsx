@@ -453,13 +453,29 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     mutationFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo", count: 4, referenceImages: refs } }),
     onSuccess: (out) => {
       const fresh = (out.assets ?? []).filter((a: any) => a.ok);
-      const next = [...fresh, ...logos].slice(0, 8);
-      setLogos(next);
-      onSave({ logos: next });
-      toast.success(`${fresh.length} logo concepts generated`);
+      // Replace prior set so the 4 directions shown match the new brief.
+      setLogos(fresh);
+      onSave({ logos: fresh });
+      toast.success(`${fresh.length} logo direction${fresh.length === 1 ? "" : "s"} rendered`);
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const regenOne = useMutation({
+    mutationFn: (vars: { idx: number; direction: any }) =>
+      generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo", referenceImages: refs, regenerateDirection: vars.direction } }),
+    onSuccess: (out, vars) => {
+      const fresh = (out.assets ?? []).find((a: any) => a.ok);
+      if (!fresh) { toast.error("Regeneration failed"); return; }
+      const next = logos.slice();
+      next[vars.idx] = fresh;
+      setLogos(next);
+      onSave({ logos: next });
+      toast.success(`"${fresh.direction_name}" regenerated`);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
 
   const [dragOver, setDragOver] = useState(false);
 
@@ -625,12 +641,14 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
         <div className="flex items-end justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold">Logo concepts</h3>
-            <p className="text-xs text-muted-foreground">Grounded in your locked palette and typography{refs.length ? ", and inspired by your reference logos" : ""}.</p>
+            <p className="text-xs text-muted-foreground">
+              Each concept starts with an AI creative-director brief — distinct logo type, symbol idea, construction notes — then renders. {refs.length ? "Inspired (not copied) by your references." : ""}
+            </p>
           </div>
           <div className="flex flex-col items-end gap-1">
             <Button onClick={() => genLogos.mutate()} disabled={genLogos.isPending || !gatePassed} size="sm">
               {genLogos.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-              Generate 4 logo concepts
+              {logos.length ? "New direction set" : "Generate 4 logo directions"}
             </Button>
             {!gatePassed && (
               <span className="text-[10px] text-muted-foreground">Upload at least one inspiration above, or choose Skip, to unlock.</span>
@@ -638,15 +656,48 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           </div>
         </div>
         {logos.length > 0 && (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {logos.map((a, i) => (
-              <a key={i} href={a.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-white/10 bg-background/40">
-                {a.url && <img src={a.url} className="aspect-square w-full object-cover" />}
-              </a>
-            ))}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {logos.map((a, i) => {
+              const busy = regenOne.isPending && regenOne.variables?.idx === i;
+              return (
+                <div key={i} className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
+                  <a href={a.url} target="_blank" rel="noreferrer" className="block bg-white">
+                    {a.url && <img src={a.url} alt={a.direction_name ?? "Logo concept"} className="aspect-square w-full object-contain" />}
+                  </a>
+                  <div className="space-y-2 p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="truncate text-xs font-semibold">{a.direction_name ?? `Concept ${i + 1}`}</div>
+                        {a.logo_type && (
+                          <div className="mt-0.5 inline-block rounded-full bg-primary/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-primary">
+                            {a.logo_type}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {a.symbol_concept && (
+                      <p className="line-clamp-3 text-[11px] leading-relaxed text-muted-foreground">{a.symbol_concept}</p>
+                    )}
+                    {a.direction && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-full text-[11px]"
+                        disabled={busy || regenOne.isPending}
+                        onClick={() => regenOne.mutate({ idx: i, direction: a.direction })}
+                      >
+                        {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+                        Regenerate this direction
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
+
 
       <div className="flex justify-between">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>

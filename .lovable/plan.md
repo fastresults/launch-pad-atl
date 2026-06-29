@@ -1,44 +1,72 @@
-## Why it skipped
+# Agency-Grade Logo Generation Overhaul
 
-Step 4 already has the reference-logo dropzone, but it sits *below* the "Generate 4 logo concepts" button with no gating. So the Generate button is always live and the dropzone reads as decorative/optional ("optional, up to 3"). Nothing forces the user to upload inspirations or even look at them first.
+## Why the current output falls short
+- Single short prompt: "minimalist vector logo, centered, crisp edges" + venture context. No design thinking, no construction system, no typographic intent, no symbol rationale.
+- All 4 variants share the same prompt → 4 near-identical results.
+- Reference logos are passed raw with no instruction on *what* to learn from them (proportion? counterform? geometry? wordmark style?).
+- No brand archetype, no logo-type taxonomy (wordmark vs. lettermark vs. monogram vs. pictorial mark vs. emblem vs. combination), no grid/construction system, no negative-space strategy.
+- Asks an image model to "design"; image models render — they need an art director's brief.
 
-## Fix — make logo inspirations a required micro-step
+## New approach: Creative Director → Designer pipeline
 
-Restructure Step 4 ("Moodboard & Logo") into a clear 3-stage flow inside the same step. The user cannot generate logos until they either upload 1–3 reference logos OR explicitly opt out.
+### Stage 1 — AI Creative Director (chat model)
+Before any pixels, run one Lovable AI call (`google/gemini-3-flash-preview`, structured output) that takes the full venture context + brand DNA + reference logos (multimodal) and returns a **logo design brief** with 4 distinct *directions*. Each direction includes:
 
-### 1. Reorder the sections
+- `direction_name` (e.g. "Geometric Monogram", "Organic Wordmark")
+- `logo_type` — one of: wordmark, lettermark, monogram, pictorial mark, abstract mark, emblem, combination mark
+- `symbol_concept` — the metaphor/idea the mark embodies (max 2 sentences, grounded in venture differentiation)
+- `construction_notes` — geometry (circle/grid base), stroke weight, corner treatment, counterforms, optical balance
+- `typography_treatment` — if wordmark/combination: letter-spacing, case, custom ligatures, weight pairing with the wizard's chosen typeface
+- `negative_space_play` — explicit hidden-shape opportunities or "none"
+- `color_application` — which palette token leads, mono/duotone strategy
+- `reference_learning` — 1 sentence each on what to borrow from each uploaded inspiration (proportion, weight, mark style — *never* copy)
+- `avoid_list` — direction-specific anti-patterns (e.g. "no gradient swooshes", "no globe", "no generic leaf")
 
-New order top → bottom:
-1. **Moodboard** (unchanged)
-2. **Reference logos** — promoted to required gateway, no longer "optional"
-3. **Logo concepts** — gated; Generate button disabled until gateway passes
+This is the missing layer. It forces design reasoning before rendering.
 
-### 2. Reference Logos becomes a gateway
+### Stage 2 — Image renderer with full art-director brief
+For each of the 4 directions, build a long, structured image prompt and call `google/gemini-3-pro-image` (upgrade from flash-image for logo quality) with the reference logos attached multimodally. Prompt template:
 
-- Headline: "Drop your 3 logo inspirations" (was "Reference logos (optional)")
-- Subcopy: "Show us 1–3 logos you admire. We'll study their composition, weight, and abstraction — never copy them — to ground your concepts. This step is required so your logos don't look generic."
-- Larger, more prominent dropzone (full-width dashed panel, not 80×80 chips) with clear "Drag & drop or click to upload up to 3 images" affordance.
-- Thumbnails appear inline as uploaded; each with remove button.
-- Below the dropzone: a small "Skip — generate without references" link that, when clicked, sets a `_logoRefSkipped: true` flag on `kit.dna` and unlocks the Generate button. This preserves user agency without making the step a wall.
+```
+LOGO DESIGN BRIEF — [direction_name]
+Brand: {company}. Category: {industry}. Audience: {audience}.
+Idea: {symbol_concept}
+Type: {logo_type}.
+Construction: {construction_notes}. Built on a clean geometric grid, optically balanced, vector-precise.
+Typography: {typography_treatment}.
+Negative space: {negative_space_play}.
+Color: {color_application} from palette {hex codes}.
+Reference study (do NOT copy): {reference_learning}.
+Output: single centered logo on pure white #FFFFFF background, no mockup, no shadow, no 3D, no photo texture, no watermark, no UI chrome, no tagline unless specified. Print-ready, scalable, monochrome-safe silhouette.
+Avoid: {avoid_list} + stock clichés, gradients-as-crutch, swooshes, generic AI flourishes, lens flares, drop shadows.
+```
 
-### 3. Gate the Generate button
+Generate one render per direction (not 4 of the same prompt). Optional: a second pass per direction at `1024x1024` monochrome for silhouette validation.
 
-`Generate 4 logo concepts` is disabled when:
-- `refs.length === 0` AND `kit.dna._logoRefSkipped !== true`
+### Stage 3 — Per-logo rationale in UI
+Save `direction_name` + `symbol_concept` alongside each generated asset so the wizard's logo grid shows each option with its name and one-line rationale — the way an agency presents concepts to a client. User picks based on *idea*, not just aesthetics.
 
-When disabled, show helper text under the button: *"Upload at least one inspiration above, or choose Skip, to unlock."*
+## Backend changes
+- New edge function `venture-logo-director` (or new mode inside `venture-brand-assets` keyed by `kind: "logo"`) that:
+  1. Calls chat model with structured output → 4 design directions.
+  2. Renders each direction sequentially via `google/gemini-3-pro-image` with reference images.
+  3. Persists each result to `venture_brand_kits.logos` with `{ url, path, direction_name, logo_type, symbol_concept, prompt }`.
+- Update `KIND_PRESETS.logo` and remove the single static `sceneHint`.
+- Keep moodboard/social flows untouched.
 
-### 4. Pull context into the prompt (already wired, verify)
+## Frontend changes (`StepMoodboard` + `LiveBrandPreview`)
+- Logo grid cards show: thumbnail, `direction_name` badge, `logo_type` chip, 1-line `symbol_concept`.
+- "Regenerate this direction" button per card (re-renders only that direction, preserves the other 3).
+- "New direction set" button regenerates the whole brief (rare, costly).
+- Live preview's logo slot uses the selected direction's rationale as alt text and tooltip.
 
-`genLogos` already passes `referenceImages: refs` to `venture-brand-assets`, and that function already loads full venture context via `loadVentureContext`. Confirm both still hold; no edge-function changes needed unless verification shows otherwise.
+## Data
+Extend each `logos[]` entry in `venture_brand_kits.logos` jsonb:
+```
+{ url, path, direction_name, logo_type, symbol_concept, prompt, created_at }
+```
+Backwards compatible — existing entries without these fields still render.
 
-### 5. Live preview
-
-`LiveBrandPreview` right pane: add a small "Inspirations" row showing the uploaded reference thumbnails so the user sees their picks reflected immediately.
-
-## Files touched
-
-- `src/components/hub/brand-wizard/BrandWizard.tsx` — reorder sections in `StepMoodboard`, promote dropzone, add gating + Skip link, helper text.
-- `src/components/hub/brand-wizard/LiveBrandPreview.tsx` — add Inspirations row when `kit.dna._logoReferences` has entries.
-
-No DB or edge-function changes.
+## Out of scope (call out, don't build now)
+- True SVG output (image models still raster; mention vectorization as a follow-up via a separate "Vectorize winner" action using a tracing service).
+- Full lockup system (horizontal/stacked/icon-only variants) — propose as next phase after the user picks a winner.
