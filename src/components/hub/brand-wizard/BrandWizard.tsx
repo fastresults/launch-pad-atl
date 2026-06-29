@@ -26,6 +26,7 @@ import {
 import { generateBrandAsset } from "@/lib/foundersHub.functions";
 import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
 import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
+import { LiveBrandPreview } from "./LiveBrandPreview";
 
 const STEPS = ["DNA", "Palette", "Typography", "Moodboard & Logo", "Voice & Review"];
 
