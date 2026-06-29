@@ -56,18 +56,17 @@ export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEdit
           Your next step
         </div>
         <h2 className="mt-2 text-2xl md:text-3xl font-semibold tracking-tight">
-          Generate your first deliverable.
+          {headline}
         </h2>
         <p className="mt-2 text-muted-foreground max-w-xl">
-          We'll open your Startup Snapshot with your brief already filled in — review it, add your
-          city and state, then we generate.
+          {subcopy}
         </p>
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
           <button
             onClick={onGenerateFirst}
             className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:opacity-90"
           >
-            Generate your first deliverable <ArrowRight className="h-4 w-4" />
+            {ctaLabel} <ArrowRight className="h-4 w-4" />
           </button>
           <button
             onClick={onSeeDeliverables}
