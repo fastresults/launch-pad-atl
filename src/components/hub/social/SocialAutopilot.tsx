@@ -547,12 +547,12 @@ function Step5BuildKit({
     [platforms, direction],
   );
 
-  const tasks: KitTask[] = useMemo(() => {
+  const tasks: (KitTask & { signed_url?: string | null })[] = useMemo(() => {
     return baseTasks.map((t) => {
       const match = assets.find(
         (a: any) => a.platform === t.platform && a.asset_kind === t.asset && a.art_direction === direction,
       );
-      return { ...t, status: match ? "done" : t.status };
+      return { ...t, status: match ? "done" : t.status, signed_url: match?.signed_url ?? null };
     });
   }, [baseTasks, assets, direction]);
 
@@ -595,33 +595,61 @@ function Step5BuildKit({
         <Badge variant="outline" className="text-[10px] capitalize">{direction}</Badge>
       </header>
 
-      <ul className="space-y-1.5">
+      <ul className="grid gap-2 sm:grid-cols-2">
         {tasks.map((t) => {
           const k = `${t.platform}:${t.asset}`;
           const done = t.status === "done";
           const err = errors[k];
+          const isAvatar = t.asset === "avatar";
+          const frameClass = isAvatar
+            ? "h-16 w-16 shrink-0 rounded-full"
+            : "h-16 w-28 shrink-0 rounded-md";
           return (
             <li key={k}
-              className="flex items-center justify-between gap-2 rounded-lg border border-white/5 bg-background/40 px-3 py-2 text-xs">
-              <div className="flex items-center gap-2">
-                {done ? (
-                  <Check className="h-3.5 w-3.5 text-status-success" />
-                ) : running ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-status-info" />
+              className="flex items-center gap-3 rounded-lg border border-white/5 bg-background/40 p-2 text-xs">
+              <div className={`${frameClass} overflow-hidden border border-white/10 bg-muted/40 flex items-center justify-center relative`}>
+                {t.signed_url ? (
+                  <img src={t.signed_url} alt={`${t.platform} ${t.asset}`} className="h-full w-full object-cover" />
+                ) : running && !done ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-status-info" />
                 ) : err ? (
-                  <span className="h-2 w-2 rounded-full bg-status-danger" />
+                  <span className="text-[10px] text-status-danger">failed</span>
                 ) : (
-                  <span className="h-2 w-2 rounded-full bg-muted-foreground/30" />
+                  <ImageIcon className="h-4 w-4 text-muted-foreground/60" />
                 )}
-                <span className={done ? "text-foreground" : "text-muted-foreground"}>
-                  {t.platform} — {t.asset.replace(/_/g, " ")}
-                </span>
               </div>
-              {err && (
-                <Button size="sm" variant="ghost" className="h-6 text-[11px]" onClick={() => retryOne(t)}>
-                  <RefreshCw className="mr-1 h-3 w-3" /> Retry
-                </Button>
-              )}
+              <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    {done ? (
+                      <Check className="h-3.5 w-3.5 text-status-success" />
+                    ) : running ? (
+                      <Loader2 className="h-3 w-3 animate-spin text-status-info" />
+                    ) : err ? (
+                      <span className="h-2 w-2 rounded-full bg-status-danger" />
+                    ) : (
+                      <span className="h-2 w-2 rounded-full bg-muted-foreground/30" />
+                    )}
+                    <span className="truncate font-medium">{t.platform}</span>
+                  </div>
+                  <div className="truncate text-[10px] capitalize text-muted-foreground">
+                    {t.asset.replace(/_/g, " ")}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  {t.signed_url && (
+                    <a href={t.signed_url} download
+                       className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5">
+                      Download
+                    </a>
+                  )}
+                  {(err || done) && (
+                    <Button size="sm" variant="ghost" className="h-6 text-[11px]" onClick={() => retryOne(t)}>
+                      <RefreshCw className="mr-1 h-3 w-3" /> {done ? "Redo" : "Retry"}
+                    </Button>
+                  )}
+                </div>
+              </div>
             </li>
           );
         })}
