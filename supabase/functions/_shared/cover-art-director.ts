@@ -162,7 +162,7 @@ export function buildCoverArtPrompt(args: {
   const references = hasLogoImage
     ? `## Attached reference images (authoritative — honor exactly)
 - Image #1: the venture's official logo. Use its colors and forms as-is. Do NOT redraw. For non-avatar assets, leave clean rectangular space so we can composite this exact logo on top later.
-- Image #2: the canvas palette tile. The THREE colors in this tile (surface, ink, accent) are the ONLY colors permitted in the composition. No other colors. No tints. No gradients between them.`
+- Image #2: the canvas palette tile. The FOUR colors in this tile (surface, ink, signature, accent) are the ONLY colors permitted in the composition. No other colors. No tints. No gradients between them.`
     : `## Reference imagery
 - No logo file was uploaded; do NOT invent a logo. Compose around a clean reserved rectangle in a non-focal corner.`;
 
@@ -178,9 +178,10 @@ export function buildCoverArtPrompt(args: {
 
 ${references}
 
-## Canvas plan (NON-NEGOTIABLE — these are the only colors you may use)
+## Canvas plan (NON-NEGOTIABLE — exactly these four hex values, used as specified)
 - Background surface: ${plan.surface}  ← the entire background fills with this exact hex
 - Ink (all text, logo marks, lines): ${plan.ink}  ← AA-legible on the surface
+- SIGNATURE brand color (MUST be visibly present): ${plan.signature}  ← cover ≥${plan.signatureMinCoveragePct}% of the canvas as a confident solid shape, block, sidebar/folio stripe, large mark, or duotone wash. Never as a hairline, 1px stroke, or tiny dot. This is the splash of brand color that makes the piece feel on-brand.
 - Accent (one supporting color, used sparingly): ${plan.accent}
 - Forbidden pairings detected in this palette:
 ${forbiddenLines}
@@ -207,8 +208,9 @@ ${brief}
 ${QUALITY}
 ${BANNED}
 ${feedbackBlock}${retryBlock}${variationSeed ? `\n## Variation seed\nSeed: ${variationSeed}. Use this to meaningfully vary composition, focal placement, and texture from any prior attempt while keeping every rule above.\n` : ""}
-Deliver a single finished image at the spec'd aspect that a senior art director would ship to a paying client today. Background MUST be exactly ${plan.surface}. Any rendered glyphs, marks, or text MUST be exactly ${plan.ink}. The only permitted accent color is ${plan.accent}.`;
+Deliver a single finished image at the spec'd aspect that a senior art director would ship to a paying client today. Background MUST be exactly ${plan.surface}. Any rendered glyphs, marks, or text MUST be exactly ${plan.ink}. The SIGNATURE color ${plan.signature} MUST cover ≥${plan.signatureMinCoveragePct}% of the canvas as a confident shape (not a hairline). The only permitted secondary accent is ${plan.accent}.`;
 }
+
 
 // Deterministic avatar prompt: the surface color is decided server-side by
 // measuring contrast against the logo's actual dominant ink, then passed in.
