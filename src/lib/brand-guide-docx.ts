@@ -861,6 +861,9 @@ export async function brandKitToDocxBlob(kit: any, companyName: string): Promise
   // ===== Cover =====
   const primaryLogo = logos.find((l: any) => l?.primary) ?? logos[0];
   const coverImg = primaryLogo?.url ? await fetchImage(primaryLogo.url) : null;
+  if (primaryLogo?.url && !coverImg) {
+    console.warn("[brand-guide-docx] Cover logo fetch failed", primaryLogo.url);
+  }
   if (coverImg) {
     body.push(
       new Paragraph({
