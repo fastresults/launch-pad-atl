@@ -8,8 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, ArrowLeft, ArrowRight, Sparkles, Lock, RefreshCw, Check, Copy, ChevronDown, ChevronUp } from "lucide-react";
-import { RichMarkdown } from "@/components/markdown/RichMarkdown";
+import { Loader2, ArrowLeft, ArrowRight, Sparkles, Lock, RefreshCw, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import {
   getBrandKit,
@@ -25,9 +24,10 @@ import {
   PERSONALITY_AXES,
 } from "@/lib/brand-wizard";
 import { generateBrandAsset } from "@/lib/foundersHub.functions";
-import { brandKitToDocxBlob } from "@/lib/brand-guide-docx";
+import { brandKitToDocxBlob, validateBrandGuideDocxBlob } from "@/lib/brand-guide-docx";
 import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
 import { LiveBrandPreview } from "./LiveBrandPreview";
+import { VisualBrandGuide } from "./VisualBrandGuide";
 
 const STEPS = ["DNA", "Palette", "Typography", "Moodboard & Logo", "Voice & Review"];
 
@@ -746,7 +746,6 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
     rules: "",
   });
   const [saving, setSaving] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(true);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
   const lock = useMutation({
@@ -758,7 +757,6 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
     onSuccess: () => {
       toast.success("Brand style guide generated");
       qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
-      setPreviewOpen(true);
       setTimeout(() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
     },
     onError: (e: any) => toast.error(e.message),
@@ -785,6 +783,10 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
       const companyName = snapshot.company_name || "Brand";
       const title = `${companyName} - Style Guide`;
       const blob = await brandKitToDocxBlob(fresh, companyName);
+      const validation = await validateBrandGuideDocxBlob(blob, fresh);
+      if (!validation.ok) {
+        throw new Error(validation.errors.join(" "));
+      }
       const filename = `${title}.docx`;
       const contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
       const { uploadUrl, path } = await createDocumentUploadUrl({ filename, contentType, snapshotId: snapshot.id });
@@ -860,20 +862,11 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
                 <Button variant="ghost" size="sm" onClick={copyGuide} title="Copy markdown">
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setPreviewOpen((v) => !v)}>
-                  {previewOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                  <span className="ml-1 text-xs">{previewOpen ? "Collapse" : "Expand"}</span>
-                </Button>
               </div>
             </div>
-            {previewOpen && (
-              <div
-                className="max-h-[460px] overflow-y-auto px-5 py-4 text-foreground"
-                style={{ fontFamily: body ? `'${body}', system-ui` : undefined }}
-              >
-                <RichMarkdown variant="document">{kit.guide_markdown}</RichMarkdown>
-              </div>
-            )}
+            <div className="max-h-[620px] overflow-y-auto p-4">
+              <VisualBrandGuide kit={kit} snapshot={snapshot} />
+            </div>
           </>
         ) : (
           <div className="px-4 py-6 text-center text-sm text-muted-foreground">
