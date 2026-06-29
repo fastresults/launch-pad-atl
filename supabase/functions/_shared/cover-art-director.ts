@@ -141,8 +141,9 @@ export function buildCoverArtPrompt(args: {
   plan: CanvasPlan;
   hasLogoImage?: boolean;
   retryNote?: string;
+  userFeedback?: string;
 }): string {
-  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote } = args;
+  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback } = args;
   const brief = DIRECTION_BRIEF[direction];
   const palette = paletteBlock(kit);
   const typo = typoBlock(kit);
@@ -161,6 +162,10 @@ export function buildCoverArtPrompt(args: {
 - Image #2: the canvas palette tile. The THREE colors in this tile (surface, ink, accent) are the ONLY colors permitted in the composition. No other colors. No tints. No gradients between them.`
     : `## Reference imagery
 - No logo file was uploaded; do NOT invent a logo. Compose around a clean reserved rectangle in a non-focal corner.`;
+
+  const feedbackBlock = userFeedback && userFeedback.trim()
+    ? `\n## Founder feedback on the previous version (BINDING — honor every note)\nThe founder reviewed the last render and said:\n"""${userFeedback.trim().slice(0, 600)}"""\nTreat this as binding art-direction notes from the client. Apply every note unless it would violate the canvas plan or contrast rules above (those always win).\n`
+    : "";
 
   const retryBlock = retryNote
     ? `\n## Previous attempt was rejected\n${retryNote}\nDo NOT repeat that mistake.\n`
@@ -198,7 +203,7 @@ ${system}
 ${brief}
 ${QUALITY}
 ${BANNED}
-${retryBlock}
+${feedbackBlock}${retryBlock}
 Deliver a single finished image at the spec'd aspect that a senior art director would ship to a paying client today. Background MUST be exactly ${plan.surface}. Any rendered glyphs, marks, or text MUST be exactly ${plan.ink}. The only permitted accent color is ${plan.accent}.`;
 }
 

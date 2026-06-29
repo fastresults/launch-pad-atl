@@ -1,0 +1,164 @@
+// @ts-nocheck
+import { useState } from "react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Loader2, Sparkles, Image as ImageIcon } from "lucide-react";
+
+const QUICK_NOTES = [
+  "Lighter background",
+  "Stronger logo presence",
+  "More whitespace",
+  "Higher contrast",
+  "Less saturated",
+  "Different composition",
+];
+
+const DIRECTIONS = [
+  { id: "editorial", label: "Editorial" },
+  { id: "photographic", label: "Photographic" },
+  { id: "geometric", label: "Geometric" },
+  { id: "illustrative", label: "Illustrative" },
+];
+
+export function RegenerateAssetDialog({
+  open,
+  onOpenChange,
+  scope, // "single" | "all"
+  targetLabel,
+  thumbnailUrl,
+  currentDirection,
+  canvasPlan,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  scope: "single" | "all";
+  targetLabel: string;
+  thumbnailUrl?: string | null;
+  currentDirection: string;
+  canvasPlan?: { surface?: string; ink?: string; accent?: string } | null;
+  onSubmit: (input: { feedback: string; directionOverride?: string }) => Promise<void>;
+}) {
+  const [feedback, setFeedback] = useState("");
+  const [direction, setDirection] = useState<string>(currentDirection);
+  const [busy, setBusy] = useState(false);
+
+  const addQuick = (note: string) => {
+    setFeedback((prev) => (prev ? `${prev}\n• ${note}` : `• ${note}`));
+  };
+
+  const submit = async () => {
+    setBusy(true);
+    try {
+      await onSubmit({
+        feedback: feedback.trim(),
+        directionOverride: direction !== currentDirection ? direction : undefined,
+      });
+      setFeedback("");
+      onOpenChange(false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !busy && onOpenChange(v)}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            {scope === "all" ? "Regenerate all assets" : `Regenerate ${targetLabel}`}
+          </DialogTitle>
+          <DialogDescription>
+            Tell the art director what's off-brand. Your notes are passed verbatim to the next render.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {scope === "single" && (
+            <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-2">
+              <div className="h-14 w-20 shrink-0 overflow-hidden rounded-md border border-border bg-muted/40 flex items-center justify-center">
+                {thumbnailUrl ? (
+                  <img src={thumbnailUrl} alt="current" className="h-full w-full object-cover" />
+                ) : (
+                  <ImageIcon className="h-4 w-4 text-muted-foreground/60" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium">{targetLabel}</div>
+                <div className="mt-1 flex items-center gap-2">
+                  <Badge variant="outline" className="text-[10px] capitalize">{currentDirection}</Badge>
+                  {canvasPlan && (
+                    <div className="flex items-center gap-0.5">
+                      <span className="h-3 w-3 rounded-sm border border-border" style={{ background: canvasPlan.surface }} />
+                      <span className="h-3 w-3 rounded-sm border border-border" style={{ background: canvasPlan.ink }} />
+                      <span className="h-3 w-3 rounded-sm border border-border" style={{ background: canvasPlan.accent }} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="mb-1 block text-xs font-medium">What's off?</label>
+            <Textarea
+              rows={4}
+              placeholder="e.g. background too dark, logo too small, less purple, more editorial feel"
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value.slice(0, 600))}
+              disabled={busy}
+            />
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {QUICK_NOTES.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => addQuick(n)}
+                  disabled={busy}
+                  className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] hover:bg-muted"
+                >
+                  + {n}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {scope === "single" && (
+            <div>
+              <label className="mb-1 block text-xs font-medium">Style for this asset (optional)</label>
+              <Select value={direction} onValueChange={setDirection} disabled={busy}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DIRECTIONS.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>{d.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                Overrides the global style for just this asset.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
+          <Button onClick={submit} disabled={busy}>
+            {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+            Regenerate
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

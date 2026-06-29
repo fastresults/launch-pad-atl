@@ -116,11 +116,13 @@ export function buildKitTasks(
 export async function generateOneKitTask(
   snapshotId: string,
   task: KitTask,
+  opts?: { feedback?: string; directionOverride?: string },
 ): Promise<void> {
   await generateSocialCover({
     snapshotId,
     platform: task.platform,
     asset: task.asset,
-    direction: task.direction,
+    direction: opts?.directionOverride || task.direction,
+    feedback: opts?.feedback,
   });
 }

@@ -255,6 +255,7 @@ Deno.serve(async (req) => {
     const platformName = String(body?.platform || "");
     const assetKind = String(body?.asset || body?.assetKind || "") as AssetKind;
     const direction = String(body?.direction || "editorial") as ArtDirectionId;
+    const userFeedback = typeof body?.feedback === "string" ? body.feedback.slice(0, 600) : "";
     const platform = getPlatform(platformName);
     if (!platform) return json({ error: `Unknown platform: ${platformName}` }, 400);
     const asset = platform.assets.find((a) => a.kind === assetKind);
@@ -304,6 +305,7 @@ Deno.serve(async (req) => {
             plan,
             hasLogoImage: !!logoDataUrl,
             retryNote,
+            userFeedback,
           });
 
     const generate = async (retryNote?: string) => {
@@ -391,6 +393,8 @@ Deno.serve(async (req) => {
         canvas_plan: plan as any,
         qa_status: qa.ok ? "pass" : "fail",
         qa_notes: qa as any,
+        last_feedback: userFeedback || null,
+        last_regenerated_at: userFeedback ? new Date().toISOString() : null,
       })
       .select()
       .single();
