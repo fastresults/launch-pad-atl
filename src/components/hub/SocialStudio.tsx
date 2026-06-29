@@ -1,17 +1,18 @@
 // @ts-nocheck
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Share2, Copy, ExternalLink, Calendar, Rocket, Lock } from "lucide-react";
+import { Share2, Copy, ExternalLink, Calendar, Rocket, Lock, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import { getBrandKit } from "@/lib/brandKit.functions";
 import { SocialStudioGate } from "@/components/hub/social/SocialStudioGate";
 import { CoverArtTab } from "@/components/hub/social/CoverArtTab";
 import { ChannelSetupTab } from "@/components/hub/social/ChannelSetupTab";
+import { SocialAutopilot } from "@/components/hub/social/SocialAutopilot";
 
 export function SocialStudio({ snapshot }: { snapshot: any }) {
   const kitQ = useQuery({
