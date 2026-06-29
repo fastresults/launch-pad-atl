@@ -3,6 +3,7 @@
 // rendered text/foreground stands at least ~3:1 against its surrounding bg.
 
 import { PNG } from "npm:pngjs@7.0.0";
+import { Buffer } from "node:buffer";
 import { contrastRatio, lightness } from "./palette-rules.ts";
 import type { CanvasPlan } from "./canvas-plan.ts";
 
