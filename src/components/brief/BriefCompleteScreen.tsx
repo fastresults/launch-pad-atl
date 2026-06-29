@@ -4,9 +4,15 @@ type Props = {
   onGenerateFirst: () => void;
   onSeeDeliverables: () => void;
   onEditBrief: () => void;
+  hasExistingVentures?: boolean;
 };
 
-export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEditBrief }: Props) {
+export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEditBrief, hasExistingVentures = false }: Props) {
+  const ctaLabel = hasExistingVentures ? "Open your Startup Hub" : "Generate your first deliverable";
+  const headline = hasExistingVentures ? "Pick up where you left off." : "Generate your first deliverable.";
+  const subcopy = hasExistingVentures
+    ? "Your brief just got sharper — jump back into your Startup Hub to refresh existing deliverables or start a new venture."
+    : "We'll open your Startup Snapshot with your brief already filled in — review it, add your city and state, then we generate.";
   return (
     <div className="mt-10 space-y-10">
       <div>
