@@ -693,7 +693,7 @@ async function buildLogoSection(
                       new ImageRun({
                         type: primaryImg.type,
                         data: primaryImg.data,
-                        transformation: { width: 360, height: 360 },
+                        transformation: fitBox(primaryImg.width, primaryImg.height, 360, 360),
                         altText: {
                           title: "Primary logo",
                           description: primary?.direction_name || "Primary logo",
