@@ -1,8 +1,10 @@
 // Brand Wizard AI helper: generates palette options, typography pairings,
-// and the final long-form Brand Style Guide markdown. Lives separately from
-// venture-generate-document so it can run cheaply and frequently.
+// and the final long-form Brand Style Guide markdown. Every call is grounded
+// in the canonical venture context (snapshot + brief + founder + market +
+// uploaded sources + snapshot brain) so the brand reflects the whole venture.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { loadVentureContext, compactPreamble, renderSources } from "../_shared/venture-context.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,45 +37,44 @@ async function callAI(messages: any[], opts: { json?: boolean; model?: string } 
   return json.choices?.[0]?.message?.content ?? "";
 }
 
-function snapshotBrief(snap: any, kit: any) {
-  return [
-    `Company: ${snap.company_name || "—"}`,
-    `Industry: ${snap.industry || "—"}`,
-    `Track: ${snap.track || "—"}`,
-    `Concept: ${snap.concept_summary || "—"}`,
-    `Value prop: ${snap.value_proposition || "—"}`,
-    `Audience: ${snap.target_audience || "—"}`,
-    kit?.dna ? `Personality: ${JSON.stringify(kit.dna.personality || {})}` : "",
-    kit?.dna?.mood?.length ? `Mood: ${kit.dna.mood.join(", ")}` : "",
-    kit?.dna?.admired?.length ? `Brands admired: ${kit.dna.admired.join(", ")}` : "",
-  ].filter(Boolean).join("\n");
+function brandBrief(ctx: any, kit: any) {
+  const brainBlock = ctx.brain
+    ? `\n\n## Venture brain (compressed)\n${JSON.stringify(ctx.brain, null, 2)}`
+    : "";
+  const sourcesBlock = (ctx.sources.documents.length || ctx.sources.urls.length)
+    ? `\n\n${renderSources(ctx, 2500)}`
+    : "";
+  const dnaBlock = kit?.dna
+    ? `\n\n## Founder DNA selections\nPersonality: ${JSON.stringify(kit.dna.personality || {})}\nMood: ${(kit.dna.mood || []).join(", ") || "—"}\nBrands admired: ${(kit.dna.admired || []).join(", ") || "—"}\nKeywords: ${(kit.dna.keywords || []).join(", ") || "—"}`
+    : "";
+  return `${compactPreamble(ctx)}${brainBlock}${sourcesBlock}${dnaBlock}`;
 }
 
-async function generatePalettes(snap: any, kit: any) {
-  const sys = `You are a senior brand designer. Propose four DISTINCT brand palette directions for the venture below. Each palette gets a name, a one-sentence rationale, and six roles (bg, fg, muted, accent, primary, secondary) as #RRGGBB hex. Ensure WCAG AA contrast between fg/bg. Return JSON only.`;
-  const user = `${snapshotBrief(snap, kit)}
+async function generatePalettes(ctx: any, kit: any) {
+  const sys = `You are a senior brand designer. Propose four DISTINCT brand palette directions for the venture below. Ground every choice in the venture's industry, customer, differentiation and any uploaded source material — palettes must feel ownable to THIS specific business, not generic. Each palette gets a name, a one-sentence rationale that references something concrete from the venture context, and six roles (bg, fg, muted, accent, primary, secondary) as #RRGGBB hex. Ensure WCAG AA contrast between fg/bg. Return JSON only.`;
+  const user = `${brandBrief(ctx, kit)}
 
 Return JSON: { "options": [ { "name": string, "rationale": string, "mood": [string,string,string], "colors": { "bg": "#hex", "fg": "#hex", "muted": "#hex", "accent": "#hex", "primary": "#hex", "secondary": "#hex" } } ] } — exactly 4 options, visually distinct from each other.`;
   const raw = await callAI([{ role: "system", content: sys }, { role: "user", content: user }], { json: true });
   return JSON.parse(raw);
 }
 
-async function generateTypography(snap: any, kit: any) {
-  const sys = `You are a typography director. Propose four DISTINCT Google Font pairings (heading + body) tailored to the brand below. Return JSON only.`;
-  const user = `${snapshotBrief(snap, kit)}
+async function generateTypography(ctx: any, kit: any) {
+  const sys = `You are a typography director. Propose four DISTINCT Google Font pairings (heading + body) tailored to the venture below. Use the full venture context — industry, customer, personality, mood, admired brands — so each pairing tells a different story for THIS business. Return JSON only.`;
+  const user = `${brandBrief(ctx, kit)}
 
 Return JSON: { "options": [ { "name": string, "rationale": string, "heading": { "family": "Google Font name", "weight": 600|700|800 }, "body": { "family": "Google Font name", "weight": 400|500 } } ] } — exactly 4 pairings, visually distinct from each other. Use only fonts available on Google Fonts.`;
   const raw = await callAI([{ role: "system", content: sys }, { role: "user", content: user }], { json: true });
   return JSON.parse(raw);
 }
 
-async function generateGuide(snap: any, kit: any) {
-  const sys = `You are the head of brand at a top agency writing a complete Brand Style Guide for a founder. The guide must be polished, ownable, ready to hand to designers and marketing. Use the EXACT palette, typography, mood, and voice settings provided. Output Markdown only — no JSON, no code fences except where syntax matters.`;
+async function generateGuide(ctx: any, kit: any) {
+  const sys = `You are the head of brand at a top agency writing a complete Brand Style Guide for a founder. Use the ENTIRE venture context — company, customer, differentiation, founder DNA, mood, uploaded source materials, and the locked palette/typography/voice — to make every section unmistakably about THIS venture, not boilerplate. Output Markdown only — no JSON, no code fences except where syntax matters.`;
   const palette = kit.palette ? JSON.stringify(kit.palette, null, 2) : "(none chosen)";
   const typography = kit.typography ? JSON.stringify(kit.typography, null, 2) : "(none chosen)";
   const voice = kit.voice ? JSON.stringify(kit.voice, null, 2) : "(none provided)";
-  const user = `BRAND BRIEF:
-${snapshotBrief(snap, kit)}
+  const user = `BRAND BRIEF (full venture context):
+${brandBrief(ctx, kit)}
 
 LOCKED PALETTE:
 ${palette}
@@ -98,7 +99,7 @@ Produce a thorough Brand Style Guide in Markdown with these sections:
 ## 10. Voice Cheat-Sheet
 ## 11. File Naming & Governance
 
-Target 1,400–1,900 words. Be specific, name the chosen fonts and hex values throughout.`;
+Target 1,400–1,900 words. Be specific, name the chosen fonts and hex values throughout, and reference the venture's actual customer/problem/differentiation in the examples.`;
   return await callAI([{ role: "system", content: sys }, { role: "user", content: user }], { model: "google/gemini-2.5-pro" });
 }
 
@@ -118,24 +119,23 @@ Deno.serve(async (req) => {
     if (!userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-    const { data: snap } = await supabase.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle();
-    if (!snap || snap.user_id !== userId) {
+    const ctx = await loadVentureContext(supabase, snapshotId);
+    if (!ctx.snap || ctx.snap.user_id !== userId) {
       return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const { data: kit } = await supabase.from("venture_brand_kits").select("*").eq("snapshot_id", snapshotId).maybeSingle();
 
     if (action === "palettes") {
-      const out = await generatePalettes(snap, kit);
+      const out = await generatePalettes(ctx, kit);
       return new Response(JSON.stringify(out), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (action === "typography") {
-      const out = await generateTypography(snap, kit);
+      const out = await generateTypography(ctx, kit);
       return new Response(JSON.stringify(out), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (action === "styleguide") {
-      const md = await generateGuide(snap, kit);
+      const md = await generateGuide(ctx, kit);
       await supabase.from("venture_brand_kits").update({ guide_markdown: md, status: "locked", locked_at: new Date().toISOString() }).eq("snapshot_id", snapshotId);
-      // Also push brand_tokens into the snapshot so downstream deliverables use them.
       if (kit?.palette?.colors && kit?.typography) {
         const brand_tokens = {
           colors: kit.palette.colors,

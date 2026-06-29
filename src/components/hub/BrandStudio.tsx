@@ -1,14 +1,16 @@
 // @ts-nocheck
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Palette, Sparkles, Lock } from "lucide-react";
-import { getBrandKit } from "@/lib/brandKit.functions";
+import { Palette, Sparkles, Lock, RotateCcw } from "lucide-react";
+import { getBrandKit, resetBrandKit } from "@/lib/brandKit.functions";
 import { BrandWizard } from "@/components/hub/brand-wizard/BrandWizard";
+import { toast } from "sonner";
 
 export function BrandStudio({ snapshot }: { snapshot: any }) {
   const [open, setOpen] = useState(false);
+  const qc = useQueryClient();
   const kitQ = useQuery({
     queryKey: ["brandKit", snapshot.id],
     queryFn: () => getBrandKit(snapshot.id),
@@ -16,9 +18,23 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
   const kit = kitQ.data;
   const locked = kit?.status === "locked";
 
+  const reset = useMutation({
+    mutationFn: () => resetBrandKit(snapshot.id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+      toast.success("Brand wizard reset. Start fresh whenever you're ready.");
+    },
+    onError: (e: any) => toast.error(e.message || "Reset failed"),
+  });
+
+  const onReset = () => {
+    const label = locked ? "This will delete your locked brand kit (palette, typography, logos, moodboard, style guide). Continue?" : "This will discard your current wizard progress. Continue?";
+    if (window.confirm(label)) reset.mutate();
+  };
+
   return (
     <div className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Palette className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold">Brand Studio</h3>
@@ -29,10 +45,17 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
             <Badge variant="outline" className="text-[10px]">Step {kit.step ?? 1} / 5</Badge>
           )}
         </div>
-        <Button size="sm" onClick={() => setOpen(true)}>
-          <Sparkles className="mr-1 h-3 w-3" />
-          {kit ? (locked ? "Edit brand" : "Resume wizard") : "Start brand wizard"}
-        </Button>
+        <div className="flex items-center gap-2">
+          {kit && (
+            <Button size="sm" variant="ghost" onClick={onReset} disabled={reset.isPending} title="Reset & start over">
+              <RotateCcw className="mr-1 h-3 w-3" />Reset
+            </Button>
+          )}
+          <Button size="sm" onClick={() => setOpen(true)}>
+            <Sparkles className="mr-1 h-3 w-3" />
+            {kit ? (locked ? "Edit brand" : "Resume wizard") : "Start brand wizard"}
+          </Button>
+        </div>
       </div>
 
       {!kit && (

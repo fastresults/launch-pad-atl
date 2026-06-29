@@ -1,8 +1,10 @@
 // Founders Hub — brand asset generator.
 // Generates logo / moodboard / social images via the Lovable AI image gateway,
-// grounded in the venture's brand_tokens and the wizard's locked palette/typography.
+// grounded in the FULL venture context (snapshot + brief + sources + brain)
+// and the wizard's locked palette/typography/personality.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { loadVentureContext } from "../_shared/venture-context.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,7 +32,9 @@ const MOODBOARD_ANGLES = [
   "Tile 4 — Color & motion: an abstract painterly composition built from the brand's primary, secondary and accent colors. Smooth gradients, organic shapes.",
 ];
 
-function buildPrompt(kind: string, snap: any, tokens: any, extra?: string, angle?: string) {
+function buildPrompt(kind: string, ctx: any, tokens: any, extra?: string, angle?: string) {
+  const snap = ctx.snap;
+  const brain = ctx.brain;
   const preset = KIND_PRESETS[kind];
   const palette = tokens?.colors
     ? `Color palette: primary ${tokens.colors.primary ?? "#000"}, secondary ${tokens.colors.secondary ?? ""}, accent ${tokens.colors.accent ?? ""}.`
@@ -39,11 +43,19 @@ function buildPrompt(kind: string, snap: any, tokens: any, extra?: string, angle
   const fonts = tokens?.fonts ? `Typography reference: ${tokens.fonts.heading ?? ""} / ${tokens.fonts.body ?? ""}.` : "";
   const industry = snap.industry ? `Industry: ${snap.industry}.` : "";
   const company = snap.company_name ? `Brand: ${snap.company_name}.` : "";
+  const concept = snap.concept_summary ? `Concept: ${String(snap.concept_summary).slice(0, 220)}.` : "";
+  const audience = snap.target_audience ? `Customer: ${String(snap.target_audience).slice(0, 180)}.` : "";
+  const diff = snap.differentiation_statement ? `Differentiation: ${String(snap.differentiation_statement).slice(0, 180)}.` : "";
+  const problem = brain?.problem ? `Problem solved: ${String(brain.problem).slice(0, 180)}.` : "";
   return [
     preset.sceneHint,
     angle ?? "",
     company,
     industry,
+    concept,
+    audience,
+    diff,
+    problem,
     palette,
     mood,
     fonts,
@@ -122,7 +134,8 @@ Deno.serve(async (req) => {
     if (!userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-    const { data: snap } = await supabase.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle();
+    const ctx = await loadVentureContext(supabase, snapshotId);
+    const snap = ctx.snap;
     if (!snap) return new Response(JSON.stringify({ error: "Snapshot not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     if (snap.user_id !== userId) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
@@ -131,7 +144,7 @@ Deno.serve(async (req) => {
     const tokens = {
       colors: kit?.palette?.colors ?? snap.brand_tokens?.colors,
       fonts: kit?.typography ? { heading: kit.typography.heading?.family, body: kit.typography.body?.family } : snap.brand_tokens?.fonts,
-      mood: kit?.dna?.personality ?? snap.brand_tokens?.mood,
+      mood: kit?.dna?.mood ?? kit?.dna?.personality ?? snap.brand_tokens?.mood,
     };
 
     const n = Math.max(1, Math.min(4, count ?? preset.defaultCount));
@@ -142,7 +155,7 @@ Deno.serve(async (req) => {
       while (i < n) {
         const myIdx = i++;
         const angle = kind === "moodboard" ? MOODBOARD_ANGLES[myIdx % MOODBOARD_ANGLES.length] : undefined;
-        const prompt = buildPrompt(kind, snap, tokens, extra, angle);
+        const prompt = buildPrompt(kind, ctx, tokens, extra, angle);
         try {
           const b64 = await generateOne(prompt, preset.size, kind === "logo" ? referenceImages : undefined);
           const up = await uploadAsset(supabase, snapshotId, userId, kind, b64, prompt);

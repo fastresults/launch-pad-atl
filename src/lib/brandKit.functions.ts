@@ -61,3 +61,11 @@ export async function fetchTypographyOptions(snapshotId: string) {
 export async function generateStyleGuide(snapshotId: string) {
   return callWizard({ action: "styleguide", snapshotId });
 }
+
+export async function resetBrandKit(snapshotId: string): Promise<void> {
+  const { error } = await supabase
+    .from("venture_brand_kits")
+    .delete()
+    .eq("snapshot_id", snapshotId);
+  if (error) throw error;
+}
