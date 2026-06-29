@@ -138,9 +138,11 @@ export function buildCoverArtPrompt(args: {
   direction: ArtDirectionId;
   kit: Kit;
   ctx: any;
+  plan: CanvasPlan;
   hasLogoImage?: boolean;
+  retryNote?: string;
 }): string {
-  const { platform, asset, direction, kit, ctx, hasLogoImage = true } = args;
+  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote } = args;
   const brief = DIRECTION_BRIEF[direction];
   const palette = paletteBlock(kit);
   const typo = typoBlock(kit);
@@ -149,20 +151,34 @@ export function buildCoverArtPrompt(args: {
   const system = assetSystem(asset, hasLogoImage, headline);
   const dims = `${asset.width}x${asset.height} (${asset.guidance})`;
 
+  const forbiddenLines = plan.forbiddenPairs.slice(0, 6).map(
+    (p) => `  - Never place ${p.fg} on ${p.bg} (only ${p.ratio}:1 — illegible).`,
+  ).join("\n") || "  - (none flagged)";
+
   const references = hasLogoImage
     ? `## Attached reference images (authoritative — honor exactly)
 - Image #1: the venture's official logo. Use its colors and forms as-is. Do NOT redraw. For non-avatar assets, leave clean rectangular space so we can composite this exact logo on top later.
-- Image #2 (if present): brand palette swatch tile — these are the ONLY colors permitted in the composition.
-- Image #3 (if present): brand typography specimen — match this typographic voice if you render any text.`
+- Image #2: the canvas palette tile. The THREE colors in this tile (surface, ink, accent) are the ONLY colors permitted in the composition. No other colors. No tints. No gradients between them.`
     : `## Reference imagery
 - No logo file was uploaded; do NOT invent a logo. Compose around a clean reserved rectangle in a non-focal corner.`;
+
+  const retryBlock = retryNote
+    ? `\n## Previous attempt was rejected\n${retryNote}\nDo NOT repeat that mistake.\n`
+    : "";
 
   return `You are an award-winning senior art director at Pentagram / Collins / Mother NY shipping a launch-day ${platform} ${asset.label} for the venture below. Anything that wouldn't pass a creative director's desk on a paying client engagement is unacceptable.
 
 ${references}
 
-## Locked brand kit (authoritative — exact colors, exact typefaces, no substitutions)
-Palette roles:
+## Canvas plan (NON-NEGOTIABLE — these are the only colors you may use)
+- Background surface: ${plan.surface}  ← the entire background fills with this exact hex
+- Ink (all text, logo marks, lines): ${plan.ink}  ← AA-legible on the surface
+- Accent (one supporting color, used sparingly): ${plan.accent}
+- Forbidden pairings detected in this palette:
+${forbiddenLines}
+
+## Locked brand kit (for typography reference only — colors are governed by the canvas plan above)
+Palette roles available in the brand kit (reference, not a license to use them all):
 ${palette}
 Typography:
 ${typo}
@@ -182,31 +198,25 @@ ${system}
 ${brief}
 ${QUALITY}
 ${BANNED}
-
-Deliver a single finished image at the spec'd aspect that a senior art director would ship to a paying client today.`;
+${retryBlock}
+Deliver a single finished image at the spec'd aspect that a senior art director would ship to a paying client today. Background MUST be exactly ${plan.surface}. Any rendered glyphs, marks, or text MUST be exactly ${plan.ink}. The only permitted accent color is ${plan.accent}.`;
 }
 
-// Deterministic prompt used specifically for avatars when paired with the
-// uploaded logo as image #1. Image generator must preserve the logo's pixels.
+// Deterministic avatar prompt: the surface color is decided server-side by
+// measuring contrast against the logo's actual dominant ink, then passed in.
 export function buildAvatarPrompt(args: {
   platform: string;
   asset: AssetSpec;
-  kit: Kit;
+  surfaceHex: string;
 }): string {
-  const { platform, asset, kit } = args;
-  const palette = kit?.palette?.colors ?? {};
-  const bg = palette.bg || palette.background || "#FFFFFF";
-  const primary = palette.primary || palette.accent || "#111111";
+  const { platform, asset, surfaceHex } = args;
   return `You are placing the venture's official logo (attached as image #1) onto a profile avatar for ${platform}.
 
 NON-NEGOTIABLE:
 - PRESERVE THE LOGO PIXELS EXACTLY. Do not redraw, recolor, restyle, crop, distort, or "improve" the logo. Treat it as a placed asset.
 - Center the logo on a perfectly square canvas at ${asset.width}x${asset.height}.
 - The logo occupies ~70% of the canvas shortest side, with even padding on all four sides.
-- Background: a single flat solid color selected from the brand palette below for maximum contrast with the logo. Prefer ${bg}; if the logo is light or near-white, use ${primary} instead. No gradients, no patterns, no shadows, no glow, no decorations, no text.
+- Background: a single flat solid color, EXACTLY ${surfaceHex}. No gradients, no patterns, no shadows, no glow, no decorations, no text. This color was chosen server-side to guarantee maximum contrast against the logo — do not override it.
 
-Brand palette (use exactly one of these as the solid background):
-${Object.entries(palette).map(([k, v]) => `  - ${k}: ${v}`).join("\n")}
-
-Output a single PNG: the logo, exactly as provided, centered on the chosen solid background.`;
+Output a single PNG: the logo, exactly as provided, centered on a solid ${surfaceHex} background.`;
 }
