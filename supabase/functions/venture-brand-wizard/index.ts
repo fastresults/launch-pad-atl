@@ -170,13 +170,30 @@ async function uploadLogo(supabase: any, userId: string, snapshotId: string, dat
   const { bytes, contentType } = dataUrlToBytes(dataUrl);
   const safe = (filename || "logo").replace(/[^\x20-\x7E]/g, "").replace(/[\\/:*?"<>|]/g, "-").trim() || "logo";
   const ext = (contentType.split("/")[1] || "png").replace("+xml", "");
-  const path = `${userId}/${snapshotId}/brand-logos/${Date.now()}-${safe.replace(/\.[^.]+$/, "")}.${ext}`;
-  const { error } = await supabase.storage.from("venture-doc-images").upload(path, bytes, {
+  const baseName = safe.replace(/\.[^.]+$/, "");
+  // Save into user-media so the logo is available to website + social creative
+  // generation pipelines (which read from user-media / media_assets).
+  const path = `${userId}/brand/${snapshotId}/logo-${Date.now()}-${baseName}.${ext}`;
+  const { error } = await supabase.storage.from("user-media").upload(path, bytes, {
     contentType,
     upsert: true,
   });
   if (error) throw new Error(`Logo upload failed: ${error.message}`);
-  const { data: signed } = await supabase.storage.from("venture-doc-images").createSignedUrl(path, 60 * 60 * 24 * 365);
+  const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(path, 60 * 60 * 24 * 365);
+  try {
+    await supabase.from("media_assets").insert({
+      user_id: userId,
+      storage_path: path,
+      bucket: "user-media",
+      kind: "image",
+      mime_type: contentType,
+      tags: ["brand_kit", "logo", "uploaded", `snapshot:${snapshotId}`],
+      title: filename || "Brand logo",
+      description: `Uploaded brand logo for snapshot ${snapshotId}`,
+    });
+  } catch (e) {
+    console.error("media_assets insert failed (non-fatal)", e);
+  }
   return { path, url: signed?.signedUrl ?? null, contentType };
 }
 
