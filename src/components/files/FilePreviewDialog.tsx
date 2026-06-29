@@ -60,16 +60,9 @@ export function FilePreviewDialog({
         setUrl(signed);
 
         if (isDocx(doc.mime_type, doc.original_name)) {
-          try {
-            const buf = await (await fetch(signed)).arrayBuffer();
-            if (cancelled) return;
-            const mammoth = await import("mammoth/mammoth.browser");
-            const result = await mammoth.convertToHtml({ arrayBuffer: buf });
-            if (cancelled) return;
-            setDocxHtml(result.value || "<p><em>Document appears to be empty.</em></p>");
-          } catch (e: any) {
-            if (!cancelled) setRenderError(e?.message || "Could not render document");
-          }
+          // Defer to the docx-preview renderer that runs against the live DOM
+          // container; we just mark the file as ready so the container mounts.
+          setDocxHtml("__use_docx_preview__");
         } else if (isText(doc.mime_type, doc.original_name)) {
           try {
             const txt = await (await fetch(signed)).text();
