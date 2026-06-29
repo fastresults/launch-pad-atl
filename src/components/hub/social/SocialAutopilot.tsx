@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import {
   ArrowLeft, ArrowRight, Check, Sparkles, Loader2, RefreshCw,
-  Settings2, Copy, ExternalLink, PartyPopper, Image as ImageIcon,
+  Settings2, Copy, ExternalLink, PartyPopper, Image as ImageIcon, Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -19,6 +19,7 @@ import { PLATFORM_SPECS, ART_DIRECTIONS } from "@/lib/social-platform-specs";
 import { listSocialAssets } from "@/lib/social-cover.functions";
 import { listStylePreviews, generateStylePreview, type StylePreview } from "@/lib/style-preview.functions";
 import { RegenerateAssetDialog } from "./RegenerateAssetDialog";
+import { AssetPreviewDialog, type PreviewableAsset } from "./AssetPreviewDialog";
 import { RotateCcw } from "lucide-react";
 
 const STEPS = [
