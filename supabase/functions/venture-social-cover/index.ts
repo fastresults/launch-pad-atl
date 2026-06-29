@@ -264,55 +264,100 @@ Deno.serve(async (req) => {
     }
 
     const ctx = await loadVentureContext(admin, snapshotId);
-    const logoDataUrl = await fetchPrimaryLogoDataUrl(admin, kit);
+    const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
 
     const isAvatar = asset.kind === "avatar";
-    const prompt = isAvatar
-      ? buildAvatarPrompt({ platform: platform.label, asset, kit })
-      : buildCoverArtPrompt({
-          platform: platform.label,
-          asset,
-          direction,
-          kit,
-          ctx,
-          hasLogoImage: !!logoDataUrl,
-        });
 
-    let b64: string;
-    let modelUsed: string;
+    // --- Canvas plan: pre-decide exact surface/ink/accent hexes ---
+    let plan: CanvasPlan;
+    if (isAvatar) {
+      const ink = logoBytes ? logoDominantInk(logoBytes) : null;
+      const { surface } = pickAvatarSurface(kit, ink);
+      plan = {
+        surface,
+        ink: ink || "#0B0F19",
+        accent: surface,
+        surfaceRole: "avatar-surface",
+        forbiddenPairs: [],
+      };
+    } else {
+      plan = buildCanvasPlan({ kit, asset, direction });
+    }
+
+    // --- Palette tile so the model SEES the only colors it may use ---
+    let paletteTileDataUrl: string | null = null;
     try {
-      if (logoDataUrl) {
-        // Multimodal path: pass the actual logo bytes to the image model.
-        b64 = await callMultimodal(prompt, [logoDataUrl], apiKey);
-        modelUsed = MODEL_MULTIMODAL;
-      } else {
-        // No logo available — fall back to text-only at medium quality.
-        b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
-        modelUsed = MODEL_FALLBACK;
-      }
-    } catch (e: any) {
-      // If multimodal failed for a non-billing/non-moderation reason, try text-only.
-      const status = e?.status;
-      if (logoDataUrl && status !== 402 && status !== 429) {
-        try {
-          b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
-          modelUsed = MODEL_FALLBACK + " (multimodal fallback)";
-        } catch (e2: any) {
-          const status2 = e2?.status;
-          const out: any = { error: e2?.message ?? "Generation failed", upstreamStatus: status2 };
-          if (status2 === 402) { out.code = "PAYMENT_REQUIRED"; out.reason = "ai_credits_exhausted"; }
-          else if (status2 === 429) { out.code = "RATE_LIMITED"; }
-          return json(out, 200);
+      paletteTileDataUrl = bytesToDataUrl(buildPaletteTilePngBytes(plan));
+    } catch (e) {
+      console.warn("palette tile build failed", e);
+    }
+
+    const buildPrompt = (retryNote?: string) =>
+      isAvatar
+        ? buildAvatarPrompt({ platform: platform.label, asset, surfaceHex: plan.surface })
+        : buildCoverArtPrompt({
+            platform: platform.label,
+            asset,
+            direction,
+            kit,
+            ctx,
+            plan,
+            hasLogoImage: !!logoDataUrl,
+            retryNote,
+          });
+
+    const generate = async (retryNote?: string) => {
+      const prompt = buildPrompt(retryNote);
+      const refs = [logoDataUrl, paletteTileDataUrl].filter(Boolean) as string[];
+      try {
+        if (refs.length) {
+          const b64 = await callMultimodal(prompt, refs, apiKey);
+          return { b64, modelUsed: MODEL_MULTIMODAL, prompt };
         }
-      } else {
-        const out: any = { error: e?.message ?? "Generation failed", upstreamStatus: status };
-        if (status === 402) { out.code = "PAYMENT_REQUIRED"; out.reason = "ai_credits_exhausted"; }
-        else if (status === 429) { out.code = "RATE_LIMITED"; }
-        return json(out, 200);
+        const b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
+        return { b64, modelUsed: MODEL_FALLBACK, prompt };
+      } catch (e: any) {
+        const status = e?.status;
+        if (refs.length && status !== 402 && status !== 429) {
+          const b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
+          return { b64, modelUsed: MODEL_FALLBACK + " (multimodal fallback)", prompt };
+        }
+        throw e;
+      }
+    };
+
+    let result: { b64: string; modelUsed: string; prompt: string };
+    try {
+      result = await generate();
+    } catch (e: any) {
+      const status = e?.status;
+      const out: any = { error: e?.message ?? "Generation failed", upstreamStatus: status };
+      if (status === 402) { out.code = "PAYMENT_REQUIRED"; out.reason = "ai_credits_exhausted"; }
+      else if (status === 429) { out.code = "RATE_LIMITED"; }
+      return json(out, 200);
+    }
+
+    // --- Post-gen contrast QA + one retry if it fails ---
+    let bytes = b64ToBytes(result.b64);
+    let qa = isAvatar ? { ok: true, reasons: [], observed: { dominantBg: plan.surface, dominantFg: plan.ink, ratio: 21 } } : runContrastQa(bytes, plan);
+    if (!qa.ok) {
+      console.warn("contrast QA failed, retrying once", qa.reasons);
+      try {
+        const retryNote = `Your previous attempt produced ${qa.observed.dominantFg} on ${qa.observed.dominantBg} (only ${qa.observed.ratio}:1 contrast — illegible). Use ONLY surface=${plan.surface}, ink=${plan.ink}, accent=${plan.accent}. Background must fill with ${plan.surface} exactly.`;
+        const retry = await generate(retryNote);
+        const retryBytes = b64ToBytes(retry.b64);
+        const retryQa = runContrastQa(retryBytes, plan);
+        // Keep retry if it's better, otherwise keep original.
+        if (retryQa.observed.ratio > qa.observed.ratio) {
+          bytes = retryBytes;
+          qa = retryQa;
+          result = retry;
+        }
+      } catch (e) {
+        console.warn("QA retry failed", e);
       }
     }
 
-    const bytes = b64ToBytes(b64!);
     const fileId = crypto.randomUUID();
     const storagePath = `social-cover/${userId}/${snapshotId}/${platform.platform}/${asset.kind}/${direction}-${fileId}.png`;
 
@@ -339,10 +384,13 @@ Deno.serve(async (req) => {
         signed_url_expires_at: expiresAt,
         width: asset.width,
         height: asset.height,
-        prompt_used: prompt,
-        model_used: modelUsed!,
+        prompt_used: result.prompt,
+        model_used: result.modelUsed,
         brand_kit_locked_at: kit.locked_at,
         is_selected: false,
+        canvas_plan: plan as any,
+        qa_status: qa.ok ? "pass" : "fail",
+        qa_notes: qa as any,
       })
       .select()
       .single();
