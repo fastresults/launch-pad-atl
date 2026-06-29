@@ -481,6 +481,18 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     onSave({ dna: { ...(kit?.dna ?? {}), _logoReferences: next } });
   };
 
+  const skipped = !!kit?.dna?._logoRefSkipped;
+  const gatePassed = refs.length > 0 || skipped;
+
+  const skipRefs = () => {
+    onSave({ dna: { ...(kit?.dna ?? {}), _logoRefSkipped: true } });
+  };
+  const undoSkip = () => {
+    const dna = { ...(kit?.dna ?? {}) };
+    delete dna._logoRefSkipped;
+    onSave({ dna });
+  };
+
   return (
     <div className="space-y-8">
       {/* MOODBOARD */}
@@ -508,39 +520,65 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
         )}
       </section>
 
-      {/* REFERENCE LOGOS */}
-      <section className="space-y-3">
-        <div>
-          <h3 className="text-sm font-semibold">Reference logos <span className="text-xs font-normal text-muted-foreground">(optional, up to 3)</span></h3>
-          <p className="text-xs text-muted-foreground">Drop logos you love. The AI will study their composition, weight, and abstraction — not copy them — when drafting your concepts.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {refs.map((src, i) => (
-            <div key={i} className="relative h-20 w-20 overflow-hidden rounded-lg border border-white/10 bg-background/40">
-              <img src={src} className="h-full w-full object-contain" />
-              <button onClick={() => removeRef(i)} className="absolute right-0 top-0 rounded-bl bg-black/60 px-1 text-xs text-white hover:bg-black/80">×</button>
+      {/* REFERENCE LOGOS — required gateway */}
+      <section className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold">Drop your 3 logo inspirations</h3>
+              <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">Required</span>
             </div>
-          ))}
-          {refs.length < 3 && (
-            <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-lg border border-dashed border-white/20 text-xs text-muted-foreground hover:border-white/40">
-              <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => onDropRefs(e.target.files)} />
-              + Add
-            </label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Show us 1–3 logos you admire. We'll study their composition, weight, and abstraction — never copy them — to ground your concepts. This step is required so your logos don't look generic.
+            </p>
+          </div>
+        </div>
+
+        <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-white/20 bg-background/40 px-4 py-6 text-center hover:border-primary/50">
+          <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => onDropRefs(e.target.files)} disabled={refs.length >= 3} />
+          <div className="text-sm font-medium">{refs.length >= 3 ? "3 inspirations added — you're set" : "Drag & drop or click to upload"}</div>
+          <div className="mt-1 text-xs text-muted-foreground">PNG, JPG, SVG · up to 3 images · {refs.length}/3 added</div>
+        </label>
+
+        {refs.length > 0 && (
+          <div className="flex flex-wrap items-center gap-3">
+            {refs.map((src, i) => (
+              <div key={i} className="relative h-20 w-20 overflow-hidden rounded-lg border border-white/10 bg-background">
+                <img src={src} className="h-full w-full object-contain" />
+                <button onClick={() => removeRef(i)} className="absolute right-0 top-0 rounded-bl bg-black/60 px-1 text-xs text-white hover:bg-black/80">×</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between text-xs">
+          {skipped ? (
+            <button onClick={undoSkip} className="text-primary underline-offset-2 hover:underline">Reconsider — I'll upload inspirations</button>
+          ) : (
+            <button onClick={skipRefs} className="text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">
+              Skip — generate without references
+            </button>
           )}
+          {skipped && <span className="text-amber-700 dark:text-amber-400">Skipped — concepts will be context-only</span>}
         </div>
       </section>
 
-      {/* LOGOS */}
+      {/* LOGOS — gated */}
       <section className="space-y-3">
         <div className="flex items-end justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold">Logo concepts</h3>
             <p className="text-xs text-muted-foreground">Grounded in your locked palette and typography{refs.length ? ", and inspired by your reference logos" : ""}.</p>
           </div>
-          <Button onClick={() => genLogos.mutate()} disabled={genLogos.isPending} size="sm">
-            {genLogos.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-            Generate 4 logo concepts
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            <Button onClick={() => genLogos.mutate()} disabled={genLogos.isPending || !gatePassed} size="sm">
+              {genLogos.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+              Generate 4 logo concepts
+            </Button>
+            {!gatePassed && (
+              <span className="text-[10px] text-muted-foreground">Upload at least one inspiration above, or choose Skip, to unlock.</span>
+            )}
+          </div>
         </div>
         {logos.length > 0 && (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
