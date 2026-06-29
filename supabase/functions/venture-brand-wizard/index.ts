@@ -161,37 +161,40 @@ async function extractExistingBrand(ctx: any, kit: any, payload: any, supabase: 
   const voiceNotes: string | undefined = payload.voiceNotes?.trim() || undefined;
   const incomingLogos: { dataUrl: string; filename: string }[] = Array.isArray(payload.logos) ? payload.logos : [];
 
-  // 1. Upload logos to storage and build logo entries (first = primary).
-  const uploadedLogos: any[] = [];
-  for (let i = 0; i < incomingLogos.length; i++) {
-    const l = incomingLogos[i];
-    if (!l?.dataUrl) continue;
+  // 1+2. Run logo uploads and Firecrawl scrape in parallel to stay under the
+  // Edge Function idle-timeout budget.
+  const uploadPromises = incomingLogos.map(async (l, i) => {
+    if (!l?.dataUrl) return null;
     try {
       const up = await uploadLogo(supabase, userId, snapshotId, l.dataUrl, l.filename || `logo-${i + 1}`);
-      uploadedLogos.push({
+      return {
         url: up.url,
         path: up.path,
         contentType: up.contentType,
         filename: l.filename || `logo-${i + 1}`,
         primary: i === 0,
         source: "uploaded",
-      });
+      };
     } catch (e) {
       console.error("logo upload failed", e);
+      return null;
     }
-  }
+  });
 
-  // 2. Scrape website (best-effort).
-  let scrape: any = null;
-  let scrapeError: string | null = null;
-  if (websiteUrl) {
-    try {
-      scrape = await firecrawlScrape(websiteUrl);
-    } catch (e: any) {
-      scrapeError = e?.message ?? String(e);
-      console.error("firecrawl error", scrapeError);
-    }
-  }
+  const scrapePromise: Promise<{ scrape: any; error: string | null }> = websiteUrl
+    ? Promise.race([
+        firecrawlScrape(websiteUrl).then((s) => ({ scrape: s, error: null as string | null })),
+        new Promise<{ scrape: any; error: string | null }>((resolve) =>
+          setTimeout(() => resolve({ scrape: null, error: "Website scan timed out after 45s — proceeding with logos only." }), 45_000),
+        ),
+      ]).catch((e: any) => ({ scrape: null, error: e?.message ?? String(e) }))
+    : Promise.resolve({ scrape: null, error: null });
+
+  const [uploadResults, scrapeResult] = await Promise.all([Promise.all(uploadPromises), scrapePromise]);
+  const uploadedLogos: any[] = uploadResults.filter(Boolean) as any[];
+  const scrape = scrapeResult.scrape;
+  const scrapeError = scrapeResult.error;
+  if (scrapeError) console.error("firecrawl error", scrapeError);
 
   // 3. Ask the model to synthesize palette/typography/voice/moodboard.
   const branding = scrape?.branding ?? null;
