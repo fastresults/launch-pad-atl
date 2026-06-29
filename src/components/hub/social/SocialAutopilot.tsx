@@ -940,16 +940,31 @@ function Step5BuildKit({
         })}
       </ul>
 
+      {anyDone && !allDone && (
+        <p className="text-[11px] text-muted-foreground">
+          {tasks.filter((t) => t.status === "done").length} of {tasks.length} assets ready. You can continue to launch now and finish the rest later from this step.
+        </p>
+      )}
       <footer className="flex items-center justify-between gap-2">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back</Button>
-        {allDone ? (
-          <Button onClick={onContinue}>Next: launch <ArrowRight className="ml-1 h-3 w-3" /></Button>
-        ) : (
-          <Button onClick={runAll} disabled={running}>
-            {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-            Generate all
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {anyDone && tasks.some((t) => t.status !== "done") && (
+            <Button variant="outline" onClick={runAll} disabled={running}>
+              {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              Generate missing ({tasks.filter((t) => t.status !== "done").length})
+            </Button>
+          )}
+          {anyDone ? (
+            <Button onClick={onContinue} disabled={running}>
+              Continue to launch <ArrowRight className="ml-1 h-3 w-3" />
+            </Button>
+          ) : (
+            <Button onClick={runAll} disabled={running}>
+              {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              Generate all
+            </Button>
+          )}
+        </div>
       </footer>
 
       {regenTarget && (
