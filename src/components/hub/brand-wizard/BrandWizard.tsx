@@ -66,7 +66,7 @@ export function BrandWizard({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-5xl gap-0 overflow-hidden p-0">
+      <DialogContent className="max-h-[92vh] max-w-7xl gap-0 overflow-hidden p-0">
         <DialogHeader className="border-b border-white/10 px-6 py-4">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -97,20 +97,25 @@ export function BrandWizard({
           </div>
         </DialogHeader>
 
-        <div className="max-h-[68vh] overflow-y-auto px-6 py-5">
-          {kitQ.isLoading ? (
-            <div className="flex items-center justify-center py-10 text-muted-foreground">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading kit…
-            </div>
-          ) : (
-            <>
-              {step === 1 && <StepDNA snapshot={snapshot} kit={kit} onSave={save.mutate} onNext={() => goTo(2)} />}
-              {step === 2 && <StepPalette snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(1)} onNext={() => goTo(3)} />}
-              {step === 3 && <StepTypography snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(2)} onNext={() => goTo(4)} />}
-              {step === 4 && <StepMoodboard snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(3)} onNext={() => goTo(5)} />}
-              {step === 5 && <StepReview snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(4)} onDone={() => onOpenChange(false)} />}
-            </>
-          )}
+        <div className="grid max-h-[72vh] grid-cols-1 lg:grid-cols-[1fr_360px]">
+          <div className="overflow-y-auto px-6 py-5">
+            {kitQ.isLoading ? (
+              <div className="flex items-center justify-center py-10 text-muted-foreground">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading kit…
+              </div>
+            ) : (
+              <>
+                {step === 1 && <StepDNA snapshot={snapshot} kit={kit} onSave={save.mutate} onNext={() => goTo(2)} />}
+                {step === 2 && <StepPalette snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(1)} onNext={() => goTo(3)} />}
+                {step === 3 && <StepTypography snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(2)} onNext={() => goTo(4)} />}
+                {step === 4 && <StepMoodboard snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(3)} onNext={() => goTo(5)} />}
+                {step === 5 && <StepReview snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(4)} onDone={() => onOpenChange(false)} />}
+              </>
+            )}
+          </div>
+          <aside className="hidden border-l border-white/10 bg-background/40 px-4 py-4 lg:block">
+            <LiveBrandPreview kit={kit} snapshot={snapshot} />
+          </aside>
         </div>
       </DialogContent>
     </Dialog>
