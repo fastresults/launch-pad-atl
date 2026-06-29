@@ -11,8 +11,11 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
+  BRAND_KIT_REQUIRED_TYPES,
+  brandKitBlock,
   compactPreamble,
   distillDeps,
+  loadBrandKit,
   loadVentureContext,
   pickBrainSlice,
   type VentureContext,
