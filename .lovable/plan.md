@@ -1,35 +1,66 @@
-# In-Modal DOCX Preview
+# Visual Brand Style Guide DOCX
 
-Right now the My Files preview modal only renders images and PDFs inline. DOCX deliverables (like the Brand Style Guide saved from the wizard) fall through to the "In-browser preview isn't available" fallback, forcing users to download. We'll add an in-browser DOCX renderer so the modal shows the styled document directly.
+Today, "Save to My Files" exports `kit.guide_markdown` through the generic markdown→DOCX converter. That captures the words but loses the actual choices the user made — palette swatches, typography samples, and the selected logo. We'll build a dedicated brand-aware exporter that bakes those assets into the document.
 
 ## Scope
 
-Update only `src/components/files/FilePreviewDialog.tsx` and add one dependency. No backend or storage changes.
+- New: `src/lib/brand-guide-docx.ts` — purpose-built DOCX builder for the brand kit.
+- Updated: `src/components/hub/brand-wizard/BrandWizard.tsx` `saveToFiles()` calls the new builder and passes the full `kit`.
+- No backend, schema, or wizard-flow changes.
 
-## Approach
+## What goes into the document
 
-1. **Add `mammoth`** (`bun add mammoth`) — a battle-tested library that converts `.docx` → semantic HTML in the browser. ~150KB, no server needed.
-2. **Detect DOCX** by mime (`application/vnd.openxmlformats-officedocument.wordprocessingml.document`) or `.docx` extension.
-3. **Fetch the signed URL as an ArrayBuffer**, run `mammoth.convertToHtml({ arrayBuffer })`, and inject the HTML into a scrollable, styled container inside the existing preview frame.
-4. **Style the rendered HTML** with a `prose`-style wrapper (white card, comfortable max-width, brand-friendly typography) so it reads like a document rather than raw HTML.
-5. **Loading + error states**: show the existing spinner while parsing; if parsing fails, fall back to the current "preview not available" message with Download still available.
-6. **Keep existing behavior** for images, PDFs, and unsupported types unchanged. Markdown (`.md`) and plain text (`.txt`) get a lightweight inline render too as a bonus (text fetched and shown in a `<pre>` / `RichMarkdown` block) — optional, can be cut if you want a tighter scope.
+Pulled directly from `kit` (palette / typography / logos / voice / dna), so it reflects exactly what the user picked:
 
-## UX details
+1. **Cover page**
+   - Selected primary logo rendered at ~3" (image fetched from its URL/dataURL and embedded as PNG/JPG via `ImageRun`).
+   - Company name in the chosen **heading font**, primary color.
+   - "Brand Style Guide" subtitle, generation date.
 
-- Container: `max-h-[72vh] overflow-auto bg-white text-slate-900 rounded-lg p-8` so the document feels like paper inside the dark modal.
-- Headings, lists, tables from mammoth get sensible default spacing via a scoped CSS class (no global `.prose` dependency required).
-- Download and Delete buttons stay where they are.
+2. **Color system**
+   - One row per color (Primary, Secondary, Accent, Neutral Dark, Neutral Light, Surface, …).
+   - Each row: a filled DOCX table cell using `shading.fill = hexWithoutHash` as a true swatch, followed by role name, HEX, RGB, and short usage note.
+   - Includes any extended/semantic tokens present on `kit.palette` (success/warning/etc. if available).
+
+3. **Typography**
+   - Heading sample: company name set in `kit.typography.heading.family` at 36pt bold (uses Word's built-in font fallback; if the family isn't installed on the reader's machine, Word substitutes — we also note the Google Fonts URL/import link so they can install it).
+   - Body sample: a 60–80-word paragraph in `kit.typography.body.family` at 11pt.
+   - Specimen scale block: H1/H2/H3/Body/Caption rows with size, weight, line-height, and use-case.
+   - Font metadata table: family, weights used, source (Google Fonts), license.
+
+4. **Logo lockups**
+   - Primary logo: embedded full-size on a light background card (white shaded cell, centered image).
+   - Secondary alternates: any other logos the user kept — 2-up grid with labels.
+   - Clear-space + minimum-size note generated from the logo's aspect.
+   - "Don't" examples are skipped (we don't have generated misuse images).
+
+5. **Voice & messaging**
+   - Tagline, tone words, dos/don'ts pulled from `kit.voice`.
+
+6. **Written guide content**
+   - The existing `kit.guide_markdown` (Brand at a Glance, Purpose, Promise, etc.) appended after the visual sections, run through the existing markdown→blocks parser so formatting is preserved.
 
 ## Technical notes
 
-- Mammoth runs entirely client-side; the signed URL returned by `getDocumentDownloadUrl` is fetched with `fetch(url).then(r => r.arrayBuffer())`.
-- We pass `mammoth.convertToHtml` with default style map — good enough for headings, bold/italic, lists, tables, and images embedded in the DOCX.
-- Embedded images are returned as base64 data URLs automatically, so they render without extra storage round-trips.
-- Cleanup: abort in-flight conversion when the dialog closes or the doc changes (reuse the existing `cancelled` flag).
+- Reuse the existing `docx` library and `mdToBlocks()` helper from `src/lib/markdown-to-docx.ts` (export it if needed) so we don't duplicate markdown parsing.
+- Color swatches are real Word table cells with `shading: { fill: hex, type: ShadingType.CLEAR }`, sized ~0.8" x 0.6" — renders identically in Word and Google Docs.
+- Logo images: `fetch(url) → arrayBuffer()`, detect PNG vs JPG via the first bytes, embed with `ImageRun({ type, data, transformation })`. Data-URL logos (some are base64-stored) are decoded the same way. If a logo fails to fetch, skip it silently and continue (we don't want one bad URL to break the save).
+- Page size: US Letter (12240×15840 DXA), 1" margins.
+- Headings use the chosen `heading.family` as the Word font name; body uses `body.family`. Falls back to "Inter"/"Source Sans Pro" if missing.
+- Existing "Save to My Files" upload path (signed URL + `attendee_documents`) stays exactly the same — only the blob content changes.
+
+## Verification
+
+After build, generate the DOCX in the sandbox, convert to PDF via LibreOffice, render the first 6 pages as JPGs, and inspect:
+- swatches actually show color
+- logo renders and is not stretched
+- heading font specimen reads cleanly
+- markdown sections appear after the visual ones with intact formatting
+
+If any page is broken, fix the builder and re-render before shipping.
 
 ## Out of scope
 
-- XLSX / PPTX previews (different libraries, can be a follow-up).
-- Editing the document in the modal (read-only preview only).
-- Server-side rendering or caching of the HTML.
+- Editing the kit from within the document.
+- Regenerating logos/palettes during export.
+- PDF export variant (DOCX only for now; PDF can follow).
