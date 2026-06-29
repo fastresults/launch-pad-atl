@@ -572,10 +572,29 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           </div>
         </div>
 
-        <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-white/20 bg-background/40 px-4 py-6 text-center hover:border-primary/50">
-          <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => onDropRefs(e.target.files)} disabled={refs.length >= 3} />
+        <label
+          className={`flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors ${
+            dragOver ? "border-primary bg-primary/10" : "border-white/20 bg-background/40 hover:border-primary/50"
+          }`}
+          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (refs.length < 3) setDragOver(true); }}
+          onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); if (refs.length < 3) setDragOver(true); }}
+          onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOver(false); }}
+          onDrop={(e) => {
+            e.preventDefault(); e.stopPropagation(); setDragOver(false);
+            if (refs.length >= 3) return;
+            onDropRefs(e.dataTransfer?.files ?? null);
+          }}
+        >
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => { onDropRefs(e.target.files); e.currentTarget.value = ""; }}
+            disabled={refs.length >= 3}
+          />
           <div className="text-sm font-medium">{refs.length >= 3 ? "3 inspirations added — you're set" : "Drag & drop or click to upload"}</div>
-          <div className="mt-1 text-xs text-muted-foreground">PNG, JPG, SVG · up to 3 images · {refs.length}/3 added</div>
+          <div className="mt-1 text-xs text-muted-foreground">PNG, JPG, SVG, WEBP · up to 3 images · {refs.length}/3 added</div>
         </label>
 
         {refs.length > 0 && (
