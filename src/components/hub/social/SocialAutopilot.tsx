@@ -547,12 +547,18 @@ function Step5BuildKit({
     [platforms, direction],
   );
 
-  const tasks: (KitTask & { signed_url?: string | null })[] = useMemo(() => {
+  const tasks: (KitTask & { signed_url?: string | null; canvas_plan?: any; qa_status?: string | null })[] = useMemo(() => {
     return baseTasks.map((t) => {
       const match = assets.find(
         (a: any) => a.platform === t.platform && a.asset_kind === t.asset && a.art_direction === direction,
       );
-      return { ...t, status: match ? "done" : t.status, signed_url: match?.signed_url ?? null };
+      return {
+        ...t,
+        status: match ? "done" : t.status,
+        signed_url: match?.signed_url ?? null,
+        canvas_plan: match?.canvas_plan ?? null,
+        qa_status: match?.qa_status ?? null,
+      };
     });
   }, [baseTasks, assets, direction]);
 
@@ -631,10 +637,22 @@ function Step5BuildKit({
                       <span className="h-2 w-2 rounded-full bg-muted-foreground/30" />
                     )}
                     <span className="truncate font-medium">{t.platform}</span>
+                    {t.qa_status === "fail" && (
+                      <span className="ml-1 rounded bg-status-warning/15 px-1 text-[9px] font-medium text-status-warning">
+                        contrast
+                      </span>
+                    )}
                   </div>
                   <div className="truncate text-[10px] capitalize text-muted-foreground">
                     {t.asset.replace(/_/g, " ")}
                   </div>
+                  {t.canvas_plan && (
+                    <div className="mt-1 flex items-center gap-0.5" title={`surface ${t.canvas_plan.surface} · ink ${t.canvas_plan.ink} · accent ${t.canvas_plan.accent}`}>
+                      <span className="h-2.5 w-2.5 rounded-sm border border-white/20" style={{ background: t.canvas_plan.surface }} />
+                      <span className="h-2.5 w-2.5 rounded-sm border border-white/20" style={{ background: t.canvas_plan.ink }} />
+                      <span className="h-2.5 w-2.5 rounded-sm border border-white/20" style={{ background: t.canvas_plan.accent }} />
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-1">
                   {t.signed_url && (
