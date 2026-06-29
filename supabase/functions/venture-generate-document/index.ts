@@ -489,6 +489,12 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, ...result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
+    if ((e as any)?.code === "brand_kit_required") {
+      return new Response(
+        JSON.stringify({ ok: false, error: "brand_kit_required", message }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
     if (e instanceof GatewayError) {
       return new Response(JSON.stringify({ ok: false, error: message, gatewayStatus: e.status }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
