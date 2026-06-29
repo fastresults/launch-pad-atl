@@ -23,6 +23,7 @@ import {
   aaBadge,
   PERSONALITY_AXES,
 } from "@/lib/brand-wizard";
+import { sanitizePaletteOption, validatePalette } from "@/lib/brand/palette-rules";
 import { generateBrandAsset } from "@/lib/foundersHub.functions";
 import { brandKitToDocxBlob, validateBrandGuideDocxBlob } from "@/lib/brand-guide-docx";
 import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
@@ -238,21 +239,20 @@ function StepDNA({ snapshot, kit, onSave, onNext }: any) {
 /* ---------- STEP 2: Palette ---------- */
 function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
   const saved = kit?.palette ?? null;
-  const initial = kit?.dna?._paletteOptions ?? [];
+  const initial = (kit?.dna?._paletteOptions ?? []).map(sanitizePaletteOption);
   // Ensure saved pick is always present in the visible options
   const seedOptions = (() => {
     if (!saved) return initial;
     if (initial.some((o: any) => o?.name === saved.name)) return initial;
-    return [saved, ...initial];
+    return [sanitizePaletteOption(saved), ...initial];
   })();
   const [options, setOptions] = useState<any[]>(seedOptions);
-  const [chosen, setChosen] = useState<any>(saved);
+  const [chosen, setChosen] = useState<any>(saved ? sanitizePaletteOption(saved) : null);
   const gen = useMutation({
     mutationFn: () => fetchPaletteOptions(snapshot.id),
     onSuccess: (out) => {
-      const next = out.options ?? [];
+      const next = (out.options ?? []).map(sanitizePaletteOption);
       setOptions(next);
-      // Persist option set + keep saved pick on top if not present
       const persistedOptions = chosen && !next.some((o: any) => o?.name === chosen.name)
         ? [chosen, ...next]
         : next;
@@ -263,14 +263,28 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
   });
 
   const choose = (opt: any) => {
-    setChosen(opt);
-    onSave({ palette: opt });
+    const safe = sanitizePaletteOption(opt);
+    setChosen(safe);
+    onSave({ palette: safe });
+    if (safe.audit?.length) {
+      toast.message("Palette adjusted for readability", {
+        description: `${safe.audit.length} change${safe.audit.length === 1 ? "" : "s"} so text + buttons stay legible on web and social.`,
+      });
+    }
+  };
+
+  const autoFix = () => {
+    if (!chosen) return;
+    const re = sanitizePaletteOption(chosen);
+    setChosen(re);
+    onSave({ palette: re });
+    toast.success("Palette repaired to meet WCAG AA");
   };
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground">Pick the palette direction that feels right. You can fine-tune later.</p>
+        <p className="text-sm text-muted-foreground">Pick the palette direction that feels right. We auto-check contrast so it ports cleanly to your website and social creatives.</p>
         <Button variant="outline" size="sm" onClick={() => gen.mutate()} disabled={gen.isPending} title="Generate fresh options — your current pick is kept">
           {gen.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
           Show new options
@@ -291,6 +305,44 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
               </div>
             ))}
           </div>
+
+          {/* Pairings strip */}
+          <div className="mt-3 space-y-1.5">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Contrast pairings</div>
+            <div className="grid gap-1.5 sm:grid-cols-2">
+              {(chosen.contrast?.pairings ?? []).map((p: any) => (
+                <div key={p.label} className="flex items-center justify-between rounded-md border border-white/10 px-2 py-1.5 text-[11px]">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="inline-block h-4 w-7 rounded border border-white/10" style={{ background: p.bg }}>
+                      <span className="block h-full w-full text-center text-[9px] font-semibold leading-4" style={{ color: p.fg }}>Aa</span>
+                    </span>
+                    <span className="truncate text-muted-foreground">{p.label}</span>
+                  </div>
+                  <span className={`ml-2 shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${p.pass ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-rose-500/15 text-rose-700 dark:text-rose-300"}`}>
+                    {p.pass ? "AA ✓" : "Fail"} {p.ratio.toFixed(2)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {!chosen.contrast?.pass && (
+              <div className="flex items-center justify-between rounded-md border border-amber-500/40 bg-amber-500/5 px-2 py-1.5 text-[11px] text-amber-700 dark:text-amber-300">
+                <span>Some pairings don't meet WCAG AA — text won't stay legible on web/social.</span>
+                <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={autoFix}>Auto-fix</Button>
+              </div>
+            )}
+            {chosen.audit?.length > 0 && (
+              <details className="rounded-md border border-white/10 px-2 py-1.5 text-[10px] text-muted-foreground">
+                <summary className="cursor-pointer">{chosen.audit.length} auto-adjustment{chosen.audit.length === 1 ? "" : "s"} applied</summary>
+                <ul className="mt-1 space-y-0.5 pl-3">
+                  {chosen.audit.map((a: any, i: number) => (
+                    <li key={i} className="list-disc">
+                      <span className="font-mono">{a.field}</span>: {a.from} → {a.to} — {a.reason}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </div>
         </div>
       )}
 
@@ -307,6 +359,7 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
           {options.map((opt, i) => {
             const isPicked = chosen?.name === opt.name;
             const fgBgRatio = contrastRatio(opt.colors.fg, opt.colors.bg);
+            const pass = opt.contrast?.pass ?? fgBgRatio >= 4.5;
             return (
               <button
                 key={`${opt.name}-${i}`}
@@ -329,7 +382,12 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
                     </div>
                   ))}
                 </div>
-                <div className="mt-2 text-[10px] opacity-60">Text contrast {fgBgRatio.toFixed(2)} — {aaBadge(fgBgRatio)}</div>
+                <div className="mt-2 flex items-center justify-between text-[10px]">
+                  <span className="opacity-60">Text contrast {fgBgRatio.toFixed(2)} — {aaBadge(fgBgRatio)}</span>
+                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${pass ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-200" : "bg-rose-500/20 text-rose-700 dark:text-rose-200"}`}>
+                    {pass ? "AA ✓" : "Needs fix"}
+                  </span>
+                </div>
               </button>
             );
           })}
@@ -337,7 +395,7 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
       )}
       <div className="flex justify-between">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>
-        <Button onClick={onNext} disabled={!chosen}>Continue <ArrowRight className="ml-1 h-4 w-4" /></Button>
+        <Button onClick={onNext} disabled={!chosen || !(chosen.contrast?.pass ?? true)}>Continue <ArrowRight className="ml-1 h-4 w-4" /></Button>
       </div>
     </div>
   );
