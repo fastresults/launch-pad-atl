@@ -17,7 +17,9 @@ import {
 } from "@/lib/social-autopilot.functions";
 import { PLATFORM_SPECS, ART_DIRECTIONS } from "@/lib/social-platform-specs";
 import { listSocialAssets } from "@/lib/social-cover.functions";
+import { listStylePreviews, generateStylePreview, type StylePreview } from "@/lib/style-preview.functions";
 import { RegenerateAssetDialog } from "./RegenerateAssetDialog";
+import { RotateCcw } from "lucide-react";
 
 const STEPS = [
   { id: 1, label: "Goals" },
