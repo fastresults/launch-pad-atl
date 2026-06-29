@@ -1,59 +1,46 @@
-# Why the Style Guide looks "empty" in the preview
+## Plan: Make the Brand Style Guide truly WYSIWYG
 
-The DOCX file we generate (`src/lib/brand-guide-docx.ts`) **already embeds** the logo image, the chosen palette swatches (as filled Word table cells), the typography specimens with the chosen font families, the type-scale table, and the voice section. That code is correct and the data is being saved (`palette`, `typography`, `logos`, `voice` are all persisted on `venture_brand_kits` and read back by `getBrandKit` before export).
+### What is going wrong
+- The in-wizard Style Guide preview is currently rendering only `guide_markdown`, so it cannot show the selected logo images, palette color blocks, or typography specimens.
+- The Word export depends on fetching stored logo URLs at export time. If those signed image URLs are expired, malformed, blocked, or missing, the DOCX silently falls back to text-only sections.
+- The My Files modal preview was improved, but that only renders whatever is inside the DOCX. It does not solve missing visuals at generation/export time.
 
-What's wrong is the **preview**, not the file. We render the DOCX inline in `src/components/files/FilePreviewDialog.tsx` with:
+### Implementation steps
+1. **Create one visual Brand Guide renderer**
+   - Build a reusable `VisualBrandGuide` component that displays the actual selected kit data: cover logo, color swatches, typography samples, logo grid, voice, and the written narrative.
+   - Use this component inside Step 5 instead of the markdown-only preview.
+   - This makes the user see the same brand assets before saving that should appear in My Files and Word.
 
-```ts
-const result = await mammoth.convertToHtml({ arrayBuffer: buf });
-```
+2. **Harden logo image export**
+   - Update `brand-guide-docx.ts` so logo embedding resolves images from durable storage paths when available, not only from previously signed URLs.
+   - Keep support for data URLs and regular URLs, but prefer fresh signed download URLs for saved `path` values.
+   - If a logo cannot be embedded, show a clear export warning/toast instead of silently producing a text-only DOCX.
 
-Default mammoth behavior:
-- **Drops all images** (no `convertImage` handler → `<img>` tags are skipped) → no logo on cover.
-- **Ignores table cell shading** (`w:shd`) → color swatches render as empty cells, so the palette looks blank.
-- **Strips run-level color, font family, and font size** → typography specimens fall back to the dialog's default font, so "no typography" appears applied.
-- **Strips bar characters' spacing context** → voice attribute bars render but look like plain text.
+3. **Make color blocks Word-compatible**
+   - Replace fragile color swatch table cells with Word-safe colored shape/image swatches where needed, while keeping table shading for compatibility.
+   - Ensure swatches appear in Microsoft Word, downloaded DOCX, and the My Files preview.
 
-Opening the same file in Word / Google Docs / the mammoth viewer with the right options shows everything we embedded. So we need to upgrade the preview to expose what's already in the file.
+4. **Add export validation before upload**
+   - After generating the DOCX blob, inspect the package client-side enough to confirm:
+     - at least one embedded media file exists when logos are selected
+     - document XML contains the expected palette hex fills
+   - If validation fails, block the save and tell the user which asset failed instead of saving a misleading file.
 
-# Plan
+5. **Refresh My Files preview behavior**
+   - Keep `docx-preview`, but add a visual fallback message when the DOCX lacks embedded media or color fills.
+   - This avoids the modal appearing broken when the real file is missing the assets.
 
-## 1. Upgrade the DOCX preview in `FilePreviewDialog.tsx`
+6. **Verify with the current snapshot**
+   - Generate/save a new style guide for the current venture.
+   - Confirm the saved DOCX is materially larger than the current ~21KB text-only file, contains `/word/media/*`, contains palette fill values, and previews with visible logo/color blocks in My Files.
 
-Pass mammoth a richer config:
+### Files expected to change
+- `src/components/hub/brand-wizard/BrandWizard.tsx`
+- new reusable visual guide component under `src/components/hub/brand-wizard/`
+- `src/lib/brand-guide-docx.ts`
+- optionally `src/components/files/FilePreviewDialog.tsx` for validation/fallback messaging
 
-- **`convertImage`** — use `mammoth.images.imgElement` with a base64 data URI handler so the logo and any embedded images render inline.
-- **`styleMap`** — map our heading styles (`Heading 1..4`) to semantic tags so they keep their hierarchy.
-- **`includeDefaultStyleMap: true`** plus `transformDocument` to preserve run-level color and font, which mammoth normally drops. We'll walk the document tree and, for each run with `color` / `font` / `highlight`, attach an inline `style` via a custom HTML transform. For table cells we'll attach the `w:shd` fill as `background-color` on the cell.
-- Wrap the rendered HTML in a scoped container that allows inline `style` colors/fonts (already supported, just need to stop stripping them).
-
-## 2. Style the preview container
-
-Add a scoped stylesheet in the dialog that:
-
-- Renders `<table>` with visible borders and respects per-cell `background-color`.
-- Renders `<img>` at `max-width: 100%`.
-- Honors inline `font-family`, `color`, and `font-size` so typography specimens look right (Google Fonts are already lazy-loaded in the wizard; we'll add `loadGoogleFont` calls for the kit's chosen heading/body family when the previewed doc is a Style Guide so the font is available in the preview too — best-effort, falls back gracefully).
-
-## 3. Add a clear "Open in Word for full fidelity" affordance
-
-Even with the upgrades, mammoth can't match Word 1:1 (gradients, custom OOXML, page layout). Add a small note + a **Download** button right above the preview so users know the file itself contains everything.
-
-## 4. Sanity-check the generator (no functional change expected)
-
-Quick review pass on `brand-guide-docx.ts` to confirm:
-
-- `logos[].url` is reachable from the browser (signed Supabase URL or data URL) — if not, the cover image fetch silently returns `null`. We'll add a `console.warn` on fetch failure and a fallback text mark so we can see in logs whether image fetch is the culprit on the file side too.
-- Palette is read from `palette.colors` (current shape from the wizard) — confirmed correct.
-
-## Files touched
-
-- `src/components/files/FilePreviewDialog.tsx` — richer mammoth config, scoped styles, optional Google Font preload, download hint.
-- `src/lib/brand-guide-docx.ts` — add a small warning when logo image fetch fails (diagnostic only).
-
-No schema changes, no edge function changes, no data migration.
-
-## Verification
-
-- Open an existing Style Guide from My Files → preview shows the cover logo, the colored palette table, typography specimens in the chosen fonts, and the voice section.
-- Download the same file and open in Word → identical content (already worked).
+### Success criteria
+- Step 5 preview shows actual selected logo imagery, color swatches, and typography before saving.
+- Saved Word docs contain embedded logo images and visible color blocks when opened/downloaded.
+- My Files modal preview matches the saved Word document closely enough to be WYSIWYG for images, colors, and typography layout.
