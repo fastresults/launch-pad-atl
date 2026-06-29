@@ -1178,7 +1178,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 size="sm"
                 variant={catComplete ? "ghost" : "outline"}
                 disabled={bulk.isPending || jobRunning}
-                onClick={() => bulk.mutate({ category: cat })}
+                onClick={() => {
+                  // If this section contains a brand-kit-gated deliverable
+                  // and the kit isn't locked yet, redirect to the wizard.
+                  const needsBrandKit = items.some((t: any) => BRAND_KIT_REQUIRED_TYPES.has(t.type));
+                  if (needsBrandKit && !brandKitLocked) {
+                    toast.error("Finish the Brand Wizard first — it powers the Website PRD.");
+                    openBrandWizard();
+                    return;
+                  }
+                  bulk.mutate({ category: cat });
+                }}
               >
                 {catGenerating ? (
                   <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
