@@ -458,6 +458,7 @@ function Step4Style({
   const [pick, setPick] = useState<string | null>(direction);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
   const [dialog, setDialog] = useState<{ scope: "single" | "all"; direction?: string } | null>(null);
+  const [previewIdx, setPreviewIdx] = useState<number | null>(null);
 
   const previewsQ = useQuery({
     queryKey: ["style-previews", snapshotId],
