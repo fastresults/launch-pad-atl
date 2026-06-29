@@ -5,6 +5,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext, compactPreamble, renderSources } from "../_shared/venture-context.ts";
+import { aiFetch } from "../_shared/ai-fetch.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,8 +17,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
-async function callAI(messages: any[], opts: { json?: boolean; model?: string } = {}) {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+async function callAI(messages: any[], opts: { json?: boolean; model?: string; timeoutMs?: number; retries?: number } = {}) {
+  const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       "Lovable-API-Key": LOVABLE_API_KEY,
@@ -28,7 +29,7 @@ async function callAI(messages: any[], opts: { json?: boolean; model?: string } 
       messages,
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
-  });
+  }, { timeoutMs: opts.timeoutMs ?? 120_000, retries: opts.retries ?? 1 });
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`AI gateway ${res.status}: ${txt.slice(0, 300)}`);
@@ -73,13 +74,32 @@ async function generateGuide(ctx: any, kit: any) {
   const existingPreface = isExisting
     ? `\n\nIMPORTANT: This brand ALREADY EXISTS. The palette, typography, logo and voice below were extracted from the founder's live website (${kit?.dna?.source_url ?? "no URL"}) and uploaded logo files. Treat them as ground truth — codify what's there, do not propose replacements or "modernize" anything. Where the data is incomplete, say so explicitly rather than inventing alternates.`
     : "";
-  const sys = `You are the head of brand at a top agency writing a complete Brand Style Guide for a founder. Use the ENTIRE venture context — company, customer, differentiation, founder DNA, mood, uploaded source materials, and the locked palette/typography/voice — to make every section unmistakably about THIS venture, not boilerplate.${existingPreface} Output Markdown only — no JSON, no code fences except where syntax matters.`;
+  const sys = `You are the head of brand at a top agency writing a complete Brand Style Guide for a founder. Use the ENTIRE venture context — company, customer, differentiation, founder DNA, mood, uploaded source materials, logo assets, and the locked palette/typography/voice — to make every section unmistakably about THIS venture, not boilerplate.${existingPreface} Output Markdown only — no JSON, no code fences except where syntax matters.`;
   const palette = kit.palette ? JSON.stringify(kit.palette, null, 2) : "(none chosen)";
   const typography = kit.typography ? JSON.stringify(kit.typography, null, 2) : "(none chosen)";
   const voice = kit.voice ? JSON.stringify(kit.voice, null, 2) : "(none provided)";
+
+  const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
+  const primaryLogo = logos.find((l) => l?.primary) ?? logos[0] ?? null;
+  const logoBlock = logos.length
+    ? `LOGO ASSETS (${logos.length} uploaded; primary first):
+${logos.map((l, i) => `${i + 1}. ${l.filename || "logo"}${(l === primaryLogo) ? " — PRIMARY" : ""}${l.contentType ? ` (${l.contentType})` : ""}${l.url ? `\n   URL: ${l.url}` : ""}`).join("\n")}`
+    : `LOGO ASSETS: (none uploaded — Section 5 must say so explicitly and give forward-looking direction for a future mark; do NOT pretend a logo exists.)`;
+
+  const moodboard: any[] = Array.isArray(kit?.moodboard) ? kit.moodboard : [];
+  const moodBlock = moodboard.length
+    ? `VISUAL EVIDENCE (use these when writing Section 5 logo character and Section 6 imagery):
+${moodboard.map((m, i) => `${i + 1}. [${m.source || "image"}] ${m.caption || ""}${m.url ? ` — ${m.url}` : ""}`).join("\n")}`
+    : `VISUAL EVIDENCE: (none)`;
+
   const auditSection = isExisting
-    ? `## 1. Existing Brand Audit (what was extracted from ${kit?.dna?.source_url ?? "uploaded assets"} vs. inferred)\n`
+    ? `## 1. Existing Brand Audit — enumerate, as bullets, exactly which fields came from the live site extraction (Firecrawl branding payload) vs. inferred, whether typography was auto_mapped to the nearest Google Font, and call out any palette role left blank. Then state the brand's purpose, promise, and positioning in 2-3 sentences.\n`
     : `## 1. Brand at a Glance (purpose, promise, positioning statement)\n`;
+
+  const logoSectionInstruction = logos.length
+    ? `## 5. Logo Usage — Reference the uploaded PRIMARY logo by filename (${primaryLogo?.filename || "see LOGO ASSETS"}). Describe its visual character (wordmark, symbol, or combination mark), recommended clear-space expressed as a multiple of the logo's cap-height, minimum sizes for print (mm) and screen (px), 4-6 do/don'ts grounded in the actual mark (color inversions on the locked palette, monochrome use, backgrounds to avoid), and lockup rules if multiple variants were uploaded. Do NOT say "no logo is provided" — one is provided.`
+    : `## 5. Logo Usage — Explicitly state that no logo has been uploaded yet. Then provide forward-looking direction for the future mark grounded in the locked palette, typography, and brand voice (recommended type of mark, character, what to avoid). Do NOT fabricate a logo that doesn't exist.`;
+
   const user = `BRAND BRIEF (full venture context):
 ${brandBrief(ctx, kit)}
 
@@ -92,12 +112,16 @@ ${typography}
 LOCKED VOICE:
 ${voice}
 
+${logoBlock}
+
+${moodBlock}
+
 Produce a thorough Brand Style Guide in Markdown with these sections:
 # {Company} — Brand Style Guide
 ${auditSection}## 2. Personality & Voice (5-trait spectrum, do/don't, 3 before/after copy rewrites)
 ## 3. Color System (table: role | hex | RGB | usage | AA pair)
 ## 4. Typography (hierarchy table: H1/H2/H3/body/caption with size/weight/line-height; web + print fallback)
-## 5. Logo Usage (clear-space, min size, do/don'ts, lockups)
+${logoSectionInstruction}
 ## 6. Imagery & Moodboard (style direction, 3 image prompts for photography, 2 for illustration)
 ## 7. Iconography (style, stroke width, corner radius)
 ## 8. Motion (easing, duration, hover/scroll patterns)
@@ -106,7 +130,7 @@ ${auditSection}## 2. Personality & Voice (5-trait spectrum, do/don't, 3 before/a
 ## 11. File Naming & Governance
 
 Target 1,400–1,900 words. Be specific, name the chosen fonts and hex values throughout, and reference the venture's actual customer/problem/differentiation in the examples.`;
-  return await callAI([{ role: "system", content: sys }, { role: "user", content: user }], { model: "google/gemini-2.5-pro" });
+  return await callAI([{ role: "system", content: sys }, { role: "user", content: user }], { model: "google/gemini-2.5-pro", timeoutMs: 140_000, retries: 0 });
 }
 
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") ?? "";
@@ -252,8 +276,8 @@ Return JSON exactly in this shape:
   }
 }
 
-For the palette: prefer Firecrawl branding colors when present (map colors.primary→primary, secondary→secondary, accent→accent, background→bg, textPrimary→fg). If a role is missing, derive it. Use #RRGGBB.
-For typography: map Firecrawl branding fonts to the nearest Google Font. Set auto_mapped:true if you had to substitute.`;
+For the palette: if Firecrawl branding is present, you MUST copy colors verbatim (colors.primary→primary, secondary→secondary, accent→accent, background→bg, textPrimary→fg). Only infer when a role is missing. Use #RRGGBB.
+For typography: if Firecrawl branding fonts are present, use them verbatim when they exist on Google Fonts; otherwise map to the nearest Google Font and set auto_mapped:true. Set auto_mapped:false when the family matched verbatim.`;
   const raw = await callAI([
     { role: "system", content: sys },
     { role: "user", content: user },

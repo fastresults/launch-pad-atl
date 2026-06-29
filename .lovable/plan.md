@@ -1,95 +1,44 @@
-## Goal
-Give the Brand Wizard two entry tracks at Step 1:
+## Audit findings
 
-- **Track A — "I already have a brand"** (new): user drops their logo file(s) and pastes their live website URL. We scrape the site with Firecrawl + extract colors/typography/voice from the logo and site, propose a derived palette/typography/voice for confirmation, then jump straight to Step 5 (Review) and generate the style guide.
-- **Track B — "Build a brand from scratch"** (existing flow): unchanged — DNA → palette → typography → moodboard/logo → review.
+**1. Style Guide ignores uploaded logos (the screenshot bug)**
+`generateGuide()` in `supabase/functions/venture-brand-wizard/index.ts` passes `palette`, `typography`, `voice` into the prompt, but never passes `kit.logos` or `kit.moodboard`. So even when the founder uploaded a logo via the "Existing Brand" track (Track A), the model writes "As no logo is provided…". The DOCX exporter embeds the logo correctly — only the narrative prose is blind to it.
 
-## Why
-Many workshop users (especially Main Street / e-commerce) already operate under a brand. Forcing them through the generative wizard discards their real identity and produces a Website PRD that doesn't match their live site. Track A makes the Brand Kit reflect what already exists so downstream deliverables (Website PRD, Social Kit) stay on-brand.
+**2. Existing-track audit section is generic**
+Section 1 is labeled "Existing Brand Audit" but the prompt doesn't tell the model what was actually extracted vs. inferred (Firecrawl branding payload, auto-mapped fonts, missing roles). Output ends up boilerplate.
 
-## UX
+**3. Section 5 ("Logo Usage") has no logo-specific guidance**
+Even with a logo present, the prompt asks for generic "clear-space, min size, do/don'ts" with no reference to the uploaded mark's shape, colorway, or filename, so the section reads like a template.
 
-### Step 1 becomes a track picker
-File: `src/components/hub/brand-wizard/BrandWizard.tsx` (and a new `Step1TrackPicker.tsx`).
+**4. Extraction model was downgraded to Flash (last turn's timeout fix)**
+Flash is fast enough but loses fidelity on color/font inference from screenshots. Worth keeping Flash but giving it tighter instructions, and falling back to Pro only when Firecrawl branding payload is empty.
 
-Two large cards:
-1. **"I already have a brand"** — "Upload your logo + paste your website. We'll extract your colors, fonts, and voice."
-2. **"Help me build one"** — current DNA flow.
+**5. Style Guide model still Pro, no timeout guard**
+`generateGuide()` calls `gemini-2.5-pro` with no `aiFetch` retry/timeout wrapper. Long generations can 504 the same way `extract-existing` did.
 
-Selection is persisted on `venture_brand_kits.dna.track = 'existing' | 'new'` so users can resume.
+## Fix plan
 
-### Track A wizard steps
-1. **Upload & URL** (new `ExistingBrandIntake.tsx`)
-   - Logo dropzone (PNG/SVG/JPG, up to 4 files: primary, mark, wordmark, alt). Uploaded to `venture-doc-images` bucket via existing signed-URL helper. Persisted on `kit.logos[]` with a `source: 'uploaded'` flag.
-   - Website URL input (validated, optional but encouraged).
-   - Optional "About / voice notes" textarea.
-   - CTA: **Analyze my brand** → calls new edge action `extract-existing`.
-2. **Review extracted brand** (new `ExtractedBrandReview.tsx`)
-   - Shows derived palette (swatches + hex), typography pairing, voice bullets, and a moodboard built from the site's hero/OG image.
-   - Each section has an **Edit** button that drops the user into the existing palette / typography / voice pickers pre-seeded with the extracted values (so they can override anything).
-3. **Review & Lock** → reuses existing Step 5 (`VisualBrandGuide` preview + Generate Style Guide + Save to My Files).
+### A. `supabase/functions/venture-brand-wizard/index.ts` — `generateGuide()`
+- Build a `logoBlock` from `kit.logos`: count, primary filename, signed URL of the primary, and a note if multiple variants exist. Build a `moodBlock` from `kit.moodboard` (site screenshot caption, OG image, logo thumbnails) so the model knows what visual evidence exists.
+- Inject both blocks into the user prompt, right after LOCKED VOICE, under headings `LOGO ASSETS` and `VISUAL EVIDENCE`.
+- Update the Section 5 instruction from generic clear-space copy to: "Reference the uploaded primary logo by filename; describe its visual character (wordmark/symbol/combination), recommended clear-space as a multiple of the logo's cap-height, minimum sizes for print and screen, do/don'ts grounded in the actual mark, and lockup rules. If no logo was uploaded, say so explicitly and provide direction for a future mark."
+- For the `existing` track, expand Section 1's instruction to enumerate: which fields came from Firecrawl branding vs. inferred, whether typography was `auto_mapped`, and any roles the extractor left blank.
 
-Skip Steps 2–4 of the generative flow entirely for Track A unless the user clicks Edit on a section.
+### B. Same file — `generateGuide()` resilience
+- Wrap the `callAI` call in `generateGuide` with `aiFetch` (already used elsewhere) — 90s timeout, 1 retry — so it surfaces a clean error instead of a 504 idle timeout if Pro is slow.
+- Keep the model on `gemini-2.5-pro` (output quality matters here more than latency).
 
-### Reset & switch tracks
-Existing `resetBrandKit` already wipes the row. Add a "Switch track" link on Step 1 of either flow that calls reset after confirmation.
+### C. Same file — `extractExistingBrand()` quality
+- Keep Flash for speed but add an instruction: "If Firecrawl branding is present, you MUST copy `colors.primary/secondary/accent/background/textPrimary` and `fonts[]` verbatim. Only infer when a field is missing." This recovers the fidelity lost from the Pro→Flash downgrade without re-introducing the 150s timeout.
+- Set `auto_mapped: true` whenever a font substitution was made so the Style Guide audit section can flag it.
 
-## Backend
-
-### New edge action: `venture-brand-wizard` → `action: 'extract-existing'`
-File: `supabase/functions/venture-brand-wizard/index.ts`.
-
-Input: `{ snapshotId, websiteUrl?, logoPaths: string[], voiceNotes?: string }`.
-
-Pipeline:
-1. **Scrape site with Firecrawl** (already linked connector; key is `FIRECRAWL_API_KEY`). Use `formats: ['markdown','branding','screenshot','summary']` on the homepage and (best-effort) `/about`. The `branding` format returns colors, fonts, logo, OG image — that's the primary source of truth.
-2. **Logo color extraction**: download each uploaded logo via signed URL, run a Deno-side quantizer (small `npm:get-image-colors` or a hand-rolled k-means on a downsampled PNG) to pull 4–6 dominant non-background colors. Reconcile with Firecrawl branding palette (prefer logo for primary/secondary, site for neutrals/accents).
-3. **Typography reconciliation**: take Firecrawl branding `fonts[]` / `typography.fontFamilies`. Map to nearest Google Font (lookup table + fuzzy match); if none, fall back to the closest pairing from the existing typography generator and flag `auto_mapped: true`.
-4. **Voice synthesis**: feed scraped markdown summary + voice notes to Gemini (`google/gemini-2.5-flash`, JSON) to produce 3–5 voice bullets, tone words, and do/don't pairs — same shape as the existing voice step.
-5. **Moodboard**: store the site screenshot + OG image + extracted logo URLs as moodboard entries.
-6. **Persist** to `venture_brand_kits`:
-   - `dna = { track: 'existing', source_url, voice_notes }`
-   - `palette = { name: 'Extracted from <domain>', colors: {...}, rationale, source: 'extracted' }`
-   - `typography = { heading, body, source: 'extracted', auto_mapped }`
-   - `voice = { bullets, tone, dos, donts, source: 'extracted' }`
-   - `moodboard = [...]`, `logos = [...uploaded with primary flag]`
-   - `step = 5`, `status = 'draft'` (user still has to lock via Generate Style Guide).
-7. Return the full kit so the UI hydrates Step 2 (Extracted review) immediately.
-
-### Style-guide prompt awareness
-File: `supabase/functions/venture-brand-wizard/index.ts` `generateGuide()`.
-- When `kit.dna.track === 'existing'`, prepend an instruction: *"This brand already exists. Treat the palette, typography, logo, and voice as ground truth — describe and codify them, do not propose replacements. Reference the source URL where relevant."*
-- Skip the "personality spectrum" speculation section in favor of an "Existing brand audit" section noting what was extracted vs. inferred.
-
-### Website PRD gate stays
-The existing brand-kit gate on `website_prd` already covers both tracks (a locked kit is a locked kit regardless of origin). No change there — Track A users still must hit "Generate Style Guide" which sets `status='locked'`.
-
-## Data
-No schema migration needed:
-- `venture_brand_kits.dna` (jsonb) holds `track`, `source_url`, `voice_notes`.
-- `logos[]` already supports arbitrary entries; add `source: 'uploaded' | 'generated'` and `primary: boolean`.
-- `palette/typography/voice` already jsonb — add a `source` discriminator.
-
-## Files
-
-New:
-- `src/components/hub/brand-wizard/Step1TrackPicker.tsx`
-- `src/components/hub/brand-wizard/ExistingBrandIntake.tsx`
-- `src/components/hub/brand-wizard/ExtractedBrandReview.tsx`
-
-Edited:
-- `src/components/hub/brand-wizard/BrandWizard.tsx` — branch on `kit.dna.track`; route Track A through the 3-step path, Track B through current 5-step path.
-- `src/lib/brandKit.functions.ts` — add `extractExistingBrand(snapshotId, payload)` wrapping the new edge action.
-- `supabase/functions/venture-brand-wizard/index.ts` — add `extract-existing` action, Firecrawl call, logo color extraction, voice synthesis, persistence; tweak `generateGuide()` for existing-brand mode.
-- `supabase/functions/_shared/venture-context.ts` — extend `brandKitBlock` to include `track` + `source_url` so downstream deliverables know the brand is real, not generated.
+### D. No client / schema changes
+- `kit.logos` and `kit.moodboard` are already persisted by `extractExistingBrand` and the generative track. No DB migration, no new RPC, no UI changes required.
+- DOCX exporter (`brand-guide-docx.ts`) already embeds the primary logo correctly — leave untouched.
 
 ## Verification
-1. Track A: upload PNG logo + paste a live URL → extracted palette/typography/voice appears within ~15s; user can edit any section; Generate Style Guide produces a locked kit; Website PRD unlocks and references the extracted hex/fonts verbatim.
-2. Track A with no URL (logo only): still produces a palette from the logo, typography falls back with `auto_mapped` badge shown in the review step.
-3. Track B: unchanged 5-step flow still works end-to-end.
-4. Reset → switch tracks → re-run: prior kit fully cleared, no leakage between tracks.
-5. Firecrawl 402/insufficient credits: surfaces a clear error in the intake step with a retry; logo-only fallback still works.
 
-## Out of scope
-- Auto-detecting which track to suggest from the snapshot (could be a follow-up: if `brief` mentions an existing site, default the picker to Track A).
-- Reverse-engineering full component styles (buttons, radii). Step 1 — palette/typography/voice/logo only.
+1. Run Track A in the preview: upload a logo + website URL → confirm Brand Kit locks with `logos[]` populated.
+2. Click "Generate Style Guide" → open Step 5 preview. Section 5 should name the uploaded logo file and describe it; Section 1 should list what was extracted vs. inferred.
+3. "Save to My Files" → open the DOCX in the file preview. Logo, palette swatches, and font specimens should all match the kit.
+4. Run Track B (build from scratch) with no logos → Section 5 should say "no logo uploaded" and give forward-looking direction (no false claim of an existing mark).
+5. Check edge logs for `venture-brand-wizard` — no 504s on `styleguide` action.
