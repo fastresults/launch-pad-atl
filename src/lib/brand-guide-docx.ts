@@ -28,6 +28,7 @@ import {
 import JSZip from "jszip";
 import { supabase } from "@/integrations/supabase/client";
 import { mdToBlocks } from "./markdown-to-docx";
+import { sanitizeGuideMarkdown } from "./brand/sanitize-guide-markdown";
 
 // --- Page constants --------------------------------------------------------
 
