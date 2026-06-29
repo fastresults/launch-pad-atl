@@ -29,7 +29,7 @@ async function callAI(messages: any[], opts: { json?: boolean; model?: string; t
       messages,
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
-  });
+  }, { timeoutMs: opts.timeoutMs ?? 120_000, retries: opts.retries ?? 1 });
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`AI gateway ${res.status}: ${txt.slice(0, 300)}`);
