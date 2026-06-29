@@ -99,7 +99,7 @@ export function BrandWizard({
         </DialogHeader>
 
         <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[1fr_360px]">
-          <div className="min-h-0 overflow-y-auto px-6 py-5">
+          <div className="min-h-0 overflow-y-auto px-6 pb-8 pt-5">
             {kitQ.isLoading ? (
               <div className="flex items-center justify-center py-10 text-muted-foreground">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading kit…
@@ -875,9 +875,9 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="sticky bottom-0 z-20 -mx-6 -mb-8 flex flex-wrap items-center justify-between gap-2 border-t border-border bg-background/95 px-6 py-4 shadow-[0_-12px_28px_rgba(0,0,0,0.18)] backdrop-blur">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button onClick={() => lock.mutate()} disabled={lock.isPending || !kit?.palette || !kit?.typography}>
             {lock.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
             {kit?.guide_markdown ? "Regenerate style guide" : "Generate brand style guide"}
