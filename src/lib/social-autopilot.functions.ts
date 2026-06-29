@@ -86,7 +86,20 @@ export type KitTask = {
   error?: string;
 };
 
-// Per-platform: avatar (where applicable) + banner/header/channel_art
+// Per-platform: avatar (where applicable) + a hero/cover asset chosen from the
+// platform's spec. Platforms whose identity needs a second format get an extra tile.
+const COVER_PRIORITY = [
+  "channel_art", "header", "banner",
+  "pinned_post", "video_poster", "vertical_pin",
+  "story_cover", "thumbnail",
+];
+const EXTRA_KIT_ASSETS: Record<string, string[]> = {
+  Instagram: ["story_cover"],
+  TikTok:    ["video_poster"],
+  YouTube:   ["thumbnail"],
+  Pinterest: ["vertical_pin"],
+};
+
 export function buildKitTasks(
   platforms: string[],
   direction: string,
@@ -96,19 +109,17 @@ export function buildKitTasks(
   for (const p of platforms) {
     const spec = specs[p];
     if (!spec) continue;
-    const wanted = spec.assets.filter((a) =>
-      ["avatar", "banner", "header", "channel_art"].includes(a.kind),
-    );
-    // Prefer 1 avatar + 1 cover-ish, dedup by kind family
-    const seenCover = new Set<string>();
-    for (const a of wanted) {
-      if (a.kind === "avatar") {
-        tasks.push({ platform: p, asset: a.kind, direction, status: "pending" });
-      } else if (!seenCover.has("cover")) {
-        seenCover.add("cover");
-        tasks.push({ platform: p, asset: a.kind, direction, status: "pending" });
-      }
-    }
+    const kinds = new Set(spec.assets.map((a) => a.kind));
+    const added = new Set<string>();
+    const push = (kind: string) => {
+      if (!kinds.has(kind) || added.has(kind)) return;
+      added.add(kind);
+      tasks.push({ platform: p, asset: kind, direction, status: "pending" });
+    };
+    if (kinds.has("avatar")) push("avatar");
+    const hero = COVER_PRIORITY.find((k) => kinds.has(k));
+    if (hero) push(hero);
+    for (const k of EXTRA_KIT_ASSETS[p] ?? []) push(k);
   }
   return tasks;
 }
