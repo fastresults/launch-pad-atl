@@ -547,12 +547,12 @@ function Step5BuildKit({
     [platforms, direction],
   );
 
-  const tasks: KitTask[] = useMemo(() => {
+  const tasks: (KitTask & { signed_url?: string | null })[] = useMemo(() => {
     return baseTasks.map((t) => {
       const match = assets.find(
         (a: any) => a.platform === t.platform && a.asset_kind === t.asset && a.art_direction === direction,
       );
-      return { ...t, status: match ? "done" : t.status };
+      return { ...t, status: match ? "done" : t.status, signed_url: match?.signed_url ?? null };
     });
   }, [baseTasks, assets, direction]);
 
