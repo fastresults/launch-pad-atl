@@ -255,6 +255,7 @@ Deno.serve(async (req) => {
     const platformName = String(body?.platform || "");
     const assetKind = String(body?.asset || body?.assetKind || "") as AssetKind;
     const direction = String(body?.direction || "editorial") as ArtDirectionId;
+    const userFeedback = typeof body?.feedback === "string" ? body.feedback.slice(0, 600) : "";
     const platform = getPlatform(platformName);
     if (!platform) return json({ error: `Unknown platform: ${platformName}` }, 400);
     const asset = platform.assets.find((a) => a.kind === assetKind);
