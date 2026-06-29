@@ -772,7 +772,7 @@ function Step5BuildKit({
         await generateOneKitTask(snapshotId, t);
         await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
       } catch (e: any) {
-        setErrors((prev) => ({ ...prev, [k]: e.message ?? "failed" }));
+        setErrors((prev) => ({ ...prev, [k]: generationErrorMessage(e) }));
       } finally {
         setTaskRunning(k, false);
       }
@@ -789,7 +789,9 @@ function Step5BuildKit({
       setErrors((prev) => { const n = { ...prev }; delete n[k]; return n; });
       toast.success("Regenerated");
     } catch (e: any) {
-      toast.error(e.message ?? "failed");
+      const msg = generationErrorMessage(e);
+      setErrors((prev) => ({ ...prev, [k]: msg }));
+      toast.error(msg);
     } finally {
       setTaskRunning(k, false);
     }
@@ -806,7 +808,7 @@ function Step5BuildKit({
           await generateOneKitTask(snapshotId, t, opts);
           await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
         } catch (e: any) {
-          setErrors((prev) => ({ ...prev, [k]: e.message ?? "failed" }));
+          setErrors((prev) => ({ ...prev, [k]: generationErrorMessage(e) }));
         } finally {
           setTaskRunning(k, false);
         }
@@ -953,7 +955,7 @@ function Step5BuildKit({
                           await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
                           setErrors((prev) => { const n = { ...prev }; delete n[k]; return n; });
                         } catch (e: any) {
-                          setErrors((prev) => ({ ...prev, [k]: e.message ?? "failed" }));
+                          setErrors((prev) => ({ ...prev, [k]: generationErrorMessage(e) }));
                         } finally {
                           setTaskRunning(k, false);
                         }
