@@ -11,6 +11,7 @@ import { listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import { getBrandKit } from "@/lib/brandKit.functions";
 import { SocialStudioGate } from "@/components/hub/social/SocialStudioGate";
 import { CoverArtTab } from "@/components/hub/social/CoverArtTab";
+import { ChannelSetupTab } from "@/components/hub/social/ChannelSetupTab";
 
 export function SocialStudio({ snapshot }: { snapshot: any }) {
   const kitQ = useQuery({
@@ -111,28 +112,11 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
           </TabsContent>
 
           <TabsContent value="channels" className="pt-3">
-            {platformMatrix.length > 0 ? (
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Where to post</div>
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {platformMatrix.map((p) => (
-                    <a
-                      key={p.name}
-                      href={`https://namechk.com/?q=${encodeURIComponent((snapshot.company_name || "").replace(/\s+/g, ""))}`}
-                      target="_blank" rel="noreferrer"
-                      title={p.recommendation === "Yes" ? "Recommended" : p.recommendation === "Maybe" ? "Worth trying" : "Skip for now"}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-background/40 px-2 py-0.5 text-[11px] hover:bg-white/5"
-                    >
-                      <span className={`h-2 w-2 rounded-full ${dotColor(p.recommendation)}`} />
-                      <span>{p.name}</span>
-                      <ExternalLink className="h-2.5 w-2.5 text-muted-foreground" />
-                    </a>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">Generate the social media audit to populate the channel matrix.</p>
-            )}
+            <ChannelSetupTab
+              snapshot={snapshot}
+              kit={kit}
+              platformMatrix={platformMatrix}
+            />
           </TabsContent>
 
           <TabsContent value="cover" className="pt-3">
