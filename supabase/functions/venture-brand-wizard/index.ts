@@ -78,7 +78,14 @@ async function generateGuide(ctx: any, kit: any) {
   const existingPreface = isExisting
     ? `\n\nIMPORTANT: This brand ALREADY EXISTS. The palette, typography, logo and voice below were extracted from the founder's live website (${kit?.dna?.source_url ?? "no URL"}) and uploaded logo files. Treat them as ground truth — codify what's there, do not propose replacements or "modernize" anything. Where the data is incomplete, say so explicitly rather than inventing alternates.`
     : "";
-  const sys = `You are the head of brand at a top agency writing a complete Brand Style Guide for a founder. Use the ENTIRE venture context — company, customer, differentiation, founder DNA, mood, uploaded source materials, logo assets, and the locked palette/typography/voice — to make every section unmistakably about THIS venture, not boilerplate.${existingPreface} Output Markdown only — no JSON, no code fences except where syntax matters.`;
+  const sys = `You are the head of brand at a top agency writing a complete Brand Style Guide for a founder. Use the ENTIRE venture context — company, customer, differentiation, founder DNA, mood, uploaded source materials, logo assets, and the locked palette/typography/voice — to make every section unmistakably about THIS venture, not boilerplate.${existingPreface} Output Markdown only — no JSON, no code fences except where syntax matters.
+
+FORMATTING CONTRACT (strict):
+- NEVER draw ASCII art, sliders, bars, gauges, meters, sparklines, swatches, or any pseudo-graphic. Forbidden glyphs for layout purposes: | - – — • · = * ▮ ▯ █ ░ ▰ ▱ ○ ●. (Pipes are ONLY allowed inside real Markdown tables.)
+- For any "scale" or "spectrum", use a Markdown TABLE with a numeric Score column (1–5). Do not draw the scale.
+- For comparisons (do/don't, before/after, role/usage), use Markdown tables or bulleted lists with bold labels.
+- Color swatches, font specimens, motion curves: describe in tables (role | value | usage). Do NOT attempt to render them visually in text.
+- Plain prose otherwise. No decorative dividers made of dashes or equals signs.`;
   const palette = kit.palette ? JSON.stringify(kit.palette, null, 2) : "(none chosen)";
   const typography = kit.typography ? JSON.stringify(kit.typography, null, 2) : "(none chosen)";
   const voice = kit.voice ? JSON.stringify(kit.voice, null, 2) : "(none provided)";
