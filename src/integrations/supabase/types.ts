@@ -2411,6 +2411,7 @@ export type Database = {
           art_direction: string
           asset_kind: string
           brand_kit_locked_at: string | null
+          canvas_plan: Json | null
           created_at: string
           height: number
           id: string
@@ -2418,6 +2419,8 @@ export type Database = {
           model_used: string | null
           platform: string
           prompt_used: string | null
+          qa_notes: Json | null
+          qa_status: string | null
           signed_url: string | null
           signed_url_expires_at: string | null
           snapshot_id: string
@@ -2430,6 +2433,7 @@ export type Database = {
           art_direction: string
           asset_kind: string
           brand_kit_locked_at?: string | null
+          canvas_plan?: Json | null
           created_at?: string
           height: number
           id?: string
@@ -2437,6 +2441,8 @@ export type Database = {
           model_used?: string | null
           platform: string
           prompt_used?: string | null
+          qa_notes?: Json | null
+          qa_status?: string | null
           signed_url?: string | null
           signed_url_expires_at?: string | null
           snapshot_id: string
@@ -2449,6 +2455,7 @@ export type Database = {
           art_direction?: string
           asset_kind?: string
           brand_kit_locked_at?: string | null
+          canvas_plan?: Json | null
           created_at?: string
           height?: number
           id?: string
@@ -2456,6 +2463,8 @@ export type Database = {
           model_used?: string | null
           platform?: string
           prompt_used?: string | null
+          qa_notes?: Json | null
+          qa_status?: string | null
           signed_url?: string | null
           signed_url_expires_at?: string | null
           snapshot_id?: string
