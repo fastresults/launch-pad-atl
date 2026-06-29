@@ -557,15 +557,27 @@ function Step4Style({
               </button>
 
               {brandLocked && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setDialog({ scope: "single", direction: d.id }); }}
-                  disabled={loading}
-                  title="Regenerate this preview"
-                  className="absolute right-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm opacity-0 transition group-hover:opacity-100 disabled:opacity-50"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                </button>
+                <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition group-hover:opacity-100">
+                  {preview?.signed_url && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setPreviewIdx(ART_DIRECTIONS.findIndex((x) => x.id === d.id)); }}
+                      title="Preview full size"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setDialog({ scope: "single", direction: d.id }); }}
+                    disabled={loading}
+                    title="Regenerate this preview"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm disabled:opacity-50"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               )}
             </div>
           );
