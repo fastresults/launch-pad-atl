@@ -143,6 +143,7 @@ export function SocialAutopilot({
         />
       ) : step === 4 ? (
         <Step4Style
+          snapshotId={snapshotId}
           kit={kit}
           direction={direction}
           onBack={() => setStep(3)}
