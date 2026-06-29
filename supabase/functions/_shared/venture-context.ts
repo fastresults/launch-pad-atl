@@ -191,6 +191,7 @@ export type BrandKitRow = {
   voice?: any;
   logos?: any[] | null;
   guide_markdown?: string | null;
+  dna?: any;
 };
 
 export async function loadBrandKit(supabase: any, snapshotId: string): Promise<BrandKitRow | null> {
