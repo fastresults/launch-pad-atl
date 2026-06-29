@@ -1,8 +1,58 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, Trash2, FileText, Loader2 } from "lucide-react";
 import { getDocumentDownloadUrl } from "@/lib/attendee.functions";
+
+function DocxPreview({ url, onError }: { url: string; onError: (msg: string | null) => void }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const styleRef = useRef<HTMLDivElement | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    onError(null);
+    (async () => {
+      try {
+        const buf = await (await fetch(url)).arrayBuffer();
+        if (cancelled) return;
+        const { renderAsync } = await import("docx-preview");
+        if (cancelled || !containerRef.current) return;
+        containerRef.current.innerHTML = "";
+        if (styleRef.current) styleRef.current.innerHTML = "";
+        await renderAsync(buf, containerRef.current, styleRef.current ?? undefined, {
+          inWrapper: true,
+          ignoreWidth: false,
+          ignoreHeight: false,
+          ignoreFonts: false,
+          breakPages: true,
+          experimental: true,
+          renderHeaders: true,
+          renderFooters: true,
+          useBase64URL: true,
+        });
+      } catch (e: any) {
+        if (!cancelled) onError(e?.message || "Could not render document");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [url]);
+
+  return (
+    <div className="max-h-[72vh] overflow-auto rounded-lg bg-slate-200 p-4">
+      {loading && (
+        <div className="flex h-[360px] items-center justify-center text-sm text-muted-foreground">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Rendering document…
+        </div>
+      )}
+      <div ref={styleRef} />
+      <div ref={containerRef} className="docx-preview-host mx-auto [&_.docx-wrapper]:bg-transparent [&_.docx-wrapper>section.docx]:mx-auto [&_.docx-wrapper>section.docx]:mb-4 [&_.docx-wrapper>section.docx]:shadow-lg" />
+    </div>
+  );
+}
 
 type Doc = {
   id: string;
@@ -40,14 +90,14 @@ export function FilePreviewDialog({
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [docxHtml, setDocxHtml] = useState<string | null>(null);
+  // docx rendering happens in <DocxPreview /> directly from the signed URL
   const [textBody, setTextBody] = useState<string | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setUrl(null);
-    setDocxHtml(null);
+    // docx rendering is delegated to <DocxPreview />
     setTextBody(null);
     setRenderError(null);
     if (!doc) return;
@@ -60,16 +110,7 @@ export function FilePreviewDialog({
         setUrl(signed);
 
         if (isDocx(doc.mime_type, doc.original_name)) {
-          try {
-            const buf = await (await fetch(signed)).arrayBuffer();
-            if (cancelled) return;
-            const mammoth = await import("mammoth/mammoth.browser");
-            const result = await mammoth.convertToHtml({ arrayBuffer: buf });
-            if (cancelled) return;
-            setDocxHtml(result.value || "<p><em>Document appears to be empty.</em></p>");
-          } catch (e: any) {
-            if (!cancelled) setRenderError(e?.message || "Could not render document");
-          }
+          // <DocxPreview /> fetches and renders from the signed URL
         } else if (isText(doc.mime_type, doc.original_name)) {
           try {
             const txt = await (await fetch(signed)).text();
@@ -119,26 +160,8 @@ export function FilePreviewDialog({
             <iframe src={url} title={doc.original_name} className="h-[70vh] w-full rounded-lg bg-white" />
           )}
 
-          {!loading && docx && docxHtml && (
-            <div className="max-h-[72vh] overflow-auto rounded-lg bg-white p-8 md:p-12 shadow-inner">
-              <div
-                className="docx-preview mx-auto max-w-[68ch] text-slate-900 leading-relaxed text-[15px]
-                  [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-3
-                  [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2
-                  [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2
-                  [&_p]:my-2
-                  [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2
-                  [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2
-                  [&_li]:my-1
-                  [&_table]:border-collapse [&_table]:my-3 [&_table]:w-full
-                  [&_td]:border [&_td]:border-slate-300 [&_td]:p-2
-                  [&_th]:border [&_th]:border-slate-300 [&_th]:p-2 [&_th]:bg-slate-100 [&_th]:text-left
-                  [&_a]:text-primary [&_a]:underline
-                  [&_strong]:font-semibold
-                  [&_img]:max-w-full [&_img]:my-3"
-                dangerouslySetInnerHTML={{ __html: docxHtml }}
-              />
-            </div>
+          {!loading && url && docx && (
+            <DocxPreview url={url} onError={setRenderError} />
           )}
 
           {!loading && text && textBody !== null && (
@@ -147,7 +170,7 @@ export function FilePreviewDialog({
             </div>
           )}
 
-          {!loading && url && !image && !pdf && !(docx && docxHtml) && !(text && textBody !== null) && (
+          {!loading && url && !image && !pdf && !docx && !(text && textBody !== null) && (
             <div className="flex h-[420px] flex-col items-center justify-center gap-3 text-center px-6">
               <FileText className="h-10 w-10 text-muted-foreground" />
               <div className="text-sm text-muted-foreground max-w-md">
