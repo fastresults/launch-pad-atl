@@ -771,7 +771,7 @@ async function buildLogoSection(
                       new ImageRun({
                         type: img.type,
                         data: img.data,
-                        transformation: { width: 200, height: 200 },
+                        transformation: fitBox(img.width, img.height, 200, 200),
                         altText: {
                           title: "Alternate logo",
                           description: alt?.direction_name || "Alternate logo",
