@@ -45,6 +45,9 @@ import { RewriteFeedbackDialog } from "@/components/hub/RewriteFeedbackDialog";
 import { IntakeGatewayDialog, type IntakeTarget } from "@/components/hub/IntakeGatewayDialog";
 import { BulkUnlockDialog } from "@/components/hub/BulkUnlockDialog";
 import { BrandStudio } from "@/components/hub/BrandStudio";
+import { getBrandKit } from "@/lib/brandKit.functions";
+
+const BRAND_KIT_REQUIRED_TYPES = new Set<string>(["website_prd"]);
 import { SocialStudio } from "@/components/hub/SocialStudio";
 import { FounderRoadmapCard } from "@/components/hub/FounderRoadmapCard";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
