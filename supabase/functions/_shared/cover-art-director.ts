@@ -142,8 +142,9 @@ export function buildCoverArtPrompt(args: {
   hasLogoImage?: boolean;
   retryNote?: string;
   userFeedback?: string;
+  variationSeed?: string;
 }): string {
-  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback } = args;
+  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed } = args;
   const brief = DIRECTION_BRIEF[direction];
   const palette = paletteBlock(kit);
   const typo = typoBlock(kit);
