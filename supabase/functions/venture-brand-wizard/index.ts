@@ -276,8 +276,8 @@ Return JSON exactly in this shape:
   }
 }
 
-For the palette: prefer Firecrawl branding colors when present (map colors.primary→primary, secondary→secondary, accent→accent, background→bg, textPrimary→fg). If a role is missing, derive it. Use #RRGGBB.
-For typography: map Firecrawl branding fonts to the nearest Google Font. Set auto_mapped:true if you had to substitute.`;
+For the palette: if Firecrawl branding is present, you MUST copy colors verbatim (colors.primary→primary, secondary→secondary, accent→accent, background→bg, textPrimary→fg). Only infer when a role is missing. Use #RRGGBB.
+For typography: if Firecrawl branding fonts are present, use them verbatim when they exist on Google Fonts; otherwise map to the nearest Google Font and set auto_mapped:true. Set auto_mapped:false when the family matched verbatim.`;
   const raw = await callAI([
     { role: "system", content: sys },
     { role: "user", content: user },
