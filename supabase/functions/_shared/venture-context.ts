@@ -197,7 +197,7 @@ export type BrandKitRow = {
 export async function loadBrandKit(supabase: any, snapshotId: string): Promise<BrandKitRow | null> {
   const { data } = await supabase
     .from("venture_brand_kits")
-    .select("status, locked_at, palette, typography, voice, logos, guide_markdown")
+    .select("status, locked_at, palette, typography, voice, logos, guide_markdown, dna")
     .eq("snapshot_id", snapshotId)
     .maybeSingle();
   return (data ?? null) as BrandKitRow | null;
