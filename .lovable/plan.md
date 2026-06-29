@@ -1,29 +1,40 @@
 ## Goal
-When a generated avatar/cover in Social Studio (Step 5 Build kit) feels off-brand, give the user a clear **Regenerate** path with optional written feedback ("less purple", "more editorial", "remove the dark square", etc.) plus a one-tap style override — instead of the current tiny silent "Redo" that just re-rolls the same prompt.
+Replace the static Step 4 "Pick a look" mocks with brand-aware, AI-rendered preview tiles, each with its own Regenerate button (and a "Regenerate all"). Step 5 regenerate behavior stays as is.
 
-## UX changes (`SocialAutopilot.tsx`, Step 5 card)
+## What changes
 
-1. Replace the per-asset ghost "Redo/Retry" with a prominent **Regenerate** button (icon + label) on every tile, visible whenever the tile has an image or an error.
-2. Clicking Regenerate opens a new `RegenerateAssetDialog` showing:
-   - Thumbnail of the current asset + brand palette swatches + current style chip.
-   - Free-text "What's off?" field (placeholder: "e.g. background too dark, logo too small, less purple, more editorial feel").
-   - Quick-pick chips that prepend canned guidance: *Lighter background*, *Stronger logo presence*, *More whitespace*, *Higher contrast*, *Less saturated*, *Different composition*.
-   - Optional **Override style for this asset** dropdown (Editorial / Photographic / Geometric / Illustrative) so users can try a different look on one tile without changing the global pick.
-   - Buttons: Cancel · Regenerate.
-3. Add a header-level **Regenerate all** button next to the direction badge that opens the same dialog scoped to "all not-locked assets" with the same feedback fields.
-4. Add a small ⭐ **Keep** toggle per tile; kept tiles are excluded from "Regenerate all" so the user can lock the good ones.
+### 1. Brand-aware previews (replace CSS mocks)
+- `StylePreview` in `src/components/hub/social/SocialAutopilot.tsx` currently draws CSS shapes from the palette. Swap to render an actual AI-generated thumbnail per direction (Editorial / Photographic / Geometric / Illustrative), composed with the venture's logo, palette, and typography.
+- Fall back to the existing CSS mock while loading or if generation fails.
 
-## Wiring
+### 2. New thumbnail cache table
+Add `venture_style_previews`:
+- `id`, `snapshot_id`, `direction` (editorial|photographic|geometric|illustrative), `image_url`, `canvas_plan` jsonb, `qa_status`, `created_at`
+- Unique on `(snapshot_id, direction)`. RLS + GRANTs mirroring `venture_social_assets`.
 
-- Extend `generateOneKitTask(snapshotId, task, opts?)` in `src/lib/social-autopilot.functions.ts` to accept `{ feedback?: string; directionOverride?: ArtDirectionId }` and forward both to the `venture-social-cover` invoke body as `feedback` and `direction`.
-- `venture-social-cover/index.ts`: read `body.feedback` (string, ≤500 chars, trimmed) and pass it through to `buildCoverArtPrompt` / `buildAvatarPrompt` as an additional `userFeedback` argument; concatenate into the existing `retryNote` slot so the director prompt includes a "User feedback to honor on this regeneration: …" block above the existing constraints. Direction override already flows via the existing `direction` field.
-- `cover-art-director.ts`: accept and render `userFeedback` near the top of the prompt with a "Treat this as binding art-direction notes" preface; keep WCAG/contrast rules above it so feedback can't override safety rails.
-- Persist the last feedback on the asset row for transparency: add `last_feedback text` and `last_regenerated_at timestamptz` columns to `venture_social_assets` (migration). Show the last feedback as a muted tooltip on the tile if present.
+### 3. Edge Function: `venture-style-preview`
+- Input: `{ snapshotId, direction, feedback? }`
+- Reuses `_shared/canvas-plan.ts`, `palette-tile.ts`, `cover-art-director.ts`, and `image-qa.ts` (the same pipeline as Step 5) but at 1024x768 preview ratio.
+- Uses brand kit (palette + logo PNG from `user-media`) as multimodal input so previews look like what the kit will actually produce.
+- Upserts result into `venture_style_previews`.
+
+### 4. UI: Regenerate on each Step 4 tile
+In `Step4Style`:
+- Per-tile overlay button (top-right): `RotateCcw` icon → opens `RegenerateAssetDialog` (already exists) prefilled with that direction; on submit calls `venture-style-preview` with `feedback`.
+- Header action: "Regenerate all" → fires the function for all 4 directions in parallel with a single shared feedback string.
+- Tile shows loading shimmer while regenerating; selection state preserved.
+- First visit auto-generates any missing previews (one call per direction, parallel).
+
+### 5. Client wrapper
+Add `generateStylePreview(snapshotId, direction, feedback?)` in `src/lib/social.functions.ts` (next to `generateSocialCover`).
+
+## Files touched
+- `supabase/migrations/<ts>_venture_style_previews.sql` (new)
+- `supabase/functions/venture-style-preview/index.ts` (new)
+- `src/lib/social.functions.ts` (add wrapper)
+- `src/components/hub/social/SocialAutopilot.tsx` (Step4Style + StylePreview)
+- Reuse: `src/components/hub/social/RegenerateAssetDialog.tsx` (no change)
 
 ## Out of scope
-No changes to Step 4 Style picker, brand wizard, or the QA/contrast retry loop. The Geometric thumbnail shown in the screenshot is just the static style preview — regenerate applies to real generated assets in Step 5.
-
-## Technical notes
-- Keep `verify_jwt = false` posture unchanged; `venture-social-cover` already validates the user.
-- Migration adds two nullable columns; existing RLS grants cover them.
-- Dialog reuses shadcn `Dialog`, `Textarea`, `Badge`, `Select`.
+- Step 5 tiles (already have regenerate).
+- Changing the 4 direction options or copy.

@@ -17,7 +17,9 @@ import {
 } from "@/lib/social-autopilot.functions";
 import { PLATFORM_SPECS, ART_DIRECTIONS } from "@/lib/social-platform-specs";
 import { listSocialAssets } from "@/lib/social-cover.functions";
+import { listStylePreviews, generateStylePreview, type StylePreview } from "@/lib/style-preview.functions";
 import { RegenerateAssetDialog } from "./RegenerateAssetDialog";
+import { RotateCcw } from "lucide-react";
 
 const STEPS = [
   { id: 1, label: "Goals" },
@@ -141,6 +143,7 @@ export function SocialAutopilot({
         />
       ) : step === 4 ? (
         <Step4Style
+          snapshotId={snapshotId}
           kit={kit}
           direction={direction}
           onBack={() => setStep(3)}
@@ -443,42 +446,135 @@ function Step3Channels({
 
 // ====================== STEP 4 — Style ======================
 function Step4Style({
-  kit, direction, onBack, onContinue,
-}: { kit: any; direction: string | null; onBack: () => void; onContinue: (d: string) => void }) {
+  snapshotId, kit, direction, onBack, onContinue,
+}: { snapshotId: string; kit: any; direction: string | null; onBack: () => void; onContinue: (d: string) => void }) {
+  const qc = useQueryClient();
   const palette = kit?.palette?.colors ?? {};
   const colors = Object.values(palette).slice(0, 4) as string[];
   const head = kit?.typography?.heading?.family ?? "Inter";
+  const brandLocked = kit?.status === "locked";
 
   const [pick, setPick] = useState<string | null>(direction);
+  const [busy, setBusy] = useState<Record<string, boolean>>({});
+  const [dialog, setDialog] = useState<{ scope: "single" | "all"; direction?: string } | null>(null);
+
+  const previewsQ = useQuery({
+    queryKey: ["style-previews", snapshotId],
+    queryFn: () => listStylePreviews(snapshotId),
+    enabled: brandLocked,
+  });
+  const previews: StylePreview[] = previewsQ.data ?? [];
+  const byDirection = new Map(previews.map((p) => [p.direction, p]));
+
+  const runGenerate = async (dirId: string, feedback?: string) => {
+    if (!brandLocked) return;
+    setBusy((b) => ({ ...b, [dirId]: true }));
+    try {
+      await generateStylePreview({ snapshotId, direction: dirId, feedback });
+      await qc.invalidateQueries({ queryKey: ["style-previews", snapshotId] });
+    } catch (e: any) {
+      toast.error(e?.message || "Couldn't regenerate preview");
+    } finally {
+      setBusy((b) => ({ ...b, [dirId]: false }));
+    }
+  };
+
+  // Auto-generate any missing previews on first visit (in parallel).
+  useEffect(() => {
+    if (!brandLocked || previewsQ.isLoading) return;
+    const missing = ART_DIRECTIONS.filter((d) => !byDirection.has(d.id) && !busy[d.id]);
+    if (!missing.length) return;
+    missing.forEach((d) => runGenerate(d.id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brandLocked, previewsQ.isLoading, previews.length]);
+
+  const regenerateAll = async (feedback: string) => {
+    await Promise.all(ART_DIRECTIONS.map((d) => runGenerate(d.id, feedback)));
+  };
 
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
-      <header>
-        <h3 className="text-base font-semibold">Pick a look</h3>
-        <p className="text-xs text-muted-foreground">One tap. We'll apply it to every channel using your brand.</p>
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-semibold">Pick a look</h3>
+          <p className="text-xs text-muted-foreground">
+            Live previews rendered with your brand kit. Not feeling one? Hit regenerate.
+          </p>
+        </div>
+        {brandLocked && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setDialog({ scope: "all" })}
+            disabled={Object.values(busy).some(Boolean)}
+          >
+            <RotateCcw className="mr-1 h-3 w-3" /> Regenerate all
+          </Button>
+        )}
       </header>
 
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         {ART_DIRECTIONS.map((d) => {
           const on = pick === d.id;
+          const preview = byDirection.get(d.id);
+          const loading = busy[d.id];
           return (
-            <button
+            <div
               key={d.id}
-              type="button"
-              onClick={() => setPick(d.id)}
-              className={`overflow-hidden rounded-xl border text-left transition ${
+              className={`group relative overflow-hidden rounded-xl border transition ${
                 on ? "border-primary ring-2 ring-primary/40" : "border-white/10 hover:border-white/20"
               }`}
             >
-              <StylePreview id={d.id} colors={colors} fontFamily={head} />
-              <div className="p-2">
-                <div className="text-sm font-semibold">{d.label}</div>
-                <p className="line-clamp-2 text-[11px] text-muted-foreground">{d.blurb}</p>
-              </div>
-            </button>
+              <button
+                type="button"
+                onClick={() => setPick(d.id)}
+                className="block w-full text-left"
+              >
+                <div className="relative">
+                  {preview?.signed_url ? (
+                    <img
+                      src={preview.signed_url}
+                      alt={`${d.label} preview`}
+                      className="aspect-[4/3] w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <StylePreview id={d.id} colors={colors} fontFamily={head} />
+                  )}
+                  {loading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-2">
+                  <div className="text-sm font-semibold">{d.label}</div>
+                  <p className="line-clamp-2 text-[11px] text-muted-foreground">{d.blurb}</p>
+                </div>
+              </button>
+
+              {brandLocked && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setDialog({ scope: "single", direction: d.id }); }}
+                  disabled={loading}
+                  title="Regenerate this preview"
+                  className="absolute right-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm opacity-0 transition group-hover:opacity-100 disabled:opacity-50"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
           );
         })}
       </div>
+
+      {!brandLocked && (
+        <p className="text-[11px] text-muted-foreground">
+          Lock your Brand Kit to render live previews here. Static mockups shown above.
+        </p>
+      )}
 
       <footer className="flex items-center justify-between gap-2">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back</Button>
@@ -486,6 +582,30 @@ function Step4Style({
           Continue <ArrowRight className="ml-1 h-3 w-3" />
         </Button>
       </footer>
+
+      {dialog && (
+        <RegenerateAssetDialog
+          open={!!dialog}
+          onOpenChange={(v) => !v && setDialog(null)}
+          scope={dialog.scope}
+          targetLabel={
+            dialog.scope === "all"
+              ? "all 4 style previews"
+              : ART_DIRECTIONS.find((x) => x.id === dialog.direction)?.label || ""
+          }
+          thumbnailUrl={dialog.direction ? byDirection.get(dialog.direction)?.signed_url : null}
+          currentDirection={dialog.direction || "editorial"}
+          canvasPlan={dialog.direction ? byDirection.get(dialog.direction)?.canvas_plan : null}
+          onSubmit={async ({ feedback, directionOverride }) => {
+            if (dialog.scope === "all") {
+              await regenerateAll(feedback);
+            } else {
+              const target = directionOverride || dialog.direction!;
+              await runGenerate(target, feedback);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
