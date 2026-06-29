@@ -1,38 +1,53 @@
-## Goal
-Make every creative asset on Social Studio (Step 4 style previews and Step 5 build-kit tiles) openable in a full-size preview modal — click any tile to see the artwork large with metadata and actions.
+# Fix: Step 5 "Build kit" footer blocks the user from reaching Launch
 
-## What changes
+## Problem
+In `SocialAutopilot.tsx` (Step 5), the primary CTA is gated by `allDone` — every platform/asset task must have a generated image. If even one tile is missing (e.g. the Threads avatar in the screenshot), the footer flips to **Generate all** and there is no way to advance to Step 6 (Launch). Users who have already produced and regenerated the assets they care about are stuck.
 
-### 1. New shared component: `AssetPreviewDialog`
-`src/components/hub/social/AssetPreviewDialog.tsx`
-- Built on shadcn `Dialog` (large: `max-w-5xl`, asset centered on a neutral checkerboard so transparent PNGs read correctly).
-- Props: `open`, `onOpenChange`, `asset: { url, title, subtitle?, width?, height?, platform?, assetKind?, canvasPlan?, qaStatus?, qaNotes?, modelUsed?, lastFeedback?, updatedAt? }`, optional `onRegenerate?()`, `onDownload?()`, `nextAsset?()/prevAsset?()` for keyboard arrow navigation.
-- Body: large image (object-contain, capped at 80vh), side rail with title, dimensions, platform, model used, last feedback, QA badge (pass/fail with contrast ratio from `qaNotes`), CanvasPlan swatch strip (surface/ink/accent) when present.
-- Footer: Download (signed URL), Copy URL, Open in new tab, Regenerate (opens existing `RegenerateAssetDialog`).
-- Keyboard: Esc to close, ←/→ to move between assets in the same gallery.
+## Fix
 
-### 2. Step 4 – Style preview tiles
-In `SocialAutopilot.tsx` `Step4Style`:
-- Wrap each direction tile in a button that opens `AssetPreviewDialog` for that direction's preview image (the AI thumbnail from `venture_style_previews`).
-- Add a small "Preview" overlay icon (Eye) next to the existing Regenerate overlay, so click-through is discoverable without hijacking the tile-select click. Selection stays on tile body click; Preview/Regenerate are corner buttons that `stopPropagation`.
-- Arrow-key nav cycles through the 4 directions.
+### 1. Replace single-CTA footer with a two-button footer
+File: `src/components/hub/social/SocialAutopilot.tsx` (footer of `Step5BuildKit`).
 
-### 3. Step 5 – Build kit tiles
-In `Step5BuildKit`:
-- Each generated asset card (avatar / cover / pinned post, per platform) becomes clickable → opens `AssetPreviewDialog` with that asset.
-- The existing Regenerate / Keep controls stay; add an Eye "Preview" icon next to them.
-- Arrow-key nav cycles through all assets currently rendered in the kit grid.
+- Always show **Continue to launch** as the primary CTA once `anyDone` is true (at least one asset generated). This calls the existing `onContinue`.
+- Add a secondary **Generate missing** button (outline) shown only when there are pending/errored tiles. It runs `runAll` but skips tiles whose `status === "done"` (current `runAll` already does this).
+- When nothing has been generated yet, keep today's behavior: primary **Generate all**, no Continue.
+- Disable Continue while `running` is true so a user can't navigate away mid-batch.
 
-### 4. Wiring
-- Reuse signed URLs already returned by `listSocialAssets` / `listStylePreviews` — no new edge function or schema work.
-- Reuse `RegenerateAssetDialog` for the Regenerate action from inside the preview.
-- No DB changes.
+### 2. Soft warning when advancing with gaps
+When the user clicks Continue and `!allDone`, show an inline note above the footer (not a blocking dialog): "X of Y assets generated. You can finish the rest later from this step." No confirmation modal — just informational, so flow stays fast.
 
-## Files touched
-- `src/components/hub/social/AssetPreviewDialog.tsx` (new)
-- `src/components/hub/social/SocialAutopilot.tsx` (Step4Style + Step5BuildKit: add preview triggers and dialog state)
+### 3. Tile-level clarity for the empty Threads case
+The Threads row in the screenshot shows a placeholder icon and no Regenerate button (the button only renders when `done || err`). Add a **Generate** button on tiles that are neither done nor errored so a single missing tile can be filled without the bulk action.
+
+### 4. Keep existing behavior intact
+- `Regenerate` per tile, `Regenerate all`, `Keep` toggle, preview modal, and the bulk `runAll` loop are unchanged.
+- No edge function or schema changes.
+- No copy changes elsewhere in the wizard.
+
+## Technical details
+- Derive `pendingCount = tasks.filter(t => t.status !== "done").length` and `doneCount = tasks.length - pendingCount` for the footer caption.
+- Footer JSX (pseudocode):
+  ```
+  <Back />
+  <div className="flex items-center gap-2">
+    {!allDone && anyDone && (
+      <span className="text-[11px] text-muted-foreground">
+        {doneCount} of {tasks.length} ready
+      </span>
+    )}
+    {pendingCount > 0 && anyDone && (
+      <Button variant="outline" onClick={runAll} disabled={running}>
+        Generate missing ({pendingCount})
+      </Button>
+    )}
+    {anyDone ? (
+      <Button onClick={onContinue} disabled={running}>Continue to launch →</Button>
+    ) : (
+      <Button onClick={runAll} disabled={running}>Generate all</Button>
+    )}
+  </div>
+  ```
+- Per-tile "Generate" button: render when `!done && !err` (mutually exclusive with the existing Regenerate button). Calls `generateOneKitTask(snapshotId, t)` then invalidates the `social-cover` query.
 
 ## Out of scope
-- Editing/cropping inside the modal.
-- Persisting view history.
-- Other hub surfaces (Brand Wizard, Documents) — this request is scoped to Social Studio per the screenshot.
+- Why the Threads avatar failed to generate in the first place (separate issue — likely a per-task error swallowed by the bulk loop). Can be a follow-up if it recurs after this fix.
