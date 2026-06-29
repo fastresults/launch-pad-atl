@@ -172,7 +172,7 @@ export function FilePreviewDialog({
             </div>
           )}
 
-          {!loading && url && !image && !pdf && !(docx && docxHtml) && !(text && textBody !== null) && (
+          {!loading && url && !image && !pdf && !docx && !(text && textBody !== null) && (
             <div className="flex h-[420px] flex-col items-center justify-center gap-3 text-center px-6">
               <FileText className="h-10 w-10 text-muted-foreground" />
               <div className="text-sm text-muted-foreground max-w-md">
