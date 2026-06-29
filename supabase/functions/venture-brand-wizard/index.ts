@@ -129,16 +129,24 @@ ${moodBlock}
 
 Produce a thorough Brand Style Guide in Markdown with these sections:
 # {Company} — Brand Style Guide
-${auditSection}## 2. Personality & Voice (5-trait spectrum, do/don't, 3 before/after copy rewrites)
-## 3. Color System (table: role | hex | RGB | usage | AA pair)
-## 4. Typography (hierarchy table: H1/H2/H3/body/caption with size/weight/line-height; web + print fallback)
+${auditSection}## 2. Personality & Voice
+Write 2-3 sentences on the brand's voice. Then a "Voice Spectrum" Markdown table with this exact shape (no ASCII sliders — just integer Scores 1-5, where 1 = far left pole, 5 = far right pole):
+
+| Trait | Left pole | Score | Right pole | How it shows up |
+|---|---|---|---|---|
+| Directness | Direct | 2 | Vague | one concrete sentence |
+
+Include 5 rows (Directness, Expertise, Empathy, Brevity, Edge — or equivalents that fit the brand). Then a `### Do` bulleted list (4-6 items) and a `### Don't` bulleted list (4-6 items). Then `### Before / After` with 3 rewrites, each as two blockquotes (`> Before:` then `> After:`).
+## 3. Color System — Markdown table only: | Role | Hex | RGB | Usage | AA Pair |. No swatch art or block characters.
+## 4. Typography — Markdown hierarchy table: | Level | Font | Weight | Size | Line-height | Use |. Include H1/H2/H3/body/caption and web + print fallback rows. No ASCII type specimens.
 ${logoSectionInstruction}
 ## 6. Imagery & Moodboard (style direction, 3 image prompts for photography, 2 for illustration)
 ## 7. Iconography (style, stroke width, corner radius)
-## 8. Motion (easing, duration, hover/scroll patterns)
+## 8. Motion — Markdown table: | Pattern | Easing | Duration (ms) | Use |. No drawn curves.
 ## 9. Application Examples (website hero, social post, email signature, business card copy)
 ## 10. Voice Cheat-Sheet
 ## 11. File Naming & Governance
+
 
 Target 1,400–1,900 words. Be specific, name the chosen fonts and hex values throughout, and reference the venture's actual customer/problem/differentiation in the examples.`;
   return await callAI([{ role: "system", content: sys }, { role: "user", content: user }], { model: "google/gemini-2.5-pro", timeoutMs: 140_000, retries: 0 });
