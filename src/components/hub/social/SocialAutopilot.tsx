@@ -488,7 +488,7 @@ function Step4Style({
       await generateStylePreview({ snapshotId, direction: dirId, feedback });
       await qc.invalidateQueries({ queryKey: ["style-previews", snapshotId] });
     } catch (e: any) {
-      toast.error(e?.message || "Couldn't regenerate preview");
+      toast.error(generationErrorMessage(e));
     } finally {
       setBusy((b) => ({ ...b, [dirId]: false }));
     }
