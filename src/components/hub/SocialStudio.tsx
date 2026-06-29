@@ -11,6 +11,7 @@ import { listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import { getBrandKit } from "@/lib/brandKit.functions";
 import { SocialStudioGate } from "@/components/hub/social/SocialStudioGate";
 import { CoverArtTab } from "@/components/hub/social/CoverArtTab";
+import { ChannelSetupTab } from "@/components/hub/social/ChannelSetupTab";
 
 export function SocialStudio({ snapshot }: { snapshot: any }) {
   const kitQ = useQuery({
