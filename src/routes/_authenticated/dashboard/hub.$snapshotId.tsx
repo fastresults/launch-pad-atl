@@ -848,6 +848,23 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const [showFailures, setShowFailures] = useState(false);
   const [rewriteTarget, setRewriteTarget] = useState<{ type: string; name: string } | null>(null);
   const [intakeTarget, setIntakeTarget] = useState<IntakeTarget>(null);
+  const brandStudioRef = useRef<HTMLDetailsElement | null>(null);
+
+  const brandKitQ = useQuery({
+    queryKey: ["brandKit", snapshot.id],
+    queryFn: () => getBrandKit(snapshot.id),
+    refetchInterval: 8000,
+  });
+  const brandKit = brandKitQ.data ?? null;
+  const brandKitLocked = brandKit?.status === "locked";
+  const brandKitLockedAt = brandKit?.locked_at ?? null;
+
+  const openBrandWizard = useCallback(() => {
+    if (brandStudioRef.current) {
+      brandStudioRef.current.open = true;
+      brandStudioRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
 
   const genOne = useMutation({
     mutationFn: (vars: { documentType: string; rewriteFeedback?: string; rewriteTags?: string[]; intakeAnswers?: Record<string, any> }) =>
