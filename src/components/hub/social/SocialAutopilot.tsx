@@ -547,7 +547,7 @@ function Step5BuildKit({
     [platforms, direction],
   );
 
-  const tasks: (KitTask & { signed_url?: string | null; canvas_plan?: any; qa_status?: string | null })[] = useMemo(() => {
+  const tasks: (KitTask & { signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null })[] = useMemo(() => {
     return baseTasks.map((t) => {
       const match = assets.find(
         (a: any) => a.platform === t.platform && a.asset_kind === t.asset && a.art_direction === direction,
@@ -558,12 +558,15 @@ function Step5BuildKit({
         signed_url: match?.signed_url ?? null,
         canvas_plan: match?.canvas_plan ?? null,
         qa_status: match?.qa_status ?? null,
+        last_feedback: match?.last_feedback ?? null,
       };
     });
   }, [baseTasks, assets, direction]);
 
   const [running, setRunning] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [kept, setKept] = useState<Record<string, boolean>>({});
+  const [regenTarget, setRegenTarget] = useState<null | { scope: "single" | "all"; task?: any }>(null);
   const allDone = tasks.every((t) => t.status === "done");
 
   const runAll = async () => {
@@ -581,13 +584,33 @@ function Step5BuildKit({
     setRunning(false);
   };
 
-  const retryOne = async (t: KitTask) => {
+  const regenerateSingle = async (t: any, opts: { feedback: string; directionOverride?: string }) => {
     try {
-      await generateOneKitTask(snapshotId, t);
+      await generateOneKitTask(snapshotId, t, opts);
       await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
       setErrors((prev) => { const n = { ...prev }; delete n[`${t.platform}:${t.asset}`]; return n; });
+      toast.success("Regenerated");
     } catch (e: any) {
       toast.error(e.message ?? "failed");
+    }
+  };
+
+  const regenerateAll = async (opts: { feedback: string }) => {
+    setRunning(true);
+    try {
+      for (const t of tasks) {
+        const k = `${t.platform}:${t.asset}`;
+        if (kept[k]) continue;
+        try {
+          await generateOneKitTask(snapshotId, t, opts);
+          await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
+        } catch (e: any) {
+          setErrors((prev) => ({ ...prev, [k]: e.message ?? "failed" }));
+        }
+      }
+      toast.success("Regenerated all unlocked assets");
+    } finally {
+      setRunning(false);
     }
   };
 
