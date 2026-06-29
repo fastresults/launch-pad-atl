@@ -147,7 +147,7 @@ export function LiveBrandPreview({ kit, snapshot }: { kit: any; snapshot: any })
 
         {/* Moodboard & logo */}
         <Section title="Moodboard & logo">
-          {moodboard.length === 0 && logos.length === 0 ? (
+          {moodboard.length === 0 && logos.length === 0 && !(kit?.dna?._logoReferences?.length) ? (
             <Placeholder>Generate moodboard images and logo concepts in Step 4.</Placeholder>
           ) : (
             <>
@@ -158,6 +158,18 @@ export function LiveBrandPreview({ kit, snapshot }: { kit: any; snapshot: any })
                       {m?.url && <img src={m.url} className="h-full w-full object-cover" />}
                     </div>
                   ))}
+                </div>
+              )}
+              {kit?.dna?._logoReferences?.length > 0 && (
+                <div className="mt-2">
+                  <div className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Inspirations</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {kit.dna._logoReferences.slice(0, 3).map((src: string, i: number) => (
+                      <div key={i} className="h-12 w-12 overflow-hidden rounded border border-white/10 bg-background">
+                        <img src={src} className="h-full w-full object-contain" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               {primaryLogo?.url && (
