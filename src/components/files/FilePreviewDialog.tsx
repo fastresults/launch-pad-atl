@@ -4,18 +4,43 @@ import { Button } from "@/components/ui/button";
 import { Download, Trash2, FileText, Loader2 } from "lucide-react";
 import { getDocumentDownloadUrl } from "@/lib/attendee.functions";
 
-function DocxPreview({ url, onError }: { url: string; onError: (msg: string | null) => void }) {
+function DocxPreview({
+  url,
+  onError,
+  expectedVisuals = false,
+}: {
+  url: string;
+  onError: (msg: string | null) => void;
+  expectedVisuals?: boolean;
+}) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const styleRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState(true);
+  const [visualWarning, setVisualWarning] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setVisualWarning(null);
     onError(null);
     (async () => {
       try {
         const buf = await (await fetch(url)).arrayBuffer();
+        if (expectedVisuals) {
+          try {
+            const JSZip = (await import("jszip")).default;
+            const zip = await JSZip.loadAsync(buf);
+            const mediaCount = Object.keys(zip.files).filter((name) => /^word\/media\//.test(name)).length;
+            const documentXml = await zip.file("word/document.xml")?.async("string");
+            const hasColorFills = /w:fill="[A-Fa-f0-9]{6}"/.test(documentXml || "");
+            const hasLogoAlt = /Brand logo|Primary logo|Alternate logo/.test(documentXml || "");
+            if (!cancelled && (!mediaCount || !hasColorFills || !hasLogoAlt)) {
+              setVisualWarning("This saved Word file does not contain the expected embedded logo and color assets. Generate and save the style guide again.");
+            }
+          } catch {
+            // Rendering can continue; package inspection is only advisory.
+          }
+        }
         if (cancelled) return;
         const { renderAsync } = await import("docx-preview");
         if (cancelled || !containerRef.current) return;
@@ -46,6 +71,11 @@ function DocxPreview({ url, onError }: { url: string; onError: (msg: string | nu
       {loading && (
         <div className="flex h-[360px] items-center justify-center text-sm text-muted-foreground">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Rendering document…
+        </div>
+      )}
+      {!loading && visualWarning && (
+        <div className="mb-3 rounded-lg border border-status-warning/30 bg-status-warning/10 px-3 py-2 text-sm text-status-warning">
+          {visualWarning}
         </div>
       )}
       <div ref={styleRef} />
@@ -161,7 +191,7 @@ export function FilePreviewDialog({
           )}
 
           {!loading && url && docx && (
-            <DocxPreview url={url} onError={setRenderError} />
+            <DocxPreview url={url} onError={setRenderError} expectedVisuals={/style guide/i.test(doc.original_name)} />
           )}
 
           {!loading && text && textBody !== null && (
