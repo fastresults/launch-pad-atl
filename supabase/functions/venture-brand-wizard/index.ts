@@ -1,8 +1,10 @@
 // Brand Wizard AI helper: generates palette options, typography pairings,
-// and the final long-form Brand Style Guide markdown. Lives separately from
-// venture-generate-document so it can run cheaply and frequently.
+// and the final long-form Brand Style Guide markdown. Every call is grounded
+// in the canonical venture context (snapshot + brief + founder + market +
+// uploaded sources + snapshot brain) so the brand reflects the whole venture.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { loadVentureContext, compactPreamble, renderSources } from "../_shared/venture-context.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,18 +37,17 @@ async function callAI(messages: any[], opts: { json?: boolean; model?: string } 
   return json.choices?.[0]?.message?.content ?? "";
 }
 
-function snapshotBrief(snap: any, kit: any) {
-  return [
-    `Company: ${snap.company_name || "—"}`,
-    `Industry: ${snap.industry || "—"}`,
-    `Track: ${snap.track || "—"}`,
-    `Concept: ${snap.concept_summary || "—"}`,
-    `Value prop: ${snap.value_proposition || "—"}`,
-    `Audience: ${snap.target_audience || "—"}`,
-    kit?.dna ? `Personality: ${JSON.stringify(kit.dna.personality || {})}` : "",
-    kit?.dna?.mood?.length ? `Mood: ${kit.dna.mood.join(", ")}` : "",
-    kit?.dna?.admired?.length ? `Brands admired: ${kit.dna.admired.join(", ")}` : "",
-  ].filter(Boolean).join("\n");
+function brandBrief(ctx: any, kit: any) {
+  const brainBlock = ctx.brain
+    ? `\n\n## Venture brain (compressed)\n${JSON.stringify(ctx.brain, null, 2)}`
+    : "";
+  const sourcesBlock = (ctx.sources.documents.length || ctx.sources.urls.length)
+    ? `\n\n${renderSources(ctx, 2500)}`
+    : "";
+  const dnaBlock = kit?.dna
+    ? `\n\n## Founder DNA selections\nPersonality: ${JSON.stringify(kit.dna.personality || {})}\nMood: ${(kit.dna.mood || []).join(", ") || "—"}\nBrands admired: ${(kit.dna.admired || []).join(", ") || "—"}\nKeywords: ${(kit.dna.keywords || []).join(", ") || "—"}`
+    : "";
+  return `${compactPreamble(ctx)}${brainBlock}${sourcesBlock}${dnaBlock}`;
 }
 
 async function generatePalettes(snap: any, kit: any) {
