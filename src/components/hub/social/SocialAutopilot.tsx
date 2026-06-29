@@ -17,6 +17,7 @@ import {
 } from "@/lib/social-autopilot.functions";
 import { PLATFORM_SPECS, ART_DIRECTIONS } from "@/lib/social-platform-specs";
 import { listSocialAssets } from "@/lib/social-cover.functions";
+import { RegenerateAssetDialog } from "./RegenerateAssetDialog";
 
 const STEPS = [
   { id: 1, label: "Goals" },
