@@ -1209,14 +1209,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               const isComplete = status === "complete";
               const hasReadableContent = Boolean(d?.content && String(d.content).trim().length > 0);
               const generating = status === "generating" || (genOne.isPending && genOne.variables?.documentType === t.type);
-              const Icon = isComplete ? CheckCircle2 : depsMet ? Circle : Lock;
-              const tone = isComplete ? "text-status-success" : depsMet ? "text-foreground" : "text-muted-foreground";
+              const needsBrandKit = BRAND_KIT_REQUIRED_TYPES.has(t.type);
+              const brandGated = needsBrandKit && !brandKitLocked;
+              const Icon = isComplete ? CheckCircle2 : brandGated ? Lock : depsMet ? Circle : Lock;
+              const tone = isComplete ? "text-status-success" : depsMet && !brandGated ? "text-foreground" : "text-muted-foreground";
 
               let statusLine: string;
               if (isComplete) statusLine = "Ready to read";
               else if (generating && hasReadableContent) statusLine = "Updating… previous version available";
               else if (generating) statusLine = "Writing now…";
               else if (status === "failed") statusLine = "Needs another try";
+              else if (brandGated) statusLine = "Complete the Brand Wizard to unlock";
               else if (!depsMet) {
                 const missing = deps.find((dep) => !completedKeys.has(dep));
                 const missingLabel = missing ? ((typeByKey.get(missing) as any)?.name ?? missing) : "earlier documents";
@@ -1224,16 +1227,24 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               } else statusLine = "Not started yet";
 
               const stale = isStale(d);
+              const staleLabel = needsBrandKit && brandKitLockedAt && d?.updated_at && new Date(brandKitLockedAt).getTime() - new Date(d.updated_at).getTime() > 60_000
+                ? "Brand updated"
+                : "Concept updated";
               return (
-                <div key={t.type} className={`rounded-xl border bg-card p-4 ${stale ? "border-status-warning/40" : "border-white/10"}`}>
+                <div key={t.type} className={`rounded-xl border bg-card p-4 ${stale ? "border-status-warning/40" : brandGated ? "border-primary/30" : "border-white/10"}`}>
                   <div className="flex items-start gap-2">
                     <Icon className={`mt-0.5 h-4 w-4 ${tone}`} />
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="truncate text-sm font-medium">{t.name}</h4>
+                        {needsBrandKit && (
+                          <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
+                            Requires Brand Kit
+                          </Badge>
+                        )}
                         {stale && (
                           <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">
-                            Concept updated
+                            {staleLabel}
                           </Badge>
                         )}
                       </div>
@@ -1241,8 +1252,12 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                       <div className="mt-1 text-[10px] text-muted-foreground">{statusLine} · ~{t.estimated_minutes} min</div>
                     </div>
                   </div>
-                  <div className="mt-3 flex gap-2">
-                    {isComplete || hasReadableContent ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {brandGated && !isComplete ? (
+                      <Button size="sm" variant="outline" onClick={openBrandWizard}>
+                        <Sparkles className="mr-1 h-3 w-3" /> Open Brand Wizard
+                      </Button>
+                    ) : isComplete || hasReadableContent ? (
                       <Button size="sm" onClick={() => setViewerDoc(d)}>
                         <Eye className="mr-1 h-3 w-3" /> Read
                       </Button>
@@ -1277,6 +1292,10 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                         size="sm"
                         variant="ghost"
                         onClick={() => {
+                          if (brandGated) {
+                            openBrandWizard();
+                            return;
+                          }
                           if (t.intake_schema) {
                             setIntakeTarget({
                               type: t.type,
