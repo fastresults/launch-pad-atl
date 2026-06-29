@@ -1,67 +1,29 @@
-# Brand Kit → Social Studio: Color Consistency Hardening
+## Goal
+When a generated avatar/cover in Social Studio (Step 5 Build kit) feels off-brand, give the user a clear **Regenerate** path with optional written feedback ("less purple", "more editorial", "remove the dark square", etc.) plus a one-tap style override — instead of the current tiny silent "Redo" that just re-rolls the same prompt.
 
-The current pipeline passes the locked palette as a list of hex codes and trusts the image model to pick a contrast-safe combination per asset. The model frequently fails this (e.g., dark ink on dark violet) because: (1) no specific bg/ink pair is pre-decided per asset, (2) the palette swatch tile the prompt references is never actually attached, and (3) there is no post-generation QA to catch failures.
+## UX changes (`SocialAutopilot.tsx`, Step 5 card)
 
-This plan makes color a decision the *system* makes, not the model.
+1. Replace the per-asset ghost "Redo/Retry" with a prominent **Regenerate** button (icon + label) on every tile, visible whenever the tile has an image or an error.
+2. Clicking Regenerate opens a new `RegenerateAssetDialog` showing:
+   - Thumbnail of the current asset + brand palette swatches + current style chip.
+   - Free-text "What's off?" field (placeholder: "e.g. background too dark, logo too small, less purple, more editorial feel").
+   - Quick-pick chips that prepend canned guidance: *Lighter background*, *Stronger logo presence*, *More whitespace*, *Higher contrast*, *Less saturated*, *Different composition*.
+   - Optional **Override style for this asset** dropdown (Editorial / Photographic / Geometric / Illustrative) so users can try a different look on one tile without changing the global pick.
+   - Buttons: Cancel · Regenerate.
+3. Add a header-level **Regenerate all** button next to the direction badge that opens the same dialog scoped to "all not-locked assets" with the same feedback fields.
+4. Add a small ⭐ **Keep** toggle per tile; kept tiles are excluded from "Regenerate all" so the user can lock the good ones.
 
-## 1. Pre-compute a "Canvas Plan" per asset (server)
+## Wiring
 
-In `cover-art-director.ts`, before assembling the prompt, derive a concrete `CanvasPlan` from the locked palette using `palette-rules.ts`:
+- Extend `generateOneKitTask(snapshotId, task, opts?)` in `src/lib/social-autopilot.functions.ts` to accept `{ feedback?: string; directionOverride?: ArtDirectionId }` and forward both to the `venture-social-cover` invoke body as `feedback` and `direction`.
+- `venture-social-cover/index.ts`: read `body.feedback` (string, ≤500 chars, trimmed) and pass it through to `buildCoverArtPrompt` / `buildAvatarPrompt` as an additional `userFeedback` argument; concatenate into the existing `retryNote` slot so the director prompt includes a "User feedback to honor on this regeneration: …" block above the existing constraints. Direction override already flows via the existing `direction` field.
+- `cover-art-director.ts`: accept and render `userFeedback` near the top of the prompt with a "Treat this as binding art-direction notes" preface; keep WCAG/contrast rules above it so feedback can't override safety rails.
+- Persist the last feedback on the asset row for transparency: add `last_feedback text` and `last_regenerated_at timestamptz` columns to `venture_social_assets` (migration). Show the last feedback as a muted tooltip on the tile if present.
 
-- `surface` — the chosen background hex (one specific role)
-- `ink` — the on-color guaranteed ≥ 4.5:1 against `surface` (uses `pickOnColor` / `contrastRatio`)
-- `accent` — one supporting role chosen for ≥ 3:1 against `surface` and visually distinct from `ink`
-- `headlineColor` — `ink` (or `onPrimary` if surface is `primary`)
-- `forbiddenCombos` — explicit "never put X on Y" list of any palette pair that fails AA
+## Out of scope
+No changes to Step 4 Style picker, brand wizard, or the QA/contrast retry loop. The Geometric thumbnail shown in the screenshot is just the static style preview — regenerate applies to real generated assets in Step 5.
 
-Selection rules per asset kind:
-- **Avatar**: surface = whichever palette role gives the *highest* contrast with the logo's dominant ink (computed by sampling the logo bytes). Today it just "prefers bg" — replace with computed max-contrast pick.
-- **Banner / cover / thumbnail**: rotate surface across `bg`, `primary`, `secondary` per direction (Editorial → bg; Geometric → primary; Photographic → bg w/ duotone toward primary; Illustrative → bg). Always re-derive `ink` from `pickOnColor(surface)` so we *guarantee* legibility.
-
-The prompt then says: "Background MUST be exactly `#XXXXXX`. Any rendered text MUST be exactly `#YYYYYY`. The only accent permitted is `#ZZZZZZ`. Do NOT use [forbidden list]." — no more "pick two roles."
-
-## 2. Actually attach the palette + type tiles (server)
-
-`cover-art-director.ts` currently references "Image #2: palette swatch tile" and "Image #3: typography specimen" but `venture-social-cover/index.ts` only sends the logo. Build and pass them:
-
-- `buildPaletteTile(plan)` → render a 1024×256 PNG showing surface / ink / accent swatches with hex labels, server-side via a tiny canvas helper (Deno `ImageData` or a hand-rolled PNG encoder; we already do similar for brand-guide swatches — reuse the approach from `brand-guide-docx`'s swatch helper, ported to edge).
-- `buildTypeTile(kit)` → optional, lower priority; skip if it adds latency.
-
-Pass `[logo, paletteTile]` to `callMultimodal`. The model "sees" the exact pixels it's allowed to use.
-
-## 3. Post-generation contrast QA + one retry (server)
-
-After the image returns, in `venture-social-cover/index.ts`:
-
-- Decode the PNG, downsample to 64×64, cluster dominant colors.
-- Verify: top-2 colors include surface ± tolerance; if rendered text region (top 1/3 for thumbnails, lower 1/3 for posters) contains a color < 3:1 contrast against the dominant background, mark **FAIL**.
-- On FAIL, retry **once** with an even stricter prompt addendum ("Previous attempt placed near-black ink on dark violet — this is a hard fail. Use `#XXXXXX` text on `#YYYYYY` surface ONLY.") If still fails, fall back to text-only with the same canvas plan.
-
-Persist the QA verdict on `venture_social_assets` (`qa_status`, `qa_notes`) so the UI can badge a card and let the user one-tap regenerate.
-
-## 4. Surface canvas plan in the UI (client)
-
-In `SocialAutopilot.tsx` Step 5 task rows:
-
-- Show a small swatch strip (surface / ink / accent) under each generating asset so the user can see *which* brand colors the kit committed to.
-- If `qa_status === "fail"`, badge the thumbnail with "Contrast issue — regenerate" and wire the existing Redo button.
-- Mirror the same swatch strip on the Brand Wizard's "Pick a look" step so users see the exact color pairing the social system will use, closing the visual loop.
-
-## 5. Tighten direction briefs (server)
-
-In `cover-art-director.ts`:
-- Remove "AT MOST two palette roles + the background" (ambiguous). Replace with "Use exactly: surface = `#…`, ink = `#…`, accent = `#…`. Nothing else."
-- Add to `BANNED`: "Dark text on dark surfaces, light text on light surfaces, any pair below 4.5:1 contrast."
-
-## Technical Details
-
-Files touched:
-- `supabase/functions/_shared/cover-art-director.ts` — add `buildCanvasPlan(kit, asset, direction, logoBytes?)`, rewrite prompts to use hard hex values.
-- `supabase/functions/_shared/palette-tile.ts` (new) — PNG encoder for swatch tile.
-- `supabase/functions/_shared/image-qa.ts` (new) — dominant-color + contrast check.
-- `supabase/functions/venture-social-cover/index.ts` — attach palette tile, run QA, retry once, persist verdict.
-- Migration: add `qa_status text`, `qa_notes jsonb`, `canvas_plan jsonb` to `venture_social_assets`.
-- `src/components/hub/social/SocialAutopilot.tsx` — swatch strip + QA badge.
-- `src/components/hub/BrandWizard.tsx` — mirror swatch strip on Style step.
-
-Out of scope: rebuilding the Brand Wizard's palette generation (it's already contrast-validated via `palette-rules.ts`); changing platform specs.
+## Technical notes
+- Keep `verify_jwt = false` posture unchanged; `venture-social-cover` already validates the user.
+- Migration adds two nullable columns; existing RLS grants cover them.
+- Dialog reuses shadcn `Dialog`, `Textarea`, `Badge`, `Select`.
