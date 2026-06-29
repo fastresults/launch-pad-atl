@@ -1195,7 +1195,8 @@ export async function validateBrandGuideDocxBlob(blob: Blob, kit: any): Promise<
   }
 
   const logos = Array.isArray(kit?.logos) ? kit.logos : [];
-  if (logos.length && mediaCount === 0) {
+  const logoAltPresent = !!documentXml && (/Brand logo|Primary logo|Alternate logo/.test(documentXml));
+  if (logos.length && (!logoAltPresent || mediaCount === 0)) {
     errors.push("The selected logo images were not embedded into the Word file.");
   }
 
