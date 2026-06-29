@@ -434,8 +434,23 @@ function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
 /* ---------- STEP 4: Moodboard & Logo ---------- */
 function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
   const [logos, setLogos] = useState<any[]>(kit?.logos ?? []);
+  const [moodboard, setMoodboard] = useState<any[]>(kit?.moodboard ?? []);
+  const [refs, setRefs] = useState<string[]>(kit?.dna?._logoReferences ?? []);
+
+  const genMood = useMutation({
+    mutationFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "moodboard", count: 4 } }),
+    onSuccess: (out) => {
+      const fresh = (out.assets ?? []).filter((a: any) => a.ok);
+      const next = [...fresh, ...moodboard].slice(0, 8);
+      setMoodboard(next);
+      onSave({ moodboard: next });
+      toast.success(`${fresh.length} moodboard tiles generated`);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const genLogos = useMutation({
-    mutationFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo", count: 4 } }),
+    mutationFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo", count: 4, referenceImages: refs } }),
     onSuccess: (out) => {
       const fresh = (out.assets ?? []).filter((a: any) => a.ok);
       const next = [...fresh, ...logos].slice(0, 8);
@@ -446,26 +461,98 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const onDropRefs = async (files: FileList | null) => {
+    if (!files) return;
+    const arr = Array.from(files).slice(0, 3 - refs.length);
+    const dataUrls = await Promise.all(arr.map((f) => new Promise<string>((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result as string);
+      r.onerror = rej;
+      r.readAsDataURL(f);
+    })));
+    const next = [...refs, ...dataUrls].slice(0, 3);
+    setRefs(next);
+    onSave({ dna: { ...(kit?.dna ?? {}), _logoReferences: next } });
+  };
+
+  const removeRef = (idx: number) => {
+    const next = refs.filter((_, i) => i !== idx);
+    setRefs(next);
+    onSave({ dna: { ...(kit?.dna ?? {}), _logoReferences: next } });
+  };
+
   return (
-    <div className="space-y-5">
-      <p className="text-sm text-muted-foreground">
-        Generate logo concepts grounded in your locked palette and typography. Pick favorites — they'll appear in your style guide.
-      </p>
-      <div className="flex gap-2">
-        <Button onClick={() => genLogos.mutate()} disabled={genLogos.isPending}>
-          {genLogos.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-          Generate 4 logo concepts
-        </Button>
-      </div>
-      {logos.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {logos.map((a, i) => (
-            <a key={i} href={a.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-white/10 bg-background/40">
-              {a.url && <img src={a.url} className="aspect-square w-full object-cover" />}
-            </a>
-          ))}
+    <div className="space-y-8">
+      {/* MOODBOARD */}
+      <section className="space-y-3">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">Moodboard</h3>
+            <p className="text-xs text-muted-foreground">Four curated tiles — texture, hero scene, still life, and color motion — grounded in your locked palette and personality.</p>
+          </div>
+          <Button onClick={() => genMood.mutate()} disabled={genMood.isPending} size="sm">
+            {genMood.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+            {moodboard.length ? "Regenerate moodboard" : "Generate moodboard"}
+          </Button>
         </div>
-      )}
+        {moodboard.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {moodboard.map((a, i) => (
+              <a key={i} href={a.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-white/10 bg-background/40">
+                {a.url && <img src={a.url} className="aspect-square w-full object-cover" />}
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-white/10 p-6 text-center text-xs text-muted-foreground">No moodboard yet. Generate to see four art-directed tiles here.</div>
+        )}
+      </section>
+
+      {/* REFERENCE LOGOS */}
+      <section className="space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold">Reference logos <span className="text-xs font-normal text-muted-foreground">(optional, up to 3)</span></h3>
+          <p className="text-xs text-muted-foreground">Drop logos you love. The AI will study their composition, weight, and abstraction — not copy them — when drafting your concepts.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          {refs.map((src, i) => (
+            <div key={i} className="relative h-20 w-20 overflow-hidden rounded-lg border border-white/10 bg-background/40">
+              <img src={src} className="h-full w-full object-contain" />
+              <button onClick={() => removeRef(i)} className="absolute right-0 top-0 rounded-bl bg-black/60 px-1 text-xs text-white hover:bg-black/80">×</button>
+            </div>
+          ))}
+          {refs.length < 3 && (
+            <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-lg border border-dashed border-white/20 text-xs text-muted-foreground hover:border-white/40">
+              <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => onDropRefs(e.target.files)} />
+              + Add
+            </label>
+          )}
+        </div>
+      </section>
+
+      {/* LOGOS */}
+      <section className="space-y-3">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">Logo concepts</h3>
+            <p className="text-xs text-muted-foreground">Grounded in your locked palette and typography{refs.length ? ", and inspired by your reference logos" : ""}.</p>
+          </div>
+          <Button onClick={() => genLogos.mutate()} disabled={genLogos.isPending} size="sm">
+            {genLogos.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+            Generate 4 logo concepts
+          </Button>
+        </div>
+        {logos.length > 0 && (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {logos.map((a, i) => (
+              <a key={i} href={a.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-white/10 bg-background/40">
+                {a.url && <img src={a.url} className="aspect-square w-full object-cover" />}
+              </a>
+            ))}
+          </div>
+        )}
+      </section>
+
       <div className="flex justify-between">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>
         <Button onClick={onNext}>Continue <ArrowRight className="ml-1 h-4 w-4" /></Button>
