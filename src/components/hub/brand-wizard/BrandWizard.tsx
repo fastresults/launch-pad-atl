@@ -26,6 +26,7 @@ import {
 import { generateBrandAsset } from "@/lib/foundersHub.functions";
 import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
 import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
+import { LiveBrandPreview } from "./LiveBrandPreview";
 
 const STEPS = ["DNA", "Palette", "Typography", "Moodboard & Logo", "Voice & Review"];
 
@@ -65,7 +66,7 @@ export function BrandWizard({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-5xl gap-0 overflow-hidden p-0">
+      <DialogContent className="max-h-[92vh] max-w-7xl gap-0 overflow-hidden p-0">
         <DialogHeader className="border-b border-white/10 px-6 py-4">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -96,20 +97,25 @@ export function BrandWizard({
           </div>
         </DialogHeader>
 
-        <div className="max-h-[68vh] overflow-y-auto px-6 py-5">
-          {kitQ.isLoading ? (
-            <div className="flex items-center justify-center py-10 text-muted-foreground">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading kit…
-            </div>
-          ) : (
-            <>
-              {step === 1 && <StepDNA snapshot={snapshot} kit={kit} onSave={save.mutate} onNext={() => goTo(2)} />}
-              {step === 2 && <StepPalette snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(1)} onNext={() => goTo(3)} />}
-              {step === 3 && <StepTypography snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(2)} onNext={() => goTo(4)} />}
-              {step === 4 && <StepMoodboard snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(3)} onNext={() => goTo(5)} />}
-              {step === 5 && <StepReview snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(4)} onDone={() => onOpenChange(false)} />}
-            </>
-          )}
+        <div className="grid max-h-[72vh] grid-cols-1 lg:grid-cols-[1fr_360px]">
+          <div className="overflow-y-auto px-6 py-5">
+            {kitQ.isLoading ? (
+              <div className="flex items-center justify-center py-10 text-muted-foreground">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading kit…
+              </div>
+            ) : (
+              <>
+                {step === 1 && <StepDNA snapshot={snapshot} kit={kit} onSave={save.mutate} onNext={() => goTo(2)} />}
+                {step === 2 && <StepPalette snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(1)} onNext={() => goTo(3)} />}
+                {step === 3 && <StepTypography snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(2)} onNext={() => goTo(4)} />}
+                {step === 4 && <StepMoodboard snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(3)} onNext={() => goTo(5)} />}
+                {step === 5 && <StepReview snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(4)} onDone={() => onOpenChange(false)} />}
+              </>
+            )}
+          </div>
+          <aside className="hidden border-l border-white/10 bg-background/40 px-4 py-4 lg:block">
+            <LiveBrandPreview kit={kit} snapshot={snapshot} />
+          </aside>
         </div>
       </DialogContent>
     </Dialog>
@@ -198,15 +204,30 @@ function StepDNA({ snapshot, kit, onSave, onNext }: any) {
 
 /* ---------- STEP 2: Palette ---------- */
 function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
-  const [options, setOptions] = useState<any[]>(kit?.dna?._paletteOptions ?? []);
-  const [chosen, setChosen] = useState<any>(kit?.palette ?? null);
+  const saved = kit?.palette ?? null;
+  const initial = kit?.dna?._paletteOptions ?? [];
+  // Ensure saved pick is always present in the visible options
+  const seedOptions = (() => {
+    if (!saved) return initial;
+    if (initial.some((o: any) => o?.name === saved.name)) return initial;
+    return [saved, ...initial];
+  })();
+  const [options, setOptions] = useState<any[]>(seedOptions);
+  const [chosen, setChosen] = useState<any>(saved);
   const gen = useMutation({
     mutationFn: () => fetchPaletteOptions(snapshot.id),
-    onSuccess: (out) => setOptions(out.options ?? []),
+    onSuccess: (out) => {
+      const next = out.options ?? [];
+      setOptions(next);
+      // Persist option set + keep saved pick on top if not present
+      const persistedOptions = chosen && !next.some((o: any) => o?.name === chosen.name)
+        ? [chosen, ...next]
+        : next;
+      onSave({ dna: { ...(kit?.dna ?? {}), _paletteOptions: persistedOptions } });
+      if (chosen && !next.some((o: any) => o?.name === chosen.name)) setOptions(persistedOptions);
+    },
     onError: (e: any) => toast.error(e.message),
   });
-
-  useEffect(() => { if (options.length === 0) gen.mutate(); /* eslint-disable-next-line */ }, []);
 
   const choose = (opt: any) => {
     setChosen(opt);
@@ -215,16 +236,38 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">Pick the palette direction that feels right. You can fine-tune later.</p>
-        <Button variant="outline" size="sm" onClick={() => gen.mutate()} disabled={gen.isPending}>
+        <Button variant="outline" size="sm" onClick={() => gen.mutate()} disabled={gen.isPending} title="Generate fresh options — your current pick is kept">
           {gen.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
-          Regenerate
+          Show new options
         </Button>
       </div>
-      {gen.isPending && options.length === 0 ? (
-        <div className="flex items-center justify-center py-10 text-muted-foreground">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Designing 4 palette directions…
+
+      {chosen && (
+        <div className="rounded-lg border border-primary/40 bg-primary/5 p-3">
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">Your current pick</div>
+            <div className="text-xs font-medium">{chosen.name}</div>
+          </div>
+          <div className="mt-2 flex gap-1.5">
+            {Object.entries(chosen.colors ?? {}).map(([k, v]: any) => (
+              <div key={k} className="flex-1">
+                <div className="h-6 rounded border border-white/10" style={{ background: v }} />
+                <div className="mt-0.5 text-[8px] font-mono text-muted-foreground">{k}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {options.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-10 text-muted-foreground">
+          <p className="text-sm">No palette options yet.</p>
+          <Button onClick={() => gen.mutate()} disabled={gen.isPending}>
+            {gen.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+            Generate 4 palette directions
+          </Button>
         </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
@@ -233,15 +276,17 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
             const fgBgRatio = contrastRatio(opt.colors.fg, opt.colors.bg);
             return (
               <button
-                key={i}
+                key={`${opt.name}-${i}`}
                 onClick={() => choose(opt)}
-                className={`rounded-xl border p-4 text-left transition ${isPicked ? "border-primary ring-2 ring-primary/30" : "border-white/10 hover:border-white/30"}`}
+                className={`relative rounded-xl border p-4 text-left transition ${isPicked ? "border-primary ring-2 ring-primary/30" : "border-white/10 hover:border-white/30"}`}
                 style={{ background: opt.colors.bg, color: opt.colors.fg }}
               >
-                <div className="flex items-start justify-between">
-                  <div className="font-semibold">{opt.name}</div>
-                  {isPicked && <Check className="h-4 w-4" />}
-                </div>
+                {isPicked && (
+                  <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                    <Check className="h-3 w-3" /> Selected
+                  </span>
+                )}
+                <div className="font-semibold">{opt.name}</div>
                 <div className="mt-1 text-xs opacity-80">{opt.rationale}</div>
                 <div className="mt-3 flex gap-1.5">
                   {Object.entries(opt.colors).map(([k, v]: any) => (
@@ -267,21 +312,42 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
 
 /* ---------- STEP 3: Typography ---------- */
 function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
-  const [options, setOptions] = useState<any[]>([]);
-  const [chosen, setChosen] = useState<any>(kit?.typography ?? null);
+  const saved = kit?.typography ?? null;
+  const initial = kit?.dna?._typographyOptions ?? [];
+  const seedOptions = (() => {
+    if (!saved) return initial;
+    if (initial.some((o: any) => o?.name === saved.name)) return initial;
+    return [saved, ...initial];
+  })();
+  const [options, setOptions] = useState<any[]>(seedOptions);
+  const [chosen, setChosen] = useState<any>(saved);
+
+  // Preload fonts for whatever's already on screen
+  useEffect(() => {
+    options.forEach((o: any) => {
+      if (o?.heading?.family) loadGoogleFont(o.heading.family, [o.heading.weight ?? 700]);
+      if (o?.body?.family) loadGoogleFont(o.body.family, [o.body.weight ?? 400]);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options.length]);
+
   const gen = useMutation({
     mutationFn: () => fetchTypographyOptions(snapshot.id),
     onSuccess: (out) => {
-      setOptions(out.options ?? []);
-      (out.options ?? []).forEach((o: any) => {
+      const next = out.options ?? [];
+      next.forEach((o: any) => {
         loadGoogleFont(o.heading?.family, [o.heading?.weight ?? 700]);
         loadGoogleFont(o.body?.family, [o.body?.weight ?? 400]);
       });
+      setOptions(next);
+      const persistedOptions = chosen && !next.some((o: any) => o?.name === chosen.name)
+        ? [chosen, ...next]
+        : next;
+      onSave({ dna: { ...(kit?.dna ?? {}), _typographyOptions: persistedOptions } });
+      if (chosen && !next.some((o: any) => o?.name === chosen.name)) setOptions(persistedOptions);
     },
     onError: (e: any) => toast.error(e.message),
   });
-
-  useEffect(() => { if (options.length === 0) gen.mutate(); /* eslint-disable-next-line */ }, []);
 
   const tagline = snapshot.tagline || snapshot.company_name || "Your brand, beautifully expressed.";
 
@@ -292,16 +358,33 @@ function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">Pick a font pairing. Previews use your own tagline.</p>
-        <Button variant="outline" size="sm" onClick={() => gen.mutate()} disabled={gen.isPending}>
+        <Button variant="outline" size="sm" onClick={() => gen.mutate()} disabled={gen.isPending} title="Generate fresh options — your current pick is kept">
           {gen.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
-          Regenerate
+          Show new options
         </Button>
       </div>
-      {gen.isPending && options.length === 0 ? (
-        <div className="flex items-center justify-center py-10 text-muted-foreground">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Curating type pairings…
+
+      {chosen && (
+        <div className="rounded-lg border border-primary/40 bg-primary/5 p-3">
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">Your current pick</div>
+            <div className="text-[10px] font-mono text-muted-foreground">{chosen.heading?.family} / {chosen.body?.family}</div>
+          </div>
+          <div className="mt-1 text-lg leading-tight" style={{ fontFamily: `'${chosen.heading?.family}', system-ui`, fontWeight: chosen.heading?.weight ?? 700 }}>
+            {tagline}
+          </div>
+        </div>
+      )}
+
+      {options.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-10 text-muted-foreground">
+          <p className="text-sm">No font pairings yet.</p>
+          <Button onClick={() => gen.mutate()} disabled={gen.isPending}>
+            {gen.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+            Generate 4 font pairings
+          </Button>
         </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
@@ -309,14 +392,16 @@ function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
             const isPicked = chosen?.name === opt.name;
             return (
               <button
-                key={i}
+                key={`${opt.name}-${i}`}
                 onClick={() => choose(opt)}
-                className={`rounded-xl border p-5 text-left transition bg-card ${isPicked ? "border-primary ring-2 ring-primary/30" : "border-white/10 hover:border-white/30"}`}
+                className={`relative rounded-xl border p-5 text-left transition bg-card ${isPicked ? "border-primary ring-2 ring-primary/30" : "border-white/10 hover:border-white/30"}`}
               >
-                <div className="flex items-start justify-between">
-                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{opt.name}</div>
-                  {isPicked && <Check className="h-4 w-4 text-primary" />}
-                </div>
+                {isPicked && (
+                  <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                    <Check className="h-3 w-3" /> Selected
+                  </span>
+                )}
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{opt.name}</div>
                 <div
                   className="mt-2 text-2xl leading-tight"
                   style={{ fontFamily: `'${opt.heading?.family}', system-ui`, fontWeight: opt.heading?.weight ?? 700 }}
@@ -343,6 +428,7 @@ function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
       </div>
     </div>
   );
+
 }
 
 /* ---------- STEP 4: Moodboard & Logo ---------- */
