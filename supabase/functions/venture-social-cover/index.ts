@@ -393,6 +393,8 @@ Deno.serve(async (req) => {
         canvas_plan: plan as any,
         qa_status: qa.ok ? "pass" : "fail",
         qa_notes: qa as any,
+        last_feedback: userFeedback || null,
+        last_regenerated_at: userFeedback ? new Date().toISOString() : null,
       })
       .select()
       .single();
