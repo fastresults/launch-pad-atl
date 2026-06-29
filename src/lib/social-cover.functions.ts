@@ -41,6 +41,7 @@ export async function generateSocialCover(input: {
   platform: string;
   asset: string;
   direction: string;
+  feedback?: string;
 }): Promise<SocialAsset> {
   const data = await call({ action: "generate", ...input });
   return data.asset as SocialAsset;
