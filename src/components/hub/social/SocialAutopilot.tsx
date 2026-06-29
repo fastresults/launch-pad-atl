@@ -614,6 +614,8 @@ function Step5BuildKit({
     }
   };
 
+  const anyDone = tasks.some((t) => t.status === "done");
+
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
       <header className="flex items-center justify-between gap-2">
@@ -621,7 +623,20 @@ function Step5BuildKit({
           <h3 className="text-base font-semibold">Generating your channel kits</h3>
           <p className="text-xs text-muted-foreground">Avatar + cover for each channel, in your chosen style.</p>
         </div>
-        <Badge variant="outline" className="text-[10px] capitalize">{direction}</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-[10px] capitalize">{direction}</Badge>
+          {anyDone && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-[11px]"
+              disabled={running}
+              onClick={() => setRegenTarget({ scope: "all" })}
+            >
+              <RefreshCw className="mr-1 h-3 w-3" /> Regenerate all
+            </Button>
+          )}
+        </div>
       </header>
 
       <ul className="grid gap-2 sm:grid-cols-2">
@@ -630,6 +645,7 @@ function Step5BuildKit({
           const done = t.status === "done";
           const err = errors[k];
           const isAvatar = t.asset === "avatar";
+          const isKept = !!kept[k];
           const frameClass = isAvatar
             ? "h-16 w-16 shrink-0 rounded-full"
             : "h-16 w-28 shrink-0 rounded-md";
@@ -665,9 +681,18 @@ function Step5BuildKit({
                         contrast
                       </span>
                     )}
+                    {isKept && (
+                      <span className="ml-1 rounded bg-status-success/15 px-1 text-[9px] font-medium text-status-success">
+                        kept
+                      </span>
+                    )}
                   </div>
-                  <div className="truncate text-[10px] capitalize text-muted-foreground">
+                  <div
+                    className="truncate text-[10px] capitalize text-muted-foreground"
+                    title={t.last_feedback ? `Last feedback: ${t.last_feedback}` : undefined}
+                  >
                     {t.asset.replace(/_/g, " ")}
+                    {t.last_feedback ? " · feedback applied" : ""}
                   </div>
                   {t.canvas_plan && (
                     <div className="mt-1 flex items-center gap-0.5" title={`surface ${t.canvas_plan.surface} · ink ${t.canvas_plan.ink} · accent ${t.canvas_plan.accent}`}>
@@ -684,9 +709,26 @@ function Step5BuildKit({
                       Download
                     </a>
                   )}
+                  {done && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 text-[11px]"
+                      onClick={() => setKept((prev) => ({ ...prev, [k]: !prev[k] }))}
+                      title={isKept ? "Unlock for regenerate-all" : "Keep this — exclude from regenerate-all"}
+                    >
+                      {isKept ? "Unkeep" : "Keep"}
+                    </Button>
+                  )}
                   {(err || done) && (
-                    <Button size="sm" variant="ghost" className="h-6 text-[11px]" onClick={() => retryOne(t)}>
-                      <RefreshCw className="mr-1 h-3 w-3" /> {done ? "Redo" : "Retry"}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-6 text-[11px]"
+                      disabled={running}
+                      onClick={() => setRegenTarget({ scope: "single", task: t })}
+                    >
+                      <RefreshCw className="mr-1 h-3 w-3" /> Regenerate
                     </Button>
                   )}
                 </div>
@@ -707,9 +749,33 @@ function Step5BuildKit({
           </Button>
         )}
       </footer>
+
+      {regenTarget && (
+        <RegenerateAssetDialog
+          open={!!regenTarget}
+          onOpenChange={(v) => { if (!v) setRegenTarget(null); }}
+          scope={regenTarget.scope}
+          targetLabel={
+            regenTarget.scope === "all"
+              ? `${tasks.filter((t) => !kept[`${t.platform}:${t.asset}`]).length} assets`
+              : `${regenTarget.task?.platform} ${String(regenTarget.task?.asset || "").replace(/_/g, " ")}`
+          }
+          thumbnailUrl={regenTarget.task?.signed_url ?? null}
+          currentDirection={regenTarget.task?.direction || direction}
+          canvasPlan={regenTarget.task?.canvas_plan ?? null}
+          onSubmit={async (input) => {
+            if (regenTarget.scope === "single") {
+              await regenerateSingle(regenTarget.task, input);
+            } else {
+              await regenerateAll({ feedback: input.feedback });
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
+
 
 // ====================== STEP 6 — Launch ======================
 function Step6Launch({
