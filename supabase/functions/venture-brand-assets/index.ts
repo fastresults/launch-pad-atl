@@ -1,6 +1,6 @@
 // Founders Hub — brand asset generator.
-// Generates logo / social profile / cover / launch-post images via Lovable AI
-// image gateway, using the venture's visual_identity_brief + brand_tokens.
+// Generates logo / moodboard / social images via the Lovable AI image gateway,
+// grounded in the venture's brand_tokens and the wizard's locked palette/typography.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -16,12 +16,21 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 const KIND_PRESETS: Record<string, { size: string; sceneHint: string; defaultCount: number }> = {
   logo:          { size: "1024x1024", sceneHint: "minimalist vector logo, centered on a solid neutral background, crisp edges, no text unless brand specifies, high contrast", defaultCount: 4 },
+  moodboard:     { size: "1024x1024", sceneHint: "editorial brand moodboard tile, evocative, tactile, art-directed, magazine quality", defaultCount: 4 },
   social_profile:{ size: "1024x1024", sceneHint: "social media profile avatar, square 1:1, centered subject, simple background", defaultCount: 1 },
   social_cover:  { size: "1536x1024", sceneHint: "social media cover banner, wide composition, leave space for an overlaid headline on the right third", defaultCount: 1 },
   launch_post:   { size: "1024x1024", sceneHint: "launch announcement social post, modern editorial layout, bold composition", defaultCount: 1 },
 };
 
-function buildPrompt(kind: string, snap: any, tokens: any, extra?: string) {
+// Four distinct moodboard angles so the grid feels curated, not repetitive.
+const MOODBOARD_ANGLES = [
+  "Tile 1 — Texture & material: extreme close-up of a tactile surface that embodies the brand mood (paper grain, brushed metal, soft fabric, etc). No text.",
+  "Tile 2 — Hero environment: a wide cinematic scene of a person or place that represents the customer's world. Natural light, editorial photography.",
+  "Tile 3 — Object still life: an art-directed still life of 2–3 props that evoke the brand's category and personality. Studio lighting, clean composition.",
+  "Tile 4 — Color & motion: an abstract painterly composition built from the brand's primary, secondary and accent colors. Smooth gradients, organic shapes.",
+];
+
+function buildPrompt(kind: string, snap: any, tokens: any, extra?: string, angle?: string) {
   const preset = KIND_PRESETS[kind];
   const palette = tokens?.colors
     ? `Color palette: primary ${tokens.colors.primary ?? "#000"}, secondary ${tokens.colors.secondary ?? ""}, accent ${tokens.colors.accent ?? ""}.`
@@ -32,6 +41,7 @@ function buildPrompt(kind: string, snap: any, tokens: any, extra?: string) {
   const company = snap.company_name ? `Brand: ${snap.company_name}.` : "";
   return [
     preset.sceneHint,
+    angle ?? "",
     company,
     industry,
     palette,
@@ -42,13 +52,19 @@ function buildPrompt(kind: string, snap: any, tokens: any, extra?: string) {
   ].filter(Boolean).join(" ");
 }
 
-async function generateOne(prompt: string, size: string): Promise<string> {
+async function generateOne(prompt: string, size: string, referenceImages?: string[]): Promise<string> {
+  const content: any[] = [{ type: "text", text: prompt }];
+  if (referenceImages?.length) {
+    for (const url of referenceImages.slice(0, 3)) {
+      content.push({ type: "image_url", image_url: { url } });
+    }
+  }
   const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "google/gemini-3.1-flash-image",
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: referenceImages?.length ? content : prompt }],
       modalities: ["image", "text"],
       size,
     }),
@@ -60,7 +76,7 @@ async function generateOne(prompt: string, size: string): Promise<string> {
   const json = await res.json();
   const b64 = json?.data?.[0]?.b64_json;
   if (!b64) throw new Error("No image data returned");
-  return b64; // base64 PNG
+  return b64;
 }
 
 async function uploadAsset(supabase: any, snapshotId: string, userId: string, kind: string, b64: string, prompt: string) {
@@ -72,7 +88,6 @@ async function uploadAsset(supabase: any, snapshotId: string, userId: string, ki
   });
   if (upErr) throw new Error(`Upload failed: ${upErr.message}`);
   const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(path, 60 * 60 * 24 * 7);
-  // Best-effort media_assets row (table may have different columns; ignore failure)
   try {
     await supabase.from("media_assets").insert({
       user_id: userId,
@@ -93,7 +108,7 @@ Deno.serve(async (req) => {
   try {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
     const body = await req.json();
-    const { snapshotId, kind = "logo", count, extra } = body ?? {};
+    const { snapshotId, kind = "logo", count, extra, referenceImages } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
     const preset = KIND_PRESETS[kind];
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
@@ -111,20 +126,27 @@ Deno.serve(async (req) => {
     if (!snap) return new Response(JSON.stringify({ error: "Snapshot not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     if (snap.user_id !== userId) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const tokens = snap.brand_tokens ?? null;
-    const prompt = buildPrompt(kind, snap, tokens, extra);
+    // Pull palette/typography from the locked brand kit so logos/moodboard match wizard selections.
+    const { data: kit } = await supabase.from("venture_brand_kits").select("palette, typography, dna").eq("snapshot_id", snapshotId).maybeSingle();
+    const tokens = {
+      colors: kit?.palette?.colors ?? snap.brand_tokens?.colors,
+      fonts: kit?.typography ? { heading: kit.typography.heading?.family, body: kit.typography.body?.family } : snap.brand_tokens?.fonts,
+      mood: kit?.dna?.personality ?? snap.brand_tokens?.mood,
+    };
+
     const n = Math.max(1, Math.min(4, count ?? preset.defaultCount));
 
-    // Concurrency 2 — image gen is heavy.
     const results: any[] = [];
     let i = 0;
     async function worker() {
       while (i < n) {
         const myIdx = i++;
+        const angle = kind === "moodboard" ? MOODBOARD_ANGLES[myIdx % MOODBOARD_ANGLES.length] : undefined;
+        const prompt = buildPrompt(kind, snap, tokens, extra, angle);
         try {
-          const b64 = await generateOne(prompt, preset.size);
+          const b64 = await generateOne(prompt, preset.size, kind === "logo" ? referenceImages : undefined);
           const up = await uploadAsset(supabase, snapshotId, userId, kind, b64, prompt);
-          results[myIdx] = { ok: true, ...up };
+          results[myIdx] = { ok: true, prompt, ...up };
         } catch (e) {
           results[myIdx] = { ok: false, error: e instanceof Error ? e.message : String(e) };
         }
@@ -132,7 +154,20 @@ Deno.serve(async (req) => {
     }
     await Promise.all([worker(), worker()]);
 
-    return new Response(JSON.stringify({ ok: true, kind, prompt, assets: results }), {
+    // Persist into the brand kit so the live preview & guide pick them up.
+    try {
+      const fresh = results.filter((r) => r?.ok).map((r) => ({ url: r.url, path: r.path }));
+      if (fresh.length) {
+        const column = kind === "moodboard" ? "moodboard" : kind === "logo" ? "logos" : null;
+        if (column && kit) {
+          const existing = Array.isArray((kit as any)[column]) ? (kit as any)[column] : [];
+          const next = [...fresh, ...existing].slice(0, 8);
+          await supabase.from("venture_brand_kits").update({ [column]: next }).eq("snapshot_id", snapshotId);
+        }
+      }
+    } catch { /* non-fatal */ }
+
+    return new Response(JSON.stringify({ ok: true, kind, assets: results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

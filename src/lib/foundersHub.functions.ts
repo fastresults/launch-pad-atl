@@ -725,9 +725,9 @@ export async function refineConcept(input: any): Promise<any> {
 }
 
 export async function generateBrandAsset(input: any): Promise<any> {
-  const { snapshotId, kind, count, extra } = unwrap<{ snapshotId: string; kind: string; count?: number; extra?: string }>(input);
+  const { snapshotId, kind, count, extra, referenceImages } = unwrap<{ snapshotId: string; kind: string; count?: number; extra?: string; referenceImages?: string[] }>(input);
   const { data, error } = await supabase.functions.invoke("venture-brand-assets", {
-    body: { snapshotId, kind, count, extra },
+    body: { snapshotId, kind, count, extra, referenceImages },
   });
   if (error) {
     const msg = (data as any)?.error || error.message;
