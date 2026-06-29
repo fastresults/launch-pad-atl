@@ -25,7 +25,7 @@ import {
   PERSONALITY_AXES,
 } from "@/lib/brand-wizard";
 import { generateBrandAsset } from "@/lib/foundersHub.functions";
-import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
+import { brandKitToDocxBlob } from "@/lib/brand-guide-docx";
 import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
 import { LiveBrandPreview } from "./LiveBrandPreview";
 
@@ -782,8 +782,9 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
     }
     setSaving(true);
     try {
-      const title = `${snapshot.company_name || "Brand"} — Style Guide`;
-      const blob = await markdownToDocxBlob(title, fresh.guide_markdown, { subtitle: "Brand Style Guide" });
+      const companyName = snapshot.company_name || "Brand";
+      const title = `${companyName} - Style Guide`;
+      const blob = await brandKitToDocxBlob(fresh, companyName);
       const filename = `${title}.docx`;
       const contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
       const { uploadUrl, path } = await createDocumentUploadUrl({ filename, contentType, snapshotId: snapshot.id });

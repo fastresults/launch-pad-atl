@@ -354,7 +354,7 @@ function makeCodeBlock(lang: string, code: string[]): Table {
   });
 }
 
-function mdToBlocks(md: string): (Paragraph | Table)[] {
+export function mdToBlocks(md: string): (Paragraph | Table)[] {
   const lines = md.replace(/\r\n/g, "\n").split("\n");
   const blocks: (Paragraph | Table)[] = [];
   let i = 0;
