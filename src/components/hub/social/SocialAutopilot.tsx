@@ -982,6 +982,15 @@ function Step5BuildKit({
         })}
       </ul>
 
+      {Object.keys(errors).length > 0 && (
+        <div className="rounded-lg border border-status-warning/30 bg-status-warning/10 p-3 text-xs text-status-warning">
+          <div className="font-semibold">Some assets could not generate.</div>
+          <div className="mt-1 text-status-warning/90">
+            {Array.from(new Set(Object.values(errors))).slice(0, 2).join(" ")}
+          </div>
+        </div>
+      )}
+
       {anyDone && !allDone && (
         <p className="text-[11px] text-muted-foreground">
           {tasks.filter((t) => t.status === "done").length} of {tasks.length} assets ready. You can continue to launch now and finish the rest later from this step.
