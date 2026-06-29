@@ -843,11 +843,43 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
         </div>
       </div>
 
-      {kit?.guide_markdown && (
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-xs text-emerald-800 dark:text-emerald-300">
-          <div className="flex items-center gap-2"><Lock className="h-3 w-3" />Style guide locked — {kit.guide_markdown.split(/\s+/).length} words.</div>
-        </div>
-      )}
+      <div ref={previewRef} className="rounded-xl border border-emerald-500/30 bg-card overflow-hidden">
+        {kit?.guide_markdown ? (
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Lock className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-400" />
+                Brand Style Guide
+                <span className="text-xs font-normal text-muted-foreground">
+                  · {kit.guide_markdown.split(/\s+/).filter(Boolean).length} words
+                  {kit.locked_at ? ` · locked ${new Date(kit.locked_at).toLocaleDateString()}` : ""}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" onClick={copyGuide} title="Copy markdown">
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setPreviewOpen((v) => !v)}>
+                  {previewOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                  <span className="ml-1 text-xs">{previewOpen ? "Collapse" : "Expand"}</span>
+                </Button>
+              </div>
+            </div>
+            {previewOpen && (
+              <div
+                className="max-h-[460px] overflow-y-auto px-5 py-4 text-foreground"
+                style={{ fontFamily: body ? `'${body}', system-ui` : undefined }}
+              >
+                <RichMarkdown variant="document">{kit.guide_markdown}</RichMarkdown>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+            Generate the style guide to preview it here.
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>
