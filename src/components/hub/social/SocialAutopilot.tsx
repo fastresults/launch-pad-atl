@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import {
   ArrowLeft, ArrowRight, Check, Sparkles, Loader2, RefreshCw,
-  Settings2, Copy, ExternalLink, PartyPopper, Image as ImageIcon,
+  Settings2, Copy, ExternalLink, PartyPopper, Image as ImageIcon, Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -19,6 +19,7 @@ import { PLATFORM_SPECS, ART_DIRECTIONS } from "@/lib/social-platform-specs";
 import { listSocialAssets } from "@/lib/social-cover.functions";
 import { listStylePreviews, generateStylePreview, type StylePreview } from "@/lib/style-preview.functions";
 import { RegenerateAssetDialog } from "./RegenerateAssetDialog";
+import { AssetPreviewDialog, type PreviewableAsset } from "./AssetPreviewDialog";
 import { RotateCcw } from "lucide-react";
 
 const STEPS = [
@@ -457,6 +458,7 @@ function Step4Style({
   const [pick, setPick] = useState<string | null>(direction);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
   const [dialog, setDialog] = useState<{ scope: "single" | "all"; direction?: string } | null>(null);
+  const [previewIdx, setPreviewIdx] = useState<number | null>(null);
 
   const previewsQ = useQuery({
     queryKey: ["style-previews", snapshotId],
@@ -555,15 +557,27 @@ function Step4Style({
               </button>
 
               {brandLocked && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setDialog({ scope: "single", direction: d.id }); }}
-                  disabled={loading}
-                  title="Regenerate this preview"
-                  className="absolute right-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm opacity-0 transition group-hover:opacity-100 disabled:opacity-50"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                </button>
+                <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition group-hover:opacity-100">
+                  {preview?.signed_url && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setPreviewIdx(ART_DIRECTIONS.findIndex((x) => x.id === d.id)); }}
+                      title="Preview full size"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setDialog({ scope: "single", direction: d.id }); }}
+                    disabled={loading}
+                    title="Regenerate this preview"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm disabled:opacity-50"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               )}
             </div>
           );
@@ -606,6 +620,32 @@ function Step4Style({
           }}
         />
       )}
+
+      {previewIdx !== null && (() => {
+        const d = ART_DIRECTIONS[previewIdx];
+        const p = d ? byDirection.get(d.id) : null;
+        const asset: PreviewableAsset | null = d ? {
+          url: p?.signed_url ?? null,
+          title: `${d.label} — style preview`,
+          subtitle: d.blurb,
+          assetKind: "style_preview",
+          canvasPlan: p?.canvas_plan ?? null,
+          qaStatus: p?.qa_status ?? null,
+          qaNotes: (p as any)?.qa_notes ?? null,
+          lastFeedback: p?.last_feedback ?? null,
+          updatedAt: p?.updated_at ?? null,
+        } : null;
+        return (
+          <AssetPreviewDialog
+            open={previewIdx !== null}
+            onOpenChange={(v) => !v && setPreviewIdx(null)}
+            asset={asset}
+            onPrev={() => setPreviewIdx((i) => (i === null ? 0 : (i - 1 + ART_DIRECTIONS.length) % ART_DIRECTIONS.length))}
+            onNext={() => setPreviewIdx((i) => (i === null ? 0 : (i + 1) % ART_DIRECTIONS.length))}
+            onRegenerate={d ? () => { setPreviewIdx(null); setDialog({ scope: "single", direction: d.id }); } : undefined}
+          />
+        );
+      })()}
     </div>
   );
 }
@@ -668,7 +708,7 @@ function Step5BuildKit({
     [platforms, direction],
   );
 
-  const tasks: (KitTask & { signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null })[] = useMemo(() => {
+  const tasks: (KitTask & { signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null; qa_notes?: any; model_used?: string | null; updated_at?: string | null; width?: number | null; height?: number | null })[] = useMemo(() => {
     return baseTasks.map((t) => {
       const match = assets.find(
         (a: any) => a.platform === t.platform && a.asset_kind === t.asset && a.art_direction === direction,
@@ -679,7 +719,12 @@ function Step5BuildKit({
         signed_url: match?.signed_url ?? null,
         canvas_plan: match?.canvas_plan ?? null,
         qa_status: match?.qa_status ?? null,
+        qa_notes: (match as any)?.qa_notes ?? null,
         last_feedback: match?.last_feedback ?? null,
+        model_used: (match as any)?.model_used ?? null,
+        updated_at: (match as any)?.updated_at ?? null,
+        width: (match as any)?.width ?? null,
+        height: (match as any)?.height ?? null,
       };
     });
   }, [baseTasks, assets, direction]);
@@ -688,6 +733,8 @@ function Step5BuildKit({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [kept, setKept] = useState<Record<string, boolean>>({});
   const [regenTarget, setRegenTarget] = useState<null | { scope: "single" | "all"; task?: any }>(null);
+  const [previewIdx, setPreviewIdx] = useState<number | null>(null);
+  const previewableIdxs = useMemo(() => tasks.map((t, i) => (t.signed_url ? i : -1)).filter((i) => i >= 0), [tasks]);
   const allDone = tasks.every((t) => t.status === "done");
 
   const runAll = async () => {
@@ -773,7 +820,13 @@ function Step5BuildKit({
           return (
             <li key={k}
               className="flex items-center gap-3 rounded-lg border border-white/5 bg-background/40 p-2 text-xs">
-              <div className={`${frameClass} overflow-hidden border border-white/10 bg-muted/40 flex items-center justify-center relative`}>
+              <button
+                type="button"
+                onClick={() => { if (t.signed_url) setPreviewIdx(tasks.indexOf(t)); }}
+                disabled={!t.signed_url}
+                title={t.signed_url ? "Preview full size" : undefined}
+                className={`${frameClass} overflow-hidden border border-white/10 bg-muted/40 flex items-center justify-center relative ${t.signed_url ? "cursor-zoom-in hover:ring-2 hover:ring-primary/40" : ""}`}
+              >
                 {t.signed_url ? (
                   <img src={t.signed_url} alt={`${t.platform} ${t.asset}`} className="h-full w-full object-cover" />
                 ) : running && !done ? (
@@ -783,7 +836,7 @@ function Step5BuildKit({
                 ) : (
                   <ImageIcon className="h-4 w-4 text-muted-foreground/60" />
                 )}
-              </div>
+              </button>
               <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
@@ -824,6 +877,16 @@ function Step5BuildKit({
                   )}
                 </div>
                 <div className="flex items-center gap-1">
+                  {t.signed_url && (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewIdx(tasks.indexOf(t))}
+                      title="Preview"
+                      className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5"
+                    >
+                      <Eye className="mr-1 h-3 w-3" /> Preview
+                    </button>
+                  )}
                   {t.signed_url && (
                     <a href={t.signed_url} download
                        className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5">
@@ -893,6 +956,48 @@ function Step5BuildKit({
           }}
         />
       )}
+
+      {previewIdx !== null && (() => {
+        const t = tasks[previewIdx];
+        if (!t) return null;
+        const goPrev = () => {
+          if (!previewableIdxs.length) return;
+          const pos = previewableIdxs.indexOf(previewIdx);
+          const next = previewableIdxs[(pos - 1 + previewableIdxs.length) % previewableIdxs.length];
+          setPreviewIdx(next);
+        };
+        const goNext = () => {
+          if (!previewableIdxs.length) return;
+          const pos = previewableIdxs.indexOf(previewIdx);
+          const next = previewableIdxs[(pos + 1) % previewableIdxs.length];
+          setPreviewIdx(next);
+        };
+        const asset: PreviewableAsset = {
+          url: t.signed_url ?? null,
+          title: `${t.platform} — ${String(t.asset).replace(/_/g, " ")}`,
+          subtitle: t.guidance ?? null,
+          platform: t.platform,
+          assetKind: t.asset,
+          width: t.width ?? null,
+          height: t.height ?? null,
+          canvasPlan: t.canvas_plan ?? null,
+          qaStatus: t.qa_status ?? null,
+          qaNotes: t.qa_notes ?? null,
+          modelUsed: t.model_used ?? null,
+          lastFeedback: t.last_feedback ?? null,
+          updatedAt: t.updated_at ?? null,
+        };
+        return (
+          <AssetPreviewDialog
+            open={previewIdx !== null}
+            onOpenChange={(v) => !v && setPreviewIdx(null)}
+            asset={asset}
+            onPrev={previewableIdxs.length > 1 ? goPrev : undefined}
+            onNext={previewableIdxs.length > 1 ? goNext : undefined}
+            onRegenerate={() => { setPreviewIdx(null); setRegenTarget({ scope: "single", task: t }); }}
+          />
+        );
+      })()}
     </div>
   );
 }

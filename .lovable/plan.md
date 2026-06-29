@@ -1,40 +1,38 @@
 ## Goal
-Replace the static Step 4 "Pick a look" mocks with brand-aware, AI-rendered preview tiles, each with its own Regenerate button (and a "Regenerate all"). Step 5 regenerate behavior stays as is.
+Make every creative asset on Social Studio (Step 4 style previews and Step 5 build-kit tiles) openable in a full-size preview modal — click any tile to see the artwork large with metadata and actions.
 
 ## What changes
 
-### 1. Brand-aware previews (replace CSS mocks)
-- `StylePreview` in `src/components/hub/social/SocialAutopilot.tsx` currently draws CSS shapes from the palette. Swap to render an actual AI-generated thumbnail per direction (Editorial / Photographic / Geometric / Illustrative), composed with the venture's logo, palette, and typography.
-- Fall back to the existing CSS mock while loading or if generation fails.
+### 1. New shared component: `AssetPreviewDialog`
+`src/components/hub/social/AssetPreviewDialog.tsx`
+- Built on shadcn `Dialog` (large: `max-w-5xl`, asset centered on a neutral checkerboard so transparent PNGs read correctly).
+- Props: `open`, `onOpenChange`, `asset: { url, title, subtitle?, width?, height?, platform?, assetKind?, canvasPlan?, qaStatus?, qaNotes?, modelUsed?, lastFeedback?, updatedAt? }`, optional `onRegenerate?()`, `onDownload?()`, `nextAsset?()/prevAsset?()` for keyboard arrow navigation.
+- Body: large image (object-contain, capped at 80vh), side rail with title, dimensions, platform, model used, last feedback, QA badge (pass/fail with contrast ratio from `qaNotes`), CanvasPlan swatch strip (surface/ink/accent) when present.
+- Footer: Download (signed URL), Copy URL, Open in new tab, Regenerate (opens existing `RegenerateAssetDialog`).
+- Keyboard: Esc to close, ←/→ to move between assets in the same gallery.
 
-### 2. New thumbnail cache table
-Add `venture_style_previews`:
-- `id`, `snapshot_id`, `direction` (editorial|photographic|geometric|illustrative), `image_url`, `canvas_plan` jsonb, `qa_status`, `created_at`
-- Unique on `(snapshot_id, direction)`. RLS + GRANTs mirroring `venture_social_assets`.
+### 2. Step 4 – Style preview tiles
+In `SocialAutopilot.tsx` `Step4Style`:
+- Wrap each direction tile in a button that opens `AssetPreviewDialog` for that direction's preview image (the AI thumbnail from `venture_style_previews`).
+- Add a small "Preview" overlay icon (Eye) next to the existing Regenerate overlay, so click-through is discoverable without hijacking the tile-select click. Selection stays on tile body click; Preview/Regenerate are corner buttons that `stopPropagation`.
+- Arrow-key nav cycles through the 4 directions.
 
-### 3. Edge Function: `venture-style-preview`
-- Input: `{ snapshotId, direction, feedback? }`
-- Reuses `_shared/canvas-plan.ts`, `palette-tile.ts`, `cover-art-director.ts`, and `image-qa.ts` (the same pipeline as Step 5) but at 1024x768 preview ratio.
-- Uses brand kit (palette + logo PNG from `user-media`) as multimodal input so previews look like what the kit will actually produce.
-- Upserts result into `venture_style_previews`.
+### 3. Step 5 – Build kit tiles
+In `Step5BuildKit`:
+- Each generated asset card (avatar / cover / pinned post, per platform) becomes clickable → opens `AssetPreviewDialog` with that asset.
+- The existing Regenerate / Keep controls stay; add an Eye "Preview" icon next to them.
+- Arrow-key nav cycles through all assets currently rendered in the kit grid.
 
-### 4. UI: Regenerate on each Step 4 tile
-In `Step4Style`:
-- Per-tile overlay button (top-right): `RotateCcw` icon → opens `RegenerateAssetDialog` (already exists) prefilled with that direction; on submit calls `venture-style-preview` with `feedback`.
-- Header action: "Regenerate all" → fires the function for all 4 directions in parallel with a single shared feedback string.
-- Tile shows loading shimmer while regenerating; selection state preserved.
-- First visit auto-generates any missing previews (one call per direction, parallel).
-
-### 5. Client wrapper
-Add `generateStylePreview(snapshotId, direction, feedback?)` in `src/lib/social.functions.ts` (next to `generateSocialCover`).
+### 4. Wiring
+- Reuse signed URLs already returned by `listSocialAssets` / `listStylePreviews` — no new edge function or schema work.
+- Reuse `RegenerateAssetDialog` for the Regenerate action from inside the preview.
+- No DB changes.
 
 ## Files touched
-- `supabase/migrations/<ts>_venture_style_previews.sql` (new)
-- `supabase/functions/venture-style-preview/index.ts` (new)
-- `src/lib/social.functions.ts` (add wrapper)
-- `src/components/hub/social/SocialAutopilot.tsx` (Step4Style + StylePreview)
-- Reuse: `src/components/hub/social/RegenerateAssetDialog.tsx` (no change)
+- `src/components/hub/social/AssetPreviewDialog.tsx` (new)
+- `src/components/hub/social/SocialAutopilot.tsx` (Step4Style + Step5BuildKit: add preview triggers and dialog state)
 
 ## Out of scope
-- Step 5 tiles (already have regenerate).
-- Changing the 4 direction options or copy.
+- Editing/cropping inside the modal.
+- Persisting view history.
+- Other hub surfaces (Brand Wizard, Documents) — this request is scoped to Social Studio per the screenshot.
