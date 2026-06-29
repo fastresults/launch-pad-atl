@@ -820,7 +820,13 @@ function Step5BuildKit({
           return (
             <li key={k}
               className="flex items-center gap-3 rounded-lg border border-white/5 bg-background/40 p-2 text-xs">
-              <div className={`${frameClass} overflow-hidden border border-white/10 bg-muted/40 flex items-center justify-center relative`}>
+              <button
+                type="button"
+                onClick={() => { if (t.signed_url) setPreviewIdx(tasks.indexOf(t)); }}
+                disabled={!t.signed_url}
+                title={t.signed_url ? "Preview full size" : undefined}
+                className={`${frameClass} overflow-hidden border border-white/10 bg-muted/40 flex items-center justify-center relative ${t.signed_url ? "cursor-zoom-in hover:ring-2 hover:ring-primary/40" : ""}`}
+              >
                 {t.signed_url ? (
                   <img src={t.signed_url} alt={`${t.platform} ${t.asset}`} className="h-full w-full object-cover" />
                 ) : running && !done ? (
@@ -830,7 +836,7 @@ function Step5BuildKit({
                 ) : (
                   <ImageIcon className="h-4 w-4 text-muted-foreground/60" />
                 )}
-              </div>
+              </button>
               <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
