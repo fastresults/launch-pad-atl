@@ -62,6 +62,13 @@ export async function generateStyleGuide(snapshotId: string) {
   return callWizard({ action: "styleguide", snapshotId });
 }
 
+export async function extractExistingBrand(
+  snapshotId: string,
+  payload: { websiteUrl?: string; logos?: { dataUrl: string; filename: string }[]; voiceNotes?: string },
+) {
+  return callWizard({ action: "extract-existing", snapshotId, ...payload });
+}
+
 export async function resetBrandKit(snapshotId: string): Promise<void> {
   const { error } = await supabase
     .from("venture_brand_kits")
