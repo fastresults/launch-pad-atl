@@ -904,6 +904,24 @@ function Step5BuildKit({
                       {isKept ? "Unkeep" : "Keep"}
                     </Button>
                   )}
+                  {!done && !err && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-6 text-[11px]"
+                      disabled={running}
+                      onClick={async () => {
+                        try {
+                          await generateOneKitTask(snapshotId, t);
+                          await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
+                        } catch (e: any) {
+                          setErrors((prev) => ({ ...prev, [k]: e.message ?? "failed" }));
+                        }
+                      }}
+                    >
+                      <Sparkles className="mr-1 h-3 w-3" /> Generate
+                    </Button>
+                  )}
                   {(err || done) && (
                     <Button
                       size="sm"
