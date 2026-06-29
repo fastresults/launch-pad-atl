@@ -43,6 +43,19 @@ const SIGNUP_URLS: Record<string, string> = {
   Reddit: "https://www.reddit.com/register/",
 };
 
+function generationErrorMessage(e: any) {
+  if (e?.code === "AI_CREDIT_LIMIT_REACHED" || e?.reason === "workspace_credit_limit") {
+    return "AI image generation is paused because this workspace has reached its AI credit limit. Ask the workspace owner to raise the limit, then try Generate again.";
+  }
+  if (e?.code === "PAYMENT_REQUIRED" || e?.reason === "ai_credits_exhausted") {
+    return "AI image generation is paused because AI credits are exhausted. Add credits, then try Generate again.";
+  }
+  if (e?.code === "RATE_LIMITED") {
+    return "The image generator is rate-limited right now. Wait a minute, then try Generate again.";
+  }
+  return e?.details || e?.message || "Generation failed. Please try again.";
+}
+
 export function SocialAutopilot({
   snapshot,
   kit,
@@ -475,7 +488,7 @@ function Step4Style({
       await generateStylePreview({ snapshotId, direction: dirId, feedback });
       await qc.invalidateQueries({ queryKey: ["style-previews", snapshotId] });
     } catch (e: any) {
-      toast.error(e?.message || "Couldn't regenerate preview");
+      toast.error(generationErrorMessage(e));
     } finally {
       setBusy((b) => ({ ...b, [dirId]: false }));
     }
@@ -730,36 +743,57 @@ function Step5BuildKit({
   }, [baseTasks, assets, direction]);
 
   const [running, setRunning] = useState(false);
+  const [runningKeys, setRunningKeys] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [kept, setKept] = useState<Record<string, boolean>>({});
   const [regenTarget, setRegenTarget] = useState<null | { scope: "single" | "all"; task?: any }>(null);
   const [previewIdx, setPreviewIdx] = useState<number | null>(null);
   const previewableIdxs = useMemo(() => tasks.map((t, i) => (t.signed_url ? i : -1)).filter((i) => i >= 0), [tasks]);
   const allDone = tasks.every((t) => t.status === "done");
+  const taskKey = (t: Pick<KitTask, "platform" | "asset">) => `${t.platform}:${t.asset}`;
+
+  const setTaskRunning = (key: string, value: boolean) => {
+    setRunningKeys((prev) => {
+      const next = { ...prev };
+      if (value) next[key] = true;
+      else delete next[key];
+      return next;
+    });
+  };
 
   const runAll = async () => {
     setRunning(true);
     setErrors({});
     for (const t of tasks) {
       if (t.status === "done") continue;
+      const k = taskKey(t);
+      setTaskRunning(k, true);
       try {
         await generateOneKitTask(snapshotId, t);
         await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
       } catch (e: any) {
-        setErrors((prev) => ({ ...prev, [`${t.platform}:${t.asset}`]: e.message ?? "failed" }));
+        setErrors((prev) => ({ ...prev, [k]: generationErrorMessage(e) }));
+      } finally {
+        setTaskRunning(k, false);
       }
     }
     setRunning(false);
   };
 
   const regenerateSingle = async (t: any, opts: { feedback: string; directionOverride?: string }) => {
+    const k = taskKey(t);
+    setTaskRunning(k, true);
     try {
       await generateOneKitTask(snapshotId, t, opts);
       await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
-      setErrors((prev) => { const n = { ...prev }; delete n[`${t.platform}:${t.asset}`]; return n; });
+      setErrors((prev) => { const n = { ...prev }; delete n[k]; return n; });
       toast.success("Regenerated");
     } catch (e: any) {
-      toast.error(e.message ?? "failed");
+      const msg = generationErrorMessage(e);
+      setErrors((prev) => ({ ...prev, [k]: msg }));
+      toast.error(msg);
+    } finally {
+      setTaskRunning(k, false);
     }
   };
 
@@ -767,13 +801,16 @@ function Step5BuildKit({
     setRunning(true);
     try {
       for (const t of tasks) {
-        const k = `${t.platform}:${t.asset}`;
+        const k = taskKey(t);
         if (kept[k]) continue;
+        setTaskRunning(k, true);
         try {
           await generateOneKitTask(snapshotId, t, opts);
           await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
         } catch (e: any) {
-          setErrors((prev) => ({ ...prev, [k]: e.message ?? "failed" }));
+          setErrors((prev) => ({ ...prev, [k]: generationErrorMessage(e) }));
+        } finally {
+          setTaskRunning(k, false);
         }
       }
       toast.success("Regenerated all unlocked assets");
@@ -809,9 +846,10 @@ function Step5BuildKit({
 
       <ul className="grid gap-2 sm:grid-cols-2">
         {tasks.map((t) => {
-          const k = `${t.platform}:${t.asset}`;
+          const k = taskKey(t);
           const done = t.status === "done";
           const err = errors[k];
+          const itemRunning = !!runningKeys[k];
           const isAvatar = t.asset === "avatar";
           const isKept = !!kept[k];
           const frameClass = isAvatar
@@ -829,7 +867,7 @@ function Step5BuildKit({
               >
                 {t.signed_url ? (
                   <img src={t.signed_url} alt={`${t.platform} ${t.asset}`} className="h-full w-full object-cover" />
-                ) : running && !done ? (
+                ) : itemRunning ? (
                   <Loader2 className="h-4 w-4 animate-spin text-status-info" />
                 ) : err ? (
                   <span className="text-[10px] text-status-danger">failed</span>
@@ -842,7 +880,7 @@ function Step5BuildKit({
                   <div className="flex items-center gap-1.5">
                     {done ? (
                       <Check className="h-3.5 w-3.5 text-status-success" />
-                    ) : running ? (
+                    ) : itemRunning ? (
                       <Loader2 className="h-3 w-3 animate-spin text-status-info" />
                     ) : err ? (
                       <span className="h-2 w-2 rounded-full bg-status-danger" />
@@ -909,17 +947,21 @@ function Step5BuildKit({
                       size="sm"
                       variant="outline"
                       className="h-6 text-[11px]"
-                      disabled={running}
+                      disabled={running || itemRunning}
                       onClick={async () => {
+                        setTaskRunning(k, true);
                         try {
                           await generateOneKitTask(snapshotId, t);
                           await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
+                          setErrors((prev) => { const n = { ...prev }; delete n[k]; return n; });
                         } catch (e: any) {
-                          setErrors((prev) => ({ ...prev, [k]: e.message ?? "failed" }));
+                          setErrors((prev) => ({ ...prev, [k]: generationErrorMessage(e) }));
+                        } finally {
+                          setTaskRunning(k, false);
                         }
                       }}
                     >
-                      <Sparkles className="mr-1 h-3 w-3" /> Generate
+                      {itemRunning ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />} Generate
                     </Button>
                   )}
                   {(err || done) && (
@@ -927,10 +969,10 @@ function Step5BuildKit({
                       size="sm"
                       variant="outline"
                       className="h-6 text-[11px]"
-                      disabled={running}
+                      disabled={running || itemRunning}
                       onClick={() => setRegenTarget({ scope: "single", task: t })}
                     >
-                      <RefreshCw className="mr-1 h-3 w-3" /> Regenerate
+                      {itemRunning ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />} Regenerate
                     </Button>
                   )}
                 </div>
@@ -939,6 +981,15 @@ function Step5BuildKit({
           );
         })}
       </ul>
+
+      {Object.keys(errors).length > 0 && (
+        <div className="rounded-lg border border-status-warning/30 bg-status-warning/10 p-3 text-xs text-status-warning">
+          <div className="font-semibold">Some assets could not generate.</div>
+          <div className="mt-1 text-status-warning/90">
+            {Array.from(new Set(Object.values(errors))).slice(0, 2).join(" ")}
+          </div>
+        </div>
+      )}
 
       {anyDone && !allDone && (
         <p className="text-[11px] text-muted-foreground">

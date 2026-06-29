@@ -41,6 +41,21 @@ function json(body: unknown, status = 200) {
   });
 }
 
+function gatewayError(text: string, status: number, label: string) {
+  let parsed: any = {};
+  try { parsed = JSON.parse(text); } catch { /* non-json gateway body */ }
+  const message =
+    parsed?.error?.message ||
+    parsed?.message ||
+    parsed?.details ||
+    `${label} gateway error (${status})`;
+  const err: any = new Error(message);
+  err.status = status;
+  err.code = parsed?.error?.type || parsed?.error?.code || parsed?.type || parsed?.code;
+  err.details = parsed?.details;
+  return err;
+}
+
 function b64ToBytes(b64: string): Uint8Array {
   const bin = atob(b64);
   const out = new Uint8Array(bin.length);
@@ -99,11 +114,7 @@ async function callMultimodal(prompt: string, imagesDataUrls: string[], apiKey: 
   });
   const text = await res.text();
   if (!res.ok) {
-    let parsed: any = {};
-    try { parsed = JSON.parse(text); } catch { /* */ }
-    const err: any = new Error(parsed?.error?.message || `Multimodal gateway error (${res.status})`);
-    err.status = res.status;
-    throw err;
+    throw gatewayError(text, res.status, "Multimodal");
   }
   const data = JSON.parse(text);
   const b64 = data?.data?.[0]?.b64_json;
@@ -119,11 +130,7 @@ async function callTextOnly(prompt: string, size: string, apiKey: string): Promi
   });
   const text = await res.text();
   if (!res.ok) {
-    let parsed: any = {};
-    try { parsed = JSON.parse(text); } catch { /* */ }
-    const err: any = new Error(parsed?.error?.message || `Fallback gateway error (${res.status})`);
-    err.status = res.status;
-    throw err;
+    throw gatewayError(text, res.status, "Fallback");
   }
   const data = JSON.parse(text);
   const b64 = data?.data?.[0]?.b64_json;
@@ -223,7 +230,7 @@ Deno.serve(async (req) => {
         return { b64, modelUsed: MODEL_FALLBACK, prompt };
       } catch (e: any) {
         const status = e?.status;
-        if (refs.length && status !== 402 && status !== 429) {
+        if (refs.length && ![401, 402, 403, 429].includes(status)) {
           const b64 = await callTextOnly(prompt, PREVIEW_ASSET.modelSize, apiKey);
           return { b64, modelUsed: MODEL_FALLBACK + " (multimodal fallback)", prompt };
         }
@@ -237,7 +244,10 @@ Deno.serve(async (req) => {
     } catch (e: any) {
       const out: any = { error: e?.message ?? "Generation failed", upstreamStatus: e?.status };
       if (e?.status === 402) { out.code = "PAYMENT_REQUIRED"; out.reason = "ai_credits_exhausted"; }
+      else if (e?.status === 403 && e?.code === "credit_limit_reached") { out.code = "AI_CREDIT_LIMIT_REACHED"; out.reason = "workspace_credit_limit"; }
       else if (e?.status === 429) { out.code = "RATE_LIMITED"; }
+      else if (e?.code) { out.code = e.code; }
+      if (e?.details) out.details = e.details;
       return json(out, 200);
     }
 

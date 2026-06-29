@@ -26,6 +26,9 @@ async function call(body: any) {
   if (data?.error) {
     const err: any = new Error(data.error);
     err.code = data.code;
+    err.reason = data.reason;
+    err.details = data.details;
+    err.upstreamStatus = data.upstreamStatus;
     throw err;
   }
   return data;
