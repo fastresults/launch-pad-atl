@@ -1,8 +1,58 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, Trash2, FileText, Loader2 } from "lucide-react";
 import { getDocumentDownloadUrl } from "@/lib/attendee.functions";
+
+function DocxPreview({ url, onError }: { url: string; onError: (msg: string | null) => void }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const styleRef = useRef<HTMLDivElement | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    onError(null);
+    (async () => {
+      try {
+        const buf = await (await fetch(url)).arrayBuffer();
+        if (cancelled) return;
+        const { renderAsync } = await import("docx-preview");
+        if (cancelled || !containerRef.current) return;
+        containerRef.current.innerHTML = "";
+        if (styleRef.current) styleRef.current.innerHTML = "";
+        await renderAsync(buf, containerRef.current, styleRef.current ?? undefined, {
+          inWrapper: true,
+          ignoreWidth: false,
+          ignoreHeight: false,
+          ignoreFonts: false,
+          breakPages: true,
+          experimental: true,
+          renderHeaders: true,
+          renderFooters: true,
+          useBase64URL: true,
+        });
+      } catch (e: any) {
+        if (!cancelled) onError(e?.message || "Could not render document");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [url]);
+
+  return (
+    <div className="max-h-[72vh] overflow-auto rounded-lg bg-slate-200 p-4">
+      {loading && (
+        <div className="flex h-[360px] items-center justify-center text-sm text-muted-foreground">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Rendering document…
+        </div>
+      )}
+      <div ref={styleRef} />
+      <div ref={containerRef} className="docx-preview-host mx-auto [&_.docx-wrapper]:bg-transparent [&_.docx-wrapper>section.docx]:mx-auto [&_.docx-wrapper>section.docx]:mb-4 [&_.docx-wrapper>section.docx]:shadow-lg" />
+    </div>
+  );
+}
 
 type Doc = {
   id: string;
