@@ -203,7 +203,7 @@ ${system}
 ${brief}
 ${QUALITY}
 ${BANNED}
-${retryBlock}
+${feedbackBlock}${retryBlock}
 Deliver a single finished image at the spec'd aspect that a senior art director would ship to a paying client today. Background MUST be exactly ${plan.surface}. Any rendered glyphs, marks, or text MUST be exactly ${plan.ink}. The only permitted accent color is ${plan.accent}.`;
 }
 
