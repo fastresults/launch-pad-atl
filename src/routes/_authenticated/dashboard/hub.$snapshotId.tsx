@@ -870,7 +870,15 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     mutationFn: (vars: { documentType: string; rewriteFeedback?: string; rewriteTags?: string[]; intakeAnswers?: Record<string, any> }) =>
       generateDocument({ data: { snapshotId: snapshot.id, ...vars } }),
     onSuccess: () => { toast.success("Document ready"); qc.invalidateQueries({ queryKey: ["hub"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Generation failed"),
+    onError: (e) => {
+      const msg = e instanceof Error ? e.message : "Generation failed";
+      if (/brand_kit_required|Brand Wizard/i.test(msg)) {
+        toast.error("Finish the Brand Wizard first — it powers this deliverable.");
+        openBrandWizard();
+      } else {
+        toast.error(msg);
+      }
+    },
   });
 
   const bulk = useMutation({
