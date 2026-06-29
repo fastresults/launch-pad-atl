@@ -1975,6 +1975,68 @@ export type Database = {
         }
         Relationships: []
       }
+      venture_brand_kits: {
+        Row: {
+          created_at: string
+          dna: Json
+          guide_markdown: string | null
+          id: string
+          locked_at: string | null
+          logos: Json
+          moodboard: Json
+          palette: Json | null
+          snapshot_id: string
+          status: string
+          step: number
+          typography: Json | null
+          updated_at: string
+          user_id: string
+          voice: Json | null
+        }
+        Insert: {
+          created_at?: string
+          dna?: Json
+          guide_markdown?: string | null
+          id?: string
+          locked_at?: string | null
+          logos?: Json
+          moodboard?: Json
+          palette?: Json | null
+          snapshot_id: string
+          status?: string
+          step?: number
+          typography?: Json | null
+          updated_at?: string
+          user_id: string
+          voice?: Json | null
+        }
+        Update: {
+          created_at?: string
+          dna?: Json
+          guide_markdown?: string | null
+          id?: string
+          locked_at?: string | null
+          logos?: Json
+          moodboard?: Json
+          palette?: Json | null
+          snapshot_id?: string
+          status?: string
+          step?: number
+          typography?: Json | null
+          updated_at?: string
+          user_id?: string
+          voice?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_brand_kits_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: true
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venture_document_types: {
         Row: {
           active: boolean
