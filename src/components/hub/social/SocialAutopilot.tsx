@@ -43,6 +43,19 @@ const SIGNUP_URLS: Record<string, string> = {
   Reddit: "https://www.reddit.com/register/",
 };
 
+function generationErrorMessage(e: any) {
+  if (e?.code === "AI_CREDIT_LIMIT_REACHED" || e?.reason === "workspace_credit_limit") {
+    return "AI image generation is paused because this workspace has reached its AI credit limit. Ask the workspace owner to raise the limit, then try Generate again.";
+  }
+  if (e?.code === "PAYMENT_REQUIRED" || e?.reason === "ai_credits_exhausted") {
+    return "AI image generation is paused because AI credits are exhausted. Add credits, then try Generate again.";
+  }
+  if (e?.code === "RATE_LIMITED") {
+    return "The image generator is rate-limited right now. Wait a minute, then try Generate again.";
+  }
+  return e?.details || e?.message || "Generation failed. Please try again.";
+}
+
 export function SocialAutopilot({
   snapshot,
   kit,
