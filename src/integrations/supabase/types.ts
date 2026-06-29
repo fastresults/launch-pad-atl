@@ -2533,6 +2533,63 @@ export type Database = {
           },
         ]
       }
+      venture_style_previews: {
+        Row: {
+          brand_kit_locked_at: string | null
+          canvas_plan: Json | null
+          created_at: string
+          direction: string
+          id: string
+          last_feedback: string | null
+          model_used: string | null
+          prompt_used: string | null
+          qa_notes: Json | null
+          qa_status: string | null
+          signed_url: string | null
+          signed_url_expires_at: string | null
+          snapshot_id: string
+          storage_path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_kit_locked_at?: string | null
+          canvas_plan?: Json | null
+          created_at?: string
+          direction: string
+          id?: string
+          last_feedback?: string | null
+          model_used?: string | null
+          prompt_used?: string | null
+          qa_notes?: Json | null
+          qa_status?: string | null
+          signed_url?: string | null
+          signed_url_expires_at?: string | null
+          snapshot_id: string
+          storage_path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_kit_locked_at?: string | null
+          canvas_plan?: Json | null
+          created_at?: string
+          direction?: string
+          id?: string
+          last_feedback?: string | null
+          model_used?: string | null
+          prompt_used?: string | null
+          qa_notes?: Json | null
+          qa_status?: string | null
+          signed_url?: string | null
+          signed_url_expires_at?: string | null
+          snapshot_id?: string
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       video_testimonials: {
         Row: {
           created_at: string
