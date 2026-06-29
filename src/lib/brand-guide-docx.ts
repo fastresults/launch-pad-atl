@@ -74,29 +74,76 @@ function readableTextOn(bgHex: string): string {
 
 // --- Image fetch -----------------------------------------------------------
 
-async function fetchImage(url: string): Promise<{ data: ArrayBuffer; type: "png" | "jpg" } | null> {
+type FetchedImage = { data: ArrayBuffer; type: "png" | "jpg"; width: number; height: number };
+
+async function measureImage(buf: ArrayBuffer, mime: string): Promise<{ width: number; height: number } | null> {
   try {
+    const blob = new Blob([buf], { type: mime });
+    if (typeof createImageBitmap === "function") {
+      const bmp = await createImageBitmap(blob);
+      const dims = { width: bmp.width, height: bmp.height };
+      bmp.close?.();
+      return dims;
+    }
+    return await new Promise((resolve) => {
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        const dims = { width: img.naturalWidth, height: img.naturalHeight };
+        URL.revokeObjectURL(url);
+        resolve(dims);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      };
+      img.src = url;
+    });
+  } catch {
+    return null;
+  }
+}
+
+/** Scale natural dimensions to fit inside maxW x maxH while preserving aspect ratio. */
+function fitBox(natW: number, natH: number, maxW: number, maxH: number): { width: number; height: number } {
+  if (!natW || !natH) return { width: maxW, height: Math.round(maxH / 2) };
+  const scale = Math.min(maxW / natW, maxH / natH);
+  return {
+    width: Math.max(1, Math.round(natW * scale)),
+    height: Math.max(1, Math.round(natH * scale)),
+  };
+}
+
+async function fetchImage(url: string): Promise<FetchedImage | null> {
+  try {
+    let buf: ArrayBuffer;
+    let type: "png" | "jpg";
+    let mime: string;
     if (url.startsWith("data:")) {
       const m = /^data:image\/(png|jpe?g);base64,(.+)$/i.exec(url);
       if (!m) return null;
       const binary = atob(m[2]);
       const bytes = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      return { data: bytes.buffer, type: m[1].toLowerCase().startsWith("p") ? "png" : "jpg" };
+      buf = bytes.buffer;
+      type = m[1].toLowerCase().startsWith("p") ? "png" : "jpg";
+      mime = `image/${type === "png" ? "png" : "jpeg"}`;
+    } else {
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      buf = await res.arrayBuffer();
+      const head = new Uint8Array(buf.slice(0, 4));
+      type = head[0] === 0x89 && head[1] === 0x50 ? "png" : "jpg";
+      mime = `image/${type === "png" ? "png" : "jpeg"}`;
     }
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const buf = await res.arrayBuffer();
-    const head = new Uint8Array(buf.slice(0, 4));
-    const type: "png" | "jpg" =
-      head[0] === 0x89 && head[1] === 0x50 ? "png" : "jpg";
-    return { data: buf, type };
+    const dims = (await measureImage(buf, mime)) ?? { width: 0, height: 0 };
+    return { data: buf, type, width: dims.width, height: dims.height };
   } catch {
     return null;
   }
 }
 
-async function fetchKitImage(asset: any): Promise<{ data: ArrayBuffer; type: "png" | "jpg" } | null> {
+async function fetchKitImage(asset: any): Promise<FetchedImage | null> {
   if (!asset) return null;
   if (asset.path) {
     try {
