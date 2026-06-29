@@ -31,7 +31,7 @@ const SIGNED_TTL = 60 * 60 * 24 * 7;
 
 function gatewayHeaders(apiKey: string): Record<string, string> {
   return {
-    "Lovable-API-Key": apiKey,
+    Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
   };
 }
