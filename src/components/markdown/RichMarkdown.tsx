@@ -33,7 +33,8 @@ const NUMERIC_RE = /^[\$£€]?\s*-?[\d,]+(?:\.\d+)?%?$/;
 
 function CodeBlock({ inline, className, children }: any) {
   const txt = String(children ?? "").replace(/\n$/, "");
-  if (inline) {
+  const isInline = inline ?? (!className && !String(children ?? "").includes("\n"));
+  if (isInline) {
     return (
       <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[12.5px] text-foreground">
         {children}
@@ -149,6 +150,7 @@ function makeComponents(variant: Variant) {
       <hr className="my-6 h-px border-0 bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
     ),
     blockquote: Blockquote,
+    pre: ({ children }: any) => <>{children}</>,
     code: CodeBlock,
     table: ({ children }: any) => (
       <div className="my-4 overflow-x-auto rounded-lg border border-border/60">
