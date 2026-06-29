@@ -708,7 +708,7 @@ function Step5BuildKit({
     [platforms, direction],
   );
 
-  const tasks: (KitTask & { signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null })[] = useMemo(() => {
+  const tasks: (KitTask & { signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null; qa_notes?: any; model_used?: string | null; updated_at?: string | null; width?: number | null; height?: number | null })[] = useMemo(() => {
     return baseTasks.map((t) => {
       const match = assets.find(
         (a: any) => a.platform === t.platform && a.asset_kind === t.asset && a.art_direction === direction,
@@ -719,7 +719,12 @@ function Step5BuildKit({
         signed_url: match?.signed_url ?? null,
         canvas_plan: match?.canvas_plan ?? null,
         qa_status: match?.qa_status ?? null,
+        qa_notes: (match as any)?.qa_notes ?? null,
         last_feedback: match?.last_feedback ?? null,
+        model_used: (match as any)?.model_used ?? null,
+        updated_at: (match as any)?.updated_at ?? null,
+        width: (match as any)?.width ?? null,
+        height: (match as any)?.height ?? null,
       };
     });
   }, [baseTasks, assets, direction]);
@@ -728,6 +733,8 @@ function Step5BuildKit({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [kept, setKept] = useState<Record<string, boolean>>({});
   const [regenTarget, setRegenTarget] = useState<null | { scope: "single" | "all"; task?: any }>(null);
+  const [previewIdx, setPreviewIdx] = useState<number | null>(null);
+  const previewableIdxs = useMemo(() => tasks.map((t, i) => (t.signed_url ? i : -1)).filter((i) => i >= 0), [tasks]);
   const allDone = tasks.every((t) => t.status === "done");
 
   const runAll = async () => {
