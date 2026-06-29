@@ -36,7 +36,17 @@ export async function createDocumentUploadUrl(data: {
   snapshotId?: string | null;
 }) {
   const folder = data.snapshotId ?? "unassigned";
-  const path = `${await uid()}/${folder}/${Date.now()}-${data.filename}`;
+  // Sanitize: Supabase storage rejects many non-ASCII characters (em dashes, smart quotes, etc.)
+  const safeName = data.filename
+    .normalize("NFKD")
+    .replace(/[\u2010-\u2015]/g, "-") // various dashes → hyphen
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[^\x20-\x7E]/g, "") // strip remaining non-ASCII
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim() || "file";
+  const path = `${await uid()}/${folder}/${Date.now()}-${safeName}`;
   const { data: res, error } = await supabase.storage
     .from("attendee-docs")
     .createSignedUploadUrl(path);
