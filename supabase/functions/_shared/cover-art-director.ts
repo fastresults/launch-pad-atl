@@ -5,6 +5,7 @@
 // rather than redrawing one.
 
 import type { AssetSpec, ArtDirectionId } from "./social-platform-specs.ts";
+import type { CanvasPlan } from "./canvas-plan.ts";
 
 type Kit = {
   palette?: any;
@@ -34,12 +35,14 @@ HARD BANS (any of these = failure, regenerate without it):
 - Isometric office workers, stock smiling founders, handshake cliches, lightbulbs, rocket ships, puzzle pieces.
 - Heavy gradients, drop shadows, bevels, lens flares, glossy reflections.
 - Reproductions or redraws of the attached logo. The attached logo is placed by us, not redrawn by you.
+- Dark text on dark surfaces. Light text on light surfaces. ANY foreground/background pair below 4.5:1 contrast.
+- Using a color that is not exactly surface, ink, or accent from the canvas plan.
 `;
 
 const QUALITY = `
 QUALITY BAR (an award jury would accept this):
 - One dominant focal element. ≥60% negative space.
-- Use AT MOST two palette roles + the background. Never use all roles at once.
+- Use ONLY the three hex colors named in the canvas plan: surface (background), ink (text/marks), accent (one supporting color). Nothing else.
 - Typography (when present) must use the brand heading family, tight tracking, real type hierarchy, optical alignment.
 - WCAG AA contrast (≥4.5:1) between any text and its background.
 - Crisp edges, no AI-blur, no muddy color, no halftone artifacts.
