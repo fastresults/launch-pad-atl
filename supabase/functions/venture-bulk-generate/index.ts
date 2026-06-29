@@ -186,10 +186,12 @@ async function generateOne(
   const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
   const preamble = compactPreamble(ctx);
 
+  const brandBlock = brandKitBlock(brandKit);
   const userPrompt = [
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
     `Category: ${type.category}`,
+    brandBlock,
     preamble,
     brainSlice
       ? `\n## Venture brain (compressed, authoritative — every section must reflect these)\n${JSON.stringify(brainSlice, null, 2)}`
