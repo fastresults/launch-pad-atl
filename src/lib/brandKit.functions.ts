@@ -1,0 +1,63 @@
+// @ts-nocheck
+import { supabase } from "@/integrations/supabase/client";
+
+export type BrandKit = {
+  id: string;
+  snapshot_id: string;
+  user_id: string;
+  status: "draft" | "locked";
+  step: number;
+  dna: any;
+  palette: any | null;
+  typography: any | null;
+  moodboard: any[];
+  logos: any[];
+  voice: any | null;
+  guide_markdown: string | null;
+  locked_at: string | null;
+};
+
+export async function getBrandKit(snapshotId: string): Promise<BrandKit | null> {
+  const { data, error } = await supabase
+    .from("venture_brand_kits")
+    .select("*")
+    .eq("snapshot_id", snapshotId)
+    .maybeSingle();
+  if (error) throw error;
+  return data as BrandKit | null;
+}
+
+export async function upsertBrandKit(snapshotId: string, patch: Partial<BrandKit>): Promise<BrandKit> {
+  const { data: u } = await supabase.auth.getUser();
+  const uid = u?.user?.id;
+  if (!uid) throw new Error("Not signed in");
+  const { data, error } = await supabase
+    .from("venture_brand_kits")
+    .upsert(
+      { snapshot_id: snapshotId, user_id: uid, ...patch },
+      { onConflict: "snapshot_id" },
+    )
+    .select()
+    .single();
+  if (error) throw error;
+  return data as BrandKit;
+}
+
+async function callWizard(body: any) {
+  const { data, error } = await supabase.functions.invoke("venture-brand-wizard", { body });
+  if (error) throw new Error(error.message || "Brand wizard request failed");
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+
+export async function fetchPaletteOptions(snapshotId: string) {
+  return callWizard({ action: "palettes", snapshotId });
+}
+
+export async function fetchTypographyOptions(snapshotId: string) {
+  return callWizard({ action: "typography", snapshotId });
+}
+
+export async function generateStyleGuide(snapshotId: string) {
+  return callWizard({ action: "styleguide", snapshotId });
+}
