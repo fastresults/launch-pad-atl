@@ -306,6 +306,10 @@ For typography: if Firecrawl branding fonts are present, use them verbatim when 
   let parsed: any;
   try { parsed = JSON.parse(raw); } catch { throw new Error("AI extraction returned invalid JSON"); }
 
+  // Repair extracted palette so bg/fg and brand-role pairings are guaranteed legible.
+  if (parsed?.palette) parsed.palette = sanitizePaletteOption({ ...parsed.palette, source: "extracted" });
+
+
   // 4. Build moodboard from screenshot + OG image + uploaded logos.
   const moodboard: any[] = [];
   if (screenshot) moodboard.push({ url: screenshot, source: "site_screenshot", caption: "Homepage" });
