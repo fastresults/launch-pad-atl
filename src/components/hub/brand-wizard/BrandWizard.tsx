@@ -312,21 +312,42 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
 
 /* ---------- STEP 3: Typography ---------- */
 function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
-  const [options, setOptions] = useState<any[]>([]);
-  const [chosen, setChosen] = useState<any>(kit?.typography ?? null);
+  const saved = kit?.typography ?? null;
+  const initial = kit?.dna?._typographyOptions ?? [];
+  const seedOptions = (() => {
+    if (!saved) return initial;
+    if (initial.some((o: any) => o?.name === saved.name)) return initial;
+    return [saved, ...initial];
+  })();
+  const [options, setOptions] = useState<any[]>(seedOptions);
+  const [chosen, setChosen] = useState<any>(saved);
+
+  // Preload fonts for whatever's already on screen
+  useEffect(() => {
+    options.forEach((o: any) => {
+      if (o?.heading?.family) loadGoogleFont(o.heading.family, [o.heading.weight ?? 700]);
+      if (o?.body?.family) loadGoogleFont(o.body.family, [o.body.weight ?? 400]);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options.length]);
+
   const gen = useMutation({
     mutationFn: () => fetchTypographyOptions(snapshot.id),
     onSuccess: (out) => {
-      setOptions(out.options ?? []);
-      (out.options ?? []).forEach((o: any) => {
+      const next = out.options ?? [];
+      next.forEach((o: any) => {
         loadGoogleFont(o.heading?.family, [o.heading?.weight ?? 700]);
         loadGoogleFont(o.body?.family, [o.body?.weight ?? 400]);
       });
+      setOptions(next);
+      const persistedOptions = chosen && !next.some((o: any) => o?.name === chosen.name)
+        ? [chosen, ...next]
+        : next;
+      onSave({ dna: { ...(kit?.dna ?? {}), _typographyOptions: persistedOptions } });
+      if (chosen && !next.some((o: any) => o?.name === chosen.name)) setOptions(persistedOptions);
     },
     onError: (e: any) => toast.error(e.message),
   });
-
-  useEffect(() => { if (options.length === 0) gen.mutate(); /* eslint-disable-next-line */ }, []);
 
   const tagline = snapshot.tagline || snapshot.company_name || "Your brand, beautifully expressed.";
 
@@ -337,16 +358,33 @@ function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">Pick a font pairing. Previews use your own tagline.</p>
-        <Button variant="outline" size="sm" onClick={() => gen.mutate()} disabled={gen.isPending}>
+        <Button variant="outline" size="sm" onClick={() => gen.mutate()} disabled={gen.isPending} title="Generate fresh options — your current pick is kept">
           {gen.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
-          Regenerate
+          Show new options
         </Button>
       </div>
-      {gen.isPending && options.length === 0 ? (
-        <div className="flex items-center justify-center py-10 text-muted-foreground">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Curating type pairings…
+
+      {chosen && (
+        <div className="rounded-lg border border-primary/40 bg-primary/5 p-3">
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">Your current pick</div>
+            <div className="text-[10px] font-mono text-muted-foreground">{chosen.heading?.family} / {chosen.body?.family}</div>
+          </div>
+          <div className="mt-1 text-lg leading-tight" style={{ fontFamily: `'${chosen.heading?.family}', system-ui`, fontWeight: chosen.heading?.weight ?? 700 }}>
+            {tagline}
+          </div>
+        </div>
+      )}
+
+      {options.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-10 text-muted-foreground">
+          <p className="text-sm">No font pairings yet.</p>
+          <Button onClick={() => gen.mutate()} disabled={gen.isPending}>
+            {gen.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+            Generate 4 font pairings
+          </Button>
         </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
@@ -354,14 +392,16 @@ function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
             const isPicked = chosen?.name === opt.name;
             return (
               <button
-                key={i}
+                key={`${opt.name}-${i}`}
                 onClick={() => choose(opt)}
-                className={`rounded-xl border p-5 text-left transition bg-card ${isPicked ? "border-primary ring-2 ring-primary/30" : "border-white/10 hover:border-white/30"}`}
+                className={`relative rounded-xl border p-5 text-left transition bg-card ${isPicked ? "border-primary ring-2 ring-primary/30" : "border-white/10 hover:border-white/30"}`}
               >
-                <div className="flex items-start justify-between">
-                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{opt.name}</div>
-                  {isPicked && <Check className="h-4 w-4 text-primary" />}
-                </div>
+                {isPicked && (
+                  <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                    <Check className="h-3 w-3" /> Selected
+                  </span>
+                )}
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{opt.name}</div>
                 <div
                   className="mt-2 text-2xl leading-tight"
                   style={{ fontFamily: `'${opt.heading?.family}', system-ui`, fontWeight: opt.heading?.weight ?? 700 }}
@@ -388,6 +428,7 @@ function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
       </div>
     </div>
   );
+
 }
 
 /* ---------- STEP 4: Moodboard & Logo ---------- */
