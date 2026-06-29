@@ -78,7 +78,14 @@ async function generateGuide(ctx: any, kit: any) {
   const existingPreface = isExisting
     ? `\n\nIMPORTANT: This brand ALREADY EXISTS. The palette, typography, logo and voice below were extracted from the founder's live website (${kit?.dna?.source_url ?? "no URL"}) and uploaded logo files. Treat them as ground truth — codify what's there, do not propose replacements or "modernize" anything. Where the data is incomplete, say so explicitly rather than inventing alternates.`
     : "";
-  const sys = `You are the head of brand at a top agency writing a complete Brand Style Guide for a founder. Use the ENTIRE venture context — company, customer, differentiation, founder DNA, mood, uploaded source materials, logo assets, and the locked palette/typography/voice — to make every section unmistakably about THIS venture, not boilerplate.${existingPreface} Output Markdown only — no JSON, no code fences except where syntax matters.`;
+  const sys = `You are the head of brand at a top agency writing a complete Brand Style Guide for a founder. Use the ENTIRE venture context — company, customer, differentiation, founder DNA, mood, uploaded source materials, logo assets, and the locked palette/typography/voice — to make every section unmistakably about THIS venture, not boilerplate.${existingPreface} Output Markdown only — no JSON, no code fences except where syntax matters.
+
+FORMATTING CONTRACT (strict):
+- NEVER draw ASCII art, sliders, bars, gauges, meters, sparklines, swatches, or any pseudo-graphic. Forbidden glyphs for layout purposes: | - – — • · = * ▮ ▯ █ ░ ▰ ▱ ○ ●. (Pipes are ONLY allowed inside real Markdown tables.)
+- For any "scale" or "spectrum", use a Markdown TABLE with a numeric Score column (1–5). Do not draw the scale.
+- For comparisons (do/don't, before/after, role/usage), use Markdown tables or bulleted lists with bold labels.
+- Color swatches, font specimens, motion curves: describe in tables (role | value | usage). Do NOT attempt to render them visually in text.
+- Plain prose otherwise. No decorative dividers made of dashes or equals signs.`;
   const palette = kit.palette ? JSON.stringify(kit.palette, null, 2) : "(none chosen)";
   const typography = kit.typography ? JSON.stringify(kit.typography, null, 2) : "(none chosen)";
   const voice = kit.voice ? JSON.stringify(kit.voice, null, 2) : "(none provided)";
@@ -122,16 +129,24 @@ ${moodBlock}
 
 Produce a thorough Brand Style Guide in Markdown with these sections:
 # {Company} — Brand Style Guide
-${auditSection}## 2. Personality & Voice (5-trait spectrum, do/don't, 3 before/after copy rewrites)
-## 3. Color System (table: role | hex | RGB | usage | AA pair)
-## 4. Typography (hierarchy table: H1/H2/H3/body/caption with size/weight/line-height; web + print fallback)
+${auditSection}## 2. Personality & Voice
+Write 2-3 sentences on the brand's voice. Then a "Voice Spectrum" Markdown table with this exact shape (no ASCII sliders — just integer Scores 1-5, where 1 = far left pole, 5 = far right pole):
+
+| Trait | Left pole | Score | Right pole | How it shows up |
+|---|---|---|---|---|
+| Directness | Direct | 2 | Vague | one concrete sentence |
+
+Include 5 rows (Directness, Expertise, Empathy, Brevity, Edge — or equivalents that fit the brand). Then a `### Do` bulleted list (4-6 items) and a `### Don't` bulleted list (4-6 items). Then `### Before / After` with 3 rewrites, each as two blockquotes (`> Before:` then `> After:`).
+## 3. Color System — Markdown table only: | Role | Hex | RGB | Usage | AA Pair |. No swatch art or block characters.
+## 4. Typography — Markdown hierarchy table: | Level | Font | Weight | Size | Line-height | Use |. Include H1/H2/H3/body/caption and web + print fallback rows. No ASCII type specimens.
 ${logoSectionInstruction}
 ## 6. Imagery & Moodboard (style direction, 3 image prompts for photography, 2 for illustration)
 ## 7. Iconography (style, stroke width, corner radius)
-## 8. Motion (easing, duration, hover/scroll patterns)
+## 8. Motion — Markdown table: | Pattern | Easing | Duration (ms) | Use |. No drawn curves.
 ## 9. Application Examples (website hero, social post, email signature, business card copy)
 ## 10. Voice Cheat-Sheet
 ## 11. File Naming & Governance
+
 
 Target 1,400–1,900 words. Be specific, name the chosen fonts and hex values throughout, and reference the venture's actual customer/problem/differentiation in the examples.`;
   return await callAI([{ role: "system", content: sys }, { role: "user", content: user }], { model: "google/gemini-2.5-pro", timeoutMs: 140_000, retries: 0 });

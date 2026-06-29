@@ -4,6 +4,7 @@ import { CheckCircle2, ImageIcon, Lock } from "lucide-react";
 import { RichMarkdown } from "@/components/markdown/RichMarkdown";
 import { supabase } from "@/integrations/supabase/client";
 import { loadGoogleFont } from "@/lib/brand-wizard";
+import { sanitizeGuideMarkdown } from "@/lib/brand/sanitize-guide-markdown";
 
 const COLOR_ORDER = ["primary", "secondary", "accent", "bg", "fg", "muted", "surface", "text", "success", "warning", "danger"];
 
@@ -202,7 +203,7 @@ export function VisualBrandGuide({ kit, snapshot, className = "" }: { kit: any; 
           <section className="px-8 py-8 sm:px-12">
             <SectionTitle label="Brand Narrative" style={headingStyle} color={primary} />
             <div className="prose-brand rounded-lg border bg-white p-5" style={{ borderColor: "rgba(0,0,0,0.12)", color: "#111827" }}>
-              <RichMarkdown variant="document">{kit.guide_markdown}</RichMarkdown>
+              <RichMarkdown variant="document">{sanitizeGuideMarkdown(kit.guide_markdown)}</RichMarkdown>
             </div>
             <div className="mt-4 flex items-center gap-2 text-xs opacity-70">
               <Lock className="h-3.5 w-3.5" /> Locked guide · {kit.guide_markdown.split(/\s+/).filter(Boolean).length} words
