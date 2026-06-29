@@ -746,6 +746,8 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
     rules: "",
   });
   const [saving, setSaving] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(true);
+  const previewRef = useRef<HTMLDivElement | null>(null);
 
   const lock = useMutation({
     mutationFn: async () => {
@@ -756,9 +758,21 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
     onSuccess: () => {
       toast.success("Brand style guide generated");
       qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+      setPreviewOpen(true);
+      setTimeout(() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const copyGuide = async () => {
+    if (!kit?.guide_markdown) return;
+    try {
+      await navigator.clipboard.writeText(kit.guide_markdown);
+      toast.success("Style guide markdown copied");
+    } catch {
+      toast.error("Copy failed");
+    }
+  };
 
   const saveToFiles = async () => {
     const fresh = await getBrandKit(snapshot.id);
