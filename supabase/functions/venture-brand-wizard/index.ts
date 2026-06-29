@@ -304,7 +304,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
-    const { action, snapshotId } = await req.json();
+    const body = await req.json();
+    const { action, snapshotId } = body;
     if (!action || !snapshotId) throw new Error("action and snapshotId required");
 
     const auth = req.headers.get("Authorization") ?? "";
