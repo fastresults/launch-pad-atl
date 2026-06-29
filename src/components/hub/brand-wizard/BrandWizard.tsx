@@ -25,7 +25,7 @@ import {
   PERSONALITY_AXES,
 } from "@/lib/brand-wizard";
 import { generateBrandAsset } from "@/lib/foundersHub.functions";
-import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
+import { brandKitToDocxBlob } from "@/lib/brand-guide-docx";
 import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
 import { LiveBrandPreview } from "./LiveBrandPreview";
 
