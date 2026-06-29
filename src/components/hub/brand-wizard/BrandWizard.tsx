@@ -204,15 +204,30 @@ function StepDNA({ snapshot, kit, onSave, onNext }: any) {
 
 /* ---------- STEP 2: Palette ---------- */
 function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
-  const [options, setOptions] = useState<any[]>(kit?.dna?._paletteOptions ?? []);
-  const [chosen, setChosen] = useState<any>(kit?.palette ?? null);
+  const saved = kit?.palette ?? null;
+  const initial = kit?.dna?._paletteOptions ?? [];
+  // Ensure saved pick is always present in the visible options
+  const seedOptions = (() => {
+    if (!saved) return initial;
+    if (initial.some((o: any) => o?.name === saved.name)) return initial;
+    return [saved, ...initial];
+  })();
+  const [options, setOptions] = useState<any[]>(seedOptions);
+  const [chosen, setChosen] = useState<any>(saved);
   const gen = useMutation({
     mutationFn: () => fetchPaletteOptions(snapshot.id),
-    onSuccess: (out) => setOptions(out.options ?? []),
+    onSuccess: (out) => {
+      const next = out.options ?? [];
+      setOptions(next);
+      // Persist option set + keep saved pick on top if not present
+      const persistedOptions = chosen && !next.some((o: any) => o?.name === chosen.name)
+        ? [chosen, ...next]
+        : next;
+      onSave({ dna: { ...(kit?.dna ?? {}), _paletteOptions: persistedOptions } });
+      if (chosen && !next.some((o: any) => o?.name === chosen.name)) setOptions(persistedOptions);
+    },
     onError: (e: any) => toast.error(e.message),
   });
-
-  useEffect(() => { if (options.length === 0) gen.mutate(); /* eslint-disable-next-line */ }, []);
 
   const choose = (opt: any) => {
     setChosen(opt);
@@ -221,16 +236,38 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">Pick the palette direction that feels right. You can fine-tune later.</p>
-        <Button variant="outline" size="sm" onClick={() => gen.mutate()} disabled={gen.isPending}>
+        <Button variant="outline" size="sm" onClick={() => gen.mutate()} disabled={gen.isPending} title="Generate fresh options — your current pick is kept">
           {gen.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
-          Regenerate
+          Show new options
         </Button>
       </div>
-      {gen.isPending && options.length === 0 ? (
-        <div className="flex items-center justify-center py-10 text-muted-foreground">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Designing 4 palette directions…
+
+      {chosen && (
+        <div className="rounded-lg border border-primary/40 bg-primary/5 p-3">
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">Your current pick</div>
+            <div className="text-xs font-medium">{chosen.name}</div>
+          </div>
+          <div className="mt-2 flex gap-1.5">
+            {Object.entries(chosen.colors ?? {}).map(([k, v]: any) => (
+              <div key={k} className="flex-1">
+                <div className="h-6 rounded border border-white/10" style={{ background: v }} />
+                <div className="mt-0.5 text-[8px] font-mono text-muted-foreground">{k}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {options.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-10 text-muted-foreground">
+          <p className="text-sm">No palette options yet.</p>
+          <Button onClick={() => gen.mutate()} disabled={gen.isPending}>
+            {gen.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+            Generate 4 palette directions
+          </Button>
         </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
@@ -239,15 +276,17 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
             const fgBgRatio = contrastRatio(opt.colors.fg, opt.colors.bg);
             return (
               <button
-                key={i}
+                key={`${opt.name}-${i}`}
                 onClick={() => choose(opt)}
-                className={`rounded-xl border p-4 text-left transition ${isPicked ? "border-primary ring-2 ring-primary/30" : "border-white/10 hover:border-white/30"}`}
+                className={`relative rounded-xl border p-4 text-left transition ${isPicked ? "border-primary ring-2 ring-primary/30" : "border-white/10 hover:border-white/30"}`}
                 style={{ background: opt.colors.bg, color: opt.colors.fg }}
               >
-                <div className="flex items-start justify-between">
-                  <div className="font-semibold">{opt.name}</div>
-                  {isPicked && <Check className="h-4 w-4" />}
-                </div>
+                {isPicked && (
+                  <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                    <Check className="h-3 w-3" /> Selected
+                  </span>
+                )}
+                <div className="font-semibold">{opt.name}</div>
                 <div className="mt-1 text-xs opacity-80">{opt.rationale}</div>
                 <div className="mt-3 flex gap-1.5">
                   {Object.entries(opt.colors).map(([k, v]: any) => (
