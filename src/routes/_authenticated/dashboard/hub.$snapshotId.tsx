@@ -923,10 +923,18 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   // Stale = doc was generated before the concept was last locked/updated.
   const conceptChangedAt = snapshot?.concept_locked_at ?? snapshot?.updated_at ?? null;
   const isStale = (d: any) => {
-    if (!d || d.status !== "complete" || !conceptChangedAt) return false;
+    if (!d || d.status !== "complete") return false;
     const docAt = d.updated_at ? new Date(d.updated_at).getTime() : 0;
-    const cAt = new Date(conceptChangedAt).getTime();
-    return docAt > 0 && cAt > 0 && cAt - docAt > 60_000; // 60s grace
+    if (!docAt) return false;
+    const cAt = conceptChangedAt ? new Date(conceptChangedAt).getTime() : 0;
+    if (cAt > 0 && cAt - docAt > 60_000) return true;
+    // Brand-kit-dependent deliverables also go stale when the brand kit was
+    // re-locked after the doc was generated.
+    if (BRAND_KIT_REQUIRED_TYPES.has(d.document_type) && brandKitLockedAt) {
+      const bAt = new Date(brandKitLockedAt).getTime();
+      if (bAt > 0 && bAt - docAt > 60_000) return true;
+    }
+    return false;
   };
   const staleDocs = docs.filter(isStale);
   const staleCount = staleDocs.length;
