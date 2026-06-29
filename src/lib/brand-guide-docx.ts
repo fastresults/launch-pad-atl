@@ -959,7 +959,7 @@ export async function brandKitToDocxBlob(kit: any, companyName: string): Promise
   const typography = kit?.typography ?? {};
   const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
   const voice = kit?.voice ?? {};
-  const guideMarkdown: string = kit?.guide_markdown || "";
+  const guideMarkdown: string = sanitizeGuideMarkdown(kit?.guide_markdown || "");
 
   const primaryHex = palette?.colors?.primary || "111827";
   const headingFont = typography?.heading?.family || FALLBACK_HEADING_FONT;
