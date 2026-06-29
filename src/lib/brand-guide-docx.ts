@@ -981,7 +981,7 @@ export async function brandKitToDocxBlob(kit: any, companyName: string): Promise
           new ImageRun({
             type: coverImg.type,
             data: coverImg.data,
-            transformation: { width: 280, height: 280 },
+            transformation: fitBox(coverImg.width, coverImg.height, 360, 280),
             altText: { title: "Brand logo", description: companyName, name: "cover-logo" },
           }),
         ],
