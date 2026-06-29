@@ -878,6 +878,16 @@ function Step5BuildKit({
                 </div>
                 <div className="flex items-center gap-1">
                   {t.signed_url && (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewIdx(tasks.indexOf(t))}
+                      title="Preview"
+                      className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5"
+                    >
+                      <Eye className="mr-1 h-3 w-3" /> Preview
+                    </button>
+                  )}
+                  {t.signed_url && (
                     <a href={t.signed_url} download
                        className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5">
                       Download
