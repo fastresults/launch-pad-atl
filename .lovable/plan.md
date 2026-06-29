@@ -1,53 +1,58 @@
-# Fix: Step 5 "Build kit" footer blocks the user from reaching Launch
+# Audit: Missing Instagram & TikTok artwork in Build Kit / Launch
 
-## Problem
-In `SocialAutopilot.tsx` (Step 5), the primary CTA is gated by `allDone` — every platform/asset task must have a generated image. If even one tile is missing (e.g. the Threads avatar in the screenshot), the footer flips to **Generate all** and there is no way to advance to Step 6 (Launch). Users who have already produced and regenerated the assets they care about are stuck.
+## Root cause
 
-## Fix
+In `src/lib/social-autopilot.functions.ts` → `buildKitTasks()`, the asset filter is hard-restricted to four kinds:
 
-### 1. Replace single-CTA footer with a two-button footer
-File: `src/components/hub/social/SocialAutopilot.tsx` (footer of `Step5BuildKit`).
+```ts
+spec.assets.filter(a => ["avatar","banner","header","channel_art"].includes(a.kind))
+```
 
-- Always show **Continue to launch** as the primary CTA once `anyDone` is true (at least one asset generated). This calls the existing `onContinue`.
-- Add a secondary **Generate missing** button (outline) shown only when there are pending/errored tiles. It runs `runAll` but skips tiles whose `status === "done"` (current `runAll` already does this).
-- When nothing has been generated yet, keep today's behavior: primary **Generate all**, no Continue.
-- Disable Continue while `running` is true so a user can't navigate away mid-batch.
+Looking at `src/lib/social-platform-specs.ts`:
 
-### 2. Soft warning when advancing with gaps
-When the user clicks Continue and `!allDone`, show an inline note above the footer (not a blocking dialog): "X of Y assets generated. You can finish the rest later from this step." No confirmation modal — just informational, so flow stays fast.
+| Platform   | Assets in spec                              | What survives the filter |
+|------------|---------------------------------------------|--------------------------|
+| Instagram  | avatar, pinned_post, story_cover            | avatar only              |
+| TikTok     | avatar, video_poster                        | avatar only              |
+| Threads    | avatar, pinned_post                         | avatar only              |
+| Pinterest  | banner, vertical_pin                        | banner only              |
+| YouTube    | channel_art, thumbnail                      | channel_art only         |
+| LinkedIn   | banner, header, pinned_post                 | banner + header          |
+| X          | header, avatar, pinned_post                 | header + avatar          |
+| Facebook   | banner, pinned_post                         | banner                   |
+| Reddit     | banner, avatar                              | banner + avatar          |
 
-### 3. Tile-level clarity for the empty Threads case
-The Threads row in the screenshot shows a placeholder icon and no Regenerate button (the button only renders when `done || err`). Add a **Generate** button on tiles that are neither done nor errored so a single missing tile can be filled without the bulk action.
+So Instagram and TikTok DO appear in the kit — but only as a tiny round avatar. The "cover artwork" the user expects (pinned post tile, story cover, video poster) is filtered out before tasks are even built. There is also an inner `seenCover` dedupe that would collapse multiple cover-class assets to one even if they were included.
 
-### 4. Keep existing behavior intact
-- `Regenerate` per tile, `Regenerate all`, `Keep` toggle, preview modal, and the bulk `runAll` loop are unchanged.
-- No edge function or schema changes.
-- No copy changes elsewhere in the wizard.
+Step 4 (Style) shows live previews of one art direction per tile and doesn't preview per-platform, so the gap shows up most visibly in Step 5 (Build kit) and Step 6 (Launch).
 
-## Technical details
-- Derive `pendingCount = tasks.filter(t => t.status !== "done").length` and `doneCount = tasks.length - pendingCount` for the footer caption.
-- Footer JSX (pseudocode):
-  ```
-  <Back />
-  <div className="flex items-center gap-2">
-    {!allDone && anyDone && (
-      <span className="text-[11px] text-muted-foreground">
-        {doneCount} of {tasks.length} ready
-      </span>
-    )}
-    {pendingCount > 0 && anyDone && (
-      <Button variant="outline" onClick={runAll} disabled={running}>
-        Generate missing ({pendingCount})
-      </Button>
-    )}
-    {anyDone ? (
-      <Button onClick={onContinue} disabled={running}>Continue to launch →</Button>
-    ) : (
-      <Button onClick={runAll} disabled={running}>Generate all</Button>
-    )}
-  </div>
-  ```
-- Per-tile "Generate" button: render when `!done && !err` (mutually exclusive with the existing Regenerate button). Calls `generateOneKitTask(snapshotId, t)` then invalidates the `social-cover` query.
+## Recommendation
 
-## Out of scope
-- Why the Threads avatar failed to generate in the first place (separate issue — likely a per-task error swallowed by the bulk loop). Can be a follow-up if it recurs after this fix.
+Treat every channel as deserving at least one **feature/cover asset** in addition to the avatar, using the natural hero format from each platform's spec.
+
+### Changes
+
+1. **`src/lib/social-autopilot.functions.ts` — rewrite `buildKitTasks`**
+   - Include this expanded "cover-class" set: `banner`, `header`, `channel_art`, `pinned_post`, `story_cover`, `video_poster`, `vertical_pin`, `thumbnail`.
+   - For each platform, always emit:
+     - the `avatar` task if the spec has one, and
+     - **one** hero/cover task chosen by priority order: `channel_art` → `header` → `banner` → `pinned_post` → `video_poster` → `vertical_pin` → `story_cover` → `thumbnail`.
+   - Optional second tile for platforms whose identity needs both a feed and a story/video format (Instagram: add `story_cover`; TikTok: keep `video_poster`; YouTube: add `thumbnail`). Gate behind a constant `EXTRA_KIT_ASSETS` so we can tune without code churn.
+
+2. **`supabase/functions/_shared/social-platform-specs.ts`** — keep server mirror in sync; no schema change, just confirm the same kinds exist server-side so `venture-social-cover` accepts them.
+
+3. **`venture-social-cover` (sanity check, not a behavior change)** — confirm `pinned_post`, `story_cover`, `video_poster`, `vertical_pin`, `thumbnail` all have prompt/aspect handling in `cover-art-director.ts`. If any are missing, add the canvas dimensions + composition hint (story/video posters are 9:16 vertical; pinned posts are 1:1; vertical pin is 2:3; thumbnail is 16:9). This is the only place where additional work might be needed; I'll inspect before editing.
+
+4. **Step 5 UI (`SocialAutopilot.tsx` → `Step5BuildKit`)** — no logic change required, but verify the tile grid renders multi-asset platforms cleanly (Instagram will now show avatar + story cover, TikTok avatar + video poster, etc.). If tile labels collide, use `PLATFORM_SPECS[p].assets.find(a => a.kind === task.asset)?.label` for the caption.
+
+5. **Step 6 UI (`Step6Launch`)** — already iterates `listSocialAssets`, so it will pick up the new assets automatically. Confirm the "ready/missing" count uses the new task list as the source of truth so the "Generate missing (N)" footer button stays accurate.
+
+### Expected outcome
+
+After this change, selecting Instagram and TikTok in Step 3 produces real feature artwork (story cover / video poster) plus an avatar in Steps 5 and 6 — matching what the user saw advertised in Step 3's channel picker.
+
+### Out of scope
+
+- No DB migration.
+- No change to Brand Wizard, palette planning, or QA contrast pipeline.
+- No change to the regenerate-with-feedback flow; new assets inherit it for free.
