@@ -1,14 +1,16 @@
 // @ts-nocheck
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Palette, Sparkles, Lock } from "lucide-react";
-import { getBrandKit } from "@/lib/brandKit.functions";
+import { Palette, Sparkles, Lock, RotateCcw } from "lucide-react";
+import { getBrandKit, resetBrandKit } from "@/lib/brandKit.functions";
 import { BrandWizard } from "@/components/hub/brand-wizard/BrandWizard";
+import { toast } from "sonner";
 
 export function BrandStudio({ snapshot }: { snapshot: any }) {
   const [open, setOpen] = useState(false);
+  const qc = useQueryClient();
   const kitQ = useQuery({
     queryKey: ["brandKit", snapshot.id],
     queryFn: () => getBrandKit(snapshot.id),
