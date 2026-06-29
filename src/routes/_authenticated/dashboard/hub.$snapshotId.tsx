@@ -1322,13 +1322,25 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         );
       })}
 
-      {/* Bonus tools - deferred */}
-      <details open={completeCount === total && total > 0} className="rounded-2xl border border-white/10 bg-card/40 p-4">
+      {/* Bonus tools - deferred. Brand Wizard lives here and is required for Website PRD. */}
+      <details
+        ref={brandStudioRef}
+        id="brand-studio"
+        open={(completeCount === total && total > 0) || !brandKitLocked}
+        className="rounded-2xl border border-white/10 bg-card/40 p-4 scroll-mt-24"
+      >
         <summary className="cursor-pointer list-none">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <div className="text-sm font-semibold">Bonus tools (optional)</div>
-              <div className="text-xs text-muted-foreground">Generate logos, social posts and brand assets once your documents are ready.</div>
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                Brand Wizard & bonus tools
+                {!brandKitLocked && (
+                  <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
+                    Required for Website PRD
+                  </Badge>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground">Lock your brand colors, typography and logo here — the Website PRD generation uses them verbatim.</div>
             </div>
             <span className="text-xs text-muted-foreground">Show / hide</span>
           </div>
