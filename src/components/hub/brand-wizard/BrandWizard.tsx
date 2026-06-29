@@ -97,8 +97,8 @@ export function BrandWizard({
           </div>
         </DialogHeader>
 
-        <div className="grid max-h-[72vh] grid-cols-1 lg:grid-cols-[1fr_360px]">
-          <div className="overflow-y-auto px-6 py-5">
+        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[1fr_360px]">
+          <div className="min-h-0 overflow-y-auto px-6 py-5">
             {kitQ.isLoading ? (
               <div className="flex items-center justify-center py-10 text-muted-foreground">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading kit…
@@ -113,7 +113,7 @@ export function BrandWizard({
               </>
             )}
           </div>
-          <aside className="hidden border-l border-white/10 bg-background/40 px-4 py-4 lg:block">
+          <aside className="hidden min-h-0 overflow-y-auto border-l border-white/10 bg-background/40 px-4 py-4 lg:block">
             <LiveBrandPreview kit={kit} snapshot={snapshot} />
           </aside>
         </div>
