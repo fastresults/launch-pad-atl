@@ -142,8 +142,9 @@ export function buildCoverArtPrompt(args: {
   hasLogoImage?: boolean;
   retryNote?: string;
   userFeedback?: string;
+  variationSeed?: string;
 }): string {
-  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback } = args;
+  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed } = args;
   const brief = DIRECTION_BRIEF[direction];
   const palette = paletteBlock(kit);
   const typo = typoBlock(kit);
@@ -203,7 +204,7 @@ ${system}
 ${brief}
 ${QUALITY}
 ${BANNED}
-${feedbackBlock}${retryBlock}
+${feedbackBlock}${retryBlock}${variationSeed ? `\n## Variation seed\nSeed: ${variationSeed}. Use this to meaningfully vary composition, focal placement, and texture from any prior attempt while keeping every rule above.\n` : ""}
 Deliver a single finished image at the spec'd aspect that a senior art director would ship to a paying client today. Background MUST be exactly ${plan.surface}. Any rendered glyphs, marks, or text MUST be exactly ${plan.ink}. The only permitted accent color is ${plan.accent}.`;
 }
 
@@ -213,8 +214,16 @@ export function buildAvatarPrompt(args: {
   platform: string;
   asset: AssetSpec;
   surfaceHex: string;
+  userFeedback?: string;
+  retryNote?: string;
+  variationSeed?: string;
 }): string {
-  const { platform, asset, surfaceHex } = args;
+  const { platform, asset, surfaceHex, userFeedback, retryNote, variationSeed } = args;
+  const feedbackBlock = userFeedback && userFeedback.trim()
+    ? `\nFounder feedback on previous version (BINDING — apply unless it conflicts with logo preservation): """${userFeedback.trim().slice(0, 400)}"""\n`
+    : "";
+  const retryBlock = retryNote ? `\nRetry note: ${retryNote}\n` : "";
+  const seedBlock = variationSeed ? `\nVariation seed: ${variationSeed} (vary subtle non-logo details across regenerations).\n` : "";
   return `You are placing the venture's official logo (attached as image #1) onto a profile avatar for ${platform}.
 
 NON-NEGOTIABLE:
@@ -222,6 +231,6 @@ NON-NEGOTIABLE:
 - Center the logo on a perfectly square canvas at ${asset.width}x${asset.height}.
 - The logo occupies ~70% of the canvas shortest side, with even padding on all four sides.
 - Background: a single flat solid color, EXACTLY ${surfaceHex}. No gradients, no patterns, no shadows, no glow, no decorations, no text. This color was chosen server-side to guarantee maximum contrast against the logo — do not override it.
-
+${feedbackBlock}${retryBlock}${seedBlock}
 Output a single PNG: the logo, exactly as provided, centered on a solid ${surfaceHex} background.`;
 }

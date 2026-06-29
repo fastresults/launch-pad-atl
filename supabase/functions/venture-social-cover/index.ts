@@ -293,9 +293,21 @@ Deno.serve(async (req) => {
       console.warn("palette tile build failed", e);
     }
 
+    // Variation seed forces meaningful change on every regenerate, even when
+    // feedback text is identical or empty (otherwise the prompt is byte-identical
+    // and the model returns a near-duplicate image).
+    const variationSeed = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
+
     const buildPrompt = (retryNote?: string) =>
       isAvatar
-        ? buildAvatarPrompt({ platform: platform.label, asset, surfaceHex: plan.surface })
+        ? buildAvatarPrompt({
+            platform: platform.label,
+            asset,
+            surfaceHex: plan.surface,
+            userFeedback,
+            retryNote,
+            variationSeed,
+          })
         : buildCoverArtPrompt({
             platform: platform.label,
             asset,
@@ -306,6 +318,7 @@ Deno.serve(async (req) => {
             hasLogoImage: !!logoDataUrl,
             retryNote,
             userFeedback,
+            variationSeed,
           });
 
     const generate = async (retryNote?: string) => {
