@@ -32,7 +32,9 @@ const MOODBOARD_ANGLES = [
   "Tile 4 — Color & motion: an abstract painterly composition built from the brand's primary, secondary and accent colors. Smooth gradients, organic shapes.",
 ];
 
-function buildPrompt(kind: string, snap: any, tokens: any, extra?: string, angle?: string) {
+function buildPrompt(kind: string, ctx: any, tokens: any, extra?: string, angle?: string) {
+  const snap = ctx.snap;
+  const brain = ctx.brain;
   const preset = KIND_PRESETS[kind];
   const palette = tokens?.colors
     ? `Color palette: primary ${tokens.colors.primary ?? "#000"}, secondary ${tokens.colors.secondary ?? ""}, accent ${tokens.colors.accent ?? ""}.`
@@ -41,11 +43,19 @@ function buildPrompt(kind: string, snap: any, tokens: any, extra?: string, angle
   const fonts = tokens?.fonts ? `Typography reference: ${tokens.fonts.heading ?? ""} / ${tokens.fonts.body ?? ""}.` : "";
   const industry = snap.industry ? `Industry: ${snap.industry}.` : "";
   const company = snap.company_name ? `Brand: ${snap.company_name}.` : "";
+  const concept = snap.concept_summary ? `Concept: ${String(snap.concept_summary).slice(0, 220)}.` : "";
+  const audience = snap.target_audience ? `Customer: ${String(snap.target_audience).slice(0, 180)}.` : "";
+  const diff = snap.differentiation_statement ? `Differentiation: ${String(snap.differentiation_statement).slice(0, 180)}.` : "";
+  const problem = brain?.problem ? `Problem solved: ${String(brain.problem).slice(0, 180)}.` : "";
   return [
     preset.sceneHint,
     angle ?? "",
     company,
     industry,
+    concept,
+    audience,
+    diff,
+    problem,
     palette,
     mood,
     fonts,
