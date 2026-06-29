@@ -2416,6 +2416,8 @@ export type Database = {
           height: number
           id: string
           is_selected: boolean
+          last_feedback: string | null
+          last_regenerated_at: string | null
           model_used: string | null
           platform: string
           prompt_used: string | null
@@ -2438,6 +2440,8 @@ export type Database = {
           height: number
           id?: string
           is_selected?: boolean
+          last_feedback?: string | null
+          last_regenerated_at?: string | null
           model_used?: string | null
           platform: string
           prompt_used?: string | null
@@ -2460,6 +2464,8 @@ export type Database = {
           height?: number
           id?: string
           is_selected?: boolean
+          last_feedback?: string | null
+          last_regenerated_at?: string | null
           model_used?: string | null
           platform?: string
           prompt_used?: string | null
