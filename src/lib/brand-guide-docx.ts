@@ -25,6 +25,8 @@ import {
   TabStopPosition,
   convertInchesToTwip,
 } from "docx";
+import JSZip from "jszip";
+import { supabase } from "@/integrations/supabase/client";
 import { mdToBlocks } from "./markdown-to-docx";
 
 // --- Page constants --------------------------------------------------------
@@ -72,9 +74,7 @@ function readableTextOn(bgHex: string): string {
 
 // --- Image fetch -----------------------------------------------------------
 
-async function fetchImage(
-  url: string,
-): Promise<{ data: ArrayBuffer; type: "png" | "jpg" } | null> {
+async function fetchImage(url: string): Promise<{ data: ArrayBuffer; type: "png" | "jpg" } | null> {
   try {
     if (url.startsWith("data:")) {
       const m = /^data:image\/(png|jpe?g);base64,(.+)$/i.exec(url);
@@ -91,6 +91,50 @@ async function fetchImage(
     const type: "png" | "jpg" =
       head[0] === 0x89 && head[1] === 0x50 ? "png" : "jpg";
     return { data: buf, type };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchKitImage(asset: any): Promise<{ data: ArrayBuffer; type: "png" | "jpg" } | null> {
+  if (!asset) return null;
+  if (asset.path) {
+    try {
+      const { data } = await supabase.storage
+        .from(asset.bucket || "user-media")
+        .createSignedUrl(asset.path, 3600);
+      if (data?.signedUrl) {
+        const fresh = await fetchImage(data.signedUrl);
+        if (fresh) return fresh;
+      }
+    } catch {
+      // Fall back to the stored URL below.
+    }
+  }
+  return asset.url ? fetchImage(asset.url) : null;
+}
+
+const swatchCache = new Map<string, ArrayBuffer>();
+
+async function colorSwatchPng(hex: string, width = 260, height = 96): Promise<ArrayBuffer | null> {
+  const fill = `#${stripHash(hex)}`;
+  const key = `${fill}-${width}x${height}`;
+  if (swatchCache.has(key)) return swatchCache.get(key)!;
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.fillStyle = fill;
+    ctx.fillRect(0, 0, width, height);
+    ctx.strokeStyle = "rgba(0,0,0,0.16)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, width - 2, height - 2);
+    const blob: Blob = await new Promise((resolve) => canvas.toBlob((b) => resolve(b!), "image/png"));
+    const buf = await blob.arrayBuffer();
+    swatchCache.set(key, buf);
+    return buf;
   } catch {
     return null;
   }
@@ -188,7 +232,7 @@ const ROLE_LABELS: Record<string, { label: string; usage: string }> = {
   danger: { label: "Danger", usage: "Destructive actions and error states." },
 };
 
-function buildPaletteTable(palette: any, headingFont: string, bodyFont: string): Table {
+async function buildPaletteTable(palette: any, headingFont: string, bodyFont: string): Promise<Table> {
   const colors: Record<string, string> = palette?.colors ?? {};
   const rolesOrder = ["primary", "secondary", "accent", "fg", "bg", "muted", "surface", "text", "success", "warning", "danger"];
   const seen = new Set<string>();
@@ -231,9 +275,10 @@ function buildPaletteTable(palette: any, headingFont: string, bodyFont: string):
     ),
   });
 
-  const rows = entries.map((e) => {
+  const rows = await Promise.all(entries.map(async (e) => {
     const rolesMeta = ROLE_LABELS[e.key] ?? { label: e.key, usage: "Custom brand color." };
     const rgb = hexToRgb(e.hex);
+    const swatch = await colorSwatchPng(e.hex);
     return new TableRow({
       cantSplit: true,
       height: { value: 1200, rule: HeightRule.ATLEAST },
@@ -244,6 +289,22 @@ function buildPaletteTable(palette: any, headingFont: string, bodyFont: string):
           margins: { top: 240, bottom: 240, left: 160, right: 160 },
           verticalAlign: VerticalAlign.CENTER,
           children: [
+            ...(swatch
+              ? [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { after: 80 },
+                    children: [
+                      new ImageRun({
+                        type: "png",
+                        data: swatch,
+                        transformation: { width: 112, height: 42 },
+                        altText: { title: `${e.key} color swatch`, description: `#${stripHash(e.hex)}`, name: `${e.key}-swatch` },
+                      }),
+                    ],
+                  }),
+                ]
+              : []),
             makeP({
               text: `#${stripHash(e.hex)}`,
               size: 16,
@@ -288,7 +349,7 @@ function buildPaletteTable(palette: any, headingFont: string, bodyFont: string):
         }),
       ],
     });
-  });
+  }));
 
   return new Table({
     width: { size: PAGE.contentWidthDxa, type: WidthType.DXA },
@@ -551,7 +612,7 @@ async function buildLogoSection(
   const others = logos.filter((l: any) => l !== primary).slice(0, 4);
 
   // Primary logo card
-  const primaryImg = primary?.url ? await fetchImage(primary.url) : null;
+  const primaryImg = await fetchKitImage(primary);
   if (primaryImg) {
     blocks.push(
       new Table({
@@ -645,7 +706,7 @@ async function buildLogoSection(
     const rowsGrid: TableRow[] = [];
     for (let i = 0; i < others.length; i += 2) {
       const pair = [others[i], others[i + 1]].filter(Boolean);
-      const imgs = await Promise.all(pair.map((p) => (p?.url ? fetchImage(p.url) : Promise.resolve(null))));
+      const imgs = await Promise.all(pair.map((p) => fetchKitImage(p)));
       const cells = await Promise.all(
         pair.map(async (alt, idx) => {
           const img = imgs[idx];
@@ -860,9 +921,9 @@ export async function brandKitToDocxBlob(kit: any, companyName: string): Promise
 
   // ===== Cover =====
   const primaryLogo = logos.find((l: any) => l?.primary) ?? logos[0];
-  const coverImg = primaryLogo?.url ? await fetchImage(primaryLogo.url) : null;
-  if (primaryLogo?.url && !coverImg) {
-    console.warn("[brand-guide-docx] Cover logo fetch failed", primaryLogo.url);
+  const coverImg = await fetchKitImage(primaryLogo);
+  if ((primaryLogo?.path || primaryLogo?.url) && !coverImg) {
+    console.warn("[brand-guide-docx] Cover logo fetch failed", primaryLogo.path || primaryLogo.url);
   }
   if (coverImg) {
     body.push(
@@ -951,7 +1012,7 @@ export async function brandKitToDocxBlob(kit: any, companyName: string): Promise
       }),
     );
   }
-  body.push(buildPaletteTable(palette, headingFont, bodyFont));
+  body.push(await buildPaletteTable(palette, headingFont, bodyFont));
 
   // ===== Typography =====
   body.push(...sectionHeader("Typography", primaryHex, headingFont));
@@ -1117,4 +1178,30 @@ export async function brandKitToDocxBlob(kit: any, companyName: string): Promise
   });
 
   return await Packer.toBlob(doc);
+}
+
+export async function validateBrandGuideDocxBlob(blob: Blob, kit: any): Promise<{ ok: boolean; errors: string[]; mediaCount: number; colorFillCount: number }> {
+  const errors: string[] = [];
+  const zip = await JSZip.loadAsync(blob);
+  const mediaCount = Object.keys(zip.files).filter((name) => /^word\/media\//.test(name)).length;
+  const documentXml = await zip.file("word/document.xml")?.async("string");
+  if (!documentXml) errors.push("The Word package is missing its document body.");
+
+  const colors = kit?.palette?.colors ?? {};
+  const expectedColors = Object.values(colors).filter((v: any) => typeof v === "string").map((v: string) => stripHash(v));
+  const colorFillCount = expectedColors.filter((hex) => documentXml?.includes(`w:fill="${hex}"`) || documentXml?.includes(`fill="${hex}"`)).length;
+  if (expectedColors.length && colorFillCount === 0) {
+    errors.push("The selected color system was not embedded into the Word file.");
+  }
+
+  const logos = Array.isArray(kit?.logos) ? kit.logos : [];
+  const expectedLogoMedia = logos.length ? Math.min(logos.length, 5) + 1 : 0; // cover logo + primary/alternates
+  const swatchMedia = expectedColors.length;
+  if (logos.length && mediaCount <= swatchMedia) {
+    errors.push("The selected logo images were not embedded into the Word file.");
+  } else if (logos.length && mediaCount < Math.min(expectedLogoMedia + swatchMedia, swatchMedia + 2)) {
+    errors.push("Only part of the selected logo set was embedded into the Word file.");
+  }
+
+  return { ok: errors.length === 0, errors, mediaCount, colorFillCount };
 }
