@@ -257,7 +257,7 @@ For typography: map Firecrawl branding fonts to the nearest Google Font. Set aut
   const raw = await callAI([
     { role: "system", content: sys },
     { role: "user", content: user },
-  ], { json: true, model: "google/gemini-2.5-pro" });
+  ], { json: true, model: "google/gemini-2.5-flash" });
   let parsed: any;
   try { parsed = JSON.parse(raw); } catch { throw new Error("AI extraction returned invalid JSON"); }
 
