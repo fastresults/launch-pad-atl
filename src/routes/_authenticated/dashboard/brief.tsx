@@ -349,7 +349,12 @@ export default function BriefWizard() {
       {mode === "complete" ? (
         <div className="mt-10">
           <BriefCompleteScreen
+            hasExistingVentures={(ventureCount ?? 0) > 0}
             onGenerateFirst={async () => {
+              if ((ventureCount ?? 0) > 0) {
+                navigate("/dashboard/hub");
+                return;
+              }
               try {
                 const prefill = await buildPrefillFromBrief();
                 navigate("/dashboard/hub/new", { state: { prefill } });
@@ -357,7 +362,7 @@ export default function BriefWizard() {
                 navigate("/dashboard/hub/new");
               }
             }}
-            onSeeDeliverables={() => navigate({ to: "/dashboard/deliverables" })}
+            onSeeDeliverables={() => navigate("/dashboard/deliverables")}
             onEditBrief={() => {
               setMode("question");
               setIdx(0);

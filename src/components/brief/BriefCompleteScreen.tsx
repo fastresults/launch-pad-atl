@@ -4,9 +4,15 @@ type Props = {
   onGenerateFirst: () => void;
   onSeeDeliverables: () => void;
   onEditBrief: () => void;
+  hasExistingVentures?: boolean;
 };
 
-export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEditBrief }: Props) {
+export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEditBrief, hasExistingVentures = false }: Props) {
+  const ctaLabel = hasExistingVentures ? "Open your Startup Hub" : "Generate your first deliverable";
+  const headline = hasExistingVentures ? "Pick up where you left off." : "Generate your first deliverable.";
+  const subcopy = hasExistingVentures
+    ? "Your brief just got sharper — jump back into your Startup Hub to refresh existing deliverables or start a new venture."
+    : "We'll open your Startup Snapshot with your brief already filled in — review it, add your city and state, then we generate.";
   return (
     <div className="mt-10 space-y-10">
       <div>
@@ -50,18 +56,17 @@ export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEdit
           Your next step
         </div>
         <h2 className="mt-2 text-2xl md:text-3xl font-semibold tracking-tight">
-          Generate your first deliverable.
+          {headline}
         </h2>
         <p className="mt-2 text-muted-foreground max-w-xl">
-          We'll open your Startup Snapshot with your brief already filled in — review it, add your
-          city and state, then we generate.
+          {subcopy}
         </p>
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
           <button
             onClick={onGenerateFirst}
             className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:opacity-90"
           >
-            Generate your first deliverable <ArrowRight className="h-4 w-4" />
+            {ctaLabel} <ArrowRight className="h-4 w-4" />
           </button>
           <button
             onClick={onSeeDeliverables}
