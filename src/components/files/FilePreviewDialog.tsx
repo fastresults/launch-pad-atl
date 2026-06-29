@@ -97,7 +97,7 @@ export function FilePreviewDialog({
   useEffect(() => {
     let cancelled = false;
     setUrl(null);
-    setDocxHtml(null);
+    // docx rendering is delegated to <DocxPreview />
     setTextBody(null);
     setRenderError(null);
     if (!doc) return;
