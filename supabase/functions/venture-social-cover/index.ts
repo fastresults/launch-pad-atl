@@ -1,5 +1,7 @@
 // Venture Social Cover — gated, agency-grade per-platform cover art generator.
-// Hard-requires a LOCKED Brand Kit. Outputs feed Cover Art tab in Social Studio.
+// Hard-requires a LOCKED Brand Kit. Generates logo-aware avatars and covers
+// using Gemini multimodal (logo + palette/type tiles as image input) with an
+// OpenAI text-only fallback.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
@@ -8,8 +10,9 @@ import {
   ART_DIRECTIONS,
   type ArtDirectionId,
   type AssetKind,
+  type AssetSpec,
 } from "../_shared/social-platform-specs.ts";
-import { buildCoverArtPrompt } from "../_shared/cover-art-director.ts";
+import { buildCoverArtPrompt, buildAvatarPrompt } from "../_shared/cover-art-director.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,7 +21,8 @@ const corsHeaders = {
 };
 
 const AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/images/generations";
-const MODEL = "openai/gpt-image-2";
+const MODEL_MULTIMODAL = "google/gemini-3-pro-image";
+const MODEL_FALLBACK = "openai/gpt-image-2";
 const BUCKET = "user-media";
 const SIGNED_TTL = 60 * 60 * 24 * 7;
 
@@ -36,24 +40,109 @@ function b64ToBytes(b64: string): Uint8Array {
   return out;
 }
 
-async function callImageGateway(prompt: string, size: string, apiKey: string) {
+function bytesToB64(bytes: Uint8Array): string {
+  let s = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    s += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(s);
+}
+
+function mimeFromPath(p: string): string {
+  const ext = (p.split(".").pop() || "").toLowerCase();
+  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+  if (ext === "webp") return "image/webp";
+  if (ext === "svg") return "image/svg+xml";
+  return "image/png";
+}
+
+// Fetch the brand kit's primary logo as a data URL the image model can ingest.
+// Returns null if no logo is available or anything fails — caller degrades.
+async function fetchPrimaryLogoDataUrl(admin: any, kit: any): Promise<string | null> {
+  try {
+    const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
+    if (!logos.length) return null;
+    const primary = logos.find((l) => l?.primary) ?? logos[0];
+    const path = primary?.path || primary?.storage_path;
+    if (!path) return null;
+    const { data, error } = await admin.storage.from(BUCKET).download(path);
+    if (error || !data) return null;
+    const buf = new Uint8Array(await data.arrayBuffer());
+    // Hard cap: 4 MB inline. SVG and oversize files are skipped — Gemini won't reliably ingest.
+    if (buf.byteLength > 4 * 1024 * 1024) return null;
+    const mime = primary?.contentType || mimeFromPath(path);
+    if (mime === "image/svg+xml") return null; // model can't reliably rasterize SVG in-band
+    return `data:${mime};base64,${bytesToB64(buf)}`;
+  } catch (e) {
+    console.error("fetchPrimaryLogoDataUrl failed", e);
+    return null;
+  }
+}
+
+// Multimodal call: Gemini image model via OpenRouter chat shape. Returns b64 PNG.
+async function callMultimodal(
+  prompt: string,
+  imagesDataUrls: string[],
+  apiKey: string,
+): Promise<string> {
+  const content: any[] = [{ type: "text", text: prompt }];
+  for (const url of imagesDataUrls) {
+    if (url) content.push({ type: "image_url", image_url: { url } });
+  }
+  const body = {
+    model: MODEL_MULTIMODAL,
+    messages: [{ role: "user", content }],
+    modalities: ["image", "text"],
+  };
   const res = await fetch(AI_GATEWAY, {
     method: "POST",
-    headers: { "Lovable-API-Key": apiKey, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: MODEL, prompt, size, quality: "low", n: 1 }),
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
   const text = await res.text();
   if (!res.ok) {
     let parsed: any = {};
     try { parsed = JSON.parse(text); } catch { /* */ }
-    const err: any = new Error(parsed?.error?.message || `AI gateway error (${res.status})`);
+    const err: any = new Error(parsed?.error?.message || `Multimodal gateway error (${res.status})`);
     err.status = res.status;
     throw err;
   }
   const data = JSON.parse(text);
   const b64 = data?.data?.[0]?.b64_json;
-  if (!b64) throw new Error("AI gateway returned no image");
-  return b64 as string;
+  if (!b64) {
+    const err: any = new Error("Multimodal gateway returned no image");
+    err.status = 502;
+    throw err;
+  }
+  return b64;
+}
+
+// Fallback: text-only OpenAI image gen at medium quality.
+async function callTextOnly(prompt: string, size: string, apiKey: string): Promise<string> {
+  const res = await fetch(AI_GATEWAY, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: MODEL_FALLBACK,
+      prompt,
+      size,
+      quality: "medium",
+      n: 1,
+    }),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    let parsed: any = {};
+    try { parsed = JSON.parse(text); } catch { /* */ }
+    const err: any = new Error(parsed?.error?.message || `Fallback gateway error (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = JSON.parse(text);
+  const b64 = data?.data?.[0]?.b64_json;
+  if (!b64) throw new Error("Fallback gateway returned no image");
+  return b64;
 }
 
 Deno.serve(async (req) => {
@@ -170,20 +259,55 @@ Deno.serve(async (req) => {
     }
 
     const ctx = await loadVentureContext(admin, snapshotId);
-    const prompt = buildCoverArtPrompt({ platform: platform.label, asset, direction, kit, ctx });
+    const logoDataUrl = await fetchPrimaryLogoDataUrl(admin, kit);
+
+    const isAvatar = asset.kind === "avatar";
+    const prompt = isAvatar
+      ? buildAvatarPrompt({ platform: platform.label, asset, kit })
+      : buildCoverArtPrompt({
+          platform: platform.label,
+          asset,
+          direction,
+          kit,
+          ctx,
+          hasLogoImage: !!logoDataUrl,
+        });
 
     let b64: string;
+    let modelUsed: string;
     try {
-      b64 = await callImageGateway(prompt, asset.modelSize, apiKey);
+      if (logoDataUrl) {
+        // Multimodal path: pass the actual logo bytes to the image model.
+        b64 = await callMultimodal(prompt, [logoDataUrl], apiKey);
+        modelUsed = MODEL_MULTIMODAL;
+      } else {
+        // No logo available — fall back to text-only at medium quality.
+        b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
+        modelUsed = MODEL_FALLBACK;
+      }
     } catch (e: any) {
+      // If multimodal failed for a non-billing/non-moderation reason, try text-only.
       const status = e?.status;
-      const out: any = { error: e?.message ?? "Generation failed", upstreamStatus: status };
-      if (status === 402) { out.code = "PAYMENT_REQUIRED"; out.reason = "ai_credits_exhausted"; }
-      else if (status === 429) { out.code = "RATE_LIMITED"; }
-      return json(out, 200);
+      if (logoDataUrl && status !== 402 && status !== 429) {
+        try {
+          b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
+          modelUsed = MODEL_FALLBACK + " (multimodal fallback)";
+        } catch (e2: any) {
+          const status2 = e2?.status;
+          const out: any = { error: e2?.message ?? "Generation failed", upstreamStatus: status2 };
+          if (status2 === 402) { out.code = "PAYMENT_REQUIRED"; out.reason = "ai_credits_exhausted"; }
+          else if (status2 === 429) { out.code = "RATE_LIMITED"; }
+          return json(out, 200);
+        }
+      } else {
+        const out: any = { error: e?.message ?? "Generation failed", upstreamStatus: status };
+        if (status === 402) { out.code = "PAYMENT_REQUIRED"; out.reason = "ai_credits_exhausted"; }
+        else if (status === 429) { out.code = "RATE_LIMITED"; }
+        return json(out, 200);
+      }
     }
 
-    const bytes = b64ToBytes(b64);
+    const bytes = b64ToBytes(b64!);
     const fileId = crypto.randomUUID();
     const storagePath = `social-cover/${userId}/${snapshotId}/${platform.platform}/${asset.kind}/${direction}-${fileId}.png`;
 
@@ -211,7 +335,7 @@ Deno.serve(async (req) => {
         width: asset.width,
         height: asset.height,
         prompt_used: prompt,
-        model_used: MODEL,
+        model_used: modelUsed!,
         brand_kit_locked_at: kit.locked_at,
         is_selected: false,
       })
@@ -225,4 +349,3 @@ Deno.serve(async (req) => {
     return json({ error: (e as Error).message ?? "Internal error" }, 500);
   }
 });
-
