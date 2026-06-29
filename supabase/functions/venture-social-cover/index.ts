@@ -60,26 +60,28 @@ function mimeFromPath(p: string): string {
   return "image/png";
 }
 
-// Fetch the brand kit's primary logo as a data URL the image model can ingest.
-// Returns null if no logo is available or anything fails — caller degrades.
-async function fetchPrimaryLogoDataUrl(admin: any, kit: any): Promise<string | null> {
+// Fetch the brand kit's primary logo as raw bytes + data URL.
+// Returns nulls if no logo is available or anything fails — caller degrades.
+async function fetchPrimaryLogo(
+  admin: any,
+  kit: any,
+): Promise<{ dataUrl: string | null; bytes: Uint8Array | null }> {
   try {
     const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
-    if (!logos.length) return null;
+    if (!logos.length) return { dataUrl: null, bytes: null };
     const primary = logos.find((l) => l?.primary) ?? logos[0];
     const path = primary?.path || primary?.storage_path;
-    if (!path) return null;
+    if (!path) return { dataUrl: null, bytes: null };
     const { data, error } = await admin.storage.from(BUCKET).download(path);
-    if (error || !data) return null;
+    if (error || !data) return { dataUrl: null, bytes: null };
     const buf = new Uint8Array(await data.arrayBuffer());
-    // Hard cap: 4 MB inline. SVG and oversize files are skipped — Gemini won't reliably ingest.
-    if (buf.byteLength > 4 * 1024 * 1024) return null;
+    if (buf.byteLength > 4 * 1024 * 1024) return { dataUrl: null, bytes: null };
     const mime = primary?.contentType || mimeFromPath(path);
-    if (mime === "image/svg+xml") return null; // model can't reliably rasterize SVG in-band
-    return `data:${mime};base64,${bytesToB64(buf)}`;
+    if (mime === "image/svg+xml") return { dataUrl: null, bytes: null };
+    return { dataUrl: `data:${mime};base64,${bytesToB64(buf)}`, bytes: buf };
   } catch (e) {
-    console.error("fetchPrimaryLogoDataUrl failed", e);
-    return null;
+    console.error("fetchPrimaryLogo failed", e);
+    return { dataUrl: null, bytes: null };
   }
 }
 
