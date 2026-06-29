@@ -134,7 +134,8 @@ Deno.serve(async (req) => {
     if (!userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-    const { data: snap } = await supabase.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle();
+    const ctx = await loadVentureContext(supabase, snapshotId);
+    const snap = ctx.snap;
     if (!snap) return new Response(JSON.stringify({ error: "Snapshot not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     if (snap.user_id !== userId) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
@@ -143,7 +144,7 @@ Deno.serve(async (req) => {
     const tokens = {
       colors: kit?.palette?.colors ?? snap.brand_tokens?.colors,
       fonts: kit?.typography ? { heading: kit.typography.heading?.family, body: kit.typography.body?.family } : snap.brand_tokens?.fonts,
-      mood: kit?.dna?.personality ?? snap.brand_tokens?.mood,
+      mood: kit?.dna?.mood ?? kit?.dna?.personality ?? snap.brand_tokens?.mood,
     };
 
     const n = Math.max(1, Math.min(4, count ?? preset.defaultCount));
@@ -154,7 +155,7 @@ Deno.serve(async (req) => {
       while (i < n) {
         const myIdx = i++;
         const angle = kind === "moodboard" ? MOODBOARD_ANGLES[myIdx % MOODBOARD_ANGLES.length] : undefined;
-        const prompt = buildPrompt(kind, snap, tokens, extra, angle);
+        const prompt = buildPrompt(kind, ctx, tokens, extra, angle);
         try {
           const b64 = await generateOne(prompt, preset.size, kind === "logo" ? referenceImages : undefined);
           const up = await uploadAsset(supabase, snapshotId, userId, kind, b64, prompt);
