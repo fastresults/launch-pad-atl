@@ -29,6 +29,13 @@ const MODEL_FALLBACK = "openai/gpt-image-2";
 const BUCKET = "user-media";
 const SIGNED_TTL = 60 * 60 * 24 * 7;
 
+function gatewayHeaders(apiKey: string): Record<string, string> {
+  return {
+    "Lovable-API-Key": apiKey,
+    "Content-Type": "application/json",
+  };
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -102,7 +109,7 @@ async function callMultimodal(
   };
   const res = await fetch(AI_GATEWAY, {
     method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    headers: gatewayHeaders(apiKey),
     body: JSON.stringify(body),
   });
   const text = await res.text();
@@ -127,7 +134,7 @@ async function callMultimodal(
 async function callTextOnly(prompt: string, size: string, apiKey: string): Promise<string> {
   const res = await fetch(AI_GATEWAY, {
     method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    headers: gatewayHeaders(apiKey),
     body: JSON.stringify({
       model: MODEL_FALLBACK,
       prompt,
