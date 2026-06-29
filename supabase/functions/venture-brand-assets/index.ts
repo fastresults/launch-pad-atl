@@ -1,8 +1,10 @@
 // Founders Hub — brand asset generator.
 // Generates logo / moodboard / social images via the Lovable AI image gateway,
-// grounded in the venture's brand_tokens and the wizard's locked palette/typography.
+// grounded in the FULL venture context (snapshot + brief + sources + brain)
+// and the wizard's locked palette/typography/personality.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { loadVentureContext } from "../_shared/venture-context.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
