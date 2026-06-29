@@ -956,6 +956,48 @@ function Step5BuildKit({
           }}
         />
       )}
+
+      {previewIdx !== null && (() => {
+        const t = tasks[previewIdx];
+        if (!t) return null;
+        const goPrev = () => {
+          if (!previewableIdxs.length) return;
+          const pos = previewableIdxs.indexOf(previewIdx);
+          const next = previewableIdxs[(pos - 1 + previewableIdxs.length) % previewableIdxs.length];
+          setPreviewIdx(next);
+        };
+        const goNext = () => {
+          if (!previewableIdxs.length) return;
+          const pos = previewableIdxs.indexOf(previewIdx);
+          const next = previewableIdxs[(pos + 1) % previewableIdxs.length];
+          setPreviewIdx(next);
+        };
+        const asset: PreviewableAsset = {
+          url: t.signed_url ?? null,
+          title: `${t.platform} — ${String(t.asset).replace(/_/g, " ")}`,
+          subtitle: t.guidance ?? null,
+          platform: t.platform,
+          assetKind: t.asset,
+          width: t.width ?? null,
+          height: t.height ?? null,
+          canvasPlan: t.canvas_plan ?? null,
+          qaStatus: t.qa_status ?? null,
+          qaNotes: t.qa_notes ?? null,
+          modelUsed: t.model_used ?? null,
+          lastFeedback: t.last_feedback ?? null,
+          updatedAt: t.updated_at ?? null,
+        };
+        return (
+          <AssetPreviewDialog
+            open={previewIdx !== null}
+            onOpenChange={(v) => !v && setPreviewIdx(null)}
+            asset={asset}
+            onPrev={previewableIdxs.length > 1 ? goPrev : undefined}
+            onNext={previewableIdxs.length > 1 ? goNext : undefined}
+            onRegenerate={() => { setPreviewIdx(null); setRegenTarget({ scope: "single", task: t }); }}
+          />
+        );
+      })()}
     </div>
   );
 }
