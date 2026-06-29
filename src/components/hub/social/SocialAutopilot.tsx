@@ -620,6 +620,32 @@ function Step4Style({
           }}
         />
       )}
+
+      {previewIdx !== null && (() => {
+        const d = ART_DIRECTIONS[previewIdx];
+        const p = d ? byDirection.get(d.id) : null;
+        const asset: PreviewableAsset | null = d ? {
+          url: p?.signed_url ?? null,
+          title: `${d.label} — style preview`,
+          subtitle: d.blurb,
+          assetKind: "style_preview",
+          canvasPlan: p?.canvas_plan ?? null,
+          qaStatus: p?.qa_status ?? null,
+          qaNotes: (p as any)?.qa_notes ?? null,
+          lastFeedback: p?.last_feedback ?? null,
+          updatedAt: p?.updated_at ?? null,
+        } : null;
+        return (
+          <AssetPreviewDialog
+            open={previewIdx !== null}
+            onOpenChange={(v) => !v && setPreviewIdx(null)}
+            asset={asset}
+            onPrev={() => setPreviewIdx((i) => (i === null ? 0 : (i - 1 + ART_DIRECTIONS.length) % ART_DIRECTIONS.length))}
+            onNext={() => setPreviewIdx((i) => (i === null ? 0 : (i + 1) % ART_DIRECTIONS.length))}
+            onRegenerate={d ? () => { setPreviewIdx(null); setDialog({ scope: "single", direction: d.id }); } : undefined}
+          />
+        );
+      })()}
     </div>
   );
 }
