@@ -219,6 +219,24 @@ export async function generateOne(
   const snap = ctx.snap;
   if (!type) throw new Error(`Unknown document type: ${documentType}`);
 
+  // Brand-kit gate: deliverables in BRAND_KIT_REQUIRED_TYPES cannot generate
+  // until the founder has run the Brand Wizard and locked their kit.
+  let brandKit: Awaited<ReturnType<typeof loadBrandKit>> = null;
+  if (BRAND_KIT_REQUIRED_TYPES.has(documentType)) {
+    brandKit = await loadBrandKit(supabase, snapshotId);
+    if (!brandKit || brandKit.status !== "locked") {
+      // Reset to pending so the UI shows the gate, not a "Needs another try" state.
+      await supabase.from("venture_documents").upsert({
+        snapshot_id: snapshotId,
+        document_type: documentType,
+        status: "pending",
+      }, { onConflict: "snapshot_id,document_type" });
+      const err = new Error("Lock your Brand Wizard before generating this deliverable.");
+      (err as any).code = "brand_kit_required";
+      throw err;
+    }
+  }
+
   // Ensure a snapshot brain exists AND is fresh (recomputes when dirty —
   // dirty flag is set by source-extract / intake-writeback / concept-refine).
   if (snap.concept_summary || snap.research_brief || snap.business_concept) {
