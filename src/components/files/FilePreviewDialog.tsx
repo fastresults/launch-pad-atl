@@ -110,9 +110,7 @@ export function FilePreviewDialog({
         setUrl(signed);
 
         if (isDocx(doc.mime_type, doc.original_name)) {
-          // Defer to the docx-preview renderer that runs against the live DOM
-          // container; we just mark the file as ready so the container mounts.
-          setDocxHtml("__use_docx_preview__");
+          // <DocxPreview /> fetches and renders from the signed URL
         } else if (isText(doc.mime_type, doc.original_name)) {
           try {
             const txt = await (await fetch(signed)).text();
