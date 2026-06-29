@@ -175,3 +175,62 @@ export function renderSources(ctx: VentureContext, perSourceCap = 6000): string 
   );
   return [...docBlocks, ...urlBlocks].join("\n\n");
 }
+
+/**
+ * Deliverables that REQUIRE a locked Brand Kit before they can be generated.
+ * The Brand Kit (palette, typography, primary logo, voice) is injected as
+ * authoritative context for these prompts.
+ */
+export const BRAND_KIT_REQUIRED_TYPES = new Set<string>(["website_prd"]);
+
+export type BrandKitRow = {
+  status?: string | null;
+  locked_at?: string | null;
+  palette?: any;
+  typography?: any;
+  voice?: any;
+  logos?: any[] | null;
+  guide_markdown?: string | null;
+};
+
+export async function loadBrandKit(supabase: any, snapshotId: string): Promise<BrandKitRow | null> {
+  const { data } = await supabase
+    .from("venture_brand_kits")
+    .select("status, locked_at, palette, typography, voice, logos, guide_markdown")
+    .eq("snapshot_id", snapshotId)
+    .maybeSingle();
+  return (data ?? null) as BrandKitRow | null;
+}
+
+/**
+ * Render a locked Brand Kit as an authoritative, "use verbatim" prompt block.
+ * Returns "" when the kit is missing or not locked.
+ */
+export function brandKitBlock(kit: BrandKitRow | null): string {
+  if (!kit || kit.status !== "locked") return "";
+  const lines: string[] = [];
+  lines.push("## BRAND KIT (LOCKED — authoritative, use VERBATIM, do not invent alternates)");
+  const logos = Array.isArray(kit.logos) ? kit.logos : [];
+  const primaryLogo = logos.find((l: any) => l && l.primary) ?? logos[0];
+  if (primaryLogo?.url) {
+    lines.push(`- Primary logo URL: ${primaryLogo.url}`);
+    if (primaryLogo.alt || primaryLogo.title) {
+      lines.push(`  alt: "${primaryLogo.alt ?? primaryLogo.title}"`);
+    }
+  }
+  if (kit.palette) {
+    lines.push(`- Palette (use these exact hex values for every color token, dark mode included):\n\`\`\`json\n${JSON.stringify(kit.palette, null, 2)}\n\`\`\``);
+  }
+  if (kit.typography) {
+    lines.push(`- Typography (use these exact Google Fonts for heading + body — do not substitute):\n\`\`\`json\n${JSON.stringify(kit.typography, null, 2)}\n\`\`\``);
+  }
+  if (kit.voice) {
+    lines.push(`- Voice & tone (apply to every page of copy):\n\`\`\`json\n${JSON.stringify(kit.voice, null, 2)}\n\`\`\``);
+  }
+  if (kit.guide_markdown) {
+    const excerpt = String(kit.guide_markdown).slice(0, 1600);
+    lines.push(`- Style-guide excerpt (treat as ground truth):\n${excerpt}`);
+  }
+  lines.push("\nHARD RULES for this generation: every color, font name, and logo reference MUST come from the block above. Do not propose alternates, do not 'modernize' the palette, do not pick a different Google Font. If a section needs more colors than the palette provides, derive tints/shades from the existing hex values rather than introducing new hues.");
+  return lines.join("\n");
+}

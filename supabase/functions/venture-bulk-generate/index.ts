@@ -11,8 +11,11 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
+  BRAND_KIT_REQUIRED_TYPES,
+  brandKitBlock,
   compactPreamble,
   distillDeps,
+  loadBrandKit,
   loadVentureContext,
   pickBrainSlice,
   type VentureContext,
@@ -124,6 +127,27 @@ async function generateOne(
     .maybeSingle();
   if (!type) throw new Error(`Unknown document type: ${documentType}`);
 
+  // Brand-kit gate: skip deliverables in BRAND_KIT_REQUIRED_TYPES until the
+  // founder has locked their Brand Wizard. Mark the doc 'pending' (not
+  // 'failed') so the UI keeps showing the friendly gate.
+  let brandKit: Awaited<ReturnType<typeof loadBrandKit>> = null;
+  if (BRAND_KIT_REQUIRED_TYPES.has(documentType)) {
+    brandKit = await loadBrandKit(supabase, snapshotId);
+    if (!brandKit || brandKit.status !== "locked") {
+      await supabase.from("venture_documents").upsert({
+        snapshot_id: snapshotId,
+        document_type: documentType,
+        status: "pending",
+      }, { onConflict: "snapshot_id,document_type" });
+      await supabase.from("venture_generation_failures").insert({
+        snapshot_id: snapshotId,
+        document_type: documentType,
+        error: "Skipped: Brand Wizard not locked.",
+      });
+      return; // skip this doc, continue the job
+    }
+  }
+
   await supabase.from("venture_documents").upsert({
     snapshot_id: snapshotId,
     document_type: documentType,
@@ -162,10 +186,12 @@ async function generateOne(
   const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
   const preamble = compactPreamble(ctx);
 
+  const brandBlock = brandKitBlock(brandKit);
   const userPrompt = [
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
     `Category: ${type.category}`,
+    brandBlock,
     preamble,
     brainSlice
       ? `\n## Venture brain (compressed, authoritative — every section must reflect these)\n${JSON.stringify(brainSlice, null, 2)}`

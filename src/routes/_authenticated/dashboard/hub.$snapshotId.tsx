@@ -45,6 +45,9 @@ import { RewriteFeedbackDialog } from "@/components/hub/RewriteFeedbackDialog";
 import { IntakeGatewayDialog, type IntakeTarget } from "@/components/hub/IntakeGatewayDialog";
 import { BulkUnlockDialog } from "@/components/hub/BulkUnlockDialog";
 import { BrandStudio } from "@/components/hub/BrandStudio";
+import { getBrandKit } from "@/lib/brandKit.functions";
+
+const BRAND_KIT_REQUIRED_TYPES = new Set<string>(["website_prd"]);
 import { SocialStudio } from "@/components/hub/SocialStudio";
 import { FounderRoadmapCard } from "@/components/hub/FounderRoadmapCard";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
@@ -845,12 +848,37 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const [showFailures, setShowFailures] = useState(false);
   const [rewriteTarget, setRewriteTarget] = useState<{ type: string; name: string } | null>(null);
   const [intakeTarget, setIntakeTarget] = useState<IntakeTarget>(null);
+  const brandStudioRef = useRef<HTMLDetailsElement | null>(null);
+
+  const brandKitQ = useQuery({
+    queryKey: ["brandKit", snapshot.id],
+    queryFn: () => getBrandKit(snapshot.id),
+    refetchInterval: 8000,
+  });
+  const brandKit = brandKitQ.data ?? null;
+  const brandKitLocked = brandKit?.status === "locked";
+  const brandKitLockedAt = brandKit?.locked_at ?? null;
+
+  const openBrandWizard = useCallback(() => {
+    if (brandStudioRef.current) {
+      brandStudioRef.current.open = true;
+      brandStudioRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
 
   const genOne = useMutation({
     mutationFn: (vars: { documentType: string; rewriteFeedback?: string; rewriteTags?: string[]; intakeAnswers?: Record<string, any> }) =>
       generateDocument({ data: { snapshotId: snapshot.id, ...vars } }),
     onSuccess: () => { toast.success("Document ready"); qc.invalidateQueries({ queryKey: ["hub"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Generation failed"),
+    onError: (e) => {
+      const msg = e instanceof Error ? e.message : "Generation failed";
+      if (/brand_kit_required|Brand Wizard/i.test(msg)) {
+        toast.error("Finish the Brand Wizard first — it powers this deliverable.");
+        openBrandWizard();
+      } else {
+        toast.error(msg);
+      }
+    },
   });
 
   const bulk = useMutation({
@@ -895,10 +923,18 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   // Stale = doc was generated before the concept was last locked/updated.
   const conceptChangedAt = snapshot?.concept_locked_at ?? snapshot?.updated_at ?? null;
   const isStale = (d: any) => {
-    if (!d || d.status !== "complete" || !conceptChangedAt) return false;
+    if (!d || d.status !== "complete") return false;
     const docAt = d.updated_at ? new Date(d.updated_at).getTime() : 0;
-    const cAt = new Date(conceptChangedAt).getTime();
-    return docAt > 0 && cAt > 0 && cAt - docAt > 60_000; // 60s grace
+    if (!docAt) return false;
+    const cAt = conceptChangedAt ? new Date(conceptChangedAt).getTime() : 0;
+    if (cAt > 0 && cAt - docAt > 60_000) return true;
+    // Brand-kit-dependent deliverables also go stale when the brand kit was
+    // re-locked after the doc was generated.
+    if (BRAND_KIT_REQUIRED_TYPES.has(d.document_type) && brandKitLockedAt) {
+      const bAt = new Date(brandKitLockedAt).getTime();
+      if (bAt > 0 && bAt - docAt > 60_000) return true;
+    }
+    return false;
   };
   const staleDocs = docs.filter(isStale);
   const staleCount = staleDocs.length;
@@ -1142,7 +1178,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 size="sm"
                 variant={catComplete ? "ghost" : "outline"}
                 disabled={bulk.isPending || jobRunning}
-                onClick={() => bulk.mutate({ category: cat })}
+                onClick={() => {
+                  // If this section contains a brand-kit-gated deliverable
+                  // and the kit isn't locked yet, redirect to the wizard.
+                  const needsBrandKit = items.some((t: any) => BRAND_KIT_REQUIRED_TYPES.has(t.type));
+                  if (needsBrandKit && !brandKitLocked) {
+                    toast.error("Finish the Brand Wizard first — it powers the Website PRD.");
+                    openBrandWizard();
+                    return;
+                  }
+                  bulk.mutate({ category: cat });
+                }}
               >
                 {catGenerating ? (
                   <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
@@ -1163,14 +1209,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               const isComplete = status === "complete";
               const hasReadableContent = Boolean(d?.content && String(d.content).trim().length > 0);
               const generating = status === "generating" || (genOne.isPending && genOne.variables?.documentType === t.type);
-              const Icon = isComplete ? CheckCircle2 : depsMet ? Circle : Lock;
-              const tone = isComplete ? "text-status-success" : depsMet ? "text-foreground" : "text-muted-foreground";
+              const needsBrandKit = BRAND_KIT_REQUIRED_TYPES.has(t.type);
+              const brandGated = needsBrandKit && !brandKitLocked;
+              const Icon = isComplete ? CheckCircle2 : brandGated ? Lock : depsMet ? Circle : Lock;
+              const tone = isComplete ? "text-status-success" : depsMet && !brandGated ? "text-foreground" : "text-muted-foreground";
 
               let statusLine: string;
               if (isComplete) statusLine = "Ready to read";
               else if (generating && hasReadableContent) statusLine = "Updating… previous version available";
               else if (generating) statusLine = "Writing now…";
               else if (status === "failed") statusLine = "Needs another try";
+              else if (brandGated) statusLine = "Complete the Brand Wizard to unlock";
               else if (!depsMet) {
                 const missing = deps.find((dep) => !completedKeys.has(dep));
                 const missingLabel = missing ? ((typeByKey.get(missing) as any)?.name ?? missing) : "earlier documents";
@@ -1178,16 +1227,24 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               } else statusLine = "Not started yet";
 
               const stale = isStale(d);
+              const staleLabel = needsBrandKit && brandKitLockedAt && d?.updated_at && new Date(brandKitLockedAt).getTime() - new Date(d.updated_at).getTime() > 60_000
+                ? "Brand updated"
+                : "Concept updated";
               return (
-                <div key={t.type} className={`rounded-xl border bg-card p-4 ${stale ? "border-status-warning/40" : "border-white/10"}`}>
+                <div key={t.type} className={`rounded-xl border bg-card p-4 ${stale ? "border-status-warning/40" : brandGated ? "border-primary/30" : "border-white/10"}`}>
                   <div className="flex items-start gap-2">
                     <Icon className={`mt-0.5 h-4 w-4 ${tone}`} />
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="truncate text-sm font-medium">{t.name}</h4>
+                        {needsBrandKit && (
+                          <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
+                            Requires Brand Kit
+                          </Badge>
+                        )}
                         {stale && (
                           <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">
-                            Concept updated
+                            {staleLabel}
                           </Badge>
                         )}
                       </div>
@@ -1195,8 +1252,12 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                       <div className="mt-1 text-[10px] text-muted-foreground">{statusLine} · ~{t.estimated_minutes} min</div>
                     </div>
                   </div>
-                  <div className="mt-3 flex gap-2">
-                    {isComplete || hasReadableContent ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {brandGated && !isComplete ? (
+                      <Button size="sm" variant="outline" onClick={openBrandWizard}>
+                        <Sparkles className="mr-1 h-3 w-3" /> Open Brand Wizard
+                      </Button>
+                    ) : isComplete || hasReadableContent ? (
                       <Button size="sm" onClick={() => setViewerDoc(d)}>
                         <Eye className="mr-1 h-3 w-3" /> Read
                       </Button>
@@ -1231,6 +1292,10 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                         size="sm"
                         variant="ghost"
                         onClick={() => {
+                          if (brandGated) {
+                            openBrandWizard();
+                            return;
+                          }
                           if (t.intake_schema) {
                             setIntakeTarget({
                               type: t.type,
@@ -1257,13 +1322,25 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         );
       })}
 
-      {/* Bonus tools - deferred */}
-      <details open={completeCount === total && total > 0} className="rounded-2xl border border-white/10 bg-card/40 p-4">
+      {/* Bonus tools - deferred. Brand Wizard lives here and is required for Website PRD. */}
+      <details
+        ref={brandStudioRef}
+        id="brand-studio"
+        open={(completeCount === total && total > 0) || !brandKitLocked}
+        className="rounded-2xl border border-white/10 bg-card/40 p-4 scroll-mt-24"
+      >
         <summary className="cursor-pointer list-none">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <div className="text-sm font-semibold">Bonus tools (optional)</div>
-              <div className="text-xs text-muted-foreground">Generate logos, social posts and brand assets once your documents are ready.</div>
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                Brand Wizard & bonus tools
+                {!brandKitLocked && (
+                  <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
+                    Required for Website PRD
+                  </Badge>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground">Lock your brand colors, typography and logo here — the Website PRD generation uses them verbatim.</div>
             </div>
             <span className="text-xs text-muted-foreground">Show / hide</span>
           </div>

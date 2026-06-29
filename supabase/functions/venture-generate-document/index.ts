@@ -11,8 +11,11 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
+  BRAND_KIT_REQUIRED_TYPES,
+  brandKitBlock,
   compactPreamble,
   distillDeps,
+  loadBrandKit,
   loadVentureContext,
   pickBrainSlice,
 } from "../_shared/venture-context.ts";
@@ -216,6 +219,24 @@ export async function generateOne(
   const snap = ctx.snap;
   if (!type) throw new Error(`Unknown document type: ${documentType}`);
 
+  // Brand-kit gate: deliverables in BRAND_KIT_REQUIRED_TYPES cannot generate
+  // until the founder has run the Brand Wizard and locked their kit.
+  let brandKit: Awaited<ReturnType<typeof loadBrandKit>> = null;
+  if (BRAND_KIT_REQUIRED_TYPES.has(documentType)) {
+    brandKit = await loadBrandKit(supabase, snapshotId);
+    if (!brandKit || brandKit.status !== "locked") {
+      // Reset to pending so the UI shows the gate, not a "Needs another try" state.
+      await supabase.from("venture_documents").upsert({
+        snapshot_id: snapshotId,
+        document_type: documentType,
+        status: "pending",
+      }, { onConflict: "snapshot_id,document_type" });
+      const err = new Error("Lock your Brand Wizard before generating this deliverable.");
+      (err as any).code = "brand_kit_required";
+      throw err;
+    }
+  }
+
   // Ensure a snapshot brain exists AND is fresh (recomputes when dirty —
   // dirty flag is set by source-extract / intake-writeback / concept-refine).
   if (snap.concept_summary || snap.research_brief || snap.business_concept) {
@@ -287,10 +308,12 @@ export async function generateOne(
   const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
   const preamble = compactPreamble(ctx);
 
+  const brandBlock = brandKitBlock(brandKit);
   const userPrompt = [
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
     `Category: ${type.category}`,
+    brandBlock,
     preamble,
     brainSlice
       ? `\n## Venture brain (compressed, authoritative — every section must reflect these)\n${JSON.stringify(brainSlice, null, 2)}`
@@ -466,6 +489,12 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, ...result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
+    if ((e as any)?.code === "brand_kit_required") {
+      return new Response(
+        JSON.stringify({ ok: false, error: "brand_kit_required", message }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
     if (e instanceof GatewayError) {
       return new Response(JSON.stringify({ ok: false, error: message, gatewayStatus: e.status }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
