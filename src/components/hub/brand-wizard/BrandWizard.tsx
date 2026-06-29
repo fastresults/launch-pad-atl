@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, ArrowLeft, ArrowRight, Sparkles, Lock, RefreshCw, Check } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight, Sparkles, Lock, RefreshCw, Check, Copy, ChevronDown, ChevronUp } from "lucide-react";
+import { RichMarkdown } from "@/components/markdown/RichMarkdown";
+import { useRef } from "react";
 import { toast } from "sonner";
 import {
   getBrandKit,
