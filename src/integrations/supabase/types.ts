@@ -2406,6 +2406,74 @@ export type Database = {
         }
         Relationships: []
       }
+      venture_social_assets: {
+        Row: {
+          art_direction: string
+          asset_kind: string
+          brand_kit_locked_at: string | null
+          created_at: string
+          height: number
+          id: string
+          is_selected: boolean
+          model_used: string | null
+          platform: string
+          prompt_used: string | null
+          signed_url: string | null
+          signed_url_expires_at: string | null
+          snapshot_id: string
+          storage_path: string
+          updated_at: string
+          user_id: string
+          width: number
+        }
+        Insert: {
+          art_direction: string
+          asset_kind: string
+          brand_kit_locked_at?: string | null
+          created_at?: string
+          height: number
+          id?: string
+          is_selected?: boolean
+          model_used?: string | null
+          platform: string
+          prompt_used?: string | null
+          signed_url?: string | null
+          signed_url_expires_at?: string | null
+          snapshot_id: string
+          storage_path: string
+          updated_at?: string
+          user_id: string
+          width: number
+        }
+        Update: {
+          art_direction?: string
+          asset_kind?: string
+          brand_kit_locked_at?: string | null
+          created_at?: string
+          height?: number
+          id?: string
+          is_selected?: boolean
+          model_used?: string | null
+          platform?: string
+          prompt_used?: string | null
+          signed_url?: string | null
+          signed_url_expires_at?: string | null
+          snapshot_id?: string
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_social_assets_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_testimonials: {
         Row: {
           created_at: string
