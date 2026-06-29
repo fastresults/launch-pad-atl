@@ -6,6 +6,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext, compactPreamble, renderSources } from "../_shared/venture-context.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
+import { sanitizePaletteOption } from "../_shared/palette-rules.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -57,7 +58,10 @@ async function generatePalettes(ctx: any, kit: any) {
 
 Return JSON: { "options": [ { "name": string, "rationale": string, "mood": [string,string,string], "colors": { "bg": "#hex", "fg": "#hex", "muted": "#hex", "accent": "#hex", "primary": "#hex", "secondary": "#hex" } } ] } — exactly 4 options, visually distinct from each other.`;
   const raw = await callAI([{ role: "system", content: sys }, { role: "user", content: user }], { json: true });
-  return JSON.parse(raw);
+  const parsed = JSON.parse(raw);
+  // Enforce palette rules (WCAG contrast, role separation, on-colors) regardless of what the model returned.
+  parsed.options = Array.isArray(parsed.options) ? parsed.options.map(sanitizePaletteOption) : [];
+  return parsed;
 }
 
 async function generateTypography(ctx: any, kit: any) {
@@ -301,6 +305,10 @@ For typography: if Firecrawl branding fonts are present, use them verbatim when 
   ], { json: true, model: "google/gemini-2.5-flash" });
   let parsed: any;
   try { parsed = JSON.parse(raw); } catch { throw new Error("AI extraction returned invalid JSON"); }
+
+  // Repair extracted palette so bg/fg and brand-role pairings are guaranteed legible.
+  if (parsed?.palette) parsed.palette = sanitizePaletteOption({ ...parsed.palette, source: "extracted" });
+
 
   // 4. Build moodboard from screenshot + OG image + uploaded logos.
   const moodboard: any[] = [];
