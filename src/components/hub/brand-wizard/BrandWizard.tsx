@@ -461,24 +461,62 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const [dragOver, setDragOver] = useState(false);
+
+  const downscaleToDataUrl = (file: File, max = 512): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Could not read file"));
+      reader.onload = () => {
+        const src = reader.result as string;
+        // SVGs and tiny files: keep as-is.
+        if (file.type === "image/svg+xml" || file.size < 120 * 1024) return resolve(src);
+        const img = new Image();
+        img.onerror = () => resolve(src);
+        img.onload = () => {
+          try {
+            const scale = Math.min(1, max / Math.max(img.width, img.height));
+            const w = Math.round(img.width * scale);
+            const h = Math.round(img.height * scale);
+            const canvas = document.createElement("canvas");
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return resolve(src);
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL("image/png"));
+          } catch { resolve(src); }
+        };
+        img.src = src;
+      };
+      reader.readAsDataURL(file);
+    });
+
   const onDropRefs = async (files: FileList | null) => {
-    if (!files) return;
-    const arr = Array.from(files).slice(0, 3 - refs.length);
-    const dataUrls = await Promise.all(arr.map((f) => new Promise<string>((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result as string);
-      r.onerror = rej;
-      r.readAsDataURL(f);
-    })));
-    const next = [...refs, ...dataUrls].slice(0, 3);
-    setRefs(next);
-    onSave({ dna: { ...(kit?.dna ?? {}), _logoReferences: next } });
+    if (!files || files.length === 0) return;
+    const arr = Array.from(files).filter((f) => f.type.startsWith("image/")).slice(0, 3 - refs.length);
+    if (arr.length === 0) {
+      toast.error("Please drop image files (PNG, JPG, SVG)");
+      return;
+    }
+    try {
+      const dataUrls = await Promise.all(arr.map((f) => downscaleToDataUrl(f)));
+      const next = [...refs, ...dataUrls].slice(0, 3);
+      setRefs(next);
+      await upsertBrandKit(snapshot.id, { dna: { ...(kit?.dna ?? {}), _logoReferences: next } });
+      toast.success(`${arr.length} inspiration${arr.length > 1 ? "s" : ""} added`);
+    } catch (e: any) {
+      toast.error(e?.message || "Upload failed");
+    }
   };
 
-  const removeRef = (idx: number) => {
+  const removeRef = async (idx: number) => {
     const next = refs.filter((_, i) => i !== idx);
     setRefs(next);
-    onSave({ dna: { ...(kit?.dna ?? {}), _logoReferences: next } });
+    try {
+      await upsertBrandKit(snapshot.id, { dna: { ...(kit?.dna ?? {}), _logoReferences: next } });
+    } catch (e: any) {
+      toast.error(e?.message || "Could not save");
+    }
   };
 
   const skipped = !!kit?.dna?._logoRefSkipped;
@@ -534,10 +572,29 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           </div>
         </div>
 
-        <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-white/20 bg-background/40 px-4 py-6 text-center hover:border-primary/50">
-          <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => onDropRefs(e.target.files)} disabled={refs.length >= 3} />
+        <label
+          className={`flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors ${
+            dragOver ? "border-primary bg-primary/10" : "border-white/20 bg-background/40 hover:border-primary/50"
+          }`}
+          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (refs.length < 3) setDragOver(true); }}
+          onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); if (refs.length < 3) setDragOver(true); }}
+          onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOver(false); }}
+          onDrop={(e) => {
+            e.preventDefault(); e.stopPropagation(); setDragOver(false);
+            if (refs.length >= 3) return;
+            onDropRefs(e.dataTransfer?.files ?? null);
+          }}
+        >
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => { onDropRefs(e.target.files); e.currentTarget.value = ""; }}
+            disabled={refs.length >= 3}
+          />
           <div className="text-sm font-medium">{refs.length >= 3 ? "3 inspirations added — you're set" : "Drag & drop or click to upload"}</div>
-          <div className="mt-1 text-xs text-muted-foreground">PNG, JPG, SVG · up to 3 images · {refs.length}/3 added</div>
+          <div className="mt-1 text-xs text-muted-foreground">PNG, JPG, SVG, WEBP · up to 3 images · {refs.length}/3 added</div>
         </label>
 
         {refs.length > 0 && (
