@@ -875,7 +875,7 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
         )}
       </div>
 
-      <div className="sticky bottom-0 z-20 -mx-6 -mb-8 flex flex-wrap items-center justify-between gap-2 border-t border-border bg-background/95 px-6 py-4 shadow-[0_-12px_28px_rgba(0,0,0,0.18)] backdrop-blur">
+      <div className="sticky bottom-0 z-20 -mx-6 -mb-8 flex flex-wrap items-center justify-between gap-2 border-t border-border bg-background/95 px-6 py-4 shadow-lg backdrop-blur">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>
         <div className="flex flex-wrap justify-end gap-2">
           <Button onClick={() => lock.mutate()} disabled={lock.isPending || !kit?.palette || !kit?.typography}>
