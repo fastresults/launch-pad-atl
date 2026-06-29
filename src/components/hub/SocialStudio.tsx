@@ -1,17 +1,18 @@
 // @ts-nocheck
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Share2, Copy, ExternalLink, Calendar, Rocket, Lock } from "lucide-react";
+import { Share2, Copy, ExternalLink, Calendar, Rocket, Lock, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import { getBrandKit } from "@/lib/brandKit.functions";
 import { SocialStudioGate } from "@/components/hub/social/SocialStudioGate";
 import { CoverArtTab } from "@/components/hub/social/CoverArtTab";
 import { ChannelSetupTab } from "@/components/hub/social/ChannelSetupTab";
+import { SocialAutopilot } from "@/components/hub/social/SocialAutopilot";
 
 export function SocialStudio({ snapshot }: { snapshot: any }) {
   const kitQ = useQuery({
@@ -42,6 +43,8 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
   const copy = (text: string) => { navigator.clipboard.writeText(text); toast.success("Copied"); };
   const hasStrategy = auditDoc || pillarsDoc || calendarDoc || launchDoc;
 
+  const [advanced, setAdvanced] = useState(false);
+
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
       <div className="flex items-center justify-between gap-2">
@@ -54,11 +57,25 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
             </span>
           )}
         </div>
+        {locked && (
+          <button
+            type="button"
+            onClick={() => setAdvanced((a) => !a)}
+            className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground"
+          >
+            <Wand2 className="h-3 w-3" />
+            {advanced ? "Switch to guided" : "Advanced mode"}
+          </button>
+        )}
       </div>
 
       {!locked && <SocialStudioGate snapshot={snapshot} kit={kit} />}
 
-      {locked && (
+      {locked && !advanced && (
+        <SocialAutopilot snapshot={snapshot} kit={kit} onShowAdvanced={() => setAdvanced(true)} />
+      )}
+
+      {locked && advanced && (
         <Tabs defaultValue={hasStrategy ? "strategy" : "cover"} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="strategy">Strategy</TabsTrigger>

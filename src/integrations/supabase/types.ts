@@ -2474,6 +2474,50 @@ export type Database = {
           },
         ]
       }
+      venture_social_progress: {
+        Row: {
+          art_direction: string | null
+          created_at: string
+          current_step: number
+          goals: Json
+          launch_status: Json
+          selected_platforms: string[]
+          snapshot_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          art_direction?: string | null
+          created_at?: string
+          current_step?: number
+          goals?: Json
+          launch_status?: Json
+          selected_platforms?: string[]
+          snapshot_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          art_direction?: string | null
+          created_at?: string
+          current_step?: number
+          goals?: Json
+          launch_status?: Json
+          selected_platforms?: string[]
+          snapshot_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_social_progress_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: true
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_testimonials: {
         Row: {
           created_at: string
