@@ -305,6 +305,7 @@ Deno.serve(async (req) => {
             plan,
             hasLogoImage: !!logoDataUrl,
             retryNote,
+            userFeedback,
           });
 
     const generate = async (retryNote?: string) => {
