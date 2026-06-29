@@ -28,8 +28,11 @@ import { brandKitToDocxBlob, validateBrandGuideDocxBlob } from "@/lib/brand-guid
 import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
 import { LiveBrandPreview } from "./LiveBrandPreview";
 import { VisualBrandGuide } from "./VisualBrandGuide";
+import { Step1TrackPicker } from "./Step1TrackPicker";
+import { ExistingBrandIntake } from "./ExistingBrandIntake";
 
-const STEPS = ["DNA", "Palette", "Typography", "Moodboard & Logo", "Voice & Review"];
+const STEPS_NEW = ["DNA", "Palette", "Typography", "Moodboard & Logo", "Voice & Review"];
+const STEPS_EXISTING = ["Track", "Upload & site", "Voice & Review"];
 
 export function BrandWizard({
   snapshot,
@@ -48,6 +51,8 @@ export function BrandWizard({
     enabled: open,
   });
   const kit = kitQ.data;
+  const track: "existing" | "new" | undefined = kit?.dna?.track;
+  const STEPS = track === "existing" ? STEPS_EXISTING : track === "new" ? STEPS_NEW : ["Track"];
   const [step, setStep] = useState(1);
 
   useEffect(() => {
@@ -65,6 +70,12 @@ export function BrandWizard({
     save.mutate({ step: n });
   };
 
+  const pickTrack = async (t: "existing" | "new") => {
+    await upsertBrandKit(snapshotId, { dna: { ...(kit?.dna ?? {}), track: t }, step: 2 });
+    qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
+    setStep(2);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[92vh] max-h-[92vh] max-w-7xl flex-col gap-0 overflow-hidden p-0">
@@ -72,6 +83,11 @@ export function BrandWizard({
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             Brand Wizard — {snapshot.company_name || "Your venture"}
+            {track && (
+              <Badge variant="outline" className="ml-2 text-[10px]">
+                {track === "existing" ? "Existing brand track" : "Build-from-scratch track"}
+              </Badge>
+            )}
           </DialogTitle>
           <div className="mt-3 flex items-center gap-2">
             {STEPS.map((label, i) => {
@@ -104,6 +120,21 @@ export function BrandWizard({
               <div className="flex items-center justify-center py-10 text-muted-foreground">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading kit…
               </div>
+            ) : !track ? (
+              <Step1TrackPicker kit={kit} onPick={pickTrack} />
+            ) : track === "existing" ? (
+              <>
+                {step === 1 && <Step1TrackPicker kit={kit} onPick={pickTrack} />}
+                {step === 2 && (
+                  <ExistingBrandIntake
+                    snapshot={snapshot}
+                    kit={kit}
+                    onBack={() => goTo(1)}
+                    onExtracted={() => goTo(3)}
+                  />
+                )}
+                {step === 3 && <StepReview snapshot={snapshot} kit={kit} onSave={save.mutate} onBack={() => goTo(2)} onDone={() => onOpenChange(false)} />}
+              </>
             ) : (
               <>
                 {step === 1 && <StepDNA snapshot={snapshot} kit={kit} onSave={save.mutate} onNext={() => goTo(2)} />}
@@ -122,6 +153,7 @@ export function BrandWizard({
     </Dialog>
   );
 }
+
 
 /* ---------- STEP 1: DNA ---------- */
 function StepDNA({ snapshot, kit, onSave, onNext }: any) {
