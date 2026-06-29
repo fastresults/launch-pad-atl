@@ -14,8 +14,45 @@ export type QaVerdict = {
     dominantBg: string;
     dominantFg: string;
     ratio: number;
+    signatureCoveragePct?: number;
   };
 };
+
+function hexToRgbLocal(hex: string): [number, number, number] {
+  const h = hex.replace("#", "");
+  return [
+    parseInt(h.slice(0, 2), 16),
+    parseInt(h.slice(2, 4), 16),
+    parseInt(h.slice(4, 6), 16),
+  ];
+}
+
+// Coarse perceptual distance — RGB squared distance is fine for "does this
+// region contain colors close to the signature hex" checks.
+function colorDistSq(a: [number, number, number], b: [number, number, number]): number {
+  return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+}
+
+function signatureCoveragePct(png: PNG, signatureHex: string): number {
+  const target = hexToRgbLocal(signatureHex);
+  // Threshold ~ ΔE proxy: 60 RGB units distance => ~ visually similar enough
+  // (covers duotone washes, slight model drift, and antialiased edges).
+  const THRESH = 60 * 60;
+  let hits = 0;
+  let total = 0;
+  const stride = 4;
+  for (let y = 0; y < png.height; y += stride) {
+    for (let x = 0; x < png.width; x += stride) {
+      const i = (png.width * y + x) << 2;
+      if (png.data[i + 3] < 128) continue;
+      const px: [number, number, number] = [png.data[i], png.data[i + 1], png.data[i + 2]];
+      if (colorDistSq(px, target) <= THRESH) hits++;
+      total++;
+    }
+  }
+  return total ? (hits / total) * 100 : 0;
+}
+
 
 function toHex(r: number, g: number, b: number): string {
   const h = (v: number) => v.toString(16).padStart(2, "0").toUpperCase();
@@ -116,12 +153,30 @@ export function runContrastQa(pngBytes: Uint8Array, plan: CanvasPlan): QaVerdict
     );
   }
 
+  // Signature color presence — the brand splash must actually show up.
+  let signatureCovPct: number | undefined;
+  if (plan.signature && plan.signature.toUpperCase() !== plan.surface.toUpperCase()) {
+    signatureCovPct = Number(signatureCoveragePct(png, plan.signature).toFixed(1));
+    const minPct = (plan.signatureMinCoveragePct ?? 12) * 0.6; // 60% tolerance band
+    if (signatureCovPct < minPct) {
+      reasons.push(
+        `Signature brand color ${plan.signature} only covered ${signatureCovPct}% of the canvas (need ≥${plan.signatureMinCoveragePct}%, tolerance ≥${minPct.toFixed(0)}%). The brand splash is missing — increase coverage as a confident shape, sidebar, block, or duotone wash, not a hairline.`,
+      );
+    }
+  }
+
   return {
     ok: reasons.length === 0,
     reasons,
-    observed: { dominantBg, dominantFg: fg.hex, ratio: Number(ratio.toFixed(2)) },
+    observed: {
+      dominantBg,
+      dominantFg: fg.hex,
+      ratio: Number(ratio.toFixed(2)),
+      signatureCoveragePct: signatureCovPct,
+    },
   };
 }
+
 
 // Cheap dominant-ink estimator for a logo PNG (used to pick avatar surface).
 export function logoDominantInk(pngBytes: Uint8Array): string | null {

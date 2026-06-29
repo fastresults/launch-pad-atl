@@ -17,13 +17,13 @@ type Kit = {
 
 const DIRECTION_BRIEF: Record<ArtDirectionId, string> = {
   editorial:
-    "EDITORIAL — Magazine-grade type-led layout in the tradition of Wallpaper*, Apartamento, It's Nice That, and Pentagram editorial work. ONE confident headline set in the brand heading family, tight tracking, ranged left. ≥60% negative space. Optional 1px rule lines, a small folio mark, an italic deck. No photography, no illustration of objects, no decorative flourishes. The composition should look like a printed spread, not a web banner.",
+    "EDITORIAL — Magazine-grade type-led layout in the tradition of Wallpaper*, Apartamento, It's Nice That, and Pentagram editorial work. ONE confident headline set in the brand heading family, tight tracking, ranged left. ≥55% negative space. The brand signature color anchors the composition as a confident solid block, full-bleed sidebar, folio stripe, or large flat mark — never a hairline. Optional 1px rule lines and a small folio mark. No photography, no illustration of objects. The composition should look like a printed spread.",
   photographic:
-    "PHOTOGRAPHIC — One cinematic, photo-real subject relevant to this venture, in the tradition of Annie Leibovitz editorial, Joe McNally environmental portraits, or Steve McCurry — natural light, shallow depth of field, real-camera physics. Apply a subtle duotone graded toward the brand primary. NO type overlay unless the spec explicitly requires a headline. Avoid stock-people-smiling-at-laptop tropes, avoid HDR, avoid AI-skin shine.",
+    "PHOTOGRAPHIC — One cinematic, photo-real subject relevant to this venture, in the tradition of Annie Leibovitz editorial, Joe McNally environmental portraits, or Steve McCurry — natural light, shallow depth of field, real-camera physics. Apply a confident duotone grade pushed toward the brand SIGNATURE color so the brand hue clearly tints the image. NO type overlay unless the spec explicitly requires a headline. Avoid stock-people-smiling-at-laptop tropes, avoid HDR, avoid AI-skin shine.",
   geometric:
-    "GEOMETRIC — Bauhaus Dessau / Sagmeister / Paula Scher discipline. Bold flat shapes (circles, arcs, rectangles, triangles) using EXACTLY two palette roles plus the background. No gradients, no outlines, no drop shadows. Confident asymmetry, mathematical alignment. The composition should read as a printed poster.",
+    "GEOMETRIC — Bauhaus Dessau / Sagmeister / Paula Scher discipline. Bold flat shapes (circles, arcs, rectangles, triangles). At least one major focal shape is filled with the brand SIGNATURE color and occupies a substantial portion of the canvas. No gradients, no outlines, no drop shadows. Confident asymmetry, mathematical alignment.",
   illustrative:
-    "ILLUSTRATIVE — Flat custom vector illustration in the tradition of Malika Favre, Christoph Niemann, or Tom Froese. Single conceptual image that represents the venture, two-tone or three-tone using only the locked palette, clean closed shapes, no gradients, no textures, generous negative space. Avoid generic 'tech illustration' people, avoid isometric tropes.",
+    "ILLUSTRATIVE — Flat custom vector illustration in the tradition of Malika Favre, Christoph Niemann, or Tom Froese. Single conceptual image that represents the venture, two-tone or three-tone using only the locked palette. At least one major shape uses the SIGNATURE color as fill — not as a thin outline. Clean closed shapes, no gradients, no textures, generous negative space.",
 };
 
 const BANNED = `
@@ -36,13 +36,15 @@ HARD BANS (any of these = failure, regenerate without it):
 - Heavy gradients, drop shadows, bevels, lens flares, glossy reflections.
 - Reproductions or redraws of the attached logo. The attached logo is placed by us, not redrawn by you.
 - Dark text on dark surfaces. Light text on light surfaces. ANY foreground/background pair below 4.5:1 contrast.
-- Using a color that is not exactly surface, ink, or accent from the canvas plan.
+- Using a color that is not one of: surface, ink, signature, or accent from the canvas plan.
+- Composition with NO visible signature color, or where signature is reduced to a hairline / 1px stroke / barely-there mark = failure.
 `;
+
 
 const QUALITY = `
 QUALITY BAR (an award jury would accept this):
-- One dominant focal element. ≥60% negative space.
-- Use ONLY the three hex colors named in the canvas plan: surface (background), ink (text/marks), accent (one supporting color). Nothing else.
+- One dominant focal element. ≥55% negative space.
+- Use ONLY the four hex colors named in the canvas plan: surface (background), ink (text/marks), signature (the brand hue — MUST be visibly present as a confident shape/block/wash), and accent (one supporting color, used sparingly).
 - Typography (when present) must use the brand heading family, tight tracking, real type hierarchy, optical alignment.
 - WCAG AA contrast (≥4.5:1) between any text and its background.
 - Crisp edges, no AI-blur, no muddy color, no halftone artifacts.
@@ -160,7 +162,7 @@ export function buildCoverArtPrompt(args: {
   const references = hasLogoImage
     ? `## Attached reference images (authoritative — honor exactly)
 - Image #1: the venture's official logo. Use its colors and forms as-is. Do NOT redraw. For non-avatar assets, leave clean rectangular space so we can composite this exact logo on top later.
-- Image #2: the canvas palette tile. The THREE colors in this tile (surface, ink, accent) are the ONLY colors permitted in the composition. No other colors. No tints. No gradients between them.`
+- Image #2: the canvas palette tile. The FOUR colors in this tile (surface, ink, signature, accent) are the ONLY colors permitted in the composition. No other colors. No tints. No gradients between them.`
     : `## Reference imagery
 - No logo file was uploaded; do NOT invent a logo. Compose around a clean reserved rectangle in a non-focal corner.`;
 
@@ -176,9 +178,10 @@ export function buildCoverArtPrompt(args: {
 
 ${references}
 
-## Canvas plan (NON-NEGOTIABLE — these are the only colors you may use)
+## Canvas plan (NON-NEGOTIABLE — exactly these four hex values, used as specified)
 - Background surface: ${plan.surface}  ← the entire background fills with this exact hex
 - Ink (all text, logo marks, lines): ${plan.ink}  ← AA-legible on the surface
+- SIGNATURE brand color (MUST be visibly present): ${plan.signature}  ← cover ≥${plan.signatureMinCoveragePct}% of the canvas as a confident solid shape, block, sidebar/folio stripe, large mark, or duotone wash. Never as a hairline, 1px stroke, or tiny dot. This is the splash of brand color that makes the piece feel on-brand.
 - Accent (one supporting color, used sparingly): ${plan.accent}
 - Forbidden pairings detected in this palette:
 ${forbiddenLines}
@@ -205,8 +208,9 @@ ${brief}
 ${QUALITY}
 ${BANNED}
 ${feedbackBlock}${retryBlock}${variationSeed ? `\n## Variation seed\nSeed: ${variationSeed}. Use this to meaningfully vary composition, focal placement, and texture from any prior attempt while keeping every rule above.\n` : ""}
-Deliver a single finished image at the spec'd aspect that a senior art director would ship to a paying client today. Background MUST be exactly ${plan.surface}. Any rendered glyphs, marks, or text MUST be exactly ${plan.ink}. The only permitted accent color is ${plan.accent}.`;
+Deliver a single finished image at the spec'd aspect that a senior art director would ship to a paying client today. Background MUST be exactly ${plan.surface}. Any rendered glyphs, marks, or text MUST be exactly ${plan.ink}. The SIGNATURE color ${plan.signature} MUST cover ≥${plan.signatureMinCoveragePct}% of the canvas as a confident shape (not a hairline). The only permitted secondary accent is ${plan.accent}.`;
 }
+
 
 // Deterministic avatar prompt: the surface color is decided server-side by
 // measuring contrast against the logo's actual dominant ink, then passed in.

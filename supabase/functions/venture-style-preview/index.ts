@@ -255,7 +255,10 @@ Deno.serve(async (req) => {
     let qa = runContrastQa(bytes, plan);
     if (!qa.ok) {
       try {
-        const retryNote = `Previous attempt: ${qa.observed.dominantFg} on ${qa.observed.dominantBg} (${qa.observed.ratio}:1). Use ONLY surface=${plan.surface}, ink=${plan.ink}, accent=${plan.accent}. Fill background with ${plan.surface} exactly.`;
+        const sigNote = (qa.observed.signatureCoveragePct ?? 100) < plan.signatureMinCoveragePct
+          ? ` Signature ${plan.signature} only covered ${qa.observed.signatureCoveragePct}% — make it cover ≥${plan.signatureMinCoveragePct}% as a confident block/sidebar/wash, NOT a hairline.`
+          : "";
+        const retryNote = `Previous attempt: ${qa.observed.dominantFg} on ${qa.observed.dominantBg} (${qa.observed.ratio}:1). Use ONLY surface=${plan.surface}, ink=${plan.ink}, signature=${plan.signature}, accent=${plan.accent}. Fill background with ${plan.surface} exactly.${sigNote}`;
         const retry = await generate(retryNote);
         const retryBytes = b64ToBytes(retry.b64);
         const retryQa = runContrastQa(retryBytes, plan);

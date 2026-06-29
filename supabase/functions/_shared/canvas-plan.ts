@@ -1,11 +1,10 @@
 // Pre-computes the EXACT colors an image generator is allowed to use for a
 // social asset, derived from the locked brand kit. Removes "model picks two
-// palette roles" ambiguity that caused dark-ink-on-dark-violet failures.
+// palette roles" ambiguity and guarantees the brand's signature hue shows up.
 
 import {
   contrastRatio,
   pickOnColor,
-  lightness,
   saturation,
 } from "./palette-rules.ts";
 import type { AssetSpec, ArtDirectionId } from "./social-platform-specs.ts";
@@ -14,7 +13,10 @@ export type CanvasPlan = {
   surface: string;     // background hex
   ink: string;         // text / primary mark on surface, AA-guaranteed
   accent: string;      // supporting role (≥3:1 vs surface, distinct from ink)
-  surfaceRole: string; // which palette role surface came from
+  signature: string;   // the unmistakable brand hue (visible brand splash)
+  signatureRole: string;
+  signatureMinCoveragePct: number;
+  surfaceRole: string;
   forbiddenPairs: Array<{ fg: string; bg: string; ratio: number }>;
 };
 
@@ -36,30 +38,69 @@ function pickSurfaceForDirection(
 ): { color: string; role: string } {
   const bg = roles.bg || roles.background || "#FFFFFF";
   const primary = roles.primary || roles.accent || "#111111";
-  const secondary = roles.secondary || primary;
 
-  // Direction-driven default surface choice
   let role: string;
   let color: string;
   if (assetKind === "thumbnail" || assetKind === "video_poster" || assetKind === "vertical_pin") {
-    // High-impact formats: bold colored surface
     role = "primary";
     color = primary;
   } else if (direction === "geometric") {
     role = "primary";
     color = primary;
-  } else if (direction === "photographic") {
-    // Photographic = brand-tinted but base is neutral; treat surface as bg
-    role = "bg";
-    color = bg;
-  } else if (direction === "editorial" || direction === "illustrative") {
-    role = "bg";
-    color = bg;
   } else {
     role = "bg";
     color = bg;
   }
   return { color, role };
+}
+
+function signatureCoverageFor(direction: ArtDirectionId, assetKind: string): number {
+  if (assetKind === "thumbnail" || assetKind === "video_poster" || assetKind === "vertical_pin") {
+    return 30;
+  }
+  if (direction === "editorial") return 12;
+  if (direction === "photographic") return 15; // duotone wash target
+  if (direction === "geometric") return 25;
+  if (direction === "illustrative") return 20;
+  return 18;
+}
+
+function pickSignature(
+  roles: Record<string, string>,
+  surface: string,
+  ink: string,
+): { hex: string; role: string } {
+  // Prefer the most "brand-defining" hue: primary, then secondary, then accent.
+  const ordered: Array<[string, string | undefined]> = [
+    ["primary", roles.primary],
+    ["secondary", roles.secondary],
+    ["accent", roles.accent],
+  ];
+  const surfU = surface.toUpperCase();
+  const inkU = ink.toUpperCase();
+
+  // First pass: strongly saturated, distinct from surface & ink.
+  for (const [name, hex] of ordered) {
+    if (!hex) continue;
+    const H = hex.toUpperCase();
+    if (H === surfU || H === inkU) continue;
+    if (saturation(hex) >= 0.25) return { hex, role: name };
+  }
+  // Second pass: any candidate distinct from surface & ink.
+  for (const [name, hex] of ordered) {
+    if (!hex) continue;
+    const H = hex.toUpperCase();
+    if (H === surfU || H === inkU) continue;
+    return { hex, role: name };
+  }
+  // Last resort: pick any non-surface, non-ink saturated role from the kit.
+  for (const [name, hex] of Object.entries(roles)) {
+    const H = hex.toUpperCase();
+    if (H === surfU || H === inkU) continue;
+    if (saturation(hex) >= 0.2) return { hex, role: name };
+  }
+  // Nothing brandy — fall back to accent equivalent.
+  return { hex: roles.accent || roles.primary || ink, role: "fallback" };
 }
 
 export function buildCanvasPlan(args: {
@@ -74,8 +115,6 @@ export function buildCanvasPlan(args: {
     args.asset.kind,
   );
 
-  // Ink = on-color guaranteed ≥ 4.5:1 against surface.
-  // Prefer an in-palette neutral that passes, else fall back to white/near-black.
   const candidates = [
     roles.onPrimary, roles.onSecondary, roles.onAccent,
     roles.fg, roles.bg,
@@ -97,7 +136,11 @@ export function buildCanvasPlan(args: {
       contrastRatio(c, surface) >= 3,
   ) || ink;
 
-  // Surface the dangerous combos so the prompt can ban them by name.
+  // Signature = the unmistakable brand hue that MUST be visible.
+  const sig = pickSignature(roles, surface, ink);
+  const signatureMinCoveragePct = signatureCoverageFor(args.direction, args.asset.kind);
+
+  // Surface dangerous combos so the prompt can ban them by name.
   const allRoles = Object.entries(roles);
   const forbiddenPairs: CanvasPlan["forbiddenPairs"] = [];
   for (const [, fg] of allRoles) {
@@ -108,11 +151,18 @@ export function buildCanvasPlan(args: {
     }
   }
 
-  return { surface, ink, accent, surfaceRole, forbiddenPairs };
+  return {
+    surface,
+    ink,
+    accent,
+    signature: sig.hex,
+    signatureRole: sig.role,
+    signatureMinCoveragePct,
+    surfaceRole,
+    forbiddenPairs,
+  };
 }
 
-// Choose the best avatar surface against the actual logo bytes' dominant ink.
-// Returns the role name + hex picked from the palette.
 export function pickAvatarSurface(
   kit: any,
   logoDominantInk: string | null,

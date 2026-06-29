@@ -283,7 +283,7 @@ Deno.serve(async (req) => {
 
     const isAvatar = asset.kind === "avatar";
 
-    // --- Canvas plan: pre-decide exact surface/ink/accent hexes ---
+    // --- Canvas plan: pre-decide exact surface/ink/accent/signature hexes ---
     let plan: CanvasPlan;
     if (isAvatar) {
       const ink = logoBytes ? logoDominantInk(logoBytes) : null;
@@ -292,12 +292,16 @@ Deno.serve(async (req) => {
         surface,
         ink: ink || "#0B0F19",
         accent: surface,
+        signature: surface,
+        signatureRole: "avatar-surface",
+        signatureMinCoveragePct: 0,
         surfaceRole: "avatar-surface",
         forbiddenPairs: [],
       };
     } else {
       plan = buildCanvasPlan({ kit, asset, direction });
     }
+
 
     // --- Palette tile so the model SEES the only colors it may use ---
     let paletteTileDataUrl: string | null = null;
@@ -377,7 +381,10 @@ Deno.serve(async (req) => {
     if (!qa.ok) {
       console.warn("contrast QA failed, retrying once", qa.reasons);
       try {
-        const retryNote = `Your previous attempt produced ${qa.observed.dominantFg} on ${qa.observed.dominantBg} (only ${qa.observed.ratio}:1 contrast — illegible). Use ONLY surface=${plan.surface}, ink=${plan.ink}, accent=${plan.accent}. Background must fill with ${plan.surface} exactly.`;
+        const sigNote = (qa.observed.signatureCoveragePct ?? 100) < plan.signatureMinCoveragePct
+          ? ` The brand signature color ${plan.signature} was only ${qa.observed.signatureCoveragePct}% of the canvas — make it cover ≥${plan.signatureMinCoveragePct}% as a confident solid shape, sidebar, block, or duotone wash, NOT a hairline.`
+          : "";
+        const retryNote = `Your previous attempt produced ${qa.observed.dominantFg} on ${qa.observed.dominantBg} (only ${qa.observed.ratio}:1 contrast — illegible). Use ONLY surface=${plan.surface}, ink=${plan.ink}, signature=${plan.signature}, accent=${plan.accent}. Background must fill with ${plan.surface} exactly.${sigNote}`;
         const retry = await generate(retryNote);
         const retryBytes = b64ToBytes(retry.b64);
         const retryQa = runContrastQa(retryBytes, plan);
