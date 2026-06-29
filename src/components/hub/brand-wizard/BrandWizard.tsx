@@ -659,8 +659,27 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {logos.map((a, i) => {
               const busy = regenOne.isPending && regenOne.variables?.idx === i;
+              const removeLogo = async () => {
+                const next = logos.filter((_, j) => j !== i);
+                setLogos(next);
+                try {
+                  await upsertBrandKit(snapshot.id, { logos: next });
+                  onSave({ logos: next });
+                  toast.success("Concept removed");
+                } catch (e: any) {
+                  toast.error(e?.message || "Could not remove");
+                }
+              };
               return (
-                <div key={i} className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
+                <div key={i} className="relative flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
+                  <button
+                    onClick={removeLogo}
+                    disabled={busy || regenOne.isPending}
+                    aria-label="Remove this concept"
+                    className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white shadow hover:bg-black disabled:opacity-40"
+                  >
+                    ×
+                  </button>
                   <a href={a.url} target="_blank" rel="noreferrer" className="block bg-white">
                     {a.url && <img src={a.url} alt={a.direction_name ?? "Logo concept"} className="aspect-square w-full object-contain" />}
                   </a>
@@ -678,18 +697,29 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                     {a.symbol_concept && (
                       <p className="line-clamp-3 text-[11px] leading-relaxed text-muted-foreground">{a.symbol_concept}</p>
                     )}
-                    {a.direction && (
+                    <div className="flex gap-1.5">
+                      {a.direction && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 flex-1 text-[11px]"
+                          disabled={busy || regenOne.isPending}
+                          onClick={() => regenOne.mutate({ idx: i, direction: a.direction })}
+                        >
+                          {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+                          Regenerate
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 w-full text-[11px]"
+                        className="h-7 px-2 text-[11px] text-destructive hover:text-destructive"
                         disabled={busy || regenOne.isPending}
-                        onClick={() => regenOne.mutate({ idx: i, direction: a.direction })}
+                        onClick={removeLogo}
                       >
-                        {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-                        Regenerate this direction
+                        Remove
                       </Button>
-                    )}
+                    </div>
                   </div>
                 </div>
               );
