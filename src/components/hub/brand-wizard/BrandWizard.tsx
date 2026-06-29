@@ -453,13 +453,29 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     mutationFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo", count: 4, referenceImages: refs } }),
     onSuccess: (out) => {
       const fresh = (out.assets ?? []).filter((a: any) => a.ok);
-      const next = [...fresh, ...logos].slice(0, 8);
-      setLogos(next);
-      onSave({ logos: next });
-      toast.success(`${fresh.length} logo concepts generated`);
+      // Replace prior set so the 4 directions shown match the new brief.
+      setLogos(fresh);
+      onSave({ logos: fresh });
+      toast.success(`${fresh.length} logo direction${fresh.length === 1 ? "" : "s"} rendered`);
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const regenOne = useMutation({
+    mutationFn: (vars: { idx: number; direction: any }) =>
+      generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo", referenceImages: refs, regenerateDirection: vars.direction } }),
+    onSuccess: (out, vars) => {
+      const fresh = (out.assets ?? []).find((a: any) => a.ok);
+      if (!fresh) { toast.error("Regeneration failed"); return; }
+      const next = logos.slice();
+      next[vars.idx] = fresh;
+      setLogos(next);
+      onSave({ logos: next });
+      toast.success(`"${fresh.direction_name}" regenerated`);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
 
   const [dragOver, setDragOver] = useState(false);
 
