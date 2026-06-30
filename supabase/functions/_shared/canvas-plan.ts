@@ -211,6 +211,7 @@ export function buildCanvasPlan(args: {
   kit: any;
   asset: AssetSpec;
   direction: ArtDirectionId;
+  signature?: SignatureConfig;
 }): CanvasPlan {
   const roles = rolesFromKit(args.kit);
   const { color: surface, role: surfaceRole } = pickSurfaceForDirection(
@@ -229,7 +230,6 @@ export function buildCanvasPlan(args: {
     if (contrastRatio(c, surface) >= 4.5) { ink = c; break; }
   }
 
-  // Accent = a brand role distinct from surface AND ink, with ≥3:1 vs surface.
   const accentPool = ["accent", "secondary", "primary", "muted"]
     .map((k) => roles[k])
     .filter(Boolean) as string[];
@@ -240,11 +240,19 @@ export function buildCanvasPlan(args: {
       contrastRatio(c, surface) >= 3,
   ) || ink;
 
-  // Signature = the unmistakable brand hue that MUST be visible.
   const sig = pickSignature(roles, surface, ink);
-  const signatureMinCoveragePct = signatureCoverageFor(args.direction, args.asset.kind);
+  const intensity: SignatureIntensity = args.signature?.intensity ?? "balanced";
+  const placement: SignaturePlacement = resolvePlacement(
+    args.signature?.placement ?? "auto",
+    args.direction,
+    args.asset.kind,
+  );
+  const signatureMinCoveragePct =
+    typeof args.signature?.minCoveragePct === "number"
+      ? Math.max(0, Math.min(100, Math.round(args.signature.minCoveragePct)))
+      : signatureCoverageFor(args.direction, args.asset.kind, intensity);
+  const signaturePlacementBrief = placementBrief(placement, intensity);
 
-  // Surface dangerous combos so the prompt can ban them by name.
   const allRoles = Object.entries(roles);
   const forbiddenPairs: CanvasPlan["forbiddenPairs"] = [];
   for (const [, fg] of allRoles) {
@@ -263,6 +271,9 @@ export function buildCanvasPlan(args: {
     displaySignature: deriveDisplaySignature(sig.hex),
     signatureRole: sig.role,
     signatureMinCoveragePct,
+    signatureIntensity: intensity,
+    signaturePlacement: placement,
+    signaturePlacementBrief,
     surfaceRole,
     forbiddenPairs,
   };
