@@ -38,6 +38,7 @@ HARD BANS (any of these = failure, regenerate without it):
 - Dark text on dark surfaces. Light text on light surfaces. ANY foreground/background pair below 4.5:1 contrast.
 - Using a color that is not one of: surface, ink, signature, or accent from the canvas plan.
 - Composition with NO visible signature color, or where signature is reduced to a hairline / 1px stroke / barely-there mark = failure.
+- If the final image, viewed at 240px thumbnail size, could be mistaken for grayscale or for a 2-color black-and-white render, it is a failure.
 `;
 
 
