@@ -182,7 +182,7 @@ ${references}
 ## Canvas plan (NON-NEGOTIABLE — exactly these four hex values, used as specified)
 - Background surface: ${plan.surface}  ← the entire background fills with this exact hex
 - Ink (all text, logo marks, lines): ${plan.ink}  ← AA-legible on the surface
-- SIGNATURE brand color (MUST be visibly present): ${plan.signature}  ← cover ≥${plan.signatureMinCoveragePct}% of the canvas as a confident solid shape, block, sidebar/folio stripe, large mark, or duotone wash. Never as a hairline, 1px stroke, or tiny dot. This is the splash of brand color that makes the piece feel on-brand.
+- SIGNATURE brand color (MUST be visibly present): ${plan.displaySignature}  ← cover ≥${plan.signatureMinCoveragePct}% of the canvas as a confident solid shape, block, sidebar/folio stripe, large mark, or duotone wash. Never as a hairline, 1px stroke, or tiny dot. This is the splash of brand color that makes the piece feel on-brand. Use this EXACT hex — do not darken it toward black, do not desaturate it toward gray.
 - Accent (one supporting color, used sparingly): ${plan.accent}
 - Forbidden pairings detected in this palette:
 ${forbiddenLines}
