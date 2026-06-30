@@ -293,6 +293,7 @@ Deno.serve(async (req) => {
         ink: ink || "#0B0F19",
         accent: surface,
         signature: surface,
+        displaySignature: surface,
         signatureRole: "avatar-surface",
         signatureMinCoveragePct: 0,
         surfaceRole: "avatar-surface",
