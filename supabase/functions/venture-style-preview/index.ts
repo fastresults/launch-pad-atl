@@ -12,6 +12,7 @@ import { buildCanvasPlan, type CanvasPlan } from "../_shared/canvas-plan.ts";
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
 import { runContrastQa } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind } from "../_shared/logo-compositor.ts";
+import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -282,12 +283,25 @@ Deno.serve(async (req) => {
         const retry = await generate(retryNote);
         const retryBytes = b64ToBytes(retry.b64);
         const retryQa = runContrastQa(retryBytes, plan);
-        const retryBetter = (retryQa.observed.signatureVisible && !sigVisible) ||
+        const retryBetter =
+          (retryQa.observed.signatureVisible && !sigVisible) ||
+          (retryQa.observed.signatureCoveragePct ?? 0) > (qa.observed.signatureCoveragePct ?? 0) ||
           retryQa.observed.ratio > qa.observed.ratio;
         if (retryBetter) {
           bytes = retryBytes; qa = retryQa; result = retry;
         }
       } catch (e) { console.warn("QA retry failed", e); }
+    }
+
+    const minPct = (plan.signatureMinCoveragePct ?? 12) * 0.75;
+    const signatureMissing = qa.observed.signatureVisible === false ||
+      ((qa.observed.signatureCoveragePct ?? 0) < minPct);
+    if (signatureMissing) {
+      bytes = compositeSignatureSplash(bytes, plan);
+      qa = runContrastQa(bytes, plan);
+      (qa as any).signature_composited = true;
+    } else {
+      (qa as any).signature_composited = false;
     }
 
     // Guaranteed logo placement on the preview tile.
