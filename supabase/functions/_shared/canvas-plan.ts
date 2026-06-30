@@ -4,6 +4,8 @@
 
 import {
   contrastRatio,
+  hue,
+  lightness,
   pickOnColor,
   saturation,
 } from "./palette-rules.ts";
@@ -13,12 +15,47 @@ export type CanvasPlan = {
   surface: string;     // background hex
   ink: string;         // text / primary mark on surface, AA-guaranteed
   accent: string;      // supporting role (≥3:1 vs surface, distinct from ink)
-  signature: string;   // the unmistakable brand hue (visible brand splash)
+  signature: string;          // the raw brand role hex (reference)
+  displaySignature: string;   // the hex actually rendered/checked — boosted if signature is too dark/desaturated to be visible
   signatureRole: string;
   signatureMinCoveragePct: number;
   surfaceRole: string;
   forbiddenPairs: Array<{ fg: string; bg: string; ratio: number }>;
 };
+
+// HSL helpers (local — palette-rules exports only hue/saturation/lightness getters)
+function hslToHex(h: number, s: number, l: number): string {
+  h = ((h % 360) + 360) % 360;
+  s = Math.max(0, Math.min(1, s));
+  l = Math.max(0, Math.min(1, l));
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const hp = h / 60;
+  const x = c * (1 - Math.abs((hp % 2) - 1));
+  let r = 0, g = 0, b = 0;
+  if (hp < 1) [r, g, b] = [c, x, 0];
+  else if (hp < 2) [r, g, b] = [x, c, 0];
+  else if (hp < 3) [r, g, b] = [0, c, x];
+  else if (hp < 4) [r, g, b] = [0, x, c];
+  else if (hp < 5) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  const m = l - c / 2;
+  const to = (v: number) => Math.round((v + m) * 255).toString(16).padStart(2, "0").toUpperCase();
+  return `#${to(r)}${to(g)}${to(b)}`;
+}
+
+// If the chosen signature hex is too dark or too desaturated to read on screen
+// as a brand splash, derive a displayable tint that preserves the hue but
+// raises lightness and saturation into a visible band.
+function deriveDisplaySignature(hex: string): string {
+  const L = lightness(hex);   // 0..1 perceived
+  const S = saturation(hex);  // 0..1
+  if (L >= 0.18 && S >= 0.35) return hex;
+  const h = hue(hex);
+  // Target a punchy, visible mid-tone of the same hue family.
+  const targetL = 0.50;
+  const targetS = Math.max(S, 0.65);
+  return hslToHex(h, targetS, targetL);
+}
 
 function rolesFromKit(kit: any): Record<string, string> {
   const c = kit?.palette?.colors ?? {};
