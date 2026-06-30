@@ -611,6 +611,17 @@ function Step4Style({
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                   </button>
+                  {preview?.signed_url && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); deletePreview(d.id); }}
+                      disabled={loading}
+                      title="Delete & regenerate fresh"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-status-danger/40 bg-background/90 text-status-danger shadow-sm disabled:opacity-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
               )}
             </div>
