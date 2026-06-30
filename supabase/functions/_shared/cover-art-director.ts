@@ -209,7 +209,7 @@ ${brief}
 ${QUALITY}
 ${BANNED}
 ${feedbackBlock}${retryBlock}${variationSeed ? `\n## Variation seed\nSeed: ${variationSeed}. Use this to meaningfully vary composition, focal placement, and texture from any prior attempt while keeping every rule above.\n` : ""}
-Deliver a single finished image at the spec'd aspect that a senior art director would ship to a paying client today. Background MUST be exactly ${plan.surface}. Any rendered glyphs, marks, or text MUST be exactly ${plan.ink}. The SIGNATURE color ${plan.signature} MUST cover ≥${plan.signatureMinCoveragePct}% of the canvas as a confident shape (not a hairline). The only permitted secondary accent is ${plan.accent}.`;
+Deliver a single finished image at the spec'd aspect that a senior art director would ship to a paying client today. Background MUST be exactly ${plan.surface}. Any rendered glyphs, marks, or text MUST be exactly ${plan.ink}. The SIGNATURE color ${plan.displaySignature} MUST cover ≥${plan.signatureMinCoveragePct}% of the canvas as a confident shape (not a hairline). The only permitted secondary accent is ${plan.accent}. If the result reads as black-and-white at thumbnail size, you have failed.`;
 }
 
 
