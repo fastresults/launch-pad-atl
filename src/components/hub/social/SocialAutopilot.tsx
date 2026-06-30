@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import {
   ArrowLeft, ArrowRight, Check, Sparkles, Loader2, RefreshCw,
-  Settings2, Copy, ExternalLink, PartyPopper, Image as ImageIcon, Eye,
+  Settings2, Copy, ExternalLink, PartyPopper, Image as ImageIcon, Eye, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
