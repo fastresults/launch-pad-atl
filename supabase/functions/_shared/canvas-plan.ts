@@ -111,15 +111,62 @@ function pickSurfaceForDirection(
   return { color, role };
 }
 
-function signatureCoverageFor(direction: ArtDirectionId, assetKind: string): number {
+function signatureCoverageFor(
+  direction: ArtDirectionId,
+  assetKind: string,
+  intensity: SignatureIntensity,
+): number {
+  let base: number;
   if (assetKind === "thumbnail" || assetKind === "video_poster" || assetKind === "vertical_pin") {
-    return 30;
+    base = 30;
+  } else if (direction === "editorial") base = 18;
+  else if (direction === "photographic") base = 22;
+  else if (direction === "geometric") base = 28;
+  else if (direction === "illustrative") base = 22;
+  else base = 20;
+  const factor = intensity === "subtle" ? 0.55 : intensity === "bold" ? 1.45 : 1;
+  return Math.max(8, Math.min(Math.round(base * factor), 60));
+}
+
+function resolvePlacement(
+  requested: SignaturePlacement,
+  direction: ArtDirectionId,
+  assetKind: string,
+): SignaturePlacement {
+  if (requested !== "auto") return requested;
+  if (assetKind === "thumbnail" || assetKind === "video_poster" || assetKind === "vertical_pin") {
+    return "focal_shape";
   }
-  if (direction === "editorial") return 18;
-  if (direction === "photographic") return 22; // duotone wash target
-  if (direction === "geometric") return 28;
-  if (direction === "illustrative") return 22;
-  return 20;
+  if (direction === "photographic") return "duotone_wash";
+  if (direction === "editorial") return "sidebar_stripe";
+  if (direction === "geometric") return "focal_shape";
+  if (direction === "illustrative") return "focal_shape";
+  return "anchor_block";
+}
+
+function placementBrief(p: SignaturePlacement, intensity: SignatureIntensity): string {
+  const tone =
+    intensity === "subtle"
+      ? "Keep it confident but restrained — a single deliberate moment, not poster-paint."
+      : intensity === "bold"
+      ? "Push it loud — the brand hue is the HERO element, the first thing the eye lands on."
+      : "Treat it as the anchoring brand moment — unmistakable at thumbnail size, never decorative trim.";
+  switch (p) {
+    case "anchor_block":
+      return `Render the brand signature color as one large flat anchor block (rectangle or arc) occupying a major quadrant of the canvas. ${tone}`;
+    case "sidebar_stripe":
+      return `Render the brand signature color as a full-bleed sidebar or folio stripe along one edge (top, bottom, or vertical edge). ${tone}`;
+    case "duotone_wash":
+      return `Apply the brand signature color as a confident duotone or gradient wash over the focal subject / background. Midtones must read clearly as the signature hue, never as neutral gray. ${tone}`;
+    case "focal_shape":
+      return `Render the brand signature color as the FILL of the dominant focal shape (circle, arc, illustrated form, or headline mark) — not as an outline. ${tone}`;
+    case "corner_mark":
+      return `Render the brand signature color as a deliberate corner / folio mark — a solid quarter-circle, tab, or corner block. Not a hairline. ${tone}`;
+    case "framed_border":
+      return `Render the brand signature color as a confident framed border or inner frame around the composition (≥4% of canvas width on each side). ${tone}`;
+    default:
+      return tone;
+  }
 }
 
 function pickSignature(
