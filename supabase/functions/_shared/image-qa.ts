@@ -192,13 +192,23 @@ export function runContrastQa(pngBytes: Uint8Array, plan: CanvasPlan): QaVerdict
   }
 
   // Signature color presence — the brand splash must actually show up.
+  // We check the *displaySignature* (the visible tint), not the raw brand hex,
+  // because a near-black brand hex would falsely "match" plain black pixels.
+  const sigTarget = (plan.displaySignature || plan.signature || "").toUpperCase();
   let signatureCovPct: number | undefined;
-  if (plan.signature && plan.signature.toUpperCase() !== plan.surface.toUpperCase()) {
-    signatureCovPct = Number(signatureCoveragePct(png, plan.signature).toFixed(1));
-    const minPct = (plan.signatureMinCoveragePct ?? 12) * 0.6; // 60% tolerance band
-    if (signatureCovPct < minPct) {
+  let signatureVisible: boolean | undefined;
+  if (sigTarget && sigTarget !== plan.surface.toUpperCase()) {
+    const stats = signatureCoverageStats(png, sigTarget);
+    signatureCovPct = Number(stats.pct.toFixed(1));
+    signatureVisible = stats.visible;
+    const minPct = (plan.signatureMinCoveragePct ?? 12) * 0.75; // tighter tolerance
+    if (!stats.visible) {
       reasons.push(
-        `Signature brand color ${plan.signature} only covered ${signatureCovPct}% of the canvas (need ≥${plan.signatureMinCoveragePct}%, tolerance ≥${minPct.toFixed(0)}%). The brand splash is missing — increase coverage as a confident shape, sidebar, block, or duotone wash, not a hairline.`,
+        `No perceptible ${sigTarget} pixels in the render — the brand splash is missing entirely. Add a confident ${sigTarget} block, sidebar, full-bleed stripe, or duotone wash covering ≥${plan.signatureMinCoveragePct}% of the canvas. Not a hairline. Not a corner accent.`,
+      );
+    } else if (signatureCovPct < minPct) {
+      reasons.push(
+        `Signature brand color ${sigTarget} only covered ${signatureCovPct}% of the canvas (need ≥${plan.signatureMinCoveragePct}%, tolerance ≥${minPct.toFixed(0)}%). The brand splash is too small — increase to a confident shape, sidebar, block, or duotone wash, not a hairline.`,
       );
     }
   }
@@ -211,6 +221,7 @@ export function runContrastQa(pngBytes: Uint8Array, plan: CanvasPlan): QaVerdict
       dominantFg: fg.hex,
       ratio: Number(ratio.toFixed(2)),
       signatureCoveragePct: signatureCovPct,
+      signatureVisible,
     },
   };
 }
