@@ -18,6 +18,11 @@ export type SocialAsset = {
   brand_kit_locked_at: string | null;
   is_selected: boolean;
   created_at: string;
+  updated_at?: string;
+  canvas_plan?: any;
+  qa_status?: string | null;
+  qa_notes?: any;
+  last_feedback?: string | null;
 };
 
 async function call(body: any) {
@@ -45,6 +50,11 @@ export async function generateSocialCover(input: {
   asset: string;
   direction: string;
   feedback?: string;
+  signatureIntensity?: "subtle" | "balanced" | "bold";
+  signaturePlacement?:
+    | "auto" | "anchor_block" | "sidebar_stripe" | "duotone_wash"
+    | "focal_shape" | "corner_mark" | "framed_border";
+  signatureMinCoveragePct?: number;
 }): Promise<SocialAsset> {
   const data = await call({ action: "generate", ...input });
   return data.asset as SocialAsset;

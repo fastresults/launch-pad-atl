@@ -16,7 +16,7 @@ export type PreviewableAsset = {
   assetKind?: string | null;
   width?: number | null;
   height?: number | null;
-  canvasPlan?: { surface?: string; ink?: string; accent?: string } | null;
+  canvasPlan?: { surface?: string; ink?: string; accent?: string; signature?: string; displaySignature?: string } | null;
   qaStatus?: string | null;
   qaNotes?: any;
   modelUsed?: string | null;
@@ -57,6 +57,8 @@ export function AssetPreviewDialog({
   };
 
   const ratio = asset?.qaNotes?.observed?.ratio;
+  const signatureCoverage = asset?.qaNotes?.observed?.signatureCoveragePct;
+  const signatureVisible = asset?.qaNotes?.observed?.signatureVisible;
   const checker =
     "repeating-conic-gradient(hsl(var(--muted)) 0% 25%, hsl(var(--background)) 0% 50%) 0 0 / 24px 24px";
 
@@ -115,7 +117,7 @@ export function AssetPreviewDialog({
                   variant="outline"
                   className={`text-[10px] ${asset.qaStatus === "pass" ? "border-status-success/40 text-status-success" : "border-status-warning/40 text-status-warning"}`}
                 >
-                  QA {asset.qaStatus}{ratio ? ` · ${ratio}:1` : ""}
+                  {asset.qaStatus === "pass" ? "QA pass" : signatureVisible === false ? "Brand color missing" : "QA fail"}{ratio ? ` · ${ratio}:1` : ""}
                 </Badge>
               )}
             </div>
@@ -131,15 +133,25 @@ export function AssetPreviewDialog({
               <div>
                 <div className="text-muted-foreground">Palette</div>
                 <div className="mt-1 flex items-center gap-1.5">
-                  {(["surface", "ink", "accent"] as const).map((k) =>
-                    asset.canvasPlan?.[k] ? (
+                  {([
+                    ["surface", asset.canvasPlan.surface],
+                    ["ink", asset.canvasPlan.ink],
+                    ["signature", asset.canvasPlan.displaySignature || asset.canvasPlan.signature],
+                    ["accent", asset.canvasPlan.accent],
+                  ] as const).map(([k, hex]) =>
+                    hex ? (
                       <div key={k} className="flex items-center gap-1">
-                        <span className="h-4 w-4 rounded-sm border border-border" style={{ background: asset.canvasPlan[k] }} />
-                        <span className="text-[10px] text-muted-foreground">{asset.canvasPlan[k]}</span>
+                        <span className="h-4 w-4 rounded-sm border border-border" style={{ background: hex }} />
+                        <span className="text-[10px] text-muted-foreground">{hex}</span>
                       </div>
                     ) : null,
                   )}
                 </div>
+                {signatureCoverage !== undefined && (
+                  <div className="mt-1 text-[10px] text-muted-foreground">
+                    Signature coverage: {signatureCoverage}% {signatureVisible === false ? "(not visible)" : ""}
+                  </div>
+                )}
               </div>
             )}
 

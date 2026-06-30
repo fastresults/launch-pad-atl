@@ -146,5 +146,5 @@ export async function generateOneKitTask(
     signatureIntensity: opts?.signatureIntensity,
     signaturePlacement: opts?.signaturePlacement,
     signatureMinCoveragePct: opts?.signatureMinCoveragePct,
-  } as any);
+  });
 }
