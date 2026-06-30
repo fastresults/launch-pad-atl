@@ -290,6 +290,23 @@ Deno.serve(async (req) => {
       } catch (e) { console.warn("QA retry failed", e); }
     }
 
+    // Guaranteed logo placement on the preview tile.
+    let logoComposited = false;
+    if (logoBytes) {
+      try {
+        bytes = await compositeLogo(bytes, logoBytes, {
+          placement: placementForAssetKind(PREVIEW_ASSET.kind),
+          surfaceHex: plan.surface,
+        });
+        logoComposited = true;
+      } catch (e) {
+        console.warn("style preview logo composite failed", e);
+      }
+    }
+    (qa as any).logo_composited = logoComposited;
+
+
+
     // Delete previous storage object if any (we upsert one preview per direction).
     const { data: existing } = await admin
       .from("venture_style_previews")
