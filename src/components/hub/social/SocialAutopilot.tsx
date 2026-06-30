@@ -481,11 +481,17 @@ function Step4Style({
   const previews: StylePreview[] = previewsQ.data ?? [];
   const byDirection = new Map(previews.map((p) => [p.direction, p]));
 
-  const runGenerate = async (dirId: string, feedback?: string) => {
+  const runGenerate = async (dirId: string, opts?: { feedback?: string; signatureIntensity?: any; signaturePlacement?: any }) => {
     if (!brandLocked) return;
     setBusy((b) => ({ ...b, [dirId]: true }));
     try {
-      await generateStylePreview({ snapshotId, direction: dirId, feedback });
+      await generateStylePreview({
+        snapshotId,
+        direction: dirId,
+        feedback: opts?.feedback,
+        signatureIntensity: opts?.signatureIntensity,
+        signaturePlacement: opts?.signaturePlacement,
+      } as any);
       await qc.invalidateQueries({ queryKey: ["style-previews", snapshotId] });
     } catch (e: any) {
       toast.error(generationErrorMessage(e));
@@ -503,8 +509,8 @@ function Step4Style({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brandLocked, previewsQ.isLoading, previews.length]);
 
-  const regenerateAll = async (feedback: string) => {
-    await Promise.all(ART_DIRECTIONS.map((d) => runGenerate(d.id, feedback)));
+  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any }) => {
+    await Promise.all(ART_DIRECTIONS.map((d) => runGenerate(d.id, opts)));
   };
 
   return (
@@ -623,12 +629,12 @@ function Step4Style({
           thumbnailUrl={dialog.direction ? byDirection.get(dialog.direction)?.signed_url : null}
           currentDirection={dialog.direction || "editorial"}
           canvasPlan={dialog.direction ? byDirection.get(dialog.direction)?.canvas_plan : null}
-          onSubmit={async ({ feedback, directionOverride }) => {
+          onSubmit={async ({ feedback, directionOverride, signatureIntensity, signaturePlacement }) => {
             if (dialog.scope === "all") {
-              await regenerateAll(feedback);
+              await regenerateAll({ feedback, signatureIntensity, signaturePlacement });
             } else {
               const target = directionOverride || dialog.direction!;
-              await runGenerate(target, feedback);
+              await runGenerate(target, { feedback, signatureIntensity, signaturePlacement });
             }
           }}
         />
@@ -780,7 +786,10 @@ function Step5BuildKit({
     setRunning(false);
   };
 
-  const regenerateSingle = async (t: any, opts: { feedback: string; directionOverride?: string }) => {
+  const regenerateSingle = async (
+    t: any,
+    opts: { feedback: string; directionOverride?: string; signatureIntensity?: any; signaturePlacement?: any },
+  ) => {
     const k = taskKey(t);
     setTaskRunning(k, true);
     try {
@@ -797,7 +806,7 @@ function Step5BuildKit({
     }
   };
 
-  const regenerateAll = async (opts: { feedback: string }) => {
+  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any }) => {
     setRunning(true);
     try {
       for (const t of tasks) {
@@ -1035,7 +1044,11 @@ function Step5BuildKit({
             if (regenTarget.scope === "single") {
               await regenerateSingle(regenTarget.task, input);
             } else {
-              await regenerateAll({ feedback: input.feedback });
+              await regenerateAll({
+                feedback: input.feedback,
+                signatureIntensity: input.signatureIntensity,
+                signaturePlacement: input.signaturePlacement,
+              });
             }
           }}
         />

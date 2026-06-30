@@ -127,7 +127,15 @@ export function buildKitTasks(
 export async function generateOneKitTask(
   snapshotId: string,
   task: KitTask,
-  opts?: { feedback?: string; directionOverride?: string },
+  opts?: {
+    feedback?: string;
+    directionOverride?: string;
+    signatureIntensity?: "subtle" | "balanced" | "bold";
+    signaturePlacement?:
+      | "auto" | "anchor_block" | "sidebar_stripe" | "duotone_wash"
+      | "focal_shape" | "corner_mark" | "framed_border";
+    signatureMinCoveragePct?: number;
+  },
 ): Promise<void> {
   await generateSocialCover({
     snapshotId,
@@ -135,5 +143,8 @@ export async function generateOneKitTask(
     asset: task.asset,
     direction: opts?.directionOverride || task.direction,
     feedback: opts?.feedback,
-  });
+    signatureIntensity: opts?.signatureIntensity,
+    signaturePlacement: opts?.signaturePlacement,
+    signatureMinCoveragePct: opts?.signatureMinCoveragePct,
+  } as any);
 }

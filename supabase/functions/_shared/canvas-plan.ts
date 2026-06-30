@@ -11,6 +11,23 @@ import {
 } from "./palette-rules.ts";
 import type { AssetSpec, ArtDirectionId } from "./social-platform-specs.ts";
 
+export type SignatureIntensity = "subtle" | "balanced" | "bold";
+export type SignaturePlacement =
+  | "auto"
+  | "anchor_block"
+  | "sidebar_stripe"
+  | "duotone_wash"
+  | "focal_shape"
+  | "corner_mark"
+  | "framed_border";
+
+export type SignatureConfig = {
+  intensity?: SignatureIntensity;
+  placement?: SignaturePlacement;
+  // Optional hard override (0-100). If set, wins over intensity/direction defaults.
+  minCoveragePct?: number;
+};
+
 export type CanvasPlan = {
   surface: string;     // background hex
   ink: string;         // text / primary mark on surface, AA-guaranteed
@@ -19,6 +36,9 @@ export type CanvasPlan = {
   displaySignature: string;   // the hex actually rendered/checked — boosted if signature is too dark/desaturated to be visible
   signatureRole: string;
   signatureMinCoveragePct: number;
+  signatureIntensity: SignatureIntensity;
+  signaturePlacement: SignaturePlacement;
+  signaturePlacementBrief: string; // palette-agnostic placement instruction for the model
   surfaceRole: string;
   forbiddenPairs: Array<{ fg: string; bg: string; ratio: number }>;
 };
@@ -91,15 +111,62 @@ function pickSurfaceForDirection(
   return { color, role };
 }
 
-function signatureCoverageFor(direction: ArtDirectionId, assetKind: string): number {
+function signatureCoverageFor(
+  direction: ArtDirectionId,
+  assetKind: string,
+  intensity: SignatureIntensity,
+): number {
+  let base: number;
   if (assetKind === "thumbnail" || assetKind === "video_poster" || assetKind === "vertical_pin") {
-    return 30;
+    base = 30;
+  } else if (direction === "editorial") base = 18;
+  else if (direction === "photographic") base = 22;
+  else if (direction === "geometric") base = 28;
+  else if (direction === "illustrative") base = 22;
+  else base = 20;
+  const factor = intensity === "subtle" ? 0.55 : intensity === "bold" ? 1.45 : 1;
+  return Math.max(8, Math.min(Math.round(base * factor), 60));
+}
+
+function resolvePlacement(
+  requested: SignaturePlacement,
+  direction: ArtDirectionId,
+  assetKind: string,
+): SignaturePlacement {
+  if (requested !== "auto") return requested;
+  if (assetKind === "thumbnail" || assetKind === "video_poster" || assetKind === "vertical_pin") {
+    return "focal_shape";
   }
-  if (direction === "editorial") return 18;
-  if (direction === "photographic") return 22; // duotone wash target
-  if (direction === "geometric") return 28;
-  if (direction === "illustrative") return 22;
-  return 20;
+  if (direction === "photographic") return "duotone_wash";
+  if (direction === "editorial") return "sidebar_stripe";
+  if (direction === "geometric") return "focal_shape";
+  if (direction === "illustrative") return "focal_shape";
+  return "anchor_block";
+}
+
+function placementBrief(p: SignaturePlacement, intensity: SignatureIntensity): string {
+  const tone =
+    intensity === "subtle"
+      ? "Keep it confident but restrained — a single deliberate moment, not poster-paint."
+      : intensity === "bold"
+      ? "Push it loud — the brand hue is the HERO element, the first thing the eye lands on."
+      : "Treat it as the anchoring brand moment — unmistakable at thumbnail size, never decorative trim.";
+  switch (p) {
+    case "anchor_block":
+      return `Render the brand signature color as one large flat anchor block (rectangle or arc) occupying a major quadrant of the canvas. ${tone}`;
+    case "sidebar_stripe":
+      return `Render the brand signature color as a full-bleed sidebar or folio stripe along one edge (top, bottom, or vertical edge). ${tone}`;
+    case "duotone_wash":
+      return `Apply the brand signature color as a confident duotone or gradient wash over the focal subject / background. Midtones must read clearly as the signature hue, never as neutral gray. ${tone}`;
+    case "focal_shape":
+      return `Render the brand signature color as the FILL of the dominant focal shape (circle, arc, illustrated form, or headline mark) — not as an outline. ${tone}`;
+    case "corner_mark":
+      return `Render the brand signature color as a deliberate corner / folio mark — a solid quarter-circle, tab, or corner block. Not a hairline. ${tone}`;
+    case "framed_border":
+      return `Render the brand signature color as a confident framed border or inner frame around the composition (≥4% of canvas width on each side). ${tone}`;
+    default:
+      return tone;
+  }
 }
 
 function pickSignature(
@@ -144,6 +211,7 @@ export function buildCanvasPlan(args: {
   kit: any;
   asset: AssetSpec;
   direction: ArtDirectionId;
+  signature?: SignatureConfig;
 }): CanvasPlan {
   const roles = rolesFromKit(args.kit);
   const { color: surface, role: surfaceRole } = pickSurfaceForDirection(
@@ -162,7 +230,6 @@ export function buildCanvasPlan(args: {
     if (contrastRatio(c, surface) >= 4.5) { ink = c; break; }
   }
 
-  // Accent = a brand role distinct from surface AND ink, with ≥3:1 vs surface.
   const accentPool = ["accent", "secondary", "primary", "muted"]
     .map((k) => roles[k])
     .filter(Boolean) as string[];
@@ -173,11 +240,19 @@ export function buildCanvasPlan(args: {
       contrastRatio(c, surface) >= 3,
   ) || ink;
 
-  // Signature = the unmistakable brand hue that MUST be visible.
   const sig = pickSignature(roles, surface, ink);
-  const signatureMinCoveragePct = signatureCoverageFor(args.direction, args.asset.kind);
+  const intensity: SignatureIntensity = args.signature?.intensity ?? "balanced";
+  const placement: SignaturePlacement = resolvePlacement(
+    args.signature?.placement ?? "auto",
+    args.direction,
+    args.asset.kind,
+  );
+  const signatureMinCoveragePct =
+    typeof args.signature?.minCoveragePct === "number"
+      ? Math.max(0, Math.min(100, Math.round(args.signature.minCoveragePct)))
+      : signatureCoverageFor(args.direction, args.asset.kind, intensity);
+  const signaturePlacementBrief = placementBrief(placement, intensity);
 
-  // Surface dangerous combos so the prompt can ban them by name.
   const allRoles = Object.entries(roles);
   const forbiddenPairs: CanvasPlan["forbiddenPairs"] = [];
   for (const [, fg] of allRoles) {
@@ -196,6 +271,9 @@ export function buildCanvasPlan(args: {
     displaySignature: deriveDisplaySignature(sig.hex),
     signatureRole: sig.role,
     signatureMinCoveragePct,
+    signatureIntensity: intensity,
+    signaturePlacement: placement,
+    signaturePlacementBrief,
     surfaceRole,
     forbiddenPairs,
   };

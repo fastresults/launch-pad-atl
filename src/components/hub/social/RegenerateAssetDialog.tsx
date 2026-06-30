@@ -27,6 +27,22 @@ const DIRECTIONS = [
   { id: "illustrative", label: "Illustrative" },
 ];
 
+const INTENSITIES = [
+  { id: "subtle", label: "Subtle", hint: "Restrained brand-color moment" },
+  { id: "balanced", label: "Balanced", hint: "Anchoring brand splash (default)" },
+  { id: "bold", label: "Bold", hint: "Brand color is the hero element" },
+] as const;
+
+const PLACEMENTS = [
+  { id: "auto", label: "Auto (recommended)" },
+  { id: "anchor_block", label: "Anchor block / quadrant" },
+  { id: "sidebar_stripe", label: "Sidebar / folio stripe" },
+  { id: "duotone_wash", label: "Duotone wash over subject" },
+  { id: "focal_shape", label: "Fill the focal shape" },
+  { id: "corner_mark", label: "Corner / folio mark" },
+  { id: "framed_border", label: "Framed border" },
+] as const;
+
 export function RegenerateAssetDialog({
   open,
   onOpenChange,
@@ -43,11 +59,18 @@ export function RegenerateAssetDialog({
   targetLabel: string;
   thumbnailUrl?: string | null;
   currentDirection: string;
-  canvasPlan?: { surface?: string; ink?: string; accent?: string } | null;
-  onSubmit: (input: { feedback: string; directionOverride?: string }) => Promise<void>;
+  canvasPlan?: { surface?: string; ink?: string; accent?: string; signature?: string; displaySignature?: string } | null;
+  onSubmit: (input: {
+    feedback: string;
+    directionOverride?: string;
+    signatureIntensity?: "subtle" | "balanced" | "bold";
+    signaturePlacement?: typeof PLACEMENTS[number]["id"];
+  }) => Promise<void>;
 }) {
   const [feedback, setFeedback] = useState("");
   const [direction, setDirection] = useState<string>(currentDirection);
+  const [intensity, setIntensity] = useState<"subtle" | "balanced" | "bold">("balanced");
+  const [placement, setPlacement] = useState<typeof PLACEMENTS[number]["id"]>("auto");
   const [busy, setBusy] = useState(false);
 
   const addQuick = (note: string) => {
@@ -60,6 +83,8 @@ export function RegenerateAssetDialog({
       await onSubmit({
         feedback: feedback.trim(),
         directionOverride: direction !== currentDirection ? direction : undefined,
+        signatureIntensity: intensity,
+        signaturePlacement: placement,
       });
       setFeedback("");
       onOpenChange(false);
@@ -149,7 +174,65 @@ export function RegenerateAssetDialog({
               </p>
             </div>
           )}
+
+          <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-medium">Brand signature color</div>
+              {(canvasPlan?.displaySignature || canvasPlan?.signature) && (
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="h-3 w-3 rounded-sm border border-border"
+                    style={{ background: canvasPlan?.displaySignature || canvasPlan?.signature }}
+                  />
+                  <span className="text-[10px] font-mono uppercase text-muted-foreground">
+                    {(canvasPlan?.displaySignature || canvasPlan?.signature)?.replace("#", "")}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[11px] text-muted-foreground">Intensity</label>
+              <div className="grid grid-cols-3 gap-1.5">
+                {INTENSITIES.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setIntensity(opt.id)}
+                    className={`rounded-md border px-2 py-1.5 text-left transition ${
+                      intensity === opt.id
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-background hover:bg-muted"
+                    }`}
+                    title={opt.hint}
+                  >
+                    <div className="text-[11px] font-medium">{opt.label}</div>
+                    <div className="text-[9px] text-muted-foreground line-clamp-1">{opt.hint}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[11px] text-muted-foreground">Placement</label>
+              <Select value={placement} onValueChange={(v: any) => setPlacement(v)} disabled={busy}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLACEMENTS.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                Where the brand color appears in the composition. "Auto" lets the art director pick based on style.
+              </p>
+            </div>
+          </div>
         </div>
+
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>

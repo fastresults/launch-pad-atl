@@ -196,10 +196,23 @@ Deno.serve(async (req) => {
     }
     const userFeedback = typeof body?.feedback === "string" ? body.feedback.slice(0, 600) : "";
 
+    const signatureIntensity = (["subtle", "balanced", "bold"] as const).includes(body?.signatureIntensity)
+      ? body.signatureIntensity
+      : undefined;
+    const signaturePlacement = (
+      ["auto", "anchor_block", "sidebar_stripe", "duotone_wash", "focal_shape", "corner_mark", "framed_border"] as const
+    ).includes(body?.signaturePlacement) ? body.signaturePlacement : undefined;
+    const signatureMinCoveragePct = typeof body?.signatureMinCoveragePct === "number"
+      ? body.signatureMinCoveragePct
+      : undefined;
+    const signatureCfg = (signatureIntensity || signaturePlacement || signatureMinCoveragePct !== undefined)
+      ? { intensity: signatureIntensity, placement: signaturePlacement, minCoveragePct: signatureMinCoveragePct }
+      : undefined;
+
     const ctx = await loadVentureContext(admin, snapshotId);
     const logoDataUrl = await fetchPrimaryLogo(admin, kit);
 
-    const plan: CanvasPlan = buildCanvasPlan({ kit, asset: PREVIEW_ASSET, direction });
+    const plan: CanvasPlan = buildCanvasPlan({ kit, asset: PREVIEW_ASSET, direction, signature: signatureCfg });
 
     let paletteTileDataUrl: string | null = null;
     try { paletteTileDataUrl = bytesToDataUrl(buildPaletteTilePngBytes(plan)); }
