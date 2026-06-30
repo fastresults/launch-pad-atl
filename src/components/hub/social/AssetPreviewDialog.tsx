@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Download, Copy, ExternalLink, RefreshCw, ChevronLeft, ChevronRight, ImageOff,
+  Download, Copy, ExternalLink, RefreshCw, ChevronLeft, ChevronRight, ImageOff, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,12 +25,13 @@ export type PreviewableAsset = {
 };
 
 export function AssetPreviewDialog({
-  open, onOpenChange, asset, onRegenerate, onPrev, onNext,
+  open, onOpenChange, asset, onRegenerate, onDelete, onPrev, onNext,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   asset: PreviewableAsset | null;
   onRegenerate?: () => void;
+  onDelete?: () => void;
   onPrev?: () => void;
   onNext?: () => void;
 }) {
@@ -199,6 +200,20 @@ export function AssetPreviewDialog({
               {onRegenerate && (
                 <Button size="sm" className="w-full justify-start" onClick={onRegenerate}>
                   <RefreshCw className="mr-2 h-3.5 w-3.5" /> Regenerate
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full justify-start border-status-danger/40 text-status-danger hover:bg-status-danger/10 hover:text-status-danger"
+                  onClick={() => {
+                    if (window.confirm("Delete this image? The tile will reset so you can generate a fresh one.")) {
+                      onDelete();
+                    }
+                  }}
+                >
+                  <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete & start over
                 </Button>
               )}
             </div>

@@ -45,3 +45,7 @@ export async function generateStylePreview(input: {
   const data = await call({ action: "generate", ...input });
   return data.preview as StylePreview;
 }
+
+export async function deleteStylePreview(snapshotId: string, direction: string): Promise<void> {
+  await call({ action: "delete", snapshotId, direction });
+}

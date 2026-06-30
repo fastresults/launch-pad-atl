@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import {
   ArrowLeft, ArrowRight, Check, Sparkles, Loader2, RefreshCw,
-  Settings2, Copy, ExternalLink, PartyPopper, Image as ImageIcon, Eye,
+  Settings2, Copy, ExternalLink, PartyPopper, Image as ImageIcon, Eye, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -16,8 +16,8 @@ import {
   buildKitTasks, generateOneKitTask, PLAN_DOCS, type SocialGoals, type KitTask,
 } from "@/lib/social-autopilot.functions";
 import { PLATFORM_SPECS, ART_DIRECTIONS } from "@/lib/social-platform-specs";
-import { listSocialAssets } from "@/lib/social-cover.functions";
-import { listStylePreviews, generateStylePreview, type StylePreview } from "@/lib/style-preview.functions";
+import { listSocialAssets, deleteSocialAsset } from "@/lib/social-cover.functions";
+import { listStylePreviews, generateStylePreview, deleteStylePreview, type StylePreview } from "@/lib/style-preview.functions";
 import { RegenerateAssetDialog } from "./RegenerateAssetDialog";
 import { AssetPreviewDialog, type PreviewableAsset } from "./AssetPreviewDialog";
 import { RotateCcw } from "lucide-react";
@@ -513,6 +513,21 @@ function Step4Style({
     await Promise.all(ART_DIRECTIONS.map((d) => runGenerate(d.id, opts)));
   };
 
+  const deletePreview = async (dirId: string) => {
+    if (!window.confirm("Delete this style preview? It will regenerate fresh from scratch.")) return;
+    setBusy((b) => ({ ...b, [dirId]: true }));
+    try {
+      await deleteStylePreview(snapshotId, dirId);
+      await qc.invalidateQueries({ queryKey: ["style-previews", snapshotId] });
+      toast.success("Deleted — regenerating fresh preview");
+      // Trigger fresh generation immediately
+      await runGenerate(dirId);
+    } catch (e: any) {
+      toast.error(generationErrorMessage(e));
+      setBusy((b) => ({ ...b, [dirId]: false }));
+    }
+  };
+
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
       <header className="flex items-start justify-between gap-3">
@@ -596,6 +611,17 @@ function Step4Style({
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                   </button>
+                  {preview?.signed_url && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); deletePreview(d.id); }}
+                      disabled={loading}
+                      title="Delete & regenerate fresh"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-status-danger/40 bg-background/90 text-status-danger shadow-sm disabled:opacity-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -662,6 +688,7 @@ function Step4Style({
             onPrev={() => setPreviewIdx((i) => (i === null ? 0 : (i - 1 + ART_DIRECTIONS.length) % ART_DIRECTIONS.length))}
             onNext={() => setPreviewIdx((i) => (i === null ? 0 : (i + 1) % ART_DIRECTIONS.length))}
             onRegenerate={d ? () => { setPreviewIdx(null); setDialog({ scope: "single", direction: d.id }); } : undefined}
+            onDelete={d && p?.signed_url ? () => { setPreviewIdx(null); deletePreview(d.id); } : undefined}
           />
         );
       })()}
@@ -727,7 +754,7 @@ function Step5BuildKit({
     [platforms, direction],
   );
 
-  const tasks: (KitTask & { signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null; qa_notes?: any; model_used?: string | null; updated_at?: string | null; width?: number | null; height?: number | null })[] = useMemo(() => {
+  const tasks: (KitTask & { asset_id?: string | null; signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null; qa_notes?: any; model_used?: string | null; updated_at?: string | null; width?: number | null; height?: number | null })[] = useMemo(() => {
     return baseTasks.map((t) => {
       const match = assets.find(
         (a: any) => a.platform === t.platform && a.asset_kind === t.asset && a.art_direction === direction,
@@ -735,6 +762,7 @@ function Step5BuildKit({
       return {
         ...t,
         status: match ? "done" : t.status,
+        asset_id: (match as any)?.id ?? null,
         signed_url: match?.signed_url ?? null,
         canvas_plan: match?.canvas_plan ?? null,
         qa_status: match?.qa_status ?? null,
@@ -830,6 +858,24 @@ function Step5BuildKit({
       toast.success("Regenerated all unlocked assets");
     } finally {
       setRunning(false);
+    }
+  };
+
+  const deleteAsset = async (t: any) => {
+    if (!t?.asset_id) return;
+    const k = taskKey(t);
+    if (!window.confirm(`Delete this ${t.platform} ${String(t.asset).replace(/_/g, " ")}? The tile will reset so you can generate a fresh one.`)) return;
+    setTaskRunning(k, true);
+    try {
+      await deleteSocialAsset(snapshotId, t.asset_id);
+      await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
+      setErrors((prev) => { const n = { ...prev }; delete n[k]; return n; });
+      setKept((prev) => { const n = { ...prev }; delete n[k]; return n; });
+      toast.success("Deleted — tile is ready for a fresh generation");
+    } catch (e: any) {
+      toast.error(generationErrorMessage(e));
+    } finally {
+      setTaskRunning(k, false);
     }
   };
 
@@ -989,6 +1035,18 @@ function Step5BuildKit({
                       {itemRunning ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />} Regenerate
                     </Button>
                   )}
+                  {done && t.asset_id && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-1.5 text-status-danger hover:bg-status-danger/10 hover:text-status-danger"
+                      disabled={running || itemRunning}
+                      onClick={() => deleteAsset(t)}
+                      title="Delete this image — tile will reset for a fresh generation"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </li>
@@ -1098,6 +1156,7 @@ function Step5BuildKit({
             onPrev={previewableIdxs.length > 1 ? goPrev : undefined}
             onNext={previewableIdxs.length > 1 ? goNext : undefined}
             onRegenerate={() => { setPreviewIdx(null); setRegenTarget({ scope: "single", task: t }); }}
+            onDelete={t.asset_id ? () => { setPreviewIdx(null); deleteAsset(t); } : undefined}
           />
         );
       })()}
