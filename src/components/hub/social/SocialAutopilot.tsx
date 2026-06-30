@@ -16,7 +16,8 @@ import {
   buildKitTasks, generateOneKitTask, PLAN_DOCS, type SocialGoals, type KitTask,
 } from "@/lib/social-autopilot.functions";
 import { PLATFORM_SPECS, ART_DIRECTIONS } from "@/lib/social-platform-specs";
-import { listSocialAssets } from "@/lib/social-cover.functions";
+import { listSocialAssets, deleteSocialAsset } from "@/lib/social-cover.functions";
+import { deleteStylePreview } from "@/lib/style-preview.functions";
 import { listStylePreviews, generateStylePreview, type StylePreview } from "@/lib/style-preview.functions";
 import { RegenerateAssetDialog } from "./RegenerateAssetDialog";
 import { AssetPreviewDialog, type PreviewableAsset } from "./AssetPreviewDialog";
