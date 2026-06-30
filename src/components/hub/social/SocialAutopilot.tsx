@@ -1044,7 +1044,11 @@ function Step5BuildKit({
             if (regenTarget.scope === "single") {
               await regenerateSingle(regenTarget.task, input);
             } else {
-              await regenerateAll({ feedback: input.feedback });
+              await regenerateAll({
+                feedback: input.feedback,
+                signatureIntensity: input.signatureIntensity,
+                signaturePlacement: input.signaturePlacement,
+              });
             }
           }}
         />
