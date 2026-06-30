@@ -80,23 +80,26 @@ function mimeFromPath(p: string): string {
   return "image/png";
 }
 
-async function fetchPrimaryLogo(admin: any, kit: any): Promise<string | null> {
+async function fetchPrimaryLogo(
+  admin: any,
+  kit: any,
+): Promise<{ dataUrl: string | null; bytes: Uint8Array | null }> {
   try {
     const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
-    if (!logos.length) return null;
+    if (!logos.length) return { dataUrl: null, bytes: null };
     const primary = logos.find((l) => l?.primary) ?? logos[0];
     const path = primary?.path || primary?.storage_path;
-    if (!path) return null;
+    if (!path) return { dataUrl: null, bytes: null };
     const { data, error } = await admin.storage.from(BUCKET).download(path);
-    if (error || !data) return null;
+    if (error || !data) return { dataUrl: null, bytes: null };
     const buf = new Uint8Array(await data.arrayBuffer());
-    if (buf.byteLength > 4 * 1024 * 1024) return null;
+    if (buf.byteLength > 4 * 1024 * 1024) return { dataUrl: null, bytes: null };
     const mime = primary?.contentType || mimeFromPath(path);
-    if (mime === "image/svg+xml") return null;
-    return `data:${mime};base64,${bytesToB64(buf)}`;
+    if (mime === "image/svg+xml") return { dataUrl: null, bytes: null };
+    return { dataUrl: `data:${mime};base64,${bytesToB64(buf)}`, bytes: buf };
   } catch (e) {
     console.error("fetchPrimaryLogo failed", e);
-    return null;
+    return { dataUrl: null, bytes: null };
   }
 }
 
