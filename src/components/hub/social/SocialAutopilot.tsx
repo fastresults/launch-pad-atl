@@ -481,11 +481,17 @@ function Step4Style({
   const previews: StylePreview[] = previewsQ.data ?? [];
   const byDirection = new Map(previews.map((p) => [p.direction, p]));
 
-  const runGenerate = async (dirId: string, feedback?: string) => {
+  const runGenerate = async (dirId: string, opts?: { feedback?: string; signatureIntensity?: any; signaturePlacement?: any }) => {
     if (!brandLocked) return;
     setBusy((b) => ({ ...b, [dirId]: true }));
     try {
-      await generateStylePreview({ snapshotId, direction: dirId, feedback });
+      await generateStylePreview({
+        snapshotId,
+        direction: dirId,
+        feedback: opts?.feedback,
+        signatureIntensity: opts?.signatureIntensity,
+        signaturePlacement: opts?.signaturePlacement,
+      } as any);
       await qc.invalidateQueries({ queryKey: ["style-previews", snapshotId] });
     } catch (e: any) {
       toast.error(generationErrorMessage(e));
@@ -503,8 +509,8 @@ function Step4Style({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brandLocked, previewsQ.isLoading, previews.length]);
 
-  const regenerateAll = async (feedback: string) => {
-    await Promise.all(ART_DIRECTIONS.map((d) => runGenerate(d.id, feedback)));
+  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any }) => {
+    await Promise.all(ART_DIRECTIONS.map((d) => runGenerate(d.id, opts)));
   };
 
   return (
