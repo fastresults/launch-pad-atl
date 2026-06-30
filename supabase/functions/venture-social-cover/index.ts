@@ -424,6 +424,24 @@ Deno.serve(async (req) => {
       }
     }
 
+    // --- Guaranteed logo placement: composite the user's actual brand mark
+    // into the reserved zone (or center, for avatars). The model only paints
+    // a clean negative-space chip; we own the final logo pixels.
+    let logoComposited = false;
+    if (logoBytes) {
+      try {
+        const placement = placementForAssetKind(asset.kind);
+        bytes = await compositeLogo(bytes, logoBytes, {
+          placement,
+          surfaceHex: plan.surface,
+        });
+        logoComposited = true;
+      } catch (e) {
+        console.warn("logo composite failed, shipping un-composited image", e);
+      }
+    }
+    (qa as any).logo_composited = logoComposited;
+
     const fileId = crypto.randomUUID();
     const storagePath = `social-cover/${userId}/${snapshotId}/${platform.platform}/${asset.kind}/${direction}-${fileId}.png`;
 
