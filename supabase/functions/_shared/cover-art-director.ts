@@ -45,7 +45,7 @@ HARD BANS (any of these = failure, regenerate without it):
 const QUALITY = `
 QUALITY BAR (an award jury would accept this):
 - One dominant focal element. ≥55% negative space.
-- Use ONLY the four hex colors named in the canvas plan: surface (background), ink (text/marks), signature (the brand hue — MUST be visibly present as a confident shape/block/wash), and accent (one supporting color, used sparingly).
+- Use ONLY the four hex colors named in the canvas plan: surface (background), ink (text/marks), signature (the brand hue — MUST be visibly present as a confident shape/block/wash in its exact named hex), and accent (one supporting color, used sparingly).
 - Typography (when present) must use the brand heading family, tight tracking, real type hierarchy, optical alignment.
 - WCAG AA contrast (≥4.5:1) between any text and its background.
 - Crisp edges, no AI-blur, no muddy color, no halftone artifacts.
