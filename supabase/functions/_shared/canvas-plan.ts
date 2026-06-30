@@ -95,11 +95,11 @@ function signatureCoverageFor(direction: ArtDirectionId, assetKind: string): num
   if (assetKind === "thumbnail" || assetKind === "video_poster" || assetKind === "vertical_pin") {
     return 30;
   }
-  if (direction === "editorial") return 12;
-  if (direction === "photographic") return 15; // duotone wash target
-  if (direction === "geometric") return 25;
-  if (direction === "illustrative") return 20;
-  return 18;
+  if (direction === "editorial") return 18;
+  if (direction === "photographic") return 22; // duotone wash target
+  if (direction === "geometric") return 28;
+  if (direction === "illustrative") return 22;
+  return 20;
 }
 
 function pickSignature(
