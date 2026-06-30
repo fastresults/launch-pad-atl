@@ -834,6 +834,24 @@ function Step5BuildKit({
     }
   };
 
+  const deleteAsset = async (t: any) => {
+    if (!t?.asset_id) return;
+    const k = taskKey(t);
+    if (!window.confirm(`Delete this ${t.platform} ${String(t.asset).replace(/_/g, " ")}? The tile will reset so you can generate a fresh one.`)) return;
+    setTaskRunning(k, true);
+    try {
+      await deleteSocialAsset(snapshotId, t.asset_id);
+      await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
+      setErrors((prev) => { const n = { ...prev }; delete n[k]; return n; });
+      setKept((prev) => { const n = { ...prev }; delete n[k]; return n; });
+      toast.success("Deleted — tile is ready for a fresh generation");
+    } catch (e: any) {
+      toast.error(generationErrorMessage(e));
+    } finally {
+      setTaskRunning(k, false);
+    }
+  };
+
   const anyDone = tasks.some((t) => t.status === "done");
 
   return (
