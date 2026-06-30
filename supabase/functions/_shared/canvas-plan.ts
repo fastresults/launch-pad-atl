@@ -193,6 +193,7 @@ export function buildCanvasPlan(args: {
     ink,
     accent,
     signature: sig.hex,
+    displaySignature: deriveDisplaySignature(sig.hex),
     signatureRole: sig.role,
     signatureMinCoveragePct,
     surfaceRole,
