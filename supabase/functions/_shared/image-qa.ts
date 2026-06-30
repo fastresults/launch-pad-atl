@@ -196,7 +196,8 @@ export function runContrastQa(pngBytes: Uint8Array, plan: CanvasPlan): QaVerdict
 
   // Also fail if the dominant bg is wildly off plan.surface (luminance band mismatch).
   const planSurfaceL = lightness(plan.surface);
-  if (plan.signaturePlacement !== "duotone_wash" && Math.abs(planSurfaceL - bgL) > 0.4) {
+  const signatureCanOccupyCorners = ["duotone_wash", "corner_mark", "framed_border"].includes(plan.signaturePlacement as string);
+  if (!signatureCanOccupyCorners && Math.abs(planSurfaceL - bgL) > 0.4) {
     reasons.push(
       `Background drifted from planned surface ${plan.surface} (got ${dominantBg})`,
     );
