@@ -27,6 +27,22 @@ const DIRECTIONS = [
   { id: "illustrative", label: "Illustrative" },
 ];
 
+const INTENSITIES = [
+  { id: "subtle", label: "Subtle", hint: "Restrained brand-color moment" },
+  { id: "balanced", label: "Balanced", hint: "Anchoring brand splash (default)" },
+  { id: "bold", label: "Bold", hint: "Brand color is the hero element" },
+] as const;
+
+const PLACEMENTS = [
+  { id: "auto", label: "Auto (recommended)" },
+  { id: "anchor_block", label: "Anchor block / quadrant" },
+  { id: "sidebar_stripe", label: "Sidebar / folio stripe" },
+  { id: "duotone_wash", label: "Duotone wash over subject" },
+  { id: "focal_shape", label: "Fill the focal shape" },
+  { id: "corner_mark", label: "Corner / folio mark" },
+  { id: "framed_border", label: "Framed border" },
+] as const;
+
 export function RegenerateAssetDialog({
   open,
   onOpenChange,
@@ -43,11 +59,18 @@ export function RegenerateAssetDialog({
   targetLabel: string;
   thumbnailUrl?: string | null;
   currentDirection: string;
-  canvasPlan?: { surface?: string; ink?: string; accent?: string } | null;
-  onSubmit: (input: { feedback: string; directionOverride?: string }) => Promise<void>;
+  canvasPlan?: { surface?: string; ink?: string; accent?: string; signature?: string; displaySignature?: string } | null;
+  onSubmit: (input: {
+    feedback: string;
+    directionOverride?: string;
+    signatureIntensity?: "subtle" | "balanced" | "bold";
+    signaturePlacement?: typeof PLACEMENTS[number]["id"];
+  }) => Promise<void>;
 }) {
   const [feedback, setFeedback] = useState("");
   const [direction, setDirection] = useState<string>(currentDirection);
+  const [intensity, setIntensity] = useState<"subtle" | "balanced" | "bold">("balanced");
+  const [placement, setPlacement] = useState<typeof PLACEMENTS[number]["id"]>("auto");
   const [busy, setBusy] = useState(false);
 
   const addQuick = (note: string) => {
@@ -60,6 +83,8 @@ export function RegenerateAssetDialog({
       await onSubmit({
         feedback: feedback.trim(),
         directionOverride: direction !== currentDirection ? direction : undefined,
+        signatureIntensity: intensity,
+        signaturePlacement: placement,
       });
       setFeedback("");
       onOpenChange(false);
