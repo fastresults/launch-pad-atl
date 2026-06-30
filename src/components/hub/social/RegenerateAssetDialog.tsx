@@ -18,6 +18,7 @@ const QUICK_NOTES = [
   "Higher contrast",
   "Less saturated",
   "Different composition",
+  "Make brand color unmistakable",
 ];
 
 const DIRECTIONS = [
@@ -51,6 +52,7 @@ export function RegenerateAssetDialog({
   thumbnailUrl,
   currentDirection,
   canvasPlan,
+  initialIntensity = "balanced",
   onSubmit,
 }: {
   open: boolean;
@@ -60,6 +62,7 @@ export function RegenerateAssetDialog({
   thumbnailUrl?: string | null;
   currentDirection: string;
   canvasPlan?: { surface?: string; ink?: string; accent?: string; signature?: string; displaySignature?: string } | null;
+  initialIntensity?: "subtle" | "balanced" | "bold";
   onSubmit: (input: {
     feedback: string;
     directionOverride?: string;
@@ -69,7 +72,7 @@ export function RegenerateAssetDialog({
 }) {
   const [feedback, setFeedback] = useState("");
   const [direction, setDirection] = useState<string>(currentDirection);
-  const [intensity, setIntensity] = useState<"subtle" | "balanced" | "bold">("balanced");
+  const [intensity, setIntensity] = useState<"subtle" | "balanced" | "bold">(initialIntensity);
   const [placement, setPlacement] = useState<typeof PLACEMENTS[number]["id"]>("auto");
   const [busy, setBusy] = useState(false);
 
@@ -126,6 +129,7 @@ export function RegenerateAssetDialog({
                     <div className="flex items-center gap-0.5">
                       <span className="h-3 w-3 rounded-sm border border-border" style={{ background: canvasPlan.surface }} />
                       <span className="h-3 w-3 rounded-sm border border-border" style={{ background: canvasPlan.ink }} />
+                      <span className="h-3 w-3 rounded-sm border border-border" style={{ background: canvasPlan.displaySignature || canvasPlan.signature }} />
                       <span className="h-3 w-3 rounded-sm border border-border" style={{ background: canvasPlan.accent }} />
                     </div>
                   )}

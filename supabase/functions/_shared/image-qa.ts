@@ -97,6 +97,12 @@ function toHex(r: number, g: number, b: number): string {
   return `#${h(r)}${h(g)}${h(b)}`;
 }
 
+function rgbDistance(a: string, b: string): number {
+  const [ar, ag, ab] = hexToRgbLocal(a);
+  const [br, bg, bb] = hexToRgbLocal(b);
+  return Math.hypot(ar - br, ag - bg, ab - bb);
+}
+
 function bucket(v: number): number {
   // Quantize to 32 buckets per channel so near-identical colors collapse.
   return Math.min(7, v >> 5);
@@ -159,7 +165,12 @@ export function runContrastQa(pngBytes: Uint8Array, plan: CanvasPlan): QaVerdict
     ...corner(0, Math.floor(H * 0.85)),
     ...corner(Math.floor(W * 0.85), Math.floor(H * 0.85)),
   ].sort((a, b) => b.pct - a.pct);
-  const dominantBg = bgSamples[0]?.hex ?? "#FFFFFF";
+  // Brand signature panels often occupy a corner/edge by design. Choose the
+  // corner sample closest to the planned surface so the splash is not mistaken
+  // for an unintended background drift.
+  const dominantBg = bgSamples.length
+    ? [...bgSamples].sort((a, b) => rgbDistance(a.hex, plan.surface) - rgbDistance(b.hex, plan.surface))[0].hex
+    : "#FFFFFF";
 
   // FG sample = center band (where headline or focal mark sits).
   const cy0 = Math.floor(H * 0.30);
@@ -185,7 +196,8 @@ export function runContrastQa(pngBytes: Uint8Array, plan: CanvasPlan): QaVerdict
 
   // Also fail if the dominant bg is wildly off plan.surface (luminance band mismatch).
   const planSurfaceL = lightness(plan.surface);
-  if (Math.abs(planSurfaceL - bgL) > 0.4) {
+  const signatureCanOccupyCorners = ["duotone_wash", "corner_mark", "framed_border"].includes(plan.signaturePlacement as string);
+  if (!signatureCanOccupyCorners && Math.abs(planSurfaceL - bgL) > 0.4) {
     reasons.push(
       `Background drifted from planned surface ${plan.surface} (got ${dominantBg})`,
     );

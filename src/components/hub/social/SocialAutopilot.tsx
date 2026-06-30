@@ -491,7 +491,7 @@ function Step4Style({
         feedback: opts?.feedback,
         signatureIntensity: opts?.signatureIntensity,
         signaturePlacement: opts?.signaturePlacement,
-      } as any);
+      });
       await qc.invalidateQueries({ queryKey: ["style-previews", snapshotId] });
     } catch (e: any) {
       toast.error(generationErrorMessage(e));
@@ -757,6 +757,11 @@ function Step5BuildKit({
   const previewableIdxs = useMemo(() => tasks.map((t, i) => (t.signed_url ? i : -1)).filter((i) => i >= 0), [tasks]);
   const allDone = tasks.every((t) => t.status === "done");
   const taskKey = (t: Pick<KitTask, "platform" | "asset">) => `${t.platform}:${t.asset}`;
+  const signatureFailed = (t?: any) =>
+    t?.qa_notes?.observed?.signatureVisible === false ||
+    (typeof t?.qa_notes?.observed?.signatureCoveragePct === "number" &&
+      typeof t?.canvas_plan?.signatureMinCoveragePct === "number" &&
+      t.qa_notes.observed.signatureCoveragePct < t.canvas_plan.signatureMinCoveragePct * 0.75);
 
   const setTaskRunning = (key: string, value: boolean) => {
     setRunningKeys((prev) => {
@@ -899,7 +904,7 @@ function Step5BuildKit({
                     <span className="truncate font-medium">{t.platform}</span>
                     {t.qa_status === "fail" && (
                       <span className="ml-1 rounded bg-status-warning/15 px-1 text-[9px] font-medium text-status-warning">
-                        contrast
+                        {signatureFailed(t) ? "brand color" : "QA fail"}
                       </span>
                     )}
                     {isKept && (
@@ -1040,6 +1045,7 @@ function Step5BuildKit({
           thumbnailUrl={regenTarget.task?.signed_url ?? null}
           currentDirection={regenTarget.task?.direction || direction}
           canvasPlan={regenTarget.task?.canvas_plan ?? null}
+          initialIntensity={regenTarget.scope === "single" && signatureFailed(regenTarget.task) ? "bold" : "balanced"}
           onSubmit={async (input) => {
             if (regenTarget.scope === "single") {
               await regenerateSingle(regenTarget.task, input);

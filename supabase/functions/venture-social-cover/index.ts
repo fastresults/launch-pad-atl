@@ -17,6 +17,7 @@ import { buildCanvasPlan, pickAvatarSurface, type CanvasPlan } from "../_shared/
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
 import { runContrastQa, logoDominantInk } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind } from "../_shared/logo-compositor.ts";
+import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -411,8 +412,12 @@ Deno.serve(async (req) => {
         const retry = await generate(retryNote);
         const retryBytes = b64ToBytes(retry.b64);
         const retryQa = runContrastQa(retryBytes, plan);
-        // Prefer the retry when it fixes the signature, OR when contrast improved.
-        const retryBetter = (retryQa.observed.signatureVisible && !sigVisible) ||
+        const currentSig = qa.observed.signatureCoveragePct ?? 0;
+        const retrySig = retryQa.observed.signatureCoveragePct ?? 0;
+        // Prefer the retry when it improves the signature color first, then contrast.
+        const retryBetter =
+          (retryQa.observed.signatureVisible && !sigVisible) ||
+          retrySig > currentSig ||
           retryQa.observed.ratio > qa.observed.ratio;
         if (retryBetter) {
           bytes = retryBytes;
@@ -421,6 +426,21 @@ Deno.serve(async (req) => {
         }
       } catch (e) {
         console.warn("QA retry failed", e);
+      }
+    }
+
+    // Prompts are advisory; the brand signature splash must be visible in pixels.
+    // If generation/retry still missed it, force a deterministic brand-color element.
+    if (!isAvatar) {
+      const minPct = (plan.signatureMinCoveragePct ?? 12) * 0.75;
+      const signatureMissing = qa.observed.signatureVisible === false ||
+        ((qa.observed.signatureCoveragePct ?? 0) < minPct);
+      if (signatureMissing) {
+        bytes = compositeSignatureSplash(bytes, plan);
+        qa = runContrastQa(bytes, plan);
+        (qa as any).signature_composited = true;
+      } else {
+        (qa as any).signature_composited = false;
       }
     }
 
