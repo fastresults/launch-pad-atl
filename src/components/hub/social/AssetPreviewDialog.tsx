@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Download, Copy, ExternalLink, RefreshCw, ChevronLeft, ChevronRight, ImageOff,
+  Download, Copy, ExternalLink, RefreshCw, ChevronLeft, ChevronRight, ImageOff, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
