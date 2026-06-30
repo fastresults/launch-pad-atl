@@ -491,7 +491,7 @@ function Step4Style({
         feedback: opts?.feedback,
         signatureIntensity: opts?.signatureIntensity,
         signaturePlacement: opts?.signaturePlacement,
-      } as any);
+      });
       await qc.invalidateQueries({ queryKey: ["style-previews", snapshotId] });
     } catch (e: any) {
       toast.error(generationErrorMessage(e));
