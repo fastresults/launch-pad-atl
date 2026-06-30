@@ -184,6 +184,24 @@ Deno.serve(async (req) => {
       return json({ previews: data ?? [] });
     }
 
+    if (action === "delete") {
+      const direction = body?.direction as string | undefined;
+      if (!direction) return json({ error: "direction required" }, 400);
+      const { data: row } = await admin
+        .from("venture_style_previews")
+        .select("id, user_id, storage_path")
+        .eq("snapshot_id", snapshotId)
+        .eq("direction", direction)
+        .maybeSingle();
+      if (!row) return json({ ok: true });
+      if (row.user_id !== userId) return json({ error: "Forbidden" }, 403);
+      if (row.storage_path) {
+        await admin.storage.from(BUCKET).remove([row.storage_path]).catch(() => {});
+      }
+      await admin.from("venture_style_previews").delete().eq("id", row.id);
+      return json({ ok: true });
+    }
+
     if (action !== "generate") return json({ error: `Unknown action: ${action}` }, 400);
 
     const { data: kit } = await admin
