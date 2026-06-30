@@ -6,8 +6,9 @@ export type StylePreview = {
   snapshot_id: string;
   direction: "editorial" | "photographic" | "geometric" | "illustrative";
   signed_url: string | null;
-  canvas_plan: { surface?: string; ink?: string; accent?: string } | null;
+  canvas_plan: { surface?: string; ink?: string; accent?: string; signature?: string; displaySignature?: string; signatureMinCoveragePct?: number } | null;
   qa_status: string | null;
+  qa_notes?: any;
   last_feedback: string | null;
   updated_at: string;
 };
@@ -35,6 +36,11 @@ export async function generateStylePreview(input: {
   snapshotId: string;
   direction: string;
   feedback?: string;
+  signatureIntensity?: "subtle" | "balanced" | "bold";
+  signaturePlacement?:
+    | "auto" | "anchor_block" | "sidebar_stripe" | "duotone_wash"
+    | "focal_shape" | "corner_mark" | "framed_border";
+  signatureMinCoveragePct?: number;
 }): Promise<StylePreview> {
   const data = await call({ action: "generate", ...input });
   return data.preview as StylePreview;
