@@ -111,7 +111,8 @@ function assetSystem(asset: AssetSpec, hasLogoImage: boolean, headline: string):
   if (kind === "banner" || kind === "header" || kind === "channel_art") {
     return `BANNER / HEADER SYSTEM (${ratio})
 - Treat the canvas as a 12-column print grid. Critical content lives in columns 2–8 (left-anchored); columns 9–12 stay quiet for platform UI overlap.
-- Reserve a clean rectangular zone in a non-focal corner (bottom-right or upper-right) for our logo composite — do NOT place the attached logo into the image; just leave room.
+- RESERVED LOGO ZONE: the bottom-right ~16% × 16% square (with ~5% inset from both edges) MUST remain a completely clean, empty area — no type, no shapes, no texture, no gradient, no detail. We will server-side composite the venture's actual logo into that exact area after generation. Compose the rest of the canvas so that empty corner reads as intentional negative space, not as a hole.
+- Do NOT redraw, recreate, or paint the logo yourself anywhere on the canvas.
 - If a headline is rendered, use the brand heading family, set ranged left, max two lines, headline candidate: "${headline || "(use venture name only)"}".
 - Strict safe inset of 8% on all sides — no critical content in the bleed.
 - ${asset.guidance}`;
@@ -120,6 +121,7 @@ function assetSystem(asset: AssetSpec, hasLogoImage: boolean, headline: string):
   if (kind === "thumbnail" || kind === "video_poster" || kind === "vertical_pin") {
     return `THUMBNAIL / POSTER SYSTEM (${ratio})
 - One bold focal subject occupies the upper two-thirds. Headline (3–5 words) anchors the lower third, set in the brand heading family.
+- RESERVED LOGO ZONE: the top-left ~18% × 18% square (with ~6% inset) MUST stay completely clean and empty — no type, no shapes, no decoration. We will server-side composite the venture's actual logo into that exact area after generation. Do NOT redraw the logo anywhere on the canvas.
 - High contrast — readable as a 240px-wide thumbnail in a feed.
 - Headline candidate: "${headline || "(use venture name)"}". Trim to fit.
 - ${asset.guidance}`;
@@ -129,6 +131,7 @@ function assetSystem(asset: AssetSpec, hasLogoImage: boolean, headline: string):
   return `POST / COVER SYSTEM (${ratio})
 - Treat as a single editorial frame. One focal element, ≥60% negative space.
 - Optional type lockup uses the brand heading family.
+- RESERVED LOGO ZONE: the top-left ~20% × 20% square (with ~7% inset) MUST stay completely clean and empty — no type, no shapes, no decoration. We will server-side composite the venture's actual logo into that exact area after generation. Do NOT redraw the logo anywhere on the canvas.
 - Reserve an 8% safe inset on all sides for platform UI.
 - ${asset.guidance}`;
 }

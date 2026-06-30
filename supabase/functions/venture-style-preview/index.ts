@@ -11,6 +11,7 @@ import { buildCoverArtPrompt } from "../_shared/cover-art-director.ts";
 import { buildCanvasPlan, type CanvasPlan } from "../_shared/canvas-plan.ts";
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
 import { runContrastQa } from "../_shared/image-qa.ts";
+import { compositeLogo, placementForAssetKind } from "../_shared/logo-compositor.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -80,23 +81,26 @@ function mimeFromPath(p: string): string {
   return "image/png";
 }
 
-async function fetchPrimaryLogo(admin: any, kit: any): Promise<string | null> {
+async function fetchPrimaryLogo(
+  admin: any,
+  kit: any,
+): Promise<{ dataUrl: string | null; bytes: Uint8Array | null }> {
   try {
     const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
-    if (!logos.length) return null;
+    if (!logos.length) return { dataUrl: null, bytes: null };
     const primary = logos.find((l) => l?.primary) ?? logos[0];
     const path = primary?.path || primary?.storage_path;
-    if (!path) return null;
+    if (!path) return { dataUrl: null, bytes: null };
     const { data, error } = await admin.storage.from(BUCKET).download(path);
-    if (error || !data) return null;
+    if (error || !data) return { dataUrl: null, bytes: null };
     const buf = new Uint8Array(await data.arrayBuffer());
-    if (buf.byteLength > 4 * 1024 * 1024) return null;
+    if (buf.byteLength > 4 * 1024 * 1024) return { dataUrl: null, bytes: null };
     const mime = primary?.contentType || mimeFromPath(path);
-    if (mime === "image/svg+xml") return null;
-    return `data:${mime};base64,${bytesToB64(buf)}`;
+    if (mime === "image/svg+xml") return { dataUrl: null, bytes: null };
+    return { dataUrl: `data:${mime};base64,${bytesToB64(buf)}`, bytes: buf };
   } catch (e) {
     console.error("fetchPrimaryLogo failed", e);
-    return null;
+    return { dataUrl: null, bytes: null };
   }
 }
 
@@ -210,7 +214,7 @@ Deno.serve(async (req) => {
       : undefined;
 
     const ctx = await loadVentureContext(admin, snapshotId);
-    const logoDataUrl = await fetchPrimaryLogo(admin, kit);
+    const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
 
     const plan: CanvasPlan = buildCanvasPlan({ kit, asset: PREVIEW_ASSET, direction, signature: signatureCfg });
 
@@ -285,6 +289,23 @@ Deno.serve(async (req) => {
         }
       } catch (e) { console.warn("QA retry failed", e); }
     }
+
+    // Guaranteed logo placement on the preview tile.
+    let logoComposited = false;
+    if (logoBytes) {
+      try {
+        bytes = await compositeLogo(bytes, logoBytes, {
+          placement: placementForAssetKind(PREVIEW_ASSET.kind),
+          surfaceHex: plan.surface,
+        });
+        logoComposited = true;
+      } catch (e) {
+        console.warn("style preview logo composite failed", e);
+      }
+    }
+    (qa as any).logo_composited = logoComposited;
+
+
 
     // Delete previous storage object if any (we upsert one preview per direction).
     const { data: existing } = await admin
