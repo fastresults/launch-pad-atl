@@ -214,7 +214,7 @@ Deno.serve(async (req) => {
       : undefined;
 
     const ctx = await loadVentureContext(admin, snapshotId);
-    const logoDataUrl = await fetchPrimaryLogo(admin, kit);
+    const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
 
     const plan: CanvasPlan = buildCanvasPlan({ kit, asset: PREVIEW_ASSET, direction, signature: signatureCfg });
 
