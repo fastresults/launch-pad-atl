@@ -202,6 +202,20 @@ export function AssetPreviewDialog({
                   <RefreshCw className="mr-2 h-3.5 w-3.5" /> Regenerate
                 </Button>
               )}
+              {onDelete && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full justify-start border-status-danger/40 text-status-danger hover:bg-status-danger/10 hover:text-status-danger"
+                  onClick={() => {
+                    if (window.confirm("Delete this image? The tile will reset so you can generate a fresh one.")) {
+                      onDelete();
+                    }
+                  }}
+                >
+                  <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete & start over
+                </Button>
+              )}
             </div>
           </aside>
         </div>
