@@ -174,7 +174,65 @@ export function RegenerateAssetDialog({
               </p>
             </div>
           )}
+
+          <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-medium">Brand signature color</div>
+              {(canvasPlan?.displaySignature || canvasPlan?.signature) && (
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="h-3 w-3 rounded-sm border border-border"
+                    style={{ background: canvasPlan?.displaySignature || canvasPlan?.signature }}
+                  />
+                  <span className="text-[10px] font-mono uppercase text-muted-foreground">
+                    {(canvasPlan?.displaySignature || canvasPlan?.signature)?.replace("#", "")}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[11px] text-muted-foreground">Intensity</label>
+              <div className="grid grid-cols-3 gap-1.5">
+                {INTENSITIES.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setIntensity(opt.id)}
+                    className={`rounded-md border px-2 py-1.5 text-left transition ${
+                      intensity === opt.id
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-background hover:bg-muted"
+                    }`}
+                    title={opt.hint}
+                  >
+                    <div className="text-[11px] font-medium">{opt.label}</div>
+                    <div className="text-[9px] text-muted-foreground line-clamp-1">{opt.hint}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[11px] text-muted-foreground">Placement</label>
+              <Select value={placement} onValueChange={(v: any) => setPlacement(v)} disabled={busy}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLACEMENTS.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                Where the brand color appears in the composition. "Auto" lets the art director pick based on style.
+              </p>
+            </div>
+          </div>
         </div>
+
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
