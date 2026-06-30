@@ -513,6 +513,21 @@ function Step4Style({
     await Promise.all(ART_DIRECTIONS.map((d) => runGenerate(d.id, opts)));
   };
 
+  const deletePreview = async (dirId: string) => {
+    if (!window.confirm("Delete this style preview? It will regenerate fresh from scratch.")) return;
+    setBusy((b) => ({ ...b, [dirId]: true }));
+    try {
+      await deleteStylePreview(snapshotId, dirId);
+      await qc.invalidateQueries({ queryKey: ["style-previews", snapshotId] });
+      toast.success("Deleted — regenerating fresh preview");
+      // Trigger fresh generation immediately
+      await runGenerate(dirId);
+    } catch (e: any) {
+      toast.error(generationErrorMessage(e));
+      setBusy((b) => ({ ...b, [dirId]: false }));
+    }
+  };
+
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
       <header className="flex items-start justify-between gap-3">
