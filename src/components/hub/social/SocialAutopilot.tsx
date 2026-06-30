@@ -1008,6 +1008,18 @@ function Step5BuildKit({
                       {itemRunning ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />} Regenerate
                     </Button>
                   )}
+                  {done && t.asset_id && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-1.5 text-status-danger hover:bg-status-danger/10 hover:text-status-danger"
+                      disabled={running || itemRunning}
+                      onClick={() => deleteAsset(t)}
+                      title="Delete this image — tile will reset for a fresh generation"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </li>
