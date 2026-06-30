@@ -79,22 +79,24 @@ export function RegenerateAssetDialog({
 
   const submit = async () => {
     setBusy(true);
-    try {
-      await onSubmit({
-        feedback: feedback.trim(),
-        directionOverride: direction !== currentDirection ? direction : undefined,
-        signatureIntensity: intensity,
-        signaturePlacement: placement,
-      });
-      setFeedback("");
-      onOpenChange(false);
-    } finally {
-      setBusy(false);
-    }
+    // Fire-and-forget so the user can close the modal and let the task run in the background.
+    const payload = {
+      feedback: feedback.trim(),
+      directionOverride: direction !== currentDirection ? direction : undefined,
+      signatureIntensity: intensity,
+      signaturePlacement: placement,
+    };
+    Promise.resolve()
+      .then(() => onSubmit(payload))
+      .catch(() => { /* parent surfaces errors via toast */ })
+      .finally(() => setBusy(false));
+    setFeedback("");
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !busy && onOpenChange(v)}>
+    <Dialog open={open} onOpenChange={(v) => onOpenChange(v)}>
+
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
