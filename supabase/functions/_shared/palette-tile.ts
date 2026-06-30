@@ -20,7 +20,7 @@ export function buildPaletteTilePngBytes(plan: CanvasPlan): Uint8Array {
   const stripes: Array<[string, [number, number, number]]> = [
     ["surface",   hexToRgb(plan.surface)],
     ["ink",       hexToRgb(plan.ink)],
-    ["signature", hexToRgb(plan.signature)],
+    ["signature", hexToRgb(plan.displaySignature || plan.signature)],
     ["accent",    hexToRgb(plan.accent)],
   ];
   const stripeW = Math.floor(W / stripes.length);

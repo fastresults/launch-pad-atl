@@ -1,79 +1,63 @@
-## Why current renders feel off-brand
+# Fix: regenerated assets still miss the brand "splash"
 
-`buildCanvasPlan` locks each asset to exactly three hex values — `surface`, `ink`, `accent` — and `cover-art-director.ts` tells the model "ONLY these three hex colors. Nothing else. No tints."
+## Audit findings
 
-For most directions (`editorial`, `illustrative`, `photographic`) the surface defaults to `bg` (usually white/off-white), the ink resolves to a dark neutral, and `accent` is chosen as the first palette role that's distinct from both with ≥3:1 contrast. The brand's signature hue (the purple) often ends up:
+The previous pass added a `signature` color, prompt language, and a coverage QA — but the splash still goes missing on regenerate. Three real bugs explain it.
 
-- Demoted to `accent` and then used "sparingly" by the model (a thin rule, a tiny mark) instead of as a recognizable brand splash, OR
-- Skipped entirely when `primary` doesn't pass the 3:1 surface test, leaving the composition reading as black-on-white with no brand color at all.
+1. **Signature-coverage detector matches the wrong pixels.**
+   `image-qa.ts` uses a raw RGB squared-distance threshold of `60²`. A dark plum (e.g. `#1A0D2E`) is within that distance of plain black. So a fully black/gray render *passes* the signature check — QA reports "8% coverage" when there is literally no purple on screen. No retry fires.
 
-Result: technically on-palette, visually generic.
+2. **The signature picker accepts near-invisible hues.**
+   `pickSignature` only requires saturation ≥0.25. Dark, desaturated brand purples (lightness <0.20) qualify and then disappear into the surface in a photographic duotone. The picker needs a *visible* hue band, and if the kit only offers a dim hue, we must screen-boost a displayable tint to use as the actual splash target.
 
-## Fix — introduce an explicit "signature" brand color with required presence
+3. **The pass threshold is too lenient for photographic.**
+   Photographic minimum is 15% with a 60% tolerance → effective 9%. A sliver in one corner clears it. For photographic the "splash" must be a real duotone wash or a confident color block, not a pixel margin.
 
-### 1. Extend `CanvasPlan` (`supabase/functions/_shared/canvas-plan.ts`)
+A fourth contributor on regenerate: the retry only fires inside the single function call. If the founder hits Regenerate again, we start over with the same plan, the same hex, and the same too-lenient QA — same result. We need both the plan and the QA to be stricter on every call.
 
-Add a fourth, mandatory role:
+## Plan
 
-```ts
-export type CanvasPlan = {
-  surface: string;
-  ink: string;
-  accent: string;
-  signature: string;        // NEW — the unmistakable brand hue (usually `primary`)
-  signatureRole: string;    // which palette role it came from
-  signatureMinCoveragePct: number; // 15 for hero/banner, 25 for thumbnail/poster, 8 for editorial
-  surfaceRole: string;
-  forbiddenPairs: Array<{ fg: string; bg: string; ratio: number }>;
-};
-```
+### 1. Replace the signature-coverage detector with a perceptual + hue check
+`supabase/functions/_shared/image-qa.ts`:
+- Convert pixels and `plan.signature` to OKLab (or HSL hue+sat) for matching, not raw RGB distance.
+- A pixel counts toward signature coverage only if (a) ΔE to signature is small AND (b) the pixel is itself perceptibly chromatic (saturation ≥ ~0.20 and lightness in [0.15, 0.92]). Black/white/gray pixels never count, even if they're "close" in RGB to a near-black brand hue.
+- Return both `signatureCoveragePct` and a new `signatureVisible` boolean. QA fails if `signatureVisible` is false regardless of nominal pct.
 
-Selection logic for `signature`:
-1. Prefer `roles.primary`; fall back to `roles.secondary`, then `roles.accent`.
-2. If `signature === surface` (e.g. geometric direction already put primary on surface), pick the next most saturated non-neutral role so we always have a contrasting brand pop.
-3. Never equal `ink`. Contrast against `surface` is allowed to be <3:1 because signature is used as shape fill, not text — but we record the pair in `forbiddenPairs` so the model won't set text on it.
+### 2. Make the signature actually visible
+`supabase/functions/_shared/canvas-plan.ts`:
+- Add a `displaySignature` field: the hex we send to the model and check against in QA. If the picked role's lightness is <0.25 or saturation <0.35, derive a displayable tint (raise L to ~0.45–0.55, keep hue) and use that as `displaySignature`. Keep the original kit hex as `signatureRole` reference only.
+- Raise `signatureCoverageFor` for photographic to 22% (duotone wash target) and for editorial to 18%.
+- Tighten QA tolerance band in `image-qa.ts` from 0.6× to 0.75× of the plan minimum.
 
-Coverage targets by asset kind/direction:
-- `thumbnail`, `video_poster`, `vertical_pin`: 25–40% (bold poster energy).
-- `banner`, `header`, `channel_art`, `pinned_post`, `story_cover`: 15–25%.
-- `editorial` direction on any kind: 8–15% (still required, but restrained — a single confident block/rule/mark).
-- `photographic`: signature appears as duotone grade target, not as a flat shape.
-- `avatar`: unchanged — logo preservation rules win.
+### 3. Make the art-director prompt name and show the displayable hue
+`supabase/functions/_shared/cover-art-director.ts`:
+- Reference `plan.displaySignature` everywhere the prompt currently references `plan.signature`, so the model is told "use #X" where X is actually visible.
+- Strengthen the photographic brief: "the duotone midtones must read clearly as the SIGNATURE hue, not as neutral gray; if the source subject is monochrome, add a confident signature-colored gradient wash or a flat signature block behind the subject covering ≥25% of the canvas."
+- Add an explicit failure clause: "If the final image, viewed at thumbnail size, could be mistaken for grayscale, it is a failure."
 
-### 2. Update `cover-art-director.ts` prompt
+### 4. Make the palette tile reflect the displayable hue
+`supabase/functions/_shared/palette-tile.ts`:
+- Swap the signature swatch to `displaySignature` so the reference image the model sees matches the prompt instructions.
 
-Replace the "ONLY these three hex colors" block with a four-color contract that *requires* signature presence:
+### 5. Wire the retry note to the real failure reason
+`supabase/functions/venture-social-cover/index.ts` and `supabase/functions/venture-style-preview/index.ts`:
+- Use the new `signatureVisible` flag in the retry decision. If signature is invisible, the retry note becomes binding: "The previous render contained no perceptible {hex} pixels. Add a confident {displaySignature} block, sidebar, or duotone wash covering ≥{min}% of the canvas." No fallback to "looks close enough."
+- Persist `plan.displaySignature` and the new QA fields onto `venture_social_assets.canvas_plan` / `qa_notes` for traceability.
 
-- Rename header to "Canvas palette (NON-NEGOTIABLE — exactly these four hex values, used as specified)".
-- Add a `Signature` line: `Signature (the brand hue — MUST be visibly present): {signature}  ← cover ≥{signatureMinCoveragePct}% of the composition as a confident shape, block, rule stack, or duotone wash. Not as a hairline. Not as a 1px stroke.`
-- Per-direction signature usage guidance:
-  - editorial → one solid signature block or full-bleed sidebar/folio stripe.
-  - geometric → primary geometric shape filled with signature.
-  - illustrative → at least one major shape uses signature as fill.
-  - photographic → duotone grade targets the signature hue (replace the existing "graded toward brand primary" line to read "graded toward `{signature}`").
-- Update BANNED list:
-  - Remove the absolute "no other colors / no tints" line; replace with: "Only these four hexes. Signature MAY appear at lower opacity (≥70%) to integrate with photography; surface, ink, accent must remain exact."
-  - Add: "Composition with no visible signature color = failure. Composition where signature is reduced to a hairline or <{signatureMinCoveragePct}% coverage = failure."
-- Update the closing line: "Background MUST be exactly {surface}. Text/marks MUST be exactly {ink}. The signature color {signature} MUST cover ≥{signatureMinCoveragePct}% of the canvas. The only permitted secondary accent is {accent}."
-
-### 3. Update `image-qa.ts` to gate on signature presence
-
-Currently QA checks contrast pairings. Add a lightweight color-histogram check on the returned PNG: count pixels within ΔE ≤ 12 of `plan.signature`. If `coveragePct < signatureMinCoveragePct * 0.6` (60% tolerance), mark the asset as `signature_missing` and return a retry note ("Signature color {signature} was nearly absent — increase coverage to ≥{signatureMinCoveragePct}% as a confident shape, not a hairline.") so the existing regenerate-with-retryNote path in `venture-social-cover` automatically takes another pass.
-
-### 4. Avatar path unchanged
-
-`pickAvatarSurface` keeps prioritizing maximum logo contrast. We do not force signature onto avatars because logo legibility wins.
+### 6. Regenerate-with-feedback always re-evaluates
+Confirm that every regenerate call rebuilds the plan (it does today via `buildCanvasPlan`), but also bump `variationSeed` into the *composition* guidance so the model doesn't repeat its prior framing — keeps the brand rules constant, varies the layout.
 
 ## Files touched
 
-- `supabase/functions/_shared/canvas-plan.ts` — add `signature`, `signatureRole`, `signatureMinCoveragePct`, selection + coverage logic.
-- `supabase/functions/_shared/cover-art-director.ts` — new four-color contract in `buildCoverArtPrompt`, per-direction signature usage, updated BANNED + closing line.
-- `supabase/functions/_shared/image-qa.ts` — add signature-coverage check + retry note.
-- `supabase/functions/venture-social-cover/index.ts` — wire the new QA failure into the existing retry loop (no new round-trip if first pass already passes).
-- `supabase/functions/venture-style-preview/index.ts` — same canvas plan upgrade so Step 4 style tiles also show the purple splash, keeping previews honest.
+- `supabase/functions/_shared/canvas-plan.ts`
+- `supabase/functions/_shared/image-qa.ts`
+- `supabase/functions/_shared/cover-art-director.ts`
+- `supabase/functions/_shared/palette-tile.ts`
+- `supabase/functions/venture-social-cover/index.ts`
+- `supabase/functions/venture-style-preview/index.ts`
 
-## Out of scope
+No DB migration. No frontend changes.
 
-- No UI changes in `SocialAutopilot.tsx`; the fix is entirely in the generation contract.
-- No palette rule changes in `palette-rules.ts` — WCAG gates stay as-is.
-- Brand Wizard output unchanged; we're just using `primary` more assertively downstream.
+## Acceptance check
+
+After the change, regenerating the YouTube thumbnail in the screenshot must either (a) come back with a clearly visible purple block/wash, or (b) auto-retry once with a binding signature note before returning. A black-and-white render must never pass QA again.

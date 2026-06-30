@@ -255,14 +255,19 @@ Deno.serve(async (req) => {
     let qa = runContrastQa(bytes, plan);
     if (!qa.ok) {
       try {
-        const sigNote = (qa.observed.signatureCoveragePct ?? 100) < plan.signatureMinCoveragePct
-          ? ` Signature ${plan.signature} only covered ${qa.observed.signatureCoveragePct}% — make it cover ≥${plan.signatureMinCoveragePct}% as a confident block/sidebar/wash, NOT a hairline.`
+        const sigVisible = qa.observed.signatureVisible !== false;
+        const sigNote = !sigVisible
+          ? ` CRITICAL: no perceptible ${plan.displaySignature} pixels in the previous render — image read as black-and-white. Add a confident ${plan.displaySignature} block, sidebar, or duotone wash covering ≥${plan.signatureMinCoveragePct}% of the canvas, using the exact hex.`
+          : (qa.observed.signatureCoveragePct ?? 100) < plan.signatureMinCoveragePct
+          ? ` Signature ${plan.displaySignature} only covered ${qa.observed.signatureCoveragePct}% — make it cover ≥${plan.signatureMinCoveragePct}% as a confident block/sidebar/wash, NOT a hairline.`
           : "";
-        const retryNote = `Previous attempt: ${qa.observed.dominantFg} on ${qa.observed.dominantBg} (${qa.observed.ratio}:1). Use ONLY surface=${plan.surface}, ink=${plan.ink}, signature=${plan.signature}, accent=${plan.accent}. Fill background with ${plan.surface} exactly.${sigNote}`;
+        const retryNote = `Previous attempt: ${qa.observed.dominantFg} on ${qa.observed.dominantBg} (${qa.observed.ratio}:1). Use ONLY surface=${plan.surface}, ink=${plan.ink}, signature=${plan.displaySignature}, accent=${plan.accent}. Fill background with ${plan.surface} exactly.${sigNote}`;
         const retry = await generate(retryNote);
         const retryBytes = b64ToBytes(retry.b64);
         const retryQa = runContrastQa(retryBytes, plan);
-        if (retryQa.observed.ratio > qa.observed.ratio) {
+        const retryBetter = (retryQa.observed.signatureVisible && !sigVisible) ||
+          retryQa.observed.ratio > qa.observed.ratio;
+        if (retryBetter) {
           bytes = retryBytes; qa = retryQa; result = retry;
         }
       } catch (e) { console.warn("QA retry failed", e); }
