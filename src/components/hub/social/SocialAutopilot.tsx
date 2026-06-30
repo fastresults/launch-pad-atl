@@ -629,12 +629,12 @@ function Step4Style({
           thumbnailUrl={dialog.direction ? byDirection.get(dialog.direction)?.signed_url : null}
           currentDirection={dialog.direction || "editorial"}
           canvasPlan={dialog.direction ? byDirection.get(dialog.direction)?.canvas_plan : null}
-          onSubmit={async ({ feedback, directionOverride }) => {
+          onSubmit={async ({ feedback, directionOverride, signatureIntensity, signaturePlacement }) => {
             if (dialog.scope === "all") {
-              await regenerateAll(feedback);
+              await regenerateAll({ feedback, signatureIntensity, signaturePlacement });
             } else {
               const target = directionOverride || dialog.direction!;
-              await runGenerate(target, feedback);
+              await runGenerate(target, { feedback, signatureIntensity, signaturePlacement });
             }
           }}
         />
