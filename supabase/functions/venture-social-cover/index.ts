@@ -270,6 +270,21 @@ Deno.serve(async (req) => {
     const assetKind = String(body?.asset || body?.assetKind || "") as AssetKind;
     const direction = String(body?.direction || "editorial") as ArtDirectionId;
     const userFeedback = typeof body?.feedback === "string" ? body.feedback.slice(0, 600) : "";
+
+    // Configurable brand-signature rules (palette-agnostic — works for any brand color).
+    const signatureIntensity = (["subtle", "balanced", "bold"] as const).includes(body?.signatureIntensity)
+      ? body.signatureIntensity
+      : undefined;
+    const signaturePlacement = (
+      ["auto", "anchor_block", "sidebar_stripe", "duotone_wash", "focal_shape", "corner_mark", "framed_border"] as const
+    ).includes(body?.signaturePlacement) ? body.signaturePlacement : undefined;
+    const signatureMinCoveragePct = typeof body?.signatureMinCoveragePct === "number"
+      ? body.signatureMinCoveragePct
+      : undefined;
+    const signatureCfg = (signatureIntensity || signaturePlacement || signatureMinCoveragePct !== undefined)
+      ? { intensity: signatureIntensity, placement: signaturePlacement, minCoveragePct: signatureMinCoveragePct }
+      : undefined;
+
     const platform = getPlatform(platformName);
     if (!platform) return json({ error: `Unknown platform: ${platformName}` }, 400);
     const asset = platform.assets.find((a) => a.kind === assetKind);
@@ -296,11 +311,14 @@ Deno.serve(async (req) => {
         displaySignature: surface,
         signatureRole: "avatar-surface",
         signatureMinCoveragePct: 0,
+        signatureIntensity: "balanced",
+        signaturePlacement: "auto",
+        signaturePlacementBrief: "",
         surfaceRole: "avatar-surface",
         forbiddenPairs: [],
       };
     } else {
-      plan = buildCanvasPlan({ kit, asset, direction });
+      plan = buildCanvasPlan({ kit, asset, direction, signature: signatureCfg });
     }
 
 
