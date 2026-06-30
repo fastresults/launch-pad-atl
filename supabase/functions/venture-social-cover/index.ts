@@ -382,15 +382,20 @@ Deno.serve(async (req) => {
     if (!qa.ok) {
       console.warn("contrast QA failed, retrying once", qa.reasons);
       try {
-        const sigNote = (qa.observed.signatureCoveragePct ?? 100) < plan.signatureMinCoveragePct
-          ? ` The brand signature color ${plan.signature} was only ${qa.observed.signatureCoveragePct}% of the canvas — make it cover ≥${plan.signatureMinCoveragePct}% as a confident solid shape, sidebar, block, or duotone wash, NOT a hairline.`
+        const sigVisible = qa.observed.signatureVisible !== false;
+        const sigNote = !sigVisible
+          ? ` CRITICAL: the previous render contained NO perceptible ${plan.displaySignature} pixels — the entire image read as black-and-white or neutral. You MUST add a confident ${plan.displaySignature} block, full-bleed sidebar, large flat shape, or duotone wash covering ≥${plan.signatureMinCoveragePct}% of the canvas. Use the exact hex ${plan.displaySignature}, do not darken or desaturate it.`
+          : (qa.observed.signatureCoveragePct ?? 100) < plan.signatureMinCoveragePct
+          ? ` The brand signature color ${plan.displaySignature} was only ${qa.observed.signatureCoveragePct}% of the canvas — make it cover ≥${plan.signatureMinCoveragePct}% as a confident solid shape, sidebar, block, or duotone wash, NOT a hairline.`
           : "";
-        const retryNote = `Your previous attempt produced ${qa.observed.dominantFg} on ${qa.observed.dominantBg} (only ${qa.observed.ratio}:1 contrast — illegible). Use ONLY surface=${plan.surface}, ink=${plan.ink}, signature=${plan.signature}, accent=${plan.accent}. Background must fill with ${plan.surface} exactly.${sigNote}`;
+        const retryNote = `Your previous attempt produced ${qa.observed.dominantFg} on ${qa.observed.dominantBg} (only ${qa.observed.ratio}:1 contrast — illegible). Use ONLY surface=${plan.surface}, ink=${plan.ink}, signature=${plan.displaySignature}, accent=${plan.accent}. Background must fill with ${plan.surface} exactly.${sigNote}`;
         const retry = await generate(retryNote);
         const retryBytes = b64ToBytes(retry.b64);
         const retryQa = runContrastQa(retryBytes, plan);
-        // Keep retry if it's better, otherwise keep original.
-        if (retryQa.observed.ratio > qa.observed.ratio) {
+        // Prefer the retry when it fixes the signature, OR when contrast improved.
+        const retryBetter = (retryQa.observed.signatureVisible && !sigVisible) ||
+          retryQa.observed.ratio > qa.observed.ratio;
+        if (retryBetter) {
           bytes = retryBytes;
           qa = retryQa;
           result = retry;
