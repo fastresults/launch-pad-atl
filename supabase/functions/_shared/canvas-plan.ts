@@ -11,6 +11,23 @@ import {
 } from "./palette-rules.ts";
 import type { AssetSpec, ArtDirectionId } from "./social-platform-specs.ts";
 
+export type SignatureIntensity = "subtle" | "balanced" | "bold";
+export type SignaturePlacement =
+  | "auto"
+  | "anchor_block"
+  | "sidebar_stripe"
+  | "duotone_wash"
+  | "focal_shape"
+  | "corner_mark"
+  | "framed_border";
+
+export type SignatureConfig = {
+  intensity?: SignatureIntensity;
+  placement?: SignaturePlacement;
+  // Optional hard override (0-100). If set, wins over intensity/direction defaults.
+  minCoveragePct?: number;
+};
+
 export type CanvasPlan = {
   surface: string;     // background hex
   ink: string;         // text / primary mark on surface, AA-guaranteed
@@ -19,6 +36,9 @@ export type CanvasPlan = {
   displaySignature: string;   // the hex actually rendered/checked — boosted if signature is too dark/desaturated to be visible
   signatureRole: string;
   signatureMinCoveragePct: number;
+  signatureIntensity: SignatureIntensity;
+  signaturePlacement: SignaturePlacement;
+  signaturePlacementBrief: string; // palette-agnostic placement instruction for the model
   surfaceRole: string;
   forbiddenPairs: Array<{ fg: string; bg: string; ratio: number }>;
 };
