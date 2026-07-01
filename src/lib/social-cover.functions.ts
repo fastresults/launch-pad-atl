@@ -44,6 +44,13 @@ export async function listSocialAssets(snapshotId: string): Promise<SocialAsset[
   return (data?.assets ?? []) as SocialAsset[];
 }
 
+export type PaletteOverride = {
+  surface?: string;
+  ink?: string;
+  accent?: string;
+  signature?: string;
+};
+
 export async function generateSocialCover(input: {
   snapshotId: string;
   platform: string;
@@ -55,6 +62,7 @@ export async function generateSocialCover(input: {
     | "auto" | "anchor_block" | "sidebar_stripe" | "duotone_wash"
     | "focal_shape" | "corner_mark" | "framed_border";
   signatureMinCoveragePct?: number;
+  paletteOverride?: PaletteOverride;
 }): Promise<SocialAsset> {
   const data = await call({ action: "generate", ...input });
   return data.asset as SocialAsset;

@@ -13,7 +13,7 @@ import {
   type AssetSpec,
 } from "../_shared/social-platform-specs.ts";
 import { buildCoverArtPrompt, buildAvatarPrompt } from "../_shared/cover-art-director.ts";
-import { buildCanvasPlan, pickAvatarSurface, type CanvasPlan } from "../_shared/canvas-plan.ts";
+import { buildCanvasPlan, pickAvatarSurface, applyPaletteOverride, type CanvasPlan } from "../_shared/canvas-plan.ts";
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
 import { runContrastQa, logoDominantInk } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind } from "../_shared/logo-compositor.ts";
@@ -287,6 +287,16 @@ Deno.serve(async (req) => {
       ? { intensity: signatureIntensity, placement: signaturePlacement, minCoveragePct: signatureMinCoveragePct }
       : undefined;
 
+    // Optional per-generation palette override (from Regenerate/Generate modal swatches).
+    const paletteOverride = body?.paletteOverride && typeof body.paletteOverride === "object"
+      ? {
+          surface: body.paletteOverride.surface,
+          ink: body.paletteOverride.ink,
+          accent: body.paletteOverride.accent,
+          signature: body.paletteOverride.signature,
+        }
+      : undefined;
+
     const platform = getPlatform(platformName);
     if (!platform) return json({ error: `Unknown platform: ${platformName}` }, 400);
     const asset = platform.assets.find((a) => a.kind === assetKind);
@@ -322,6 +332,7 @@ Deno.serve(async (req) => {
     } else {
       plan = buildCanvasPlan({ kit, asset, direction, signature: signatureCfg });
     }
+    plan = applyPaletteOverride(plan, paletteOverride);
 
 
     // --- Palette tile so the model SEES the only colors it may use ---

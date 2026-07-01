@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Sparkles, Image as ImageIcon } from "lucide-react";
+import { Loader2, Sparkles, Image as ImageIcon, RotateCcw } from "lucide-react";
+import { contrastRatio } from "@/lib/brand/palette-rules";
 
 const QUICK_NOTES = [
   "Lighter background",
@@ -44,6 +45,108 @@ const PLACEMENTS = [
   { id: "framed_border", label: "Framed border" },
 ] as const;
 
+type SwatchRole = "surface" | "ink" | "signature" | "accent";
+const SWATCH_ROLES: { key: SwatchRole; label: string; hint: string }[] = [
+  { key: "surface",   label: "Surface",   hint: "Background" },
+  { key: "ink",       label: "Ink",       hint: "Text & primary mark" },
+  { key: "signature", label: "Signature", hint: "Brand color splash" },
+  { key: "accent",    label: "Accent",    hint: "Supporting hue" },
+];
+
+function normalizeHex(v?: string | null): string | null {
+  if (!v) return null;
+  const m = String(v).trim().match(/^#?([0-9a-fA-F]{6})$/);
+  return m ? `#${m[1].toUpperCase()}` : null;
+}
+
+function SwatchButton({
+  role, brandHex, displayHex, value, onChange,
+}: {
+  role: SwatchRole;
+  brandHex: string | null;
+  displayHex: string | null; // the hex that actually renders (e.g. displaySignature)
+  value: string | null;      // the user override for this role, or null
+  onChange: (hex: string | null) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [hexText, setHexText] = useState<string>((value || displayHex || brandHex || "").toUpperCase());
+  const [open, setOpen] = useState(false);
+  const effective = value || displayHex || brandHex || "#000000";
+  const edited = !!value && value.toUpperCase() !== (brandHex || "").toUpperCase();
+
+  const commit = (raw: string) => {
+    const n = normalizeHex(raw);
+    if (n) {
+      setHexText(n);
+      onChange(n);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        title={`${role} — click to change`}
+        className={`relative flex items-center gap-1.5 rounded-md border px-1.5 py-1 transition ${
+          open ? "border-primary bg-primary/10" : "border-border bg-background hover:bg-muted"
+        }`}
+      >
+        <span
+          className="h-4 w-4 rounded-sm border border-border"
+          style={{ background: effective }}
+        />
+        <span className="text-[10px] font-mono uppercase text-muted-foreground">
+          {effective.replace("#", "")}
+        </span>
+        {edited && <span className="h-1.5 w-1.5 rounded-full bg-primary" title="edited" />}
+      </button>
+      {open && (
+        <div
+          className="absolute left-0 top-full z-50 mt-1 w-52 rounded-lg border border-border bg-popover p-2 shadow-lg"
+          onMouseLeave={() => setOpen(false)}
+        >
+          <div className="mb-1 flex items-center justify-between">
+            <div className="text-[11px] font-medium capitalize">{role}</div>
+            <button
+              type="button"
+              className="text-[10px] text-muted-foreground hover:text-foreground"
+              onClick={() => { onChange(null); setHexText((brandHex || "").toUpperCase()); }}
+              title="Reset to brand kit value"
+            >
+              <RotateCcw className="mr-0.5 -mt-0.5 inline h-3 w-3" /> Reset
+            </button>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <input
+              ref={inputRef}
+              type="color"
+              value={effective}
+              onChange={(e) => commit(e.target.value)}
+              className="h-8 w-10 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0"
+            />
+            <input
+              type="text"
+              value={hexText}
+              onChange={(e) => setHexText(e.target.value.toUpperCase())}
+              onBlur={(e) => commit(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") commit((e.target as HTMLInputElement).value); }}
+              className="h-8 w-full rounded border border-border bg-background px-2 font-mono text-[11px] uppercase"
+              placeholder="#RRGGBB"
+              maxLength={7}
+            />
+          </div>
+          {brandHex && (
+            <div className="mt-1 text-[10px] text-muted-foreground">
+              Brand: <span className="font-mono">{brandHex}</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function RegenerateAssetDialog({
   open,
   onOpenChange,
@@ -53,6 +156,7 @@ export function RegenerateAssetDialog({
   currentDirection,
   canvasPlan,
   initialIntensity = "balanced",
+  mode = "regenerate",
   onSubmit,
 }: {
   open: boolean;
@@ -63,11 +167,13 @@ export function RegenerateAssetDialog({
   currentDirection: string;
   canvasPlan?: { surface?: string; ink?: string; accent?: string; signature?: string; displaySignature?: string } | null;
   initialIntensity?: "subtle" | "balanced" | "bold";
+  mode?: "generate" | "regenerate";
   onSubmit: (input: {
     feedback: string;
     directionOverride?: string;
     signatureIntensity?: "subtle" | "balanced" | "bold";
     signaturePlacement?: typeof PLACEMENTS[number]["id"];
+    paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
   }) => Promise<void>;
 }) {
   const [feedback, setFeedback] = useState("");
@@ -76,19 +182,48 @@ export function RegenerateAssetDialog({
   const [placement, setPlacement] = useState<typeof PLACEMENTS[number]["id"]>("auto");
   const [busy, setBusy] = useState(false);
 
+  // Per-role override state — null means "use brand-kit value".
+  const [ovr, setOvr] = useState<Record<SwatchRole, string | null>>({
+    surface: null, ink: null, signature: null, accent: null,
+  });
+
+  const brand = {
+    surface: normalizeHex(canvasPlan?.surface),
+    ink: normalizeHex(canvasPlan?.ink),
+    signature: normalizeHex(canvasPlan?.signature),
+    accent: normalizeHex(canvasPlan?.accent),
+  };
+  const displaySig = normalizeHex(canvasPlan?.displaySignature) || brand.signature;
+
+  const effective = {
+    surface: ovr.surface || brand.surface,
+    ink: ovr.ink || brand.ink,
+    signature: ovr.signature || displaySig,
+    accent: ovr.accent || brand.accent,
+  };
+
+  const contrast = useMemo(() => {
+    if (!effective.surface || !effective.ink) return null;
+    try { return contrastRatio(effective.ink, effective.surface); } catch { return null; }
+  }, [effective.surface, effective.ink]);
+
   const addQuick = (note: string) => {
     setFeedback((prev) => (prev ? `${prev}\n• ${note}` : `• ${note}`));
   };
 
   const submit = async () => {
     setBusy(true);
-    // Fire-and-forget so the user can close the modal and let the task run in the background.
+    const paletteOverride = Object.fromEntries(
+      Object.entries(ovr).filter(([, v]) => !!v),
+    ) as Record<string, string>;
     const payload = {
       feedback: feedback.trim(),
       directionOverride: direction !== currentDirection ? direction : undefined,
       signatureIntensity: intensity,
       signaturePlacement: placement,
+      paletteOverride: Object.keys(paletteOverride).length ? paletteOverride : undefined,
     };
+    // Fire-and-forget so the user can close the modal and let the task run in the background.
     Promise.resolve()
       .then(() => onSubmit(payload))
       .catch(() => { /* parent surfaces errors via toast */ })
@@ -97,17 +232,22 @@ export function RegenerateAssetDialog({
     onOpenChange(false);
   };
 
+  const submitLabel = mode === "generate" ? "Generate" : "Regenerate";
+
   return (
     <Dialog open={open} onOpenChange={(v) => onOpenChange(v)}>
-
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            {scope === "all" ? "Regenerate all assets" : `Regenerate ${targetLabel}`}
+            {mode === "generate"
+              ? `Generate ${targetLabel}`
+              : scope === "all" ? "Regenerate all assets" : `Regenerate ${targetLabel}`}
           </DialogTitle>
           <DialogDescription>
-            Tell the art director what's off-brand. Your notes are passed verbatim to the next render.
+            {mode === "generate"
+              ? "Fine-tune palette, direction, and brand-color intensity before we render this asset."
+              : "Tell the art director what's off-brand. Your notes are passed verbatim to the next render."}
           </DialogDescription>
         </DialogHeader>
 
@@ -125,42 +265,76 @@ export function RegenerateAssetDialog({
                 <div className="truncate text-sm font-medium">{targetLabel}</div>
                 <div className="mt-1 flex items-center gap-2">
                   <Badge variant="outline" className="text-[10px] capitalize">{currentDirection}</Badge>
-                  {canvasPlan && (
-                    <div className="flex items-center gap-0.5">
-                      <span className="h-3 w-3 rounded-sm border border-border" style={{ background: canvasPlan.surface }} />
-                      <span className="h-3 w-3 rounded-sm border border-border" style={{ background: canvasPlan.ink }} />
-                      <span className="h-3 w-3 rounded-sm border border-border" style={{ background: canvasPlan.displaySignature || canvasPlan.signature }} />
-                      <span className="h-3 w-3 rounded-sm border border-border" style={{ background: canvasPlan.accent }} />
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
           )}
 
-          <div>
-            <label className="mb-1 block text-xs font-medium">What's off?</label>
-            <Textarea
-              rows={4}
-              placeholder="e.g. background too dark, logo too small, less purple, more editorial feel"
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value.slice(0, 600))}
-              disabled={busy}
-            />
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {QUICK_NOTES.map((n) => (
+          {/* Clickable palette */}
+          <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-medium">Palette — click any swatch to change</div>
+              {Object.values(ovr).some(Boolean) && (
                 <button
-                  key={n}
                   type="button"
-                  onClick={() => addQuick(n)}
-                  disabled={busy}
-                  className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] hover:bg-muted"
+                  className="text-[10px] text-muted-foreground hover:text-foreground"
+                  onClick={() => setOvr({ surface: null, ink: null, signature: null, accent: null })}
                 >
-                  + {n}
+                  Reset all
                 </button>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {SWATCH_ROLES.map(({ key, label }) => (
+                <div key={key} className="flex flex-col gap-0.5">
+                  <span className="text-[9px] uppercase tracking-wide text-muted-foreground">{label}</span>
+                  <SwatchButton
+                    role={key}
+                    brandHex={brand[key]}
+                    displayHex={key === "signature" ? displaySig : brand[key]}
+                    value={ovr[key]}
+                    onChange={(hex) => setOvr((p) => ({ ...p, [key]: hex }))}
+                  />
+                </div>
               ))}
             </div>
+            {contrast !== null && (
+              <div
+                className={`text-[10px] ${
+                  contrast >= 4.5 ? "text-status-success" : contrast >= 3 ? "text-status-warning" : "text-status-danger"
+                }`}
+              >
+                Ink on surface: {contrast.toFixed(2)}:1{" "}
+                {contrast >= 4.5 ? "· AA pass" : contrast >= 3 ? "· AA fail (large text only)" : "· illegible"}
+              </div>
+            )}
           </div>
+
+          {mode === "regenerate" && (
+            <div>
+              <label className="mb-1 block text-xs font-medium">What's off?</label>
+              <Textarea
+                rows={4}
+                placeholder="e.g. background too dark, logo too small, less purple, more editorial feel"
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value.slice(0, 600))}
+                disabled={busy}
+              />
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {QUICK_NOTES.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => addQuick(n)}
+                    disabled={busy}
+                    className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] hover:bg-muted"
+                  >
+                    + {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {scope === "single" && (
             <div>
@@ -175,28 +349,11 @@ export function RegenerateAssetDialog({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="mt-1 text-[10px] text-muted-foreground">
-                Overrides the global style for just this asset.
-              </p>
             </div>
           )}
 
           <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="text-xs font-medium">Brand signature color</div>
-              {(canvasPlan?.displaySignature || canvasPlan?.signature) && (
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className="h-3 w-3 rounded-sm border border-border"
-                    style={{ background: canvasPlan?.displaySignature || canvasPlan?.signature }}
-                  />
-                  <span className="text-[10px] font-mono uppercase text-muted-foreground">
-                    {(canvasPlan?.displaySignature || canvasPlan?.signature)?.replace("#", "")}
-                  </span>
-                </div>
-              )}
-            </div>
-
+            <div className="text-xs font-medium">Brand signature color</div>
             <div>
               <label className="mb-1 block text-[11px] text-muted-foreground">Intensity</label>
               <div className="grid grid-cols-3 gap-1.5">
@@ -232,9 +389,6 @@ export function RegenerateAssetDialog({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="mt-1 text-[10px] text-muted-foreground">
-                Where the brand color appears in the composition. "Auto" lets the art director pick based on style.
-              </p>
             </div>
           </div>
         </div>
@@ -244,7 +398,7 @@ export function RegenerateAssetDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={submit} disabled={busy}>
             {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-            Regenerate
+            {submitLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -8,7 +8,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { ART_DIRECTIONS, type ArtDirectionId, type AssetSpec } from "../_shared/social-platform-specs.ts";
 import { buildCoverArtPrompt } from "../_shared/cover-art-director.ts";
-import { buildCanvasPlan, type CanvasPlan } from "../_shared/canvas-plan.ts";
+import { buildCanvasPlan, applyPaletteOverride, type CanvasPlan } from "../_shared/canvas-plan.ts";
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
 import { runContrastQa } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind } from "../_shared/logo-compositor.ts";
@@ -232,10 +232,20 @@ Deno.serve(async (req) => {
       ? { intensity: signatureIntensity, placement: signaturePlacement, minCoveragePct: signatureMinCoveragePct }
       : undefined;
 
+    const paletteOverride = body?.paletteOverride && typeof body.paletteOverride === "object"
+      ? {
+          surface: body.paletteOverride.surface,
+          ink: body.paletteOverride.ink,
+          accent: body.paletteOverride.accent,
+          signature: body.paletteOverride.signature,
+        }
+      : undefined;
+
     const ctx = await loadVentureContext(admin, snapshotId);
     const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
 
-    const plan: CanvasPlan = buildCanvasPlan({ kit, asset: PREVIEW_ASSET, direction, signature: signatureCfg });
+    let plan: CanvasPlan = buildCanvasPlan({ kit, asset: PREVIEW_ASSET, direction, signature: signatureCfg });
+    plan = applyPaletteOverride(plan, paletteOverride);
 
     let paletteTileDataUrl: string | null = null;
     try { paletteTileDataUrl = bytesToDataUrl(buildPaletteTilePngBytes(plan)); }
