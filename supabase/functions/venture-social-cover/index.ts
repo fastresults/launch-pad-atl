@@ -287,6 +287,16 @@ Deno.serve(async (req) => {
       ? { intensity: signatureIntensity, placement: signaturePlacement, minCoveragePct: signatureMinCoveragePct }
       : undefined;
 
+    // Optional per-generation palette override (from Regenerate/Generate modal swatches).
+    const paletteOverride = body?.paletteOverride && typeof body.paletteOverride === "object"
+      ? {
+          surface: body.paletteOverride.surface,
+          ink: body.paletteOverride.ink,
+          accent: body.paletteOverride.accent,
+          signature: body.paletteOverride.signature,
+        }
+      : undefined;
+
     const platform = getPlatform(platformName);
     if (!platform) return json({ error: `Unknown platform: ${platformName}` }, 400);
     const asset = platform.assets.find((a) => a.kind === assetKind);
