@@ -293,8 +293,8 @@ export function RegenerateAssetDialog({
                   <span className="text-[9px] uppercase tracking-wide text-muted-foreground">{label}</span>
                   <SwatchButton
                     role={key}
-                    brandHex={brand[key]}
-                    displayHex={key === "signature" ? displaySig : brand[key]}
+                    brandHex={key === "accent" ? (brand.accent || accentFallback) : brand[key]}
+                    displayHex={key === "signature" ? displaySig : (key === "accent" ? (brand.accent || accentFallback) : brand[key])}
                     value={ovr[key]}
                     onChange={(hex) => setOvr((p) => ({ ...p, [key]: hex }))}
                   />
