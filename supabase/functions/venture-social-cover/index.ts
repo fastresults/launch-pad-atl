@@ -332,6 +332,7 @@ Deno.serve(async (req) => {
     } else {
       plan = buildCanvasPlan({ kit, asset, direction, signature: signatureCfg });
     }
+    plan = applyPaletteOverride(plan, paletteOverride);
 
 
     // --- Palette tile so the model SEES the only colors it may use ---
