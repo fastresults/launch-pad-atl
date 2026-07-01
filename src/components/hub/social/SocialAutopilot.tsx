@@ -1113,6 +1113,7 @@ function Step5BuildKit({
                 feedback: input.feedback,
                 signatureIntensity: input.signatureIntensity,
                 signaturePlacement: input.signaturePlacement,
+                paletteOverride: input.paletteOverride,
               });
             }
           }}
