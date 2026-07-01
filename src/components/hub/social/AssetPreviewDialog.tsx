@@ -90,15 +90,24 @@ export function AssetPreviewDialog({
               <img
                 src={asset.url}
                 alt={asset.title}
-                className="max-h-[72vh] max-w-full object-contain rounded shadow-lg"
+                className={`max-h-[72vh] max-w-full object-contain rounded shadow-lg transition ${busy ? "opacity-40 blur-[1px]" : ""}`}
               />
             ) : (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                <ImageOff className="h-8 w-8" />
-                <span className="text-xs">No image yet</span>
+                {busy ? <Loader2 className="h-8 w-8 animate-spin" /> : <ImageOff className="h-8 w-8" />}
+                <span className="text-xs">{busy ? "Generating…" : "No image yet"}</span>
               </div>
             )}
-            {onNext && (
+            {busy && asset.url && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/40 backdrop-blur-[1px] pointer-events-none">
+                <div className="flex items-center gap-2 rounded-full border border-border bg-background/95 px-3 py-1.5 shadow-lg">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-xs font-medium">Regenerating…</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground">You can keep this open — we'll refresh the image when it's ready.</span>
+              </div>
+            )}
+            {onNext && !busy && (
               <button
                 type="button"
                 onClick={onNext}
