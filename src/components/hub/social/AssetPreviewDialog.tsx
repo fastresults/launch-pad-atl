@@ -132,39 +132,45 @@ export function AssetPreviewDialog({
 
             {asset.canvasPlan && (() => {
               const cp = asset.canvasPlan!;
-              const sig = cp.displaySignature || cp.signature;
-              const accent = cp.accent || sig || cp.ink || cp.surface || "#6B7280";
-              const rows: Array<[string, string | undefined | null, boolean]> = [
-                ["surface", cp.surface, false],
-                ["ink", cp.ink, false],
-                ["signature", sig, false],
-                ["accent", accent, !cp.accent],
+              const surface = cp.surface || "#FFFFFF";
+              const ink = cp.ink || "#0B0F19";
+              // Signature (brand color splash) — always show. Fallback: accent → ink → neutral.
+              const sigRaw = cp.displaySignature || cp.signature;
+              const signature = sigRaw || cp.accent || ink || "#6B7280";
+              const signatureDerived = !sigRaw;
+              // Accent — always show. Fallback: signature → ink → surface → neutral.
+              const accent = cp.accent || sigRaw || ink || surface || "#6B7280";
+              const accentDerived = !cp.accent;
+              const rows: Array<[string, string, boolean]> = [
+                ["surface", surface, !cp.surface],
+                ["ink", ink, !cp.ink],
+                ["signature", signature, signatureDerived],
+                ["accent", accent, accentDerived],
               ];
               return (
                 <div>
                   <div className="text-muted-foreground">Palette</div>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                    {rows.map(([k, hex, derived]) =>
-                      hex ? (
-                        <button
-                          key={k}
-                          type="button"
-                          onClick={onRegenerate}
-                          disabled={!onRegenerate}
-                          title={onRegenerate ? `Change ${k}${derived ? " (derived)" : ""} — opens Regenerate` : String(k)}
-                          className="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-1 transition hover:bg-muted hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          <span className="h-4 w-4 rounded-sm border border-border" style={{ background: hex }} />
-                          <span className="text-[10px] font-mono uppercase text-muted-foreground">
-                            {hex}{derived ? "*" : ""}
-                          </span>
-                        </button>
-                      ) : null,
-                    )}
+                    {rows.map(([k, hex, derived]) => (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={onRegenerate}
+                        disabled={!onRegenerate}
+                        title={onRegenerate ? `Change ${k}${derived ? " (derived)" : ""} — opens Regenerate` : String(k)}
+                        className="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-1 transition hover:bg-muted hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <span className="h-4 w-4 rounded-sm border border-border" style={{ background: hex }} />
+                        <span className="text-[10px] font-mono uppercase text-muted-foreground">
+                          {hex}{derived ? "*" : ""}
+                        </span>
+                      </button>
+                    ))}
                   </div>
                   {rows.some(([, , d]) => d) && (
-                    <div className="mt-1 text-[10px] text-muted-foreground">* derived — no accent in brand kit</div>
+                    <div className="mt-1 text-[10px] text-muted-foreground">* derived — not in brand kit</div>
                   )}
+
                   {onRegenerate && (
                     <div className="mt-1 text-[10px] text-muted-foreground">
                       Click a swatch to change color in Regenerate.
