@@ -76,7 +76,7 @@ export function AssetPreviewDialog({
 
         <div className="grid gap-0 md:grid-cols-[1fr_280px]">
           <div className="relative flex items-center justify-center p-4" style={{ background: checker, minHeight: 360 }}>
-            {onPrev && (
+            {onPrev && !busy && (
               <button
                 type="button"
                 onClick={onPrev}
