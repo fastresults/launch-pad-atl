@@ -840,7 +840,7 @@ function Step5BuildKit({
     }
   };
 
-  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any }) => {
+  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any }) => {
     setRunning(true);
     try {
       for (const t of tasks) {
