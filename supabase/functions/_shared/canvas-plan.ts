@@ -66,7 +66,7 @@ function hslToHex(h: number, s: number, l: number): string {
 // If the chosen signature hex is too dark or too desaturated to read on screen
 // as a brand splash, derive a displayable tint that preserves the hue but
 // raises lightness and saturation into a visible band.
-function deriveDisplaySignature(hex: string): string {
+export function deriveDisplaySignature(hex: string): string {
   const L = lightness(hex);   // 0..1 perceived
   const S = saturation(hex);  // 0..1
   if (L >= 0.18 && S >= 0.35) return hex;
@@ -75,6 +75,43 @@ function deriveDisplaySignature(hex: string): string {
   const targetL = 0.50;
   const targetS = Math.max(S, 0.65);
   return hslToHex(h, targetS, targetL);
+}
+
+export type PaletteOverride = {
+  surface?: string;
+  ink?: string;
+  accent?: string;
+  signature?: string;
+};
+
+function normalizeHex(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const t = v.trim();
+  const m = t.match(/^#?([0-9a-fA-F]{6})$/);
+  return m ? `#${m[1].toUpperCase()}` : null;
+}
+
+/**
+ * Merge a user-provided palette override into a CanvasPlan. Invalid hexes are
+ * ignored (falls back to the plan's brand-kit value). Signature overrides also
+ * recompute displaySignature so the AI reference and QA both track the new hue.
+ */
+export function applyPaletteOverride(plan: CanvasPlan, override?: PaletteOverride | null): CanvasPlan {
+  if (!override) return plan;
+  const surface = normalizeHex(override.surface);
+  const ink = normalizeHex(override.ink);
+  const accent = normalizeHex(override.accent);
+  const signature = normalizeHex(override.signature);
+  if (!surface && !ink && !accent && !signature) return plan;
+  const nextSignature = signature ?? plan.signature;
+  return {
+    ...plan,
+    surface: surface ?? plan.surface,
+    ink: ink ?? plan.ink,
+    accent: accent ?? plan.accent,
+    signature: nextSignature,
+    displaySignature: signature ? deriveDisplaySignature(nextSignature) : plan.displaySignature,
+  };
 }
 
 function rolesFromKit(kit: any): Record<string, string> {
