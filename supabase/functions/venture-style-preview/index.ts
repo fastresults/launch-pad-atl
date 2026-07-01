@@ -8,7 +8,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { ART_DIRECTIONS, type ArtDirectionId, type AssetSpec } from "../_shared/social-platform-specs.ts";
 import { buildCoverArtPrompt } from "../_shared/cover-art-director.ts";
-import { buildCanvasPlan, type CanvasPlan } from "../_shared/canvas-plan.ts";
+import { buildCanvasPlan, applyPaletteOverride, type CanvasPlan } from "../_shared/canvas-plan.ts";
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
 import { runContrastQa } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind } from "../_shared/logo-compositor.ts";
