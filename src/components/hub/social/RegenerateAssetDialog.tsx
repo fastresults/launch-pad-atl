@@ -194,12 +194,15 @@ export function RegenerateAssetDialog({
     accent: normalizeHex(canvasPlan?.accent),
   };
   const displaySig = normalizeHex(canvasPlan?.displaySignature) || brand.signature;
+  // Accent is required for the art director prompt — always surface a value.
+  // Fallback order: kit accent → signature → ink → surface → neutral.
+  const accentFallback = brand.accent || displaySig || brand.signature || brand.ink || brand.surface || "#6B7280";
 
   const effective = {
     surface: ovr.surface || brand.surface,
     ink: ovr.ink || brand.ink,
     signature: ovr.signature || displaySig,
-    accent: ovr.accent || brand.accent,
+    accent: ovr.accent || accentFallback,
   };
 
   const contrast = useMemo(() => {
