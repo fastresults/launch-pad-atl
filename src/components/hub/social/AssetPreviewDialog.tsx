@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Download, Copy, ExternalLink, RefreshCw, ChevronLeft, ChevronRight, ImageOff, Trash2,
+  Download, Copy, ExternalLink, RefreshCw, ChevronLeft, ChevronRight, ImageOff, Trash2, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,7 +25,7 @@ export type PreviewableAsset = {
 };
 
 export function AssetPreviewDialog({
-  open, onOpenChange, asset, onRegenerate, onDelete, onPrev, onNext,
+  open, onOpenChange, asset, onRegenerate, onDelete, onPrev, onNext, busy = false,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -34,6 +34,7 @@ export function AssetPreviewDialog({
   onDelete?: () => void;
   onPrev?: () => void;
   onNext?: () => void;
+  busy?: boolean;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -75,7 +76,7 @@ export function AssetPreviewDialog({
 
         <div className="grid gap-0 md:grid-cols-[1fr_280px]">
           <div className="relative flex items-center justify-center p-4" style={{ background: checker, minHeight: 360 }}>
-            {onPrev && (
+            {onPrev && !busy && (
               <button
                 type="button"
                 onClick={onPrev}
@@ -89,15 +90,24 @@ export function AssetPreviewDialog({
               <img
                 src={asset.url}
                 alt={asset.title}
-                className="max-h-[72vh] max-w-full object-contain rounded shadow-lg"
+                className={`max-h-[72vh] max-w-full object-contain rounded shadow-lg transition ${busy ? "opacity-40 blur-[1px]" : ""}`}
               />
             ) : (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                <ImageOff className="h-8 w-8" />
-                <span className="text-xs">No image yet</span>
+                {busy ? <Loader2 className="h-8 w-8 animate-spin" /> : <ImageOff className="h-8 w-8" />}
+                <span className="text-xs">{busy ? "Generating…" : "No image yet"}</span>
               </div>
             )}
-            {onNext && (
+            {busy && asset.url && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/40 backdrop-blur-[1px] pointer-events-none">
+                <div className="flex items-center gap-2 rounded-full border border-border bg-background/95 px-3 py-1.5 shadow-lg">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-xs font-medium">Regenerating…</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground">You can keep this open — we'll refresh the image when it's ready.</span>
+              </div>
+            )}
+            {onNext && !busy && (
               <button
                 type="button"
                 onClick={onNext}
@@ -227,14 +237,16 @@ export function AssetPreviewDialog({
                 </>
               )}
               {onRegenerate && (
-                <Button size="sm" className="w-full justify-start" onClick={onRegenerate}>
-                  <RefreshCw className="mr-2 h-3.5 w-3.5" /> Regenerate
+                <Button size="sm" className="w-full justify-start" onClick={onRegenerate} disabled={busy}>
+                  {busy ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-2 h-3.5 w-3.5" />}
+                  {busy ? "Regenerating…" : "Regenerate"}
                 </Button>
               )}
               {onDelete && (
                 <Button
                   size="sm"
                   variant="outline"
+                  disabled={busy}
                   className="w-full justify-start border-status-danger/40 text-status-danger hover:bg-status-danger/10 hover:text-status-danger"
                   onClick={() => {
                     if (window.confirm("Delete this image? The tile will reset so you can generate a fresh one.")) {
