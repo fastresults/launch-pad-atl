@@ -133,7 +133,7 @@ export function AssetPreviewDialog({
             {asset.canvasPlan && (
               <div>
                 <div className="text-muted-foreground">Palette</div>
-                <div className="mt-1 flex items-center gap-1.5">
+                <div className="mt-1 flex flex-wrap items-center gap-1.5">
                   {([
                     ["surface", asset.canvasPlan.surface],
                     ["ink", asset.canvasPlan.ink],
@@ -141,13 +141,25 @@ export function AssetPreviewDialog({
                     ["accent", asset.canvasPlan.accent],
                   ] as const).map(([k, hex]) =>
                     hex ? (
-                      <div key={k} className="flex items-center gap-1">
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={onRegenerate}
+                        disabled={!onRegenerate}
+                        title={onRegenerate ? `Change ${k} — opens Regenerate` : String(k)}
+                        className="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-1 transition hover:bg-muted hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                      >
                         <span className="h-4 w-4 rounded-sm border border-border" style={{ background: hex }} />
-                        <span className="text-[10px] text-muted-foreground">{hex}</span>
-                      </div>
+                        <span className="text-[10px] font-mono uppercase text-muted-foreground">{hex}</span>
+                      </button>
                     ) : null,
                   )}
                 </div>
+                {onRegenerate && (
+                  <div className="mt-1 text-[10px] text-muted-foreground">
+                    Click a swatch to change color in Regenerate.
+                  </div>
+                )}
                 {signatureCoverage !== undefined && (
                   <div className="mt-1 text-[10px] text-muted-foreground">
                     Signature coverage: {signatureCoverage}% {signatureVisible === false ? "(not visible)" : ""}
