@@ -25,7 +25,7 @@ export type PreviewableAsset = {
 };
 
 export function AssetPreviewDialog({
-  open, onOpenChange, asset, onRegenerate, onDelete, onPrev, onNext,
+  open, onOpenChange, asset, onRegenerate, onDelete, onPrev, onNext, busy = false,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -34,6 +34,7 @@ export function AssetPreviewDialog({
   onDelete?: () => void;
   onPrev?: () => void;
   onNext?: () => void;
+  busy?: boolean;
 }) {
   useEffect(() => {
     if (!open) return;
