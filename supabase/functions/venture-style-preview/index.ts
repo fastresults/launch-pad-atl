@@ -232,10 +232,20 @@ Deno.serve(async (req) => {
       ? { intensity: signatureIntensity, placement: signaturePlacement, minCoveragePct: signatureMinCoveragePct }
       : undefined;
 
+    const paletteOverride = body?.paletteOverride && typeof body.paletteOverride === "object"
+      ? {
+          surface: body.paletteOverride.surface,
+          ink: body.paletteOverride.ink,
+          accent: body.paletteOverride.accent,
+          signature: body.paletteOverride.signature,
+        }
+      : undefined;
+
     const ctx = await loadVentureContext(admin, snapshotId);
     const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
 
-    const plan: CanvasPlan = buildCanvasPlan({ kit, asset: PREVIEW_ASSET, direction, signature: signatureCfg });
+    let plan: CanvasPlan = buildCanvasPlan({ kit, asset: PREVIEW_ASSET, direction, signature: signatureCfg });
+    plan = applyPaletteOverride(plan, paletteOverride);
 
     let paletteTileDataUrl: string | null = null;
     try { paletteTileDataUrl = bytesToDataUrl(buildPaletteTilePngBytes(plan)); }
