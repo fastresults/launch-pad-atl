@@ -13,7 +13,7 @@ import {
   type AssetSpec,
 } from "../_shared/social-platform-specs.ts";
 import { buildCoverArtPrompt, buildAvatarPrompt } from "../_shared/cover-art-director.ts";
-import { buildCanvasPlan, pickAvatarSurface, type CanvasPlan } from "../_shared/canvas-plan.ts";
+import { buildCanvasPlan, pickAvatarSurface, applyPaletteOverride, type CanvasPlan } from "../_shared/canvas-plan.ts";
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
 import { runContrastQa, logoDominantInk } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind } from "../_shared/logo-compositor.ts";
