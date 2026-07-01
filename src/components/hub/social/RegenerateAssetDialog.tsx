@@ -194,12 +194,15 @@ export function RegenerateAssetDialog({
     accent: normalizeHex(canvasPlan?.accent),
   };
   const displaySig = normalizeHex(canvasPlan?.displaySignature) || brand.signature;
+  // Accent is required for the art director prompt — always surface a value.
+  // Fallback order: kit accent → signature → ink → surface → neutral.
+  const accentFallback = brand.accent || displaySig || brand.signature || brand.ink || brand.surface || "#6B7280";
 
   const effective = {
     surface: ovr.surface || brand.surface,
     ink: ovr.ink || brand.ink,
     signature: ovr.signature || displaySig,
-    accent: ovr.accent || brand.accent,
+    accent: ovr.accent || accentFallback,
   };
 
   const contrast = useMemo(() => {
@@ -290,8 +293,8 @@ export function RegenerateAssetDialog({
                   <span className="text-[9px] uppercase tracking-wide text-muted-foreground">{label}</span>
                   <SwatchButton
                     role={key}
-                    brandHex={brand[key]}
-                    displayHex={key === "signature" ? displaySig : brand[key]}
+                    brandHex={key === "accent" ? (brand.accent || accentFallback) : brand[key]}
+                    displayHex={key === "signature" ? displaySig : (key === "accent" ? (brand.accent || accentFallback) : brand[key])}
                     value={ovr[key]}
                     onChange={(hex) => setOvr((p) => ({ ...p, [key]: hex }))}
                   />
