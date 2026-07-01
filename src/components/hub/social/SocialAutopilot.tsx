@@ -822,8 +822,9 @@ function Step5BuildKit({
 
   const regenerateSingle = async (
     t: any,
-    opts: { feedback: string; directionOverride?: string; signatureIntensity?: any; signaturePlacement?: any },
+    opts: { feedback: string; directionOverride?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any },
   ) => {
+
     const k = taskKey(t);
     setTaskRunning(k, true);
     try {
