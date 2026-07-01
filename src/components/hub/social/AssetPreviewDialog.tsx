@@ -237,14 +237,16 @@ export function AssetPreviewDialog({
                 </>
               )}
               {onRegenerate && (
-                <Button size="sm" className="w-full justify-start" onClick={onRegenerate}>
-                  <RefreshCw className="mr-2 h-3.5 w-3.5" /> Regenerate
+                <Button size="sm" className="w-full justify-start" onClick={onRegenerate} disabled={busy}>
+                  {busy ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-2 h-3.5 w-3.5" />}
+                  {busy ? "Regenerating…" : "Regenerate"}
                 </Button>
               )}
               {onDelete && (
                 <Button
                   size="sm"
                   variant="outline"
+                  disabled={busy}
                   className="w-full justify-start border-status-danger/40 text-status-danger hover:bg-status-danger/10 hover:text-status-danger"
                   onClick={() => {
                     if (window.confirm("Delete this image? The tile will reset so you can generate a fresh one.")) {
