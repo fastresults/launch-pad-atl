@@ -60,8 +60,8 @@ function baseBandPct(aspect: AdAspect): number {
 
 function maxBandPct(aspect: AdAspect): number {
   if (aspect === "9:16") return 0.32;
-  if (aspect === "4:5") return 0.40;
-  return 0.42;
+  if (aspect === "4:5") return 0.42;
+  return 0.46;
 }
 
 function aspectMaxLines(aspect: AdAspect): number {
@@ -73,8 +73,8 @@ function aspectMaxLines(aspect: AdAspect): number {
 function targetLinesForLength(len: number, aspect: AdAspect): number {
   const cap = aspectMaxLines(aspect);
   if (len <= 28) return 1;
-  if (len <= 55) return Math.min(2, cap);
-  if (len <= 90) return Math.min(3, cap);
+  if (len <= 60) return Math.min(2, cap);
+  if (len <= 110) return Math.min(3, cap);
   return cap;
 }
 
@@ -84,7 +84,7 @@ function sizeRangeForTier(targetLines: number, minDim: number): { min: number; m
   if (targetLines <= 1) return { min: Math.round(60 * s), max: Math.round(104 * s) };
   if (targetLines === 2) return { min: Math.round(52 * s), max: Math.round(84 * s) };
   if (targetLines === 3) return { min: Math.round(42 * s), max: Math.round(68 * s) };
-  return { min: Math.round(32 * s), max: Math.round(54 * s) };
+  return { min: Math.round(28 * s), max: Math.round(54 * s) };
 }
 
 function charUnits(s: string): number {
