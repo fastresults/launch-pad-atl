@@ -166,7 +166,9 @@ function targetBoxFor(
   }
 
   const inset = Math.floor(short * tier.insetFrac);
-  if (placement === "banner-corner") {
+  const effectiveCorner: "top-left" | "bottom-right" =
+    cornerOverride ?? (placement === "banner-corner" ? "bottom-right" : "top-left");
+  if (effectiveCorner === "bottom-right") {
     return { x: W - boxW - inset, y: H - boxH - inset, w: boxW, h: boxH, mode };
   }
   return { x: inset, y: inset, w: boxW, h: boxH, mode };
