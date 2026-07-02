@@ -45,6 +45,12 @@ const PLACEMENTS = [
   { id: "framed_border", label: "Framed border" },
 ] as const;
 
+const LOGO_SIZES = [
+  { id: "sm", label: "Small", hint: "Discreet corner mark" },
+  { id: "md", label: "Medium", hint: "Recommended (readable at a glance)" },
+  { id: "lg", label: "Large", hint: "Hero logo — dominant lockup" },
+] as const;
+
 type SwatchRole = "surface" | "ink" | "signature" | "accent";
 const SWATCH_ROLES: { key: SwatchRole; label: string; hint: string }[] = [
   { key: "surface",   label: "Surface",   hint: "Background" },
