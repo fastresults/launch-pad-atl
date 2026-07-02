@@ -4,8 +4,9 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Palette, Sparkles, Lock, RotateCcw } from "lucide-react";
-import { getBrandKit, resetBrandKit } from "@/lib/brandKit.functions";
+import { getBrandKit, resetBrandKit, upsertBrandKit } from "@/lib/brandKit.functions";
 import { BrandWizard } from "@/components/hub/brand-wizard/BrandWizard";
+import { EditablePaletteSwatch } from "@/components/hub/brand/EditablePaletteSwatch";
 import { toast } from "sonner";
 
 export function BrandStudio({ snapshot }: { snapshot: any }) {
