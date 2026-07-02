@@ -552,6 +552,17 @@ function Step4BuildAds({
     }
   };
 
+  // Auto-kick "Generate week" when arriving via the Step 1 shortcut.
+  useEffect(() => {
+    if (autoRunWeek == null) return;
+    if (running) return;
+    if (tasks.length === 0) return;
+    const pending = tasks.some((t) => t.post.week === autoRunWeek && !t.ad);
+    onAutoRunConsumed?.();
+    if (pending) void runWeek(autoRunWeek);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRunWeek, tasks.length]);
+
   const runAll = async () => {
     setRunning(true);
     try {
