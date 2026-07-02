@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Sparkles, Image as ImageIcon, RotateCcw } from "lucide-react";
 import { contrastRatio } from "@/lib/brand/palette-rules";
+import { AssetImage } from "./AssetImage";
 
 const QUICK_NOTES = [
   "Lighter background",
@@ -331,7 +332,7 @@ export function RegenerateAssetDialog({
             <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-2">
               <div className="h-14 w-20 shrink-0 overflow-hidden rounded-md border border-border bg-muted/40 flex items-center justify-center">
                 {thumbnailUrl ? (
-                  <img src={thumbnailUrl} alt="current" className="h-full w-full object-cover" />
+                  <AssetImage src={thumbnailUrl} alt="current" className="h-full w-full object-contain" />
                 ) : (
                   <ImageIcon className="h-4 w-4 text-muted-foreground/60" />
                 )}

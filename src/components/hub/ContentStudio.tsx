@@ -17,6 +17,7 @@ import {
 } from "@/lib/content-autopilot.functions";
 import { AssetPreviewDialog, type PreviewableAsset } from "@/components/hub/social/AssetPreviewDialog";
 import { RegenerateAssetDialog } from "@/components/hub/social/RegenerateAssetDialog";
+import { AssetImage } from "@/components/hub/social/AssetImage";
 
 const ART_DIRECTIONS = [
   { id: "editorial", label: "Editorial" },
@@ -677,7 +678,7 @@ function Step4BuildAds({
                       className={`h-20 w-20 shrink-0 overflow-hidden rounded-md border border-white/10 bg-muted/40 flex items-center justify-center ${url ? "cursor-zoom-in hover:ring-2 hover:ring-primary/40" : ""}`}
                     >
                       {url ? (
-                        <img src={url} alt="ad preview" className="h-full w-full object-cover" />
+                        <AssetImage src={url} alt="ad preview" className="h-full w-full object-contain" />
                       ) : busy ? (
                         <Loader2 className="h-4 w-4 animate-spin text-status-info" />
                       ) : err ? (

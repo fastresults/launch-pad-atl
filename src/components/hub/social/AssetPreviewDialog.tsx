@@ -7,6 +7,7 @@ import {
   Download, Copy, ExternalLink, RefreshCw, ChevronLeft, ChevronRight, ImageOff, Trash2, Loader2, Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
+import { AssetImage } from "./AssetImage";
 
 export type PreviewableAsset = {
   url?: string | null;
@@ -91,7 +92,7 @@ export function AssetPreviewDialog({
               </button>
             )}
             {asset.url ? (
-              <img
+              <AssetImage
                 src={asset.url}
                 alt={asset.title}
                 className={`max-h-[72vh] max-w-full object-contain rounded shadow-lg transition ${busy ? "opacity-40 blur-[1px]" : ""}`}
