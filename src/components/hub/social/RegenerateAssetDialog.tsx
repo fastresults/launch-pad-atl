@@ -404,6 +404,7 @@ export function RegenerateAssetDialog({
             )}
             {headlineMode === "custom" && (
               <input
+                ref={headlineInputRef}
                 type="text"
                 value={headlineText}
                 onChange={(e) => setHeadlineText(e.target.value.slice(0, 64))}
