@@ -484,10 +484,10 @@ Deno.serve(async (req) => {
     let logoComposited = false;
     if (logoBytes) {
       try {
-        const placement = placementForAssetKind(asset.kind);
         bytes = await compositeLogo(bytes, logoBytes, {
-          placement,
+          placement: logoPlacement,
           surfaceHex: plan.surface,
+          logoSize,
         });
         logoComposited = true;
       } catch (e) {
@@ -495,6 +495,7 @@ Deno.serve(async (req) => {
       }
     }
     (qa as any).logo_composited = logoComposited;
+    (qa as any).logo_size = logoSize;
 
     const fileId = crypto.randomUUID();
     const storagePath = `social-cover/${userId}/${snapshotId}/${platform.platform}/${asset.kind}/${direction}-${fileId}.png`;
