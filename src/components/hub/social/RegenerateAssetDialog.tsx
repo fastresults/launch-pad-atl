@@ -295,6 +295,7 @@ export function RegenerateAssetDialog({
       signaturePlacement: placement,
       paletteOverride: Object.keys(paletteOverride).length ? paletteOverride : undefined,
       headlineOverride,
+      logoSize,
     };
     // Fire-and-forget so the user can close the modal and let the task run in the background.
     Promise.resolve()
