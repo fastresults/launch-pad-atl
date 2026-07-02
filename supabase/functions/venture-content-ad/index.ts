@@ -238,8 +238,13 @@ Deno.serve(async (req) => {
       : undefined;
 
     const rawHl = body?.headlineOverride;
+    const stripTrailingEllipsis = (s: string) =>
+      s.replace(/(?:\.{3}|…)+\s*$/g, "").replace(/[\s,;:\-–—]+$/g, "").trim();
     const headlineOverride = rawHl && typeof rawHl === "object" && ["auto", "custom", "none"].includes(rawHl.mode)
-      ? { mode: rawHl.mode as "auto" | "custom" | "none", text: typeof rawHl.text === "string" ? rawHl.text.slice(0, 200) : undefined }
+      ? {
+          mode: rawHl.mode as "auto" | "custom" | "none",
+          text: typeof rawHl.text === "string" ? stripTrailingEllipsis(rawHl.text).slice(0, 200) : undefined,
+        }
       : undefined;
 
     // Content Studio: default to SMALL logo so the wordmark doesn't dominate
