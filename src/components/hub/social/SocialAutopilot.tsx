@@ -658,6 +658,7 @@ function Step4Style({
           currentDirection={dialog.direction || "editorial"}
           canvasPlan={dialog.direction ? byDirection.get(dialog.direction)?.canvas_plan : null}
           currentHeadline={dialog.direction ? (byDirection.get(dialog.direction) as any)?.last_headline ?? null : null}
+          focusSection={dialog.focusSection}
           onSubmit={async ({ feedback, directionOverride, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride }) => {
             if (dialog.scope === "all") {
               await regenerateAll({ feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride });
