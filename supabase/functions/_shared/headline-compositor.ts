@@ -10,42 +10,54 @@
 import { Image } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 import type { CanvasPlan } from "./canvas-plan.ts";
 
-// Inter Bold — bundled with the function so we never depend on network egress
-// at runtime. Network CDNs are only a fallback if the bundled read fails.
-const LOCAL_FONT_URL = new URL("./fonts/Inter-Bold.ttf", import.meta.url);
-const FONT_CDN_FALLBACKS = [
-  "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/files/inter-latin-700-normal.woff",
-  "https://rsms.me/inter/font-files/Inter-Bold.woff2",
-];
+import { INTER_BOLD_BASE64 } from "./fonts/inter-bold.ts";
+
+// Inter Bold — embedded as a base64 TS module so it always ships with the
+// edge bundle. (Raw .ttf siblings are NOT included in Supabase deploys.)
+const TTF_CDN_FALLBACK =
+  "https://raw.githubusercontent.com/rsms/inter/master/docs/font-files/Inter-Bold.ttf";
 
 let fontBytesPromise: Promise<Uint8Array | null> | null = null;
+
+function decodeBase64(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
 
 async function loadFont(): Promise<Uint8Array | null> {
   if (!fontBytesPromise) {
     fontBytesPromise = (async () => {
-      // 1) Bundled font — fast, offline, always present.
+      // 1) Embedded base64 — offline, always present, no I/O.
       try {
-        const bytes = await Deno.readFile(LOCAL_FONT_URL);
-        if (bytes && bytes.length > 1024) return bytes;
-      } catch (e) {
-        console.warn("headline-compositor: local font read failed", e);
-      }
-      // 2) Network fallbacks.
-      for (const url of FONT_CDN_FALLBACKS) {
-        try {
-          const res = await fetch(url);
-          if (!res.ok) continue;
-          const buf = new Uint8Array(await res.arrayBuffer());
-          if (buf.length > 1024) return buf;
-        } catch (e) {
-          console.warn("headline-compositor: cdn font fetch failed", url, e);
+        const bytes = decodeBase64(INTER_BOLD_BASE64);
+        if (bytes.length > 1024) {
+          console.info(`[headline-compositor] font loaded (bytes=${bytes.length})`);
+          return bytes;
         }
+      } catch (e) {
+        console.warn("headline-compositor: base64 decode failed", e);
+      }
+      // 2) TTF CDN fallback (imagescript only parses TTF, not woff/woff2).
+      try {
+        const res = await fetch(TTF_CDN_FALLBACK);
+        if (res.ok) {
+          const buf = new Uint8Array(await res.arrayBuffer());
+          if (buf.length > 1024) {
+            console.info(`[headline-compositor] font loaded via CDN (bytes=${buf.length})`);
+            return buf;
+          }
+        }
+      } catch (e) {
+        console.warn("headline-compositor: cdn font fetch failed", e);
       }
       return null;
     })();
   }
   return fontBytesPromise;
 }
+
 
 function hexToRgba(hex: string, a = 0xff): number {
   const m = /^#?([0-9a-f]{6})$/i.exec((hex || "").trim());
