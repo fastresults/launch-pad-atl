@@ -9,7 +9,28 @@ import { Slider } from "@/components/ui/slider";
 import {
   ArrowLeft, ArrowRight, Check, Sparkles, Loader2, RefreshCw,
   Settings2, Copy, ExternalLink, PartyPopper, Image as ImageIcon, Eye, Trash2,
+  Instagram, Linkedin, Twitter, Facebook, Youtube, Music2, Globe,
 } from "lucide-react";
+
+const PLATFORM_ICONS: Record<string, any> = {
+  Instagram, LinkedIn: Linkedin, X: Twitter, Twitter, Facebook,
+  YouTube: Youtube, TikTok: Music2, Threads: Music2, Pinterest: Globe, Reddit: Globe,
+};
+
+function platformLabel(p: string): string {
+  return (PLATFORM_SPECS as any)[p]?.label ?? p;
+}
+function assetLabel(platform: string, kind: string): string {
+  const spec = (PLATFORM_SPECS as any)[platform];
+  const found = spec?.assets?.find((a: any) => a.kind === kind);
+  if (found?.label) return found.label;
+  return kind.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+}
+function assetDims(platform: string, kind: string): string | null {
+  const spec = (PLATFORM_SPECS as any)[platform];
+  const found = spec?.assets?.find((a: any) => a.kind === kind);
+  return found ? `${found.width}×${found.height}` : null;
+}
 import { toast } from "sonner";
 import {
   getSocialProgress, upsertSocialProgress, listPlanDocs, ensurePlanDoc,
