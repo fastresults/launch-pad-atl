@@ -215,7 +215,7 @@ export default function DeliverablesPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Your deliverables</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Your startup assets</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {allDocs.length === 0
               ? "Documents you generate in the Hub show up here."
@@ -233,7 +233,7 @@ export default function DeliverablesPage() {
         <div className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Ask or search your deliverables</span>
+            <span className="text-sm font-medium">Ask or search your startup assets</span>
           </div>
           <form
             onSubmit={(e) => {
@@ -403,7 +403,7 @@ export default function DeliverablesPage() {
       {!isLoading && allDocs.length === 0 && (
         <div className="rounded-2xl border border-white/10 bg-card p-10 text-center">
           <FileText className="mx-auto h-10 w-10 text-muted-foreground" />
-          <h2 className="mt-3 text-lg font-medium">No deliverables yet</h2>
+          <h2 className="mt-3 text-lg font-medium">No startup assets yet</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Head to the Hub, lock a concept, and generate your first founder-ready document.
           </p>

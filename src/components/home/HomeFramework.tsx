@@ -156,7 +156,7 @@ function Framework() {
           <span className="text-gradient-brand">Built in one room, in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          {TOTAL_DELIVERABLES} deliverables across eight categories — generated live from your idea, your market, and your numbers, then refined with you in the room. Yours to keep, edit, and run with for {WORKSHOP_PRICE_LABEL}.
+          {TOTAL_DELIVERABLES} startup assets across eight categories — generated live from your idea, your market, and your numbers, then refined with you in the room. Yours to keep, edit, and run with for {WORKSHOP_PRICE_LABEL}.
 
         </p>
 
@@ -214,7 +214,7 @@ function Framework() {
 
 function HonestRoadmap() {
   const included = [
-    `All ${TOTAL_DELIVERABLES} deliverables — Foundation, Strategy, Operations, Finance, Governance, Brand, Marketing, and Social & Content`,
+    `All ${TOTAL_DELIVERABLES} startup assets — Foundation, Strategy, Operations, Finance, Governance, Brand, Marketing, and Social & Content`,
     "Built live with Adam, for your idea — not a framework",
     "Yours to keep forever — plus a 90-day action plan you walk out with",
     "Working time with Adam in a small room",

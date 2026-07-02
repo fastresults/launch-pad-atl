@@ -41,7 +41,7 @@ export default function WorkshopDayPage() {
           Walk in with an idea. Walk out knowing what to do with it.
         </h2>
         <p className="mt-2 max-w-3xl text-sm md:text-base text-muted-foreground">
-          You do the thinking out loud. Your coach guides you through it — who you serve, why people should care, how you price, where your first customers come from, and what the money really looks like. You leave with clear answers, a Monday-morning action plan, and {TOTAL_DELIVERABLES} founder-ready deliverables built for your startup across {TOTAL_CATEGORIES} categories — Foundation, Strategy, Operations, Finance, Governance, plus bonus Brand, Marketing, and Social &amp; Content tracks — waiting in your dashboard to refine and ship.
+          You do the thinking out loud. Your coach guides you through it — who you serve, why people should care, how you price, where your first customers come from, and what the money really looks like. You leave with clear answers, a Monday-morning action plan, and {TOTAL_DELIVERABLES} founder-ready startup assets built for your startup across {TOTAL_CATEGORIES} categories — Foundation, Strategy, Operations, Finance, Governance, plus bonus Brand, Marketing, and Social &amp; Content tracks — waiting in your dashboard to refine and ship.
         </p>
       </div>
 
@@ -54,7 +54,7 @@ export default function WorkshopDayPage() {
       <section>
         <h2 className="mb-1 text-sm font-medium uppercase tracking-wide text-muted-foreground">Two ways to build it</h2>
         <p className="mb-4 text-sm text-muted-foreground">
-          Same {TOTAL_CATEGORIES} categories, same {TOTAL_DELIVERABLES} founder-ready deliverables. Pick the path that fits where you are right now.
+          Same {TOTAL_CATEGORIES} categories, same {TOTAL_DELIVERABLES} founder-ready startup assets. Pick the path that fits where you are right now.
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           {/* Card A — Guided in the room */}
@@ -64,7 +64,7 @@ export default function WorkshopDayPage() {
             </div>
             <h3 className="mt-2 text-lg font-semibold">Build it out loud with your coach</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              We move through the {TOTAL_CATEGORIES} categories together, one at a time. You talk it out, your coach keeps you moving, and your answers turn into your brief and your deliverables as you go. Best if it's your first time putting the idea into words.
+              We move through the {TOTAL_CATEGORIES} categories together, one at a time. You talk it out, your coach keeps you moving, and your answers turn into your brief and your startup assets as you go. Best if it's your first time putting the idea into words.
             </p>
             <div className="mt-4">
               <Link to="/dashboard/brief" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90">
@@ -80,7 +80,7 @@ export default function WorkshopDayPage() {
             </div>
             <h3 className="mt-2 text-lg font-semibold">Drop in a link or a paragraph, get all {TOTAL_DELIVERABLES} back</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Paste your site or describe your startup. We enrich it, generate every deliverable in order, and hand it back so you can walk in Saturday with something to react to — not a blank page.
+              Paste your site or describe your startup. We enrich it, generate every startup asset in order, and hand it back so you can walk in Saturday with something to react to — not a blank page.
             </p>
             <div className="mt-4">
               <Link to="/dashboard/hub/new" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-background/50 px-4 py-2.5 text-sm font-medium hover:bg-white/5">
@@ -210,7 +210,7 @@ export default function WorkshopDayPage() {
       {/* CTAs */}
       <div className="flex flex-wrap gap-3">
         <Link to="/dashboard/hub" className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:opacity-90">
-          See all {TOTAL_DELIVERABLES} deliverables we build together
+          See all {TOTAL_DELIVERABLES} startup assets we build together
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>

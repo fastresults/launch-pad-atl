@@ -8,10 +8,10 @@ type Props = {
 };
 
 export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEditBrief, hasExistingVentures = false }: Props) {
-  const ctaLabel = hasExistingVentures ? "Open your Startup Hub" : "Generate your first deliverable";
-  const headline = hasExistingVentures ? "Pick up where you left off." : "Generate your first deliverable.";
+  const ctaLabel = hasExistingVentures ? "Open your Startup Hub" : "Generate your first startup asset";
+  const headline = hasExistingVentures ? "Pick up where you left off." : "Generate your first startup asset.";
   const subcopy = hasExistingVentures
-    ? "Your brief just got sharper — jump back into your Startup Hub to refresh existing deliverables or start a new venture."
+    ? "Your brief just got sharper — jump back into your Startup Hub to refresh existing startup assets or start a new venture."
     : "We'll open your Startup Snapshot with your brief already filled in — review it, add your city and state, then we generate.";
   return (
     <div className="mt-10 space-y-10">
@@ -23,7 +23,7 @@ export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEdit
           You've given the AI the full picture.
         </h1>
         <p className="mt-3 text-muted-foreground max-w-2xl">
-          From here on, every deliverable we build is grounded in your story, your market, and your
+          From here on, every startup asset we build is grounded in your story, your market, and your
           edge — not a generic framework.
         </p>
       </div>
@@ -46,7 +46,7 @@ export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEdit
           <UnlockCard
             icon={<FileText className="h-4 w-4" />}
             title="Deliverables that sound like you"
-            body="Every one of the 34 deliverables is generated from your own words and numbers."
+            body="Every one of the 34 startup assets is generated from your own words and numbers."
           />
         </div>
       </div>
@@ -72,7 +72,7 @@ export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEdit
             onClick={onSeeDeliverables}
             className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/10 px-5 py-3 text-sm font-medium hover:bg-muted/30"
           >
-            See all 34 deliverables
+            See all 34 startup assets
           </button>
         </div>
       </div>

@@ -71,7 +71,7 @@ export default function WorkflowPage() {
     mutationFn: () => forceRunMyRemaining(),
     onSuccess: (r: any) => {
       const made = r?.done ?? r?.attempted ?? 0;
-      toast.success(made > 0 ? `Force run restarted — ${made} deliverables advanced` : "Force run restarted generation");
+      toast.success(made > 0 ? `Force run restarted — ${made} startup assets advanced` : "Force run restarted generation");
       qc.invalidateQueries({ queryKey: ["my"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Force run failed"),
@@ -177,8 +177,8 @@ export default function WorkflowPage() {
           <h1 className="text-3xl font-semibold tracking-tight">Your workflow</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {totalDeliverables > 0
-              ? `${totalDeliverables} founder-ready deliverables across ${totalCategories} categories — including bonus Brand, Marketing, and Social & Content tracks. Each one is generated from your Startup Brief and the deliverables that came before it, so the whole package stays in sync with your startup.`
-              : "Your full deliverables package, generated from your Startup Brief and built in order so each piece feeds the next."}
+              ? `${totalDeliverables} founder-ready startup assets across ${totalCategories} categories — including bonus Brand, Marketing, and Social & Content tracks. Each one is generated from your Startup Brief and the startup assets that came before it, so the whole package stays in sync with your startup.`
+              : "Your full startup asset package, generated from your Startup Brief and built in order so each piece feeds the next."}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -200,8 +200,8 @@ export default function WorkflowPage() {
           <Button
             onClick={() => runAll.mutate()}
             disabled={!briefReady || bulkActive || remainingCount === 0}
-            aria-label="Generate every deliverable that's still missing"
-            title="Generate every deliverable that's still missing"
+            aria-label="Generate every startup asset that's still missing"
+            title="Generate every startup asset that's still missing"
           >
             {bulkActive ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating…</>
@@ -221,8 +221,8 @@ export default function WorkflowPage() {
             <div className="flex items-center gap-2 font-medium">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
               {bulk
-                ? `Building your kit — ${bulkDone} of ${bulkTotal} new deliverables ready`
-                : "Queuing your remaining deliverables…"}
+                ? `Building your kit — ${bulkDone} of ${bulkTotal} new startup assets ready`
+                : "Queuing your remaining startup assets…"}
             </div>
             <div className="text-xs text-muted-foreground">
               {generatedCount} / {triggerable.length} total
@@ -247,7 +247,7 @@ export default function WorkflowPage() {
       {!briefReady && (
         <div className="rounded-2xl border border-status-warning/30 bg-status-warning/5 p-4 text-sm">
           <Link to="/dashboard/brief" className="font-medium underline">Finish your Startup Brief</Link>
-          {" "}first ({briefScore} / 10 answered) — your coach needs it before AI can generate deliverables that actually sound like your startup.
+          {" "}first ({briefScore} / 10 answered) — your coach needs it before AI can generate startup assets that actually sound like your startup.
         </div>
       )}
 
@@ -353,7 +353,7 @@ export default function WorkflowPage() {
                       variant={d.generated ? "outline" : "default"}
                       disabled={!briefReady || runOne.isPending}
                       onClick={() => runOne.mutate(d.key)}
-                      title={!d.deps_met ? "We'll run upstream deliverables first, then this one." : undefined}
+                      title={!d.deps_met ? "We'll run upstream startup assets first, then this one." : undefined}
                     >
                       {runOne.isPending && runOne.variables === d.key ? (
                         <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Running…</>

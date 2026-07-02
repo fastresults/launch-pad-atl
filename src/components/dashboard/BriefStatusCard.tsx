@@ -45,7 +45,7 @@ export function BriefStatusCard({ answered, total }: Props) {
         description={
           <>
             You can talk instead of type. Your AI assistant uses these answers all day
-            Saturday to build your 25 deliverables. You're <strong className="text-foreground">0 of {total}</strong> done.
+            Saturday to build your 25 startup assets. You're <strong className="text-foreground">0 of {total}</strong> done.
           </>
         }
         primary={{ to: "/dashboard/brief", label: "Start" }}
@@ -106,7 +106,7 @@ export function BriefStatusCard({ answered, total }: Props) {
             <AlertDialogTitle>Clear all {total} answers?</AlertDialogTitle>
             <AlertDialogDescription>
               This sends you back to question 1 with a blank brief. Your generated
-              deliverables and ventures stay untouched. This can't be undone.
+              startup assets and ventures stay untouched. This can't be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
