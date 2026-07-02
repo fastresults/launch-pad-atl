@@ -477,15 +477,25 @@ export function buildCoverArtPrompt(args: {
   variationSeed?: string;
   headlineOverride?: HeadlineOverride;
   logoZone?: { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" };
+  sceneSignal?: SceneSignal;
+  // When true, we render the headline server-side after generation. The prompt
+  // suppresses all glyphs and reserves the top band as unmarked negative space.
+  serverRenderedHeadline?: boolean;
 }): string {
-  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed, headlineOverride, logoZone } = args;
+  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed, headlineOverride, logoZone, sceneSignal, serverRenderedHeadline } = args;
   const brief = DIRECTION_BRIEF[direction];
   const palette = paletteBlock(kit);
   const typo = typoBlock(kit);
-  const { text: headline, suppress: suppressHeadline } = resolveHeadline(ctx, headlineOverride);
-  const isCustomHeadline = headlineOverride?.mode === "custom" && !!headline;
-  const venture = ventureBlock(ctx, headlineOverride);
-  const scene = resolveSceneDirective(ctx);
+  // If the headline will be composited server-side, force the model into
+  // zero-glyph mode — otherwise Gemini paints its own (badly-fit) headline
+  // AND ours ends up on top, producing duplicate text.
+  const effectiveOverride: HeadlineOverride | undefined = serverRenderedHeadline
+    ? { mode: "none" }
+    : headlineOverride;
+  const { text: headline, suppress: suppressHeadline } = resolveHeadline(ctx, effectiveOverride);
+  const isCustomHeadline = effectiveOverride?.mode === "custom" && !!headline;
+  const venture = ventureBlock(ctx, effectiveOverride);
+  const scene = resolveSceneDirective(ctx, sceneSignal);
   const sceneBlock = sceneDirectiveBlock(scene);
   const system = assetSystem(asset, hasLogoImage, headline, suppressHeadline, isCustomHeadline, logoZone);
   const dims = `${asset.width}x${asset.height} (${asset.guidance})`;
