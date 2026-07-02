@@ -210,7 +210,7 @@ export function FilePreviewDialog({
               </div>
               {doc.kind === "deliverable" && (
                 <div className="text-xs text-muted-foreground max-w-md">
-                  Tip: open the deliverable from the Hub to get the rich viewer with Markdown, DOCX, and PDF export.
+                  Tip: open the startup asset from the Hub to get the rich viewer with Markdown, DOCX, and PDF export.
                 </div>
               )}
             </div>

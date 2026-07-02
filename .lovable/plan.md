@@ -1,55 +1,90 @@
 ## Goal
-Replace the native OS `<input type="color">` in the palette swatch popover with a proper in-app **color wheel + saturation/lightness picker** so founders can visually dial in a color without relying on the browser's tiny system picker.
+Replace user-facing "deliverable(s)" copy with **"startup asset(s)"** across the app and marketing pages. Keep code identifiers, DB columns, route paths, edge-function names, and query keys unchanged (they are internal and refactoring them is risky + out of scope).
 
-## Library
-Add [`react-colorful`](https://github.com/omgovich/react-colorful) (~2.8 kB, zero-dep, already the de facto shadcn/Radix companion picker). Two components we need:
-- `HexColorPicker` — the square saturation/value area with hue slider underneath (the "color wheel" experience the screenshot is asking for).
-- `HexColorInput` — validated hex text field (drop-in replacement for our current `Input` + regex).
+## Terminology rules
+- Singular: **startup asset** (e.g. "each startup asset")
+- Plural: **startup assets** (e.g. "34 startup assets")
+- Count phrasing: **"34 startup assets across eight categories"**
+- Never use "deliverables" in headings, body copy, buttons, tooltips, toasts, aria-labels, empty states, or emails visible to users.
+- Keep it lowercase in body copy; Title Case only in headings/labels ("Your Startup Assets").
 
-Install: `bun add react-colorful`.
+## Where to change (user-facing strings only)
 
-## Changes (single file)
+### Marketing / home
+- `src/components/home/HomeFramework.tsx`
+  - L159 hero body: `"34 deliverables across eight categories …"` → `"34 startup assets across eight categories …"`
+  - L217 bullet: `"All 34 deliverables — Foundation, Strategy, …"` → `"All 34 startup assets — Foundation, Strategy, …"`
+  - Any other visible "deliverable" tokens in this file (sweep).
+- `src/routes/services.tsx`
+  - L254 detail copy: `"Fixed price, fixed deliverables, fixed clock."` → `"Fixed price, fixed startup assets, fixed clock."`
+  - L120 `s.deliverables.map(...)` — data key, **do not rename**; only touch surrounding visible labels if any read "Deliverables".
 
-### `src/components/hub/brand/EditablePaletteSwatch.tsx`
-Rework the `PopoverContent` body only. Trigger button, debounce, reset behavior, and the `onChange(hex)` contract stay the same — so BrandWizard and BrandStudio need **no** changes.
+### Brief flow
+- `src/components/brief/BriefCompleteScreen.tsx`
+  - L49: `"Every one of the 34 deliverables …"` → `"Every one of the 34 startup assets …"`
+  - L75 button: `"See all 34 deliverables"` → `"See all 34 startup assets"`
+- `src/components/brief/BriefReview.tsx` L112: `"deliverables and ventures stay untouched"` → `"startup assets and ventures stay untouched"`
+- `src/components/dashboard/BriefStatusCard.tsx`
+  - L48: `"build your 25 deliverables"` → `"build your 25 startup assets"` (also worth confirming the number matches `TOTAL_DELIVERABLES`; separate follow-up)
+  - L109: same replacement as BriefReview.
 
-New popover layout (top → bottom):
+### Dashboard / workflow / deliverables page
+- `src/routes/_authenticated/dashboard.tsx`
+  - L108 tooltip: `"…every deliverable reads from…"` → `"…every startup asset reads from…"`
+  - L138 tooltip: `"makes every deliverable sharper"` → `"makes every startup asset sharper"`
+  - L112 `key: "deliverables"` — **internal key, leave**.
+  - Any sidebar label that reads "Deliverables" → rename to "Startup Assets" (sweep the nav strings in this file).
+- `src/routes/_authenticated/dashboard/deliverables.tsx` (route path stays)
+  - L218 H1: `"Your deliverables"` → `"Your startup assets"`
+  - L236: `"Ask or search your deliverables"` → `"Ask or search your startup assets"`
+  - L406 empty state: `"No deliverables yet"` → `"No startup assets yet"`
+  - Any other visible strings; leave `queryKey`, `supabase.functions.invoke("deliverables-ask", …)` alone.
+- `src/routes/_authenticated/dashboard/workflow.tsx`
+  - L74 toast: `"${made} deliverables advanced"` → `"${made} startup assets advanced"`
+  - L180: `"…founder-ready deliverables across…"` → `"…founder-ready startup assets across…"`
+  - L181: `"Your full deliverables package…"` → `"Your full startup asset package…"`
+  - L203–204 aria-label/title: `"Generate every deliverable that's still missing"` → `"Generate every startup asset that's still missing"`
+  - L224: `"${bulkDone} of ${bulkTotal} new deliverables ready"` → `"…new startup assets ready"`
+  - L225: `"Queuing your remaining deliverables…"` → `"Queuing your remaining startup assets…"`
+  - L250: `"…deliverables that actually sound like your startup"` → `"…startup assets that actually sound like your startup"`
+  - L356 title: `"We'll run upstream deliverables first, then this one."` → `"We'll run upstream startup assets first, then this one."`
+  - Comments (L110) — leave.
+- `src/routes/_authenticated/dashboard/day.tsx` — sweep any visible deliverable strings, replace.
 
-1. **Header row** — token label (e.g. `MUTED`) + "Reset" link (unchanged).
-2. **Color picker** — `<HexColorPicker color={draft} onChange={commitDebounced} style={{ width: '100%', height: 160 }} />`. This gives:
-   - Large saturation/value square (click + drag).
-   - Hue slider strip underneath (the "wheel").
-   - Live drag updates, debounced 250 ms into `onSave` (same as today).
-3. **Hex input row** — `<HexColorInput prefixed color={draft} onChange={commit} />` styled with our existing `Input` classes so it matches the rest of the UI. Keeps keyboard entry / paste-a-hex workflow.
-4. **Recent / brand swatches row** *(optional, nice-to-have)* — six small buttons showing the other palette tokens' current colors so the user can quickly match "make muted the same as border". Skip if it bloats the popover; leave a TODO.
-5. **Done** button — unchanged.
+### Workshop slides / brief-facing copy
+- `src/components/workshop-slides/DeliverableSlide.tsx` and `src/components/workshop-slides/slides/*.tsx` (foundation, strategy, operations, finance, brand, marketing, social-content) — replace visible strings only. Keep the file/component name `DeliverableSlide` (internal).
+- `src/components/workshop-slides/registry.ts` — labels only; keep keys.
 
-Remove:
-- `<input type="color">` element.
-- Local `isHex` regex + manual hex `<Input>` (react-colorful validates internally).
+### Privacy / legal
+- `src/routes/privacy.tsx` — replace visible "deliverables" → "startup assets" where it refers to the founder's outputs (leave any legal-ese phrasing that requires a lawyer's sign-off; there shouldn't be any beyond the noun).
 
-Keep:
-- `size` prop, hover pencil overlay, `originalValue` reset, debounced commit, `onChange(hex)` signature.
-- Popover width bumped from `w-64` to `w-72` to fit the picker comfortably; still fits inside the Review card.
+### Data / lib layers (sweep for user-visible strings only)
+- `src/lib/framework-deliverables.ts` — filename stays; export const names stay; only literal display strings change.
+- `src/lib/schedule-data.ts`, `src/lib/build-workshops.ts`, `src/lib/agency-services.ts`, `src/lib/founder-memory.ts`, `src/lib/admin-badges.functions.ts`, `src/lib/site-settings.functions.ts`, `src/lib/attendee.functions.ts`, `src/lib/userPipeline.functions.ts`, `src/lib/pipeline.functions.ts` — replace only user-visible string literals (e.g. labels, tooltips, badge text, email subjects/bodies). Skip keys, columns, log messages, and identifiers.
 
-### Styling
-`react-colorful` ships its own CSS via `import "react-colorful/dist/index.css"` (add once at the top of `EditablePaletteSwatch.tsx`). Override just the border radius to match our tokens:
+### App shell
+- `src/App.tsx` — replace any visible route/nav label strings ("Deliverables" tab) → "Startup Assets".
 
-```css
-.react-colorful { border-radius: 0.5rem; }
-.react-colorful__saturation { border-radius: 0.5rem 0.5rem 0 0; }
-.react-colorful__hue { border-radius: 0 0 0.5rem 0.5rem; height: 16px; }
-```
+## Out of scope (explicitly leave alone)
+- Route paths: `/dashboard/deliverables` stays (breaking it invalidates bookmarks, sitemaps, and SEO). Nav label above the route becomes "Startup Assets".
+- DB columns / types in `src/integrations/supabase/types.ts` (auto-generated, and referenced elsewhere).
+- Edge functions (`deliverables-ask`, etc.) and their invoke() calls.
+- React Query keys (`["my", "venture-deliverables"]`, etc.).
+- File names, component names, constant names (`TOTAL_DELIVERABLES`, `framework-deliverables.ts`).
+- Comments and log strings.
+- Admin/internal-only surfaces (settings toggles) unless they render to end users.
 
-Scoped via a wrapper class inside the component (no global CSS edits).
+## Method
+One PR, mechanical sweep with manual review per file. For each file listed:
+1. `rg -n "deliverable"` in the file.
+2. For each hit, decide: user-visible string → replace; identifier/comment/log → skip.
+3. Preserve capitalization at each site ("Deliverables" → "Startup Assets"; "deliverables" → "startup assets"; "deliverable" → "startup asset").
+4. Preserve counts and surrounding punctuation.
 
-## Out of scope
-- No changes to BrandWizard, BrandStudio, or any generator — the swatch's public API is unchanged.
-- No alpha channel (palette tokens are opaque hex).
-- No eyedropper API (Chromium-only, `EyeDropper` — can add later behind a `if ('EyeDropper' in window)` check).
-- No preset-palette picker inside the popover (separate feature).
+## Verification
+- `rg -n "deliverable" src` after the sweep — every remaining hit must be an identifier, comment, log, filename, DB column, edge-function name, route path, or query key. Confirm the list before merging.
+- Spot-check the hero (`/`), `/services`, `/dashboard`, `/dashboard/deliverables`, `/dashboard/workflow`, and the brief complete screen in the preview.
 
-## Technical notes
-- `react-colorful` is fully controlled: pass `color={draft}`, receive updates via `onChange`. It handles drag, touch, and keyboard.
-- Debounce stays client-side; the DB write only fires 250 ms after the user stops dragging, so saturating the color area doesn't spam `upsertBrandKit`.
-- Bundle impact: ~2.8 kB gzipped, tree-shakes to only `HexColorPicker` + `HexColorInput`.
+## Follow-ups (not in this change)
+- Decide whether to rename the route `/dashboard/deliverables` → `/dashboard/assets` with a redirect (SEO cost + link rot; needs its own plan).
+- Reconcile `BriefStatusCard` "25" vs `TOTAL_DELIVERABLES` (34).

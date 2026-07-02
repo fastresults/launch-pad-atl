@@ -109,7 +109,7 @@ export function BriefReview({ values, onEdit, onContinueDiscovery }: Props) {
             <AlertDialogTitle>Clear all answers?</AlertDialogTitle>
             <AlertDialogDescription>
               This wipes every answer and sends you back to question 1. Your generated
-              deliverables and ventures stay untouched. This can't be undone.
+              startup assets and ventures stay untouched. This can't be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

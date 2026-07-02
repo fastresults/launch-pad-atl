@@ -246,7 +246,7 @@ export const strategySlides: Slide[] = [
   // 5. The deliverables overview
   {
     id: "deliverables-overview",
-    title: `The ${TOTAL_DELIVS} deliverables`,
+    title: `The ${TOTAL_DELIVS} startup assets`,
     render: () => (
       <SlideLayout stageKicker={KICKER} pageLabel={pl(5)}>
         <div className="grid grid-cols-12 gap-10 items-center">
@@ -261,7 +261,7 @@ export const strategySlides: Slide[] = [
             <SlotText
               slideId="deliverables-overview"
               field="title"
-              defaultValue={`${TOTAL_DELIVS} founder-ready deliverables — built for your startup.`}
+              defaultValue={`${TOTAL_DELIVS} founder-ready startup assets — built for your startup.`}
               as="h2"
               className="slide-title font-semibold tracking-tight mb-10"
             />

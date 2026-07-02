@@ -109,12 +109,12 @@ export const socialContentSlides: Slide[] = [
   },
   {
     id: "deliverables-overview",
-    title: `The ${TOTAL_DELIVS} deliverables`,
+    title: `The ${TOTAL_DELIVS} startup assets`,
     render: () => (
       <SlideLayout stageKicker={KICKER} pageLabel={pl(5)}>
         <div>
           <SlotText slideId="deliverables-overview" field="kicker" defaultValue="What you walk out with" as="div" className="slide-kicker font-semibold text-primary mb-6" />
-          <SlotText slideId="deliverables-overview" field="title" defaultValue={`${TOTAL_DELIVS} founder-ready deliverables — built for your startup.`} as="h2" className="slide-title font-semibold tracking-tight mb-12" />
+          <SlotText slideId="deliverables-overview" field="title" defaultValue={`${TOTAL_DELIVS} founder-ready startup assets — built for your startup.`} as="h2" className="slide-title font-semibold tracking-tight mb-12" />
           <div className="grid grid-cols-2 gap-6">
             {STAGE.items.map((item, i) => {
               const Icon = item.icon;
@@ -149,7 +149,7 @@ export const socialContentSlides: Slide[] = [
       <SlideLayout stageKicker={KICKER} pageLabel={pl(TOTAL_SLIDES)} variant="dark">
         <div className="max-w-[1500px]">
           <SlotText slideId="recap" field="kicker" defaultValue="That's a wrap · workshop complete" as="div" className="slide-kicker font-semibold text-white/60 mb-10" />
-          <SlotText slideId="recap" field="title" defaultValue="Eight stages. Thirty-four deliverables. One founder-ready startup." as="h2" className="slide-title font-semibold tracking-tight" />
+          <SlotText slideId="recap" field="title" defaultValue="Eight stages. Thirty-four startup assets. One founder-ready startup." as="h2" className="slide-title font-semibold tracking-tight" />
           <SlotText slideId="recap" field="body" defaultValue="From Foundation to Social & Content — every attendee walks out with the documents, decks, and plans a real business is built on. This is what an Atlanta startup kit looks like." as="p" className="slide-subtitle mt-10 text-white/80 max-w-[1300px]" />
           <div className="mt-16 inline-flex items-center gap-4 px-8 py-5 rounded-2xl bg-primary text-primary-foreground slide-body-lg font-semibold">
             <Sparkles style={{ width: 36, height: 36 }} />

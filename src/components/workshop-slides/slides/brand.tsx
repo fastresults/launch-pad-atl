@@ -153,13 +153,13 @@ export const brandSlides: Slide[] = [
   },
   {
     id: "deliverables-overview",
-    title: `The ${TOTAL_DELIVS} deliverables`,
+    title: `The ${TOTAL_DELIVS} startup assets`,
     render: () => (
       <SlideLayout stageKicker={KICKER} pageLabel={pl(5)}>
         <div className="grid grid-cols-12 gap-10 items-center">
           <div className="col-span-7">
             <SlotText slideId="deliverables-overview" field="kicker" defaultValue="What you walk out with" as="div" className="slide-kicker font-semibold text-primary mb-6" />
-            <SlotText slideId="deliverables-overview" field="title" defaultValue={`${TOTAL_DELIVS} founder-ready deliverables — built for your startup.`} as="h2" className="slide-title font-semibold tracking-tight mb-10" />
+            <SlotText slideId="deliverables-overview" field="title" defaultValue={`${TOTAL_DELIVS} founder-ready startup assets — built for your startup.`} as="h2" className="slide-title font-semibold tracking-tight mb-10" />
             <div className="grid grid-cols-1 gap-4">
               {STAGE.items.map((item, i) => {
                 const Icon = item.icon;

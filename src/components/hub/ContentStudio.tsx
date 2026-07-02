@@ -174,7 +174,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           <h3 className="text-sm font-semibold">Content Studio</h3>
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          Generate your <b>90-Day Content Calendar</b> deliverable first — Content Studio turns
+          Generate your <b>90-Day Content Calendar</b> startup asset first — Content Studio turns
           each planned post into a 1:1 / 4:5 / 9:16 social ad using your locked brand kit.
         </p>
       </div>

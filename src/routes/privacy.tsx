@@ -65,7 +65,7 @@ export default function PrivacyPage() {
               </li>
               <li>
                 To communicate with you about logistics, schedule changes, and
-                post-workshop deliverables.
+                post-workshop startup assets.
               </li>
               <li>To send occasional updates about future workshops (you can opt out).</li>
               <li>

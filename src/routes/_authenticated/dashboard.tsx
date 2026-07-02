@@ -105,7 +105,7 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       key: "brief",
       to: "/dashboard/brief",
       label: "Startup brief",
-      tooltip: "Answer ten questions by typing or by voice. The brief becomes the source every deliverable reads from — when it's complete and confirmed, your facilitator's AI can build the rest of your kit.",
+      tooltip: "Answer ten questions by typing or by voice. The brief becomes the source every startup asset reads from — when it's complete and confirmed, your facilitator's AI can build the rest of your kit.",
       icon: ClipboardList,
     },
     {
@@ -135,7 +135,7 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       key: "profile",
       to: "/dashboard/profile",
       label: "Founder profile",
-      tooltip: "Tell us about you, your startup, and your numbers — revenue, burn, runway. Every field you fill makes every deliverable sharper. Save each section as you go; finish when it feels right.",
+      tooltip: "Tell us about you, your startup, and your numbers — revenue, burn, runway. Every field you fill makes every startup asset sharper. Save each section as you go; finish when it feels right.",
       icon: User,
     },
   ];
