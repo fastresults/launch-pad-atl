@@ -258,6 +258,37 @@ export default function WorkflowPage() {
         </div>
       )}
 
+      {imageEligible.length > 0 && (
+        <div className="rounded-2xl border border-white/10 bg-card p-4">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <div className="flex items-center gap-2 font-medium">
+              <ImageIcon className="h-4 w-4 text-muted-foreground" />
+              Hero images
+              {imageGeneratingCount > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  {imageGeneratingCount} painting
+                </span>
+              )}
+              {imageFailedCount > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-status-warning/10 px-2 py-0.5 text-[10px] font-medium text-status-warning">
+                  <AlertTriangle className="h-3 w-3" />
+                  {imageFailedCount} failed
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {imageReadyCount} / {imageEligible.length} painted
+            </div>
+          </div>
+          <Progress value={imagePct} className="mt-3 h-2" />
+          <div className="mt-2 text-xs text-muted-foreground">
+            Images generate at their own pace after each document is written — open a startup asset to view or retry its hero image.
+          </div>
+        </div>
+      )}
+
+
       {!briefReady && (
         <div className="rounded-2xl border border-status-warning/30 bg-status-warning/5 p-4 text-sm">
           <Link to="/dashboard/brief" className="font-medium underline">Finish your Startup Brief</Link>
