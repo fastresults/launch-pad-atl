@@ -68,22 +68,87 @@ function typoBlock(kit: Kit) {
   return `  - Heading family: ${h}\n  - Body family: ${b}`;
 }
 
-function ventureBlock(ctx: any, headlineOverride?: HeadlineOverride) {
+// Words in a company name that innocently collide with unrelated real-world
+// trades / places, causing image models to render the trade instead of the
+// venture. E.g. "Startup Workshops" → carpentry workshop scene.
+const LITERAL_WORD_GUARDS: Record<string, string> = {
+  workshop: `"Workshop" here means a facilitated founder-education session with people, laptops, whiteboards, and slides — NOT a carpentry, mechanical, woodworking, metal, or craft workshop. Do NOT depict workbenches, hand tools, sawdust, aprons, lumber, machinery, or artisan trades.`,
+  workshops: `"Workshops" here means facilitated founder-education sessions — NOT carpentry, mechanical, or craft workshops. Do NOT depict workbenches, tools, aprons, or artisan trades.`,
+  lab: `"Lab" is a metaphor for iterative experimentation — NOT a chemistry / medical / scientific laboratory. Do NOT depict beakers, microscopes, lab coats, or test tubes unless the venture is literally in life sciences.`,
+  labs: `"Labs" is a metaphor for iterative experimentation — NOT a chemistry / medical / scientific laboratory. Do NOT depict beakers, microscopes, lab coats, or test tubes unless the venture is literally in life sciences.`,
+  studio: `"Studio" is a brand metaphor — NOT necessarily an art / dance / recording studio. Do NOT depict easels, ballet bars, or microphones unless the venture is literally in those trades.`,
+  garage: `"Garage" is a founder-culture metaphor — NOT a car repair bay. Do NOT depict cars, lifts, tires, or mechanic overalls unless the venture is literally automotive.`,
+  kitchen: `"Kitchen" is a metaphor for making things — NOT a restaurant kitchen. Do NOT depict cooks, stoves, or food unless the venture is literally in food & beverage.`,
+  forge: `"Forge" is a metaphor for crafting — NOT a blacksmith's forge. Do NOT depict anvils, hot metal, or blacksmiths unless the venture is literally in metalwork.`,
+  foundry: `"Foundry" is a metaphor for building — NOT a metal-casting foundry. Do NOT depict molten metal or industrial casting unless the venture is literally in that trade.`,
+  atelier: `"Atelier" is a brand metaphor — NOT a fashion or art atelier. Do NOT depict sewing, mannequins, or fashion sketches unless the venture is literally in that trade.`,
+  factory: `"Factory" is a metaphor for scaled production — NOT an industrial factory floor. Do NOT depict conveyor belts or heavy machinery unless the venture is literally in manufacturing.`,
+  works: `"Works" is a brand suffix — NOT an industrial works. Do NOT depict factories or heavy industry unless the venture is literally in that sector.`,
+  hub: `"Hub" is a metaphor for a gathering point — NOT a transit hub or airport. Do NOT depict planes, terminals, or hubcaps unless the venture is literally in transit.`,
+  garden: `"Garden" is a metaphor for cultivation — NOT a horticultural garden. Do NOT depict plants, soil, or gardeners unless the venture is literally in horticulture.`,
+};
+
+function literalWordGuards(name: string, industry?: string, subIndustry?: string): string[] {
+  if (!name) return [];
+  const ind = `${industry ?? ""} ${subIndustry ?? ""}`.toLowerCase();
+  const guards: string[] = [];
+  const tokens = name.toLowerCase().split(/[^a-z]+/).filter(Boolean);
+  for (const t of tokens) {
+    const g = LITERAL_WORD_GUARDS[t];
+    if (!g) continue;
+    // Skip the guard if the industry actually IS that trade (e.g. real bakery).
+    if (t === "kitchen" && /food|restaurant|bever/.test(ind)) continue;
+    if ((t === "lab" || t === "labs") && /(life ?sci|biotech|pharma|medical)/.test(ind)) continue;
+    if (t === "garage" && /auto|vehicle|car/.test(ind)) continue;
+    if (t === "atelier" && /fashion|apparel|art/.test(ind)) continue;
+    if ((t === "factory" || t === "works") && /manufactur|industrial/.test(ind)) continue;
+    guards.push(g);
+  }
+  return guards;
+}
+
+function ventureBlock(ctx: any, _headlineOverride?: HeadlineOverride) {
   const brain = ctx?.brain ?? {};
-  const name = brain?.identity?.company_name ?? ctx?.snap?.company_name ?? "the venture";
-  const oneLiner = brain?.identity?.one_liner ?? "";
+  const snap = ctx?.snap ?? {};
+  const name = brain?.identity?.company_name ?? snap?.company_name ?? "the venture";
+  const oneLiner = brain?.identity?.one_liner ?? snap?.value_proposition ?? "";
+  const concept = snap?.concept_summary ?? "";
   const customer = brain?.customer ?? "";
+  const problem = brain?.problem ?? "";
+  const solution = brain?.solution ?? "";
   const diff = (brain?.differentiators ?? []).slice(0, 3).join("; ");
-  // When the founder is overriding the on-image headline (custom or none),
-  // do NOT show competing copy to the model — it will render the one-liner
-  // instead of the requested custom text.
-  const hideCopy = headlineOverride?.mode === "custom" || headlineOverride?.mode === "none";
-  return [
+  const industry = snap?.industry ?? "";
+  const subIndustry = snap?.sub_industry ?? "";
+  const track = snap?.track ?? "";
+  const location = [snap?.city, snap?.region, snap?.country].filter(Boolean).join(", ");
+  const guards = literalWordGuards(name, industry, subIndustry);
+
+  // "Visual anchor": what the scene should evoke, derived from customer + industry.
+  const anchorParts: string[] = [];
+  if (customer) anchorParts.push(customer);
+  else if (industry) anchorParts.push(`${industry} audience`);
+  const visualAnchor = anchorParts.length ? anchorParts.join(" · ") : "";
+
+  const lines: string[] = [
+    `SUBJECT CONTEXT (for scene comprehension only — do NOT render any of these words as text on the canvas):`,
     `  - Name: ${name}`,
-    !hideCopy && oneLiner && `  - One-liner: ${oneLiner}`,
-    customer && `  - Customer: ${customer}`,
+    industry && `  - Industry: ${industry}${subIndustry ? ` / ${subIndustry}` : ""}`,
+    track && `  - Track: ${track}`,
+    location && `  - Location: ${location}`,
+    concept && `  - What it IS (plain description): ${concept}`,
+    oneLiner && `  - One-liner: ${oneLiner}`,
+    customer && `  - Customer / audience depicted: ${customer}`,
+    problem && `  - Problem it solves: ${problem}`,
+    solution && `  - How it solves it: ${solution}`,
     diff && `  - Differentiators: ${diff}`,
-  ].filter(Boolean).join("\n");
+    visualAnchor && `  - VISUAL ANCHOR (aim the scene here): ${visualAnchor}`,
+  ].filter(Boolean) as string[];
+
+  if (guards.length) {
+    lines.push(`  - LITERAL-WORD GUARDRAILS (the name contains everyday words that MUST NOT be interpreted literally):`);
+    for (const g of guards) lines.push(`      • ${g}`);
+  }
+  return lines.join("\n");
 }
 
 
@@ -258,8 +323,10 @@ ${palette}
 Typography:
 ${typo}
 
-## Venture context
+## Subject brief (what this venture actually IS — the scene must reflect this, not a literal reading of the brand name)
 ${venture}
+
+The Subject brief above governs WHAT is depicted. The Canvas plan above governs COLORS. The Headline policy governs TEXT. Never let the brand name's individual English words dictate the scene — always defer to the Subject brief.
 
 ## Asset spec
   - Platform: ${platform}

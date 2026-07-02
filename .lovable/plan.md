@@ -1,62 +1,61 @@
-## What's wrong in the attached render
+# Retain venture context on regeneration
 
-The "startuplabs" logo sits in a tiny light-gray rectangle floating over the concrete background. Two concrete defects in `supabase/functions/_shared/logo-compositor.ts` cause this:
+## The problem
 
-1. **Wide wordmarks get shrunk by the width cap, not enlarged by it.**
-   The chip is sized height-first (`boxH = short * heightFrac * padCompensation`), then width is derived from logo aspect. For a ~4:1 wordmark on a landscape canvas, that produces `boxW ≈ 0.60 * W`, which exceeds `maxWFrac` (0.48 md / 0.58 lg). The clamp path then does `boxW = maxW; boxH = boxW / aspect` — which **shrinks the height** (and therefore the logo) well below the tier's target. The wider the wordmark, the smaller the logo ends up. That's the opposite of what the tiers imply.
+When you regenerated the cover for "Startup Workshops" with the headline **"Adam Rocks!"**, the model produced a young man in a carpentry workshop. Context wasn't literally lost on the round-trip — the edge function still reloads the full venture on every call. The real problem is two-fold:
 
-2. **The chip reads as a pasted sticker, not integrated art.**
-   - Chip is a fully opaque flat `plan.surface` rectangle with hard 90° corners and no shadow/edge treatment.
-   - `plan.surface` for this brand is a light neutral that lands very close to the base image's midtone gray, so the chip prints as a slightly-off rectangle outline instead of a deliberate lockup.
-   - 8% inner padding on every side wastes another ~16% of the chip on empty surface color, making the logo look small even at "md/lg".
-   - Transparent PNG logos still get a solid chip painted behind them even when they'd composite cleanly onto the artwork.
+1. **`ventureBlock` in `supabase/functions/_shared/cover-art-director.ts` sends the model almost nothing about the venture** — just `Name`, `One-liner`, `Customer`, `Differentiators`. No industry, no track, no problem/solution, no visual subject guidance. With a name like "Startup Workshops," the model latches onto the word "workshop" literally.
+2. **When the founder picks a custom headline ("Adam Rocks!") or "no text", we intentionally hide the one-liner** (`hideCopy` branch) to stop the model from painting competing copy on the canvas. That's correct for *rendered text*, but it also strips the last shred of subject context the model had, so nothing is left to anchor the scene.
 
-Secondary: the prompt-side `logoSafeZone` hint uses the same height-first math, so the reserved negative space the model paints doesn't match the actual composited chip — occasionally the chip lands on top of model-rendered content.
+Result: model reads `Name: Startup Workshops` + a punchy headline + no subject → invents a literal workshop scene.
 
-Note: no `[logo-compositor]` log line appears in `venture-social-cover` logs for the run in question, but that's just because the search window predates the console.log; the compositor is being called (image clearly shows the chip).
+## The fix
 
-## Plan
+Rewrite `ventureBlock` and the prompt scaffolding so the model always receives a rich, unambiguous **Subject Brief** — separate from the on-image headline policy — that regeneration cannot strip.
 
-Scope: `supabase/functions/_shared/logo-compositor.ts` and matching hint consumers. No UI changes.
+### 1. Enrich `ventureBlock` (`supabase/functions/_shared/cover-art-director.ts`)
 
-### 1. Width-first sizing for wide logos, height-first for square/tall
+Always emit, regardless of headline mode:
 
-Split the target math on aspect ratio:
+- Company name
+- Industry / sub-industry / track (pulled from `ctx.snap`)
+- What the venture IS in one plain sentence (concept summary or brain one-liner) — as **subject context, not on-image copy**
+- Who it serves (customer)
+- Problem + solution (short)
+- Differentiators
+- **Literal-word guardrails**: an auto-derived "DO NOT interpret literally" line built from tokens in the company name that have common non-startup meanings (`workshop`, `lab`, `studio`, `garage`, `kitchen`, `forge`, `atelier`, `factory`, `hub`, `foundry`, `works`, etc.). Example emitted line:
+  > "Workshop" here means a facilitated founder-education session — NOT a carpentry / mechanical / craft workshop. Do not depict workbenches, tools, sawdust, aprons, or artisan trades.
 
-- `aspect >= 2` (wordmark): drive from a new `widthFrac` per tier. `boxW = short * widthFrac`, `boxH = boxW / aspect`.
-- `aspect < 2` (mark/badge): keep current height-first math.
+Mark this block "SUBJECT CONTEXT (for scene comprehension only — do NOT render as text on the canvas)". This resolves the tension with the headline-suppression branch: the model gets full context but knows the words don't belong on the pixels.
 
-New tier table (adds `widthFrac`, raises corner ceilings so lg can actually reach lg):
+### 2. Stop stripping context in custom / none headline modes
 
-```text
-sm: heightFrac 0.10, widthFrac 0.28, maxWFrac 0.42
-md: heightFrac 0.14, widthFrac 0.36, maxWFrac 0.52
-lg: heightFrac 0.20, widthFrac 0.46, maxWFrac 0.66
-```
+Remove the `hideCopy` branch that suppressed `oneLiner` when the founder picked a custom headline. The existing `PRIMARY TEXT OBJECTIVE` block (already forbids any glyph except the override) is sufficient to keep the one-liner off the canvas.
 
-Keep a soft `maxWFrac` clamp, but when it triggers on a wordmark, clamp width **without** re-shrinking height below `heightFrac * short` — take the max of the two candidates.
+### 3. Add a `SUBJECT BRIEF` section to the prompt
 
-### 2. Reduce inner padding
+In `buildCoverArtPrompt`, insert a top-level `## Subject brief` section above `## Composition system`, sourced from the enriched `ventureBlock`. Include a one-line "Visual anchor" derived from `industry` + `customer` (e.g., "founders and small-business owners going through a startup accelerator") so the model has an explicit scene target instead of guessing from the name.
 
-Drop `padPct` in `fitInside` from 0.08 to 0.05. Combined with the sizing fix, wordmark glyphs get ~35–45% more perceived height.
+### 4. Propagate the same subject brief to the avatar + preview paths
 
-### 3. Chip finish: rounded corners + subtle drop shadow + transparent-logo fast path
+`buildAvatarPrompt` doesn't need scene context (it just places the logo), so no change there. `venture-style-preview` uses the same director — it inherits the fix automatically. Verify the style-preview edge function still passes `ctx` through unchanged.
 
-- If the decoded logo has any pixel with alpha < 250 (transparent PNG), skip the chip entirely and composite the logo directly, sized to the same target box. Add a soft 8-px feathered scrim only when a luminance probe of the target region shows contrast against the logo's ink is < 3:1.
-- Otherwise draw a rounded-rect chip: corner radius = `min(boxW, boxH) * 0.14`, plus a 1-pass Gaussian-ish soft shadow (offset y = 4 px, blur ~10 px, 25% alpha). Rounded rect and blur done by pixel-writing with imagescript (no native deps).
-- Chip surface picker: probe average luminance of a small crop of the base image behind the chip. If |L(chip.surface) − L(base)| < 0.08, swap the chip color to `plan.ink` (dark) or `#FFFFFF`, whichever gives the higher contrast against the base — so the chip always reads as a deliberate lockup.
+### 5. Feedback continuity on regenerate
 
-### 4. Sync the prompt safe-zone hint
+The current regenerate path already reloads `loadVentureContext` fresh every call, so nothing to change server-side for persistence. Add one safeguard in `SocialAutopilot.regenerateSingle`: log a warning if the response's `ctx.snap.company_name` differs from the tile's expected venture, so we catch any future drift in QA.
 
-Update `logoSafeZone` to use the same width-first / height-first branch and the same tier constants so the negative space the model reserves matches the chip we composite. Callers (`venture-social-cover/index.ts`, `venture-style-preview/index.ts`) need no signature changes.
+## Files touched
 
-### 5. Verify
+- `supabase/functions/_shared/cover-art-director.ts` — rewrite `ventureBlock`, add subject-brief section, drop `hideCopy`, add literal-word guardrail helper.
+- `supabase/functions/venture-social-cover/index.ts` — no logic change; verify `ctx` is passed (already is).
+- `supabase/functions/venture-style-preview/index.ts` — verify same (already is).
+- `src/components/hub/social/SocialAutopilot.tsx` — small logging safeguard on regenerate response.
 
-- Add one console.log line summarizing the new decision: `aspect, tier, mode(width-first|height-first), chipW/H, pad, radius, chipMode(chip|direct), surfaceSwap(yes|no)`.
-- Sanity-check by regenerating the current asset at md and lg on a wide wordmark and a square mark; confirm lg wordmark reaches ~46% canvas width and no chip prints when a transparent PNG is used.
+## Out of scope
 
-### Files touched
+- Changing the on-image headline mechanics (already working after the last fix).
+- Palette / logo compositor changes.
 
-- `supabase/functions/_shared/logo-compositor.ts` — sizing, padding, rounded/shadowed chip, transparent-logo path, surface-swap, updated `logoSafeZone`.
+## Verification
 
-No client, DB, or other Edge Function changes.
+After deploy, regenerate the Twitter header for "Startup Workshops" with headline "Adam Rocks!" and confirm the scene reflects a founder-education context (people at laptops, whiteboard, cohort setting) rather than a craft workshop.
