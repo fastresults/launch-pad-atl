@@ -379,6 +379,7 @@ Deno.serve(async (req) => {
             retryNote,
             userFeedback,
             variationSeed,
+            headlineOverride,
           });
 
     const generate = async (retryNote?: string) => {
