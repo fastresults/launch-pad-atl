@@ -290,8 +290,8 @@ export function RegenerateAssetDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => onOpenChange(v)}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             {mode === "generate"
@@ -305,7 +305,8 @@ export function RegenerateAssetDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto px-6 py-4 flex-1 min-h-0">
+
           {scope === "single" && (
             <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-2">
               <div className="h-14 w-20 shrink-0 overflow-hidden rounded-md border border-border bg-muted/40 flex items-center justify-center">
