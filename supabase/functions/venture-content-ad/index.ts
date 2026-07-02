@@ -411,10 +411,14 @@ Deno.serve(async (req) => {
         qa_notes: qa as any,
         last_feedback: userFeedback || null,
         last_regenerated_at: userFeedback ? new Date().toISOString() : null,
-        last_headline: headlineOverride
-          ? (headlineOverride.mode === "none" ? "" : (headlineOverride.text ?? null))
-          : (post.hook ?? null),
+        last_headline: (() => {
+          const resolved = resolveAdHeadline(post.hook, headlineOverride, aspect);
+          if (resolved.mode === "none") return "";
+          if (resolved.mode === "custom") return resolved.text ?? "";
+          return post.hook ?? null;
+        })(),
         last_logo_size: logoSize,
+
       })
       .select()
       .single();
