@@ -92,6 +92,7 @@ Every startup asset ships with a McKinsey-style critical assessment under the ex
 - **What if I already have a logo/website?** Great — Brand Wizard has a track that ingests existing assets so nothing gets thrown away.
 - **Is this good for a Plan B / side hustle?** Yes. Most founders come from a full-time job and want a plan they can act on evenings and weekends.
 - **Is this good for a licensed trade (electrician, plumber, salon)?** Yes — the Main Street Startup track is built for exactly this.
+- **Is this good for an online store, DTC brand, creator, or digital service?** Yes — the Online / DTC / Digital track covers Shopify/Amazon brands, creators and info products, digital services and agencies, and small SaaS.
 - **Refunds?** 7-day no-friction refund by email.
 - **Is Adam actually in the room?** Yes. He sits at your table for the session — not a moderator, not a TA.
 - **Do you take equity?** No. It's a flat ${WORKSHOP_PRICE_LABEL} workshop fee.
