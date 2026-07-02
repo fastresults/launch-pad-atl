@@ -11,6 +11,7 @@ import { CheckCircle2, Circle, Lock, Loader2, Play, Sparkles, Presentation } fro
 import { toast } from "sonner";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
 import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
+import { LegalSetupCard } from "@/components/foundation/LegalSetupCard";
 
 type WorkflowItem = {
   key: string;
