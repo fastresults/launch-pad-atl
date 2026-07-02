@@ -408,6 +408,7 @@ Deno.serve(async (req) => {
       last_headline: headlineOverride
         ? (headlineOverride.mode === "none" ? "" : (headlineOverride.text ?? null))
         : null,
+      last_logo_size: logoSize,
       brand_kit_locked_at: kit.locked_at,
       updated_at: new Date().toISOString(),
     };
