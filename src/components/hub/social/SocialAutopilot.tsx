@@ -1115,6 +1115,7 @@ function Step5BuildKit({
           currentDirection={regenTarget.task?.direction || direction}
           canvasPlan={regenTarget.task?.canvas_plan ?? null}
           currentHeadline={regenTarget.task?.last_headline ?? null}
+          currentLogoSize={(regenTarget.task as any)?.last_logo_size ?? null}
           initialIntensity={regenTarget.scope === "single" && signatureFailed(regenTarget.task) ? "bold" : "balanced"}
           focusSection={regenTarget.focusSection}
           onSubmit={async (input) => {
@@ -1127,6 +1128,7 @@ function Step5BuildKit({
                 signaturePlacement: input.signaturePlacement,
                 paletteOverride: input.paletteOverride,
                 headlineOverride: input.headlineOverride,
+                logoSize: input.logoSize,
               });
             }
           }}
