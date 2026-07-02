@@ -227,7 +227,7 @@ export function RegisterFramework() {
                     <Check className="mt-0.5 size-4 shrink-0 text-primary" />
                     <div>
                       <div className="flex flex-wrap items-center gap-2 font-medium">
-                        <span>Stage {Number(stage.number)} · {stage.items.length} deliverables</span>
+                        <span>Stage {Number(stage.number)} · {stage.items.length} startup assets</span>
                         {stage.bonus && (
                           <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.18em] text-white">
                             <Sparkles className="size-2.5" /> Bonus
@@ -240,7 +240,7 @@ export function RegisterFramework() {
                 ))}
               </ul>
               <div className="mt-3 text-xs text-muted-foreground">
-                {TOTAL_DELIVERABLES} deliverables total · built live with Adam · yours to keep.
+                {TOTAL_DELIVERABLES} startup assets total · built live with Adam · yours to keep.
               </div>
               <div className="mt-6 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs text-muted-foreground">
                 <CalendarDays className="size-4 shrink-0" />

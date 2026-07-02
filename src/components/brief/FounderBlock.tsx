@@ -205,7 +205,7 @@ export function FounderBlock({ onDone }: Props) {
           Tell us about you — the fastest way is to upload.
         </h1>
         <p className="mt-3 text-muted-foreground">
-          The AI will use your background to align positioning, advantages, and credibility across every deliverable.
+          The AI will use your background to align positioning, advantages, and credibility across every startup asset.
         </p>
       </div>
 
