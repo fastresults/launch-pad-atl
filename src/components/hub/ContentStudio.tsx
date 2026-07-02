@@ -981,7 +981,13 @@ function Step5Launch({
         </div>
       )}
 
+      <PlanNextWeekCard
+        snapshotId={snapshotId}
+        nextWeek={(allWeeks.length ? allWeeks[allWeeks.length - 1] : 0) + 1}
+      />
+
       <footer className="flex justify-between">
+
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back to build</Button>
       </footer>
     </div>
