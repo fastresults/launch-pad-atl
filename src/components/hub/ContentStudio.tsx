@@ -264,10 +264,12 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
 
       {step === 5 && (
         <Step5Launch
+          snapshotId={snapshotId}
           ads={ads}
           posts={posts}
           selectedWeeks={selectedWeeks}
           onBack={() => setStep(4)}
+
           onAddWeek={async (week) => {
             const nextWeeks = Array.from(new Set([...selectedWeeks, week])).sort((a, b) => a - b);
             setSelectedWeeks(nextWeeks);
