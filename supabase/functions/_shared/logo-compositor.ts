@@ -348,7 +348,7 @@ export async function compositeLogo(
   const padPct = 0.05;
   const radius = Math.round(Math.min(box.w, box.h) * 0.14);
 
-  let chipMode: "chip" | "direct" = "chip";
+  let chipMode: "chip" | "direct" | "footer-band" = "chip";
 
   if (transparent && opts.placement !== "avatar-center") {
     // Direct composite path. Only add a soft scrim if the logo has poor
