@@ -22,6 +22,7 @@ export type PreviewableAsset = {
   modelUsed?: string | null;
   lastFeedback?: string | null;
   lastHeadline?: string | null;
+  lastLogoSize?: "sm" | "md" | "lg" | null;
   updatedAt?: string | null;
 };
 
