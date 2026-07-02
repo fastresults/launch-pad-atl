@@ -553,7 +553,7 @@ export function DocumentViewer({
         setHeroError("Visual is already being generated. Reopen this document in a moment.");
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Image generation failed";
+      const msg = edgeErrorMessage(e, "Image generation failed");
       setHeroError(msg);
       toast.error(msg);
     } finally {
