@@ -251,6 +251,9 @@ Deno.serve(async (req) => {
         : undefined;
     console.log("[style-preview] headline override:", JSON.stringify(headlineOverride ?? null));
 
+    const logoSize: LogoSize = normalizeLogoSize(body?.logoSize);
+    console.log("[style-preview] logo size:", logoSize);
+
 
     const ctx = await loadVentureContext(admin, snapshotId);
     const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
