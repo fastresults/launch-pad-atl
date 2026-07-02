@@ -351,6 +351,10 @@ Deno.serve(async (req) => {
     }
     plan = applyPaletteOverride(plan, paletteOverride);
 
+    // Aspect-aware logo safe zone hint for the prompt (must match compositor).
+    const logoAspect = (await readLogoAspect(logoBytes)) ?? 1;
+    const logoPlacement = placementForAssetKind(asset.kind);
+    const logoZoneHint = isAvatar ? undefined : logoSafeZone(logoPlacement, logoSize, logoAspect);
 
     // --- Palette tile so the model SEES the only colors it may use ---
     let paletteTileDataUrl: string | null = null;
@@ -387,6 +391,7 @@ Deno.serve(async (req) => {
             userFeedback,
             variationSeed,
             headlineOverride,
+            logoZone: logoZoneHint,
           });
 
     const generate = async (retryNote?: string) => {
