@@ -39,6 +39,8 @@ HARD BANS (any of these = failure, regenerate without it):
 - Using a color that is not one of: surface, ink, signature, or accent from the canvas plan.
 - Composition with NO visible signature color, or where signature is reduced to a hairline / 1px stroke / barely-there mark = failure.
 - If the final image, viewed at 240px thumbnail size, could be mistaken for grayscale or for a 2-color black-and-white render, it is a failure.
+- Any visible border, outline, frame, rule, hairline, stroke, or divider around the logo landing area — or anywhere else on the canvas. The logo sits directly on the composition with no container, no chip, no plate, no card, no bracket marks.
+- Any rectangular tonal panel, ghosted box, faint fill, drop shadow, gradient edge, or "placeholder" shape in the logo corner. Treat that area as unmarked negative space that continues the surrounding composition — no window cut out for it.
 `;
 
 
@@ -207,7 +209,7 @@ function assetSystem(
     const w = logoZone?.widthPct ?? defaultW;
     const h = logoZone?.heightPct ?? defaultH;
     const corner = (logoZone?.corner === "center" ? defaultCorner : (logoZone?.corner ?? defaultCorner));
-    return `- RESERVED LOGO ZONE: the ${corner} ~${w}% × ${h}% rectangle (with ~5% inset from both edges) MUST remain a completely clean, empty area filled with the surface color — no type, no shapes, no texture, no gradient, no detail. We will server-side composite the venture's actual logo into that exact area after generation. This zone is intentionally sized so the logo reads at a glance; do NOT shrink or crowd it. Compose the rest of the canvas so the reserved rectangle reads as intentional negative space, not as a hole.
+    return `- LOGO LANDING AREA: leave the ${corner} region (approx. ${w}% × ${h}% of the canvas, with ~5% inset from both edges) as unmarked negative space that continues the surrounding composition. Do NOT frame it, do NOT outline it, do NOT draw a border, hairline, stroke, rule, divider, bracket, corner mark, ghosted panel, tonal shift, drop shadow, gradient edge, debossed plate, chip, card, or watermark around it or inside it. The surrounding composition must flow up to the edges of this area as if the logo were not there — no "window" cut out for it. We will composite the venture's actual logo directly on top of that area after generation; it needs no container of any kind.
 - Do NOT redraw, recreate, or paint the logo yourself anywhere on the canvas.`;
   };
 
@@ -289,7 +291,7 @@ export function buildCoverArtPrompt(args: {
 
   const references = hasLogoImage
     ? `## Attached reference images (authoritative — honor exactly)
-- Image #1: the venture's official logo. Use its colors and forms as-is. Do NOT redraw. For non-avatar assets, leave clean rectangular space so we can composite this exact logo on top later.
+- Image #1: the venture's official logo. Use its colors and forms as-is. Do NOT redraw. For non-avatar assets, leave an unmarked area of negative space where the logo will land — no container, no frame, no border, no plate, no card, no outline, no ghosted rectangle around it. We composite the actual logo directly on top of the raw composition.
 - Image #2: the canvas palette tile. The FOUR colors in this tile (surface, ink, signature, accent) are the ONLY colors permitted in the composition. No other colors. No tints. No gradients between them.`
     : `## Reference imagery
 - No logo file was uploaded; do NOT invent a logo. Compose around a clean reserved rectangle in a non-focal corner.`;
