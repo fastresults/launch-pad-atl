@@ -45,12 +45,20 @@ export async function upsertMyLegalSetup(
   patch: Partial<LegalSetupProgress>,
 ): Promise<LegalSetupProgress> {
   const userId = await uid();
+  const existing = await getMyLegalSetup();
+  if (existing) {
+    const { data, error } = await supabase
+      .from("legal_setup_progress")
+      .update(patch)
+      .eq("id", existing.id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return data as LegalSetupProgress;
+  }
   const { data, error } = await supabase
     .from("legal_setup_progress")
-    .upsert(
-      { user_id: userId, snapshot_id: null, ...patch },
-      { onConflict: "user_id,snapshot_id" },
-    )
+    .insert({ user_id: userId, snapshot_id: null, ...patch })
     .select()
     .single();
   if (error) throw new Error(error.message);
