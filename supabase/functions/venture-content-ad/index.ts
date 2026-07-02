@@ -279,6 +279,7 @@ Deno.serve(async (req) => {
       ctx,
       plan,
       post: {
+        id: post.id,
         pillar: post.pillar, platform: post.platform, format: post.format,
         hook: post.hook, body: post.body, cta: post.cta, asset_notes: post.asset_notes,
       },
@@ -288,6 +289,9 @@ Deno.serve(async (req) => {
       variationSeed,
       headlineOverride,
       logoZone: logoZoneHint,
+      // Headline is composited server-side by compositeHeadline() below; the
+      // model must leave the top band as unmarked negative space.
+      serverRenderedHeadline: true,
     });
 
 
