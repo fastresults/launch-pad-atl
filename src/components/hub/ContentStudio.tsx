@@ -248,10 +248,17 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           ads={ads}
           autoRunWeek={autoRunWeek}
           onAutoRunConsumed={() => setAutoRunWeek(null)}
+          onAddWeek={async (week) => {
+            const nextWeeks = Array.from(new Set([...selectedWeeks, week])).sort((a, b) => a - b);
+            setSelectedWeeks(nextWeeks);
+            setAutoRunWeek(week);
+            await persist({ selected_weeks: nextWeeks, current_step: 4 });
+          }}
           onBack={() => setStep(3)}
           onDone={async () => { setStep(5); await persist({ current_step: 5 }); }}
         />
       )}
+
 
       {step === 5 && (
         <Step5Launch
@@ -506,13 +513,15 @@ type AdTask = {
 
 function Step4BuildAds({
   snapshotId, direction, aspects, selectedWeeks, posts, ads,
-  autoRunWeek, onAutoRunConsumed, onBack, onDone,
+  autoRunWeek, onAutoRunConsumed, onAddWeek, onBack, onDone,
 }: {
   snapshotId: string; direction: string; aspects: AdAspect[];
   selectedWeeks: number[]; posts: ContentPost[]; ads: ContentAd[];
   autoRunWeek?: number | null; onAutoRunConsumed?: () => void;
+  onAddWeek?: (week: number) => Promise<void> | void;
   onBack: () => void; onDone: () => void;
 }) {
+
   const qc = useQueryClient();
   const scoped = useMemo(() => posts.filter((p) => selectedWeeks.includes(p.week)), [posts, selectedWeeks]);
 
@@ -641,6 +650,16 @@ function Step4BuildAds({
     byWeek.get(t.post.week)!.push(t);
   }
 
+  // All weeks known from the parsed calendar, and which ones are not yet activated in Step 4
+  const allWeeks = Array.from(new Set(posts.map((p) => p.week))).sort((a, b) => a - b);
+  const pendingWeeks = allWeeks.filter((w) => !selectedWeeks.includes(w));
+  const postsByWeek = new Map<number, ContentPost[]>();
+  for (const p of posts) {
+    if (!postsByWeek.has(p.week)) postsByWeek.set(p.week, []);
+    postsByWeek.get(p.week)!.push(p);
+  }
+
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
@@ -650,7 +669,11 @@ function Step4BuildAds({
           </h4>
           <p className="text-xs text-muted-foreground mt-1">
             {doneCount} of {tasks.length} ads ready · {aspects.join(", ")} · {direction}
+            {pendingWeeks.length > 0 && (
+              <> · <span className="text-status-info">{pendingWeeks.length} more week{pendingWeeks.length === 1 ? "" : "s"} available below</span></>
+            )}
           </p>
+
         </div>
         {tasks.some((t) => !t.ad) && (
           <Button size="sm" onClick={runAll} disabled={running}>
@@ -749,6 +772,51 @@ function Step4BuildAds({
           </div>
         );
       })}
+
+      {pendingWeeks.map((w) => {
+        const wPosts = postsByWeek.get(w) ?? [];
+        const isLoading = autoRunWeek === w || running;
+        return (
+          <div key={`pending-${w}`} className="rounded-xl border border-dashed border-white/15 bg-background/20 p-3">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-[10px]">Week {w}</Badge>
+                <span className="text-[10px] text-muted-foreground">
+                  {wPosts.length} planned post{wPosts.length === 1 ? "" : "s"} · not started
+                </span>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-[11px]"
+                disabled={isLoading || !onAddWeek}
+                onClick={() => onAddWeek?.(w)}
+              >
+                {isLoading ? (
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-1 h-3 w-3" />
+                )}
+                Add &amp; generate Week {w}
+              </Button>
+            </div>
+            <ul className="grid gap-1 sm:grid-cols-2">
+              {wPosts.slice(0, 4).map((p) => (
+                <li key={p.id} className="truncate text-[11px] text-muted-foreground">
+                  · {p.hook || p.pillar || "Untitled post"}
+                </li>
+              ))}
+              {wPosts.length > 4 && (
+                <li className="text-[11px] text-muted-foreground/70">
+                  + {wPosts.length - 4} more
+                </li>
+              )}
+            </ul>
+          </div>
+        );
+      })}
+
+
 
       <footer className="flex justify-between">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back</Button>
