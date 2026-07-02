@@ -10,9 +10,10 @@ startup — 34 tangible **startup assets** across eight categories, plus a signe
 90-day plan. Facilitated live by Adam Anderson, serial entrepreneur (OPEN Interactive;
 work shipped for Citigroup, Mayo Clinic, 3M, Disney).
 
-Positioning: Atlanta's #1 startup accelerator for Main Street and first-time founders —
-cafés, salons, trades, local services, indie brands, and small e-commerce. Other tracks
-(SaaS, marketplace, deep tech) supported too.
+Positioning: Atlanta's #1 startup accelerator for Main Street **and online** founders —
+cafés, salons, trades, local services, indie brands on one side; DTC and e-commerce brands,
+creators, digital services, agencies and small SaaS on the other. Marketplace and deep tech
+supported too.
 
 ## Price & offer
 - **$197** — Strategic Foundation Workshop, all 34 startup assets, kept forever.
