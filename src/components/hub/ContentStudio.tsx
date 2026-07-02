@@ -990,6 +990,32 @@ function Step5Launch({
     doneWeeks.length ? [`w-${doneWeeks[0]}`] : []
   );
 
+  // Flat ordered list of ads mirroring accordion order → indices for prev/next
+  const flatAds: ContentAd[] = [];
+  for (const w of doneWeeks) for (const a of adsByWeek.get(w) ?? []) flatAds.push(a);
+  const previewable = flatAds
+    .map((a, i) => (a.signed_url ? i : -1))
+    .filter((i) => i >= 0);
+  const [previewIdx, setPreviewIdx] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const qc = useQueryClient();
+
+  const doDelete = async (adId: string) => {
+    if (!window.confirm("Delete this ad? This can't be undone.")) return;
+    setDeletingId(adId);
+    try {
+      await deleteContentAd(snapshotId, adId);
+      await qc.invalidateQueries({ queryKey: ["content-ads", snapshotId] });
+      toast.success("Deleted");
+      setPreviewIdx(null);
+    } catch (e: any) {
+      toast.error(e?.message || "Delete failed");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+
   return (
     <div className="space-y-3">
       <div>

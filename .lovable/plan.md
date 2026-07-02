@@ -1,45 +1,28 @@
-# Week-by-week accordion for Content Studio Step 4
 
 ## Problem
-Step 4 stacks every week vertically as full cards. As weeks accumulate (ads for Week 1, pending Week 2, planning Week 3…) the page gets long and it's unclear where each week's ads live. Users want to focus on one week at a time.
 
-## Fix (UI only, scoped to `src/components/hub/ContentStudio.tsx`)
+On Step 5 ("Your ad batch is ready"), each Week 1 row currently has a plain "Open" link that just opens the raw image URL in a new tab. There is no preview modal and no way to delete an ad. Step 4 already has both — Step 5 was never wired up.
 
-Wrap the per-week blocks in a shadcn `Accordion` (`type="multiple"`, collapsible) so each week is a single row that expands to reveal its content. Same behavior for active and pending weeks; the "Plan Week N+1" affordance stays as a card outside the accordion at the bottom.
+## Fix (single file: `src/components/hub/ContentStudio.tsx`, `Step5Launch` only)
 
-### Accordion structure
+1. **Row → modal.** Turn each ad row into a `<button>` that sets `previewIdx` (index into a flat, week-ordered `flatAds` array). Remove the `<a href={signed_url}>` "Open" link.
 
-For every week in `allWeeks` (union of active + pending), render an `AccordionItem` keyed by week number:
+2. **Mount `AssetPreviewDialog`** at the bottom of `Step5Launch` (same component Step 4 uses). Map the selected ad + its post to a `PreviewableAsset` with the same fields Step 4 passes: `url`, `title` (hook), `subtitle` (`Week N · platform`), `assetKind` (aspect), `width`, `height`, `canvasPlan`, `qaStatus`, `qaNotes`, `modelUsed`, `lastFeedback`, `lastHeadline`, `lastLogoSize`, `updatedAt`. Provide `onPrev` / `onNext` cycling through previewable ads.
 
-- **Trigger row (always visible):**
-  - Left: `Week N` badge, ads-ready pill (`3/3 ads` or `0/3 planned` for pending), status dot.
-  - Right: quick action button (does not toggle the accordion; `onClick` stops propagation):
-    - Active week with pending tasks → **Generate week** (same handler as today).
-    - Active week fully done → subtle "Done" text, no button.
-    - Pending week → **Add & generate Week N**.
-  - Chevron on the far right for expand/collapse.
+3. **Delete from modal.** Pass `onDelete` to `AssetPreviewDialog` that calls `deleteContentAd(snapshotId, ad.id)`, invalidates `["content-ads", snapshotId]` via `useQueryClient`, toasts, and closes the modal.
 
-- **Content (rendered inside `AccordionContent`):**
-  - Active week → existing 2-col ad tile grid (preview / regenerate / delete tiles unchanged).
-  - Pending week → existing hooks preview list.
+4. **Delete inline on each row.** Add a small trash-icon button on the right side of every row. `stopPropagation` so it doesn't open the modal; `confirm()` prompt; same `deleteContentAd` + invalidate + toast. Row disappears on refetch.
 
-### Default open state
-- Open the earliest week that has any incomplete ads (`w.ad == null`). If everything is done, open the last active week. Pending weeks stay collapsed.
-- Store the open item ids in local state so the user can freely expand/collapse without losing position.
+5. **Row hover affordance.** Add `hover:bg-white/5 cursor-pointer` so it's obviously clickable, plus a subtle "Click to preview" hint via `title` attribute.
 
-### Summary strip (kept)
-- Header line "X of Y ads ready · aspects · direction · N more week(s) below" stays above the accordion so overall status is visible without expanding anything.
+## Technical notes
 
-### Plan Week N+1 card
-- Stays as-is directly beneath the accordion (highlighted dashed card + button). Not part of the accordion so it's always visible as the "keep going" affordance.
+- `deleteContentAd` and `AssetPreviewDialog` are already imported at the top of the file.
+- Add `useQueryClient` call inside `Step5Launch` (already imported from `@tanstack/react-query`).
+- No changes to `BuildAdsPanel` (Step 4), edge functions, data model, calendar parser, or any other component.
+- No new dependencies.
+- Regenerate flow from Step 5 is out of scope for this pass — modal will show the image + metadata + delete; regenerate stays in Step 4.
 
-### Step 5
-- No change now. If it starts feeling long later, we can apply the same accordion pattern; out of scope here.
+## Files changed
 
-## Non-goals
-- No changes to generation logic, edge functions, data model, or Step 1/2/3/5.
-- No visual redesign of the ad tiles themselves.
-- No new dependencies; shadcn `accordion` primitive is already available in the project.
-
-## Files touched
-- `src/components/hub/ContentStudio.tsx` (Step 4 render only)
+- `src/components/hub/ContentStudio.tsx` — edit `Step5Launch` (~40 line addition, ~10 line replacement)
