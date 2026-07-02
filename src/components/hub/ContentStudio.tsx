@@ -101,6 +101,24 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
     }
   };
 
+  // Auto-parse the calendar the first time the user opens Content Studio.
+  const [autoParsed, setAutoParsed] = useState(false);
+  useEffect(() => {
+    if (!locked || !calendarDoc) return;
+    if (postsQ.isLoading || parsing || autoParsed) return;
+    if ((postsQ.data ?? []).length > 0) return;
+    setAutoParsed(true);
+    void runParse();
+  }, [locked, calendarDoc, postsQ.isLoading, postsQ.data, parsing, autoParsed]);
+
+  // Default the week selector to Week 1 as soon as posts arrive.
+  useEffect(() => {
+    if (selectedWeeks.length > 0) return;
+    const weeks = Array.from(new Set(posts.map((p) => p.week))).sort((a, b) => a - b);
+    if (weeks.length === 0) return;
+    setSelectedWeeks([weeks[0]]);
+  }, [posts, selectedWeeks.length]);
+
   // ---- Gate ----
   if (kitQ.isLoading || docsQ.isLoading) {
     return (
@@ -227,6 +245,9 @@ function Step1Calendar({
   posts: ContentPost[]; parsing: boolean; onParse: () => Promise<void>; onNext: () => void;
 }) {
   const grouped = groupPostsByWeek(posts);
+  const weeks = Array.from(grouped.keys()).sort((a, b) => a - b);
+  const firstWeek = weeks[0];
+  const week1Posts = firstWeek != null ? (grouped.get(firstWeek) ?? []) : [];
   return (
     <div className="space-y-3">
       <div>
@@ -234,32 +255,72 @@ function Step1Calendar({
           <ListChecks className="h-3.5 w-3.5" /> 1 · Read your 90-day calendar
         </h4>
         <p className="text-xs text-muted-foreground mt-1">
-          We'll parse each week's planned posts (Hook, Body, CTA, Pillar) so we can turn them into
+          We parse each week's planned posts (Hook, Body, CTA, Pillar) so we can turn them into
           brand-consistent ad creatives.
         </p>
       </div>
 
       {posts.length === 0 ? (
         <div className="rounded-lg border border-white/10 bg-background/40 p-4 text-xs">
-          No posts parsed yet.
-          <div className="mt-2">
-            <Button size="sm" onClick={onParse} disabled={parsing}>
-              {parsing ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-              Parse calendar
-            </Button>
-          </div>
+          {parsing ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" /> Reading your 90-day content calendar…
+            </div>
+          ) : (
+            <>
+              No posts parsed yet.
+              <div className="mt-2">
+                <Button size="sm" onClick={onParse} disabled={parsing}>
+                  <Sparkles className="mr-1 h-3 w-3" /> Parse calendar
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       ) : (
-        <div className="rounded-lg border border-white/10 bg-background/40 p-3 text-xs">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <b>{posts.length}</b> posts across <b>{grouped.size}</b> week{grouped.size === 1 ? "" : "s"}.
+        <div className="space-y-3">
+          <div className="rounded-lg border border-white/10 bg-background/40 p-3 text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <b>{posts.length}</b> posts across <b>{grouped.size}</b> week{grouped.size === 1 ? "" : "s"}.
+              </div>
+              <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={onParse} disabled={parsing}>
+                {parsing ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
+                Re-parse
+              </Button>
             </div>
-            <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={onParse} disabled={parsing}>
-              {parsing ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
-              Re-parse
-            </Button>
           </div>
+
+          {week1Posts.length > 0 && (
+            <div className="rounded-lg border border-white/10 bg-background/40 p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Week {firstWeek} queue · {week1Posts.length} post{week1Posts.length === 1 ? "" : "s"}
+                </div>
+                <Badge variant="outline" className="text-[10px]">Ready to generate</Badge>
+              </div>
+              <ul className="space-y-1.5">
+                {week1Posts.map((p, i) => (
+                  <li key={p.id} className="flex items-start gap-2 rounded-md border border-white/5 bg-background/40 p-2 text-[11px]">
+                    <span className="mt-0.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full border border-white/10 px-1 text-[10px] text-muted-foreground">
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
+                        {p.day && <span>{p.day}</span>}
+                        {p.platform && <><span>·</span><span>{p.platform}</span></>}
+                        {p.pillar && <><span>·</span><span>{p.pillar}</span></>}
+                        {p.format && <><span>·</span><span>{p.format}</span></>}
+                      </div>
+                      <div className="mt-0.5 font-medium text-foreground line-clamp-2">
+                        {p.hook || p.body || "(no hook)"}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 
@@ -286,7 +347,7 @@ function Step2Weeks({
   const toggle = (w: number) => {
     onChange(selectedWeeks.includes(w) ? selectedWeeks.filter((x) => x !== w) : [...selectedWeeks, w].sort((a, b) => a - b));
   };
-  const allOn = weeks.every((w) => selectedWeeks.includes(w));
+  const allOn = weeks.length > 0 && weeks.every((w) => selectedWeeks.includes(w));
   return (
     <div className="space-y-3">
       <div>
