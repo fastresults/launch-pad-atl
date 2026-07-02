@@ -324,7 +324,14 @@ export function AskConcierge() {
             ) : (
               <div className="space-y-3">
                 {messages.map((m, i) => (
-                  <MessageBubble key={i} role={m.role} content={m.content} />
+                  <MessageBubble
+                    key={i}
+                    role={m.role}
+                    content={m.content}
+                    onPlay={m.role === "assistant" ? () => speak(stripMarkdown(m.content)) : undefined}
+                    onStop={stopAudio}
+                    speaking={speaking}
+                  />
                 ))}
                 {(pending || transcribing || speaking) && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -397,7 +404,19 @@ export function AskConcierge() {
   );
 }
 
-function MessageBubble({ role, content }: { role: "user" | "assistant"; content: string }) {
+function MessageBubble({
+  role,
+  content,
+  onPlay,
+  onStop,
+  speaking,
+}: {
+  role: "user" | "assistant";
+  content: string;
+  onPlay?: () => void;
+  onStop?: () => void;
+  speaking?: boolean;
+}) {
   if (role === "user") {
     return (
       <div className="flex justify-end">
@@ -412,6 +431,17 @@ function MessageBubble({ role, content }: { role: "user" | "assistant"; content:
       <div className="prose prose-sm prose-invert max-w-none prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
       </div>
+      {onPlay && (
+        <button
+          type="button"
+          onClick={speaking ? onStop : onPlay}
+          className="mt-1 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-foreground"
+          aria-label={speaking ? "Stop playback" : "Listen to this reply"}
+        >
+          {speaking ? <Square className="size-3" /> : <Volume2 className="size-3" />}
+          {speaking ? "Stop" : "Listen"}
+        </button>
+      )}
     </div>
   );
 }
