@@ -78,6 +78,8 @@ export async function listUsersWithRoles() {
       user_id,
       display_name: p?.display_name ?? null,
       email: p?.email ?? null,
+      member_status: p?.member_status ?? null,
+      founders_hub_access: !!p?.founders_hub_access,
       roles,
     };
   });
