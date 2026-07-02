@@ -326,10 +326,10 @@ export function AskConcierge() {
                 {messages.map((m, i) => (
                   <MessageBubble key={i} role={m.role} content={m.content} />
                 ))}
-                {pending && (
+                {(pending || transcribing || speaking) && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span className="inline-flex size-2 animate-pulse rounded-full bg-primary" />
-                    Thinking…
+                    {transcribing ? "Transcribing…" : speaking ? "Speaking…" : "Thinking…"}
                   </div>
                 )}
                 {error && (
