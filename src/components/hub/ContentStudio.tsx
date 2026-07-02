@@ -181,6 +181,17 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           parsing={parsing}
           onParse={runParse}
           onNext={async () => { setStep(2); await persist({ current_step: 2 }); }}
+          onGenerateNow={async (week) => {
+            setSelectedWeeks([week]);
+            setAutoRunWeek(week);
+            setStep(4);
+            await persist({
+              current_step: 4,
+              selected_weeks: [week],
+              art_direction: direction,
+              default_aspects: aspects,
+            });
+          }}
         />
       )}
 
