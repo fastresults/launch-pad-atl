@@ -291,7 +291,7 @@ export function buildCoverArtPrompt(args: {
 
   const references = hasLogoImage
     ? `## Attached reference images (authoritative — honor exactly)
-- Image #1: the venture's official logo. Use its colors and forms as-is. Do NOT redraw. For non-avatar assets, leave clean rectangular space so we can composite this exact logo on top later.
+- Image #1: the venture's official logo. Use its colors and forms as-is. Do NOT redraw. For non-avatar assets, leave an unmarked area of negative space where the logo will land — no container, no frame, no border, no plate, no card, no outline, no ghosted rectangle around it. We composite the actual logo directly on top of the raw composition.
 - Image #2: the canvas palette tile. The FOUR colors in this tile (surface, ink, signature, accent) are the ONLY colors permitted in the composition. No other colors. No tints. No gradients between them.`
     : `## Reference imagery
 - No logo file was uploaded; do NOT invent a logo. Compose around a clean reserved rectangle in a non-focal corner.`;
