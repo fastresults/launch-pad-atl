@@ -11,7 +11,7 @@ import { buildCoverArtPrompt } from "../_shared/cover-art-director.ts";
 import { buildCanvasPlan, applyPaletteOverride, type CanvasPlan } from "../_shared/canvas-plan.ts";
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
 import { runContrastQa } from "../_shared/image-qa.ts";
-import { compositeLogo, placementForAssetKind } from "../_shared/logo-compositor.ts";
+import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 
 const corsHeaders = {
@@ -251,12 +251,19 @@ Deno.serve(async (req) => {
         : undefined;
     console.log("[style-preview] headline override:", JSON.stringify(headlineOverride ?? null));
 
+    const logoSize: LogoSize = normalizeLogoSize(body?.logoSize);
+    console.log("[style-preview] logo size:", logoSize);
+
 
     const ctx = await loadVentureContext(admin, snapshotId);
     const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
 
     let plan: CanvasPlan = buildCanvasPlan({ kit, asset: PREVIEW_ASSET, direction, signature: signatureCfg });
     plan = applyPaletteOverride(plan, paletteOverride);
+
+    const logoAspect = (await readLogoAspect(logoBytes)) ?? 1;
+    const logoPlacement = placementForAssetKind(PREVIEW_ASSET.kind);
+    const logoZoneHint = logoSafeZone(logoPlacement, logoSize, logoAspect);
 
     let paletteTileDataUrl: string | null = null;
     try { paletteTileDataUrl = bytesToDataUrl(buildPaletteTilePngBytes(plan)); }
@@ -274,6 +281,7 @@ Deno.serve(async (req) => {
         retryNote,
         userFeedback,
         headlineOverride,
+        logoZone: logoZoneHint,
       });
 
     const generate = async (retryNote?: string) => {
@@ -349,8 +357,9 @@ Deno.serve(async (req) => {
     if (logoBytes) {
       try {
         bytes = await compositeLogo(bytes, logoBytes, {
-          placement: placementForAssetKind(PREVIEW_ASSET.kind),
+          placement: logoPlacement,
           surfaceHex: plan.surface,
+          logoSize,
         });
         logoComposited = true;
       } catch (e) {
@@ -358,6 +367,7 @@ Deno.serve(async (req) => {
       }
     }
     (qa as any).logo_composited = logoComposited;
+    (qa as any).logo_size = logoSize;
 
 
 
@@ -398,6 +408,7 @@ Deno.serve(async (req) => {
       last_headline: headlineOverride
         ? (headlineOverride.mode === "none" ? "" : (headlineOverride.text ?? null))
         : null,
+      last_logo_size: logoSize,
       brand_kit_locked_at: kit.locked_at,
       updated_at: new Date().toISOString(),
     };

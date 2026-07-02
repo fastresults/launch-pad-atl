@@ -16,7 +16,7 @@ import { buildCoverArtPrompt, buildAvatarPrompt } from "../_shared/cover-art-dir
 import { buildCanvasPlan, pickAvatarSurface, applyPaletteOverride, type CanvasPlan } from "../_shared/canvas-plan.ts";
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
 import { runContrastQa, logoDominantInk } from "../_shared/image-qa.ts";
-import { compositeLogo, placementForAssetKind } from "../_shared/logo-compositor.ts";
+import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 
 const corsHeaders = {
@@ -308,6 +308,11 @@ Deno.serve(async (req) => {
         : undefined;
     console.log("[social-cover] headline override:", JSON.stringify(headlineOverride ?? null));
 
+    // Optional logo size preference: 'sm' | 'md' | 'lg' — governs both the
+    // reserved-zone dimensions in the prompt AND the compositor chip size.
+    const logoSize: LogoSize = normalizeLogoSize(body?.logoSize);
+    console.log("[social-cover] logo size:", logoSize);
+
 
     const platform = getPlatform(platformName);
     if (!platform) return json({ error: `Unknown platform: ${platformName}` }, 400);
@@ -346,6 +351,10 @@ Deno.serve(async (req) => {
     }
     plan = applyPaletteOverride(plan, paletteOverride);
 
+    // Aspect-aware logo safe zone hint for the prompt (must match compositor).
+    const logoAspect = (await readLogoAspect(logoBytes)) ?? 1;
+    const logoPlacement = placementForAssetKind(asset.kind);
+    const logoZoneHint = isAvatar ? undefined : logoSafeZone(logoPlacement, logoSize, logoAspect);
 
     // --- Palette tile so the model SEES the only colors it may use ---
     let paletteTileDataUrl: string | null = null;
@@ -382,6 +391,7 @@ Deno.serve(async (req) => {
             userFeedback,
             variationSeed,
             headlineOverride,
+            logoZone: logoZoneHint,
           });
 
     const generate = async (retryNote?: string) => {
@@ -474,10 +484,10 @@ Deno.serve(async (req) => {
     let logoComposited = false;
     if (logoBytes) {
       try {
-        const placement = placementForAssetKind(asset.kind);
         bytes = await compositeLogo(bytes, logoBytes, {
-          placement,
+          placement: logoPlacement,
           surfaceHex: plan.surface,
+          logoSize,
         });
         logoComposited = true;
       } catch (e) {
@@ -485,6 +495,7 @@ Deno.serve(async (req) => {
       }
     }
     (qa as any).logo_composited = logoComposited;
+    (qa as any).logo_size = logoSize;
 
     const fileId = crypto.randomUUID();
     const storagePath = `social-cover/${userId}/${snapshotId}/${platform.platform}/${asset.kind}/${direction}-${fileId}.png`;
@@ -524,6 +535,7 @@ Deno.serve(async (req) => {
         last_headline: headlineOverride
           ? (headlineOverride.mode === "none" ? "" : (headlineOverride.text ?? null))
           : null,
+        last_logo_size: logoSize,
       })
       .select()
       .single();

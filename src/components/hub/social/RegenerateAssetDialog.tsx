@@ -45,6 +45,12 @@ const PLACEMENTS = [
   { id: "framed_border", label: "Framed border" },
 ] as const;
 
+const LOGO_SIZES = [
+  { id: "sm", label: "Small", hint: "Discreet corner mark" },
+  { id: "md", label: "Medium", hint: "Recommended (readable at a glance)" },
+  { id: "lg", label: "Large", hint: "Hero logo — dominant lockup" },
+] as const;
+
 type SwatchRole = "surface" | "ink" | "signature" | "accent";
 const SWATCH_ROLES: { key: SwatchRole; label: string; hint: string }[] = [
   { key: "surface",   label: "Surface",   hint: "Background" },
@@ -159,6 +165,7 @@ export function RegenerateAssetDialog({
   mode = "regenerate",
   suggestedHeadline,
   currentHeadline,
+  currentLogoSize,
   focusSection,
   onSubmit,
 }: {
@@ -175,8 +182,10 @@ export function RegenerateAssetDialog({
   suggestedHeadline?: string | null;
   /** The headline that was actually used on the current asset (if any). */
   currentHeadline?: string | null;
+  /** The logo size the current asset was rendered with, if any. */
+  currentLogoSize?: "sm" | "md" | "lg" | null;
   /** When set, scroll+highlight the matching section and pre-focus its primary input. */
-  focusSection?: "headline" | "palette" | "feedback";
+  focusSection?: "headline" | "palette" | "feedback" | "logo";
   onSubmit: (input: {
     feedback: string;
     directionOverride?: string;
@@ -184,12 +193,14 @@ export function RegenerateAssetDialog({
     signaturePlacement?: typeof PLACEMENTS[number]["id"];
     paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
     headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
+    logoSize?: "sm" | "md" | "lg";
   }) => Promise<void>;
 }) {
   const [feedback, setFeedback] = useState("");
   const [direction, setDirection] = useState<string>(currentDirection);
   const [intensity, setIntensity] = useState<"subtle" | "balanced" | "bold">(initialIntensity);
   const [placement, setPlacement] = useState<typeof PLACEMENTS[number]["id"]>("auto");
+  const [logoSize, setLogoSize] = useState<"sm" | "md" | "lg">(currentLogoSize || "md");
   const [busy, setBusy] = useState(false);
 
   // Headline override: when opened via "Edit headline", default to Custom so the
@@ -206,21 +217,29 @@ export function RegenerateAssetDialog({
   const [headlineHighlight, setHeadlineHighlight] = useState(false);
   const headlineSectionRef = useRef<HTMLDivElement | null>(null);
   const headlineInputRef = useRef<HTMLInputElement | null>(null);
+  const [logoHighlight, setLogoHighlight] = useState(false);
+  const logoSectionRef = useRef<HTMLDivElement | null>(null);
 
   // Scroll + highlight + focus when opened targeting a specific section.
   useEffect(() => {
     if (!open) return;
-    if (focusSection !== "headline") return;
+    if (focusSection !== "headline" && focusSection !== "logo") return;
     // Wait for dialog mount animation.
     const t = window.setTimeout(() => {
-      headlineSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
-      setHeadlineHighlight(true);
-      const inp = headlineInputRef.current;
-      if (inp) {
-        inp.focus();
-        try { inp.select(); } catch { /* noop */ }
+      if (focusSection === "headline") {
+        headlineSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+        setHeadlineHighlight(true);
+        const inp = headlineInputRef.current;
+        if (inp) {
+          inp.focus();
+          try { inp.select(); } catch { /* noop */ }
+        }
+        window.setTimeout(() => setHeadlineHighlight(false), 1400);
+      } else if (focusSection === "logo") {
+        logoSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+        setLogoHighlight(true);
+        window.setTimeout(() => setLogoHighlight(false), 1400);
       }
-      window.setTimeout(() => setHeadlineHighlight(false), 1400);
     }, 120);
     return () => window.clearTimeout(t);
   }, [open, focusSection]);
@@ -276,6 +295,7 @@ export function RegenerateAssetDialog({
       signaturePlacement: placement,
       paletteOverride: Object.keys(paletteOverride).length ? paletteOverride : undefined,
       headlineOverride,
+      logoSize,
     };
     // Fire-and-forget so the user can close the modal and let the task run in the background.
     Promise.resolve()
@@ -421,6 +441,45 @@ export function RegenerateAssetDialog({
               </div>
             )}
           </div>
+
+          {/* Logo size on canvas */}
+          <div
+            ref={logoSectionRef}
+            className={`rounded-md transition-colors ${logoHighlight ? "ring-2 ring-primary/60 bg-primary/5 p-2 -m-2" : ""}`}
+          >
+            <div className="mb-1 flex items-center justify-between">
+              <div className="text-xs font-medium">Logo size on image</div>
+              <div className="text-[10px] text-muted-foreground">
+                Bigger = more brand recall
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {LOGO_SIZES.map((opt) => {
+                const active = logoSize === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setLogoSize(opt.id)}
+                    disabled={busy}
+                    className={`rounded-md border px-2 py-1.5 text-left text-[11px] transition ${
+                      active
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-background hover:bg-muted"
+                    }`}
+                  >
+                    <div className="font-medium">{opt.label}</div>
+                    <div className="text-[10px] text-muted-foreground">{opt.hint}</div>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-1 text-[10px] text-muted-foreground">
+              We reserve a clean, contrasting zone and composite your real logo in — never AI-drawn.
+            </div>
+          </div>
+
+
 
 
 

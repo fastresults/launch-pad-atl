@@ -11,6 +11,7 @@ export type StylePreview = {
   qa_notes?: any;
   last_feedback: string | null;
   last_headline?: string | null;
+  last_logo_size?: "sm" | "md" | "lg" | null;
   updated_at: string;
 };
 
@@ -44,6 +45,7 @@ export async function generateStylePreview(input: {
   signatureMinCoveragePct?: number;
   paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
   headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
+  logoSize?: "sm" | "md" | "lg";
 }): Promise<StylePreview> {
   const data = await call({ action: "generate", ...input });
   return data.preview as StylePreview;

@@ -125,6 +125,7 @@ function assetSystem(
   headline: string,
   suppressHeadline: boolean,
   isCustomHeadline: boolean,
+  logoZone?: { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" },
 ): string {
   const kind = asset.kind;
   const ratio = `${asset.width}:${asset.height}`;
@@ -134,6 +135,16 @@ function assetSystem(
     isCustomHeadline
       ? `- HEADLINE (verbatim, exact wording, no substitutions, no rewrites, no punctuation changes): "${h}". Set in the brand heading family, ranged left, max two lines. This is the ONLY text permitted on the canvas apart from the reserved logo zone.`
       : `- If a headline is rendered, use the brand heading family, set ranged left, max two lines, headline candidate: "${h || "(use venture name only)"}".`;
+
+  // Compose a size-aware reserved-zone directive when the compositor has
+  // told us exactly how much canvas the logo will occupy.
+  const zone = (defaultCorner: "top-left" | "bottom-right", defaultW: number, defaultH: number) => {
+    const w = logoZone?.widthPct ?? defaultW;
+    const h = logoZone?.heightPct ?? defaultH;
+    const corner = (logoZone?.corner === "center" ? defaultCorner : (logoZone?.corner ?? defaultCorner));
+    return `- RESERVED LOGO ZONE: the ${corner} ~${w}% × ${h}% rectangle (with ~5% inset from both edges) MUST remain a completely clean, empty area filled with the surface color — no type, no shapes, no texture, no gradient, no detail. We will server-side composite the venture's actual logo into that exact area after generation. This zone is intentionally sized so the logo reads at a glance; do NOT shrink or crowd it. Compose the rest of the canvas so the reserved rectangle reads as intentional negative space, not as a hole.
+- Do NOT redraw, recreate, or paint the logo yourself anywhere on the canvas.`;
+  };
 
   if (kind === "avatar") {
     return `AVATAR SYSTEM
@@ -147,8 +158,7 @@ function assetSystem(
   if (kind === "banner" || kind === "header" || kind === "channel_art") {
     return `BANNER / HEADER SYSTEM (${ratio})
 - Treat the canvas as a 12-column print grid. Critical content lives in columns 2–8 (left-anchored); columns 9–12 stay quiet for platform UI overlap.
-- RESERVED LOGO ZONE: the bottom-right ~16% × 16% square (with ~5% inset from both edges) MUST remain a completely clean, empty area — no type, no shapes, no texture, no gradient, no detail. We will server-side composite the venture's actual logo into that exact area after generation. Compose the rest of the canvas so that empty corner reads as intentional negative space, not as a hole.
-- Do NOT redraw, recreate, or paint the logo yourself anywhere on the canvas.
+${zone("bottom-right", 16, 16)}
 ${suppressHeadline ? suppressBlock : verbatimNote(headline)}
 - Strict safe inset of 8% on all sides — no critical content in the bleed.
 - ${asset.guidance}`;
@@ -157,7 +167,7 @@ ${suppressHeadline ? suppressBlock : verbatimNote(headline)}
   if (kind === "thumbnail" || kind === "video_poster" || kind === "vertical_pin") {
     return `THUMBNAIL / POSTER SYSTEM (${ratio})
 - One bold focal subject occupies the upper two-thirds.${suppressHeadline ? " Composition must resolve without any text lockup." : " Headline (3–5 words) anchors the lower third, set in the brand heading family."}
-- RESERVED LOGO ZONE: the top-left ~18% × 18% square (with ~6% inset) MUST stay completely clean and empty — no type, no shapes, no decoration. We will server-side composite the venture's actual logo into that exact area after generation. Do NOT redraw the logo anywhere on the canvas.
+${zone("top-left", 22, 22)}
 - High contrast — readable as a 240px-wide thumbnail in a feed.
 ${suppressHeadline ? suppressBlock : `- HEADLINE (${isCustomHeadline ? "verbatim, exact wording, no substitutions" : "candidate"}): "${headline || "(use venture name)"}". Trim to fit${isCustomHeadline ? " ONLY by wrapping — never by rephrasing" : ""}.`}
 - ${asset.guidance}`;
@@ -167,7 +177,7 @@ ${suppressHeadline ? suppressBlock : `- HEADLINE (${isCustomHeadline ? "verbatim
   return `POST / COVER SYSTEM (${ratio})
 - Treat as a single editorial frame. One focal element, ≥60% negative space.
 ${suppressHeadline ? suppressBlock : "- Optional type lockup uses the brand heading family." + (isCustomHeadline ? ` HEADLINE (verbatim, exact wording): "${headline}". Do not rephrase.` : "")}
-- RESERVED LOGO ZONE: the top-left ~20% × 20% square (with ~7% inset) MUST stay completely clean and empty — no type, no shapes, no decoration. We will server-side composite the venture's actual logo into that exact area after generation. Do NOT redraw the logo anywhere on the canvas.
+${zone("top-left", 24, 24)}
 - Reserve an 8% safe inset on all sides for platform UI.
 - ${asset.guidance}`;
 }
@@ -186,15 +196,16 @@ export function buildCoverArtPrompt(args: {
   userFeedback?: string;
   variationSeed?: string;
   headlineOverride?: HeadlineOverride;
+  logoZone?: { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" };
 }): string {
-  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed, headlineOverride } = args;
+  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed, headlineOverride, logoZone } = args;
   const brief = DIRECTION_BRIEF[direction];
   const palette = paletteBlock(kit);
   const typo = typoBlock(kit);
   const { text: headline, suppress: suppressHeadline } = resolveHeadline(ctx, headlineOverride);
   const isCustomHeadline = headlineOverride?.mode === "custom" && !!headline;
   const venture = ventureBlock(ctx, headlineOverride);
-  const system = assetSystem(asset, hasLogoImage, headline, suppressHeadline, isCustomHeadline);
+  const system = assetSystem(asset, hasLogoImage, headline, suppressHeadline, isCustomHeadline, logoZone);
   const dims = `${asset.width}x${asset.height} (${asset.guidance})`;
 
   // Auto-derived tagline the model must NOT paint when the founder has taken

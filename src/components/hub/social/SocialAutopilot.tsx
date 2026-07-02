@@ -470,7 +470,7 @@ function Step4Style({
 
   const [pick, setPick] = useState<string | null>(direction);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
-  const [dialog, setDialog] = useState<{ scope: "single" | "all"; direction?: string; focusSection?: "headline" | "palette" | "feedback" } | null>(null);
+  const [dialog, setDialog] = useState<{ scope: "single" | "all"; direction?: string; focusSection?: "headline" | "palette" | "feedback" | "logo" } | null>(null);
   const [previewIdx, setPreviewIdx] = useState<number | null>(null);
 
   const previewsQ = useQuery({
@@ -481,7 +481,7 @@ function Step4Style({
   const previews: StylePreview[] = previewsQ.data ?? [];
   const byDirection = new Map(previews.map((p) => [p.direction, p]));
 
-  const runGenerate = async (dirId: string, opts?: { feedback?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any }) => {
+  const runGenerate = async (dirId: string, opts?: { feedback?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any; logoSize?: "sm" | "md" | "lg" }) => {
     if (!brandLocked) return;
     setBusy((b) => ({ ...b, [dirId]: true }));
     try {
@@ -493,6 +493,7 @@ function Step4Style({
         signaturePlacement: opts?.signaturePlacement,
         paletteOverride: opts?.paletteOverride,
         headlineOverride: opts?.headlineOverride,
+        logoSize: opts?.logoSize,
       });
       await qc.invalidateQueries({ queryKey: ["style-previews", snapshotId] });
     } catch (e: any) {
@@ -511,7 +512,7 @@ function Step4Style({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brandLocked, previewsQ.isLoading, previews.length]);
 
-  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any }) => {
+  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any; logoSize?: "sm" | "md" | "lg" }) => {
     await Promise.all(ART_DIRECTIONS.map((d) => runGenerate(d.id, opts)));
   };
 
@@ -658,13 +659,14 @@ function Step4Style({
           currentDirection={dialog.direction || "editorial"}
           canvasPlan={dialog.direction ? byDirection.get(dialog.direction)?.canvas_plan : null}
           currentHeadline={dialog.direction ? (byDirection.get(dialog.direction) as any)?.last_headline ?? null : null}
+          currentLogoSize={dialog.direction ? (byDirection.get(dialog.direction) as any)?.last_logo_size ?? null : null}
           focusSection={dialog.focusSection}
-          onSubmit={async ({ feedback, directionOverride, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride }) => {
+          onSubmit={async ({ feedback, directionOverride, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride, logoSize }) => {
             if (dialog.scope === "all") {
-              await regenerateAll({ feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride });
+              await regenerateAll({ feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride, logoSize });
             } else {
               const target = directionOverride || dialog.direction!;
-              await runGenerate(target, { feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride });
+              await runGenerate(target, { feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride, logoSize });
             }
           }}
         />
@@ -683,6 +685,7 @@ function Step4Style({
           qaNotes: (p as any)?.qa_notes ?? null,
           lastFeedback: p?.last_feedback ?? null,
           lastHeadline: (p as any)?.last_headline ?? null,
+          lastLogoSize: (p as any)?.last_logo_size ?? null,
           updatedAt: p?.updated_at ?? null,
         } : null;
         return (
@@ -695,6 +698,7 @@ function Step4Style({
             busy={d ? !!busy[d.id] : false}
             onRegenerate={d ? () => setDialog({ scope: "single", direction: d.id }) : undefined}
             onEditHeadline={d ? () => setDialog({ scope: "single", direction: d.id, focusSection: "headline" }) : undefined}
+            onEditLogoSize={d ? () => setDialog({ scope: "single", direction: d.id, focusSection: "logo" }) : undefined}
             onDelete={d && p?.signed_url ? () => { setPreviewIdx(null); deletePreview(d.id); } : undefined}
           />
         );
@@ -761,7 +765,7 @@ function Step5BuildKit({
     [platforms, direction],
   );
 
-  const tasks: (KitTask & { asset_id?: string | null; signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null; last_headline?: string | null; qa_notes?: any; model_used?: string | null; updated_at?: string | null; width?: number | null; height?: number | null })[] = useMemo(() => {
+  const tasks: (KitTask & { asset_id?: string | null; signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null; last_headline?: string | null; last_logo_size?: "sm" | "md" | "lg" | null; qa_notes?: any; model_used?: string | null; updated_at?: string | null; width?: number | null; height?: number | null })[] = useMemo(() => {
     return baseTasks.map((t) => {
       const match = assets.find(
         (a: any) => a.platform === t.platform && a.asset_kind === t.asset && a.art_direction === direction,
@@ -776,6 +780,7 @@ function Step5BuildKit({
         qa_notes: (match as any)?.qa_notes ?? null,
         last_feedback: match?.last_feedback ?? null,
         last_headline: (match as any)?.last_headline ?? null,
+        last_logo_size: (match as any)?.last_logo_size ?? null,
         model_used: (match as any)?.model_used ?? null,
         updated_at: (match as any)?.updated_at ?? null,
         width: (match as any)?.width ?? null,
@@ -788,7 +793,7 @@ function Step5BuildKit({
   const [runningKeys, setRunningKeys] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [kept, setKept] = useState<Record<string, boolean>>({});
-  const [regenTarget, setRegenTarget] = useState<null | { scope: "single" | "all"; task?: any; focusSection?: "headline" | "palette" | "feedback" }>(null);
+  const [regenTarget, setRegenTarget] = useState<null | { scope: "single" | "all"; task?: any; focusSection?: "headline" | "palette" | "feedback" | "logo" }>(null);
   const [previewIdx, setPreviewIdx] = useState<number | null>(null);
   const previewableIdxs = useMemo(() => tasks.map((t, i) => (t.signed_url ? i : -1)).filter((i) => i >= 0), [tasks]);
   const allDone = tasks.every((t) => t.status === "done");
@@ -829,7 +834,7 @@ function Step5BuildKit({
 
   const regenerateSingle = async (
     t: any,
-    opts: { feedback: string; directionOverride?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any },
+    opts: { feedback: string; directionOverride?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any; logoSize?: "sm" | "md" | "lg" },
   ) => {
 
     const k = taskKey(t);
@@ -848,7 +853,7 @@ function Step5BuildKit({
     }
   };
 
-  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any }) => {
+  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any; logoSize?: "sm" | "md" | "lg" }) => {
     setRunning(true);
     try {
       for (const t of tasks) {
@@ -1113,6 +1118,7 @@ function Step5BuildKit({
           currentDirection={regenTarget.task?.direction || direction}
           canvasPlan={regenTarget.task?.canvas_plan ?? null}
           currentHeadline={regenTarget.task?.last_headline ?? null}
+          currentLogoSize={(regenTarget.task as any)?.last_logo_size ?? null}
           initialIntensity={regenTarget.scope === "single" && signatureFailed(regenTarget.task) ? "bold" : "balanced"}
           focusSection={regenTarget.focusSection}
           onSubmit={async (input) => {
@@ -1125,6 +1131,7 @@ function Step5BuildKit({
                 signaturePlacement: input.signaturePlacement,
                 paletteOverride: input.paletteOverride,
                 headlineOverride: input.headlineOverride,
+                logoSize: input.logoSize,
               });
             }
           }}
@@ -1160,6 +1167,7 @@ function Step5BuildKit({
           modelUsed: t.model_used ?? null,
           lastFeedback: t.last_feedback ?? null,
           lastHeadline: (t as any).last_headline ?? null,
+          lastLogoSize: (t as any).last_logo_size ?? null,
           updatedAt: t.updated_at ?? null,
         };
         return (
@@ -1172,6 +1180,7 @@ function Step5BuildKit({
             busy={!!runningKeys[`${t.platform}:${t.asset}`]}
             onRegenerate={() => setRegenTarget({ scope: "single", task: t })}
             onEditHeadline={() => setRegenTarget({ scope: "single", task: t, focusSection: "headline" })}
+            onEditLogoSize={() => setRegenTarget({ scope: "single", task: t, focusSection: "logo" })}
             onDelete={t.asset_id ? () => { setPreviewIdx(null); deleteAsset(t); } : undefined}
           />
         );

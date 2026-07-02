@@ -22,17 +22,19 @@ export type PreviewableAsset = {
   modelUsed?: string | null;
   lastFeedback?: string | null;
   lastHeadline?: string | null;
+  lastLogoSize?: "sm" | "md" | "lg" | null;
   updatedAt?: string | null;
 };
 
 export function AssetPreviewDialog({
-  open, onOpenChange, asset, onRegenerate, onEditHeadline, onDelete, onPrev, onNext, busy = false,
+  open, onOpenChange, asset, onRegenerate, onEditHeadline, onEditLogoSize, onDelete, onPrev, onNext, busy = false,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   asset: PreviewableAsset | null;
   onRegenerate?: () => void;
   onEditHeadline?: () => void;
+  onEditLogoSize?: () => void;
   onDelete?: () => void;
   onPrev?: () => void;
   onNext?: () => void;
@@ -239,6 +241,35 @@ export function AssetPreviewDialog({
                 </div>
               );
             })()}
+
+            {(() => {
+              const sz = asset.lastLogoSize;
+              const label = sz === "sm" ? "Small" : sz === "lg" ? "Large" : sz === "md" ? "Medium" : "Default (medium)";
+              return (
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-muted-foreground">Logo size on image</div>
+                    {onEditLogoSize && (
+                      <button
+                        type="button"
+                        onClick={onEditLogoSize}
+                        disabled={busy}
+                        className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-[10px] font-medium text-foreground transition hover:border-primary hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                        title="Change how large the logo appears on this image"
+                      >
+                        <Pencil className="h-3 w-3" /> Edit
+                      </button>
+                    )}
+                  </div>
+                  <div className="mt-1 rounded border border-border bg-background/40 p-2 text-[11px]">
+                    <span className="font-medium">{label}</span>
+                    <span className="text-muted-foreground"> — composited over a reserved zone for guaranteed legibility.</span>
+                  </div>
+                </div>
+              );
+            })()}
+
+
 
 
             {asset.lastFeedback && (
