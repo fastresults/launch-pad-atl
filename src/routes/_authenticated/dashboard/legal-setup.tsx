@@ -542,7 +542,7 @@ function OperatingAgreementPanel({
       </Button>
       {md && (
         <div className="max-h-96 overflow-y-auto rounded-lg border border-white/10 bg-background/60 p-4">
-          <RichMarkdown source={md} />
+          <RichMarkdown>{md}</RichMarkdown>
         </div>
       )}
       {md && (
