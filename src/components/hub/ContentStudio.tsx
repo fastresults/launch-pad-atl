@@ -1055,39 +1055,54 @@ function Step5Launch({
                   <div className="grid gap-2 sm:grid-cols-2">
                     {wAds.map((a) => {
                       const p = postById.get(a.post_id);
+                      const flatIdx = flatAds.indexOf(a);
+                      const canPreview = !!a.signed_url;
                       return (
-                        <div key={a.id} className="flex items-center gap-2 rounded-lg border border-white/10 bg-background/30 p-2">
-                          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-background/60">
-                            {a.signed_url ? (
-                              <AssetImage src={a.signed_url} alt={p?.hook || "ad"} className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center">
-                                <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        <div
+                          key={a.id}
+                          className="group flex items-center gap-2 rounded-lg border border-white/10 bg-background/30 p-2 transition hover:bg-white/5"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => canPreview && setPreviewIdx(flatIdx)}
+                            disabled={!canPreview}
+                            title={canPreview ? "Click to preview" : "No preview available"}
+                            className="flex flex-1 items-center gap-2 text-left disabled:cursor-not-allowed"
+                          >
+                            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-background/60">
+                              {a.signed_url ? (
+                                <AssetImage src={a.signed_url} alt={p?.hook || "ad"} className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center">
+                                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-[11px] font-medium">
+                                {p?.hook || p?.pillar || "Untitled"}
                               </div>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-[11px] font-medium">
-                              {p?.hook || p?.pillar || "Untitled"}
+                              <div className="truncate text-[10px] text-muted-foreground">
+                                {a.aspect}{p?.platform ? ` · ${p.platform}` : ""}
+                              </div>
                             </div>
-                            <div className="truncate text-[10px] text-muted-foreground">
-                              {a.aspect}{p?.platform ? ` · ${p.platform}` : ""}
-                            </div>
-                          </div>
-                          {a.signed_url && (
-                            <a
-                              href={a.signed_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="rounded border border-white/10 px-2 py-1 text-[10px] hover:bg-white/5"
-                            >
-                              Open
-                            </a>
-                          )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); doDelete(a.id); }}
+                            disabled={deletingId === a.id}
+                            title="Delete ad"
+                            className="rounded p-1.5 text-muted-foreground opacity-60 transition hover:bg-destructive/10 hover:text-destructive hover:opacity-100 disabled:opacity-40"
+                          >
+                            {deletingId === a.id
+                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              : <Trash2 className="h-3.5 w-3.5" />}
+                          </button>
                         </div>
                       );
                     })}
                   </div>
+
                 </AccordionContent>
               </AccordionItem>
             );
