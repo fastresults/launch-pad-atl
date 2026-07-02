@@ -232,6 +232,8 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           selectedWeeks={selectedWeeks}
           posts={posts}
           ads={ads}
+          autoRunWeek={autoRunWeek}
+          onAutoRunConsumed={() => setAutoRunWeek(null)}
           onBack={() => setStep(3)}
           onDone={async () => { setStep(5); await persist({ current_step: 5 }); }}
         />
