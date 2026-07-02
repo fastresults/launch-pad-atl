@@ -287,7 +287,7 @@ export function RegenerateAssetDialog({
       headlineMode === "none"
         ? { mode: "none" as const }
         : headlineMode === "custom" && headlineText.trim()
-        ? { mode: "custom" as const, text: headlineText.trim().slice(0, 64) }
+        ? { mode: "custom" as const, text: sanitizeHeadline(headlineText).slice(0, 140) }
         : undefined; // auto = default, no override
     const payload = {
       feedback: feedback.trim(),
