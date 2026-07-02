@@ -340,19 +340,32 @@ function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
   const scored = lib.map((v, i) => {
     let score = 0;
     if (v.tags?.length && signalStr) {
-      for (const t of v.tags) if (signalStr.includes(t.toLowerCase())) score += 2;
+      for (const t of v.tags) if (signalStr.includes(t.toLowerCase())) score = Math.min(2, score + 1);
     }
     return { v, i, score };
   });
-  const topScore = Math.max(0, ...scored.map((s) => s.score));
-  const pool = scored.filter((s) => s.score === topScore);
-  const rotor = hash32(signal?.discriminator || String(Date.now()));
-  const chosen = pool[rotor % pool.length].v;
+  // Sort by score desc, keep a wide top pool so rotation actually rotates.
+  scored.sort((a, b) => b.score - a.score);
+  const minPool = Math.min(6, lib.length);
+  let pool = scored.filter((s) => s.score === scored[0].score);
+  if (pool.length < minPool) pool = scored.slice(0, minPool);
+
+  // Recent-used memory per snapshot (best-effort; resets on cold start).
+  const snapshotKey = String(snap?.id ?? snap?.snapshot_id ?? "");
+  const recent = getRecent(snapshotKey);
+  const fresh = pool.filter((s) => !recent.includes(s.i));
+  const finalPool = fresh.length ? fresh : pool;
+
+  const rotorSeed = `${snapshotKey}|${signal?.discriminator || String(Date.now())}`;
+  const rotor = hash32(rotorSeed);
+  const picked = finalPool[rotor % finalPool.length];
+  const chosen = picked.v;
+  rememberRecent(snapshotKey, picked.i);
 
   // Compose the depict string with a fresh camera+composition per post so
   // even repeat variant picks vary framing.
-  const compositionIdx = hash32((signal?.discriminator || "") + "|comp") % COMPOSITIONS.length;
-  const cameraIdx = hash32((signal?.discriminator || "") + "|cam") % CAMERAS.length;
+  const compositionIdx = hash32(rotorSeed + "|comp") % COMPOSITIONS.length;
+  const cameraIdx = hash32(rotorSeed + "|cam") % CAMERAS.length;
 
   const depictWithAudience = customer
     ? `${chosen.depict} Audience implied: ${customer}.`
@@ -369,6 +382,21 @@ function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
   };
 }
 
+// Best-effort per-snapshot recent-scene memory. In-memory only; if the edge
+// worker cold-starts between calls, memory resets and that's fine.
+const RECENT_MAX = 4;
+const RECENT_BY_SNAPSHOT: Map<string, number[]> = new Map();
+function getRecent(key: string): number[] {
+  if (!key) return [];
+  return RECENT_BY_SNAPSHOT.get(key) ?? [];
+}
+function rememberRecent(key: string, idx: number) {
+  if (!key) return;
+  const arr = RECENT_BY_SNAPSHOT.get(key) ?? [];
+  const next = [idx, ...arr.filter((i) => i !== idx)].slice(0, RECENT_MAX);
+  RECENT_BY_SNAPSHOT.set(key, next);
+}
+
 function sceneDirectiveBlock(scene: SceneDirective): string {
   const avoid = scene.avoid.length ? scene.avoid.join(", ") : "(none)";
   return [
@@ -380,7 +408,8 @@ function sceneDirectiveBlock(scene: SceneDirective): string {
     `  CAMERA / LIGHT: ${scene.camera}`,
     `  COMPOSITION: ${scene.composition}`,
     `  DO NOT DEPICT: ${avoid}`,
-    `  IMPORTANT: this scene is UNIQUE to this post — do NOT default to a generic "team around a laptop" or "cohort at a table" fallback. Deliver exactly the scene described above.`,
+    `  ANTI-CLICHÉ: unless the DEPICT line above explicitly names them, do NOT include any of: sticky notes, Post-it notes, a whiteboard with notes, "team standing in front of a whiteboard", cofounders around a laptop, a facilitator pointing at notes, hands pressing notes onto glass. These are banned defaults.`,
+    `  IMPORTANT: this scene is UNIQUE to this post — deliver exactly the scene described above. Do not blend it with a generic startup-office fallback.`,
   ].join("\n");
 }
 
