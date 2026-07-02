@@ -5,6 +5,7 @@ import { RichMarkdown } from "@/components/markdown/RichMarkdown";
 import { supabase } from "@/integrations/supabase/client";
 import { loadGoogleFont } from "@/lib/brand-wizard";
 import { sanitizeGuideMarkdown } from "@/lib/brand/sanitize-guide-markdown";
+import { EditablePaletteSwatch } from "@/components/hub/brand/EditablePaletteSwatch";
 
 const COLOR_ORDER = ["primary", "secondary", "accent", "bg", "fg", "muted", "surface", "text", "success", "warning", "danger"];
 
