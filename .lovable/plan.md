@@ -1,42 +1,50 @@
-## What went wrong
+# Ensure logo is always large enough to read
 
-You changed the headline to "Adam Rocks!" and hit Regenerate, but the returned image still paints the auto‑derived tagline ("An AI‑native, strategy‑first workshop that transforms founder fo…"). The client sent the override correctly; the failure is in the prompt the model sees.
+## Problem
+The logo compositor sizes the logo chip as a square at ~16–20% of the canvas's shortest edge, then letterboxes the logo inside with 12% inner padding. For wide wordmarks like `startuplabs`, the wordmark's height ends up ~3–4% of the canvas — visually tiny (see the attached YouTube thumbnail). The chip shape ignores the logo's true aspect ratio, and there is no user-facing size control.
 
-Two concrete bugs and one prompt‑robustness gap:
+## Fix strategy
+Make the logo target a **minimum readable size** measured on the logo's dominant axis (not the chip), aspect-aware, with a user override in the Regenerate / Preview modals.
 
-### Bug 1 — duplicate `assetSystem` in `cover-art-director.ts`
-`supabase/functions/_shared/cover-art-director.ts` declares `function assetSystem(...)` **twice** (lines 114–125 and 127–178). The first is a stale 3‑arg version that only handles the avatar case; the second is the real 5‑arg version that carries `suppressHeadline` and `isCustomHeadline` (the flags that inject the "verbatim, exact wording" instruction). Depending on how Deno hoists the redeclaration this either throws at module load or silently drops the verbatim clause. Either way it is wrong and must be removed.
+### 1. Aspect-aware, minimum-height sizing (`supabase/functions/_shared/logo-compositor.ts`)
+- After decoding the logo, compute its aspect ratio `ar = logo.width / logo.height`.
+- Replace fixed-square `targetBoxFor` with an aspect-aware box:
+  - **Corner placements** (`banner-corner`, `thumbnail-lockup`): target a minimum **logo height** as a % of canvas shortest side, then derive box width from `ar` + padding. Tiers:
+    - `sm` → 6% min height
+    - `md` → 9% min height (new default, up from effective ~3–4%)
+    - `lg` → 13% min height
+  - Wide wordmarks (`ar > 3`) also enforce a min width of 22/30/38% of canvas width so they don't shrink to a stripe.
+  - Square/badge logos (`ar` ~1) cap at 18/22/28% of shortest side.
+  - `avatar-center` unchanged (already large).
+- Cap chip width so it never exceeds 45% of canvas width (safe zone).
+- Reduce inner padding from 12% → 8% so the readable glyphs get more of the chip.
 
-### Bug 2 — the old tagline is still in the prompt as context
-`ventureBlock()` always emits `- One-liner: <brain.identity.one_liner>`, and that one‑liner is exactly the "An AI‑native, strategy‑first workshop…" string. Even when `HEADLINE (verbatim): "Adam Rocks!"` is present in the asset system block, the model sees the long, professional copy elsewhere in the prompt and prefers to render it on the poster. This is the primary reason your custom text got overridden.
+### 2. Plumb a `logoSize` option through the pipeline
+- `compositeLogo(..., opts: { placement, surfaceHex, logoSize?: 'sm'|'md'|'lg' })` — default `md`.
+- `venture-social-cover/index.ts` and `venture-style-preview/index.ts`: accept `logoSize` from the request body, forward to `compositeLogo`, and log the resolved size next to headline logging.
+- Persist last choice on the asset row (`last_logo_size` column, similar to `last_headline`) so regeneration keeps the user's preference.
 
-### Bug 3 — the verbatim rule is buried
-The verbatim instruction only appears inside the per‑asset system block, mid‑prompt. Gemini‑3‑pro‑image responds much more reliably when the exact string it must render is stated once at the very top as the primary objective, and once more in a hard negative ("do NOT render any other tagline").
+### 3. Prompt-side reinforcement (`supabase/functions/_shared/cover-art-director.ts`)
+- Add a `LOGO SAFE ZONE` block to the prompt telling the model to reserve a clean rectangle at the chosen placement of `~{H}% height × {W}% width` filled with `surfaceHex`, so the composited chip lands on flat background instead of on top of a face/detail. Values match the tier the compositor will use.
 
-## Plan
+### 4. UI controls
+- `RegenerateAssetDialog.tsx`: add a **Logo size** segmented control (Small / Medium / Large) next to Headline, with a helper caption ("Recommended: Medium for wordmarks").
+- `AssetPreviewDialog.tsx`: surface current logo size as a chip with an **Edit** shortcut that opens Regenerate scrolled to the Logo size section (reuse the `focusSection` mechanism already added for headlines).
+- `SocialAutopilot.tsx`: pass `logoSize` through `regenerateSingle` and initial `generateAll` calls; default `md`, remember per-asset from `last_logo_size`.
 
-1. **Delete the dead first `assetSystem` declaration** in `supabase/functions/_shared/cover-art-director.ts` (lines 114–125). Keep only the 5‑arg version that receives `suppressHeadline` and `isCustomHeadline`.
+### 5. Migration
+- `ALTER TABLE venture_social_assets ADD COLUMN last_logo_size text;` (+ same on style previews if applicable), backfill NULL, no RLS changes required.
 
-2. **Sanitize `ventureBlock` when a custom or "none" headline override is active.** Pass `headlineOverride` into `ventureBlock(ctx, headlineOverride)` and, when the override is `custom` or `none`, drop the `One-liner` line entirely (and any other field that duplicates the auto‑headline text). The model must not be shown competing copy.
-
-3. **Add a top‑of‑prompt PRIMARY TEXT OBJECTIVE block in `buildCoverArtPrompt`** when `isCustomHeadline` is true:
-   - `PRIMARY TEXT OBJECTIVE: the only lettering on the canvas is the exact string "Adam Rocks!" (verbatim, no substitutions, no rewrites, no punctuation changes, no additional words).`
-   - `FORBIDDEN TEXT: do NOT render "<autoHeadline(ctx)>" or any paraphrase of it anywhere on the canvas.`
-   Mirror the same two lines when the override is `none` (objective = zero glyphs, forbidden = the auto tagline).
-
-4. **Make the "verbatim" rule survive retries.** `image-qa.ts` retry path currently reuses the same prompt; confirm `headlineOverride` is threaded through the retry call in `venture-social-cover/index.ts` so the second attempt still gets the verbatim instruction.
-
-5. **Refresh the preview sidebar after regenerate** so "Headline on image" shows "Adam Rocks!" instead of the "Auto‑derived from your venture" placeholder. `venture-social-cover` already writes `last_headline`; verify the `["social-cover", snapshotId]` query invalidation actually re‑reads the row into the `AssetPreviewDialog` after a single‑asset regenerate (the current screenshot suggests it didn't).
-
-6. **Log the resolved headline server‑side.** Add a one‑line `console.log("[social-cover] headline:", { mode, text, suppress })` at the top of the render call in both `venture-social-cover` and `venture-style-preview` so the next time this misfires we can confirm from edge logs whether the override reached the prompt.
+### 6. QA
+- Verify with three logo shapes (wide wordmark, square badge, tall glyph) that the composited chip's rendered logo height on a 1280×720 canvas is ≥ ~65px on Medium, ≥ ~95px on Large.
+- Confirm chip never overlaps the headline safe zone at bottom-left of thumbnails.
 
 ## Files touched
-
-- `supabase/functions/_shared/cover-art-director.ts` — remove duplicate `assetSystem`; add `PRIMARY TEXT OBJECTIVE` / `FORBIDDEN TEXT` block; take `headlineOverride` in `ventureBlock` and strip the one‑liner when overridden.
-- `supabase/functions/venture-social-cover/index.ts` — add headline log line; verify retry path forwards `headlineOverride`.
-- `supabase/functions/venture-style-preview/index.ts` — same log line; same retry check.
-- `src/components/hub/social/SocialAutopilot.tsx` / `AssetPreviewDialog.tsx` — verify the sidebar re‑reads `last_headline` after regenerate; add a small fallback that displays the just‑submitted headline optimistically until the query returns.
-
-## What stays the same
-
-Client submit path, palette override handling, brand‑signature intensity/placement, delete flow, and the modal scroll fix from the previous turn all remain untouched.
+- `supabase/functions/_shared/logo-compositor.ts` (sizing + padding + new option)
+- `supabase/functions/_shared/cover-art-director.ts` (safe-zone prompt block)
+- `supabase/functions/venture-social-cover/index.ts` (accept + persist `logoSize`)
+- `supabase/functions/venture-style-preview/index.ts` (accept `logoSize`)
+- `src/components/hub/social/RegenerateAssetDialog.tsx` (Logo size control + focus section)
+- `src/components/hub/social/AssetPreviewDialog.tsx` (display + Edit shortcut)
+- `src/components/hub/social/SocialAutopilot.tsx` (thread option through)
+- New migration for `last_logo_size`
