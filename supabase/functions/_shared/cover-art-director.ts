@@ -191,11 +191,21 @@ export function buildCoverArtPrompt(args: {
   const brief = DIRECTION_BRIEF[direction];
   const palette = paletteBlock(kit);
   const typo = typoBlock(kit);
-  const venture = ventureBlock(ctx);
   const { text: headline, suppress: suppressHeadline } = resolveHeadline(ctx, headlineOverride);
   const isCustomHeadline = headlineOverride?.mode === "custom" && !!headline;
+  const venture = ventureBlock(ctx, headlineOverride);
   const system = assetSystem(asset, hasLogoImage, headline, suppressHeadline, isCustomHeadline);
   const dims = `${asset.width}x${asset.height} (${asset.guidance})`;
+
+  // Auto-derived tagline the model must NOT paint when the founder has taken
+  // manual control of the on-image text.
+  const autoTag = autoHeadline(ctx);
+  const primaryTextObjective = isCustomHeadline
+    ? `\n## PRIMARY TEXT OBJECTIVE (READ FIRST — OVERRIDES ALL OTHER COPY GUIDANCE)\nThe ONLY lettering permitted anywhere on this canvas is the exact string:\n    "${headline}"\nRender it verbatim. No substitutions. No rewrites. No punctuation changes. No additional words, subheads, taglines, URLs, hashtags, or captions.\nFORBIDDEN TEXT: do NOT render "${autoTag}" or any paraphrase, translation, abbreviation, or restatement of it anywhere on the canvas.\n`
+    : suppressHeadline
+    ? `\n## PRIMARY TEXT OBJECTIVE (READ FIRST — OVERRIDES ALL OTHER COPY GUIDANCE)\nZERO lettering on this canvas. No headline, no tagline, no subhead, no URL, no callout, no caption, no watermark. Zero glyphs. Zero words. Zero numbers.\nFORBIDDEN TEXT: do NOT render "${autoTag}" or any paraphrase of it.\n`
+    : "";
+
 
   const forbiddenLines = plan.forbiddenPairs.slice(0, 6).map(
     (p) => `  - Never place ${p.fg} on ${p.bg} (only ${p.ratio}:1 — illegible).`,
