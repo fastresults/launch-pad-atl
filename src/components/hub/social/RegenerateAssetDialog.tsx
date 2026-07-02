@@ -217,21 +217,29 @@ export function RegenerateAssetDialog({
   const [headlineHighlight, setHeadlineHighlight] = useState(false);
   const headlineSectionRef = useRef<HTMLDivElement | null>(null);
   const headlineInputRef = useRef<HTMLInputElement | null>(null);
+  const [logoHighlight, setLogoHighlight] = useState(false);
+  const logoSectionRef = useRef<HTMLDivElement | null>(null);
 
   // Scroll + highlight + focus when opened targeting a specific section.
   useEffect(() => {
     if (!open) return;
-    if (focusSection !== "headline") return;
+    if (focusSection !== "headline" && focusSection !== "logo") return;
     // Wait for dialog mount animation.
     const t = window.setTimeout(() => {
-      headlineSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
-      setHeadlineHighlight(true);
-      const inp = headlineInputRef.current;
-      if (inp) {
-        inp.focus();
-        try { inp.select(); } catch { /* noop */ }
+      if (focusSection === "headline") {
+        headlineSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+        setHeadlineHighlight(true);
+        const inp = headlineInputRef.current;
+        if (inp) {
+          inp.focus();
+          try { inp.select(); } catch { /* noop */ }
+        }
+        window.setTimeout(() => setHeadlineHighlight(false), 1400);
+      } else if (focusSection === "logo") {
+        logoSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+        setLogoHighlight(true);
+        window.setTimeout(() => setLogoHighlight(false), 1400);
       }
-      window.setTimeout(() => setHeadlineHighlight(false), 1400);
     }, 120);
     return () => window.clearTimeout(t);
   }, [open, focusSection]);
