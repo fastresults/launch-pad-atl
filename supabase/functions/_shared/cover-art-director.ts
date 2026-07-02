@@ -438,10 +438,11 @@ ${palette}
 Typography:
 ${typo}
 
-## Subject brief (what this venture actually IS — the scene must reflect this, not a literal reading of the brand name)
+## Brand context (identity metadata — NOT a scene description)
+The brand name below is a wordmark / label, not a subject to depict. If the Scene Directive at the top and any literal reading of the brand name conflict, the Scene Directive ALWAYS wins.
 ${venture}
 
-The Subject brief above governs WHAT is depicted. The Canvas plan above governs COLORS. The Headline policy governs TEXT. Never let the brand name's individual English words dictate the scene — always defer to the Subject brief.
+The Scene Directive governs WHAT is depicted. The Canvas plan governs COLORS. The Headline policy governs TEXT. Never let the brand name's individual English words dictate the scene — always defer to the Scene Directive.
 
 ## Asset spec
   - Platform: ${platform}
