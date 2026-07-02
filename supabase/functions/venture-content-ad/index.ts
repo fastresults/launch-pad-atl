@@ -1,0 +1,409 @@
+// Venture Content Ad — generates 1:1 / 4:5 / 9:16 social ads for a specific
+// post from the parsed 90-day content calendar. Mirrors venture-social-cover
+// architecture (brand-gated, canvas plan + palette tile + logo composite +
+// contrast + signature-splash retry), but keyed by (post_id, aspect) instead
+// of (platform, asset_kind).
+
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { loadVentureContext } from "../_shared/venture-context.ts";
+import { buildCanvasPlan, applyPaletteOverride, type CanvasPlan } from "../_shared/canvas-plan.ts";
+import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
+import { runContrastQa } from "../_shared/image-qa.ts";
+import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
+import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
+import { buildContentAdPrompt, specForAspect, type AdAspect } from "../_shared/content-ad-director.ts";
+import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+const AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/images/generations";
+const MODEL_MULTIMODAL = "google/gemini-3-pro-image";
+const MODEL_FALLBACK = "openai/gpt-image-2";
+const BUCKET = "user-media";
+const SIGNED_TTL = 60 * 60 * 24 * 7;
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+}
+
+function gwHeaders(k: string) {
+  return { Authorization: `Bearer ${k}`, "Content-Type": "application/json" };
+}
+
+function gatewayError(text: string, status: number, label: string) {
+  let parsed: any = {};
+  try { parsed = JSON.parse(text); } catch { /* non-json */ }
+  const msg = parsed?.error?.message || parsed?.message || parsed?.details || `${label} gateway error (${status})`;
+  const err: any = new Error(msg);
+  err.status = status;
+  err.code = parsed?.error?.type || parsed?.error?.code || parsed?.type || parsed?.code;
+  err.details = parsed?.details;
+  return err;
+}
+
+function b64ToBytes(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function bytesToB64(bytes: Uint8Array): string {
+  let s = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) s += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  return btoa(s);
+}
+function mimeFromPath(p: string): string {
+  const ext = (p.split(".").pop() || "").toLowerCase();
+  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+  if (ext === "webp") return "image/webp";
+  if (ext === "svg") return "image/svg+xml";
+  return "image/png";
+}
+
+async function fetchPrimaryLogo(admin: any, kit: any) {
+  try {
+    const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
+    if (!logos.length) return { dataUrl: null as string | null, bytes: null as Uint8Array | null };
+    const primary = logos.find((l) => l?.primary) ?? logos[0];
+    const path = primary?.path || primary?.storage_path;
+    if (!path) return { dataUrl: null, bytes: null };
+    const { data, error } = await admin.storage.from(BUCKET).download(path);
+    if (error || !data) return { dataUrl: null, bytes: null };
+    const buf = new Uint8Array(await data.arrayBuffer());
+    if (buf.byteLength > 4 * 1024 * 1024) return { dataUrl: null, bytes: null };
+    const mime = primary?.contentType || mimeFromPath(path);
+    if (mime === "image/svg+xml") return { dataUrl: null, bytes: null };
+    return { dataUrl: `data:${mime};base64,${bytesToB64(buf)}`, bytes: buf };
+  } catch (e) {
+    console.error("fetchPrimaryLogo failed", e);
+    return { dataUrl: null, bytes: null };
+  }
+}
+
+async function callMultimodal(prompt: string, imagesDataUrls: string[], apiKey: string) {
+  const content: any[] = [{ type: "text", text: prompt }];
+  for (const url of imagesDataUrls) if (url) content.push({ type: "image_url", image_url: { url } });
+  const body = { model: MODEL_MULTIMODAL, messages: [{ role: "user", content }], modalities: ["image", "text"] };
+  const res = await fetch(AI_GATEWAY, { method: "POST", headers: gwHeaders(apiKey), body: JSON.stringify(body) });
+  const text = await res.text();
+  if (!res.ok) throw gatewayError(text, res.status, "Multimodal");
+  const data = JSON.parse(text);
+  const b64 = data?.data?.[0]?.b64_json;
+  if (!b64) { const e: any = new Error("Multimodal gateway returned no image"); e.status = 502; throw e; }
+  return b64 as string;
+}
+
+async function callTextOnly(prompt: string, size: string, apiKey: string) {
+  const res = await fetch(AI_GATEWAY, {
+    method: "POST", headers: gwHeaders(apiKey),
+    body: JSON.stringify({ model: MODEL_FALLBACK, prompt, size, quality: "medium", n: 1 }),
+  });
+  const text = await res.text();
+  if (!res.ok) throw gatewayError(text, res.status, "Fallback");
+  const data = JSON.parse(text);
+  const b64 = data?.data?.[0]?.b64_json;
+  if (!b64) throw new Error("Fallback gateway returned no image");
+  return b64 as string;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  try {
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!apiKey) return json({ error: "LOVABLE_API_KEY not configured" }, 500);
+
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const client = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claims, error: claimsErr } = await client.auth.getClaims(token);
+    if (claimsErr || !claims?.claims?.sub) return json({ error: "Unauthorized" }, 401);
+    const userId = claims.claims.sub as string;
+
+    const admin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const body = (await req.json().catch(() => ({}))) as any;
+    const action = body?.action ?? "generate";
+    const snapshotId = body?.snapshotId as string | undefined;
+    if (!snapshotId) return json({ error: "snapshotId required" }, 400);
+
+    const { data: snap } = await admin
+      .from("venture_snapshots")
+      .select("id, user_id")
+      .eq("id", snapshotId)
+      .maybeSingle();
+    if (!snap || snap.user_id !== userId) return json({ error: "Forbidden" }, 403);
+
+    // ---- LIST ----
+    if (action === "list") {
+      const { data } = await admin
+        .from("venture_content_ads")
+        .select("*")
+        .eq("snapshot_id", snapshotId)
+        .order("created_at", { ascending: false });
+      return json({ ads: data ?? [] });
+    }
+
+    // ---- DELETE ----
+    if (action === "delete") {
+      const adId = body?.adId as string;
+      if (!adId) return json({ error: "adId required" }, 400);
+      const { data: row } = await admin
+        .from("venture_content_ads")
+        .select("user_id, storage_path")
+        .eq("id", adId)
+        .maybeSingle();
+      if (!row || row.user_id !== userId) return json({ error: "Not found" }, 404);
+      if (row.storage_path) await admin.storage.from(BUCKET).remove([row.storage_path]).catch(() => {});
+      await admin.from("venture_content_ads").delete().eq("id", adId);
+      return json({ ok: true });
+    }
+
+    // ---- SELECT ----
+    if (action === "select") {
+      const adId = body?.adId as string;
+      if (!adId) return json({ error: "adId required" }, 400);
+      const { data: row } = await admin
+        .from("venture_content_ads")
+        .select("*")
+        .eq("id", adId)
+        .maybeSingle();
+      if (!row || row.user_id !== userId) return json({ error: "Not found" }, 404);
+      await admin
+        .from("venture_content_ads")
+        .update({ is_selected: false })
+        .eq("snapshot_id", snapshotId)
+        .eq("post_id", row.post_id)
+        .eq("aspect", row.aspect);
+      const { data: updated } = await admin
+        .from("venture_content_ads")
+        .update({ is_selected: true })
+        .eq("id", adId)
+        .select()
+        .single();
+      return json({ ad: updated });
+    }
+
+    // ---- GENERATE ----
+    if (action !== "generate") return json({ error: `Unknown action: ${action}` }, 400);
+
+    // HARD GATE: brand kit must be locked
+    const { data: kit } = await admin
+      .from("venture_brand_kits")
+      .select("*")
+      .eq("snapshot_id", snapshotId)
+      .maybeSingle();
+    if (!kit || kit.status !== "locked") {
+      return json({
+        error: "Brand Wizard must be completed and locked before generating content ads.",
+        code: "BRAND_NOT_LOCKED",
+      }, 400);
+    }
+
+    const postId = String(body?.postId || "");
+    if (!postId) return json({ error: "postId required" }, 400);
+    const aspect = (["1:1", "4:5", "9:16"] as const).includes(body?.aspect) ? body.aspect as AdAspect : "1:1";
+    const direction = String(body?.direction || "editorial") as ArtDirectionId;
+    if (!ART_DIRECTIONS.some((d) => d.id === direction)) return json({ error: `Unknown direction: ${direction}` }, 400);
+
+    const { data: post } = await admin
+      .from("venture_content_calendar_posts")
+      .select("*")
+      .eq("id", postId)
+      .maybeSingle();
+    if (!post || post.user_id !== userId || post.snapshot_id !== snapshotId) {
+      return json({ error: "Post not found in this venture" }, 404);
+    }
+
+    const userFeedback = typeof body?.feedback === "string" ? body.feedback.slice(0, 600) : "";
+    const signatureIntensity = (["subtle", "balanced", "bold"] as const).includes(body?.signatureIntensity) ? body.signatureIntensity : undefined;
+    const signaturePlacement = (["auto", "anchor_block", "sidebar_stripe", "duotone_wash", "focal_shape", "corner_mark", "framed_border"] as const).includes(body?.signaturePlacement) ? body.signaturePlacement : undefined;
+    const signatureMinCoveragePct = typeof body?.signatureMinCoveragePct === "number" ? body.signatureMinCoveragePct : undefined;
+    const signatureCfg = (signatureIntensity || signaturePlacement || signatureMinCoveragePct !== undefined)
+      ? { intensity: signatureIntensity, placement: signaturePlacement, minCoveragePct: signatureMinCoveragePct }
+      : undefined;
+
+    const paletteOverride = body?.paletteOverride && typeof body.paletteOverride === "object"
+      ? { surface: body.paletteOverride.surface, ink: body.paletteOverride.ink, accent: body.paletteOverride.accent, signature: body.paletteOverride.signature }
+      : undefined;
+
+    const rawHl = body?.headlineOverride;
+    const headlineOverride = rawHl && typeof rawHl === "object" && ["auto", "custom", "none"].includes(rawHl.mode)
+      ? { mode: rawHl.mode as "auto" | "custom" | "none", text: typeof rawHl.text === "string" ? rawHl.text.slice(0, 64) : undefined }
+      : undefined;
+
+    const logoSize: LogoSize = normalizeLogoSize(body?.logoSize);
+
+    const asset = specForAspect(aspect);
+    const ctx = await loadVentureContext(admin, snapshotId);
+    const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
+
+    let plan: CanvasPlan = buildCanvasPlan({ kit, asset, direction, signature: signatureCfg });
+    plan = applyPaletteOverride(plan, paletteOverride);
+
+    const logoAspect = (await readLogoAspect(logoBytes)) ?? 1;
+    const logoPlacement = placementForAssetKind(asset.kind);
+    const logoZoneHint = logoSafeZone(logoPlacement, logoSize, logoAspect);
+
+    let paletteTileDataUrl: string | null = null;
+    try { paletteTileDataUrl = bytesToDataUrl(buildPaletteTilePngBytes(plan)); }
+    catch (e) { console.warn("palette tile build failed", e); }
+
+    const variationSeed = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
+
+    const buildPrompt = (retryNote?: string) => buildContentAdPrompt({
+      aspect,
+      direction,
+      kit,
+      ctx,
+      plan,
+      post: {
+        pillar: post.pillar, platform: post.platform, format: post.format,
+        hook: post.hook, body: post.body, cta: post.cta, asset_notes: post.asset_notes,
+      },
+      hasLogoImage: !!logoDataUrl,
+      retryNote,
+      userFeedback,
+      variationSeed,
+      headlineOverride,
+      logoZone: logoZoneHint,
+    });
+
+    const generate = async (retryNote?: string) => {
+      const prompt = buildPrompt(retryNote);
+      const refs = [logoDataUrl, paletteTileDataUrl].filter(Boolean) as string[];
+      try {
+        if (refs.length) {
+          const b64 = await callMultimodal(prompt, refs, apiKey);
+          return { b64, modelUsed: MODEL_MULTIMODAL, prompt };
+        }
+        const b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
+        return { b64, modelUsed: MODEL_FALLBACK, prompt };
+      } catch (e: any) {
+        const status = e?.status;
+        if (refs.length && ![401, 402, 403, 429].includes(status)) {
+          const b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
+          return { b64, modelUsed: MODEL_FALLBACK + " (multimodal fallback)", prompt };
+        }
+        throw e;
+      }
+    };
+
+    let result: { b64: string; modelUsed: string; prompt: string };
+    try { result = await generate(); }
+    catch (e: any) {
+      const status = e?.status;
+      const out: any = { error: e?.message ?? "Generation failed", upstreamStatus: status };
+      if (status === 402) { out.code = "PAYMENT_REQUIRED"; out.reason = "ai_credits_exhausted"; }
+      else if (status === 403 && e?.code === "credit_limit_reached") { out.code = "AI_CREDIT_LIMIT_REACHED"; out.reason = "workspace_credit_limit"; }
+      else if (status === 429) { out.code = "RATE_LIMITED"; }
+      else if (e?.code) { out.code = e.code; }
+      if (e?.details) out.details = e.details;
+      return json(out, 200);
+    }
+
+    let bytes = b64ToBytes(result.b64);
+    let qa = runContrastQa(bytes, plan);
+    if (!qa.ok) {
+      try {
+        const sigVisible = qa.observed.signatureVisible !== false;
+        const sigNote = !sigVisible
+          ? ` CRITICAL: previous render contained NO perceptible ${plan.displaySignature} pixels. You MUST add a confident ${plan.displaySignature} block, sidebar, or duotone wash covering ≥${plan.signatureMinCoveragePct}% of the canvas.`
+          : (qa.observed.signatureCoveragePct ?? 100) < plan.signatureMinCoveragePct
+          ? ` Brand signature ${plan.displaySignature} was only ${qa.observed.signatureCoveragePct}% of canvas — cover ≥${plan.signatureMinCoveragePct}% as a confident solid shape.`
+          : "";
+        const retryNote = `Previous attempt produced ${qa.observed.dominantFg} on ${qa.observed.dominantBg} (${qa.observed.ratio}:1 — illegible). Use ONLY surface=${plan.surface}, ink=${plan.ink}, signature=${plan.displaySignature}, accent=${plan.accent}.${sigNote}`;
+        const retry = await generate(retryNote);
+        const retryBytes = b64ToBytes(retry.b64);
+        const retryQa = runContrastQa(retryBytes, plan);
+        const currentSig = qa.observed.signatureCoveragePct ?? 0;
+        const retrySig = retryQa.observed.signatureCoveragePct ?? 0;
+        const retryBetter =
+          (retryQa.observed.signatureVisible && !sigVisible) ||
+          retrySig > currentSig ||
+          retryQa.observed.ratio > qa.observed.ratio;
+        if (retryBetter) { bytes = retryBytes; qa = retryQa; result = retry; }
+      } catch (e) { console.warn("QA retry failed", e); }
+    }
+
+    const minPct = (plan.signatureMinCoveragePct ?? 12) * 0.75;
+    const signatureMissing = qa.observed.signatureVisible === false || ((qa.observed.signatureCoveragePct ?? 0) < minPct);
+    if (signatureMissing) {
+      bytes = compositeSignatureSplash(bytes, plan);
+      qa = runContrastQa(bytes, plan);
+      (qa as any).signature_composited = true;
+    }
+
+    let logoComposited = false;
+    if (logoBytes) {
+      try {
+        bytes = await compositeLogo(bytes, logoBytes, {
+          placement: logoPlacement,
+          surfaceHex: plan.surface,
+          inkHex: plan.ink,
+          logoSize,
+        });
+        logoComposited = true;
+      } catch (e) { console.warn("logo composite failed", e); }
+    }
+    (qa as any).logo_composited = logoComposited;
+    (qa as any).logo_size = logoSize;
+
+    const fileId = crypto.randomUUID();
+    const safeAspect = aspect.replace(":", "x");
+    const storagePath = `content-ad/${userId}/${snapshotId}/${post.week}/${postId}/${safeAspect}-${direction}-${fileId}.png`;
+
+    const { error: upErr } = await admin.storage
+      .from(BUCKET)
+      .upload(storagePath, bytes, { contentType: "image/png", upsert: false });
+    if (upErr) throw upErr;
+
+    const { data: signed } = await admin.storage.from(BUCKET).createSignedUrl(storagePath, SIGNED_TTL);
+    const expiresAt = new Date(Date.now() + SIGNED_TTL * 1000).toISOString();
+
+    const { data: row, error: insErr } = await admin
+      .from("venture_content_ads")
+      .insert({
+        snapshot_id: snapshotId,
+        user_id: userId,
+        post_id: postId,
+        aspect,
+        art_direction: direction,
+        storage_path: storagePath,
+        signed_url: signed?.signedUrl ?? null,
+        signed_url_expires_at: expiresAt,
+        width: asset.width,
+        height: asset.height,
+        prompt_used: result.prompt,
+        model_used: result.modelUsed,
+        brand_kit_locked_at: kit.locked_at,
+        is_selected: false,
+        canvas_plan: plan as any,
+        qa_status: qa.ok ? "pass" : "fail",
+        qa_notes: qa as any,
+        last_feedback: userFeedback || null,
+        last_regenerated_at: userFeedback ? new Date().toISOString() : null,
+        last_headline: headlineOverride
+          ? (headlineOverride.mode === "none" ? "" : (headlineOverride.text ?? null))
+          : (post.hook ?? null),
+        last_logo_size: logoSize,
+      })
+      .select()
+      .single();
+    if (insErr) throw insErr;
+
+    return json({ ad: row });
+  } catch (e) {
+    console.error("venture-content-ad error", e);
+    return json({ error: (e as Error).message ?? "Internal error" }, 500);
+  }
+});

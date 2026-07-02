@@ -2037,6 +2037,217 @@ export type Database = {
           },
         ]
       }
+      venture_content_ads: {
+        Row: {
+          art_direction: string
+          aspect: string
+          brand_kit_locked_at: string | null
+          canvas_plan: Json | null
+          created_at: string
+          height: number | null
+          id: string
+          is_selected: boolean
+          last_feedback: string | null
+          last_headline: string | null
+          last_logo_size: string | null
+          last_regenerated_at: string | null
+          model_used: string | null
+          post_id: string
+          prompt_used: string | null
+          qa_notes: Json | null
+          qa_status: string | null
+          signed_url: string | null
+          signed_url_expires_at: string | null
+          snapshot_id: string
+          storage_path: string
+          updated_at: string
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          art_direction: string
+          aspect: string
+          brand_kit_locked_at?: string | null
+          canvas_plan?: Json | null
+          created_at?: string
+          height?: number | null
+          id?: string
+          is_selected?: boolean
+          last_feedback?: string | null
+          last_headline?: string | null
+          last_logo_size?: string | null
+          last_regenerated_at?: string | null
+          model_used?: string | null
+          post_id: string
+          prompt_used?: string | null
+          qa_notes?: Json | null
+          qa_status?: string | null
+          signed_url?: string | null
+          signed_url_expires_at?: string | null
+          snapshot_id: string
+          storage_path: string
+          updated_at?: string
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          art_direction?: string
+          aspect?: string
+          brand_kit_locked_at?: string | null
+          canvas_plan?: Json | null
+          created_at?: string
+          height?: number | null
+          id?: string
+          is_selected?: boolean
+          last_feedback?: string | null
+          last_headline?: string | null
+          last_logo_size?: string | null
+          last_regenerated_at?: string | null
+          model_used?: string | null
+          post_id?: string
+          prompt_used?: string | null
+          qa_notes?: Json | null
+          qa_status?: string | null
+          signed_url?: string | null
+          signed_url_expires_at?: string | null
+          snapshot_id?: string
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_content_ads_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "venture_content_calendar_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venture_content_ads_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venture_content_calendar_posts: {
+        Row: {
+          asset_notes: string | null
+          best_time: string | null
+          body: string | null
+          created_at: string
+          cta: string | null
+          day: string | null
+          format: string | null
+          hashtags: string[] | null
+          hook: string | null
+          id: string
+          parsed_at: string
+          pillar: string | null
+          platform: string | null
+          snapshot_id: string
+          source_doc_id: string | null
+          updated_at: string
+          user_id: string
+          week: number
+        }
+        Insert: {
+          asset_notes?: string | null
+          best_time?: string | null
+          body?: string | null
+          created_at?: string
+          cta?: string | null
+          day?: string | null
+          format?: string | null
+          hashtags?: string[] | null
+          hook?: string | null
+          id: string
+          parsed_at?: string
+          pillar?: string | null
+          platform?: string | null
+          snapshot_id: string
+          source_doc_id?: string | null
+          updated_at?: string
+          user_id: string
+          week: number
+        }
+        Update: {
+          asset_notes?: string | null
+          best_time?: string | null
+          body?: string | null
+          created_at?: string
+          cta?: string | null
+          day?: string | null
+          format?: string | null
+          hashtags?: string[] | null
+          hook?: string | null
+          id?: string
+          parsed_at?: string
+          pillar?: string | null
+          platform?: string | null
+          snapshot_id?: string
+          source_doc_id?: string | null
+          updated_at?: string
+          user_id?: string
+          week?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_content_calendar_posts_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venture_content_progress: {
+        Row: {
+          art_direction: string | null
+          created_at: string
+          current_step: number
+          default_aspects: string[] | null
+          launch_status: Json | null
+          selected_weeks: number[] | null
+          snapshot_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          art_direction?: string | null
+          created_at?: string
+          current_step?: number
+          default_aspects?: string[] | null
+          launch_status?: Json | null
+          selected_weeks?: number[] | null
+          snapshot_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          art_direction?: string | null
+          created_at?: string
+          current_step?: number
+          default_aspects?: string[] | null
+          launch_status?: Json | null
+          selected_weeks?: number[] | null
+          snapshot_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_content_progress_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: true
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venture_document_types: {
         Row: {
           active: boolean

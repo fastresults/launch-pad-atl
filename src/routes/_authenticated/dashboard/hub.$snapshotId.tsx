@@ -49,6 +49,7 @@ import { getBrandKit } from "@/lib/brandKit.functions";
 
 const BRAND_KIT_REQUIRED_TYPES = new Set<string>(["website_prd"]);
 import { SocialStudio } from "@/components/hub/SocialStudio";
+import { ContentStudio } from "@/components/hub/ContentStudio";
 import { FounderRoadmapCard } from "@/components/hub/FounderRoadmapCard";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
 import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
@@ -1348,6 +1349,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         <div className="mt-4 space-y-4">
           <BrandStudio snapshot={snapshot} />
           <SocialStudio snapshot={snapshot} />
+          <ContentStudio snapshot={snapshot} />
         </div>
       </details>
 
