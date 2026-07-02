@@ -70,6 +70,18 @@ export function logoSafeZone(
   return { widthPct, heightPct, corner };
 }
 
+// Cheap aspect-ratio probe used by the prompt builder before compositing.
+// Returns null on decode failure so callers fall back to defaults.
+export async function readLogoAspect(logoBytes: Uint8Array | null | undefined): Promise<number | null> {
+  if (!logoBytes || logoBytes.byteLength === 0) return null;
+  try {
+    const img = await Image.decode(logoBytes);
+    return img.width / Math.max(1, img.height);
+  } catch {
+    return null;
+  }
+}
+
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
   if (!m) return { r: 11, g: 15, b: 25 }; // safe near-black
