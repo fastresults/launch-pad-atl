@@ -362,6 +362,7 @@ Deno.serve(async (req) => {
           surfaceHex: plan.surface,
           inkHex: plan.ink,
           logoSize,
+          cornerOverride,
         });
         logoComposited = true;
       } catch (e) { console.warn("logo composite failed", e); }
