@@ -241,7 +241,18 @@ Deno.serve(async (req) => {
       ? { mode: rawHl.mode as "auto" | "custom" | "none", text: typeof rawHl.text === "string" ? rawHl.text.slice(0, 64) : undefined }
       : undefined;
 
-    const logoSize: LogoSize = normalizeLogoSize(body?.logoSize);
+    // Content Studio: default to SMALL logo so the wordmark doesn't dominate
+    // a square/portrait ad, and place it on the OPPOSITE corner from the
+    // headline (headline anchors top-left in Editorial), unless the founder
+    // has explicitly suppressed on-image text.
+    const requestedLogoSize = body?.logoSize;
+    const logoSize: LogoSize = requestedLogoSize
+      ? normalizeLogoSize(requestedLogoSize)
+      : "sm";
+    const headlineSuppressed = headlineOverride?.mode === "none";
+    const cornerOverride: "top-left" | "bottom-right" | undefined = headlineSuppressed
+      ? undefined
+      : "bottom-right";
 
     const asset = specForAspect(aspect);
     const ctx = await loadVentureContext(admin, snapshotId);
@@ -252,7 +263,7 @@ Deno.serve(async (req) => {
 
     const logoAspect = (await readLogoAspect(logoBytes)) ?? 1;
     const logoPlacement = placementForAssetKind(asset.kind);
-    const logoZoneHint = logoSafeZone(logoPlacement, logoSize, logoAspect);
+    const logoZoneHint = logoSafeZone(logoPlacement, logoSize, logoAspect, asset.width, asset.height, cornerOverride);
 
     let paletteTileDataUrl: string | null = null;
     try { paletteTileDataUrl = bytesToDataUrl(buildPaletteTilePngBytes(plan)); }
