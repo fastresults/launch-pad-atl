@@ -68,9 +68,10 @@ Eight additional capabilities. Each is a separate half-day workshop (from ${WORK
 our team can build it done-for-you.
 ${buildLayerBlock()}
 
-## Two tracks
-- **Main Street Startup track** — cafés, salons, trades, local services, indie brands, small e-commerce. This is the default and what most founders come for.
-- **Standard track** — SaaS, marketplace, deep tech, or other tech-forward startups.
+## Two equal default tracks — pick the one that fits
+- **Main Street Startup** — cafés, salons, fitness studios, trades, local services, indie products, solo professional practices.
+- **Online / DTC / Digital** — DTC and e-commerce brands (Shopify, Amazon, marketplaces), creators and info products, digital services and agencies, small SaaS and subscription products.
+- **Also supported** — marketplaces, deep tech, and social-impact startups (specialized tracks; ask if this fits you).
 
 ## The Founder Playbook (post-workshop)
 After the workshop, every founder gets access to a dashboard with:
