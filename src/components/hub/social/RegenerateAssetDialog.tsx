@@ -233,12 +233,19 @@ export function RegenerateAssetDialog({
     const paletteOverride = Object.fromEntries(
       Object.entries(ovr).filter(([, v]) => !!v),
     ) as Record<string, string>;
+    const headlineOverride =
+      headlineMode === "none"
+        ? { mode: "none" as const }
+        : headlineMode === "custom" && headlineText.trim()
+        ? { mode: "custom" as const, text: headlineText.trim().slice(0, 64) }
+        : undefined; // auto = default, no override
     const payload = {
       feedback: feedback.trim(),
       directionOverride: direction !== currentDirection ? direction : undefined,
       signatureIntensity: intensity,
       signaturePlacement: placement,
       paletteOverride: Object.keys(paletteOverride).length ? paletteOverride : undefined,
+      headlineOverride,
     };
     // Fire-and-forget so the user can close the modal and let the task run in the background.
     Promise.resolve()
