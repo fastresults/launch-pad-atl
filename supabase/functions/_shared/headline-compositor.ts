@@ -14,7 +14,7 @@ import type { CanvasPlan } from "./canvas-plan.ts";
 // base64 font module pushed the edge worker over its memory limit before it
 // could even handle lightweight actions like `list`.
 const TTF_CDN_FALLBACK =
-  "https://raw.githubusercontent.com/rsms/inter/master/docs/font-files/Inter-Bold.ttf";
+  "https://raw.githubusercontent.com/rsms/inter/master/docs/font-files/InterVariable.ttf";
 
 let fontBytesPromise: Promise<Uint8Array | null> | null = null;
 
