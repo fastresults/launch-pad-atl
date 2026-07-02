@@ -101,6 +101,24 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
     }
   };
 
+  // Auto-parse the calendar the first time the user opens Content Studio.
+  const [autoParsed, setAutoParsed] = useState(false);
+  useEffect(() => {
+    if (!locked || !calendarDoc) return;
+    if (postsQ.isLoading || parsing || autoParsed) return;
+    if ((postsQ.data ?? []).length > 0) return;
+    setAutoParsed(true);
+    void runParse();
+  }, [locked, calendarDoc, postsQ.isLoading, postsQ.data, parsing, autoParsed]);
+
+  // Default the week selector to Week 1 as soon as posts arrive.
+  useEffect(() => {
+    if (selectedWeeks.length > 0) return;
+    const weeks = Array.from(new Set(posts.map((p) => p.week))).sort((a, b) => a - b);
+    if (weeks.length === 0) return;
+    setSelectedWeeks([weeks[0]]);
+  }, [posts, selectedWeeks.length]);
+
   // ---- Gate ----
   if (kitQ.isLoading || docsQ.isLoading) {
     return (
