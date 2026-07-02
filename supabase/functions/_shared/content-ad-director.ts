@@ -86,6 +86,7 @@ export function buildContentAdPrompt(args: {
   ctx: any;
   plan: CanvasPlan;
   post: {
+    id?: string | null;
     pillar?: string | null;
     platform?: string | null;
     format?: string | null;
@@ -100,6 +101,7 @@ export function buildContentAdPrompt(args: {
   variationSeed?: string;
   headlineOverride?: HeadlineOverride;
   logoZone?: { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" };
+  serverRenderedHeadline?: boolean;
 }): string {
   const { aspect, post } = args;
   const asset = specForAspect(aspect);
@@ -130,7 +132,28 @@ export function buildContentAdPrompt(args: {
     variationSeed: args.variationSeed,
     headlineOverride: resolvedHeadline,
     logoZone: args.logoZone,
+    serverRenderedHeadline: args.serverRenderedHeadline,
+    sceneSignal: {
+      // Stable per-post discriminator so retries land on the same scene; add
+      // the variationSeed so "regenerate" rotates to a fresh scene.
+      discriminator: `${post.id ?? "post"}|${aspect}|${args.variationSeed ?? ""}`,
+      pillar: post.pillar,
+      format: post.format,
+      assetNotes: post.asset_notes,
+    },
   });
 
   return `${base}\n${postBrief}\n`;
+}
+
+// Re-export for callers that need to know the finally-rendered headline text.
+export function resolveFinalAdHeadline(
+  postHook: string | null | undefined,
+  founderOverride?: HeadlineOverride,
+  aspect: AdAspect = "1:1",
+): { text: string; suppress: boolean } {
+  const r = resolveAdHeadline(postHook, founderOverride, aspect);
+  if (r.mode === "none") return { text: "", suppress: true };
+  if (r.mode === "custom") return { text: r.text || "", suppress: false };
+  return { text: "", suppress: false };
 }

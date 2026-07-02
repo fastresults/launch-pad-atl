@@ -161,10 +161,116 @@ type SceneDirective = {
   subjects: string[];
   setting: string;
   mood: string;
+  camera: string;
+  composition: string;
   avoid: string[];
 };
 
-function resolveSceneDirective(ctx: any): SceneDirective {
+type SceneVariant = Omit<SceneDirective, "avoid"> & { tags?: string[] };
+
+// Composition rotations layered on top of any picked variant so even repeat
+// picks vary framing.
+const COMPOSITIONS = [
+  "rule-of-thirds, subject anchored left, generous negative space on the right",
+  "centered environmental portrait, subject filling middle third",
+  "over-the-shoulder view, subject in lower-right, foreground detail bokeh",
+  "wide establishing shot, subject small within setting, architectural framing",
+  "close macro detail of hands + object, shallow focus, no full face",
+  "flat-lay top-down, objects arranged asymmetrically, single accent",
+  "low-angle heroic, subject looking off-frame, ceiling / sky negative space",
+  "two-shot conversation, both subjects mid-gesture, catch-light in eyes",
+];
+
+const CAMERAS = [
+  "35mm prime, f/2, natural window daylight",
+  "50mm prime, f/1.8, soft north-light",
+  "85mm portrait, f/2.8, golden-hour spill",
+  "24mm wide, f/4, ambient overhead daylight",
+  "macro 100mm, f/4, single-source raking light",
+  "documentary handheld, natural mixed light",
+];
+
+// Scene libraries per bucket. Each entry is one legitimate on-brand scene;
+// they rotate per post so a 4-post week reads as an editorial set, not the
+// same photo four times.
+const LIBRARY_STARTUP: SceneVariant[] = [
+  { depict: "A facilitator mid-gesture at a whiteboard covered in sticky notes; two founders lean in, laptops open on a shared table.", subjects: ["facilitator", "whiteboard", "sticky notes", "founders"], setting: "modern accelerator studio, daylight through tall glass", mood: "focused, collaborative", camera: CAMERAS[0], composition: COMPOSITIONS[0], tags: ["education", "workshop", "cohort"] },
+  { depict: "A single founder alone at a wood desk with an open laptop and a paper notebook mid-sketch; a cold-brew and a plant in soft focus behind.", subjects: ["founder", "laptop", "notebook"], setting: "quiet home studio or cafe corner", mood: "considered, calm", camera: CAMERAS[1], composition: COMPOSITIONS[1], tags: ["deep work", "story", "founder"] },
+  { depict: "Two founders in a 1:1 mentor session over espresso at a small round table; one sketches on a napkin, the other listens intently.", subjects: ["mentor", "mentee", "espresso"], setting: "third-wave coffee bar mid-morning", mood: "candid, generous", camera: CAMERAS[2], composition: COMPOSITIONS[2], tags: ["mentor", "advice", "coaching"] },
+  { depict: "A founder at a demo-day podium in soft spotlight, one arm raised mid-point; the audience is warm bokeh in the foreground.", subjects: ["founder on stage", "microphone", "audience bokeh"], setting: "warm-lit demo-day stage", mood: "confident, arrived", camera: CAMERAS[2], composition: COMPOSITIONS[6], tags: ["launch", "demo", "milestone"] },
+  { depict: "A macro of a hand pressing a Post-it onto a glass wall already covered in a matrix of colored notes; other hands blur in.", subjects: ["hand", "post-it", "glass wall"], setting: "sprint room glass wall", mood: "kinetic, iterative", camera: CAMERAS[4], composition: COMPOSITIONS[4], tags: ["sprint", "product", "planning"] },
+  { depict: "An over-the-shoulder view of a founder reviewing a spreadsheet or dashboard on a laptop, a coffee and a small notebook in the foreground.", subjects: ["founder", "laptop screen", "notebook"], setting: "clean workspace desk", mood: "analytical, quiet", camera: CAMERAS[0], composition: COMPOSITIONS[2], tags: ["metrics", "data", "review"] },
+  { depict: "A candid two-shot of co-founders laughing beside a whiteboard mid-argument-mid-agreement; markers and half-full cups on the ledge.", subjects: ["co-founders", "whiteboard", "markers"], setting: "startup room", mood: "warm, real", camera: CAMERAS[5], composition: COMPOSITIONS[7], tags: ["team", "culture", "cofounder"] },
+  { depict: "A low-angle heroic portrait of a founder at the top of an exterior stairwell, looking off-frame, morning light on their face.", subjects: ["founder portrait"], setting: "urban exterior stairwell", mood: "resolved, forward", camera: CAMERAS[2], composition: COMPOSITIONS[6], tags: ["story", "brand", "portrait"] },
+  { depict: "A flat-lay of a founder toolkit — notebook open to a sketch, MacBook edge, an index card with three bullets, a cortado — arranged asymmetrically on wood.", subjects: ["notebook", "laptop edge", "card", "coffee"], setting: "wood tabletop, top-down", mood: "crafted, deliberate", camera: CAMERAS[3], composition: COMPOSITIONS[5], tags: ["toolkit", "resource", "how-to"] },
+  { depict: "A wide establishing shot of an accelerator loft — long shared table, plants, glass walls — a small figure of a founder at one end.", subjects: ["accelerator space", "distant figure"], setting: "loft coworking", mood: "spacious, possible", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["space", "community", "brand"] },
+];
+
+const LIBRARY_MAIN_STREET: SceneVariant[] = [
+  { depict: "A shop owner behind the counter of their own storefront, one product held up in warm daylight through the front window.", subjects: ["owner", "counter", "product"], setting: "small-business storefront interior", mood: "proud, grounded", camera: CAMERAS[1], composition: COMPOSITIONS[1], tags: ["owner", "portrait", "story"] },
+  { depict: "A customer and owner mid-exchange at the register, both smiling naturally, product bags on the counter.", subjects: ["owner", "customer"], setting: "shop register", mood: "community, warm", camera: CAMERAS[5], composition: COMPOSITIONS[7], tags: ["customer", "service", "community"] },
+  { depict: "A macro of hands wrapping or preparing the shop's signature product, brown paper and twine on a wood surface.", subjects: ["hands", "product", "wrapping"], setting: "shop prep counter", mood: "crafted", camera: CAMERAS[4], composition: COMPOSITIONS[4], tags: ["craft", "product", "how-to"] },
+  { depict: "An exterior morning shot of the storefront awning with the OPEN sign lit and a chalkboard on the sidewalk.", subjects: ["storefront", "chalkboard", "OPEN sign"], setting: "sidewalk exterior", mood: "inviting, local", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["neighborhood", "brand", "launch"] },
+  { depict: "A flat-lay of the shop's product beside a handwritten note and a customer card on brown craft paper.", subjects: ["product", "note", "card"], setting: "wood tabletop, top-down", mood: "thoughtful", camera: CAMERAS[3], composition: COMPOSITIONS[5], tags: ["gift", "resource", "toolkit"] },
+  { depict: "A wide establishing shot of the block the shop sits on, storefront visible, foot traffic softly out of focus.", subjects: ["block", "storefront"], setting: "neighborhood street", mood: "rooted", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["location", "story"] },
+];
+
+const LIBRARY_FOOD: SceneVariant[] = [
+  { depict: "Chef-owner plating a dish under a single warm pendant, steam rising, tickets on a rail behind.", subjects: ["chef", "plate"], setting: "restaurant pass", mood: "crafted", camera: CAMERAS[2], composition: COMPOSITIONS[1], tags: ["portrait", "story"] },
+  { depict: "Overhead of hands arranging fresh ingredients on a marble counter, one hand mid-motion with a knife.", subjects: ["hands", "ingredients"], setting: "prep counter", mood: "kinetic", camera: CAMERAS[3], composition: COMPOSITIONS[5], tags: ["prep", "process", "how-to"] },
+  { depict: "A guest at the counter receiving their drink, the barista in soft focus behind, morning light through window.", subjects: ["guest", "barista"], setting: "cafe counter", mood: "warm", camera: CAMERAS[1], composition: COMPOSITIONS[2], tags: ["customer", "service"] },
+  { depict: "Macro of espresso pouring into a ceramic cup, ripples in the crema, a single accent color plate behind.", subjects: ["espresso", "cup"], setting: "bar top", mood: "crafted, quiet", camera: CAMERAS[4], composition: COMPOSITIONS[4], tags: ["product", "craft"] },
+  { depict: "Establishing shot of the dining room at first light, chairs down, sun bars across empty tables.", subjects: ["dining room"], setting: "morning restaurant interior", mood: "anticipatory", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["space", "brand"] },
+];
+
+const LIBRARY_FITNESS: SceneVariant[] = [
+  { depict: "Coach cuing a client mid-movement on the studio floor, chalk-dusted plates and a rig in the background.", subjects: ["coach", "client"], setting: "boutique training floor", mood: "focused, kinetic", camera: CAMERAS[2], composition: COMPOSITIONS[2] },
+  { depict: "Macro of a hand chalking up on a bar; the rest of the athlete blurs out of focus behind.", subjects: ["hand", "chalk", "bar"], setting: "training rig", mood: "disciplined", camera: CAMERAS[4], composition: COMPOSITIONS[4] },
+  { depict: "Wide low-angle of a solo athlete mid-rep under tall windows; long shadows on the floor.", subjects: ["athlete"], setting: "studio floor", mood: "resolute", camera: CAMERAS[3], composition: COMPOSITIONS[6] },
+  { depict: "Two-shot of coach and client laughing during a rest set, water bottles at their feet.", subjects: ["coach", "client"], setting: "studio bench", mood: "community", camera: CAMERAS[5], composition: COMPOSITIONS[7] },
+];
+
+const LIBRARY_HEALTH: SceneVariant[] = [
+  { depict: "A clinician reviewing a monitor with a colleague, calm overhead light, no dramatization.", subjects: ["clinician", "colleague", "monitor"], setting: "modern clinical suite", mood: "precise", camera: CAMERAS[0], composition: COMPOSITIONS[0] },
+  { depict: "Macro of gloved hands operating a modern instrument on a clean tray.", subjects: ["hands", "instrument"], setting: "prep tray", mood: "considered", camera: CAMERAS[4], composition: COMPOSITIONS[4] },
+  { depict: "A researcher at a workstation of screens, calm posture, no theatrics.", subjects: ["researcher", "workstation"], setting: "modern research bay", mood: "steady", camera: CAMERAS[1], composition: COMPOSITIONS[1] },
+];
+
+const LIBRARY_MOBILITY: SceneVariant[] = [
+  { depict: "A founder-engineer beside their vehicle on a clean shop floor, single spot lighting the mark, wide framing.", subjects: ["engineer", "vehicle"], setting: "modern mobility shop", mood: "engineered", camera: CAMERAS[3], composition: COMPOSITIONS[3] },
+  { depict: "Macro of a hand on a control surface — dashboard, throttle, or terminal — instrument reflections in the surface.", subjects: ["hand", "control surface"], setting: "cockpit macro", mood: "precise", camera: CAMERAS[4], composition: COMPOSITIONS[4] },
+];
+
+function pickLibrary(track: string, industry: string): SceneVariant[] {
+  if (track.includes("main_street") || track.includes("main street")) return LIBRARY_MAIN_STREET;
+  if (/food|restaurant|bever|cafe|coffee/.test(industry)) return LIBRARY_FOOD;
+  if (/fitness|wellness|health club|gym/.test(industry)) return LIBRARY_FITNESS;
+  if (/(life ?sci|biotech|pharma|medical|health tech)/.test(industry)) return LIBRARY_HEALTH;
+  if (/auto|vehicle|mobility/.test(industry)) return LIBRARY_MOBILITY;
+  return LIBRARY_STARTUP;
+}
+
+// FNV-1a hash for deterministic per-post scene rotation.
+function hash32(s: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+
+// Signal we use to steer + rotate the scene per post. Callers pass a stable
+// discriminator (post_id + variationSeed) plus optional pillar/format/notes
+// hints; we hash it into an index and bias by tag matches.
+export type SceneSignal = {
+  discriminator?: string;
+  pillar?: string | null;
+  format?: string | null;
+  assetNotes?: string | null;
+};
+
+function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
   const brain = ctx?.brain ?? {};
   const snap = ctx?.snap ?? {};
   const name = brain?.identity?.company_name ?? snap?.company_name ?? "";
@@ -189,63 +295,38 @@ function resolveSceneDirective(ctx: any): SceneDirective {
   if (guards.some((g) => /hub/i.test(g))) addAvoid("airport terminals", "planes", "hubcaps");
   if (guards.some((g) => /garden/i.test(g))) addAvoid("soil", "gardeners", "plant nursery");
 
-  // Track-first resolution.
-  if (track.includes("main_street") || track.includes("main street")) {
-    return {
-      depict: `A confident local small-business owner${customer ? ` (${customer})` : ""} inside their own shop, cafe, or storefront during business hours — warm daylight, real fixtures, real product on display, one authentic human moment.`,
-      subjects: ["small-business owner", "local storefront interior", "real product on display", "daylight"],
-      setting: "authentic Main-Street shop or storefront",
-      mood: "grounded, proud, community-rooted",
-      avoid: [...avoidBase],
-    };
-  }
+  const lib = pickLibrary(track, ind);
 
-  // Industry-specific scenes.
-  if (/food|restaurant|bever|cafe|coffee/.test(ind)) {
-    return {
-      depict: "A founder-operator in their food/beverage space — clean prep counter, real ingredients, natural window light, one confident portrait or over-the-shoulder shot.",
-      subjects: ["founder-operator", "prep counter", "real ingredients"],
-      setting: "modern food/beverage workspace",
-      mood: "crafted, warm, intentional",
-      avoid: [...avoidBase],
-    };
-  }
-  if (/fitness|wellness|health club|gym/.test(ind)) {
-    return {
-      depict: "A founder-coach mid-session in a modern studio — one client, one clean movement, daylight through tall windows.",
-      subjects: ["coach", "client", "studio floor"],
-      setting: "modern boutique fitness studio",
-      mood: "focused, kinetic, disciplined",
-      avoid: [...avoidBase],
-    };
-  }
-  if (/(life ?sci|biotech|pharma|medical|health tech)/.test(ind)) {
-    return {
-      depict: "A clinical-grade research or care setting with a professional at work — real instruments, calm daylight, no theatrics.",
-      subjects: ["clinician or researcher", "modern equipment"],
-      setting: "modern clinical or research environment",
-      mood: "precise, considered, human",
-      avoid: [...avoidBase],
-    };
-  }
-  if (/auto|vehicle/.test(ind)) {
-    return {
-      depict: "A modern mobility workspace with a founder-engineer beside their vehicle or rig — clean floor, brand-lit, one confident hero angle.",
-      subjects: ["founder-engineer", "vehicle or rig"],
-      setting: "modern mobility workspace",
-      mood: "engineered, deliberate",
-      avoid: [...avoidBase],
-    };
-  }
+  // Score every variant by tag match against post signals; hash-rotate ties.
+  const signalStr = [signal?.pillar, signal?.format, signal?.assetNotes].filter(Boolean).join(" ").toLowerCase();
+  const scored = lib.map((v, i) => {
+    let score = 0;
+    if (v.tags?.length && signalStr) {
+      for (const t of v.tags) if (signalStr.includes(t.toLowerCase())) score += 2;
+    }
+    return { v, i, score };
+  });
+  const topScore = Math.max(0, ...scored.map((s) => s.score));
+  const pool = scored.filter((s) => s.score === topScore);
+  const rotor = hash32(signal?.discriminator || String(Date.now()));
+  const chosen = pool[rotor % pool.length].v;
 
-  // Default: startup / tech / services / anything else → founder cohort in an
-  // accelerator setting. This is the correct scene for a startup accelerator
-  // brand like "Startup Workshops".
+  // Compose the depict string with a fresh camera+composition per post so
+  // even repeat variant picks vary framing.
+  const compositionIdx = hash32((signal?.discriminator || "") + "|comp") % COMPOSITIONS.length;
+  const cameraIdx = hash32((signal?.discriminator || "") + "|cam") % CAMERAS.length;
+
+  const depictWithAudience = customer
+    ? `${chosen.depict} Audience implied: ${customer}.`
+    : chosen.depict;
+
   return {
-    depict: `A diverse cohort of early-stage founders${customer ? ` (audience: ${customer})` : ""} in a bright modern accelerator / coworking space — laptops open, sticky notes on glass walls, a facilitator mid-gesture at a whiteboard. Real people, natural daylight, one confident focal moment.`,
-    subjects: ["early-stage founders", "facilitator", "laptops", "whiteboard", "sticky notes on glass"],
-    setting: "modern accelerator / coworking studio, daylight",
-    mood: "focused, collaborative, optimistic",
+    depict: depictWithAudience,
+    subjects: chosen.subjects,
+    setting: chosen.setting,
+    mood: chosen.mood,
+    camera: CAMERAS[cameraIdx],
+    composition: COMPOSITIONS[compositionIdx],
     avoid: [...avoidBase],
   };
 }
@@ -253,12 +334,15 @@ function resolveSceneDirective(ctx: any): SceneDirective {
 function sceneDirectiveBlock(scene: SceneDirective): string {
   const avoid = scene.avoid.length ? scene.avoid.join(", ") : "(none)";
   return [
-    `SCENE DIRECTIVE (HIGHEST PRIORITY — depict exactly this; ignore any literal reading of the brand name):`,
+    `SCENE DIRECTIVE (HIGHEST PRIORITY — depict exactly this specific scene; ignore any literal reading of the brand name):`,
     `  DEPICT: ${scene.depict}`,
     `  KEY SUBJECTS: ${scene.subjects.join(", ")}`,
     `  SETTING: ${scene.setting}`,
     `  MOOD: ${scene.mood}`,
+    `  CAMERA / LIGHT: ${scene.camera}`,
+    `  COMPOSITION: ${scene.composition}`,
     `  DO NOT DEPICT: ${avoid}`,
+    `  IMPORTANT: this scene is UNIQUE to this post — do NOT default to a generic "team around a laptop" or "cohort at a table" fallback. Deliver exactly the scene described above.`,
   ].join("\n");
 }
 
@@ -393,15 +477,25 @@ export function buildCoverArtPrompt(args: {
   variationSeed?: string;
   headlineOverride?: HeadlineOverride;
   logoZone?: { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" };
+  sceneSignal?: SceneSignal;
+  // When true, we render the headline server-side after generation. The prompt
+  // suppresses all glyphs and reserves the top band as unmarked negative space.
+  serverRenderedHeadline?: boolean;
 }): string {
-  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed, headlineOverride, logoZone } = args;
+  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed, headlineOverride, logoZone, sceneSignal, serverRenderedHeadline } = args;
   const brief = DIRECTION_BRIEF[direction];
   const palette = paletteBlock(kit);
   const typo = typoBlock(kit);
-  const { text: headline, suppress: suppressHeadline } = resolveHeadline(ctx, headlineOverride);
-  const isCustomHeadline = headlineOverride?.mode === "custom" && !!headline;
-  const venture = ventureBlock(ctx, headlineOverride);
-  const scene = resolveSceneDirective(ctx);
+  // If the headline will be composited server-side, force the model into
+  // zero-glyph mode — otherwise Gemini paints its own (badly-fit) headline
+  // AND ours ends up on top, producing duplicate text.
+  const effectiveOverride: HeadlineOverride | undefined = serverRenderedHeadline
+    ? { mode: "none" }
+    : headlineOverride;
+  const { text: headline, suppress: suppressHeadline } = resolveHeadline(ctx, effectiveOverride);
+  const isCustomHeadline = effectiveOverride?.mode === "custom" && !!headline;
+  const venture = ventureBlock(ctx, effectiveOverride);
+  const scene = resolveSceneDirective(ctx, sceneSignal);
   const sceneBlock = sceneDirectiveBlock(scene);
   const system = assetSystem(asset, hasLogoImage, headline, suppressHeadline, isCustomHeadline, logoZone);
   const dims = `${asset.width}x${asset.height} (${asset.guidance})`;

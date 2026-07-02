@@ -12,6 +12,7 @@ import { runContrastQa } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 import { buildContentAdPrompt, specForAspect, resolveAdHeadline, type AdAspect } from "../_shared/content-ad-director.ts";
+import { compositeHeadline } from "../_shared/headline-compositor.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
 
 const corsHeaders = {
@@ -278,6 +279,7 @@ Deno.serve(async (req) => {
       ctx,
       plan,
       post: {
+        id: post.id,
         pillar: post.pillar, platform: post.platform, format: post.format,
         hook: post.hook, body: post.body, cta: post.cta, asset_notes: post.asset_notes,
       },
@@ -287,6 +289,9 @@ Deno.serve(async (req) => {
       variationSeed,
       headlineOverride,
       logoZone: logoZoneHint,
+      // Headline is composited server-side by compositeHeadline() below; the
+      // model must leave the top band as unmarked negative space.
+      serverRenderedHeadline: true,
     });
 
 
@@ -360,6 +365,22 @@ Deno.serve(async (req) => {
       qa = runContrastQa(bytes, plan);
       (qa as any).signature_composited = true;
     }
+
+    // ---- Server-side headline typography ----
+    // The prompt asked the model for zero glyphs; we now paint the fitted
+    // headline into the reserved top band so letters never get clipped.
+    const resolvedHeadline = resolveAdHeadline(post.hook, headlineOverride, aspect);
+    let headlineComposited = false;
+    let finalHeadlineText = "";
+    if (resolvedHeadline.mode === "custom" && resolvedHeadline.text?.trim()) {
+      finalHeadlineText = resolvedHeadline.text.trim();
+      try {
+        const before = bytes;
+        bytes = await compositeHeadline(bytes, plan, aspect, finalHeadlineText);
+        headlineComposited = bytes !== before;
+      } catch (e) { console.warn("headline composite failed", e); }
+    }
+    (qa as any).headline_composited = headlineComposited;
 
     let logoComposited = false;
     if (logoBytes) {
