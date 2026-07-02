@@ -159,6 +159,7 @@ export function RegenerateAssetDialog({
   mode = "regenerate",
   suggestedHeadline,
   currentHeadline,
+  focusSection,
   onSubmit,
 }: {
   open: boolean;
@@ -174,6 +175,8 @@ export function RegenerateAssetDialog({
   suggestedHeadline?: string | null;
   /** The headline that was actually used on the current asset (if any). */
   currentHeadline?: string | null;
+  /** When set, scroll+highlight the matching section and pre-focus its primary input. */
+  focusSection?: "headline" | "palette" | "feedback";
   onSubmit: (input: {
     feedback: string;
     directionOverride?: string;
