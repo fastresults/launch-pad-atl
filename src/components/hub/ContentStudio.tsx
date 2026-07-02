@@ -115,7 +115,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
       await qc.invalidateQueries({ queryKey: ["content-posts", snapshotId] });
       toast.success(`Parsed ${r.count} posts from your 90-day calendar`);
     } catch (e: any) {
-      toast.error(e?.message || "Failed to parse calendar");
+      toast.error(edgeErrorMessage(e, "Failed to parse calendar"));
     } finally {
       setParsing(false);
     }
@@ -589,7 +589,7 @@ function Step4BuildAds({
       await qc.invalidateQueries({ queryKey: ["content-ads", snapshotId] });
       setErrors((p) => { const n = { ...p }; delete n[k]; return n; });
     } catch (e: any) {
-      const msg = e?.message || "Generation failed";
+      const msg = edgeErrorMessage(e, "Generation failed");
       const recoverable = /failed to fetch|network|timeout|context canceled|cancel/i.test(msg);
       if (recoverable) {
         toast.message("Still finishing in the background…", {
@@ -653,7 +653,7 @@ function Step4BuildAds({
       await qc.invalidateQueries({ queryKey: ["content-ads", snapshotId] });
       toast.success("Deleted");
     } catch (e: any) {
-      toast.error(e?.message || "Delete failed");
+      toast.error(edgeErrorMessage(e, "Delete failed"));
     } finally { setBusy(k, false); }
   };
 
@@ -1010,7 +1010,7 @@ function Step5Launch({
       toast.success("Deleted");
       setPreviewIdx(null);
     } catch (e: any) {
-      toast.error(e?.message || "Delete failed");
+      toast.error(edgeErrorMessage(e, "Delete failed"));
     } finally {
       setDeletingId(null);
     }
@@ -1225,7 +1225,7 @@ function PlanNextWeekCard({ snapshotId, nextWeek }: { snapshotId: string; nextWe
       await qc.invalidateQueries({ queryKey: ["content-posts", snapshotId] });
       toast.success(`Week ${nextWeek} drafted — ${res.count} post${res.count === 1 ? "" : "s"} added`);
     } catch (e: any) {
-      toast.error(e?.message || "Failed to draft next week");
+      toast.error(edgeErrorMessage(e, "Failed to draft next week"));
     } finally {
       setBusy(false);
     }
