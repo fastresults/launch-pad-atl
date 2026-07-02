@@ -95,6 +95,18 @@ export function AdminSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
+        {isImpersonating && impersonationTarget && (
+          <button
+            onClick={() => stopImpersonation()}
+            className="mb-2 flex w-full items-center gap-2 rounded-md border border-amber-400/40 bg-amber-500/10 px-2 py-1.5 text-left text-[11px] text-amber-100 hover:bg-amber-500/20"
+            title="Exit impersonation"
+          >
+            <EyeOff className="h-3.5 w-3.5 shrink-0" />
+            <span className="flex-1 truncate group-data-[collapsible=icon]:hidden">
+              As {impersonationTarget.name} — Exit
+            </span>
+          </button>
+        )}
         <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col">
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
             <div className="truncate text-xs font-medium">{user?.email}</div>
