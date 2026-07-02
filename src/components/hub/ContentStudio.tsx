@@ -248,10 +248,17 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           ads={ads}
           autoRunWeek={autoRunWeek}
           onAutoRunConsumed={() => setAutoRunWeek(null)}
+          onAddWeek={async (week) => {
+            const nextWeeks = Array.from(new Set([...selectedWeeks, week])).sort((a, b) => a - b);
+            setSelectedWeeks(nextWeeks);
+            setAutoRunWeek(week);
+            await persist({ selected_weeks: nextWeeks, current_step: 4 });
+          }}
           onBack={() => setStep(3)}
           onDone={async () => { setStep(5); await persist({ current_step: 5 }); }}
         />
       )}
+
 
       {step === 5 && (
         <Step5Launch

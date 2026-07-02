@@ -1,51 +1,46 @@
-## Root cause (found it)
+# Enable per-week generation in Content Studio (Step 4)
 
-The `…` is being injected **client-side**, not by the SVG or the director. Two spots:
+## Problem
+Step 4 ("Build ad creatives") only renders weeks the user picked in Step 2. After generating Week 1 via the Step 1 shortcut, Weeks 2 and 3 are invisible — the user has no way to progressively generate additional weeks without going back to Step 2. This breaks the promise of a week-by-week creative plan.
 
-1. `src/components/hub/social/RegenerateAssetDialog.tsx:290`
-   ```ts
-   { mode: "custom", text: headlineText.trim().slice(0, 64) }
-   ```
-   The dialog hard-slices any custom headline to **64 chars** before sending it to the edge function. Anything longer is chopped mid-word — the trailing `…` you see was appended by the old director on the previous run and stored in `last_headline`.
+## Fix (UI only, scoped to `src/components/hub/ContentStudio.tsx`)
 
-2. `RegenerateAssetDialog.tsx:217`
-   ```ts
-   const [headlineText, setHeadlineText] = useState<string>(currentHeadline || "");
-   ```
-   `currentHeadline` is prefilled from `ad.last_headline` (see `ContentStudio.tsx:756` and `SocialAutopilot.tsx:661/1120`), which for existing posts still contains the old `"…"`. The user regenerates, the ellipsis is re-sent as custom text, and it's stably locked in.
+Change Step 4 so **every** week present in the parsed calendar is shown, and unselected weeks appear as a lightweight "locked" card with an **Add & generate Week N** action.
 
-Also cosmetic: line 399 shows `${headlineText.length}/64`, and line 423 preview does `.slice(0, 64)` on the suggestion.
+### Step4BuildAds changes
 
-Neither the director nor the SVG can fix this — by the time they receive the payload, the string already ends in `…` and is ≤64 chars.
+1. Accept a new prop `onAddWeek: (week: number) => Promise<void>` from the parent. Parent implementation adds the week to `selectedWeeks`, persists it, and sets `autoRunWeek` to trigger generation — reusing the existing Step 1 shortcut path.
 
-## Fix plan
+2. Compute the full week list from `posts` (not just `scoped`):
+   - `allWeeks = unique(posts.map(p => p.week)).sort()`
+   - For each week, determine if it is `active` (in `selectedWeeks`) or `pending` (not yet selected).
 
-### 1. `src/components/hub/social/RegenerateAssetDialog.tsx`
+3. Render loop iterates over `allWeeks`:
+   - **Active weeks** — render existing card exactly as today (tiles, Preview/Regenerate/Delete, per-week "Generate week" button).
+   - **Pending weeks** — render a compact placeholder card:
+     - Header: `Week N` badge + post count + secondary text "Not started".
+     - Body: short line listing post hooks (truncated, muted).
+     - Primary action: `Add & generate Week N` button. On click → `onAddWeek(w)`; button shows spinner while `autoRunWeek === w`.
 
-- Raise the custom-headline cap to **140 chars** (matches new director cap of 100/110/120 with headroom). Update:
-  - `slice(0, 64)` on submit → `slice(0, 140)`
-  - `/64` counter → `/140`
-  - Preview line 423 `.slice(0, 64)` → `.slice(0, 140)`
-- Sanitize `currentHeadline` prefill: strip trailing `…`, `...`, and any trailing punctuation/whitespace left over from the old truncator. New helper `sanitizeHeadline(s)` used at both `useState` init and the "Use suggested" fallback.
-- Also sanitize `suggestedHeadline` the same way before rendering the preview and using it.
+4. Update the top summary line so the "X of Y ads ready" count keeps reflecting only active weeks, but add a small trailing note like `· N more week(s) available` when pending weeks exist.
 
-### 2. `src/components/hub/ContentStudio.tsx` and `src/components/hub/social/SocialAutopilot.tsx`
+### Parent (`ContentStudio` component) changes
 
-- When passing `currentHeadline` into the dialog, prefer the **source hook** over the stored `last_headline` when the stored value is a truncated prefix of the hook (endsWith `…` or `...`, or shorter than hook and matches its prefix). Fall back to `last_headline` only when the hook is missing.
-- `ContentStudio.tsx:756` already has `post.hook` as fallback — flip the priority so hook wins when last_headline looks truncated.
-- `SocialAutopilot.tsx:661` and `1120` don't currently pass the hook — add it.
+- Add `onAddWeek` handler passed to `Step4BuildAds`:
+  ```
+  const nextWeeks = Array.from(new Set([...selectedWeeks, week])).sort();
+  setSelectedWeeks(nextWeeks);
+  setAutoRunWeek(week);
+  await persist({ selected_weeks: nextWeeks, current_step: 4 });
+  ```
+- No changes to Steps 1/2/3/5 behavior. Step 2 still works for bulk multi-week selection up front; Step 4 now supports incremental additions.
 
-### 3. Backfill safety in the edge function
+### Notes / non-goals
 
-- In `venture-content-ad/index.ts` around line 240, after parsing `headlineOverride`, strip trailing `…`/`...` from `rawHl.text` so any old client that still sends a truncated string self-heals.
-
-### 4. Verification
-
-Regenerate the failing "market gap" post — the Headline field should show the full hook without `…`, and the rendered image should wrap to 3 lines with no ellipsis. Test a short (~20 char), medium (~60 char), and long (~110 char) headline. Confirm tier-fit from the previous fix engages and no truncation appears at any length.
+- No backend, schema, or edge function changes.
+- No changes to generation logic — reuses `runWeek` via the existing `autoRunWeek` effect.
+- No layout/colors/spacing overhaul; visual style matches existing week cards (border, badge, muted text).
+- Copy stays consistent with "startup" / "framework" project rules (n/a here — no such copy touched).
 
 ## Files touched
-
-- `src/components/hub/social/RegenerateAssetDialog.tsx`
-- `src/components/hub/ContentStudio.tsx`
-- `src/components/hub/social/SocialAutopilot.tsx`
-- `supabase/functions/venture-content-ad/index.ts` (redeploy)
+- `src/components/hub/ContentStudio.tsx` (only)
