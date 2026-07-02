@@ -324,6 +324,7 @@ export default function WorkflowPage() {
               )}
             </div>
           </div>
+          {n === 1 && <LegalSetupCard />}
           <div className="grid gap-3 md:grid-cols-2">
             {group.items.map((d) => {
               const Icon = d.generated ? CheckCircle2 : d.deps_met ? Circle : Lock;
