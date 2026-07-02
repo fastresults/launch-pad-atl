@@ -14,6 +14,7 @@ type SvgArgs = {
   logoAspect?: number | null;
   logoSize?: LogoSize;
   logoCorner?: "top-left" | "bottom-right";
+  logoChip?: boolean;
 };
 
 const enc = new TextEncoder();
@@ -57,18 +58,20 @@ function headlineBandPct(aspect: AdAspect): number {
 }
 
 function maxLines(aspect: AdAspect): number {
-  return aspect === "9:16" ? 3 : 2;
+  if (aspect === "9:16") return 4;
+  if (aspect === "4:5") return 3;
+  return 3;
 }
 
 function charUnits(s: string): number {
   let out = 0;
   for (const ch of s) {
-    if (ch === " ") out += 0.34;
-    else if (/[,.;:!|'’`]/.test(ch)) out += 0.25;
-    else if (/[ilI1]/.test(ch)) out += 0.30;
-    else if (/[mwMW]/.test(ch)) out += 0.88;
-    else if (/[A-Z]/.test(ch)) out += 0.66;
-    else out += 0.56;
+    if (ch === " ") { out += 0.38; continue; }
+    if (/[,.;:!|'’`]/.test(ch)) out += 0.28;
+    else if (/[ilI1]/.test(ch)) out += 0.34;
+    else if (/[mwMW]/.test(ch)) out += 0.95;
+    else if (/[A-Z]/.test(ch)) out += 0.72;
+    else out += 0.62;
   }
   return out;
 }
@@ -92,7 +95,11 @@ function wrap(words: string[], size: number, maxW: number, maxL: number): string
     }
   }
   if (cur) lines.push(cur);
-  return lines.length && lines.length <= maxL ? lines : null;
+  if (!lines.length || lines.length > maxL) return null;
+  for (const line of lines) {
+    if (estimatedWidth(line, size) > maxW * 0.98) return null;
+  }
+  return lines;
 }
 
 function truncateWords(text: string, maxChars: number): string {
@@ -110,11 +117,11 @@ function fitHeadline(text: string, W: number, H: number, aspect: AdAspect) {
   const x = Math.round(W * 0.075);
   const bandY = Math.round(H * 0.035);
   const bandH = Math.round(H * headlineBandPct(aspect));
-  const textW = W - x * 2;
+  const textW = W - x * 2 - Math.round(W * 0.02);
   const textH = Math.round(bandH * 0.66);
   const linesMax = maxLines(aspect);
-  const maxSize = Math.min(98, Math.floor(textH / linesMax / 1.05));
-  const minSize = aspect === "9:16" ? 34 : 38;
+  const maxSize = Math.min(84, Math.floor(textH / Math.max(2, linesMax) / 1.05));
+  const minSize = aspect === "9:16" ? 32 : 34;
 
   const candidates = [clean, truncateWords(clean, 86), truncateWords(clean, 68), truncateWords(clean, 54), truncateWords(clean, 42)];
   for (const candidate of candidates) {
@@ -187,7 +194,29 @@ export function buildContentAdSvgBytes(args: SvgArgs): Uint8Array {
   }
 
   if (args.logoDataUrl) {
-    const box = logoBox(W, H, args.logoAspect || 1, args.logoSize || "sm", args.logoCorner || "bottom-right");
+    const corner = args.logoCorner || "bottom-right";
+    const box = logoBox(W, H, args.logoAspect || 1, args.logoSize || "sm", corner);
+    const wantChip = args.logoChip ?? (corner === "bottom-right");
+    if (wantChip) {
+      const surfLum = lum(surface);
+      let chipFill = "#FFFFFF";
+      let chipOpacity = 0.92;
+      if (surfLum > 0.7) {
+        chipFill = ink === "#0B0F19" ? ink : "#0B0F19";
+        chipOpacity = 0.88;
+      } else if (surfLum >= 0.35) {
+        chipFill = contrast("#FFFFFF", surface) >= contrast("#0B0F19", surface) ? "#FFFFFF" : "#0B0F19";
+        chipOpacity = 0.9;
+      }
+      const padX = Math.round(box.boxW * 0.12);
+      const padY = Math.round(box.boxH * 0.18);
+      const rx = Math.round(box.boxH * 0.22);
+      const cx = box.x - padX;
+      const cy = box.y - padY;
+      const cw = box.boxW + padX * 2;
+      const ch = box.boxH + padY * 2;
+      parts.push(`<rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" rx="${rx}" ry="${rx}" fill="${chipFill}" opacity="${chipOpacity}"/>`);
+    }
     parts.push(`<image href="${escapeXml(args.logoDataUrl)}" x="${box.x}" y="${box.y}" width="${box.boxW}" height="${box.boxH}" preserveAspectRatio="xMidYMid meet"/>`);
   }
 
