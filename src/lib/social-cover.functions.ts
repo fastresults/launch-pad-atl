@@ -68,6 +68,7 @@ export async function generateSocialCover(input: {
   signatureMinCoveragePct?: number;
   paletteOverride?: PaletteOverride;
   headlineOverride?: HeadlineOverride;
+  logoSize?: "sm" | "md" | "lg";
 }): Promise<SocialAsset> {
   const data = await call({ action: "generate", ...input });
   return data.asset as SocialAsset;
