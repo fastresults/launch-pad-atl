@@ -69,22 +69,22 @@ function Hero() {
           <div>
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white md:text-sm md:tracking-[0.2em]">
 
-          <Star className="size-3.5 fill-current" /> Atlanta's most founder-friendly accelerator
+          <Star className="size-3.5 fill-current" /> Thu, Jul 23, 2026 · Norcross, GA · 20 seats
         </p>
 
 
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
-          The strategic foundation every startup needs —{" "}
-          <span className="text-gradient-brand">built in one morning.</span>
+          Idea in.{" "}
+          <span className="text-gradient-brand">Launch plan out.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          One morning. 34 deliverables built live for your startup — positioning, offer, brand, site, the 90-day plan — and you walk out ready to execute on Monday. {WORKSHOP_PRICE_LABEL}, yours to keep.{" "}
-          <span className="font-medium text-white">No upsell in the room.</span>
+          One morning. Four working stages. Bring nothing but the idea and the intention to build it — by 11:30 AM you walk out nearly launch-ready, with your first customer named, your offer priced, and a signed 90-day plan for what's next. {WORKSHOP_PRICE_LABEL}, yours to keep.{" "}
+          <span className="font-medium text-white">Full support during and after the workshop</span>, available if you want it.
         </p>
 
 
         <p className="mt-4 max-w-2xl text-sm text-white/80 md:text-base">
-          Coffee's on us. If you want help building the brand, the site, or the legal side after — we do that too. Your call, no pressure.
+          Coffee's on us — no pressure, ever.
         </p>
 
 
@@ -93,13 +93,7 @@ function Hero() {
             to="/register"
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
           >
-            Reserve a seat — {WORKSHOP_PRICE_LABEL} <ArrowRight className="size-4" />
-          </Link>
-          <Link
-            to="/services"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/30 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
-          >
-            See our services
+            Reserve your seat — {WORKSHOP_PRICE_LABEL} <ArrowRight className="size-4" />
           </Link>
         </div>
 
@@ -110,7 +104,7 @@ function Hero() {
           <span aria-hidden>·</span>
           <span>Coffee on us</span>
           <span aria-hidden>·</span>
-          <span>No upsell in the room</span>
+          <span>Full support available</span>
         </p>
         <p className="mt-2 max-w-2xl text-xs text-white/60 md:text-sm">
           Built for Main Street founders — cafés, salons, trades, local services, indie brands, and first-time small e-commerce. Other tracks (SaaS, marketplace, deep tech) supported too.
@@ -121,7 +115,7 @@ function Hero() {
           <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
           <Meta icon={<MapPin className="size-4" />} label={`${EVENT.venueCity}, ${EVENT.venueRegion}`} />
           <Meta icon={<Clock className="size-4" />} label="8:45–11:30 AM · Coffee included" />
-          <Meta icon={<Users className="size-4" />} label={`${EVENT.capacity} seats per cohort`} />
+          <Meta icon={<Users className="size-4" />} label="20 seats, one cohort" />
         </div>
           </div>
           <div className="hidden lg:flex justify-center">
