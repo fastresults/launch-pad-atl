@@ -42,6 +42,7 @@ export async function generateStylePreview(input: {
     | "focal_shape" | "corner_mark" | "framed_border";
   signatureMinCoveragePct?: number;
   paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
+  headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
 }): Promise<StylePreview> {
   const data = await call({ action: "generate", ...input });
   return data.preview as StylePreview;
