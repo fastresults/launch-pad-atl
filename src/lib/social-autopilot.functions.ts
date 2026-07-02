@@ -136,6 +136,7 @@ export async function generateOneKitTask(
       | "focal_shape" | "corner_mark" | "framed_border";
     signatureMinCoveragePct?: number;
     paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
+    headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
   },
 ): Promise<void> {
   await generateSocialCover({
@@ -148,5 +149,6 @@ export async function generateOneKitTask(
     signaturePlacement: opts?.signaturePlacement,
     signatureMinCoveragePct: opts?.signatureMinCoveragePct,
     paletteOverride: opts?.paletteOverride,
+    headlineOverride: opts?.headlineOverride,
   });
 }
