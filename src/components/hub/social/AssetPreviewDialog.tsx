@@ -26,12 +26,13 @@ export type PreviewableAsset = {
 };
 
 export function AssetPreviewDialog({
-  open, onOpenChange, asset, onRegenerate, onDelete, onPrev, onNext, busy = false,
+  open, onOpenChange, asset, onRegenerate, onEditHeadline, onDelete, onPrev, onNext, busy = false,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   asset: PreviewableAsset | null;
   onRegenerate?: () => void;
+  onEditHeadline?: () => void;
   onDelete?: () => void;
   onPrev?: () => void;
   onNext?: () => void;
