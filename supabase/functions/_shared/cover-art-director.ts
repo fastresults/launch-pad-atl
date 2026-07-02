@@ -352,10 +352,14 @@ ${suppressHeadline ? suppressBlock : `- HEADLINE (${isCustomHeadline ? "verbatim
   }
 
   // pinned_post, story_cover, etc.
+  const isSquareOrPortrait = asset.height >= asset.width;
+  const sidebarCap = isSquareOrPortrait
+    ? `\n- SIDEBAR / SIGNATURE BLOCK CAP: on this square or portrait canvas, any sidebar stripe or full-height signature block MUST NOT exceed 28% of canvas width, MUST sit on the OPPOSITE side of the canvas from the LOGO LANDING AREA, and MUST NOT contain any lettering (no vertical headline, no rotated text, no glyphs). Reach the signature coverage target through additional flat shapes elsewhere on the canvas, not by widening the sidebar.`
+    : "";
   return `POST / COVER SYSTEM (${ratio})
 - Treat as a single editorial frame. One focal element, ≥60% negative space.
 ${suppressHeadline ? suppressBlock : "- Optional type lockup uses the brand heading family." + (isCustomHeadline ? ` HEADLINE (verbatim, exact wording): "${headline}". Do not rephrase.` : "")}
-${zone("top-left", 24, 24)}
+${zone("top-left", 24, 24)}${sidebarCap}
 - Reserve an 8% safe inset on all sides for platform UI.
 - ${asset.guidance}`;
 }
