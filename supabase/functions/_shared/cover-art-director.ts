@@ -82,7 +82,9 @@ function ventureBlock(ctx: any) {
   ].filter(Boolean).join("\n");
 }
 
-function headlineFor(ctx: any): string {
+export type HeadlineOverride = { mode: "auto" | "custom" | "none"; text?: string };
+
+function autoHeadline(ctx: any): string {
   const brain = ctx?.brain ?? {};
   return (
     brain?.identity?.tagline ||
@@ -91,6 +93,20 @@ function headlineFor(ctx: any): string {
     ctx?.snap?.one_liner ||
     ""
   ).slice(0, 64);
+}
+
+// Resolves the final headline to render on the image.
+// Returns { text, suppress } — when suppress=true the composition must be
+// rendered with zero glyphs anywhere on the canvas.
+export function resolveHeadline(
+  ctx: any,
+  override?: HeadlineOverride,
+): { text: string; suppress: boolean } {
+  if (override?.mode === "none") return { text: "", suppress: true };
+  if (override?.mode === "custom") {
+    return { text: (override.text || "").trim().slice(0, 64), suppress: false };
+  }
+  return { text: autoHeadline(ctx), suppress: false };
 }
 
 // ------- Per-asset composition systems -------
