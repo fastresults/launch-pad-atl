@@ -940,155 +940,199 @@ function Step5BuildKit({
         </div>
       </header>
 
-      <ul className="grid gap-2 sm:grid-cols-2">
-        {tasks.map((t) => {
-          const k = taskKey(t);
-          const done = t.status === "done";
-          const err = errors[k];
-          const itemRunning = !!runningKeys[k];
-          const isAvatar = t.asset === "avatar";
-          const isKept = !!kept[k];
-          const frameClass = isAvatar
-            ? "h-16 w-16 shrink-0 rounded-full"
-            : "h-16 w-28 shrink-0 rounded-md";
-          return (
-            <li key={k}
-              className="flex items-center gap-3 rounded-lg border border-white/5 bg-background/40 p-2 text-xs">
-              <button
-                type="button"
-                onClick={() => { if (t.signed_url) setPreviewIdx(tasks.indexOf(t)); }}
-                disabled={!t.signed_url}
-                title={t.signed_url ? "Preview full size" : undefined}
-                className={`${frameClass} overflow-hidden border border-white/10 bg-muted/40 flex items-center justify-center relative ${t.signed_url ? "cursor-zoom-in hover:ring-2 hover:ring-primary/40" : ""}`}
-              >
-                {t.signed_url ? (
-                  <img src={t.signed_url} alt={`${t.platform} ${t.asset}`} className="h-full w-full object-cover" />
-                ) : itemRunning ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-status-info" />
-                ) : err ? (
-                  <span className="text-[10px] text-status-danger">failed</span>
-                ) : (
-                  <ImageIcon className="h-4 w-4 text-muted-foreground/60" />
-                )}
-              </button>
-              <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    {done ? (
-                      <Check className="h-3.5 w-3.5 text-status-success" />
-                    ) : itemRunning ? (
-                      <Loader2 className="h-3 w-3 animate-spin text-status-info" />
-                    ) : err ? (
-                      <span className="h-2 w-2 rounded-full bg-status-danger" />
-                    ) : (
-                      <span className="h-2 w-2 rounded-full bg-muted-foreground/30" />
-                    )}
-                    <span className="truncate font-medium">{t.platform}</span>
-                    {t.qa_status === "fail" && (
-                      <span className="ml-1 rounded bg-status-warning/15 px-1 text-[9px] font-medium text-status-warning">
-                        {signatureFailed(t) ? "brand color" : "QA fail"}
+      {(() => {
+        // Group tasks by platform preserving original ordering
+        const order: string[] = [];
+        const groups = new Map<string, typeof tasks>();
+        for (const t of tasks) {
+          if (!groups.has(t.platform)) { groups.set(t.platform, [] as any); order.push(t.platform); }
+          groups.get(t.platform)!.push(t);
+        }
+        return (
+          <div className="space-y-4">
+            {order.map((platform) => {
+              const items = groups.get(platform)!;
+              const Icon = PLATFORM_ICONS[platform] ?? Globe;
+              const doneCount = items.filter((t) => t.status === "done").length;
+              return (
+                <section key={platform} className="rounded-xl border border-white/10 bg-background/30">
+                  <header className="flex items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+                        <Icon className="h-4 w-4" />
                       </span>
-                    )}
-                    {isKept && (
-                      <span className="ml-1 rounded bg-status-success/15 px-1 text-[9px] font-medium text-status-success">
-                        kept
-                      </span>
-                    )}
-                  </div>
-                  <div
-                    className="truncate text-[10px] capitalize text-muted-foreground"
-                    title={t.last_feedback ? `Last feedback: ${t.last_feedback}` : undefined}
-                  >
-                    {t.asset.replace(/_/g, " ")}
-                    {t.last_feedback ? " · feedback applied" : ""}
-                  </div>
-                  {t.canvas_plan && (
-                    <div className="mt-1 flex items-center gap-0.5" title={`surface ${t.canvas_plan.surface} · ink ${t.canvas_plan.ink} · accent ${t.canvas_plan.accent}`}>
-                      <span className="h-2.5 w-2.5 rounded-sm border border-white/20" style={{ background: t.canvas_plan.surface }} />
-                      <span className="h-2.5 w-2.5 rounded-sm border border-white/20" style={{ background: t.canvas_plan.ink }} />
-                      <span className="h-2.5 w-2.5 rounded-sm border border-white/20" style={{ background: t.canvas_plan.accent }} />
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold leading-tight">{platformLabel(platform)}</div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {items.map((t) => assetLabel(platform, t.asset)).join(" · ")}
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-1">
-                  {t.signed_url && (
-                    <button
-                      type="button"
-                      onClick={() => setPreviewIdx(tasks.indexOf(t))}
-                      title="Preview"
-                      className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5"
-                    >
-                      <Eye className="mr-1 h-3 w-3" /> Preview
-                    </button>
-                  )}
-                  {t.signed_url && (
-                    <a href={t.signed_url} download
-                       className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5">
-                      Download
-                    </a>
-                  )}
-                  {done && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 text-[11px]"
-                      onClick={() => setKept((prev) => ({ ...prev, [k]: !prev[k] }))}
-                      title={isKept ? "Unlock for regenerate-all" : "Keep this — exclude from regenerate-all"}
-                    >
-                      {isKept ? "Unkeep" : "Keep"}
-                    </Button>
-                  )}
-                  {!done && !err && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-6 text-[11px]"
-                      disabled={running || itemRunning}
-                      onClick={async () => {
-                        setTaskRunning(k, true);
-                        try {
-                          await generateOneKitTask(snapshotId, t);
-                          await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
-                          setErrors((prev) => { const n = { ...prev }; delete n[k]; return n; });
-                        } catch (e: any) {
-                          setErrors((prev) => ({ ...prev, [k]: generationErrorMessage(e) }));
-                        } finally {
-                          setTaskRunning(k, false);
-                        }
-                      }}
-                    >
-                      {itemRunning ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />} Generate
-                    </Button>
-                  )}
-                  {(err || done) && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-6 text-[11px]"
-                      disabled={running || itemRunning}
-                      onClick={() => setRegenTarget({ scope: "single", task: t })}
-                    >
-                      {itemRunning ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />} Regenerate
-                    </Button>
-                  )}
-                  {done && t.asset_id && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 px-1.5 text-status-danger hover:bg-status-danger/10 hover:text-status-danger"
-                      disabled={running || itemRunning}
-                      onClick={() => deleteAsset(t)}
-                      title="Delete this image — tile will reset for a fresh generation"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+                    <Badge variant="outline" className="shrink-0 text-[10px]">
+                      {doneCount}/{items.length} ready
+                    </Badge>
+                  </header>
+                  <ul className="grid gap-2 p-2 sm:grid-cols-2">
+                    {items.map((t) => {
+                      const k = taskKey(t);
+                      const done = t.status === "done";
+                      const err = errors[k];
+                      const itemRunning = !!runningKeys[k];
+                      const isAvatar = t.asset === "avatar";
+                      const isKept = !!kept[k];
+                      const frameClass = isAvatar
+                        ? "h-20 w-20 shrink-0 rounded-full"
+                        : "h-20 w-28 shrink-0 rounded-md";
+                      const aLabel = assetLabel(platform, t.asset);
+                      const dims = assetDims(platform, t.asset);
+                      return (
+                        <li key={k}
+                          className="flex flex-col gap-2 rounded-lg border border-white/5 bg-background/40 p-2 text-xs sm:flex-row sm:items-center">
+                          <div className="flex items-start gap-3">
+                            <button
+                              type="button"
+                              onClick={() => { if (t.signed_url) setPreviewIdx(tasks.indexOf(t)); }}
+                              disabled={!t.signed_url}
+                              title={t.signed_url ? `${platformLabel(platform)} — ${aLabel} (preview)` : undefined}
+                              className={`${frameClass} overflow-hidden border border-white/10 bg-muted/40 flex items-center justify-center relative ${t.signed_url ? "cursor-zoom-in hover:ring-2 hover:ring-primary/40" : ""}`}
+                            >
+                              {t.signed_url ? (
+                                <img src={t.signed_url} alt={`${platformLabel(platform)} ${aLabel}`} className="h-full w-full object-cover" />
+                              ) : itemRunning ? (
+                                <Loader2 className="h-4 w-4 animate-spin text-status-info" />
+                              ) : err ? (
+                                <span className="text-[10px] text-status-danger">failed</span>
+                              ) : (
+                                <ImageIcon className="h-4 w-4 text-muted-foreground/60" />
+                              )}
+                              <span className="absolute left-1 top-1 rounded bg-black/60 px-1 py-[1px] text-[9px] font-medium uppercase tracking-wide text-white">
+                                {isAvatar ? "Avatar" : (aLabel.length > 14 ? aLabel.split(" ")[0] : aLabel)}
+                              </span>
+                            </button>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                {done ? (
+                                  <Check className="h-3.5 w-3.5 text-status-success" />
+                                ) : itemRunning ? (
+                                  <Loader2 className="h-3 w-3 animate-spin text-status-info" />
+                                ) : err ? (
+                                  <span className="h-2 w-2 rounded-full bg-status-danger" />
+                                ) : (
+                                  <span className="h-2 w-2 rounded-full bg-muted-foreground/30" />
+                                )}
+                                <span className="font-semibold">{aLabel}</span>
+                                {t.qa_status === "fail" && (
+                                  <span className="ml-1 rounded bg-status-warning/15 px-1 text-[9px] font-medium text-status-warning">
+                                    {signatureFailed(t) ? "brand color" : "QA fail"}
+                                  </span>
+                                )}
+                                {isKept && (
+                                  <span className="ml-1 rounded bg-status-success/15 px-1 text-[9px] font-medium text-status-success">
+                                    kept
+                                  </span>
+                                )}
+                              </div>
+                              <div
+                                className="text-[10px] text-muted-foreground"
+                                title={t.last_feedback ? `Last feedback: ${t.last_feedback}` : undefined}
+                              >
+                                {platformLabel(platform)}{dims ? ` · ${dims}` : ""}
+                                {t.last_feedback ? " · feedback applied" : ""}
+                              </div>
+                              {t.canvas_plan && (
+                                <div className="mt-1 flex items-center gap-0.5" title={`surface ${t.canvas_plan.surface} · ink ${t.canvas_plan.ink} · accent ${t.canvas_plan.accent}`}>
+                                  <span className="h-2.5 w-2.5 rounded-sm border border-white/20" style={{ background: t.canvas_plan.surface }} />
+                                  <span className="h-2.5 w-2.5 rounded-sm border border-white/20" style={{ background: t.canvas_plan.ink }} />
+                                  <span className="h-2.5 w-2.5 rounded-sm border border-white/20" style={{ background: t.canvas_plan.accent }} />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1 sm:ml-auto sm:justify-end">
+                            {t.signed_url && (
+                              <button
+                                type="button"
+                                onClick={() => setPreviewIdx(tasks.indexOf(t))}
+                                title="Preview"
+                                className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5"
+                              >
+                                <Eye className="mr-1 h-3 w-3" /> Preview
+                              </button>
+                            )}
+                            {t.signed_url && (
+                              <a href={t.signed_url} download
+                                 className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5">
+                                Download
+                              </a>
+                            )}
+                            {done && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 text-[11px]"
+                                onClick={() => setKept((prev) => ({ ...prev, [k]: !prev[k] }))}
+                                title={isKept ? "Unlock for regenerate-all" : "Keep this — exclude from regenerate-all"}
+                              >
+                                {isKept ? "Unkeep" : "Keep"}
+                              </Button>
+                            )}
+                            {!done && !err && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 text-[11px]"
+                                disabled={running || itemRunning}
+                                onClick={async () => {
+                                  setTaskRunning(k, true);
+                                  try {
+                                    await generateOneKitTask(snapshotId, t);
+                                    await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
+                                    setErrors((prev) => { const n = { ...prev }; delete n[k]; return n; });
+                                  } catch (e: any) {
+                                    setErrors((prev) => ({ ...prev, [k]: generationErrorMessage(e) }));
+                                  } finally {
+                                    setTaskRunning(k, false);
+                                  }
+                                }}
+                              >
+                                {itemRunning ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />} Generate
+                              </Button>
+                            )}
+                            {(err || done) && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 text-[11px]"
+                                disabled={running || itemRunning}
+                                onClick={() => setRegenTarget({ scope: "single", task: t })}
+                              >
+                                {itemRunning ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />} Regenerate
+                              </Button>
+                            )}
+                            {done && t.asset_id && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 px-1.5 text-status-danger hover:bg-status-danger/10 hover:text-status-danger"
+                                disabled={running || itemRunning}
+                                onClick={() => deleteAsset(t)}
+                                title="Delete this image — tile will reset for a fresh generation"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
+        );
+      })()}
+
 
       {Object.keys(errors).length > 0 && (
         <div className="rounded-lg border border-status-warning/30 bg-status-warning/10 p-3 text-xs text-status-warning">
