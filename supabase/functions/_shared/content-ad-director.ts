@@ -42,21 +42,32 @@ export function specForAspect(aspect: AdAspect): AssetSpec {
   } as AssetSpec;
 }
 
-// Per-aspect soft caps for the on-image headline. Longer aspects afford more.
-const HEADLINE_CAP: Record<AdAspect, number> = { "1:1": 60, "4:5": 70, "9:16": 80 };
+// Per-aspect soft caps for the on-image headline. The SVG compositor tiers by
+// length (1–4 lines) and shrinks font size, so we allow generous caps here and
+// only trim at natural clause boundaries when a headline is truly excessive.
+const HEADLINE_CAP: Record<AdAspect, number> = { "1:1": 100, "4:5": 110, "9:16": 120 };
 
-// Word-safe truncator: cap length, then back off to the last whole-word boundary
-// so headlines never get chopped mid-word ("It's not th"). Adds an ellipsis only
-// when we actually removed content.
+// Length-safe headline sanitizer. Never appends an ellipsis and never chops
+// mid-word. If the raw string exceeds `cap`, prefer trimming at the last clause
+// boundary (comma, em-dash, colon, semicolon) inside the cap; otherwise back off
+// to the last whole-word boundary. The SVG layer handles wrapping/sizing.
 export function truncateHeadline(raw: string, cap: number): string {
   const s = (raw || "").trim().replace(/\s+/g, " ");
   if (s.length <= cap) return s;
   const hard = s.slice(0, cap);
-  // Prefer breaking on the last space in the hard slice; fall back to the hard cut.
+  const clause = Math.max(
+    hard.lastIndexOf(", "),
+    hard.lastIndexOf(" — "),
+    hard.lastIndexOf(" – "),
+    hard.lastIndexOf(": "),
+    hard.lastIndexOf("; "),
+  );
+  if (clause >= Math.floor(cap * 0.5)) {
+    return hard.slice(0, clause).replace(/[\s,;:.!?\-–—(]+$/g, "");
+  }
   const lastSpace = hard.lastIndexOf(" ");
   const stem = lastSpace >= Math.floor(cap * 0.5) ? hard.slice(0, lastSpace) : hard;
-  // Strip trailing punctuation before appending the ellipsis for a clean read.
-  return stem.replace(/[\s,;:.!?\-–—(]+$/g, "") + "…";
+  return stem.replace(/[\s,;:.!?\-–—(]+$/g, "");
 }
 
 // Resolve the headline the ad should carry. Rules:

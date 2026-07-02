@@ -1,36 +1,57 @@
+## Problem
 
-## Problems in the current preview
+Headline is being truncated with "…" (see `"…for a local service brand in 10…"`) because `fitHeadline()` in `content-ad-svg.ts` falls back to `truncateWords()` candidates when the full string won't fit at the min font size. That's the wrong behavior — long titles should shrink and wrap to more lines, never lose words.
 
-1. **Headline clips off the right edge** ("...business" is cut). The SVG's width estimator in `content-ad-svg.ts` underestimates Arial Bold, so `wrap()` believes a line fits when it actually overflows the canvas.
-2. **Logo has no contrast guarantee.** The `startuplabs` wordmark is placed directly on whatever pixels sit under the bottom-right corner (often dark or busy), so it disappears or muddies.
+## Root cause
 
-## Fix plan (single file: `supabase/functions/_shared/content-ad-svg.ts`)
+In `supabase/functions/_shared/content-ad-svg.ts`:
 
-### 1. Headline never truncates visually
+```ts
+const candidates = [clean, truncateWords(clean, 86), truncateWords(clean, 68), ...];
+for (const candidate of candidates) { ... }
+```
 
-- Tighten `charUnits()` to match Arial Black/800 weight: bump default from `0.56 → 0.62`, caps `0.66 → 0.72`, `m/w` `0.88 → 0.95`, space `0.34 → 0.38`.
-- Add a **right-edge safety margin**: compute `textW = W - x*2 - Math.round(W*0.02)` so wrapping reserves ~2% breathing room.
-- Allow **3 lines on 1:1 and 4:5** (currently only 9:16 gets 3). Bump `maxLines` for 1:1 to 3, 4:5 to 3, 9:16 to 4.
-- Lower `maxSize` cap from 98 → 84 so first pass doesn't lock in an oversized font.
-- Sanity guard: after `wrap()` succeeds, re-check each line with a stricter multiplier (`estimatedWidth(line, size) <= textW * 0.98`); if any line fails, continue shrinking.
+If the full string fails at `minSize` (34px) inside the 3-line cap on 1:1, the loop silently swaps in a truncated string. Combined with the tight `headlineBandPct` (0.24 of H) and `textH = bandH * 0.66`, medium-long titles hit the truncation path.
 
-Result: the "40-page business plan…" headline wraps cleanly inside the band at every aspect.
+Also, upstream in `venture-content-ad/index.ts` / `content-ad-director.ts`, the headline is passed through without any length-tier logic, so the SVG layer is the only thing deciding layout.
 
-### 2. Logo auto-contrast chip
+## Fix plan
 
-Add a rounded background chip drawn *under* the logo image whenever it improves legibility:
+### 1. `content-ad-svg.ts` — never truncate, always fit
 
-- Determine chip color by luminance of `plan.surface` (the footer/brand surface):
-  - If surface is dark (`lum < 0.35`) → chip = `#FFFFFF` at 92% opacity.
-  - If surface is light (`lum > 0.7`) → chip = `plan.ink` (near-black) at 88% opacity.
-  - Mid-tone → pick whichever of white/ink has higher contrast vs. surface.
-- Only render chip when contrast(logo-region-bg, white) < 3.0 OR corner is `bottom-right` over the AI image (always risky). Simple rule: **always render the chip for `bottom-right`**, skip for `top-left` (which sits on the solid surface band and is safe).
-- Chip geometry: `rect` with `rx = boxH * 0.22`, padded `boxW * 0.12` horizontally and `boxH * 0.18` vertically around the logo box, drawn before the `<image>` tag.
+Replace the "shrink then truncate" strategy with a length-tiered "line count + size" strategy:
 
-Extend `SvgArgs` with an optional `logoChip?: boolean` (default true for bottom-right) so callers can opt out. No changes needed in `venture-content-ad/index.ts` — it already passes `logoCorner: "bottom-right"`.
+- **Classify by character length** (spaces included):
+  - `≤ 28` chars → target **1 line**, larger size range
+  - `29–55` chars → target **2 lines**
+  - `56–90` chars → target **3 lines**
+  - `> 90` chars → target **4 lines** (allow on 1:1 and 4:5 too, not just 9:16)
+- **Expand `headlineBandPct` dynamically** to fit the required line count: base band % + `(targetLines - 2) * 0.04`, capped at 0.38 of H. This grows the band for longer titles instead of squeezing text.
+- **Font-size ranges per tier** (auto-fit inside tier, don't jump tiers early):
+  - 1 line: 72–96
+  - 2 lines: 56–80
+  - 3 lines: 44–64
+  - 4 lines: 34–52
+- **Remove `truncateWords()` fallback entirely.** Wrap loop shrinks size until the full string fits at the tier's line count. If it still overflows at the tier's min size, escalate to the next tier (more lines + smaller size) rather than truncating.
+- **Absolute last resort** (only if 4 lines at 34px still won't fit — e.g. one word longer than the canvas): shrink below tier min down to 28px before giving up. Never insert "…".
 
-## Verification
+### 2. `content-ad-director.ts` (or wherever the headline is picked) — cap author-side length
 
-- Regenerate the failing "40-page business plan" post — headline should wrap to 3 lines inside the band with no clipping.
-- Confirm the `startuplabs` logo sits on a soft white pill with clear separation from the underlying photo.
-- Spot-check a light-palette venture to confirm the chip flips to dark and top-left placements remain chip-free.
+Add a soft cap so titles picked for image overlays stay ≤ ~100 chars. If a source title (from calendar/pillars) exceeds 100 chars, prefer a shorter derived form (subhead, first sentence, or trimmed at a clause boundary — comma/em-dash/colon), but **do not** append "…". This keeps the SVG layer from ever needing tier 4 emergency fallback.
+
+### 3. Aspect-aware maxLines
+
+Update `maxLines()` to return the tier ceiling for the aspect:
+- `9:16` → up to 5 (tall canvas)
+- `4:5` → up to 4
+- `1:1` → up to 4
+
+### 4. Verification
+
+Regenerate three test posts covering short (`"Founder mistake #1"`), medium (`"How we found a market gap for a local service brand"`), and long (`"How we found a market gap for a local service brand in 10 minutes using a free tool"`). Each should render the full title, no ellipsis, band height adapting to line count.
+
+## Files
+
+- `supabase/functions/_shared/content-ad-svg.ts` — replace `fitHeadline`, `maxLines`, `headlineBandPct`; delete `truncateWords` usage.
+- `supabase/functions/_shared/content-ad-director.ts` — add ≤100-char sanitizer for the overlay headline field.
+- Redeploy `venture-content-ad`.
