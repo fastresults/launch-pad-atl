@@ -354,7 +354,7 @@ Deno.serve(async (req) => {
     // Aspect-aware logo safe zone hint for the prompt (must match compositor).
     const logoAspect = (await readLogoAspect(logoBytes)) ?? 1;
     const logoPlacement = placementForAssetKind(asset.kind);
-    const logoZoneHint = isAvatar ? undefined : logoSafeZone(logoPlacement, logoSize, logoAspect);
+    const logoZoneHint = isAvatar ? undefined : logoSafeZone(logoPlacement, logoSize, logoAspect, asset.width, asset.height);
 
     // --- Palette tile so the model SEES the only colors it may use ---
     let paletteTileDataUrl: string | null = null;
