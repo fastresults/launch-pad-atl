@@ -387,10 +387,30 @@ export default function WorkflowPage() {
                         <h3 className="truncate text-sm font-medium">{d.label}</h3>
                       </div>
                       {d.description && <p className="mt-1 text-xs text-muted-foreground">{d.description}</p>}
-                      <div className="mt-2 flex flex-wrap gap-1">
+                      <div className="mt-2 flex flex-wrap items-center gap-1">
                         {d.generated && <Badge variant="secondary" className="text-xs">Generated</Badge>}
                         {!d.generated && !d.deps_met && <Badge variant="outline" className="text-xs">Waiting on upstream</Badge>}
+                        {d.generated && (
+                          d.image_status === "ready" ? (
+                            <Badge variant="outline" className="gap-1 text-[10px]" title="Hero image ready">
+                              <ImageIcon className="h-3 w-3 text-status-success" /> Image
+                            </Badge>
+                          ) : d.image_status === "generating" ? (
+                            <Badge variant="outline" className="gap-1 text-[10px]" title="Hero image being painted">
+                              <Loader2 className="h-3 w-3 animate-spin text-primary" /> Image
+                            </Badge>
+                          ) : d.image_status === "failed" ? (
+                            <Badge variant="outline" className="gap-1 text-[10px] text-status-warning" title="Hero image failed — open to retry">
+                              <AlertTriangle className="h-3 w-3" /> Image
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="gap-1 text-[10px] text-muted-foreground" title="Hero image queued">
+                              <ImageIcon className="h-3 w-3" /> Image
+                            </Badge>
+                          )
+                        )}
                       </div>
+
                     </div>
                   </div>
                   <div className="mt-3 flex gap-2">
