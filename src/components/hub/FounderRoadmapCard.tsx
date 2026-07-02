@@ -5,6 +5,7 @@ import { Loader2, RefreshCw, Sparkles, AlertCircle, BookOpen } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { edgeErrorMessage } from "@/lib/edge-errors";
 import { FounderRoadmapDialog } from "./FounderRoadmapDialog";
 
 interface Props { snapshot: any; documentCount?: number; }
@@ -44,7 +45,7 @@ export function FounderRoadmapCard({ snapshot, documentCount }: Props) {
       qc.invalidateQueries({ queryKey: ["hub", "snapshot", snapshot.id] });
       setOpen(true);
     },
-    onError: (e: any) => toast.error(e?.message ?? "Couldn't generate roadmap"),
+    onError: (e: any) => toast.error(edgeErrorMessage(e, "Couldn't generate roadmap")),
   });
 
   return (

@@ -23,6 +23,7 @@ import { listStylePreviews, generateStylePreview, deleteStylePreview, type Style
 import { RegenerateAssetDialog } from "./RegenerateAssetDialog";
 import { AssetPreviewDialog, type PreviewableAsset } from "./AssetPreviewDialog";
 import { RotateCcw } from "lucide-react";
+import { edgeStatus, edgeErrorMessage } from "@/lib/edge-errors";
 
 const PLATFORM_ICONS: Record<string, any> = {
   Instagram, LinkedIn: Linkedin, X: Twitter, Twitter, Facebook,
@@ -75,7 +76,10 @@ function generationErrorMessage(e: any) {
   if (e?.code === "RATE_LIMITED") {
     return "The image generator is rate-limited right now. Wait a minute, then try Generate again.";
   }
-  return e?.details || e?.message || "Generation failed. Please try again.";
+  const status = edgeStatus(e);
+  if (status === 401) return "Your session expired. Please sign in again and retry.";
+  if (status === 403) return "You don't have access to run this. Try signing out and back in, or retry in a moment.";
+  return e?.details || edgeErrorMessage(e, "Generation failed. Please try again.");
 }
 
 export function SocialAutopilot({

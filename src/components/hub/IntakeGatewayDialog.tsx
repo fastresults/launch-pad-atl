@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { edgeErrorMessage } from "@/lib/edge-errors";
 import {
   provenanceLabel,
   type CanonicalFounderContext,
@@ -217,7 +218,7 @@ export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: P
         toast.error("Couldn't transcribe — try typing instead.");
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Transcription failed");
+      toast.error(edgeErrorMessage(e, "Transcription failed"));
     } finally {
       setTranscribingFor(null);
     }
@@ -306,7 +307,7 @@ export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: P
         );
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't estimate — try answering manually.");
+      toast.error(edgeErrorMessage(e, "Couldn't estimate — try answering manually."));
     } finally {
       setEstimating(false);
     }

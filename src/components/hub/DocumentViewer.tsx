@@ -23,6 +23,7 @@ import {
   BookmarkCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { edgeErrorMessage } from "@/lib/edge-errors";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
@@ -431,7 +432,7 @@ export function DocumentViewer({
       qc.invalidateQueries({ queryKey: ["hub"] });
       toast.success("Full Website PRD regenerated");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Website PRD regeneration failed");
+      toast.error(edgeErrorMessage(e, "Website PRD regeneration failed"));
     } finally {
       setPrdRepairing(false);
     }
@@ -458,7 +459,7 @@ export function DocumentViewer({
       setAssessmentStatus(row?.deep_assessment_status ?? "complete");
       toast.success("Deep assessment ready");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Deep assessment failed";
+      const msg = edgeErrorMessage(e, "Deep assessment failed");
       setAssessmentError(msg);
       setAssessmentStatus("failed");
       toast.error(msg);
@@ -552,7 +553,7 @@ export function DocumentViewer({
         setHeroError("Visual is already being generated. Reopen this document in a moment.");
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Image generation failed";
+      const msg = edgeErrorMessage(e, "Image generation failed");
       setHeroError(msg);
       toast.error(msg);
     } finally {
