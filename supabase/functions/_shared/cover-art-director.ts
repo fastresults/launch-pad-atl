@@ -381,6 +381,8 @@ export function buildCoverArtPrompt(args: {
   const { text: headline, suppress: suppressHeadline } = resolveHeadline(ctx, headlineOverride);
   const isCustomHeadline = headlineOverride?.mode === "custom" && !!headline;
   const venture = ventureBlock(ctx, headlineOverride);
+  const scene = resolveSceneDirective(ctx);
+  const sceneBlock = sceneDirectiveBlock(scene);
   const system = assetSystem(asset, hasLogoImage, headline, suppressHeadline, isCustomHeadline, logoZone);
   const dims = `${asset.width}x${asset.height} (${asset.guidance})`;
 
