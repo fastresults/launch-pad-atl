@@ -910,12 +910,14 @@ function Step4BuildAds({
 // STEP 5 — Launch summary
 // ============================================================
 function Step5Launch({
-  ads, posts, selectedWeeks, onBack, onAddWeek,
+  snapshotId, ads, posts, selectedWeeks, onBack, onAddWeek,
 }: {
+  snapshotId: string;
   ads: ContentAd[]; posts: ContentPost[]; selectedWeeks: number[];
   onBack: () => void;
   onAddWeek?: (week: number) => Promise<void> | void;
 }) {
+
   const scoped = ads.filter((a) => selectedWeeks.length === 0 || true);
   const allWeeks = Array.from(new Set(posts.map((p) => p.week))).sort((a, b) => a - b);
   const pendingWeeks = allWeeks.filter((w) => !selectedWeeks.includes(w));
