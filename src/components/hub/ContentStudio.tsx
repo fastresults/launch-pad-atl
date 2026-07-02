@@ -669,7 +669,11 @@ function Step4BuildAds({
           </h4>
           <p className="text-xs text-muted-foreground mt-1">
             {doneCount} of {tasks.length} ads ready · {aspects.join(", ")} · {direction}
+            {pendingWeeks.length > 0 && (
+              <> · <span className="text-status-info">{pendingWeeks.length} more week{pendingWeeks.length === 1 ? "" : "s"} available below</span></>
+            )}
           </p>
+
         </div>
         {tasks.some((t) => !t.ad) && (
           <Button size="sm" onClick={runAll} disabled={running}>
