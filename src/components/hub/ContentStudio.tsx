@@ -971,10 +971,25 @@ function Step5Launch({
   const allWeeks = Array.from(new Set(posts.map((p) => p.week))).sort((a, b) => a - b);
   const pendingWeeks = allWeeks.filter((w) => !selectedWeeks.includes(w));
   const postsByWeek = new Map<number, ContentPost[]>();
+  const postById = new Map<string, ContentPost>();
   for (const p of posts) {
     if (!postsByWeek.has(p.week)) postsByWeek.set(p.week, []);
     postsByWeek.get(p.week)!.push(p);
+    postById.set(p.id, p);
   }
+  // Group ads by week via their linked post
+  const adsByWeek = new Map<number, ContentAd[]>();
+  for (const a of ads) {
+    const p = postById.get(a.post_id);
+    if (!p) continue;
+    if (!adsByWeek.has(p.week)) adsByWeek.set(p.week, []);
+    adsByWeek.get(p.week)!.push(a);
+  }
+  const doneWeeks = Array.from(adsByWeek.keys()).sort((a, b) => a - b);
+  const [openDone, setOpenDone] = useState<string[]>(() =>
+    doneWeeks.length ? [`w-${doneWeeks[0]}`] : []
+  );
+
   return (
     <div className="space-y-3">
       <div>
@@ -984,8 +999,76 @@ function Step5Launch({
         </p>
       </div>
       <div className="rounded-lg border border-white/10 bg-background/40 p-3 text-xs">
-        <b>{scoped.length}</b> ad{scoped.length === 1 ? "" : "s"} produced across weeks {selectedWeeks.join(", ") || "—"}.
+        <b>{scoped.length}</b> ad{scoped.length === 1 ? "" : "s"} produced across weeks {doneWeeks.join(", ") || "—"}.
       </div>
+
+      {doneWeeks.length > 0 && (
+        <Accordion
+          type="multiple"
+          value={openDone}
+          onValueChange={(v) => setOpenDone(v as string[])}
+          className="space-y-2"
+        >
+          {doneWeeks.map((w) => {
+            const wAds = adsByWeek.get(w) ?? [];
+            return (
+              <AccordionItem
+                key={`done-w-${w}`}
+                value={`w-${w}`}
+                className="rounded-xl border border-white/10 bg-background/40 px-3"
+              >
+                <AccordionTrigger className="py-2.5 hover:no-underline">
+                  <div className="flex flex-1 items-center gap-2 pr-2">
+                    <Badge variant="outline" className="text-[10px]">Week {w}</Badge>
+                    <span className="text-[11px] text-muted-foreground">
+                      {wAds.length} ad{wAds.length === 1 ? "" : "s"} ready
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-3">
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {wAds.map((a) => {
+                      const p = postById.get(a.post_id);
+                      return (
+                        <div key={a.id} className="flex items-center gap-2 rounded-lg border border-white/10 bg-background/30 p-2">
+                          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-background/60">
+                            {a.signed_url ? (
+                              <AssetImage src={a.signed_url} alt={p?.hook || "ad"} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center">
+                                <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[11px] font-medium">
+                              {p?.hook || p?.pillar || "Untitled"}
+                            </div>
+                            <div className="truncate text-[10px] text-muted-foreground">
+                              {a.aspect}{p?.platform ? ` · ${p.platform}` : ""}
+                            </div>
+                          </div>
+                          {a.signed_url && (
+                            <a
+                              href={a.signed_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded border border-white/10 px-2 py-1 text-[10px] hover:bg-white/5"
+                            >
+                              Open
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
+      )}
+
 
       {pendingWeeks.length > 0 && (
         <div className="space-y-2">
