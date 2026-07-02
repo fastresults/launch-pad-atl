@@ -109,7 +109,7 @@ export function AdminSidebar() {
         )}
         <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col">
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-            <div className="truncate text-xs font-medium">{isImpersonating ? undefined : user?.email}</div>
+            <div className="truncate text-xs font-medium">{actorUser?.email}</div>
             <div className="text-[10px] text-muted-foreground">
               {isSuperAdmin ? "Super admin" : "Admin"}
             </div>
