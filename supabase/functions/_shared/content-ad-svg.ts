@@ -51,16 +51,40 @@ function contrast(a: string, b: string): number {
   return (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
 }
 
-function headlineBandPct(aspect: AdAspect): number {
-  if (aspect === "9:16") return 0.15;
+// Base band % (2-line target). Grown dynamically by fitHeadline for longer titles.
+function baseBandPct(aspect: AdAspect): number {
+  if (aspect === "9:16") return 0.16;
   if (aspect === "4:5") return 0.20;
-  return 0.24;
+  return 0.22;
 }
 
-function maxLines(aspect: AdAspect): number {
-  if (aspect === "9:16") return 4;
-  if (aspect === "4:5") return 3;
-  return 3;
+function maxBandPct(aspect: AdAspect): number {
+  if (aspect === "9:16") return 0.32;
+  if (aspect === "4:5") return 0.40;
+  return 0.42;
+}
+
+function aspectMaxLines(aspect: AdAspect): number {
+  if (aspect === "9:16") return 5;
+  return 4;
+}
+
+// Tiered length classification. Returns target line count based on character length.
+function targetLinesForLength(len: number, aspect: AdAspect): number {
+  const cap = aspectMaxLines(aspect);
+  if (len <= 28) return 1;
+  if (len <= 55) return Math.min(2, cap);
+  if (len <= 90) return Math.min(3, cap);
+  return cap;
+}
+
+// Font size range per line-count tier (based on 1080px canvas; scaled by minDim).
+function sizeRangeForTier(targetLines: number, minDim: number): { min: number; max: number } {
+  const s = minDim / 1080;
+  if (targetLines <= 1) return { min: Math.round(60 * s), max: Math.round(104 * s) };
+  if (targetLines === 2) return { min: Math.round(52 * s), max: Math.round(84 * s) };
+  if (targetLines === 3) return { min: Math.round(42 * s), max: Math.round(68 * s) };
+  return { min: Math.round(32 * s), max: Math.round(54 * s) };
 }
 
 function charUnits(s: string): number {
@@ -84,6 +108,7 @@ function wrap(words: string[], size: number, maxW: number, maxL: number): string
   const lines: string[] = [];
   let cur = "";
   for (const w of words) {
+    // If a single word is wider than the canvas at this size, this size fails.
     if (estimatedWidth(w, size) > maxW) return null;
     const next = cur ? `${cur} ${w}` : w;
     if (estimatedWidth(next, size) <= maxW) {
@@ -102,32 +127,29 @@ function wrap(words: string[], size: number, maxW: number, maxL: number): string
   return lines;
 }
 
-function truncateWords(text: string, maxChars: number): string {
-  const s = text.trim().replace(/\s+/g, " ");
-  if (s.length <= maxChars) return s;
-  const cut = s.slice(0, maxChars);
-  const sp = cut.lastIndexOf(" ");
-  const stem = sp > maxChars * 0.5 ? cut.slice(0, sp) : cut;
-  return stem.replace(/[\s,;:.!?\-–—(]+$/g, "") + "…";
-}
-
+// Fit the full headline — never truncate. Escalates through line-count tiers,
+// growing the band as needed, until the entire string fits.
 function fitHeadline(text: string, W: number, H: number, aspect: AdAspect) {
   const clean = text.trim().replace(/\s+/g, " ");
   if (!clean) return null;
   const x = Math.round(W * 0.075);
   const bandY = Math.round(H * 0.035);
-  const bandH = Math.round(H * headlineBandPct(aspect));
   const textW = W - x * 2 - Math.round(W * 0.02);
-  const textH = Math.round(bandH * 0.66);
-  const linesMax = maxLines(aspect);
-  const maxSize = Math.min(84, Math.floor(textH / Math.max(2, linesMax) / 1.05));
-  const minSize = aspect === "9:16" ? 32 : 34;
+  const words = clean.split(/\s+/).filter(Boolean);
+  const minDim = Math.min(W, H);
+  const capLines = aspectMaxLines(aspect);
+  const startTier = targetLinesForLength(clean.length, aspect);
+  const maxBandH = Math.round(H * maxBandPct(aspect));
 
-  const candidates = [clean, truncateWords(clean, 86), truncateWords(clean, 68), truncateWords(clean, 54), truncateWords(clean, 42)];
-  for (const candidate of candidates) {
-    const words = candidate.split(/\s+/).filter(Boolean);
-    for (let size = maxSize; size >= minSize; size -= 2) {
-      const lines = wrap(words, size, textW, linesMax);
+  // Try each tier from length-implied target up to the aspect cap.
+  for (let tier = startTier; tier <= capLines; tier += 1) {
+    const range = sizeRangeForTier(tier, minDim);
+    // Grow band to comfortably hold `tier` lines.
+    const growPct = baseBandPct(aspect) + Math.max(0, tier - 2) * 0.05;
+    const bandH = Math.min(maxBandH, Math.round(H * growPct));
+    const textH = Math.round(bandH * 0.72);
+    for (let size = range.max; size >= range.min; size -= 2) {
+      const lines = wrap(words, size, textW, tier);
       if (!lines) continue;
       const lineHeight = Math.round(size * 1.08);
       if (lines.length * lineHeight <= textH) {
@@ -135,8 +157,24 @@ function fitHeadline(text: string, W: number, H: number, aspect: AdAspect) {
       }
     }
   }
+
+  // Last-resort emergency shrink at max tier — still no truncation.
+  const tier = capLines;
+  const bandH = maxBandH;
+  const textH = Math.round(bandH * 0.78);
+  const emergencyMin = Math.max(22, Math.round(24 * (minDim / 1080)));
+  const emergencyMax = sizeRangeForTier(tier, minDim).min;
+  for (let size = emergencyMax; size >= emergencyMin; size -= 1) {
+    const lines = wrap(words, size, textW, tier);
+    if (!lines) continue;
+    const lineHeight = Math.round(size * 1.08);
+    if (lines.length * lineHeight <= textH) {
+      return { lines, size, lineHeight, x, bandY, bandH, textH };
+    }
+  }
   return null;
 }
+
 
 function logoBox(W: number, H: number, logoAspect: number, size: LogoSize, corner: "top-left" | "bottom-right") {
   const tiers = {
