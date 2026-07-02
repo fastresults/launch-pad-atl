@@ -396,7 +396,7 @@ export function RegenerateAssetDialog({
             <div className="flex items-center justify-between">
               <div className="text-xs font-medium">Headline text on image</div>
               <span className="text-[10px] text-muted-foreground">
-                {headlineMode === "custom" ? `${headlineText.length}/64` : ""}
+                {headlineMode === "custom" ? `${headlineText.length}/140` : ""}
               </span>
             </div>
             <div className="grid grid-cols-3 gap-1.5">
