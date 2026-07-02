@@ -107,7 +107,7 @@ function Hero() {
           <span>Full support available</span>
         </p>
         <p className="mt-2 max-w-2xl text-xs text-white/60 md:text-sm">
-          Built for Main Street founders — cafés, salons, trades, local services, indie brands, and first-time small e-commerce. Other tracks (SaaS, marketplace, deep tech) supported too.
+          Two equal tracks — Main Street and Online. Cafés, salons, trades, local services and indie brands on one side; DTC and e-commerce brands, creators, digital services, agencies and small SaaS on the other. Pick the track that fits your startup. Marketplace and deep tech supported too.
         </p>
 
         <div className="mt-10 grid max-w-3xl grid-cols-1 gap-3 text-white/90 sm:grid-cols-2 lg:grid-cols-4 md:mt-12 md:gap-4">
@@ -381,7 +381,7 @@ function Facilitator() {
               <span className="text-gradient-brand">at your table for the session.</span>
             </p>
             <p className="mt-5 text-muted-foreground">
-              Co-Founder of OPEN Interactive and a serial entrepreneur who has personally started multiple companies and helped launch dozens more across tech, services, and Main Street. Along the way he's shipped work for Citigroup, Mayo Clinic, 3M, and Disney, built full digital systems for a Caribbean country's government, and produced one of the region's biggest business summits for five years running.
+              Co-Founder of OPEN Interactive and a serial entrepreneur who has personally started multiple companies and helped launch dozens more across tech, services, online brands, and Main Street. Along the way he's shipped work for Citigroup, Mayo Clinic, 3M, and Disney, built full digital systems for a Caribbean country's government, and produced one of the region's biggest business summits for five years running.
             </p>
             <p className="mt-3 text-muted-foreground">
               He's sat in your seat — more than once. He knows what the first move looks like, and what it takes to get from "good idea" to "running business."

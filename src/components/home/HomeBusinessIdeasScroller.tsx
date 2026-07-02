@@ -103,8 +103,8 @@ export function HomeBusinessIdeasScroller() {
             60+ startup ideas founders are actually launching
           </h2>
           <p className="text-base text-muted-foreground md:text-lg">
-            Across online, main street, service, food, side hustle, and family-run — proof there's a clear path no
-            matter what you're starting.
+            Online and Main Street, side by side — plus service, food, side hustles and family-run.
+            Proof there's a clear path no matter what you're starting.
           </p>
         </div>
 

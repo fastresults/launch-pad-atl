@@ -38,9 +38,10 @@ startup — ${TOTAL_DELIVERABLES} tangible **startup assets** across eight categ
 90-day plan. Facilitated live by Adam Anderson, serial entrepreneur (OPEN Interactive;
 work shipped for Citigroup, Mayo Clinic, 3M, Disney).
 
-Positioning: Atlanta's #1 startup accelerator for Main Street and first-time founders —
-cafés, salons, trades, local services, indie brands, and small e-commerce. Other tracks
-(SaaS, marketplace, deep tech) supported too.
+Positioning: Atlanta's #1 startup accelerator for Main Street **and online** founders —
+cafés, salons, trades, local services, indie brands on one side; DTC and e-commerce brands,
+creators, digital services, agencies and small SaaS on the other. Marketplace and deep tech
+supported too.
 
 ## Price & offer
 - **${WORKSHOP_PRICE_LABEL}** — Strategic Foundation Workshop, all ${TOTAL_DELIVERABLES} startup assets, kept forever.
@@ -67,9 +68,10 @@ Eight additional capabilities. Each is a separate half-day workshop (from ${WORK
 our team can build it done-for-you.
 ${buildLayerBlock()}
 
-## Two tracks
-- **Main Street Startup track** — cafés, salons, trades, local services, indie brands, small e-commerce. This is the default and what most founders come for.
-- **Standard track** — SaaS, marketplace, deep tech, or other tech-forward startups.
+## Two equal default tracks — pick the one that fits
+- **Main Street Startup** — cafés, salons, fitness studios, trades, local services, indie products, solo professional practices.
+- **Online / DTC / Digital** — DTC and e-commerce brands (Shopify, Amazon, marketplaces), creators and info products, digital services and agencies, small SaaS and subscription products.
+- **Also supported** — marketplaces, deep tech, and social-impact startups (specialized tracks; ask if this fits you).
 
 ## The Founder Playbook (post-workshop)
 After the workshop, every founder gets access to a dashboard with:
@@ -90,6 +92,7 @@ Every startup asset ships with a McKinsey-style critical assessment under the ex
 - **What if I already have a logo/website?** Great — Brand Wizard has a track that ingests existing assets so nothing gets thrown away.
 - **Is this good for a Plan B / side hustle?** Yes. Most founders come from a full-time job and want a plan they can act on evenings and weekends.
 - **Is this good for a licensed trade (electrician, plumber, salon)?** Yes — the Main Street Startup track is built for exactly this.
+- **Is this good for an online store, DTC brand, creator, or digital service?** Yes — the Online / DTC / Digital track covers Shopify/Amazon brands, creators and info products, digital services and agencies, and small SaaS.
 - **Refunds?** 7-day no-friction refund by email.
 - **Is Adam actually in the room?** Yes. He sits at your table for the session — not a moderator, not a TA.
 - **Do you take equity?** No. It's a flat ${WORKSHOP_PRICE_LABEL} workshop fee.
