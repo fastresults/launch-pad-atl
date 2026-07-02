@@ -300,7 +300,7 @@ function paintShadow(
 export async function compositeLogo(
   baseBytes: Uint8Array,
   logoBytes: Uint8Array,
-  opts: { placement: LogoPlacement; surfaceHex: string; logoSize?: LogoSize; inkHex?: string },
+  opts: { placement: LogoPlacement; surfaceHex: string; logoSize?: LogoSize; inkHex?: string; cornerOverride?: "top-left" | "bottom-right" },
 ): Promise<Uint8Array> {
   let base: Image;
   let logo: Image;
