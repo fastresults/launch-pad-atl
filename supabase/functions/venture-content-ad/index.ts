@@ -9,10 +9,10 @@ import { loadVentureContext } from "../_shared/venture-context.ts";
 import { buildCanvasPlan, applyPaletteOverride, type CanvasPlan } from "../_shared/canvas-plan.ts";
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
 import { runContrastQa } from "../_shared/image-qa.ts";
-import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
+import { placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 import { buildContentAdPrompt, specForAspect, resolveAdHeadline, type AdAspect } from "../_shared/content-ad-director.ts";
-import { compositeHeadline } from "../_shared/headline-compositor.ts";
+import { buildContentAdSvgBytes } from "../_shared/content-ad-svg.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
 
 const corsHeaders = {
@@ -366,45 +366,41 @@ Deno.serve(async (req) => {
       (qa as any).signature_composited = true;
     }
 
-    // ---- Server-side headline typography ----
-    // The prompt asked the model for zero glyphs; we now paint the fitted
-    // headline into the reserved top band so letters never get clipped.
+    // ---- Server-side SVG overlay typography ----
+    // Keep typography out of the edge CPU hot path: the function stores a
+    // final SVG that layers the generated image, fitted live text, and logo.
+    // Browser SVG text rendering is fast/reliable and avoids worker CPU limits.
     const resolvedHeadline = resolveAdHeadline(post.hook, headlineOverride, aspect);
-    let headlineComposited = false;
     let finalHeadlineText = "";
     if (resolvedHeadline.mode === "custom" && resolvedHeadline.text?.trim()) {
       finalHeadlineText = resolvedHeadline.text.trim();
-      try {
-        const before = bytes;
-        bytes = await compositeHeadline(bytes, plan, aspect, finalHeadlineText);
-        headlineComposited = bytes !== before;
-      } catch (e) { console.warn("headline composite failed", e); }
     }
+    const headlineComposited = !!finalHeadlineText;
+    const logoComposited = !!logoDataUrl;
+    bytes = buildContentAdSvgBytes({
+      baseImageB64: bytesToB64(bytes),
+      baseMime: "image/png",
+      width: asset.width,
+      height: asset.height,
+      plan,
+      aspect,
+      headline: finalHeadlineText,
+      logoDataUrl,
+      logoAspect,
+      logoSize,
+      logoCorner: cornerOverride,
+    });
     (qa as any).headline_composited = headlineComposited;
-
-    let logoComposited = false;
-    if (logoBytes) {
-      try {
-        bytes = await compositeLogo(bytes, logoBytes, {
-          placement: logoPlacement,
-          surfaceHex: plan.surface,
-          inkHex: plan.ink,
-          logoSize,
-          cornerOverride,
-        });
-        logoComposited = true;
-      } catch (e) { console.warn("logo composite failed", e); }
-    }
     (qa as any).logo_composited = logoComposited;
     (qa as any).logo_size = logoSize;
 
     const fileId = crypto.randomUUID();
     const safeAspect = aspect.replace(":", "x");
-    const storagePath = `content-ad/${userId}/${snapshotId}/${post.week}/${postId}/${safeAspect}-${direction}-${fileId}.png`;
+    const storagePath = `content-ad/${userId}/${snapshotId}/${post.week}/${postId}/${safeAspect}-${direction}-${fileId}.svg`;
 
     const { error: upErr } = await admin.storage
       .from(BUCKET)
-      .upload(storagePath, bytes, { contentType: "image/png", upsert: false });
+      .upload(storagePath, bytes, { contentType: "image/svg+xml", upsert: false });
     if (upErr) throw upErr;
 
     const { data: signed } = await admin.storage.from(BUCKET).createSignedUrl(storagePath, SIGNED_TTL);
