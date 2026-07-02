@@ -1163,9 +1163,52 @@ function Step5Launch({
 
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back to build</Button>
       </footer>
+
+      {previewIdx !== null && (() => {
+        const ad = flatAds[previewIdx];
+        if (!ad?.signed_url) return null;
+        const p = postById.get(ad.post_id);
+        const goPrev = () => {
+          const pos = previewable.indexOf(previewIdx);
+          setPreviewIdx(previewable[(pos - 1 + previewable.length) % previewable.length]);
+        };
+        const goNext = () => {
+          const pos = previewable.indexOf(previewIdx);
+          setPreviewIdx(previewable[(pos + 1) % previewable.length]);
+        };
+        const asset: PreviewableAsset = {
+          url: ad.signed_url,
+          title: `${ad.aspect} — ${p?.hook?.slice(0, 60) || p?.pillar || "ad"}`,
+          subtitle: `Week ${p?.week ?? "?"}${p?.platform ? " · " + p.platform : ""}`,
+          platform: p?.platform,
+          assetKind: ad.aspect,
+          width: ad.width,
+          height: ad.height,
+          canvasPlan: ad.canvas_plan,
+          qaStatus: ad.qa_status,
+          qaNotes: ad.qa_notes,
+          modelUsed: ad.model_used,
+          lastFeedback: ad.last_feedback,
+          lastHeadline: ad.last_headline,
+          lastLogoSize: ad.last_logo_size,
+          updatedAt: ad.updated_at,
+        };
+        return (
+          <AssetPreviewDialog
+            open={previewIdx !== null}
+            onOpenChange={(v) => !v && setPreviewIdx(null)}
+            asset={asset}
+            onPrev={previewable.length > 1 ? goPrev : undefined}
+            onNext={previewable.length > 1 ? goNext : undefined}
+            busy={deletingId === ad.id}
+            onDelete={() => doDelete(ad.id)}
+          />
+        );
+      })()}
     </div>
   );
 }
+
 
 
 // ============================================================
