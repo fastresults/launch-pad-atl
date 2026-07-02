@@ -39,6 +39,8 @@ HARD BANS (any of these = failure, regenerate without it):
 - Using a color that is not one of: surface, ink, signature, or accent from the canvas plan.
 - Composition with NO visible signature color, or where signature is reduced to a hairline / 1px stroke / barely-there mark = failure.
 - If the final image, viewed at 240px thumbnail size, could be mistaken for grayscale or for a 2-color black-and-white render, it is a failure.
+- Any visible border, outline, frame, rule, hairline, stroke, or divider around the logo landing area — or anywhere else on the canvas. The logo sits directly on the composition with no container, no chip, no plate, no card, no bracket marks.
+- Any rectangular tonal panel, ghosted box, faint fill, drop shadow, gradient edge, or "placeholder" shape in the logo corner. Treat that area as unmarked negative space that continues the surrounding composition — no window cut out for it.
 `;
 
 
