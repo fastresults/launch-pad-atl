@@ -365,7 +365,12 @@ export function RegenerateAssetDialog({
           </div>
 
           {/* Headline text override */}
-          <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+          <div
+            ref={headlineSectionRef}
+            className={`rounded-lg border bg-muted/20 p-3 space-y-2 transition ${
+              headlineHighlight ? "border-primary ring-2 ring-primary/60 shadow-sm" : "border-border"
+            }`}
+          >
             <div className="flex items-center justify-between">
               <div className="text-xs font-medium">Headline text on image</div>
               <span className="text-[10px] text-muted-foreground">
