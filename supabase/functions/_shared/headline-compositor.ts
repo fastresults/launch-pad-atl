@@ -10,23 +10,38 @@
 import { Image } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 import type { CanvasPlan } from "./canvas-plan.ts";
 
-// Inter Bold — free, ships from rsms.me/inter (mirrored on jsDelivr).
-const FONT_URL =
-  "https://cdn.jsdelivr.net/gh/rsms/inter@v4.0/docs/font-files/Inter-Bold.otf";
+// Inter Bold — bundled with the function so we never depend on network egress
+// at runtime. Network CDNs are only a fallback if the bundled read fails.
+const LOCAL_FONT_URL = new URL("./fonts/Inter-Bold.ttf", import.meta.url);
+const FONT_CDN_FALLBACKS = [
+  "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/files/inter-latin-700-normal.woff",
+  "https://rsms.me/inter/font-files/Inter-Bold.woff2",
+];
 
 let fontBytesPromise: Promise<Uint8Array | null> | null = null;
 
 async function loadFont(): Promise<Uint8Array | null> {
   if (!fontBytesPromise) {
     fontBytesPromise = (async () => {
+      // 1) Bundled font — fast, offline, always present.
       try {
-        const res = await fetch(FONT_URL);
-        if (!res.ok) return null;
-        return new Uint8Array(await res.arrayBuffer());
+        const bytes = await Deno.readFile(LOCAL_FONT_URL);
+        if (bytes && bytes.length > 1024) return bytes;
       } catch (e) {
-        console.warn("headline-compositor: font fetch failed", e);
-        return null;
+        console.warn("headline-compositor: local font read failed", e);
       }
+      // 2) Network fallbacks.
+      for (const url of FONT_CDN_FALLBACKS) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const buf = new Uint8Array(await res.arrayBuffer());
+          if (buf.length > 1024) return buf;
+        } catch (e) {
+          console.warn("headline-compositor: cdn font fetch failed", url, e);
+        }
+      }
+      return null;
     })();
   }
   return fontBytesPromise;
