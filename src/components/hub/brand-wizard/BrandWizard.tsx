@@ -31,6 +31,7 @@ import { LiveBrandPreview } from "./LiveBrandPreview";
 import { VisualBrandGuide } from "./VisualBrandGuide";
 import { Step1TrackPicker } from "./Step1TrackPicker";
 import { ExistingBrandIntake } from "./ExistingBrandIntake";
+import { EditablePaletteSwatch } from "@/components/hub/brand/EditablePaletteSwatch";
 
 const STEPS_NEW = ["DNA", "Palette", "Typography", "Moodboard & Logo", "Voice & Review"];
 const STEPS_EXISTING = ["Track", "Upload & site", "Voice & Review"];
