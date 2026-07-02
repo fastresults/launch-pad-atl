@@ -297,6 +297,16 @@ Deno.serve(async (req) => {
         }
       : undefined;
 
+    // Optional headline override: { mode: "auto"|"custom"|"none", text? }
+    const rawHl = body?.headlineOverride;
+    const headlineOverride =
+      rawHl && typeof rawHl === "object" && ["auto", "custom", "none"].includes(rawHl.mode)
+        ? {
+            mode: rawHl.mode as "auto" | "custom" | "none",
+            text: typeof rawHl.text === "string" ? rawHl.text.slice(0, 64) : undefined,
+          }
+        : undefined;
+
     const platform = getPlatform(platformName);
     if (!platform) return json({ error: `Unknown platform: ${platformName}` }, 400);
     const asset = platform.assets.find((a) => a.kind === assetKind);
