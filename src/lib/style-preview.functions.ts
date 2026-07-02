@@ -11,6 +11,7 @@ export type StylePreview = {
   qa_notes?: any;
   last_feedback: string | null;
   last_headline?: string | null;
+  last_logo_size?: "sm" | "md" | "lg" | null;
   updated_at: string;
 };
 
