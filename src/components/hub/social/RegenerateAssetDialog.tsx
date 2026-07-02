@@ -165,6 +165,7 @@ export function RegenerateAssetDialog({
   mode = "regenerate",
   suggestedHeadline,
   currentHeadline,
+  currentLogoSize,
   focusSection,
   onSubmit,
 }: {
@@ -181,8 +182,10 @@ export function RegenerateAssetDialog({
   suggestedHeadline?: string | null;
   /** The headline that was actually used on the current asset (if any). */
   currentHeadline?: string | null;
+  /** The logo size the current asset was rendered with, if any. */
+  currentLogoSize?: "sm" | "md" | "lg" | null;
   /** When set, scroll+highlight the matching section and pre-focus its primary input. */
-  focusSection?: "headline" | "palette" | "feedback";
+  focusSection?: "headline" | "palette" | "feedback" | "logo";
   onSubmit: (input: {
     feedback: string;
     directionOverride?: string;
@@ -190,12 +193,14 @@ export function RegenerateAssetDialog({
     signaturePlacement?: typeof PLACEMENTS[number]["id"];
     paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
     headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
+    logoSize?: "sm" | "md" | "lg";
   }) => Promise<void>;
 }) {
   const [feedback, setFeedback] = useState("");
   const [direction, setDirection] = useState<string>(currentDirection);
   const [intensity, setIntensity] = useState<"subtle" | "balanced" | "bold">(initialIntensity);
   const [placement, setPlacement] = useState<typeof PLACEMENTS[number]["id"]>("auto");
+  const [logoSize, setLogoSize] = useState<"sm" | "md" | "lg">(currentLogoSize || "md");
   const [busy, setBusy] = useState(false);
 
   // Headline override: when opened via "Edit headline", default to Custom so the
