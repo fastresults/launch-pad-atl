@@ -66,9 +66,7 @@ function maxLines(aspect: AdAspect): number {
 function charUnits(s: string): number {
   let out = 0;
   for (const ch of s) {
-    if (ch === " ") out += 0.38;
-    else if (/[,.;:!|'’`]/.test(ch)) as: null;
-    if (ch === " ") continue;
+    if (ch === " ") { out += 0.38; continue; }
     if (/[,.;:!|'’`]/.test(ch)) out += 0.28;
     else if (/[ilI1]/.test(ch)) out += 0.34;
     else if (/[mwMW]/.test(ch)) out += 0.95;
