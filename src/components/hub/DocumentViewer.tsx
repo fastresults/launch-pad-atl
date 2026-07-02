@@ -459,7 +459,7 @@ export function DocumentViewer({
       setAssessmentStatus(row?.deep_assessment_status ?? "complete");
       toast.success("Deep assessment ready");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Deep assessment failed";
+      const msg = edgeErrorMessage(e, "Deep assessment failed");
       setAssessmentError(msg);
       setAssessmentStatus("failed");
       toast.error(msg);
