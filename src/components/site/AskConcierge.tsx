@@ -116,19 +116,43 @@ export function AskConcierge() {
     try {
       stopAudio();
       setSpeaking(true);
-      const { data, error: err } = await supabase.functions.invoke("venture-speak", {
-        body: { text },
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      const SUPABASE_URL = (import.meta as any).env.VITE_SUPABASE_URL as string;
+      const ANON = (import.meta as any).env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/venture-speak`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: ANON,
+          Authorization: `Bearer ${token ?? ANON}`,
+        },
+        body: JSON.stringify({ text }),
       });
-      if (err) throw err;
-      const blob = data instanceof Blob ? data : new Blob([data as ArrayBuffer], { type: "audio/mpeg" });
+      if (!res.ok) {
+        const detail = await res.text().catch(() => "");
+        console.error("[concierge] TTS failed", res.status, detail);
+        throw new Error(`TTS ${res.status}`);
+      }
+      const blob = await res.blob();
+      if (!blob.size) throw new Error("Empty audio");
       const url = URL.createObjectURL(blob);
       currentAudioUrlRef.current = url;
       const audio = new Audio(url);
       audioRef.current = audio;
       audio.onended = () => stopAudio();
-      audio.onerror = () => stopAudio();
-      await audio.play();
-    } catch {
+      audio.onerror = () => {
+        console.error("[concierge] audio element error");
+        stopAudio();
+      };
+      try {
+        await audio.play();
+      } catch (playErr) {
+        console.error("[concierge] audio.play() rejected", playErr);
+        stopAudio();
+      }
+    } catch (err) {
+      console.error("[concierge] speak failed", err);
       stopAudio();
     }
   }, []);
