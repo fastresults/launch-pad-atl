@@ -786,7 +786,7 @@ function Step5BuildKit({
   const [runningKeys, setRunningKeys] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [kept, setKept] = useState<Record<string, boolean>>({});
-  const [regenTarget, setRegenTarget] = useState<null | { scope: "single" | "all"; task?: any }>(null);
+  const [regenTarget, setRegenTarget] = useState<null | { scope: "single" | "all"; task?: any; focusSection?: "headline" | "palette" | "feedback" }>(null);
   const [previewIdx, setPreviewIdx] = useState<number | null>(null);
   const previewableIdxs = useMemo(() => tasks.map((t, i) => (t.signed_url ? i : -1)).filter((i) => i >= 0), [tasks]);
   const allDone = tasks.every((t) => t.status === "done");
