@@ -778,6 +778,7 @@ function Step5BuildKit({
         qa_notes: (match as any)?.qa_notes ?? null,
         last_feedback: match?.last_feedback ?? null,
         last_headline: (match as any)?.last_headline ?? null,
+        last_logo_size: (match as any)?.last_logo_size ?? null,
         model_used: (match as any)?.model_used ?? null,
         updated_at: (match as any)?.updated_at ?? null,
         width: (match as any)?.width ?? null,
