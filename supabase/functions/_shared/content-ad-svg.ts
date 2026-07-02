@@ -14,6 +14,7 @@ type SvgArgs = {
   logoAspect?: number | null;
   logoSize?: LogoSize;
   logoCorner?: "top-left" | "bottom-right";
+  logoChip?: boolean;
 };
 
 const enc = new TextEncoder();
