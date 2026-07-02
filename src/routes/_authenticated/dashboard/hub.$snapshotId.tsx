@@ -38,6 +38,7 @@ import {
 import { provenanceLabel } from "@/lib/canonical-context";
 import { useCanonicalContext } from "@/hooks/use-canonical-context";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
+import { LegalSetupCard } from "@/components/foundation/LegalSetupCard";
 import { TRACKS, getTrack, type TrackKey } from "@/lib/tracks";
 import { ConceptStudio } from "@/components/hub/ConceptStudio";
 import { DocumentViewer } from "@/components/hub/DocumentViewer";
@@ -1318,6 +1319,11 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 </div>
               );
             })}
+            {String(cat).toLowerCase().includes("foundation") && (
+              <div className="md:col-span-2">
+                <LegalSetupCard />
+              </div>
+            )}
           </div>
         </section>
         );
