@@ -393,6 +393,9 @@ Deno.serve(async (req) => {
       prompt_used: result.prompt,
       model_used: result.modelUsed,
       last_feedback: userFeedback || null,
+      last_headline: headlineOverride
+        ? (headlineOverride.mode === "none" ? "" : (headlineOverride.text ?? null))
+        : null,
       brand_kit_locked_at: kit.locked_at,
       updated_at: new Date().toISOString(),
     };
