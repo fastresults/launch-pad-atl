@@ -1,57 +1,51 @@
-## Problem
+## Root cause (found it)
 
-Headline is being truncated with "…" (see `"…for a local service brand in 10…"`) because `fitHeadline()` in `content-ad-svg.ts` falls back to `truncateWords()` candidates when the full string won't fit at the min font size. That's the wrong behavior — long titles should shrink and wrap to more lines, never lose words.
+The `…` is being injected **client-side**, not by the SVG or the director. Two spots:
 
-## Root cause
+1. `src/components/hub/social/RegenerateAssetDialog.tsx:290`
+   ```ts
+   { mode: "custom", text: headlineText.trim().slice(0, 64) }
+   ```
+   The dialog hard-slices any custom headline to **64 chars** before sending it to the edge function. Anything longer is chopped mid-word — the trailing `…` you see was appended by the old director on the previous run and stored in `last_headline`.
 
-In `supabase/functions/_shared/content-ad-svg.ts`:
+2. `RegenerateAssetDialog.tsx:217`
+   ```ts
+   const [headlineText, setHeadlineText] = useState<string>(currentHeadline || "");
+   ```
+   `currentHeadline` is prefilled from `ad.last_headline` (see `ContentStudio.tsx:756` and `SocialAutopilot.tsx:661/1120`), which for existing posts still contains the old `"…"`. The user regenerates, the ellipsis is re-sent as custom text, and it's stably locked in.
 
-```ts
-const candidates = [clean, truncateWords(clean, 86), truncateWords(clean, 68), ...];
-for (const candidate of candidates) { ... }
-```
+Also cosmetic: line 399 shows `${headlineText.length}/64`, and line 423 preview does `.slice(0, 64)` on the suggestion.
 
-If the full string fails at `minSize` (34px) inside the 3-line cap on 1:1, the loop silently swaps in a truncated string. Combined with the tight `headlineBandPct` (0.24 of H) and `textH = bandH * 0.66`, medium-long titles hit the truncation path.
-
-Also, upstream in `venture-content-ad/index.ts` / `content-ad-director.ts`, the headline is passed through without any length-tier logic, so the SVG layer is the only thing deciding layout.
+Neither the director nor the SVG can fix this — by the time they receive the payload, the string already ends in `…` and is ≤64 chars.
 
 ## Fix plan
 
-### 1. `content-ad-svg.ts` — never truncate, always fit
+### 1. `src/components/hub/social/RegenerateAssetDialog.tsx`
 
-Replace the "shrink then truncate" strategy with a length-tiered "line count + size" strategy:
+- Raise the custom-headline cap to **140 chars** (matches new director cap of 100/110/120 with headroom). Update:
+  - `slice(0, 64)` on submit → `slice(0, 140)`
+  - `/64` counter → `/140`
+  - Preview line 423 `.slice(0, 64)` → `.slice(0, 140)`
+- Sanitize `currentHeadline` prefill: strip trailing `…`, `...`, and any trailing punctuation/whitespace left over from the old truncator. New helper `sanitizeHeadline(s)` used at both `useState` init and the "Use suggested" fallback.
+- Also sanitize `suggestedHeadline` the same way before rendering the preview and using it.
 
-- **Classify by character length** (spaces included):
-  - `≤ 28` chars → target **1 line**, larger size range
-  - `29–55` chars → target **2 lines**
-  - `56–90` chars → target **3 lines**
-  - `> 90` chars → target **4 lines** (allow on 1:1 and 4:5 too, not just 9:16)
-- **Expand `headlineBandPct` dynamically** to fit the required line count: base band % + `(targetLines - 2) * 0.04`, capped at 0.38 of H. This grows the band for longer titles instead of squeezing text.
-- **Font-size ranges per tier** (auto-fit inside tier, don't jump tiers early):
-  - 1 line: 72–96
-  - 2 lines: 56–80
-  - 3 lines: 44–64
-  - 4 lines: 34–52
-- **Remove `truncateWords()` fallback entirely.** Wrap loop shrinks size until the full string fits at the tier's line count. If it still overflows at the tier's min size, escalate to the next tier (more lines + smaller size) rather than truncating.
-- **Absolute last resort** (only if 4 lines at 34px still won't fit — e.g. one word longer than the canvas): shrink below tier min down to 28px before giving up. Never insert "…".
+### 2. `src/components/hub/ContentStudio.tsx` and `src/components/hub/social/SocialAutopilot.tsx`
 
-### 2. `content-ad-director.ts` (or wherever the headline is picked) — cap author-side length
+- When passing `currentHeadline` into the dialog, prefer the **source hook** over the stored `last_headline` when the stored value is a truncated prefix of the hook (endsWith `…` or `...`, or shorter than hook and matches its prefix). Fall back to `last_headline` only when the hook is missing.
+- `ContentStudio.tsx:756` already has `post.hook` as fallback — flip the priority so hook wins when last_headline looks truncated.
+- `SocialAutopilot.tsx:661` and `1120` don't currently pass the hook — add it.
 
-Add a soft cap so titles picked for image overlays stay ≤ ~100 chars. If a source title (from calendar/pillars) exceeds 100 chars, prefer a shorter derived form (subhead, first sentence, or trimmed at a clause boundary — comma/em-dash/colon), but **do not** append "…". This keeps the SVG layer from ever needing tier 4 emergency fallback.
+### 3. Backfill safety in the edge function
 
-### 3. Aspect-aware maxLines
-
-Update `maxLines()` to return the tier ceiling for the aspect:
-- `9:16` → up to 5 (tall canvas)
-- `4:5` → up to 4
-- `1:1` → up to 4
+- In `venture-content-ad/index.ts` around line 240, after parsing `headlineOverride`, strip trailing `…`/`...` from `rawHl.text` so any old client that still sends a truncated string self-heals.
 
 ### 4. Verification
 
-Regenerate three test posts covering short (`"Founder mistake #1"`), medium (`"How we found a market gap for a local service brand"`), and long (`"How we found a market gap for a local service brand in 10 minutes using a free tool"`). Each should render the full title, no ellipsis, band height adapting to line count.
+Regenerate the failing "market gap" post — the Headline field should show the full hook without `…`, and the rendered image should wrap to 3 lines with no ellipsis. Test a short (~20 char), medium (~60 char), and long (~110 char) headline. Confirm tier-fit from the previous fix engages and no truncation appears at any length.
 
-## Files
+## Files touched
 
-- `supabase/functions/_shared/content-ad-svg.ts` — replace `fitHeadline`, `maxLines`, `headlineBandPct`; delete `truncateWords` usage.
-- `supabase/functions/_shared/content-ad-director.ts` — add ≤100-char sanitizer for the overlay headline field.
-- Redeploy `venture-content-ad`.
+- `src/components/hub/social/RegenerateAssetDialog.tsx`
+- `src/components/hub/ContentStudio.tsx`
+- `src/components/hub/social/SocialAutopilot.tsx`
+- `supabase/functions/venture-content-ad/index.ts` (redeploy)

@@ -13,6 +13,19 @@ import { Loader2, Sparkles, Image as ImageIcon, RotateCcw } from "lucide-react";
 import { contrastRatio } from "@/lib/brand/palette-rules";
 import { AssetImage } from "./AssetImage";
 
+// Strip trailing ellipsis / punctuation left behind by older truncators so the
+// full headline can be re-edited and re-rendered without a leftover "…".
+function sanitizeHeadline(s: string | null | undefined): string {
+  const raw = (s ?? "").trim();
+  if (!raw) return "";
+  return raw
+    .replace(/\s+/g, " ")
+    .replace(/(?:\.{3}|…)+\s*$/g, "")
+    .replace(/[\s,;:\-–—]+$/g, "")
+    .trim();
+}
+
+
 const QUICK_NOTES = [
   "Lighter background",
   "Stronger logo presence",
@@ -214,7 +227,7 @@ export function RegenerateAssetDialog({
       ? "custom"
       : "auto";
   const [headlineMode, setHeadlineMode] = useState<"auto" | "custom" | "none">(initialHeadlineMode);
-  const [headlineText, setHeadlineText] = useState<string>(currentHeadline || "");
+  const [headlineText, setHeadlineText] = useState<string>(sanitizeHeadline(currentHeadline));
   const [headlineHighlight, setHeadlineHighlight] = useState(false);
   const headlineSectionRef = useRef<HTMLDivElement | null>(null);
   const headlineInputRef = useRef<HTMLInputElement | null>(null);
@@ -287,7 +300,7 @@ export function RegenerateAssetDialog({
       headlineMode === "none"
         ? { mode: "none" as const }
         : headlineMode === "custom" && headlineText.trim()
-        ? { mode: "custom" as const, text: headlineText.trim().slice(0, 64) }
+        ? { mode: "custom" as const, text: sanitizeHeadline(headlineText).slice(0, 140) }
         : undefined; // auto = default, no override
     const payload = {
       feedback: feedback.trim(),
@@ -396,7 +409,7 @@ export function RegenerateAssetDialog({
             <div className="flex items-center justify-between">
               <div className="text-xs font-medium">Headline text on image</div>
               <span className="text-[10px] text-muted-foreground">
-                {headlineMode === "custom" ? `${headlineText.length}/64` : ""}
+                {headlineMode === "custom" ? `${headlineText.length}/140` : ""}
               </span>
             </div>
             <div className="grid grid-cols-3 gap-1.5">
@@ -420,7 +433,7 @@ export function RegenerateAssetDialog({
               <div className="text-[10px] text-muted-foreground">
                 Will render:{" "}
                 <span className="font-medium text-foreground">
-                  "{(suggestedHeadline || currentHeadline || "").slice(0, 64) || "(venture name)"}"
+                  "{sanitizeHeadline(suggestedHeadline || currentHeadline || "").slice(0, 140) || "(venture name)"}"
                 </span>
               </div>
             )}
@@ -429,10 +442,10 @@ export function RegenerateAssetDialog({
                 ref={headlineInputRef}
                 type="text"
                 value={headlineText}
-                onChange={(e) => setHeadlineText(e.target.value.slice(0, 64))}
+                onChange={(e) => setHeadlineText(e.target.value.slice(0, 140))}
                 disabled={busy}
                 placeholder="Exact words to render on the image"
-                maxLength={64}
+                maxLength={140}
                 className="h-9 w-full rounded border border-border bg-background px-2 text-sm"
               />
             )}
