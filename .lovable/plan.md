@@ -1,79 +1,69 @@
+# Rebalance Copy: Main Street ↔ Online Founders
 
-# Ask Startup Labs — Persistent Site Chatbot
+**Goal:** Every user-facing surface treats Main Street and Online (DTC / e-commerce / creator / digital-service / SaaS-lite) founders as equal, first-class audiences. Today, Main Street is the hero and online is a footnote ("...other tracks supported too").
 
-A branded chat bubble fixed to the bottom-right on every public page. It answers anything about Startup Labs: the workshop, pricing, cohorts, tracks, the 34 startup assets, Brand/Social/Content Studios, Founder Playbook, refunds, schedule, location, contact — grounded in the site's own copy so answers stay accurate.
+## Audit findings
 
-## 1. Knowledge base (single source of truth)
+Copy currently skews Main Street on:
+- `src/components/home/HomeFramework.tsx` — hero + facilitator bio lead Main Street; online is parenthetical.
+- `src/lib/chatbot-knowledge.ts` + `supabase/functions/venture-chatbot/knowledge.ts` — "Atlanta's #1 accelerator **for Main Street and first-time founders**"; online listed only under "Standard track."
+- `src/routes/services.tsx` — "government and Main Street alike."
+- `src/components/home/HomeBusinessIdeasScroller.tsx` — order + phrasing leads Main Street.
+- Track system (`src/lib/tracks.ts`) — Main Street explicitly labeled "the default track for most workshop attendees."
+- Edge-function prompts referencing "main street" as default posture: `venture-synthesize-concept`, `venture-deep-research`, `venture-generate-roadmap`, `venture-bulk-generate`, `venture-generate-document`, `venture-generate-assessment`, `_shared/track-tones.ts`, `_shared/deliverable-prompts.ts`, `_shared/cover-art-director.ts`.
+- Static marketing docs in `/public/business-case.*`.
+- Onboarding: `src/routes/_authenticated/dashboard/hub.new.tsx`, `src/components/brief/MarketBlock.tsx`, `src/lib/brief-sync-profile.ts`, `src/lib/member-intake.functions.ts`.
 
-Create `src/lib/chatbot-knowledge.ts` that aggregates every user-facing copy source we already own into one structured, versioned corpus. Sections:
+## Rebalancing principle
 
-- **Offer & pricing**: $197 price, Founders vs Cohort tiers, Atlanta's #1 accelerator positioning, seats/cohort model (from `HomeFramework.tsx`, `services.tsx`, `register/`).
-- **Event logistics**: Thu Jul 23, 2026 · Norcross, GA · 20 seats, agenda/day flow (from `dashboard/day.tsx`, `schedule.tsx`).
-- **Tracks**: standard + Main Street Startup track.
-- **34 startup assets**: names, 40-word descriptions, category, stage — pulled directly from `src/lib/framework-deliverables.ts`.
-- **Workshop curriculum**: Foundation, Strategy, Operations, Finance, Governance, Brand, Marketing, Social & Content — titles + summaries from `components/workshop-slides/slides/*`.
-- **Studios**: Brand Wizard (two tracks — existing brand vs new), Social Studio, Content Studio (weekly ad accordion), Concept Studio / Epiphany Engine, Founder Playbook + Roadmap, Budget & Pro Forma intake.
-- **Policies & meta**: Privacy, Terms, Unsubscribe, Contact, Facilitator info.
-- **FAQ seed** (~20 Q/A): "What do I leave with?", "Is this for a Plan B?", "Do I need a business idea already?", "What if I already have a logo/website?", "Refunds?", "Who's it not for?", etc.
+- Replace phrases like "Main Street founders" as the lead subject with a **two-noun pairing** ("Main Street and online founders", "storefront and digital founders", "cafés, salons, trades — and DTC brands, creators, digital services").
+- Wherever we say "default track" or "most attendees," reframe as "two equal tracks — pick the one that fits your startup."
+- Order/parity: whenever Main Street is listed, list online right next to it, with a comparable example set (Shopify DTC, Etsy, creator brand, digital agency, coaching/consulting, SaaS-lite, marketplace side project).
+- Keep the Main Street track's operator vocabulary intact where it exists as a track (that's a feature). Only the framing/marketing copy changes.
 
-Each entry: `{ id, section, title, body, route }` so answers can cite/link back to the relevant page.
+## Scope of changes
 
-## 2. Edge Function: `venture-chatbot`
+### 1. Marketing surfaces (highest priority — user-visible)
+- `src/components/home/HomeFramework.tsx`
+  - Hero subhead: reframe from "Built for Main Street founders — …" to a two-audience line covering Main Street + online, with matched example lists.
+  - Facilitator bio: swap "tech, services, and Main Street" for "tech, services, Main Street, and online brands."
+- `src/components/home/HomeBusinessIdeasScroller.tsx`
+  - Reorder categories so online and Main Street alternate; rewrite the caption to lead with the pairing.
+- `src/routes/services.tsx` — swap "government and Main Street alike" for "government, Main Street, and online brands alike."
+- `src/routes/index.tsx`, `src/routes/register.tsx`, `src/routes/build.tsx`, `src/routes/facilitator.tsx`, `src/routes/schedule.tsx` — sweep for any Main-Street-only phrasing and rebalance.
 
-Server-side streaming chat, mirroring the pattern used by other `venture-*` functions.
+### 2. Concierge chatbot knowledge
+- `src/lib/chatbot-knowledge.ts` **and** `supabase/functions/venture-chatbot/knowledge.ts` (both must match):
+  - Positioning line → "Atlanta's #1 startup accelerator for Main Street **and online** founders — cafés, salons, trades, local services, indie brands, DTC e-commerce, creators, digital services, and small SaaS."
+  - "Two tracks" section → treat Main Street and Online/DTC as equal defaults; move deep-tech/SaaS/marketplace into a third "Also supported" line.
+  - Update FAQ answers ("Is this good for…") to add an online-founder Q&A ("Is this good for an online store / DTC brand / creator business / digital service?").
 
-- Loads the knowledge corpus (imported from a shared TS module compiled into the function, or duplicated as a `.ts` in `supabase/functions/venture-chatbot/knowledge.ts` generated from `src/lib/chatbot-knowledge.ts` — we'll keep one canonical file and re-export).
-- Uses Lovable AI (`google/gemini-3-flash-preview`) via the shared `ai-gateway.ts` helper.
-- System prompt: "You are the Startup Labs concierge. Only answer using the provided knowledge. If unknown, offer to connect them via /contact. Never invent pricing, dates, or guarantees. Tone: confident, plainspoken, founder-to-founder."
-- Streams via `toUIMessageStreamResponse`.
-- CORS enabled; `verify_jwt = false` (public marketing chat, no PII writes).
-- Rate limit: soft cap per IP (in-memory best-effort) + 402/429 pass-through toasts.
+### 3. Track framing (do NOT rewrite prompts, only the labels/descriptions)
+- `src/lib/tracks.ts`
+  - Remove "default track for most workshop attendees" from Main Street's `description`.
+  - Update E-commerce/DTC `description` to feel equally first-class (add creators, digital services, small SaaS-lite alongside DTC).
+  - Do not touch `tonePrompt` fields — those are correct per-track instructions.
 
-No DB tables — conversation is ephemeral per browser (localStorage), matching a lightweight marketing chatbot.
+### 4. Onboarding + intake
+- `src/routes/_authenticated/dashboard/hub.new.tsx`, `src/components/brief/MarketBlock.tsx`, `src/lib/brief-sync-profile.ts`, `src/lib/member-intake.functions.ts`
+  - Where Main Street is a prompt example, add an online example beside it (never replace).
 
-## 3. UI: `src/components/site/AskConcierge.tsx`
+### 5. Edge function prompts (light touch)
+- `_shared/track-tones.ts`, `_shared/deliverable-prompts.ts`, `_shared/cover-art-director.ts`, and the six `venture-*` functions that mention "main street":
+  - Only rebalance sentences that say "assume main street unless told otherwise." Change to "route by the track key on the concept; do not assume a default." Leave track-specific voice guidance intact.
 
-- Fixed `bottom-6 right-6 z-50` launcher button: circular, brand primary gradient, small "Ask Startup Labs" label on hover, subtle pulse on first visit only.
-- Click opens a 380×560 panel (bottom-right anchored, mobile: full-width sheet).
-- Built with AI Elements: `Conversation`, `Message`, `MessageResponse`, `PromptInput`, `PromptInputTextarea`, `PromptInputFooter`, `PromptInputSubmit`, `Shimmer`.
-- Uses `useChat` + `DefaultChatTransport` pointing at the edge function URL.
-- Messages persist in `localStorage` under `sl.concierge.v1` (one conversation, "Clear" button in header).
-- Header: small ATL badge icon + "Startup Labs Concierge" + close (×).
-- Empty state: 4 suggested chips — "What do I leave with?", "How much is it?", "When's the next cohort?", "Is this right for me?".
-- Markdown rendering for assistant answers; auto-link route references (e.g. `/services`, `/register`).
-- Textarea auto-focus on open; ESC closes; focus trap while open.
+### 6. Static docs
+- `public/business-case.md/.txt/.html` — same rebalancing sweep as marketing surfaces so downloadable copy matches.
 
-## 4. Brand & styling
+## Out of scope
+- Existing generated user assets (personal deliverables) — not rewritten.
+- Visual design, layout, imagery.
+- New routes or new tracks.
 
-Uses existing semantic tokens only (`--primary`, `--background`, `--foreground`, `--accent`, `--border`, `--muted`) — no hardcoded colors. Matches the dark-navy hero aesthetic:
+## Verification
+- Grep after changes: no line begins with "Built for Main Street" or "for Main Street and first-time founders" without an online pair.
+- Chatbot: ask "is this workshop for an online store owner?" — answer should confirm equally.
+- Home hero, `/services`, `/register` visually reviewed at 1280 and mobile widths.
 
-- Launcher: `bg-primary text-primary-foreground shadow-elegant` with subtle ring in `--accent`.
-- Panel: `bg-background border-border` with hex-pattern faint background echoing the hero.
-- User bubble: `bg-primary text-primary-foreground`. Assistant: no background, plain foreground on panel.
-- Typography: inherits site font stack (no new fonts).
-
-## 5. Mount & visibility
-
-- Mounted once in `src/routes/__root.tsx` (or `App.tsx` layout) so it appears on every route.
-- Hidden on: `/login`, `/signup`, `/reset-password`, `/unsubscribe`, and inside `_authenticated/dashboard/*` (dashboard has its own tools).
-- Admin toggle in `admin.settings.tsx`: `concierge_enabled` in `site_settings` (default on).
-
-## 6. Guardrails
-
-- Edge function refuses off-topic prompts politely and steers back.
-- No promises about outcomes, guaranteed funding, legal/tax/medical advice.
-- If asked something not in corpus (e.g. "what's the WiFi password"), it says so and links `/contact`.
-- All answers stay under ~180 words unless user asks "explain in detail".
-
-## Technical notes
-
-- New files: `src/lib/chatbot-knowledge.ts`, `src/components/site/AskConcierge.tsx`, `src/components/site/AskConcierge.launcher.tsx`, `supabase/functions/venture-chatbot/index.ts`, `supabase/functions/venture-chatbot/knowledge.ts`.
-- Modified: `src/routes/__root.tsx` (mount), `src/routes/_authenticated/admin.settings.tsx` (toggle), reuses `edge-errors.ts` for 402/429/403 toasts.
-- Install (if missing): AI Elements `conversation message prompt-input shimmer` — check first.
-- No DB migrations required unless we add the admin toggle row; that's a single `site_settings` upsert, no schema change.
-
-## Out of scope (call out for approval)
-
-- Human handoff / live chat.
-- Multi-thread history or per-user account persistence.
-- Analytics dashboards for chat volume (can add later via `email_send_log`-style table if wanted).
+## Risk
+Two knowledge files must stay in sync (`src/lib/chatbot-knowledge.ts` and `supabase/functions/venture-chatbot/knowledge.ts`). Any drift and the chatbot answers differently than the site. I'll edit both in the same pass.
