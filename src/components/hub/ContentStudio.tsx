@@ -491,10 +491,12 @@ type AdTask = {
 };
 
 function Step4BuildAds({
-  snapshotId, direction, aspects, selectedWeeks, posts, ads, onBack, onDone,
+  snapshotId, direction, aspects, selectedWeeks, posts, ads,
+  autoRunWeek, onAutoRunConsumed, onBack, onDone,
 }: {
   snapshotId: string; direction: string; aspects: AdAspect[];
   selectedWeeks: number[]; posts: ContentPost[]; ads: ContentAd[];
+  autoRunWeek?: number | null; onAutoRunConsumed?: () => void;
   onBack: () => void; onDone: () => void;
 }) {
   const qc = useQueryClient();
