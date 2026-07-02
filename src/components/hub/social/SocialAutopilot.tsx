@@ -657,12 +657,13 @@ function Step4Style({
           thumbnailUrl={dialog.direction ? byDirection.get(dialog.direction)?.signed_url : null}
           currentDirection={dialog.direction || "editorial"}
           canvasPlan={dialog.direction ? byDirection.get(dialog.direction)?.canvas_plan : null}
-          onSubmit={async ({ feedback, directionOverride, signatureIntensity, signaturePlacement, paletteOverride }) => {
+          currentHeadline={dialog.direction ? (byDirection.get(dialog.direction) as any)?.last_headline ?? null : null}
+          onSubmit={async ({ feedback, directionOverride, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride }) => {
             if (dialog.scope === "all") {
-              await regenerateAll({ feedback, signatureIntensity, signaturePlacement, paletteOverride });
+              await regenerateAll({ feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride });
             } else {
               const target = directionOverride || dialog.direction!;
-              await runGenerate(target, { feedback, signatureIntensity, signaturePlacement, paletteOverride });
+              await runGenerate(target, { feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride });
             }
           }}
         />
