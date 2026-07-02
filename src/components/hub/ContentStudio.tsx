@@ -773,6 +773,51 @@ function Step4BuildAds({
         );
       })}
 
+      {pendingWeeks.map((w) => {
+        const wPosts = postsByWeek.get(w) ?? [];
+        const isLoading = autoRunWeek === w || running;
+        return (
+          <div key={`pending-${w}`} className="rounded-xl border border-dashed border-white/15 bg-background/20 p-3">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-[10px]">Week {w}</Badge>
+                <span className="text-[10px] text-muted-foreground">
+                  {wPosts.length} planned post{wPosts.length === 1 ? "" : "s"} · not started
+                </span>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-[11px]"
+                disabled={isLoading || !onAddWeek}
+                onClick={() => onAddWeek?.(w)}
+              >
+                {isLoading ? (
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-1 h-3 w-3" />
+                )}
+                Add &amp; generate Week {w}
+              </Button>
+            </div>
+            <ul className="grid gap-1 sm:grid-cols-2">
+              {wPosts.slice(0, 4).map((p) => (
+                <li key={p.id} className="truncate text-[11px] text-muted-foreground">
+                  · {p.hook || p.pillar || "Untitled post"}
+                </li>
+              ))}
+              {wPosts.length > 4 && (
+                <li className="text-[11px] text-muted-foreground/70">
+                  + {wPosts.length - 4} more
+                </li>
+              )}
+            </ul>
+          </div>
+        );
+      })}
+
+
+
       <footer className="flex justify-between">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back</Button>
         <Button onClick={onDone} disabled={!anyDone}>
