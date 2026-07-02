@@ -45,14 +45,30 @@ export function AskConcierge() {
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [voiceOn, setVoiceOn] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(VOICE_PREF_KEY) === "1";
+  });
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAudioUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-40)));
     } catch { /* ignore quota */ }
   }, [messages]);
+
+  useEffect(() => {
+    try { localStorage.setItem(VOICE_PREF_KEY, voiceOn ? "1" : "0"); } catch { /* noop */ }
+  }, [voiceOn]);
 
   useEffect(() => {
     if (open) {
@@ -75,10 +91,53 @@ export function AskConcierge() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  useEffect(() => {
+    return () => {
+      stopAudio();
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function stopAudio() {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current = null;
+    }
+    if (currentAudioUrlRef.current) {
+      URL.revokeObjectURL(currentAudioUrlRef.current);
+      currentAudioUrlRef.current = null;
+    }
+    setSpeaking(false);
+  }
+
+  const speak = useCallback(async (text: string) => {
+    try {
+      stopAudio();
+      setSpeaking(true);
+      const { data, error: err } = await supabase.functions.invoke("venture-speak", {
+        body: { text },
+      });
+      if (err) throw err;
+      const blob = data instanceof Blob ? data : new Blob([data as ArrayBuffer], { type: "audio/mpeg" });
+      const url = URL.createObjectURL(blob);
+      currentAudioUrlRef.current = url;
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => stopAudio();
+      audio.onerror = () => stopAudio();
+      await audio.play();
+    } catch {
+      stopAudio();
+    }
+  }, []);
+
   async function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed || pending) return;
     setError(null);
+    stopAudio();
     const next: Msg[] = [...messages, { role: "user", content: trimmed }];
     setMessages(next);
     setInput("");
@@ -91,6 +150,7 @@ export function AskConcierge() {
       const answer = (data as any)?.answer as string | undefined;
       if (!answer) throw new Error("Empty response");
       setMessages((prev) => [...prev, { role: "assistant", content: answer }]);
+      if (voiceOn) void speak(stripMarkdown(answer));
     } catch (e: any) {
       setError(edgeErrorMessage(e, "Couldn't reach the concierge. Please try again."));
     } finally {
@@ -99,9 +159,71 @@ export function AskConcierge() {
     }
   }
 
+  async function startRecording() {
+    if (recording || transcribing || pending) return;
+    setError(null);
+    stopAudio();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mime = pickRecorderMime();
+      const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.onstop = async () => {
+        const type = recorder.mimeType || mime || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type });
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        recorderRef.current = null;
+        chunksRef.current = [];
+        if (blob.size < 2048) {
+          setError("That recording was empty — please try again.");
+          return;
+        }
+        await transcribeAndSend(blob);
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+    } catch {
+      setError("Microphone access is needed. Enable it in your browser and try again.");
+    }
+  }
+
+  function stopRecording() {
+    if (!recording) return;
+    setRecording(false);
+    try { recorderRef.current?.stop(); } catch { /* noop */ }
+  }
+
+  async function transcribeAndSend(blob: Blob) {
+    setTranscribing(true);
+    try {
+      const ext = (blob.type.split(";")[0].split("/")[1] || "webm").replace("mpeg", "mp3");
+      const form = new FormData();
+      form.append("file", new File([blob], `recording.${ext}`, { type: blob.type }));
+      const { data, error: err } = await supabase.functions.invoke("venture-transcribe", { body: form });
+      if (err) throw err;
+      const text = ((data as any)?.text ?? "").trim();
+      if (!text) {
+        setError("Couldn't hear that — please try again.");
+        return;
+      }
+      await send(text);
+    } catch (e: any) {
+      setError(edgeErrorMessage(e, "Couldn't transcribe that. Please try again."));
+    } finally {
+      setTranscribing(false);
+    }
+  }
+
   function clearAll() {
     setMessages([]);
     setError(null);
+    stopAudio();
     try { localStorage.removeItem(STORAGE_KEY); } catch { /* noop */ }
   }
 
