@@ -685,6 +685,7 @@ function Step4Style({
           qaNotes: (p as any)?.qa_notes ?? null,
           lastFeedback: p?.last_feedback ?? null,
           lastHeadline: (p as any)?.last_headline ?? null,
+          lastLogoSize: (p as any)?.last_logo_size ?? null,
           updatedAt: p?.updated_at ?? null,
         } : null;
         return (
@@ -697,6 +698,7 @@ function Step4Style({
             busy={d ? !!busy[d.id] : false}
             onRegenerate={d ? () => setDialog({ scope: "single", direction: d.id }) : undefined}
             onEditHeadline={d ? () => setDialog({ scope: "single", direction: d.id, focusSection: "headline" }) : undefined}
+            onEditLogoSize={d ? () => setDialog({ scope: "single", direction: d.id, focusSection: "logo" }) : undefined}
             onDelete={d && p?.signed_url ? () => { setPreviewIdx(null); deletePreview(d.id); } : undefined}
           />
         );
