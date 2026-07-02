@@ -2417,6 +2417,7 @@ export type Database = {
           id: string
           is_selected: boolean
           last_feedback: string | null
+          last_headline: string | null
           last_regenerated_at: string | null
           model_used: string | null
           platform: string
@@ -2441,6 +2442,7 @@ export type Database = {
           id?: string
           is_selected?: boolean
           last_feedback?: string | null
+          last_headline?: string | null
           last_regenerated_at?: string | null
           model_used?: string | null
           platform: string
@@ -2465,6 +2467,7 @@ export type Database = {
           id?: string
           is_selected?: boolean
           last_feedback?: string | null
+          last_headline?: string | null
           last_regenerated_at?: string | null
           model_used?: string | null
           platform?: string
@@ -2541,6 +2544,7 @@ export type Database = {
           direction: string
           id: string
           last_feedback: string | null
+          last_headline: string | null
           model_used: string | null
           prompt_used: string | null
           qa_notes: Json | null
@@ -2559,6 +2563,7 @@ export type Database = {
           direction: string
           id?: string
           last_feedback?: string | null
+          last_headline?: string | null
           model_used?: string | null
           prompt_used?: string | null
           qa_notes?: Json | null
@@ -2577,6 +2582,7 @@ export type Database = {
           direction?: string
           id?: string
           last_feedback?: string | null
+          last_headline?: string | null
           model_used?: string | null
           prompt_used?: string | null
           qa_notes?: Json | null
