@@ -24,6 +24,7 @@ export type SocialAsset = {
   qa_notes?: any;
   last_feedback?: string | null;
   last_headline?: string | null;
+  last_logo_size?: "sm" | "md" | "lg" | null;
 };
 
 async function call(body: any) {
