@@ -115,6 +115,7 @@ function targetBoxFor(
   H: number,
   logoAspect: number,
   size: LogoSize,
+  cornerOverride?: "top-left" | "bottom-right",
 ): { x: number; y: number; w: number; h: number; mode: "width-first" | "height-first" } {
   const short = Math.min(W, H);
 
