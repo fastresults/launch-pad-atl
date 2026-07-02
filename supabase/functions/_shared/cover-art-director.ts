@@ -68,19 +68,24 @@ function typoBlock(kit: Kit) {
   return `  - Heading family: ${h}\n  - Body family: ${b}`;
 }
 
-function ventureBlock(ctx: any) {
+function ventureBlock(ctx: any, headlineOverride?: HeadlineOverride) {
   const brain = ctx?.brain ?? {};
   const name = brain?.identity?.company_name ?? ctx?.snap?.company_name ?? "the venture";
   const oneLiner = brain?.identity?.one_liner ?? "";
   const customer = brain?.customer ?? "";
   const diff = (brain?.differentiators ?? []).slice(0, 3).join("; ");
+  // When the founder is overriding the on-image headline (custom or none),
+  // do NOT show competing copy to the model — it will render the one-liner
+  // instead of the requested custom text.
+  const hideCopy = headlineOverride?.mode === "custom" || headlineOverride?.mode === "none";
   return [
     `  - Name: ${name}`,
-    oneLiner && `  - One-liner: ${oneLiner}`,
+    !hideCopy && oneLiner && `  - One-liner: ${oneLiner}`,
     customer && `  - Customer: ${customer}`,
     diff && `  - Differentiators: ${diff}`,
   ].filter(Boolean).join("\n");
 }
+
 
 export type HeadlineOverride = { mode: "auto" | "custom" | "none"; text?: string };
 
