@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { MessageCircle, X, Send, Sparkles, Trash2 } from "lucide-react";
+import { MessageCircle, X, Send, Sparkles, Trash2, Mic, Square, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeErrorMessage } from "@/lib/edge-errors";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,9 @@ import { cn } from "@/lib/utils";
 type Msg = { role: "user" | "assistant"; content: string };
 
 const STORAGE_KEY = "sl.concierge.v1";
+const VOICE_PREF_KEY = "sl.concierge.voice.v1";
 const HIDDEN_PREFIXES = ["/login", "/signup", "/reset-password", "/unsubscribe", "/dashboard", "/admin", "/welcome", "/paused", "/workshop"];
+
 
 const STARTERS = [
   "What do I leave with?",
@@ -43,14 +45,30 @@ export function AskConcierge() {
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [voiceOn, setVoiceOn] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(VOICE_PREF_KEY) === "1";
+  });
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAudioUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-40)));
     } catch { /* ignore quota */ }
   }, [messages]);
+
+  useEffect(() => {
+    try { localStorage.setItem(VOICE_PREF_KEY, voiceOn ? "1" : "0"); } catch { /* noop */ }
+  }, [voiceOn]);
 
   useEffect(() => {
     if (open) {
@@ -73,10 +91,53 @@ export function AskConcierge() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  useEffect(() => {
+    return () => {
+      stopAudio();
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function stopAudio() {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current = null;
+    }
+    if (currentAudioUrlRef.current) {
+      URL.revokeObjectURL(currentAudioUrlRef.current);
+      currentAudioUrlRef.current = null;
+    }
+    setSpeaking(false);
+  }
+
+  const speak = useCallback(async (text: string) => {
+    try {
+      stopAudio();
+      setSpeaking(true);
+      const { data, error: err } = await supabase.functions.invoke("venture-speak", {
+        body: { text },
+      });
+      if (err) throw err;
+      const blob = data instanceof Blob ? data : new Blob([data as ArrayBuffer], { type: "audio/mpeg" });
+      const url = URL.createObjectURL(blob);
+      currentAudioUrlRef.current = url;
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => stopAudio();
+      audio.onerror = () => stopAudio();
+      await audio.play();
+    } catch {
+      stopAudio();
+    }
+  }, []);
+
   async function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed || pending) return;
     setError(null);
+    stopAudio();
     const next: Msg[] = [...messages, { role: "user", content: trimmed }];
     setMessages(next);
     setInput("");
@@ -89,6 +150,7 @@ export function AskConcierge() {
       const answer = (data as any)?.answer as string | undefined;
       if (!answer) throw new Error("Empty response");
       setMessages((prev) => [...prev, { role: "assistant", content: answer }]);
+      if (voiceOn) void speak(stripMarkdown(answer));
     } catch (e: any) {
       setError(edgeErrorMessage(e, "Couldn't reach the concierge. Please try again."));
     } finally {
@@ -97,9 +159,71 @@ export function AskConcierge() {
     }
   }
 
+  async function startRecording() {
+    if (recording || transcribing || pending) return;
+    setError(null);
+    stopAudio();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mime = pickRecorderMime();
+      const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.onstop = async () => {
+        const type = recorder.mimeType || mime || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type });
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        recorderRef.current = null;
+        chunksRef.current = [];
+        if (blob.size < 2048) {
+          setError("That recording was empty — please try again.");
+          return;
+        }
+        await transcribeAndSend(blob);
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+    } catch {
+      setError("Microphone access is needed. Enable it in your browser and try again.");
+    }
+  }
+
+  function stopRecording() {
+    if (!recording) return;
+    setRecording(false);
+    try { recorderRef.current?.stop(); } catch { /* noop */ }
+  }
+
+  async function transcribeAndSend(blob: Blob) {
+    setTranscribing(true);
+    try {
+      const ext = (blob.type.split(";")[0].split("/")[1] || "webm").replace("mpeg", "mp3");
+      const form = new FormData();
+      form.append("file", new File([blob], `recording.${ext}`, { type: blob.type }));
+      const { data, error: err } = await supabase.functions.invoke("venture-transcribe", { body: form });
+      if (err) throw err;
+      const text = ((data as any)?.text ?? "").trim();
+      if (!text) {
+        setError("Couldn't hear that — please try again.");
+        return;
+      }
+      await send(text);
+    } catch (e: any) {
+      setError(edgeErrorMessage(e, "Couldn't transcribe that. Please try again."));
+    } finally {
+      setTranscribing(false);
+    }
+  }
+
   function clearAll() {
     setMessages([]);
     setError(null);
+    stopAudio();
     try { localStorage.removeItem(STORAGE_KEY); } catch { /* noop */ }
   }
 
@@ -139,6 +263,21 @@ export function AskConcierge() {
               <div className="text-sm font-semibold tracking-tight">Startup Labs Concierge</div>
             </div>
             <div className="flex items-center gap-1">
+              <button
+                type="button"
+                aria-label={voiceOn ? "Voice replies on — click to mute" : "Voice replies off — click to enable"}
+                aria-pressed={voiceOn}
+                onClick={() => {
+                  if (voiceOn && speaking) stopAudio();
+                  setVoiceOn((v) => !v);
+                }}
+                className={cn(
+                  "rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white",
+                  voiceOn && "text-white",
+                )}
+              >
+                {voiceOn ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+              </button>
               {messages.length > 0 && (
                 <button
                   type="button"
@@ -187,10 +326,10 @@ export function AskConcierge() {
                 {messages.map((m, i) => (
                   <MessageBubble key={i} role={m.role} content={m.content} />
                 ))}
-                {pending && (
+                {(pending || transcribing || speaking) && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span className="inline-flex size-2 animate-pulse rounded-full bg-primary" />
-                    Thinking…
+                    {transcribing ? "Transcribing…" : speaking ? "Speaking…" : "Thinking…"}
                   </div>
                 )}
                 {error && (
@@ -222,14 +361,26 @@ export function AskConcierge() {
                     send(input);
                   }
                 }}
-                placeholder="Ask about the workshop, pricing, tracks…"
+                placeholder={recording ? "Listening… tap the square to stop." : "Ask about the workshop, pricing, tracks…"}
                 className="max-h-32 min-h-[36px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-                disabled={pending}
+                disabled={pending || recording || transcribing}
               />
+              <button
+                type="button"
+                aria-label={recording ? "Stop recording" : "Record voice message"}
+                onClick={recording ? stopRecording : startRecording}
+                disabled={pending || transcribing}
+                className={cn(
+                  "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/10 text-foreground transition-colors hover:bg-white/10 disabled:opacity-40",
+                  recording && "border-destructive/60 bg-destructive/20 text-destructive-foreground animate-pulse",
+                )}
+              >
+                {transcribing ? <Loader2 className="size-4 animate-spin" /> : recording ? <Square className="size-4" /> : <Mic className="size-4" />}
+              </button>
               <button
                 type="submit"
                 aria-label="Send"
-                disabled={pending || !input.trim()}
+                disabled={pending || recording || transcribing || !input.trim()}
                 className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
               >
                 <Send className="size-4" />
@@ -263,4 +414,33 @@ function MessageBubble({ role, content }: { role: "user" | "assistant"; content:
       </div>
     </div>
   );
+}
+
+// Strip markdown syntax so TTS reads clean prose (no asterisks, hashes, link syntax).
+function stripMarkdown(md: string): string {
+  return md
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/(\*\*|__)(.*?)\1/g, "$2")
+    .replace(/(\*|_)(.*?)\1/g, "$2")
+    .replace(/^\s*[-*+]\s+/gm, "")
+    .replace(/^\s*\d+\.\s+/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+// Pick a MediaRecorder MIME the browser supports. Safari records audio/mp4;
+// Chrome/Firefox default to audio/webm.
+function pickRecorderMime(): string | undefined {
+  if (typeof MediaRecorder === "undefined") return undefined;
+  const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/mpeg"];
+  for (const c of candidates) {
+    try {
+      if (MediaRecorder.isTypeSupported(c)) return c;
+    } catch { /* noop */ }
+  }
+  return undefined;
 }
