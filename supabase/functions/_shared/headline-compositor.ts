@@ -10,12 +10,11 @@
 import { Image } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 import type { CanvasPlan } from "./canvas-plan.ts";
 
-import { INTER_BOLD_BASE64 } from "./fonts/inter-bold.ts";
-
-// Inter Bold — embedded as a base64 TS module so it always ships with the
-// edge bundle. (Raw .ttf siblings are NOT included in Supabase deploys.)
+// IMPORTANT: keep large embedded fonts OFF the function bundle. A previous
+// base64 font module pushed the edge worker over its memory limit before it
+// could even handle lightweight actions like `list`.
 const TTF_CDN_FALLBACK =
-  "https://raw.githubusercontent.com/rsms/inter/master/docs/font-files/Inter-Bold.ttf";
+  "https://raw.githubusercontent.com/rsms/inter/master/docs/font-files/InterVariable.ttf";
 
 let fontBytesPromise: Promise<Uint8Array | null> | null = null;
 
@@ -29,19 +28,13 @@ function decodeBase64(b64: string): Uint8Array {
 async function loadFont(): Promise<Uint8Array | null> {
   if (!fontBytesPromise) {
     fontBytesPromise = (async () => {
-      // 1) Embedded base64 — offline, always present, no I/O.
+      // 1) TTF CDN first: imagescript parses TTF, not woff/woff2. This keeps
+      // the embedded base64 module out of memory for the common path.
       try {
-        const bytes = decodeBase64(INTER_BOLD_BASE64);
-        if (bytes.length > 1024) {
-          console.info(`[headline-compositor] font loaded (bytes=${bytes.length})`);
-          return bytes;
-        }
-      } catch (e) {
-        console.warn("headline-compositor: base64 decode failed", e);
-      }
-      // 2) TTF CDN fallback (imagescript only parses TTF, not woff/woff2).
-      try {
-        const res = await fetch(TTF_CDN_FALLBACK);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2500);
+        const res = await fetch(TTF_CDN_FALLBACK, { signal: controller.signal });
+        clearTimeout(timeout);
         if (res.ok) {
           const buf = new Uint8Array(await res.arrayBuffer());
           if (buf.length > 1024) {
@@ -52,6 +45,8 @@ async function loadFont(): Promise<Uint8Array | null> {
       } catch (e) {
         console.warn("headline-compositor: cdn font fetch failed", e);
       }
+      // If the CDN is unavailable, skip headline compositing rather than
+      // importing a huge embedded font and crashing the whole generation.
       return null;
     })();
   }
