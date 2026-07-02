@@ -196,15 +196,16 @@ export function buildCoverArtPrompt(args: {
   userFeedback?: string;
   variationSeed?: string;
   headlineOverride?: HeadlineOverride;
+  logoZone?: { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" };
 }): string {
-  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed, headlineOverride } = args;
+  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed, headlineOverride, logoZone } = args;
   const brief = DIRECTION_BRIEF[direction];
   const palette = paletteBlock(kit);
   const typo = typoBlock(kit);
   const { text: headline, suppress: suppressHeadline } = resolveHeadline(ctx, headlineOverride);
   const isCustomHeadline = headlineOverride?.mode === "custom" && !!headline;
   const venture = ventureBlock(ctx, headlineOverride);
-  const system = assetSystem(asset, hasLogoImage, headline, suppressHeadline, isCustomHeadline);
+  const system = assetSystem(asset, hasLogoImage, headline, suppressHeadline, isCustomHeadline, logoZone);
   const dims = `${asset.width}x${asset.height} (${asset.guidance})`;
 
   // Auto-derived tagline the model must NOT paint when the founder has taken
