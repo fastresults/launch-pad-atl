@@ -41,6 +41,7 @@ const DashboardMedia = lazy(() => import("@/routes/_authenticated/dashboard/medi
 const DashboardProfile = lazy(() => import("@/routes/_authenticated/dashboard/profile"));
 const DashboardWorkflow = lazy(() => import("@/routes/_authenticated/dashboard/workflow"));
 const DashboardWorkflowKey = lazy(() => import("@/routes/_authenticated/dashboard/workflow.$key"));
+const DashboardLegalSetup = lazy(() => import("@/routes/_authenticated/dashboard/legal-setup"));
 const HubLibrary = lazy(() => import("@/routes/_authenticated/dashboard/hub.index"));
 const HubNew = lazy(() => import("@/routes/_authenticated/dashboard/hub.new"));
 const HubSnapshot = lazy(() => import("@/routes/_authenticated/dashboard/hub.$snapshotId"));
