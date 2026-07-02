@@ -5,6 +5,7 @@ import { RichMarkdown } from "@/components/markdown/RichMarkdown";
 import { supabase } from "@/integrations/supabase/client";
 import { loadGoogleFont } from "@/lib/brand-wizard";
 import { sanitizeGuideMarkdown } from "@/lib/brand/sanitize-guide-markdown";
+import { EditablePaletteSwatch } from "@/components/hub/brand/EditablePaletteSwatch";
 
 const COLOR_ORDER = ["primary", "secondary", "accent", "bg", "fg", "muted", "surface", "text", "success", "warning", "danger"];
 
@@ -55,7 +56,7 @@ function AssetImage({ asset, alt, className, imgClassName }: any) {
   );
 }
 
-export function VisualBrandGuide({ kit, snapshot, className = "" }: { kit: any; snapshot: any; className?: string }) {
+export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange, originalColors }: { kit: any; snapshot: any; className?: string; onColorChange?: (tokenKey: string, hex: string) => void; originalColors?: Record<string, string> }) {
   const palette = kit?.palette ?? {};
   const colors = palette?.colors ?? {};
   const typography = kit?.typography ?? {};
@@ -116,10 +117,23 @@ export function VisualBrandGuide({ kit, snapshot, className = "" }: { kit: any; 
           <SectionTitle label="Color System" style={headingStyle} color={primary} />
           {palette?.name && <h3 className="text-xl" style={headingStyle}>{palette.name}</h3>}
           {palette?.rationale && <p className="mt-2 text-sm leading-6 opacity-80">{palette.rationale}</p>}
+          {onColorChange && (
+            <p className="mt-2 text-[11px] italic opacity-70">Click any swatch to change its color.</p>
+          )}
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {colorEntries.map(([key, value]) => (
               <div key={key} className="overflow-hidden rounded-lg border bg-white/80" style={{ borderColor: "rgba(0,0,0,0.12)", color: "#111827" }}>
-                <div className="h-24" style={{ background: value }} />
+                <div className="relative h-24" style={{ background: value }}>
+                  {onColorChange && (
+                    <EditablePaletteSwatch
+                      tokenKey={key}
+                      value={value}
+                      originalValue={originalColors?.[key]}
+                      onChange={(hex) => onColorChange(key, hex)}
+                      fill
+                    />
+                  )}
+                </div>
                 <div className="p-3">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-semibold uppercase tracking-wide">{key}</span>
