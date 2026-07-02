@@ -13,6 +13,8 @@ import { listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import {
   parseCalendarPosts, listCalendarPosts, listContentAds, generateContentAd,
   deleteContentAd, getContentProgress, upsertContentProgress, groupPostsByWeek,
+  planNextWeek,
+
   type ContentPost, type ContentAd, type AdAspect,
 } from "@/lib/content-autopilot.functions";
 import { AssetPreviewDialog, type PreviewableAsset } from "@/components/hub/social/AssetPreviewDialog";
