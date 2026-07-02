@@ -31,20 +31,28 @@ async function buildWorkflow(userId: string) {
       .order("sort_order", { ascending: true }),
     supabase
       .from("attendee_deliverables")
-      .select("deliverable_key, review_status, publish_status, content_current")
+      .select("deliverable_key, review_status, publish_status, content_current, hero_image_path, hero_image_status")
       .eq("user_id", userId),
   ]);
 
   const generatedKeys = new Set<string>();
+  const imageReadyKeys = new Set<string>();
+  const imageStatusByKey = new Map<string, string>();
   for (const d of delivRes.data ?? []) {
     if (d.content_current && Object.keys(d.content_current ?? {}).length > 0) {
       generatedKeys.add(d.deliverable_key);
     }
+    if (d.hero_image_path) imageReadyKeys.add(d.deliverable_key);
+    if (d.hero_image_status) imageStatusByKey.set(d.deliverable_key, d.hero_image_status);
   }
 
   const items = (typesRes.data ?? []).map((t: any) => {
     const deps = (t.depends_on_keys ?? []) as string[];
     const deps_met = deps.every((k) => generatedKeys.has(k));
+    const image_ready = imageReadyKeys.has(t.key);
+    const raw = imageStatusByKey.get(t.key) ?? null;
+    const image_status: "idle" | "generating" | "ready" | "failed" =
+      image_ready ? "ready" : raw === "generating" ? "generating" : raw === "failed" ? "failed" : "idle";
     return {
       key: t.key,
       label: t.label,
@@ -55,8 +63,11 @@ async function buildWorkflow(userId: string) {
       user_can_trigger: t.user_can_trigger !== false,
       generated: generatedKeys.has(t.key),
       deps_met,
+      image_ready,
+      image_status,
     };
   });
+
 
   return {
     brief: briefRes.data ?? null,
