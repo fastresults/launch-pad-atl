@@ -420,6 +420,8 @@ export function buildCoverArtPrompt(args: {
 ${references}
 ${primaryTextObjective}
 
+## ${sceneBlock}
+
 ## Canvas plan (NON-NEGOTIABLE — exactly these four hex values, used as specified)
 - Background surface: ${plan.surface}  ← the entire background fills with this exact hex
 - Ink (all text, logo marks, lines): ${plan.ink}  ← AA-legible on the surface
