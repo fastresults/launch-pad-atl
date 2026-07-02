@@ -1,46 +1,49 @@
-# Enable per-week generation in Content Studio (Step 4)
+# Add "Plan next week" to Content Studio Step 4
 
-## Problem
-Step 4 ("Build ad creatives") only renders weeks the user picked in Step 2. After generating Week 1 via the Step 1 shortcut, Weeks 2 and 3 are invisible — the user has no way to progressively generate additional weeks without going back to Step 2. This breaks the promise of a week-by-week creative plan.
+## Why
+Your parsed calendar only contains Week 1 posts (3 total), so the "Add & generate Week N" cards I added earlier have nothing to render. We need an on-demand way to append Week 2, Week 3, … posts to the calendar, then flow them through the existing ad-generation UI.
 
-## Fix (UI only, scoped to `src/components/hub/ContentStudio.tsx`)
+## Backend — new edge function `venture-plan-next-week`
 
-Change Step 4 so **every** week present in the parsed calendar is shown, and unselected weeks appear as a lightweight "locked" card with an **Add & generate Week N** action.
+Input: `{ snapshotId: string, week: number }` (the *new* week number to plan).
 
-### Step4BuildAds changes
+Behavior:
+1. Auth check (same pattern as `venture-parse-content-calendar` — verify user owns snapshot).
+2. Load context: brand snapshot summary + all existing rows from `venture_content_calendar_posts` for this snapshot (so tone/pillars/platforms stay consistent).
+3. Call Lovable AI gateway (`google/gemini-2.5-flash`) with a strict JSON-schema prompt asking for 3 posts (Instagram / Facebook / LinkedIn — mirroring the Week 1 mix) with fields: `platform, pillar, format, hook, body, cta, hashtags[], asset_notes, best_time, day`.
+4. Insert rows into `venture_content_calendar_posts` with deterministic IDs `cc_ai_${sha1(snapshotId|week|platform|hook).slice(0,16)}`, `week = <requested>`, `user_id = auth uid`.
+5. Return `{ count, posts }`.
 
-1. Accept a new prop `onAddWeek: (week: number) => Promise<void>` from the parent. Parent implementation adds the week to `selectedWeeks`, persists it, and sets `autoRunWeek` to trigger generation — reusing the existing Step 1 shortcut path.
+Register in `supabase/config.toml` (verify_jwt = true).
 
-2. Compute the full week list from `posts` (not just `scoped`):
-   - `allWeeks = unique(posts.map(p => p.week)).sort()`
-   - For each week, determine if it is `active` (in `selectedWeeks`) or `pending` (not yet selected).
+## Client — `src/lib/content-autopilot.functions.ts`
 
-3. Render loop iterates over `allWeeks`:
-   - **Active weeks** — render existing card exactly as today (tiles, Preview/Regenerate/Delete, per-week "Generate week" button).
-   - **Pending weeks** — render a compact placeholder card:
-     - Header: `Week N` badge + post count + secondary text "Not started".
-     - Body: short line listing post hooks (truncated, muted).
-     - Primary action: `Add & generate Week N` button. On click → `onAddWeek(w)`; button shows spinner while `autoRunWeek === w`.
+Add:
+```
+export async function planNextWeek(snapshotId: string, week: number) {
+  return invoke<{ count: number; posts: ContentPost[] }>("venture-plan-next-week", { snapshotId, week });
+}
+```
 
-4. Update the top summary line so the "X of Y ads ready" count keeps reflecting only active weeks, but add a small trailing note like `· N more week(s) available` when pending weeks exist.
+## UI — `src/components/hub/ContentStudio.tsx` (Step 4 only)
 
-### Parent (`ContentStudio` component) changes
+Compute `nextWeek = (max(allWeeks) ?? 0) + 1`. Always render a dashed "Plan Week {nextWeek}" card at the bottom of the week list, styled like the pending-week card but with a different action:
 
-- Add `onAddWeek` handler passed to `Step4BuildAds`:
-  ```
-  const nextWeeks = Array.from(new Set([...selectedWeeks, week])).sort();
-  setSelectedWeeks(nextWeeks);
-  setAutoRunWeek(week);
-  await persist({ selected_weeks: nextWeeks, current_step: 4 });
-  ```
-- No changes to Steps 1/2/3/5 behavior. Step 2 still works for bulk multi-week selection up front; Step 4 now supports incremental additions.
+- Header: `Week {nextWeek}` badge + muted text "Not planned yet".
+- Body copy: "Ask the AI to draft 3 posts for Week {nextWeek} matching your existing calendar tone and platforms."
+- Button: **Plan Week {nextWeek}** (Sparkles icon). Shows spinner while running.
+- On click:
+  1. `await planNextWeek(snapshotId, nextWeek)` — toast on error.
+  2. `qc.invalidateQueries({ queryKey: ["content-posts", snapshotId] })` so posts refetch.
+  3. Toast "Week {nextWeek} drafted — 3 posts added".
+  - After refetch the week becomes a pending week, and the existing "Add & generate Week N" card + Step 4 flow does the rest.
 
-### Notes / non-goals
+Also mirror the same "Plan Week N+1" card into Step 5 alongside the existing pending-week cards, so users who already advanced can extend without going back.
 
-- No backend, schema, or edge function changes.
-- No changes to generation logic — reuses `runWeek` via the existing `autoRunWeek` effect.
-- No layout/colors/spacing overhaul; visual style matches existing week cards (border, badge, muted text).
-- Copy stays consistent with "startup" / "framework" project rules (n/a here — no such copy touched).
+No changes to Step 1/2/3, no schema changes, no changes to ad-generation code.
 
 ## Files touched
-- `src/components/hub/ContentStudio.tsx` (only)
+- New: `supabase/functions/venture-plan-next-week/index.ts`
+- Edited: `supabase/config.toml` (register function)
+- Edited: `src/lib/content-autopilot.functions.ts` (add `planNextWeek`)
+- Edited: `src/components/hub/ContentStudio.tsx` (Step 4 + Step 5 render "Plan Week N+1" card)

@@ -13,6 +13,8 @@ import { listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import {
   parseCalendarPosts, listCalendarPosts, listContentAds, generateContentAd,
   deleteContentAd, getContentProgress, upsertContentProgress, groupPostsByWeek,
+  planNextWeek,
+
   type ContentPost, type ContentAd, type AdAspect,
 } from "@/lib/content-autopilot.functions";
 import { AssetPreviewDialog, type PreviewableAsset } from "@/components/hub/social/AssetPreviewDialog";
@@ -262,10 +264,12 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
 
       {step === 5 && (
         <Step5Launch
+          snapshotId={snapshotId}
           ads={ads}
           posts={posts}
           selectedWeeks={selectedWeeks}
           onBack={() => setStep(4)}
+
           onAddWeek={async (week) => {
             const nextWeeks = Array.from(new Set([...selectedWeeks, week])).sort((a, b) => a - b);
             setSelectedWeeks(nextWeeks);
@@ -825,6 +829,10 @@ function Step4BuildAds({
         );
       })}
 
+      <PlanNextWeekCard
+        snapshotId={snapshotId}
+        nextWeek={(allWeeks.length ? allWeeks[allWeeks.length - 1] : 0) + 1}
+      />
 
 
       <footer className="flex justify-between">
@@ -902,12 +910,14 @@ function Step4BuildAds({
 // STEP 5 — Launch summary
 // ============================================================
 function Step5Launch({
-  ads, posts, selectedWeeks, onBack, onAddWeek,
+  snapshotId, ads, posts, selectedWeeks, onBack, onAddWeek,
 }: {
+  snapshotId: string;
   ads: ContentAd[]; posts: ContentPost[]; selectedWeeks: number[];
   onBack: () => void;
   onAddWeek?: (week: number) => Promise<void> | void;
 }) {
+
   const scoped = ads.filter((a) => selectedWeeks.length === 0 || true);
   const allWeeks = Array.from(new Set(posts.map((p) => p.week))).sort((a, b) => a - b);
   const pendingWeeks = allWeeks.filter((w) => !selectedWeeks.includes(w));
@@ -971,10 +981,55 @@ function Step5Launch({
         </div>
       )}
 
+      <PlanNextWeekCard
+        snapshotId={snapshotId}
+        nextWeek={(allWeeks.length ? allWeeks[allWeeks.length - 1] : 0) + 1}
+      />
+
       <footer className="flex justify-between">
+
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back to build</Button>
       </footer>
     </div>
   );
 }
 
+
+// ============================================================
+// Reusable card: "Plan Week N" — asks AI to draft the next week's posts
+// ============================================================
+function PlanNextWeekCard({ snapshotId, nextWeek }: { snapshotId: string; nextWeek: number }) {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const onClick = async () => {
+    setBusy(true);
+    try {
+      const res = await planNextWeek(snapshotId, nextWeek);
+      await qc.invalidateQueries({ queryKey: ["content-posts", snapshotId] });
+      toast.success(`Week ${nextWeek} drafted — ${res.count} post${res.count === 1 ? "" : "s"} added`);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to draft next week");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px]">Week {nextWeek}</Badge>
+            <span className="text-[10px] text-muted-foreground">Not planned yet</span>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Ask the AI to draft 3 posts for Week {nextWeek} that match your existing calendar tone and platforms.
+          </p>
+        </div>
+        <Button size="sm" onClick={onClick} disabled={busy} className="shrink-0">
+          {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+          Plan Week {nextWeek}
+        </Button>
+      </div>
+    </div>
+  );
+}
