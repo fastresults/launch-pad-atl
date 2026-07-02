@@ -263,10 +263,19 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
       {step === 5 && (
         <Step5Launch
           ads={ads}
+          posts={posts}
           selectedWeeks={selectedWeeks}
           onBack={() => setStep(4)}
+          onAddWeek={async (week) => {
+            const nextWeeks = Array.from(new Set([...selectedWeeks, week])).sort((a, b) => a - b);
+            setSelectedWeeks(nextWeeks);
+            setAutoRunWeek(week);
+            setStep(4);
+            await persist({ selected_weeks: nextWeeks, current_step: 4 });
+          }}
         />
       )}
+
     </div>
   );
 }
