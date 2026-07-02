@@ -23,6 +23,7 @@ import {
   BookmarkCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { edgeErrorMessage } from "@/lib/edge-errors";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
@@ -431,7 +432,7 @@ export function DocumentViewer({
       qc.invalidateQueries({ queryKey: ["hub"] });
       toast.success("Full Website PRD regenerated");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Website PRD regeneration failed");
+      toast.error(edgeErrorMessage(e, "Website PRD regeneration failed"));
     } finally {
       setPrdRepairing(false);
     }

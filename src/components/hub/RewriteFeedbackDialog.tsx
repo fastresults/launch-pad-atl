@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { edgeErrorMessage } from "@/lib/edge-errors";
 
 const QUICK_TAGS = [
   "Too generic",
@@ -115,7 +116,7 @@ export function RewriteFeedbackDialog({ target, onClose, onSubmit }: Props) {
         toast.error("Couldn't transcribe — try typing instead.");
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Transcription failed");
+      toast.error(edgeErrorMessage(e, "Transcription failed"));
     } finally {
       setTranscribing(false);
     }
