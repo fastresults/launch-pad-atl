@@ -339,7 +339,16 @@ function Step1Calendar({
         </div>
       )}
 
-      <footer className="flex justify-end">
+      <footer className="flex justify-end gap-2">
+        {firstWeek != null && week1Posts.length > 0 && (
+          <Button
+            variant="outline"
+            onClick={() => onGenerateNow(firstWeek)}
+            disabled={posts.length === 0}
+          >
+            <Sparkles className="mr-1 h-3 w-3" /> Generate Week {firstWeek} now
+          </Button>
+        )}
         <Button onClick={onNext} disabled={posts.length === 0}>
           Continue <ArrowRight className="ml-1 h-3 w-3" />
         </Button>
