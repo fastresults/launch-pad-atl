@@ -1,41 +1,74 @@
-# Kill the logo bounding-box artifact
 
-## What's happening
+## Problem
 
-In your screenshot the top-left has a faint rectangular outline around the Startup Labs logo. That outline was painted by the image model, not by our compositor (the compositor only draws a chip for opaque logos, and a transparent PNG goes through the direct-composite path with no chip). The model drew it because our prompt keeps telling it about a "reserved rectangle" / "reserved logo zone" / "clean rectangular space" — and models routinely respond by drawing a visible boundary around that region (a hairline stroke, a thin rule, a ghosted frame, a slightly different fill) so the composition "reads" as intentional.
+For "Startup Workshops," the model rendered a carpenter in a woodshop. We already have `LITERAL_WORD_GUARDS` and a Subject brief, but they arrive as *negative* instructions after the brand name. Image models weight the earliest, most concrete noun phrases most heavily — so "Workshops" wins before the guardrails are read.
 
-## Fix
+Root cause: context is present but **not resolved into a scene** before the model sees the brand name. We're asking the model to reason ("don't take this literally") instead of handing it a pre-decided subject.
 
-Change the prompt language so the reserved area is described as **invisible negative space**, and add an explicit hard ban on any border, frame, outline, rule, or divider anywhere near the logo area. One file, three targeted edits — all in `supabase/functions/_shared/cover-art-director.ts`.
+## Fix: Pre-resolve a Scene Directive, put it first, demote the brand name
 
-### 1. Rewrite the reserved-zone directive (`zone(...)` helper)
+### 1. New deterministic resolver in `cover-art-director.ts`
 
-Replace the current wording that repeats the word "rectangle" with copy that describes the zone as unmarked negative space, e.g.:
+Add `resolveSceneDirective(ctx)` that returns a small, opinionated object built from `industry`, `track`, `customer`, `concept`, `problem`, `solution` — never from the brand name:
 
-- Remove "the top-left ~X% × Y% **rectangle**" phrasing.
-- State the area MUST contain no stroke, no outline, no border, no frame, no hairline, no divider, no rule, no drop-shadow, no gradient edge, no tonal shift, no ghosted box, no debossed panel, no watermark, and no bracket marks.
-- State the surrounding composition must continue up to the edges as if the logo zone did not exist — no framing device around it, no negative-space "window" cut out for it.
-- Keep the "we composite the actual logo on top later" note.
+```
+{
+  depict:   "A diverse cohort of early-stage founders in a bright modern
+             coworking space, laptops open, sticky notes on glass walls,
+             facilitator mid-gesture at a whiteboard.",
+  subjects: ["founders", "facilitator", "laptops", "whiteboard", "sticky notes"],
+  setting:  "modern coworking / accelerator studio, daylight",
+  mood:     "focused, collaborative, optimistic",
+  avoid:    ["workbench","hand tools","sawdust","lumber","aprons","machinery"]
+}
+```
 
-### 2. Add the same ban to `BANNED`
+Resolution rules (track/industry first, brand name never):
+- Track `main_street` → local small-business owner in their shop/office.
+- Track `tech`/`startup` → founder cohort in accelerator setting.
+- Industry `food`, `fitness`, `services`, etc. → matching authentic setting.
+- Fallback → founder cohort scene.
+- `avoid[]` is auto-populated from the same `LITERAL_WORD_GUARDS` table so bans stay in sync.
 
-Add two lines to the HARD BANS block:
+### 2. Reorder the prompt
 
-- "Any visible border, outline, frame, rule, hairline, or divider around the logo area or anywhere on the canvas. The logo is placed on the raw image with no container, no chip, no plate, no card."
-- "Any rectangular tonal panel, ghosted box, or 'placeholder' shape near the logo corner. Treat the logo area as unmarked negative space that continues the surrounding composition."
+Today the prompt reads: brand name → subject brief → guardrails.
+Change to:
 
-### 3. Reinforce in `references`
+```
+SCENE DIRECTIVE (highest priority — depict exactly this):
+  DEPICT: <depict>
+  KEY SUBJECTS: <subjects joined>
+  SETTING: <setting>
+  MOOD: <mood>
+  DO NOT DEPICT: <avoid joined>
 
-Update the "Image #1" note to add: "Do NOT draw any container, frame, plate, card, or outline around where the logo will land. The logo sits directly on the composition."
+BRAND CONTEXT (identity only — not a scene description):
+  Brand name: "<name>"  ← treat as a label, not a subject
+  Industry / Track / Customer / …
+```
 
-## Compositor: no change needed
+Two behavioral shifts:
+- The Scene Directive is the first noun-heavy block the model reads.
+- The brand name is explicitly reframed as a label, not a subject, so tokens like "Workshops" stop competing with the directive.
 
-`logo-compositor.ts` already uses the direct-composite path (no chip) for transparent PNGs like the Startup Labs mark. It only draws a rounded chip for opaque logos where a chip is necessary for legibility — that's the correct behavior and shouldn't change.
+### 3. Reinforce at the end
 
-## Deploy
+Append one line to the closing `Never let the brand name…` sentence:
 
-Redeploy `venture-social-cover` and `venture-style-preview` so both the cover pipeline and the style previews pick up the new prompt language.
+> "If the Scene Directive and the brand name conflict, the Scene Directive wins. The brand name is a wordmark, not a subject."
+
+### 4. Regeneration parity
+
+Regeneration already re-runs the director, so no call-site changes needed — the new directive rides along automatically. `venture-social-cover` and `venture-style-preview` just need redeploy.
+
+## Files
+
+- `supabase/functions/_shared/cover-art-director.ts` — add `resolveSceneDirective`, restructure prompt ordering, keep `LITERAL_WORD_GUARDS` as the `avoid[]` source of truth.
+- Deploy: `venture-social-cover`, `venture-style-preview`.
+
+No DB or UI changes.
 
 ## Verification
 
-Regenerate the same Startup Workshops header. The logo should land in the top-left with no rectangular outline, no ghosted frame, and no tonal panel around it — the surrounding composition continues unbroken up to the logo pixels.
+Regenerate the Twitter header for Startup Workshops with headline "Adam Rocks!" — expect a founder-cohort/coworking scene, no woodshop, brand purple retained, logo lockup unchanged.
