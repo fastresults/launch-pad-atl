@@ -204,16 +204,42 @@ export function AssetPreviewDialog({
               </div>
             )}
 
-            {asset.lastHeadline !== undefined && asset.lastHeadline !== null && (
-              <div>
-                <div className="text-muted-foreground">Headline on image</div>
-                <div className="rounded border border-border bg-background/40 p-2 text-[11px]">
-                  {asset.lastHeadline === ""
-                    ? <span className="italic text-muted-foreground">No text (suppressed)</span>
-                    : <span className="font-medium">"{asset.lastHeadline}"</span>}
+            {(() => {
+              const hl = asset.lastHeadline;
+              const hasStored = hl !== undefined && hl !== null;
+              const suppressed = hl === "";
+              return (
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-muted-foreground">Headline on image</div>
+                    {onEditHeadline && (
+                      <button
+                        type="button"
+                        onClick={onEditHeadline}
+                        disabled={busy}
+                        className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-[10px] font-medium text-foreground transition hover:border-primary hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                        title="Edit the text painted on this image"
+                      >
+                        <Pencil className="h-3 w-3" /> Edit
+                      </button>
+                    )}
+                  </div>
+                  <div
+                    className="mt-1 rounded border border-border bg-background/40 p-2 text-[11px] line-clamp-2"
+                    title={hasStored && !suppressed ? String(hl) : undefined}
+                  >
+                    {suppressed ? (
+                      <span className="italic text-muted-foreground">No text on image</span>
+                    ) : hasStored ? (
+                      <span className="font-medium">"{hl}"</span>
+                    ) : (
+                      <span className="italic text-muted-foreground">Auto-derived from your venture</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
+
 
             {asset.lastFeedback && (
               <div>
