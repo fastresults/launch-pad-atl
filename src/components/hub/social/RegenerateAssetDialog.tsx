@@ -214,7 +214,7 @@ export function RegenerateAssetDialog({
       ? "custom"
       : "auto";
   const [headlineMode, setHeadlineMode] = useState<"auto" | "custom" | "none">(initialHeadlineMode);
-  const [headlineText, setHeadlineText] = useState<string>(currentHeadline || "");
+  const [headlineText, setHeadlineText] = useState<string>(sanitizeHeadline(currentHeadline));
   const [headlineHighlight, setHeadlineHighlight] = useState(false);
   const headlineSectionRef = useRef<HTMLDivElement | null>(null);
   const headlineInputRef = useRef<HTMLInputElement | null>(null);
