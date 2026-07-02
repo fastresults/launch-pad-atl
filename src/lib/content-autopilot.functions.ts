@@ -61,6 +61,13 @@ export async function listCalendarPosts(snapshotId: string): Promise<ContentPost
   return res.posts ?? [];
 }
 
+// Ask the AI to draft the next week of posts and append them to the calendar.
+export async function planNextWeek(snapshotId: string, week: number) {
+  return invoke<{ count: number; posts: ContentPost[] }>("venture-plan-next-week", {
+    snapshotId, week,
+  });
+
+
 // -------- Ads --------
 export async function listContentAds(snapshotId: string): Promise<ContentAd[]> {
   const res = await invoke<{ ads: ContentAd[] }>("venture-content-ad", {
