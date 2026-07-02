@@ -535,6 +535,7 @@ Deno.serve(async (req) => {
         last_headline: headlineOverride
           ? (headlineOverride.mode === "none" ? "" : (headlineOverride.text ?? null))
           : null,
+        last_logo_size: logoSize,
       })
       .select()
       .single();
