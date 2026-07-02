@@ -1,13 +1,10 @@
 // @ts-nocheck
 import { useEffect, useRef, useState } from "react";
+import { HexColorPicker, HexColorInput } from "react-colorful";
+import "react-colorful/dist/index.css";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Pencil, RotateCcw } from "lucide-react";
-
-function isHex(s: string) {
-  return /^#([0-9a-f]{6})$/i.test(s);
-}
 
 export function EditablePaletteSwatch({
   tokenKey,
@@ -30,10 +27,7 @@ export function EditablePaletteSwatch({
 
   useEffect(() => setDraft(value), [value]);
 
-  const commit = (next: string) => {
-    if (!isHex(next)) return;
-    onChange(next);
-  };
+  const commit = (next: string) => onChange(next);
   const commitDebounced = (next: string) => {
     setDraft(next);
     if (timer.current) clearTimeout(timer.current);
@@ -58,7 +52,7 @@ export function EditablePaletteSwatch({
             </span>
           </button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="w-64 space-y-3 p-3">
+        <PopoverContent align="start" className="w-72 space-y-3 p-3">
           <div className="flex items-center justify-between">
             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {tokenKey}
@@ -74,29 +68,43 @@ export function EditablePaletteSwatch({
               </button>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={isHex(draft) ? draft : "#000000"}
-              onChange={(e) => commitDebounced(e.target.value)}
-              className="h-9 w-14 cursor-pointer rounded border border-white/10 bg-transparent"
-              aria-label={`Pick color for ${tokenKey}`}
-            />
-            <Input
-              value={draft}
-              onChange={(e) => {
-                const v = e.target.value.trim();
-                setDraft(v);
-                if (isHex(v)) commit(v);
-              }}
-              placeholder="#RRGGBB"
-              className="h-9 font-mono text-xs"
-              maxLength={7}
+
+          <div className="epaint-wrap">
+            <HexColorPicker
+              color={draft}
+              onChange={commitDebounced}
+              style={{ width: "100%", height: 176 }}
             />
           </div>
+
+          <div className="flex items-center gap-2">
+            <div
+              className="h-9 w-10 shrink-0 rounded border border-white/10"
+              style={{ background: draft }}
+              aria-hidden
+            />
+            <div className="flex flex-1 items-center gap-1 rounded-md border border-input bg-background px-2 focus-within:ring-2 focus-within:ring-ring">
+              <span className="text-xs text-muted-foreground">#</span>
+              <HexColorInput
+                color={draft}
+                onChange={(v) => { setDraft(v); commit(v); }}
+                className="h-9 w-full bg-transparent font-mono text-xs uppercase outline-none"
+                aria-label={`Hex for ${tokenKey}`}
+              />
+            </div>
+          </div>
+
           <Button size="sm" variant="secondary" className="w-full" onClick={() => setOpen(false)}>
             Done
           </Button>
+
+          {/* Scoped styling for react-colorful to match app tokens */}
+          <style>{`
+            .epaint-wrap .react-colorful { width: 100%; height: 176px; border-radius: 0.5rem; overflow: hidden; }
+            .epaint-wrap .react-colorful__saturation { border-radius: 0.5rem 0.5rem 0 0; }
+            .epaint-wrap .react-colorful__hue { height: 16px; border-radius: 0 0 0.5rem 0.5rem; }
+            .epaint-wrap .react-colorful__pointer { width: 16px; height: 16px; }
+          `}</style>
         </PopoverContent>
       </Popover>
       {showLabel && (
