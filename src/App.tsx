@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { AskConcierge } from "@/components/site/AskConcierge";
 
 // Layout guards
 import AuthenticatedLayout from "@/routes/_authenticated";
@@ -182,6 +183,7 @@ export default function App() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <AskConcierge />
     </Suspense>
   );
 }

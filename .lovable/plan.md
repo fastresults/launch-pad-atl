@@ -1,90 +1,79 @@
-## Goal
-Replace user-facing "deliverable(s)" copy with **"startup asset(s)"** across the app and marketing pages. Keep code identifiers, DB columns, route paths, edge-function names, and query keys unchanged (they are internal and refactoring them is risky + out of scope).
 
-## Terminology rules
-- Singular: **startup asset** (e.g. "each startup asset")
-- Plural: **startup assets** (e.g. "34 startup assets")
-- Count phrasing: **"34 startup assets across eight categories"**
-- Never use "deliverables" in headings, body copy, buttons, tooltips, toasts, aria-labels, empty states, or emails visible to users.
-- Keep it lowercase in body copy; Title Case only in headings/labels ("Your Startup Assets").
+# Ask Startup Labs — Persistent Site Chatbot
 
-## Where to change (user-facing strings only)
+A branded chat bubble fixed to the bottom-right on every public page. It answers anything about Startup Labs: the workshop, pricing, cohorts, tracks, the 34 startup assets, Brand/Social/Content Studios, Founder Playbook, refunds, schedule, location, contact — grounded in the site's own copy so answers stay accurate.
 
-### Marketing / home
-- `src/components/home/HomeFramework.tsx`
-  - L159 hero body: `"34 deliverables across eight categories …"` → `"34 startup assets across eight categories …"`
-  - L217 bullet: `"All 34 deliverables — Foundation, Strategy, …"` → `"All 34 startup assets — Foundation, Strategy, …"`
-  - Any other visible "deliverable" tokens in this file (sweep).
-- `src/routes/services.tsx`
-  - L254 detail copy: `"Fixed price, fixed deliverables, fixed clock."` → `"Fixed price, fixed startup assets, fixed clock."`
-  - L120 `s.deliverables.map(...)` — data key, **do not rename**; only touch surrounding visible labels if any read "Deliverables".
+## 1. Knowledge base (single source of truth)
 
-### Brief flow
-- `src/components/brief/BriefCompleteScreen.tsx`
-  - L49: `"Every one of the 34 deliverables …"` → `"Every one of the 34 startup assets …"`
-  - L75 button: `"See all 34 deliverables"` → `"See all 34 startup assets"`
-- `src/components/brief/BriefReview.tsx` L112: `"deliverables and ventures stay untouched"` → `"startup assets and ventures stay untouched"`
-- `src/components/dashboard/BriefStatusCard.tsx`
-  - L48: `"build your 25 deliverables"` → `"build your 25 startup assets"` (also worth confirming the number matches `TOTAL_DELIVERABLES`; separate follow-up)
-  - L109: same replacement as BriefReview.
+Create `src/lib/chatbot-knowledge.ts` that aggregates every user-facing copy source we already own into one structured, versioned corpus. Sections:
 
-### Dashboard / workflow / deliverables page
-- `src/routes/_authenticated/dashboard.tsx`
-  - L108 tooltip: `"…every deliverable reads from…"` → `"…every startup asset reads from…"`
-  - L138 tooltip: `"makes every deliverable sharper"` → `"makes every startup asset sharper"`
-  - L112 `key: "deliverables"` — **internal key, leave**.
-  - Any sidebar label that reads "Deliverables" → rename to "Startup Assets" (sweep the nav strings in this file).
-- `src/routes/_authenticated/dashboard/deliverables.tsx` (route path stays)
-  - L218 H1: `"Your deliverables"` → `"Your startup assets"`
-  - L236: `"Ask or search your deliverables"` → `"Ask or search your startup assets"`
-  - L406 empty state: `"No deliverables yet"` → `"No startup assets yet"`
-  - Any other visible strings; leave `queryKey`, `supabase.functions.invoke("deliverables-ask", …)` alone.
-- `src/routes/_authenticated/dashboard/workflow.tsx`
-  - L74 toast: `"${made} deliverables advanced"` → `"${made} startup assets advanced"`
-  - L180: `"…founder-ready deliverables across…"` → `"…founder-ready startup assets across…"`
-  - L181: `"Your full deliverables package…"` → `"Your full startup asset package…"`
-  - L203–204 aria-label/title: `"Generate every deliverable that's still missing"` → `"Generate every startup asset that's still missing"`
-  - L224: `"${bulkDone} of ${bulkTotal} new deliverables ready"` → `"…new startup assets ready"`
-  - L225: `"Queuing your remaining deliverables…"` → `"Queuing your remaining startup assets…"`
-  - L250: `"…deliverables that actually sound like your startup"` → `"…startup assets that actually sound like your startup"`
-  - L356 title: `"We'll run upstream deliverables first, then this one."` → `"We'll run upstream startup assets first, then this one."`
-  - Comments (L110) — leave.
-- `src/routes/_authenticated/dashboard/day.tsx` — sweep any visible deliverable strings, replace.
+- **Offer & pricing**: $197 price, Founders vs Cohort tiers, Atlanta's #1 accelerator positioning, seats/cohort model (from `HomeFramework.tsx`, `services.tsx`, `register/`).
+- **Event logistics**: Thu Jul 23, 2026 · Norcross, GA · 20 seats, agenda/day flow (from `dashboard/day.tsx`, `schedule.tsx`).
+- **Tracks**: standard + Main Street Startup track.
+- **34 startup assets**: names, 40-word descriptions, category, stage — pulled directly from `src/lib/framework-deliverables.ts`.
+- **Workshop curriculum**: Foundation, Strategy, Operations, Finance, Governance, Brand, Marketing, Social & Content — titles + summaries from `components/workshop-slides/slides/*`.
+- **Studios**: Brand Wizard (two tracks — existing brand vs new), Social Studio, Content Studio (weekly ad accordion), Concept Studio / Epiphany Engine, Founder Playbook + Roadmap, Budget & Pro Forma intake.
+- **Policies & meta**: Privacy, Terms, Unsubscribe, Contact, Facilitator info.
+- **FAQ seed** (~20 Q/A): "What do I leave with?", "Is this for a Plan B?", "Do I need a business idea already?", "What if I already have a logo/website?", "Refunds?", "Who's it not for?", etc.
 
-### Workshop slides / brief-facing copy
-- `src/components/workshop-slides/DeliverableSlide.tsx` and `src/components/workshop-slides/slides/*.tsx` (foundation, strategy, operations, finance, brand, marketing, social-content) — replace visible strings only. Keep the file/component name `DeliverableSlide` (internal).
-- `src/components/workshop-slides/registry.ts` — labels only; keep keys.
+Each entry: `{ id, section, title, body, route }` so answers can cite/link back to the relevant page.
 
-### Privacy / legal
-- `src/routes/privacy.tsx` — replace visible "deliverables" → "startup assets" where it refers to the founder's outputs (leave any legal-ese phrasing that requires a lawyer's sign-off; there shouldn't be any beyond the noun).
+## 2. Edge Function: `venture-chatbot`
 
-### Data / lib layers (sweep for user-visible strings only)
-- `src/lib/framework-deliverables.ts` — filename stays; export const names stay; only literal display strings change.
-- `src/lib/schedule-data.ts`, `src/lib/build-workshops.ts`, `src/lib/agency-services.ts`, `src/lib/founder-memory.ts`, `src/lib/admin-badges.functions.ts`, `src/lib/site-settings.functions.ts`, `src/lib/attendee.functions.ts`, `src/lib/userPipeline.functions.ts`, `src/lib/pipeline.functions.ts` — replace only user-visible string literals (e.g. labels, tooltips, badge text, email subjects/bodies). Skip keys, columns, log messages, and identifiers.
+Server-side streaming chat, mirroring the pattern used by other `venture-*` functions.
 
-### App shell
-- `src/App.tsx` — replace any visible route/nav label strings ("Deliverables" tab) → "Startup Assets".
+- Loads the knowledge corpus (imported from a shared TS module compiled into the function, or duplicated as a `.ts` in `supabase/functions/venture-chatbot/knowledge.ts` generated from `src/lib/chatbot-knowledge.ts` — we'll keep one canonical file and re-export).
+- Uses Lovable AI (`google/gemini-3-flash-preview`) via the shared `ai-gateway.ts` helper.
+- System prompt: "You are the Startup Labs concierge. Only answer using the provided knowledge. If unknown, offer to connect them via /contact. Never invent pricing, dates, or guarantees. Tone: confident, plainspoken, founder-to-founder."
+- Streams via `toUIMessageStreamResponse`.
+- CORS enabled; `verify_jwt = false` (public marketing chat, no PII writes).
+- Rate limit: soft cap per IP (in-memory best-effort) + 402/429 pass-through toasts.
 
-## Out of scope (explicitly leave alone)
-- Route paths: `/dashboard/deliverables` stays (breaking it invalidates bookmarks, sitemaps, and SEO). Nav label above the route becomes "Startup Assets".
-- DB columns / types in `src/integrations/supabase/types.ts` (auto-generated, and referenced elsewhere).
-- Edge functions (`deliverables-ask`, etc.) and their invoke() calls.
-- React Query keys (`["my", "venture-deliverables"]`, etc.).
-- File names, component names, constant names (`TOTAL_DELIVERABLES`, `framework-deliverables.ts`).
-- Comments and log strings.
-- Admin/internal-only surfaces (settings toggles) unless they render to end users.
+No DB tables — conversation is ephemeral per browser (localStorage), matching a lightweight marketing chatbot.
 
-## Method
-One PR, mechanical sweep with manual review per file. For each file listed:
-1. `rg -n "deliverable"` in the file.
-2. For each hit, decide: user-visible string → replace; identifier/comment/log → skip.
-3. Preserve capitalization at each site ("Deliverables" → "Startup Assets"; "deliverables" → "startup assets"; "deliverable" → "startup asset").
-4. Preserve counts and surrounding punctuation.
+## 3. UI: `src/components/site/AskConcierge.tsx`
 
-## Verification
-- `rg -n "deliverable" src` after the sweep — every remaining hit must be an identifier, comment, log, filename, DB column, edge-function name, route path, or query key. Confirm the list before merging.
-- Spot-check the hero (`/`), `/services`, `/dashboard`, `/dashboard/deliverables`, `/dashboard/workflow`, and the brief complete screen in the preview.
+- Fixed `bottom-6 right-6 z-50` launcher button: circular, brand primary gradient, small "Ask Startup Labs" label on hover, subtle pulse on first visit only.
+- Click opens a 380×560 panel (bottom-right anchored, mobile: full-width sheet).
+- Built with AI Elements: `Conversation`, `Message`, `MessageResponse`, `PromptInput`, `PromptInputTextarea`, `PromptInputFooter`, `PromptInputSubmit`, `Shimmer`.
+- Uses `useChat` + `DefaultChatTransport` pointing at the edge function URL.
+- Messages persist in `localStorage` under `sl.concierge.v1` (one conversation, "Clear" button in header).
+- Header: small ATL badge icon + "Startup Labs Concierge" + close (×).
+- Empty state: 4 suggested chips — "What do I leave with?", "How much is it?", "When's the next cohort?", "Is this right for me?".
+- Markdown rendering for assistant answers; auto-link route references (e.g. `/services`, `/register`).
+- Textarea auto-focus on open; ESC closes; focus trap while open.
 
-## Follow-ups (not in this change)
-- Decide whether to rename the route `/dashboard/deliverables` → `/dashboard/assets` with a redirect (SEO cost + link rot; needs its own plan).
-- Reconcile `BriefStatusCard` "25" vs `TOTAL_DELIVERABLES` (34).
+## 4. Brand & styling
+
+Uses existing semantic tokens only (`--primary`, `--background`, `--foreground`, `--accent`, `--border`, `--muted`) — no hardcoded colors. Matches the dark-navy hero aesthetic:
+
+- Launcher: `bg-primary text-primary-foreground shadow-elegant` with subtle ring in `--accent`.
+- Panel: `bg-background border-border` with hex-pattern faint background echoing the hero.
+- User bubble: `bg-primary text-primary-foreground`. Assistant: no background, plain foreground on panel.
+- Typography: inherits site font stack (no new fonts).
+
+## 5. Mount & visibility
+
+- Mounted once in `src/routes/__root.tsx` (or `App.tsx` layout) so it appears on every route.
+- Hidden on: `/login`, `/signup`, `/reset-password`, `/unsubscribe`, and inside `_authenticated/dashboard/*` (dashboard has its own tools).
+- Admin toggle in `admin.settings.tsx`: `concierge_enabled` in `site_settings` (default on).
+
+## 6. Guardrails
+
+- Edge function refuses off-topic prompts politely and steers back.
+- No promises about outcomes, guaranteed funding, legal/tax/medical advice.
+- If asked something not in corpus (e.g. "what's the WiFi password"), it says so and links `/contact`.
+- All answers stay under ~180 words unless user asks "explain in detail".
+
+## Technical notes
+
+- New files: `src/lib/chatbot-knowledge.ts`, `src/components/site/AskConcierge.tsx`, `src/components/site/AskConcierge.launcher.tsx`, `supabase/functions/venture-chatbot/index.ts`, `supabase/functions/venture-chatbot/knowledge.ts`.
+- Modified: `src/routes/__root.tsx` (mount), `src/routes/_authenticated/admin.settings.tsx` (toggle), reuses `edge-errors.ts` for 402/429/403 toasts.
+- Install (if missing): AI Elements `conversation message prompt-input shimmer` — check first.
+- No DB migrations required unless we add the admin toggle row; that's a single `site_settings` upsert, no schema change.
+
+## Out of scope (call out for approval)
+
+- Human handoff / live chat.
+- Multi-thread history or per-user account persistence.
+- Analytics dashboards for chat volume (can add later via `email_send_log`-style table if wanted).
