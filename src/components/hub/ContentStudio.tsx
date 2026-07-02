@@ -753,7 +753,7 @@ function Step4BuildAds({
           thumbnailUrl={regen.task.ad?.signed_url ?? null}
           currentDirection={regen.task.ad?.art_direction || direction}
           canvasPlan={regen.task.ad?.canvas_plan ?? null}
-          currentHeadline={regen.task.ad?.last_headline ?? (regen.task.post.hook ?? null)}
+          currentHeadline={pickHeadlineForEdit(regen.task.post.hook, regen.task.ad?.last_headline)}
           currentLogoSize={(regen.task.ad as any)?.last_logo_size ?? null}
           initialIntensity="balanced"
           focusSection={regen.focusSection}
