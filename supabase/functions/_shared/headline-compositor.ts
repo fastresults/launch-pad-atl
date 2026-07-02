@@ -10,9 +10,9 @@
 import { Image } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 import type { CanvasPlan } from "./canvas-plan.ts";
 
-// IMPORTANT: keep the large embedded font OFF the module boot path. Importing
-// the 400KB+ base64 module at top-level can push the edge worker over its memory
-// limit before it even handles lightweight actions like `list`.
+// IMPORTANT: keep large embedded fonts OFF the function bundle. A previous
+// base64 font module pushed the edge worker over its memory limit before it
+// could even handle lightweight actions like `list`.
 const TTF_CDN_FALLBACK =
   "https://raw.githubusercontent.com/rsms/inter/master/docs/font-files/Inter-Bold.ttf";
 
@@ -45,18 +45,8 @@ async function loadFont(): Promise<Uint8Array | null> {
       } catch (e) {
         console.warn("headline-compositor: cdn font fetch failed", e);
       }
-      // 2) Embedded base64 fallback — dynamically imported so it is not parsed
-      // or retained during function boot/list/delete/select requests.
-      try {
-        const mod = await import("./fonts/inter-bold.ts");
-        const bytes = decodeBase64(mod.INTER_BOLD_BASE64);
-        if (bytes.length > 1024) {
-          console.info(`[headline-compositor] font loaded from embedded fallback (bytes=${bytes.length})`);
-          return bytes;
-        }
-      } catch (e) {
-        console.warn("headline-compositor: embedded font load failed", e);
-      }
+      // If the CDN is unavailable, skip headline compositing rather than
+      // importing a huge embedded font and crashing the whole generation.
       return null;
     })();
   }
