@@ -1,50 +1,62 @@
-# Ensure logo is always large enough to read
+## What's wrong in the attached render
 
-## Problem
-The logo compositor sizes the logo chip as a square at ~16–20% of the canvas's shortest edge, then letterboxes the logo inside with 12% inner padding. For wide wordmarks like `startuplabs`, the wordmark's height ends up ~3–4% of the canvas — visually tiny (see the attached YouTube thumbnail). The chip shape ignores the logo's true aspect ratio, and there is no user-facing size control.
+The "startuplabs" logo sits in a tiny light-gray rectangle floating over the concrete background. Two concrete defects in `supabase/functions/_shared/logo-compositor.ts` cause this:
 
-## Fix strategy
-Make the logo target a **minimum readable size** measured on the logo's dominant axis (not the chip), aspect-aware, with a user override in the Regenerate / Preview modals.
+1. **Wide wordmarks get shrunk by the width cap, not enlarged by it.**
+   The chip is sized height-first (`boxH = short * heightFrac * padCompensation`), then width is derived from logo aspect. For a ~4:1 wordmark on a landscape canvas, that produces `boxW ≈ 0.60 * W`, which exceeds `maxWFrac` (0.48 md / 0.58 lg). The clamp path then does `boxW = maxW; boxH = boxW / aspect` — which **shrinks the height** (and therefore the logo) well below the tier's target. The wider the wordmark, the smaller the logo ends up. That's the opposite of what the tiers imply.
 
-### 1. Aspect-aware, minimum-height sizing (`supabase/functions/_shared/logo-compositor.ts`)
-- After decoding the logo, compute its aspect ratio `ar = logo.width / logo.height`.
-- Replace fixed-square `targetBoxFor` with an aspect-aware box:
-  - **Corner placements** (`banner-corner`, `thumbnail-lockup`): target a minimum **logo height** as a % of canvas shortest side, then derive box width from `ar` + padding. Tiers:
-    - `sm` → 6% min height
-    - `md` → 9% min height (new default, up from effective ~3–4%)
-    - `lg` → 13% min height
-  - Wide wordmarks (`ar > 3`) also enforce a min width of 22/30/38% of canvas width so they don't shrink to a stripe.
-  - Square/badge logos (`ar` ~1) cap at 18/22/28% of shortest side.
-  - `avatar-center` unchanged (already large).
-- Cap chip width so it never exceeds 45% of canvas width (safe zone).
-- Reduce inner padding from 12% → 8% so the readable glyphs get more of the chip.
+2. **The chip reads as a pasted sticker, not integrated art.**
+   - Chip is a fully opaque flat `plan.surface` rectangle with hard 90° corners and no shadow/edge treatment.
+   - `plan.surface` for this brand is a light neutral that lands very close to the base image's midtone gray, so the chip prints as a slightly-off rectangle outline instead of a deliberate lockup.
+   - 8% inner padding on every side wastes another ~16% of the chip on empty surface color, making the logo look small even at "md/lg".
+   - Transparent PNG logos still get a solid chip painted behind them even when they'd composite cleanly onto the artwork.
 
-### 2. Plumb a `logoSize` option through the pipeline
-- `compositeLogo(..., opts: { placement, surfaceHex, logoSize?: 'sm'|'md'|'lg' })` — default `md`.
-- `venture-social-cover/index.ts` and `venture-style-preview/index.ts`: accept `logoSize` from the request body, forward to `compositeLogo`, and log the resolved size next to headline logging.
-- Persist last choice on the asset row (`last_logo_size` column, similar to `last_headline`) so regeneration keeps the user's preference.
+Secondary: the prompt-side `logoSafeZone` hint uses the same height-first math, so the reserved negative space the model paints doesn't match the actual composited chip — occasionally the chip lands on top of model-rendered content.
 
-### 3. Prompt-side reinforcement (`supabase/functions/_shared/cover-art-director.ts`)
-- Add a `LOGO SAFE ZONE` block to the prompt telling the model to reserve a clean rectangle at the chosen placement of `~{H}% height × {W}% width` filled with `surfaceHex`, so the composited chip lands on flat background instead of on top of a face/detail. Values match the tier the compositor will use.
+Note: no `[logo-compositor]` log line appears in `venture-social-cover` logs for the run in question, but that's just because the search window predates the console.log; the compositor is being called (image clearly shows the chip).
 
-### 4. UI controls
-- `RegenerateAssetDialog.tsx`: add a **Logo size** segmented control (Small / Medium / Large) next to Headline, with a helper caption ("Recommended: Medium for wordmarks").
-- `AssetPreviewDialog.tsx`: surface current logo size as a chip with an **Edit** shortcut that opens Regenerate scrolled to the Logo size section (reuse the `focusSection` mechanism already added for headlines).
-- `SocialAutopilot.tsx`: pass `logoSize` through `regenerateSingle` and initial `generateAll` calls; default `md`, remember per-asset from `last_logo_size`.
+## Plan
 
-### 5. Migration
-- `ALTER TABLE venture_social_assets ADD COLUMN last_logo_size text;` (+ same on style previews if applicable), backfill NULL, no RLS changes required.
+Scope: `supabase/functions/_shared/logo-compositor.ts` and matching hint consumers. No UI changes.
 
-### 6. QA
-- Verify with three logo shapes (wide wordmark, square badge, tall glyph) that the composited chip's rendered logo height on a 1280×720 canvas is ≥ ~65px on Medium, ≥ ~95px on Large.
-- Confirm chip never overlaps the headline safe zone at bottom-left of thumbnails.
+### 1. Width-first sizing for wide logos, height-first for square/tall
 
-## Files touched
-- `supabase/functions/_shared/logo-compositor.ts` (sizing + padding + new option)
-- `supabase/functions/_shared/cover-art-director.ts` (safe-zone prompt block)
-- `supabase/functions/venture-social-cover/index.ts` (accept + persist `logoSize`)
-- `supabase/functions/venture-style-preview/index.ts` (accept `logoSize`)
-- `src/components/hub/social/RegenerateAssetDialog.tsx` (Logo size control + focus section)
-- `src/components/hub/social/AssetPreviewDialog.tsx` (display + Edit shortcut)
-- `src/components/hub/social/SocialAutopilot.tsx` (thread option through)
-- New migration for `last_logo_size`
+Split the target math on aspect ratio:
+
+- `aspect >= 2` (wordmark): drive from a new `widthFrac` per tier. `boxW = short * widthFrac`, `boxH = boxW / aspect`.
+- `aspect < 2` (mark/badge): keep current height-first math.
+
+New tier table (adds `widthFrac`, raises corner ceilings so lg can actually reach lg):
+
+```text
+sm: heightFrac 0.10, widthFrac 0.28, maxWFrac 0.42
+md: heightFrac 0.14, widthFrac 0.36, maxWFrac 0.52
+lg: heightFrac 0.20, widthFrac 0.46, maxWFrac 0.66
+```
+
+Keep a soft `maxWFrac` clamp, but when it triggers on a wordmark, clamp width **without** re-shrinking height below `heightFrac * short` — take the max of the two candidates.
+
+### 2. Reduce inner padding
+
+Drop `padPct` in `fitInside` from 0.08 to 0.05. Combined with the sizing fix, wordmark glyphs get ~35–45% more perceived height.
+
+### 3. Chip finish: rounded corners + subtle drop shadow + transparent-logo fast path
+
+- If the decoded logo has any pixel with alpha < 250 (transparent PNG), skip the chip entirely and composite the logo directly, sized to the same target box. Add a soft 8-px feathered scrim only when a luminance probe of the target region shows contrast against the logo's ink is < 3:1.
+- Otherwise draw a rounded-rect chip: corner radius = `min(boxW, boxH) * 0.14`, plus a 1-pass Gaussian-ish soft shadow (offset y = 4 px, blur ~10 px, 25% alpha). Rounded rect and blur done by pixel-writing with imagescript (no native deps).
+- Chip surface picker: probe average luminance of a small crop of the base image behind the chip. If |L(chip.surface) − L(base)| < 0.08, swap the chip color to `plan.ink` (dark) or `#FFFFFF`, whichever gives the higher contrast against the base — so the chip always reads as a deliberate lockup.
+
+### 4. Sync the prompt safe-zone hint
+
+Update `logoSafeZone` to use the same width-first / height-first branch and the same tier constants so the negative space the model reserves matches the chip we composite. Callers (`venture-social-cover/index.ts`, `venture-style-preview/index.ts`) need no signature changes.
+
+### 5. Verify
+
+- Add one console.log line summarizing the new decision: `aspect, tier, mode(width-first|height-first), chipW/H, pad, radius, chipMode(chip|direct), surfaceSwap(yes|no)`.
+- Sanity-check by regenerating the current asset at md and lg on a wide wordmark and a square mark; confirm lg wordmark reaches ~46% canvas width and no chip prints when a transparent PNG is used.
+
+### Files touched
+
+- `supabase/functions/_shared/logo-compositor.ts` — sizing, padding, rounded/shadowed chip, transparent-logo path, surface-swap, updated `logoSafeZone`.
+
+No client, DB, or other Edge Function changes.
