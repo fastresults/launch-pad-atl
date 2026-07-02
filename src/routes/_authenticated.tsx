@@ -1,5 +1,6 @@
 import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
+import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 
 export default function AuthenticatedLayout() {
   const { isAuthenticated, isApprovedMember, isAdmin, memberStatus, loading } = useAuth();
