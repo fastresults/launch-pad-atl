@@ -145,9 +145,10 @@ Deno.serve(async (req) => {
     // Ownership
     const { data: snap } = await admin
       .from("venture_snapshots")
-      .select("id, user_id, business_name, one_line_pitch, target_market, tone, brand_voice")
+      .select("id, user_id, company_name, business_concept, value_proposition, differentiation_statement")
       .eq("id", snapshotId)
       .maybeSingle();
+
     if (!snap || snap.user_id !== userId) return json({ error: "Forbidden" }, 403);
 
     if (action === "list") {
