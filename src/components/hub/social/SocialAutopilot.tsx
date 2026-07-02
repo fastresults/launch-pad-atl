@@ -694,6 +694,7 @@ function Step4Style({
             onNext={() => setPreviewIdx((i) => (i === null ? 0 : (i + 1) % ART_DIRECTIONS.length))}
             busy={d ? !!busy[d.id] : false}
             onRegenerate={d ? () => setDialog({ scope: "single", direction: d.id }) : undefined}
+            onEditHeadline={d ? () => setDialog({ scope: "single", direction: d.id, focusSection: "headline" }) : undefined}
             onDelete={d && p?.signed_url ? () => { setPreviewIdx(null); deletePreview(d.id); } : undefined}
           />
         );
