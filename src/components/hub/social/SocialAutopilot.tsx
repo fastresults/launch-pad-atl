@@ -1107,6 +1107,7 @@ function Step5BuildKit({
           thumbnailUrl={regenTarget.task?.signed_url ?? null}
           currentDirection={regenTarget.task?.direction || direction}
           canvasPlan={regenTarget.task?.canvas_plan ?? null}
+          currentHeadline={regenTarget.task?.last_headline ?? null}
           initialIntensity={regenTarget.scope === "single" && signatureFailed(regenTarget.task) ? "bold" : "balanced"}
           onSubmit={async (input) => {
             if (regenTarget.scope === "single") {
@@ -1117,6 +1118,7 @@ function Step5BuildKit({
                 signatureIntensity: input.signatureIntensity,
                 signaturePlacement: input.signaturePlacement,
                 paletteOverride: input.paletteOverride,
+                headlineOverride: input.headlineOverride,
               });
             }
           }}
