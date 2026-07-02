@@ -353,15 +353,29 @@ ${suppressHeadline ? suppressBlock : `- HEADLINE (${isCustomHeadline ? "verbatim
 
   // pinned_post, story_cover, etc.
   const isSquareOrPortrait = asset.height >= asset.width;
+  // Headline-landing zone: top-band exclusion so headlines can't collide with
+  // signature sidebars, focal shapes, or the logo. Sized by aspect.
+  const headlineBandPct = suppressHeadline
+    ? 0
+    : asset.width === asset.height
+    ? 24
+    : asset.height > asset.width * 1.5
+    ? 14
+    : 20;
+  const headlineZoneBlock = suppressHeadline
+    ? ""
+    : `\n- HEADLINE LANDING AREA: reserve the TOP ${headlineBandPct}% of the canvas (full width, minus 8% side insets) exclusively for the headline text. NO sidebar stripe, NO signature block, NO focal shape, NO photo subject, NO logo may enter or cross this rectangle. The headline text is left-anchored inside this band, ranged left, max two lines, tight tracking, must fit fully within the band without any character clipping at the left or right edge. Do NOT wrap so tightly that any letterform touches or crosses the band's left/right/top edges — pull the type in by another 3% if in doubt.`;
   const sidebarCap = isSquareOrPortrait
-    ? `\n- SIDEBAR / SIGNATURE BLOCK CAP: on this square or portrait canvas, any sidebar stripe or full-height signature block MUST NOT exceed 28% of canvas width, MUST sit on the OPPOSITE side of the canvas from the LOGO LANDING AREA, and MUST NOT contain any lettering (no vertical headline, no rotated text, no glyphs). Reach the signature coverage target through additional flat shapes elsewhere on the canvas, not by widening the sidebar.`
+    ? `\n- SIDEBAR / SIGNATURE BLOCK CAP: on this square or portrait canvas, any sidebar stripe or full-height signature block MUST NOT exceed 28% of canvas width, MUST sit on the OPPOSITE side of the canvas from the LOGO LANDING AREA, MUST START BELOW the HEADLINE LANDING AREA (never full-height across the headline band), and MUST NOT contain any lettering (no vertical headline, no rotated text, no glyphs). Reach the signature coverage target through additional flat shapes elsewhere on the canvas, not by widening or lengthening the sidebar.`
     : "";
   return `POST / COVER SYSTEM (${ratio})
 - Treat as a single editorial frame. One focal element, ≥60% negative space.
-${suppressHeadline ? suppressBlock : "- Optional type lockup uses the brand heading family." + (isCustomHeadline ? ` HEADLINE (verbatim, exact wording): "${headline}". Do not rephrase.` : "")}
+${suppressHeadline ? "- Optional type lockup uses the brand heading family." : "- Optional type lockup uses the brand heading family." + (isCustomHeadline ? ` HEADLINE (verbatim, exact wording): "${headline}". Do not rephrase. Render it entirely inside the HEADLINE LANDING AREA below — never let letterforms touch or cross that band's edges.` : "")}
+${headlineZoneBlock}
 ${zone("top-left", 24, 24)}${sidebarCap}
 - Reserve an 8% safe inset on all sides for platform UI.
 - ${asset.guidance}`;
+
 }
 
 // ------- Public builders -------
