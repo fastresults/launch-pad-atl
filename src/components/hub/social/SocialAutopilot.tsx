@@ -470,7 +470,7 @@ function Step4Style({
 
   const [pick, setPick] = useState<string | null>(direction);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
-  const [dialog, setDialog] = useState<{ scope: "single" | "all"; direction?: string; focusSection?: "headline" | "palette" | "feedback" } | null>(null);
+  const [dialog, setDialog] = useState<{ scope: "single" | "all"; direction?: string; focusSection?: "headline" | "palette" | "feedback" | "logo" } | null>(null);
   const [previewIdx, setPreviewIdx] = useState<number | null>(null);
 
   const previewsQ = useQuery({
