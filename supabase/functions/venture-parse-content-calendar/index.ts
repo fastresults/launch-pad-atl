@@ -183,7 +183,8 @@ Rules:
 - Produce exactly 3 posts for Week ${week}.
 - Distribute across these platforms (one each if possible): ${platformMix}.
 - Vary pillars from prior weeks; keep tone consistent.
-- Hook <= 120 chars, body <= 400 chars, cta <= 80 chars.
+- Hook: 120–170 characters, ONE complete sentence (or two tight clauses). Written to fill 4 lines on a 1:1 ad — do NOT end mid-clause, do NOT dangle on a conjunction ('and', 'or', 'but', 'because', 'with', 'that'). Finish the thought with punctuation.
+- Body <= 400 chars, cta <= 80 chars.
 - 3-6 relevant hashtags, no leading '#' duplication.
 - Days: Mon/Wed/Fri unless prior calendar suggests otherwise.
 No prose outside the JSON.`;
