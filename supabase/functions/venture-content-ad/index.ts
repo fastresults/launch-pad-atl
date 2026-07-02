@@ -366,6 +366,22 @@ Deno.serve(async (req) => {
       (qa as any).signature_composited = true;
     }
 
+    // ---- Server-side headline typography ----
+    // The prompt asked the model for zero glyphs; we now paint the fitted
+    // headline into the reserved top band so letters never get clipped.
+    const resolvedHeadline = resolveAdHeadline(post.hook, headlineOverride, aspect);
+    let headlineComposited = false;
+    let finalHeadlineText = "";
+    if (resolvedHeadline.mode === "custom" && resolvedHeadline.text?.trim()) {
+      finalHeadlineText = resolvedHeadline.text.trim();
+      try {
+        const before = bytes;
+        bytes = await compositeHeadline(bytes, plan, aspect, finalHeadlineText);
+        headlineComposited = bytes !== before;
+      } catch (e) { console.warn("headline composite failed", e); }
+    }
+    (qa as any).headline_composited = headlineComposited;
+
     let logoComposited = false;
     if (logoBytes) {
       try {
