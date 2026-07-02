@@ -291,7 +291,12 @@ Deno.serve(async (req) => {
 
     const generate = async (retryNote?: string) => {
       const prompt = buildPrompt(retryNote);
-      const refs = [logoDataUrl, paletteTileDataUrl].filter(Boolean) as string[];
+      // Intentionally OMIT the wordmark logo from multimodal refs: passing the
+      // wordmark invites the image model to echo the brand text into the scene
+      // (bottom band / signage / sticker), which then duplicates when our
+      // compositor places the real logo on top. Palette tile is enough to lock
+      // colors; the logo is composited after generation.
+      const refs = [paletteTileDataUrl].filter(Boolean) as string[];
       try {
         if (refs.length) {
           const b64 = await callMultimodal(prompt, refs, apiKey);
@@ -299,6 +304,7 @@ Deno.serve(async (req) => {
         }
         const b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
         return { b64, modelUsed: MODEL_FALLBACK, prompt };
+
       } catch (e: any) {
         const status = e?.status;
         if (refs.length && ![401, 402, 403, 429].includes(status)) {
