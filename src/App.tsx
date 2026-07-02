@@ -136,6 +136,7 @@ export default function App() {
             <Route path="profile" element={<DashboardProfile />} />
             <Route path="workflow" element={<DashboardWorkflow />} />
             <Route path="workflow/:key" element={<DashboardWorkflowKey />} />
+            <Route path="legal-setup" element={<DashboardLegalSetup />} />
             <Route path="hub" element={<HubLibrary />} />
             <Route path="hub/new" element={<HubNew />} />
             <Route path="hub/:snapshotId" element={<HubSnapshot />} />
