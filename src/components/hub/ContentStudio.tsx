@@ -994,3 +994,42 @@ function Step5Launch({
   );
 }
 
+
+// ============================================================
+// Reusable card: "Plan Week N" — asks AI to draft the next week's posts
+// ============================================================
+function PlanNextWeekCard({ snapshotId, nextWeek }: { snapshotId: string; nextWeek: number }) {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const onClick = async () => {
+    setBusy(true);
+    try {
+      const res = await planNextWeek(snapshotId, nextWeek);
+      await qc.invalidateQueries({ queryKey: ["content-posts", snapshotId] });
+      toast.success(`Week ${nextWeek} drafted — ${res.count} post${res.count === 1 ? "" : "s"} added`);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to draft next week");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px]">Week {nextWeek}</Badge>
+            <span className="text-[10px] text-muted-foreground">Not planned yet</span>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Ask the AI to draft 3 posts for Week {nextWeek} that match your existing calendar tone and platforms.
+          </p>
+        </div>
+        <Button size="sm" onClick={onClick} disabled={busy} className="shrink-0">
+          {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+          Plan Week {nextWeek}
+        </Button>
+      </div>
+    </div>
+  );
+}
