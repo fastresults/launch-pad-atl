@@ -194,16 +194,38 @@ const CAMERAS = [
 // they rotate per post so a 4-post week reads as an editorial set, not the
 // same photo four times.
 const LIBRARY_STARTUP: SceneVariant[] = [
-  { depict: "A facilitator mid-gesture at a whiteboard covered in sticky notes; two founders lean in, laptops open on a shared table.", subjects: ["facilitator", "whiteboard", "sticky notes", "founders"], setting: "modern accelerator studio, daylight through tall glass", mood: "focused, collaborative", camera: CAMERAS[0], composition: COMPOSITIONS[0], tags: ["education", "workshop", "cohort"] },
-  { depict: "A single founder alone at a wood desk with an open laptop and a paper notebook mid-sketch; a cold-brew and a plant in soft focus behind.", subjects: ["founder", "laptop", "notebook"], setting: "quiet home studio or cafe corner", mood: "considered, calm", camera: CAMERAS[1], composition: COMPOSITIONS[1], tags: ["deep work", "story", "founder"] },
-  { depict: "Two founders in a 1:1 mentor session over espresso at a small round table; one sketches on a napkin, the other listens intently.", subjects: ["mentor", "mentee", "espresso"], setting: "third-wave coffee bar mid-morning", mood: "candid, generous", camera: CAMERAS[2], composition: COMPOSITIONS[2], tags: ["mentor", "advice", "coaching"] },
-  { depict: "A founder at a demo-day podium in soft spotlight, one arm raised mid-point; the audience is warm bokeh in the foreground.", subjects: ["founder on stage", "microphone", "audience bokeh"], setting: "warm-lit demo-day stage", mood: "confident, arrived", camera: CAMERAS[2], composition: COMPOSITIONS[6], tags: ["launch", "demo", "milestone"] },
-  { depict: "A macro of a hand pressing a Post-it onto a glass wall already covered in a matrix of colored notes; other hands blur in.", subjects: ["hand", "post-it", "glass wall"], setting: "sprint room glass wall", mood: "kinetic, iterative", camera: CAMERAS[4], composition: COMPOSITIONS[4], tags: ["sprint", "product", "planning"] },
-  { depict: "An over-the-shoulder view of a founder reviewing a spreadsheet or dashboard on a laptop, a coffee and a small notebook in the foreground.", subjects: ["founder", "laptop screen", "notebook"], setting: "clean workspace desk", mood: "analytical, quiet", camera: CAMERAS[0], composition: COMPOSITIONS[2], tags: ["metrics", "data", "review"] },
-  { depict: "A candid two-shot of co-founders laughing beside a whiteboard mid-argument-mid-agreement; markers and half-full cups on the ledge.", subjects: ["co-founders", "whiteboard", "markers"], setting: "startup room", mood: "warm, real", camera: CAMERAS[5], composition: COMPOSITIONS[7], tags: ["team", "culture", "cofounder"] },
-  { depict: "A low-angle heroic portrait of a founder at the top of an exterior stairwell, looking off-frame, morning light on their face.", subjects: ["founder portrait"], setting: "urban exterior stairwell", mood: "resolved, forward", camera: CAMERAS[2], composition: COMPOSITIONS[6], tags: ["story", "brand", "portrait"] },
-  { depict: "A flat-lay of a founder toolkit — notebook open to a sketch, MacBook edge, an index card with three bullets, a cortado — arranged asymmetrically on wood.", subjects: ["notebook", "laptop edge", "card", "coffee"], setting: "wood tabletop, top-down", mood: "crafted, deliberate", camera: CAMERAS[3], composition: COMPOSITIONS[5], tags: ["toolkit", "resource", "how-to"] },
-  { depict: "A wide establishing shot of an accelerator loft — long shared table, plants, glass walls — a small figure of a founder at one end.", subjects: ["accelerator space", "distant figure"], setting: "loft coworking", mood: "spacious, possible", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["space", "community", "brand"] },
+  // Human moment — not at a laptop
+  { depict: "A single founder on a rooftop at dusk holding a printed pitch, city skyline going amber behind them.", subjects: ["founder", "rooftop", "printed pitch"], setting: "urban rooftop at dusk", mood: "resolved, quiet", camera: CAMERAS[2], composition: COMPOSITIONS[6], tags: ["story", "portrait"] },
+  { depict: "A founder mid-stride through a city crosswalk at rush hour, portfolio in hand, motion blur on the crowd around them.", subjects: ["founder", "crosswalk", "portfolio"], setting: "urban crosswalk", mood: "kinetic, decisive", camera: CAMERAS[5], composition: COMPOSITIONS[0], tags: ["momentum"] },
+  { depict: "A candid handshake between a founder and a first customer on a shop-lit sidewalk, both smiling naturally.", subjects: ["founder", "customer", "handshake"], setting: "storefront sidewalk", mood: "warm, arrived", camera: CAMERAS[1], composition: COMPOSITIONS[2], tags: ["customer"] },
+  { depict: "A lone silhouette of a founder against a floor-to-ceiling window at night, city lights beyond as bokeh field.", subjects: ["founder silhouette", "window", "city lights"], setting: "high-floor office at night", mood: "contemplative", camera: CAMERAS[2], composition: COMPOSITIONS[6], tags: ["brand", "story"] },
+
+  // Metaphor / conceptual
+  { depict: "A single warmly lit doorway at the end of a dark hallway, light spilling across the floor toward the camera.", subjects: ["doorway", "light"], setting: "long dark hallway", mood: "opportunity", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["launch", "story"] },
+  { depict: "A paper airplane arcing across a wall of graph paper, its shadow trailing behind it.", subjects: ["paper airplane", "graph paper wall"], setting: "graphic wall", mood: "playful, forward", camera: CAMERAS[4], composition: COMPOSITIONS[0], tags: ["idea"] },
+  { depict: "A single chess piece mid-move on a marble board, other pieces softly out of focus.", subjects: ["chess piece", "marble board"], setting: "chess board macro", mood: "strategic", camera: CAMERAS[4], composition: COMPOSITIONS[4], tags: ["strategy"] },
+  { depict: "A brass compass resting on weathered wood, cardinal marks catching a single side light.", subjects: ["compass", "wood"], setting: "wood tabletop macro", mood: "grounded, deliberate", camera: CAMERAS[4], composition: COMPOSITIONS[5], tags: ["direction"] },
+  { depict: "The edge of a runway with lights vanishing into low fog, one taxiing figure implied in the distance.", subjects: ["runway", "runway lights", "fog"], setting: "airfield at dawn", mood: "anticipation", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["launch"] },
+  { depict: "A footbridge under construction stretching over open water toward a far shore in golden light.", subjects: ["bridge", "water", "far shore"], setting: "coastal construction", mood: "building, aspirational", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["building"] },
+
+  // Object-forward macro (no faces)
+  { depict: "A fountain pen crossing out a line of printed strategy on cream paper, ink still wet.", subjects: ["fountain pen", "printed page"], setting: "desk macro", mood: "decisive", camera: CAMERAS[4], composition: COMPOSITIONS[4], tags: ["revision", "strategy"] },
+  { depict: "A stack of business cards fanned across a linen surface with one card standing on edge.", subjects: ["business cards", "linen"], setting: "flat-lay linen", mood: "crafted", camera: CAMERAS[3], composition: COMPOSITIONS[5], tags: ["brand"] },
+  { depict: "A single espresso cup resting on a signed contract, steam curling above the rim.", subjects: ["espresso", "contract"], setting: "cafe table macro", mood: "closed, calm", camera: CAMERAS[4], composition: COMPOSITIONS[4], tags: ["deal", "milestone"] },
+  { depict: "A vintage brass key resting on a hand-drawn blueprint, single raking light across the paper texture.", subjects: ["key", "blueprint"], setting: "drafting table macro", mood: "unlocking", camera: CAMERAS[4], composition: COMPOSITIONS[5], tags: ["access", "launch"] },
+  { depict: "A boarding pass, passport, and Moleskine on a walnut desk beside a coffee ring — top-down.", subjects: ["boarding pass", "passport", "notebook"], setting: "walnut desk flat-lay", mood: "moving", camera: CAMERAS[3], composition: COMPOSITIONS[5], tags: ["travel", "growth"] },
+
+  // Environmental / outdoor
+  { depict: "Aerial of a coastal highway curving along cliffs at sunrise, one car on the road.", subjects: ["coastal highway", "sunrise"], setting: "aerial coast", mood: "expansive", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["journey"] },
+  { depict: "A lone tree on a green hill under storm light, distant rain visible on one side of the frame.", subjects: ["tree", "hill", "storm light"], setting: "open landscape", mood: "resilient", camera: CAMERAS[3], composition: COMPOSITIONS[6], tags: ["resilience"] },
+  { depict: "A neon-lit alley at night with a single figure walking away from camera, wet reflections underfoot.", subjects: ["alley", "neon", "figure"], setting: "urban alley at night", mood: "cinematic", camera: CAMERAS[2], composition: COMPOSITIONS[0], tags: ["brand"] },
+  { depict: "A mountain ridgeline emerging from morning fog, first sunlight touching the highest peak only.", subjects: ["ridgeline", "fog", "sunlight"], setting: "mountain morning", mood: "arriving", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["milestone"] },
+
+  // Editorial / graphic
+  { depict: "A saturated single-color field with one small paper boat centered, long shadow across the plane.", subjects: ["paper boat", "color field"], setting: "graphic studio still-life", mood: "quiet, iconic", camera: CAMERAS[3], composition: COMPOSITIONS[5], tags: ["brand", "idea"] },
+  { depict: "A torn-paper reveal exposing a textured surface beneath — the tear diagonal across the frame.", subjects: ["torn paper", "texture"], setting: "graphic macro", mood: "unveiling", camera: CAMERAS[4], composition: COMPOSITIONS[4], tags: ["launch", "reveal"] },
+  { depict: "A duotone portrait cropped tight on the eyes only, direct gaze, single light source.", subjects: ["eyes", "duotone portrait"], setting: "editorial studio", mood: "resolute", camera: CAMERAS[2], composition: COMPOSITIONS[1], tags: ["portrait", "brand"] },
+  { depict: "A long-exposure light trail sweeping across an empty street at night, buildings crisp on either side.", subjects: ["light trail", "empty street"], setting: "night street long exposure", mood: "motion, ambition", camera: CAMERAS[3], composition: COMPOSITIONS[0], tags: ["momentum"] },
 ];
 
 const LIBRARY_MAIN_STREET: SceneVariant[] = [
@@ -213,6 +235,10 @@ const LIBRARY_MAIN_STREET: SceneVariant[] = [
   { depict: "An exterior morning shot of the storefront awning with the OPEN sign lit and a chalkboard on the sidewalk.", subjects: ["storefront", "chalkboard", "OPEN sign"], setting: "sidewalk exterior", mood: "inviting, local", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["neighborhood", "brand", "launch"] },
   { depict: "A flat-lay of the shop's product beside a handwritten note and a customer card on brown craft paper.", subjects: ["product", "note", "card"], setting: "wood tabletop, top-down", mood: "thoughtful", camera: CAMERAS[3], composition: COMPOSITIONS[5], tags: ["gift", "resource", "toolkit"] },
   { depict: "A wide establishing shot of the block the shop sits on, storefront visible, foot traffic softly out of focus.", subjects: ["block", "storefront"], setting: "neighborhood street", mood: "rooted", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["location", "story"] },
+  // Metaphor / object additions
+  { depict: "A hand-lettered chalkboard sign leaned against a brick wall, one flower in a jar beside it.", subjects: ["chalkboard sign", "brick", "flower"], setting: "sidewalk still-life", mood: "handmade", camera: CAMERAS[4], composition: COMPOSITIONS[5], tags: ["brand"] },
+  { depict: "A ring of keys resting on a fresh lease agreement, morning light across the paper.", subjects: ["keys", "lease"], setting: "counter macro", mood: "milestone", camera: CAMERAS[4], composition: COMPOSITIONS[4], tags: ["milestone"] },
+  { depict: "A neighborhood at dusk with the shop's warm interior glowing among cooler storefronts.", subjects: ["street at dusk", "shop glow"], setting: "neighborhood dusk", mood: "welcoming", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["brand"] },
 ];
 
 const LIBRARY_FOOD: SceneVariant[] = [
@@ -221,6 +247,9 @@ const LIBRARY_FOOD: SceneVariant[] = [
   { depict: "A guest at the counter receiving their drink, the barista in soft focus behind, morning light through window.", subjects: ["guest", "barista"], setting: "cafe counter", mood: "warm", camera: CAMERAS[1], composition: COMPOSITIONS[2], tags: ["customer", "service"] },
   { depict: "Macro of espresso pouring into a ceramic cup, ripples in the crema, a single accent color plate behind.", subjects: ["espresso", "cup"], setting: "bar top", mood: "crafted, quiet", camera: CAMERAS[4], composition: COMPOSITIONS[4], tags: ["product", "craft"] },
   { depict: "Establishing shot of the dining room at first light, chairs down, sun bars across empty tables.", subjects: ["dining room"], setting: "morning restaurant interior", mood: "anticipatory", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["space", "brand"] },
+  { depict: "A single lit menu propped on a wine-red banquette, ambient candles flickering around it.", subjects: ["menu", "banquette"], setting: "evening dining nook", mood: "invitational", camera: CAMERAS[2], composition: COMPOSITIONS[1], tags: ["brand"] },
+  { depict: "Flat-lay of raw ingredients arranged as a color story on butcher paper — no hands.", subjects: ["ingredients", "butcher paper"], setting: "top-down still-life", mood: "editorial", camera: CAMERAS[3], composition: COMPOSITIONS[5], tags: ["seasonal"] },
+  { depict: "A market bag of produce set on a bike basket outside a shop at sunrise.", subjects: ["produce", "bike"], setting: "sidewalk sunrise", mood: "local, honest", camera: CAMERAS[1], composition: COMPOSITIONS[2], tags: ["sourcing"] },
 ];
 
 const LIBRARY_FITNESS: SceneVariant[] = [
@@ -228,17 +257,26 @@ const LIBRARY_FITNESS: SceneVariant[] = [
   { depict: "Macro of a hand chalking up on a bar; the rest of the athlete blurs out of focus behind.", subjects: ["hand", "chalk", "bar"], setting: "training rig", mood: "disciplined", camera: CAMERAS[4], composition: COMPOSITIONS[4] },
   { depict: "Wide low-angle of a solo athlete mid-rep under tall windows; long shadows on the floor.", subjects: ["athlete"], setting: "studio floor", mood: "resolute", camera: CAMERAS[3], composition: COMPOSITIONS[6] },
   { depict: "Two-shot of coach and client laughing during a rest set, water bottles at their feet.", subjects: ["coach", "client"], setting: "studio bench", mood: "community", camera: CAMERAS[5], composition: COMPOSITIONS[7] },
+  { depict: "A solo runner on an empty coastal road at sunrise, long shadow trailing behind.", subjects: ["runner", "coastal road"], setting: "coast at sunrise", mood: "grit", camera: CAMERAS[3], composition: COMPOSITIONS[3] },
+  { depict: "Flat-lay of shoes, tape, and a written training log on concrete.", subjects: ["shoes", "log"], setting: "concrete flat-lay", mood: "committed", camera: CAMERAS[3], composition: COMPOSITIONS[5] },
+  { depict: "An empty studio at first light, one kettlebell centered in a pool of window sun.", subjects: ["kettlebell", "empty studio"], setting: "studio dawn", mood: "quiet before", camera: CAMERAS[3], composition: COMPOSITIONS[3] },
 ];
 
 const LIBRARY_HEALTH: SceneVariant[] = [
   { depict: "A clinician reviewing a monitor with a colleague, calm overhead light, no dramatization.", subjects: ["clinician", "colleague", "monitor"], setting: "modern clinical suite", mood: "precise", camera: CAMERAS[0], composition: COMPOSITIONS[0] },
   { depict: "Macro of gloved hands operating a modern instrument on a clean tray.", subjects: ["hands", "instrument"], setting: "prep tray", mood: "considered", camera: CAMERAS[4], composition: COMPOSITIONS[4] },
   { depict: "A researcher at a workstation of screens, calm posture, no theatrics.", subjects: ["researcher", "workstation"], setting: "modern research bay", mood: "steady", camera: CAMERAS[1], composition: COMPOSITIONS[1] },
+  { depict: "A calm sunrise view from a hospital window over a waking city.", subjects: ["window", "cityscape"], setting: "clinical window at dawn", mood: "hopeful", camera: CAMERAS[3], composition: COMPOSITIONS[3] },
+  { depict: "Macro of a single pill bottle beside a handwritten note on a wood table.", subjects: ["bottle", "note"], setting: "quiet home surface", mood: "human", camera: CAMERAS[4], composition: COMPOSITIONS[5] },
+  { depict: "A patient hand resting in a clinician's hand — cropped close, respectful.", subjects: ["hands"], setting: "clinical macro", mood: "trust", camera: CAMERAS[4], composition: COMPOSITIONS[4] },
 ];
 
 const LIBRARY_MOBILITY: SceneVariant[] = [
   { depict: "A founder-engineer beside their vehicle on a clean shop floor, single spot lighting the mark, wide framing.", subjects: ["engineer", "vehicle"], setting: "modern mobility shop", mood: "engineered", camera: CAMERAS[3], composition: COMPOSITIONS[3] },
   { depict: "Macro of a hand on a control surface — dashboard, throttle, or terminal — instrument reflections in the surface.", subjects: ["hand", "control surface"], setting: "cockpit macro", mood: "precise", camera: CAMERAS[4], composition: COMPOSITIONS[4] },
+  { depict: "An overhead of an empty test track marked with fresh tire arcs at golden hour.", subjects: ["track", "tire arcs"], setting: "aerial test track", mood: "iterating", camera: CAMERAS[3], composition: COMPOSITIONS[3] },
+  { depict: "A single vehicle silhouetted against a horizon of desert light, dust plume trailing.", subjects: ["vehicle", "horizon"], setting: "desert road", mood: "ambition", camera: CAMERAS[3], composition: COMPOSITIONS[6] },
+  { depict: "Flat-lay of blueprints, calipers, and a coffee cup on a steel workbench.", subjects: ["blueprints", "tools"], setting: "workbench flat-lay", mood: "engineered", camera: CAMERAS[3], composition: COMPOSITIONS[5] },
 ];
 
 function pickLibrary(track: string, industry: string): SceneVariant[] {
