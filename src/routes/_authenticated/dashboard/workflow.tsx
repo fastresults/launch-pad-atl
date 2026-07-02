@@ -7,7 +7,7 @@ import { countAnsweredBriefFields } from "@/lib/brief-progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, Circle, Lock, Loader2, Play, Sparkles, Presentation } from "lucide-react";
+import { CheckCircle2, Circle, Lock, Loader2, Play, Sparkles, Presentation, Image as ImageIcon, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
 import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
@@ -23,7 +23,10 @@ type WorkflowItem = {
   user_can_trigger?: boolean;
   generated: boolean;
   deps_met: boolean;
+  image_ready?: boolean;
+  image_status?: "idle" | "generating" | "ready" | "failed";
 };
+
 
 export default function WorkflowPage() {
   const qc = useQueryClient();
@@ -86,6 +89,16 @@ export default function WorkflowPage() {
   const triggerable = items.filter((i) => i.user_can_trigger !== false);
   const generatedCount = triggerable.filter((i) => i.generated).length;
   const remainingCount = triggerable.length - generatedCount;
+
+  // Hero image progress — denominator is docs with content (only those get an image).
+  const imageEligible = triggerable.filter((i) => i.generated);
+  const imageReadyCount = imageEligible.filter((i) => i.image_ready).length;
+  const imageGeneratingCount = imageEligible.filter((i) => i.image_status === "generating").length;
+  const imageFailedCount = imageEligible.filter((i) => i.image_status === "failed").length;
+  const imagePct = imageEligible.length > 0
+    ? Math.round((imageReadyCount / imageEligible.length) * 100)
+    : 0;
+
 
   // Track bulk-run progress: lock in a snapshot when the user clicks Run remaining,
   // then watch generatedCount climb toward the target.
@@ -245,6 +258,37 @@ export default function WorkflowPage() {
         </div>
       )}
 
+      {imageEligible.length > 0 && (
+        <div className="rounded-2xl border border-white/10 bg-card p-4">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <div className="flex items-center gap-2 font-medium">
+              <ImageIcon className="h-4 w-4 text-muted-foreground" />
+              Hero images
+              {imageGeneratingCount > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  {imageGeneratingCount} painting
+                </span>
+              )}
+              {imageFailedCount > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-status-warning/10 px-2 py-0.5 text-[10px] font-medium text-status-warning">
+                  <AlertTriangle className="h-3 w-3" />
+                  {imageFailedCount} failed
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {imageReadyCount} / {imageEligible.length} painted
+            </div>
+          </div>
+          <Progress value={imagePct} className="mt-3 h-2" />
+          <div className="mt-2 text-xs text-muted-foreground">
+            Images generate at their own pace after each document is written — open a startup asset to view or retry its hero image.
+          </div>
+        </div>
+      )}
+
+
       {!briefReady && (
         <div className="rounded-2xl border border-status-warning/30 bg-status-warning/5 p-4 text-sm">
           <Link to="/dashboard/brief" className="font-medium underline">Finish your Startup Brief</Link>
@@ -343,10 +387,30 @@ export default function WorkflowPage() {
                         <h3 className="truncate text-sm font-medium">{d.label}</h3>
                       </div>
                       {d.description && <p className="mt-1 text-xs text-muted-foreground">{d.description}</p>}
-                      <div className="mt-2 flex flex-wrap gap-1">
+                      <div className="mt-2 flex flex-wrap items-center gap-1">
                         {d.generated && <Badge variant="secondary" className="text-xs">Generated</Badge>}
                         {!d.generated && !d.deps_met && <Badge variant="outline" className="text-xs">Waiting on upstream</Badge>}
+                        {d.generated && (
+                          d.image_status === "ready" ? (
+                            <Badge variant="outline" className="gap-1 text-[10px]" title="Hero image ready">
+                              <ImageIcon className="h-3 w-3 text-status-success" /> Image
+                            </Badge>
+                          ) : d.image_status === "generating" ? (
+                            <Badge variant="outline" className="gap-1 text-[10px]" title="Hero image being painted">
+                              <Loader2 className="h-3 w-3 animate-spin text-primary" /> Image
+                            </Badge>
+                          ) : d.image_status === "failed" ? (
+                            <Badge variant="outline" className="gap-1 text-[10px] text-status-warning" title="Hero image failed — open to retry">
+                              <AlertTriangle className="h-3 w-3" /> Image
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="gap-1 text-[10px] text-muted-foreground" title="Hero image queued">
+                              <ImageIcon className="h-3 w-3" /> Image
+                            </Badge>
+                          )
+                        )}
                       </div>
+
                     </div>
                   </div>
                   <div className="mt-3 flex gap-2">
