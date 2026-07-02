@@ -429,10 +429,10 @@ export function RegenerateAssetDialog({
                 ref={headlineInputRef}
                 type="text"
                 value={headlineText}
-                onChange={(e) => setHeadlineText(e.target.value.slice(0, 64))}
+                onChange={(e) => setHeadlineText(e.target.value.slice(0, 140))}
                 disabled={busy}
                 placeholder="Exact words to render on the image"
-                maxLength={64}
+                maxLength={140}
                 className="h-9 w-full rounded border border-border bg-background px-2 text-sm"
               />
             )}
