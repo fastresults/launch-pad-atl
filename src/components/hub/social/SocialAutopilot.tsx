@@ -12,6 +12,18 @@ import {
   Instagram, Linkedin, Twitter, Facebook, Youtube, Music2, Globe,
 } from "lucide-react";
 
+import { toast } from "sonner";
+import {
+  getSocialProgress, upsertSocialProgress, listPlanDocs, ensurePlanDoc,
+  buildKitTasks, generateOneKitTask, PLAN_DOCS, type SocialGoals, type KitTask,
+} from "@/lib/social-autopilot.functions";
+import { PLATFORM_SPECS, ART_DIRECTIONS } from "@/lib/social-platform-specs";
+import { listSocialAssets, deleteSocialAsset } from "@/lib/social-cover.functions";
+import { listStylePreviews, generateStylePreview, deleteStylePreview, type StylePreview } from "@/lib/style-preview.functions";
+import { RegenerateAssetDialog } from "./RegenerateAssetDialog";
+import { AssetPreviewDialog, type PreviewableAsset } from "./AssetPreviewDialog";
+import { RotateCcw } from "lucide-react";
+
 const PLATFORM_ICONS: Record<string, any> = {
   Instagram, LinkedIn: Linkedin, X: Twitter, Twitter, Facebook,
   YouTube: Youtube, TikTok: Music2, Threads: Music2, Pinterest: Globe, Reddit: Globe,
@@ -31,17 +43,6 @@ function assetDims(platform: string, kind: string): string | null {
   const found = spec?.assets?.find((a: any) => a.kind === kind);
   return found ? `${found.width}×${found.height}` : null;
 }
-import { toast } from "sonner";
-import {
-  getSocialProgress, upsertSocialProgress, listPlanDocs, ensurePlanDoc,
-  buildKitTasks, generateOneKitTask, PLAN_DOCS, type SocialGoals, type KitTask,
-} from "@/lib/social-autopilot.functions";
-import { PLATFORM_SPECS, ART_DIRECTIONS } from "@/lib/social-platform-specs";
-import { listSocialAssets, deleteSocialAsset } from "@/lib/social-cover.functions";
-import { listStylePreviews, generateStylePreview, deleteStylePreview, type StylePreview } from "@/lib/style-preview.functions";
-import { RegenerateAssetDialog } from "./RegenerateAssetDialog";
-import { AssetPreviewDialog, type PreviewableAsset } from "./AssetPreviewDialog";
-import { RotateCcw } from "lucide-react";
 
 const STEPS = [
   { id: 1, label: "Goals" },
