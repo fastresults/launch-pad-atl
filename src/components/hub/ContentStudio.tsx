@@ -990,6 +990,32 @@ function Step5Launch({
     doneWeeks.length ? [`w-${doneWeeks[0]}`] : []
   );
 
+  // Flat ordered list of ads mirroring accordion order → indices for prev/next
+  const flatAds: ContentAd[] = [];
+  for (const w of doneWeeks) for (const a of adsByWeek.get(w) ?? []) flatAds.push(a);
+  const previewable = flatAds
+    .map((a, i) => (a.signed_url ? i : -1))
+    .filter((i) => i >= 0);
+  const [previewIdx, setPreviewIdx] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const qc = useQueryClient();
+
+  const doDelete = async (adId: string) => {
+    if (!window.confirm("Delete this ad? This can't be undone.")) return;
+    setDeletingId(adId);
+    try {
+      await deleteContentAd(snapshotId, adId);
+      await qc.invalidateQueries({ queryKey: ["content-ads", snapshotId] });
+      toast.success("Deleted");
+      setPreviewIdx(null);
+    } catch (e: any) {
+      toast.error(e?.message || "Delete failed");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+
   return (
     <div className="space-y-3">
       <div>
@@ -1029,39 +1055,54 @@ function Step5Launch({
                   <div className="grid gap-2 sm:grid-cols-2">
                     {wAds.map((a) => {
                       const p = postById.get(a.post_id);
+                      const flatIdx = flatAds.indexOf(a);
+                      const canPreview = !!a.signed_url;
                       return (
-                        <div key={a.id} className="flex items-center gap-2 rounded-lg border border-white/10 bg-background/30 p-2">
-                          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-background/60">
-                            {a.signed_url ? (
-                              <AssetImage src={a.signed_url} alt={p?.hook || "ad"} className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center">
-                                <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        <div
+                          key={a.id}
+                          className="group flex items-center gap-2 rounded-lg border border-white/10 bg-background/30 p-2 transition hover:bg-white/5"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => canPreview && setPreviewIdx(flatIdx)}
+                            disabled={!canPreview}
+                            title={canPreview ? "Click to preview" : "No preview available"}
+                            className="flex flex-1 items-center gap-2 text-left disabled:cursor-not-allowed"
+                          >
+                            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-background/60">
+                              {a.signed_url ? (
+                                <AssetImage src={a.signed_url} alt={p?.hook || "ad"} className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center">
+                                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-[11px] font-medium">
+                                {p?.hook || p?.pillar || "Untitled"}
                               </div>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-[11px] font-medium">
-                              {p?.hook || p?.pillar || "Untitled"}
+                              <div className="truncate text-[10px] text-muted-foreground">
+                                {a.aspect}{p?.platform ? ` · ${p.platform}` : ""}
+                              </div>
                             </div>
-                            <div className="truncate text-[10px] text-muted-foreground">
-                              {a.aspect}{p?.platform ? ` · ${p.platform}` : ""}
-                            </div>
-                          </div>
-                          {a.signed_url && (
-                            <a
-                              href={a.signed_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="rounded border border-white/10 px-2 py-1 text-[10px] hover:bg-white/5"
-                            >
-                              Open
-                            </a>
-                          )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); doDelete(a.id); }}
+                            disabled={deletingId === a.id}
+                            title="Delete ad"
+                            className="rounded p-1.5 text-muted-foreground opacity-60 transition hover:bg-destructive/10 hover:text-destructive hover:opacity-100 disabled:opacity-40"
+                          >
+                            {deletingId === a.id
+                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              : <Trash2 className="h-3.5 w-3.5" />}
+                          </button>
                         </div>
                       );
                     })}
                   </div>
+
                 </AccordionContent>
               </AccordionItem>
             );
@@ -1122,9 +1163,52 @@ function Step5Launch({
 
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back to build</Button>
       </footer>
+
+      {previewIdx !== null && (() => {
+        const ad = flatAds[previewIdx];
+        if (!ad?.signed_url) return null;
+        const p = postById.get(ad.post_id);
+        const goPrev = () => {
+          const pos = previewable.indexOf(previewIdx);
+          setPreviewIdx(previewable[(pos - 1 + previewable.length) % previewable.length]);
+        };
+        const goNext = () => {
+          const pos = previewable.indexOf(previewIdx);
+          setPreviewIdx(previewable[(pos + 1) % previewable.length]);
+        };
+        const asset: PreviewableAsset = {
+          url: ad.signed_url,
+          title: `${ad.aspect} — ${p?.hook?.slice(0, 60) || p?.pillar || "ad"}`,
+          subtitle: `Week ${p?.week ?? "?"}${p?.platform ? " · " + p.platform : ""}`,
+          platform: p?.platform,
+          assetKind: ad.aspect,
+          width: ad.width,
+          height: ad.height,
+          canvasPlan: ad.canvas_plan,
+          qaStatus: ad.qa_status,
+          qaNotes: ad.qa_notes,
+          modelUsed: ad.model_used,
+          lastFeedback: ad.last_feedback,
+          lastHeadline: ad.last_headline,
+          lastLogoSize: ad.last_logo_size,
+          updatedAt: ad.updated_at,
+        };
+        return (
+          <AssetPreviewDialog
+            open={previewIdx !== null}
+            onOpenChange={(v) => !v && setPreviewIdx(null)}
+            asset={asset}
+            onPrev={previewable.length > 1 ? goPrev : undefined}
+            onNext={previewable.length > 1 ? goNext : undefined}
+            busy={deletingId === ad.id}
+            onDelete={() => doDelete(ad.id)}
+          />
+        );
+      })()}
     </div>
   );
 }
+
 
 
 // ============================================================
