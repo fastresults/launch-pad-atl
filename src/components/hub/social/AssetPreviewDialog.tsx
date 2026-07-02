@@ -203,6 +203,17 @@ export function AssetPreviewDialog({
               </div>
             )}
 
+            {asset.lastHeadline !== undefined && asset.lastHeadline !== null && (
+              <div>
+                <div className="text-muted-foreground">Headline on image</div>
+                <div className="rounded border border-border bg-background/40 p-2 text-[11px]">
+                  {asset.lastHeadline === ""
+                    ? <span className="italic text-muted-foreground">No text (suppressed)</span>
+                    : <span className="font-medium">"{asset.lastHeadline}"</span>}
+                </div>
+              </div>
+            )}
+
             {asset.lastFeedback && (
               <div>
                 <div className="text-muted-foreground">Last feedback</div>
