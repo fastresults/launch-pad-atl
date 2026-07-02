@@ -1,0 +1,583 @@
+// @ts-nocheck
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  ExternalLink,
+  Loader2,
+  Scale,
+  Sparkles,
+  FileText,
+  MessageCircleQuestion,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { RichMarkdown } from "@/components/markdown/RichMarkdown";
+import { GEORGIA_LEGAL_STEPS, recommendEntity, type LegalStep } from "@/lib/legal-setup";
+import {
+  generateOperatingAgreement,
+  getMyLegalSetup,
+  toggleLegalStep,
+  upsertMyLegalSetup,
+  type LegalSetupProgress,
+} from "@/lib/legal-setup.functions";
+import { getMyFiling } from "@/lib/filing.functions";
+
+export default function LegalSetupPage() {
+  const qc = useQueryClient();
+  const { data: progress } = useQuery({ queryKey: ["my", "legal-setup"], queryFn: getMyLegalSetup });
+  const { data: filing } = useQuery({ queryKey: ["my", "filing"], queryFn: getMyFiling });
+
+  const completed = progress?.steps_completed ?? {};
+  const doneCount = GEORGIA_LEGAL_STEPS.filter((s) => completed[s.key]).length;
+  const pct = Math.round((doneCount / GEORGIA_LEGAL_STEPS.length) * 100);
+
+  const toggle = useMutation({
+    mutationFn: (v: { key: string; done: boolean }) => toggleLegalStep(v.key, v.done),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my", "legal-setup"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
+  });
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
+          <Link to="/dashboard/workflow">
+            <ArrowLeft className="mr-1 h-4 w-4" /> Back to workflow
+          </Link>
+        </Button>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Scale className="h-6 w-6 text-primary" />
+              <h1 className="text-3xl font-semibold tracking-tight">Legal Setup — Georgia</h1>
+            </div>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              A concierge walkthrough for forming your business in Georgia and getting your Federal EIN. Every step tells you what to click, what it costs, and how long it takes. Mark each one complete as you go.
+            </p>
+          </div>
+          <div className="min-w-[220px]">
+            <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+              <span>Progress</span>
+              <span>
+                {doneCount} / {GEORGIA_LEGAL_STEPS.length}
+              </span>
+            </div>
+            <Progress value={pct} className="h-2" />
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-card/50 p-4 text-xs text-muted-foreground">
+        <strong className="text-foreground">Not legal advice.</strong> This is a step-by-step
+        guide for the standard Georgia LLC formation and IRS EIN application. For unusual
+        situations — foreign founders, multiple entity structures, professional-license
+        industries — talk to a Georgia business attorney before you file.
+      </div>
+
+      <Accordion type="multiple" defaultValue={["step-1"]} className="space-y-3">
+        {GEORGIA_LEGAL_STEPS.map((step) => (
+          <StepBlock
+            key={step.key}
+            step={step}
+            done={!!completed[step.key]}
+            progress={progress ?? null}
+            filing={filing ?? {}}
+            onToggle={(v) => toggle.mutate({ key: step.key, done: v })}
+          />
+        ))}
+      </Accordion>
+    </div>
+  );
+}
+
+function StepBlock({
+  step,
+  done,
+  progress,
+  filing,
+  onToggle,
+}: {
+  step: LegalStep;
+  done: boolean;
+  progress: LegalSetupProgress | null;
+  filing: Record<string, any>;
+  onToggle: (v: boolean) => void;
+}) {
+  return (
+    <AccordionItem
+      value={`step-${step.n}`}
+      className={`rounded-2xl border ${done ? "border-status-success/40 bg-status-success/5" : "border-white/10 bg-card"} px-4`}
+    >
+      <AccordionTrigger className="py-4 hover:no-underline">
+        <div className="flex flex-1 items-center gap-3 pr-2 text-left">
+          <div
+            className={`flex h-8 w-8 flex-none items-center justify-center rounded-full border text-sm font-semibold ${
+              done
+                ? "border-status-success/50 bg-status-success/10 text-status-success"
+                : "border-primary/40 bg-primary/5 text-primary"
+            }`}
+          >
+            {done ? <CheckCircle2 className="h-4 w-4" /> : step.n}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-base font-semibold">{step.label}</h3>
+              <span className="text-xs text-muted-foreground">· ~{step.estMinutes} min · {step.cost}</span>
+            </div>
+            <p className="mt-0.5 text-xs text-muted-foreground">{step.short}</p>
+          </div>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent className="pb-5 pt-1">
+        <div className="space-y-4 text-sm">
+          <p className="whitespace-pre-line leading-relaxed text-muted-foreground">{step.detail}</p>
+
+          <StepInputs step={step} progress={progress} filing={filing} />
+
+          <div className="flex flex-wrap gap-2">
+            {step.officialLinks.map((l) => (
+              <Button key={l.url} asChild size="sm" variant="outline">
+                <a href={l.url} target="_blank" rel="noreferrer noopener">
+                  <ExternalLink className="mr-1 h-3.5 w-3.5" /> {l.label}
+                </a>
+              </Button>
+            ))}
+          </div>
+
+          <Separator className="opacity-40" />
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <Checkbox checked={done} onCheckedChange={(v) => onToggle(!!v)} />
+              <span className="font-medium">
+                {done ? "Step complete" : "Mark this step complete"}
+              </span>
+            </label>
+            <StuckHelpButton step={step} />
+          </div>
+        </div>
+      </AccordionContent>
+    </AccordionItem>
+  );
+}
+
+function StepInputs({
+  step,
+  progress,
+  filing,
+}: {
+  step: LegalStep;
+  progress: LegalSetupProgress | null;
+  filing: Record<string, any>;
+}) {
+  const qc = useQueryClient();
+  const save = useMutation({
+    mutationFn: (patch: Partial<LegalSetupProgress>) => upsertMyLegalSetup(patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my", "legal-setup"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
+  });
+
+  if (step.key === "entity_choice") return <EntityChoicePanel progress={progress} onSave={(p) => save.mutate(p)} />;
+  if (step.key === "name_check")
+    return (
+      <NameCheckPanel
+        progress={progress}
+        defaultName={filing?.llc_name || ""}
+        onSave={(p) => save.mutate(p)}
+      />
+    );
+  if (step.key === "registered_agent")
+    return (
+      <RegisteredAgentPanel
+        progress={progress}
+        defaultAgent={filing?.registered_agent_name || ""}
+        onSave={(p) => save.mutate(p)}
+      />
+    );
+  if (step.key === "articles_filed")
+    return <ArticlesPanel progress={progress} filing={filing} onSave={(p) => save.mutate(p)} />;
+  if (step.key === "ein") return <EinPanel progress={progress} onSave={(p) => save.mutate(p)} />;
+  if (step.key === "operating_agreement")
+    return <OperatingAgreementPanel progress={progress} onSave={(p) => save.mutate(p)} />;
+  if (step.key === "post_formation") return <PostFormationPanel />;
+  return null;
+}
+
+// ---------- Step panels ----------
+
+function EntityChoicePanel({
+  progress,
+  onSave,
+}: {
+  progress: LegalSetupProgress | null;
+  onSave: (p: Partial<LegalSetupProgress>) => void;
+}) {
+  const [choice, setChoice] = useState<string>(progress?.entity_choice ?? "llc");
+  useEffect(() => {
+    if (progress?.entity_choice) setChoice(progress.entity_choice);
+  }, [progress?.entity_choice]);
+  const rec = recommendEntity({ hasCofounders: false });
+  return (
+    <div className="rounded-xl border border-white/10 bg-background/40 p-4">
+      <div className="mb-2 flex items-center gap-2 text-xs">
+        <Sparkles className="h-3.5 w-3.5 text-primary" />
+        <span className="font-medium">Our recommendation:</span>
+        <span className="text-muted-foreground">{rec.reason}</span>
+      </div>
+      <RadioGroup
+        value={choice}
+        onValueChange={(v) => {
+          setChoice(v);
+          onSave({ entity_choice: v });
+        }}
+        className="grid gap-2 sm:grid-cols-3"
+      >
+        {[
+          { v: "llc", label: "LLC", sub: "Recommended" },
+          { v: "s_corp", label: "S-Corp", sub: "Payroll from day one" },
+          { v: "sole_prop", label: "Sole Prop", sub: "Testing only" },
+        ].map((opt) => (
+          <label
+            key={opt.v}
+            className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm ${
+              choice === opt.v ? "border-primary bg-primary/5" : "border-white/10"
+            }`}
+          >
+            <RadioGroupItem value={opt.v} className="mt-0.5" />
+            <div>
+              <div className="font-medium">{opt.label}</div>
+              <div className="text-xs text-muted-foreground">{opt.sub}</div>
+            </div>
+          </label>
+        ))}
+      </RadioGroup>
+    </div>
+  );
+}
+
+function NameCheckPanel({
+  progress,
+  defaultName,
+  onSave,
+}: {
+  progress: LegalSetupProgress | null;
+  defaultName: string;
+  onSave: (p: Partial<LegalSetupProgress>) => void;
+}) {
+  const [name, setName] = useState(progress?.business_name || defaultName || "");
+  const [reserved, setReserved] = useState(progress?.name_reserved ?? false);
+  useEffect(() => {
+    setName(progress?.business_name || defaultName || "");
+    setReserved(progress?.name_reserved ?? false);
+  }, [progress?.business_name, progress?.name_reserved, defaultName]);
+  const searchUrl = useMemo(
+    () => `https://ecorp.sos.ga.gov/BusinessSearch?businessName=${encodeURIComponent(name || "")}`,
+    [name],
+  );
+  return (
+    <div className="grid gap-3 rounded-xl border border-white/10 bg-background/40 p-4 sm:grid-cols-2">
+      <div>
+        <Label className="text-xs">Proposed LLC name</Label>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={() => onSave({ business_name: name || null })}
+          placeholder="e.g. Peachtree Kitchen LLC"
+        />
+        <div className="mt-2">
+          <Button asChild size="sm" variant="secondary">
+            <a href={searchUrl} target="_blank" rel="noreferrer noopener">
+              Search this name on eCorp <ExternalLink className="ml-1 h-3.5 w-3.5" />
+            </a>
+          </Button>
+        </div>
+      </div>
+      <label className="mt-6 flex cursor-pointer items-start gap-2 text-sm">
+        <Checkbox
+          checked={reserved}
+          onCheckedChange={(v) => {
+            const next = !!v;
+            setReserved(next);
+            onSave({ name_reserved: next });
+          }}
+        />
+        <div>
+          <div className="font-medium">I reserved this name ($25, optional)</div>
+          <div className="text-xs text-muted-foreground">
+            Only needed if you're not filing within 30 days.
+          </div>
+        </div>
+      </label>
+    </div>
+  );
+}
+
+function RegisteredAgentPanel({
+  progress,
+  defaultAgent,
+  onSave,
+}: {
+  progress: LegalSetupProgress | null;
+  defaultAgent: string;
+  onSave: (p: Partial<LegalSetupProgress>) => void;
+}) {
+  const [choice, setChoice] = useState(progress?.registered_agent_choice || "self");
+  const [name, setName] = useState(progress?.registered_agent_name || defaultAgent || "");
+  const [service, setService] = useState(progress?.registered_agent_service || "");
+  useEffect(() => {
+    setChoice(progress?.registered_agent_choice || "self");
+    setName(progress?.registered_agent_name || defaultAgent || "");
+    setService(progress?.registered_agent_service || "");
+  }, [progress?.registered_agent_choice, progress?.registered_agent_name, progress?.registered_agent_service, defaultAgent]);
+  return (
+    <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+      <RadioGroup
+        value={choice}
+        onValueChange={(v) => {
+          setChoice(v);
+          onSave({ registered_agent_choice: v });
+        }}
+        className="grid gap-2 sm:grid-cols-3"
+      >
+        {[
+          { v: "self", label: "I'll be my own agent", sub: "Free, public address" },
+          { v: "cofounder", label: "Cofounder / friend", sub: "Free, they must agree" },
+          { v: "service", label: "Use a service", sub: "$99–$150/year, private" },
+        ].map((opt) => (
+          <label
+            key={opt.v}
+            className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm ${
+              choice === opt.v ? "border-primary bg-primary/5" : "border-white/10"
+            }`}
+          >
+            <RadioGroupItem value={opt.v} className="mt-0.5" />
+            <div>
+              <div className="font-medium">{opt.label}</div>
+              <div className="text-xs text-muted-foreground">{opt.sub}</div>
+            </div>
+          </label>
+        ))}
+      </RadioGroup>
+      {choice !== "service" ? (
+        <div>
+          <Label className="text-xs">Agent's full name</Label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={() => onSave({ registered_agent_name: name || null })}
+            placeholder="First Last"
+          />
+        </div>
+      ) : (
+        <div>
+          <Label className="text-xs">Service provider</Label>
+          <Input
+            value={service}
+            onChange={(e) => setService(e.target.value)}
+            onBlur={() => onSave({ registered_agent_service: service || null })}
+            placeholder="Northwest Registered Agent"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ArticlesPanel({
+  progress,
+  filing,
+  onSave,
+}: {
+  progress: LegalSetupProgress | null;
+  filing: Record<string, any>;
+  onSave: (p: Partial<LegalSetupProgress>) => void;
+}) {
+  const [ctl, setCtl] = useState(progress?.articles_control_number || "");
+  const [filedDate, setFiledDate] = useState<string>(
+    progress?.articles_filed_at ? progress.articles_filed_at.slice(0, 10) : "",
+  );
+  useEffect(() => {
+    setCtl(progress?.articles_control_number || "");
+    setFiledDate(progress?.articles_filed_at ? progress.articles_filed_at.slice(0, 10) : "");
+  }, [progress?.articles_control_number, progress?.articles_filed_at]);
+  const crib = [
+    ["Entity name", progress?.business_name || filing?.llc_name || "—"],
+    ["Registered Agent name", progress?.registered_agent_name || filing?.registered_agent_name || "—"],
+    ["Registered Agent address", filing?.registered_agent_address || `${filing?.address_line1 ?? ""} ${filing?.city ?? ""}, GA ${filing?.postal_code ?? ""}` || "—"],
+    ["Principal office", `${filing?.address_line1 ?? ""} ${filing?.city ?? ""}, GA ${filing?.postal_code ?? ""}`],
+    ["Organizer", `${filing?.legal_first_name ?? ""} ${filing?.legal_last_name ?? ""}`.trim() || "—"],
+  ];
+  return (
+    <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+      <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Field-by-field crib sheet (from your Filing Info)
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {crib.map(([k, v]) => (
+          <div key={k} className="rounded-lg bg-background/60 px-3 py-2 text-xs">
+            <div className="text-muted-foreground">{k}</div>
+            <div className="mt-0.5 font-medium">{v || "—"}</div>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Missing something?{" "}
+        <Link to="/dashboard/filing" className="underline">
+          Update your Filing Info
+        </Link>{" "}
+        and the values here will refresh.
+      </p>
+      <Separator className="opacity-40" />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <Label className="text-xs">Control number (once approved)</Label>
+          <Input
+            value={ctl}
+            onChange={(e) => setCtl(e.target.value)}
+            onBlur={() => onSave({ articles_control_number: ctl || null })}
+            placeholder="e.g. 23456789"
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Date filed</Label>
+          <Input
+            type="date"
+            value={filedDate}
+            onChange={(e) => {
+              setFiledDate(e.target.value);
+              onSave({ articles_filed_at: e.target.value ? new Date(e.target.value).toISOString() : null });
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EinPanel({
+  progress,
+  onSave,
+}: {
+  progress: LegalSetupProgress | null;
+  onSave: (p: Partial<LegalSetupProgress>) => void;
+}) {
+  const [ein, setEin] = useState(progress?.ein || "");
+  useEffect(() => setEin(progress?.ein || ""), [progress?.ein]);
+  return (
+    <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+      <ol className="ml-4 list-decimal space-y-1 text-xs text-muted-foreground">
+        <li>Open the IRS EIN online application (Mon–Fri, 7am–10pm ET).</li>
+        <li>Legal structure → <strong>Limited Liability Company</strong> → number of members → state <strong>Georgia</strong>.</li>
+        <li>Reason for applying → <strong>Started a new business</strong>.</li>
+        <li>Responsible party → your legal name + SSN or ITIN.</li>
+        <li><strong>Download the CP 575 PDF at the end.</strong> The IRS will not email it.</li>
+      </ol>
+      <div>
+        <Label className="text-xs">Your EIN (format: XX-XXXXXXX)</Label>
+        <Input
+          value={ein}
+          onChange={(e) => setEin(e.target.value)}
+          onBlur={() =>
+            onSave({
+              ein: ein || null,
+              ein_obtained_at: ein ? new Date().toISOString() : null,
+            })
+          }
+          placeholder="12-3456789"
+        />
+      </div>
+    </div>
+  );
+}
+
+function OperatingAgreementPanel({
+  progress,
+  onSave,
+}: {
+  progress: LegalSetupProgress | null;
+  onSave: (p: Partial<LegalSetupProgress>) => void;
+}) {
+  const qc = useQueryClient();
+  const gen = useMutation({
+    mutationFn: () => generateOperatingAgreement(),
+    onSuccess: (r) => {
+      onSave({
+        operating_agreement_markdown: r.markdown,
+        operating_agreement_generated_at: new Date().toISOString(),
+      });
+      qc.invalidateQueries({ queryKey: ["my", "legal-setup"] });
+      toast.success("Operating Agreement ready");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Generation failed"),
+  });
+  const md = progress?.operating_agreement_markdown;
+  return (
+    <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+      <Button onClick={() => gen.mutate()} disabled={gen.isPending} size="sm">
+        {gen.isPending ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Drafting…
+          </>
+        ) : (
+          <>
+            <FileText className="mr-2 h-4 w-4" /> {md ? "Regenerate draft" : "Generate my Operating Agreement"}
+          </>
+        )}
+      </Button>
+      {md && (
+        <div className="max-h-96 overflow-y-auto rounded-lg border border-white/10 bg-background/60 p-4">
+          <RichMarkdown>{md}</RichMarkdown>
+        </div>
+      )}
+      {md && (
+        <p className="text-xs text-muted-foreground">
+          This is a starting draft. If you have cofounders or outside investors, have a Georgia
+          business attorney review it before you sign.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function PostFormationPanel() {
+  return (
+    <div className="rounded-xl border border-white/10 bg-background/40 p-4 text-xs text-muted-foreground">
+      Every year on <strong className="text-foreground">April 1</strong>, file your Georgia
+      Annual Registration ($50). Skip it two years in a row and the state will
+      administratively dissolve your LLC.
+    </div>
+  );
+}
+
+function StuckHelpButton({ step }: { step: LegalStep }) {
+  const openConcierge = () => {
+    try {
+      window.dispatchEvent(
+        new CustomEvent("concierge:open", {
+          detail: { prompt: `I'm stuck on the "${step.label}" step for forming my Georgia LLC. ${step.short}` },
+        }),
+      );
+    } catch {}
+  };
+  return (
+    <Button variant="ghost" size="sm" onClick={openConcierge}>
+      <MessageCircleQuestion className="mr-1 h-4 w-4" /> What if I'm stuck?
+    </Button>
+  );
+}

@@ -1379,6 +1379,75 @@ export type Database = {
           },
         ]
       }
+      legal_setup_progress: {
+        Row: {
+          articles_control_number: string | null
+          articles_filed_at: string | null
+          business_name: string | null
+          created_at: string
+          ein: string | null
+          ein_obtained_at: string | null
+          entity_choice: string | null
+          entity_state: string | null
+          id: string
+          name_reserved: boolean
+          notes: string | null
+          operating_agreement_generated_at: string | null
+          operating_agreement_markdown: string | null
+          registered_agent_choice: string | null
+          registered_agent_name: string | null
+          registered_agent_service: string | null
+          snapshot_id: string | null
+          steps_completed: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          articles_control_number?: string | null
+          articles_filed_at?: string | null
+          business_name?: string | null
+          created_at?: string
+          ein?: string | null
+          ein_obtained_at?: string | null
+          entity_choice?: string | null
+          entity_state?: string | null
+          id?: string
+          name_reserved?: boolean
+          notes?: string | null
+          operating_agreement_generated_at?: string | null
+          operating_agreement_markdown?: string | null
+          registered_agent_choice?: string | null
+          registered_agent_name?: string | null
+          registered_agent_service?: string | null
+          snapshot_id?: string | null
+          steps_completed?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          articles_control_number?: string | null
+          articles_filed_at?: string | null
+          business_name?: string | null
+          created_at?: string
+          ein?: string | null
+          ein_obtained_at?: string | null
+          entity_choice?: string | null
+          entity_state?: string | null
+          id?: string
+          name_reserved?: boolean
+          notes?: string | null
+          operating_agreement_generated_at?: string | null
+          operating_agreement_markdown?: string | null
+          registered_agent_choice?: string | null
+          registered_agent_name?: string | null
+          registered_agent_service?: string | null
+          snapshot_id?: string | null
+          steps_completed?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       media_assets: {
         Row: {
           ai_error: string | null

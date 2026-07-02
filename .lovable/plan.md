@@ -1,37 +1,57 @@
-## Problem
+# Georgia Legal Setup — Foundation Workflow
 
-In the ad preview, the headline reads:
+Add a new Foundation-stage tool that walks the founder step-by-step through legally forming their business in Georgia and obtaining a Federal EIN (FEIN). It reuses the existing Filing Info the founder already provides, generates a personalized packet, and tracks progress task-by-task so the user always knows what to do next.
 
-> "Within five years of the final whistle, nearly 80% of professional athletes face a financial or"
+## What the founder experiences
 
-It cuts off mid-clause at "financial or". The SVG compositor already supports 4-line tiered rendering, but two upstream stages are chopping the text before it ever reaches the compositor:
+A new card appears at the top of the Foundation pillar: **"Legal Setup — Form your Georgia business."** Opening it launches a full-page checklist with 7 sequential steps. Each step has a plain-English explanation, the official GA link, an estimated time, an estimated cost, and a "Mark complete" toggle. Progress persists per user and shows as a ring on the Foundation stage.
 
-1. `content-ad-director.ts` → `HEADLINE_CAP = { "1:1": 100, "4:5": 110, "9:16": 120 }` word-safely trims the hook to ~100 chars for square ads. That is why the sentence dies at "financial or".
-2. `venture-parse-content-calendar` prompt asks for a `hook` with no length/line target, so the LLM writes hooks that only comfortably render as 2 lines. When a longer, more compelling hook comes through, it gets truncated at step 1.
+### The 7 steps
 
-## Fix
+1. **Choose your entity** — LLC vs S-Corp vs Sole Prop, with a recommendation based on the founder's brief (industry, revenue plans, cofounders). Auto-picks LLC unless the brief signals otherwise.
+2. **Name check + reservation** — GA Corporations Division business-name search, optional 30-day name reservation.
+3. **Registered Agent** — explain the role, offer three paths: self, cofounder, third-party service (Northwest / ZenBusiness / Registered Agents Inc). Pre-fills from Filing Info.
+4. **File Articles of Organization** — direct link to `ecorp.sos.ga.gov`, exact fees ($100 online / $110 mail), field-by-field crib sheet pre-filled from Filing Info the founder already entered.
+5. **Get your FEIN (EIN)** — IRS Form SS-4 online walkthrough, exactly which "reason for applying" and "responsible party" options to choose, screenshot-annotated 10-minute path. Saves the EIN back to the profile once entered.
+6. **Operating Agreement** — generates a Georgia-specific single/multi-member Operating Agreement document from the founder's data (uses the existing document generator pipeline).
+7. **Post-formation checklist** — GA Annual Registration ($50, due April 1), business bank account, sales/use tax registration (if selling taxable goods), local business license (Atlanta or founder's city), BOI report status (currently paused — noted with disclaimer).
 
-### 1. Raise the director caps so full sentences survive (`supabase/functions/_shared/content-ad-director.ts`)
-- `HEADLINE_CAP` → `{ "1:1": 180, "4:5": 200, "9:16": 220 }` (roughly the char budget of 4 full lines at the compositor's min font size).
-- Keep `truncateHeadline` as the safety net for pathological cases; with the new caps, real hooks will pass through untouched.
+Every step has a **"What if I'm stuck?"** button that pipes the step + the founder's context into the Ask Concierge chatbot pre-loaded.
 
-### 2. Tune the SVG tiering so it actually reaches for 4 lines (`supabase/functions/_shared/content-ad-svg.ts`)
-- `targetLinesForLength` thresholds: `≤28→1`, `≤60→2`, `≤110→3`, `else→4` (was `≤28/≤55/≤90/else`). The current headline (~110 chars) will now start at tier 4 instead of walking up from 3.
-- `sizeRangeForTier(4)` min font: drop from `32*s` to `28*s` so 4 lines of ~45 chars each fit inside the top band without emergency shrink.
-- `maxBandPct("1:1")`: `0.42 → 0.46` so tier-4 has room without crowding the image.
+## How it fits the existing product
 
-### 3. Prompt the calendar to write 4-line-ready hooks (`supabase/functions/venture-parse-content-calendar/index.ts`)
-Update the JSON-return instruction and field description so the LLM aims for the full band:
-- Add explicit length guidance: "`hook`: 120–170 characters, one complete sentence or two tight clauses. Written to occupy 4 lines on a square ad — do not truncate, do not end mid-clause."
-- Add a hard rule: "Never end a hook with a dangling conjunction ('and', 'or', 'but', 'because'). Complete the thought."
+- Lives inside the Foundation pillar on the workflow page — same visual pattern as the current deliverable cards, so it feels native.
+- Reads from `attendee_filing_info` / `member_filings` (already collected on the Filing page) so most fields are pre-filled.
+- Writes progress to a new lightweight `legal_setup_progress` table keyed on `user_id` + `venture_snapshot_id`.
+- Generates the Operating Agreement through the existing `venture-generate-document` edge function, adding a new document type `operating_agreement_ga`.
+- Deep-links each step's "help" button to the existing Ask Concierge with a scoped system prompt.
 
-### 4. Regenerate note in the UI (`RegenerateAssetDialog.tsx`)
-The "Headline on image" custom-override input currently reads the truncated hook back. After the cap change, seed the input with the untruncated `post.hook` so founders see and can edit the full sentence.
+## Technical outline
 
-## Verification
+### Database (one migration)
 
-- Re-open the affected asset → Regenerate with no changes → headline renders 4 lines ending in a period, no "financial or" cutoff.
-- Regenerate on a short (~40 char) hook → still renders 1–2 lines large.
-- Regenerate on a 9:16 story → tier picks up to 5 lines when needed.
+- New table `public.legal_setup_progress` — `id`, `user_id`, `snapshot_id`, `entity_choice`, `entity_state`, `ein`, `registered_agent_choice`, `steps_completed jsonb`, `notes`, timestamps. Full GRANTs + RLS ("founder owns their row" + admin bypass), plus `updated_at` trigger.
+- Seed one row in `public.deliverable_types` for `legal_setup_ga` (Foundation stage, `output_kind='workflow'`, `user_can_trigger=true`).
+- Seed one row in `public.venture_document_types` for `operating_agreement_ga`.
 
-No DB migrations, no new dependencies.
+### Frontend
+
+- `src/lib/legal-setup.ts` — pure data: the 7 steps, GA-specific links, fees, and copy.
+- `src/lib/legal-setup.functions.ts` — read/write progress via the Supabase client.
+- `src/components/foundation/LegalSetupCard.tsx` — teaser card slotted into the Foundation pillar list.
+- `src/routes/_authenticated/dashboard/legal-setup.tsx` — full stepper page (reuses existing `Accordion` + `Checkbox` primitives).
+- Hook the "Generate Operating Agreement" button into the existing document generation flow.
+
+### Edge function
+
+- Extend `venture-generate-document` (or add `venture-generate-operating-agreement`) with a Georgia-specific Operating Agreement prompt that consumes filing info + entity choice.
+
+### Chatbot integration
+
+- Extend `src/lib/chatbot-knowledge.ts` with a "Georgia formation" section (SOS process, EIN, GA annual registration, Atlanta business license) so the concierge answers accurately when a founder clicks "What if I'm stuck?".
+
+## Out of scope (call out to user)
+
+- We won't file on the founder's behalf or store SSNs beyond what Filing Info already collects.
+- BOI/CTA reporting is currently paused by court order — we'll surface the current status with a link but not automate it.
+- Non-Georgia states are not covered in this iteration; the card only appears when the founder's Filing Info state is GA (or unset — then we ask).

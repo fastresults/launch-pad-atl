@@ -63,6 +63,19 @@ ${stagesBlock()}
 ## Why foundation first (before you spend on brand, site, ads)
 ${foundationBlock()}
 
+## Legal Setup (Georgia) — inside your dashboard
+Under Foundation you'll find a step-by-step **Legal Setup** walkthrough for forming
+your business in Georgia:
+1. Choose entity (LLC recommended for most).
+2. Check + reserve name on the GA Corporations Division (ecorp.sos.ga.gov).
+3. Pick a Registered Agent (self, cofounder, or a paid service).
+4. File Articles of Organization with the GA Secretary of State ($100 online).
+5. Get your Federal EIN (FEIN) from the IRS (free, ~10 minutes online).
+6. Generate your Georgia-specific Operating Agreement.
+7. Post-formation: annual $50 registration each April 1, business bank account,
+   local city/county licenses.
+This is guidance, not legal advice — complex situations should see a Georgia attorney.
+
 ## The modern build layer — what comes next (optional, after the workshop)
 Eight additional capabilities. Each is a separate half-day workshop (from ${WORKSHOP_PRICE_LABEL}) OR
 our team can build it done-for-you.

@@ -11,6 +11,7 @@ import { CheckCircle2, Circle, Lock, Loader2, Play, Sparkles, Presentation } fro
 import { toast } from "sonner";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
 import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
+import { LegalSetupCard } from "@/components/foundation/LegalSetupCard";
 
 type WorkflowItem = {
   key: string;
@@ -324,6 +325,7 @@ export default function WorkflowPage() {
               )}
             </div>
           </div>
+          {n === 1 && <LegalSetupCard />}
           <div className="grid gap-3 md:grid-cols-2">
             {group.items.map((d) => {
               const Icon = d.generated ? CheckCircle2 : d.deps_met ? Circle : Lock;
