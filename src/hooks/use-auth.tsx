@@ -1,11 +1,23 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getMyAccount, type AppRole, type MemberStatus } from "@/lib/auth.functions";
 
+const IMPERSONATION_KEY = "sl.impersonation.v1";
+
+type ImpersonationTarget = {
+  userId: string;
+  name: string;
+  email: string;
+  logId?: string;
+};
+
 type AuthState = {
+  /** The effective user (target when impersonating, else the real user). Downstream reads use `user.id` transparently. */
   user: User | null;
+  /** The real signed-in user (the admin), regardless of impersonation. */
+  actorUser: User | null;
   session: Session | null;
   roles: AppRole[];
   memberStatus: MemberStatus;
@@ -17,20 +29,37 @@ type AuthState = {
   isSuperAdmin: boolean;
   isApprovedMember: boolean;
   signOut: () => Promise<void>;
+  // Impersonation
+  isImpersonating: boolean;
+  impersonationTarget: ImpersonationTarget | null;
+  startImpersonation: (t: Omit<ImpersonationTarget, "logId">) => Promise<void>;
+  stopImpersonation: () => Promise<void>;
 };
 
-
 const AuthContext = createContext<AuthState | null>(null);
+
+function readStoredImpersonation(): ImpersonationTarget | null {
+  try {
+    const raw = sessionStorage.getItem(IMPERSONATION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as ImpersonationTarget;
+  } catch {
+    return null;
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [actorUser, setActorUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [memberStatus, setMemberStatus] = useState<MemberStatus>("pending");
   const [approvedVia, setApprovedVia] = useState<"admin" | "payment" | null>(null);
   const [foundersHubAccess, setFoundersHubAccess] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [impersonation, setImpersonation] = useState<ImpersonationTarget | null>(() =>
+    readStoredImpersonation(),
+  );
 
   useEffect(() => {
     let active = true;
@@ -64,10 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
-      setUser(s?.user ?? null);
+      setActorUser(s?.user ?? null);
       setTimeout(() => {
         loadAccount(s?.user ?? null);
         queryClient.invalidateQueries();
@@ -77,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
       setSession(data.session);
-      setUser(data.session?.user ?? null);
+      setActorUser(data.session?.user ?? null);
       loadAccount(data.session?.user ?? null).finally(() => {
         if (active) setLoading(false);
       });
@@ -89,27 +117,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [queryClient]);
 
+  const isAdmin = roles.includes("admin") || roles.includes("super_admin");
+
+  // Auto-clear impersonation if the actor is no longer admin.
+  useEffect(() => {
+    if (impersonation && !isAdmin && actorUser) {
+      sessionStorage.removeItem(IMPERSONATION_KEY);
+      setImpersonation(null);
+    }
+  }, [impersonation, isAdmin, actorUser]);
+
+  const startImpersonation: AuthState["startImpersonation"] = async (t) => {
+    if (!isAdmin) throw new Error("Only admins can impersonate");
+    let logId: string | undefined;
+    try {
+      const { data, error } = await supabase.rpc("start_impersonation", { _target: t.userId });
+      if (error) throw error;
+      logId = data as string;
+    } catch (e) {
+      console.warn("start_impersonation log failed", e);
+    }
+    const target: ImpersonationTarget = { ...t, logId };
+    sessionStorage.setItem(IMPERSONATION_KEY, JSON.stringify(target));
+    setImpersonation(target);
+    queryClient.clear();
+  };
+
+  const stopImpersonation: AuthState["stopImpersonation"] = async () => {
+    const current = impersonation;
+    sessionStorage.removeItem(IMPERSONATION_KEY);
+    setImpersonation(null);
+    queryClient.clear();
+    if (current?.logId) {
+      try {
+        await supabase.rpc("end_impersonation", { _id: current.logId });
+      } catch (e) {
+        console.warn("end_impersonation log failed", e);
+      }
+    }
+  };
+
+  // Effective user: swap id/email when impersonating. Downstream reads of `user.id` transparently
+  // target the impersonated user. All authenticated Supabase requests still authenticate as the actor.
+  const effectiveUser = useMemo<User | null>(() => {
+    if (impersonation && isAdmin && actorUser) {
+      return {
+        ...actorUser,
+        id: impersonation.userId,
+        email: impersonation.email || actorUser.email,
+      };
+    }
+    return actorUser;
+  }, [impersonation, isAdmin, actorUser]);
+
   const signOut = async () => {
+    sessionStorage.removeItem(IMPERSONATION_KEY);
+    setImpersonation(null);
     await supabase.auth.signOut();
   };
 
-  const isAdmin = roles.includes("admin") || roles.includes("super_admin");
-
   const value: AuthState = {
-    user,
+    user: effectiveUser,
+    actorUser,
     session,
     roles,
     memberStatus,
     approvedVia,
     foundersHubAccess,
     loading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!actorUser,
     isAdmin,
     isSuperAdmin: roles.includes("super_admin"),
     isApprovedMember: isAdmin || memberStatus === "approved",
     signOut,
+    isImpersonating: !!impersonation && isAdmin,
+    impersonationTarget: impersonation,
+    startImpersonation,
+    stopImpersonation,
   };
-
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
