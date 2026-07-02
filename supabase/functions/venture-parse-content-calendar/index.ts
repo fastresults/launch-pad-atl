@@ -187,15 +187,16 @@ Rules:
 - 3-6 relevant hashtags, no leading '#' duplication.
 - Days: Mon/Wed/Fri unless prior calendar suggests otherwise.
 No prose outside the JSON.`;
-      const userMsg = `Startup: ${snap.business_name ?? "(unnamed)"}
-Pitch: ${snap.one_line_pitch ?? ""}
-Audience: ${snap.target_market ?? ""}
-Voice: ${snap.brand_voice ?? snap.tone ?? "friendly, direct"}
+      const userMsg = `Startup: ${snap.company_name ?? "(unnamed)"}
+Concept: ${snap.business_concept ?? ""}
+Value prop: ${snap.value_proposition ?? ""}
+Differentiator: ${snap.differentiation_statement ?? ""}
 
 Existing calendar so far:
 ${existingSummary || "(none)"}
 
 Draft 3 posts for Week ${week}.`;
+
 
       const lovableKey = Deno.env.get("LOVABLE_API_KEY");
       if (!lovableKey) return json({ error: "AI gateway not configured" }, 500);
