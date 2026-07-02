@@ -89,7 +89,7 @@ function ventureBlock(ctx: any, headlineOverride?: HeadlineOverride) {
 
 export type HeadlineOverride = { mode: "auto" | "custom" | "none"; text?: string };
 
-function autoHeadline(ctx: any): string {
+export function autoHeadline(ctx: any): string {
   const brain = ctx?.brain ?? {};
   return (
     brain?.identity?.tagline ||
@@ -99,6 +99,7 @@ function autoHeadline(ctx: any): string {
     ""
   ).slice(0, 64);
 }
+
 
 // Resolves the final headline to render on the image.
 // Returns { text, suppress } — when suppress=true the composition must be
