@@ -357,8 +357,9 @@ Deno.serve(async (req) => {
     if (logoBytes) {
       try {
         bytes = await compositeLogo(bytes, logoBytes, {
-          placement: placementForAssetKind(PREVIEW_ASSET.kind),
+          placement: logoPlacement,
           surfaceHex: plan.surface,
+          logoSize,
         });
         logoComposited = true;
       } catch (e) {
@@ -366,6 +367,7 @@ Deno.serve(async (req) => {
       }
     }
     (qa as any).logo_composited = logoComposited;
+    (qa as any).logo_size = logoSize;
 
 
 
