@@ -23,6 +23,7 @@ import { listStylePreviews, generateStylePreview, deleteStylePreview, type Style
 import { RegenerateAssetDialog } from "./RegenerateAssetDialog";
 import { AssetPreviewDialog, type PreviewableAsset } from "./AssetPreviewDialog";
 import { RotateCcw } from "lucide-react";
+import { edgeStatus, edgeErrorMessage } from "@/lib/edge-errors";
 
 const PLATFORM_ICONS: Record<string, any> = {
   Instagram, LinkedIn: Linkedin, X: Twitter, Twitter, Facebook,
