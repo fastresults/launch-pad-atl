@@ -107,7 +107,7 @@ function Hero() {
           <span>Full support available</span>
         </p>
         <p className="mt-2 max-w-2xl text-xs text-white/60 md:text-sm">
-          Built for Main Street founders — cafés, salons, trades, local services, indie brands, and first-time small e-commerce. Other tracks (SaaS, marketplace, deep tech) supported too.
+          Two equal tracks — Main Street and Online. Cafés, salons, trades, local services and indie brands on one side; DTC and e-commerce brands, creators, digital services, agencies and small SaaS on the other. Pick the track that fits your startup. Marketplace and deep tech supported too.
         </p>
 
         <div className="mt-10 grid max-w-3xl grid-cols-1 gap-3 text-white/90 sm:grid-cols-2 lg:grid-cols-4 md:mt-12 md:gap-4">
