@@ -10,6 +10,7 @@ import {
   RefreshCw, Check, Eye, Trash2, Image as ImageIcon, ListChecks,
 } from "lucide-react";
 import { toast } from "sonner";
+import { edgeErrorMessage } from "@/lib/edge-errors";
 import { getBrandKit } from "@/lib/brandKit.functions";
 import { listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import {
