@@ -68,23 +68,28 @@ function typoBlock(kit: Kit) {
   return `  - Heading family: ${h}\n  - Body family: ${b}`;
 }
 
-function ventureBlock(ctx: any) {
+function ventureBlock(ctx: any, headlineOverride?: HeadlineOverride) {
   const brain = ctx?.brain ?? {};
   const name = brain?.identity?.company_name ?? ctx?.snap?.company_name ?? "the venture";
   const oneLiner = brain?.identity?.one_liner ?? "";
   const customer = brain?.customer ?? "";
   const diff = (brain?.differentiators ?? []).slice(0, 3).join("; ");
+  // When the founder is overriding the on-image headline (custom or none),
+  // do NOT show competing copy to the model — it will render the one-liner
+  // instead of the requested custom text.
+  const hideCopy = headlineOverride?.mode === "custom" || headlineOverride?.mode === "none";
   return [
     `  - Name: ${name}`,
-    oneLiner && `  - One-liner: ${oneLiner}`,
+    !hideCopy && oneLiner && `  - One-liner: ${oneLiner}`,
     customer && `  - Customer: ${customer}`,
     diff && `  - Differentiators: ${diff}`,
   ].filter(Boolean).join("\n");
 }
 
+
 export type HeadlineOverride = { mode: "auto" | "custom" | "none"; text?: string };
 
-function autoHeadline(ctx: any): string {
+export function autoHeadline(ctx: any): string {
   const brain = ctx?.brain ?? {};
   return (
     brain?.identity?.tagline ||
@@ -94,6 +99,7 @@ function autoHeadline(ctx: any): string {
     ""
   ).slice(0, 64);
 }
+
 
 // Resolves the final headline to render on the image.
 // Returns { text, suppress } — when suppress=true the composition must be
@@ -111,18 +117,7 @@ export function resolveHeadline(
 
 // ------- Per-asset composition systems -------
 
-function assetSystem(asset: AssetSpec, hasLogoImage: boolean, headline: string): string {
-  const kind = asset.kind;
-  const ratio = `${asset.width}:${asset.height}`;
 
-  if (kind === "avatar") {
-    return `AVATAR SYSTEM
-- The attached image #1 is the venture's official logo. Place it perfectly centered, occupying ~70% of the canvas shortest side.
-- Background: a single flat color drawn from the brand palette (prefer 'bg' if it contrasts with the logo; otherwise 'primary' or 'fg' — whichever yields ≥4.5:1 contrast against the logo's dominant ink).
-- No additional shapes, type, gradients, or decorations. Just the logo on color.
-- Logo pixels MUST be preserved — do not stylize, recolor, redraw, crop, or distort the mark.
-- Output a perfect square at ${asset.width}x${asset.height}.`;
-  }
 
 function assetSystem(
   asset: AssetSpec,
@@ -196,11 +191,21 @@ export function buildCoverArtPrompt(args: {
   const brief = DIRECTION_BRIEF[direction];
   const palette = paletteBlock(kit);
   const typo = typoBlock(kit);
-  const venture = ventureBlock(ctx);
   const { text: headline, suppress: suppressHeadline } = resolveHeadline(ctx, headlineOverride);
   const isCustomHeadline = headlineOverride?.mode === "custom" && !!headline;
+  const venture = ventureBlock(ctx, headlineOverride);
   const system = assetSystem(asset, hasLogoImage, headline, suppressHeadline, isCustomHeadline);
   const dims = `${asset.width}x${asset.height} (${asset.guidance})`;
+
+  // Auto-derived tagline the model must NOT paint when the founder has taken
+  // manual control of the on-image text.
+  const autoTag = autoHeadline(ctx);
+  const primaryTextObjective = isCustomHeadline
+    ? `\n## PRIMARY TEXT OBJECTIVE (READ FIRST — OVERRIDES ALL OTHER COPY GUIDANCE)\nThe ONLY lettering permitted anywhere on this canvas is the exact string:\n    "${headline}"\nRender it verbatim. No substitutions. No rewrites. No punctuation changes. No additional words, subheads, taglines, URLs, hashtags, or captions.\nFORBIDDEN TEXT: do NOT render "${autoTag}" or any paraphrase, translation, abbreviation, or restatement of it anywhere on the canvas.\n`
+    : suppressHeadline
+    ? `\n## PRIMARY TEXT OBJECTIVE (READ FIRST — OVERRIDES ALL OTHER COPY GUIDANCE)\nZERO lettering on this canvas. No headline, no tagline, no subhead, no URL, no callout, no caption, no watermark. Zero glyphs. Zero words. Zero numbers.\nFORBIDDEN TEXT: do NOT render "${autoTag}" or any paraphrase of it.\n`
+    : "";
+
 
   const forbiddenLines = plan.forbiddenPairs.slice(0, 6).map(
     (p) => `  - Never place ${p.fg} on ${p.bg} (only ${p.ratio}:1 — illegible).`,
@@ -224,6 +229,7 @@ export function buildCoverArtPrompt(args: {
   return `You are an award-winning senior art director at Pentagram / Collins / Mother NY shipping a launch-day ${platform} ${asset.label} for the venture below. Anything that wouldn't pass a creative director's desk on a paying client engagement is unacceptable.
 
 ${references}
+${primaryTextObjective}
 
 ## Canvas plan (NON-NEGOTIABLE — exactly these four hex values, used as specified)
 - Background surface: ${plan.surface}  ← the entire background fills with this exact hex

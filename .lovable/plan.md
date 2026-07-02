@@ -1,68 +1,42 @@
-## Add "Edit headline" entry point to the asset preview modal
+## What went wrong
 
-Right now users can only reach the headline text control by clicking Regenerate and scrolling through the dialog. This plan adds a direct entry point from the preview modal.
+You changed the headline to "Adam Rocks!" and hit Regenerate, but the returned image still paints the auto‑derived tagline ("An AI‑native, strategy‑first workshop that transforms founder fo…"). The client sent the override correctly; the failure is in the prompt the model sees.
 
-### What changes
+Two concrete bugs and one prompt‑robustness gap:
 
-**1. New "Headline" row in the preview modal right rail** (`AssetPreviewDialog.tsx`)
+### Bug 1 — duplicate `assetSystem` in `cover-art-director.ts`
+`supabase/functions/_shared/cover-art-director.ts` declares `function assetSystem(...)` **twice** (lines 114–125 and 127–178). The first is a stale 3‑arg version that only handles the avatar case; the second is the real 5‑arg version that carries `suppressHeadline` and `isCustomHeadline` (the flags that inject the "verbatim, exact wording" instruction). Depending on how Deno hoists the redeclaration this either throws at module load or silently drops the verbatim clause. Either way it is wrong and must be removed.
 
-Placed directly under the **Palette** section, above the action buttons:
+### Bug 2 — the old tagline is still in the prompt as context
+`ventureBlock()` always emits `- One-liner: <brain.identity.one_liner>`, and that one‑liner is exactly the "An AI‑native, strategy‑first workshop…" string. Even when `HEADLINE (verbatim): "Adam Rocks!"` is present in the asset system block, the model sees the long, professional copy elsewhere in the prompt and prefers to render it on the poster. This is the primary reason your custom text got overridden.
 
-```text
-┌─────────────────────────────┐
-│ Palette                     │
-│ [ swatches... ]             │
-├─────────────────────────────┤
-│ Headline on image           │
-│ "An AI-native, strategy…"   │
-│ [ ✎ Edit headline ]         │
-├─────────────────────────────┤
-│ Model  · google/gemini-…    │
-└─────────────────────────────┘
-```
+### Bug 3 — the verbatim rule is buried
+The verbatim instruction only appears inside the per‑asset system block, mid‑prompt. Gemini‑3‑pro‑image responds much more reliably when the exact string it must render is stated once at the very top as the primary objective, and once more in a hard negative ("do NOT render any other tagline").
 
-Behavior:
-- Always renders (even when `last_headline` is null) so the affordance is visible on legacy assets.
-- Shows the stored `last_headline` when present. When null, shows *"Auto-derived from your venture"* as a hint.
-- When `last_headline === ""` (explicitly suppressed), shows *"No text on image"* with the pencil affordance to re-enable.
-- Truncates to two lines with ellipsis; full text on hover title.
-- **Edit headline** button — a small ghost button with a pencil icon that fires a new `onEditHeadline` callback.
+## Plan
 
-**2. Wire the button to the existing Regenerate dialog** (`SocialAutopilot.tsx`)
+1. **Delete the dead first `assetSystem` declaration** in `supabase/functions/_shared/cover-art-director.ts` (lines 114–125). Keep only the 5‑arg version that receives `suppressHeadline` and `isCustomHeadline`.
 
-- `onEditHeadline` opens the same `RegenerateAssetDialog` already used by the ↻ overlay, but passes a new `focusSection: "headline"` prop.
-- The preview modal stays mounted underneath (busy overlay behavior we already ship).
+2. **Sanitize `ventureBlock` when a custom or "none" headline override is active.** Pass `headlineOverride` into `ventureBlock(ctx, headlineOverride)` and, when the override is `custom` or `none`, drop the `One-liner` line entirely (and any other field that duplicates the auto‑headline text). The model must not be shown competing copy.
 
-**3. Auto-focus the headline section when opened via Edit headline** (`RegenerateAssetDialog.tsx`)
+3. **Add a top‑of‑prompt PRIMARY TEXT OBJECTIVE block in `buildCoverArtPrompt`** when `isCustomHeadline` is true:
+   - `PRIMARY TEXT OBJECTIVE: the only lettering on the canvas is the exact string "Adam Rocks!" (verbatim, no substitutions, no rewrites, no punctuation changes, no additional words).`
+   - `FORBIDDEN TEXT: do NOT render "<autoHeadline(ctx)>" or any paraphrase of it anywhere on the canvas.`
+   Mirror the same two lines when the override is `none` (objective = zero glyphs, forbidden = the auto tagline).
 
-- New optional prop `focusSection?: "headline" | "palette" | "feedback"`.
-- When `focusSection === "headline"`:
-  - Scroll the headline block into view on mount (`useRef` + `scrollIntoView({ block: "start" })`).
-  - Add a temporary ring highlight (`ring-2 ring-primary` for ~1.2s) so the section is visually obvious.
-  - If `currentHeadline` is present, default the mode to **Custom text** with the field pre-focused and text selected, so the user can immediately type a replacement.
-  - Otherwise default to **Custom text** with an empty field focused.
+4. **Make the "verbatim" rule survive retries.** `image-qa.ts` retry path currently reuses the same prompt; confirm `headlineOverride` is threaded through the retry call in `venture-social-cover/index.ts` so the second attempt still gets the verbatim instruction.
 
-**4. Suggested-headline fetch for legacy assets**
+5. **Refresh the preview sidebar after regenerate** so "Headline on image" shows "Adam Rocks!" instead of the "Auto‑derived from your venture" placeholder. `venture-social-cover` already writes `last_headline`; verify the `["social-cover", snapshotId]` query invalidation actually re‑reads the row into the `AssetPreviewDialog` after a single‑asset regenerate (the current screenshot suggests it didn't).
 
-The sidebar's fallback preview needs *something* to show when `last_headline` is null. Two-tier resolution:
-- If `last_headline` exists → show it verbatim.
-- Otherwise → show a client-side derivation: `snap.identity?.tagline ?? snap.name` (same fallback chain the Edge Function uses). No new network call; this data is already in the venture snapshot query.
+6. **Log the resolved headline server‑side.** Add a one‑line `console.log("[social-cover] headline:", { mode, text, suppress })` at the top of the render call in both `venture-social-cover` and `venture-style-preview` so the next time this misfires we can confirm from edge logs whether the override reached the prompt.
 
-### Files touched
+## Files touched
 
-- `src/components/hub/social/AssetPreviewDialog.tsx` — add Headline row + Edit button + `onEditHeadline` prop.
-- `src/components/hub/social/RegenerateAssetDialog.tsx` — accept `focusSection`, scroll + highlight + prefocus custom input.
-- `src/components/hub/social/SocialAutopilot.tsx` — pass `onEditHeadline` (both preview instances at ~L687 style-preview and ~L1161 kit-asset), thread `focusSection: "headline"` into `regenTarget` state, forward derived fallback headline into `AssetPreviewDialog` as `lastHeadline` when the row is null.
+- `supabase/functions/_shared/cover-art-director.ts` — remove duplicate `assetSystem`; add `PRIMARY TEXT OBJECTIVE` / `FORBIDDEN TEXT` block; take `headlineOverride` in `ventureBlock` and strip the one‑liner when overridden.
+- `supabase/functions/venture-social-cover/index.ts` — add headline log line; verify retry path forwards `headlineOverride`.
+- `supabase/functions/venture-style-preview/index.ts` — same log line; same retry check.
+- `src/components/hub/social/SocialAutopilot.tsx` / `AssetPreviewDialog.tsx` — verify the sidebar re‑reads `last_headline` after regenerate; add a small fallback that displays the just‑submitted headline optimistically until the query returns.
 
-### Non-goals
+## What stays the same
 
-- No changes to Edge Functions or DB.
-- No backfill of `last_headline` for old rows (they will use the client-side derivation for display; next regeneration will persist the real value).
-- No changes to the ↻ tile overlay flow — it continues to open the dialog without a focused section.
-
-### Acceptance
-
-- On any asset preview modal, a **Headline on image** row is visible in the right rail.
-- Clicking **Edit headline** opens the Regenerate dialog with the headline section scrolled into view, highlighted, and the Custom text input focused with existing text selected.
-- Submitting from that state regenerates the asset with the new headline and the preview modal updates in place (existing busy-overlay behavior).
-- Legacy assets (with `last_headline = null`) show a sensible derived preview instead of a blank row.
+Client submit path, palette override handling, brand‑signature intensity/placement, delete flow, and the modal scroll fix from the previous turn all remain untouched.

@@ -249,6 +249,8 @@ Deno.serve(async (req) => {
             text: typeof rawHl.text === "string" ? rawHl.text.slice(0, 64) : undefined,
           }
         : undefined;
+    console.log("[style-preview] headline override:", JSON.stringify(headlineOverride ?? null));
+
 
     const ctx = await loadVentureContext(admin, snapshotId);
     const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
