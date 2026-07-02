@@ -17,12 +17,12 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useAuth } from "@/hooks/use-auth";
 import { ADMIN_GROUPS, ADMIN_NAV } from "@/lib/admin-nav";
-import { LogOut } from "lucide-react";
+import { LogOut, EyeOff } from "lucide-react";
 import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 import { StartupLabsMark } from "@/components/brand/StartupLabsMark";
 
 export function AdminSidebar() {
-  const { isSuperAdmin, signOut, user } = useAuth();
+  const { isSuperAdmin, signOut, user, isImpersonating, impersonationTarget, stopImpersonation } = useAuth();
   const { pathname } = useLocation();
 
   const { data: badges } = useQuery({
