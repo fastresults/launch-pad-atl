@@ -420,7 +420,7 @@ export function RegenerateAssetDialog({
               <div className="text-[10px] text-muted-foreground">
                 Will render:{" "}
                 <span className="font-medium text-foreground">
-                  "{(suggestedHeadline || currentHeadline || "").slice(0, 64) || "(venture name)"}"
+                  "{sanitizeHeadline(suggestedHeadline || currentHeadline || "").slice(0, 140) || "(venture name)"}"
                 </span>
               </div>
             )}
