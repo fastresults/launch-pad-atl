@@ -954,7 +954,7 @@ function Step5BuildKit({
           groups.get(t.platform)!.push(t);
         }
         return (
-          <Accordion type="multiple" defaultValue={order} className="space-y-4">
+          <Accordion type="multiple" className="space-y-4">
             {order.map((platform) => {
               const items = groups.get(platform)!;
               const Icon = PLATFORM_ICONS[platform] ?? Globe;
