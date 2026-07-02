@@ -194,7 +194,29 @@ export function buildContentAdSvgBytes(args: SvgArgs): Uint8Array {
   }
 
   if (args.logoDataUrl) {
-    const box = logoBox(W, H, args.logoAspect || 1, args.logoSize || "sm", args.logoCorner || "bottom-right");
+    const corner = args.logoCorner || "bottom-right";
+    const box = logoBox(W, H, args.logoAspect || 1, args.logoSize || "sm", corner);
+    const wantChip = args.logoChip ?? (corner === "bottom-right");
+    if (wantChip) {
+      const surfLum = lum(surface);
+      let chipFill = "#FFFFFF";
+      let chipOpacity = 0.92;
+      if (surfLum > 0.7) {
+        chipFill = ink === "#0B0F19" ? ink : "#0B0F19";
+        chipOpacity = 0.88;
+      } else if (surfLum >= 0.35) {
+        chipFill = contrast("#FFFFFF", surface) >= contrast("#0B0F19", surface) ? "#FFFFFF" : "#0B0F19";
+        chipOpacity = 0.9;
+      }
+      const padX = Math.round(box.boxW * 0.12);
+      const padY = Math.round(box.boxH * 0.18);
+      const rx = Math.round(box.boxH * 0.22);
+      const cx = box.x - padX;
+      const cy = box.y - padY;
+      const cw = box.boxW + padX * 2;
+      const ch = box.boxH + padY * 2;
+      parts.push(`<rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" rx="${rx}" ry="${rx}" fill="${chipFill}" opacity="${chipOpacity}"/>`);
+    }
     parts.push(`<image href="${escapeXml(args.logoDataUrl)}" x="${box.x}" y="${box.y}" width="${box.boxW}" height="${box.boxH}" preserveAspectRatio="xMidYMid meet"/>`);
   }
 
