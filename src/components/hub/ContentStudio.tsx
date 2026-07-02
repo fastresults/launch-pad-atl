@@ -553,6 +553,8 @@ function Step4BuildAds({
 
   const [running, setRunning] = useState(false);
   const [runningKeys, setRunningKeys] = useState<Record<string, boolean>>({});
+  const [openWeeks, setOpenWeeks] = useState<string[] | null>(null);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [regen, setRegen] = useState<null | { task: AdTask; focusSection?: any }>(null);
   const [previewIdx, setPreviewIdx] = useState<number | null>(null);
