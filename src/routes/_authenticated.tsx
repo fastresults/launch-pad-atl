@@ -35,5 +35,10 @@ export default function AuthenticatedLayout() {
     return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
   }
 
-  return <Outlet />;
+  return (
+    <>
+      <ImpersonationBanner />
+      <Outlet />
+    </>
+  );
 }
