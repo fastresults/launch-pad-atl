@@ -117,11 +117,11 @@ function fitHeadline(text: string, W: number, H: number, aspect: AdAspect) {
   const x = Math.round(W * 0.075);
   const bandY = Math.round(H * 0.035);
   const bandH = Math.round(H * headlineBandPct(aspect));
-  const textW = W - x * 2;
+  const textW = W - x * 2 - Math.round(W * 0.02);
   const textH = Math.round(bandH * 0.66);
   const linesMax = maxLines(aspect);
-  const maxSize = Math.min(98, Math.floor(textH / linesMax / 1.05));
-  const minSize = aspect === "9:16" ? 34 : 38;
+  const maxSize = Math.min(84, Math.floor(textH / Math.max(2, linesMax) / 1.05));
+  const minSize = aspect === "9:16" ? 32 : 34;
 
   const candidates = [clean, truncateWords(clean, 86), truncateWords(clean, 68), truncateWords(clean, 54), truncateWords(clean, 42)];
   for (const candidate of candidates) {
