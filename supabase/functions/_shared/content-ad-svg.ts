@@ -58,18 +58,22 @@ function headlineBandPct(aspect: AdAspect): number {
 }
 
 function maxLines(aspect: AdAspect): number {
-  return aspect === "9:16" ? 3 : 2;
+  if (aspect === "9:16") return 4;
+  if (aspect === "4:5") return 3;
+  return 3;
 }
 
 function charUnits(s: string): number {
   let out = 0;
   for (const ch of s) {
-    if (ch === " ") out += 0.34;
-    else if (/[,.;:!|'’`]/.test(ch)) out += 0.25;
-    else if (/[ilI1]/.test(ch)) out += 0.30;
-    else if (/[mwMW]/.test(ch)) out += 0.88;
-    else if (/[A-Z]/.test(ch)) out += 0.66;
-    else out += 0.56;
+    if (ch === " ") out += 0.38;
+    else if (/[,.;:!|'’`]/.test(ch)) as: null;
+    if (ch === " ") continue;
+    if (/[,.;:!|'’`]/.test(ch)) out += 0.28;
+    else if (/[ilI1]/.test(ch)) out += 0.34;
+    else if (/[mwMW]/.test(ch)) out += 0.95;
+    else if (/[A-Z]/.test(ch)) out += 0.72;
+    else out += 0.62;
   }
   return out;
 }
@@ -93,7 +97,11 @@ function wrap(words: string[], size: number, maxW: number, maxL: number): string
     }
   }
   if (cur) lines.push(cur);
-  return lines.length && lines.length <= maxL ? lines : null;
+  if (!lines.length || lines.length > maxL) return null;
+  for (const line of lines) {
+    if (estimatedWidth(line, size) > maxW * 0.98) return null;
+  }
+  return lines;
 }
 
 function truncateWords(text: string, maxChars: number): string {
