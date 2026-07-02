@@ -21,6 +21,7 @@ import { PLATFORM_SPECS, ART_DIRECTIONS } from "@/lib/social-platform-specs";
 import { listSocialAssets, deleteSocialAsset } from "@/lib/social-cover.functions";
 import { listStylePreviews, generateStylePreview, deleteStylePreview, type StylePreview } from "@/lib/style-preview.functions";
 import { RegenerateAssetDialog } from "./RegenerateAssetDialog";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { AssetPreviewDialog, type PreviewableAsset } from "./AssetPreviewDialog";
 import { RotateCcw } from "lucide-react";
 import { edgeStatus, edgeErrorMessage } from "@/lib/edge-errors";
