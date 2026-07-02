@@ -366,7 +366,11 @@ Deno.serve(async (req) => {
 
     let bytes = b64ToBytes(result.b64);
     let qa = runContrastQa(bytes, plan);
-    if (!qa.ok) {
+    // Skip the QA retry if we've already burned most of our 150s budget on the
+    // first generation — a second slow call would push us past IDLE_TIMEOUT.
+    // Reserve ~35s for compositing, storage upload, and signed URL work.
+    const timeBudgetOkForRetry = (Date.now() - requestStartedAt) < 60_000;
+    if (!qa.ok && timeBudgetOkForRetry) {
       try {
         const sigVisible = qa.observed.signatureVisible !== false;
         const sigNote = !sigVisible
