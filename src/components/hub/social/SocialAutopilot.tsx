@@ -1169,6 +1169,7 @@ function Step5BuildKit({
             onNext={previewableIdxs.length > 1 ? goNext : undefined}
             busy={!!runningKeys[`${t.platform}:${t.asset}`]}
             onRegenerate={() => setRegenTarget({ scope: "single", task: t })}
+            onEditHeadline={() => setRegenTarget({ scope: "single", task: t, focusSection: "headline" })}
             onDelete={t.asset_id ? () => { setPreviewIdx(null); deleteAsset(t); } : undefined}
           />
         );
