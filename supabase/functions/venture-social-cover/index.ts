@@ -306,6 +306,8 @@ Deno.serve(async (req) => {
             text: typeof rawHl.text === "string" ? rawHl.text.slice(0, 64) : undefined,
           }
         : undefined;
+    console.log("[social-cover] headline override:", JSON.stringify(headlineOverride ?? null));
+
 
     const platform = getPlatform(platformName);
     if (!platform) return json({ error: `Unknown platform: ${platformName}` }, 400);
