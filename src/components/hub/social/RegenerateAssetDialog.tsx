@@ -157,6 +157,8 @@ export function RegenerateAssetDialog({
   canvasPlan,
   initialIntensity = "balanced",
   mode = "regenerate",
+  suggestedHeadline,
+  currentHeadline,
   onSubmit,
 }: {
   open: boolean;
@@ -168,12 +170,17 @@ export function RegenerateAssetDialog({
   canvasPlan?: { surface?: string; ink?: string; accent?: string; signature?: string; displaySignature?: string } | null;
   initialIntensity?: "subtle" | "balanced" | "bold";
   mode?: "generate" | "regenerate";
+  /** Suggested/auto headline shown to the user when they pick "Use suggested". */
+  suggestedHeadline?: string | null;
+  /** The headline that was actually used on the current asset (if any). */
+  currentHeadline?: string | null;
   onSubmit: (input: {
     feedback: string;
     directionOverride?: string;
     signatureIntensity?: "subtle" | "balanced" | "bold";
     signaturePlacement?: typeof PLACEMENTS[number]["id"];
     paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
+    headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
   }) => Promise<void>;
 }) {
   const [feedback, setFeedback] = useState("");
@@ -181,6 +188,13 @@ export function RegenerateAssetDialog({
   const [intensity, setIntensity] = useState<"subtle" | "balanced" | "bold">(initialIntensity);
   const [placement, setPlacement] = useState<typeof PLACEMENTS[number]["id"]>("auto");
   const [busy, setBusy] = useState(false);
+
+  // Headline override: default to "custom" pre-filled with whatever text is on
+  // the current asset so users can edit that exact string.
+  const initialHeadlineMode: "auto" | "custom" | "none" =
+    currentHeadline && currentHeadline.trim() ? "custom" : "auto";
+  const [headlineMode, setHeadlineMode] = useState<"auto" | "custom" | "none">(initialHeadlineMode);
+  const [headlineText, setHeadlineText] = useState<string>(currentHeadline || "");
 
   // Per-role override state — null means "use brand-kit value".
   const [ovr, setOvr] = useState<Record<SwatchRole, string | null>>({
