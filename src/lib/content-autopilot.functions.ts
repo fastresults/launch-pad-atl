@@ -66,6 +66,9 @@ export async function planNextWeek(snapshotId: string, week: number) {
   return invoke<{ count: number; posts: ContentPost[] }>("venture-plan-next-week", {
     snapshotId, week,
   });
+}
+
+
 
 
 // -------- Ads --------
