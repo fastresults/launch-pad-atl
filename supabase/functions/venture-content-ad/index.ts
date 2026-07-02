@@ -86,11 +86,34 @@ async function fetchPrimaryLogo(admin: any, kit: any) {
   }
 }
 
+// Per-call timeout so a hung upstream doesn't idle the whole 150s request.
+// gemini-3-pro-image can take 60–90s; cap at 110s to leave headroom for
+// composite/upload work before Deno's 150s idle limit trips.
+const GATEWAY_TIMEOUT_MS = 110_000;
+
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } catch (e: any) {
+    if (e?.name === "AbortError") {
+      const err: any = new Error(`Image generation timed out after ${Math.round(timeoutMs / 1000)}s`);
+      err.status = 504;
+      err.code = "UPSTREAM_TIMEOUT";
+      throw err;
+    }
+    throw e;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 async function callMultimodal(prompt: string, imagesDataUrls: string[], apiKey: string) {
   const content: any[] = [{ type: "text", text: prompt }];
   for (const url of imagesDataUrls) if (url) content.push({ type: "image_url", image_url: { url } });
   const body = { model: MODEL_MULTIMODAL, messages: [{ role: "user", content }], modalities: ["image", "text"] };
-  const res = await fetch(AI_GATEWAY, { method: "POST", headers: gwHeaders(apiKey), body: JSON.stringify(body) });
+  const res = await fetchWithTimeout(AI_GATEWAY, { method: "POST", headers: gwHeaders(apiKey), body: JSON.stringify(body) }, GATEWAY_TIMEOUT_MS);
   const text = await res.text();
   if (!res.ok) throw gatewayError(text, res.status, "Multimodal");
   const data = JSON.parse(text);
@@ -100,10 +123,10 @@ async function callMultimodal(prompt: string, imagesDataUrls: string[], apiKey: 
 }
 
 async function callTextOnly(prompt: string, size: string, apiKey: string) {
-  const res = await fetch(AI_GATEWAY, {
+  const res = await fetchWithTimeout(AI_GATEWAY, {
     method: "POST", headers: gwHeaders(apiKey),
     body: JSON.stringify({ model: MODEL_FALLBACK, prompt, size, quality: "medium", n: 1 }),
-  });
+  }, GATEWAY_TIMEOUT_MS);
   const text = await res.text();
   if (!res.ok) throw gatewayError(text, res.status, "Fallback");
   const data = JSON.parse(text);
@@ -111,6 +134,7 @@ async function callTextOnly(prompt: string, size: string, apiKey: string) {
   if (!b64) throw new Error("Fallback gateway returned no image");
   return b64 as string;
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
