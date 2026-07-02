@@ -353,15 +353,29 @@ ${suppressHeadline ? suppressBlock : `- HEADLINE (${isCustomHeadline ? "verbatim
 
   // pinned_post, story_cover, etc.
   const isSquareOrPortrait = asset.height >= asset.width;
+  // Headline-landing zone: top-band exclusion so headlines can't collide with
+  // signature sidebars, focal shapes, or the logo. Sized by aspect.
+  const headlineBandPct = suppressHeadline
+    ? 0
+    : asset.width === asset.height
+    ? 24
+    : asset.height > asset.width * 1.5
+    ? 14
+    : 20;
+  const headlineZoneBlock = suppressHeadline
+    ? ""
+    : `\n- HEADLINE LANDING AREA: reserve the TOP ${headlineBandPct}% of the canvas (full width, minus 8% side insets) exclusively for the headline text. NO sidebar stripe, NO signature block, NO focal shape, NO photo subject, NO logo may enter or cross this rectangle. The headline text is left-anchored inside this band, ranged left, max two lines, tight tracking, must fit fully within the band without any character clipping at the left or right edge. Do NOT wrap so tightly that any letterform touches or crosses the band's left/right/top edges — pull the type in by another 3% if in doubt.`;
   const sidebarCap = isSquareOrPortrait
-    ? `\n- SIDEBAR / SIGNATURE BLOCK CAP: on this square or portrait canvas, any sidebar stripe or full-height signature block MUST NOT exceed 28% of canvas width, MUST sit on the OPPOSITE side of the canvas from the LOGO LANDING AREA, and MUST NOT contain any lettering (no vertical headline, no rotated text, no glyphs). Reach the signature coverage target through additional flat shapes elsewhere on the canvas, not by widening the sidebar.`
+    ? `\n- SIDEBAR / SIGNATURE BLOCK CAP: on this square or portrait canvas, any sidebar stripe or full-height signature block MUST NOT exceed 28% of canvas width, MUST sit on the OPPOSITE side of the canvas from the LOGO LANDING AREA, MUST START BELOW the HEADLINE LANDING AREA (never full-height across the headline band), and MUST NOT contain any lettering (no vertical headline, no rotated text, no glyphs). Reach the signature coverage target through additional flat shapes elsewhere on the canvas, not by widening or lengthening the sidebar.`
     : "";
   return `POST / COVER SYSTEM (${ratio})
 - Treat as a single editorial frame. One focal element, ≥60% negative space.
-${suppressHeadline ? suppressBlock : "- Optional type lockup uses the brand heading family." + (isCustomHeadline ? ` HEADLINE (verbatim, exact wording): "${headline}". Do not rephrase.` : "")}
+${suppressHeadline ? suppressBlock : "- Optional type lockup uses the brand heading family." + (isCustomHeadline ? ` HEADLINE (verbatim, exact wording): "${headline}". Do not rephrase. Render it entirely inside the HEADLINE LANDING AREA below — never let letterforms touch or cross that band's edges.` : "")}
+${headlineZoneBlock}
 ${zone("top-left", 24, 24)}${sidebarCap}
 - Reserve an 8% safe inset on all sides for platform UI.
 - ${asset.guidance}`;
+
 }
 
 // ------- Public builders -------
@@ -395,11 +409,19 @@ export function buildCoverArtPrompt(args: {
   // Auto-derived tagline the model must NOT paint when the founder has taken
   // manual control of the on-image text.
   const autoTag = autoHeadline(ctx);
-  const primaryTextObjective = isCustomHeadline
-    ? `\n## PRIMARY TEXT OBJECTIVE (READ FIRST — OVERRIDES ALL OTHER COPY GUIDANCE)\nThe ONLY lettering permitted anywhere on this canvas is the exact string:\n    "${headline}"\nRender it verbatim. No substitutions. No rewrites. No punctuation changes. No additional words, subheads, taglines, URLs, hashtags, or captions.\nFORBIDDEN TEXT: do NOT render "${autoTag}" or any paraphrase, translation, abbreviation, or restatement of it anywhere on the canvas.\n`
-    : suppressHeadline
-    ? `\n## PRIMARY TEXT OBJECTIVE (READ FIRST — OVERRIDES ALL OTHER COPY GUIDANCE)\nZERO lettering on this canvas. No headline, no tagline, no subhead, no URL, no callout, no caption, no watermark. Zero glyphs. Zero words. Zero numbers.\nFORBIDDEN TEXT: do NOT render "${autoTag}" or any paraphrase of it.\n`
+  // Explicit ban on re-drawing the brand wordmark anywhere in the scene — the
+  // logo is composited server-side, and multimodal models otherwise tend to
+  // echo the wordmark into the background as scene text.
+  const brandName: string = (ctx?.brain?.identity?.company_name ?? ctx?.snap?.company_name ?? "").toString().trim();
+  const wordmarkBan = brandName
+    ? `\nWORDMARK BAN (STRICT): do NOT render the letters "${brandName}", any casing variant ("${brandName.toLowerCase()}", "${brandName.toUpperCase()}"), any spacing variant, or any typographic redraw of the brand mark anywhere in the composition — not on a shopfront, sticker, sign, monitor, poster, sidebar, footer, watermark, badge, or as ambient signage. The real logo is composited on top after generation; any painted brand text creates a duplicate.\n`
     : "";
+  const primaryTextObjective = isCustomHeadline
+    ? `\n## PRIMARY TEXT OBJECTIVE (READ FIRST — OVERRIDES ALL OTHER COPY GUIDANCE)\nThe ONLY lettering permitted anywhere on this canvas is the exact string:\n    "${headline}"\nRender it verbatim. No substitutions. No rewrites. No punctuation changes. No additional words, subheads, taglines, URLs, hashtags, or captions.\nFORBIDDEN TEXT: do NOT render "${autoTag}" or any paraphrase, translation, abbreviation, or restatement of it anywhere on the canvas.${wordmarkBan}`
+    : suppressHeadline
+    ? `\n## PRIMARY TEXT OBJECTIVE (READ FIRST — OVERRIDES ALL OTHER COPY GUIDANCE)\nZERO lettering on this canvas. No headline, no tagline, no subhead, no URL, no callout, no caption, no watermark. Zero glyphs. Zero words. Zero numbers.\nFORBIDDEN TEXT: do NOT render "${autoTag}" or any paraphrase of it.${wordmarkBan}`
+    : `\n## PRIMARY TEXT OBJECTIVE\nAt most one short headline is permitted, set in the brand heading family.${wordmarkBan}`;
+
 
 
   const forbiddenLines = plan.forbiddenPairs.slice(0, 6).map(

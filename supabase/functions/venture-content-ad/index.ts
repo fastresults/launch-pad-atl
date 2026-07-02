@@ -11,7 +11,7 @@ import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-til
 import { runContrastQa } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
-import { buildContentAdPrompt, specForAspect, type AdAspect } from "../_shared/content-ad-director.ts";
+import { buildContentAdPrompt, specForAspect, resolveAdHeadline, type AdAspect } from "../_shared/content-ad-director.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
 
 const corsHeaders = {
@@ -238,7 +238,7 @@ Deno.serve(async (req) => {
 
     const rawHl = body?.headlineOverride;
     const headlineOverride = rawHl && typeof rawHl === "object" && ["auto", "custom", "none"].includes(rawHl.mode)
-      ? { mode: rawHl.mode as "auto" | "custom" | "none", text: typeof rawHl.text === "string" ? rawHl.text.slice(0, 64) : undefined }
+      ? { mode: rawHl.mode as "auto" | "custom" | "none", text: typeof rawHl.text === "string" ? rawHl.text.slice(0, 200) : undefined }
       : undefined;
 
     // Content Studio: default to SMALL logo so the wordmark doesn't dominate
@@ -281,7 +281,7 @@ Deno.serve(async (req) => {
         pillar: post.pillar, platform: post.platform, format: post.format,
         hook: post.hook, body: post.body, cta: post.cta, asset_notes: post.asset_notes,
       },
-      hasLogoImage: !!logoDataUrl,
+      hasLogoImage: false, // logo is composited server-side, not sent to the model
       retryNote,
       userFeedback,
       variationSeed,
@@ -289,9 +289,15 @@ Deno.serve(async (req) => {
       logoZone: logoZoneHint,
     });
 
+
     const generate = async (retryNote?: string) => {
       const prompt = buildPrompt(retryNote);
-      const refs = [logoDataUrl, paletteTileDataUrl].filter(Boolean) as string[];
+      // Intentionally OMIT the wordmark logo from multimodal refs: passing the
+      // wordmark invites the image model to echo the brand text into the scene
+      // (bottom band / signage / sticker), which then duplicates when our
+      // compositor places the real logo on top. Palette tile is enough to lock
+      // colors; the logo is composited after generation.
+      const refs = [paletteTileDataUrl].filter(Boolean) as string[];
       try {
         if (refs.length) {
           const b64 = await callMultimodal(prompt, refs, apiKey);
@@ -299,6 +305,7 @@ Deno.serve(async (req) => {
         }
         const b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
         return { b64, modelUsed: MODEL_FALLBACK, prompt };
+
       } catch (e: any) {
         const status = e?.status;
         if (refs.length && ![401, 402, 403, 429].includes(status)) {
@@ -404,10 +411,14 @@ Deno.serve(async (req) => {
         qa_notes: qa as any,
         last_feedback: userFeedback || null,
         last_regenerated_at: userFeedback ? new Date().toISOString() : null,
-        last_headline: headlineOverride
-          ? (headlineOverride.mode === "none" ? "" : (headlineOverride.text ?? null))
-          : (post.hook ?? null),
+        last_headline: (() => {
+          const resolved = resolveAdHeadline(post.hook, headlineOverride, aspect);
+          if (resolved.mode === "none") return "";
+          if (resolved.mode === "custom") return resolved.text ?? "";
+          return post.hook ?? null;
+        })(),
         last_logo_size: logoSize,
+
       })
       .select()
       .single();

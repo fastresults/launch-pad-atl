@@ -348,7 +348,7 @@ export async function compositeLogo(
   const padPct = 0.05;
   const radius = Math.round(Math.min(box.w, box.h) * 0.14);
 
-  let chipMode: "chip" | "direct" = "chip";
+  let chipMode: "chip" | "direct" | "footer-band" = "chip";
 
   if (transparent && opts.placement !== "avatar-center") {
     // Direct composite path. Only add a soft scrim if the logo has poor
@@ -377,21 +377,32 @@ export async function compositeLogo(
     const contrast = (Math.max(inkLum, baseLumBehind) + 0.05) / (Math.min(inkLum, baseLumBehind) + 0.05);
 
     if (contrast < 3) {
-      // Add a subtle rounded scrim behind the logo, sized slightly larger.
-      const scrimW = Math.round(box.w * 1.06);
-      const scrimH = Math.round(box.h * 1.10);
-      const scrim = new Image(scrimW, scrimH);
-      const scrimColor = inkLum < 0.5
-        ? rgbToImagescriptColor(255, 255, 255, 170)
-        : rgbToImagescriptColor(0, 0, 0, 170);
-      fillRoundedRect(scrim, scrimColor, Math.round(Math.min(scrimW, scrimH) * 0.18));
-      const scrimX = box.x - Math.round((scrimW - box.w) / 2);
-      const scrimY = box.y - Math.round((scrimH - box.h) / 2);
-      base.composite(scrim, scrimX, scrimY);
+      // Editorial masthead: paint a full-width footer band in the brand
+      // SURFACE color, then place the logo left-aligned inside it. Reads as
+      // an intentional lockup instead of a translucent "sticker" plate.
+      chipMode = "footer-band";
+      const bandH = Math.min(base.height, Math.round(box.h + Math.round(base.height * 0.06)));
+      const bandY = base.height - bandH;
+      const band = new Image(base.width, bandH);
+      const bandColor = inkLum < 0.5
+        ? rgbToImagescriptColor(255, 255, 255, 0xff)
+        : rgbToImagescriptColor(11, 15, 25, 0xff);
+      // Solid fill (no rounded corners on a full-bleed band).
+      for (let y = 0; y < bandH; y++) {
+        for (let x = 0; x < base.width; x++) band.setPixelAt(x + 1, y + 1, bandColor);
+      }
+      base.composite(band, 0, bandY);
+      // Re-fit the logo inside the band, left-aligned with a comfortable inset.
+      const inset = Math.round(base.width * 0.05);
+      const bandBoxW = Math.min(box.w, base.width - inset * 2);
+      const bandBoxH = Math.min(box.h, bandH - Math.round(bandH * 0.15));
+      const fit = fitInside(logo, bandBoxW, bandBoxH, padPct);
+      base.composite(fit.img, inset + fit.offX, bandY + Math.floor((bandH - bandBoxH) / 2) + fit.offY);
+    } else {
+      const fit = fitInside(logo, box.w, box.h, padPct);
+      base.composite(fit.img, box.x + fit.offX, box.y + fit.offY);
     }
 
-    const fit = fitInside(logo, box.w, box.h, padPct);
-    base.composite(fit.img, box.x + fit.offX, box.y + fit.offY);
   } else {
     // Rounded chip with a soft drop shadow.
     if (opts.placement !== "avatar-center") {
