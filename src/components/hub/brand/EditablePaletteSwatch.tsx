@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useEffect, useRef, useState } from "react";
 import { HexColorPicker, HexColorInput } from "react-colorful";
-import "react-colorful/dist/index.css";
+
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Pencil, RotateCcw } from "lucide-react";
