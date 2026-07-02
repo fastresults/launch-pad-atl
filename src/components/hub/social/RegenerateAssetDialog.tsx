@@ -508,7 +508,7 @@ export function RegenerateAssetDialog({
         </div>
 
 
-        <DialogFooter>
+        <DialogFooter className="px-6 py-4 border-t border-border shrink-0 bg-background">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={submit} disabled={busy}>
             {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
