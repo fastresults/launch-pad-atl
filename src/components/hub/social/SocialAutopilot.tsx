@@ -1112,6 +1112,7 @@ function Step5BuildKit({
           canvasPlan={regenTarget.task?.canvas_plan ?? null}
           currentHeadline={regenTarget.task?.last_headline ?? null}
           initialIntensity={regenTarget.scope === "single" && signatureFailed(regenTarget.task) ? "bold" : "balanced"}
+          focusSection={regenTarget.focusSection}
           onSubmit={async (input) => {
             if (regenTarget.scope === "single") {
               await regenerateSingle(regenTarget.task, input);
