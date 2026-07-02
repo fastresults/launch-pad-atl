@@ -1,69 +1,75 @@
-# Rebalance Copy: Main Street ↔ Online Founders
+## Goal
+On the Brand Style Guide preview (the "Color System" section shown in your screenshot), every swatch — Primary, Secondary, Accent, BG, FG, Muted, Surface, Text, Success, Warning, Danger — becomes clickable. Clicking opens a color-wheel popover (saturation/value box + hue slider + hex input) so the founder can pick a new color visually. The change saves immediately to the brand kit's palette and re-renders the whole preview (headline color, section borders, typography accents) with the new value.
 
-**Goal:** Every user-facing surface treats Main Street and Online (DTC / e-commerce / creator / digital-service / SaaS-lite) founders as equal, first-class audiences. Today, Main Street is the hero and online is a footnote ("...other tracks supported too").
+## What already exists (reuse, don't rebuild)
+- `EditablePaletteSwatch` (`src/components/hub/brand/EditablePaletteSwatch.tsx`) — already wraps `react-colorful`'s `HexColorPicker` + `HexColorInput` in a Popover, with debounced onChange, Reset, and Done controls. It's the compact editor used in `BrandWizard.tsx`.
+- `BrandWizard.tsx` already knows how to persist palette edits via `onSave({ palette: { ...kit.palette, colors: nextColors, source: "user-edited" } })`.
+- `VisualBrandGuide.tsx` currently renders the Color System swatches as read-only cards (lines 119–132).
 
-## Audit findings
+## Changes
 
-Copy currently skews Main Street on:
-- `src/components/home/HomeFramework.tsx` — hero + facilitator bio lead Main Street; online is parenthetical.
-- `src/lib/chatbot-knowledge.ts` + `supabase/functions/venture-chatbot/knowledge.ts` — "Atlanta's #1 accelerator **for Main Street and first-time founders**"; online listed only under "Standard track."
-- `src/routes/services.tsx` — "government and Main Street alike."
-- `src/components/home/HomeBusinessIdeasScroller.tsx` — order + phrasing leads Main Street.
-- Track system (`src/lib/tracks.ts`) — Main Street explicitly labeled "the default track for most workshop attendees."
-- Edge-function prompts referencing "main street" as default posture: `venture-synthesize-concept`, `venture-deep-research`, `venture-generate-roadmap`, `venture-bulk-generate`, `venture-generate-document`, `venture-generate-assessment`, `_shared/track-tones.ts`, `_shared/deliverable-prompts.ts`, `_shared/cover-art-director.ts`.
-- Static marketing docs in `/public/business-case.*`.
-- Onboarding: `src/routes/_authenticated/dashboard/hub.new.tsx`, `src/components/brief/MarketBlock.tsx`, `src/lib/brief-sync-profile.ts`, `src/lib/member-intake.functions.ts`.
+### 1. `src/components/hub/brand-wizard/VisualBrandGuide.tsx`
+- Accept two new optional props:
+  - `onColorChange?: (tokenKey: string, hex: string) => void`
+  - `originalColors?: Record<string, string>` (for the "Reset" affordance inside the popover)
+- In the Color System grid, when `onColorChange` is provided:
+  - Render each color card with the existing look (color block on top, label + hex + RGB below).
+  - Overlay an `EditablePaletteSwatch` trigger that covers the color block, so clicking anywhere on the swatch opens the wheel. Show a small "click to edit" hover affordance (pencil icon + subtle overlay, same pattern the component already uses).
+  - Pass `tokenKey={key}`, `value={value}`, `originalValue={originalColors?.[key]}`, and `onChange={(hex) => onColorChange(key, hex)}`.
+- When `onColorChange` is not provided, keep today's read-only rendering (no behavioral change for any other caller / exports).
 
-## Rebalancing principle
+### 2. `src/components/hub/brand-wizard/BrandWizard.tsx`
+- On the `<VisualBrandGuide kit={kit} snapshot={snapshot} />` call (line 989), wire the two new props:
+  - `originalColors` = the palette from the last generation (already tracked when a kit is generated; if no snapshot exists, pass the current `kit.palette.colors`).
+  - `onColorChange` = the same handler pattern already used at line 948:
+    ```ts
+    (key, hex) => onSave({
+      palette: {
+        ...(kit.palette ?? {}),
+        colors: { ...(kit.palette?.colors ?? {}), [key]: hex },
+        source: "user-edited",
+      },
+    })
+    ```
+- Add a tiny helper hint above the guide preview: "Click any color swatch to change it." (keeps discovery obvious without new UI chrome).
 
-- Replace phrases like "Main Street founders" as the lead subject with a **two-noun pairing** ("Main Street and online founders", "storefront and digital founders", "cafés, salons, trades — and DTC brands, creators, digital services").
-- Wherever we say "default track" or "most attendees," reframe as "two equal tracks — pick the one that fits your startup."
-- Order/parity: whenever Main Street is listed, list online right next to it, with a comparable example set (Shopify DTC, Etsy, creator brand, digital agency, coaching/consulting, SaaS-lite, marketplace side project).
-- Keep the Main Street track's operator vocabulary intact where it exists as a track (that's a feature). Only the framing/marketing copy changes.
+### 3. Nothing else changes
+- No new dependencies (`react-colorful` is already installed).
+- No DB migration — palette overrides already persist through the existing `onSave` → `brand_kits.palette` write.
+- No changes to `BrandStudio.tsx` (already uses `EditablePaletteSwatch`) or any downstream renderer — since they all read `kit.palette.colors`, updates propagate automatically to Social Studio, Content Studio, DOCX export, and Logo Compositor.
+- No changes to edge functions or prompts.
 
-## Scope of changes
+## Technical details
 
-### 1. Marketing surfaces (highest priority — user-visible)
-- `src/components/home/HomeFramework.tsx`
-  - Hero subhead: reframe from "Built for Main Street founders — …" to a two-audience line covering Main Street + online, with matched example lists.
-  - Facilitator bio: swap "tech, services, and Main Street" for "tech, services, Main Street, and online brands."
-- `src/components/home/HomeBusinessIdeasScroller.tsx`
-  - Reorder categories so online and Main Street alternate; rewrite the caption to lead with the pairing.
-- `src/routes/services.tsx` — swap "government and Main Street alike" for "government, Main Street, and online brands alike."
-- `src/routes/index.tsx`, `src/routes/register.tsx`, `src/routes/build.tsx`, `src/routes/facilitator.tsx`, `src/routes/schedule.tsx` — sweep for any Main-Street-only phrasing and rebalance.
+**Overlay pattern for the swatch trigger** (inside VisualBrandGuide's color card):
+```tsx
+<div className="relative h-24" style={{ background: value }}>
+  {onColorChange && (
+    <EditablePaletteSwatch
+      tokenKey={key}
+      value={value}
+      originalValue={originalColors?.[key]}
+      onChange={(hex) => onColorChange(key, hex)}
+      size="lg"
+      // renders an absolutely-positioned invisible-but-focusable trigger
+    />
+  )}
+</div>
+```
+`EditablePaletteSwatch` already renders its own trigger button; we'll extend it with an optional `fill` mode (or wrap its trigger with `absolute inset-0`) so it stretches over the whole 96px-tall color block instead of the current 6×6 chip. That's a ~10-line addition to `EditablePaletteSwatch.tsx`:
+- New prop `fill?: boolean`. When true, the trigger uses `absolute inset-0 h-full w-full rounded-none` and a translucent hover overlay with a centered pencil icon.
 
-### 2. Concierge chatbot knowledge
-- `src/lib/chatbot-knowledge.ts` **and** `supabase/functions/venture-chatbot/knowledge.ts` (both must match):
-  - Positioning line → "Atlanta's #1 startup accelerator for Main Street **and online** founders — cafés, salons, trades, local services, indie brands, DTC e-commerce, creators, digital services, and small SaaS."
-  - "Two tracks" section → treat Main Street and Online/DTC as equal defaults; move deep-tech/SaaS/marketplace into a third "Also supported" line.
-  - Update FAQ answers ("Is this good for…") to add an online-founder Q&A ("Is this good for an online store / DTC brand / creator business / digital service?").
+**Debouncing / save load**: `EditablePaletteSwatch` already debounces onChange at 250ms, so dragging around the color wheel won't spam the database; only the final resting hex hits `onSave`.
 
-### 3. Track framing (do NOT rewrite prompts, only the labels/descriptions)
-- `src/lib/tracks.ts`
-  - Remove "default track for most workshop attendees" from Main Street's `description`.
-  - Update E-commerce/DTC `description` to feel equally first-class (add creators, digital services, small SaaS-lite alongside DTC).
-  - Do not touch `tonePrompt` fields — those are correct per-track instructions.
-
-### 4. Onboarding + intake
-- `src/routes/_authenticated/dashboard/hub.new.tsx`, `src/components/brief/MarketBlock.tsx`, `src/lib/brief-sync-profile.ts`, `src/lib/member-intake.functions.ts`
-  - Where Main Street is a prompt example, add an online example beside it (never replace).
-
-### 5. Edge function prompts (light touch)
-- `_shared/track-tones.ts`, `_shared/deliverable-prompts.ts`, `_shared/cover-art-director.ts`, and the six `venture-*` functions that mention "main street":
-  - Only rebalance sentences that say "assume main street unless told otherwise." Change to "route by the track key on the concept; do not assume a default." Leave track-specific voice guidance intact.
-
-### 6. Static docs
-- `public/business-case.md/.txt/.html` — same rebalancing sweep as marketing surfaces so downloadable copy matches.
+**Reset**: `EditablePaletteSwatch` already shows a "Reset" affordance when `originalValue` differs from `draft`, so founders can undo a swatch back to what Firecrawl/Brand Wizard originally derived.
 
 ## Out of scope
-- Existing generated user assets (personal deliverables) — not rewritten.
-- Visual design, layout, imagery.
-- New routes or new tracks.
+- No new color harmony suggestions or WCAG auto-repair on click (the existing "Repair contrast" button in BrandWizard stays where it is).
+- No palette-name / rationale editing.
+- No changes to typography, logo, or moodboard sections.
 
-## Verification
-- Grep after changes: no line begins with "Built for Main Street" or "for Main Street and first-time founders" without an online pair.
-- Chatbot: ask "is this workshop for an online store owner?" — answer should confirm equally.
-- Home hero, `/services`, `/register` visually reviewed at 1280 and mobile widths.
-
-## Risk
-Two knowledge files must stay in sync (`src/lib/chatbot-knowledge.ts` and `supabase/functions/venture-chatbot/knowledge.ts`). Any drift and the chatbot answers differently than the site. I'll edit both in the same pass.
+## Acceptance
+- Clicking any swatch in the Brand Style Guide preview opens a color-wheel popover with hue slider and hex input.
+- Selecting a color updates the swatch, its hex/RGB caption, and every other place in the preview that reads that token (headline color, section border, etc.) within one debounce tick.
+- The change persists — refreshing the page keeps the new color.
+- If you change your mind, "Reset" in the popover snaps the token back to the originally generated value.

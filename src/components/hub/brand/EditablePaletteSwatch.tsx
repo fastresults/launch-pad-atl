@@ -13,6 +13,7 @@ export function EditablePaletteSwatch({
   onChange,
   size = "md",
   showLabel = false,
+  fill = false,
 }: {
   tokenKey: string;
   value: string;
@@ -20,6 +21,7 @@ export function EditablePaletteSwatch({
   onChange: (hex: string) => void;
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
+  fill?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -37,18 +39,22 @@ export function EditablePaletteSwatch({
   const sizeCls =
     size === "sm" ? "h-5 w-5" : size === "lg" ? "h-8 w-8" : "h-6 w-6";
 
+  const triggerCls = fill
+    ? "group absolute inset-0 h-full w-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+    : `group relative ${sizeCls} rounded border border-white/20 hover:ring-2 hover:ring-primary/40 focus:outline-none focus:ring-2 focus:ring-primary`;
+
   return (
-    <div className="inline-flex items-center gap-1">
+    <div className={fill ? "contents" : "inline-flex items-center gap-1"}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
             type="button"
             title={`${tokenKey} · ${value} — click to change`}
-            className={`group relative ${sizeCls} rounded border border-white/20 hover:ring-2 hover:ring-primary/40 focus:outline-none focus:ring-2 focus:ring-primary`}
-            style={{ background: value }}
+            className={triggerCls}
+            style={fill ? undefined : { background: value }}
           >
-            <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded bg-black/0 opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
-              <Pencil className="h-2.5 w-2.5 text-white" />
+            <span className={`pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100 ${fill ? "" : "rounded"}`}>
+              <Pencil className={fill ? "h-5 w-5 text-white" : "h-2.5 w-2.5 text-white"} />
             </span>
           </button>
         </PopoverTrigger>
