@@ -409,11 +409,19 @@ export function buildCoverArtPrompt(args: {
   // Auto-derived tagline the model must NOT paint when the founder has taken
   // manual control of the on-image text.
   const autoTag = autoHeadline(ctx);
-  const primaryTextObjective = isCustomHeadline
-    ? `\n## PRIMARY TEXT OBJECTIVE (READ FIRST — OVERRIDES ALL OTHER COPY GUIDANCE)\nThe ONLY lettering permitted anywhere on this canvas is the exact string:\n    "${headline}"\nRender it verbatim. No substitutions. No rewrites. No punctuation changes. No additional words, subheads, taglines, URLs, hashtags, or captions.\nFORBIDDEN TEXT: do NOT render "${autoTag}" or any paraphrase, translation, abbreviation, or restatement of it anywhere on the canvas.\n`
-    : suppressHeadline
-    ? `\n## PRIMARY TEXT OBJECTIVE (READ FIRST — OVERRIDES ALL OTHER COPY GUIDANCE)\nZERO lettering on this canvas. No headline, no tagline, no subhead, no URL, no callout, no caption, no watermark. Zero glyphs. Zero words. Zero numbers.\nFORBIDDEN TEXT: do NOT render "${autoTag}" or any paraphrase of it.\n`
+  // Explicit ban on re-drawing the brand wordmark anywhere in the scene — the
+  // logo is composited server-side, and multimodal models otherwise tend to
+  // echo the wordmark into the background as scene text.
+  const brandName: string = (ctx?.brain?.identity?.company_name ?? ctx?.snap?.company_name ?? "").toString().trim();
+  const wordmarkBan = brandName
+    ? `\nWORDMARK BAN (STRICT): do NOT render the letters "${brandName}", any casing variant ("${brandName.toLowerCase()}", "${brandName.toUpperCase()}"), any spacing variant, or any typographic redraw of the brand mark anywhere in the composition — not on a shopfront, sticker, sign, monitor, poster, sidebar, footer, watermark, badge, or as ambient signage. The real logo is composited on top after generation; any painted brand text creates a duplicate.\n`
     : "";
+  const primaryTextObjective = isCustomHeadline
+    ? `\n## PRIMARY TEXT OBJECTIVE (READ FIRST — OVERRIDES ALL OTHER COPY GUIDANCE)\nThe ONLY lettering permitted anywhere on this canvas is the exact string:\n    "${headline}"\nRender it verbatim. No substitutions. No rewrites. No punctuation changes. No additional words, subheads, taglines, URLs, hashtags, or captions.\nFORBIDDEN TEXT: do NOT render "${autoTag}" or any paraphrase, translation, abbreviation, or restatement of it anywhere on the canvas.${wordmarkBan}`
+    : suppressHeadline
+    ? `\n## PRIMARY TEXT OBJECTIVE (READ FIRST — OVERRIDES ALL OTHER COPY GUIDANCE)\nZERO lettering on this canvas. No headline, no tagline, no subhead, no URL, no callout, no caption, no watermark. Zero glyphs. Zero words. Zero numbers.\nFORBIDDEN TEXT: do NOT render "${autoTag}" or any paraphrase of it.${wordmarkBan}`
+    : `\n## PRIMARY TEXT OBJECTIVE\nAt most one short headline is permitted, set in the brand heading family.${wordmarkBan}`;
+
 
 
   const forbiddenLines = plan.forbiddenPairs.slice(0, 6).map(
