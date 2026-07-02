@@ -519,6 +519,9 @@ Deno.serve(async (req) => {
         qa_notes: qa as any,
         last_feedback: userFeedback || null,
         last_regenerated_at: userFeedback ? new Date().toISOString() : null,
+        last_headline: headlineOverride
+          ? (headlineOverride.mode === "none" ? "" : (headlineOverride.text ?? null))
+          : null,
       })
       .select()
       .single();
