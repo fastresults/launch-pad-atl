@@ -319,7 +319,7 @@ export async function compositeLogo(
 
   const size = normalizeLogoSize(opts.logoSize);
   const logoAspect = logo.width / Math.max(1, logo.height);
-  const box = targetBoxFor(opts.placement, base.width, base.height, logoAspect, size);
+  const box = targetBoxFor(opts.placement, base.width, base.height, logoAspect, size, opts.cornerOverride);
   const transparent = hasTransparency(logo);
 
   const surface = hexToRgb(opts.surfaceHex || "#FFFFFF");
