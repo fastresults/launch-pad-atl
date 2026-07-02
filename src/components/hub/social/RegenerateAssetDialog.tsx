@@ -442,6 +442,45 @@ export function RegenerateAssetDialog({
             )}
           </div>
 
+          {/* Logo size on canvas */}
+          <div
+            ref={logoSectionRef}
+            className={`rounded-md transition-colors ${logoHighlight ? "ring-2 ring-primary/60 bg-primary/5 p-2 -m-2" : ""}`}
+          >
+            <div className="mb-1 flex items-center justify-between">
+              <div className="text-xs font-medium">Logo size on image</div>
+              <div className="text-[10px] text-muted-foreground">
+                Bigger = more brand recall
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {LOGO_SIZES.map((opt) => {
+                const active = logoSize === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setLogoSize(opt.id)}
+                    disabled={busy}
+                    className={`rounded-md border px-2 py-1.5 text-left text-[11px] transition ${
+                      active
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-background hover:bg-muted"
+                    }`}
+                  >
+                    <div className="font-medium">{opt.label}</div>
+                    <div className="text-[10px] text-muted-foreground">{opt.hint}</div>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-1 text-[10px] text-muted-foreground">
+              We reserve a clean, contrasting zone and composite your real logo in — never AI-drawn.
+            </div>
+          </div>
+
+
+
 
 
           {mode === "regenerate" && (
