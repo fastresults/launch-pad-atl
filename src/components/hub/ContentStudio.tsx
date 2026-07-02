@@ -32,6 +32,19 @@ const ASPECTS: { id: AdAspect; label: string; hint: string }[] = [
   { id: "9:16", label: "9:16 story", hint: "Stories/Reels/TikTok (1080×1920)" },
 ];
 
+// Prefer the source hook over a stored last_headline when the stored value
+// looks like a truncated prefix (older versions appended "…"). This keeps the
+// regenerate dialog from re-sending a chopped headline.
+function pickHeadlineForEdit(hook: string | null | undefined, lastHeadline: string | null | undefined): string | null {
+  const h = (hook ?? "").trim();
+  const l = (lastHeadline ?? "").trim();
+  if (!l) return h || null;
+  if (/[…]|\.{3}$/.test(l)) return h || l;
+  if (h && l.length < h.length && h.startsWith(l.replace(/[.…]+$/, ""))) return h;
+  return l;
+}
+
+
 export function ContentStudio({ snapshot }: { snapshot: any }) {
   const snapshotId: string = snapshot.id;
   const qc = useQueryClient();
