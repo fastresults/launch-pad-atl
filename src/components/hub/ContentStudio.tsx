@@ -263,10 +263,19 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
       {step === 5 && (
         <Step5Launch
           ads={ads}
+          posts={posts}
           selectedWeeks={selectedWeeks}
           onBack={() => setStep(4)}
+          onAddWeek={async (week) => {
+            const nextWeeks = Array.from(new Set([...selectedWeeks, week])).sort((a, b) => a - b);
+            setSelectedWeeks(nextWeeks);
+            setAutoRunWeek(week);
+            setStep(4);
+            await persist({ selected_weeks: nextWeeks, current_step: 4 });
+          }}
         />
       )}
+
     </div>
   );
 }
@@ -893,11 +902,20 @@ function Step4BuildAds({
 // STEP 5 — Launch summary
 // ============================================================
 function Step5Launch({
-  ads, selectedWeeks, onBack,
+  ads, posts, selectedWeeks, onBack, onAddWeek,
 }: {
-  ads: ContentAd[]; selectedWeeks: number[]; onBack: () => void;
+  ads: ContentAd[]; posts: ContentPost[]; selectedWeeks: number[];
+  onBack: () => void;
+  onAddWeek?: (week: number) => Promise<void> | void;
 }) {
   const scoped = ads.filter((a) => selectedWeeks.length === 0 || true);
+  const allWeeks = Array.from(new Set(posts.map((p) => p.week))).sort((a, b) => a - b);
+  const pendingWeeks = allWeeks.filter((w) => !selectedWeeks.includes(w));
+  const postsByWeek = new Map<number, ContentPost[]>();
+  for (const p of posts) {
+    if (!postsByWeek.has(p.week)) postsByWeek.set(p.week, []);
+    postsByWeek.get(p.week)!.push(p);
+  }
   return (
     <div className="space-y-3">
       <div>
@@ -909,9 +927,54 @@ function Step5Launch({
       <div className="rounded-lg border border-white/10 bg-background/40 p-3 text-xs">
         <b>{scoped.length}</b> ad{scoped.length === 1 ? "" : "s"} produced across weeks {selectedWeeks.join(", ") || "—"}.
       </div>
+
+      {pendingWeeks.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            Keep going — more weeks in your plan
+          </div>
+          {pendingWeeks.map((w) => {
+            const wPosts = postsByWeek.get(w) ?? [];
+            return (
+              <div key={`pending-${w}`} className="rounded-xl border border-dashed border-white/15 bg-background/20 p-3">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[10px]">Week {w}</Badge>
+                    <span className="text-[10px] text-muted-foreground">
+                      {wPosts.length} planned post{wPosts.length === 1 ? "" : "s"} · not started
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-[11px]"
+                    disabled={!onAddWeek}
+                    onClick={() => onAddWeek?.(w)}
+                  >
+                    <Sparkles className="mr-1 h-3 w-3" />
+                    Add &amp; generate Week {w}
+                  </Button>
+                </div>
+                <ul className="grid gap-1 sm:grid-cols-2">
+                  {wPosts.slice(0, 4).map((p) => (
+                    <li key={p.id} className="truncate text-[11px] text-muted-foreground">
+                      · {p.hook || p.pillar || "Untitled post"}
+                    </li>
+                  ))}
+                  {wPosts.length > 4 && (
+                    <li className="text-[11px] text-muted-foreground/70">+ {wPosts.length - 4} more</li>
+                  )}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       <footer className="flex justify-between">
-        <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back</Button>
+        <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back to build</Button>
       </footer>
     </div>
   );
 }
+
