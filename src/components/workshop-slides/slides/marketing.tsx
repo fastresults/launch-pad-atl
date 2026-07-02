@@ -149,7 +149,7 @@ export const marketingSlides: Slide[] = [
   },
   {
     id: "deliverables-overview",
-    title: `The ${TOTAL_DELIVS} deliverable${TOTAL_DELIVS === 1 ? "" : "s"}`,
+    title: `The ${TOTAL_DELIVS} startup asset${TOTAL_DELIVS === 1 ? "" : "s"}`,
     render: () => (
       <SlideLayout stageKicker={KICKER} pageLabel={pl(5)}>
         <div className="grid grid-cols-12 gap-10 items-center">
