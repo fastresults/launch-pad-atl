@@ -72,6 +72,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
   const [selectedWeeks, setSelectedWeeks] = useState<number[]>([]);
   const [direction, setDirection] = useState<string>("editorial");
   const [aspects, setAspects] = useState<AdAspect[]>(["1:1"]);
+  const [autoRunWeek, setAutoRunWeek] = useState<number | null>(null);
 
   // Hydrate from progress
   useEffect(() => {
@@ -180,6 +181,17 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           parsing={parsing}
           onParse={runParse}
           onNext={async () => { setStep(2); await persist({ current_step: 2 }); }}
+          onGenerateNow={async (week) => {
+            setSelectedWeeks([week]);
+            setAutoRunWeek(week);
+            setStep(4);
+            await persist({
+              current_step: 4,
+              selected_weeks: [week],
+              art_direction: direction,
+              default_aspects: aspects,
+            });
+          }}
         />
       )}
 
@@ -220,6 +232,8 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           selectedWeeks={selectedWeeks}
           posts={posts}
           ads={ads}
+          autoRunWeek={autoRunWeek}
+          onAutoRunConsumed={() => setAutoRunWeek(null)}
           onBack={() => setStep(3)}
           onDone={async () => { setStep(5); await persist({ current_step: 5 }); }}
         />
@@ -240,9 +254,10 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
 // STEP 1 — Parse the calendar
 // ============================================================
 function Step1Calendar({
-  posts, parsing, onParse, onNext,
+  posts, parsing, onParse, onNext, onGenerateNow,
 }: {
   posts: ContentPost[]; parsing: boolean; onParse: () => Promise<void>; onNext: () => void;
+  onGenerateNow: (week: number) => Promise<void> | void;
 }) {
   const grouped = groupPostsByWeek(posts);
   const weeks = Array.from(grouped.keys()).sort((a, b) => a - b);
@@ -324,7 +339,16 @@ function Step1Calendar({
         </div>
       )}
 
-      <footer className="flex justify-end">
+      <footer className="flex justify-end gap-2">
+        {firstWeek != null && week1Posts.length > 0 && (
+          <Button
+            variant="outline"
+            onClick={() => onGenerateNow(firstWeek)}
+            disabled={posts.length === 0}
+          >
+            <Sparkles className="mr-1 h-3 w-3" /> Generate Week {firstWeek} now
+          </Button>
+        )}
         <Button onClick={onNext} disabled={posts.length === 0}>
           Continue <ArrowRight className="ml-1 h-3 w-3" />
         </Button>
@@ -467,10 +491,12 @@ type AdTask = {
 };
 
 function Step4BuildAds({
-  snapshotId, direction, aspects, selectedWeeks, posts, ads, onBack, onDone,
+  snapshotId, direction, aspects, selectedWeeks, posts, ads,
+  autoRunWeek, onAutoRunConsumed, onBack, onDone,
 }: {
   snapshotId: string; direction: string; aspects: AdAspect[];
   selectedWeeks: number[]; posts: ContentPost[]; ads: ContentAd[];
+  autoRunWeek?: number | null; onAutoRunConsumed?: () => void;
   onBack: () => void; onDone: () => void;
 }) {
   const qc = useQueryClient();
@@ -525,6 +551,17 @@ function Step4BuildAds({
       setRunning(false);
     }
   };
+
+  // Auto-kick "Generate week" when arriving via the Step 1 shortcut.
+  useEffect(() => {
+    if (autoRunWeek == null) return;
+    if (running) return;
+    if (tasks.length === 0) return;
+    const pending = tasks.some((t) => t.post.week === autoRunWeek && !t.ad);
+    onAutoRunConsumed?.();
+    if (pending) void runWeek(autoRunWeek);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRunWeek, tasks.length]);
 
   const runAll = async () => {
     setRunning(true);
