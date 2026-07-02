@@ -24,6 +24,10 @@ export function LegalSetupCard() {
           <p className="mt-1 text-sm text-muted-foreground">
             Step-by-step walkthrough: entity choice, name reservation, Registered Agent, Georgia Articles of Organization, IRS FEIN, Operating Agreement, and the post-formation checklist. Everything you need to be legal, bankable, and ready to sign your first contract.
           </p>
+          <p className="mt-2 flex items-start gap-1.5 text-xs italic text-muted-foreground/80">
+            <Info className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+            <span>A few of these steps happen outside the workshop — filings, ID numbers, and signatures you'll complete on your own time. This checklist keeps everything in one place so nothing slips.</span>
+          </p>
         </div>
         <Button asChild>
           <Link to="/dashboard/legal-setup">
