@@ -827,6 +827,10 @@ function Step4BuildAds({
         );
       })}
 
+      <PlanNextWeekCard
+        snapshotId={snapshotId}
+        nextWeek={(allWeeks.length ? allWeeks[allWeeks.length - 1] : 0) + 1}
+      />
 
 
       <footer className="flex justify-between">
