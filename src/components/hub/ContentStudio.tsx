@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
 import {
   Newspaper, Lock, ArrowLeft, ArrowRight, Sparkles, Loader2, Calendar, Wand2,
   RefreshCw, Check, Eye, Trash2, Image as ImageIcon, ListChecks,
@@ -551,6 +553,8 @@ function Step4BuildAds({
 
   const [running, setRunning] = useState(false);
   const [runningKeys, setRunningKeys] = useState<Record<string, boolean>>({});
+  const [openWeeks, setOpenWeeks] = useState<string[] | null>(null);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [regen, setRegen] = useState<null | { task: AdTask; focusSection?: any }>(null);
   const [previewIdx, setPreviewIdx] = useState<number | null>(null);
@@ -696,138 +700,183 @@ function Step4BuildAds({
         )}
       </div>
 
-      {Array.from(byWeek.keys()).sort((a, b) => a - b).map((w) => {
-        const wTasks = byWeek.get(w)!;
-        const wDone = wTasks.filter((t) => t.ad).length;
-        return (
-          <div key={w} className="rounded-xl border border-white/10 bg-background/40 p-3">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-[10px]">Week {w}</Badge>
-                <span className="text-[10px] text-muted-foreground">{wDone}/{wTasks.length} ads</span>
-              </div>
-              {wTasks.some((t) => !t.ad) && (
-                <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => runWeek(w)} disabled={running}>
-                  <Sparkles className="mr-1 h-3 w-3" /> Generate week
-                </Button>
-              )}
-            </div>
-            <ul className="grid gap-2 sm:grid-cols-2">
-              {wTasks.map((t) => {
-                const k = key(t);
-                const busy = !!runningKeys[k];
-                const err = errors[k];
-                const url = t.ad?.signed_url;
-                return (
-                  <li key={k} className="flex items-start gap-3 rounded-lg border border-white/5 bg-background/40 p-2 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => { if (url) setPreviewIdx(tasks.indexOf(t)); }}
-                      disabled={!url}
-                      className={`h-20 w-20 shrink-0 overflow-hidden rounded-md border border-white/10 bg-muted/40 flex items-center justify-center ${url ? "cursor-zoom-in hover:ring-2 hover:ring-primary/40" : ""}`}
-                    >
-                      {url ? (
-                        <AssetImage src={url} alt="ad preview" className="h-full w-full object-contain" />
-                      ) : busy ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-status-info" />
-                      ) : err ? (
-                        <span className="text-[10px] text-status-danger">failed</span>
-                      ) : (
-                        <ImageIcon className="h-4 w-4 text-muted-foreground/60" />
-                      )}
-                    </button>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <Badge variant="outline" className="text-[9px]">{t.aspect}</Badge>
-                        {t.post.platform && <span className="text-[10px] text-muted-foreground">{t.post.platform}</span>}
-                        {t.ad?.qa_status === "fail" && (
-                          <span className="rounded bg-status-warning/15 px-1 text-[9px] font-medium text-status-warning">QA fail</span>
-                        )}
-                      </div>
-                      <div className="mt-0.5 line-clamp-2 font-medium" title={t.post.hook ?? undefined}>
-                        {t.post.hook || t.post.body?.slice(0, 80) || "(no hook)"}
-                      </div>
-                      {t.post.pillar && (
-                        <div className="text-[10px] text-muted-foreground">{t.post.pillar}</div>
-                      )}
-                      <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                        {!t.ad && !err && (
-                          <Button size="sm" variant="outline" className="h-6 text-[11px]" disabled={running || busy}
-                            onClick={() => doGenerate(t)}>
-                            {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-                            Generate
-                          </Button>
-                        )}
-                        {(t.ad || err) && (
-                          <Button size="sm" variant="outline" className="h-6 text-[11px]" disabled={running || busy}
-                            onClick={() => setRegen({ task: t })}>
-                            <RefreshCw className="mr-1 h-3 w-3" /> Regenerate
-                          </Button>
-                        )}
-                        {url && (
-                          <Button size="sm" variant="ghost" className="h-6 text-[11px]"
-                            onClick={() => setPreviewIdx(tasks.indexOf(t))}>
-                            <Eye className="mr-1 h-3 w-3" /> Preview
-                          </Button>
-                        )}
-                        {t.ad && (
-                          <Button size="sm" variant="ghost" className="h-6 px-1.5 text-status-danger hover:bg-status-danger/10"
-                            disabled={busy || running} onClick={() => doDelete(t)}>
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        );
-      })}
+      {(() => {
+        // Compute a sensible default open item once weeks are known.
+        const activeWeeks = Array.from(byWeek.keys()).sort((a, b) => a - b);
+        let defaultOpen: string[] = [];
+        const firstIncomplete = activeWeeks.find((w) => (byWeek.get(w) ?? []).some((t) => !t.ad));
+        if (firstIncomplete != null) defaultOpen = [`w-${firstIncomplete}`];
+        else if (activeWeeks.length) defaultOpen = [`w-${activeWeeks[activeWeeks.length - 1]}`];
+        const value = openWeeks ?? defaultOpen;
 
-      {pendingWeeks.map((w) => {
-        const wPosts = postsByWeek.get(w) ?? [];
-        const isLoading = autoRunWeek === w || running;
         return (
-          <div key={`pending-${w}`} className="rounded-xl border border-dashed border-white/15 bg-background/20 p-3">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-[10px]">Week {w}</Badge>
-                <span className="text-[10px] text-muted-foreground">
-                  {wPosts.length} planned post{wPosts.length === 1 ? "" : "s"} · not started
-                </span>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-[11px]"
-                disabled={isLoading || !onAddWeek}
-                onClick={() => onAddWeek?.(w)}
-              >
-                {isLoading ? (
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                ) : (
-                  <Sparkles className="mr-1 h-3 w-3" />
-                )}
-                Add &amp; generate Week {w}
-              </Button>
-            </div>
-            <ul className="grid gap-1 sm:grid-cols-2">
-              {wPosts.slice(0, 4).map((p) => (
-                <li key={p.id} className="truncate text-[11px] text-muted-foreground">
-                  · {p.hook || p.pillar || "Untitled post"}
-                </li>
-              ))}
-              {wPosts.length > 4 && (
-                <li className="text-[11px] text-muted-foreground/70">
-                  + {wPosts.length - 4} more
-                </li>
-              )}
-            </ul>
-          </div>
+          <Accordion
+            type="multiple"
+            value={value}
+            onValueChange={(v) => setOpenWeeks(v as string[])}
+            className="space-y-2"
+          >
+            {allWeeks.map((w) => {
+              const isPending = !selectedWeeks.includes(w);
+              const wTasks = byWeek.get(w) ?? [];
+              const wPosts = postsByWeek.get(w) ?? [];
+              const wDone = wTasks.filter((t) => t.ad).length;
+              const wTotal = wTasks.length;
+              const wPending = wTotal - wDone;
+              const isLoading = autoRunWeek === w || running;
+
+              return (
+                <AccordionItem
+                  key={`w-${w}`}
+                  value={`w-${w}`}
+                  className={`rounded-xl border ${isPending ? "border-dashed border-white/15 bg-background/20" : "border-white/10 bg-background/40"} px-3`}
+                >
+                  <AccordionTrigger className="py-2.5 hover:no-underline">
+                    <div className="flex flex-1 items-center justify-between gap-2 pr-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-[10px]">Week {w}</Badge>
+                        {isPending ? (
+                          <span className="text-[10px] text-muted-foreground">
+                            {wPosts.length} planned post{wPosts.length === 1 ? "" : "s"} · not started
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground">
+                            {wDone}/{wTotal} ads{wPending === 0 ? " · done" : ""}
+                          </span>
+                        )}
+                      </div>
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isPending) onAddWeek?.(w);
+                          else if (wPending > 0) runWeek(w);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            if (isPending) onAddWeek?.(w);
+                            else if (wPending > 0) runWeek(w);
+                          }
+                        }}
+                        className={
+                          isPending || wPending > 0
+                            ? "inline-flex h-7 items-center gap-1 rounded-md border border-input bg-background px-2 text-[11px] hover:bg-accent hover:text-accent-foreground"
+                            : "text-[10px] text-muted-foreground"
+                        }
+                        aria-disabled={isLoading}
+                      >
+                        {isPending ? (
+                          <>
+                            {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                            Add &amp; generate
+                          </>
+                        ) : wPending > 0 ? (
+                          <>
+                            {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                            Generate week ({wPending})
+                          </>
+                        ) : (
+                          "Done"
+                        )}
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    {isPending ? (
+                      <ul className="grid gap-1 sm:grid-cols-2">
+                        {wPosts.slice(0, 8).map((p) => (
+                          <li key={p.id} className="truncate text-[11px] text-muted-foreground">
+                            · {p.hook || p.pillar || "Untitled post"}
+                          </li>
+                        ))}
+                        {wPosts.length > 8 && (
+                          <li className="text-[11px] text-muted-foreground/70">+ {wPosts.length - 8} more</li>
+                        )}
+                      </ul>
+                    ) : (
+                      <ul className="grid gap-2 sm:grid-cols-2">
+                        {wTasks.map((t) => {
+                          const k = key(t);
+                          const busy = !!runningKeys[k];
+                          const err = errors[k];
+                          const url = t.ad?.signed_url;
+                          return (
+                            <li key={k} className="flex items-start gap-3 rounded-lg border border-white/5 bg-background/40 p-2 text-xs">
+                              <button
+                                type="button"
+                                onClick={() => { if (url) setPreviewIdx(tasks.indexOf(t)); }}
+                                disabled={!url}
+                                className={`h-20 w-20 shrink-0 overflow-hidden rounded-md border border-white/10 bg-muted/40 flex items-center justify-center ${url ? "cursor-zoom-in hover:ring-2 hover:ring-primary/40" : ""}`}
+                              >
+                                {url ? (
+                                  <AssetImage src={url} alt="ad preview" className="h-full w-full object-contain" />
+                                ) : busy ? (
+                                  <Loader2 className="h-4 w-4 animate-spin text-status-info" />
+                                ) : err ? (
+                                  <span className="text-[10px] text-status-danger">failed</span>
+                                ) : (
+                                  <ImageIcon className="h-4 w-4 text-muted-foreground/60" />
+                                )}
+                              </button>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5">
+                                  <Badge variant="outline" className="text-[9px]">{t.aspect}</Badge>
+                                  {t.post.platform && <span className="text-[10px] text-muted-foreground">{t.post.platform}</span>}
+                                  {t.ad?.qa_status === "fail" && (
+                                    <span className="rounded bg-status-warning/15 px-1 text-[9px] font-medium text-status-warning">QA fail</span>
+                                  )}
+                                </div>
+                                <div className="mt-0.5 line-clamp-2 font-medium" title={t.post.hook ?? undefined}>
+                                  {t.post.hook || t.post.body?.slice(0, 80) || "(no hook)"}
+                                </div>
+                                {t.post.pillar && (
+                                  <div className="text-[10px] text-muted-foreground">{t.post.pillar}</div>
+                                )}
+                                <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                                  {!t.ad && !err && (
+                                    <Button size="sm" variant="outline" className="h-6 text-[11px]" disabled={running || busy}
+                                      onClick={() => doGenerate(t)}>
+                                      {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+                                      Generate
+                                    </Button>
+                                  )}
+                                  {(t.ad || err) && (
+                                    <Button size="sm" variant="outline" className="h-6 text-[11px]" disabled={running || busy}
+                                      onClick={() => setRegen({ task: t })}>
+                                      <RefreshCw className="mr-1 h-3 w-3" /> Regenerate
+                                    </Button>
+                                  )}
+                                  {url && (
+                                    <Button size="sm" variant="ghost" className="h-6 text-[11px]"
+                                      onClick={() => setPreviewIdx(tasks.indexOf(t))}>
+                                      <Eye className="mr-1 h-3 w-3" /> Preview
+                                    </Button>
+                                  )}
+                                  {t.ad && (
+                                    <Button size="sm" variant="ghost" className="h-6 px-1.5 text-status-danger hover:bg-status-danger/10"
+                                      disabled={busy || running} onClick={() => doDelete(t)}>
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
         );
-      })}
+      })()}
+
+
 
       <PlanNextWeekCard
         snapshotId={snapshotId}
