@@ -1319,6 +1319,11 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 </div>
               );
             })}
+            {String(cat).toLowerCase().includes("foundation") && (
+              <div className="md:col-span-2">
+                <LegalSetupCard />
+              </div>
+            )}
           </div>
         </section>
         );
