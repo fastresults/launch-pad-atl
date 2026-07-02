@@ -370,7 +370,7 @@ ${suppressHeadline ? suppressBlock : `- HEADLINE (${isCustomHeadline ? "verbatim
     : "";
   return `POST / COVER SYSTEM (${ratio})
 - Treat as a single editorial frame. One focal element, ≥60% negative space.
-${suppressHeadline ? "- Optional type lockup uses the brand heading family." : "- Optional type lockup uses the brand heading family." + (isCustomHeadline ? ` HEADLINE (verbatim, exact wording): "${headline}". Do not rephrase. Render it entirely inside the HEADLINE LANDING AREA below — never let letterforms touch or cross that band's edges.` : "")}
+${suppressHeadline ? suppressBlock : "- Optional type lockup uses the brand heading family." + (isCustomHeadline ? ` HEADLINE (verbatim, exact wording): "${headline}". Do not rephrase. Render it entirely inside the HEADLINE LANDING AREA below — never let letterforms touch or cross that band's edges.` : "")}
 ${headlineZoneBlock}
 ${zone("top-left", 24, 24)}${sidebarCap}
 - Reserve an 8% safe inset on all sides for platform UI.
