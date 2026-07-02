@@ -75,94 +75,88 @@ function maxLines(aspect: AdAspect): number {
   return aspect === "9:16" ? 3 : 2;
 }
 
-// Word-wrap `text` into up to `maxL` lines that each fit inside `maxWpx`
-// when rendered by imagescript at `size`. Returns null if it can't fit
-// even by using the max lines.
-function tryWrap(
-  font: Uint8Array,
-  size: number,
-  text: string,
-  maxWpx: number,
-  maxL: number,
-): { lines: string[]; width: number; height: number } | null {
-  const words = text.split(/\s+/).filter(Boolean);
-  if (!words.length) return null;
+// Reference size used to measure word widths once. Widths at other sizes are
+// derived linearly (px scales ~linearly with font size for a given font).
+const REF_SIZE = 100;
 
-  const lines: string[] = [];
-  let cur = "";
-  for (const w of words) {
-    const candidate = cur ? cur + " " + w : w;
-    let img: Image;
-    try { img = Image.renderText(font, size, candidate, 0x000000ff) as Image; }
-    catch { return null; }
-    if (img.width <= maxWpx) {
-      cur = candidate;
-    } else {
-      if (!cur) {
-        // Single word wider than the line — no fit at this size.
-        return null;
-      }
-      lines.push(cur);
-      cur = w;
-      if (lines.length >= maxL) return null;
-      // Check single-word width against maxWpx too.
-      let solo: Image;
-      try { solo = Image.renderText(font, size, w, 0x000000ff) as Image; }
-      catch { return null; }
-      if (solo.width > maxWpx) return null;
+type WordMetrics = {
+  spaceRef: number;                // width of a single space at REF_SIZE
+  widthsRef: Map<string, number>;  // width of each unique word at REF_SIZE
+};
+
+function measureWords(font: Uint8Array, words: string[]): WordMetrics | null {
+  const widthsRef = new Map<string, number>();
+  try {
+    for (const w of words) {
+      if (widthsRef.has(w)) continue;
+      const img = Image.renderText(font, REF_SIZE, w, 0x000000ff) as Image;
+      widthsRef.set(w, img.width);
     }
+    const a = (Image.renderText(font, REF_SIZE, "a", 0x000000ff) as Image).width;
+    const aSpaceA = (Image.renderText(font, REF_SIZE, "a a", 0x000000ff) as Image).width;
+    const spaceRef = Math.max(REF_SIZE * 0.25, aSpaceA - a * 2);
+    return { spaceRef, widthsRef };
+  } catch {
+    return null;
   }
-  if (cur) lines.push(cur);
-  if (!lines.length || lines.length > maxL) return null;
-
-  let widest = 0;
-  const lineHeight = Math.round(size * 1.08);
-  for (const l of lines) {
-    let img: Image;
-    try { img = Image.renderText(font, size, l, 0x000000ff) as Image; }
-    catch { return null; }
-    if (img.width > widest) widest = img.width;
-  }
-  const totalH = lines.length * lineHeight;
-  return { lines, width: widest, height: totalH };
 }
 
-// Binary-search largest font size that fits in the band with word wrapping.
+function wrapAtSize(
+  words: string[],
+  metrics: WordMetrics,
+  size: number,
+  maxWpx: number,
+  maxL: number,
+): { lines: string[] } | null {
+  const scale = size / REF_SIZE;
+  const space = metrics.spaceRef * scale;
+  const lines: string[] = [];
+  let curWords: string[] = [];
+  let curW = 0;
+  for (const w of words) {
+    const ww = (metrics.widthsRef.get(w) ?? 0) * scale;
+    if (ww > maxWpx) return null;
+    const tentative = curWords.length ? curW + space + ww : ww;
+    if (tentative <= maxWpx) {
+      curWords.push(w);
+      curW = tentative;
+    } else {
+      lines.push(curWords.join(" "));
+      if (lines.length >= maxL) return null;
+      curWords = [w];
+      curW = ww;
+    }
+  }
+  if (curWords.length) lines.push(curWords.join(" "));
+  if (!lines.length || lines.length > maxL) return null;
+  return { lines };
+}
+
 function fitHeadline(
   font: Uint8Array,
   text: string,
   bandW: number,
   bandH: number,
   aspect: AdAspect,
-): { lines: string[]; size: number; lineHeight: number; width: number; height: number } | null {
+): { lines: string[]; size: number; lineHeight: number } | null {
+  const words = text.split(/\s+/).filter(Boolean);
+  if (!words.length) return null;
+  const metrics = measureWords(font, words);
+  if (!metrics) return null;
+
   const maxL = maxLines(aspect);
-  // Ceiling: band height / lines, clamped to a reasonable typographic max.
-  const ceil = Math.min(180, Math.floor(bandH / Math.max(1, maxL)));
+  const ceil = Math.min(180, Math.floor(bandH / Math.max(1, maxL) / 1.08));
   const floor = 28;
 
-  let best: ReturnType<typeof tryWrap> | null = null;
-  let bestSize = 0;
-
-  let lo = floor, hi = ceil;
-  while (lo <= hi) {
-    const mid = Math.floor((lo + hi) / 2);
-    const wrapped = tryWrap(font, mid, text, bandW, maxL);
-    if (wrapped && wrapped.height <= bandH) {
-      best = wrapped;
-      bestSize = mid;
-      lo = mid + 4; // try larger
-    } else {
-      hi = mid - 4;
+  for (let size = ceil; size >= floor; size -= 4) {
+    const wrapped = wrapAtSize(words, metrics, size, bandW, maxL);
+    if (!wrapped) continue;
+    const lh = Math.round(size * 1.08);
+    if (wrapped.lines.length * lh <= bandH) {
+      return { lines: wrapped.lines, size, lineHeight: lh };
     }
   }
-  if (!best) return null;
-  return {
-    lines: best.lines,
-    size: bestSize,
-    lineHeight: Math.round(bestSize * 1.08),
-    width: best.width,
-    height: best.height,
-  };
+  return null;
 }
 
 // Word-safe truncator (matches content-ad-director) as a last-resort fallback.
