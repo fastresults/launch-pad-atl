@@ -109,12 +109,12 @@ export const socialContentSlides: Slide[] = [
   },
   {
     id: "deliverables-overview",
-    title: `The ${TOTAL_DELIVS} deliverables`,
+    title: `The ${TOTAL_DELIVS} startup assets`,
     render: () => (
       <SlideLayout stageKicker={KICKER} pageLabel={pl(5)}>
         <div>
           <SlotText slideId="deliverables-overview" field="kicker" defaultValue="What you walk out with" as="div" className="slide-kicker font-semibold text-primary mb-6" />
-          <SlotText slideId="deliverables-overview" field="title" defaultValue={`${TOTAL_DELIVS} founder-ready deliverables — built for your startup.`} as="h2" className="slide-title font-semibold tracking-tight mb-12" />
+          <SlotText slideId="deliverables-overview" field="title" defaultValue={`${TOTAL_DELIVS} founder-ready startup assets — built for your startup.`} as="h2" className="slide-title font-semibold tracking-tight mb-12" />
           <div className="grid grid-cols-2 gap-6">
             {STAGE.items.map((item, i) => {
               const Icon = item.icon;

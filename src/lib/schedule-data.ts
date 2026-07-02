@@ -85,7 +85,7 @@ export const SCHEDULE: Session[] = [
     time: "11:30 AM",
     duration: "—",
     title: "Close — strategic foundation in hand",
-    description: "You walk out with your six strategic deliverables and a signed 90-day roadmap.",
+    description: "You walk out with your six strategic startup assets and a signed 90-day roadmap.",
     kind: "break",
   },
 ];
