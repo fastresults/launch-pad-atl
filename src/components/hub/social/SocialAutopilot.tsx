@@ -756,7 +756,7 @@ function Step5BuildKit({
     [platforms, direction],
   );
 
-  const tasks: (KitTask & { asset_id?: string | null; signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null; qa_notes?: any; model_used?: string | null; updated_at?: string | null; width?: number | null; height?: number | null })[] = useMemo(() => {
+  const tasks: (KitTask & { asset_id?: string | null; signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null; last_headline?: string | null; qa_notes?: any; model_used?: string | null; updated_at?: string | null; width?: number | null; height?: number | null })[] = useMemo(() => {
     return baseTasks.map((t) => {
       const match = assets.find(
         (a: any) => a.platform === t.platform && a.asset_kind === t.asset && a.art_direction === direction,
@@ -770,6 +770,7 @@ function Step5BuildKit({
         qa_status: match?.qa_status ?? null,
         qa_notes: (match as any)?.qa_notes ?? null,
         last_feedback: match?.last_feedback ?? null,
+        last_headline: (match as any)?.last_headline ?? null,
         model_used: (match as any)?.model_used ?? null,
         updated_at: (match as any)?.updated_at ?? null,
         width: (match as any)?.width ?? null,
