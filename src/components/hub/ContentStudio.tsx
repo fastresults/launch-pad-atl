@@ -650,6 +650,16 @@ function Step4BuildAds({
     byWeek.get(t.post.week)!.push(t);
   }
 
+  // All weeks known from the parsed calendar, and which ones are not yet activated in Step 4
+  const allWeeks = Array.from(new Set(posts.map((p) => p.week))).sort((a, b) => a - b);
+  const pendingWeeks = allWeeks.filter((w) => !selectedWeeks.includes(w));
+  const postsByWeek = new Map<number, ContentPost[]>();
+  for (const p of posts) {
+    if (!postsByWeek.has(p.week)) postsByWeek.set(p.week, []);
+    postsByWeek.get(p.week)!.push(p);
+  }
+
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
