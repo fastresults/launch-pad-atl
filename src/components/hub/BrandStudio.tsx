@@ -69,11 +69,22 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
       {kit && (
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Palette</div>
-            <div className="mt-1 flex flex-wrap gap-1">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Palette — click to edit</div>
+            <div className="mt-1 flex flex-wrap gap-1.5">
               {kit.palette?.colors ? Object.entries(kit.palette.colors).map(([k, v]: any) => (
-                <div key={k} className="flex items-center gap-1 rounded-full border border-white/10 bg-background/40 px-2 py-0.5 text-[10px]">
-                  <span className="h-3 w-3 rounded-full border border-white/20" style={{ background: v }} />
+                <div key={k} className="flex items-center gap-1 rounded-full border border-white/10 bg-background/40 px-1.5 py-0.5 text-[10px]">
+                  <EditablePaletteSwatch
+                    tokenKey={k}
+                    value={v as string}
+                    size="sm"
+                    onChange={async (hex) => {
+                      const nextColors = { ...(kit.palette?.colors ?? {}), [k]: hex };
+                      await upsertBrandKit(snapshot.id, {
+                        palette: { ...(kit.palette ?? {}), colors: nextColors, source: "user-edited" },
+                      });
+                      qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+                    }}
+                  />
                   <span className="text-muted-foreground">{k}</span>
                 </div>
               )) : <span className="text-xs text-muted-foreground">Not chosen yet</span>}
