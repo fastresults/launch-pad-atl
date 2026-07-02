@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
 import {
   Newspaper, Lock, ArrowLeft, ArrowRight, Sparkles, Loader2, Calendar, Wand2,
   RefreshCw, Check, Eye, Trash2, Image as ImageIcon, ListChecks,
