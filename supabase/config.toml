@@ -1,1 +1,4 @@
 project_id = "hflfxytqrlkobhuugsca"
+
+[functions.venture-plan-next-week]
+verify_jwt = false
