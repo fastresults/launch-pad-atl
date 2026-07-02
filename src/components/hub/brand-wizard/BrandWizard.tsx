@@ -986,7 +986,21 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
               </div>
             </div>
             <div className="max-h-[620px] overflow-y-auto p-4">
-              <VisualBrandGuide kit={kit} snapshot={snapshot} />
+              <VisualBrandGuide
+                kit={kit}
+                snapshot={snapshot}
+                originalColors={kit?.palette?.colors ?? {}}
+                onColorChange={(key, hex) => {
+                  const nextColors = { ...(kit?.palette?.colors ?? {}), [key]: hex };
+                  onSave({
+                    palette: {
+                      ...(kit?.palette ?? {}),
+                      colors: nextColors,
+                      source: "user-edited",
+                    },
+                  });
+                }}
+              />
             </div>
           </>
         ) : (
