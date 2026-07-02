@@ -103,7 +103,8 @@ export function buildContentAdPrompt(args: {
 }): string {
   const { aspect, post } = args;
   const asset = specForAspect(aspect);
-  const resolvedHeadline = resolveAdHeadline(post.hook, args.headlineOverride);
+  const resolvedHeadline = resolveAdHeadline(post.hook, args.headlineOverride, aspect);
+
 
   // Post-specific brief appended as extra art-direction context.
   const postBrief = [
