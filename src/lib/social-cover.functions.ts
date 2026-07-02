@@ -23,6 +23,7 @@ export type SocialAsset = {
   qa_status?: string | null;
   qa_notes?: any;
   last_feedback?: string | null;
+  last_headline?: string | null;
 };
 
 async function call(body: any) {
@@ -51,6 +52,8 @@ export type PaletteOverride = {
   signature?: string;
 };
 
+export type HeadlineOverride = { mode: "auto" | "custom" | "none"; text?: string };
+
 export async function generateSocialCover(input: {
   snapshotId: string;
   platform: string;
@@ -63,6 +66,7 @@ export async function generateSocialCover(input: {
     | "focal_shape" | "corner_mark" | "framed_border";
   signatureMinCoveragePct?: number;
   paletteOverride?: PaletteOverride;
+  headlineOverride?: HeadlineOverride;
 }): Promise<SocialAsset> {
   const data = await call({ action: "generate", ...input });
   return data.asset as SocialAsset;

@@ -21,6 +21,7 @@ export type PreviewableAsset = {
   qaNotes?: any;
   modelUsed?: string | null;
   lastFeedback?: string | null;
+  lastHeadline?: string | null;
   updatedAt?: string | null;
 };
 
@@ -199,6 +200,17 @@ export function AssetPreviewDialog({
               <div>
                 <div className="text-muted-foreground">Model</div>
                 <div className="font-mono text-[10px] break-all">{asset.modelUsed}</div>
+              </div>
+            )}
+
+            {asset.lastHeadline !== undefined && asset.lastHeadline !== null && (
+              <div>
+                <div className="text-muted-foreground">Headline on image</div>
+                <div className="rounded border border-border bg-background/40 p-2 text-[11px]">
+                  {asset.lastHeadline === ""
+                    ? <span className="italic text-muted-foreground">No text (suppressed)</span>
+                    : <span className="font-medium">"{asset.lastHeadline}"</span>}
+                </div>
               </div>
             )}
 

@@ -157,6 +157,8 @@ export function RegenerateAssetDialog({
   canvasPlan,
   initialIntensity = "balanced",
   mode = "regenerate",
+  suggestedHeadline,
+  currentHeadline,
   onSubmit,
 }: {
   open: boolean;
@@ -168,12 +170,17 @@ export function RegenerateAssetDialog({
   canvasPlan?: { surface?: string; ink?: string; accent?: string; signature?: string; displaySignature?: string } | null;
   initialIntensity?: "subtle" | "balanced" | "bold";
   mode?: "generate" | "regenerate";
+  /** Suggested/auto headline shown to the user when they pick "Use suggested". */
+  suggestedHeadline?: string | null;
+  /** The headline that was actually used on the current asset (if any). */
+  currentHeadline?: string | null;
   onSubmit: (input: {
     feedback: string;
     directionOverride?: string;
     signatureIntensity?: "subtle" | "balanced" | "bold";
     signaturePlacement?: typeof PLACEMENTS[number]["id"];
     paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
+    headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
   }) => Promise<void>;
 }) {
   const [feedback, setFeedback] = useState("");
@@ -181,6 +188,13 @@ export function RegenerateAssetDialog({
   const [intensity, setIntensity] = useState<"subtle" | "balanced" | "bold">(initialIntensity);
   const [placement, setPlacement] = useState<typeof PLACEMENTS[number]["id"]>("auto");
   const [busy, setBusy] = useState(false);
+
+  // Headline override: default to "custom" pre-filled with whatever text is on
+  // the current asset so users can edit that exact string.
+  const initialHeadlineMode: "auto" | "custom" | "none" =
+    currentHeadline && currentHeadline.trim() ? "custom" : "auto";
+  const [headlineMode, setHeadlineMode] = useState<"auto" | "custom" | "none">(initialHeadlineMode);
+  const [headlineText, setHeadlineText] = useState<string>(currentHeadline || "");
 
   // Per-role override state — null means "use brand-kit value".
   const [ovr, setOvr] = useState<Record<SwatchRole, string | null>>({
@@ -219,12 +233,19 @@ export function RegenerateAssetDialog({
     const paletteOverride = Object.fromEntries(
       Object.entries(ovr).filter(([, v]) => !!v),
     ) as Record<string, string>;
+    const headlineOverride =
+      headlineMode === "none"
+        ? { mode: "none" as const }
+        : headlineMode === "custom" && headlineText.trim()
+        ? { mode: "custom" as const, text: headlineText.trim().slice(0, 64) }
+        : undefined; // auto = default, no override
     const payload = {
       feedback: feedback.trim(),
       directionOverride: direction !== currentDirection ? direction : undefined,
       signatureIntensity: intensity,
       signaturePlacement: placement,
       paletteOverride: Object.keys(paletteOverride).length ? paletteOverride : undefined,
+      headlineOverride,
     };
     // Fire-and-forget so the user can close the modal and let the task run in the background.
     Promise.resolve()
@@ -312,6 +333,59 @@ export function RegenerateAssetDialog({
               </div>
             )}
           </div>
+
+          {/* Headline text override */}
+          <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-medium">Headline text on image</div>
+              <span className="text-[10px] text-muted-foreground">
+                {headlineMode === "custom" ? `${headlineText.length}/64` : ""}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {(["auto", "custom", "none"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setHeadlineMode(m)}
+                  className={`rounded-md border px-2 py-1.5 text-[11px] font-medium transition ${
+                    headlineMode === m
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-background hover:bg-muted"
+                  }`}
+                >
+                  {m === "auto" ? "Use suggested" : m === "custom" ? "Custom text" : "No text"}
+                </button>
+              ))}
+            </div>
+            {headlineMode === "auto" && (
+              <div className="text-[10px] text-muted-foreground">
+                Will render:{" "}
+                <span className="font-medium text-foreground">
+                  "{(suggestedHeadline || currentHeadline || "").slice(0, 64) || "(venture name)"}"
+                </span>
+              </div>
+            )}
+            {headlineMode === "custom" && (
+              <input
+                type="text"
+                value={headlineText}
+                onChange={(e) => setHeadlineText(e.target.value.slice(0, 64))}
+                disabled={busy}
+                placeholder="Exact words to render on the image"
+                maxLength={64}
+                className="h-9 w-full rounded border border-border bg-background px-2 text-sm"
+              />
+            )}
+            {headlineMode === "none" && (
+              <div className="text-[10px] text-muted-foreground">
+                No headline, tagline, or lettering will be rendered. Logo still composites in.
+              </div>
+            )}
+          </div>
+
+
 
           {mode === "regenerate" && (
             <div>

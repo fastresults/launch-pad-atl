@@ -481,7 +481,7 @@ function Step4Style({
   const previews: StylePreview[] = previewsQ.data ?? [];
   const byDirection = new Map(previews.map((p) => [p.direction, p]));
 
-  const runGenerate = async (dirId: string, opts?: { feedback?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any }) => {
+  const runGenerate = async (dirId: string, opts?: { feedback?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any }) => {
     if (!brandLocked) return;
     setBusy((b) => ({ ...b, [dirId]: true }));
     try {
@@ -492,6 +492,7 @@ function Step4Style({
         signatureIntensity: opts?.signatureIntensity,
         signaturePlacement: opts?.signaturePlacement,
         paletteOverride: opts?.paletteOverride,
+        headlineOverride: opts?.headlineOverride,
       });
       await qc.invalidateQueries({ queryKey: ["style-previews", snapshotId] });
     } catch (e: any) {
@@ -510,7 +511,7 @@ function Step4Style({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brandLocked, previewsQ.isLoading, previews.length]);
 
-  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any }) => {
+  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any }) => {
     await Promise.all(ART_DIRECTIONS.map((d) => runGenerate(d.id, opts)));
   };
 
@@ -656,12 +657,13 @@ function Step4Style({
           thumbnailUrl={dialog.direction ? byDirection.get(dialog.direction)?.signed_url : null}
           currentDirection={dialog.direction || "editorial"}
           canvasPlan={dialog.direction ? byDirection.get(dialog.direction)?.canvas_plan : null}
-          onSubmit={async ({ feedback, directionOverride, signatureIntensity, signaturePlacement, paletteOverride }) => {
+          currentHeadline={dialog.direction ? (byDirection.get(dialog.direction) as any)?.last_headline ?? null : null}
+          onSubmit={async ({ feedback, directionOverride, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride }) => {
             if (dialog.scope === "all") {
-              await regenerateAll({ feedback, signatureIntensity, signaturePlacement, paletteOverride });
+              await regenerateAll({ feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride });
             } else {
               const target = directionOverride || dialog.direction!;
-              await runGenerate(target, { feedback, signatureIntensity, signaturePlacement, paletteOverride });
+              await runGenerate(target, { feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride });
             }
           }}
         />
@@ -679,6 +681,7 @@ function Step4Style({
           qaStatus: p?.qa_status ?? null,
           qaNotes: (p as any)?.qa_notes ?? null,
           lastFeedback: p?.last_feedback ?? null,
+          lastHeadline: (p as any)?.last_headline ?? null,
           updatedAt: p?.updated_at ?? null,
         } : null;
         return (
@@ -756,7 +759,7 @@ function Step5BuildKit({
     [platforms, direction],
   );
 
-  const tasks: (KitTask & { asset_id?: string | null; signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null; qa_notes?: any; model_used?: string | null; updated_at?: string | null; width?: number | null; height?: number | null })[] = useMemo(() => {
+  const tasks: (KitTask & { asset_id?: string | null; signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null; last_headline?: string | null; qa_notes?: any; model_used?: string | null; updated_at?: string | null; width?: number | null; height?: number | null })[] = useMemo(() => {
     return baseTasks.map((t) => {
       const match = assets.find(
         (a: any) => a.platform === t.platform && a.asset_kind === t.asset && a.art_direction === direction,
@@ -770,6 +773,7 @@ function Step5BuildKit({
         qa_status: match?.qa_status ?? null,
         qa_notes: (match as any)?.qa_notes ?? null,
         last_feedback: match?.last_feedback ?? null,
+        last_headline: (match as any)?.last_headline ?? null,
         model_used: (match as any)?.model_used ?? null,
         updated_at: (match as any)?.updated_at ?? null,
         width: (match as any)?.width ?? null,
@@ -823,7 +827,7 @@ function Step5BuildKit({
 
   const regenerateSingle = async (
     t: any,
-    opts: { feedback: string; directionOverride?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any },
+    opts: { feedback: string; directionOverride?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any },
   ) => {
 
     const k = taskKey(t);
@@ -842,7 +846,7 @@ function Step5BuildKit({
     }
   };
 
-  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any }) => {
+  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any }) => {
     setRunning(true);
     try {
       for (const t of tasks) {
@@ -1106,6 +1110,7 @@ function Step5BuildKit({
           thumbnailUrl={regenTarget.task?.signed_url ?? null}
           currentDirection={regenTarget.task?.direction || direction}
           canvasPlan={regenTarget.task?.canvas_plan ?? null}
+          currentHeadline={regenTarget.task?.last_headline ?? null}
           initialIntensity={regenTarget.scope === "single" && signatureFailed(regenTarget.task) ? "bold" : "balanced"}
           onSubmit={async (input) => {
             if (regenTarget.scope === "single") {
@@ -1116,6 +1121,7 @@ function Step5BuildKit({
                 signatureIntensity: input.signatureIntensity,
                 signaturePlacement: input.signaturePlacement,
                 paletteOverride: input.paletteOverride,
+                headlineOverride: input.headlineOverride,
               });
             }
           }}
@@ -1150,6 +1156,7 @@ function Step5BuildKit({
           qaNotes: t.qa_notes ?? null,
           modelUsed: t.model_used ?? null,
           lastFeedback: t.last_feedback ?? null,
+          lastHeadline: (t as any).last_headline ?? null,
           updatedAt: t.updated_at ?? null,
         };
         return (

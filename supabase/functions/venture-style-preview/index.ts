@@ -241,6 +241,15 @@ Deno.serve(async (req) => {
         }
       : undefined;
 
+    const rawHl = body?.headlineOverride;
+    const headlineOverride =
+      rawHl && typeof rawHl === "object" && ["auto", "custom", "none"].includes(rawHl.mode)
+        ? {
+            mode: rawHl.mode as "auto" | "custom" | "none",
+            text: typeof rawHl.text === "string" ? rawHl.text.slice(0, 64) : undefined,
+          }
+        : undefined;
+
     const ctx = await loadVentureContext(admin, snapshotId);
     const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
 
@@ -262,6 +271,7 @@ Deno.serve(async (req) => {
         hasLogoImage: !!logoDataUrl,
         retryNote,
         userFeedback,
+        headlineOverride,
       });
 
     const generate = async (retryNote?: string) => {
@@ -383,6 +393,9 @@ Deno.serve(async (req) => {
       prompt_used: result.prompt,
       model_used: result.modelUsed,
       last_feedback: userFeedback || null,
+      last_headline: headlineOverride
+        ? (headlineOverride.mode === "none" ? "" : (headlineOverride.text ?? null))
+        : null,
       brand_kit_locked_at: kit.locked_at,
       updated_at: new Date().toISOString(),
     };
