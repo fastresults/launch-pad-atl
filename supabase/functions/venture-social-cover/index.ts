@@ -308,6 +308,11 @@ Deno.serve(async (req) => {
         : undefined;
     console.log("[social-cover] headline override:", JSON.stringify(headlineOverride ?? null));
 
+    // Optional logo size preference: 'sm' | 'md' | 'lg' — governs both the
+    // reserved-zone dimensions in the prompt AND the compositor chip size.
+    const logoSize: LogoSize = normalizeLogoSize(body?.logoSize);
+    console.log("[social-cover] logo size:", logoSize);
+
 
     const platform = getPlatform(platformName);
     if (!platform) return json({ error: `Unknown platform: ${platformName}` }, 400);
