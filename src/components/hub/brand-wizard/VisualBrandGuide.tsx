@@ -56,7 +56,7 @@ function AssetImage({ asset, alt, className, imgClassName }: any) {
   );
 }
 
-export function VisualBrandGuide({ kit, snapshot, className = "" }: { kit: any; snapshot: any; className?: string }) {
+export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange, originalColors }: { kit: any; snapshot: any; className?: string; onColorChange?: (tokenKey: string, hex: string) => void; originalColors?: Record<string, string> }) {
   const palette = kit?.palette ?? {};
   const colors = palette?.colors ?? {};
   const typography = kit?.typography ?? {};
