@@ -65,16 +65,39 @@ function splitRow(line: string): string[] {
   return line.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
 }
 
+function assignField(post: ParsedPost, rawKey: string, val: string) {
+  const key = HEADER_MAP[rawKey.toLowerCase().replace(/[*_`]/g, "").trim()];
+  if (!key) return;
+  if (key === ("hashtags" as any)) {
+    post.hashtags = val.split(/[\s,]+/).filter((h) => h.startsWith("#"));
+  } else {
+    (post as any)[key] = val;
+  }
+}
+
+function parseBulletPosts(body: string, week: number, out: ParsedPost[]) {
+  const postRe = /\*\*Post\s*\d+[^*]*\*\*([\s\S]*?)(?=\*\*Post\s*\d+[^*]*\*\*|$)/gi;
+  let pm: RegExpExecArray | null;
+  while ((pm = postRe.exec(body))) {
+    const chunk = pm[1];
+    const post: ParsedPost = { week };
+    const lineRe = /[*\-]\s*\*\*([^:*]+):\*\*\s*([^\n]+)/g;
+    let lm: RegExpExecArray | null;
+    while ((lm = lineRe.exec(chunk))) {
+      assignField(post, lm[1], lm[2].trim());
+    }
+    if (post.hook || post.body) out.push(post);
+  }
+}
+
 function parseCalendar(md: string): ParsedPost[] {
   const posts: ParsedPost[] = [];
-  // Section by "## Week N" / "### Week N" headings; keep everything up to next
-  // week heading (Weeks 1–4 drafted, 5–12 outlined use the same header pattern).
   const weekRe = /(^|\n)(#{2,3})\s*Week\s*(\d+)[^\n]*\n([\s\S]*?)(?=\n#{2,3}\s*Week\s*\d+|\n#{1,3}\s*[A-Z][^\n]*\n|$)/gi;
   let m: RegExpExecArray | null;
   while ((m = weekRe.exec(md))) {
     const week = Number(m[3]);
     const body = m[4];
-    // Find every markdown table in this week and parse rows.
+    const before = posts.length;
     const tableRe = /((?:^|\n)\s*\|[^\n]+\|\s*\n\s*\|[\s:\-|]+\|\s*\n(?:\s*\|[^\n]+\|\s*\n?)+)/g;
     let t: RegExpExecArray | null;
     while ((t = tableRe.exec(body))) {
@@ -86,19 +109,12 @@ function parseCalendar(md: string): ParsedPost[] {
         const cols = splitRow(rline);
         if (!cols.length || cols.every((c) => !c)) continue;
         const post: ParsedPost = { week };
-        headers.forEach((h, i) => {
-          const key = HEADER_MAP[h];
-          if (!key) return;
-          const val = cols[i] ?? "";
-          if (key === ("hashtags" as any)) {
-            post.hashtags = val.split(/[\s,]+/).filter((h) => h.startsWith("#"));
-          } else {
-            (post as any)[key] = val;
-          }
-        });
-        // Only keep rows that have at least a hook or body — skip separators/notes.
+        headers.forEach((h, i) => assignField(post, h, cols[i] ?? ""));
         if (post.hook || post.body) posts.push(post);
       }
+    }
+    if (posts.length === before) {
+      parseBulletPosts(body, week, posts);
     }
   }
   return posts;
