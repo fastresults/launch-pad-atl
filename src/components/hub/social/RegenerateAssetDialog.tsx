@@ -334,6 +334,59 @@ export function RegenerateAssetDialog({
             )}
           </div>
 
+          {/* Headline text override */}
+          <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-medium">Headline text on image</div>
+              <span className="text-[10px] text-muted-foreground">
+                {headlineMode === "custom" ? `${headlineText.length}/64` : ""}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {(["auto", "custom", "none"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setHeadlineMode(m)}
+                  className={`rounded-md border px-2 py-1.5 text-[11px] font-medium transition ${
+                    headlineMode === m
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-background hover:bg-muted"
+                  }`}
+                >
+                  {m === "auto" ? "Use suggested" : m === "custom" ? "Custom text" : "No text"}
+                </button>
+              ))}
+            </div>
+            {headlineMode === "auto" && (
+              <div className="text-[10px] text-muted-foreground">
+                Will render:{" "}
+                <span className="font-medium text-foreground">
+                  "{(suggestedHeadline || currentHeadline || "").slice(0, 64) || "(venture name)"}"
+                </span>
+              </div>
+            )}
+            {headlineMode === "custom" && (
+              <input
+                type="text"
+                value={headlineText}
+                onChange={(e) => setHeadlineText(e.target.value.slice(0, 64))}
+                disabled={busy}
+                placeholder="Exact words to render on the image"
+                maxLength={64}
+                className="h-9 w-full rounded border border-border bg-background px-2 text-sm"
+              />
+            )}
+            {headlineMode === "none" && (
+              <div className="text-[10px] text-muted-foreground">
+                No headline, tagline, or lettering will be rendered. Logo still composites in.
+              </div>
+            )}
+          </div>
+
+
+
           {mode === "regenerate" && (
             <div>
               <label className="mb-1 block text-xs font-medium">What's off?</label>
