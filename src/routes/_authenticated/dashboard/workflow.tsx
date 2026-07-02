@@ -90,6 +90,16 @@ export default function WorkflowPage() {
   const generatedCount = triggerable.filter((i) => i.generated).length;
   const remainingCount = triggerable.length - generatedCount;
 
+  // Hero image progress — denominator is docs with content (only those get an image).
+  const imageEligible = triggerable.filter((i) => i.generated);
+  const imageReadyCount = imageEligible.filter((i) => i.image_ready).length;
+  const imageGeneratingCount = imageEligible.filter((i) => i.image_status === "generating").length;
+  const imageFailedCount = imageEligible.filter((i) => i.image_status === "failed").length;
+  const imagePct = imageEligible.length > 0
+    ? Math.round((imageReadyCount / imageEligible.length) * 100)
+    : 0;
+
+
   // Track bulk-run progress: lock in a snapshot when the user clicks Run remaining,
   // then watch generatedCount climb toward the target.
   const justStarted = useRef(false);
