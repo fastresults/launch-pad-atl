@@ -513,13 +513,15 @@ type AdTask = {
 
 function Step4BuildAds({
   snapshotId, direction, aspects, selectedWeeks, posts, ads,
-  autoRunWeek, onAutoRunConsumed, onBack, onDone,
+  autoRunWeek, onAutoRunConsumed, onAddWeek, onBack, onDone,
 }: {
   snapshotId: string; direction: string; aspects: AdAspect[];
   selectedWeeks: number[]; posts: ContentPost[]; ads: ContentAd[];
   autoRunWeek?: number | null; onAutoRunConsumed?: () => void;
+  onAddWeek?: (week: number) => Promise<void> | void;
   onBack: () => void; onDone: () => void;
 }) {
+
   const qc = useQueryClient();
   const scoped = useMemo(() => posts.filter((p) => selectedWeeks.includes(p.week)), [posts, selectedWeeks]);
 
