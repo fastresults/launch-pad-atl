@@ -1,28 +1,26 @@
-
 ## Problem
 
-On Step 5 ("Your ad batch is ready"), each Week 1 row currently has a plain "Open" link that just opens the raw image URL in a new tab. There is no preview modal and no way to delete an ad. Step 4 already has both — Step 5 was never wired up.
+In Step "Generating your channel kits", each tile shows only a thumbnail + a truncated platform name (e.g. `I`, `A..`, `F`) next to the action buttons. Users can't tell which channel (Instagram, LinkedIn, X, Facebook, YouTube, TikTok…) or which asset type (Avatar vs Cover) a graphic belongs to. The row is dominated by Preview/Download/Keep/Regenerate/Trash, and the label column collapses.
 
-## Fix (single file: `src/components/hub/ContentStudio.tsx`, `Step5Launch` only)
+## Fix (UI only — `src/components/hub/social/SocialAutopilot.tsx`, Step 5 tile list ~lines 921–1040)
 
-1. **Row → modal.** Turn each ad row into a `<button>` that sets `previewIdx` (index into a flat, week-ordered `flatAds` array). Remove the `<a href={signed_url}>` "Open" link.
+1. **Group tiles by channel.** Replace the flat 2-column grid with sections, one per platform. Each section has a header row:
+   - Platform icon (from `PLATFORM_SPECS[t.platform].icon` if present, else a lucide fallback map: Instagram/Linkedin/Twitter/Facebook/Youtube/Music2 for TikTok).
+   - Platform display name in `text-sm font-semibold` (use `PLATFORM_SPECS[p].label ?? p`).
+   - Small count pill: "Avatar + Cover" or "2 assets".
+2. **Make asset type unmistakable on every tile.** Above the thumbnail row, render a badge:
+   - `Avatar` (pill, neutral) for `t.asset === "avatar"`.
+   - `Cover` / humanized `t.asset` (e.g. "Pinned Post", "Story", "Header") for the rest, via a small `assetLabel(kind)` helper.
+   - Keep the circle vs rectangle frame shape as today, but also enlarge thumbs slightly (`h-20 w-20` avatar, `h-20 w-36` cover) so the shape reads at a glance.
+3. **Fix the truncated middle column.** Remove `truncate` on the platform name row inside the tile (the section header already carries the channel). Replace the inner `<span>{t.platform}</span>` with the asset-type label + dimensions (e.g. "Cover · 1500×500"), pulled from `PLATFORM_SPECS[t.platform].assets[t.asset]` when available. This keeps the row informative without the tiny "I / A.." clipping seen in the screenshot.
+4. **Responsive layout.** Section grid = `sm:grid-cols-2`; tiles inside a section stack `flex-col sm:flex-row` so action buttons wrap under the label on narrow widths instead of pushing the label off-screen.
+5. **Accessibility.** Update `alt` and `title` to `"${platformLabel} — ${assetLabel}"` so screen readers and hover tooltips match the new visible labels.
 
-2. **Mount `AssetPreviewDialog`** at the bottom of `Step5Launch` (same component Step 4 uses). Map the selected ad + its post to a `PreviewableAsset` with the same fields Step 4 passes: `url`, `title` (hook), `subtitle` (`Week N · platform`), `assetKind` (aspect), `width`, `height`, `canvasPlan`, `qaStatus`, `qaNotes`, `modelUsed`, `lastFeedback`, `lastHeadline`, `lastLogoSize`, `updatedAt`. Provide `onPrev` / `onNext` cycling through previewable ads.
+## Out of scope
+- No changes to generation, regenerate, keep, delete, preview modal, or edge functions.
+- No data-model changes; all labels derive from existing `PLATFORM_SPECS` + task fields.
 
-3. **Delete from modal.** Pass `onDelete` to `AssetPreviewDialog` that calls `deleteContentAd(snapshotId, ad.id)`, invalidates `["content-ads", snapshotId]` via `useQueryClient`, toasts, and closes the modal.
+## Files touched
+- `src/components/hub/social/SocialAutopilot.tsx` (Step5 kit list + a small `assetLabel`/`platformIcon` helper)
 
-4. **Delete inline on each row.** Add a small trash-icon button on the right side of every row. `stopPropagation` so it doesn't open the modal; `confirm()` prompt; same `deleteContentAd` + invalidate + toast. Row disappears on refetch.
-
-5. **Row hover affordance.** Add `hover:bg-white/5 cursor-pointer` so it's obviously clickable, plus a subtle "Click to preview" hint via `title` attribute.
-
-## Technical notes
-
-- `deleteContentAd` and `AssetPreviewDialog` are already imported at the top of the file.
-- Add `useQueryClient` call inside `Step5Launch` (already imported from `@tanstack/react-query`).
-- No changes to `BuildAdsPanel` (Step 4), edge functions, data model, calendar parser, or any other component.
-- No new dependencies.
-- Regenerate flow from Step 5 is out of scope for this pass — modal will show the image + metadata + delete; regenerate stays in Step 4.
-
-## Files changed
-
-- `src/components/hub/ContentStudio.tsx` — edit `Step5Launch` (~40 line addition, ~10 line replacement)
+Approve and I'll implement.
