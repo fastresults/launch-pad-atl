@@ -207,7 +207,7 @@ function assetSystem(
     const w = logoZone?.widthPct ?? defaultW;
     const h = logoZone?.heightPct ?? defaultH;
     const corner = (logoZone?.corner === "center" ? defaultCorner : (logoZone?.corner ?? defaultCorner));
-    return `- RESERVED LOGO ZONE: the ${corner} ~${w}% × ${h}% rectangle (with ~5% inset from both edges) MUST remain a completely clean, empty area filled with the surface color — no type, no shapes, no texture, no gradient, no detail. We will server-side composite the venture's actual logo into that exact area after generation. This zone is intentionally sized so the logo reads at a glance; do NOT shrink or crowd it. Compose the rest of the canvas so the reserved rectangle reads as intentional negative space, not as a hole.
+    return `- LOGO LANDING AREA: leave the ${corner} region (approx. ${w}% × ${h}% of the canvas, with ~5% inset from both edges) as unmarked negative space that continues the surrounding composition. Do NOT frame it, do NOT outline it, do NOT draw a border, hairline, stroke, rule, divider, bracket, corner mark, ghosted panel, tonal shift, drop shadow, gradient edge, debossed plate, chip, card, or watermark around it or inside it. The surrounding composition must flow up to the edges of this area as if the logo were not there — no "window" cut out for it. We will composite the venture's actual logo directly on top of that area after generation; it needs no container of any kind.
 - Do NOT redraw, recreate, or paint the logo yourself anywhere on the canvas.`;
   };
 

@@ -1,61 +1,41 @@
-# Retain venture context on regeneration
+# Kill the logo bounding-box artifact
 
-## The problem
+## What's happening
 
-When you regenerated the cover for "Startup Workshops" with the headline **"Adam Rocks!"**, the model produced a young man in a carpentry workshop. Context wasn't literally lost on the round-trip — the edge function still reloads the full venture on every call. The real problem is two-fold:
+In your screenshot the top-left has a faint rectangular outline around the Startup Labs logo. That outline was painted by the image model, not by our compositor (the compositor only draws a chip for opaque logos, and a transparent PNG goes through the direct-composite path with no chip). The model drew it because our prompt keeps telling it about a "reserved rectangle" / "reserved logo zone" / "clean rectangular space" — and models routinely respond by drawing a visible boundary around that region (a hairline stroke, a thin rule, a ghosted frame, a slightly different fill) so the composition "reads" as intentional.
 
-1. **`ventureBlock` in `supabase/functions/_shared/cover-art-director.ts` sends the model almost nothing about the venture** — just `Name`, `One-liner`, `Customer`, `Differentiators`. No industry, no track, no problem/solution, no visual subject guidance. With a name like "Startup Workshops," the model latches onto the word "workshop" literally.
-2. **When the founder picks a custom headline ("Adam Rocks!") or "no text", we intentionally hide the one-liner** (`hideCopy` branch) to stop the model from painting competing copy on the canvas. That's correct for *rendered text*, but it also strips the last shred of subject context the model had, so nothing is left to anchor the scene.
+## Fix
 
-Result: model reads `Name: Startup Workshops` + a punchy headline + no subject → invents a literal workshop scene.
+Change the prompt language so the reserved area is described as **invisible negative space**, and add an explicit hard ban on any border, frame, outline, rule, or divider anywhere near the logo area. One file, three targeted edits — all in `supabase/functions/_shared/cover-art-director.ts`.
 
-## The fix
+### 1. Rewrite the reserved-zone directive (`zone(...)` helper)
 
-Rewrite `ventureBlock` and the prompt scaffolding so the model always receives a rich, unambiguous **Subject Brief** — separate from the on-image headline policy — that regeneration cannot strip.
+Replace the current wording that repeats the word "rectangle" with copy that describes the zone as unmarked negative space, e.g.:
 
-### 1. Enrich `ventureBlock` (`supabase/functions/_shared/cover-art-director.ts`)
+- Remove "the top-left ~X% × Y% **rectangle**" phrasing.
+- State the area MUST contain no stroke, no outline, no border, no frame, no hairline, no divider, no rule, no drop-shadow, no gradient edge, no tonal shift, no ghosted box, no debossed panel, no watermark, and no bracket marks.
+- State the surrounding composition must continue up to the edges as if the logo zone did not exist — no framing device around it, no negative-space "window" cut out for it.
+- Keep the "we composite the actual logo on top later" note.
 
-Always emit, regardless of headline mode:
+### 2. Add the same ban to `BANNED`
 
-- Company name
-- Industry / sub-industry / track (pulled from `ctx.snap`)
-- What the venture IS in one plain sentence (concept summary or brain one-liner) — as **subject context, not on-image copy**
-- Who it serves (customer)
-- Problem + solution (short)
-- Differentiators
-- **Literal-word guardrails**: an auto-derived "DO NOT interpret literally" line built from tokens in the company name that have common non-startup meanings (`workshop`, `lab`, `studio`, `garage`, `kitchen`, `forge`, `atelier`, `factory`, `hub`, `foundry`, `works`, etc.). Example emitted line:
-  > "Workshop" here means a facilitated founder-education session — NOT a carpentry / mechanical / craft workshop. Do not depict workbenches, tools, sawdust, aprons, or artisan trades.
+Add two lines to the HARD BANS block:
 
-Mark this block "SUBJECT CONTEXT (for scene comprehension only — do NOT render as text on the canvas)". This resolves the tension with the headline-suppression branch: the model gets full context but knows the words don't belong on the pixels.
+- "Any visible border, outline, frame, rule, hairline, or divider around the logo area or anywhere on the canvas. The logo is placed on the raw image with no container, no chip, no plate, no card."
+- "Any rectangular tonal panel, ghosted box, or 'placeholder' shape near the logo corner. Treat the logo area as unmarked negative space that continues the surrounding composition."
 
-### 2. Stop stripping context in custom / none headline modes
+### 3. Reinforce in `references`
 
-Remove the `hideCopy` branch that suppressed `oneLiner` when the founder picked a custom headline. The existing `PRIMARY TEXT OBJECTIVE` block (already forbids any glyph except the override) is sufficient to keep the one-liner off the canvas.
+Update the "Image #1" note to add: "Do NOT draw any container, frame, plate, card, or outline around where the logo will land. The logo sits directly on the composition."
 
-### 3. Add a `SUBJECT BRIEF` section to the prompt
+## Compositor: no change needed
 
-In `buildCoverArtPrompt`, insert a top-level `## Subject brief` section above `## Composition system`, sourced from the enriched `ventureBlock`. Include a one-line "Visual anchor" derived from `industry` + `customer` (e.g., "founders and small-business owners going through a startup accelerator") so the model has an explicit scene target instead of guessing from the name.
+`logo-compositor.ts` already uses the direct-composite path (no chip) for transparent PNGs like the Startup Labs mark. It only draws a rounded chip for opaque logos where a chip is necessary for legibility — that's the correct behavior and shouldn't change.
 
-### 4. Propagate the same subject brief to the avatar + preview paths
+## Deploy
 
-`buildAvatarPrompt` doesn't need scene context (it just places the logo), so no change there. `venture-style-preview` uses the same director — it inherits the fix automatically. Verify the style-preview edge function still passes `ctx` through unchanged.
-
-### 5. Feedback continuity on regenerate
-
-The current regenerate path already reloads `loadVentureContext` fresh every call, so nothing to change server-side for persistence. Add one safeguard in `SocialAutopilot.regenerateSingle`: log a warning if the response's `ctx.snap.company_name` differs from the tile's expected venture, so we catch any future drift in QA.
-
-## Files touched
-
-- `supabase/functions/_shared/cover-art-director.ts` — rewrite `ventureBlock`, add subject-brief section, drop `hideCopy`, add literal-word guardrail helper.
-- `supabase/functions/venture-social-cover/index.ts` — no logic change; verify `ctx` is passed (already is).
-- `supabase/functions/venture-style-preview/index.ts` — verify same (already is).
-- `src/components/hub/social/SocialAutopilot.tsx` — small logging safeguard on regenerate response.
-
-## Out of scope
-
-- Changing the on-image headline mechanics (already working after the last fix).
-- Palette / logo compositor changes.
+Redeploy `venture-social-cover` and `venture-style-preview` so both the cover pipeline and the style previews pick up the new prompt language.
 
 ## Verification
 
-After deploy, regenerate the Twitter header for "Startup Workshops" with headline "Adam Rocks!" and confirm the scene reflects a founder-education context (people at laptops, whiteboard, cohort setting) rather than a craft workshop.
+Regenerate the same Startup Workshops header. The logo should land in the top-left with no rectangular outline, no ghosted frame, and no tonal panel around it — the surrounding composition continues unbroken up to the logo pixels.
