@@ -1167,6 +1167,7 @@ function Step5BuildKit({
           modelUsed: t.model_used ?? null,
           lastFeedback: t.last_feedback ?? null,
           lastHeadline: (t as any).last_headline ?? null,
+          lastLogoSize: (t as any).last_logo_size ?? null,
           updatedAt: t.updated_at ?? null,
         };
         return (
@@ -1179,6 +1180,7 @@ function Step5BuildKit({
             busy={!!runningKeys[`${t.platform}:${t.asset}`]}
             onRegenerate={() => setRegenTarget({ scope: "single", task: t })}
             onEditHeadline={() => setRegenTarget({ scope: "single", task: t, focusSection: "headline" })}
+            onEditLogoSize={() => setRegenTarget({ scope: "single", task: t, focusSection: "logo" })}
             onDelete={t.asset_id ? () => { setPreviewIdx(null); deleteAsset(t); } : undefined}
           />
         );
