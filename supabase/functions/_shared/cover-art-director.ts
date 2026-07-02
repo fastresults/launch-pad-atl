@@ -153,6 +153,115 @@ function ventureBlock(ctx: any, _headlineOverride?: HeadlineOverride) {
   return lines.join("\n");
 }
 
+// Deterministic scene resolver — NEVER reads the brand name. Picks a subject
+// from track/industry/customer so the model gets a fully-decided scene BEFORE
+// it ever encounters tokens like "Workshops" / "Lab" / "Garage".
+type SceneDirective = {
+  depict: string;
+  subjects: string[];
+  setting: string;
+  mood: string;
+  avoid: string[];
+};
+
+function resolveSceneDirective(ctx: any): SceneDirective {
+  const brain = ctx?.brain ?? {};
+  const snap = ctx?.snap ?? {};
+  const name = brain?.identity?.company_name ?? snap?.company_name ?? "";
+  const industry = (snap?.industry ?? "").toLowerCase();
+  const subIndustry = (snap?.sub_industry ?? "").toLowerCase();
+  const track = (snap?.track ?? "").toLowerCase();
+  const customer = brain?.customer ?? "";
+  const ind = `${industry} ${subIndustry}`;
+
+  // Union of every literal-word ban that applies to this venture's name.
+  const guards = literalWordGuards(name, snap?.industry, snap?.sub_industry);
+  const avoidBase = new Set<string>();
+  const addAvoid = (...items: string[]) => items.forEach((i) => avoidBase.add(i));
+  if (guards.some((g) => /workshop/i.test(g))) addAvoid("workbench", "hand tools", "sawdust", "lumber", "aprons", "wood shavings", "carpentry machinery", "artisan trades");
+  if (guards.some((g) => /\blab\b|laborator/i.test(g))) addAvoid("beakers", "microscopes", "lab coats", "test tubes");
+  if (guards.some((g) => /studio/i.test(g))) addAvoid("easels", "ballet bars", "recording microphones");
+  if (guards.some((g) => /garage/i.test(g))) addAvoid("cars", "lifts", "tires", "mechanic overalls");
+  if (guards.some((g) => /kitchen/i.test(g))) addAvoid("stoves", "chefs", "restaurant kitchens");
+  if (guards.some((g) => /forge|foundry/i.test(g))) addAvoid("anvils", "molten metal", "blacksmiths");
+  if (guards.some((g) => /atelier/i.test(g))) addAvoid("sewing", "mannequins", "fashion sketches");
+  if (guards.some((g) => /factory|works/i.test(g))) addAvoid("conveyor belts", "heavy machinery", "industrial floor");
+  if (guards.some((g) => /hub/i.test(g))) addAvoid("airport terminals", "planes", "hubcaps");
+  if (guards.some((g) => /garden/i.test(g))) addAvoid("soil", "gardeners", "plant nursery");
+
+  // Track-first resolution.
+  if (track.includes("main_street") || track.includes("main street")) {
+    return {
+      depict: `A confident local small-business owner${customer ? ` (${customer})` : ""} inside their own shop, cafe, or storefront during business hours — warm daylight, real fixtures, real product on display, one authentic human moment.`,
+      subjects: ["small-business owner", "local storefront interior", "real product on display", "daylight"],
+      setting: "authentic Main-Street shop or storefront",
+      mood: "grounded, proud, community-rooted",
+      avoid: [...avoidBase],
+    };
+  }
+
+  // Industry-specific scenes.
+  if (/food|restaurant|bever|cafe|coffee/.test(ind)) {
+    return {
+      depict: "A founder-operator in their food/beverage space — clean prep counter, real ingredients, natural window light, one confident portrait or over-the-shoulder shot.",
+      subjects: ["founder-operator", "prep counter", "real ingredients"],
+      setting: "modern food/beverage workspace",
+      mood: "crafted, warm, intentional",
+      avoid: [...avoidBase],
+    };
+  }
+  if (/fitness|wellness|health club|gym/.test(ind)) {
+    return {
+      depict: "A founder-coach mid-session in a modern studio — one client, one clean movement, daylight through tall windows.",
+      subjects: ["coach", "client", "studio floor"],
+      setting: "modern boutique fitness studio",
+      mood: "focused, kinetic, disciplined",
+      avoid: [...avoidBase],
+    };
+  }
+  if (/(life ?sci|biotech|pharma|medical|health tech)/.test(ind)) {
+    return {
+      depict: "A clinical-grade research or care setting with a professional at work — real instruments, calm daylight, no theatrics.",
+      subjects: ["clinician or researcher", "modern equipment"],
+      setting: "modern clinical or research environment",
+      mood: "precise, considered, human",
+      avoid: [...avoidBase],
+    };
+  }
+  if (/auto|vehicle/.test(ind)) {
+    return {
+      depict: "A modern mobility workspace with a founder-engineer beside their vehicle or rig — clean floor, brand-lit, one confident hero angle.",
+      subjects: ["founder-engineer", "vehicle or rig"],
+      setting: "modern mobility workspace",
+      mood: "engineered, deliberate",
+      avoid: [...avoidBase],
+    };
+  }
+
+  // Default: startup / tech / services / anything else → founder cohort in an
+  // accelerator setting. This is the correct scene for a startup accelerator
+  // brand like "Startup Workshops".
+  return {
+    depict: `A diverse cohort of early-stage founders${customer ? ` (audience: ${customer})` : ""} in a bright modern accelerator / coworking space — laptops open, sticky notes on glass walls, a facilitator mid-gesture at a whiteboard. Real people, natural daylight, one confident focal moment.`,
+    subjects: ["early-stage founders", "facilitator", "laptops", "whiteboard", "sticky notes on glass"],
+    setting: "modern accelerator / coworking studio, daylight",
+    mood: "focused, collaborative, optimistic",
+    avoid: [...avoidBase],
+  };
+}
+
+function sceneDirectiveBlock(scene: SceneDirective): string {
+  const avoid = scene.avoid.length ? scene.avoid.join(", ") : "(none)";
+  return [
+    `SCENE DIRECTIVE (HIGHEST PRIORITY — depict exactly this; ignore any literal reading of the brand name):`,
+    `  DEPICT: ${scene.depict}`,
+    `  KEY SUBJECTS: ${scene.subjects.join(", ")}`,
+    `  SETTING: ${scene.setting}`,
+    `  MOOD: ${scene.mood}`,
+    `  DO NOT DEPICT: ${avoid}`,
+  ].join("\n");
+}
+
 
 export type HeadlineOverride = { mode: "auto" | "custom" | "none"; text?: string };
 
