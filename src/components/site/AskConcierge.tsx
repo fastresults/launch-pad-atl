@@ -361,14 +361,26 @@ export function AskConcierge() {
                     send(input);
                   }
                 }}
-                placeholder="Ask about the workshop, pricing, tracks…"
+                placeholder={recording ? "Listening… tap the square to stop." : "Ask about the workshop, pricing, tracks…"}
                 className="max-h-32 min-h-[36px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-                disabled={pending}
+                disabled={pending || recording || transcribing}
               />
+              <button
+                type="button"
+                aria-label={recording ? "Stop recording" : "Record voice message"}
+                onClick={recording ? stopRecording : startRecording}
+                disabled={pending || transcribing}
+                className={cn(
+                  "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/10 text-foreground transition-colors hover:bg-white/10 disabled:opacity-40",
+                  recording && "border-destructive/60 bg-destructive/20 text-destructive-foreground animate-pulse",
+                )}
+              >
+                {transcribing ? <Loader2 className="size-4 animate-spin" /> : recording ? <Square className="size-4" /> : <Mic className="size-4" />}
+              </button>
               <button
                 type="submit"
                 aria-label="Send"
-                disabled={pending || !input.trim()}
+                disabled={pending || recording || transcribing || !input.trim()}
                 className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
               >
                 <Send className="size-4" />
