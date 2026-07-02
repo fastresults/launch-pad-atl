@@ -22,7 +22,7 @@ import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 import { StartupLabsMark } from "@/components/brand/StartupLabsMark";
 
 export function AdminSidebar() {
-  const { isSuperAdmin, signOut, user, isImpersonating, impersonationTarget, stopImpersonation } = useAuth();
+  const { isSuperAdmin, signOut, user, actorUser, isImpersonating, impersonationTarget, stopImpersonation } = useAuth();
   const { pathname } = useLocation();
 
   const { data: badges } = useQuery({
