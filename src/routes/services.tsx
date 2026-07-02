@@ -67,7 +67,7 @@ function Hero() {
         </div>
 
         <p className="mt-8 text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-sm">
-          Work shipped for Citigroup · Mayo Clinic · 3M · Disney · government and Main Street alike
+          Work shipped for Citigroup · Mayo Clinic · 3M · Disney · government, Main Street, and online brands alike
         </p>
       </div>
     </section>
