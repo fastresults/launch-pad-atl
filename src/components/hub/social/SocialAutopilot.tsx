@@ -763,7 +763,7 @@ function Step5BuildKit({
     [platforms, direction],
   );
 
-  const tasks: (KitTask & { asset_id?: string | null; signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null; last_headline?: string | null; qa_notes?: any; model_used?: string | null; updated_at?: string | null; width?: number | null; height?: number | null })[] = useMemo(() => {
+  const tasks: (KitTask & { asset_id?: string | null; signed_url?: string | null; canvas_plan?: any; qa_status?: string | null; last_feedback?: string | null; last_headline?: string | null; last_logo_size?: "sm" | "md" | "lg" | null; qa_notes?: any; model_used?: string | null; updated_at?: string | null; width?: number | null; height?: number | null })[] = useMemo(() => {
     return baseTasks.map((t) => {
       const match = assets.find(
         (a: any) => a.platform === t.platform && a.asset_kind === t.asset && a.art_direction === direction,
