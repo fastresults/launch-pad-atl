@@ -42,22 +42,42 @@ export function specForAspect(aspect: AdAspect): AssetSpec {
   } as AssetSpec;
 }
 
+// Per-aspect soft caps for the on-image headline. Longer aspects afford more.
+const HEADLINE_CAP: Record<AdAspect, number> = { "1:1": 60, "4:5": 70, "9:16": 80 };
+
+// Word-safe truncator: cap length, then back off to the last whole-word boundary
+// so headlines never get chopped mid-word ("It's not th"). Adds an ellipsis only
+// when we actually removed content.
+export function truncateHeadline(raw: string, cap: number): string {
+  const s = (raw || "").trim().replace(/\s+/g, " ");
+  if (s.length <= cap) return s;
+  const hard = s.slice(0, cap);
+  // Prefer breaking on the last space in the hard slice; fall back to the hard cut.
+  const lastSpace = hard.lastIndexOf(" ");
+  const stem = lastSpace >= Math.floor(cap * 0.5) ? hard.slice(0, lastSpace) : hard;
+  // Strip trailing punctuation before appending the ellipsis for a clean read.
+  return stem.replace(/[\s,;:.!?\-–—(]+$/g, "") + "…";
+}
+
 // Resolve the headline the ad should carry. Rules:
 //  - Founder explicit override always wins (custom text or 'none' = no text)
-//  - Otherwise use the post's Hook (verbatim, trimmed to 64 chars)
+//  - Otherwise use the post's Hook, word-safely truncated to the aspect cap
 //  - If neither, fall back to the cover-art auto headline
 export function resolveAdHeadline(
   postHook: string | null | undefined,
   founderOverride?: HeadlineOverride,
+  aspect: AdAspect = "1:1",
 ): HeadlineOverride {
+  const cap = HEADLINE_CAP[aspect] ?? 60;
   if (founderOverride?.mode === "none") return { mode: "none" };
   if (founderOverride?.mode === "custom" && founderOverride.text?.trim()) {
-    return { mode: "custom", text: founderOverride.text.trim().slice(0, 64) };
+    return { mode: "custom", text: truncateHeadline(founderOverride.text, cap) };
   }
-  const hook = (postHook || "").trim().slice(0, 64);
+  const hook = truncateHeadline(postHook || "", cap);
   if (hook) return { mode: "custom", text: hook };
   return { mode: "auto" };
 }
+
 
 export function buildContentAdPrompt(args: {
   aspect: AdAspect;
