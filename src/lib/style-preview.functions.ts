@@ -45,6 +45,7 @@ export async function generateStylePreview(input: {
   signatureMinCoveragePct?: number;
   paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
   headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
+  logoSize?: "sm" | "md" | "lg";
 }): Promise<StylePreview> {
   const data = await call({ action: "generate", ...input });
   return data.preview as StylePreview;
