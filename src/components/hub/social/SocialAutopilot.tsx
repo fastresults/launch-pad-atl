@@ -681,6 +681,7 @@ function Step4Style({
           qaStatus: p?.qa_status ?? null,
           qaNotes: (p as any)?.qa_notes ?? null,
           lastFeedback: p?.last_feedback ?? null,
+          lastHeadline: (p as any)?.last_headline ?? null,
           updatedAt: p?.updated_at ?? null,
         } : null;
         return (
