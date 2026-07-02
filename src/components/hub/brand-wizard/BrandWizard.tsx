@@ -922,10 +922,40 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
         <div className="text-xs uppercase tracking-wide text-muted-foreground">Review</div>
         <div className="mt-2 grid gap-3 md:grid-cols-2">
           <div>
-            <div className="text-[10px] text-muted-foreground">Palette</div>
-            <div className="mt-1 flex gap-1">
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] text-muted-foreground">Palette — click any swatch to change</div>
+              {kit?.palette?.colors && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const repaired = sanitizePaletteOption({ ...kit.palette, colors: kit.palette.colors });
+                    onSave({ palette: repaired });
+                    toast.success("Palette repaired to meet WCAG AA");
+                  }}
+                  className="text-[10px] text-muted-foreground hover:text-foreground"
+                  title="Auto-adjust colors for AA contrast"
+                >
+                  Repair contrast
+                </button>
+              )}
+            </div>
+            <div className="mt-1 flex flex-wrap gap-1.5">
               {kit?.palette?.colors && Object.entries(kit.palette.colors).map(([k, v]: any) => (
-                <div key={k} title={`${k} ${v}`} className="h-6 w-6 rounded border border-white/10" style={{ background: v }} />
+                <EditablePaletteSwatch
+                  key={k}
+                  tokenKey={k}
+                  value={v}
+                  onChange={(hex) => {
+                    const nextColors = { ...(kit.palette?.colors ?? {}), [k]: hex };
+                    onSave({
+                      palette: {
+                        ...(kit.palette ?? {}),
+                        colors: nextColors,
+                        source: "user-edited",
+                      },
+                    });
+                  }}
+                />
               ))}
             </div>
           </div>
