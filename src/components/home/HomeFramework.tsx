@@ -381,7 +381,7 @@ function Facilitator() {
               <span className="text-gradient-brand">at your table for the session.</span>
             </p>
             <p className="mt-5 text-muted-foreground">
-              Co-Founder of OPEN Interactive and a serial entrepreneur who has personally started multiple companies and helped launch dozens more across tech, services, and Main Street. Along the way he's shipped work for Citigroup, Mayo Clinic, 3M, and Disney, built full digital systems for a Caribbean country's government, and produced one of the region's biggest business summits for five years running.
+              Co-Founder of OPEN Interactive and a serial entrepreneur who has personally started multiple companies and helped launch dozens more across tech, services, online brands, and Main Street. Along the way he's shipped work for Citigroup, Mayo Clinic, 3M, and Disney, built full digital systems for a Caribbean country's government, and produced one of the region's biggest business summits for five years running.
             </p>
             <p className="mt-3 text-muted-foreground">
               He's sat in your seat — more than once. He knows what the first move looks like, and what it takes to get from "good idea" to "running business."
