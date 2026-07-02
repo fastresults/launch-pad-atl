@@ -23,6 +23,7 @@ export type SocialAsset = {
   qa_status?: string | null;
   qa_notes?: any;
   last_feedback?: string | null;
+  last_headline?: string | null;
 };
 
 async function call(body: any) {
