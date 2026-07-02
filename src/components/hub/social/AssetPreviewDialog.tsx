@@ -21,6 +21,7 @@ export type PreviewableAsset = {
   qaNotes?: any;
   modelUsed?: string | null;
   lastFeedback?: string | null;
+  lastHeadline?: string | null;
   updatedAt?: string | null;
 };
 
