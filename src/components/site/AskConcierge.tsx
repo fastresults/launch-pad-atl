@@ -324,7 +324,14 @@ export function AskConcierge() {
             ) : (
               <div className="space-y-3">
                 {messages.map((m, i) => (
-                  <MessageBubble key={i} role={m.role} content={m.content} />
+                  <MessageBubble
+                    key={i}
+                    role={m.role}
+                    content={m.content}
+                    onPlay={m.role === "assistant" ? () => speak(stripMarkdown(m.content)) : undefined}
+                    onStop={stopAudio}
+                    speaking={speaking}
+                  />
                 ))}
                 {(pending || transcribing || speaking) && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
