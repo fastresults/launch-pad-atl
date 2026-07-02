@@ -281,13 +281,14 @@ Deno.serve(async (req) => {
         pillar: post.pillar, platform: post.platform, format: post.format,
         hook: post.hook, body: post.body, cta: post.cta, asset_notes: post.asset_notes,
       },
-      hasLogoImage: !!logoDataUrl,
+      hasLogoImage: false, // logo is composited server-side, not sent to the model
       retryNote,
       userFeedback,
       variationSeed,
       headlineOverride,
       logoZone: logoZoneHint,
     });
+
 
     const generate = async (retryNote?: string) => {
       const prompt = buildPrompt(retryNote);
