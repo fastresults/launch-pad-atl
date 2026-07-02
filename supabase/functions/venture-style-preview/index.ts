@@ -261,6 +261,10 @@ Deno.serve(async (req) => {
     let plan: CanvasPlan = buildCanvasPlan({ kit, asset: PREVIEW_ASSET, direction, signature: signatureCfg });
     plan = applyPaletteOverride(plan, paletteOverride);
 
+    const logoAspect = (await readLogoAspect(logoBytes)) ?? 1;
+    const logoPlacement = placementForAssetKind(PREVIEW_ASSET.kind);
+    const logoZoneHint = logoSafeZone(logoPlacement, logoSize, logoAspect);
+
     let paletteTileDataUrl: string | null = null;
     try { paletteTileDataUrl = bytesToDataUrl(buildPaletteTilePngBytes(plan)); }
     catch (e) { console.warn("palette tile failed", e); }
@@ -277,6 +281,7 @@ Deno.serve(async (req) => {
         retryNote,
         userFeedback,
         headlineOverride,
+        logoZone: logoZoneHint,
       });
 
     const generate = async (retryNote?: string) => {
