@@ -323,8 +323,10 @@ ${palette}
 Typography:
 ${typo}
 
-## Venture context
+## Subject brief (what this venture actually IS — the scene must reflect this, not a literal reading of the brand name)
 ${venture}
+
+The Subject brief above governs WHAT is depicted. The Canvas plan above governs COLORS. The Headline policy governs TEXT. Never let the brand name's individual English words dictate the scene — always defer to the Subject brief.
 
 ## Asset spec
   - Platform: ${platform}
