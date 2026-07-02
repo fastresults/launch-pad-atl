@@ -162,12 +162,21 @@ Deno.serve(async (req) => {
     const snapshotId = body?.snapshotId as string | undefined;
     if (!snapshotId) return json({ error: "snapshotId required" }, 400);
 
+    const { data: adminRoles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .in("role", ["admin", "super_admin"]);
+    const isAdmin = (adminRoles ?? []).length > 0;
+
     const { data: snap } = await admin
       .from("venture_snapshots")
       .select("id, user_id")
       .eq("id", snapshotId)
       .maybeSingle();
-    if (!snap || snap.user_id !== userId) return json({ error: "Forbidden" }, 403);
+    if (!snap || (snap.user_id !== userId && !isAdmin)) return json({ error: "Forbidden" }, 403);
+    const ownerId = snap.user_id as string;
+
 
     // ---- LIST ----
     if (action === "list") {
@@ -188,7 +197,7 @@ Deno.serve(async (req) => {
         .select("user_id, storage_path")
         .eq("id", adId)
         .maybeSingle();
-      if (!row || row.user_id !== userId) return json({ error: "Not found" }, 404);
+      if (!row || row.user_id !== ownerId) return json({ error: "Not found" }, 404);
       if (row.storage_path) await admin.storage.from(BUCKET).remove([row.storage_path]).catch(() => {});
       await admin.from("venture_content_ads").delete().eq("id", adId);
       return json({ ok: true });
@@ -203,7 +212,7 @@ Deno.serve(async (req) => {
         .select("*")
         .eq("id", adId)
         .maybeSingle();
-      if (!row || row.user_id !== userId) return json({ error: "Not found" }, 404);
+      if (!row || row.user_id !== ownerId) return json({ error: "Not found" }, 404);
       await admin
         .from("venture_content_ads")
         .update({ is_selected: false })
@@ -246,7 +255,7 @@ Deno.serve(async (req) => {
       .select("*")
       .eq("id", postId)
       .maybeSingle();
-    if (!post || post.user_id !== userId || post.snapshot_id !== snapshotId) {
+    if (!post || post.user_id !== ownerId || post.snapshot_id !== snapshotId) {
       return json({ error: "Post not found in this venture" }, 404);
     }
 
@@ -430,7 +439,7 @@ Deno.serve(async (req) => {
 
     const fileId = crypto.randomUUID();
     const safeAspect = aspect.replace(":", "x");
-    const storagePath = `content-ad/${userId}/${snapshotId}/${post.week}/${postId}/${safeAspect}-${direction}-${fileId}.svg`;
+    const storagePath = `content-ad/${ownerId}/${snapshotId}/${post.week}/${postId}/${safeAspect}-${direction}-${fileId}.svg`;
 
     const { error: upErr } = await admin.storage
       .from(BUCKET)
@@ -444,7 +453,7 @@ Deno.serve(async (req) => {
       .from("venture_content_ads")
       .insert({
         snapshot_id: snapshotId,
-        user_id: userId,
+        user_id: ownerId,
         post_id: postId,
         aspect,
         art_direction: direction,
