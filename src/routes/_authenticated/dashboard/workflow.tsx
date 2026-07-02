@@ -7,7 +7,7 @@ import { countAnsweredBriefFields } from "@/lib/brief-progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, Circle, Lock, Loader2, Play, Sparkles, Presentation } from "lucide-react";
+import { CheckCircle2, Circle, Lock, Loader2, Play, Sparkles, Presentation, Image as ImageIcon, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
 import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
@@ -23,7 +23,10 @@ type WorkflowItem = {
   user_can_trigger?: boolean;
   generated: boolean;
   deps_met: boolean;
+  image_ready?: boolean;
+  image_status?: "idle" | "generating" | "ready" | "failed";
 };
+
 
 export default function WorkflowPage() {
   const qc = useQueryClient();
