@@ -254,9 +254,10 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
 // STEP 1 — Parse the calendar
 // ============================================================
 function Step1Calendar({
-  posts, parsing, onParse, onNext,
+  posts, parsing, onParse, onNext, onGenerateNow,
 }: {
   posts: ContentPost[]; parsing: boolean; onParse: () => Promise<void>; onNext: () => void;
+  onGenerateNow: (week: number) => Promise<void> | void;
 }) {
   const grouped = groupPostsByWeek(posts);
   const weeks = Array.from(grouped.keys()).sort((a, b) => a - b);
