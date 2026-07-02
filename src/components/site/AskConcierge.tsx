@@ -263,6 +263,21 @@ export function AskConcierge() {
               <div className="text-sm font-semibold tracking-tight">Startup Labs Concierge</div>
             </div>
             <div className="flex items-center gap-1">
+              <button
+                type="button"
+                aria-label={voiceOn ? "Voice replies on — click to mute" : "Voice replies off — click to enable"}
+                aria-pressed={voiceOn}
+                onClick={() => {
+                  if (voiceOn && speaking) stopAudio();
+                  setVoiceOn((v) => !v);
+                }}
+                className={cn(
+                  "rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white",
+                  voiceOn && "text-white",
+                )}
+              >
+                {voiceOn ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+              </button>
               {messages.length > 0 && (
                 <button
                   type="button"
