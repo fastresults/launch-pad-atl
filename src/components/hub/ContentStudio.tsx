@@ -523,8 +523,25 @@ function Step4BuildAds({
   const setBusy = (k: string, v: boolean) =>
     setRunningKeys((prev) => { const n = { ...prev }; if (v) n[k] = true; else delete n[k]; return n; });
 
+  const waitForRecoveredAd = async (t: AdTask, knownIds: Set<string>) => {
+    for (let i = 0; i < 10; i += 1) {
+      await new Promise((resolve) => window.setTimeout(resolve, i < 2 ? 1200 : 2500));
+      const fresh = await listContentAds(snapshotId);
+      const recovered = fresh.find(
+        (ad) => ad.post_id === t.post.id && ad.aspect === t.aspect && !knownIds.has(ad.id),
+      );
+      if (recovered) {
+        await qc.setQueryData(["content-ads", snapshotId], fresh);
+        await qc.invalidateQueries({ queryKey: ["content-ads", snapshotId] });
+        return recovered;
+      }
+    }
+    return null;
+  };
+
   const doGenerate = async (t: AdTask, opts?: any) => {
     const k = key(t);
+    const knownIds = new Set(ads.filter((ad) => ad.post_id === t.post.id && ad.aspect === t.aspect).map((ad) => ad.id));
     setBusy(k, true);
     try {
       await generateContentAd(snapshotId, t.post.id, t.aspect, direction, opts);
@@ -532,6 +549,18 @@ function Step4BuildAds({
       setErrors((p) => { const n = { ...p }; delete n[k]; return n; });
     } catch (e: any) {
       const msg = e?.message || "Generation failed";
+      const recoverable = /failed to fetch|network|timeout|context canceled|cancel/i.test(msg);
+      if (recoverable) {
+        toast.message("Still finishing in the background…", {
+          description: "We’ll refresh this tile as soon as the finished ad is saved.",
+        });
+        const recovered = await waitForRecoveredAd(t, knownIds);
+        if (recovered) {
+          setErrors((p) => { const n = { ...p }; delete n[k]; return n; });
+          toast.success("Ad finished and was added to the queue");
+          return;
+        }
+      }
       setErrors((p) => ({ ...p, [k]: msg }));
       toast.error(msg);
     } finally {
