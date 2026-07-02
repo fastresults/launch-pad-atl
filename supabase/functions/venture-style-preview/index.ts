@@ -263,7 +263,7 @@ Deno.serve(async (req) => {
 
     const logoAspect = (await readLogoAspect(logoBytes)) ?? 1;
     const logoPlacement = placementForAssetKind(PREVIEW_ASSET.kind);
-    const logoZoneHint = logoSafeZone(logoPlacement, logoSize, logoAspect);
+    const logoZoneHint = logoSafeZone(logoPlacement, logoSize, logoAspect, PREVIEW_ASSET.width, PREVIEW_ASSET.height);
 
     let paletteTileDataUrl: string | null = null;
     try { paletteTileDataUrl = bytesToDataUrl(buildPaletteTilePngBytes(plan)); }

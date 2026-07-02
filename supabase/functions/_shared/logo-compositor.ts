@@ -53,34 +53,27 @@ const TIERS: Record<LogoSize, Tier> = {
 
 const WIDE_ASPECT = 2; // aspect >= 2 → treat as wordmark
 
-// Returns a hint the prompt can echo, so the model reserves the same
-// rectangle we're about to composite into.
+// Canvas-aware reserved-zone hint. Derives the rectangle from the same
+// targetBoxFor() logic the compositor uses, then converts to canvas
+// percentages, so the prompt and the composite reference the same region.
 export function logoSafeZone(
   placement: LogoPlacement,
   size: LogoSize,
   logoAspect: number,
+  canvasW: number,
+  canvasH: number,
+  cornerOverride?: "top-left" | "bottom-right",
 ): { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" } {
   if (placement === "avatar-center") {
     return { widthPct: 78, heightPct: 78, corner: "center" };
   }
-  const tier = TIERS[size];
-  const aspect = Math.max(0.2, logoAspect);
-  // Prompt hint uses a 16:9 canvas approximation. The compositor makes the
-  // authoritative call using real canvas dimensions.
-  let widthPct: number;
-  let heightPct: number;
-  if (aspect >= WIDE_ASPECT) {
-    // width-first: chip width fraction of shortest side, then height derived
-    // and expressed as a fraction of canvas height (short * hFrac ≈ 9/16 * W).
-    const boxWShortFrac = Math.min(tier.widthFrac, tier.maxWFrac * (16 / 9));
-    widthPct = Math.round(boxWShortFrac * (9 / 16) * 100);
-    heightPct = Math.round((boxWShortFrac / aspect) * 100);
-  } else {
-    heightPct = Math.round(tier.heightFrac * 100);
-    const rawW = heightPct * aspect * (9 / 16);
-    widthPct = Math.min(Math.round(rawW), Math.round(tier.maxWFrac * 100));
-  }
-  const corner = placement === "banner-corner" ? "bottom-right" : "top-left";
+  const W = Math.max(1, canvasW);
+  const H = Math.max(1, canvasH);
+  const box = targetBoxFor(placement, W, H, Math.max(0.2, logoAspect), size, cornerOverride);
+  const widthPct = Math.max(1, Math.round((box.w / W) * 100));
+  const heightPct = Math.max(1, Math.round((box.h / H) * 100));
+  const corner: "top-left" | "bottom-right" =
+    cornerOverride ?? (placement === "banner-corner" ? "bottom-right" : "top-left");
   return { widthPct, heightPct, corner };
 }
 
@@ -122,6 +115,7 @@ function targetBoxFor(
   H: number,
   logoAspect: number,
   size: LogoSize,
+  cornerOverride?: "top-left" | "bottom-right",
 ): { x: number; y: number; w: number; h: number; mode: "width-first" | "height-first" } {
   const short = Math.min(W, H);
 
@@ -172,7 +166,9 @@ function targetBoxFor(
   }
 
   const inset = Math.floor(short * tier.insetFrac);
-  if (placement === "banner-corner") {
+  const effectiveCorner: "top-left" | "bottom-right" =
+    cornerOverride ?? (placement === "banner-corner" ? "bottom-right" : "top-left");
+  if (effectiveCorner === "bottom-right") {
     return { x: W - boxW - inset, y: H - boxH - inset, w: boxW, h: boxH, mode };
   }
   return { x: inset, y: inset, w: boxW, h: boxH, mode };
@@ -304,7 +300,7 @@ function paintShadow(
 export async function compositeLogo(
   baseBytes: Uint8Array,
   logoBytes: Uint8Array,
-  opts: { placement: LogoPlacement; surfaceHex: string; logoSize?: LogoSize; inkHex?: string },
+  opts: { placement: LogoPlacement; surfaceHex: string; logoSize?: LogoSize; inkHex?: string; cornerOverride?: "top-left" | "bottom-right" },
 ): Promise<Uint8Array> {
   let base: Image;
   let logo: Image;
@@ -323,7 +319,7 @@ export async function compositeLogo(
 
   const size = normalizeLogoSize(opts.logoSize);
   const logoAspect = logo.width / Math.max(1, logo.height);
-  const box = targetBoxFor(opts.placement, base.width, base.height, logoAspect, size);
+  const box = targetBoxFor(opts.placement, base.width, base.height, logoAspect, size, opts.cornerOverride);
   const transparent = hasTransparency(logo);
 
   const surface = hexToRgb(opts.surfaceHex || "#FFFFFF");
