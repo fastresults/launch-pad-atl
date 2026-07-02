@@ -658,13 +658,14 @@ function Step4Style({
           currentDirection={dialog.direction || "editorial"}
           canvasPlan={dialog.direction ? byDirection.get(dialog.direction)?.canvas_plan : null}
           currentHeadline={dialog.direction ? (byDirection.get(dialog.direction) as any)?.last_headline ?? null : null}
+          currentLogoSize={dialog.direction ? (byDirection.get(dialog.direction) as any)?.last_logo_size ?? null : null}
           focusSection={dialog.focusSection}
-          onSubmit={async ({ feedback, directionOverride, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride }) => {
+          onSubmit={async ({ feedback, directionOverride, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride, logoSize }) => {
             if (dialog.scope === "all") {
-              await regenerateAll({ feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride });
+              await regenerateAll({ feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride, logoSize });
             } else {
               const target = directionOverride || dialog.direction!;
-              await runGenerate(target, { feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride });
+              await runGenerate(target, { feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride, logoSize });
             }
           }}
         />
