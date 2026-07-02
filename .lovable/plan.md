@@ -1,75 +1,83 @@
 ## Goal
-On the Brand Style Guide preview (the "Color System" section shown in your screenshot), every swatch — Primary, Secondary, Accent, BG, FG, Muted, Surface, Text, Success, Warning, Danger — becomes clickable. Clicking opens a color-wheel popover (saturation/value box + hue slider + hex input) so the founder can pick a new color visually. The change saves immediately to the brand kit's palette and re-renders the whole preview (headline color, section borders, typography accents) with the new value.
+Admins (and super admins) can open **any user's dashboard** — not just the read-only member view — and use every founder-facing function (Concept Studio, Brand Wizard, Social Studio, Content Studio, Founder Playbook, brief, files, etc.) as that user. From **Admin → Users & roles**, every row gets an **"Open dashboard"** action that starts the session and lands on `/dashboard`. A persistent amber banner + "Exit impersonation" button is visible on every page while active.
 
-## What already exists (reuse, don't rebuild)
-- `EditablePaletteSwatch` (`src/components/hub/brand/EditablePaletteSwatch.tsx`) — already wraps `react-colorful`'s `HexColorPicker` + `HexColorInput` in a Popover, with debounced onChange, Reset, and Done controls. It's the compact editor used in `BrandWizard.tsx`.
-- `BrandWizard.tsx` already knows how to persist palette edits via `onSave({ palette: { ...kit.palette, colors: nextColors, source: "user-edited" } })`.
-- `VisualBrandGuide.tsx` currently renders the Color System swatches as read-only cards (lines 119–132).
+Uses the existing admin-aware RLS: every founder table already has `is_admin(auth.uid())` policies (proven by `admin.members.$userId.view.tsx` reading the same rows today). We don't need JWT swap — we scope queries client-side to a target `user_id` when an admin is impersonating.
+
+## What already exists (reuse)
+- `getMemberView` / `admin.members.$userId.view.tsx` — read-only aggregate; keep as the "peek" flow.
+- `useAuth()` — session + role flags (`isAdmin`, `isSuperAdmin`).
+- Admin RLS on `profiles`, `venture_snapshots`, `venture_documents`, `attendee_*`, `venture_brand_kits`, `venture_social_assets`, `venture_content_ads`, `bulk_unlock_grants`, etc.
 
 ## Changes
 
-### 1. `src/components/hub/brand-wizard/VisualBrandGuide.tsx`
-- Accept two new optional props:
-  - `onColorChange?: (tokenKey: string, hex: string) => void`
-  - `originalColors?: Record<string, string>` (for the "Reset" affordance inside the popover)
-- In the Color System grid, when `onColorChange` is provided:
-  - Render each color card with the existing look (color block on top, label + hex + RGB below).
-  - Overlay an `EditablePaletteSwatch` trigger that covers the color block, so clicking anywhere on the swatch opens the wheel. Show a small "click to edit" hover affordance (pencil icon + subtle overlay, same pattern the component already uses).
-  - Pass `tokenKey={key}`, `value={value}`, `originalValue={originalColors?.[key]}`, and `onChange={(hex) => onColorChange(key, hex)}`.
-- When `onColorChange` is not provided, keep today's read-only rendering (no behavioral change for any other caller / exports).
+### 1. New impersonation context — `src/hooks/use-impersonation.tsx`
+- Stores `{ targetUserId, targetEmail, targetName }` in `sessionStorage` under `sl.impersonation` (session-only so a closed tab ends it).
+- Exposes `useImpersonation()` → `{ isImpersonating, target, start(user), stop() }`.
+- Guard: `start()` no-ops (and toasts) unless the caller is `isAdmin`. On mount, the provider validates the same rule against the current session and auto-clears if the user is no longer admin.
+- Provider mounted in `src/App.tsx` inside `AuthProvider`.
 
-### 2. `src/components/hub/brand-wizard/BrandWizard.tsx`
-- On the `<VisualBrandGuide kit={kit} snapshot={snapshot} />` call (line 989), wire the two new props:
-  - `originalColors` = the palette from the last generation (already tracked when a kit is generated; if no snapshot exists, pass the current `kit.palette.colors`).
-  - `onColorChange` = the same handler pattern already used at line 948:
-    ```ts
-    (key, hex) => onSave({
-      palette: {
-        ...(kit.palette ?? {}),
-        colors: { ...(kit.palette?.colors ?? {}), [key]: hex },
-        source: "user-edited",
-      },
-    })
-    ```
-- Add a tiny helper hint above the guide preview: "Click any color swatch to change it." (keeps discovery obvious without new UI chrome).
+### 2. Effective-user hook — `src/hooks/use-effective-user.ts`
+- `useEffectiveUser()` returns `{ userId, isImpersonating, actorUserId }`:
+  - `userId` = impersonation target if active and actor is admin, else `auth.user.id`.
+  - `actorUserId` = always the real signed-in user's id (for audit / server-side checks).
+- Every dashboard query/mutation that currently reads `user.id` (or filters by `auth.uid()`) is switched to `useEffectiveUser().userId`. Grep target set:
+  - `src/routes/_authenticated/dashboard/**` (all pages) — `hub.index`, `hub.$snapshotId`, `hub.new`, `brief`, `deliverables`, `documents`, `files`, `media`, `workflow`, `workflow.$key`, `filing`, `goals`, `profile`, `index`, `day`.
+  - `src/components/hub/**` and `src/components/brief/**` where they call `.eq("user_id", user.id)` or pass `user.id` into functions.
+  - `src/lib/foundersHub.functions.ts`, `brief.functions.ts`, `brandKit.functions.ts`, `creative.functions.ts`, `content-autopilot.functions.ts`, `social-autopilot.functions.ts`, `founderMemory.functions.ts`, `stageIntake.functions.ts`, `filing.functions.ts`, `media.functions.ts`, `attendee.functions.ts`, `discovery.functions.ts`, `pipeline.functions.ts`, `userPipeline.functions.ts`, `deck-overrides.functions.ts`, `brand-intake.functions.ts` — each accepts an optional `overrideUserId` from callers; the client calls pass `useEffectiveUser().userId`. Server-side edge-function calls include `{ actAsUserId }` in the body — the function verifies the caller is admin via `is_admin(auth.uid())` before honoring it (see step 4).
 
-### 3. Nothing else changes
-- No new dependencies (`react-colorful` is already installed).
-- No DB migration — palette overrides already persist through the existing `onSave` → `brand_kits.palette` write.
-- No changes to `BrandStudio.tsx` (already uses `EditablePaletteSwatch`) or any downstream renderer — since they all read `kit.palette.colors`, updates propagate automatically to Social Studio, Content Studio, DOCX export, and Logo Compositor.
-- No changes to edge functions or prompts.
+### 3. Global impersonation banner — `src/components/admin/ImpersonationBanner.tsx`
+- Sticky bar rendered at the top of `_authenticated.tsx` (inside `<Outlet />` wrapper) when `isImpersonating`.
+- Shows: "Viewing as **{name}** ({email}) — actions you take will affect their account." + **Exit** button (calls `stop()` and navigates to `/admin/users`).
+- Uses `bg-amber-500/15 text-amber-200 border-amber-400/40` (semantic tokens already in `styles.css`).
+
+### 4. Edge-function guardrail
+- Any edge function that today reads `user.id` from the JWT and writes founder data (`venture-*`, `brand-*`, `content-*`, `social-*`, `brief-*`, `founder-*`) accepts an optional `actAsUserId` in the payload:
+  - If present, the function calls `has_role(auth.uid(), 'admin' | 'super_admin')` (via the DB `is_admin` function) and rejects with 403 if false; otherwise it substitutes `actAsUserId` for `user.id` on all writes.
+  - This keeps impersonation server-authoritative — a non-admin can't forge the header even if they inspect the client.
+
+### 5. Users & roles page — `src/routes/_authenticated/_admin/admin.users.tsx`
+- Add two column actions per row (excluding self and other super_admins where role changes are disallowed — impersonation itself is allowed against any non-self user):
+  - **Open dashboard** — primary button. Calls `impersonation.start({ userId, name, email })` then `navigate("/dashboard")`.
+  - **Peek** (secondary link) — existing `admin/members/$userId/view` read-only aggregate.
+- Extend `listUsersWithRoles()` in `src/lib/admin.functions.ts` to include `member_status` and `founders_hub_access` so the table can show a small badge before opening ("Approved" / "Pending" / etc.) — one extra column via the existing `profiles` join already in the function.
+- Add a helper hint above the table: "Opening a dashboard signs you in as that user for this tab. Exit anytime from the amber banner."
+
+### 6. Admin sidebar — `src/components/admin/AdminSidebar.tsx`
+- If `isImpersonating`, add a compact "Impersonating {name} — Exit" row above the sign-out button so admins can bail from anywhere in the admin surface too.
+
+### 7. Auth guard — `src/routes/_authenticated.tsx`
+- When impersonating, skip the `memberStatus === "paused"` redirect for the actor (admin retains navigation) but still route dashboard pages through the effective user. If the **target** is paused, show a small inline note in the banner ("Target member is paused") — don't redirect the admin out.
 
 ## Technical details
 
-**Overlay pattern for the swatch trigger** (inside VisualBrandGuide's color card):
-```tsx
-<div className="relative h-24" style={{ background: value }}>
-  {onColorChange && (
-    <EditablePaletteSwatch
-      tokenKey={key}
-      value={value}
-      originalValue={originalColors?.[key]}
-      onChange={(hex) => onColorChange(key, hex)}
-      size="lg"
-      // renders an absolutely-positioned invisible-but-focusable trigger
-    />
-  )}
-</div>
+**Why not JWT swap?** Supabase doesn't support delegated tokens on the client. Every founder table already has `is_admin(auth.uid())` policies (that's how the read-only member view works today), so an admin's own JWT is sufficient to read/write another user's rows as long as the client filters by `target_user_id`. The edge-function guardrail in step 4 closes the write path: the function verifies admin role from the caller's JWT before honoring `actAsUserId`.
+
+**Refactor pattern:**
+```ts
+// before
+const { user } = useAuth();
+const { data } = useQuery(["snapshots", user.id], () => listSnapshots(user.id));
+
+// after
+const { userId } = useEffectiveUser();
+const { data } = useQuery(["snapshots", userId], () => listSnapshots(userId));
 ```
-`EditablePaletteSwatch` already renders its own trigger button; we'll extend it with an optional `fill` mode (or wrap its trigger with `absolute inset-0`) so it stretches over the whole 96px-tall color block instead of the current 6×6 chip. That's a ~10-line addition to `EditablePaletteSwatch.tsx`:
-- New prop `fill?: boolean`. When true, the trigger uses `absolute inset-0 h-full w-full rounded-none` and a translucent hover overlay with a centered pencil icon.
+Query keys include `userId` so switching impersonation targets invalidates cached data automatically — no manual `qc.clear()` needed.
 
-**Debouncing / save load**: `EditablePaletteSwatch` already debounces onChange at 250ms, so dragging around the color wheel won't spam the database; only the final resting hex hits `onSave`.
+**Session storage, not localStorage.** Ends on tab close. Prevents an admin from forgetting they're impersonating across days.
 
-**Reset**: `EditablePaletteSwatch` already shows a "Reset" affordance when `originalValue` differs from `draft`, so founders can undo a swatch back to what Firecrawl/Brand Wizard originally derived.
+**Audit log (optional, low cost).** Add `public.admin_impersonation_log(id, actor_user_id, target_user_id, started_at, ended_at)` + `start_impersonation(_target)` / `end_impersonation()` SQL functions (SECURITY DEFINER, admin-guarded). The client calls `start_impersonation` on `start()` and `end_impersonation` on `stop()`/unload. Included so admin activity on other users' accounts is traceable.
 
 ## Out of scope
-- No new color harmony suggestions or WCAG auto-repair on click (the existing "Repair contrast" button in BrandWizard stays where it is).
-- No palette-name / rationale editing.
-- No changes to typography, logo, or moodboard sections.
+- No changes to founder-facing UI copy or layouts — admins see the exact same dashboard.
+- No new roles or role model changes.
+- No changes to super_admin promotion rules; `admin_set_user_role` stays as-is.
+- Real-time / presence changes (analytics unaffected).
 
 ## Acceptance
-- Clicking any swatch in the Brand Style Guide preview opens a color-wheel popover with hue slider and hex input.
-- Selecting a color updates the swatch, its hex/RGB caption, and every other place in the preview that reads that token (headline color, section border, etc.) within one debounce tick.
-- The change persists — refreshing the page keeps the new color.
-- If you change your mind, "Reset" in the popover snaps the token back to the originally generated value.
+- From `/admin/users`, clicking **Open dashboard** on any non-self user lands the admin on `/dashboard` seeing that user's ventures, brief, files, playbook, and studios.
+- Creating/editing anything (e.g., generating a Content Studio ad) writes to the **target** user's rows, not the admin's.
+- A sticky amber banner is visible on every dashboard route; **Exit** returns the admin to `/admin/users` and restores their own data.
+- Refreshing the tab preserves impersonation; closing the tab ends it.
+- A non-admin who somehow calls `impersonation.start` sees no effect (client guard) and any spoofed `actAsUserId` in an edge-function call is rejected with 403 (server guard).
+- `admin_impersonation_log` shows one row per session with start/end timestamps.

@@ -56,7 +56,7 @@ export async function getAdminStats() {
 export async function listUsersWithRoles() {
   const [rolesRes, profilesRes] = await Promise.all([
     supabase.from("user_roles").select("user_id, role"),
-    supabase.from("profiles").select("user_id, display_name, email"),
+    supabase.from("profiles").select("user_id, display_name, email, member_status, founders_hub_access"),
   ]);
   const profileByUser = new Map<string, any>();
   for (const p of profilesRes.data ?? []) profileByUser.set(p.user_id, p);
@@ -78,6 +78,8 @@ export async function listUsersWithRoles() {
       user_id,
       display_name: p?.display_name ?? null,
       email: p?.email ?? null,
+      member_status: p?.member_status ?? null,
+      founders_hub_access: !!p?.founders_hub_access,
       roles,
     };
   });

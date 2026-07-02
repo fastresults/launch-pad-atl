@@ -17,12 +17,12 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useAuth } from "@/hooks/use-auth";
 import { ADMIN_GROUPS, ADMIN_NAV } from "@/lib/admin-nav";
-import { LogOut } from "lucide-react";
+import { LogOut, EyeOff } from "lucide-react";
 import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 import { StartupLabsMark } from "@/components/brand/StartupLabsMark";
 
 export function AdminSidebar() {
-  const { isSuperAdmin, signOut, user } = useAuth();
+  const { isSuperAdmin, signOut, user, actorUser, isImpersonating, impersonationTarget, stopImpersonation } = useAuth();
   const { pathname } = useLocation();
 
   const { data: badges } = useQuery({
@@ -95,9 +95,21 @@ export function AdminSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
+        {isImpersonating && impersonationTarget && (
+          <button
+            onClick={() => stopImpersonation()}
+            className="mb-2 flex w-full items-center gap-2 rounded-md border border-amber-400/40 bg-amber-500/10 px-2 py-1.5 text-left text-[11px] text-amber-100 hover:bg-amber-500/20"
+            title="Exit impersonation"
+          >
+            <EyeOff className="h-3.5 w-3.5 shrink-0" />
+            <span className="flex-1 truncate group-data-[collapsible=icon]:hidden">
+              As {impersonationTarget.name} — Exit
+            </span>
+          </button>
+        )}
         <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col">
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-            <div className="truncate text-xs font-medium">{user?.email}</div>
+            <div className="truncate text-xs font-medium">{actorUser?.email}</div>
             <div className="text-[10px] text-muted-foreground">
               {isSuperAdmin ? "Super admin" : "Admin"}
             </div>

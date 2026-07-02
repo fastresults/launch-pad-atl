@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_impersonation_log: {
+        Row: {
+          actor_user_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          started_at: string
+          target_user_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          target_user_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       ai_pipeline_runs: {
         Row: {
           created_at: string
@@ -3014,6 +3041,7 @@ export type Database = {
         Returns: boolean
       }
       email_queue_dispatch: { Args: never; Returns: undefined }
+      end_impersonation: { Args: { _id: string }; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -3079,6 +3107,7 @@ export type Database = {
         }[]
       }
       reset_founder_workspace: { Args: { _user_id: string }; Returns: string[] }
+      start_impersonation: { Args: { _target: string }; Returns: string }
       sweep_stuck_generations: { Args: never; Returns: undefined }
       sync_cohort_seat_cache: {
         Args: { _cohort_id: string }
