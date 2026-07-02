@@ -1156,6 +1156,7 @@ function Step5BuildKit({
           qaNotes: t.qa_notes ?? null,
           modelUsed: t.model_used ?? null,
           lastFeedback: t.last_feedback ?? null,
+          lastHeadline: (t as any).last_headline ?? null,
           updatedAt: t.updated_at ?? null,
         };
         return (
