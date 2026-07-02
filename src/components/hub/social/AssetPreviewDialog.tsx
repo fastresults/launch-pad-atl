@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Download, Copy, ExternalLink, RefreshCw, ChevronLeft, ChevronRight, ImageOff, Trash2, Loader2,
+  Download, Copy, ExternalLink, RefreshCw, ChevronLeft, ChevronRight, ImageOff, Trash2, Loader2, Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,12 +26,13 @@ export type PreviewableAsset = {
 };
 
 export function AssetPreviewDialog({
-  open, onOpenChange, asset, onRegenerate, onDelete, onPrev, onNext, busy = false,
+  open, onOpenChange, asset, onRegenerate, onEditHeadline, onDelete, onPrev, onNext, busy = false,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   asset: PreviewableAsset | null;
   onRegenerate?: () => void;
+  onEditHeadline?: () => void;
   onDelete?: () => void;
   onPrev?: () => void;
   onNext?: () => void;
@@ -203,16 +204,42 @@ export function AssetPreviewDialog({
               </div>
             )}
 
-            {asset.lastHeadline !== undefined && asset.lastHeadline !== null && (
-              <div>
-                <div className="text-muted-foreground">Headline on image</div>
-                <div className="rounded border border-border bg-background/40 p-2 text-[11px]">
-                  {asset.lastHeadline === ""
-                    ? <span className="italic text-muted-foreground">No text (suppressed)</span>
-                    : <span className="font-medium">"{asset.lastHeadline}"</span>}
+            {(() => {
+              const hl = asset.lastHeadline;
+              const hasStored = hl !== undefined && hl !== null;
+              const suppressed = hl === "";
+              return (
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-muted-foreground">Headline on image</div>
+                    {onEditHeadline && (
+                      <button
+                        type="button"
+                        onClick={onEditHeadline}
+                        disabled={busy}
+                        className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-[10px] font-medium text-foreground transition hover:border-primary hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                        title="Edit the text painted on this image"
+                      >
+                        <Pencil className="h-3 w-3" /> Edit
+                      </button>
+                    )}
+                  </div>
+                  <div
+                    className="mt-1 rounded border border-border bg-background/40 p-2 text-[11px] line-clamp-2"
+                    title={hasStored && !suppressed ? String(hl) : undefined}
+                  >
+                    {suppressed ? (
+                      <span className="italic text-muted-foreground">No text on image</span>
+                    ) : hasStored ? (
+                      <span className="font-medium">"{hl}"</span>
+                    ) : (
+                      <span className="italic text-muted-foreground">Auto-derived from your venture</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
+
 
             {asset.lastFeedback && (
               <div>

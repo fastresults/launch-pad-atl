@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -159,6 +159,7 @@ export function RegenerateAssetDialog({
   mode = "regenerate",
   suggestedHeadline,
   currentHeadline,
+  focusSection,
   onSubmit,
 }: {
   open: boolean;
@@ -174,6 +175,8 @@ export function RegenerateAssetDialog({
   suggestedHeadline?: string | null;
   /** The headline that was actually used on the current asset (if any). */
   currentHeadline?: string | null;
+  /** When set, scroll+highlight the matching section and pre-focus its primary input. */
+  focusSection?: "headline" | "palette" | "feedback";
   onSubmit: (input: {
     feedback: string;
     directionOverride?: string;
@@ -189,12 +192,39 @@ export function RegenerateAssetDialog({
   const [placement, setPlacement] = useState<typeof PLACEMENTS[number]["id"]>("auto");
   const [busy, setBusy] = useState(false);
 
-  // Headline override: default to "custom" pre-filled with whatever text is on
-  // the current asset so users can edit that exact string.
+  // Headline override: when opened via "Edit headline", default to Custom so the
+  // user can type immediately. Otherwise, default to Custom only when there's an
+  // existing headline to preserve/edit; else Auto.
   const initialHeadlineMode: "auto" | "custom" | "none" =
-    currentHeadline && currentHeadline.trim() ? "custom" : "auto";
+    focusSection === "headline"
+      ? "custom"
+      : currentHeadline && currentHeadline.trim()
+      ? "custom"
+      : "auto";
   const [headlineMode, setHeadlineMode] = useState<"auto" | "custom" | "none">(initialHeadlineMode);
   const [headlineText, setHeadlineText] = useState<string>(currentHeadline || "");
+  const [headlineHighlight, setHeadlineHighlight] = useState(false);
+  const headlineSectionRef = useRef<HTMLDivElement | null>(null);
+  const headlineInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Scroll + highlight + focus when opened targeting a specific section.
+  useEffect(() => {
+    if (!open) return;
+    if (focusSection !== "headline") return;
+    // Wait for dialog mount animation.
+    const t = window.setTimeout(() => {
+      headlineSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+      setHeadlineHighlight(true);
+      const inp = headlineInputRef.current;
+      if (inp) {
+        inp.focus();
+        try { inp.select(); } catch { /* noop */ }
+      }
+      window.setTimeout(() => setHeadlineHighlight(false), 1400);
+    }, 120);
+    return () => window.clearTimeout(t);
+  }, [open, focusSection]);
+
 
   // Per-role override state — null means "use brand-kit value".
   const [ovr, setOvr] = useState<Record<SwatchRole, string | null>>({
@@ -335,7 +365,12 @@ export function RegenerateAssetDialog({
           </div>
 
           {/* Headline text override */}
-          <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+          <div
+            ref={headlineSectionRef}
+            className={`rounded-lg border bg-muted/20 p-3 space-y-2 transition ${
+              headlineHighlight ? "border-primary ring-2 ring-primary/60 shadow-sm" : "border-border"
+            }`}
+          >
             <div className="flex items-center justify-between">
               <div className="text-xs font-medium">Headline text on image</div>
               <span className="text-[10px] text-muted-foreground">
@@ -369,6 +404,7 @@ export function RegenerateAssetDialog({
             )}
             {headlineMode === "custom" && (
               <input
+                ref={headlineInputRef}
                 type="text"
                 value={headlineText}
                 onChange={(e) => setHeadlineText(e.target.value.slice(0, 64))}

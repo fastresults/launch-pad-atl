@@ -470,7 +470,7 @@ function Step4Style({
 
   const [pick, setPick] = useState<string | null>(direction);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
-  const [dialog, setDialog] = useState<{ scope: "single" | "all"; direction?: string } | null>(null);
+  const [dialog, setDialog] = useState<{ scope: "single" | "all"; direction?: string; focusSection?: "headline" | "palette" | "feedback" } | null>(null);
   const [previewIdx, setPreviewIdx] = useState<number | null>(null);
 
   const previewsQ = useQuery({
@@ -658,6 +658,7 @@ function Step4Style({
           currentDirection={dialog.direction || "editorial"}
           canvasPlan={dialog.direction ? byDirection.get(dialog.direction)?.canvas_plan : null}
           currentHeadline={dialog.direction ? (byDirection.get(dialog.direction) as any)?.last_headline ?? null : null}
+          focusSection={dialog.focusSection}
           onSubmit={async ({ feedback, directionOverride, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride }) => {
             if (dialog.scope === "all") {
               await regenerateAll({ feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride });
@@ -693,6 +694,7 @@ function Step4Style({
             onNext={() => setPreviewIdx((i) => (i === null ? 0 : (i + 1) % ART_DIRECTIONS.length))}
             busy={d ? !!busy[d.id] : false}
             onRegenerate={d ? () => setDialog({ scope: "single", direction: d.id }) : undefined}
+            onEditHeadline={d ? () => setDialog({ scope: "single", direction: d.id, focusSection: "headline" }) : undefined}
             onDelete={d && p?.signed_url ? () => { setPreviewIdx(null); deletePreview(d.id); } : undefined}
           />
         );
@@ -786,7 +788,7 @@ function Step5BuildKit({
   const [runningKeys, setRunningKeys] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [kept, setKept] = useState<Record<string, boolean>>({});
-  const [regenTarget, setRegenTarget] = useState<null | { scope: "single" | "all"; task?: any }>(null);
+  const [regenTarget, setRegenTarget] = useState<null | { scope: "single" | "all"; task?: any; focusSection?: "headline" | "palette" | "feedback" }>(null);
   const [previewIdx, setPreviewIdx] = useState<number | null>(null);
   const previewableIdxs = useMemo(() => tasks.map((t, i) => (t.signed_url ? i : -1)).filter((i) => i >= 0), [tasks]);
   const allDone = tasks.every((t) => t.status === "done");
@@ -1112,6 +1114,7 @@ function Step5BuildKit({
           canvasPlan={regenTarget.task?.canvas_plan ?? null}
           currentHeadline={regenTarget.task?.last_headline ?? null}
           initialIntensity={regenTarget.scope === "single" && signatureFailed(regenTarget.task) ? "bold" : "balanced"}
+          focusSection={regenTarget.focusSection}
           onSubmit={async (input) => {
             if (regenTarget.scope === "single") {
               await regenerateSingle(regenTarget.task, input);
@@ -1168,6 +1171,7 @@ function Step5BuildKit({
             onNext={previewableIdxs.length > 1 ? goNext : undefined}
             busy={!!runningKeys[`${t.platform}:${t.asset}`]}
             onRegenerate={() => setRegenTarget({ scope: "single", task: t })}
+            onEditHeadline={() => setRegenTarget({ scope: "single", task: t, focusSection: "headline" })}
             onDelete={t.asset_id ? () => { setPreviewIdx(null); deleteAsset(t); } : undefined}
           />
         );
