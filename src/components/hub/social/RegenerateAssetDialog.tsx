@@ -13,6 +13,19 @@ import { Loader2, Sparkles, Image as ImageIcon, RotateCcw } from "lucide-react";
 import { contrastRatio } from "@/lib/brand/palette-rules";
 import { AssetImage } from "./AssetImage";
 
+// Strip trailing ellipsis / punctuation left behind by older truncators so the
+// full headline can be re-edited and re-rendered without a leftover "…".
+function sanitizeHeadline(s: string | null | undefined): string {
+  const raw = (s ?? "").trim();
+  if (!raw) return "";
+  return raw
+    .replace(/\s+/g, " ")
+    .replace(/(?:\.{3}|…)+\s*$/g, "")
+    .replace(/[\s,;:\-–—]+$/g, "")
+    .trim();
+}
+
+
 const QUICK_NOTES = [
   "Lighter background",
   "Stronger logo presence",
