@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { MessageCircle, X, Send, Sparkles, Trash2 } from "lucide-react";
+import { MessageCircle, X, Send, Sparkles, Trash2, Mic, Square, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeErrorMessage } from "@/lib/edge-errors";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,9 @@ import { cn } from "@/lib/utils";
 type Msg = { role: "user" | "assistant"; content: string };
 
 const STORAGE_KEY = "sl.concierge.v1";
+const VOICE_PREF_KEY = "sl.concierge.voice.v1";
 const HIDDEN_PREFIXES = ["/login", "/signup", "/reset-password", "/unsubscribe", "/dashboard", "/admin", "/welcome", "/paused", "/workshop"];
+
 
 const STARTERS = [
   "What do I leave with?",
