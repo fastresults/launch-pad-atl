@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Scale, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Scale, ArrowRight, CheckCircle2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { getMyLegalSetup } from "@/lib/legal-setup.functions";
