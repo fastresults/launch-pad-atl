@@ -117,18 +117,7 @@ export function resolveHeadline(
 
 // ------- Per-asset composition systems -------
 
-function assetSystem(asset: AssetSpec, hasLogoImage: boolean, headline: string): string {
-  const kind = asset.kind;
-  const ratio = `${asset.width}:${asset.height}`;
 
-  if (kind === "avatar") {
-    return `AVATAR SYSTEM
-- The attached image #1 is the venture's official logo. Place it perfectly centered, occupying ~70% of the canvas shortest side.
-- Background: a single flat color drawn from the brand palette (prefer 'bg' if it contrasts with the logo; otherwise 'primary' or 'fg' — whichever yields ≥4.5:1 contrast against the logo's dominant ink).
-- No additional shapes, type, gradients, or decorations. Just the logo on color.
-- Logo pixels MUST be preserved — do not stylize, recolor, redraw, crop, or distort the mark.
-- Output a perfect square at ${asset.width}x${asset.height}.`;
-  }
 
 function assetSystem(
   asset: AssetSpec,
