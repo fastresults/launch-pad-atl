@@ -45,7 +45,8 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
         .eq("user_id", userId)
         .limit(400);
       q = snapshotId ? q.eq("snapshot_id", snapshotId) : q.is("snapshot_id", null);
-      const { data } = await q;
+      const { data, error } = await q;
+      if (error) console.warn("[BrainMindMap] memory query failed", error);
       return data ?? [];
     },
     enabled: !!userId,
@@ -59,7 +60,8 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
         .eq("user_id", userId)
         .limit(100);
       q = snapshotId ? q.eq("snapshot_id", snapshotId) : q.is("snapshot_id", null);
-      const { data } = await q;
+      const { data, error } = await q;
+      if (error) console.warn("[BrainMindMap] notes query failed", error);
       return data ?? [];
     },
     enabled: !!userId,
@@ -68,11 +70,12 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
     queryKey: ["brain-graph", "docs", snapshotId],
     queryFn: async () => {
       if (!snapshotId) return [];
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("venture_documents")
-        .select("id, deliverable_type_key, title, hero_image_status, deep_assessment_status")
+        .select("id, document_type, status, hero_image_status, deep_assessment_status")
         .eq("snapshot_id", snapshotId)
-        .limit(80);
+        .limit(200);
+      if (error) console.warn("[BrainMindMap] docs query failed", error);
       return data ?? [];
     },
     enabled: !!snapshotId,
@@ -87,7 +90,8 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
         .order("created_at", { ascending: false })
         .limit(40);
       q = snapshotId ? q.eq("snapshot_id", snapshotId) : q.is("snapshot_id", null);
-      const { data } = await q;
+      const { data, error } = await q;
+      if (error) console.warn("[BrainMindMap] messages query failed", error);
       return (data ?? []).reverse();
     },
     enabled: !!userId,
@@ -293,7 +297,7 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
         {filtered.nodes.length <= 1 && (
           <div className="absolute inset-0 flex items-center justify-center">
             <p className="max-w-xs text-center text-sm text-muted-foreground">
-              No memory yet. Generate startup assets and click <b>Rebuild memory</b> to populate the mind map.
+              Nothing to map yet. Generate startup assets, then <b>Rebuild memory</b> to enrich the graph.
             </p>
           </div>
         )}
