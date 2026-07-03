@@ -1,20 +1,42 @@
-## Goal
-Temporarily prevent users from creating additional ventures beyond their first. When they click **New startup** and already have one or more existing ventures, show a modal explaining that multi-venture support is coming soon and will be a paid add-on for serial entrepreneurs and consultants.
+## Problem found
 
-## Behavior
-- If the user has **0 ventures** → button still routes to `/dashboard/hub/new` (unchanged).
-- If the user has **≥1 venture** → clicking either "New startup" button (top-right header + empty-state) opens an `AlertDialog` instead of navigating.
+The repeated **Stale content detected** warning is caused by flawed detection logic, not necessarily stale data.
 
-## Modal content
-- Title: **Multiple startups coming soon**
-- Body: Short message that additional ventures are a planned feature for serial entrepreneurs, founders, and startup consultants. Will be available as a paid upgrade. Invite them to keep building on their current venture in the meantime.
-- Optional secondary CTA: "Notify me" (just closes with a toast "We'll let you know" — no backend wiring, purely UI acknowledgement) — or skip and use a single **Got it** action. I'll go with **Got it** + a subtle "Have questions? Contact support" line to keep scope tight.
+Current behavior:
+- `detectVentureMismatch()` loads memory rows for the selected startup.
+- It checks whether most asset memory titles include the current startup name.
+- Rebuilt memory titles are normal output/type names like `budget_pro_forma`, `paid_ads_starter_pack`, `brand_messaging`, etc.
+- Those titles do not include `StartupLabs`, so the detector falsely marks fresh rebuilt memory as stale every time.
 
-## Implementation (single file)
-Edit `src/routes/_authenticated/dashboard/hub.index.tsx`:
-1. In `LibraryInner`, add `const [showComingSoon, setShowComingSoon] = useState(false)` and derive `hasVentures = snapshots.length > 0`.
-2. Replace the header `<Button asChild><Link to="/dashboard/hub/new">…</Link></Button>` with a conditional: when `hasVentures`, render a plain `<Button onClick={() => setShowComingSoon(true)}>`; otherwise keep the Link version.
-3. Do the same swap in `EmptyState` — but since `EmptyState` only renders when the current tab is empty, and the "active" empty state implies no ventures, the Link is fine there. No change needed.
-4. Add an `<AlertDialog open={showComingSoon} onOpenChange={setShowComingSoon}>` at the bottom of `LibraryInner` with the copy above and a single **Got it** action.
+There is also a secondary reset mismatch:
+- The reset RPC only deletes startup-scoped Second Brain rows when a startup is selected.
+- It does not clear/rebuild the current `venture_documents` rows, so the UI text saying “Reset assets & memory” overstates what is actually being reset.
 
-No routing, DB, or business-logic changes. Frontend-only.
+## Plan
+
+1. **Replace the title-name heuristic**
+   - Remove the rule that says memory is stale when asset titles do not contain the current startup name.
+   - Use reliable scope checks instead: memory is valid when `founder_brain_memory.snapshot_id` matches the selected startup.
+   - Treat only unscoped legacy memory (`snapshot_id is null`) as potentially stale, not correctly scoped rows.
+
+2. **Make stale detection evidence-based**
+   - Update `detectVentureMismatch()` to return a warning only when there are legacy/unscoped asset or assessment memory rows for the user while a current startup is selected.
+   - Show examples from those legacy rows only.
+   - Do not flag current `snapshot_id` rows whose titles are framework/output names.
+
+3. **Fix rebuild cleanup semantics**
+   - Confirm `brain-reindex` wipes and rewrites the selected startup’s auto-derived memory before indexing.
+   - Keep that behavior, but ensure the frontend invalidates all affected queries after a rebuild finishes: status, mismatch, graph memory, and graph docs.
+
+4. **Clarify/reset behavior**
+   - Update the reset success copy so it says what it actually did: reset Second Brain memory/chat/notes/jobs for the current startup.
+   - Avoid implying generated startup assets were deleted unless the backend really deleted them.
+
+5. **Optional backend hardening if needed**
+   - Add or update a database function so reset can also remove legacy unscoped memory for the user when working inside a selected startup, because legacy rows are exactly what can pollute retrieval.
+   - Keep current-startup data isolated by `snapshot_id`.
+
+6. **Validation**
+   - Check live database counts before/after logic: selected startup memory rows, legacy unscoped rows, and example titles.
+   - Verify the warning disappears for fresh `StartupLabs` memory even when titles are `budget_pro_forma`, `paid_ads_starter_pack`, etc.
+   - Verify warnings still appear only if genuinely unscoped legacy memory exists.
