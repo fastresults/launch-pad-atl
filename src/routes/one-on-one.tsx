@@ -40,10 +40,10 @@ export default function OneOnOnePage() {
   const [modesOpen, setModesOpen] = useState(false);
 
   useEffect(() => {
-    document.title = "Done-For-You Startup Build with Adam — $1,997";
+    document.title = "Done-For-You Startup Build with Adam — $2,799";
     const meta = document.querySelector('meta[name="description"]');
     const desc =
-      "Adam and his creative team build your startup for you — brand, website, social channels, and setup — end-to-end for $1,997.";
+      "Adam and his creative team build your startup for you — brand, website, social channels, and setup — end-to-end for $2,799.";
     if (meta) meta.setAttribute("content", desc);
   }, []);
 
@@ -153,7 +153,7 @@ export default function OneOnOnePage() {
                 <span className="text-xs uppercase tracking-[0.18em]">White-glove · limited builds per month</span>
               </div>
               <div className="mt-4 flex flex-wrap items-end gap-3">
-                <span className="text-5xl font-semibold tracking-tight md:text-6xl">$1,997</span>
+                <span className="text-5xl font-semibold tracking-tight md:text-6xl">$2,799</span>
                 <span className="pb-2 text-sm text-muted-foreground">everything included</span>
               </div>
               <p className="mt-3 max-w-2xl text-base text-muted-foreground">
