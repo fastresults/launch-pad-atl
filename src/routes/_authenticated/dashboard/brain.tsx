@@ -17,7 +17,8 @@ import { cn } from "@/lib/utils";
 import {
   loadBrainHistory, sendBrainMessage, clearBrainHistory, rebuildBrainMemory,
   saveBrainNote, listBrainNotes, deleteBrainNote, getBrainStatus,
-  type BrainMessage,
+  pollBrainJob, getLatestBrainJob,
+  type BrainMessage, type BrainIndexingJob,
 } from "@/lib/brain.functions";
 
 const STARTERS = [
@@ -140,11 +141,58 @@ export default function BrainPage() {
     }
   }, [pending, qc, userId, voiceOn, speak]);
 
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [job, setJob] = useState<BrainIndexingJob | null>(null);
+
+  // On mount / user change, pick up any in-flight job so a page refresh doesn't lose progress.
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    void getLatestBrainJob(userId).then((j) => {
+      if (cancelled) return;
+      setJob(j);
+      if (j && (j.status === "queued" || j.status === "running")) setJobId(j.id);
+    });
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  // Poll the active job.
+  useEffect(() => {
+    if (!jobId) return;
+    let stop = false;
+    const tick = async () => {
+      try {
+        const j = await pollBrainJob(jobId);
+        if (stop) return;
+        setJob(j);
+        if (j.status === "done" || j.status === "failed") {
+          setJobId(null);
+          qc.invalidateQueries({ queryKey: ["brain", "status", userId] });
+          if (j.status === "done") {
+            toast.success(`Memory ready — ${j.embedded_chunks} chunks from ${j.total_sources} sources${j.failed_chunks ? ` (${j.failed_chunks} failed)` : ""}`);
+          } else {
+            toast.error(j.error_message ?? "Rebuild failed");
+          }
+        }
+      } catch {
+        // keep polling; transient network errors shouldn't abort
+      }
+    };
+    void tick();
+    const iv = setInterval(tick, 2000);
+    return () => { stop = true; clearInterval(iv); };
+  }, [jobId, qc, userId]);
+
   const rebuild = useMutation({
     mutationFn: rebuildBrainMemory,
-    onSuccess: (r) => {
-      toast.success(`Memory rebuilt — ${r.chunks} chunks from ${r.sources} sources`);
-      qc.invalidateQueries({ queryKey: ["brain", "status", userId] });
+    onSuccess: ({ jobId: id }) => {
+      setJobId(id);
+      setJob({
+        id, status: "queued", total_sources: 0, total_chunks: 0, embedded_chunks: 0,
+        failed_chunks: 0, error_message: null, started_at: null, finished_at: null,
+        created_at: new Date().toISOString(),
+      });
+      toast.info("Rebuilding memory in the background…");
     },
     onError: (e: any) => toast.error(e?.message ?? "Rebuild failed"),
   });
@@ -247,12 +295,30 @@ export default function BrainPage() {
           <Button
             size="sm" variant="outline" className="mt-3 w-full"
             onClick={() => rebuild.mutate()}
-            disabled={rebuild.isPending}
+            disabled={rebuild.isPending || !!jobId}
           >
-            {rebuild.isPending
+            {rebuild.isPending || jobId
               ? <><Loader2 className="mr-2 h-3 w-3 animate-spin" />Rebuilding…</>
               : <><RefreshCw className="mr-2 h-3 w-3" />Rebuild memory</>}
           </Button>
+          {job && (job.status === "queued" || job.status === "running") && (
+            <div className="mt-2 space-y-1">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full bg-primary transition-all"
+                  style={{ width: `${job.total_chunks ? Math.min(100, Math.round(((job.embedded_chunks + job.failed_chunks) / job.total_chunks) * 100)) : 5}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                {job.total_chunks
+                  ? `Embedding ${job.embedded_chunks + job.failed_chunks} / ${job.total_chunks} chunks`
+                  : "Preparing sources…"}
+              </p>
+            </div>
+          )}
+          {job?.status === "failed" && (
+            <p className="mt-2 text-[10px] text-destructive">{job.error_message ?? "Rebuild failed"}</p>
+          )}
           <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
             Re-embed your brief, startup assets, assessments, and notes so the brain retrieves the latest of everything.
           </p>
