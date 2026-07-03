@@ -117,6 +117,7 @@ Deno.serve(async (req) => {
 
     await admin.from("founder_brain_messages").insert({
       user_id: userId,
+      snapshot_id: snapshotId,
       role: "assistant",
       content: answer,
       citations,
