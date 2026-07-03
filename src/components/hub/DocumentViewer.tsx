@@ -719,10 +719,14 @@ export function DocumentViewer({
         setHeroStatus(nextStatus);
         heroImgErrorOnceRef.current = false;
         if (signedUrl) {
-          const url = primeSignedStorageUrl(HERO_BUCKET, data.path, signedUrl, 3600);
-          setHeroImageLoading(true);
-          await loadImage(url, 20_000);
-          setHeroUrl(url);
+          try {
+            const url = primeSignedStorageUrl(HERO_BUCKET, data.path, signedUrl, 3600);
+            setHeroImageLoading(true);
+            await loadImage(url, 20_000);
+            setHeroUrl(url);
+          } catch {
+            // The normal heroPath effect will retry with a freshly minted URL.
+          }
         }
         setHeroPath(data.path);
         setHeroError(null);
