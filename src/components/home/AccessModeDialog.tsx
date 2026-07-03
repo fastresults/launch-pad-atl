@@ -28,11 +28,10 @@ const MODES: Mode[] = [
     title: "In-person workshop",
     format: "Norcross, GA · 20 seats",
     promise:
-      "One morning in the room with Adam. Walk out with your first customer named, your offer priced, and a signed 90-day plan.",
+      "One morning in the room with Adam. You leave with your 90-day plan and the assets to run it.",
     price: `${WORKSHOP_PRICE_LABEL} — yours to keep`,
     cta: "Reserve a seat",
     to: "/register",
-    featured: true,
   },
   {
     id: "webinar",
@@ -40,21 +39,22 @@ const MODES: Mode[] = [
     title: "Live webinar",
     format: "Remote · small cohort",
     promise:
-      "The same framework, run live over video. Ideal if you can't make the trip but still want the group energy and Adam in the room.",
+      "Same guided build, on video. Same plan, same assets — done live from wherever you are.",
     price: "Lower price · next cohort forming",
     cta: "Join the next webinar",
     to: "/webinar",
   },
   {
     id: "one_on_one",
-    icon: <User className="size-5" />,
-    title: "1:1 with Adam",
-    format: "Private working session",
+    icon: <Wand2 className="size-5" />,
+    title: "Done-for-you with Adam",
+    format: "Adam + creative team · full build",
     promise:
-      "Just you and Adam, working your startup end-to-end. Best for founders who want focused attention on a specific bottleneck.",
-    price: "Custom · booked directly",
-    cta: "Book a 1:1",
+      "Skip the build. Adam and his team set up your startup end-to-end — brand, website, social channels, and systems — while you stay founder.",
+    price: "$1,997 · everything included",
+    cta: "Have Adam build it",
     to: "/one-on-one",
+    featured: true,
   },
 ];
 
