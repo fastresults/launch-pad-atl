@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
 });
 
 // deno-lint-ignore no-explicit-any
-async function runJob(admin: any, userId: string, jobId: string) {
+async function runJob(admin: any, userId: string, jobId: string, snapshotId: string | null) {
   const touch = async (patch: Record<string, unknown>) => {
     const { error } = await admin.from("brain_indexing_jobs").update(patch).eq("id", jobId);
     if (error) console.error("brain-reindex job update failed", error.message);
@@ -70,25 +70,53 @@ async function runJob(admin: any, userId: string, jobId: string) {
   try {
     await touch({ status: "running", started_at: new Date().toISOString() });
 
-    const [{ data: brief }, { data: founder }, { data: market }, { data: goals }, { data: delivs }, { data: notes }] = await Promise.all([
+    const notesQuery = admin.from("founder_brain_notes").select("id, content, tags, created_at").eq("user_id", userId);
+    if (snapshotId) notesQuery.eq("snapshot_id", snapshotId);
+    else notesQuery.is("snapshot_id", null);
+
+    const [
+      { data: brief },
+      { data: founder },
+      { data: market },
+      { data: goals },
+      { data: delivs },
+      { data: notes },
+      { data: snapshot },
+    ] = await Promise.all([
       admin.from("attendee_business_brief").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_founder_profile").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_market_profile").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_goals").select("*").eq("user_id", userId),
       admin.from("attendee_deliverables").select("deliverable_key, content_current, deep_assessment").eq("user_id", userId),
-      admin.from("founder_brain_notes").select("id, content, tags, created_at").eq("user_id", userId),
+      notesQuery,
+      snapshotId
+        ? admin.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
 
-    // Wipe only the auto-derived rows; user-written notes-derived rows are
-    // regenerated below from the notes table, so this is safe.
-    await admin
+    // Wipe only this venture's auto-derived rows. Legacy rows (snapshot_id is
+    // null) are left alone so pre-migration data still surfaces until the
+    // founder rebuilds them explicitly.
+    const wipe = admin
       .from("founder_brain_memory")
       .delete()
       .eq("user_id", userId)
-      .in("kind", ["brief", "deliverable", "assessment", "goal", "note"]);
+      .in("kind", ["brief", "deliverable", "assessment", "goal", "note", "venture"]);
+    if (snapshotId) wipe.eq("snapshot_id", snapshotId);
+    else wipe.is("snapshot_id", null);
+    await wipe;
 
     type Source = { kind: string; source_ref: string | null; title: string; content: string };
     const sources: Source[] = [];
+
+    if (snapshot) {
+      sources.push({
+        kind: "venture",
+        source_ref: snapshotId,
+        title: `Venture — ${snapshot.company_name ?? "current venture"}`,
+        content: JSON.stringify(snapshot, null, 2),
+      });
+    }
 
     if (brief || founder || market) {
       sources.push({
