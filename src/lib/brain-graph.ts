@@ -21,7 +21,7 @@ export type BrainGraph = { nodes: BrainGraphNode[]; links: BrainGraphLink[] };
 
 export type MemoryRow = { id: string; kind: string; title: string | null; source_ref: string | null; content?: string | null };
 export type NoteRow = { id: string; content: string; source?: string | null; created_at?: string };
-export type DocRow = { id: string; deliverable_type_key?: string | null; title?: string | null; hero_image_status?: string | null; deep_assessment_status?: string | null };
+export type DocRow = { id: string; document_type?: string | null; status?: string | null; hero_image_status?: string | null; deep_assessment_status?: string | null };
 export type MsgRow = { id: string; role: string; content: string; created_at?: string };
 
 const CLUSTER_META: Record<string, { label: string; color: string }> = {
@@ -47,6 +47,16 @@ function shortTitle(s: string | null | undefined, max = 40) {
   const t = (s ?? "").replace(/\s+/g, " ").trim();
   if (!t) return "Untitled";
   return t.length > max ? t.slice(0, max - 1) + "…" : t;
+}
+
+function humanizeDocType(key: string | null | undefined): string {
+  if (!key) return "Asset";
+  return key
+    .replace(/[_-]+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join(" ");
 }
 
 export function buildBrainGraph(input: {
