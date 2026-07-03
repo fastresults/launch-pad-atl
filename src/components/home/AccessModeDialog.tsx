@@ -100,7 +100,7 @@ export function AccessModeDialog({
             >
               {m.featured && (
                 <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
-                  <Sparkles className="size-3" /> Most popular
+                  <Sparkles className="size-3" /> White-glove
                 </span>
               )}
               <div className="flex items-center gap-2 text-primary">
