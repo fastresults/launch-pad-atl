@@ -98,6 +98,17 @@
   /* CTA glow shadows */
   --glow-primary: 0 0 28px oklch(0.68 0.28 290 / 0.5), 0 0 8px oklch(0.68 0.28 290 / 0.35), 0 2px 16px oklch(0 0 0 / 0.4);
   --glow-hero: 0 0 28px oklch(0.62 0.27 350 / 0.45), 0 0 8px oklch(0.72 0.21 45 / 0.3), 0 2px 16px oklch(0 0 0 / 0.4);
+
+  /* Second Brain mind-map cluster colors */
+  --brain-asset: oklch(0.72 0.18 250);
+  --brain-assessment: oklch(0.75 0.19 145);
+  --brain-note: oklch(0.78 0.17 85);
+  --brain-brief: oklch(0.7 0.2 315);
+  --brain-chat: oklch(0.72 0.2 25);
+  --brain-memory: oklch(0.78 0.06 260);
+  --brain-hero: oklch(0.72 0.2 355);
+  --brain-edge: oklch(0.75 0.15 180 / 0.35);
+  --brain-canvas: oklch(0.09 0.02 280);
 }
 
 :root.light {
