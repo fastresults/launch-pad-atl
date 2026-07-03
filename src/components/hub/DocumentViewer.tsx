@@ -30,7 +30,38 @@ import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functi
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
-import { getSignedStorageUrl } from "@/lib/storageSignedUrl";
+import { getSignedStorageUrl, invalidateSignedStorageUrl } from "@/lib/storageSignedUrl";
+
+const HERO_BUCKET = "venture-doc-images";
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function loadImage(url: string, timeoutMs = 15_000) {
+  return new Promise<void>((resolve, reject) => {
+    if (typeof window === "undefined") {
+      resolve();
+      return;
+    }
+    const img = new Image();
+    const timer = window.setTimeout(() => {
+      img.onload = null;
+      img.onerror = null;
+      reject(new Error("Saved visual took too long to load"));
+    }, timeoutMs);
+    img.onload = () => {
+      window.clearTimeout(timer);
+      resolve();
+    };
+    img.onerror = () => {
+      window.clearTimeout(timer);
+      reject(new Error("Saved visual file could not be displayed"));
+    };
+    img.decoding = "async";
+    img.src = url;
+  });
+}
 
 function titleCase(s: string) {
   return (s || "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -306,6 +337,7 @@ export function DocumentViewer({
   const [heroStatus, setHeroStatus] = useState<string | null>(doc?.hero_image_status ?? null);
   const [heroLoading, setHeroLoading] = useState(false);
   const [heroSigning, setHeroSigning] = useState(false);
+  const [heroImageLoading, setHeroImageLoading] = useState(false);
   const [heroError, setHeroError] = useState<string | null>(null);
   const [heroRetryNonce, setHeroRetryNonce] = useState(0);
   const heroImgErrorOnceRef = useRef(false);
@@ -530,8 +562,8 @@ export function DocumentViewer({
       setHeroStatus((prev) => (prev === newStatus ? prev : newStatus));
       setHeroPath((prev) => {
         if (prev === newPath) return prev;
-        // Path changed (or first arrival) — force re-sign
-        setHeroUrl(null);
+        // Path changed (or first arrival) — force re-sign, but keep any
+        // currently displayed image visible until the replacement preloads.
         heroImgErrorOnceRef.current = false;
         return newPath;
       });
@@ -601,27 +633,58 @@ export function DocumentViewer({
     let cancelled = false;
     if (!heroPath) {
       setHeroSigning(false);
+      setHeroImageLoading(false);
       return;
     }
     setHeroSigning(true);
+    setHeroImageLoading(true);
     setHeroError(null);
     (async () => {
-      try {
-        const url = await getSignedStorageUrl("venture-doc-images", heroPath, 3600);
-        if (!cancelled) setHeroUrl(url);
-      } catch (e) {
-        if (!cancelled) {
-          setHeroUrl(null);
-          setHeroError(e instanceof Error ? e.message : "Saved visual could not be loaded");
+      let lastError: unknown = null;
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          if (attempt > 0) invalidateSignedStorageUrl(HERO_BUCKET, heroPath);
+          const url = await getSignedStorageUrl(HERO_BUCKET, heroPath, 3600);
+          if (cancelled) return;
+          setHeroSigning(false);
+          await loadImage(url, attempt > 0 ? 20_000 : 15_000);
+          if (cancelled) return;
+          setHeroUrl(url);
+          setHeroError(null);
+          setHeroStatus((prev) => prev ?? "ready");
+          return;
+        } catch (e) {
+          lastError = e;
+          if (attempt < 2) await wait(650 * (attempt + 1));
         }
-      } finally {
-        if (!cancelled) setHeroSigning(false);
       }
-    })();
+      if (!cancelled) {
+        setHeroUrl(null);
+        setHeroError(lastError instanceof Error ? lastError.message : "Saved visual could not be loaded");
+      }
+    })().finally(() => {
+      if (!cancelled) {
+        setHeroSigning(false);
+        setHeroImageLoading(false);
+      }
+    });
     return () => {
       cancelled = true;
     };
   }, [heroPath, heroRetryNonce]);
+
+  const retryHeroLoad = () => {
+    if (heroPath) invalidateSignedStorageUrl(HERO_BUCKET, heroPath);
+    heroImgErrorOnceRef.current = false;
+    setHeroError(null);
+    setHeroRetryNonce((n) => n + 1);
+  };
+
+  useEffect(() => {
+    if (!heroPath || heroStatus !== "ready") return;
+    getSignedStorageUrl(HERO_BUCKET, heroPath, 3600).catch(() => {});
+    })();
+  }, [heroPath, heroStatus]);
 
   // Lazy hero image: auto-generate only once per (snapshot, document) when
   // there's no image AND no prior attempt. If status is already `generating`
@@ -652,9 +715,10 @@ export function DocumentViewer({
       });
       if (error) throw new Error(error.message);
       if (data?.path) {
+        setHeroStatus(data.status ?? "ready");
         setHeroPath(data.path);
-        setHeroUrl(null); // force re-sign
         heroImgErrorOnceRef.current = false;
+        qc.invalidateQueries({ queryKey: ["hub", "docs", doc.snapshot_id] });
         toast.success(quality === "hq" ? "HQ visual generated" : force ? "New visual generated" : "Visual generated");
       } else if (data?.skipped && data?.reason === "in_flight") {
         // Server-side job already running — don't error; the realtime/poll
@@ -674,6 +738,16 @@ export function DocumentViewer({
     navigator.clipboard.writeText(exportContent);
     toast.success("Copied");
   };
+
+  const hasStoredHero = Boolean(heroPath);
+  const heroBusy = heroLoading || heroSigning || heroImageLoading || heroStatus === "generating";
+  const heroLoadingLabel = heroStatus === "generating" && !heroLoading
+    ? "Painting visual… this usually takes 20–40 seconds"
+    : heroLoading
+      ? "Generating visual…"
+      : heroSigning
+        ? "Preparing saved visual…"
+        : "Loading saved visual…";
   const onDownloadMd = () => {
     const blob = new Blob([exportContent], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
@@ -873,6 +947,7 @@ export function DocumentViewer({
                       // before giving up.
                       if (!heroImgErrorOnceRef.current && heroPath) {
                         heroImgErrorOnceRef.current = true;
+                        invalidateSignedStorageUrl(HERO_BUCKET, heroPath);
                         setHeroUrl(null);
                         setHeroRetryNonce((n) => n + 1);
                         return;
@@ -883,24 +958,13 @@ export function DocumentViewer({
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-accent/20 p-6 text-center">
-                    {heroLoading || heroSigning || heroStatus === "generating" ? (
-                      <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>
-                          {heroStatus === "generating" && !heroLoading
-                            ? "Painting visual… this usually takes 20–40 seconds"
-                            : heroLoading
-                              ? "Generating visual…"
-                              : "Loading saved visual…"}
-                        </span>
-                      </div>
-                    ) : heroError ? (
+                    {heroError ? (
                       <div className="max-w-sm space-y-3">
                         <p className="text-sm font-medium text-foreground">Visual unavailable</p>
                         <p className="text-xs text-muted-foreground">{heroError}</p>
                         <div className="flex flex-wrap justify-center gap-2">
                           {heroPath && (
-                            <Button size="sm" variant="secondary" onClick={() => { heroImgErrorOnceRef.current = false; setHeroError(null); setHeroRetryNonce((n) => n + 1); }}>
+                            <Button size="sm" variant="secondary" onClick={retryHeroLoad}>
                               Retry load
                             </Button>
                           )}
@@ -909,6 +973,11 @@ export function DocumentViewer({
                             Regenerate visual
                           </Button>
                         </div>
+                      </div>
+                    ) : heroBusy || hasStoredHero ? (
+                      <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>{heroLoadingLabel}</span>
                       </div>
                     ) : (
                       <Button
