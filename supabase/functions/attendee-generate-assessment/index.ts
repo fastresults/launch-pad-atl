@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
       raw = raw.replace(/QUALITY_SCORE:\s*\d{1,3}\s*$/i, "").trim();
     }
     raw = stripCitations(raw);
-    if (!/^##\s*McKinsey/im.test(raw)) raw = `## McKinsey-Grade Assessment\n\n${raw}`;
+    if (!/^##\s*(Deep\s+Dive|McKinsey)/im.test(raw)) raw = `## Deep Dive\n\n${raw}`;
 
     await admin
       .from("attendee_deliverables")
