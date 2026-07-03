@@ -340,6 +340,7 @@ export function DocumentViewer({
   const [heroImageLoading, setHeroImageLoading] = useState(false);
   const [heroError, setHeroError] = useState<string | null>(null);
   const [heroRetryNonce, setHeroRetryNonce] = useState(0);
+  const heroDocKeyRef = useRef<string | null>(null);
   const heroImgErrorOnceRef = useRef(false);
 
   // Deep assessment (on-demand McKinsey-grade analysis)
@@ -536,11 +537,18 @@ export function DocumentViewer({
 
   // Reset hero state when the document changes
   useEffect(() => {
-    setHeroPath(doc?.hero_image_path ?? null);
+    const nextKey = doc?.snapshot_id && doc?.document_type ? `${doc.snapshot_id}:${doc.document_type}` : null;
+    const nextPath = doc?.hero_image_path ?? null;
+    const docChanged = heroDocKeyRef.current !== nextKey;
+    heroDocKeyRef.current = nextKey;
+    setHeroPath((prev) => {
+      if (prev !== nextPath) heroImgErrorOnceRef.current = false;
+      return nextPath;
+    });
     setHeroStatus(doc?.hero_image_status ?? null);
-    setHeroUrl(null);
+    if (docChanged || !nextPath) setHeroUrl(null);
     setHeroError(null);
-    heroImgErrorOnceRef.current = false;
+    if (docChanged) heroImgErrorOnceRef.current = false;
   }, [doc?.snapshot_id, doc?.document_type, doc?.hero_image_path, doc?.hero_image_status]);
 
   // Realtime + polling: keep heroPath/heroStatus in sync with the DB row while
