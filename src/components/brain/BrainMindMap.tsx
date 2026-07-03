@@ -97,10 +97,29 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
     enabled: !!userId,
   });
 
+  const { data: docTypes = [] } = useQuery({
+    queryKey: ["brain-graph", "doc-types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("venture_document_types")
+        .select("type, name")
+        .eq("active", true);
+      if (error) console.warn("[BrainMindMap] doc types query failed", error);
+      return data ?? [];
+    },
+  });
+
+  const docTypeNames = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const t of docTypes as any[]) if (t?.type && t?.name) m[t.type] = t.name;
+    return m;
+  }, [docTypes]);
+
   const graph: BrainGraph = useMemo(
-    () => buildBrainGraph({ company, memory: memory as any, notes: notes as any, docs: docs as any, messages: messages as any }),
-    [company, memory, notes, docs, messages],
+    () => buildBrainGraph({ company, memory: memory as any, notes: notes as any, docs: docs as any, messages: messages as any, docTypeNames }),
+    [company, memory, notes, docs, messages, docTypeNames],
   );
+
 
   // Adjacency for hover-highlight.
   const adjacency = useMemo(() => {

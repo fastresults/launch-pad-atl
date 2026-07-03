@@ -43,7 +43,7 @@ function memoryKindToCluster(kind: string): keyof typeof CLUSTER_META {
   return "memory";
 }
 
-function shortTitle(s: string | null | undefined, max = 40) {
+function shortTitle(s: string | null | undefined, max = 60) {
   const t = (s ?? "").replace(/\s+/g, " ").trim();
   if (!t) return "Untitled";
   return t.length > max ? t.slice(0, max - 1) + "…" : t;
@@ -65,10 +65,13 @@ export function buildBrainGraph(input: {
   notes: NoteRow[];
   docs: DocRow[];
   messages: MsgRow[];
+  docTypeNames?: Record<string, string>;
 }): BrainGraph {
   const nodes: BrainGraphNode[] = [];
   const links: BrainGraphLink[] = [];
   const seenClusters = new Set<string>();
+  const nameFor = (key: string | null | undefined) =>
+    (key && input.docTypeNames?.[key]) || humanizeDocType(key);
 
   const rootId = "root";
   nodes.push({
@@ -101,7 +104,7 @@ export function buildBrainGraph(input: {
   for (const d of input.docs) {
     const clusterId = ensureCluster("asset");
     const nid = `doc:${d.id}`;
-    const docLabel = humanizeDocType(d.document_type);
+    const docLabel = nameFor(d.document_type);
     nodes.push({
       id: nid,
       label: shortTitle(docLabel),
@@ -109,7 +112,7 @@ export function buildBrainGraph(input: {
       cluster: "asset",
       radius: d.deep_assessment_status === "complete" ? 6 : 4.5,
       color: CLUSTER_META.asset.color,
-      data: { docId: d.id, documentType: d.document_type },
+      data: { docId: d.id, documentType: d.document_type, name: docLabel },
     });
     links.push({ source: clusterId, target: nid });
 
@@ -118,11 +121,12 @@ export function buildBrainGraph(input: {
       const aId = `assess:${d.id}`;
       nodes.push({
         id: aId,
-        label: shortTitle(`${docLabel} — assessment`),
+        label: shortTitle(`${docLabel} — Assessment`),
         kind: "assessment",
         cluster: "assessment",
         radius: 4,
         color: CLUSTER_META.assessment.color,
+        data: { docId: d.id, name: `${docLabel} — Assessment` },
       });
       links.push({ source: aClusterId, target: aId });
       links.push({ source: nid, target: aId, strength: 0.8 });
@@ -133,33 +137,51 @@ export function buildBrainGraph(input: {
       const hId = `hero:${d.id}`;
       nodes.push({
         id: hId,
-        label: shortTitle(`${docLabel} — hero`),
+        label: shortTitle(`${docLabel} — Hero Image`),
         kind: "hero",
         cluster: "hero",
         radius: 3.5,
         color: CLUSTER_META.hero.color,
+        data: { docId: d.id, name: `${docLabel} — Hero Image` },
       });
       links.push({ source: hClusterId, target: hId });
       links.push({ source: nid, target: hId, strength: 0.6 });
     }
   }
 
-  // Memory rows (chunks that aren't already represented as assets by source_ref).
+  // Memory rows — dedupe generic chunk titles into one node with count.
   const assetRefs = new Set(input.docs.map((d) => (d.document_type || "").toString()));
+  type Grp = { kind: keyof typeof CLUSTER_META; label: string; count: number; ids: string[]; sourceRef: string | null };
+  const groups = new Map<string, Grp>();
   for (const m of input.memory) {
-    // Skip pure duplicates of asset chunks; still fold assessments/notes/brief into their clusters.
     const k = memoryKindToCluster(m.kind);
     if (k === "asset" && m.source_ref && assetRefs.has(m.source_ref)) continue;
-    const clusterId = ensureCluster(k);
-    const nid = `mem:${m.id}`;
+    // Prefer real deliverable name when source_ref matches a document_type.
+    const resolvedName =
+      (m.source_ref && input.docTypeNames?.[m.source_ref]) ||
+      m.title ||
+      humanizeDocType(m.kind);
+    const key = `${k}::${m.source_ref ?? ""}::${resolvedName}`;
+    const g = groups.get(key);
+    if (g) {
+      g.count += 1;
+      g.ids.push(m.id);
+    } else {
+      groups.set(key, { kind: k, label: resolvedName, count: 1, ids: [m.id], sourceRef: m.source_ref });
+    }
+  }
+  for (const [key, g] of groups) {
+    const clusterId = ensureCluster(g.kind);
+    const nid = `memg:${key}`;
+    const label = g.count > 1 ? `${g.label} (×${g.count})` : g.label;
     nodes.push({
       id: nid,
-      label: shortTitle(m.title || m.kind),
-      kind: k === "asset" ? "asset" : (k as BrainGraphNode["kind"]),
-      cluster: k,
-      radius: 3.5,
-      color: CLUSTER_META[k].color,
-      data: { memId: m.id, sourceRef: m.source_ref },
+      label: shortTitle(label),
+      kind: g.kind === "asset" ? "asset" : (g.kind as BrainGraphNode["kind"]),
+      cluster: g.kind,
+      radius: Math.min(6, 3.5 + Math.log2(g.count + 1) * 0.6),
+      color: CLUSTER_META[g.kind].color,
+      data: { memIds: g.ids, sourceRef: g.sourceRef, count: g.count, name: g.label },
     });
     links.push({ source: clusterId, target: nid });
   }
@@ -167,7 +189,7 @@ export function buildBrainGraph(input: {
   // Notes.
   for (const n of input.notes) {
     const clusterId = ensureCluster("note");
-    const title = shortTitle(n.content.replace(/[*#>_`~-]/g, " ").trim(), 42);
+    const title = shortTitle(n.content.replace(/[*#>_`~-]/g, " ").trim(), 60);
     const nid = `note:${n.id}`;
     nodes.push({
       id: nid,
@@ -188,7 +210,7 @@ export function buildBrainGraph(input: {
     const nid = `chat:${t.id}`;
     nodes.push({
       id: nid,
-      label: shortTitle(t.content, 44),
+      label: shortTitle(t.content, 60),
       kind: "chat",
       cluster: "chat",
       radius: 3,
@@ -202,3 +224,4 @@ export function buildBrainGraph(input: {
 }
 
 export const BRAIN_CLUSTER_META = CLUSTER_META;
+
