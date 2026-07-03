@@ -154,8 +154,9 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
     return out;
   }, [snapshotSources, attendeeDocs]);
 
-
+  const { data: docTypes = [] } = useQuery({
     queryKey: ["brain-graph", "doc-types"],
+
     queryFn: async () => {
       const { data, error } = await supabase
         .from("venture_document_types")
