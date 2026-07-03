@@ -1,26 +1,39 @@
-## Why the map looks empty
+## Problem
 
-Two things are happening, only one of them is a real bug:
+Nodes on the Mind Map show generic placeholders ("Startup brief", "Asset") instead of the actual output names. Two root causes:
 
-1. **Real bug — the assets never render.** `BrainMindMap` selects `deliverable_type_key` and `title` from `venture_documents`, but neither column exists on that table (the real column is `document_type`, and there is no `title` — titles are derived). PostgREST rejects the request, the query silently returns `[]`, and none of the 34 asset nodes are drawn.
-2. **Accurate but misleading copy.** For the currently-signed-in account, `founder_brain_memory` genuinely has 0 rows (memory has never been rebuilt for this snapshot). Even after fix #1 the "No memory yet…" empty state would keep showing unless we broaden the check to "no graph data of any kind" and word it around assets + memory.
+1. `venture_documents` nodes are labeled from a humanized `document_type` slug (e.g. `problem_solution` → "Problem Solution") instead of the real display name stored in `venture_document_types.name` ("Problem / Solution Brief").
+2. `founder_brain_memory` chunks are stored with repeated generic titles ("Startup brief" × N, "Venture — The Athletes Prayer Foundation" × N). Every chunk becomes its own node with the same label, producing the visible clusters of identical "Startup brief" nodes in your screenshot.
 
-## Changes
+## Fix
 
-### `src/components/brain/BrainMindMap.tsx`
-- Change the `venture_documents` select to columns that exist: `id, document_type, status, hero_image_status, deep_assessment_status`.
-- Surface Supabase errors in all four `queryFn`s with `console.warn` so a silently-failing PostgREST response never masquerades as "no data" again.
-- Reword the empty overlay to: "Nothing to map yet. Generate startup assets, then rebuild memory to enrich the graph." Keep the `filtered.nodes.length <= 1` trigger.
+### 1. Load real deliverable names
 
-### `src/lib/brain-graph.ts`
-- Update `DocRow` to `{ id; document_type?: string | null; status?: string | null; hero_image_status?: string | null; deep_assessment_status?: string | null }`.
-- In the docs loop, derive a human label from `document_type` (e.g. `value_proposition` → `Value Proposition`) via a small `humanize()` helper (`replace(/_/g,' ')` + title-case). Fall back to "Asset".
-- Use `document_type` (not `deliverable_type_key`) when computing `assetRefs` so memory rows tied to an asset are still de-duplicated.
-- Store `{ docId, documentType }` on the node's `data` for future drawer detail.
+In `BrainMindMap.tsx`, add a query for `venture_document_types` (`type`, `name`) and pass a `docTypeNames: Record<string,string>` map into `buildBrainGraph`.
 
-### No schema / RLS changes
-The RLS on `venture_documents` and `founder_brain_memory` is correct; this is purely a client column-name mismatch.
+### 2. Use real names for asset / assessment / hero nodes
 
-## Expected result
+In `src/lib/brain-graph.ts`:
+- `buildBrainGraph` accepts `docTypeNames`.
+- Asset label: `docTypeNames[d.document_type] ?? humanizeDocType(d.document_type)`.
+- Assessment label: `"{name} — Assessment"`.
+- Hero label: `"{name} — Hero Image"`.
+- Store the resolved name on `node.data.name` so the side drawer and "Ask about this" prompt use it too.
 
-After the fix, StartupLabs' snapshot renders ~35 nodes immediately: root → "Startup Assets" cluster → 34 asset nodes (plus any with hero/assessment sub-nodes). Once the user hits **Rebuild memory**, memory/note/assessment clusters populate too.
+### 3. Dedupe generic memory chunks
+
+Memory rows are chunk-level, so N chunks of one brief produce N identical nodes. Collapse them:
+- Group `memory` rows by `(kind, source_ref, title)`.
+- Emit one node per group; if `count > 1`, append `" (×N)"` to the label.
+- When `source_ref` matches a known `document_type`, resolve the label through `docTypeNames` too (so "Venture — …" chunks under `source_ref='problem_solution'` render as "Problem / Solution Brief — Memory").
+
+### 4. Note / chat labels
+
+Already derived from real content — no change, but bump `shortTitle` max from 40 → 60 so full names like "Problem / Solution Brief" aren't truncated.
+
+## Files touched
+
+- `src/lib/brain-graph.ts` — add `docTypeNames` param, real-name lookup, memory dedupe, longer label cap.
+- `src/components/brain/BrainMindMap.tsx` — new `venture_document_types` query, pass map into `buildBrainGraph`.
+
+No schema, RLS, or backend changes. Chat view untouched.
