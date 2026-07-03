@@ -1012,10 +1012,11 @@ export function DocumentViewer({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    <h3 className="text-base font-semibold text-foreground">Deep assessment</h3>
+                    <h3 className="text-base font-semibold text-foreground">{title} Deep Dive</h3>
                     <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
-                      McKinsey-grade
+                      Extended analysis
                     </span>
+
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Partner-grade pressure test: assumptions, sensitivities, risks, and 30/60/90-day actions.
