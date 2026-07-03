@@ -22,11 +22,13 @@ import {
   disconnectAccount,
 } from "@/lib/zernio.functions";
 import { Link2, Trash2 } from "lucide-react";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export default function AdminSocialAccounts() {
   const [params, setParams] = useSearchParams();
   const profileId = params.get("profileId") ?? "";
   const [platform, setPlatform] = useState<string>("twitter");
+  const confirm = useConfirm();
 
   const qc = useQueryClient();
 
@@ -194,8 +196,8 @@ export default function AdminSocialAccounts() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => {
-                        if (confirm("Disconnect this account?")) disconnectMut.mutate(id);
+                      onClick={async () => {
+                        if (await confirm({ title: "Disconnect this account?", destructive: true, confirmText: "Disconnect" })) disconnectMut.mutate(id);
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
