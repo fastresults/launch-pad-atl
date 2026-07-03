@@ -52,13 +52,13 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
   const [confirmState, setConfirmState] = useState<
     (ConfirmOptions & { open: boolean }) | null
   >(null);
-  const confirmResolver = useRef<(v: boolean) => void>();
+  const confirmResolver = useRef<((v: boolean) => void) | undefined>(undefined);
 
   const [promptState, setPromptState] = useState<
     (PromptOptions & { open: boolean }) | null
   >(null);
   const [promptValue, setPromptValue] = useState("");
-  const promptResolver = useRef<(v: string | null) => void>();
+  const promptResolver = useRef<((v: string | null) => void) | undefined>(undefined);
 
   const confirm = useCallback((opts: ConfirmOptions) => {
     return new Promise<boolean>((resolve) => {
