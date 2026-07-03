@@ -113,7 +113,7 @@ export function AccessModeDialog({
                 ) : m.id === "webinar" ? (
                   <Clock className="size-3" />
                 ) : (
-                  <User className="size-3" />
+                  <Wand2 className="size-3" />
                 )}
                 {m.format}
               </p>
