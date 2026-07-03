@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Users, Video, User, ArrowRight, MapPin, Clock, Sparkles } from "lucide-react";
+import { Users, Video, Wand2, ArrowRight, MapPin, Clock, Sparkles } from "lucide-react";
 import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
 
 type Mode = {
