@@ -1,59 +1,43 @@
-## Root cause
+## Goal
 
-The Second Brain was wired to an older asset table. The Athletes Prayer Foundation has **33 completed assets in `venture_documents`** (scoped to that snapshot), but **0 rows in `attendee_deliverables`** — which is the only place the brain looks.
+When a user opens an asset modal (or triggers a deep-dive), the two sections should be labeled after the asset itself:
 
-Result:
-- `getBrainStatus` shows `Assets 0/0` because it counts `attendee_deliverables` filtered by `user_id`.
-- `brain-reindex` skips every real deliverable and only embeds the venture snapshot JSON + brief. That JSON gets chunked into ~102 pieces, which is why the memory shows 106 chunks (102 "venture" + 4 "brief") with nothing actually useful in them.
-- Chat answers therefore have no access to the executive summary, market analysis, roadmap, brand strategy, etc.
+- Main body → **"{Asset name} Summary"** (replaces generic "Executive Summary")
+- On-demand extended analysis → **"{Asset name} Deep Dive"** (replaces every "McKinsey-Grade Assessment" / "Deep assessment" label the user sees)
 
-## Fix
+No changes to model behavior, prompts' analytical rigor, DB columns, or edge-function contracts — this is a labeling / presentation pass.
 
-Teach both the status counter and the reindex job to read `venture_documents` scoped to the current snapshot, in addition to the legacy `attendee_deliverables` path (so pre-migration accounts keep working).
+## Changes
 
-### 1. `src/lib/brain.functions.ts` — `getBrainStatus`
+### 1. `src/components/hub/DocumentViewer.tsx` (primary modal)
+- Deep-dive card header (line ~997): rename `Deep assessment` → `{title} Deep Dive`; drop the "McKinsey-grade" chip (replace with a neutral "Extended analysis" chip or remove).
+- Buttons: `Run deep assessment` → `Run deep dive`; `Regenerate` stays; loading text `Analyzing…` stays; toasts `Deep assessment ready/failed` → `Deep dive ready/failed`.
+- H2 auto-badge (line ~133): match `mckinsey-grade assessment` **or** `deep dive` heading and render a neutral "Deep Dive" pill.
+- Export markdown (line ~325): emit `## {Title} Deep Dive` instead of `## McKinsey-Grade Assessment`; strip either heading variant from the incoming `extra`.
+- If the doc's rendered content starts with an `Executive Summary` H1/H2, rewrite it in the components layer to `{title} Summary` (simple heading interceptor — no content mutation stored).
 
-When a `snapshotId` is provided, count from `venture_documents`:
-- `totalAssets` = rows where `snapshot_id = snapshotId`
-- `generated` = rows where `status = 'complete'` AND `content` is non-empty
-- `assessed` = rows where `deep_assessment_status = 'complete'`
-- `heroReady` = rows where `hero_image_status = 'ready'`
+### 2. `src/routes/_authenticated/dashboard/workflow.$key.tsx`
+- Line 271 heading: `McKinsey-grade deep assessment` → `{deliverableTitle} Deep Dive`.
+- Buttons (lines 282–283): `Running deep assessment…` / `Re-run deep assessment` / `Run deep assessment` → `Running deep dive…` / `Re-run deep dive` / `Run deep dive`.
+- Toast (line 81): `Deep assessment ready` → `Deep dive ready`.
 
-Fall back to the current `attendee_deliverables` behavior when `snapshotId` is null (legacy accounts). Memory-chunk and notes counts stay as-is.
+### 3. Edge function prompt headings (so freshly generated markdown matches the new labels; older stored content is normalized by the viewer regex above)
+- `supabase/functions/venture-generate-assessment/index.ts`
+  - System prompt: change the required output heading from `## McKinsey-Grade Assessment` to `## Deep Dive` (the client prepends the asset name for display).
+  - Fallback prepend (line 305) + tone strings: swap "McKinsey-grade / deep assessment" wording for "deep dive" in user-facing strings only. Keep internal analytical instructions unchanged so quality is preserved.
+- `supabase/functions/attendee-generate-assessment/index.ts`: same two edits (system prompt heading + fallback prepend).
+- Leave `_shared/deliverable-prompts.ts` "Executive Summary" section headings alone — the viewer relabels the H1/H2 on render, and downstream roadmap logic still keys off "Executive Summary" text.
 
-### 2. `supabase/functions/brain-reindex/index.ts`
-
-When `snapshotId` is set, additionally fetch:
-```
-venture_documents
-  .select("document_type, content, deep_assessment, intake_answers, hero_image_prompt, metadata")
-  .eq("snapshot_id", snapshotId)
-  .eq("status", "complete")
-```
-
-For each row, push two `Source` entries when applicable:
-- `kind: "deliverable"`, `source_ref: document_type`, `title: document_type`, `content: content`
-- `kind: "assessment"`, `source_ref: document_type`, when `deep_assessment` is non-empty
-
-Include `intake_answers` (if present) at the top of the deliverable content so budget/pro-forma answers are searchable. Skip the existing venture-snapshot JSON dump when there are ≥1 real deliverables (it's noise — the deliverables already summarize the venture in prose), or at minimum shrink it to the top-level fields only. This alone drops the misleading "venture" chunk count from ~102 to a handful.
-
-Keep the existing `attendee_deliverables` read for backward compatibility, but de-dupe by `source_ref` so nothing is embedded twice.
-
-### 3. Rebuild memory for the affected venture
-
-After deploy, the user clicks **Rebuild memory** on the Brain page. The new job:
-- Wipes the 106 stale chunks for `snapshot_id = a430693d-…`
-- Re-embeds the 33 venture documents + assessments + brief + notes
-- Status card then shows `Assets 33/33`, real hero-image and assessment counts, and chat can cite the actual deliverables.
-
-## Verification
-
-- `Assets` stat on `/dashboard/brain` reads `33/33` (or similar) for Athletes Prayer Foundation.
-- Asking "summarize my executive summary" or "what does my market analysis say?" returns grounded answers with citations to `deliverable` / `assessment` chunks, not generic snapshot text.
-- Switching ventures still isolates memory (previous fix intact).
+### 4. Copy touch-ups (user-visible only)
+- `src/lib/chatbot-knowledge.ts` and `supabase/functions/venture-chatbot/knowledge.ts`: replace the "McKinsey-grade assessments" section title and body with "Deep dives — extended analysis attached to every asset". Keep the description of what it does.
 
 ## Out of scope
+- No DB column renames (`deep_assessment*` stays).
+- No changes to Second Brain, Founder Playbook logic, or asset generation pipelines.
+- Roadmap/generation prompts that reference "Executive Summary" as an internal anchor stay intact.
 
-- No schema changes; both tables already exist.
-- No migration of legacy `attendee_deliverables` rows.
-- Chunking, embedding model, and RLS remain unchanged.
+## Verification
+- Open any asset modal → header of secondary card reads `{Asset name} Deep Dive`; body H1 reads `{Asset name} Summary`.
+- Run a fresh deep dive → new markdown renders under `{Asset name} Deep Dive`; export .md contains the same heading.
+- Open a previously generated asset → viewer rewrites the legacy `McKinsey-Grade Assessment` heading to `{Asset name} Deep Dive`.
+- Workflow route (`/dashboard/workflow/:key`) shows the same relabeling and toast copy.
