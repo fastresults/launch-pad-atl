@@ -230,7 +230,7 @@ export default function BrainPage() {
   }, [jobId, qc, userId, snapshotId]);
 
   const rebuild = useMutation({
-    mutationFn: rebuildBrainMemory,
+    mutationFn: () => rebuildBrainMemory(snapshotId),
     onSuccess: ({ jobId: id }) => {
       setJobId(id);
       setJob({
@@ -244,28 +244,29 @@ export default function BrainPage() {
   });
 
   const clearChat = useMutation({
-    mutationFn: () => clearBrainHistory(userId!),
+    mutationFn: () => clearBrainHistory(userId!, snapshotId),
     onSuccess: () => {
-      qc.setQueryData(["brain", "history", userId], []);
+      qc.setQueryData(["brain", "history", userId, snapshotId], []);
       toast.success("Cleared");
     },
   });
 
   const purge = useMutation({
-    mutationFn: () => purgeGeneratedAssets(userId!),
+    mutationFn: () => purgeGeneratedAssets(userId!, snapshotId),
     onSuccess: (res) => {
       toast.success(
         `Cleared ${res.deliverables_deleted} old assets and ${res.memory_chunks_deleted} memory chunks. Regenerate from Workflow, then rebuild memory.`,
       );
-      qc.invalidateQueries({ queryKey: ["brain", "status", userId] });
-      qc.invalidateQueries({ queryKey: ["brain", "mismatch", userId] });
+      qc.invalidateQueries({ queryKey: ["brain", "status", userId, snapshotId] });
+      qc.invalidateQueries({ queryKey: ["brain", "mismatch", userId, snapshotId] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Reset failed"),
   });
 
   function confirmPurge() {
+    const scope = currentVenture ? `“${currentVenture.company_name}”` : "this venture";
     const ok = window.confirm(
-      "This wipes ALL generated startup assets and Second Brain memory for your account so they can be regenerated against your current venture. Continue?",
+      `This wipes ALL generated startup assets and Second Brain memory for ${scope} so they can be regenerated. Continue?`,
     );
     if (ok) purge.mutate();
   }
