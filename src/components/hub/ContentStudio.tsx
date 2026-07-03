@@ -23,6 +23,7 @@ import {
 import { AssetPreviewDialog, type PreviewableAsset } from "@/components/hub/social/AssetPreviewDialog";
 import { RegenerateAssetDialog } from "@/components/hub/social/RegenerateAssetDialog";
 import { AssetImage } from "@/components/hub/social/AssetImage";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 const ART_DIRECTIONS = [
   { id: "editorial", label: "Editorial" },
