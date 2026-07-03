@@ -12,14 +12,13 @@ export type BrainMessage = {
 export type BrainVenture = {
   id: string;
   company_name: string | null;
-  one_liner: string | null;
   updated_at: string | null;
 };
 
 export async function listBrainVentures(userId: string): Promise<BrainVenture[]> {
   const { data, error } = await supabase
     .from("venture_snapshots")
-    .select("id, company_name, one_liner, updated_at")
+    .select("id, company_name, updated_at")
     .eq("user_id", userId)
     .order("updated_at", { ascending: false });
   if (error) throw new Error(error.message);
