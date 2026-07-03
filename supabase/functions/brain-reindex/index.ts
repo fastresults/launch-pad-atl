@@ -49,8 +49,10 @@ Deno.serve(async (req) => {
 
 // deno-lint-ignore no-explicit-any
 async function runJob(admin: any, userId: string, jobId: string) {
-  const touch = (patch: Record<string, unknown>) =>
-    admin.from("brain_indexing_jobs").update(patch).eq("id", jobId);
+  const touch = async (patch: Record<string, unknown>) => {
+    const { error } = await admin.from("brain_indexing_jobs").update(patch).eq("id", jobId);
+    if (error) console.error("brain-reindex job update failed", error.message);
+  };
 
   try {
     await touch({ status: "running", started_at: new Date().toISOString() });
@@ -165,7 +167,7 @@ async function runJob(admin: any, userId: string, jobId: string) {
         console.error("brain-reindex batch failed", start, msg);
       }
 
-      await touch({ embedded_chunks: embedded, failed_chunks: failed, error_message: firstError }).catch(() => {});
+      await touch({ embedded_chunks: embedded, failed_chunks: failed, error_message: firstError });
     }
 
     await touch({
