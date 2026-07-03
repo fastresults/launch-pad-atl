@@ -103,7 +103,7 @@ function Hero() {
             onClick={() => setModesOpen(true)}
             className="text-sm text-white/80 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white hover:decoration-white sm:text-base"
           >
-            Prefer a webinar or 1:1 with Adam?
+            Prefer to do it live — or have Adam's team build it for you?
           </button>
         </div>
         <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
