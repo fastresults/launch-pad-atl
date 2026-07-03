@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { TestimonialForm } from "@/components/admin/TestimonialForm";
 
 export default function AdminTestimonialsPage() {
+  const confirm = useConfirm();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<TestimonialWithUrls | null | undefined>(undefined);
 
