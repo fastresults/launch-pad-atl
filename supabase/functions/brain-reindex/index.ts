@@ -3,13 +3,13 @@
 // with a queryable progress row in `brain_indexing_jobs`.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { chunkText, embedText, toVectorLiteral } from "../_shared/brain-embed.ts";
+import { chunkText, embedTexts, toVectorLiteral } from "../_shared/brain-embed.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const CONCURRENCY = 4;
+const EMBEDDING_BATCH_SIZE = 8;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -94,14 +94,12 @@ async function runJob(admin: any, userId: string, jobId: string) {
     for (const d of delivs ?? []) {
       // deno-lint-ignore no-explicit-any
       const c: any = (d as any).content_current;
-      if (c && (c.title || c.summary || (c.sections ?? []).length)) {
-        const md = [
-          c.title ? `# ${c.title}` : "",
-          c.summary ?? "",
-          ...(c.sections ?? []).map((s: { heading?: string; body_markdown?: string }) => `## ${s.heading ?? ""}\n${s.body_markdown ?? ""}`),
-          (c.action_items ?? []).length ? `## Action items\n${(c.action_items ?? []).map((a: string) => `- ${a}`).join("\n")}` : "",
-        ].filter(Boolean).join("\n\n");
-        sources.push({ kind: "deliverable", source_ref: (d as { deliverable_key: string }).deliverable_key, title: c.title ?? (d as { deliverable_key: string }).deliverable_key, content: md });
+      if (c && typeof c === "object" && Object.keys(c).length) {
+        const key = (d as { deliverable_key: string }).deliverable_key;
+        const md = deliverableToMarkdown(c, key);
+        if (md.trim()) {
+          sources.push({ kind: "deliverable", source_ref: key, title: c.title ?? key, content: md });
+        }
       }
       // deno-lint-ignore no-explicit-any
       const assess = (d as any).deep_assessment;
@@ -144,40 +142,31 @@ async function runJob(admin: any, userId: string, jobId: string) {
     let failed = 0;
     let firstError: string | null = null;
 
-    let cursor = 0;
-    async function worker() {
-      while (true) {
-        const idx = cursor++;
-        if (idx >= chunkQueue.length) return;
-        const job = chunkQueue[idx];
-        try {
-          const vec = await embedText(`${job.source.title}\n\n${job.text}`);
-          const { error: insErr } = await admin.from("founder_brain_memory").insert({
-            user_id: userId,
-            kind: job.source.kind,
-            source_ref: job.source.source_ref,
-            title: job.source.title,
-            content: job.text,
-            embedding: toVectorLiteral(vec),
-            metadata: { chunk_index: job.chunkIndex, chunk_total: job.chunkTotal },
-          });
-          if (insErr) throw new Error(`insert: ${insErr.message}`);
-          embedded++;
-        } catch (e) {
-          failed++;
-          const msg = e instanceof Error ? e.message : String(e);
-          if (!firstError) firstError = msg;
-          console.error("brain-reindex chunk failed", job.source.kind, job.source.source_ref, msg);
-        }
-
-        // Periodically push progress; every 3 chunks is plenty for the UI.
-        if ((embedded + failed) % 3 === 0 || (embedded + failed) === chunkQueue.length) {
-          await touch({ embedded_chunks: embedded, failed_chunks: failed, error_message: firstError }).catch(() => {});
-        }
+    for (let start = 0; start < chunkQueue.length; start += EMBEDDING_BATCH_SIZE) {
+      const batch = chunkQueue.slice(start, start + EMBEDDING_BATCH_SIZE);
+      try {
+        const vectors = await embedTexts(batch.map((job) => `${job.source.title}\n\n${job.text}`));
+        const rows = batch.map((job, i) => ({
+          user_id: userId,
+          kind: job.source.kind,
+          source_ref: job.source.source_ref,
+          title: job.source.title,
+          content: job.text,
+          embedding: toVectorLiteral(vectors[i]),
+          metadata: { chunk_index: job.chunkIndex, chunk_total: job.chunkTotal },
+        }));
+        const { error: insErr } = await admin.from("founder_brain_memory").insert(rows);
+        if (insErr) throw new Error(`insert: ${insErr.message}`);
+        embedded += rows.length;
+      } catch (e) {
+        failed += batch.length;
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!firstError) firstError = msg;
+        console.error("brain-reindex batch failed", start, msg);
       }
-    }
 
-    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, chunkQueue.length) }, () => worker()));
+      await touch({ embedded_chunks: embedded, failed_chunks: failed, error_message: firstError }).catch(() => {});
+    }
 
     await touch({
       embedded_chunks: embedded,
@@ -194,6 +183,41 @@ async function runJob(admin: any, userId: string, jobId: string) {
       .update({ status: "failed", error_message: msg, finished_at: new Date().toISOString() })
       .eq("id", jobId)
       .then(() => {});
+  }
+}
+
+// deno-lint-ignore no-explicit-any
+function deliverableToMarkdown(content: any, fallbackTitle: string): string {
+  const sections = Array.isArray(content.sections) ? content.sections : [];
+  const actionItems = Array.isArray(content.action_items) ? content.action_items : [];
+  const parts = [
+    content.title ? `# ${String(content.title)}` : `# ${fallbackTitle}`,
+    content.summary ? String(content.summary) : "",
+    ...sections.map((s: { heading?: unknown; body_markdown?: unknown; body?: unknown; content?: unknown }) => {
+      const heading = s.heading ? `## ${String(s.heading)}` : "## Section";
+      const body = s.body_markdown ?? s.body ?? s.content ?? "";
+      return `${heading}\n${stringifyContent(body)}`;
+    }),
+    actionItems.length ? `## Action items\n${actionItems.map((a: unknown) => `- ${stringifyContent(a)}`).join("\n")}` : "",
+  ].filter((part) => String(part).trim());
+
+  const known = new Set(["title", "summary", "sections", "action_items"]);
+  const extra = Object.entries(content)
+    .filter(([key, value]) => !known.has(key) && value !== null && value !== undefined && String(stringifyContent(value)).trim())
+    .map(([key, value]) => `## ${key.replace(/_/g, " ")}\n${stringifyContent(value)}`);
+
+  return [...parts, ...extra].join("\n\n");
+}
+
+function stringifyContent(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) return value.map(stringifyContent).filter(Boolean).join("\n");
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
   }
 }
 
