@@ -1,42 +1,52 @@
-## Problem found
+## Goal
 
-The repeated **Stale content detected** warning is caused by flawed detection logic, not necessarily stale data.
+Establish a global rule: **no native `window.confirm`, `window.alert`, or `window.prompt`** anywhere in the app. All confirmations, alerts, and prompts use in-app shadcn modals (`AlertDialog` / `Dialog`) so they're themed, accessible, and consistent — no more OS-chrome popups like the one on `/dashboard/brain`.
 
-Current behavior:
-- `detectVentureMismatch()` loads memory rows for the selected startup.
-- It checks whether most asset memory titles include the current startup name.
-- Rebuilt memory titles are normal output/type names like `budget_pro_forma`, `paid_ads_starter_pack`, `brand_messaging`, etc.
-- Those titles do not include `StartupLabs`, so the detector falsely marks fresh rebuilt memory as stale every time.
+## Approach
 
-There is also a secondary reset mismatch:
-- The reset RPC only deletes startup-scoped Second Brain rows when a startup is selected.
-- It does not clear/rebuild the current `venture_documents` rows, so the UI text saying “Reset assets & memory” overstates what is actually being reset.
+1. **Add a reusable confirm helper** — `src/components/ui/confirm-dialog.tsx` exposing:
+   - `<ConfirmDialog>` component (controlled), and
+   - `useConfirm()` hook returning an async `confirm({ title, description, confirmText, cancelText, destructive })` that resolves to `boolean`.
+   
+   Backed by shadcn `AlertDialog`, mounted once via a provider in `src/App.tsx`. This lets us replace `if (window.confirm(...))` call sites with `if (await confirm({...}))` — minimal diff, same control flow.
 
-## Plan
+2. **Add a reusable prompt helper** — same file, `usePrompt()` returning async `prompt({ title, description, label, placeholder, defaultValue, confirmText })` resolving to `string | null`. Backed by shadcn `Dialog` with an `Input`. Replaces the one `window.prompt` in `brain.tsx` (add-note).
 
-1. **Replace the title-name heuristic**
-   - Remove the rule that says memory is stale when asset titles do not contain the current startup name.
-   - Use reliable scope checks instead: memory is valid when `founder_brain_memory.snapshot_id` matches the selected startup.
-   - Treat only unscoped legacy memory (`snapshot_id is null`) as potentially stale, not correctly scoped rows.
+3. **Replace every call site** found in the audit:
 
-2. **Make stale detection evidence-based**
-   - Update `detectVentureMismatch()` to return a warning only when there are legacy/unscoped asset or assessment memory rows for the user while a current startup is selected.
-   - Show examples from those legacy rows only.
-   - Do not flag current `snapshot_id` rows whose titles are framework/output names.
+   Confirms (17):
+   - `src/routes/_authenticated/dashboard/brain.tsx` (2: reset brain, clear chat)
+   - `src/routes/_authenticated/dashboard/index.tsx` (1: `alert()` → toast, since it's informational, not confirm)
+   - `src/routes/unsubscribe.tsx` (local `confirm()` function — leave, it's not the browser API; just verify)
+   - `src/components/hub/social/SocialAutopilot.tsx` (2)
+   - `src/components/hub/social/AssetPreviewDialog.tsx` (1)
+   - `src/components/hub/ContentStudio.tsx` (2)
+   - `src/components/hub/BrandStudio.tsx` (1)
+   - `src/components/media/MediaHub.tsx` (1)
+   - `src/routes/_authenticated/_admin/admin.social.accounts.tsx` (1)
+   - `src/routes/_authenticated/_admin/admin.social.tsx` (1)
+   - `src/routes/_authenticated/_admin/admin.social.posts.tsx` (1)
+   - `src/routes/_authenticated/_admin/admin.social.setup.creative.$assetType.tsx` (1)
+   - `src/routes/_authenticated/_admin/admin.testimonials.tsx` (1)
+   - `src/routes/_authenticated/_admin/admin.cohorts.tsx` (1)
+   - `src/routes/_authenticated/_admin/admin.decks.$slug.tsx` (1)
 
-3. **Fix rebuild cleanup semantics**
-   - Confirm `brain-reindex` wipes and rewrites the selected startup’s auto-derived memory before indexing.
-   - Keep that behavior, but ensure the frontend invalidates all affected queries after a rebuild finishes: status, mismatch, graph memory, and graph docs.
+   Prompt (1):
+   - `src/routes/_authenticated/dashboard/brain.tsx` (add note)
 
-4. **Clarify/reset behavior**
-   - Update the reset success copy so it says what it actually did: reset Second Brain memory/chat/notes/jobs for the current startup.
-   - Avoid implying generated startup assets were deleted unless the backend really deleted them.
+   Alert (1):
+   - `src/routes/_authenticated/dashboard/index.tsx` "Instructor notified" → replace with `toast.success()` (already using sonner elsewhere).
 
-5. **Optional backend hardening if needed**
-   - Add or update a database function so reset can also remove legacy unscoped memory for the user when working inside a selected startup, because legacy rows are exactly what can pollute retrieval.
-   - Keep current-startup data isolated by `snapshot_id`.
+4. **Lint guard** — add an ESLint rule `no-restricted-globals` (or `no-alert`) to eslint.config.js so future `alert`/`confirm`/`prompt` usage fails the build, enforcing the global rule.
 
-6. **Validation**
-   - Check live database counts before/after logic: selected startup memory rows, legacy unscoped rows, and example titles.
-   - Verify the warning disappears for fresh `StartupLabs` memory even when titles are `budget_pro_forma`, `paid_ads_starter_pack`, etc.
-   - Verify warnings still appear only if genuinely unscoped legacy memory exists.
+## Technical details
+
+- Provider pattern: `<ConfirmProvider>` renders a single `AlertDialog` and exposes an imperative `confirm()` via context; hook subscribes and returns a promise that resolves on OK/Cancel.
+- Destructive variant styles the confirm button with `bg-destructive`.
+- Prompt helper uses `Dialog` + `Input` + Enter-to-submit, Esc-to-cancel.
+- All call sites become `async` where needed; most already are inside async mutation handlers.
+
+## Out of scope
+
+- Redesigning any existing in-app `AlertDialog` flows (e.g., archive/delete on hub cards) — they already comply.
+- Toast/notification changes beyond the one `alert()` conversion in dashboard index.
