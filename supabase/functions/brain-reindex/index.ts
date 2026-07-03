@@ -191,6 +191,7 @@ async function runJob(admin: any, userId: string, jobId: string, snapshotId: str
         const vectors = await embedTexts(batch.map((job) => `${job.source.title}\n\n${job.text}`));
         const rows = batch.map((job, i) => ({
           user_id: userId,
+          snapshot_id: snapshotId,
           kind: job.source.kind,
           source_ref: job.source.source_ref,
           title: job.source.title,
