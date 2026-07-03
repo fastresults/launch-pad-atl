@@ -23,9 +23,22 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
+    const body = await req.json().catch(() => ({}));
+    const snapshotId: string | null = typeof body?.snapshotId === "string" && body.snapshotId ? body.snapshotId : null;
+
+    if (snapshotId) {
+      // Confirm the venture belongs to this user before we scope work to it.
+      const { data: snap } = await admin
+        .from("venture_snapshots")
+        .select("id, user_id")
+        .eq("id", snapshotId)
+        .maybeSingle();
+      if (!snap || snap.user_id !== userId) return json({ error: "Venture not found" }, 404);
+    }
+
     const { data: job, error: jobErr } = await admin
       .from("brain_indexing_jobs")
-      .insert({ user_id: userId, status: "queued" })
+      .insert({ user_id: userId, snapshot_id: snapshotId, status: "queued" })
       .select("id")
       .single();
     if (jobErr || !job) return json({ error: jobErr?.message ?? "Job create failed" }, 500);
