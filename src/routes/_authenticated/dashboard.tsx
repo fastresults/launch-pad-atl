@@ -10,7 +10,7 @@ import {
   SidebarFooter, SidebarHeader, useSidebar,
 } from "@/components/ui/sidebar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Home, Calendar, ClipboardList, ListChecks, FolderOpen, User, Sparkles, Info } from "lucide-react";
+import { Home, Calendar, ClipboardList, ListChecks, FolderOpen, User, Sparkles, Info, Brain } from "lucide-react";
 import { listCohorts } from "@/lib/cohorts.functions";
 import { getWorkshopMode } from "@/lib/workshop-mode";
 import { getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
@@ -92,6 +92,13 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       label: "Today",
       tooltip: "Your daily check-in. Before workshop day you'll see a countdown and venue; during the workshop, the live block in session; after, your 90-day progress and the next action waiting on you.",
       icon: Home,
+    },
+    {
+      key: "brain" as any,
+      to: "/dashboard/brain",
+      label: "Second Brain",
+      tooltip: "Your voice-and-text command center. Ask anything about your startup, save notes, and rebuild memory as new startup assets are generated. Everything is grounded in your own brief, assets, and assessments.",
+      icon: Brain,
     },
     {
       key: "workshop",

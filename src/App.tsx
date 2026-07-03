@@ -42,6 +42,7 @@ const DashboardProfile = lazy(() => import("@/routes/_authenticated/dashboard/pr
 const DashboardWorkflow = lazy(() => import("@/routes/_authenticated/dashboard/workflow"));
 const DashboardWorkflowKey = lazy(() => import("@/routes/_authenticated/dashboard/workflow.$key"));
 const DashboardLegalSetup = lazy(() => import("@/routes/_authenticated/dashboard/legal-setup"));
+const DashboardBrain = lazy(() => import("@/routes/_authenticated/dashboard/brain"));
 const HubLibrary = lazy(() => import("@/routes/_authenticated/dashboard/hub.index"));
 const HubNew = lazy(() => import("@/routes/_authenticated/dashboard/hub.new"));
 const HubSnapshot = lazy(() => import("@/routes/_authenticated/dashboard/hub.$snapshotId"));
@@ -137,6 +138,7 @@ export default function App() {
             <Route path="workflow" element={<DashboardWorkflow />} />
             <Route path="workflow/:key" element={<DashboardWorkflowKey />} />
             <Route path="legal-setup" element={<DashboardLegalSetup />} />
+            <Route path="brain" element={<DashboardBrain />} />
             <Route path="hub" element={<HubLibrary />} />
             <Route path="hub/new" element={<HubNew />} />
             <Route path="hub/:snapshotId" element={<HubSnapshot />} />

@@ -1299,6 +1299,102 @@ export type Database = {
         }
         Relationships: []
       }
+      founder_brain_memory: {
+        Row: {
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          kind: string
+          metadata: Json
+          source_ref: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          kind: string
+          metadata?: Json
+          source_ref?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          kind?: string
+          metadata?: Json
+          source_ref?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      founder_brain_messages: {
+        Row: {
+          citations: Json
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          citations?: Json
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          citations?: Json
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      founder_brain_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          source: string
+          tags: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          source?: string
+          tags?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          source?: string
+          tags?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       inquiries: {
         Row: {
           assigned_to: string | null
@@ -3144,6 +3240,21 @@ export type Database = {
           stage_n: number
           tier_required: string
           user_can_trigger: boolean
+        }[]
+      }
+      match_founder_brain_memory: {
+        Args: {
+          _user_id: string
+          match_count?: number
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          id: string
+          kind: string
+          similarity: number
+          source_ref: string
+          title: string
         }[]
       }
       move_to_dlq: {
