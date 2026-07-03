@@ -193,13 +193,14 @@ export default function BrainPage() {
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
-    void getLatestBrainJob(userId).then((j) => {
+    void getLatestBrainJob(userId, snapshotId).then((j) => {
       if (cancelled) return;
       setJob(j);
       if (j && (j.status === "queued" || j.status === "running")) setJobId(j.id);
+      else setJobId(null);
     });
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [userId, snapshotId]);
 
   // Poll the active job.
   useEffect(() => {
