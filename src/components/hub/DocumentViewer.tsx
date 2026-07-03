@@ -303,10 +303,12 @@ export function DocumentViewer({
   const [tocOpen, setTocOpen] = useState(false);
   const [heroUrl, setHeroUrl] = useState<string | null>(null);
   const [heroPath, setHeroPath] = useState<string | null>(doc?.hero_image_path ?? null);
+  const [heroStatus, setHeroStatus] = useState<string | null>(doc?.hero_image_status ?? null);
   const [heroLoading, setHeroLoading] = useState(false);
   const [heroSigning, setHeroSigning] = useState(false);
   const [heroError, setHeroError] = useState<string | null>(null);
   const [heroRetryNonce, setHeroRetryNonce] = useState(0);
+  const heroImgErrorOnceRef = useRef(false);
 
   // Deep assessment (on-demand McKinsey-grade analysis)
   const [assessment, setAssessment] = useState<string | null>(doc?.deep_assessment ?? null);
@@ -503,9 +505,96 @@ export function DocumentViewer({
   // Reset hero state when the document changes
   useEffect(() => {
     setHeroPath(doc?.hero_image_path ?? null);
+    setHeroStatus(doc?.hero_image_status ?? null);
     setHeroUrl(null);
     setHeroError(null);
-  }, [doc?.snapshot_id, doc?.document_type, doc?.hero_image_path]);
+    heroImgErrorOnceRef.current = false;
+  }, [doc?.snapshot_id, doc?.document_type, doc?.hero_image_path, doc?.hero_image_status]);
+
+  // Realtime + polling: keep heroPath/heroStatus in sync with the DB row while
+  // the modal is open. Batch pipelines and prior modal sessions can leave the
+  // row in `generating` state; without this the modal would sit forever with
+  // no image.
+  useEffect(() => {
+    if (!open || !doc?.snapshot_id || !doc?.document_type) return;
+    const snapshotId = doc.snapshot_id;
+    const documentType = doc.document_type;
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+    let pollCount = 0;
+
+    const applyRow = (row: { hero_image_path?: string | null; hero_image_status?: string | null } | null) => {
+      if (!row || cancelled) return;
+      const newPath = row.hero_image_path ?? null;
+      const newStatus = row.hero_image_status ?? null;
+      setHeroStatus((prev) => (prev === newStatus ? prev : newStatus));
+      setHeroPath((prev) => {
+        if (prev === newPath) return prev;
+        // Path changed (or first arrival) — force re-sign
+        setHeroUrl(null);
+        heroImgErrorOnceRef.current = false;
+        return newPath;
+      });
+    };
+
+    const fetchOnce = async () => {
+      const { data } = await supabase
+        .from("venture_documents")
+        .select("hero_image_path, hero_image_status")
+        .eq("snapshot_id", snapshotId)
+        .eq("document_type", documentType)
+        .maybeSingle();
+      applyRow(data as any);
+    };
+
+    const startPolling = () => {
+      if (pollTimer) return;
+      pollTimer = setInterval(() => {
+        pollCount += 1;
+        if (pollCount > 45) {
+          if (pollTimer) clearInterval(pollTimer);
+          pollTimer = null;
+          return;
+        }
+        fetchOnce();
+      }, 4000);
+    };
+
+    // Immediate reconciliation on open
+    fetchOnce();
+
+    const channel = supabase
+      .channel(`hero:${snapshotId}:${documentType}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "venture_documents", filter: `snapshot_id=eq.${snapshotId}` },
+        (payload: any) => {
+          const row = payload?.new;
+          if (row?.document_type && row.document_type !== documentType) return;
+          applyRow(row);
+        },
+      )
+      .subscribe((status) => {
+        // If realtime doesn't connect quickly, fall back to polling.
+        if (status !== "SUBSCRIBED") {
+          startPolling();
+        }
+      });
+
+    // Belt-and-suspenders: also start polling after 2s if the channel is
+    // slow to attach, and continue only while we don't yet have a ready image.
+    const startupTimer = setTimeout(() => {
+      if (!cancelled && !heroPath) startPolling();
+    }, 2000);
+
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearInterval(pollTimer);
+      clearTimeout(startupTimer);
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, doc?.snapshot_id, doc?.document_type]);
 
   // Mint a signed URL when we have a path
   useEffect(() => {
@@ -535,9 +624,9 @@ export function DocumentViewer({
   }, [heroPath, heroRetryNonce]);
 
   // Lazy hero image: auto-generate only once per (snapshot, document) when
-  // there's no image AND no prior attempt. Status === 'failed' shows a Retry
-  // button instead. A ref guard prevents a second invocation if the user
-  // reopens before the first call finishes (race-free; server also locks).
+  // there's no image AND no prior attempt. If status is already `generating`
+  // (batch pipeline in flight), the realtime/poll effect above will pick up
+  // the finished path — don't call the function. `failed` shows a Retry.
   const autoFiredRef = useRef<string | null>(null);
   useEffect(() => {
     if (!open) return;
@@ -545,14 +634,13 @@ export function DocumentViewer({
     if (heroPath || heroLoading) return;
     if (!doc?.snapshot_id || !doc?.document_type) return;
     if (!doc?.content) return;
-    const status = doc?.hero_image_status ?? null;
-    if (status === "generating" || status === "failed") return;
+    if (heroStatus === "generating" || heroStatus === "failed") return;
     const key = `${doc.snapshot_id}:${doc.document_type}`;
     if (autoFiredRef.current === key) return;
     autoFiredRef.current = key;
     generateHero(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, doc?.snapshot_id, doc?.document_type, doc?.content, heroPath, doc?.hero_image_status, autoGenerateHero]);
+  }, [open, doc?.snapshot_id, doc?.document_type, doc?.content, heroPath, heroStatus, autoGenerateHero]);
 
   const generateHero = async (force = false, quality?: "fast" | "hq") => {
     if (!doc?.snapshot_id || !doc?.document_type) return;
@@ -566,9 +654,12 @@ export function DocumentViewer({
       if (data?.path) {
         setHeroPath(data.path);
         setHeroUrl(null); // force re-sign
+        heroImgErrorOnceRef.current = false;
         toast.success(quality === "hq" ? "HQ visual generated" : force ? "New visual generated" : "Visual generated");
       } else if (data?.skipped && data?.reason === "in_flight") {
-        setHeroError("Visual is already being generated. Reopen this document in a moment.");
+        // Server-side job already running — don't error; the realtime/poll
+        // effect will pick up the finished path. Show painting state instead.
+        setHeroStatus("generating");
       }
     } catch (e) {
       const msg = edgeErrorMessage(e, "Image generation failed");
@@ -772,18 +863,36 @@ export function DocumentViewer({
                     src={heroUrl}
                     alt={title}
                     loading="eager"
+                    decoding="async"
+                    // @ts-expect-error — fetchpriority is a valid HTML attribute not yet in React's DOM types
+                    fetchpriority="high"
                     className="h-full w-full object-cover"
                     onError={() => {
+                      // Signed URLs expire after 1h and can also 404 briefly
+                      // during a regenerate swap. Retry once with a fresh URL
+                      // before giving up.
+                      if (!heroImgErrorOnceRef.current && heroPath) {
+                        heroImgErrorOnceRef.current = true;
+                        setHeroUrl(null);
+                        setHeroRetryNonce((n) => n + 1);
+                        return;
+                      }
                       setHeroUrl(null);
                       setHeroError("Saved visual file could not be displayed.");
                     }}
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-accent/20 p-6 text-center">
-                    {heroLoading || heroSigning ? (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {heroLoading || heroSigning || heroStatus === "generating" ? (
+                      <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        {heroLoading ? "Generating visual…" : "Loading saved visual…"}
+                        <span>
+                          {heroStatus === "generating" && !heroLoading
+                            ? "Painting visual… this usually takes 20–40 seconds"
+                            : heroLoading
+                              ? "Generating visual…"
+                              : "Loading saved visual…"}
+                        </span>
                       </div>
                     ) : heroError ? (
                       <div className="max-w-sm space-y-3">
@@ -791,7 +900,7 @@ export function DocumentViewer({
                         <p className="text-xs text-muted-foreground">{heroError}</p>
                         <div className="flex flex-wrap justify-center gap-2">
                           {heroPath && (
-                            <Button size="sm" variant="secondary" onClick={() => setHeroRetryNonce((n) => n + 1)}>
+                            <Button size="sm" variant="secondary" onClick={() => { heroImgErrorOnceRef.current = false; setHeroError(null); setHeroRetryNonce((n) => n + 1); }}>
                               Retry load
                             </Button>
                           )}
