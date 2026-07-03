@@ -97,7 +97,64 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
     enabled: !!userId,
   });
 
-  const { data: docTypes = [] } = useQuery({
+  const { data: snapshotSources = null } = useQuery({
+    queryKey: ["brain-graph", "snapshot-sources", snapshotId],
+    queryFn: async () => {
+      if (!snapshotId) return null;
+      const { data, error } = await supabase
+        .from("venture_snapshots")
+        .select("source_materials")
+        .eq("id", snapshotId)
+        .maybeSingle();
+      if (error) console.warn("[BrainMindMap] snapshot sources query failed", error);
+      return (data?.source_materials as any) ?? null;
+    },
+    enabled: !!snapshotId,
+  });
+  const { data: attendeeDocs = [] } = useQuery({
+    queryKey: ["brain-graph", "attendee-docs", userId, snapshotId],
+    queryFn: async () => {
+      let q = supabase
+        .from("attendee_documents")
+        .select("id, original_name, kind, used_in_brief, snapshot_id")
+        .eq("user_id", userId)
+        .limit(100);
+      if (snapshotId) q = q.eq("snapshot_id", snapshotId);
+      const { data, error } = await q;
+      if (error) console.warn("[BrainMindMap] attendee docs query failed", error);
+      return data ?? [];
+    },
+    enabled: !!userId,
+  });
+
+  const sources = useMemo(() => {
+    const out: { id: string; filename: string; kind?: string | null; origin: "snapshot" | "upload" | "url" }[] = [];
+    const seen = new Set<string>();
+    const push = (row: { id: string; filename: string; kind?: string | null; origin: "snapshot" | "upload" | "url" }) => {
+      const key = (row.filename || "").trim().toLowerCase();
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      out.push(row);
+    };
+    const sm = snapshotSources as any;
+    if (sm && Array.isArray(sm.documents)) {
+      sm.documents.forEach((d: any, i: number) => {
+        if (d?.filename) push({ id: `snap-doc-${i}`, filename: d.filename, kind: "document", origin: "snapshot" });
+      });
+    }
+    if (sm && Array.isArray(sm.urls)) {
+      sm.urls.forEach((u: any, i: number) => {
+        const url = typeof u === "string" ? u : u?.url;
+        if (url) push({ id: `snap-url-${i}`, filename: url, kind: "url", origin: "url" });
+      });
+    }
+    for (const d of attendeeDocs as any[]) {
+      if (d?.original_name) push({ id: d.id, filename: d.original_name, kind: d.kind, origin: "upload" });
+    }
+    return out;
+  }, [snapshotSources, attendeeDocs]);
+
+
     queryKey: ["brain-graph", "doc-types"],
     queryFn: async () => {
       const { data, error } = await supabase
