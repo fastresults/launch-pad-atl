@@ -192,13 +192,22 @@ Deno.serve(async (req) => {
     const snapshotId = body?.snapshotId as string | undefined;
     if (!snapshotId) return json({ error: "snapshotId required" }, 400);
 
+    // Admin impersonation support
+    const { data: adminRoles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .in("role", ["admin", "super_admin"]);
+    const isAdmin = (adminRoles ?? []).length > 0;
+
     // Snapshot ownership
     const { data: snap } = await admin
       .from("venture_snapshots")
       .select("id, user_id")
       .eq("id", snapshotId)
       .maybeSingle();
-    if (!snap || snap.user_id !== userId) return json({ error: "Forbidden" }, 403);
+    if (!snap || (snap.user_id !== userId && !isAdmin)) return json({ error: "Forbidden" }, 403);
+    const ownerId = snap.user_id as string;
 
     // ---- LIST ----
     if (action === "list") {
@@ -219,7 +228,7 @@ Deno.serve(async (req) => {
         .select("user_id, storage_path")
         .eq("id", assetId)
         .maybeSingle();
-      if (!row || row.user_id !== userId) return json({ error: "Not found" }, 404);
+      if (!row || row.user_id !== ownerId && !isAdmin) return json({ error: "Not found" }, 404);
       if (row.storage_path) {
         await admin.storage.from(BUCKET).remove([row.storage_path]).catch(() => {});
       }
@@ -236,7 +245,7 @@ Deno.serve(async (req) => {
         .select("*")
         .eq("id", assetId)
         .maybeSingle();
-      if (!row || row.user_id !== userId) return json({ error: "Not found" }, 404);
+      if (!row || row.user_id !== ownerId && !isAdmin) return json({ error: "Not found" }, 404);
       await admin
         .from("venture_social_assets")
         .update({ is_selected: false })
@@ -515,7 +524,7 @@ Deno.serve(async (req) => {
       .from("venture_social_assets")
       .insert({
         snapshot_id: snapshotId,
-        user_id: userId,
+        user_id: ownerId,
         platform: platform.platform,
         asset_kind: asset.kind,
         art_direction: direction,
