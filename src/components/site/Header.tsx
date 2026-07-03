@@ -11,6 +11,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import { AccessModeDialog } from "@/components/home/AccessModeDialog";
 
 const nav = [
   { to: "/", label: "home" },
@@ -25,6 +26,7 @@ const nav = [
 export function SiteHeader() {
   const { isAuthenticated, isAdmin, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const [modesOpen, setModesOpen] = useState(false);
   const ctaFull = `Reserve seat — ${WORKSHOP_PRICE_LABEL}`;
   const ctaShort = "Reserve";
 
@@ -47,6 +49,13 @@ export function SiteHeader() {
               {n.label}
             </NavLink>
           ))}
+          <button
+            type="button"
+            onClick={() => setModesOpen(true)}
+            className="transition-colors hover:text-foreground"
+          >
+            ways to work
+          </button>
           {isAdmin && (
             <Link to="/admin" className="transition-colors hover:text-foreground">admin</Link>
           )}
@@ -102,6 +111,13 @@ export function SiteHeader() {
                   {isAdmin && (
                     <Link to="/admin" onClick={close} className="rounded-xl px-4 py-3 text-base text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground">admin</Link>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => { close(); setModesOpen(true); }}
+                    className="rounded-xl px-4 py-3 text-left text-base text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+                  >
+                    ways to work with Adam
+                  </button>
                 </nav>
                 <div className="mt-auto space-y-3 border-t border-white/5 px-6 py-5">
                   <Link to="/register" onClick={close} className="flex w-full items-center justify-center rounded-full bg-hero-gradient px-5 py-3 text-base font-medium text-white">
