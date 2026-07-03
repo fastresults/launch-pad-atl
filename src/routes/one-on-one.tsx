@@ -18,6 +18,7 @@ import {
   FolderKanban,
 } from "lucide-react";
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
+import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
 
 const INCLUDES = [
   { icon: Palette, title: "Brand identity", body: "Logo, palette, typography, and a written brand guide." },
@@ -128,6 +129,13 @@ export default function OneOnOnePage() {
             </div>
           </div>
         </section>
+
+        {/* Startup ideas scroller */}
+        <HomeBusinessIdeasScroller
+          eyebrow="Any of these — or yours"
+          heading="Adam and team can build any of these — or the specific business you're bringing"
+          subheading="Pick from the startups founders are launching right now, or hand us your idea. Either way, you get the same end-to-end build."
+        />
 
         {/* Best fit */}
         <section className="border-b border-white/5 py-16">

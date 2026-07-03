@@ -68,7 +68,15 @@ function MarqueeRow({
   );
 }
 
-export function HomeBusinessIdeasScroller() {
+export function HomeBusinessIdeasScroller({
+  eyebrow = "What founders are building",
+  heading = "60+ startup ideas founders are actually launching",
+  subheading = "Online and Main Street, side by side — plus service, food, side hustles and family-run. Proof there's a clear path no matter what you're starting.",
+}: {
+  eyebrow?: string;
+  heading?: string;
+  subheading?: string;
+} = {}) {
   const [filter, setFilter] = useState<FilterId>("all");
 
   const filtered = useMemo(
@@ -97,14 +105,13 @@ export function HomeBusinessIdeasScroller() {
         <div className="mx-auto mb-8 max-w-3xl text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-foreground">
             <Sparkles className="h-3.5 w-3.5" />
-            What founders are building
+            {eyebrow}
           </div>
           <h2 className="mb-3 text-3xl font-bold tracking-tight md:text-4xl">
-            60+ startup ideas founders are actually launching
+            {heading}
           </h2>
           <p className="text-base text-muted-foreground md:text-lg">
-            Online and Main Street, side by side — plus service, food, side hustles and family-run.
-            Proof there's a clear path no matter what you're starting.
+            {subheading}
           </p>
         </div>
 
