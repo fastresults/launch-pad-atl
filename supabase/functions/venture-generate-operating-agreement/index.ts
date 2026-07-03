@@ -39,8 +39,10 @@ Deno.serve(async (req) => {
   const memberName =
     [filing?.legal_first_name, filing?.legal_last_name].filter(Boolean).join(" ") ||
     "[Member Name]";
+  const stateCode: string = (legal?.entity_state || filing?.state || "GA").toUpperCase();
+  const stateInfo = STATE_STATUTES[stateCode] ?? STATE_STATUTES.GA;
   const principalOffice =
-    [filing?.address_line1, filing?.city, "GA", filing?.postal_code]
+    [filing?.address_line1, filing?.city, stateCode, filing?.postal_code]
       .filter(Boolean)
       .join(", ") || "[Principal Office Address]";
   const agentName =
@@ -48,12 +50,13 @@ Deno.serve(async (req) => {
   const ein = legal?.ein || "[EIN — insert after IRS approval]";
 
   const system = [
-    "You are a Georgia small-business paralegal drafting a Single-Member LLC Operating Agreement for a founder in the State of Georgia.",
+    `You are a ${stateInfo.name} small-business paralegal drafting a Single-Member LLC Operating Agreement for a founder in the State of ${stateInfo.name}.`,
     "Produce a clean, signable Markdown document with numbered Articles (I–XII) and clear headings.",
-    "Cite the Georgia Limited Liability Company Act (O.C.G.A. § 14-11) once in the recitals.",
-    "Include: Formation, Name and Principal Office, Registered Agent, Purpose, Term, Member and Capital Contributions, Management, Distributions, Tax Treatment (default disregarded entity), Books and Records, Dissolution, Indemnification, Amendments, Governing Law (Georgia), Signature block.",
+    `Cite the ${stateInfo.name} Limited Liability Company Act (${stateInfo.citation}) once in the recitals.`,
+    "Include: Formation, Name and Principal Office, Registered Agent, Purpose, Term, Member and Capital Contributions, Management, Distributions, Tax Treatment (default disregarded entity), Books and Records, Dissolution, Indemnification, Amendments, Governing Law, Signature block.",
+    `The Governing Law article MUST specify the State of ${stateInfo.name}.`,
     "Include an 'Exhibit A — Capital Contributions' table.",
-    "Do NOT add footnotes or citations beyond the one O.C.G.A. reference.",
+    "Do NOT add footnotes or citations beyond the one statute reference.",
     "Use plain language. Do not include lawyerly boilerplate that a solo founder would not need.",
     "Fill in the founder-provided fields verbatim; leave any missing field in [SQUARE BRACKETS] as a placeholder to complete before signing.",
   ].join(" ");
@@ -61,7 +64,7 @@ Deno.serve(async (req) => {
   const user = `Draft the Operating Agreement using these facts:
 
 - Entity name: ${entityName}
-- State of formation: Georgia
+- State of formation: ${stateInfo.name}
 - Principal office: ${principalOffice}
 - Sole Member: ${memberName}
 - Registered Agent: ${agentName}
