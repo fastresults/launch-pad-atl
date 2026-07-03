@@ -20,7 +20,8 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const SYSTEM_PROMPT = `You are a senior McKinsey partner producing a rigorous deep assessment of a single startup deliverable.
 
 Produce a markdown report with these sections (use exactly these headings):
-## McKinsey-Grade Assessment
+## Deep Dive
+
 ### Strategic Read
 ### Evidence & Assumptions Pressure-Test
 ### Hidden Risks & Failure Modes
