@@ -683,7 +683,6 @@ export function DocumentViewer({
   useEffect(() => {
     if (!heroPath || heroStatus !== "ready") return;
     getSignedStorageUrl(HERO_BUCKET, heroPath, 3600).catch(() => {});
-    })();
   }, [heroPath, heroStatus]);
 
   // Lazy hero image: auto-generate only once per (snapshot, document) when
