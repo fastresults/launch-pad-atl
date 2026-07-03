@@ -18,7 +18,8 @@ import {
   loadBrainHistory, sendBrainMessage, clearBrainHistory, rebuildBrainMemory,
   saveBrainNote, listBrainNotes, deleteBrainNote, getBrainStatus,
   pollBrainJob, getLatestBrainJob, purgeGeneratedAssets, detectVentureMismatch,
-  type BrainMessage, type BrainIndexingJob,
+  listBrainVentures,
+  type BrainMessage, type BrainIndexingJob, type BrainVenture,
 } from "@/lib/brain.functions";
 
 const STARTERS = [
