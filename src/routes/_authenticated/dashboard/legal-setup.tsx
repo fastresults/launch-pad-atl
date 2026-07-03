@@ -12,6 +12,7 @@ import {
   Sparkles,
   FileText,
   MessageCircleQuestion,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -27,8 +28,18 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RichMarkdown } from "@/components/markdown/RichMarkdown";
-import { GEORGIA_LEGAL_STEPS, recommendEntity, type LegalStep } from "@/lib/legal-setup";
+import { buildLegalSteps, recommendEntity, type LegalStep } from "@/lib/legal-setup";
+import { STATE_JURISDICTIONS, POPULAR_STATES, getStateByCode } from "@/lib/legal-setup-states";
 import {
   generateOperatingAgreement,
   getMyLegalSetup,
@@ -43,15 +54,35 @@ export default function LegalSetupPage() {
   const { data: progress } = useQuery({ queryKey: ["my", "legal-setup"], queryFn: getMyLegalSetup });
   const { data: filing } = useQuery({ queryKey: ["my", "filing"], queryFn: getMyFiling });
 
+  const stateCode = progress?.entity_state || "GA";
+  const state = useMemo(() => getStateByCode(stateCode), [stateCode]);
+  const steps = useMemo(() => buildLegalSteps(state), [state]);
+
   const completed = progress?.steps_completed ?? {};
-  const doneCount = GEORGIA_LEGAL_STEPS.filter((s) => completed[s.key]).length;
-  const pct = Math.round((doneCount / GEORGIA_LEGAL_STEPS.length) * 100);
+  const doneCount = steps.filter((s) => completed[s.key]).length;
+  const pct = Math.round((doneCount / steps.length) * 100);
 
   const toggle = useMutation({
     mutationFn: (v: { key: string; done: boolean }) => toggleLegalStep(v.key, v.done),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my", "legal-setup"] }),
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
   });
+
+  const saveState = useMutation({
+    mutationFn: (code: string) => upsertMyLegalSetup({ entity_state: code }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my", "legal-setup"] });
+      toast.success("State updated");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
+  });
+
+  const popular = STATE_JURISDICTIONS.filter((s) => POPULAR_STATES.includes(s.code)).sort(
+    (a, b) => POPULAR_STATES.indexOf(a.code) - POPULAR_STATES.indexOf(b.code),
+  );
+  const rest = STATE_JURISDICTIONS.filter((s) => !POPULAR_STATES.includes(s.code)).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
   return (
     <div className="space-y-8">
@@ -65,17 +96,17 @@ export default function LegalSetupPage() {
           <div>
             <div className="flex items-center gap-2">
               <Scale className="h-6 w-6 text-primary" />
-              <h1 className="text-3xl font-semibold tracking-tight">Legal Setup — Georgia</h1>
+              <h1 className="text-3xl font-semibold tracking-tight">Legal Setup — {state.name}</h1>
             </div>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              A concierge walkthrough for forming your business in Georgia and getting your Federal EIN. Every step tells you what to click, what it costs, and how long it takes. Mark each one complete as you go.
+              A concierge walkthrough for forming your startup in {state.name} and getting your Federal EIN. Every step tells you what to click, what it costs, and how long it takes. Mark each one complete as you go.
             </p>
           </div>
           <div className="min-w-[220px]">
             <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
               <span>Progress</span>
               <span>
-                {doneCount} / {GEORGIA_LEGAL_STEPS.length}
+                {doneCount} / {steps.length}
               </span>
             </div>
             <Progress value={pct} className="h-2" />
@@ -83,18 +114,61 @@ export default function LegalSetupPage() {
         </div>
       </div>
 
+      <div className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <MapPin className="h-5 w-5 text-primary" />
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-medium">Form your startup in</div>
+            <div className="text-xs text-muted-foreground">
+              {state.filingAgency} · {state.filingAgencyAddress}
+            </div>
+          </div>
+          <div className="min-w-[260px]">
+            <Select value={stateCode} onValueChange={(v) => saveState.mutate(v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-[420px]">
+                <SelectGroup>
+                  <SelectLabel>Popular for holding companies</SelectLabel>
+                  {popular.map((s) => (
+                    <SelectItem key={s.code} value={s.code}>
+                      {s.name} ({s.code})
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                <SelectGroup>
+                  <SelectLabel>All states</SelectLabel>
+                  {rest.map((s) => (
+                    <SelectItem key={s.code} value={s.code}>
+                      {s.name} ({s.code})
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {state.notes && (
+          <p className="mt-3 rounded-lg bg-background/60 p-3 text-xs text-muted-foreground">
+            <strong className="text-foreground">Heads up ({state.name}):</strong> {state.notes}
+          </p>
+        )}
+      </div>
+
       <div className="rounded-xl border border-white/10 bg-card/50 p-4 text-xs text-muted-foreground">
         <strong className="text-foreground">Not legal advice.</strong> This is a step-by-step
-        guide for the standard Georgia LLC formation and IRS EIN application. For unusual
+        guide for the standard {state.name} LLC formation and IRS EIN application. For unusual
         situations — foreign founders, multiple entity structures, professional-license
-        industries — talk to a Georgia business attorney before you file.
+        industries — talk to a {state.name} business attorney before you file.
       </div>
 
       <Accordion type="multiple" defaultValue={["step-1"]} className="space-y-3">
-        {GEORGIA_LEGAL_STEPS.map((step) => (
+        {steps.map((step) => (
           <StepBlock
             key={step.key}
             step={step}
+            state={state}
             done={!!completed[step.key]}
             progress={progress ?? null}
             filing={filing ?? {}}
