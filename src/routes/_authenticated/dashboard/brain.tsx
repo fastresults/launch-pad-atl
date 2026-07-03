@@ -167,24 +167,24 @@ export default function BrainPage() {
     setInput("");
     setPending(true);
     // Optimistic user message
-    qc.setQueryData<BrainMessage[]>(["brain", "history", userId], (prev = []) => [
+    qc.setQueryData<BrainMessage[]>(["brain", "history", userId, snapshotId], (prev = []) => [
       ...prev,
       { id: `tmp-${Date.now()}`, role: "user", content: trimmed, citations: [], created_at: new Date().toISOString() },
     ]);
     try {
-      const { answer, citations } = await sendBrainMessage(trimmed);
-      qc.setQueryData<BrainMessage[]>(["brain", "history", userId], (prev = []) => [
+      const { answer, citations } = await sendBrainMessage(trimmed, snapshotId);
+      qc.setQueryData<BrainMessage[]>(["brain", "history", userId, snapshotId], (prev = []) => [
         ...prev,
         { id: `tmp-a-${Date.now()}`, role: "assistant", content: answer, citations, created_at: new Date().toISOString() },
       ]);
-      qc.invalidateQueries({ queryKey: ["brain", "history", userId] });
+      qc.invalidateQueries({ queryKey: ["brain", "history", userId, snapshotId] });
       if (voiceOn) void speak(stripMarkdown(answer));
     } catch (e: any) {
       toast.error(e?.message ?? "Chat failed");
     } finally {
       setPending(false);
     }
-  }, [pending, qc, userId, voiceOn, speak]);
+  }, [pending, qc, userId, snapshotId, voiceOn, speak]);
 
   const [jobId, setJobId] = useState<string | null>(null);
   const [job, setJob] = useState<BrainIndexingJob | null>(null);
