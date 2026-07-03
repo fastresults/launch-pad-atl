@@ -82,6 +82,13 @@ export default function WebinarPage() {
                   Compare all three formats
                 </button>
               </div>
+              <p className="mt-4 text-xs text-muted-foreground">
+                Prefer we build it for you instead?{" "}
+                <Link to="/one-on-one" className="underline hover:text-foreground">
+                  See the done-for-you build with Adam
+                </Link>
+                .
+              </p>
             </div>
           </div>
         </section>
