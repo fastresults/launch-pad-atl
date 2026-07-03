@@ -512,6 +512,34 @@ export default function BrainPage() {
           <Button size="sm" variant="ghost" className="mt-2 w-full justify-start" onClick={addManualNote}>
             + Add a note
           </Button>
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (e.dataTransfer?.files?.length) handleFilesDropped(e.dataTransfer.files);
+            }}
+            onClick={() => {
+              const inp = document.createElement("input");
+              inp.type = "file";
+              inp.multiple = true;
+              inp.accept = ".txt,.md,.markdown,.csv,.json,.log,.rtf,.html,text/*,application/json";
+              inp.onchange = () => { if (inp.files) handleFilesDropped(inp.files); };
+              inp.click();
+            }}
+            className={cn(
+              "mt-2 cursor-pointer rounded-lg border border-dashed border-border/60 bg-background/40 px-3 py-3 text-center text-[11px] text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5",
+              dragOver && "border-primary bg-primary/10 text-primary",
+              droppingFile && "opacity-60",
+            )}
+          >
+            {droppingFile
+              ? <span className="inline-flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Reading…</span>
+              : dragOver
+                ? "Drop to save as note"
+                : "Or drop a file here (.txt, .md, .csv, .json)"}
+          </div>
+
           {showNotes && (
             <ul className="mt-2 space-y-2 max-h-72 overflow-y-auto">
               {notes.length === 0 && <li className="text-xs text-muted-foreground">No notes yet.</li>}
