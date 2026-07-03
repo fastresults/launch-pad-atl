@@ -174,9 +174,10 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
   }, [docTypes]);
 
   const graph: BrainGraph = useMemo(
-    () => buildBrainGraph({ company, memory: memory as any, notes: notes as any, docs: docs as any, messages: messages as any, docTypeNames }),
-    [company, memory, notes, docs, messages, docTypeNames],
+    () => buildBrainGraph({ company, memory: memory as any, notes: notes as any, docs: docs as any, messages: messages as any, docTypeNames, sources }),
+    [company, memory, notes, docs, messages, docTypeNames, sources],
   );
+
 
 
   // Adjacency for hover-highlight.
