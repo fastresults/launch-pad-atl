@@ -863,18 +863,36 @@ export function DocumentViewer({
                     src={heroUrl}
                     alt={title}
                     loading="eager"
+                    decoding="async"
+                    // @ts-expect-error — fetchpriority is a valid HTML attribute not yet in React's DOM types
+                    fetchpriority="high"
                     className="h-full w-full object-cover"
                     onError={() => {
+                      // Signed URLs expire after 1h and can also 404 briefly
+                      // during a regenerate swap. Retry once with a fresh URL
+                      // before giving up.
+                      if (!heroImgErrorOnceRef.current && heroPath) {
+                        heroImgErrorOnceRef.current = true;
+                        setHeroUrl(null);
+                        setHeroRetryNonce((n) => n + 1);
+                        return;
+                      }
                       setHeroUrl(null);
                       setHeroError("Saved visual file could not be displayed.");
                     }}
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-accent/20 p-6 text-center">
-                    {heroLoading || heroSigning ? (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {heroLoading || heroSigning || heroStatus === "generating" ? (
+                      <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        {heroLoading ? "Generating visual…" : "Loading saved visual…"}
+                        <span>
+                          {heroStatus === "generating" && !heroLoading
+                            ? "Painting visual… this usually takes 20–40 seconds"
+                            : heroLoading
+                              ? "Generating visual…"
+                              : "Loading saved visual…"}
+                        </span>
                       </div>
                     ) : heroError ? (
                       <div className="max-w-sm space-y-3">
@@ -882,7 +900,7 @@ export function DocumentViewer({
                         <p className="text-xs text-muted-foreground">{heroError}</p>
                         <div className="flex flex-wrap justify-center gap-2">
                           {heroPath && (
-                            <Button size="sm" variant="secondary" onClick={() => setHeroRetryNonce((n) => n + 1)}>
+                            <Button size="sm" variant="secondary" onClick={() => { heroImgErrorOnceRef.current = false; setHeroError(null); setHeroRetryNonce((n) => n + 1); }}>
                               Retry load
                             </Button>
                           )}
