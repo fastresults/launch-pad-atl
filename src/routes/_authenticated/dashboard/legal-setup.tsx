@@ -12,6 +12,7 @@ import {
   Sparkles,
   FileText,
   MessageCircleQuestion,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -27,8 +28,18 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RichMarkdown } from "@/components/markdown/RichMarkdown";
-import { GEORGIA_LEGAL_STEPS, recommendEntity, type LegalStep } from "@/lib/legal-setup";
+import { buildLegalSteps, recommendEntity, type LegalStep } from "@/lib/legal-setup";
+import { STATE_JURISDICTIONS, POPULAR_STATES, getStateByCode } from "@/lib/legal-setup-states";
 import {
   generateOperatingAgreement,
   getMyLegalSetup,
@@ -43,15 +54,35 @@ export default function LegalSetupPage() {
   const { data: progress } = useQuery({ queryKey: ["my", "legal-setup"], queryFn: getMyLegalSetup });
   const { data: filing } = useQuery({ queryKey: ["my", "filing"], queryFn: getMyFiling });
 
+  const stateCode = progress?.entity_state || "GA";
+  const state = useMemo(() => getStateByCode(stateCode), [stateCode]);
+  const steps = useMemo(() => buildLegalSteps(state), [state]);
+
   const completed = progress?.steps_completed ?? {};
-  const doneCount = GEORGIA_LEGAL_STEPS.filter((s) => completed[s.key]).length;
-  const pct = Math.round((doneCount / GEORGIA_LEGAL_STEPS.length) * 100);
+  const doneCount = steps.filter((s) => completed[s.key]).length;
+  const pct = Math.round((doneCount / steps.length) * 100);
 
   const toggle = useMutation({
     mutationFn: (v: { key: string; done: boolean }) => toggleLegalStep(v.key, v.done),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my", "legal-setup"] }),
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
   });
+
+  const saveState = useMutation({
+    mutationFn: (code: string) => upsertMyLegalSetup({ entity_state: code }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my", "legal-setup"] });
+      toast.success("State updated");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
+  });
+
+  const popular = STATE_JURISDICTIONS.filter((s) => POPULAR_STATES.includes(s.code)).sort(
+    (a, b) => POPULAR_STATES.indexOf(a.code) - POPULAR_STATES.indexOf(b.code),
+  );
+  const rest = STATE_JURISDICTIONS.filter((s) => !POPULAR_STATES.includes(s.code)).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
   return (
     <div className="space-y-8">
@@ -65,17 +96,17 @@ export default function LegalSetupPage() {
           <div>
             <div className="flex items-center gap-2">
               <Scale className="h-6 w-6 text-primary" />
-              <h1 className="text-3xl font-semibold tracking-tight">Legal Setup — Georgia</h1>
+              <h1 className="text-3xl font-semibold tracking-tight">Legal Setup — {state.name}</h1>
             </div>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              A concierge walkthrough for forming your business in Georgia and getting your Federal EIN. Every step tells you what to click, what it costs, and how long it takes. Mark each one complete as you go.
+              A concierge walkthrough for forming your startup in {state.name} and getting your Federal EIN. Every step tells you what to click, what it costs, and how long it takes. Mark each one complete as you go.
             </p>
           </div>
           <div className="min-w-[220px]">
             <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
               <span>Progress</span>
               <span>
-                {doneCount} / {GEORGIA_LEGAL_STEPS.length}
+                {doneCount} / {steps.length}
               </span>
             </div>
             <Progress value={pct} className="h-2" />
@@ -83,18 +114,61 @@ export default function LegalSetupPage() {
         </div>
       </div>
 
+      <div className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <MapPin className="h-5 w-5 text-primary" />
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-medium">Form your startup in</div>
+            <div className="text-xs text-muted-foreground">
+              {state.filingAgency} · {state.filingAgencyAddress}
+            </div>
+          </div>
+          <div className="min-w-[260px]">
+            <Select value={stateCode} onValueChange={(v) => saveState.mutate(v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-[420px]">
+                <SelectGroup>
+                  <SelectLabel>Popular for holding companies</SelectLabel>
+                  {popular.map((s) => (
+                    <SelectItem key={s.code} value={s.code}>
+                      {s.name} ({s.code})
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                <SelectGroup>
+                  <SelectLabel>All states</SelectLabel>
+                  {rest.map((s) => (
+                    <SelectItem key={s.code} value={s.code}>
+                      {s.name} ({s.code})
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {state.notes && (
+          <p className="mt-3 rounded-lg bg-background/60 p-3 text-xs text-muted-foreground">
+            <strong className="text-foreground">Heads up ({state.name}):</strong> {state.notes}
+          </p>
+        )}
+      </div>
+
       <div className="rounded-xl border border-white/10 bg-card/50 p-4 text-xs text-muted-foreground">
         <strong className="text-foreground">Not legal advice.</strong> This is a step-by-step
-        guide for the standard Georgia LLC formation and IRS EIN application. For unusual
+        guide for the standard {state.name} LLC formation and IRS EIN application. For unusual
         situations — foreign founders, multiple entity structures, professional-license
-        industries — talk to a Georgia business attorney before you file.
+        industries — talk to a {state.name} business attorney before you file.
       </div>
 
       <Accordion type="multiple" defaultValue={["step-1"]} className="space-y-3">
-        {GEORGIA_LEGAL_STEPS.map((step) => (
+        {steps.map((step) => (
           <StepBlock
             key={step.key}
             step={step}
+            state={state}
             done={!!completed[step.key]}
             progress={progress ?? null}
             filing={filing ?? {}}
@@ -108,12 +182,14 @@ export default function LegalSetupPage() {
 
 function StepBlock({
   step,
+  state,
   done,
   progress,
   filing,
   onToggle,
 }: {
   step: LegalStep;
+  state: ReturnType<typeof getStateByCode>;
   done: boolean;
   progress: LegalSetupProgress | null;
   filing: Record<string, any>;
@@ -148,7 +224,8 @@ function StepBlock({
         <div className="space-y-4 text-sm">
           <p className="whitespace-pre-line leading-relaxed text-muted-foreground">{step.detail}</p>
 
-          <StepInputs step={step} progress={progress} filing={filing} />
+          <StepInputs step={step} state={state} progress={progress} filing={filing} />
+
 
           <div className="flex flex-wrap gap-2">
             {step.officialLinks.map((l) => (
@@ -179,10 +256,12 @@ function StepBlock({
 
 function StepInputs({
   step,
+  state,
   progress,
   filing,
 }: {
   step: LegalStep;
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   filing: Record<string, any>;
 }) {
@@ -193,10 +272,12 @@ function StepInputs({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
   });
 
-  if (step.key === "entity_choice") return <EntityChoicePanel progress={progress} onSave={(p) => save.mutate(p)} />;
+  if (step.key === "entity_choice")
+    return <EntityChoicePanel state={state} progress={progress} onSave={(p) => save.mutate(p)} />;
   if (step.key === "name_check")
     return (
       <NameCheckPanel
+        state={state}
         progress={progress}
         defaultName={filing?.llc_name || ""}
         onSave={(p) => save.mutate(p)}
@@ -205,26 +286,29 @@ function StepInputs({
   if (step.key === "registered_agent")
     return (
       <RegisteredAgentPanel
+        state={state}
         progress={progress}
         defaultAgent={filing?.registered_agent_name || ""}
         onSave={(p) => save.mutate(p)}
       />
     );
   if (step.key === "articles_filed")
-    return <ArticlesPanel progress={progress} filing={filing} onSave={(p) => save.mutate(p)} />;
-  if (step.key === "ein") return <EinPanel progress={progress} onSave={(p) => save.mutate(p)} />;
+    return <ArticlesPanel state={state} progress={progress} filing={filing} onSave={(p) => save.mutate(p)} />;
+  if (step.key === "ein") return <EinPanel state={state} progress={progress} onSave={(p) => save.mutate(p)} />;
   if (step.key === "operating_agreement")
-    return <OperatingAgreementPanel progress={progress} onSave={(p) => save.mutate(p)} />;
-  if (step.key === "post_formation") return <PostFormationPanel />;
+    return <OperatingAgreementPanel state={state} progress={progress} onSave={(p) => save.mutate(p)} />;
+  if (step.key === "post_formation") return <PostFormationPanel state={state} />;
   return null;
 }
 
 // ---------- Step panels ----------
 
 function EntityChoicePanel({
+  state,
   progress,
   onSave,
 }: {
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   onSave: (p: Partial<LegalSetupProgress>) => void;
 }) {
@@ -232,11 +316,11 @@ function EntityChoicePanel({
   useEffect(() => {
     if (progress?.entity_choice) setChoice(progress.entity_choice);
   }, [progress?.entity_choice]);
-  const rec = recommendEntity({ hasCofounders: false });
+  const rec = recommendEntity({ hasCofounders: false, stateCode: state.code });
   return (
     <div className="rounded-xl border border-white/10 bg-background/40 p-4">
-      <div className="mb-2 flex items-center gap-2 text-xs">
-        <Sparkles className="h-3.5 w-3.5 text-primary" />
+      <div className="mb-2 flex items-start gap-2 text-xs">
+        <Sparkles className="h-3.5 w-3.5 flex-none text-primary mt-0.5" />
         <span className="font-medium">Our recommendation:</span>
         <span className="text-muted-foreground">{rec.reason}</span>
       </div>
@@ -272,10 +356,12 @@ function EntityChoicePanel({
 }
 
 function NameCheckPanel({
+  state,
   progress,
   defaultName,
   onSave,
 }: {
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   defaultName: string;
   onSave: (p: Partial<LegalSetupProgress>) => void;
@@ -286,10 +372,9 @@ function NameCheckPanel({
     setName(progress?.business_name || defaultName || "");
     setReserved(progress?.name_reserved ?? false);
   }, [progress?.business_name, progress?.name_reserved, defaultName]);
-  const searchUrl = useMemo(
-    () => `https://ecorp.sos.ga.gov/BusinessSearch?businessName=${encodeURIComponent(name || "")}`,
-    [name],
-  );
+  const reservationCopy = state.nameReservationFeeUsd
+    ? `I reserved this name ($${state.nameReservationFeeUsd}, optional)`
+    : `${state.name} does not offer name reservation`;
   return (
     <div className="grid gap-3 rounded-xl border border-white/10 bg-background/40 p-4 sm:grid-cols-2">
       <div>
@@ -298,18 +383,19 @@ function NameCheckPanel({
           value={name}
           onChange={(e) => setName(e.target.value)}
           onBlur={() => onSave({ business_name: name || null })}
-          placeholder="e.g. Peachtree Kitchen LLC"
+          placeholder={`e.g. Acme ${state.name} LLC`}
         />
         <div className="mt-2">
           <Button asChild size="sm" variant="secondary">
-            <a href={searchUrl} target="_blank" rel="noreferrer noopener">
-              Search this name on eCorp <ExternalLink className="ml-1 h-3.5 w-3.5" />
+            <a href={state.nameSearchUrl} target="_blank" rel="noreferrer noopener">
+              Search on {state.filingAgency.split(",")[0]} <ExternalLink className="ml-1 h-3.5 w-3.5" />
             </a>
           </Button>
         </div>
       </div>
-      <label className="mt-6 flex cursor-pointer items-start gap-2 text-sm">
+      <label className={`mt-6 flex items-start gap-2 text-sm ${state.nameReservationFeeUsd ? "cursor-pointer" : "opacity-60"}`}>
         <Checkbox
+          disabled={!state.nameReservationFeeUsd}
           checked={reserved}
           onCheckedChange={(v) => {
             const next = !!v;
@@ -318,9 +404,11 @@ function NameCheckPanel({
           }}
         />
         <div>
-          <div className="font-medium">I reserved this name ($25, optional)</div>
+          <div className="font-medium">{reservationCopy}</div>
           <div className="text-xs text-muted-foreground">
-            Only needed if you're not filing within 30 days.
+            {state.nameReservationFeeUsd
+              ? `Only needed if you're not filing within ${state.nameReservationDays ?? 30} days.`
+              : "Skip this step and go straight to filing your Articles."}
           </div>
         </div>
       </label>
@@ -329,10 +417,12 @@ function NameCheckPanel({
 }
 
 function RegisteredAgentPanel({
+  state,
   progress,
   defaultAgent,
   onSave,
 }: {
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   defaultAgent: string;
   onSave: (p: Partial<LegalSetupProgress>) => void;
@@ -347,6 +437,7 @@ function RegisteredAgentPanel({
   }, [progress?.registered_agent_choice, progress?.registered_agent_name, progress?.registered_agent_service, defaultAgent]);
   return (
     <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+      <p className="text-xs text-muted-foreground">{state.registeredAgentRules}</p>
       <RadioGroup
         value={choice}
         onValueChange={(v) => {
@@ -356,8 +447,8 @@ function RegisteredAgentPanel({
         className="grid gap-2 sm:grid-cols-3"
       >
         {[
-          { v: "self", label: "I'll be my own agent", sub: "Free, public address" },
-          { v: "cofounder", label: "Cofounder / friend", sub: "Free, they must agree" },
+          { v: "self", label: "I'll be my own agent", sub: `Free, public ${state.code} address` },
+          { v: "cofounder", label: "Cofounder / friend", sub: `Must live in ${state.name}` },
           { v: "service", label: "Use a service", sub: "$99–$150/year, private" },
         ].map((opt) => (
           <label
@@ -400,10 +491,12 @@ function RegisteredAgentPanel({
 }
 
 function ArticlesPanel({
+  state,
   progress,
   filing,
   onSave,
 }: {
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   filing: Record<string, any>;
   onSave: (p: Partial<LegalSetupProgress>) => void;
@@ -419,9 +512,10 @@ function ArticlesPanel({
   const crib = [
     ["Entity name", progress?.business_name || filing?.llc_name || "—"],
     ["Registered Agent name", progress?.registered_agent_name || filing?.registered_agent_name || "—"],
-    ["Registered Agent address", filing?.registered_agent_address || `${filing?.address_line1 ?? ""} ${filing?.city ?? ""}, GA ${filing?.postal_code ?? ""}` || "—"],
-    ["Principal office", `${filing?.address_line1 ?? ""} ${filing?.city ?? ""}, GA ${filing?.postal_code ?? ""}`],
+    ["Registered Agent address", filing?.registered_agent_address || `${filing?.address_line1 ?? ""} ${filing?.city ?? ""}, ${state.code} ${filing?.postal_code ?? ""}` || "—"],
+    ["Principal office", `${filing?.address_line1 ?? ""} ${filing?.city ?? ""}, ${state.code} ${filing?.postal_code ?? ""}`],
     ["Organizer", `${filing?.legal_first_name ?? ""} ${filing?.legal_last_name ?? ""}`.trim() || "—"],
+    ["File with", `${state.filingAgency} · ${state.filingAgencyAddress}${state.filingAgencyPhone ? ` · ${state.filingAgencyPhone}` : ""}`],
   ];
   return (
     <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
@@ -446,7 +540,7 @@ function ArticlesPanel({
       <Separator className="opacity-40" />
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <Label className="text-xs">Control number (once approved)</Label>
+          <Label className="text-xs">Control / entity number (once approved)</Label>
           <Input
             value={ctl}
             onChange={(e) => setCtl(e.target.value)}
@@ -471,9 +565,11 @@ function ArticlesPanel({
 }
 
 function EinPanel({
+  state,
   progress,
   onSave,
 }: {
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   onSave: (p: Partial<LegalSetupProgress>) => void;
 }) {
@@ -483,7 +579,7 @@ function EinPanel({
     <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
       <ol className="ml-4 list-decimal space-y-1 text-xs text-muted-foreground">
         <li>Open the IRS EIN online application (Mon–Fri, 7am–10pm ET).</li>
-        <li>Legal structure → <strong>Limited Liability Company</strong> → number of members → state <strong>Georgia</strong>.</li>
+        <li>Legal structure → <strong>Limited Liability Company</strong> → number of members → state <strong>{state.name}</strong>.</li>
         <li>Reason for applying → <strong>Started a new business</strong>.</li>
         <li>Responsible party → your legal name + SSN or ITIN.</li>
         <li><strong>Download the CP 575 PDF at the end.</strong> The IRS will not email it.</li>
@@ -507,9 +603,11 @@ function EinPanel({
 }
 
 function OperatingAgreementPanel({
+  state,
   progress,
   onSave,
 }: {
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   onSave: (p: Partial<LegalSetupProgress>) => void;
 }) {
@@ -536,7 +634,7 @@ function OperatingAgreementPanel({
           </>
         ) : (
           <>
-            <FileText className="mr-2 h-4 w-4" /> {md ? "Regenerate draft" : "Generate my Operating Agreement"}
+            <FileText className="mr-2 h-4 w-4" /> {md ? "Regenerate draft" : `Generate my ${state.name} Operating Agreement`}
           </>
         )}
       </Button>
@@ -547,20 +645,31 @@ function OperatingAgreementPanel({
       )}
       {md && (
         <p className="text-xs text-muted-foreground">
-          This is a starting draft. If you have cofounders or outside investors, have a Georgia
-          business attorney review it before you sign.
+          This is a starting draft citing {state.llcActCitation}. If you have cofounders or outside investors, have a {state.name} business attorney review it before you sign.
         </p>
       )}
     </div>
   );
 }
 
-function PostFormationPanel() {
+function PostFormationPanel({ state }: { state: ReturnType<typeof getStateByCode> }) {
+  if (!state.annualReport.required) {
+    return (
+      <div className="rounded-xl border border-white/10 bg-background/40 p-4 text-xs text-muted-foreground">
+        <strong className="text-foreground">{state.name}</strong> does not require an annual
+        report for LLCs. Confirm on the {state.filingAgency} site and keep an eye on any
+        franchise or business-privilege tax that may still apply.
+      </div>
+    );
+  }
   return (
     <div className="rounded-xl border border-white/10 bg-background/40 p-4 text-xs text-muted-foreground">
-      Every year on <strong className="text-foreground">April 1</strong>, file your Georgia
-      Annual Registration ($50). Skip it two years in a row and the state will
-      administratively dissolve your LLC.
+      File your <strong className="text-foreground">{state.name} {state.annualReport.label}</strong> —
+      {" "}${state.annualReport.feeUsd}, {state.annualReport.dueRule}. Skip it and the state may
+      administratively dissolve your LLC. Filing portal:{" "}
+      <a href={state.annualReport.filingUrl} target="_blank" rel="noreferrer noopener" className="underline">
+        {state.annualReport.filingUrl}
+      </a>
     </div>
   );
 }
@@ -570,7 +679,7 @@ function StuckHelpButton({ step }: { step: LegalStep }) {
     try {
       window.dispatchEvent(
         new CustomEvent("concierge:open", {
-          detail: { prompt: `I'm stuck on the "${step.label}" step for forming my Georgia LLC. ${step.short}` },
+          detail: { prompt: `I'm stuck on the "${step.label}" step for forming my LLC. ${step.short}` },
         }),
       );
     } catch {}
@@ -581,3 +690,4 @@ function StuckHelpButton({ step }: { step: LegalStep }) {
     </Button>
   );
 }
+
