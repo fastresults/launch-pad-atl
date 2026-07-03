@@ -464,7 +464,7 @@ export function DocumentViewer({
         body: { snapshotId: doc.snapshot_id, documentType: doc.document_type },
       });
       if (error) throw new Error(error.message);
-      if (data && data.ok === false) throw new Error(data.error ?? "Deep assessment failed");
+      if (data && data.ok === false) throw new Error(data.error ?? "Deep dive failed");
       // Fetch the freshly stored assessment
       const { data: row } = await supabase
         .from("venture_documents")
@@ -474,9 +474,10 @@ export function DocumentViewer({
         .maybeSingle();
       setAssessment(row?.deep_assessment ?? null);
       setAssessmentStatus(row?.deep_assessment_status ?? "complete");
-      toast.success("Deep assessment ready");
+      toast.success("Deep dive ready");
     } catch (e) {
-      const msg = edgeErrorMessage(e, "Deep assessment failed");
+      const msg = edgeErrorMessage(e, "Deep dive failed");
+
       setAssessmentError(msg);
       setAssessmentStatus("failed");
       toast.error(msg);
