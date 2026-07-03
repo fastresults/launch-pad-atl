@@ -9,11 +9,9 @@ export async function embedText(text: string): Promise<number[]> {
 }
 
 export async function embedTexts(texts: string[]): Promise<number[][]> {
-  const input = texts.map((text) => (text ?? "").trim()).filter(Boolean);
+  const input = texts.map((text) => (text ?? "").trim().slice(0, 8000)).filter(Boolean);
   if (!input.length) throw new Error("embedTexts: empty input");
 
-  const input = (text ?? "").trim().slice(0, 8000);
-  if (!input) throw new Error("embedText: empty input");
   const res = await aiFetch("https://ai.gateway.lovable.dev/v1/embeddings", {
     method: "POST",
     headers: {
