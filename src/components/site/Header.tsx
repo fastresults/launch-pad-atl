@@ -138,5 +138,7 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
+      <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
+    </>
   );
 }
