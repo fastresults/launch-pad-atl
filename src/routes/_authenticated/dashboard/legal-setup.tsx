@@ -304,9 +304,11 @@ function StepInputs({
 // ---------- Step panels ----------
 
 function EntityChoicePanel({
+  state,
   progress,
   onSave,
 }: {
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   onSave: (p: Partial<LegalSetupProgress>) => void;
 }) {
@@ -314,11 +316,11 @@ function EntityChoicePanel({
   useEffect(() => {
     if (progress?.entity_choice) setChoice(progress.entity_choice);
   }, [progress?.entity_choice]);
-  const rec = recommendEntity({ hasCofounders: false });
+  const rec = recommendEntity({ hasCofounders: false, stateCode: state.code });
   return (
     <div className="rounded-xl border border-white/10 bg-background/40 p-4">
-      <div className="mb-2 flex items-center gap-2 text-xs">
-        <Sparkles className="h-3.5 w-3.5 text-primary" />
+      <div className="mb-2 flex items-start gap-2 text-xs">
+        <Sparkles className="h-3.5 w-3.5 flex-none text-primary mt-0.5" />
         <span className="font-medium">Our recommendation:</span>
         <span className="text-muted-foreground">{rec.reason}</span>
       </div>
@@ -354,10 +356,12 @@ function EntityChoicePanel({
 }
 
 function NameCheckPanel({
+  state,
   progress,
   defaultName,
   onSave,
 }: {
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   defaultName: string;
   onSave: (p: Partial<LegalSetupProgress>) => void;
@@ -368,10 +372,9 @@ function NameCheckPanel({
     setName(progress?.business_name || defaultName || "");
     setReserved(progress?.name_reserved ?? false);
   }, [progress?.business_name, progress?.name_reserved, defaultName]);
-  const searchUrl = useMemo(
-    () => `https://ecorp.sos.ga.gov/BusinessSearch?businessName=${encodeURIComponent(name || "")}`,
-    [name],
-  );
+  const reservationCopy = state.nameReservationFeeUsd
+    ? `I reserved this name ($${state.nameReservationFeeUsd}, optional)`
+    : `${state.name} does not offer name reservation`;
   return (
     <div className="grid gap-3 rounded-xl border border-white/10 bg-background/40 p-4 sm:grid-cols-2">
       <div>
@@ -380,18 +383,19 @@ function NameCheckPanel({
           value={name}
           onChange={(e) => setName(e.target.value)}
           onBlur={() => onSave({ business_name: name || null })}
-          placeholder="e.g. Peachtree Kitchen LLC"
+          placeholder={`e.g. Acme ${state.name} LLC`}
         />
         <div className="mt-2">
           <Button asChild size="sm" variant="secondary">
-            <a href={searchUrl} target="_blank" rel="noreferrer noopener">
-              Search this name on eCorp <ExternalLink className="ml-1 h-3.5 w-3.5" />
+            <a href={state.nameSearchUrl} target="_blank" rel="noreferrer noopener">
+              Search on {state.filingAgency.split(",")[0]} <ExternalLink className="ml-1 h-3.5 w-3.5" />
             </a>
           </Button>
         </div>
       </div>
-      <label className="mt-6 flex cursor-pointer items-start gap-2 text-sm">
+      <label className={`mt-6 flex items-start gap-2 text-sm ${state.nameReservationFeeUsd ? "cursor-pointer" : "opacity-60"}`}>
         <Checkbox
+          disabled={!state.nameReservationFeeUsd}
           checked={reserved}
           onCheckedChange={(v) => {
             const next = !!v;
@@ -400,9 +404,11 @@ function NameCheckPanel({
           }}
         />
         <div>
-          <div className="font-medium">I reserved this name ($25, optional)</div>
+          <div className="font-medium">{reservationCopy}</div>
           <div className="text-xs text-muted-foreground">
-            Only needed if you're not filing within 30 days.
+            {state.nameReservationFeeUsd
+              ? `Only needed if you're not filing within ${state.nameReservationDays ?? 30} days.`
+              : "Skip this step and go straight to filing your Articles."}
           </div>
         </div>
       </label>
@@ -411,10 +417,12 @@ function NameCheckPanel({
 }
 
 function RegisteredAgentPanel({
+  state,
   progress,
   defaultAgent,
   onSave,
 }: {
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   defaultAgent: string;
   onSave: (p: Partial<LegalSetupProgress>) => void;
@@ -429,6 +437,7 @@ function RegisteredAgentPanel({
   }, [progress?.registered_agent_choice, progress?.registered_agent_name, progress?.registered_agent_service, defaultAgent]);
   return (
     <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+      <p className="text-xs text-muted-foreground">{state.registeredAgentRules}</p>
       <RadioGroup
         value={choice}
         onValueChange={(v) => {
@@ -438,8 +447,8 @@ function RegisteredAgentPanel({
         className="grid gap-2 sm:grid-cols-3"
       >
         {[
-          { v: "self", label: "I'll be my own agent", sub: "Free, public address" },
-          { v: "cofounder", label: "Cofounder / friend", sub: "Free, they must agree" },
+          { v: "self", label: "I'll be my own agent", sub: `Free, public ${state.code} address` },
+          { v: "cofounder", label: "Cofounder / friend", sub: `Must live in ${state.name}` },
           { v: "service", label: "Use a service", sub: "$99–$150/year, private" },
         ].map((opt) => (
           <label
@@ -482,10 +491,12 @@ function RegisteredAgentPanel({
 }
 
 function ArticlesPanel({
+  state,
   progress,
   filing,
   onSave,
 }: {
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   filing: Record<string, any>;
   onSave: (p: Partial<LegalSetupProgress>) => void;
@@ -501,9 +512,10 @@ function ArticlesPanel({
   const crib = [
     ["Entity name", progress?.business_name || filing?.llc_name || "—"],
     ["Registered Agent name", progress?.registered_agent_name || filing?.registered_agent_name || "—"],
-    ["Registered Agent address", filing?.registered_agent_address || `${filing?.address_line1 ?? ""} ${filing?.city ?? ""}, GA ${filing?.postal_code ?? ""}` || "—"],
-    ["Principal office", `${filing?.address_line1 ?? ""} ${filing?.city ?? ""}, GA ${filing?.postal_code ?? ""}`],
+    ["Registered Agent address", filing?.registered_agent_address || `${filing?.address_line1 ?? ""} ${filing?.city ?? ""}, ${state.code} ${filing?.postal_code ?? ""}` || "—"],
+    ["Principal office", `${filing?.address_line1 ?? ""} ${filing?.city ?? ""}, ${state.code} ${filing?.postal_code ?? ""}`],
     ["Organizer", `${filing?.legal_first_name ?? ""} ${filing?.legal_last_name ?? ""}`.trim() || "—"],
+    ["File with", `${state.filingAgency} · ${state.filingAgencyAddress}${state.filingAgencyPhone ? ` · ${state.filingAgencyPhone}` : ""}`],
   ];
   return (
     <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
@@ -528,7 +540,7 @@ function ArticlesPanel({
       <Separator className="opacity-40" />
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <Label className="text-xs">Control number (once approved)</Label>
+          <Label className="text-xs">Control / entity number (once approved)</Label>
           <Input
             value={ctl}
             onChange={(e) => setCtl(e.target.value)}
@@ -553,9 +565,11 @@ function ArticlesPanel({
 }
 
 function EinPanel({
+  state,
   progress,
   onSave,
 }: {
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   onSave: (p: Partial<LegalSetupProgress>) => void;
 }) {
@@ -565,7 +579,7 @@ function EinPanel({
     <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
       <ol className="ml-4 list-decimal space-y-1 text-xs text-muted-foreground">
         <li>Open the IRS EIN online application (Mon–Fri, 7am–10pm ET).</li>
-        <li>Legal structure → <strong>Limited Liability Company</strong> → number of members → state <strong>Georgia</strong>.</li>
+        <li>Legal structure → <strong>Limited Liability Company</strong> → number of members → state <strong>{state.name}</strong>.</li>
         <li>Reason for applying → <strong>Started a new business</strong>.</li>
         <li>Responsible party → your legal name + SSN or ITIN.</li>
         <li><strong>Download the CP 575 PDF at the end.</strong> The IRS will not email it.</li>
@@ -589,9 +603,11 @@ function EinPanel({
 }
 
 function OperatingAgreementPanel({
+  state,
   progress,
   onSave,
 }: {
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   onSave: (p: Partial<LegalSetupProgress>) => void;
 }) {
@@ -618,7 +634,7 @@ function OperatingAgreementPanel({
           </>
         ) : (
           <>
-            <FileText className="mr-2 h-4 w-4" /> {md ? "Regenerate draft" : "Generate my Operating Agreement"}
+            <FileText className="mr-2 h-4 w-4" /> {md ? "Regenerate draft" : `Generate my ${state.name} Operating Agreement`}
           </>
         )}
       </Button>
@@ -629,20 +645,31 @@ function OperatingAgreementPanel({
       )}
       {md && (
         <p className="text-xs text-muted-foreground">
-          This is a starting draft. If you have cofounders or outside investors, have a Georgia
-          business attorney review it before you sign.
+          This is a starting draft citing {state.llcActCitation}. If you have cofounders or outside investors, have a {state.name} business attorney review it before you sign.
         </p>
       )}
     </div>
   );
 }
 
-function PostFormationPanel() {
+function PostFormationPanel({ state }: { state: ReturnType<typeof getStateByCode> }) {
+  if (!state.annualReport.required) {
+    return (
+      <div className="rounded-xl border border-white/10 bg-background/40 p-4 text-xs text-muted-foreground">
+        <strong className="text-foreground">{state.name}</strong> does not require an annual
+        report for LLCs. Confirm on the {state.filingAgency} site and keep an eye on any
+        franchise or business-privilege tax that may still apply.
+      </div>
+    );
+  }
   return (
     <div className="rounded-xl border border-white/10 bg-background/40 p-4 text-xs text-muted-foreground">
-      Every year on <strong className="text-foreground">April 1</strong>, file your Georgia
-      Annual Registration ($50). Skip it two years in a row and the state will
-      administratively dissolve your LLC.
+      File your <strong className="text-foreground">{state.name} {state.annualReport.label}</strong> —
+      {" "}${state.annualReport.feeUsd}, {state.annualReport.dueRule}. Skip it and the state may
+      administratively dissolve your LLC. Filing portal:{" "}
+      <a href={state.annualReport.filingUrl} target="_blank" rel="noreferrer noopener" className="underline">
+        {state.annualReport.filingUrl}
+      </a>
     </div>
   );
 }
@@ -652,7 +679,7 @@ function StuckHelpButton({ step }: { step: LegalStep }) {
     try {
       window.dispatchEvent(
         new CustomEvent("concierge:open", {
-          detail: { prompt: `I'm stuck on the "${step.label}" step for forming my Georgia LLC. ${step.short}` },
+          detail: { prompt: `I'm stuck on the "${step.label}" step for forming my LLC. ${step.short}` },
         }),
       );
     } catch {}
@@ -663,3 +690,4 @@ function StuckHelpButton({ step }: { step: LegalStep }) {
     </Button>
   );
 }
+
