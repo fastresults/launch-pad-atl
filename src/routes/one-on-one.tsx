@@ -18,6 +18,7 @@ import {
   FolderKanban,
 } from "lucide-react";
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
+import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
 
 const INCLUDES = [
   { icon: Palette, title: "Brand identity", body: "Logo, palette, typography, and a written brand guide." },
