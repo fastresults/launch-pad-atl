@@ -32,6 +32,7 @@ import {
 import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { TestimonialForm } from "@/components/admin/TestimonialForm";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export default function AdminTestimonialsPage() {
   const confirm = useConfirm();
@@ -190,8 +191,8 @@ export default function AdminTestimonialsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => {
-                        if (confirm("Delete this testimonial? This also deletes the uploaded files.")) {
+                      onClick={async () => {
+                        if (await confirm({ title: "Delete this testimonial?", description: "This also deletes the uploaded files.", destructive: true, confirmText: "Delete" })) {
                           del.mutate(it.id);
                         }
                       }}
