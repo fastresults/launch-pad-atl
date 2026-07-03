@@ -116,11 +116,24 @@ function Blockquote({ children }: any) {
   );
 }
 
-function makeComponents(setHeadings: (h: { id: string; text: string }[]) => void) {
+function makeComponents(
+  setHeadings: (h: { id: string; text: string }[]) => void,
+  assetTitle?: string,
+) {
   const headings: { id: string; text: string }[] = [];
 
+  const relabel = (text: string): string => {
+    if (!assetTitle) return text;
+    if (/^\s*executive\s+summary\s*$/i.test(text)) return `${assetTitle} Summary`;
+    if (/^\s*mckinsey[-\s]*grade\s*assessment\s*$/i.test(text)) return `${assetTitle} Deep Dive`;
+    if (/^\s*deep\s+dive\s*$/i.test(text)) return `${assetTitle} Deep Dive`;
+    return text;
+  };
+
   const heading = (level: 1 | 2 | 3 | 4) => ({ children }: any) => {
-    const text = textOf(children);
+    const rawText = textOf(children);
+    const text = relabel(rawText);
+    const relabeled = text !== rawText;
     const id = slugify(text);
     if (level === 2) headings.push({ id, text });
     const Tag: any = `h${level}`;
@@ -130,10 +143,12 @@ function makeComponents(setHeadings: (h: { id: string; text: string }[]) => void
       3: "mt-5 mb-2 text-base font-semibold text-foreground",
       4: "mt-4 mb-1.5 text-sm font-semibold uppercase tracking-wide text-muted-foreground",
     }[level];
-    const isDeepDive = level === 2 && /mckinsey[-\s]*grade\s*assessment/i.test(text);
+    const isDeepDive =
+      (level === 1 || level === 2) &&
+      /(mckinsey[-\s]*grade\s*assessment|deep\s+dive)/i.test(rawText);
     return (
       <Tag id={id} className={cls}>
-        {children}
+        {relabeled ? text : children}
         {isDeepDive && (
           <span className="ml-2 inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 align-middle text-[10px] font-medium uppercase tracking-wide text-primary">
             Deep dive
@@ -142,6 +157,7 @@ function makeComponents(setHeadings: (h: { id: string; text: string }[]) => void
       </Tag>
     );
   };
+
 
   // Defer setHeadings to next tick to avoid setState-in-render warnings
   queueMicrotask(() => setHeadings(headings));
