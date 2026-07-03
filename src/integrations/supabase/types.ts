@@ -800,6 +800,51 @@ export type Database = {
         }
         Relationships: []
       }
+      brain_indexing_jobs: {
+        Row: {
+          created_at: string
+          embedded_chunks: number
+          error_message: string | null
+          failed_chunks: number
+          finished_at: string | null
+          id: string
+          started_at: string | null
+          status: string
+          total_chunks: number
+          total_sources: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          embedded_chunks?: number
+          error_message?: string | null
+          failed_chunks?: number
+          finished_at?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string
+          total_chunks?: number
+          total_sources?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          embedded_chunks?: number
+          error_message?: string | null
+          failed_chunks?: number
+          finished_at?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string
+          total_chunks?: number
+          total_sources?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bulk_unlock_codes: {
         Row: {
           code_hash: string
