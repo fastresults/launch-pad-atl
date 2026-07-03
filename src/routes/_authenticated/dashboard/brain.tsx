@@ -101,6 +101,7 @@ export default function BrainPage() {
   });
 
   const [input, setInput] = useState("");
+  const [view, setView] = useState<"chat" | "map">("chat");
   const [pending, setPending] = useState(false);
   const [voiceOn, setVoiceOn] = useState(false);
   const [recording, setRecording] = useState(false);
