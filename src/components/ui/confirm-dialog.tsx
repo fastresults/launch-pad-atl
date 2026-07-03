@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -220,7 +220,7 @@ export function PromptDialog({
   onConfirm: (value: string) => void;
 }) {
   const [value, setValue] = useState(defaultValue);
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) setValue(defaultValue);
   }, [open, defaultValue]);
   return (
