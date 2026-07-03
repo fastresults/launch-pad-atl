@@ -51,7 +51,7 @@ const MODES: Mode[] = [
     format: "Adam + creative team · full build",
     promise:
       "Skip the build. Adam and his team set up your startup end-to-end — brand, website, social channels, and systems — while you stay founder.",
-    price: "$1,997 · everything included",
+    price: "$2,799 · everything included",
     cta: "Have Adam build it",
     to: "/one-on-one",
     featured: true,
