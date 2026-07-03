@@ -303,10 +303,12 @@ export function DocumentViewer({
   const [tocOpen, setTocOpen] = useState(false);
   const [heroUrl, setHeroUrl] = useState<string | null>(null);
   const [heroPath, setHeroPath] = useState<string | null>(doc?.hero_image_path ?? null);
+  const [heroStatus, setHeroStatus] = useState<string | null>(doc?.hero_image_status ?? null);
   const [heroLoading, setHeroLoading] = useState(false);
   const [heroSigning, setHeroSigning] = useState(false);
   const [heroError, setHeroError] = useState<string | null>(null);
   const [heroRetryNonce, setHeroRetryNonce] = useState(0);
+  const heroImgErrorOnceRef = useRef(false);
 
   // Deep assessment (on-demand McKinsey-grade analysis)
   const [assessment, setAssessment] = useState<string | null>(doc?.deep_assessment ?? null);
