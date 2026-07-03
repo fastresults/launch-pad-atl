@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
     if (!doc) {
       return json({ error: "Document not found" }, { status: 404 });
     }
-    if (doc.hero_image_path && doc.hero_image_status === "ready" && !force) {
+    if (doc.hero_image_path && !force && doc.hero_image_status !== "generating" && doc.hero_image_status !== "failed") {
       const signedUrl = await signPath(admin, doc.hero_image_path);
       return json({ ok: true, path: doc.hero_image_path, signedUrl, status: "ready", skipped: true, reason: "already_ready" });
     }
