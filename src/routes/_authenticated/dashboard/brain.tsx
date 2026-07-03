@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   loadBrainHistory, sendBrainMessage, clearBrainHistory, rebuildBrainMemory,
-  saveBrainNote, listBrainNotes, deleteBrainNote, getBrainStatus,
+  saveBrainNote, listBrainNotes, deleteBrainNote, getBrainStatus, formatContentAsNote,
   pollBrainJob, getLatestBrainJob, purgeGeneratedAssets, detectVentureMismatch,
   listBrainVentures,
   type BrainMessage, type BrainIndexingJob, type BrainVenture,
@@ -321,34 +321,45 @@ export default function BrainPage() {
 
   async function saveLastAsNote() {
     if (!userId) return;
-    const lastAssistant = [...history].reverse().find((m) => m.role === "assistant");
-    if (!lastAssistant) { toast.info("No answer to save yet"); return; }
-    try {
-      await saveBrainNote(userId, lastAssistant.content, snapshotId, "chat");
-      toast.success("Saved as note");
-      qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
-    } catch (e: any) {
-      toast.error(e?.message ?? "Save failed");
-    }
+    const idx = [...history].map((m, i) => ({ m, i })).reverse().find(({ m }) => m.role === "assistant");
+    if (!idx) { toast.info("No answer to save yet"); return; }
+    await saveMessageAsNote(idx.m.content, idx.m.id);
   }
 
   async function addManualNote() {
     if (!userId) return;
     const text = window.prompt("Note (this becomes part of your brain memory next rebuild):");
     if (!text?.trim()) return;
-    await saveBrainNote(userId, text, snapshotId, "text");
-    toast.success("Note saved. Rebuild memory to embed it.");
-    qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
-  }
-
-  async function saveMessageAsNote(content: string) {
-    if (!userId || !content.trim()) return;
+    const tid = toast.loading("Formatting note…");
     try {
-      await saveBrainNote(userId, content, snapshotId, "chat");
-      toast.success("Saved as note");
+      const body = await formatContentAsNote(text);
+      await saveBrainNote(userId, body, snapshotId, "text");
+      toast.success("Note saved. Rebuild memory to embed it.", { id: tid });
       qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
     } catch (e: any) {
-      toast.error(e?.message ?? "Save failed");
+      toast.error(e?.message ?? "Save failed", { id: tid });
+    }
+  }
+
+  async function saveMessageAsNote(content: string, messageId?: string) {
+    if (!userId || !content.trim()) return;
+    // Grab the user turn that immediately preceded this assistant answer
+    // so the summarizer has the question for better titles.
+    let question = "";
+    if (messageId) {
+      const i = history.findIndex((m) => m.id === messageId);
+      for (let k = i - 1; k >= 0; k--) {
+        if (history[k].role === "user") { question = history[k].content; break; }
+      }
+    }
+    const tid = toast.loading("Summarizing into a note…");
+    try {
+      const body = await formatContentAsNote(content, question);
+      await saveBrainNote(userId, body, snapshotId, "chat");
+      toast.success("Saved as note", { id: tid });
+      qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Save failed", { id: tid });
     }
   }
 
