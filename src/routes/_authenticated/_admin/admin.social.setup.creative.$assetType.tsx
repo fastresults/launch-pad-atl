@@ -25,6 +25,7 @@ import {
   COLOR_MOODS,
   type AssetType,
 } from "@/lib/creative-vibes";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   generateVariations,
   selectVariation,
@@ -308,6 +309,7 @@ function VariationCard({
   onDelete: () => void;
   busy: boolean;
 }) {
+  const confirm = useConfirm();
   return (
     <div
       className={`overflow-hidden rounded border ${
@@ -367,8 +369,8 @@ function VariationCard({
             size="icon"
             variant="ghost"
             disabled={busy}
-            onClick={() => {
-              if (confirm("Delete this variation?")) onDelete();
+            onClick={async () => {
+              if (await confirm({ title: "Delete this variation?", destructive: true, confirmText: "Delete" })) onDelete();
             }}
             title="Delete"
           >
