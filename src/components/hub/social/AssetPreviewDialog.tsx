@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AssetImage } from "./AssetImage";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export type PreviewableAsset = {
   url?: string | null;
@@ -322,8 +323,8 @@ export function AssetPreviewDialog({
                   variant="outline"
                   disabled={busy}
                   className="w-full justify-start border-status-danger/40 text-status-danger hover:bg-status-danger/10 hover:text-status-danger"
-                  onClick={() => {
-                    if (window.confirm("Delete this image? The tile will reset so you can generate a fresh one.")) {
+                  onClick={async () => {
+                    if (await confirmDialog({ title: "Delete this image?", description: "The tile will reset so you can generate a fresh one.", destructive: true, confirmText: "Delete" })) {
                       onDelete();
                     }
                   }}
