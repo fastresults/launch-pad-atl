@@ -15,10 +15,12 @@ import {
 import { toast } from "sonner";
 import { listPosts, deletePost } from "@/lib/zernio.functions";
 import { Trash2 } from "lucide-react";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export default function AdminSocialPosts() {
   const [status, setStatus] = useState<string>("all");
   const qc = useQueryClient();
+  const confirm = useConfirm();
 
   const postsQ = useQuery({
     queryKey: ["zernio", "posts", status],
@@ -91,9 +93,9 @@ export default function AdminSocialPosts() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => {
-                      if (confirm("Delete this post?")) deleteMut.mutate(id);
-                    }}
+                      onClick={async () => {
+                        if (await confirm({ title: "Delete this post?", destructive: true, confirmText: "Delete" })) deleteMut.mutate(id);
+                      }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
