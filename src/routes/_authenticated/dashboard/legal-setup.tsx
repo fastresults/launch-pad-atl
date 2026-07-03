@@ -182,12 +182,14 @@ export default function LegalSetupPage() {
 
 function StepBlock({
   step,
+  state,
   done,
   progress,
   filing,
   onToggle,
 }: {
   step: LegalStep;
+  state: ReturnType<typeof getStateByCode>;
   done: boolean;
   progress: LegalSetupProgress | null;
   filing: Record<string, any>;
@@ -222,7 +224,8 @@ function StepBlock({
         <div className="space-y-4 text-sm">
           <p className="whitespace-pre-line leading-relaxed text-muted-foreground">{step.detail}</p>
 
-          <StepInputs step={step} progress={progress} filing={filing} />
+          <StepInputs step={step} state={state} progress={progress} filing={filing} />
+
 
           <div className="flex flex-wrap gap-2">
             {step.officialLinks.map((l) => (
