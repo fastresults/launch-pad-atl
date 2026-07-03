@@ -25,6 +25,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { AssetPreviewDialog, type PreviewableAsset } from "./AssetPreviewDialog";
 import { RotateCcw } from "lucide-react";
 import { edgeStatus, edgeErrorMessage } from "@/lib/edge-errors";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 const PLATFORM_ICONS: Record<string, any> = {
   Instagram, LinkedIn: Linkedin, X: Twitter, Twitter, Facebook,
@@ -544,7 +545,7 @@ function Step4Style({
   };
 
   const deletePreview = async (dirId: string) => {
-    if (!window.confirm("Delete this style preview? It will regenerate fresh from scratch.")) return;
+    if (!(await confirm({ title: "Delete style preview?", description: "It will regenerate fresh from scratch.", destructive: true, confirmText: "Delete" }))) return;
     setBusy((b) => ({ ...b, [dirId]: true }));
     try {
       await deleteStylePreview(snapshotId, dirId);
@@ -905,7 +906,7 @@ function Step5BuildKit({
   const deleteAsset = async (t: any) => {
     if (!t?.asset_id) return;
     const k = taskKey(t);
-    if (!window.confirm(`Delete this ${t.platform} ${String(t.asset).replace(/_/g, " ")}? The tile will reset so you can generate a fresh one.`)) return;
+    if (!(await confirm({ title: "Delete asset?", description: `Delete this ${t.platform} ${String(t.asset).replace(/_/g, " ")}? The tile will reset so you can generate a fresh one.`, destructive: true, confirmText: "Delete" }))) return;
     setTaskRunning(k, true);
     try {
       await deleteSocialAsset(snapshotId, t.asset_id);
