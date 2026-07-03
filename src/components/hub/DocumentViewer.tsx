@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -342,6 +342,7 @@ export function DocumentViewer({
   const [heroRetryNonce, setHeroRetryNonce] = useState(0);
   const heroDocKeyRef = useRef<string | null>(null);
   const heroImgErrorOnceRef = useRef(false);
+  const heroUrlRef = useRef<string | null>(null);
 
   // Deep assessment (on-demand McKinsey-grade analysis)
   const [assessment, setAssessment] = useState<string | null>(doc?.deep_assessment ?? null);
@@ -364,6 +365,10 @@ export function DocumentViewer({
   const assessmentComponents = useMemo(() => makeComponents(() => {}, title), [assessment, title]);
   const content = contentOverride ?? doc?.content ?? "";
   const printRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    heroUrlRef.current = heroUrl;
+  }, [heroUrl]);
 
   const exportContent = useMemo(() => {
     const hasAssessment =
@@ -546,7 +551,10 @@ export function DocumentViewer({
       return nextPath;
     });
     setHeroStatus(doc?.hero_image_status ?? null);
-    if (docChanged || !nextPath) setHeroUrl(null);
+      if (docChanged || !nextPath) {
+        setHeroUrl(null);
+        heroUrlRef.current = null;
+      }
     setHeroError(null);
     if (docChanged) heroImgErrorOnceRef.current = false;
   }, [doc?.snapshot_id, doc?.document_type, doc?.hero_image_path, doc?.hero_image_status]);
@@ -672,6 +680,7 @@ export function DocumentViewer({
           await loadImage(url, attempt > 0 ? 20_000 : 15_000);
           if (cancelled) return;
           setHeroUrl(url);
+          heroUrlRef.current = url;
           setHeroError(null);
           setHeroStatus((prev) => prev ?? "ready");
           return;
@@ -681,8 +690,10 @@ export function DocumentViewer({
         }
       }
       if (!cancelled) {
-        setHeroUrl(null);
-        setHeroError(lastError instanceof Error ? lastError.message : "Saved visual could not be loaded");
+        if (!heroUrlRef.current) {
+          setHeroUrl(null);
+          setHeroError(lastError instanceof Error ? lastError.message : "Saved visual could not be loaded");
+        }
       }
     })().finally(() => {
       if (!cancelled) {
@@ -746,6 +757,7 @@ export function DocumentViewer({
             setHeroImageLoading(true);
             await loadImage(url, 20_000);
             setHeroUrl(url);
+            heroUrlRef.current = url;
           } catch {
             // The normal heroPath effect will retry with a freshly minted URL.
             setHeroRetryNonce((n) => n + 1);
@@ -902,6 +914,9 @@ export function DocumentViewer({
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-primary" />
               <DialogTitle className="truncate text-base font-semibold">{title}</DialogTitle>
+              <DialogDescription className="sr-only">
+                Review, export, save, and generate the visual header for this startup document.
+              </DialogDescription>
             </div>
             <div className="mt-1 flex items-center gap-2">
               <Badge variant="outline" className="text-[10px] font-mono lowercase">
@@ -984,11 +999,12 @@ export function DocumentViewer({
                       if (!heroImgErrorOnceRef.current && heroPath) {
                         heroImgErrorOnceRef.current = true;
                         invalidateSignedStorageUrl(HERO_BUCKET, heroPath);
-                        setHeroUrl(null);
+                        setHeroImageLoading(true);
                         setHeroRetryNonce((n) => n + 1);
                         return;
                       }
                       setHeroUrl(null);
+                      heroUrlRef.current = null;
                       setHeroError("Saved visual file could not be displayed.");
                     }}
                   />
