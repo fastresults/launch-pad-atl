@@ -197,22 +197,51 @@ export async function getBrainStatus(userId: string, snapshotId: string | null) 
   let noteQ = supabase.from("founder_brain_notes").select("id", { count: "exact", head: true }).eq("user_id", userId);
   noteQ = snapshotId ? noteQ.eq("snapshot_id", snapshotId) : noteQ.is("snapshot_id", null);
 
-  const [{ count: memCount }, { count: noteCount }, { data: delivs }] = await Promise.all([
+  // The current workflow writes assets to venture_documents (snapshot-scoped).
+  // Legacy accounts kept theirs in attendee_deliverables (user-scoped). When
+  // we have a snapshot, prefer venture_documents; otherwise fall back so the
+  // status card still works for pre-migration users.
+  const vdocsQ = snapshotId
+    ? supabase
+        .from("venture_documents")
+        .select("status, content, deep_assessment_status, hero_image_status")
+        .eq("snapshot_id", snapshotId)
+    : Promise.resolve({ data: [] as any[] });
+
+  const [{ count: memCount }, { count: noteCount }, vdocsRes, { data: delivs }] = await Promise.all([
     memQ,
     noteQ,
+    vdocsQ,
     supabase
       .from("attendee_deliverables")
       .select("deliverable_key, content_current, deep_assessment_status, hero_image_status")
       .eq("user_id", userId),
   ]);
-  const rows = delivs ?? [];
-  const generated = rows.filter((r: any) => r.content_current && Object.keys(r.content_current).length).length;
-  const assessed = rows.filter((r: any) => r.deep_assessment_status === "complete").length;
-  const heroReady = rows.filter((r: any) => r.hero_image_status === "ready").length;
+
+  const vdocs = (vdocsRes as any)?.data ?? [];
+  const delivRows = delivs ?? [];
+
+  let totalAssets = 0;
+  let generated = 0;
+  let assessed = 0;
+  let heroReady = 0;
+
+  if (vdocs.length > 0) {
+    totalAssets = vdocs.length;
+    generated = vdocs.filter((r: any) => r.status === "complete" && r.content && String(r.content).trim().length > 0).length;
+    assessed = vdocs.filter((r: any) => r.deep_assessment_status === "complete").length;
+    heroReady = vdocs.filter((r: any) => r.hero_image_status === "ready").length;
+  } else {
+    totalAssets = delivRows.length;
+    generated = delivRows.filter((r: any) => r.content_current && Object.keys(r.content_current).length).length;
+    assessed = delivRows.filter((r: any) => r.deep_assessment_status === "complete").length;
+    heroReady = delivRows.filter((r: any) => r.hero_image_status === "ready").length;
+  }
+
   return {
     memoryChunks: memCount ?? 0,
     notes: noteCount ?? 0,
-    totalAssets: rows.length,
+    totalAssets,
     generated,
     assessed,
     heroReady,
