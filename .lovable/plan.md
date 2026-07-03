@@ -1,55 +1,83 @@
-## Two things in one turn
 
-### 1. Fix the build (blocking)
+# Position the 1:1 as the market's best-value "Plan B" activator
 
-`src/routes/_authenticated/_admin/admin.index.tsx` imports `ConfirmDialog` from `@/components/ui/confirm-dialog`, but I only shipped `PromptDialog`, `useConfirm`, and `usePrompt` last turn. The named export never existed, so Rollup fails.
+## The angle
 
-Add a `ConfirmDialog` component export to `src/components/ui/confirm-dialog.tsx` matching the call-site API in admin.index.tsx:
+Most founders don't need another course — they need a **second stream of income that's actually built and live**. That's the "Plan B profit generator" hook. And at $2,799 for a full done-for-you startup (brand, site, social, systems, plan), this is priced against $8k–$25k agency builds. Say that plainly — award-winning conversion copy names the alternative and shows the gap.
 
-```
-open, onOpenChange, title, description,
-confirmLabel, cancelLabel?, variant ("default" | "destructive"),
-reasonLabel?, reasonPlaceholder?, loading,
-onConfirm(reason?: string)
-```
+Voice: Adam's. Short sentences. Concrete comparisons. No hype adjectives; specific numbers instead.
 
-Built on shadcn `AlertDialog`. When `reasonLabel` is set, render a `Textarea` inside the dialog and pass its value to `onConfirm`. This is a controlled dialog (no context needed) — matches how admin.index already uses it.
+## Copy changes (all in `src/routes/one-on-one.tsx`)
 
-### 2. Add three access modes without cluttering the hero
+### 1. Eyebrow pill (top of hero)
+From: *"Done-for-you · with Adam & team"*
+To: **"Your Plan B profit generator · built for you"**
 
-**Recommendation:** keep the hero visually unchanged (one primary CTA), and introduce a single new element that opens all three paths on demand. Concretely:
+### 2. H1
+From: *"Skip the build. Get the business."*
+To: **"Activate your Plan B."**
+Gradient tail: **"We build the business. You keep the profit."**
 
-**A. One "How to work with Adam" chip under the primary CTA** (replaces nothing, adds one line).
+### 3. Hero sub-paragraph — rewrite
+> Your paycheck is Plan A. Your Plan B is the startup you keep meaning to launch. Adam and his creative team build it *for* you — brand, website, social channels, positioning, and systems — so your second income stream is live in weeks, not "someday."
 
-- Text: "Prefer a webinar or 1:1?" as a subtle underlined link.
-- Clicking it opens an **`AccessModeDialog`** (in-app modal, shadcn Dialog) that presents the three modes as a compact 3-card picker:
-  1. **In‑person workshop** — the current default. CTA: "Reserve a seat" → `/register`.
-  2. **Live webinar** — same framework, remote, group cohort. CTA: "Join the next webinar" → `/webinar` (new route, marketing landing).
-  3. **1:1 with Adam** — private working session. CTA: "Book a 1:1" → `/one-on-one` (new route).
+Keep the IGNITE / Google Meet chips underneath.
 
-Each card: icon, one-line promise, price/format line, CTA button. No hero real estate lost — the primary reserve-your-seat button stays as the highest-intent path.
+### 4. New "Best value on the market" band (insert between hero and "What we build for you")
+A short, high-contrast comparison strip. This is the conversion moment.
 
-**B. Two lightweight marketing routes** (new files) so the CTAs land on a real page instead of a `mailto:`:
+- Eyebrow: **"Best value on the market"**
+- Headline: **"A $12,000 agency build. For $2,799."**
+- Three tight comparison tiles:
+  - **Agency build** — *$8k–$25k · 8–12 weeks · you manage the vendors*
+  - **DIY (course + freelancers)** — *$3k–$6k · 3–6 months · you're the project manager*
+  - **Done-for-you with Adam** *(highlighted)* — *$2,799 · 2–3 weeks · Adam and team ship it*
+- Sub-line under the strip: *"Same deliverables. A fraction of the price. And we're the ones on the hook to ship."*
 
-- `src/routes/webinar.tsx` — hero + framework recap + next-webinar date + registration form (reuses `RegisterFramework` shell, filtered to webinar mode).
-- `src/routes/one-on-one.tsx` — hero + pricing + Calendly-style booking CTA (link to Adam's Calendly for now; we can wire the Calendly connector later if you want live availability).
+(Numbers are directional/anchor pricing common in the market — we don't quote a specific competitor.)
 
-Both routes registered in `src/App.tsx`.
+### 5. "What we build for you" — add a value line
+Keep the 7 deliverable cards. Add one line under the section heading:
+> *"Priced out separately with an agency, this stack lands north of $12,000. You're getting all of it for $2,799 because we've templatized the parts that should be templatized and reserved the human hours for the parts that matter."*
 
-**C. Header nav** — add a single "How to work with Adam" link (desktop nav + mobile menu) that opens the same `AccessModeDialog`. Zero new nav bloat if we replace/rename an existing generic item; otherwise it's one added link.
+### 6. Contrast section — reframe headline
+From: *"Same framework. Different amount of you."*
+To: **"Three ways in. One is done for you."**
+Keep the three tiles.
 
-**D. Funnel/conversion notes:**
+### 7. "Best fit if…" — sharpen for Plan B buyer
+Replace current four with:
+- *"You have a job you like — and a Plan B you keep putting off"*
+- *"You'd rather pay to skip 3 months of setup than 'learn to build a brand'"*
+- *"You want a real second income stream, not another Notion doc"*
+- *"You want Adam personally leading the work — not a junior at an agency"*
 
-- Primary hero CTA stays "Reserve your seat — $197" (highest-converting path we already have).
-- Secondary access options live behind one click, so low-intent visitors self-segment without dragging the hero into a 3-way choice paralysis.
-- Each mode's landing page uses the same proof stack (framework, testimonials, FAQ) so we don't fragment social proof.
-- Analytics: fire a `mode_selected` event with `{workshop|webinar|one_on_one}` from the dialog so we can measure funnel split.
+### 8. Price / CTA card — rewrite
+- Eyebrow: **"Best-value done-for-you build · limited seats each month"**
+- Under the $2,799: keep *"everything included"* and add a strike-through anchor: ~~*Comparable agency build: $12,000+*~~
+- Body copy:
+  > A full startup build, delivered by Adam and his creative team. Priced to be the clear best value on the market — because the point is to get your Plan B *live and earning*, not to make you save up for another year.
+- Primary CTA: **"Activate my Plan B"** (was "Book your build with Adam")
+- Trust line: *"Limited builds per month so Adam stays hands-on. Availability is confirmed after a short intake."*
 
-### Out of scope (this turn)
+### 9. Startup ideas scroller heading — tighten to the Plan B frame
+- Eyebrow: **"Pick your Plan B"**
+- Heading: **"Any of these — or the specific business you're bringing"**
+- Sub: *"Adam and team can build any of the startups founders are launching right now, or the specific one you have in mind. Either way, same end-to-end build."*
 
-- Calendly live availability wiring, webinar registration backend, pricing for 1:1 — I'll stub CTAs and copy; you can decide pricing/dates and we'll wire it next.
-- Any hero redesign beyond the one secondary link.
+### 10. FAQ — add one, keep the rest
+Add as first FAQ:
+- **Q: Why is this so much less than an agency?**
+- A: Because we've built this exact stack dozens of times. Agencies quote every project like it's brand-new; we've templatized what should be templatized (setup, structure, deploys) and spend the human hours on the parts that actually differentiate your startup — your positioning, brand, and offer.
 
-### Open question before I build (optional)
+### 11. Meta / SEO (same file, `useEffect`)
+- `document.title`: **"Plan B, Built For You — $2,799 Done-For-You Startup with Adam"**
+- Meta description: *"Activate your Plan B profit generator. Adam and his creative team build your startup end-to-end — brand, website, social, systems — for $2,799. The best-value done-for-you build on the market."*
 
-Do you have current pricing/format for the webinar and 1:1 (e.g., "$97 webinar", "$1,500 1:1 half-day")? If yes I'll bake it into the cards and landing pages; if not I'll ship copy placeholders labeled clearly.
+## Out of scope
+- No changes to workshop / webinar pages or the AccessModeDialog copy in this pass.
+- No checkout wiring — CTAs continue to route to `/contact?topic=one-on-one`.
+- No new imagery.
+
+## Open question
+The comparison strip uses market-anchor numbers ($8k–$25k agency, $3k–$6k DIY). Want me to keep those directional ranges, or do you have specific competitor prices you'd rather anchor against?
