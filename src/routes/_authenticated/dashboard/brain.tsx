@@ -211,6 +211,25 @@ export default function BrainPage() {
     },
   });
 
+  const purge = useMutation({
+    mutationFn: () => purgeGeneratedAssets(userId!),
+    onSuccess: (res) => {
+      toast.success(
+        `Cleared ${res.deliverables_deleted} old assets and ${res.memory_chunks_deleted} memory chunks. Regenerate from Workflow, then rebuild memory.`,
+      );
+      qc.invalidateQueries({ queryKey: ["brain", "status", userId] });
+      qc.invalidateQueries({ queryKey: ["brain", "mismatch", userId] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Reset failed"),
+  });
+
+  function confirmPurge() {
+    const ok = window.confirm(
+      "This wipes ALL generated startup assets and Second Brain memory for your account so they can be regenerated against your current venture. Continue?",
+    );
+    if (ok) purge.mutate();
+  }
+
   async function startRecording() {
     if (recording || transcribing || pending) return;
     try {
