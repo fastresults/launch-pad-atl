@@ -552,29 +552,12 @@ export default function BrainPage() {
           </div>
 
           {showNotes && (
-            <ul className="mt-2 space-y-2 max-h-72 overflow-y-auto">
+            <ul className="mt-2 space-y-2 max-h-80 overflow-y-auto pr-1">
               {notes.length === 0 && <li className="text-xs text-muted-foreground">No notes yet.</li>}
-              {notes.map((n: any) => (
-                <li key={n.id} className="rounded border border-border/60 bg-background/40 p-2 text-xs">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="line-clamp-3 whitespace-pre-wrap">{n.content}</span>
-                    <button
-                      onClick={async () => {
-                        await deleteBrainNote(n.id);
-                        qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
-                      }}
-                      className="text-muted-foreground hover:text-destructive"
-                      aria-label="Delete note"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                  <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
-                    <Badge variant="outline" className="h-4 px-1 text-[9px]">{n.source}</Badge>
-                    {new Date(n.created_at).toLocaleDateString()}
-                  </div>
-                </li>
-              ))}
+              {notes.map((n: any) => <NoteCard key={n.id} note={n} onDelete={async () => {
+                await deleteBrainNote(n.id);
+                qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
+              }} />)}
             </ul>
           )}
         </Card>
