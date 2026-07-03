@@ -14,6 +14,7 @@ import { BriefCompleteCard } from "@/components/brief/BriefCompleteCard";
 import { BriefStatusCard } from "@/components/dashboard/BriefStatusCard";
 import { countAnsweredBriefFields, BRIEF_TOTAL } from "@/lib/brief-progress";
 import { Calendar, MapPin, Coffee, Sparkles, CheckCircle2, Hand } from "lucide-react";
+import { toast } from "sonner";
 
 
 export default function TodayPage() {
@@ -237,7 +238,7 @@ function DuringMode({ state, generated, total }: { state: WorkshopState; generat
           </Link>
           <button
             className="rounded-xl border border-white/10 bg-card p-4 hover:border-amber-500/40 transition text-left"
-            onClick={() => alert("Instructor notified. They'll be right over.")}
+            onClick={() => toast.success("Instructor notified. They'll be right over.")}
           >
             <div className="flex items-center gap-2 text-sm font-medium">
               <Hand className="h-4 w-4 text-amber-500" /> Raise hand

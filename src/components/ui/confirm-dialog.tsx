@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,109 +9,189 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 
-type ConfirmVariant = "default" | "destructive";
-
-export interface ConfirmDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+type ConfirmOptions = {
   title: string;
   description?: React.ReactNode;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  variant?: ConfirmVariant;
-  loading?: boolean;
-  /** When set, renders an optional reason textarea and passes its value to onConfirm. */
-  reasonLabel?: string;
-  reasonPlaceholder?: string;
-  onConfirm: (reason?: string) => void | Promise<void>;
-}
+  confirmText?: string;
+  cancelText?: string;
+  destructive?: boolean;
+};
 
-export function ConfirmDialog({
-  open,
-  onOpenChange,
-  title,
-  description,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
-  variant = "default",
-  loading = false,
-  reasonLabel,
-  reasonPlaceholder,
-  onConfirm,
-}: ConfirmDialogProps) {
-  const [reason, setReason] = useState("");
+type PromptOptions = {
+  title: string;
+  description?: React.ReactNode;
+  label?: string;
+  placeholder?: string;
+  defaultValue?: string;
+  confirmText?: string;
+  cancelText?: string;
+  multiline?: boolean;
+  required?: boolean;
+};
 
-  useEffect(() => {
-    if (open) setReason("");
-  }, [open]);
+type Ctx = {
+  confirm: (opts: ConfirmOptions) => Promise<boolean>;
+  prompt: (opts: PromptOptions) => Promise<string | null>;
+};
+
+const ConfirmCtx = createContext<Ctx | null>(null);
+
+export function ConfirmProvider({ children }: { children: React.ReactNode }) {
+  const [confirmState, setConfirmState] = useState<
+    (ConfirmOptions & { open: boolean }) | null
+  >(null);
+  const confirmResolver = useRef<((v: boolean) => void) | undefined>(undefined);
+
+  const [promptState, setPromptState] = useState<
+    (PromptOptions & { open: boolean }) | null
+  >(null);
+  const [promptValue, setPromptValue] = useState("");
+  const promptResolver = useRef<((v: string | null) => void) | undefined>(undefined);
+
+  const confirm = useCallback((opts: ConfirmOptions) => {
+    return new Promise<boolean>((resolve) => {
+      confirmResolver.current = resolve;
+      setConfirmState({ ...opts, open: true });
+    });
+  }, []);
+
+  const prompt = useCallback((opts: PromptOptions) => {
+    return new Promise<string | null>((resolve) => {
+      promptResolver.current = resolve;
+      setPromptValue(opts.defaultValue ?? "");
+      setPromptState({ ...opts, open: true });
+    });
+  }, []);
+
+  const closeConfirm = (result: boolean) => {
+    confirmResolver.current?.(result);
+    confirmResolver.current = undefined;
+    setConfirmState((s) => (s ? { ...s, open: false } : s));
+  };
+
+  const closePrompt = (result: string | null) => {
+    promptResolver.current?.(result);
+    promptResolver.current = undefined;
+    setPromptState((s) => (s ? { ...s, open: false } : s));
+  };
 
   return (
-    <AlertDialog open={open} onOpenChange={(o) => !loading && onOpenChange(o)}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          {description ? (
-            <AlertDialogDescription asChild>
-              <div>{description}</div>
-            </AlertDialogDescription>
-          ) : null}
-        </AlertDialogHeader>
-        {reasonLabel ? (
-          <div className="space-y-2">
-            <Label htmlFor="confirm-dialog-reason">{reasonLabel}</Label>
-            <Textarea
-              id="confirm-dialog-reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder={reasonPlaceholder}
-              maxLength={1000}
-              rows={3}
-              disabled={loading}
-            />
-          </div>
-        ) : null}
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>{cancelLabel}</AlertDialogCancel>
-          <AlertDialogAction
-            disabled={loading}
-            className={cn(
-              variant === "destructive" &&
-                "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+    <ConfirmCtx.Provider value={{ confirm, prompt }}>
+      {children}
+
+      <AlertDialog
+        open={!!confirmState?.open}
+        onOpenChange={(o) => {
+          if (!o && confirmResolver.current) closeConfirm(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmState?.title}</AlertDialogTitle>
+            {confirmState?.description && (
+              <AlertDialogDescription>{confirmState.description}</AlertDialogDescription>
             )}
-            onClick={(e) => {
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => closeConfirm(false)}>
+              {confirmState?.cancelText ?? "Cancel"}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => closeConfirm(true)}
+              className={
+                confirmState?.destructive
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : undefined
+              }
+            >
+              {confirmState?.confirmText ?? "Confirm"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog
+        open={!!promptState?.open}
+        onOpenChange={(o) => {
+          if (!o && promptResolver.current) closePrompt(null);
+        }}
+      >
+        <DialogContent>
+          <form
+            onSubmit={(e) => {
               e.preventDefault();
-              onConfirm(reasonLabel ? reason.trim() || undefined : undefined);
+              if (promptState?.required && !promptValue.trim()) return;
+              closePrompt(promptValue);
             }}
           >
-            {loading ? "Working…" : confirmLabel}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+            <DialogHeader>
+              <DialogTitle>{promptState?.title}</DialogTitle>
+              {promptState?.description && (
+                <DialogDescription>{promptState.description}</DialogDescription>
+              )}
+            </DialogHeader>
+            <div className="space-y-2 py-3">
+              {promptState?.label && <Label>{promptState.label}</Label>}
+              {promptState?.multiline ? (
+                <textarea
+                  autoFocus
+                  className="flex min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder={promptState.placeholder}
+                  value={promptValue}
+                  onChange={(e) => setPromptValue(e.target.value)}
+                />
+              ) : (
+                <Input
+                  autoFocus
+                  placeholder={promptState?.placeholder}
+                  value={promptValue}
+                  onChange={(e) => setPromptValue(e.target.value)}
+                />
+              )}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => closePrompt(null)}>
+                {promptState?.cancelText ?? "Cancel"}
+              </Button>
+              <Button
+                type="submit"
+                disabled={promptState?.required && !promptValue.trim()}
+              >
+                {promptState?.confirmText ?? "OK"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </ConfirmCtx.Provider>
   );
 }
 
-export interface PromptDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description?: React.ReactNode;
-  inputLabel: string;
-  placeholder?: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  defaultValue?: string;
-  required?: boolean;
-  maxLength?: number;
-  loading?: boolean;
-  onConfirm: (value: string) => void | Promise<void>;
+export function useConfirm() {
+  const ctx = useContext(ConfirmCtx);
+  if (!ctx) throw new Error("useConfirm must be used within ConfirmProvider");
+  return ctx.confirm;
 }
 
+export function usePrompt() {
+  const ctx = useContext(ConfirmCtx);
+  if (!ctx) throw new Error("usePrompt must be used within ConfirmProvider");
+  return ctx.prompt;
+}
+
+/** Standalone controlled prompt dialog (compat with older callers). */
 export function PromptDialog({
   open,
   onOpenChange,
@@ -119,75 +199,64 @@ export function PromptDialog({
   description,
   inputLabel,
   placeholder,
-  confirmLabel = "Save",
+  confirmLabel = "OK",
   cancelLabel = "Cancel",
   defaultValue = "",
-  required = true,
-  maxLength = 120,
+  maxLength,
   loading = false,
   onConfirm,
-}: PromptDialogProps) {
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: React.ReactNode;
+  inputLabel?: string;
+  placeholder?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  defaultValue?: string;
+  maxLength?: number;
+  loading?: boolean;
+  onConfirm: (value: string) => void;
+}) {
   const [value, setValue] = useState(defaultValue);
-  const inputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
-    if (open) {
-      setValue(defaultValue);
-      // focus after dialog opens
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
+    if (open) setValue(defaultValue);
   }, [open, defaultValue]);
-
-  const trimmed = value.trim();
-  const canSubmit = !loading && (!required || trimmed.length > 0);
-
-  const submit = () => {
-    if (!canSubmit) return;
-    onConfirm(trimmed);
-  };
-
   return (
-    <AlertDialog open={open} onOpenChange={(o) => !loading && onOpenChange(o)}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          {description ? (
-            <AlertDialogDescription asChild>
-              <div>{description}</div>
-            </AlertDialogDescription>
-          ) : null}
-        </AlertDialogHeader>
-        <div className="space-y-2">
-          <Label htmlFor="prompt-dialog-input">{inputLabel}</Label>
-          <Input
-            id="prompt-dialog-input"
-            ref={inputRef}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                submit();
-              }
-            }}
-            placeholder={placeholder}
-            maxLength={maxLength}
-            disabled={loading}
-          />
-        </div>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>{cancelLabel}</AlertDialogCancel>
-          <AlertDialogAction
-            disabled={!canSubmit}
-            onClick={(e) => {
-              e.preventDefault();
-              submit();
-            }}
-          >
-            {loading ? "Working…" : confirmLabel}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!value.trim() || loading) return;
+            onConfirm(value.trim());
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            {description && <DialogDescription>{description}</DialogDescription>}
+          </DialogHeader>
+          <div className="space-y-2 py-3">
+            {inputLabel && <Label>{inputLabel}</Label>}
+            <Input
+              autoFocus
+              placeholder={placeholder}
+              value={value}
+              maxLength={maxLength}
+              onChange={(e) => setValue(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={loading}>
+              {cancelLabel}
+            </Button>
+            <Button type="submit" disabled={!value.trim() || loading}>
+              {confirmLabel}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

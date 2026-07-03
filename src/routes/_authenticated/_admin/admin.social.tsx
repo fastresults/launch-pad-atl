@@ -24,9 +24,11 @@ import {
   listAccounts,
 } from "@/lib/zernio.functions";
 import { Plus, Trash2, Users, ExternalLink } from "lucide-react";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export default function AdminSocialIndex() {
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -169,8 +171,8 @@ export default function AdminSocialIndex() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => {
-                      if (confirm(`Delete profile "${p.name}"?`)) deleteMut.mutate(id);
+                    onClick={async () => {
+                      if (await confirm({ title: `Delete profile "${p.name}"?`, destructive: true, confirmText: "Delete" })) deleteMut.mutate(id);
                     }}
                   >
                     <Trash2 className="h-4 w-4" />

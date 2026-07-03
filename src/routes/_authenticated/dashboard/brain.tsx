@@ -22,6 +22,7 @@ import {
   listBrainVentures,
   type BrainMessage, type BrainIndexingJob, type BrainVenture,
 } from "@/lib/brain.functions";
+import { useConfirm, usePrompt } from "@/components/ui/confirm-dialog";
 
 const STARTERS = [
   "What's the single riskiest assumption in my plan?",
@@ -40,6 +41,8 @@ export default function BrainPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const userId = user?.id;
+  const confirm = useConfirm();
+  const prompt = usePrompt();
 
   const { data: ventures = [] } = useQuery({
     queryKey: ["brain", "ventures", userId],
@@ -273,11 +276,14 @@ export default function BrainPage() {
     onError: (e: any) => toast.error(e?.message ?? "Reset failed"),
   });
 
-  function confirmPurge() {
+  async function confirmPurge() {
     const scope = currentVenture ? `“${currentVenture.company_name}”` : "this startup";
-    const ok = window.confirm(
-      `This resets Second Brain memory, notes, chat, and indexing jobs for ${scope}. Your generated startup assets stay in place. Continue?`,
-    );
+    const ok = await confirm({
+      title: "Reset Second Brain?",
+      description: `This resets Second Brain memory, notes, chat, and indexing jobs for ${scope}. Your generated startup assets stay in place.`,
+      confirmText: "Reset",
+      destructive: true,
+    });
     if (ok) purge.mutate();
   }
 
@@ -338,7 +344,14 @@ export default function BrainPage() {
 
   async function addManualNote() {
     if (!userId) return;
-    const text = window.prompt("Note (this becomes part of your brain memory next rebuild):");
+    const text = await prompt({
+      title: "Add a note",
+      description: "This becomes part of your brain memory next rebuild.",
+      placeholder: "Type your note…",
+      multiline: true,
+      required: true,
+      confirmText: "Save note",
+    });
     if (!text?.trim()) return;
     const tid = toast.loading("Formatting note…");
     try {
@@ -625,10 +638,14 @@ export default function BrainPage() {
                 variant="outline"
                 size="sm"
                 disabled={clearChat.isPending}
-                onClick={() => {
-                  if (window.confirm("Clear this Second Brain conversation? Your saved notes and memory will not be affected.")) {
-                    clearChat.mutate();
-                  }
+                onClick={async () => {
+                  const ok = await confirm({
+                    title: "Clear conversation?",
+                    description: "Clear this Second Brain conversation. Your saved notes and memory will not be affected.",
+                    confirmText: "Clear chat",
+                    destructive: true,
+                  });
+                  if (ok) clearChat.mutate();
                 }}
                 className="h-8 gap-1.5 text-xs text-muted-foreground hover:border-destructive hover:text-destructive"
                 aria-label="Clear conversation"

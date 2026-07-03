@@ -13,12 +13,14 @@ import {
   resetDeck,
 } from "@/lib/deck-overrides.functions";
 import { SlotInspector, type SlotDescriptor } from "@/components/admin/decks/SlotInspector";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export default function AdminDeckEditorPage() {
   const { slug = "" } = useParams<{ slug: string }>();
   const deck = getDeck(slug);
   const qc = useQueryClient();
   const [index, setIndex] = useState(0);
+  const confirm = useConfirm();
 
   // Capture slot defaults as slides render (so the inspector knows what's editable).
   const descriptorsRef = useRef<Map<string, SlotDescriptor>>(new Map());
@@ -108,8 +110,8 @@ export default function AdminDeckEditorPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                if (confirm("Reset every override on this deck back to defaults?")) {
+              onClick={async () => {
+                if (await confirm({ title: "Reset deck?", description: "Reset every override on this deck back to defaults.", destructive: true, confirmText: "Reset" })) {
                   resetMut.mutate();
                 }
               }}

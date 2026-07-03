@@ -34,6 +34,13 @@ export default tseslint.config(
       ],
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
+      "no-alert": "error",
+      "no-restricted-globals": [
+        "error",
+        { name: "confirm", message: "Use useConfirm() from @/components/ui/confirm-dialog instead of window.confirm." },
+        { name: "alert", message: "Use toast (sonner) or useConfirm() instead of window.alert." },
+        { name: "prompt", message: "Use usePrompt() from @/components/ui/confirm-dialog instead of window.prompt." },
+      ],
     },
   },
   eslintPluginPrettier,

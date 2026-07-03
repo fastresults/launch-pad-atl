@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { FlaskConical, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 
 type FormState = {
@@ -108,6 +109,7 @@ function clampInt(s: string, lo: number, hi: number): number {
 }
 
 export default function CohortsAdminPage() {
+  const confirm = useConfirm();
   const { isSuperAdmin, loading } = useAuth();
   const qc = useQueryClient();
   
@@ -304,8 +306,8 @@ export default function CohortsAdminPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          if (confirm(`Delete cohort ${c.dateLabel}?`)) del.mutate(c.id);
+                        onClick={async () => {
+                          if (await confirm({ title: `Delete cohort ${c.dateLabel}?`, destructive: true, confirmText: "Delete" })) del.mutate(c.id);
                         }}
                       >
                         <Trash2 className="size-3.5" />
