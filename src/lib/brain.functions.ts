@@ -189,9 +189,9 @@ export async function purgeGeneratedAssets(
   return data as any;
 }
 
-/** Detects when the current venture's memory contains assets whose titles don't
- *  match the venture's company name (indicates the founder switched ventures
- *  without resetting the brain). */
+/** Detects legacy, unscoped memory that can pollute a selected venture.
+ *  Correctly scoped rows are considered current even when their titles are
+ *  framework/output names like `budget_pro_forma` rather than the company name. */
 export async function detectVentureMismatch(
   userId: string,
   snapshotId: string | null,
@@ -201,26 +201,24 @@ export async function detectVentureMismatch(
   staleTitles: string[];
 }> {
   if (!snapshotId) return { mismatch: false, currentCompany: null, staleTitles: [] };
-  const [{ data: snap }, { data: mem }] = await Promise.all([
+  const [{ data: snap }, { data: legacyMem }] = await Promise.all([
     supabase.from("venture_snapshots").select("company_name").eq("id", snapshotId).maybeSingle(),
     supabase
       .from("founder_brain_memory")
       .select("title")
       .eq("user_id", userId)
-      .eq("snapshot_id", snapshotId)
+      .is("snapshot_id", null)
       .in("kind", ["deliverable", "assessment"])
       .limit(50),
   ]);
-  const company = ((snap as any)?.company_name ?? "").toString().trim().toLowerCase();
-  const titles = (mem ?? []).map((r: any) => (r?.title ?? "").toString().trim()).filter(Boolean);
-  if (!company || !titles.length) {
+  const titles = (legacyMem ?? []).map((r: any) => (r?.title ?? "").toString().trim()).filter(Boolean);
+  if (!titles.length) {
     return { mismatch: false, currentCompany: (snap as any)?.company_name ?? null, staleTitles: [] };
   }
-  const stale = titles.filter((t) => !t.toLowerCase().includes(company));
   return {
-    mismatch: stale.length > titles.length / 2,
+    mismatch: true,
     currentCompany: (snap as any)?.company_name ?? null,
-    staleTitles: stale.slice(0, 5),
+    staleTitles: titles.slice(0, 5),
   };
 }
 

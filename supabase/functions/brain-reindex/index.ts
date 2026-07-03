@@ -88,7 +88,9 @@ async function runJob(admin: any, userId: string, jobId: string, snapshotId: str
       admin.from("attendee_founder_profile").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_market_profile").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_goals").select("*").eq("user_id", userId),
-      admin.from("attendee_deliverables").select("deliverable_key, content_current, deep_assessment").eq("user_id", userId),
+      snapshotId
+        ? Promise.resolve({ data: [] })
+        : admin.from("attendee_deliverables").select("deliverable_key, content_current, deep_assessment").eq("user_id", userId),
       snapshotId
         ? admin
             .from("venture_documents")
@@ -102,9 +104,8 @@ async function runJob(admin: any, userId: string, jobId: string, snapshotId: str
         : Promise.resolve({ data: null }),
     ]);
 
-    // Wipe only this venture's auto-derived rows. Legacy rows (snapshot_id is
-    // null) are left alone so pre-migration data still surfaces until the
-    // founder rebuilds them explicitly.
+    // Wipe only this startup's auto-derived rows. Legacy user-scoped rows are
+    // intentionally not re-indexed into a selected startup.
     const wipe = admin
       .from("founder_brain_memory")
       .delete()
