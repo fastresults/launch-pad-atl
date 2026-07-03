@@ -80,6 +80,7 @@ async function runJob(admin: any, userId: string, jobId: string, snapshotId: str
       { data: market },
       { data: goals },
       { data: delivs },
+      { data: vdocs },
       { data: notes },
       { data: snapshot },
     ] = await Promise.all([
@@ -88,6 +89,13 @@ async function runJob(admin: any, userId: string, jobId: string, snapshotId: str
       admin.from("attendee_market_profile").select("*").eq("user_id", userId).maybeSingle(),
       admin.from("attendee_goals").select("*").eq("user_id", userId),
       admin.from("attendee_deliverables").select("deliverable_key, content_current, deep_assessment").eq("user_id", userId),
+      snapshotId
+        ? admin
+            .from("venture_documents")
+            .select("document_type, content, deep_assessment, intake_answers")
+            .eq("snapshot_id", snapshotId)
+            .eq("status", "complete")
+        : Promise.resolve({ data: [] }),
       notesQuery,
       snapshotId
         ? admin.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle()
