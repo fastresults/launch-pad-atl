@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   appendSnapshotSources,
   getSnapshot,
@@ -738,7 +738,12 @@ function SetupSubStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => voi
 
       <Dialog open={editing} onOpenChange={setEditing}>
         <DialogContent className="max-w-3xl">
-          <DialogHeader><DialogTitle>Edit founder &amp; market</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Edit founder &amp; market</DialogTitle>
+            <DialogDescription>
+              Update the founder, market, and track details used to generate this startup kit.
+            </DialogDescription>
+          </DialogHeader>
           <FounderMarketCard snapshot={snapshot} onSaved={() => { onSaved(); setEditing(false); }} />
         </DialogContent>
       </Dialog>

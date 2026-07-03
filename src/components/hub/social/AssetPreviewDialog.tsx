@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -74,6 +74,9 @@ export function AssetPreviewDialog({
       <DialogContent className="max-w-5xl p-0 overflow-hidden">
         <DialogHeader className="px-5 pt-5">
           <DialogTitle className="text-base">{asset.title}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Preview this generated startup asset, download it, or regenerate it.
+          </DialogDescription>
           {asset.subtitle && (
             <p className="text-xs text-muted-foreground">{asset.subtitle}</p>
           )}
