@@ -652,7 +652,21 @@ export function DocumentViewer({
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
           if (attempt > 0) invalidateSignedStorageUrl(HERO_BUCKET, heroPath);
-          const url = await getSignedStorageUrl(HERO_BUCKET, heroPath, 3600);
+          let url: string;
+          try {
+            url = await getSignedStorageUrl(HERO_BUCKET, heroPath, 3600);
+          } catch (signError) {
+            // Admin impersonation and some private-storage RLS paths cannot be
+            // signed by the browser client. Ask the image edge function to
+            // return a service-signed URL for already-ready visuals instead of
+            // dropping the modal back to "Generate visual".
+            if (heroStatus !== "ready" || !doc?.snapshot_id || !doc?.document_type) throw signError;
+            const { data, error } = await supabase.functions.invoke("venture-document-image", {
+              body: { snapshotId: doc.snapshot_id, documentType: doc.document_type, force: false },
+            });
+            if (error || !data?.signedUrl) throw signError;
+            url = primeSignedStorageUrl(HERO_BUCKET, data.path ?? heroPath, data.signedUrl, 3600);
+          }
           if (cancelled) return;
           setHeroSigning(false);
           await loadImage(url, attempt > 0 ? 20_000 : 15_000);
@@ -679,7 +693,7 @@ export function DocumentViewer({
     return () => {
       cancelled = true;
     };
-  }, [heroPath, heroRetryNonce]);
+  }, [doc?.snapshot_id, doc?.document_type, heroPath, heroRetryNonce, heroStatus]);
 
   const retryHeroLoad = () => {
     if (heroPath) invalidateSignedStorageUrl(HERO_BUCKET, heroPath);
