@@ -324,7 +324,7 @@ export default function BrainPage() {
     const lastAssistant = [...history].reverse().find((m) => m.role === "assistant");
     if (!lastAssistant) { toast.info("No answer to save yet"); return; }
     try {
-      await saveBrainNote(userId, lastAssistant.content, "chat", snapshotId);
+      await saveBrainNote(userId, lastAssistant.content, snapshotId, "chat");
       toast.success("Saved as note");
       qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
     } catch (e: any) {
