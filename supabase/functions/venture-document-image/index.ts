@@ -66,6 +66,13 @@ function nextPath(userId: string, snapshotId: string, documentType: string, exis
   return `${userId}/${snapshotId}/${documentType}/${version}.png`;
 }
 
+async function signPath(admin: any, path: string | null, expiresIn = 3600): Promise<string | null> {
+  if (!path) return null;
+  const { data, error } = await admin.storage.from(BUCKET).createSignedUrl(path, expiresIn);
+  if (error) return null;
+  return data?.signedUrl ?? data?.signedURL ?? null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -125,7 +132,8 @@ Deno.serve(async (req) => {
       return json({ error: "Document not found" }, { status: 404 });
     }
     if (doc.hero_image_path && doc.hero_image_status === "ready" && !force) {
-      return json({ ok: true, path: doc.hero_image_path, status: "ready", skipped: true, reason: "already_ready" });
+      const signedUrl = await signPath(admin, doc.hero_image_path);
+      return json({ ok: true, path: doc.hero_image_path, signedUrl, status: "ready", skipped: true, reason: "already_ready" });
     }
 
     // Atomic claim: only run if not already generating (or stale > 3 min).
@@ -143,12 +151,16 @@ Deno.serve(async (req) => {
         .select("hero_image_path, hero_image_status")
         .eq("id", doc.id)
         .maybeSingle();
+      const currentPath = current?.hero_image_path ?? doc.hero_image_path ?? null;
+      const currentStatus = current?.hero_image_status ?? doc.hero_image_status ?? "generating";
+      const signedUrl = currentStatus === "ready" ? await signPath(admin, currentPath) : null;
       return json({
         ok: true,
         skipped: true,
-        reason: current?.hero_image_status === "ready" ? "already_ready" : "in_flight",
-        path: current?.hero_image_path ?? doc.hero_image_path ?? null,
-        status: current?.hero_image_status ?? doc.hero_image_status ?? "generating",
+        reason: currentStatus === "ready" ? "already_ready" : "in_flight",
+        path: currentPath,
+        signedUrl,
+        status: currentStatus,
       });
     }
     const previousPath = doc.hero_image_path;
@@ -255,7 +267,8 @@ Deno.serve(async (req) => {
       await admin.storage.from(BUCKET).remove([previousPath]).catch(() => {});
     }
 
-    return json({ ok: true, path, status: "ready" });
+    const signedUrl = await signPath(admin, path);
+    return json({ ok: true, path, signedUrl, status: "ready" });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return json({ error: message }, { status: 500 });
