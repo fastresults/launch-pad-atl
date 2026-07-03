@@ -341,6 +341,59 @@ export default function BrainPage() {
     qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
   }
 
+  async function saveMessageAsNote(content: string) {
+    if (!userId || !content.trim()) return;
+    try {
+      await saveBrainNote(userId, content, snapshotId, "chat");
+      toast.success("Saved as note");
+      qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Save failed");
+    }
+  }
+
+  const [dragOver, setDragOver] = useState(false);
+  const [droppingFile, setDroppingFile] = useState(false);
+
+  async function handleFilesDropped(files: FileList | File[]) {
+    if (!userId) return;
+    const list = Array.from(files);
+    if (!list.length) return;
+    const TEXTUAL = /\.(txt|md|markdown|csv|json|log|rtf|html?)$/i;
+    const MAX = 2 * 1024 * 1024; // 2MB per note
+    setDroppingFile(true);
+    let saved = 0;
+    let skipped = 0;
+    try {
+      for (const f of list) {
+        const isTextMime = f.type.startsWith("text/") || f.type === "application/json" || f.type === "application/rtf";
+        if (!isTextMime && !TEXTUAL.test(f.name)) {
+          skipped++;
+          continue;
+        }
+        if (f.size > MAX) { skipped++; continue; }
+        const raw = await f.text();
+        const text = raw.trim();
+        if (!text) { skipped++; continue; }
+        const body = `**${f.name}**\n\n${text.slice(0, 20000)}`;
+        await saveBrainNote(userId, body, snapshotId, "file");
+        saved++;
+      }
+      if (saved) {
+        toast.success(`Saved ${saved} note${saved === 1 ? "" : "s"}. Rebuild memory to embed.`);
+        qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
+      }
+      if (skipped) {
+        toast.info(`Skipped ${skipped} file${skipped === 1 ? "" : "s"} (text/markdown/csv/json only, <2MB).`);
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Couldn't read file");
+    } finally {
+      setDroppingFile(false);
+      setDragOver(false);
+    }
+  }
+
   const empty = history.length === 0;
   const assetsReadyWithoutMemory = (status?.generated ?? 0) > 0 && (status?.memoryChunks ?? 0) === 0;
 
