@@ -742,3 +742,73 @@ function BubbleMsg({ m, onSpeak, onSaveNote }: { m: BrainMessage; onSpeak?: (t: 
     </div>
   );
 }
+
+function parseNote(content: string): { title: string | null; body: string } {
+  const raw = (content ?? "").trim();
+  // Title: leading **bold** line, or leading "# heading" line.
+  const boldMatch = raw.match(/^\*\*(.+?)\*\*\s*(?:\n+|$)/);
+  if (boldMatch) {
+    return { title: boldMatch[1].trim(), body: raw.slice(boldMatch[0].length).trim() };
+  }
+  const hashMatch = raw.match(/^#{1,6}\s+(.+?)\s*(?:\n+|$)/);
+  if (hashMatch) {
+    return { title: hashMatch[1].trim(), body: raw.slice(hashMatch[0].length).trim() };
+  }
+  return { title: null, body: raw };
+}
+
+function NoteCard({ note, onDelete }: { note: any; onDelete: () => void | Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const { title, body } = useMemo(() => parseNote(note.content ?? ""), [note.content]);
+  const hasLongBody = body.length > 180 || body.split("\n").length > 4;
+
+  return (
+    <li className="group rounded-lg border border-border/60 bg-background/50 p-3 text-xs shadow-sm transition-colors hover:border-border">
+      <div className="flex items-start justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex-1 text-left"
+        >
+          {title && (
+            <div className="text-[13px] font-semibold leading-snug text-foreground">
+              {title}
+            </div>
+          )}
+          <div
+            className={cn(
+              "prose prose-sm prose-neutral dark:prose-invert max-w-none",
+              "prose-p:my-1 prose-p:leading-relaxed",
+              "prose-ul:my-1 prose-ul:pl-4 prose-ol:my-1 prose-ol:pl-4",
+              "prose-li:my-0.5 prose-li:marker:text-muted-foreground",
+              "prose-headings:mt-2 prose-headings:mb-1 prose-headings:text-foreground",
+              "prose-strong:text-foreground prose-code:text-foreground",
+              "prose-a:text-primary hover:prose-a:underline",
+              "text-xs text-foreground/80",
+              title && "mt-1",
+              !open && "line-clamp-4",
+            )}
+          >
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
+          </div>
+          {hasLongBody && (
+            <div className="mt-1 text-[10px] font-medium text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+              {open ? "Show less" : "Show more"}
+            </div>
+          )}
+        </button>
+        <button
+          onClick={onDelete}
+          className="text-muted-foreground hover:text-destructive"
+          aria-label="Delete note"
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </div>
+      <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
+        <Badge variant="outline" className="h-4 px-1 text-[9px]">{note.source}</Badge>
+        {new Date(note.created_at).toLocaleDateString()}
+      </div>
+    </li>
+  );
+}
