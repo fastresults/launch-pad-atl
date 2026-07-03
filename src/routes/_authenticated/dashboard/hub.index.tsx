@@ -71,6 +71,7 @@ function relativeTime(iso?: string) {
 
 function LibraryInner() {
   const [tab, setTab] = useState<Tab>("active");
+  const [showComingSoon, setShowComingSoon] = useState(false);
   const { data: snapshots = [], isLoading } = useQuery({
     queryKey: ["hub", "snapshots"],
     queryFn: listSnapshots,
@@ -89,6 +90,7 @@ function LibraryInner() {
   }, [snapshots]);
 
   const visible = buckets[tab];
+  const hasVentures = snapshots.length > 0;
 
   return (
     <div className="space-y-8">
@@ -102,11 +104,17 @@ function LibraryInner() {
             Turn a single concept into {totalDocs || 20} investor-ready documents.
           </p>
         </div>
-        <Button asChild>
-          <Link to="/dashboard/hub/new">
+        {hasVentures ? (
+          <Button onClick={() => setShowComingSoon(true)}>
             <Plus className="mr-1.5 h-4 w-4" /> New startup
-          </Link>
-        </Button>
+          </Button>
+        ) : (
+          <Button asChild>
+            <Link to="/dashboard/hub/new">
+              <Plus className="mr-1.5 h-4 w-4" /> New startup
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -127,9 +135,42 @@ function LibraryInner() {
           ))}
         </div>
       )}
+
+      <AlertDialog open={showComingSoon} onOpenChange={setShowComingSoon}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Multiple startups coming soon</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <p>
+                  Running more than one venture from a single workspace is on the
+                  roadmap — built for serial entrepreneurs, founders juggling
+                  multiple ideas, and consultants supporting several startup
+                  clients.
+                </p>
+                <p>
+                  Additional ventures will be available as a paid upgrade. In
+                  the meantime, keep sharpening the venture you already have —
+                  every document, asset, and brief you generate will carry
+                  forward.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Have questions or want early access? Reach out to support.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowComingSoon(false)}>
+              Got it
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
 
 function TabPill({
   active,

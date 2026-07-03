@@ -1,53 +1,20 @@
-## What "original startup briefs" means here
+## Goal
+Temporarily prevent users from creating additional ventures beyond their first. When they click **New startup** and already have one or more existing ventures, show a modal explaining that multi-venture support is coming soon and will be a paid add-on for serial entrepreneurs and consultants.
 
-The founder's uploaded source materials — the docs/PDFs they dropped into the intake to generate the startup. Two backend sources:
+## Behavior
+- If the user has **0 ventures** → button still routes to `/dashboard/hub/new` (unchanged).
+- If the user has **≥1 venture** → clicking either "New startup" button (top-right header + empty-state) opens an `AlertDialog` instead of navigating.
 
-1. **`venture_snapshots.source_materials`** (jsonb) — the canonical brief inputs. Shape: `{ documents: [{ filename, text, charCount }], urls: [...] }`. Each `filename` is the real file name to display.
-2. **`attendee_documents`** (fallback / additional) — rows with `original_name`, `kind`, `snapshot_id`, `used_in_brief`. Also carries the file name.
+## Modal content
+- Title: **Multiple startups coming soon**
+- Body: Short message that additional ventures are a planned feature for serial entrepreneurs, founders, and startup consultants. Will be available as a paid upgrade. Invite them to keep building on their current venture in the meantime.
+- Optional secondary CTA: "Notify me" (just closes with a toast "We'll let you know" — no backend wiring, purely UI acknowledgement) — or skip and use a single **Got it** action. I'll go with **Got it** + a subtle "Have questions? Contact support" line to keep scope tight.
 
-These aren't in the mind map today, which is why the user's original PDFs/docs (e.g. `adam_anderson_resume.pdf`) don't appear.
+## Implementation (single file)
+Edit `src/routes/_authenticated/dashboard/hub.index.tsx`:
+1. In `LibraryInner`, add `const [showComingSoon, setShowComingSoon] = useState(false)` and derive `hasVentures = snapshots.length > 0`.
+2. Replace the header `<Button asChild><Link to="/dashboard/hub/new">…</Link></Button>` with a conditional: when `hasVentures`, render a plain `<Button onClick={() => setShowComingSoon(true)}>`; otherwise keep the Link version.
+3. Do the same swap in `EmptyState` — but since `EmptyState` only renders when the current tab is empty, and the "active" empty state implies no ventures, the Link is fine there. No change needed.
+4. Add an `<AlertDialog open={showComingSoon} onOpenChange={setShowComingSoon}>` at the bottom of `LibraryInner` with the copy above and a single **Got it** action.
 
-## Plan
-
-### 1. New cluster: "Source Briefs"
-
-Add a cluster keyed `source` with:
-- Label: **"Source Briefs"**
-- Color token: new `--brain-source` (add to `src/styles.css`, in the same block as the other `--brain-*` tokens; pick a distinct hue — teal / amber — so it doesn't collide with the existing pink/blue/purple).
-
-Register in `CLUSTER_META` in `src/lib/brain-graph.ts`. Add legend entry automatically (the legend maps over `BRAIN_CLUSTER_META`).
-
-### 2. Fetch source-material rows in `BrainMindMap.tsx`
-
-Two new `useQuery`s, both scoped to the current `snapshotId`:
-
-- `venture_snapshots` → `select("source_materials").eq("id", snapshotId).maybeSingle()`
-- `attendee_documents` → `select("id, original_name, kind, used_in_brief").eq("snapshot_id", snapshotId)`
-
-Merge into a single `sources: { id, filename, kind, origin }[]` array (dedupe by lowercase filename so a doc present in both places renders once). `origin` is `"snapshot"` or `"upload"` for tooltip/drawer context. Include `urls[]` from `source_materials` as `filename = url`, `kind = "url"`.
-
-Pass `sources` into `buildBrainGraph`.
-
-### 3. Render nodes in `buildBrainGraph`
-
-For each source entry:
-- `id = "src:{id}"`
-- `label = filename` (use `shortTitle` with max 60; keep the extension visible — briefs like `adam_anderson_resume.pdf` render as-is)
-- `kind = "source"` (extend the `BrainGraphNode["kind"]` union)
-- `cluster = "source"`, color = `var(--brain-source)`
-- Slightly larger radius (5) so briefs read as first-class citizens next to assets
-- `data = { filename, origin, kind }` for the drawer
-
-Link each source node to the `source` cluster **and** to `root` with a light strength — briefs are foundational context, so they should sit near the center by default (matching the user's ask "appear in the default Mind map").
-
-### 4. Drawer + "Ask about this"
-
-Existing drawer already reads `selected.label`. No changes needed — clicking a brief will prompt "Tell me about adam_anderson_resume.pdf" in chat, which is the desired behavior.
-
-## Files touched
-
-- `src/styles.css` — add `--brain-source` in both `:root` and `.dark`.
-- `src/lib/brain-graph.ts` — new `source` cluster, new `SourceRow` type, new loop, extend `kind` union.
-- `src/components/brain/BrainMindMap.tsx` — two new queries, merge into `sources`, pass to `buildBrainGraph`.
-
-No schema changes. No RLS changes. Chat view untouched.
+No routing, DB, or business-logic changes. Frontend-only.
