@@ -324,9 +324,9 @@ export default function BrainPage() {
     const lastAssistant = [...history].reverse().find((m) => m.role === "assistant");
     if (!lastAssistant) { toast.info("No answer to save yet"); return; }
     try {
-      await saveBrainNote(userId, lastAssistant.content, "chat");
+      await saveBrainNote(userId, lastAssistant.content, "chat", snapshotId);
       toast.success("Saved as note");
-      qc.invalidateQueries({ queryKey: ["brain", "notes", userId] });
+      qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
     } catch (e: any) {
       toast.error(e?.message ?? "Save failed");
     }
@@ -336,9 +336,9 @@ export default function BrainPage() {
     if (!userId) return;
     const text = window.prompt("Note (this becomes part of your brain memory next rebuild):");
     if (!text?.trim()) return;
-    await saveBrainNote(userId, text, "text");
+    await saveBrainNote(userId, text, "text", snapshotId);
     toast.success("Note saved. Rebuild memory to embed it.");
-    qc.invalidateQueries({ queryKey: ["brain", "notes", userId] });
+    qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
   }
 
   const empty = history.length === 0;
