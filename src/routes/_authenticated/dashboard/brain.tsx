@@ -700,7 +700,7 @@ function Stat({ label, value, className }: { label: string; value: string; class
   );
 }
 
-function BubbleMsg({ m, onSpeak }: { m: BrainMessage; onSpeak?: (t: string) => void }) {
+function BubbleMsg({ m, onSpeak, onSaveNote }: { m: BrainMessage; onSpeak?: (t: string) => void; onSaveNote?: (content: string) => void | Promise<void> }) {
   if (m.role === "user") {
     return (
       <div className="flex justify-end">
@@ -724,15 +724,27 @@ function BubbleMsg({ m, onSpeak }: { m: BrainMessage; onSpeak?: (t: string) => v
           ))}
         </div>
       )}
-      {onSpeak && (
-        <button
-          type="button"
-          onClick={() => onSpeak(stripMarkdown(m.content))}
-          className="mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
-        >
-          <Volume2 className="h-3 w-3" /> Play
-        </button>
-      )}
+      <div className="mt-1 flex items-center gap-3">
+        {onSpeak && (
+          <button
+            type="button"
+            onClick={() => onSpeak(stripMarkdown(m.content))}
+            className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+          >
+            <Volume2 className="h-3 w-3" /> Play
+          </button>
+        )}
+        {onSaveNote && (
+          <button
+            type="button"
+            onClick={() => onSaveNote(m.content)}
+            className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+            aria-label="Save answer as note"
+          >
+            <StickyNote className="h-3 w-3" /> Save as note
+          </button>
+        )}
+      </div>
     </div>
   );
 }
