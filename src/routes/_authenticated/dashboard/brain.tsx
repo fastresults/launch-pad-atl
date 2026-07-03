@@ -631,7 +631,7 @@ export default function BrainPage() {
               </div>
             </div>
           ) : (
-            history.map((m) => <BubbleMsg key={m.id} m={m} onSpeak={voiceOn ? speak : undefined} />)
+            history.map((m) => <BubbleMsg key={m.id} m={m} onSpeak={voiceOn ? speak : undefined} onSaveNote={saveMessageAsNote} />)
           )}
           {(pending || transcribing || speaking) && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
