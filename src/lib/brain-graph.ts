@@ -225,7 +225,26 @@ export function buildBrainGraph(input: {
     links.push({ source: clusterId, target: nid });
   }
 
+  // Original source briefs / uploaded files.
+  for (const s of input.sources ?? []) {
+    const clusterId = ensureCluster("source");
+    const nid = `src:${s.id}`;
+    nodes.push({
+      id: nid,
+      label: shortTitle(s.filename, 60),
+      kind: "source",
+      cluster: "source",
+      radius: 5,
+      color: CLUSTER_META.source.color,
+      data: { filename: s.filename, origin: s.origin, kind: s.kind ?? null, name: s.filename },
+    });
+    links.push({ source: clusterId, target: nid });
+    // Pull briefs toward the root so they read as foundational context.
+    links.push({ source: rootId, target: nid, strength: 0.9 });
+  }
+
   return { nodes, links };
+
 }
 
 export const BRAIN_CLUSTER_META = CLUSTER_META;
