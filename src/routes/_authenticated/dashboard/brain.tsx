@@ -213,7 +213,7 @@ export default function BrainPage() {
         setJob(j);
         if (j.status === "done" || j.status === "failed") {
           setJobId(null);
-          qc.invalidateQueries({ queryKey: ["brain", "status", userId] });
+          qc.invalidateQueries({ queryKey: ["brain", "status", userId, snapshotId] });
           if (j.status === "done") {
             toast.success(`Memory ready — ${j.embedded_chunks} chunks from ${j.total_sources} sources${j.failed_chunks ? ` (${j.failed_chunks} failed)` : ""}`);
           } else {
