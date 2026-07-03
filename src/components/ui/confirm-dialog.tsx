@@ -190,3 +190,73 @@ export function usePrompt() {
   if (!ctx) throw new Error("usePrompt must be used within ConfirmProvider");
   return ctx.prompt;
 }
+
+/** Standalone controlled prompt dialog (compat with older callers). */
+export function PromptDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  inputLabel,
+  placeholder,
+  confirmLabel = "OK",
+  cancelLabel = "Cancel",
+  defaultValue = "",
+  maxLength,
+  loading = false,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: React.ReactNode;
+  inputLabel?: string;
+  placeholder?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  defaultValue?: string;
+  maxLength?: number;
+  loading?: boolean;
+  onConfirm: (value: string) => void;
+}) {
+  const [value, setValue] = useState(defaultValue);
+  React.useEffect(() => {
+    if (open) setValue(defaultValue);
+  }, [open, defaultValue]);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!value.trim() || loading) return;
+            onConfirm(value.trim());
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            {description && <DialogDescription>{description}</DialogDescription>}
+          </DialogHeader>
+          <div className="space-y-2 py-3">
+            {inputLabel && <Label>{inputLabel}</Label>}
+            <Input
+              autoFocus
+              placeholder={placeholder}
+              value={value}
+              maxLength={maxLength}
+              onChange={(e) => setValue(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={loading}>
+              {cancelLabel}
+            </Button>
+            <Button type="submit" disabled={!value.trim() || loading}>
+              {confirmLabel}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
