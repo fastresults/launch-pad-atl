@@ -9,13 +9,30 @@ export type BrainMessage = {
   created_at: string;
 };
 
-export async function loadBrainHistory(userId: string): Promise<BrainMessage[]> {
+export type BrainVenture = {
+  id: string;
+  company_name: string | null;
+  one_liner: string | null;
+  updated_at: string | null;
+};
+
+export async function listBrainVentures(userId: string): Promise<BrainVenture[]> {
   const { data, error } = await supabase
+    .from("venture_snapshots")
+    .select("id, company_name, one_liner, updated_at")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as BrainVenture[];
+}
+
+export async function loadBrainHistory(userId: string, snapshotId: string | null): Promise<BrainMessage[]> {
+  let q = supabase
     .from("founder_brain_messages")
     .select("id, role, content, citations, created_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: true })
-    .limit(200);
+    .eq("user_id", userId);
+  q = snapshotId ? q.eq("snapshot_id", snapshotId) : q.is("snapshot_id", null);
+  const { data, error } = await q.order("created_at", { ascending: true }).limit(200);
   if (error) throw new Error(error.message);
   return (data ?? []).map((r) => ({
     id: r.id,
@@ -26,15 +43,18 @@ export async function loadBrainHistory(userId: string): Promise<BrainMessage[]> 
   }));
 }
 
-export async function clearBrainHistory(userId: string): Promise<void> {
-  const { error } = await supabase.from("founder_brain_messages").delete().eq("user_id", userId);
+export async function clearBrainHistory(userId: string, snapshotId: string | null): Promise<void> {
+  let q = supabase.from("founder_brain_messages").delete().eq("user_id", userId);
+  q = snapshotId ? q.eq("snapshot_id", snapshotId) : q.is("snapshot_id", null);
+  const { error } = await q;
   if (error) throw new Error(error.message);
 }
 
 export async function sendBrainMessage(
   message: string,
+  snapshotId: string | null,
 ): Promise<{ answer: string; citations: BrainCitation[] }> {
-  const { data, error } = await supabase.functions.invoke("brain-chat", { body: { message } });
+  const { data, error } = await supabase.functions.invoke("brain-chat", { body: { message, snapshotId } });
   if (error) throw error;
   if ((data as any)?.error) throw new Error((data as any).error);
   return { answer: (data as any).answer, citations: (data as any).citations ?? [] };
@@ -53,8 +73,8 @@ export type BrainIndexingJob = {
   created_at: string;
 };
 
-export async function rebuildBrainMemory(): Promise<{ jobId: string }> {
-  const { data, error } = await supabase.functions.invoke("brain-reindex", { body: {} });
+export async function rebuildBrainMemory(snapshotId: string | null): Promise<{ jobId: string }> {
+  const { data, error } = await supabase.functions.invoke("brain-reindex", { body: { snapshotId } });
   if (error) throw error;
   if ((data as any)?.error) throw new Error((data as any).error);
   const jobId = (data as any).jobId as string | undefined;
@@ -75,37 +95,41 @@ export async function pollBrainJob(jobId: string): Promise<BrainIndexingJob> {
   return json as BrainIndexingJob;
 }
 
-export async function getLatestBrainJob(userId: string): Promise<BrainIndexingJob | null> {
-  const { data, error } = await supabase
+export async function getLatestBrainJob(userId: string, snapshotId: string | null): Promise<BrainIndexingJob | null> {
+  let q = supabase
     .from("brain_indexing_jobs" as any)
     .select("id, status, total_sources, total_chunks, embedded_chunks, failed_chunks, error_message, started_at, finished_at, created_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .eq("user_id", userId);
+  q = snapshotId ? q.eq("snapshot_id", snapshotId) : q.is("snapshot_id", null);
+  const { data, error } = await q.order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (error) return null;
   return (data as unknown as BrainIndexingJob) ?? null;
 }
 
-export async function saveBrainNote(userId: string, content: string, source: "text" | "voice" | "chat" = "text") {
+export async function saveBrainNote(
+  userId: string,
+  content: string,
+  snapshotId: string | null,
+  source: "text" | "voice" | "chat" = "text",
+) {
   const clean = content.trim();
   if (!clean) return null;
   const { data, error } = await supabase
     .from("founder_brain_notes")
-    .insert({ user_id: userId, content: clean, source })
+    .insert({ user_id: userId, snapshot_id: snapshotId, content: clean, source })
     .select("id")
     .single();
   if (error) throw new Error(error.message);
   return data.id as string;
 }
 
-export async function listBrainNotes(userId: string) {
-  const { data, error } = await supabase
+export async function listBrainNotes(userId: string, snapshotId: string | null) {
+  let q = supabase
     .from("founder_brain_notes")
     .select("id, content, created_at, source")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(50);
+    .eq("user_id", userId);
+  q = snapshotId ? q.eq("snapshot_id", snapshotId) : q.is("snapshot_id", null);
+  const { data, error } = await q.order("created_at", { ascending: false }).limit(50);
   if (error) throw new Error(error.message);
   return data ?? [];
 }
@@ -115,48 +139,68 @@ export async function deleteBrainNote(id: string) {
   if (error) throw new Error(error.message);
 }
 
-export async function purgeGeneratedAssets(userId: string): Promise<{
+export async function purgeGeneratedAssets(
+  userId: string,
+  snapshotId: string | null,
+): Promise<{
   deliverables_deleted: number;
   memory_chunks_deleted: number;
+  notes_deleted?: number;
+  messages_deleted?: number;
   indexing_jobs_deleted: number;
 }> {
-  const { data, error } = await supabase.rpc("purge_founder_generated_assets" as any, { _user_id: userId });
+  const { data, error } = await supabase.rpc("purge_founder_generated_assets" as any, {
+    _user_id: userId,
+    _snapshot_id: snapshotId,
+  });
   if (error) throw new Error(error.message);
   return data as any;
 }
 
-/** Rough heuristic: if any generated deliverable's title mentions a company
- *  that is not the current venture's company_name, memory is stale. */
-export async function detectVentureMismatch(userId: string): Promise<{
+/** Detects when the current venture's memory contains assets whose titles don't
+ *  match the venture's company name (indicates the founder switched ventures
+ *  without resetting the brain). */
+export async function detectVentureMismatch(
+  userId: string,
+  snapshotId: string | null,
+): Promise<{
   mismatch: boolean;
   currentCompany: string | null;
   staleTitles: string[];
 }> {
-  const [{ data: snaps }, { data: delivs }] = await Promise.all([
-    supabase.from("venture_snapshots").select("company_name").eq("user_id", userId),
-    supabase.from("attendee_deliverables").select("content_current").eq("user_id", userId),
+  if (!snapshotId) return { mismatch: false, currentCompany: null, staleTitles: [] };
+  const [{ data: snap }, { data: mem }] = await Promise.all([
+    supabase.from("venture_snapshots").select("company_name").eq("id", snapshotId).maybeSingle(),
+    supabase
+      .from("founder_brain_memory")
+      .select("title")
+      .eq("user_id", userId)
+      .eq("snapshot_id", snapshotId)
+      .in("kind", ["deliverable", "assessment"])
+      .limit(50),
   ]);
-  const companies = (snaps ?? [])
-    .map((s: any) => (s.company_name ?? "").toString().trim().toLowerCase())
-    .filter(Boolean);
-  const titles = (delivs ?? [])
-    .map((d: any) => (d?.content_current?.title ?? "").toString().trim())
-    .filter(Boolean);
-  if (!companies.length || !titles.length) {
-    return { mismatch: false, currentCompany: companies[0] ?? null, staleTitles: [] };
+  const company = ((snap as any)?.company_name ?? "").toString().trim().toLowerCase();
+  const titles = (mem ?? []).map((r: any) => (r?.title ?? "").toString().trim()).filter(Boolean);
+  if (!company || !titles.length) {
+    return { mismatch: false, currentCompany: (snap as any)?.company_name ?? null, staleTitles: [] };
   }
-  const stale = titles.filter((t) => !companies.some((c) => t.toLowerCase().includes(c)));
+  const stale = titles.filter((t) => !t.toLowerCase().includes(company));
   return {
-    mismatch: stale.length > 0,
-    currentCompany: (snaps ?? [])[0]?.company_name ?? null,
+    mismatch: stale.length > titles.length / 2,
+    currentCompany: (snap as any)?.company_name ?? null,
     staleTitles: stale.slice(0, 5),
   };
 }
 
-export async function getBrainStatus(userId: string) {
+export async function getBrainStatus(userId: string, snapshotId: string | null) {
+  let memQ = supabase.from("founder_brain_memory").select("id", { count: "exact", head: true }).eq("user_id", userId);
+  memQ = snapshotId ? memQ.eq("snapshot_id", snapshotId) : memQ.is("snapshot_id", null);
+  let noteQ = supabase.from("founder_brain_notes").select("id", { count: "exact", head: true }).eq("user_id", userId);
+  noteQ = snapshotId ? noteQ.eq("snapshot_id", snapshotId) : noteQ.is("snapshot_id", null);
+
   const [{ count: memCount }, { count: noteCount }, { data: delivs }] = await Promise.all([
-    supabase.from("founder_brain_memory").select("id", { count: "exact", head: true }).eq("user_id", userId),
-    supabase.from("founder_brain_notes").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    memQ,
+    noteQ,
     supabase
       .from("attendee_deliverables")
       .select("deliverable_key, content_current, deep_assessment_status, hero_image_status")
