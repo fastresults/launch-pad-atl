@@ -350,6 +350,34 @@ export default function BrainPage() {
       <aside className="space-y-4">
         <Card className="p-4">
           <div className="flex items-center gap-2 text-sm font-semibold">
+            <Sparkles className="h-4 w-4 text-primary" /> Venture
+          </div>
+          {ventures.length === 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              No ventures yet. Create one from the Workflow to organize memory here.
+            </p>
+          ) : (
+            <>
+              <select
+                value={snapshotId ?? ""}
+                onChange={(e) => selectVenture(e.target.value || null)}
+                className="mt-2 w-full rounded border border-border bg-background px-2 py-1.5 text-xs"
+              >
+                {ventures.map((v: any) => (
+                  <option key={v.id} value={v.id}>
+                    {v.company_name || "Untitled venture"}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
+                Chat, notes, and memory below are scoped to <b>{currentVenture?.company_name ?? "this venture"}</b>. Switch to isolate different projects.
+              </p>
+            </>
+          )}
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold">
             <Brain className="h-4 w-4 text-primary" /> Brain status
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
