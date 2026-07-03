@@ -190,14 +190,10 @@ export default function BrainPage() {
   async function transcribeAndSend(blob: Blob) {
     setTranscribing(true);
     try {
-      const buf = await blob.arrayBuffer();
-      const bytes = new Uint8Array(buf);
-      let bin = "";
-      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-      const b64 = btoa(bin);
-      const { data, error } = await supabase.functions.invoke("venture-transcribe", {
-        body: { audio_base64: b64, mime_type: blob.type },
-      });
+      const ext = (blob.type.split(";")[0].split("/")[1] || "webm").replace("mpeg", "mp3");
+      const form = new FormData();
+      form.append("file", new File([blob], `recording.${ext}`, { type: blob.type }));
+      const { data, error } = await supabase.functions.invoke("venture-transcribe", { body: form });
       if (error) throw error;
       const text = ((data as any)?.text ?? "").trim();
       if (!text) { toast.info("Couldn't hear that"); return; }
