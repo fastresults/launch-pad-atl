@@ -63,28 +63,16 @@ export async function rebuildBrainMemory(): Promise<{ jobId: string }> {
 }
 
 export async function pollBrainJob(jobId: string): Promise<BrainIndexingJob> {
-  const { data, error } = await supabase.functions.invoke("brain-reindex-status", {
-    method: "GET" as any,
-    // supabase-js doesn't support query params on invoke; fall back to fetch below when needed.
-    body: undefined,
-    headers: {},
-  } as any).catch(() => ({ data: null, error: new Error("invoke-failed") } as any));
-
-  // The invoke helper doesn't easily send query params, so use a direct fetch for reliability.
-  if (!data || (data as any)?.error) {
-    const { data: sess } = await supabase.auth.getSession();
-    const token = sess.session?.access_token;
-    const SUPABASE_URL = (import.meta as any).env.VITE_SUPABASE_URL;
-    const ANON = (import.meta as any).env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/brain-reindex-status?jobId=${encodeURIComponent(jobId)}`, {
-      headers: { apikey: ANON, Authorization: `Bearer ${token ?? ANON}` },
-    });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.error ?? `Status ${res.status}`);
-    return json as BrainIndexingJob;
-  }
-  if (error) throw error;
-  return data as BrainIndexingJob;
+  const { data: sess } = await supabase.auth.getSession();
+  const token = sess.session?.access_token;
+  const SUPABASE_URL = (import.meta as any).env.VITE_SUPABASE_URL;
+  const ANON = (import.meta as any).env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/brain-reindex-status?jobId=${encodeURIComponent(jobId)}`, {
+    headers: { apikey: ANON, Authorization: `Bearer ${token ?? ANON}` },
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json?.error ?? `Status ${res.status}`);
+  return json as BrainIndexingJob;
 }
 
 export async function getLatestBrainJob(userId: string): Promise<BrainIndexingJob | null> {

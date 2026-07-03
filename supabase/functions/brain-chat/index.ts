@@ -4,7 +4,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { aiFetch } from "../_shared/ai-fetch.ts";
-import { embedText } from "../_shared/brain-embed.ts";
+import { embedText, toVectorLiteral } from "../_shared/brain-embed.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
       const qEmb = await embedText(message);
       const { data: matches } = await admin.rpc("match_founder_brain_memory", {
         _user_id: userId,
-        query_embedding: qEmb as unknown as string,
+        query_embedding: toVectorLiteral(qEmb),
         match_count: 8,
       });
       const rows = Array.isArray(matches) ? matches : [];
@@ -84,6 +84,7 @@ Deno.serve(async (req) => {
     const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
+        "Lovable-API-Key": LOVABLE_API_KEY,
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },

@@ -276,6 +276,7 @@ export default function BrainPage() {
   }
 
   const empty = history.length === 0;
+  const assetsReadyWithoutMemory = (status?.generated ?? 0) > 0 && (status?.memoryChunks ?? 0) === 0;
 
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[320px_1fr]">
@@ -318,6 +319,11 @@ export default function BrainPage() {
           )}
           {job?.status === "failed" && (
             <p className="mt-2 text-[10px] text-destructive">{job.error_message ?? "Rebuild failed"}</p>
+          )}
+          {assetsReadyWithoutMemory && !jobId && (
+            <p className="mt-2 rounded border border-primary/20 bg-primary/5 px-2 py-1.5 text-[10px] leading-snug text-primary">
+              Your {status?.generated} startup assets are ready, but Second Brain memory has not been built yet. Click Rebuild memory.
+            </p>
           )}
           <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
             Re-embed your brief, startup assets, assessments, and notes so the brain retrieves the latest of everything.
@@ -408,7 +414,9 @@ export default function BrainPage() {
                   Ask anything about your startup — brief, assets, assessments, notes. I'll cite what I used.
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Tip: rebuild memory after generating new assets so I have the latest.
+                  {assetsReadyWithoutMemory
+                    ? `Your ${status?.generated} startup assets are ready; rebuild memory so I can answer from them.`
+                    : "Tip: rebuild memory after generating new assets so I have the latest."}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
