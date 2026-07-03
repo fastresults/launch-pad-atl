@@ -77,7 +77,8 @@ You have the founder's FULL venture context: the venture brief, all research gat
 
 Output clean Markdown that begins with this exact H2:
 
-## McKinsey-Grade Assessment
+## Deep Dive
+
 
 Then use these ### subsections in order — adapt wording so they read natural for THIS document type, but cover every angle. ~700-1100 words total.
 
