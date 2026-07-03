@@ -109,7 +109,7 @@ export async function saveBrainNote(
   userId: string,
   content: string,
   snapshotId: string | null,
-  source: "text" | "voice" | "chat" = "text",
+  source: "text" | "voice" | "chat" | "file" = "text",
 ) {
   const clean = content.trim();
   if (!clean) return null;
@@ -120,6 +120,39 @@ export async function saveBrainNote(
     .single();
   if (error) throw new Error(error.message);
   return data.id as string;
+}
+
+/** Ask the AI gateway to compress `content` (a chat answer or freeform text)
+ *  into a saved-note shape: 7-word title + bullet list. Falls back to a naive
+ *  local title + single bullet if the gateway is unavailable, so saving never
+ *  fully fails on the user. Returns the final markdown to persist. */
+export async function formatContentAsNote(content: string, question?: string): Promise<string> {
+  const raw = content.trim();
+  if (!raw) return "";
+  try {
+    const { data, error } = await supabase.functions.invoke("brain-note-format", {
+      body: { content: raw, question: question?.trim() ?? "" },
+    });
+    if (error) throw error;
+    const title = String((data as any)?.title ?? "").trim();
+    const bullets = Array.isArray((data as any)?.bullets)
+      ? ((data as any).bullets as unknown[])
+          .map((b) => String(b ?? "").trim())
+          .filter(Boolean)
+      : [];
+    if (title && bullets.length) {
+      return `**${title}**\n\n${bullets.map((b) => `- ${b}`).join("\n")}`;
+    }
+    if (title) return `**${title}**\n\n- ${raw.slice(0, 400)}`;
+  } catch { /* fall through to naive */ }
+  const naiveTitle = raw
+    .replace(/[#*_`>\-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .slice(0, 7)
+    .join(" ") || "Saved Note";
+  return `**${naiveTitle}**\n\n- ${raw.slice(0, 400)}`;
 }
 
 export async function listBrainNotes(userId: string, snapshotId: string | null) {
