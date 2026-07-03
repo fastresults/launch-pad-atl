@@ -7,6 +7,8 @@ export async function embedText(text: string): Promise<number[]> {
   const res = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
     method: "POST",
     headers: {
+      // Documented header for the gateway; also accept Authorization as a fallback.
+      "Lovable-API-Key": LOVABLE_API_KEY,
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
       "Content-Type": "application/json",
     },
@@ -22,7 +24,12 @@ export async function embedText(text: string): Promise<number[]> {
   const json = await res.json();
   const vec = json?.data?.[0]?.embedding;
   if (!Array.isArray(vec)) throw new Error("Embedding response missing vector");
-  return vec;
+  return vec as number[];
+}
+
+/** pgvector accepts this literal form via PostgREST; a raw JS array does not. */
+export function toVectorLiteral(vec: number[]): string {
+  return `[${vec.join(",")}]`;
 }
 
 export function chunkText(text: string, maxChars = 1400, overlap = 200): string[] {
