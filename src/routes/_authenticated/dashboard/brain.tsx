@@ -336,7 +336,7 @@ export default function BrainPage() {
     if (!userId) return;
     const text = window.prompt("Note (this becomes part of your brain memory next rebuild):");
     if (!text?.trim()) return;
-    await saveBrainNote(userId, text, "text", snapshotId);
+    await saveBrainNote(userId, text, snapshotId, "text");
     toast.success("Note saved. Rebuild memory to embed it.");
     qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
   }
