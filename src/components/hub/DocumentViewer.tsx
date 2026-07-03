@@ -714,9 +714,18 @@ export function DocumentViewer({
       });
       if (error) throw new Error(error.message);
       if (data?.path) {
-        setHeroStatus(data.status ?? "ready");
-        setHeroPath(data.path);
+        const nextStatus = data.status ?? "ready";
+        const signedUrl = typeof data.signedUrl === "string" ? data.signedUrl : null;
+        setHeroStatus(nextStatus);
         heroImgErrorOnceRef.current = false;
+        if (signedUrl) {
+          const url = primeSignedStorageUrl(HERO_BUCKET, data.path, signedUrl, 3600);
+          setHeroImageLoading(true);
+          await loadImage(url, 20_000);
+          setHeroUrl(url);
+        }
+        setHeroPath(data.path);
+        setHeroError(null);
         qc.invalidateQueries({ queryKey: ["hub", "docs", doc.snapshot_id] });
         toast.success(quality === "hq" ? "HQ visual generated" : force ? "New visual generated" : "Visual generated");
       } else if (data?.skipped && data?.reason === "in_flight") {
