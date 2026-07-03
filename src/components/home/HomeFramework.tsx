@@ -18,6 +18,8 @@ import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroBg from "@/assets/hero-bg.png";
 import atlSeal from "@/assets/atl-founder-friendly-seal.svg";
+import { AccessModeDialog } from "@/components/home/AccessModeDialog";
+import { useState } from "react";
 import {
   ArrowRight,
   Calendar,
@@ -57,6 +59,7 @@ export function HomeFramework() {
 
 function Hero() {
   const EVENT = useEvent();
+  const [modesOpen, setModesOpen] = useState(false);
   return (
     <section className="relative overflow-hidden">
       <div
@@ -95,7 +98,15 @@ function Hero() {
           >
             Reserve your seat — {WORKSHOP_PRICE_LABEL} <ArrowRight className="size-4" />
           </Link>
+          <button
+            type="button"
+            onClick={() => setModesOpen(true)}
+            className="text-sm text-white/80 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white hover:decoration-white sm:text-base"
+          >
+            Prefer a webinar or 1:1 with Adam?
+          </button>
         </div>
+        <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
 
         <p className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-white/70 md:text-sm">
           <span>Atlanta-built</span>
