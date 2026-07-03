@@ -324,9 +324,9 @@ export function DocumentViewer({
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  const components = useMemo(() => makeComponents(setHeadings), [doc?.content]);
-  const assessmentComponents = useMemo(() => makeComponents(() => {}), [assessment]);
   const title = titleCase(doc?.document_type ?? "");
+  const components = useMemo(() => makeComponents(setHeadings, title), [doc?.content, title]);
+  const assessmentComponents = useMemo(() => makeComponents(() => {}, title), [assessment, title]);
   const content = contentOverride ?? doc?.content ?? "";
   const printRef = useRef<HTMLDivElement | null>(null);
 
@@ -336,10 +336,11 @@ export function DocumentViewer({
     if (!hasAssessment) return content;
     const body = (content ?? "").trimEnd();
     let extra = assessment!.trim();
-    // Avoid duplicating the canonical H2 heading
-    extra = extra.replace(/^#{1,6}\s*McKinsey[-\s]*Grade\s*Assessment\s*\n+/i, "");
-    return `${body}\n\n---\n\n## McKinsey-Grade Assessment\n\n${extra}\n`;
-  }, [content, assessment, assessmentStatus]);
+    // Avoid duplicating the canonical H2 heading (either legacy or new label)
+    extra = extra.replace(/^#{1,6}\s*(McKinsey[-\s]*Grade\s*Assessment|Deep\s+Dive)\s*\n+/i, "");
+    return `${body}\n\n---\n\n## ${title} Deep Dive\n\n${extra}\n`;
+  }, [content, assessment, assessmentStatus, title]);
+
 
   // Extract the Section 8 "Paste-Ready Master Prompt" for the PRD viewer.
   // Resolution order: BEGIN/END delimiters → Section 8 slice → largest fenced block.
