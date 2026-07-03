@@ -69,6 +69,8 @@ export function buildBrainGraph(input: {
   docs: DocRow[];
   messages: MsgRow[];
   docTypeNames?: Record<string, string>;
+  sources?: SourceRow[];
+
 }): BrainGraph {
   const nodes: BrainGraphNode[] = [];
   const links: BrainGraphLink[] = [];
