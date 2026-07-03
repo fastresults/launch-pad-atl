@@ -256,10 +256,12 @@ function StepBlock({
 
 function StepInputs({
   step,
+  state,
   progress,
   filing,
 }: {
   step: LegalStep;
+  state: ReturnType<typeof getStateByCode>;
   progress: LegalSetupProgress | null;
   filing: Record<string, any>;
 }) {
@@ -270,10 +272,12 @@ function StepInputs({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
   });
 
-  if (step.key === "entity_choice") return <EntityChoicePanel progress={progress} onSave={(p) => save.mutate(p)} />;
+  if (step.key === "entity_choice")
+    return <EntityChoicePanel state={state} progress={progress} onSave={(p) => save.mutate(p)} />;
   if (step.key === "name_check")
     return (
       <NameCheckPanel
+        state={state}
         progress={progress}
         defaultName={filing?.llc_name || ""}
         onSave={(p) => save.mutate(p)}
@@ -282,17 +286,18 @@ function StepInputs({
   if (step.key === "registered_agent")
     return (
       <RegisteredAgentPanel
+        state={state}
         progress={progress}
         defaultAgent={filing?.registered_agent_name || ""}
         onSave={(p) => save.mutate(p)}
       />
     );
   if (step.key === "articles_filed")
-    return <ArticlesPanel progress={progress} filing={filing} onSave={(p) => save.mutate(p)} />;
-  if (step.key === "ein") return <EinPanel progress={progress} onSave={(p) => save.mutate(p)} />;
+    return <ArticlesPanel state={state} progress={progress} filing={filing} onSave={(p) => save.mutate(p)} />;
+  if (step.key === "ein") return <EinPanel state={state} progress={progress} onSave={(p) => save.mutate(p)} />;
   if (step.key === "operating_agreement")
-    return <OperatingAgreementPanel progress={progress} onSave={(p) => save.mutate(p)} />;
-  if (step.key === "post_formation") return <PostFormationPanel />;
+    return <OperatingAgreementPanel state={state} progress={progress} onSave={(p) => save.mutate(p)} />;
+  if (step.key === "post_formation") return <PostFormationPanel state={state} />;
   return null;
 }
 
