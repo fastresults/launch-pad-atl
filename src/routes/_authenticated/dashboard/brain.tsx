@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import {
   loadBrainHistory, sendBrainMessage, clearBrainHistory, rebuildBrainMemory,
   saveBrainNote, listBrainNotes, deleteBrainNote, getBrainStatus,
-  pollBrainJob, getLatestBrainJob,
+  pollBrainJob, getLatestBrainJob, purgeGeneratedAssets, detectVentureMismatch,
   type BrainMessage, type BrainIndexingJob,
 } from "@/lib/brain.functions";
 
