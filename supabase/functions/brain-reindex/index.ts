@@ -116,13 +116,39 @@ async function runJob(admin: any, userId: string, jobId: string, snapshotId: str
 
     type Source = { kind: string; source_ref: string | null; title: string; content: string };
     const sources: Source[] = [];
+    const seenDeliv = new Set<string>();
+    const seenAssess = new Set<string>();
+    const vdocRows = (vdocs ?? []) as Array<{
+      document_type: string;
+      content: string | null;
+      deep_assessment: string | null;
+      intake_answers: Record<string, unknown> | null;
+    }>;
+    const hasRealDeliverables =
+      vdocRows.some((r) => (r.content ?? "").trim().length > 0) ||
+      (delivs ?? []).some((d: any) => d.content_current && Object.keys(d.content_current).length);
 
     if (snapshot) {
+      // When real deliverables exist, the full snapshot JSON is redundant noise
+      // that chunks into 100+ meaningless embeddings. Keep only the fields a
+      // founder-facing chat actually cares about.
+      const summary = hasRealDeliverables
+        ? {
+            company_name: snapshot.company_name,
+            one_liner: snapshot.one_liner ?? null,
+            industry: snapshot.industry ?? null,
+            stage: snapshot.stage ?? null,
+            target_market: snapshot.target_market ?? null,
+            problem_solved: snapshot.problem_solved ?? null,
+            value_prop: snapshot.value_prop ?? null,
+            business_model: snapshot.business_model ?? null,
+          }
+        : snapshot;
       sources.push({
         kind: "venture",
         source_ref: snapshotId,
         title: `Venture — ${snapshot.company_name ?? "current venture"}`,
-        content: JSON.stringify(snapshot, null, 2),
+        content: JSON.stringify(summary, null, 2),
       });
     }
 
@@ -142,23 +168,55 @@ async function runJob(admin: any, userId: string, jobId: string, snapshotId: str
         content: `${g.title ?? ""}\n\n${g.detail ?? ""}\n\nStatus: ${g.status ?? "n/a"}`,
       });
     }
+
+    // Current workflow: venture_documents (snapshot-scoped). Index these first
+    // so they win the dedup against any legacy attendee_deliverables row.
+    for (const v of vdocRows) {
+      const key = v.document_type;
+      const body = (v.content ?? "").trim();
+      if (body && !seenDeliv.has(key)) {
+        seenDeliv.add(key);
+        const intake = v.intake_answers && Object.keys(v.intake_answers).length
+          ? `Intake answers:\n${JSON.stringify(v.intake_answers, null, 2)}\n\n---\n\n`
+          : "";
+        sources.push({
+          kind: "deliverable",
+          source_ref: key,
+          title: key,
+          content: `${intake}${body}`,
+        });
+      }
+      const assess = (v.deep_assessment ?? "").trim();
+      if (assess && !seenAssess.has(key)) {
+        seenAssess.add(key);
+        sources.push({
+          kind: "assessment",
+          source_ref: key,
+          title: `Assessment — ${key}`,
+          content: assess,
+        });
+      }
+    }
+
     for (const d of delivs ?? []) {
       // deno-lint-ignore no-explicit-any
       const c: any = (d as any).content_current;
-      if (c && typeof c === "object" && Object.keys(c).length) {
-        const key = (d as { deliverable_key: string }).deliverable_key;
+      const key = (d as { deliverable_key: string }).deliverable_key;
+      if (c && typeof c === "object" && Object.keys(c).length && !seenDeliv.has(key)) {
         const md = deliverableToMarkdown(c, key);
         if (md.trim()) {
+          seenDeliv.add(key);
           sources.push({ kind: "deliverable", source_ref: key, title: c.title ?? key, content: md });
         }
       }
       // deno-lint-ignore no-explicit-any
       const assess = (d as any).deep_assessment;
-      if (assess && typeof assess === "string" && assess.trim()) {
+      if (assess && typeof assess === "string" && assess.trim() && !seenAssess.has(key)) {
+        seenAssess.add(key);
         sources.push({
           kind: "assessment",
-          source_ref: (d as { deliverable_key: string }).deliverable_key,
-          title: `Assessment — ${(d as { deliverable_key: string }).deliverable_key}`,
+          source_ref: key,
+          title: `Assessment — ${key}`,
           content: assess,
         });
       }
