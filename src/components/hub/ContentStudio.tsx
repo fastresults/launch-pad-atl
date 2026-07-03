@@ -540,6 +540,7 @@ function Step4BuildAds({
 }) {
 
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const scoped = useMemo(() => posts.filter((p) => selectedWeeks.includes(p.week)), [posts, selectedWeeks]);
 
   const tasks: AdTask[] = useMemo(() => {
@@ -646,7 +647,7 @@ function Step4BuildAds({
 
   const doDelete = async (t: AdTask) => {
     if (!t.ad) return;
-    if (!window.confirm("Delete this ad? The tile will reset.")) return;
+    if (!(await confirm({ title: "Delete this ad?", description: "The tile will reset.", destructive: true, confirmText: "Delete" }))) return;
     const k = key(t);
     setBusy(k, true);
     try {
@@ -1001,9 +1002,10 @@ function Step5Launch({
   const [previewIdx, setPreviewIdx] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const qc = useQueryClient();
+  const confirm = useConfirm();
 
   const doDelete = async (adId: string) => {
-    if (!window.confirm("Delete this ad? This can't be undone.")) return;
+    if (!(await confirm({ title: "Delete this ad?", description: "This can't be undone.", destructive: true, confirmText: "Delete" }))) return;
     setDeletingId(adId);
     try {
       await deleteContentAd(snapshotId, adId);
