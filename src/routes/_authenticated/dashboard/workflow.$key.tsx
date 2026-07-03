@@ -78,8 +78,9 @@ export default function WorkflowDetail() {
 
   const assess = useMutation({
     mutationFn: () => runMyDeliverableAssessment({ data: { key } }),
-    onSuccess: () => { toast.success("Deep assessment ready"); refetch(); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Assessment failed"),
+    onSuccess: () => { toast.success("Deep dive ready"); refetch(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Deep dive failed"),
+
   });
 
   const content = (deliverable?.content_current ?? {}) as Content;
