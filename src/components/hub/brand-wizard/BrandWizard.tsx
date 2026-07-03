@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -91,6 +91,9 @@ export function BrandWizard({
               </Badge>
             )}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Configure the brand direction, visual system, and generated assets for this startup.
+          </DialogDescription>
           <div className="mt-3 flex items-center gap-2">
             {STEPS.map((label, i) => {
               const n = i + 1;

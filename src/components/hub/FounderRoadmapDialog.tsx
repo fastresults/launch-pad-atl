@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Copy, Download, FileText, Printer, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
 import { toast } from "sonner";
 
@@ -193,6 +193,9 @@ export function FounderRoadmapDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] w-[min(1100px,95vw)] overflow-hidden p-0 sm:max-w-[1100px]">
         <DialogTitle className="sr-only">{title}</DialogTitle>
+        <DialogDescription className="sr-only">
+          Review, export, and print the synthesized roadmap for your startup.
+        </DialogDescription>
 
         {/* Sticky header */}
         <div className="flex items-center justify-between gap-3 border-b border-border bg-background/95 px-5 py-3 backdrop-blur">
