@@ -1,29 +1,45 @@
-## What I found
+## What's actually happening
 
-- The dashboard does see the generated startup assets: the database has **34/34 generated assets** for users.
-- The Second Brain memory table still has **0 memory chunks**, so the Brain is answering honestly that it has no indexed memory.
-- No active indexing job rows were found, and the deployed function logs show no recent `brain-reindex` activity, which means the rebuild either is not reaching the function, the status function is not deployed/available, or the background job is not persisting progress.
+Your only venture snapshot is **StartupLabs**, but `attendee_deliverables` still holds **34 rows from a previous venture ("Fancy's Foods")** — generated on 2026‑06‑26, before you switched. Those rows are per‑user (not scoped to a venture snapshot), so `brain-reindex` embeds all of them and the Second Brain answers from Fancy's Foods content.
 
-## Plan
+Verified in the DB:
+- `venture_snapshots` for your user → 1 row: `StartupLabs`
+- `attendee_deliverables` for your user → 34 rows, every title says "Fancy's Foods"
+- `founder_brain_memory` → chunks with titles like "Executive Summary: Fancy's Foods, LLC"
 
-1. **Fix the rebuild/status call path**
-   - Make the frontend call `brain-reindex-status` with a reliable direct function URL instead of first invoking it without the required `jobId`.
-   - Surface clear toast errors if rebuild starts but polling cannot find the job.
+So the Second Brain is working correctly — it's just been fed the wrong (old) source of truth.
 
-2. **Harden the indexer so 34 assets become memory**
-   - Confirm the indexer reads all startup asset content from `attendee_deliverables`.
-   - Keep vector inserts in pgvector literal format.
-   - Make every failed chunk record an error on the indexing job instead of silently ending with 0 chunks.
-   - Ensure the job records `total_sources`, `total_chunks`, `embedded_chunks`, and `failed_chunks` immediately enough for the UI to show real progress.
+## Fix (two parts)
 
-3. **Fix retrieval vector format in chat if needed**
-   - Update `brain-chat` to pass the query embedding in the same pgvector-compatible literal format used for inserts, so indexed memory can actually be searched.
+### 1. Immediate cleanup for your account
+- Delete the 34 stale `attendee_deliverables` rows for your user (all Fancy's Foods entries; they don't correspond to any current snapshot).
+- Delete all `founder_brain_memory` rows for your user so the next reindex starts clean.
+- Trigger `brain-reindex`; verify chunks now reference StartupLabs.
 
-4. **Deploy and verify the functions**
-   - Deploy `brain-reindex`, `brain-reindex-status`, and `brain-chat`.
-   - Trigger a rebuild against the current signed-in user.
-   - Verify memory chunks are created from the 34 assets and the Brain status changes from `Memory chunks: 0` to a non-zero count.
+### 2. Prevent recurrence
 
-5. **Improve empty-memory UX**
-   - If assets exist but memory chunks are 0, show a friendly status message like: “Your 34 startup assets are ready, but Second Brain memory has not been built yet. Click Rebuild memory.”
-   - Keep chat responses grounded, but make the UI explain the indexing gap before the user gets another “memory is empty” answer.
+Add a user-visible **"Clear previous venture data"** control on `/dashboard/brain` (and surface it automatically when we detect a mismatch — see below).
+
+Backend:
+- New SECURITY DEFINER RPC `purge_stale_deliverables(_user_id uuid)` that deletes `attendee_deliverables` and `founder_brain_memory` for the user, keyed to "not tied to any current venture." Since deliverables aren't snapshot-scoped today, the safe rule is: if the user has snapshots and requests a purge, wipe all deliverables + brain memory and let the workflow re-generate.
+- Auth check: `auth.uid() = _user_id OR is_admin(auth.uid())`.
+
+Frontend (`src/routes/_authenticated/dashboard/brain.tsx`):
+- Add a "Reset memory & deliverables" button in the existing rebuild card, with a confirm dialog explaining it wipes generated assets so they can be regenerated against the current venture.
+- Detect mismatch: if any `attendee_deliverables.content_current.title` doesn't contain the current `venture_snapshots.company_name`, show a warning banner: *"Your Second Brain contains content from a previous venture. Reset to reindex against StartupLabs."*
+
+### 3. Longer-term hardening (same PR)
+- Add `snapshot_id uuid` column to `attendee_deliverables` (nullable, FK to `venture_snapshots`), backfilled to the user's current snapshot.
+- Update the generation edge functions to stamp `snapshot_id` on write.
+- Update `brain-reindex` to filter deliverables by the active snapshot (`content_current` only for rows matching the current snapshot).
+
+This makes future venture switches automatically scope memory correctly.
+
+## Files touched
+- New migration: RPC + `snapshot_id` column + backfill + index.
+- `supabase/functions/brain-reindex/index.ts` — filter by active snapshot.
+- `src/lib/brain.functions.ts` — add `purgeStaleDeliverables()`.
+- `src/routes/_authenticated/dashboard/brain.tsx` — reset button + mismatch banner.
+- One-off cleanup SQL for your user (run as part of the migration or as a psql insert).
+
+Ready to build this?

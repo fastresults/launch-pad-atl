@@ -115,6 +115,44 @@ export async function deleteBrainNote(id: string) {
   if (error) throw new Error(error.message);
 }
 
+export async function purgeGeneratedAssets(userId: string): Promise<{
+  deliverables_deleted: number;
+  memory_chunks_deleted: number;
+  indexing_jobs_deleted: number;
+}> {
+  const { data, error } = await supabase.rpc("purge_founder_generated_assets" as any, { _user_id: userId });
+  if (error) throw new Error(error.message);
+  return data as any;
+}
+
+/** Rough heuristic: if any generated deliverable's title mentions a company
+ *  that is not the current venture's company_name, memory is stale. */
+export async function detectVentureMismatch(userId: string): Promise<{
+  mismatch: boolean;
+  currentCompany: string | null;
+  staleTitles: string[];
+}> {
+  const [{ data: snaps }, { data: delivs }] = await Promise.all([
+    supabase.from("venture_snapshots").select("company_name").eq("user_id", userId),
+    supabase.from("attendee_deliverables").select("content_current").eq("user_id", userId),
+  ]);
+  const companies = (snaps ?? [])
+    .map((s: any) => (s.company_name ?? "").toString().trim().toLowerCase())
+    .filter(Boolean);
+  const titles = (delivs ?? [])
+    .map((d: any) => (d?.content_current?.title ?? "").toString().trim())
+    .filter(Boolean);
+  if (!companies.length || !titles.length) {
+    return { mismatch: false, currentCompany: companies[0] ?? null, staleTitles: [] };
+  }
+  const stale = titles.filter((t) => !companies.some((c) => t.toLowerCase().includes(c)));
+  return {
+    mismatch: stale.length > 0,
+    currentCompany: (snaps ?? [])[0]?.company_name ?? null,
+    staleTitles: stale.slice(0, 5),
+  };
+}
+
 export async function getBrainStatus(userId: string) {
   const [{ count: memCount }, { count: noteCount }, { data: delivs }] = await Promise.all([
     supabase.from("founder_brain_memory").select("id", { count: "exact", head: true }).eq("user_id", userId),

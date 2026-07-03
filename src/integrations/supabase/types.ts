@@ -3312,6 +3312,10 @@ export type Database = {
         Returns: number
       }
       promote_application: { Args: { _app_id: string }; Returns: string }
+      purge_founder_generated_assets: {
+        Args: { _user_id: string }
+        Returns: Json
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {

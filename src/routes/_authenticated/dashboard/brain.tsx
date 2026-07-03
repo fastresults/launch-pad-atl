@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import {
   loadBrainHistory, sendBrainMessage, clearBrainHistory, rebuildBrainMemory,
   saveBrainNote, listBrainNotes, deleteBrainNote, getBrainStatus,
-  pollBrainJob, getLatestBrainJob,
+  pollBrainJob, getLatestBrainJob, purgeGeneratedAssets, detectVentureMismatch,
   type BrainMessage, type BrainIndexingJob,
 } from "@/lib/brain.functions";
 
@@ -52,6 +52,12 @@ export default function BrainPage() {
     queryKey: ["brain", "notes", userId],
     queryFn: () => listBrainNotes(userId!),
     enabled: !!userId,
+  });
+  const { data: mismatch } = useQuery({
+    queryKey: ["brain", "mismatch", userId],
+    queryFn: () => detectVentureMismatch(userId!),
+    enabled: !!userId,
+    refetchInterval: 30000,
   });
 
   const [input, setInput] = useState("");
@@ -205,6 +211,25 @@ export default function BrainPage() {
     },
   });
 
+  const purge = useMutation({
+    mutationFn: () => purgeGeneratedAssets(userId!),
+    onSuccess: (res) => {
+      toast.success(
+        `Cleared ${res.deliverables_deleted} old assets and ${res.memory_chunks_deleted} memory chunks. Regenerate from Workflow, then rebuild memory.`,
+      );
+      qc.invalidateQueries({ queryKey: ["brain", "status", userId] });
+      qc.invalidateQueries({ queryKey: ["brain", "mismatch", userId] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Reset failed"),
+  });
+
+  function confirmPurge() {
+    const ok = window.confirm(
+      "This wipes ALL generated startup assets and Second Brain memory for your account so they can be regenerated against your current venture. Continue?",
+    );
+    if (ok) purge.mutate();
+  }
+
   async function startRecording() {
     if (recording || transcribing || pending) return;
     try {
@@ -325,6 +350,29 @@ export default function BrainPage() {
               Your {status?.generated} startup assets are ready, but Second Brain memory has not been built yet. Click Rebuild memory.
             </p>
           )}
+          {mismatch?.mismatch && (
+            <div className="mt-2 rounded border border-destructive/30 bg-destructive/5 px-2 py-1.5 text-[10px] leading-snug text-destructive">
+              <p className="font-semibold">Stale content detected</p>
+              <p className="mt-0.5">
+                Your Second Brain contains assets from a previous venture
+                {mismatch.currentCompany ? <> — current venture is <b>{mismatch.currentCompany}</b></> : null}.
+                Reset to regenerate against the current venture.
+              </p>
+              {mismatch.staleTitles?.length ? (
+                <p className="mt-1 opacity-80">e.g. {mismatch.staleTitles.slice(0, 2).join(" · ")}</p>
+              ) : null}
+            </div>
+          )}
+          <Button
+            size="sm" variant="ghost"
+            className="mt-2 w-full text-[11px] text-muted-foreground hover:text-destructive"
+            onClick={confirmPurge}
+            disabled={purge.isPending}
+          >
+            {purge.isPending
+              ? <><Loader2 className="mr-2 h-3 w-3 animate-spin" />Resetting…</>
+              : <><Trash2 className="mr-2 h-3 w-3" />Reset assets &amp; memory</>}
+          </Button>
           <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
             Re-embed your brief, startup assets, assessments, and notes so the brain retrieves the latest of everything.
           </p>
