@@ -53,6 +53,12 @@ export default function BrainPage() {
     queryFn: () => listBrainNotes(userId!),
     enabled: !!userId,
   });
+  const { data: mismatch } = useQuery({
+    queryKey: ["brain", "mismatch", userId],
+    queryFn: () => detectVentureMismatch(userId!),
+    enabled: !!userId,
+    refetchInterval: 30000,
+  });
 
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
