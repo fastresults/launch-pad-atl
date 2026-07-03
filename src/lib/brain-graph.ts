@@ -101,14 +101,15 @@ export function buildBrainGraph(input: {
   for (const d of input.docs) {
     const clusterId = ensureCluster("asset");
     const nid = `doc:${d.id}`;
+    const docLabel = humanizeDocType(d.document_type);
     nodes.push({
       id: nid,
-      label: shortTitle(d.title || d.deliverable_type_key || "Asset"),
+      label: shortTitle(docLabel),
       kind: "asset",
       cluster: "asset",
       radius: d.deep_assessment_status === "complete" ? 6 : 4.5,
       color: CLUSTER_META.asset.color,
-      data: { docId: d.id, key: d.deliverable_type_key },
+      data: { docId: d.id, documentType: d.document_type },
     });
     links.push({ source: clusterId, target: nid });
 
@@ -117,7 +118,7 @@ export function buildBrainGraph(input: {
       const aId = `assess:${d.id}`;
       nodes.push({
         id: aId,
-        label: shortTitle(`${d.title || d.deliverable_type_key || "Asset"} — assessment`),
+        label: shortTitle(`${docLabel} — assessment`),
         kind: "assessment",
         cluster: "assessment",
         radius: 4,
@@ -132,7 +133,7 @@ export function buildBrainGraph(input: {
       const hId = `hero:${d.id}`;
       nodes.push({
         id: hId,
-        label: shortTitle(`${d.title || d.deliverable_type_key || "Asset"} — hero`),
+        label: shortTitle(`${docLabel} — hero`),
         kind: "hero",
         cluster: "hero",
         radius: 3.5,
@@ -144,7 +145,7 @@ export function buildBrainGraph(input: {
   }
 
   // Memory rows (chunks that aren't already represented as assets by source_ref).
-  const assetRefs = new Set(input.docs.map((d) => (d.deliverable_type_key || "").toString()));
+  const assetRefs = new Set(input.docs.map((d) => (d.document_type || "").toString()));
   for (const m of input.memory) {
     // Skip pure duplicates of asset chunks; still fold assessments/notes/brief into their clusters.
     const k = memoryKindToCluster(m.kind);
