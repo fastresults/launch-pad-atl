@@ -192,13 +192,22 @@ Deno.serve(async (req) => {
     const snapshotId = body?.snapshotId as string | undefined;
     if (!snapshotId) return json({ error: "snapshotId required" }, 400);
 
+    // Admin impersonation support
+    const { data: adminRoles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .in("role", ["admin", "super_admin"]);
+    const isAdmin = (adminRoles ?? []).length > 0;
+
     // Snapshot ownership
     const { data: snap } = await admin
       .from("venture_snapshots")
       .select("id, user_id")
       .eq("id", snapshotId)
       .maybeSingle();
-    if (!snap || snap.user_id !== userId) return json({ error: "Forbidden" }, 403);
+    if (!snap || (snap.user_id !== userId && !isAdmin)) return json({ error: "Forbidden" }, 403);
+    const ownerId = snap.user_id as string;
 
     // ---- LIST ----
     if (action === "list") {
