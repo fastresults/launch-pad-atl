@@ -4,7 +4,7 @@
 export type BrainGraphNode = {
   id: string;
   label: string;
-  kind: "root" | "cluster" | "asset" | "assessment" | "note" | "brief" | "chat" | "memory" | "hero";
+  kind: "root" | "cluster" | "asset" | "assessment" | "note" | "brief" | "chat" | "memory" | "hero" | "source";
   cluster: string;
   radius: number;
   color: string; // CSS var reference, e.g. "var(--brain-asset)"
@@ -23,8 +23,10 @@ export type MemoryRow = { id: string; kind: string; title: string | null; source
 export type NoteRow = { id: string; content: string; source?: string | null; created_at?: string };
 export type DocRow = { id: string; document_type?: string | null; status?: string | null; hero_image_status?: string | null; deep_assessment_status?: string | null };
 export type MsgRow = { id: string; role: string; content: string; created_at?: string };
+export type SourceRow = { id: string; filename: string; kind?: string | null; origin: "snapshot" | "upload" | "url" };
 
 const CLUSTER_META: Record<string, { label: string; color: string }> = {
+  source:     { label: "Source Briefs",      color: "var(--brain-source)" },
   asset:      { label: "Startup Assets",     color: "var(--brain-asset)" },
   assessment: { label: "Assessments",        color: "var(--brain-assessment)" },
   note:       { label: "Notes",              color: "var(--brain-note)" },
@@ -33,6 +35,7 @@ const CLUSTER_META: Record<string, { label: string; color: string }> = {
   memory:     { label: "Memory Fragments",   color: "var(--brain-memory)" },
   hero:       { label: "Hero Images",        color: "var(--brain-hero)" },
 };
+
 
 function memoryKindToCluster(kind: string): keyof typeof CLUSTER_META {
   const k = (kind || "").toLowerCase();
@@ -66,6 +69,8 @@ export function buildBrainGraph(input: {
   docs: DocRow[];
   messages: MsgRow[];
   docTypeNames?: Record<string, string>;
+  sources?: SourceRow[];
+
 }): BrainGraph {
   const nodes: BrainGraphNode[] = [];
   const links: BrainGraphLink[] = [];
@@ -220,7 +225,26 @@ export function buildBrainGraph(input: {
     links.push({ source: clusterId, target: nid });
   }
 
+  // Original source briefs / uploaded files.
+  for (const s of input.sources ?? []) {
+    const clusterId = ensureCluster("source");
+    const nid = `src:${s.id}`;
+    nodes.push({
+      id: nid,
+      label: shortTitle(s.filename, 60),
+      kind: "source",
+      cluster: "source",
+      radius: 5,
+      color: CLUSTER_META.source.color,
+      data: { filename: s.filename, origin: s.origin, kind: s.kind ?? null, name: s.filename },
+    });
+    links.push({ source: clusterId, target: nid });
+    // Pull briefs toward the root so they read as foundational context.
+    links.push({ source: rootId, target: nid, strength: 0.9 });
+  }
+
   return { nodes, links };
+
 }
 
 export const BRAIN_CLUSTER_META = CLUSTER_META;

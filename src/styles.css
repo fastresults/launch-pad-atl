@@ -107,6 +107,8 @@
   --brain-chat: oklch(0.72 0.2 25);
   --brain-memory: oklch(0.78 0.06 260);
   --brain-hero: oklch(0.72 0.2 355);
+  --brain-source: oklch(0.82 0.16 190);
+
   --brain-edge: oklch(0.75 0.15 180 / 0.35);
   --brain-canvas: oklch(0.09 0.02 280);
 }
