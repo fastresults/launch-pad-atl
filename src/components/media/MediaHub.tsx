@@ -115,6 +115,7 @@ const DRAG_MIME = "application/x-media-asset-ids";
 
 export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [folderId, setFolderId] = useState<string | null>(null);
   const [collectionId, setCollectionId] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<MediaType | "all">("all");
@@ -770,8 +771,8 @@ export function MediaHub({ scope, ownerUserId, canAdminPush, title }: Props) {
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={() => {
-                      if (confirm("Delete this file?")) removeAsset.mutate(selectedAsset);
+                    onClick={async () => {
+                      if (await confirm({ title: "Delete this file?", destructive: true, confirmText: "Delete" })) removeAsset.mutate(selectedAsset);
                     }}
                   >
                     <Trash2 className="mr-2 h-4 w-4" /> Delete
