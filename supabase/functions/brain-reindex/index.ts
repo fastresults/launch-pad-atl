@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     // Run the actual work in the background so we return immediately.
     // deno-lint-ignore no-explicit-any
     const anyRuntime = (globalThis as any).EdgeRuntime;
-    const work = runJob(admin, userId, job.id);
+    const work = runJob(admin, userId, job.id, snapshotId);
     if (anyRuntime?.waitUntil) {
       anyRuntime.waitUntil(work);
     } else {
