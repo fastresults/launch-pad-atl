@@ -16,6 +16,7 @@ import {
   ClipboardCheck,
   ScrollText,
   FolderKanban,
+  TrendingUp,
 } from "lucide-react";
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
 import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
@@ -31,20 +32,42 @@ const INCLUDES = [
 ];
 
 const FITS = [
-  "You'd rather pay to skip three months of setup",
-  "You want a launch-ready brand and site, not another to-do list",
-  "You want Adam personally leading the work",
-  "You're ready to focus on customers, not Canva",
+  "You have a job you like — and a Plan B you keep putting off",
+  "You'd rather pay to skip 3 months of setup than 'learn to build a brand'",
+  "You want a real second income stream, not another Notion doc",
+  "You want Adam personally leading the work — not a junior at an agency",
+];
+
+const COMPARE = [
+  {
+    label: "Agency build",
+    price: "$8k–$25k",
+    time: "8–12 weeks",
+    note: "You manage the vendors.",
+  },
+  {
+    label: "DIY (course + freelancers)",
+    price: "$3k–$6k",
+    time: "3–6 months",
+    note: "You're the project manager.",
+  },
+  {
+    label: "Done-for-you with Adam",
+    price: "$2,799",
+    time: "2–3 weeks",
+    note: "Adam and team ship it.",
+    featured: true,
+  },
 ];
 
 export default function OneOnOnePage() {
   const [modesOpen, setModesOpen] = useState(false);
 
   useEffect(() => {
-    document.title = "Done-For-You Startup Build with Adam — $2,799";
+    document.title = "Plan B, Built For You — $2,799 Done-For-You Startup with Adam";
     const meta = document.querySelector('meta[name="description"]');
     const desc =
-      "Adam and his creative team build your startup for you — brand, website, social channels, and setup — end-to-end for $2,799.";
+      "Activate your Plan B profit generator. Adam and his creative team build your startup end-to-end — brand, website, social, systems — for $2,799. The best-value done-for-you build on the market.";
     if (meta) meta.setAttribute("content", desc);
   }, []);
 
@@ -56,17 +79,17 @@ export default function OneOnOnePage() {
         <section className="border-b border-white/5 py-16 md:py-24">
           <div className="mx-auto max-w-4xl px-6">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-primary">
-              <Wand2 className="size-3.5" /> Done-for-you · with Adam & team
+              <Wand2 className="size-3.5" /> Your Plan B profit generator · built for you
             </p>
             <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
-              Skip the build.{" "}
-              <span className="text-gradient-brand">Get the business.</span>
+              Activate your Plan B.{" "}
+              <span className="text-gradient-brand">We build the business. You keep the profit.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-              You're a founder, not an agency. Adam and his creative team set
-              up your startup end-to-end — brand, website, social channels,
-              positioning, and systems — so you can spend day one talking to
-              customers instead of buying domains.
+              Your paycheck is Plan A. Your Plan B is the startup you keep meaning
+              to launch. Adam and his creative team build it <em>for</em> you —
+              brand, website, social channels, positioning, and systems — so your
+              second income stream is live in weeks, not "someday."
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
@@ -81,6 +104,46 @@ export default function OneOnOnePage() {
           </div>
         </section>
 
+        {/* Best value comparison */}
+        <section className="border-b border-white/5 py-16">
+          <div className="mx-auto max-w-5xl px-6">
+            <p className="mb-2 inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-primary">
+              <TrendingUp className="size-3.5" /> Best value on the market
+            </p>
+            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
+              A $12,000 agency build.{" "}
+              <span className="text-gradient-brand">For $2,799.</span>
+            </h2>
+            <div className="mt-8 grid gap-3 md:grid-cols-3">
+              {COMPARE.map((c) => (
+                <div
+                  key={c.label}
+                  className={`rounded-2xl border p-5 ${
+                    c.featured
+                      ? "border-primary/40 bg-primary/5 shadow-[0_0_0_1px_hsl(var(--primary)/0.2)]"
+                      : "border-white/10 bg-card"
+                  }`}
+                >
+                  <p
+                    className={`text-xs uppercase tracking-[0.14em] ${
+                      c.featured ? "text-primary" : "text-muted-foreground"
+                    }`}
+                  >
+                    {c.label}
+                  </p>
+                  <p className="mt-3 text-2xl font-semibold tracking-tight">{c.price}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{c.time}</p>
+                  <p className="mt-3 text-sm text-muted-foreground">{c.note}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-6 max-w-2xl text-sm text-muted-foreground">
+              Same deliverables. A fraction of the price. And we're the ones on
+              the hook to ship.
+            </p>
+          </div>
+        </section>
+
         {/* What's included */}
         <section className="border-b border-white/5 py-16">
           <div className="mx-auto max-w-5xl px-6">
@@ -89,8 +152,10 @@ export default function OneOnOnePage() {
               A launch-ready startup. Delivered.
             </h2>
             <p className="mt-3 max-w-2xl text-muted-foreground">
-              Every asset below is produced by Adam and his creative team, then
-              handed off inside your Founders Hub.
+              Priced out separately with an agency, this stack lands north of
+              $12,000. You're getting all of it for $2,799 because we've
+              templatized the parts that should be templatized and reserved the
+              human hours for the parts that matter.
             </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {INCLUDES.map(({ icon: Icon, title, body }) => (
@@ -111,7 +176,7 @@ export default function OneOnOnePage() {
           <div className="mx-auto max-w-5xl px-6">
             <p className="mb-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">How the three formats differ</p>
             <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-              Same framework. Different amount of you.
+              Three ways in. One is done for you.
             </h2>
             <div className="mt-8 grid gap-3 md:grid-cols-3">
               <div className="rounded-2xl border border-white/10 bg-card p-5">
@@ -132,9 +197,9 @@ export default function OneOnOnePage() {
 
         {/* Startup ideas scroller */}
         <HomeBusinessIdeasScroller
-          eyebrow="Any of these — or yours"
-          heading="Adam and team can build any of these — or the specific business you're bringing"
-          subheading="Pick from the startups founders are launching right now, or hand us your idea. Either way, you get the same end-to-end build."
+          eyebrow="Pick your Plan B"
+          heading="Any of these — or the specific business you're bringing"
+          subheading="Adam and team can build any of the startups founders are launching right now, or the specific one you have in mind. Either way, same end-to-end build."
         />
 
         {/* Best fit */}
@@ -158,23 +223,29 @@ export default function OneOnOnePage() {
             <div className="rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/15 to-primary/0 p-8 md:p-10">
               <div className="flex items-center gap-2 text-primary">
                 <Sparkles className="size-4" />
-                <span className="text-xs uppercase tracking-[0.18em]">White-glove · limited builds per month</span>
+                <span className="text-xs uppercase tracking-[0.18em]">
+                  Best-value done-for-you build · limited seats each month
+                </span>
               </div>
               <div className="mt-4 flex flex-wrap items-end gap-3">
                 <span className="text-5xl font-semibold tracking-tight md:text-6xl">$2,799</span>
                 <span className="pb-2 text-sm text-muted-foreground">everything included</span>
               </div>
-              <p className="mt-3 max-w-2xl text-base text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
+                <span className="line-through">Comparable agency build: $12,000+</span>
+              </p>
+              <p className="mt-4 max-w-2xl text-base text-muted-foreground">
                 A full startup build, delivered by Adam and his creative team.
-                Choose in-person at the IGNITE offices or live over Google Meet
-                — same team, same deliverables, same launch.
+                Priced to be the clear best value on the market — because the
+                point is to get your Plan B <em>live and earning</em>, not to
+                make you save up for another year.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
                   to="/contact?topic=one-on-one"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90"
                 >
-                  Book your build with Adam <ArrowRight className="size-4" />
+                  Activate my Plan B <ArrowRight className="size-4" />
                 </Link>
                 <button
                   type="button"
@@ -185,8 +256,8 @@ export default function OneOnOnePage() {
                 </button>
               </div>
               <p className="mt-4 text-xs text-muted-foreground">
-                Adam only takes on a handful of builds each month so the work
-                stays hands-on. Availability is confirmed after a short intake.
+                Limited builds per month so Adam stays hands-on. Availability is
+                confirmed after a short intake.
               </p>
             </div>
           </div>
@@ -197,6 +268,16 @@ export default function OneOnOnePage() {
           <div className="mx-auto max-w-3xl px-6">
             <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Common questions</h2>
             <div className="mt-6 space-y-4">
+              <div className="rounded-2xl border border-white/10 bg-card p-5">
+                <h3 className="font-medium">Why is this so much less than an agency?</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Because we've built this exact stack dozens of times. Agencies
+                  quote every project like it's brand-new; we've templatized
+                  what should be templatized (setup, structure, deploys) and
+                  spend the human hours on the parts that actually differentiate
+                  your startup — your positioning, brand, and offer.
+                </p>
+              </div>
               <div className="rounded-2xl border border-white/10 bg-card p-5">
                 <h3 className="font-medium">How long does the build take?</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
