@@ -228,7 +228,7 @@ Deno.serve(async (req) => {
         .select("user_id, storage_path")
         .eq("id", assetId)
         .maybeSingle();
-      if (!row || row.user_id !== userId) return json({ error: "Not found" }, 404);
+      if (!row || row.user_id !== ownerId && !isAdmin) return json({ error: "Not found" }, 404);
       if (row.storage_path) {
         await admin.storage.from(BUCKET).remove([row.storage_path]).catch(() => {});
       }
@@ -245,7 +245,7 @@ Deno.serve(async (req) => {
         .select("*")
         .eq("id", assetId)
         .maybeSingle();
-      if (!row || row.user_id !== userId) return json({ error: "Not found" }, 404);
+      if (!row || row.user_id !== ownerId && !isAdmin) return json({ error: "Not found" }, 404);
       await admin
         .from("venture_social_assets")
         .update({ is_selected: false })
@@ -524,7 +524,7 @@ Deno.serve(async (req) => {
       .from("venture_social_assets")
       .insert({
         snapshot_id: snapshotId,
-        user_id: userId,
+        user_id: ownerId,
         platform: platform.platform,
         asset_kind: asset.kind,
         art_direction: direction,
