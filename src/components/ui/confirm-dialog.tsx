@@ -261,3 +261,74 @@ export function PromptDialog({
     </Dialog>
   );
 }
+
+/** Controlled AlertDialog with optional reason textarea. */
+export function ConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
+  variant = "default",
+  reasonLabel,
+  reasonPlaceholder,
+  loading = false,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: React.ReactNode;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  variant?: "default" | "destructive";
+  reasonLabel?: string;
+  reasonPlaceholder?: string;
+  loading?: boolean;
+  onConfirm: (reason?: string) => void;
+}) {
+  const [reason, setReason] = useState("");
+  useEffect(() => {
+    if (open) setReason("");
+  }, [open]);
+  return (
+    <AlertDialog open={open} onOpenChange={(o) => { if (!loading) onOpenChange(o); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
+        </AlertDialogHeader>
+        {reasonLabel && (
+          <div className="space-y-2">
+            <Label>{reasonLabel}</Label>
+            <Textarea
+              value={reason}
+              placeholder={reasonPlaceholder}
+              onChange={(e) => setReason(e.target.value)}
+              rows={3}
+              disabled={loading}
+            />
+          </div>
+        )}
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={loading}>{cancelLabel}</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={loading}
+            onClick={(e) => {
+              e.preventDefault();
+              onConfirm(reasonLabel ? reason.trim() || undefined : undefined);
+            }}
+            className={
+              variant === "destructive"
+                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                : undefined
+            }
+          >
+            {loading ? "Working…" : confirmLabel}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
