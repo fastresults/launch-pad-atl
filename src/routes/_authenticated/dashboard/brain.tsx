@@ -227,7 +227,7 @@ export default function BrainPage() {
     void tick();
     const iv = setInterval(tick, 2000);
     return () => { stop = true; clearInterval(iv); };
-  }, [jobId, qc, userId]);
+  }, [jobId, qc, userId, snapshotId]);
 
   const rebuild = useMutation({
     mutationFn: rebuildBrainMemory,
