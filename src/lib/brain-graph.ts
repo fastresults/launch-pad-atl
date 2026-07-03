@@ -7,7 +7,7 @@ export type BrainGraphNode = {
   kind: "root" | "cluster" | "asset" | "assessment" | "note" | "brief" | "chat" | "memory" | "hero";
   cluster: string;
   radius: number;
-  color: string; // CSS var reference, e.g. "hsl(var(--brain-asset))"
+  color: string; // CSS var reference, e.g. "var(--brain-asset)"
   data?: Record<string, unknown>;
 };
 
@@ -25,13 +25,13 @@ export type DocRow = { id: string; deliverable_type_key?: string | null; title?:
 export type MsgRow = { id: string; role: string; content: string; created_at?: string };
 
 const CLUSTER_META: Record<string, { label: string; color: string }> = {
-  asset:      { label: "Startup Assets",     color: "hsl(var(--brain-asset))" },
-  assessment: { label: "Assessments",        color: "hsl(var(--brain-assessment))" },
-  note:       { label: "Notes",              color: "hsl(var(--brain-note))" },
-  brief:      { label: "Brief",              color: "hsl(var(--brain-brief))" },
-  chat:       { label: "Chat Topics",        color: "hsl(var(--brain-chat))" },
-  memory:     { label: "Memory Fragments",   color: "hsl(var(--brain-memory))" },
-  hero:       { label: "Hero Images",        color: "hsl(var(--brain-hero))" },
+  asset:      { label: "Startup Assets",     color: "var(--brain-asset)" },
+  assessment: { label: "Assessments",        color: "var(--brain-assessment)" },
+  note:       { label: "Notes",              color: "var(--brain-note)" },
+  brief:      { label: "Brief",              color: "var(--brain-brief)" },
+  chat:       { label: "Chat Topics",        color: "var(--brain-chat)" },
+  memory:     { label: "Memory Fragments",   color: "var(--brain-memory)" },
+  hero:       { label: "Hero Images",        color: "var(--brain-hero)" },
 };
 
 function memoryKindToCluster(kind: string): keyof typeof CLUSTER_META {
@@ -67,7 +67,7 @@ export function buildBrainGraph(input: {
     kind: "root",
     cluster: "root",
     radius: 14,
-    color: "hsl(var(--primary))",
+    color: "var(--primary)",
   });
 
   const ensureCluster = (key: keyof typeof CLUSTER_META) => {
