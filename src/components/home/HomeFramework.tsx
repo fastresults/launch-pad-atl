@@ -78,7 +78,7 @@ function Hero() {
 
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
           Where modern founders{" "}
-          <span text-gradient-brand"></span><span className="text-gradient-brand">begin.</span>
+          <span className="text-gradient-brand">begin.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
           One morning. Four working stages. Bring nothing but the idea and the intention to build it — by 11:30 AM you walk out nearly launch-ready, with your first customer named, your offer priced, and a signed 90-day plan for what's next. {WORKSHOP_PRICE_LABEL}, yours to keep.{" "}
