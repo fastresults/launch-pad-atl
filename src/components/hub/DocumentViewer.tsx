@@ -624,9 +624,9 @@ export function DocumentViewer({
   }, [heroPath, heroRetryNonce]);
 
   // Lazy hero image: auto-generate only once per (snapshot, document) when
-  // there's no image AND no prior attempt. Status === 'failed' shows a Retry
-  // button instead. A ref guard prevents a second invocation if the user
-  // reopens before the first call finishes (race-free; server also locks).
+  // there's no image AND no prior attempt. If status is already `generating`
+  // (batch pipeline in flight), the realtime/poll effect above will pick up
+  // the finished path — don't call the function. `failed` shows a Retry.
   const autoFiredRef = useRef<string | null>(null);
   useEffect(() => {
     if (!open) return;
@@ -634,14 +634,13 @@ export function DocumentViewer({
     if (heroPath || heroLoading) return;
     if (!doc?.snapshot_id || !doc?.document_type) return;
     if (!doc?.content) return;
-    const status = doc?.hero_image_status ?? null;
-    if (status === "generating" || status === "failed") return;
+    if (heroStatus === "generating" || heroStatus === "failed") return;
     const key = `${doc.snapshot_id}:${doc.document_type}`;
     if (autoFiredRef.current === key) return;
     autoFiredRef.current = key;
     generateHero(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, doc?.snapshot_id, doc?.document_type, doc?.content, heroPath, doc?.hero_image_status, autoGenerateHero]);
+  }, [open, doc?.snapshot_id, doc?.document_type, doc?.content, heroPath, heroStatus, autoGenerateHero]);
 
   const generateHero = async (force = false, quality?: "fast" | "hq") => {
     if (!doc?.snapshot_id || !doc?.document_type) return;
@@ -655,9 +654,12 @@ export function DocumentViewer({
       if (data?.path) {
         setHeroPath(data.path);
         setHeroUrl(null); // force re-sign
+        heroImgErrorOnceRef.current = false;
         toast.success(quality === "hq" ? "HQ visual generated" : force ? "New visual generated" : "Visual generated");
       } else if (data?.skipped && data?.reason === "in_flight") {
-        setHeroError("Visual is already being generated. Reopen this document in a moment.");
+        // Server-side job already running — don't error; the realtime/poll
+        // effect will pick up the finished path. Show painting state instead.
+        setHeroStatus("generating");
       }
     } catch (e) {
       const msg = edgeErrorMessage(e, "Image generation failed");
