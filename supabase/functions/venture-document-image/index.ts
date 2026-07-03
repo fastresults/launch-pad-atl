@@ -17,6 +17,13 @@ const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const BUCKET = "venture-doc-images";
 
+function json(body: Record<string, unknown>, init: ResponseInit = {}) {
+  return new Response(JSON.stringify(body), {
+    ...init,
+    headers: { ...corsHeaders, "Content-Type": "application/json", ...(init.headers ?? {}) },
+  });
+}
+
 function stripMarkdown(md: string): string {
   return (md || "")
     .replace(/```[\s\S]*?```/g, " ")
@@ -59,6 +66,13 @@ function nextPath(userId: string, snapshotId: string, documentType: string, exis
   return `${userId}/${snapshotId}/${documentType}/${version}.png`;
 }
 
+async function signPath(admin: any, path: string | null, expiresIn = 3600): Promise<string | null> {
+  if (!path) return null;
+  const { data, error } = await admin.storage.from(BUCKET).createSignedUrl(path, expiresIn);
+  if (error) return null;
+  return data?.signedUrl ?? data?.signedURL ?? null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -66,7 +80,7 @@ Deno.serve(async (req) => {
     const auth = req.headers.get("Authorization") ?? "";
     const token = auth.replace(/^Bearer\s+/i, "");
     if (!token) {
-      return new Response(JSON.stringify({ error: "Missing auth" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return json({ error: "Missing auth" }, { status: 401 });
     }
     const isServiceRole = token === SERVICE_KEY;
 
@@ -76,19 +90,24 @@ Deno.serve(async (req) => {
       const { data: userRes } = await userClient.auth.getUser();
       userId = userRes?.user?.id ?? null;
       if (!userId) {
-        return new Response(JSON.stringify({ error: "Not signed in" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return json({ error: "Not signed in" }, { status: 401 });
       }
     }
 
     const { snapshotId, documentType, force, quality } = await req.json();
     if (!snapshotId || !documentType) {
-      return new Response(JSON.stringify({ error: "snapshotId and documentType required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return json({ error: "snapshotId and documentType required" }, { status: 400 });
     }
     // Default to Nano Banana 2 (Flash) — ~3-5x faster than Pro with comparable
     // quality for editorial illustrations. Pass quality:"hq" to opt into Pro.
     const imageModel = quality === "hq" ? "google/gemini-3-pro-image" : "google/gemini-3.1-flash-image";
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+    let callerIsAdmin = isServiceRole;
+    if (!isServiceRole && userId) {
+      const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", userId);
+      callerIsAdmin = (roles ?? []).some((r: any) => r.role === "admin" || r.role === "super_admin");
+    }
 
     const { data: snap } = await admin
       .from("venture_snapshots")
@@ -96,10 +115,10 @@ Deno.serve(async (req) => {
       .eq("id", snapshotId)
       .maybeSingle();
     if (!snap) {
-      return new Response(JSON.stringify({ error: "Snapshot not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return json({ error: "Snapshot not found" }, { status: 404 });
     }
-    if (!isServiceRole && snap.user_id !== userId) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!isServiceRole && snap.user_id !== userId && !callerIsAdmin) {
+      return json({ error: "Forbidden" }, { status: 403 });
     }
     const ownerId = snap.user_id;
 
@@ -110,10 +129,11 @@ Deno.serve(async (req) => {
       .eq("document_type", documentType)
       .maybeSingle();
     if (!doc) {
-      return new Response(JSON.stringify({ error: "Document not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return json({ error: "Document not found" }, { status: 404 });
     }
-    if (doc.hero_image_path && doc.hero_image_status === "ready" && !force) {
-      return new Response(JSON.stringify({ ok: true, path: doc.hero_image_path, skipped: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (doc.hero_image_path && !force && doc.hero_image_status !== "generating" && doc.hero_image_status !== "failed") {
+      const signedUrl = await signPath(admin, doc.hero_image_path);
+      return json({ ok: true, path: doc.hero_image_path, signedUrl, status: "ready", skipped: true, reason: "already_ready" });
     }
 
     // Atomic claim: only run if not already generating (or stale > 3 min).
@@ -125,8 +145,23 @@ Deno.serve(async (req) => {
       .or(`hero_image_status.is.null,hero_image_status.eq.failed,hero_image_status.eq.ready,hero_image_started_at.lt.${staleCutoff}`)
       .select("id")
       .maybeSingle();
-    if (!claim && !force) {
-      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "in_flight" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!claim) {
+      const { data: current } = await admin
+        .from("venture_documents")
+        .select("hero_image_path, hero_image_status")
+        .eq("id", doc.id)
+        .maybeSingle();
+      const currentPath = current?.hero_image_path ?? doc.hero_image_path ?? null;
+      const currentStatus = current?.hero_image_status ?? doc.hero_image_status ?? "generating";
+      const signedUrl = currentStatus === "ready" ? await signPath(admin, currentPath) : null;
+      return json({
+        ok: true,
+        skipped: true,
+        reason: currentStatus === "ready" ? "already_ready" : "in_flight",
+        path: currentPath,
+        signedUrl,
+        status: currentStatus,
+      });
     }
     const previousPath = doc.hero_image_path;
 
@@ -168,9 +203,8 @@ Deno.serve(async (req) => {
         document_type: documentType,
         error: `Image gateway ${aiRes.status}: ${txt.slice(0, 300)}`,
       });
-      return new Response(JSON.stringify({ error: `Image gateway ${aiRes.status}`, detail: txt.slice(0, 300) }), {
+      return json({ error: `Image gateway ${aiRes.status}`, detail: txt.slice(0, 300) }, {
         status: aiRes.status === 429 || aiRes.status === 402 ? aiRes.status : 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -205,7 +239,7 @@ Deno.serve(async (req) => {
         document_type: documentType,
         error: `Image gateway returned no image payload: ${JSON.stringify(aiJson).slice(0, 300)}`,
       });
-      return new Response(JSON.stringify({ error: "No image returned by model" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return json({ error: "No image returned by model" }, { status: 502 });
     }
 
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
@@ -220,7 +254,7 @@ Deno.serve(async (req) => {
       await admin.from("venture_documents")
         .update({ hero_image_status: "failed", hero_image_error: `Upload: ${upErr.message}` })
         .eq("id", doc.id);
-      return new Response(JSON.stringify({ error: `Upload failed: ${upErr.message}` }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return json({ error: `Upload failed: ${upErr.message}` }, { status: 500 });
     }
 
     await admin
@@ -233,9 +267,10 @@ Deno.serve(async (req) => {
       await admin.storage.from(BUCKET).remove([previousPath]).catch(() => {});
     }
 
-    return new Response(JSON.stringify({ ok: true, path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const signedUrl = await signPath(admin, path);
+    return json({ ok: true, path, signedUrl, status: "ready" });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    return new Response(JSON.stringify({ error: message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return json({ error: message }, { status: 500 });
   }
 });

@@ -47,6 +47,7 @@ import { IntakeGatewayDialog, type IntakeTarget } from "@/components/hub/IntakeG
 import { BulkUnlockDialog } from "@/components/hub/BulkUnlockDialog";
 import { BrandStudio } from "@/components/hub/BrandStudio";
 import { getBrandKit } from "@/lib/brandKit.functions";
+import { getSignedStorageUrl } from "@/lib/storageSignedUrl";
 
 const BRAND_KIT_REQUIRED_TYPES = new Set<string>(["website_prd"]);
 import { SocialStudio } from "@/components/hub/SocialStudio";
@@ -921,6 +922,24 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const job = jobQ.data;
   const jobRunning = job?.status === "running" || job?.status === "queued";
   const failures = failuresQ.data ?? [];
+
+  useEffect(() => {
+    const readyHeroPaths = docs
+      .filter((d: any) => d?.hero_image_path && d?.hero_image_status === "ready")
+      .map((d: any) => d.hero_image_path as string);
+    if (!readyHeroPaths.length) return;
+    const frame = window.requestIdleCallback
+      ? window.requestIdleCallback(() => {
+          readyHeroPaths.forEach((path) => getSignedStorageUrl("venture-doc-images", path, 3600).catch(() => {}));
+        }, { timeout: 1500 })
+      : window.setTimeout(() => {
+          readyHeroPaths.forEach((path) => getSignedStorageUrl("venture-doc-images", path, 3600).catch(() => {}));
+        }, 300);
+    return () => {
+      if (window.cancelIdleCallback && typeof frame === "number") window.cancelIdleCallback(frame);
+      else window.clearTimeout(frame as number);
+    };
+  }, [docs]);
 
   // Stale = doc was generated before the concept was last locked/updated.
   const conceptChangedAt = snapshot?.concept_locked_at ?? snapshot?.updated_at ?? null;
