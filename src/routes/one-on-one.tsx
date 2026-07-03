@@ -53,7 +53,7 @@ const COMPARE = [
   },
   {
     label: "Done-for-you with Adam",
-    price: "$2,799",
+    price: "$4,799",
     time: "2–3 weeks",
     note: "Adam and team ship it.",
     featured: true,
@@ -64,10 +64,10 @@ export default function OneOnOnePage() {
   const [modesOpen, setModesOpen] = useState(false);
 
   useEffect(() => {
-    document.title = "Plan B, Built For You — $2,799 Done-For-You Startup with Adam";
+    document.title = "Plan B, Built For You — $4,799 Done-For-You Startup with Adam";
     const meta = document.querySelector('meta[name="description"]');
     const desc =
-      "Activate your Plan B profit generator. Adam and his creative team build your startup end-to-end — brand, website, social, systems — for $2,799. The best-value done-for-you build on the market.";
+      "Activate your Plan B profit generator. Adam and his creative team build your startup end-to-end — brand, website, social, systems — for $4,799. The best-value done-for-you build on the market.";
     if (meta) meta.setAttribute("content", desc);
   }, []);
 
@@ -112,7 +112,7 @@ export default function OneOnOnePage() {
             </p>
             <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
               A $12,000 agency build.{" "}
-              <span className="text-gradient-brand">For $2,799.</span>
+              <span className="text-gradient-brand">For $4,799.</span>
             </h2>
             <div className="mt-8 grid gap-3 md:grid-cols-3">
               {COMPARE.map((c) => (
@@ -153,7 +153,7 @@ export default function OneOnOnePage() {
             </h2>
             <p className="mt-3 max-w-2xl text-muted-foreground">
               Priced out separately with an agency, this stack lands north of
-              $12,000. You're getting all of it for $2,799 because we've
+              $12,000. You're getting all of it for $4,799 because we've
               templatized the parts that should be templatized and reserved the
               human hours for the parts that matter.
             </p>
@@ -228,7 +228,7 @@ export default function OneOnOnePage() {
                 </span>
               </div>
               <div className="mt-4 flex flex-wrap items-end gap-3">
-                <span className="text-5xl font-semibold tracking-tight md:text-6xl">$2,799</span>
+                <span className="text-5xl font-semibold tracking-tight md:text-6xl">$4,799</span>
                 <span className="pb-2 text-sm text-muted-foreground">everything included</span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
