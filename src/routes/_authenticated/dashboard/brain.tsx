@@ -33,31 +33,69 @@ function stripMarkdown(s: string) {
   return s.replace(/[#*_>`~[\]()]/g, "").replace(/\n{2,}/g, ". ").trim();
 }
 
+const VENTURE_STORAGE_KEY = "brain:selectedSnapshot";
+
 export default function BrainPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const userId = user?.id;
 
+  const { data: ventures = [] } = useQuery({
+    queryKey: ["brain", "ventures", userId],
+    queryFn: () => listBrainVentures(userId!),
+    enabled: !!userId,
+  });
+
+  const [snapshotId, setSnapshotId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem(VENTURE_STORAGE_KEY);
+  });
+
+  // Auto-select the most recent venture the first time we see the list.
+  useEffect(() => {
+    if (!ventures.length) return;
+    const stillValid = snapshotId && ventures.some((v) => v.id === snapshotId);
+    if (!stillValid) {
+      const next = ventures[0].id;
+      setSnapshotId(next);
+      try { window.localStorage.setItem(VENTURE_STORAGE_KEY, next); } catch { /* noop */ }
+    }
+  }, [ventures, snapshotId]);
+
+  const selectVenture = useCallback((id: string | null) => {
+    setSnapshotId(id);
+    try {
+      if (id) window.localStorage.setItem(VENTURE_STORAGE_KEY, id);
+      else window.localStorage.removeItem(VENTURE_STORAGE_KEY);
+    } catch { /* noop */ }
+    qc.invalidateQueries({ queryKey: ["brain"] });
+  }, [qc]);
+
+  const currentVenture = useMemo(
+    () => ventures.find((v) => v.id === snapshotId) ?? null,
+    [ventures, snapshotId],
+  );
+
   const { data: history = [] } = useQuery({
-    queryKey: ["brain", "history", userId],
-    queryFn: () => loadBrainHistory(userId!),
+    queryKey: ["brain", "history", userId, snapshotId],
+    queryFn: () => loadBrainHistory(userId!, snapshotId),
     enabled: !!userId,
   });
   const { data: status } = useQuery({
-    queryKey: ["brain", "status", userId],
-    queryFn: () => getBrainStatus(userId!),
+    queryKey: ["brain", "status", userId, snapshotId],
+    queryFn: () => getBrainStatus(userId!, snapshotId),
     enabled: !!userId,
     refetchInterval: 15000,
   });
   const { data: notes = [] } = useQuery({
-    queryKey: ["brain", "notes", userId],
-    queryFn: () => listBrainNotes(userId!),
+    queryKey: ["brain", "notes", userId, snapshotId],
+    queryFn: () => listBrainNotes(userId!, snapshotId),
     enabled: !!userId,
   });
   const { data: mismatch } = useQuery({
-    queryKey: ["brain", "mismatch", userId],
-    queryFn: () => detectVentureMismatch(userId!),
-    enabled: !!userId,
+    queryKey: ["brain", "mismatch", userId, snapshotId],
+    queryFn: () => detectVentureMismatch(userId!, snapshotId),
+    enabled: !!userId && !!snapshotId,
     refetchInterval: 30000,
   });
 
