@@ -5,13 +5,16 @@ import { Scale, ArrowRight, CheckCircle2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { getMyLegalSetup } from "@/lib/legal-setup.functions";
-import { GEORGIA_LEGAL_STEPS } from "@/lib/legal-setup";
+import { buildLegalSteps } from "@/lib/legal-setup";
+import { getStateByCode } from "@/lib/legal-setup-states";
 
 export function LegalSetupCard() {
   const { data } = useQuery({ queryKey: ["my", "legal-setup"], queryFn: getMyLegalSetup });
+  const state = getStateByCode(data?.entity_state || "GA");
+  const steps = buildLegalSteps(state);
   const completedMap = data?.steps_completed ?? {};
-  const done = GEORGIA_LEGAL_STEPS.filter((s) => completedMap[s.key]).length;
-  const pct = Math.round((done / GEORGIA_LEGAL_STEPS.length) * 100);
+  const done = steps.filter((s) => completedMap[s.key]).length;
+  const pct = Math.round((done / steps.length) * 100);
 
   return (
     <div className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card p-5">
