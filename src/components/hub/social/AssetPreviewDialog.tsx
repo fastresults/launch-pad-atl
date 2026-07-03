@@ -42,6 +42,7 @@ export function AssetPreviewDialog({
   onNext?: () => void;
   busy?: boolean;
 }) {
+  const confirmDialog = useConfirm();
   useEffect(() => {
     if (!open) return;
     const h = (e: KeyboardEvent) => {
