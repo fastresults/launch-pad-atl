@@ -711,7 +711,7 @@ function Stat({ label, value, className }: { label: string; value: string; class
   );
 }
 
-function BubbleMsg({ m, onSpeak, onSaveNote }: { m: BrainMessage; onSpeak?: (t: string) => void; onSaveNote?: (content: string) => void | Promise<void> }) {
+function BubbleMsg({ m, onSpeak, onSaveNote }: { m: BrainMessage; onSpeak?: (t: string) => void; onSaveNote?: (content: string, messageId?: string) => void | Promise<void> }) {
   if (m.role === "user") {
     return (
       <div className="flex justify-end">
@@ -748,7 +748,7 @@ function BubbleMsg({ m, onSpeak, onSaveNote }: { m: BrainMessage; onSpeak?: (t: 
         {onSaveNote && (
           <button
             type="button"
-            onClick={() => onSaveNote(m.content)}
+            onClick={() => onSaveNote(m.content, m.id)}
             className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
             aria-label="Save answer as note"
           >
