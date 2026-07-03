@@ -8,10 +8,12 @@ import { getBrandKit, resetBrandKit, upsertBrandKit } from "@/lib/brandKit.funct
 import { BrandWizard } from "@/components/hub/brand-wizard/BrandWizard";
 import { EditablePaletteSwatch } from "@/components/hub/brand/EditablePaletteSwatch";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export function BrandStudio({ snapshot }: { snapshot: any }) {
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const kitQ = useQuery({
     queryKey: ["brandKit", snapshot.id],
     queryFn: () => getBrandKit(snapshot.id),
@@ -28,9 +30,11 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
     onError: (e: any) => toast.error(e.message || "Reset failed"),
   });
 
-  const onReset = () => {
-    const label = locked ? "This will delete your locked brand kit (palette, typography, logos, moodboard, style guide). Continue?" : "This will discard your current wizard progress. Continue?";
-    if (window.confirm(label)) reset.mutate();
+  const onReset = async () => {
+    const description = locked
+      ? "This will delete your locked brand kit (palette, typography, logos, moodboard, style guide)."
+      : "This will discard your current wizard progress.";
+    if (await confirm({ title: "Reset brand wizard?", description, destructive: true, confirmText: "Reset" })) reset.mutate();
   };
 
   return (
