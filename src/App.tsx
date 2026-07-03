@@ -23,6 +23,8 @@ const ResetPasswordPage = lazy(() => import("@/routes/reset-password"));
 const PrivacyPage = lazy(() => import("@/routes/privacy"));
 const TermsPage = lazy(() => import("@/routes/terms"));
 const UnsubscribePage = lazy(() => import("@/routes/unsubscribe"));
+const WebinarPage = lazy(() => import("@/routes/webinar"));
+const OneOnOnePage = lazy(() => import("@/routes/one-on-one"));
 
 // Authenticated pages
 const WelcomePage = lazy(() => import("@/routes/_authenticated/welcome"));
@@ -116,6 +118,8 @@ export default function App() {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/unsubscribe" element={<UnsubscribePage />} />
+        <Route path="/webinar" element={<WebinarPage />} />
+        <Route path="/one-on-one" element={<OneOnOnePage />} />
 
         {/* Authenticated routes */}
         <Route element={<AuthenticatedLayout />}>
