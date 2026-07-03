@@ -441,7 +441,7 @@ export default function BrainPage() {
                     <button
                       onClick={async () => {
                         await deleteBrainNote(n.id);
-                        qc.invalidateQueries({ queryKey: ["brain", "notes", userId] });
+                        qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
                       }}
                       className="text-muted-foreground hover:text-destructive"
                       aria-label="Delete note"
