@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AskConcierge } from "@/components/site/AskConcierge";
+import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 
 // Layout guards
 import AuthenticatedLayout from "@/routes/_authenticated";
@@ -97,6 +98,7 @@ function Loading() {
 export default function App() {
   return (
     <Suspense fallback={<Loading />}>
+      <ConfirmProvider>
       <ScrollToTop />
       <Routes>
         {/* Public routes */}
@@ -188,6 +190,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <AskConcierge />
+      </ConfirmProvider>
     </Suspense>
   );
 }
