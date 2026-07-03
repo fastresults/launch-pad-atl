@@ -30,7 +30,7 @@ import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functi
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
-import { getSignedStorageUrl, invalidateSignedStorageUrl } from "@/lib/storageSignedUrl";
+import { getSignedStorageUrl, invalidateSignedStorageUrl, primeSignedStorageUrl } from "@/lib/storageSignedUrl";
 
 const HERO_BUCKET = "venture-doc-images";
 

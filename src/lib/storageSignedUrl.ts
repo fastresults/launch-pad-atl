@@ -36,6 +36,17 @@ export function invalidateSignedStorageUrl(bucket: string, path: string) {
   signedUrlCache.delete(cacheKey(bucket, path));
 }
 
+export function primeSignedStorageUrl(bucket: string, path: string, signedUrl: string, expiresIn = 3600) {
+  const url = normalizeSignedUrl(signedUrl);
+  signedUrlCache.set(cacheKey(bucket, path), {
+    url,
+    expiresAt: Date.now() + expiresIn * 1000,
+  });
+  preloadImageUrl(url);
+  browserPreload(url);
+  return url;
+}
+
 export function preloadImageUrl(url: string) {
   if (typeof document === "undefined" || !url) return;
   const id = `storage-preload-${btoa(url).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48)}`;
@@ -63,17 +74,13 @@ export async function getSignedStorageUrl(bucket: string, path: string, expiresI
   if (cached?.promise) return cached.promise;
 
   const promise = (async () => {
-  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresIn);
-  if (error) throw new Error(error.message);
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresIn);
+    if (error) throw new Error(error.message);
 
-  const signed = (data as SignedUrlResult | null)?.signedUrl ?? (data as SignedUrlResult | null)?.signedURL;
-  if (!signed) throw new Error("Signed image URL was not returned");
+    const signed = (data as SignedUrlResult | null)?.signedUrl ?? (data as SignedUrlResult | null)?.signedURL;
+    if (!signed) throw new Error("Signed image URL was not returned");
 
-    const url = normalizeSignedUrl(signed);
-    signedUrlCache.set(key, { url, expiresAt: now + expiresIn * 1000 });
-    preloadImageUrl(url);
-    browserPreload(url);
-    return url;
+    return primeSignedStorageUrl(bucket, path, signed, expiresIn);
   })();
 
   signedUrlCache.set(key, { url: "", expiresAt: 0, promise });
