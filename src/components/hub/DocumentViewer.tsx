@@ -505,9 +505,96 @@ export function DocumentViewer({
   // Reset hero state when the document changes
   useEffect(() => {
     setHeroPath(doc?.hero_image_path ?? null);
+    setHeroStatus(doc?.hero_image_status ?? null);
     setHeroUrl(null);
     setHeroError(null);
-  }, [doc?.snapshot_id, doc?.document_type, doc?.hero_image_path]);
+    heroImgErrorOnceRef.current = false;
+  }, [doc?.snapshot_id, doc?.document_type, doc?.hero_image_path, doc?.hero_image_status]);
+
+  // Realtime + polling: keep heroPath/heroStatus in sync with the DB row while
+  // the modal is open. Batch pipelines and prior modal sessions can leave the
+  // row in `generating` state; without this the modal would sit forever with
+  // no image.
+  useEffect(() => {
+    if (!open || !doc?.snapshot_id || !doc?.document_type) return;
+    const snapshotId = doc.snapshot_id;
+    const documentType = doc.document_type;
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+    let pollCount = 0;
+
+    const applyRow = (row: { hero_image_path?: string | null; hero_image_status?: string | null } | null) => {
+      if (!row || cancelled) return;
+      const newPath = row.hero_image_path ?? null;
+      const newStatus = row.hero_image_status ?? null;
+      setHeroStatus((prev) => (prev === newStatus ? prev : newStatus));
+      setHeroPath((prev) => {
+        if (prev === newPath) return prev;
+        // Path changed (or first arrival) — force re-sign
+        setHeroUrl(null);
+        heroImgErrorOnceRef.current = false;
+        return newPath;
+      });
+    };
+
+    const fetchOnce = async () => {
+      const { data } = await supabase
+        .from("venture_documents")
+        .select("hero_image_path, hero_image_status")
+        .eq("snapshot_id", snapshotId)
+        .eq("document_type", documentType)
+        .maybeSingle();
+      applyRow(data as any);
+    };
+
+    const startPolling = () => {
+      if (pollTimer) return;
+      pollTimer = setInterval(() => {
+        pollCount += 1;
+        if (pollCount > 45) {
+          if (pollTimer) clearInterval(pollTimer);
+          pollTimer = null;
+          return;
+        }
+        fetchOnce();
+      }, 4000);
+    };
+
+    // Immediate reconciliation on open
+    fetchOnce();
+
+    const channel = supabase
+      .channel(`hero:${snapshotId}:${documentType}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "venture_documents", filter: `snapshot_id=eq.${snapshotId}` },
+        (payload: any) => {
+          const row = payload?.new;
+          if (row?.document_type && row.document_type !== documentType) return;
+          applyRow(row);
+        },
+      )
+      .subscribe((status) => {
+        // If realtime doesn't connect quickly, fall back to polling.
+        if (status !== "SUBSCRIBED") {
+          startPolling();
+        }
+      });
+
+    // Belt-and-suspenders: also start polling after 2s if the channel is
+    // slow to attach, and continue only while we don't yet have a ready image.
+    const startupTimer = setTimeout(() => {
+      if (!cancelled && !heroPath) startPolling();
+    }, 2000);
+
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearInterval(pollTimer);
+      clearTimeout(startupTimer);
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, doc?.snapshot_id, doc?.document_type]);
 
   // Mint a signed URL when we have a path
   useEffect(() => {
