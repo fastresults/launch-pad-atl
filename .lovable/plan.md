@@ -1,83 +1,119 @@
 
-# Position the 1:1 as the market's best-value "Plan B" activator
+# Multi-State Legal Setup (All 50 States + DC)
 
-## The angle
+Today `src/lib/legal-setup.ts` hardcodes Georgia into every step (name search URL, Registered Agent rules, Articles filing fee/form, annual report cost, Atlanta business license, GA Tax Center, GA LLC Act citation). The Operating Agreement edge function also hardcodes "Georgia" and O.C.G.A. § 14-11. We'll expand to every US jurisdiction.
 
-Most founders don't need another course — they need a **second stream of income that's actually built and live**. That's the "Plan B profit generator" hook. And at $2,799 for a full done-for-you startup (brand, site, social, systems, plan), this is priced against $8k–$25k agency builds. Say that plainly — award-winning conversion copy names the alternative and shows the gap.
+## Scope of state coverage
 
-Voice: Adam's. Short sentences. Concrete comparisons. No hype adjectives; specific numbers instead.
+**All 50 states + DC = 51 jurisdictions**, every one selectable from day one:
 
-## Copy changes (all in `src/routes/one-on-one.tsx`)
+AL, AK, AZ, AR, CA, CO, CT, DE, DC, FL, GA, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD, MA, MI, MN, MS, MO, MT, NE, NV, NH, NJ, NM, NY, NC, ND, OH, OK, OR, PA, RI, SC, SD, TN, TX, UT, VT, VA, WA, WV, WI, WY.
 
-### 1. Eyebrow pill (top of hero)
-From: *"Done-for-you · with Adam & team"*
-To: **"Your Plan B profit generator · built for you"**
+Every jurisdiction ships with the full field set below — no "basic tier". A "Popular for holding companies" group (DE, WY, NV, TX, FL) surfaces at the top of the picker, then the full A→Z list.
 
-### 2. H1
-From: *"Skip the build. Get the business."*
-To: **"Activate your Plan B."**
-Gradient tail: **"We build the business. You keep the profit."**
+## Architecture
 
-### 3. Hero sub-paragraph — rewrite
-> Your paycheck is Plan A. Your Plan B is the startup you keep meaning to launch. Adam and his creative team build it *for* you — brand, website, social channels, positioning, and systems — so your second income stream is live in weeks, not "someday."
+### 1. New data module: `src/lib/legal-setup-states.ts`
 
-Keep the IGNITE / Google Meet chips underneath.
+Single source of truth. One record per jurisdiction:
 
-### 4. New "Best value on the market" band (insert between hero and "What we build for you")
-A short, high-contrast comparison strip. This is the conversion moment.
+```ts
+export type StateJurisdiction = {
+  code: string;                          // USPS ("GA","DE","DC"…)
+  name: string;                          // "Georgia"
+  filingAgency: string;                  // "Georgia Secretary of State, Corporations Division"
+  filingAgencyAddress: string;           // mailing address for paper filings
+  filingAgencyPhone?: string;
+  llcSuffixRequired: string[];           // ["LLC","L.L.C.","Limited Liability Company"]
+  nameSearchUrl: string;
+  nameReservationUrl?: string;
+  nameReservationFeeUsd?: number;
+  nameReservationDays?: number;
+  articlesFormName: string;              // "Articles of Organization" / "Certificate of Formation"
+  articlesOnlineUrl: string;
+  articlesPdfUrl?: string;
+  articlesFeeOnlineUsd: number;
+  articlesFeeMailUsd?: number;
+  articlesExpediteFeeUsd?: number;
+  articlesTypicalDays: string;
+  registeredAgentRules: string;
+  annualReport: {
+    required: boolean;
+    label: string;                       // "Annual Report" / "Franchise Tax" / "Biennial Statement"
+    feeUsd: number;
+    dueRule: string;
+    filingUrl: string;
+  };
+  salesTaxAgency?: { name: string; url: string };
+  llcActCitation: string;                // "O.C.G.A. § 14-11" / "6 Del. C. § 18" / "Cal. Corp. Code § 17701"
+  llcActUrl: string;
+  notes?: string;                        // e.g. NY publication req, CA $800 min, NV Initial List
+};
 
-- Eyebrow: **"Best value on the market"**
-- Headline: **"A $12,000 agency build. For $2,799."**
-- Three tight comparison tiles:
-  - **Agency build** — *$8k–$25k · 8–12 weeks · you manage the vendors*
-  - **DIY (course + freelancers)** — *$3k–$6k · 3–6 months · you're the project manager*
-  - **Done-for-you with Adam** *(highlighted)* — *$2,799 · 2–3 weeks · Adam and team ship it*
-- Sub-line under the strip: *"Same deliverables. A fraction of the price. And we're the ones on the hook to ship."*
+export const STATE_JURISDICTIONS: StateJurisdiction[] = [ /* 51 entries */ ];
+export const POPULAR_STATES = ["DE","WY","NV","TX","FL"];
+```
 
-(Numbers are directional/anchor pricing common in the market — we don't quote a specific competitor.)
+Data is researched from each state's Secretary of State (or equivalent) and statute code, with source URLs cited inline in the data file for auditability. Known gotchas baked in:
 
-### 5. "What we build for you" — add a value line
-Keep the 7 deliverable cards. Add one line under the section heading:
-> *"Priced out separately with an agency, this stack lands north of $12,000. You're getting all of it for $2,799 because we've templatized the parts that should be templatized and reserved the human hours for the parts that matter."*
+- **DE** — Certificate of Formation $110; no annual report but $300 franchise tax due June 1.
+- **CA** — Articles $70; $800 minimum franchise tax (FTB); biennial Statement of Info $20; LLC publication not required.
+- **NY** — Articles $200 + newspaper publication requirement (~$400–$2,000 in NYC counties); biennial statement $9.
+- **TX** — Certificate of Formation $300; annual Public Information Report + franchise tax (no-tax-due below threshold).
+- **MA** — $500 filing; $500 annual report.
+- **FL** — $125; annual report $138.75 due May 1.
+- **WY** — $100; annual report license tax $60 minimum.
+- **NV** — $75 Articles + $150 Initial List + $200 State Business License annually.
+- **AZ, NE, NY** — LLC publication requirements handled in `notes`.
+- **LA** — parish-level notarization noted.
+- **DC** — biennial report $300 (unusual cadence flagged).
 
-### 6. Contrast section — reframe headline
-From: *"Same framework. Different amount of you."*
-To: **"Three ways in. One is done for you."**
-Keep the three tiles.
+### 2. Refactor `src/lib/legal-setup.ts`
 
-### 7. "Best fit if…" — sharpen for Plan B buyer
-Replace current four with:
-- *"You have a job you like — and a Plan B you keep putting off"*
-- *"You'd rather pay to skip 3 months of setup than 'learn to build a brand'"*
-- *"You want a real second income stream, not another Notion doc"*
-- *"You want Adam personally leading the work — not a junior at an agency"*
+Replace `GEORGIA_LEGAL_STEPS` with `buildLegalSteps(state: StateJurisdiction): LegalStep[]` that interpolates state-specific fees, URLs, addresses, and copy into the existing 7 steps. Keep step `key`s stable so `steps_completed` records still match. `recommendEntity` gains a sentence appended for high-cost states (CA $800 minimum tax, NY publication).
 
-### 8. Price / CTA card — rewrite
-- Eyebrow: **"Best-value done-for-you build · limited seats each month"**
-- Under the $2,799: keep *"everything included"* and add a strike-through anchor: ~~*Comparable agency build: $12,000+*~~
-- Body copy:
-  > A full startup build, delivered by Adam and his creative team. Priced to be the clear best value on the market — because the point is to get your Plan B *live and earning*, not to make you save up for another year.
-- Primary CTA: **"Activate my Plan B"** (was "Book your build with Adam")
-- Trust line: *"Limited builds per month so Adam stays hands-on. Availability is confirmed after a short intake."*
+### 3. Persist selection
 
-### 9. Startup ideas scroller heading — tighten to the Plan B frame
-- Eyebrow: **"Pick your Plan B"**
-- Heading: **"Any of these — or the specific business you're bringing"**
-- Sub: *"Adam and team can build any of the startups founders are launching right now, or the specific one you have in mind. Either way, same end-to-end build."*
+`legal_setup_progress` already has an `entity_state` column — we'll reuse it as the state code (backfill any existing rows to `'GA'`). No schema change unless a read shows the column is missing; if so, migration adds `state_code text default 'GA'`.
 
-### 10. FAQ — add one, keep the rest
-Add as first FAQ:
-- **Q: Why is this so much less than an agency?**
-- A: Because we've built this exact stack dozens of times. Agencies quote every project like it's brand-new; we've templatized what should be templatized (setup, structure, deploys) and spend the human hours on the parts that actually differentiate your startup — your positioning, brand, and offer.
+Helper `setMyLegalSetupState(code)` calls `upsertMyLegalSetup({ entity_state: code })`.
 
-### 11. Meta / SEO (same file, `useEffect`)
-- `document.title`: **"Plan B, Built For You — $2,799 Done-For-You Startup with Adam"**
-- Meta description: *"Activate your Plan B profit generator. Adam and his creative team build your startup end-to-end — brand, website, social, systems — for $2,799. The best-value done-for-you build on the market."*
+### 4. UI
+
+- **State picker** at the top of `src/routes/_authenticated/dashboard/legal-setup.tsx`: Combobox with search over all 51, "Popular" group first (DE/WY/NV/TX/FL), then A→Z. Full state name + code shown.
+- **LegalSetupCard** (`src/components/foundation/LegalSetupCard.tsx`) shows selected state ("Form your Delaware startup") with a "Change state" link. Copy uses "startup" per project rule.
+- Step detail panels render fees/URLs/addresses from the state record instead of hardcoded strings.
+- Non-Georgia states hide the Atlanta ATLCore link; replace with a generic "check your city/county business license" note linking to the state's business portal.
+- Show state-specific `notes` (e.g. NY publication warning) as a callout inside the relevant step.
+
+### 5. Operating Agreement generator
+
+Update `supabase/functions/venture-generate-operating-agreement/index.ts`:
+- Read `entity_state` from `legal_setup_progress`.
+- Ship a tiny 51-entry map inside the function (name + LLC-act citation) — no cross-import from `src/`.
+- Replace hardcoded "Georgia" / "O.C.G.A. § 14-11" in the system prompt and Governing Law article with the selected state.
+
+### 6. Copy-rule compliance
+
+Per project memory ("startup", never "business" in UI copy): audit the strings touched. `LegalSetupCard` headline becomes "Form your {State} startup".
+
+## Files touched
+
+- `src/lib/legal-setup-states.ts` (new — 51 fully researched entries with citations)
+- `src/lib/legal-setup.ts` (convert to factory)
+- `src/lib/legal-setup.functions.ts` (state setter)
+- `src/routes/_authenticated/dashboard/legal-setup.tsx` (state picker + wire factory)
+- `src/components/foundation/LegalSetupCard.tsx` (dynamic state name)
+- `supabase/functions/venture-generate-operating-agreement/index.ts` (state-aware prompt)
+- Migration only if `entity_state` doesn't exist or needs a default.
 
 ## Out of scope
-- No changes to workshop / webinar pages or the AccessModeDialog copy in this pass.
-- No checkout wiring — CTAs continue to route to `/contact?topic=one-on-one`.
-- No new imagery.
 
-## Open question
-The comparison strip uses market-anchor numbers ($8k–$25k agency, $3k–$6k DIY). Want me to keep those directional ranges, or do you have specific competitor prices you'd rather anchor against?
+- Auto-filing via any state API (all states still route to official portals).
+- Foreign qualification (e.g. DE LLC operating in GA) — surfaced as a warning callout only, not a wizard.
+- Tax registration wizards beyond linking to the correct agency.
+
+## Open questions
+
+1. **Default state** for new users: keep GA, or auto-detect from the founder's `member_filings.state` if present?
+2. **Foreign-qualification warning**: show now ("You picked Delaware but live in Georgia — you'll also need to register as a foreign LLC where you operate"), or defer?
