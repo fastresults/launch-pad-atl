@@ -586,14 +586,26 @@ export default function BrainPage() {
               {voiceOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
             </button>
             {history.length > 0 && (
-              <button
+              <Button
                 type="button"
-                onClick={() => clearChat.mutate()}
-                className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
+                variant="outline"
+                size="sm"
+                disabled={clearChat.isPending}
+                onClick={() => {
+                  if (window.confirm("Clear this Second Brain conversation? Your saved notes and memory will not be affected.")) {
+                    clearChat.mutate();
+                  }
+                }}
+                className="h-8 gap-1.5 text-xs text-muted-foreground hover:border-destructive hover:text-destructive"
                 aria-label="Clear conversation"
               >
-                <Trash2 className="h-4 w-4" />
-              </button>
+                {clearChat.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" />
+                )}
+                <span>Clear chat</span>
+              </Button>
             )}
           </div>
         </header>
