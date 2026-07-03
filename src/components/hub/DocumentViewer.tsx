@@ -1051,7 +1051,7 @@ export function DocumentViewer({
                     ) : (
                       <>
                         <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                        Run deep assessment
+                        Run deep dive
                       </>
                     )}
                   </Button>
