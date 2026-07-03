@@ -726,6 +726,7 @@ export function DocumentViewer({
             setHeroUrl(url);
           } catch {
             // The normal heroPath effect will retry with a freshly minted URL.
+            setHeroRetryNonce((n) => n + 1);
           }
         }
         setHeroPath(data.path);
@@ -743,6 +744,7 @@ export function DocumentViewer({
       toast.error(msg);
     } finally {
       setHeroLoading(false);
+      setHeroImageLoading(false);
     }
   };
 
