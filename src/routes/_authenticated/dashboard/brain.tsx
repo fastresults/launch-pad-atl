@@ -5,8 +5,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
   Brain, Send, Mic, Square, Volume2, VolumeX, Loader2, RefreshCw, StickyNote,
-  Sparkles, Trash2, FileText, ChevronDown, ChevronRight,
+  Sparkles, Trash2, FileText, ChevronDown, ChevronRight, MessageSquare, Network,
 } from "lucide-react";
+import BrainMindMap from "@/components/brain/BrainMindMap";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
