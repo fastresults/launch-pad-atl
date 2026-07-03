@@ -491,6 +491,7 @@ function Step4Style({
   snapshotId, kit, direction, onBack, onContinue,
 }: { snapshotId: string; kit: any; direction: string | null; onBack: () => void; onContinue: (d: string) => void }) {
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const palette = kit?.palette?.colors ?? {};
   const colors = Object.values(palette).slice(0, 4) as string[];
   const head = kit?.typography?.heading?.family ?? "Inter";
@@ -782,6 +783,7 @@ function Step5BuildKit({
   onBack: () => void; onContinue: () => void;
 }) {
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const assetsQ = useQuery({
     queryKey: ["social-cover", snapshotId],
     queryFn: () => listSocialAssets(snapshotId),
