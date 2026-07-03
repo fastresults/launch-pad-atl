@@ -274,7 +274,7 @@ export default function BrainPage() {
   });
 
   function confirmPurge() {
-    const scope = currentVenture ? `“${currentVenture.company_name}”` : "this venture";
+    const scope = currentVenture ? `“${currentVenture.company_name}”` : "this startup";
     const ok = window.confirm(
       `This resets Second Brain memory, notes, chat, and indexing jobs for ${scope}. Your generated startup assets stay in place. Continue?`,
     );
@@ -497,8 +497,8 @@ export default function BrainPage() {
             <div className="mt-2 rounded border border-destructive/30 bg-destructive/5 px-2 py-1.5 text-[10px] leading-snug text-destructive">
               <p className="font-semibold">Stale content detected</p>
               <p className="mt-0.5">
-                Your Second Brain contains assets from a previous venture
-                {mismatch.currentCompany ? <> — current venture is <b>{mismatch.currentCompany}</b></> : null}.
+                Your Second Brain contains legacy assets from a previous startup
+                {mismatch.currentCompany ? <> — current startup is <b>{mismatch.currentCompany}</b></> : null}.
                 Reset Second Brain memory, then rebuild it for the current startup.
               </p>
               {mismatch.staleTitles?.length ? (
