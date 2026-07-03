@@ -77,7 +77,8 @@ You have the founder's FULL venture context: the venture brief, all research gat
 
 Output clean Markdown that begins with this exact H2:
 
-## McKinsey-Grade Assessment
+## Deep Dive
+
 
 Then use these ### subsections in order — adapt wording so they read natural for THIS document type, but cover every angle. ~700-1100 words total.
 
@@ -301,9 +302,10 @@ async function generateAssessment(
   }
   raw = stripCitations(raw);
 
-  if (!/^##\s*McKinsey/im.test(raw)) {
-    raw = `## McKinsey-Grade Assessment\n\n${raw}`;
+  if (!/^##\s*(Deep\s+Dive|McKinsey)/im.test(raw)) {
+    raw = `## Deep Dive\n\n${raw}`;
   }
+
 
   await supabase
     .from("venture_documents")

@@ -78,8 +78,9 @@ export default function WorkflowDetail() {
 
   const assess = useMutation({
     mutationFn: () => runMyDeliverableAssessment({ data: { key } }),
-    onSuccess: () => { toast.success("Deep assessment ready"); refetch(); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Assessment failed"),
+    onSuccess: () => { toast.success("Deep dive ready"); refetch(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Deep dive failed"),
+
   });
 
   const content = (deliverable?.content_current ?? {}) as Content;
@@ -268,7 +269,7 @@ export default function WorkflowDetail() {
         <section className="space-y-3 rounded-2xl border border-border/60 bg-card p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">McKinsey-grade deep assessment</h2>
+              <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{wf?.label ?? key} Deep Dive</h2>
               <p className="mt-1 text-xs text-muted-foreground">
                 Hardcore research, pressure-tests, hidden risks, and a 30/60/90 plan grounded in your whole venture context.
               </p>
@@ -279,8 +280,9 @@ export default function WorkflowDetail() {
               disabled={assess.isPending || assessmentStatus === "generating"}
             >
               {assess.isPending || assessmentStatus === "generating"
-                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Running deep assessment…</>
-                : <><Sparkles className="mr-2 h-4 w-4" />{assessmentText ? "Re-run deep assessment" : "Run deep assessment"}</>}
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Running deep dive…</>
+                : <><Sparkles className="mr-2 h-4 w-4" />{assessmentText ? "Re-run deep dive" : "Run deep dive"}</>}
+
             </Button>
           </div>
 

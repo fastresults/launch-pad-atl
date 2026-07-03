@@ -102,8 +102,9 @@ Every founder gets access to a dashboard with:
 - **Budget & Pro Forma** — with a short intake gateway to collect numbers before generating.
 - **Rewrite with feedback** — every generated asset can be regenerated with a feedback dialog (mic + text).
 
-## McKinsey-grade assessments
-Every startup asset ships with a McKinsey-style critical assessment under the executive summary — no footnotes, no citations.
+## Deep dives
+Every startup asset ships with an on-demand **Deep Dive** — a partner-grade extended analysis (assumptions, pressure-tests, risks, 30/60/90 actions) attached beneath the asset summary. No footnotes, no citations.
+
 
 ## Common questions
 - **What do I leave with?** All 34 startup assets, editable and yours forever, plus a 90-day plan you can run Monday.

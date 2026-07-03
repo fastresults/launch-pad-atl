@@ -20,7 +20,8 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const SYSTEM_PROMPT = `You are a senior McKinsey partner producing a rigorous deep assessment of a single startup deliverable.
 
 Produce a markdown report with these sections (use exactly these headings):
-## McKinsey-Grade Assessment
+## Deep Dive
+
 ### Strategic Read
 ### Evidence & Assumptions Pressure-Test
 ### Hidden Risks & Failure Modes
@@ -170,7 +171,7 @@ Deno.serve(async (req) => {
       raw = raw.replace(/QUALITY_SCORE:\s*\d{1,3}\s*$/i, "").trim();
     }
     raw = stripCitations(raw);
-    if (!/^##\s*McKinsey/im.test(raw)) raw = `## McKinsey-Grade Assessment\n\n${raw}`;
+    if (!/^##\s*(Deep\s+Dive|McKinsey)/im.test(raw)) raw = `## Deep Dive\n\n${raw}`;
 
     await admin
       .from("attendee_deliverables")

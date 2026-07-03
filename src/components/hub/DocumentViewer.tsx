@@ -116,11 +116,24 @@ function Blockquote({ children }: any) {
   );
 }
 
-function makeComponents(setHeadings: (h: { id: string; text: string }[]) => void) {
+function makeComponents(
+  setHeadings: (h: { id: string; text: string }[]) => void,
+  assetTitle?: string,
+) {
   const headings: { id: string; text: string }[] = [];
 
+  const relabel = (text: string): string => {
+    if (!assetTitle) return text;
+    if (/^\s*executive\s+summary\s*$/i.test(text)) return `${assetTitle} Summary`;
+    if (/^\s*mckinsey[-\s]*grade\s*assessment\s*$/i.test(text)) return `${assetTitle} Deep Dive`;
+    if (/^\s*deep\s+dive\s*$/i.test(text)) return `${assetTitle} Deep Dive`;
+    return text;
+  };
+
   const heading = (level: 1 | 2 | 3 | 4) => ({ children }: any) => {
-    const text = textOf(children);
+    const rawText = textOf(children);
+    const text = relabel(rawText);
+    const relabeled = text !== rawText;
     const id = slugify(text);
     if (level === 2) headings.push({ id, text });
     const Tag: any = `h${level}`;
@@ -130,10 +143,12 @@ function makeComponents(setHeadings: (h: { id: string; text: string }[]) => void
       3: "mt-5 mb-2 text-base font-semibold text-foreground",
       4: "mt-4 mb-1.5 text-sm font-semibold uppercase tracking-wide text-muted-foreground",
     }[level];
-    const isDeepDive = level === 2 && /mckinsey[-\s]*grade\s*assessment/i.test(text);
+    const isDeepDive =
+      (level === 1 || level === 2) &&
+      /(mckinsey[-\s]*grade\s*assessment|deep\s+dive)/i.test(rawText);
     return (
       <Tag id={id} className={cls}>
-        {children}
+        {relabeled ? text : children}
         {isDeepDive && (
           <span className="ml-2 inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 align-middle text-[10px] font-medium uppercase tracking-wide text-primary">
             Deep dive
@@ -142,6 +157,7 @@ function makeComponents(setHeadings: (h: { id: string; text: string }[]) => void
       </Tag>
     );
   };
+
 
   // Defer setHeadings to next tick to avoid setState-in-render warnings
   queueMicrotask(() => setHeadings(headings));
@@ -308,9 +324,9 @@ export function DocumentViewer({
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  const components = useMemo(() => makeComponents(setHeadings), [doc?.content]);
-  const assessmentComponents = useMemo(() => makeComponents(() => {}), [assessment]);
   const title = titleCase(doc?.document_type ?? "");
+  const components = useMemo(() => makeComponents(setHeadings, title), [doc?.content, title]);
+  const assessmentComponents = useMemo(() => makeComponents(() => {}, title), [assessment, title]);
   const content = contentOverride ?? doc?.content ?? "";
   const printRef = useRef<HTMLDivElement | null>(null);
 
@@ -320,10 +336,11 @@ export function DocumentViewer({
     if (!hasAssessment) return content;
     const body = (content ?? "").trimEnd();
     let extra = assessment!.trim();
-    // Avoid duplicating the canonical H2 heading
-    extra = extra.replace(/^#{1,6}\s*McKinsey[-\s]*Grade\s*Assessment\s*\n+/i, "");
-    return `${body}\n\n---\n\n## McKinsey-Grade Assessment\n\n${extra}\n`;
-  }, [content, assessment, assessmentStatus]);
+    // Avoid duplicating the canonical H2 heading (either legacy or new label)
+    extra = extra.replace(/^#{1,6}\s*(McKinsey[-\s]*Grade\s*Assessment|Deep\s+Dive)\s*\n+/i, "");
+    return `${body}\n\n---\n\n## ${title} Deep Dive\n\n${extra}\n`;
+  }, [content, assessment, assessmentStatus, title]);
+
 
   // Extract the Section 8 "Paste-Ready Master Prompt" for the PRD viewer.
   // Resolution order: BEGIN/END delimiters → Section 8 slice → largest fenced block.
@@ -447,7 +464,7 @@ export function DocumentViewer({
         body: { snapshotId: doc.snapshot_id, documentType: doc.document_type },
       });
       if (error) throw new Error(error.message);
-      if (data && data.ok === false) throw new Error(data.error ?? "Deep assessment failed");
+      if (data && data.ok === false) throw new Error(data.error ?? "Deep dive failed");
       // Fetch the freshly stored assessment
       const { data: row } = await supabase
         .from("venture_documents")
@@ -457,9 +474,10 @@ export function DocumentViewer({
         .maybeSingle();
       setAssessment(row?.deep_assessment ?? null);
       setAssessmentStatus(row?.deep_assessment_status ?? "complete");
-      toast.success("Deep assessment ready");
+      toast.success("Deep dive ready");
     } catch (e) {
-      const msg = edgeErrorMessage(e, "Deep assessment failed");
+      const msg = edgeErrorMessage(e, "Deep dive failed");
+
       setAssessmentError(msg);
       setAssessmentStatus("failed");
       toast.error(msg);
@@ -994,10 +1012,11 @@ export function DocumentViewer({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    <h3 className="text-base font-semibold text-foreground">Deep assessment</h3>
+                    <h3 className="text-base font-semibold text-foreground">{title} Deep Dive</h3>
                     <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
-                      McKinsey-grade
+                      Extended analysis
                     </span>
+
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Partner-grade pressure test: assumptions, sensitivities, risks, and 30/60/90-day actions.
@@ -1032,7 +1051,7 @@ export function DocumentViewer({
                     ) : (
                       <>
                         <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                        Run deep assessment
+                        Run deep dive
                       </>
                     )}
                   </Button>
