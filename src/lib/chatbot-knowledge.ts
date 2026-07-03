@@ -96,8 +96,9 @@ After the workshop, every founder gets access to a dashboard with:
 - **Budget & Pro Forma** — with a short intake gateway to collect the numbers we need before generating.
 - **Rewrite with feedback** — every generated deliverable can be regenerated with a feedback dialog (mic + text).
 
-## McKinsey-grade assessments
-Every startup asset ships with a McKinsey-style critical assessment under the executive summary — no footnotes, no citations.
+## Deep dives
+Every startup asset ships with an on-demand **Deep Dive** — a partner-grade extended analysis (assumptions, pressure-tests, risks, 30/60/90 actions) attached beneath the asset summary. No footnotes, no citations.
+
 
 ## Common questions (canned answers)
 - **What do I leave with?** All ${TOTAL_DELIVERABLES} startup assets, editable and yours forever, plus a 90-day plan you can run Monday.
