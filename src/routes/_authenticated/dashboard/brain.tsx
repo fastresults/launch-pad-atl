@@ -18,7 +18,8 @@ import {
   loadBrainHistory, sendBrainMessage, clearBrainHistory, rebuildBrainMemory,
   saveBrainNote, listBrainNotes, deleteBrainNote, getBrainStatus,
   pollBrainJob, getLatestBrainJob, purgeGeneratedAssets, detectVentureMismatch,
-  type BrainMessage, type BrainIndexingJob,
+  listBrainVentures,
+  type BrainMessage, type BrainIndexingJob, type BrainVenture,
 } from "@/lib/brain.functions";
 
 const STARTERS = [
@@ -32,31 +33,69 @@ function stripMarkdown(s: string) {
   return s.replace(/[#*_>`~[\]()]/g, "").replace(/\n{2,}/g, ". ").trim();
 }
 
+const VENTURE_STORAGE_KEY = "brain:selectedSnapshot";
+
 export default function BrainPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const userId = user?.id;
 
+  const { data: ventures = [] } = useQuery({
+    queryKey: ["brain", "ventures", userId],
+    queryFn: () => listBrainVentures(userId!),
+    enabled: !!userId,
+  });
+
+  const [snapshotId, setSnapshotId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem(VENTURE_STORAGE_KEY);
+  });
+
+  // Auto-select the most recent venture the first time we see the list.
+  useEffect(() => {
+    if (!ventures.length) return;
+    const stillValid = snapshotId && ventures.some((v) => v.id === snapshotId);
+    if (!stillValid) {
+      const next = ventures[0].id;
+      setSnapshotId(next);
+      try { window.localStorage.setItem(VENTURE_STORAGE_KEY, next); } catch { /* noop */ }
+    }
+  }, [ventures, snapshotId]);
+
+  const selectVenture = useCallback((id: string | null) => {
+    setSnapshotId(id);
+    try {
+      if (id) window.localStorage.setItem(VENTURE_STORAGE_KEY, id);
+      else window.localStorage.removeItem(VENTURE_STORAGE_KEY);
+    } catch { /* noop */ }
+    qc.invalidateQueries({ queryKey: ["brain"] });
+  }, [qc]);
+
+  const currentVenture = useMemo(
+    () => ventures.find((v) => v.id === snapshotId) ?? null,
+    [ventures, snapshotId],
+  );
+
   const { data: history = [] } = useQuery({
-    queryKey: ["brain", "history", userId],
-    queryFn: () => loadBrainHistory(userId!),
+    queryKey: ["brain", "history", userId, snapshotId],
+    queryFn: () => loadBrainHistory(userId!, snapshotId),
     enabled: !!userId,
   });
   const { data: status } = useQuery({
-    queryKey: ["brain", "status", userId],
-    queryFn: () => getBrainStatus(userId!),
+    queryKey: ["brain", "status", userId, snapshotId],
+    queryFn: () => getBrainStatus(userId!, snapshotId),
     enabled: !!userId,
     refetchInterval: 15000,
   });
   const { data: notes = [] } = useQuery({
-    queryKey: ["brain", "notes", userId],
-    queryFn: () => listBrainNotes(userId!),
+    queryKey: ["brain", "notes", userId, snapshotId],
+    queryFn: () => listBrainNotes(userId!, snapshotId),
     enabled: !!userId,
   });
   const { data: mismatch } = useQuery({
-    queryKey: ["brain", "mismatch", userId],
-    queryFn: () => detectVentureMismatch(userId!),
-    enabled: !!userId,
+    queryKey: ["brain", "mismatch", userId, snapshotId],
+    queryFn: () => detectVentureMismatch(userId!, snapshotId),
+    enabled: !!userId && !!snapshotId,
     refetchInterval: 30000,
   });
 
@@ -128,24 +167,24 @@ export default function BrainPage() {
     setInput("");
     setPending(true);
     // Optimistic user message
-    qc.setQueryData<BrainMessage[]>(["brain", "history", userId], (prev = []) => [
+    qc.setQueryData<BrainMessage[]>(["brain", "history", userId, snapshotId], (prev = []) => [
       ...prev,
       { id: `tmp-${Date.now()}`, role: "user", content: trimmed, citations: [], created_at: new Date().toISOString() },
     ]);
     try {
-      const { answer, citations } = await sendBrainMessage(trimmed);
-      qc.setQueryData<BrainMessage[]>(["brain", "history", userId], (prev = []) => [
+      const { answer, citations } = await sendBrainMessage(trimmed, snapshotId);
+      qc.setQueryData<BrainMessage[]>(["brain", "history", userId, snapshotId], (prev = []) => [
         ...prev,
         { id: `tmp-a-${Date.now()}`, role: "assistant", content: answer, citations, created_at: new Date().toISOString() },
       ]);
-      qc.invalidateQueries({ queryKey: ["brain", "history", userId] });
+      qc.invalidateQueries({ queryKey: ["brain", "history", userId, snapshotId] });
       if (voiceOn) void speak(stripMarkdown(answer));
     } catch (e: any) {
       toast.error(e?.message ?? "Chat failed");
     } finally {
       setPending(false);
     }
-  }, [pending, qc, userId, voiceOn, speak]);
+  }, [pending, qc, userId, snapshotId, voiceOn, speak]);
 
   const [jobId, setJobId] = useState<string | null>(null);
   const [job, setJob] = useState<BrainIndexingJob | null>(null);
@@ -154,13 +193,14 @@ export default function BrainPage() {
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
-    void getLatestBrainJob(userId).then((j) => {
+    void getLatestBrainJob(userId, snapshotId).then((j) => {
       if (cancelled) return;
       setJob(j);
       if (j && (j.status === "queued" || j.status === "running")) setJobId(j.id);
+      else setJobId(null);
     });
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [userId, snapshotId]);
 
   // Poll the active job.
   useEffect(() => {
@@ -173,7 +213,7 @@ export default function BrainPage() {
         setJob(j);
         if (j.status === "done" || j.status === "failed") {
           setJobId(null);
-          qc.invalidateQueries({ queryKey: ["brain", "status", userId] });
+          qc.invalidateQueries({ queryKey: ["brain", "status", userId, snapshotId] });
           if (j.status === "done") {
             toast.success(`Memory ready — ${j.embedded_chunks} chunks from ${j.total_sources} sources${j.failed_chunks ? ` (${j.failed_chunks} failed)` : ""}`);
           } else {
@@ -187,10 +227,10 @@ export default function BrainPage() {
     void tick();
     const iv = setInterval(tick, 2000);
     return () => { stop = true; clearInterval(iv); };
-  }, [jobId, qc, userId]);
+  }, [jobId, qc, userId, snapshotId]);
 
   const rebuild = useMutation({
-    mutationFn: rebuildBrainMemory,
+    mutationFn: () => rebuildBrainMemory(snapshotId),
     onSuccess: ({ jobId: id }) => {
       setJobId(id);
       setJob({
@@ -204,28 +244,29 @@ export default function BrainPage() {
   });
 
   const clearChat = useMutation({
-    mutationFn: () => clearBrainHistory(userId!),
+    mutationFn: () => clearBrainHistory(userId!, snapshotId),
     onSuccess: () => {
-      qc.setQueryData(["brain", "history", userId], []);
+      qc.setQueryData(["brain", "history", userId, snapshotId], []);
       toast.success("Cleared");
     },
   });
 
   const purge = useMutation({
-    mutationFn: () => purgeGeneratedAssets(userId!),
+    mutationFn: () => purgeGeneratedAssets(userId!, snapshotId),
     onSuccess: (res) => {
       toast.success(
         `Cleared ${res.deliverables_deleted} old assets and ${res.memory_chunks_deleted} memory chunks. Regenerate from Workflow, then rebuild memory.`,
       );
-      qc.invalidateQueries({ queryKey: ["brain", "status", userId] });
-      qc.invalidateQueries({ queryKey: ["brain", "mismatch", userId] });
+      qc.invalidateQueries({ queryKey: ["brain", "status", userId, snapshotId] });
+      qc.invalidateQueries({ queryKey: ["brain", "mismatch", userId, snapshotId] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Reset failed"),
   });
 
   function confirmPurge() {
+    const scope = currentVenture ? `“${currentVenture.company_name}”` : "this venture";
     const ok = window.confirm(
-      "This wipes ALL generated startup assets and Second Brain memory for your account so they can be regenerated against your current venture. Continue?",
+      `This wipes ALL generated startup assets and Second Brain memory for ${scope} so they can be regenerated. Continue?`,
     );
     if (ok) purge.mutate();
   }
@@ -283,9 +324,9 @@ export default function BrainPage() {
     const lastAssistant = [...history].reverse().find((m) => m.role === "assistant");
     if (!lastAssistant) { toast.info("No answer to save yet"); return; }
     try {
-      await saveBrainNote(userId, lastAssistant.content, "chat");
+      await saveBrainNote(userId, lastAssistant.content, snapshotId, "chat");
       toast.success("Saved as note");
-      qc.invalidateQueries({ queryKey: ["brain", "notes", userId] });
+      qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
     } catch (e: any) {
       toast.error(e?.message ?? "Save failed");
     }
@@ -295,9 +336,9 @@ export default function BrainPage() {
     if (!userId) return;
     const text = window.prompt("Note (this becomes part of your brain memory next rebuild):");
     if (!text?.trim()) return;
-    await saveBrainNote(userId, text, "text");
+    await saveBrainNote(userId, text, snapshotId, "text");
     toast.success("Note saved. Rebuild memory to embed it.");
-    qc.invalidateQueries({ queryKey: ["brain", "notes", userId] });
+    qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
   }
 
   const empty = history.length === 0;
@@ -307,6 +348,34 @@ export default function BrainPage() {
     <div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[320px_1fr]">
       {/* Left: status + notes */}
       <aside className="space-y-4">
+        <Card className="p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <Sparkles className="h-4 w-4 text-primary" /> Venture
+          </div>
+          {ventures.length === 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              No ventures yet. Create one from the Workflow to organize memory here.
+            </p>
+          ) : (
+            <>
+              <select
+                value={snapshotId ?? ""}
+                onChange={(e) => selectVenture(e.target.value || null)}
+                className="mt-2 w-full rounded border border-border bg-background px-2 py-1.5 text-xs"
+              >
+                {ventures.map((v: any) => (
+                  <option key={v.id} value={v.id}>
+                    {v.company_name || "Untitled venture"}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
+                Chat, notes, and memory below are scoped to <b>{currentVenture?.company_name ?? "this venture"}</b>. Switch to isolate different projects.
+              </p>
+            </>
+          )}
+        </Card>
+
         <Card className="p-4">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <Brain className="h-4 w-4 text-primary" /> Brain status
@@ -400,7 +469,7 @@ export default function BrainPage() {
                     <button
                       onClick={async () => {
                         await deleteBrainNote(n.id);
-                        qc.invalidateQueries({ queryKey: ["brain", "notes", userId] });
+                        qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
                       }}
                       className="text-muted-foreground hover:text-destructive"
                       aria-label="Delete note"

@@ -808,6 +808,7 @@ export type Database = {
           failed_chunks: number
           finished_at: string | null
           id: string
+          snapshot_id: string | null
           started_at: string | null
           status: string
           total_chunks: number
@@ -822,6 +823,7 @@ export type Database = {
           failed_chunks?: number
           finished_at?: string | null
           id?: string
+          snapshot_id?: string | null
           started_at?: string | null
           status?: string
           total_chunks?: number
@@ -836,6 +838,7 @@ export type Database = {
           failed_chunks?: number
           finished_at?: string | null
           id?: string
+          snapshot_id?: string | null
           started_at?: string | null
           status?: string
           total_chunks?: number
@@ -843,7 +846,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "brain_indexing_jobs_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bulk_unlock_codes: {
         Row: {
@@ -1352,6 +1363,7 @@ export type Database = {
           id: string
           kind: string
           metadata: Json
+          snapshot_id: string | null
           source_ref: string | null
           title: string | null
           updated_at: string
@@ -1364,6 +1376,7 @@ export type Database = {
           id?: string
           kind: string
           metadata?: Json
+          snapshot_id?: string | null
           source_ref?: string | null
           title?: string | null
           updated_at?: string
@@ -1376,12 +1389,21 @@ export type Database = {
           id?: string
           kind?: string
           metadata?: Json
+          snapshot_id?: string | null
           source_ref?: string | null
           title?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "founder_brain_memory_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       founder_brain_messages: {
         Row: {
@@ -1390,6 +1412,7 @@ export type Database = {
           created_at: string
           id: string
           role: string
+          snapshot_id: string | null
           user_id: string
         }
         Insert: {
@@ -1398,6 +1421,7 @@ export type Database = {
           created_at?: string
           id?: string
           role: string
+          snapshot_id?: string | null
           user_id: string
         }
         Update: {
@@ -1406,15 +1430,25 @@ export type Database = {
           created_at?: string
           id?: string
           role?: string
+          snapshot_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "founder_brain_messages_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       founder_brain_notes: {
         Row: {
           content: string
           created_at: string
           id: string
+          snapshot_id: string | null
           source: string
           tags: string[]
           updated_at: string
@@ -1424,6 +1458,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          snapshot_id?: string | null
           source?: string
           tags?: string[]
           updated_at?: string
@@ -1433,12 +1468,21 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          snapshot_id?: string | null
           source?: string
           tags?: string[]
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "founder_brain_notes_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inquiries: {
         Row: {
@@ -3287,21 +3331,38 @@ export type Database = {
           user_can_trigger: boolean
         }[]
       }
-      match_founder_brain_memory: {
-        Args: {
-          _user_id: string
-          match_count?: number
-          query_embedding: string
-        }
-        Returns: {
-          content: string
-          id: string
-          kind: string
-          similarity: number
-          source_ref: string
-          title: string
-        }[]
-      }
+      match_founder_brain_memory:
+        | {
+            Args: {
+              _user_id: string
+              match_count?: number
+              query_embedding: string
+            }
+            Returns: {
+              content: string
+              id: string
+              kind: string
+              similarity: number
+              source_ref: string
+              title: string
+            }[]
+          }
+        | {
+            Args: {
+              _snapshot_id?: string
+              _user_id: string
+              match_count?: number
+              query_embedding: string
+            }
+            Returns: {
+              content: string
+              id: string
+              kind: string
+              similarity: number
+              source_ref: string
+              title: string
+            }[]
+          }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -3312,10 +3373,9 @@ export type Database = {
         Returns: number
       }
       promote_application: { Args: { _app_id: string }; Returns: string }
-      purge_founder_generated_assets: {
-        Args: { _user_id: string }
-        Returns: Json
-      }
+      purge_founder_generated_assets:
+        | { Args: { _user_id: string }; Returns: Json }
+        | { Args: { _snapshot_id?: string; _user_id: string }; Returns: Json }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {

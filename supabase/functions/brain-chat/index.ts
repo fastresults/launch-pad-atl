@@ -33,14 +33,24 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const message = typeof body?.message === "string" ? body.message.trim().slice(0, 4000) : "";
+    const snapshotId: string | null = typeof body?.snapshotId === "string" && body.snapshotId ? body.snapshotId : null;
     if (!message) return json({ error: "Missing message" }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // Persist the user turn first.
-    await admin.from("founder_brain_messages").insert({ user_id: userId, role: "user", content: message });
+    if (snapshotId) {
+      const { data: snap } = await admin
+        .from("venture_snapshots")
+        .select("id, user_id")
+        .eq("id", snapshotId)
+        .maybeSingle();
+      if (!snap || snap.user_id !== userId) return json({ error: "Venture not found" }, 404);
+    }
 
-    // Retrieve top-k memory.
+    // Persist the user turn first, scoped to the current venture.
+    await admin.from("founder_brain_messages").insert({ user_id: userId, snapshot_id: snapshotId, role: "user", content: message });
+
+    // Retrieve top-k memory scoped to this venture (plus legacy unassigned rows).
     let citations: Array<{ n: number; kind: string; source_ref: string | null; title: string }> = [];
     let memoryBlock = "(no memory yet — the founder should click 'Rebuild memory')";
     try {
@@ -49,6 +59,7 @@ Deno.serve(async (req) => {
         _user_id: userId,
         query_embedding: toVectorLiteral(qEmb),
         match_count: 8,
+        _snapshot_id: snapshotId,
       });
       const rows = Array.isArray(matches) ? matches : [];
       if (rows.length) {
@@ -66,13 +77,16 @@ Deno.serve(async (req) => {
       console.warn("retrieval failed", e);
     }
 
-    // Recent transcript (last 12).
-    const { data: history } = await admin
+    // Recent transcript (last 12) for THIS venture only.
+    const historyQuery = admin
       .from("founder_brain_messages")
       .select("role, content")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(12);
+    if (snapshotId) historyQuery.eq("snapshot_id", snapshotId);
+    else historyQuery.is("snapshot_id", null);
+    const { data: history } = await historyQuery;
     const recent = (history ?? []).reverse().slice(0, -1); // drop the just-inserted user turn
 
     const messages = [
@@ -103,6 +117,7 @@ Deno.serve(async (req) => {
 
     await admin.from("founder_brain_messages").insert({
       user_id: userId,
+      snapshot_id: snapshotId,
       role: "assistant",
       content: answer,
       citations,
