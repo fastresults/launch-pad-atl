@@ -276,7 +276,7 @@ export default function BrainPage() {
   function confirmPurge() {
     const scope = currentVenture ? `“${currentVenture.company_name}”` : "this venture";
     const ok = window.confirm(
-      `This wipes ALL generated startup assets and Second Brain memory for ${scope} so they can be regenerated. Continue?`,
+      `This resets Second Brain memory, notes, chat, and indexing jobs for ${scope}. Your generated startup assets stay in place. Continue?`,
     );
     if (ok) purge.mutate();
   }
