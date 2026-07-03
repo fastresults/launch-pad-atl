@@ -575,6 +575,30 @@ export default function BrainPage() {
               <div className="text-[11px] text-muted-foreground">Voice + text control of your startup context</div>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <div className="inline-flex overflow-hidden rounded-lg border border-border/60 text-xs">
+              <button
+                type="button"
+                onClick={() => setView("chat")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-2.5 py-1 transition-colors",
+                  view === "chat" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted",
+                )}
+              >
+                <MessageSquare className="h-3.5 w-3.5" /> Chat
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("map")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 border-l border-border/60 px-2.5 py-1 transition-colors",
+                  view === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted",
+                )}
+              >
+                <Network className="h-3.5 w-3.5" /> Mind Map
+              </button>
+            </div>
+          </div>
           <div className="flex items-center gap-1">
             <button
               type="button"
