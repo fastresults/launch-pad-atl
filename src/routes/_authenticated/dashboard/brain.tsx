@@ -636,92 +636,112 @@ export default function BrainPage() {
           </div>
         </header>
 
-        <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
-          {empty ? (
-            <div className="flex h-full flex-col justify-between gap-4">
-              <div className="space-y-2">
-                <p className="text-sm text-foreground">
-                  Ask anything about your startup — brief, assets, assessments, notes. I'll cite what I used.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {assetsReadyWithoutMemory
-                    ? `Your ${status?.generated} startup assets are ready; rebuild memory so I can answer from them.`
-                    : "Tip: rebuild memory after generating new assets so I have the latest."}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {STARTERS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => send(s)}
-                    className="rounded-full border border-border/60 bg-background/60 px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            history.map((m) => <BubbleMsg key={m.id} m={m} onSpeak={voiceOn ? speak : undefined} onSaveNote={saveMessageAsNote} />)
-          )}
-          {(pending || transcribing || speaking) && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              {transcribing ? "Transcribing…" : speaking ? "Speaking…" : "Thinking…"}
-            </div>
-          )}
-        </div>
-
-        <form
-          onSubmit={(e) => { e.preventDefault(); send(input); }}
-          className="border-t border-border/60 p-3"
-        >
-          <div className="flex items-end gap-2 rounded-xl border border-border/60 bg-background/40 p-2 focus-within:border-primary/60">
-            <textarea
-              ref={inputRef}
-              rows={1}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
-              }}
-              placeholder={recording ? "Listening… tap the square to send" : "Ask, or press the mic to speak"}
-              className="max-h-40 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm focus:outline-none"
-              disabled={pending || recording || transcribing}
-            />
-            <button
-              type="button"
-              onClick={recording ? stopRecording : startRecording}
-              disabled={pending || transcribing}
-              className={cn(
-                "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/60 text-foreground hover:bg-muted disabled:opacity-40",
-                recording && "border-destructive/60 bg-destructive/20 text-destructive animate-pulse",
+        {view === "map" ? (
+          <div className="p-3">
+            {userId && (
+              <BrainMindMap
+                userId={userId}
+                snapshotId={snapshotId}
+                company={currentVenture?.company_name ?? null}
+                onAskAbout={(label) => {
+                  setView("chat");
+                  setInput(`Tell me about ${label}`);
+                  setTimeout(() => inputRef.current?.focus(), 50);
+                }}
+              />
+            )}
+          </div>
+        ) : (
+          <>
+            <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+              {empty ? (
+                <div className="flex h-full flex-col justify-between gap-4">
+                  <div className="space-y-2">
+                    <p className="text-sm text-foreground">
+                      Ask anything about your startup — brief, assets, assessments, notes. I'll cite what I used.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {assetsReadyWithoutMemory
+                        ? `Your ${status?.generated} startup assets are ready; rebuild memory so I can answer from them.`
+                        : "Tip: rebuild memory after generating new assets so I have the latest."}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {STARTERS.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => send(s)}
+                        className="rounded-full border border-border/60 bg-background/60 px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                history.map((m) => <BubbleMsg key={m.id} m={m} onSpeak={voiceOn ? speak : undefined} onSaveNote={saveMessageAsNote} />)
               )}
-              aria-label={recording ? "Stop" : "Record"}
+              {(pending || transcribing || speaking) && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  {transcribing ? "Transcribing…" : speaking ? "Speaking…" : "Thinking…"}
+                </div>
+              )}
+            </div>
+
+            <form
+              onSubmit={(e) => { e.preventDefault(); send(input); }}
+              className="border-t border-border/60 p-3"
             >
-              {transcribing ? <Loader2 className="h-4 w-4 animate-spin" /> : recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            </button>
-            <button
-              type="submit"
-              disabled={pending || recording || transcribing || !input.trim()}
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"
-              aria-label="Send"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
-            <span>Grounded in your own brief, assets, and notes.</span>
-            <button type="button" onClick={saveLastAsNote} className="inline-flex items-center gap-1 hover:text-foreground">
-              <Sparkles className="h-3 w-3" /> Save last answer as note
-            </button>
-          </div>
-        </form>
+              <div className="flex items-end gap-2 rounded-xl border border-border/60 bg-background/40 p-2 focus-within:border-primary/60">
+                <textarea
+                  ref={inputRef}
+                  rows={1}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
+                  }}
+                  placeholder={recording ? "Listening… tap the square to send" : "Ask, or press the mic to speak"}
+                  className="max-h-40 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm focus:outline-none"
+                  disabled={pending || recording || transcribing}
+                />
+                <button
+                  type="button"
+                  onClick={recording ? stopRecording : startRecording}
+                  disabled={pending || transcribing}
+                  className={cn(
+                    "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/60 text-foreground hover:bg-muted disabled:opacity-40",
+                    recording && "border-destructive/60 bg-destructive/20 text-destructive animate-pulse",
+                  )}
+                  aria-label={recording ? "Stop" : "Record"}
+                >
+                  {transcribing ? <Loader2 className="h-4 w-4 animate-spin" /> : recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </button>
+                <button
+                  type="submit"
+                  disabled={pending || recording || transcribing || !input.trim()}
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"
+                  aria-label="Send"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
+                <span>Grounded in your own brief, assets, and notes.</span>
+                <button type="button" onClick={saveLastAsNote} className="inline-flex items-center gap-1 hover:text-foreground">
+                  <Sparkles className="h-3 w-3" /> Save last answer as note
+                </button>
+              </div>
+            </form>
+          </>
+        )}
       </section>
     </div>
   );
 }
+
 
 function Stat({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
