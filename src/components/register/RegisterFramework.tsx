@@ -60,15 +60,15 @@ export function RegisterFramework() {
         footerLine: `${buildWorkshop.walkOuts.length} deliverables · built live with Adam · yours to keep.`,
       }
     : {
-        eyebrow: `Strategic Foundation Workshop · ${WORKSHOP_PRICE_LABEL}`,
-        heroTitleLead: "Reserve your seat —",
-        heroTitleEmphasis: `${WORKSHOP_PRICE_LABEL}.`,
-        heroBlurb: "Walk out with the strategic foundation for your startup: positioning, ideal customer, offer & pricing, 12-month economics, a 90-day roadmap, and a build/hire/buy decision tree. Coffee and refreshments included.",
-        asideBlurb: "Strategic Foundation Workshop — small cohort, working session with Adam Anderson. Coffee and light refreshments provided.",
+        eyebrow: `Launch Day with Adam · ${WORKSHOP_PRICE_LABEL} · Norcross, GA`,
+        heroTitleLead: "The fastest legal path to your",
+        heroTitleEmphasis: `first paying customer.`,
+        heroBlurb: "One morning in the room with Adam. Two weeks to first revenue — offer priced, first channel open, outreach going out the same day. Or a Plan B strong enough to leave the day job on your terms. Coffee and refreshments on us.",
+        asideBlurb: "One morning with Adam Anderson — small cohort, working session, real business built. You leave with a live offer, a named first customer, and the outreach ready to send. Not a folder of PDFs.",
         walkOuts: null as string[] | null,
         priceLabel: WORKSHOP_PRICE_LABEL,
         priceCents: WORKSHOP_PRICE_CENTS,
-        footerLine: `${TOTAL_DELIVERABLES} startup assets total · built live with Adam · yours to keep.`,
+        footerLine: `Everything you need to be selling by Monday · built with Adam · yours to keep.`,
       };
 
   const { data: cohorts = [] } = useQuery<Cohort[]>({
