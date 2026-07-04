@@ -1,26 +1,33 @@
 
 ## Goal
-Update the Strategic Foundation Workshop price from **$197 → $297** everywhere it appears. Leave the eight Build workshops (`brand-identity`, `website-that-converts`, etc.) untouched — they keep their own tiered pricing.
+Add hover/tap tooltips to each of the eight "What you walk out with" stage rows on `/register` — Strategic Foundation Workshop only. Each tooltip extolls the benefits and outcomes of that stage.
 
 ## Scope
-The Strategic Foundation Workshop price is centralized in two constants used by `/`, `/register`, and the chatbot knowledge base. The eight Build workshops carry their own `priceLabel` in `src/lib/build-workshops.ts` and are NOT part of this change.
+Applies only to the fallback (Strategic Foundation Workshop) branch of `RegisterFramework.tsx` — the `FRAMEWORK_STAGES.map(...)` list at lines 281–296. The `ctx.walkOuts` branch used by the eight Build workshops is untouched.
 
 ## Changes
 
-**`src/lib/framework-deliverables.ts`**
-- `WORKSHOP_PRICE_CENTS`: `19700` → `29700`
-- `WORKSHOP_PRICE_LABEL`: `"$197"` → `"$297"`
+**1. `src/lib/framework-deliverables.ts`** — extend `FrameworkStage` with an optional `benefit: string` and add one benefit copy line per stage (Foundation, Strategy, Operations, Finance, Governance, Brand, Marketing, Social & Content). Each ~140–180 chars, outcome-oriented (what the founder walks away able to do), matching the existing plain-language voice of the deliverable tooltips.
 
-That single edit cascades to:
-- `HomeFramework.tsx` hero CTA — "Reserve your seat — $297"
-- `RegisterFramework.tsx` eyebrow, submit CTA, and `price_paid_cents` on registration insert
-- `chatbot-knowledge.ts` pricing line
+Draft copy:
+- **Foundation** — "Leave with the one-page story of your startup — vision, problem, and value prop tight enough that customers buy, partners lean in, and hires say yes."
+- **Strategy** — "Walk out knowing exactly who you sell to, how you beat the alternatives, and the ninety-day plan that turns the strategy into first paying customers."
+- **Operations** — "The roadmap, weekly workflow, and sales playbook that let you deliver reliably — and hand pieces to a teammate without the business breaking."
+- **Finance** — "A twelve-month P&L, unit economics, and funding plan you can defend to a banker or investor — and use yourself to price, spend, and hire with confidence."
+- **Governance** — "Entity, risk, and advisory scaffolding in place — so you're bankable, insurable, and no longer one bad surprise away from personal exposure."
+- **Brand** *(bonus)* — "A brand system — strategy, messaging, visual brief, voice, guidelines — that earns premium pricing and stops you rebuilding your identity every six months."
+- **Marketing** *(bonus)* — "A complete website PRD ready to hand to an AI builder — launch a revenue-ready site in a weekend instead of paying $20K and waiting three months."
+- **Social & Content** *(bonus)* — "Ninety days of content, a launch kit, and a paid-ads starter pack — a distribution engine that earns attention on repeat instead of costing more each month."
 
-## Out of scope
-- `src/routes/build.tsx`, `src/routes/services.tsx`, `HomeFramework.tsx` Act 2 comment/blurb — these describe the eight Build workshops ("from $197", "$197, $297, or $397"), not the Strategic Foundation Workshop.
-- `build-workshops.ts` per-workshop `priceLabel` values.
-- No DB/schema changes; existing registration rows keep their historical `price_paid_cents`.
+**2. `src/components/register/RegisterFramework.tsx`** — wrap each stage row in the fallback list with a shadcn `Tooltip` (`Tooltip`, `TooltipTrigger`, `TooltipContent`, `TooltipProvider`). Trigger = the existing row (`asChild`), content = `stage.benefit`. Keep the row visually unchanged; add a subtle affordance (`cursor-help` on the trigger). Wrap the `<ul>` in one `TooltipProvider` with `delayDuration={150}`.
+
+No changes to layout, spacing, price card, or the Build-workshops branch.
+
+## Technical notes
+- shadcn tooltip already lives at `src/components/ui/tooltip.tsx` (standard install) — no new deps.
+- On touch devices, Radix tooltip opens on tap; acceptable per request ("tooltips"), no separate mobile treatment.
+- Tooltip content stays short (single sentence) to render cleanly at `max-w-xs`.
 
 ## Verification
-- `rg "WORKSHOP_PRICE_LABEL|WORKSHOP_PRICE_CENTS"` to confirm all consumers pick up the new value.
-- Load `/` and `/register` in preview; confirm CTA reads "$297" and register submit shows "$297".
+- Load `/register` (no `?workshop=` param), hover each of the 8 rows, confirm the correct benefit copy appears.
+- Load `/register?workshop=brand-identity`, confirm no tooltips appear on the walk-outs list (Build branch untouched).

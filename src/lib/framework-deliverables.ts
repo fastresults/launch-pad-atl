@@ -57,6 +57,7 @@ export type FrameworkStage = {
   intro: string;
   items: FrameworkDeliverable[];
   bonus?: boolean;
+  benefit?: string;
 };
 
 // Mirrors the live `venture_document_types` table (active = true, ordered by
@@ -67,6 +68,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     number: "01",
     name: "Foundation",
     intro: "The bedrock every defensible startup is built on.",
+    benefit: "Leave with the one-page story of your startup — vision, problem, and value prop tight enough that customers buy, partners lean in, and hires say yes.",
     items: [
       { icon: FileText, title: "Executive Summary", tooltip: "A one-page snapshot of your startup — what you do, who it's for, how you make money, and why now. Hand it to a banker, partner, or future hire and they'll understand the business in 60 seconds flat." },
       { icon: Eye, title: "Vision & Mission", tooltip: "The north-star statement that keeps every decision pointed the same direction. You'll stop chasing every shiny idea, say no faster, and rally future teammates and customers around a story they actually want to be part of." },
@@ -78,6 +80,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     number: "02",
     name: "Strategy",
     intro: "How you win — and how you compound the lead.",
+    benefit: "Walk out knowing exactly who you sell to, how you beat the alternatives, and the ninety-day plan that turns the strategy into first paying customers.",
     items: [
       { icon: BarChart3, title: "Market Analysis", tooltip: "A grounded read of how big the opportunity really is in your city, category, and price band. You'll stop guessing if demand is real and start sizing spend, hiring, and pricing decisions with actual numbers behind you." },
       { icon: Users, title: "Customer Personas", tooltip: "Vivid profiles of the two or three people most likely to buy — their pain, budget, vocabulary, and buying triggers. Marketing stops being random; every ad, email, and conversation lands with someone you can picture by name." },
@@ -90,6 +93,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     number: "03",
     name: "Operations",
     intro: "What you build, sell, and ship — week after week.",
+    benefit: "The roadmap, weekly workflow, and sales playbook that let you deliver reliably — and hand pieces to a teammate without the business breaking.",
     items: [
       { icon: Map, title: "Product Roadmap", tooltip: "A clear sequence of what you'll launch, in what order, over the next twelve months. You'll stop building features no one asked for, ship the things that drive revenue first, and have a calendar customers can trust." },
       { icon: Settings, title: "Operating Plan", tooltip: "The week-by-week workflow that turns your offer into something you can deliver reliably. You'll stop reinventing every order, free up hours each week, and have something a future hire can actually be trained to run." },
@@ -101,6 +105,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     number: "04",
     name: "Finance",
     intro: "The numbers investors, banks, and you can trust.",
+    benefit: "A twelve-month P&L, unit economics, and funding plan you can defend to a banker or investor — and use yourself to price, spend, and hire with confidence.",
     items: [
       { icon: LineChart, title: "Financial Model", tooltip: "A twelve-month P&L and cash flow you can defend to a banker, partner, or yourself. You'll see exactly when cash gets tight, what a slow month does, and the few levers that actually change the trajectory." },
       { icon: Calculator, title: "Unit Economics", tooltip: "The math on what one customer truly costs to win and what they pay back over time. You'll price with confidence, kill unprofitable offers, and finally know whether spending more on marketing makes you more money or less." },
@@ -113,6 +118,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     number: "05",
     name: "Governance",
     intro: "The legal and risk scaffolding that keeps you bankable.",
+    benefit: "Entity, risk, and advisory scaffolding in place — so you're bankable, insurable, and no longer one bad surprise away from personal exposure.",
     items: [
       { icon: Scale, title: "Legal Structure Brief", tooltip: "A plain-English recommendation on entity, ownership, and the contracts you actually need on day one. You'll set up the business correctly the first time, protect your personal assets, and avoid the legal cleanup bills founders pay later." },
       { icon: ShieldAlert, title: "Risk Register", tooltip: "An honest list of what could derail the business — and the specific moves that defuse each one. You'll sleep better, get insurance priced right, and stop being blindsided by the predictable problems every small business hits." },
@@ -124,6 +130,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     name: "Brand",
     bonus: true,
     intro: "An identity worth premium pricing — system, not stickers.",
+    benefit: "A brand system — strategy, messaging, visual brief, voice, guidelines — that earns premium pricing and stops you rebuilding your identity every six months.",
     items: [
       { icon: Compass, title: "Brand Strategy Framework", tooltip: "The strategic foundation under your brand — purpose, promise, audience, positioning. Every logo, color, and word downstream has a reason behind it, and you stop redoing your brand every time something feels off." },
       { icon: MessageCircle, title: "Brand Messaging House", tooltip: "Your headline, supporting messages, and proof — organized so every page, post, and pitch pulls from the same well. You'll write faster, sound consistent everywhere, and stop staring at a blinking cursor wondering what to say." },
@@ -137,6 +144,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     name: "Marketing",
     bonus: true,
     intro: "The AI-builder prompt that ships your site in a weekend.",
+    benefit: "A complete website PRD ready to hand to an AI builder — launch a revenue-ready site in a weekend instead of paying $20K and waiting three months.",
     items: [
       { icon: Globe, title: "Website PRD (AI-builder prompt)", tooltip: "A complete product requirements document — pages, copy, sections, calls to action — written so an AI builder can ship your site in a weekend. You'll skip the $20K agency quote and launch a real revenue-ready website fast." },
     ],
@@ -146,6 +154,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     name: "Social & Content",
     bonus: true,
     intro: "The distribution engine that earns attention on repeat.",
+    benefit: "Ninety days of content, a launch kit, and a paid-ads starter pack — a distribution engine that earns attention on repeat instead of costing more each month.",
     items: [
       { icon: Share2, title: "Social Media Audit & Setup", tooltip: "A clean review of your current accounts plus the right handles, bios, and links across the platforms your customers actually use. You'll show up looking professional everywhere — and stop losing customers to a stale profile." },
       { icon: Layers, title: "Content Strategy & Pillars", tooltip: "Three to five content themes that consistently attract your buyer and reinforce your positioning. You'll stop posting random updates, build a recognizable voice, and have a topic to write about every single time you sit down." },
