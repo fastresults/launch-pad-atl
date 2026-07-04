@@ -125,6 +125,10 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Megaphone, title: "Marketing Plan", tooltip: "Your channels, monthly spend, content cadence, and the metrics that tell you what's working. Marketing stops being a guessing game; you spend dollars where they return dollars and quietly turn off everything that doesn't." },
       { icon: Package, title: "Fulfillment SOP", tooltip: "The step-by-step of how order number one through ten actually gets delivered — with time and cost per unit. You'll ship the first sale without scrambling, know your true margin, and hand fulfillment to a teammate without the business breaking." },
       { icon: LifeBuoy, title: "Customer Support Starter", tooltip: "A shared support inbox, response SLA, canned replies, and refund and return rules — ready before day fifteen problems arrive. You'll answer the first customer question inside an hour and never lose a buyer to silence." },
+      { icon: CalendarDays, title: "Booking & Calendar Setup", tooltip: "Cal.com or Calendly event types tuned to your sales motion — discovery, working session, onboarding — with routing, reminders, and confirmation copy. You'll stop trading emails to book a call and start Day 6 with a real link to send." },
+      { icon: Mic, title: "Sales Call Recording Stack", tooltip: "Fathom, Grain, or Fireflies wired up with an AI summary template, tagging convention, and a call-to-content pipeline. You'll stop forgetting what the customer said and start turning every conversation into product and marketing fuel." },
+      { icon: LifeBuoy, title: "AI Support Bot Setup", tooltip: "A Chatbase or Intercom Fin bot trained on your own docs, with guardrails and escalation to your support inbox. You'll deflect the easy 60% of tickets on Day 12 and only see the questions that actually need a human." },
+      { icon: Zap, title: "Automation Recipes Starter", tooltip: "Five n8n, Zapier, or Make workflows tuned to your stack — lead → CRM + Slack, sale → welcome + review ask, weekly KPI digest, form → booking, review → wall-of-love. You'll stop doing repetitive work by Week 2." },
     ],
   },
   {
