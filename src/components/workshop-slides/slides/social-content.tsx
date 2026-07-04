@@ -139,11 +139,14 @@ export const socialContentSlides: Slide[] = [
       </SlideLayout>
     ),
   },
+  // Productization slides (Build tool · Live worksheet · Ship-ready artifact · Take-home kit)
+  ...buildProductizationSlides("social-and-content", KICKER, PROD, pl, undefined),
+
   ...STAGE.items.map((item, i) => ({
     id: `deliv-${i}`,
     title: item.title,
     render: () => (
-      <DeliverableSlide stageKicker={KICKER} pageLabel={pl(6 + i)} index={i + 1} total={TOTAL_DELIVS} deliverable={item} />
+      <DeliverableSlide stageKicker={KICKER} pageLabel={pl(10 + i)} index={i + 1} total={TOTAL_DELIVS} deliverable={item} detail={PROD.deliverableDetails[i]} />
     ),
   })),
   {

@@ -295,6 +295,9 @@ export const financeSlides: Slide[] = [
       </SlideLayout>
     ),
   },
+  // Productization slides (Build tool · Live worksheet · Ship-ready artifact · Take-home kit)
+  ...buildProductizationSlides("finance", KICKER, PROD, pl, FRAMEWORK_STAGES[4]?.name),
+
   ...STAGE.items.map((item, i) => {
     const art = DELIV_IMAGES[i];
     return {
@@ -303,13 +306,14 @@ export const financeSlides: Slide[] = [
       render: () => (
         <DeliverableSlide
           stageKicker={KICKER}
-          pageLabel={pl(6 + i)}
+          pageLabel={pl(10 + i)}
           index={i + 1}
           total={TOTAL_DELIVS}
           deliverable={item}
           slideId={`deliv-${i}`}
           imageSrc={art?.src}
           imageAlt={art?.alt}
+          detail={PROD.deliverableDetails[i]}
         />
       ),
     };
