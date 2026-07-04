@@ -1,16 +1,26 @@
-## Change
-Remove hardcoded stack names (Webflow / Framer / custom) from the `website-that-converts` workshop copy so it reads as platform-agnostic.
 
-## File: `src/lib/build-workshops.ts` (website-that-converts entry)
+## Goal
+Update the Strategic Foundation Workshop price from **$197 → $297** everywhere it appears. Leave the eight Build workshops (`brand-identity`, `website-that-converts`, etc.) untouched — they keep their own tiered pricing.
 
-1. **Walk-out (line 217)**  
-   From: `"Stack decision — Webflow vs Framer vs custom — with a 12-month cost projection"`  
-   To: `"Stack decision in writing — the right platform for your team, with a 12-month cost projection"`
+## Scope
+The Strategic Foundation Workshop price is centralized in two constants used by `/`, `/register`, and the chatbot knowledge base. The eight Build workshops carry their own `priceLabel` in `src/lib/build-workshops.ts` and are NOT part of this change.
 
-2. **Agenda close block (line 243)** — no change needed; already generic ("the stack decision in writing").
+## Changes
 
-3. **Decision body (line 278–279)**  
-   From: `"…You'll also know whether to ship it on Webflow, Framer, or hand it to our team — with the 12-month cost math on the table."`  
-   To: `"…You'll also leave with the stack decision in writing — the right platform for your team (or hand it to ours) — with the 12-month cost math on the table."`
+**`src/lib/framework-deliverables.ts`**
+- `WORKSHOP_PRICE_CENTS`: `19700` → `29700`
+- `WORKSHOP_PRICE_LABEL`: `"$197"` → `"$297"`
 
-No other content, pricing, or structural changes.
+That single edit cascades to:
+- `HomeFramework.tsx` hero CTA — "Reserve your seat — $297"
+- `RegisterFramework.tsx` eyebrow, submit CTA, and `price_paid_cents` on registration insert
+- `chatbot-knowledge.ts` pricing line
+
+## Out of scope
+- `src/routes/build.tsx`, `src/routes/services.tsx`, `HomeFramework.tsx` Act 2 comment/blurb — these describe the eight Build workshops ("from $197", "$197, $297, or $397"), not the Strategic Foundation Workshop.
+- `build-workshops.ts` per-workshop `priceLabel` values.
+- No DB/schema changes; existing registration rows keep their historical `price_paid_cents`.
+
+## Verification
+- `rg "WORKSHOP_PRICE_LABEL|WORKSHOP_PRICE_CENTS"` to confirm all consumers pick up the new value.
+- Load `/` and `/register` in preview; confirm CTA reads "$297" and register submit shows "$297".

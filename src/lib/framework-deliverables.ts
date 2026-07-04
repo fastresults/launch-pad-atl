@@ -41,8 +41,8 @@ import {
 } from "lucide-react";
 
 
-export const WORKSHOP_PRICE_CENTS = 19700;
-export const WORKSHOP_PRICE_LABEL = "$197";
+export const WORKSHOP_PRICE_CENTS = 29700;
+export const WORKSHOP_PRICE_LABEL = "$297";
 
 export type FrameworkDeliverable = {
   icon: LucideIcon;
