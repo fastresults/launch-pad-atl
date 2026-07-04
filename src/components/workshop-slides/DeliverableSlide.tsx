@@ -1,6 +1,8 @@
 import type { FrameworkDeliverable } from "@/lib/framework-deliverables";
+import type { DeliverableDetail } from "@/lib/workshop-productization";
 import { SlideLayout } from "./SlideLayout";
 import { SlotImage } from "./slots";
+import { Wrench, ArrowDownToLine, Sparkles } from "lucide-react";
 
 type Props = {
   stageKicker: string;
@@ -14,12 +16,18 @@ type Props = {
   /** Default illustration src (New Yorker–style art). Falls back to the deliverable icon. */
   imageSrc?: string;
   imageAlt?: string;
+  /**
+   * Optional productization overlay — the build mechanic, prior-stage inputs,
+   * and the one-line takeaway a founder can say when they leave.
+   * Omitted on Foundation, which is drafted live without a generator.
+   */
+  detail?: DeliverableDetail;
 };
 
 /**
  * Reusable "one slide per deliverable" template.
- * Reads icon + title + tooltip from FRAMEWORK_STAGES so the other 7 stages
- * inherit this layout for free.
+ * When `detail` is provided, the slide gains three "build/inputs/takeaway"
+ * cards under the tooltip so post-Foundation stages feel productized.
  */
 export function DeliverableSlide({
   stageKicker,
@@ -31,21 +39,54 @@ export function DeliverableSlide({
   slideId,
   imageSrc,
   imageAlt,
+  detail,
 }: Props) {
   const Icon = deliverable.icon;
   return (
     <SlideLayout stageKicker={stageKicker} pageLabel={pageLabel} variant={variant}>
-      <div className="grid grid-cols-12 gap-12 items-center">
-        <div className="col-span-7">
+      <div className="grid grid-cols-12 gap-10 items-start">
+        <div className={detail ? "col-span-8" : "col-span-7"}>
           <div className="slide-kicker font-semibold text-primary mb-6">
             Deliverable {String(index).padStart(2, "0")} / {String(total).padStart(2, "0")}
           </div>
           <h2 className="slide-title font-semibold tracking-tight">{deliverable.title}</h2>
-          <p className="slide-body-lg mt-10 max-w-[850px] text-muted-foreground">
+          <p className={`slide-body-lg mt-8 max-w-[850px] ${variant === "dark" ? "text-white/80" : "text-muted-foreground"}`}>
             {deliverable.tooltip}
           </p>
+
+          {detail && (
+            <div className="mt-8 grid grid-cols-1 gap-3">
+              <div className="rounded-2xl border bg-card p-4 flex items-start gap-4">
+                <Wrench className="text-primary shrink-0 mt-1" style={{ width: 24, height: 24 }} />
+                <div>
+                  <div className="slide-caption font-semibold uppercase tracking-wider text-primary mb-1">
+                    Build mechanic
+                  </div>
+                  <div className="slide-body">{detail.buildMechanic}</div>
+                </div>
+              </div>
+              <div className="rounded-2xl border bg-card p-4 flex items-start gap-4">
+                <ArrowDownToLine className="text-primary shrink-0 mt-1" style={{ width: 24, height: 24 }} />
+                <div>
+                  <div className="slide-caption font-semibold uppercase tracking-wider text-primary mb-1">
+                    Inherits from
+                  </div>
+                  <div className="slide-body">{detail.inputs.join(" · ")}</div>
+                </div>
+              </div>
+              <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-4 flex items-start gap-4">
+                <Sparkles className="text-primary shrink-0 mt-1" style={{ width: 24, height: 24 }} />
+                <div>
+                  <div className="slide-caption font-semibold uppercase tracking-wider text-primary mb-1">
+                    What you can say Monday
+                  </div>
+                  <div className="slide-body font-medium">{detail.takeaway}</div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-        <div className="col-span-5 flex items-center justify-center">
+        <div className={`${detail ? "col-span-4" : "col-span-5"} flex items-center justify-center`}>
           {imageSrc && slideId ? (
             <SlotImage
               slideId={slideId}
