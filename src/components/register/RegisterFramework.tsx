@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,6 +16,7 @@ import {
   WORKSHOP_PRICE_CENTS,
   WORKSHOP_PRICE_LABEL,
 } from "@/lib/framework-deliverables";
+import { getBuildWorkshop } from "@/lib/build-workshops";
 import { ArrowRight, Check, CheckCircle2, Sparkles, CalendarDays } from "lucide-react";
 
 const FormSchema = z.object({
@@ -39,6 +40,36 @@ export function RegisterFramework() {
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
+  // Context: which workshop is the user registering for?
+  const [params] = useSearchParams();
+  const workshopSlug = params.get("workshop");
+  const preselectedDateIso = params.get("date");
+  const buildWorkshop = workshopSlug ? getBuildWorkshop(workshopSlug) : undefined;
+
+  const ctx = buildWorkshop
+    ? {
+        eyebrow: `${buildWorkshop.title} · ${buildWorkshop.priceLabel}`,
+        heroTitleLead: buildWorkshop.oneLiner,
+        heroTitleEmphasis: null as string | null,
+        heroBlurb: buildWorkshop.subhead,
+        asideBlurb: `${buildWorkshop.title} — small cohort, working session with Adam Anderson. Live online. Coffee optional.`,
+        walkOuts: buildWorkshop.walkOuts as string[] | null,
+        priceLabel: buildWorkshop.priceLabel,
+        priceCents: 19_700,
+        footerLine: `${buildWorkshop.walkOuts.length} deliverables · built live with Adam · yours to keep.`,
+      }
+    : {
+        eyebrow: `Strategic Foundation Workshop · ${WORKSHOP_PRICE_LABEL}`,
+        heroTitleLead: "Reserve your seat —",
+        heroTitleEmphasis: `${WORKSHOP_PRICE_LABEL}.`,
+        heroBlurb: "Walk out with the strategic foundation for your startup: positioning, ideal customer, offer & pricing, 12-month economics, a 90-day roadmap, and a build/hire/buy decision tree. Coffee and refreshments included.",
+        asideBlurb: "Strategic Foundation Workshop — small cohort, working session with Adam Anderson. Coffee and light refreshments provided.",
+        walkOuts: null as string[] | null,
+        priceLabel: WORKSHOP_PRICE_LABEL,
+        priceCents: WORKSHOP_PRICE_CENTS,
+        footerLine: `${TOTAL_DELIVERABLES} startup assets total · built live with Adam · yours to keep.`,
+      };
+
   const { data: cohorts = [] } = useQuery<Cohort[]>({
     queryKey: ["cohorts"],
     queryFn: () => listCohorts(),
@@ -49,19 +80,28 @@ export function RegisterFramework() {
     () => cohorts.filter((c) => c.status !== "sold_out"),
     [cohorts],
   );
-  const defaultCohort = useMemo(
-    () => getNextAvailable(openCohorts) ?? FALLBACK_COHORT,
-    [openCohorts],
-  );
+  const defaultCohort = useMemo(() => {
+    if (preselectedDateIso) {
+      const match = openCohorts.find((c) => c.startISO === preselectedDateIso);
+      if (match) return match;
+    }
+    return getNextAvailable(openCohorts) ?? FALLBACK_COHORT;
+  }, [openCohorts, preselectedDateIso]);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: { stage: "idea", industry: "", cohort_id: defaultCohort.id },
   });
+
+  // Keep cohort_id in sync once cohorts load or preselected date resolves.
+  useEffect(() => {
+    setValue("cohort_id", defaultCohort.id);
+  }, [defaultCohort.id, setValue]);
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
@@ -70,7 +110,7 @@ export function RegisterFramework() {
         ...values,
         tier_interest: "cohort",
         assigned_tier: "cohort",
-        price_paid_cents: WORKSHOP_PRICE_CENTS,
+        price_paid_cents: ctx.priceCents,
       });
       setSubmitted(true);
       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -86,14 +126,20 @@ export function RegisterFramework() {
       <section className="border-b border-white/5 py-12 md:py-20">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-            <Sparkles className="size-3.5" /> Strategic Foundation Workshop · {WORKSHOP_PRICE_LABEL}
+            <Sparkles className="size-3.5" /> {ctx.eyebrow}
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
-            Reserve your seat —{" "}
-            <span className="text-gradient-brand">{WORKSHOP_PRICE_LABEL}.</span>
+            {ctx.heroTitleEmphasis ? (
+              <>
+                {ctx.heroTitleLead}{" "}
+                <span className="text-gradient-brand">{ctx.heroTitleEmphasis}</span>
+              </>
+            ) : (
+              <span className="text-gradient-brand">{ctx.heroTitleLead}</span>
+            )}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
-            Walk out with the strategic foundation for your startup: positioning, ideal customer, offer & pricing, 12-month economics, a 90-day roadmap, and a build/hire/buy decision tree. Coffee and refreshments included.
+            {ctx.heroBlurb}
           </p>
 
         </div>
@@ -199,7 +245,7 @@ export function RegisterFramework() {
                 disabled={isSubmitting}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white hover:opacity-90 disabled:opacity-60"
               >
-                {isSubmitting ? "Reserving…" : `Reserve seat — ${WORKSHOP_PRICE_LABEL}`}
+                {isSubmitting ? "Reserving…" : `Reserve seat — ${ctx.priceLabel}`}
                 {!isSubmitting && <ArrowRight className="size-4" />}
               </button>
               <p className="text-center text-xs text-muted-foreground">
@@ -211,36 +257,47 @@ export function RegisterFramework() {
           <aside className="space-y-6">
             <div className="rounded-2xl border border-white/10 bg-card p-6 md:p-8">
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-semibold tabular-nums md:text-5xl">{WORKSHOP_PRICE_LABEL}</span>
+                <span className="text-4xl font-semibold tabular-nums md:text-5xl">{ctx.priceLabel}</span>
                 <span className="text-sm text-muted-foreground">one-time</span>
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
-                Strategic Foundation Workshop — small cohort, working session with Adam Anderson. Coffee and light refreshments provided.
+                {ctx.asideBlurb}
               </p>
 
               <div className="mt-6 text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 What you walk out with
               </div>
-              <ul className="mt-3 space-y-3 text-sm">
-                {FRAMEWORK_STAGES.map((stage) => (
-                  <li key={stage.number} className="flex gap-3">
-                    <Check className="mt-0.5 size-4 shrink-0 text-primary" />
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2 font-medium">
-                        <span>Stage {Number(stage.number)} · {stage.items.length} startup assets</span>
-                        {stage.bonus && (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.18em] text-white">
-                            <Sparkles className="size-2.5" /> Bonus
-                          </span>
-                        )}
+              {ctx.walkOuts ? (
+                <ul className="mt-3 space-y-3 text-sm">
+                  {ctx.walkOuts.map((item) => (
+                    <li key={item} className="flex gap-3">
+                      <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                      <span className="font-medium leading-snug">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="mt-3 space-y-3 text-sm">
+                  {FRAMEWORK_STAGES.map((stage) => (
+                    <li key={stage.number} className="flex gap-3">
+                      <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2 font-medium">
+                          <span>Stage {Number(stage.number)} · {stage.items.length} startup assets</span>
+                          {stage.bonus && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.18em] text-white">
+                              <Sparkles className="size-2.5" /> Bonus
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{stage.name}</div>
                       </div>
-                      <div className="text-xs text-muted-foreground">{stage.name}</div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
+              )}
               <div className="mt-3 text-xs text-muted-foreground">
-                {TOTAL_DELIVERABLES} startup assets total · built live with Adam · yours to keep.
+                {ctx.footerLine}
               </div>
               <div className="mt-6 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs text-muted-foreground">
                 <CalendarDays className="size-4 shrink-0" />
