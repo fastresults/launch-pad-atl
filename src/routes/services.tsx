@@ -168,7 +168,7 @@ function Tracks() {
           <span className="text-gradient-brand">Pick the one that matches the stage you're in.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          You don't buy eight things at once. You buy the right three. Each track bundles the capabilities that compound together — at a price that beats hiring them à la carte.
+          You don't buy eight things at once. You buy the right three. Each track bundles the capabilities that compound together — scoped honestly to what your startup actually needs, priced after a short discovery call.
         </p>
 
         <div className="mt-12 grid gap-5 md:grid-cols-3">
@@ -251,7 +251,7 @@ const PROCESS_STEPS = [
   {
     icon: FileText,
     title: "Scope",
-    detail: "Fixed price, fixed startup assets, fixed clock. No T&M, no surprise invoices.",
+    detail: "Fixed scope, fixed startup assets, fixed clock — set together in discovery. Flat fee, no T&M, no surprise invoices.",
   },
   {
     icon: Hammer,
@@ -338,8 +338,8 @@ function Proof() {
               No handoffs to a junior team
             </h2>
             <p className="text-2xl font-semibold tracking-tight md:text-3xl lg:text-4xl">
-              The same operators who'd charge $50K elsewhere —{" "}
-              <span className="text-gradient-brand">working on your business this month.</span>
+              The same operators who'd cost a multiple elsewhere —{" "}
+              <span className="text-gradient-brand">scoped honestly to what your startup actually needs.</span>
             </p>
             <p className="mt-5 text-muted-foreground">
               We've shipped work for Citigroup, Mayo Clinic, 3M, and Disney. Built full digital systems for a Caribbean nation's government. Produced one of the region's biggest business summits for five years running. And we've started enough of our own companies to know which corners cost you later.
@@ -369,7 +369,7 @@ function WorkshopBand() {
             <span className="text-gradient-brand">Hire us if it's a fit.</span>
           </h2>
           <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-            Take any of the eight workshops — $197, $297, or $397 depending on the capability. You leave with the strategy, the frameworks, and the exact tool stack to ship it yourself. Decide in the room whether to DIY, hire someone else, or hand it to our team. If you hire us for any engagement over $1,000, your workshop fee is credited back.
+            Take any of the eight workshops — $197, $297, or $397 depending on the capability. You leave with the strategy, the frameworks, and the exact tool stack to ship it yourself. Decide in the room whether to DIY, hire someone else, or hand it to our team. If you hire us for any bespoke engagement after, your workshop fee is credited back against the scope.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link

@@ -1,70 +1,40 @@
 ## Goal
 
-Set attendee expectations that post-Foundation workshops are qualitatively different from Foundation — not because staff "produce agency deliverables for you," but because each session shifts into **mentored review, expert perspective, and directional guidance** applied to the founder's specific startup, using Foundation as the source of truth.
+Remove all agency service pricing (and fixed timelines) from the Services page and replace with a clear "book a discovery call → bespoke quote" framing. Workshop pricing ($197/$297/$397) stays — those are fixed-price products, not bespoke engagements.
 
-## The framing to introduce
+## Scope
 
-One-liner used consistently across surfaces:
+Two files:
+- `src/lib/agency-services.ts`
+- `src/routes/services.tsx`
 
-> **Foundation** is where you draft the core of your startup. **Every stage after Foundation** is a mentored working session — expert perspective, live review, and direction applied to your specific context, using your Foundation inputs as the starting point.
+Everything else (workshops, schedule, hub, etc.) is untouched.
 
-Supporting language cues (used verbatim, no production/agency-output promises):
-- "Mentored working session"
-- "Expert perspective on your specific startup"
-- "Live review, redirection, and sharpening"
-- "You bring the draft; the room pressure-tests it"
-- "Direction you would normally pay a mentor or advisor for"
+## Changes
 
-Explicitly avoid: "we build it for you," "agency-grade deliverable," "$X agency retainer," "done-for-you."
+### 1. `src/lib/agency-services.ts`
 
-## Where the framing lands
+- Keep the `priceLabel` and `timelineLabel` fields on the types (avoid ripple typing changes), but replace every value across all 8 individual services and all 3 tracks (Launch / Growth / Operate) with neutral, scope-based copy:
+  - `priceLabel` → `"Scoped to your startup"` (or per-item variants like `"Scoped per engagement"`, `"Scoped monthly retainer"` for the ongoing one)
+  - `timelineLabel` → `"Timeline set in discovery"` (or `"Ongoing — cadence set in discovery"` for retainers)
+- No structural changes; downstream renderers keep working.
 
-### 1. New "How this session works" slide (post-Foundation decks only)
-Insert one new slide after the existing intro slide in each of the 7 post-Foundation decks. Shared component `MentoredSessionSlide` in `ProductizationSlides.tsx`:
-- Left column: "What you bring" — your Foundation drafts + a working attempt at this stage's questions
-- Middle: "What happens in the room" — expert review, targeted questions, redirection, pattern-matching against other startups
-- Right column: "What you leave with" — a sharper version of your own thinking, plus artifacts you can keep iterating on
-- Small footnote reinforcing: outputs live on your dashboard, revisable anytime
+### 2. `src/routes/services.tsx`
 
-Each post-Foundation deck grows by one slide (bump `TOTAL_SLIDES` and `pl(11+i)` offsets in the 7 files).
+- **Service cards (line ~131):** keep the `priceLabel` slot rendering, now showing "Scoped to your startup"; CTA remains "Book a scoping call".
+- **Track cards (lines ~219–221, incl. the screenshot's `FROM $4,875 / $2,925/mo / $5,200` + `4–6 weeks / Ongoing / 30-day sprint`):** replace the price+timeline row with a single line: *"Bespoke scope — priced after a 20-min discovery call"*. Sub-line: track cadence descriptor (e.g., "Sprint engagement", "Monthly retainer", "30-day sprint") kept as qualitative, not a price anchor.
+- **"Fixed price, fixed scope, fixed clock" reassurance block (~line 254):** rewrite to reinforce the new promise — *"Fixed scope and fixed clock, set together in discovery. Flat fee, no T&M, no surprise invoices."*
+- **"$50K elsewhere" line (~341):** soften to *"The same operators who'd cost a multiple elsewhere — at Atlanta rates, scoped honestly to what you actually need."* (drops the dollar anchor.)
+- **Workshop credit-back paragraph (~372):** keep workshop $197/$297/$397 (fixed products). Reword the credit-back sentence to: *"If you hire us for any bespoke engagement after, your workshop fee is credited back against the scope."* (removes the `$1,000` threshold anchor.)
+- **DIY workshop cross-sell line (~137):** keep as-is — still references workshop price, which stays.
+- **Hero + "Start with a workshop — from $197" CTAs:** keep. Workshops remain the fixed-price entry point.
 
-### 2. Curriculum copy rewrite (`src/lib/curriculum-data.ts`, stages 2–8)
-- Rewrite each stage `summary` to lead with the mentoring/review frame, not production language
-- Add a new `perspective` field to `Stage`: one line naming the *lens* the session applies (e.g., Strategy → "how an operator sizes a market and picks a wedge"; Finance → "how an investor reads your model"; Brand → "how a brand lead pressure-tests positioning")
-- Rewrite each `walkOut` bullet away from "you receive X" toward "you leave with clearer X, reviewed against Y"
-- Foundation copy reframed explicitly as "the only stage that is pure drafting — every stage after is mentored review of your work"
+### Out of scope
 
-### 3. Schedule page (`src/routes/schedule.tsx`)
-- Add a short callout above the post-Foundation session list: "How post-Foundation sessions work — you arrive with a working draft; the session sharpens it with expert perspective"
-- Session subtitles gain a small tag: "Mentored working session"
+- Workshop pricing everywhere it appears.
+- Contact form, calendar link, `/contact` route wiring — the "Book a scoping call" buttons already point at the discovery flow.
+- No copy changes to schedule, hub, or curriculum pages.
 
-### 4. Post-Foundation stage banner on `/build/[stage]` routes
-- Persistent banner on stages 2–8: "Mentored working session · expert perspective applied to your Foundation inputs · revisable anytime"
-- Component: `MentoredSessionBanner` in `src/components/MentoredSessionBanner.tsx`, gated by `stage.id !== "foundation"`
+## Open question
 
-### 5. Productization registry copy pass (`src/lib/workshop-productization.ts`)
-No new fields. Instead, audit `buildMechanic`, `takeaway`, and artifact-preview copy for any phrasing that overpromises production ("we build," "auto-generated for you," "shipped to your dashboard as a finished deliverable") and shift to review/direction language ("you draft in-room and leave with a reviewed version," "sharpened live with staff," "a working artifact you continue to refine"). Artifact structure and generator behavior unchanged — only tone shifts.
-
-## Files touched
-
-- `src/lib/framework-deliverables.ts` — add optional `perspective` to `Stage` type
-- `src/lib/curriculum-data.ts` — rewrite stages 2–8 summary/walkOut, add `perspective`; small Foundation reframe
-- `src/lib/workshop-productization.ts` — copy audit only (no schema change)
-- `src/components/workshop-slides/ProductizationSlides.tsx` — new `MentoredSessionSlide`
-- `src/components/MentoredSessionBanner.tsx` — new component
-- `src/components/workshop-slides/slides/{strategy,operations,finance,governance,brand,marketing,social-content}.tsx` — insert new slide, bump slide counts
-- `src/routes/schedule.tsx` — callout block + session chips
-- `src/routes/build.$stage.tsx` (or equivalent stage route) — mount `MentoredSessionBanner`
-
-## Out of scope
-
-- No generator, edge function, or DB changes
-- No pricing/agency-cost comparisons anywhere
-- Foundation deck untouched except one added sentence positioning it as the drafting stage
-- Existing AI-generated artifacts stay — copy just repositions them as "starting points for your continued work," not finished agency deliverables
-
-## Open questions
-
-1. **Banner persistence** — always-on banner on stages 2–8, or dismissible after first view per stage?
-2. **`perspective` line placement** — surface it only on curriculum cards, or also as a subtitle on the stage's build page and deck intro slide?
-3. **Artifact copy** — keep the current artifact-preview slides and just soften language, or also rename them from "Ship-Ready Artifact" to something like "Working Artifact" / "Reviewed Draft"?
+Confirm: keep the workshop fixed prices ($197 / $297 / $397 and the credit-back mechanic) visible, and only strip the agency-service and track pricing? That's what this plan assumes.
