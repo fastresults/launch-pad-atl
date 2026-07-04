@@ -293,7 +293,7 @@ function WorkshopBand() {
 const FAQS = [
   {
     q: "Do I have to take the workshop first?",
-    a: "No. But it's the cheapest insurance against hiring the wrong thing — and it hands you the strategy, the frameworks, and the tool stack to actually ship it yourself if you want to. Most founders who take it come back with a sharper scope and save more than they spend.",
+    a: "No. But it's the cheapest insurance against hiring the wrong thing — one live morning inside The 14-Day Launch Method hands you the strategy, the playbook, and the tool stack to actually ship it yourself if you want to. Most founders who take it come back with a sharper scope and save more than they spend.",
   },
   {
     q: "Can I bundle just two capabilities instead of a whole track?",
