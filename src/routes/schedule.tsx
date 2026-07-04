@@ -123,6 +123,19 @@ export default function SchedulePage() {
       {/* Timeline */}
       <section className="py-16">
         <div className="mx-auto max-w-4xl px-6">
+          <div className="mb-8 rounded-2xl border border-primary/25 bg-primary/5 p-5 md:p-6">
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+              How the sessions work
+            </div>
+            <p className="text-sm text-foreground/90 md:text-base">
+              <strong>Foundation</strong> is the one drafting stage — you write the core story of
+              your startup with worksheet support. Every session after Foundation is a{" "}
+              <strong>mentored working session</strong>: you arrive with a working attempt, staff
+              apply an expert lens (operator, CFO, brand lead, distribution lead) to your specific
+              startup, and you leave with reviewed working drafts you continue to sharpen on your
+              dashboard.
+            </p>
+          </div>
           <ol className="relative space-y-6 border-l border-white/15 pl-6">
             {SCHEDULE.map((s, i) => {
               const stage = s.stage ? STAGES[s.stage - 1] : null;
