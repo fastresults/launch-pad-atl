@@ -23,6 +23,7 @@ export default function BuildWorkshopPage() {
   const Icon = w.icon;
   const offer = getWorkshopAgencyOffer(w.slug)!;
   const otherWorkshops = BUILD_WORKSHOPS.filter((x) => x.slug !== w.slug).slice(0, 3);
+  const upcoming = getUpcomingSessions(w.slug, new Date(), 12);
 
   return (
     <div className="min-h-screen">
