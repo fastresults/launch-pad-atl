@@ -247,6 +247,9 @@ export default function SchedulePage() {
 
           {/* Footer CTA tile */}
           <div className="mt-16 rounded-2xl border border-white/10 bg-card p-6 text-center md:p-10">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-gradient-brand md:tracking-[0.2em]">
+              Strategic Foundation Workshop
+            </p>
             <h3 className="text-2xl font-semibold tracking-tight md:text-3xl">
               One day. One door. Twenty seats.
             </h3>
