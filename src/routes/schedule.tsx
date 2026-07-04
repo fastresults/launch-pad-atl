@@ -26,11 +26,16 @@ export default function SchedulePage() {
   // Scroll to #stage-N anchors when navigating from the home flow strip
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const prevTitle = document.title;
+    document.title = "Schedule — Strategic Foundation Workshop";
     const id = window.location.hash.replace("#", "");
     if (id) {
       const el = document.getElementById(id);
       if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
     }
+    return () => {
+      document.title = prevTitle;
+    };
   }, []);
 
   return (
