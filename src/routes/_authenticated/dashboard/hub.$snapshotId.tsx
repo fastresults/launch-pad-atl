@@ -1376,7 +1376,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             />
             <CollapsibleContent
               id={contentId}
-              className="data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden"
+              className="overflow-hidden data-[state=closed]:hidden"
             >
               <div className="grid gap-3 pt-1 md:grid-cols-2">
             {items.map((t) => {
