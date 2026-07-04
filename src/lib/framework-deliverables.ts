@@ -37,8 +37,25 @@ import {
   TrendingUp,
   Zap,
   Mail,
+  CalendarClock,
+  ListChecks,
+  Beaker,
+  Package,
+  LifeBuoy,
+  CreditCard,
+  Building2,
+  Tag,
+  FileCheck,
+  Umbrella,
+  FileSignature,
+  AtSign,
+  Activity,
+  MousePointerClick,
+  MessageSquareQuote,
+  Send,
   type LucideIcon,
 } from "lucide-react";
+
 
 
 export const WORKSHOP_PRICE_CENTS = 29700;
