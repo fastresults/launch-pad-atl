@@ -127,7 +127,7 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       key: "hub",
       to: "/dashboard/hub",
       label: "Ventures",
-      tooltip: "Every startup concept you've explored, with its own 34-document workspace. Drop in a URL or describe an idea, then star favorites, archive what's noise, and reopen anything to keep refining.",
+      tooltip: "Every startup concept you've explored, with its own 50-document workspace. Drop in a URL or describe an idea, then star favorites, archive what's noise, and reopen anything to keep refining.",
       icon: Sparkles,
       hide: !hubVisible,
     },

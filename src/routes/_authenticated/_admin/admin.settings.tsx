@@ -87,7 +87,7 @@ const NAV_META: Record<DashboardNavKey, { label: string; icon: typeof Home; help
   workshop: { label: "Workshop day", icon: Calendar, helper: "Reservation details, venue, agenda for the cohort day." },
   brief: { label: "Startup brief", icon: ClipboardList, helper: "The 10-question brief that feeds every deliverable." },
   deliverables: { label: "Deliverables", icon: ListChecks, helper: "Generate and view the 20 investor-ready documents." },
-  hub: { label: "Ventures", icon: Sparkles, helper: "Concept explorer with a 34-document workspace per venture." },
+  hub: { label: "Ventures", icon: Sparkles, helper: "Concept explorer with a 50-document workspace per venture." },
   files: { label: "My files", icon: FolderOpen, helper: "Saved documents, uploads, brand media and PDFs." },
   profile: { label: "Founder profile", icon: User, helper: "Founder details, startup info and financial snapshot." },
 };
@@ -223,7 +223,7 @@ function BulkUnlockSettings() {
         <h2 className="text-lg font-semibold">Bulk-generation unlock</h2>
       </div>
       <p className="mb-6 text-sm text-muted-foreground">
-        The Hub default is category-by-category (Foundation → Strategy → …). Founders can run all 34 documents
+        The Hub default is category-by-category (Foundation → Strategy → …). Founders can run all 50 documents
         at once only when they enter a valid unlock code. Set one global code that works for everyone, or
         assign a per-user code that overrides it.
       </p>
