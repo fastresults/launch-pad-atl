@@ -256,8 +256,8 @@ export default function SchedulePage() {
               One day. One door. Twenty seats.
             </h3>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              Idea in at 8:45 AM. All 5 pillars in hand by 11:30 AM — and the same
-              framework live on your dashboard, with 3 bonus tracks ready to unlock.
+              Idea in at 8:45 AM. Five pillars done, three bonus tracks shipped, and up to
+              30 AI-generated documents in your dashboard by 11:30 AM.
             </p>
             <div className="mt-6 flex justify-center">
               <Link
