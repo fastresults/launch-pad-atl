@@ -134,6 +134,9 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Banknote, title: "Funding Strategy", tooltip: "A clear-eyed plan for how you'll fund the business — bootstrap, savings, grants, a loan, friends and family, or investors. You'll stop chasing the wrong kind of money and pursue the cheapest capital that actually fits." },
       { icon: ClipboardList, title: "Budget & Pro Forma", tooltip: "A line-by-line budget and forecast tied to real assumptions about your market and pricing. You'll walk into a bank, an SBA meeting, or a landlord conversation with the document they expect — and be taken seriously immediately." },
       { icon: Presentation, title: "Pitch Deck Outline", tooltip: "A tight slide-by-slide outline of the story that gets a partner, investor, or first big customer to lean in. You'll stop rebuilding decks from scratch and have a narrative spine you reuse for every important conversation." },
+      { icon: CreditCard, title: "Payments & Checkout Setup", tooltip: "A live Stripe account, tax and payout wired, receipts branded, and one working checkout link tied to your offer. You'll actually collect money on day fourteen instead of promising invoices you can't send." },
+      { icon: Building2, title: "Business Bank & Bookkeeping Starter", tooltip: "Business bank account opened, debit card in hand, books tool connected, and a clean chart of accounts seeded to your model. You'll separate personal and business from dollar one and never dread tax season again." },
+      { icon: Tag, title: "Pricing Page & Offer Sheet", tooltip: "Your packaged tiers, terms, what's included, and what's not — the artifact your checkout link points at and your sales conversations close against. You'll stop negotiating from scratch and start protecting your margin on every deal." },
     ],
   },
   {
