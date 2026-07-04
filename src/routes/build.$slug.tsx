@@ -87,8 +87,8 @@ export default function BuildWorkshopPage() {
               <Calendar className="size-4" /> Upcoming dates · {w.title}
             </div>
             <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-              Pick your session.{" "}
-              <span className="text-gradient-brand">Reserve your seat.</span>
+              {w.title} —{" "}
+              <span className="text-gradient-brand">pick your session.</span>
             </h2>
             <ul className="mt-8 grid gap-3 sm:grid-cols-2">
               {upcoming.map((s) => (
