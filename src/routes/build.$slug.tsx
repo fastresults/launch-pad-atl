@@ -97,6 +97,7 @@ export default function BuildWorkshopPage() {
                   className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-card px-5 py-4"
                 >
                   <div>
+                    <div className="mb-1 text-xs uppercase tracking-[0.16em] text-primary">{w.title}</div>
                     <div className="text-base font-medium tracking-tight">{s.dateLabel}</div>
                     <div className="text-sm text-muted-foreground">{s.timeLabel}</div>
                   </div>
