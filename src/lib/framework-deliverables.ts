@@ -173,6 +173,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Palette, title: "Visual Identity Brief", tooltip: "A clear brief for the logo, colors, type, and visual feel — ready to hand to a designer or an AI tool. You'll skip months of revisions, get an identity you actually love, and look credible from day one." },
       { icon: Mic, title: "Brand Voice & Tone Guide", tooltip: "How your brand sounds — word choice, rhythm, what to avoid — so anyone writing for you sounds like you. Founders, contractors, and AI tools all produce on-brand copy without you rewriting every sentence yourself." },
       { icon: BookOpen, title: "Brand Guidelines Book", tooltip: "One document that holds your logo rules, colors, type, voice, and examples in one place. Hand it to any vendor, freelancer, or new hire and they'll produce on-brand work without forty rounds of feedback from you." },
+      { icon: Palette, title: "Logo & Brand Asset Pack", tooltip: "AI-generation prompts for logo, favicon, OG image, avatar, and email banner — with the exact sizes and formats. You'll walk into Day 11 with everything you need to ship a site that looks like a real brand, not an AI demo." },
     ],
   },
   {
