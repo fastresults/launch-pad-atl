@@ -1,77 +1,63 @@
-# 14-Day Launch Method — Asset Audit
+# Integration Pass — Wire the 16 New Assets Into the Generation Pipeline
 
-Reviewed all 34 deliverables in `src/lib/framework-deliverables.ts` across Foundation, Strategy, Operations, Finance, Governance, Brand, Marketing, and Social & Content, plus the `BUILD_LAYER` execution pieces.
+The 16 new asset rows exist in `venture_document_types`, but they will currently generate with the generic `BASE_SYSTEM_PROMPT` and a NULL `context_keys` slice. That produces generic advice instead of the paste-ready artifacts the existing 34 emit. This pass closes those gaps so the new assets behave like first-class citizens end-to-end.
 
-Verdict: the 34 assets teach founders how to **think** about a startup, but several concrete pieces required to actually **take money in 14 days** are missing or implied but not delivered. Below is what holds up, what's soft, and what to add.
+## What's missing today
 
-## What already carries weight (keep as-is)
-- **Foundation** — Exec Summary, Vision, Problem/Solution, Value Prop. Solid one-page story.
-- **Strategy** — Market, Personas, Positioning, GTM, Messaging. Complete.
-- **Brand (bonus)** — Strategy → Messaging → Visual → Voice → Guidelines. Complete system.
-- **BUILD_LAYER** covers brand, website, social, content engine, AI ops, 16-email nurture, sales script, entity/contracts/books.
+Traced through `supabase/functions/venture-generate-document/index.ts` and `venture-bulk-generate/index.ts`:
 
-## Gaps that block a real 14-day launch
+1. **No specialized prompt.** `_shared/deliverable-prompts.ts::SPECIALIZED_PROMPTS` has 15+ entries (one per legacy type). None of the 16 new types are keyed there, so each falls back to the base analyst prompt — long-form Markdown *about* the topic instead of the actual artifact (link, checklist, script, contract, policy).
+2. **`context_keys` is NULL for the new rows.** The context slicer (`pickBrainSlice`) sends the full brain when keys are null, wasting tokens and producing off-topic output. The legacy 34 all have targeted keys.
+3. **`model_tier` defaults to `'flash'` for every new row.** Fine for most, but the day-by-day sprint plan, pricing sheet, and payments setup should reason harder (`pro`), and list-shaped assets (First-50, DNS checklist) can drop to `'lite'` to save credits.
+4. **Chatbot knowledge doesn't mention the new capabilities.** `src/lib/chatbot-knowledge.ts` and `supabase/functions/venture-chatbot/knowledge.ts` still describe the 34-asset framework and never mention payments, legal policy pack, outbound scripts, etc. — so the concierge can't route questions to them.
+5. **No PRD-style bias toward paste-ready artifacts.** Existing prompts (website_prd, launch_content_kit, paid_ads_starter_pack) are explicit about deliverable *shape* — tables, fenced blocks, exact section headings. The new prompts must follow the same discipline.
 
-### 1. Foundation — missing the sprint itself
-- **14-Day Launch Plan (day-by-day)** — the calendar that sequences the other 34 assets into 14 dated blocks with owner, output, and "definition of done." Without this, the method is a promise, not a plan.
+## Rewrite direction: every new asset ships an AI-first artifact
 
-### 2. Strategy — no path to the first buyer
-- **First-50 Warm List** — named prospects with contact, angle, and ask. This is the difference between "we have a persona" and "we have a pipeline on day 3."
-- **Pre-Sell Offer / Waitlist Test** — a 48-hour validation offer (deposit, LOI, or paid pilot) that proves demand *before* the site ships.
+Each specialized prompt will end with one **`## Paste-Ready`** block (fenced) containing the artifact a founder can literally copy into Stripe, DocuSign, their inbox, their site, or GA4. The markdown above the block is the *why*; the fenced block is the *thing*.
 
-### 3. Operations — nothing on delivering the first sale
-- **Fulfillment SOP** — how order #1 through #10 actually gets delivered, step by step, with time and cost per unit.
-- **Customer Support Starter** — inbox, response SLA, canned replies, refund/return rules. Day-15 problems that must be answered on day 14.
+Artifact shapes per new type:
 
-### 4. Finance — the money can't actually move
-- **Payments & Checkout Setup** — Stripe/Square account, tax, payout, receipts, one live checkout link. Today there's a Financial Model but no way to *collect*.
-- **Business Bank + Bookkeeping Starter** — bank account opened, card issued, books tool connected, chart of accounts seeded.
-- **Pricing Page & Offer Sheet** — packaged tiers, terms, what's included, what's not — the artifact the checkout link points at.
+| Type | Paste-ready block |
+|---|---|
+| `launch_plan_14day` | Day 1–14 table (Date/Focus/Owner/Output/Done-when) + a Google Calendar-importable ICS-style outline |
+| `first_50_warm_list` | 50-row Markdown table (Name/Company/Contact/Angle/Ask/Status) seeded from persona + market context |
+| `pre_sell_offer_test` | Landing-page copy block + 3-email pre-sell sequence + deposit link script |
+| `fulfillment_sop` | Numbered SOP + per-step time/cost table + handoff checklist |
+| `customer_support_starter` | 8 canned reply templates + SLA table + refund decision tree |
+| `payments_checkout_setup` | Stripe setup checklist + product/price JSON payload + checkout link CTA copy + tax/receipt config table |
+| `business_bank_books_starter` | Chart of accounts (CSV block) + bank/tool comparison + first-week reconciliation SOP |
+| `pricing_offer_sheet` | Tier table + one-page offer sheet Markdown + objection→response script |
+| `terms_privacy_refund_pack` | Three fenced Markdown docs (ToS, Privacy, Refund) tuned to entity + offer, ready to paste to `/legal/*` |
+| `insurance_starter` | Coverage recommendation table + carrier shortlist + COI request email template |
+| `contractor_1099_kit` | MSA + SOW Markdown template + W-9 request email + IP-assignment clause block |
+| `domain_email_dns_checklist` | Registrar/host recommendation + full DNS record table (A, MX, SPF, DKIM, DMARC) + verification steps |
+| `analytics_pixel_setup` | GA4 event map table + pixel install snippet block + UTM naming convention + dashboard sketch |
+| `landing_page_waitlist_test` | Full one-page Markdown site copy + form field spec + 2-email confirmation sequence |
+| `reviews_testimonials_kit` | Request email + SMS + DM templates + video-ask script + wall-of-love HTML snippet |
+| `outbound_dm_email_scripts` | 3-touch email sequence + LinkedIn DM sequence + SMS follow-up, keyed to `first_50_warm_list` |
 
-### 5. Governance — bankable ≠ transactable
-- **Terms of Service, Privacy Policy, Refund Policy** — required by Stripe, app stores, and any B2B buyer's procurement. Legal Structure Brief covers entity, not customer-facing policy.
-- **Insurance Starter** — GL/E&O quote and bind path; landlords, venues, and enterprise buyers ask on day one.
-- **Contractor / 1099 Kit** — MSA, SOW, W-9, IP assignment. First hire is almost always a contractor.
+Every prompt inherits `OUTPUT_FOOTER` (no footnotes, `QUALITY_SCORE` trailer) and enforces "no TBD / no `[insert …]`" like the existing prompts.
 
-### 6. Marketing — the site can ship but can't be measured or found
-- **Domain, Email, DNS Checklist** — domain purchase, Google Workspace, SPF/DKIM/DMARC, support@ alias. The Website PRD assumes these exist.
-- **Analytics & Pixel Setup** — GA4, Meta/TikTok pixel, conversion events, UTM convention. Without this, the paid ads starter has nothing to optimize against.
-- **Landing Page / Waitlist Test** — a one-page offer test that runs *before* the full site, so paid ads and warm outreach have a destination on day 4, not day 12.
+## Files to change
 
-### 7. Social & Content — attention without proof
-- **Reviews & Testimonials Capture Kit** — request templates, Google/Yelp/G2 links, video ask script, wall-of-love page. Traction dies without social proof by week two.
-- **Outbound DM / Email Scripts** — cold-warm scripts tied to the First-50 list above. Content Calendar handles inbound; nothing today handles outbound.
+1. **`supabase/functions/_shared/deliverable-prompts.ts`** — append 16 `SPECIALIZED_PROMPTS` entries in the shapes above.
+2. **Migration (SQL via the migration tool)** — one migration that:
+   - Sets `context_keys` per new type (existing brain keys: `identity`, `problem`, `solution`, `customer`, `business_model_summary`, `market_facts`, `differentiators`, `known_numbers`).
+   - Sets `model_tier` per new type:
+     - `pro`: `launch_plan_14day`, `pricing_offer_sheet`, `payments_checkout_setup`, `business_bank_books_starter`, `terms_privacy_refund_pack`
+     - `lite`: `first_50_warm_list`, `domain_email_dns_checklist`, `customer_support_starter`, `reviews_testimonials_kit`
+     - `flash` (default): the remaining seven.
+3. **`src/lib/chatbot-knowledge.ts`** and **`supabase/functions/venture-chatbot/knowledge.ts`** — add a short section listing the new capabilities under the 14-Day Launch Method so the concierge routes questions ("do you help with Stripe setup?", "what about a privacy policy?") to the right asset instead of deflecting.
+4. **Nothing else touched.** Homepage counts derive from `TOTAL_DELIVERABLES` (already 50). Image header pipeline (`venture-document-image`) reads from the catalog, so it will generate headers for new types on first request with no code change.
 
-## Recommended additions (12 new assets)
+## Out of scope
 
-| # | Stage | New deliverable |
-|---|-------|-----------------|
-| 1 | Foundation | 14-Day Launch Plan (day-by-day) |
-| 2 | Strategy | First-50 Warm List |
-| 3 | Strategy | Pre-Sell Offer / Waitlist Test |
-| 4 | Operations | Fulfillment SOP |
-| 5 | Operations | Customer Support Starter |
-| 6 | Finance | Payments & Checkout Setup |
-| 7 | Finance | Business Bank + Bookkeeping Starter |
-| 8 | Finance | Pricing Page & Offer Sheet |
-| 9 | Governance | ToS / Privacy / Refund Policy Pack |
-| 10 | Governance | Insurance Starter |
-| 11 | Governance | Contractor / 1099 Kit |
-| 12 | Marketing | Domain, Email, DNS Checklist |
-| 13 | Marketing | Analytics & Pixel Setup |
-| 14 | Marketing | Landing Page / Waitlist Test |
-| 15 | Social & Content | Reviews & Testimonials Capture Kit |
-| 16 | Social & Content | Outbound DM / Email Scripts |
+- No changes to the base model gateway, brain schema, or existing 34 prompts.
+- No new brain context keys (reuse the eight already produced by intake).
+- No UI changes — new rows flow through the existing hub, dashboard, and bulk-generate flow.
 
-(That's 16 candidate adds — cut, merge, or defer any you don't want promoted to the marketing framework.)
+## Verification
 
-## Proposed next step
-1. You approve the list (or edit it down).
-2. I'll add the accepted items to `FRAMEWORK_STAGES` in `src/lib/framework-deliverables.ts` with icon, title, and the same tooltip voice as the existing 34.
-3. Mirror the additions in `venture_document_types` migration + chatbot knowledge so the DB, dashboard, and bot stay in sync.
-4. Update the homepage/register counts (currently derived from `TOTAL_DELIVERABLES`, so this is automatic) and any hard-coded "34" references — I'll grep and fix.
-
-## Out of scope for this pass
-- Redesigning stage order or renaming stages.
-- Rewriting existing tooltips.
-- Touching workshop pricing, session structure, or curriculum data.
+- `bunx tsgo --noEmit` on the edited TS files.
+- Spot-generate 3 of the new types against a live venture (`launch_plan_14day`, `payments_checkout_setup`, `terms_privacy_refund_pack`) and confirm each returns a paste-ready fenced artifact plus a `QUALITY_SCORE` ≥ 70.
