@@ -38,20 +38,26 @@ export function SectionHeader({
   const statusMeta = STATUS_META[status];
   const StatusIcon = statusMeta.Icon;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-  const accentStyle = { color: `hsl(var(${meta.accentVar}))` } as React.CSSProperties;
-  const accentBarStyle = { backgroundColor: `hsl(var(${meta.accentVar}))` } as React.CSSProperties;
+  const accentColor = `var(${meta.accentVar})`;
+  const mix = (pct: number) => `color-mix(in oklab, ${accentColor} ${pct}%, transparent)`;
+  const accentStyle = { color: accentColor } as React.CSSProperties;
+  const accentBarStyle = { backgroundColor: accentColor } as React.CSSProperties;
   const chipStyle = {
-    backgroundColor: `hsl(var(${meta.accentVar}) / 0.12)`,
-    color: `hsl(var(${meta.accentVar}))`,
-    borderColor: `hsl(var(${meta.accentVar}) / 0.3)`,
+    backgroundColor: mix(18),
+    color: accentColor,
+    borderColor: mix(35),
   } as React.CSSProperties;
   const progressFillStyle = {
     width: `${pct}%`,
-    backgroundColor: `hsl(var(${meta.accentVar}))`,
+    backgroundColor: accentColor,
+  } as React.CSSProperties;
+  const containerStyle = {
+    backgroundImage: `linear-gradient(90deg, ${mix(12)}, ${mix(4)} 55%, color-mix(in oklab, var(--card) 60%, transparent))`,
+    borderColor: mix(25),
   } as React.CSSProperties;
 
   return (
-    <div className="group relative flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-card/60 p-3 pl-4 transition-shadow hover:shadow-md sm:gap-4 sm:p-4 sm:pl-5">
+    <div style={containerStyle} className="group relative flex flex-wrap items-center gap-3 rounded-xl border p-3 pl-4 transition-shadow hover:shadow-md sm:gap-4 sm:p-4 sm:pl-5">
       {/* Accent left bar */}
       <span
         aria-hidden
