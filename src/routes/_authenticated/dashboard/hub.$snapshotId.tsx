@@ -84,7 +84,7 @@ const STEPS = [
   { n: 1, key: "concept", label: "Your idea" },
   { n: 2, key: "enriching", label: "Research" },
   { n: 3, key: "review", label: "Review" },
-  { n: 4, key: "generate", label: "Write documents" },
+  { n: 4, key: "generate", label: "Write assets" },
 ];
 
 function statusToStep(status: string): number {
@@ -369,7 +369,7 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
             variant="outline"
             onClick={() => reextract.mutate()}
             disabled={reextract.isPending}
-            title="Re-run extraction using the documents and URLs you uploaded"
+            title="Re-run extraction using the assets and URLs you uploaded"
           >
             {reextract.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1.5 h-3.5 w-3.5" />}
             Re-extract from my sources
@@ -463,7 +463,7 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
               title={!locked ? "Lock your concept above to continue" : undefined}
             >
               {advance.isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
-              Continue to documents →
+              Continue to assets →
             </Button>
           )}
         </div>
@@ -883,7 +883,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const genOne = useMutation({
     mutationFn: (vars: { documentType: string; rewriteFeedback?: string; rewriteTags?: string[]; intakeAnswers?: Record<string, any> }) =>
       generateDocument({ data: { snapshotId: snapshot.id, ...vars } }),
-    onSuccess: () => { toast.success("Document ready"); qc.invalidateQueries({ queryKey: ["hub"] }); },
+    onSuccess: () => { toast.success("Asset ready"); qc.invalidateQueries({ queryKey: ["hub"] }); },
     onError: (e) => {
       const msg = e instanceof Error ? e.message : "Generation failed";
       if (/brand_kit_required|Brand Wizard/i.test(msg)) {
@@ -1040,7 +1040,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   let heroDone = false;
 
   if (jobRunning) {
-    heroTitle = "We're writing your documents…";
+    heroTitle = "We're writing your assets…";
     heroSub = currentDocLabel
       ? `Working on: ${currentDocLabel}. You can leave this page — we'll keep going in the background.`
       : "You can leave this page — we'll keep going in the background.";
@@ -1050,10 +1050,10 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     }
   } else if (!nextCategory) {
     heroTitle = "Your startup kit is ready";
-    heroSub = `All ${total} documents are written. Open any one below to read or download.`;
+    heroSub = `All ${total} assets are ready. Open any one below to read or download.`;
     heroDone = true;
     heroPrimary = {
-      label: "View first document",
+      label: "View first asset",
       onClick: () => {
         const first = docs.find((d: any) => d.status === "complete");
         if (first) setViewerDoc(first);
@@ -1068,7 +1068,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       ? "Let's build your startup kit, one section at a time"
       : "Pick up where you left off";
     heroSub = isFirstRun
-      ? `We'll write your ${total} documents in guided sections — Foundation first, then Strategy, Operations, and the rest. Generate one section, read it, then move on.`
+      ? `We'll write your ${total} assets in guided sections — Foundation first, then Strategy, Operations, and the rest. Generate one section, read it, then move on.`
       : `${completeCount} of ${total} done — ${remaining} remaining. Next section: ${nextCategory.cat}.`;
     heroShowProgress = !isFirstRun;
     if (isFirstRun) {
@@ -1148,7 +1148,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             className="mt-3 inline-flex items-center gap-1 text-xs text-status-warning hover:text-status-warning/80"
           >
             <AlertCircle className="h-3 w-3" />
-            {failures.length} document{failures.length === 1 ? "" : "s"} need another try
+            {failures.length} asset{failures.length === 1 ? "" : "s"} need another try
           </button>
         )}
         {showFailures && failures.length > 0 && (
@@ -1220,7 +1220,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
       {showHelper && (
         <div className="flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-card/40 px-4 py-2 text-xs text-muted-foreground">
-          <span>This page writes your full startup kit. Hit one button and we'll do the rest — you can read each document as it finishes.</span>
+          <span>This page writes your full startup kit. Hit one button and we'll do the rest — you can read each asset as it finishes.</span>
           <button type="button" onClick={() => setShowHelper(false)} className="text-muted-foreground hover:text-foreground">✕</button>
         </div>
       )}
@@ -1233,7 +1233,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             <div>
               <div className="font-medium">Concept changed since last generation</div>
               <div className="text-xs opacity-90">
-                {staleCount} document{staleCount === 1 ? "" : "s"} {staleCount === 1 ? "was" : "were"} written before your latest concept update. Rewrite to bring them in line.
+                {staleCount} asset{staleCount === 1 ? "" : "s"} {staleCount === 1 ? "was" : "were"} written before your latest concept update. Rewrite them to match.
               </div>
             </div>
           </div>
@@ -1243,8 +1243,8 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       {/* Document list */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your documents</h3>
-          <p className="text-xs text-muted-foreground">Sections unlock in order. Use the per-section button to generate a whole section at once, or hit Generate on any single document.</p>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your assets</h3>
+          <p className="text-xs text-muted-foreground">Sections unlock in order. Use the per-section button to generate a whole section at once, or hit Generate on any single asset.</p>
         </div>
         <div className="flex items-center gap-1">
           <Button
@@ -1400,7 +1400,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               else if (brandGated) statusLine = "Complete the Brand Wizard to unlock";
               else if (!depsMet) {
                 const missing = deps.find((dep) => !completedKeys.has(dep));
-                const missingLabel = missing ? ((typeByKey.get(missing) as any)?.name ?? missing) : "earlier documents";
+                const missingLabel = missing ? ((typeByKey.get(missing) as any)?.name ?? missing) : "earlier assets";
                 statusLine = `Waiting on ${missingLabel}`;
               } else statusLine = "Not started yet";
 
@@ -1456,7 +1456,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                             genOne.mutate({ documentType: t.type });
                           }
                         }}
-                        title={!depsMet ? "Finish earlier documents first" : undefined}
+                        title={!depsMet ? "Finish earlier assets first" : undefined}
                       >
                         {generating ? (
                           <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing…</>
