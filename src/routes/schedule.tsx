@@ -255,7 +255,8 @@ export default function SchedulePage() {
               One day. One door. Twenty seats.
             </h3>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              Idea in at 8:45 AM. Your full plan and a signed 90-day playbook in your hands by 11:30 AM.
+              Idea in at 8:45 AM. All 5 pillars in hand by 11:30 AM — and the same
+              framework live on your dashboard, with 3 bonus tracks ready to unlock.
             </p>
             <div className="mt-6 flex justify-center">
               <Link
