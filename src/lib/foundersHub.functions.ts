@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
 
 function unwrap<T>(input: any): T {
   if (input && typeof input === "object" && "data" in input && Object.keys(input).length === 1) {
@@ -9,10 +10,9 @@ function unwrap<T>(input: any): T {
 }
 
 async function uid() {
-  const u = (await supabase.auth.getUser()).data.user;
-  if (!u) throw new Error("Not signed in");
-  return u.id;
+  return await getEffectiveUserId();
 }
+
 
 export type SnapshotStatus = "input" | "enriching" | "review" | "generating" | "complete" | "archived";
 
