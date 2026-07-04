@@ -128,7 +128,7 @@ export const marketingSlides: Slide[] = [
         <div className="grid grid-cols-12 gap-10 items-center">
           <div className="col-span-7">
             <SlotText slideId="what-good" field="kicker" defaultValue="What good looks like" as="div" className="slide-kicker font-semibold text-primary mb-6" />
-            <SlotText slideId="what-good" field="title" defaultValue="A founder who can answer four questions with a single document a builder ships from." as="h2" className="slide-title font-semibold tracking-tight mb-10" />
+            <SlotText slideId="what-good" field="title" defaultValue="A founder who can answer four questions with a single asset a builder ships from." as="h2" className="slide-title font-semibold tracking-tight mb-10" />
             <div className="grid grid-cols-1 gap-4">
               {STAGE_QUESTIONS.map((q, i) => (
                 <div key={i} className="flex items-start gap-5 rounded-2xl bg-primary/5 border border-primary/15 p-6">
