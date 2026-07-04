@@ -40,11 +40,12 @@ export interface VentureSource {
   created_at: string;
 }
 
+import { getEffectiveUserId } from "@/lib/effective-user";
+
 async function uid() {
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) throw new Error("Not signed in");
-  return data.user.id;
+  return await getEffectiveUserId();
 }
+
 
 const KIND_FOLDER: Record<string, string> = {
   founder_bio: "founder",

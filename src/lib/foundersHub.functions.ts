@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
 
 function unwrap<T>(input: any): T {
   if (input && typeof input === "object" && "data" in input && Object.keys(input).length === 1) {
@@ -9,10 +10,9 @@ function unwrap<T>(input: any): T {
 }
 
 async function uid() {
-  const u = (await supabase.auth.getUser()).data.user;
-  if (!u) throw new Error("Not signed in");
-  return u.id;
+  return await getEffectiveUserId();
 }
+
 
 export type SnapshotStatus = "input" | "enriching" | "review" | "generating" | "complete" | "archived";
 
@@ -374,7 +374,7 @@ export async function archiveSnapshot(input: any): Promise<void> {
 
 export async function deleteSnapshot(input: any): Promise<void> {
   const { id } = unwrap<{ id: string }>(input);
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const userId = await uid().catch(() => undefined);
   const { error } = await supabase.from("venture_snapshots").delete().eq("id", id);
   if (error) throw new Error(error.message);
   if (userId) await resetWorkspaceIfEmpty(userId);

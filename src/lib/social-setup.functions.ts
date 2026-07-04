@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
 import type { SetupStage } from "@/lib/zernio-setup-guides";
+
 
 export type BrandKit = {
   user_id: string;
@@ -32,10 +34,9 @@ export type ProgressRow = {
 };
 
 async function getUserId(): Promise<string> {
-  const { data } = await supabase.auth.getUser();
-  if (!data?.user?.id) throw new Error("Not signed in");
-  return data.user.id;
+  return await getEffectiveUserId();
 }
+
 
 export async function getBrand(): Promise<BrandKit | null> {
   const uid = await getUserId();

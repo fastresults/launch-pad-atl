@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import type { BriefKey } from "@/lib/workflow";
 export type { BriefKey };
 
-async function uid() { return (await supabase.auth.getUser()).data.user!.id; }
+import { getEffectiveUserId } from "@/lib/effective-user";
+
+async function uid() { return await getEffectiveUserId(); }
 
 export async function getMyBrief() {
   const { data } = await supabase.from("attendee_business_brief").select("*").eq("user_id", await uid()).maybeSingle();

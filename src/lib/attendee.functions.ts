@@ -1,9 +1,11 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
 
 async function uid() {
-  return (await supabase.auth.getUser()).data.user!.id;
+  return await getEffectiveUserId();
 }
+
 
 export async function getMyProfile() {
   const { data } = await supabase

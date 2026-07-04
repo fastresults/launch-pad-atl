@@ -1,7 +1,9 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
 import { generateDocument, listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import { generateSocialCover } from "@/lib/social-cover.functions";
+
 
 export type SocialGoals = {
   objectives?: string[];          // ["customers","trust","investors","hire","community"]
@@ -21,10 +23,9 @@ export type SocialProgress = {
 };
 
 async function getUserId(): Promise<string> {
-  const { data } = await supabase.auth.getUser();
-  if (!data?.user?.id) throw new Error("Not signed in");
-  return data.user.id;
+  return await getEffectiveUserId();
 }
+
 
 export async function getSocialProgress(snapshotId: string): Promise<SocialProgress | null> {
   const { data, error } = await supabase

@@ -11,6 +11,7 @@
 // Setup intake) call this once on mount and use it to prefill the form.
 // They never need to know which table a value came from.
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
 
 export type CanonicalFounderContext = {
   identity: {
@@ -94,9 +95,8 @@ function geoToMarketScope(
 }
 
 export async function getCanonicalFounderContext(): Promise<CanonicalFounderContext | null> {
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData?.user;
-  if (!user) return null;
+  let userId: string;
+  try { userId = await getEffectiveUserId(); } catch { return null; }
 
   const [
     profileRes,
@@ -106,13 +106,14 @@ export async function getCanonicalFounderContext(): Promise<CanonicalFounderCont
     pubProfileRes,
     intakeRes,
   ] = await Promise.all([
-    supabase.from("attendee_profiles").select("*").eq("user_id", user.id).maybeSingle(),
-    supabase.from("attendee_business_brief").select("*").eq("user_id", user.id).maybeSingle(),
-    supabase.from("attendee_founder_profile").select("*").eq("user_id", user.id).maybeSingle(),
-    supabase.from("attendee_market_profile").select("*").eq("user_id", user.id).maybeSingle(),
-    supabase.from("profiles").select("display_name,email").eq("user_id", user.id).maybeSingle(),
-    supabase.from("member_intakes").select("*").eq("user_id", user.id).maybeSingle(),
+    supabase.from("attendee_profiles").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("attendee_business_brief").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("attendee_founder_profile").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("attendee_market_profile").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("profiles").select("display_name,email").eq("user_id", userId).maybeSingle(),
+    supabase.from("member_intakes").select("*").eq("user_id", userId).maybeSingle(),
   ]);
+
 
   const profile: any = profileRes.data ?? {};
   const brief: any = briefRes.data ?? {};
@@ -288,9 +289,8 @@ export function provenanceLabel(source: string): string {
 // AI run rebuilds the compressed reasoning blob from fresh canonical data.
 export async function markAllMySnapshotBrainsDirty(): Promise<void> {
   try {
-    const { data: u } = await supabase.auth.getUser();
-    const uid = u?.user?.id;
-    if (!uid) return;
+    let uid: string;
+    try { uid = await getEffectiveUserId(); } catch { return; }
     await supabase
       .from("venture_snapshots")
       .update({ snapshot_brain_dirty: true })
@@ -298,4 +298,5 @@ export async function markAllMySnapshotBrainsDirty(): Promise<void> {
   } catch (e) {
     console.warn("[markAllMySnapshotBrainsDirty] failed", e);
   }
+
 }

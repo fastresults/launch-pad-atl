@@ -3,10 +3,12 @@
 // (the row backing /dashboard/profile). Merge-not-overwrite: never clobber
 // values the founder has manually typed on the Profile page.
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
 
 async function uid() {
-  return (await supabase.auth.getUser()).data.user!.id;
+  return await getEffectiveUserId();
 }
+
 
 function firstSentence(s?: string | null): string {
   if (!s) return "";

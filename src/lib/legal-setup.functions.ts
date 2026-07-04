@@ -23,11 +23,12 @@ export type LegalSetupProgress = {
   updated_at: string;
 };
 
+import { getEffectiveUserId } from "@/lib/effective-user";
+
 async function uid(): Promise<string> {
-  const { data } = await supabase.auth.getUser();
-  if (!data?.user?.id) throw new Error("Not signed in");
-  return data.user.id;
+  return await getEffectiveUserId();
 }
+
 
 export async function getMyLegalSetup(): Promise<LegalSetupProgress | null> {
   const userId = await uid();
