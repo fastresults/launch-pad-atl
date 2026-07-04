@@ -78,9 +78,9 @@ export function AccessModeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Three ways to work with Adam</DialogTitle>
+          <DialogTitle className="text-2xl">Three ways to launch with Adam</DialogTitle>
           <DialogDescription>
-            Same framework, three formats. Pick the one that fits how you want to build.
+            Same 14-day path to first revenue. Pick the format — in the room, live on Zoom, or done for you.
           </DialogDescription>
         </DialogHeader>
         <div className="mt-2 grid gap-3 md:grid-cols-3">
