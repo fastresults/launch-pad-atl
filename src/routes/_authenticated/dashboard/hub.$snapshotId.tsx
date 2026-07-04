@@ -73,8 +73,12 @@ import {
   Upload,
   FileText,
   X,
+  ChevronsDownUp,
+  ChevronsUpDown,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { SectionHeader } from "@/components/hub/SectionHeader";
 
 const STEPS = [
   { n: 1, key: "concept", label: "Your idea" },
