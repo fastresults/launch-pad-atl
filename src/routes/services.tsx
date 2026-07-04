@@ -168,7 +168,7 @@ function Tracks() {
           <span className="text-gradient-brand">Pick the one that matches the stage you're in.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          You don't buy eight things at once. You buy the right three. Each track bundles the capabilities that compound together — at a price that beats hiring them à la carte.
+          You don't buy eight things at once. You buy the right three. Each track bundles the capabilities that compound together — scoped honestly to what your startup actually needs, priced after a short discovery call.
         </p>
 
         <div className="mt-12 grid gap-5 md:grid-cols-3">
