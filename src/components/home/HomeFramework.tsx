@@ -270,7 +270,7 @@ function HonestRoadmap() {
         <div className="mt-12 md:mt-16">
           <div className="rounded-2xl border border-primary/40 bg-card p-6 md:p-8">
             <div className="mb-4 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-primary">
-              What {WORKSHOP_PRICE_LABEL} gets you — the foundation
+              What {WORKSHOP_PRICE_LABEL} gets you — 14 days from now
             </div>
             <ul className="grid gap-3 sm:grid-cols-2 md:gap-4">
               {included.map((s) => (
@@ -286,10 +286,10 @@ function HonestRoadmap() {
         {/* Act 3 — The modern build layer */}
         <div className="mt-12 md:mt-16">
           <div className="mb-2 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground md:text-sm">
-            <Sparkles className="size-4 text-primary" /> The modern build layer — what comes next
+            <Sparkles className="size-4 text-primary" /> What comes after your first customer
           </div>
           <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-            In 2026, no founder wins on strategy alone. Eight capabilities turn the plan into a startup that attracts customers, converts them, and keeps them coming back. Each half-day workshop hands over the strategy, the frameworks, and the exact tool stack to DIY it — from $197 — or we'll build it for you.
+            Once you're live and taking money, eight more capabilities turn a launched business into a growing one — the brand, the site that converts, the content engine, the sales script, the automations. Each is a half-day working session with Adam. Or hand the whole thing to his team.
           </p>
 
 
