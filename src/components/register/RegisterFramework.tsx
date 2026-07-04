@@ -110,7 +110,7 @@ export function RegisterFramework() {
         ...values,
         tier_interest: "cohort",
         assigned_tier: "cohort",
-        price_paid_cents: WORKSHOP_PRICE_CENTS,
+        price_paid_cents: ctx.priceCents,
       });
       setSubmitted(true);
       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
