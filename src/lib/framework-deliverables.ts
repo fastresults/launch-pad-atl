@@ -154,6 +154,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     name: "Social & Content",
     bonus: true,
     intro: "The distribution engine that earns attention on repeat.",
+    benefit: "Ninety days of content, a launch kit, and a paid-ads starter pack — a distribution engine that earns attention on repeat instead of costing more each month.",
     items: [
       { icon: Share2, title: "Social Media Audit & Setup", tooltip: "A clean review of your current accounts plus the right handles, bios, and links across the platforms your customers actually use. You'll show up looking professional everywhere — and stop losing customers to a stale profile." },
       { icon: Layers, title: "Content Strategy & Pillars", tooltip: "Three to five content themes that consistently attract your buyer and reinforce your positioning. You'll stop posting random updates, build a recognizable voice, and have a topic to write about every single time you sit down." },
