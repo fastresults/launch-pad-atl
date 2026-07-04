@@ -31,13 +31,13 @@ export const STAGES: Stage[] = [
     summary: "The legal foundation. Leave with a filing-ready packet and the legal kit you need to sell.",
     oneLiner: "Legal foundation",
     takeHome:
-      "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding model with 12-month runway, a business plan with pro formas, an investor-ready pitch deck, and a fundraising kit ready to send. File Monday, start taking money the same week.",
+      "Your state LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding model with 12-month runway, a business plan with pro formas, an investor-ready pitch deck, and a fundraising kit ready to send. File Monday, start taking money the same week.",
     walkOut: [
-      "Articles of Organization pre-filled in your GA Secretary of State account",
+      "Articles of Organization pre-filled in your Secretary of State account (all 50 states supported)",
       "EIN application completed and submitted — number issued in the session",
       "Business-bank shortlist + bank application checklist filled for your business",
       "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business",
-      "Local license + sales-tax requirements documented for your county",
+      "Local license + sales-tax requirements documented for your state and county",
       "Funding model & 12-month runway: real costs, margins, break-even, and cash picture by month",
       "Business plan with pro formas: short narrative plan + 12-month P&L, cash flow, and break-even pro forma a bank or investor will accept",
       "Investor-ready pitch deck: 10 slides in your brand (problem, solution, market, offer, traction, model, GTM, team, ask, use of funds)",
@@ -50,21 +50,21 @@ export const STAGES: Stage[] = [
       "File local business license and sales-tax registration once the entity is approved",
     ],
     duration: "60 min",
-    covers: ["GA LLC packet", "EIN", "T&Cs / privacy", "Service agreement"],
+    covers: ["State LLC packet", "EIN", "T&Cs / privacy", "Service agreement"],
     tasks: [
       {
-        title: "Choose structure & prepare the GA LLC filing",
+        title: "Choose structure & prepare your state LLC filing",
         deliverable:
-          "Your filing packet for your business: name confirmed available, registered agent chosen, member info entered, GA SOS account created, Articles of Organization pre-filled.",
-        tool: "GA Secretary of State filing walk-through",
+          "Your filing packet for your business: name confirmed available, registered agent chosen, member info entered, Secretary of State account created, Articles of Organization pre-filled.",
+        tool: "Secretary of State filing walk-through (all 50 states)",
         details: [
           "Pick LLC vs sole prop vs S-corp using a 5-question decision tree",
-          "Confirm name availability on the GA SOS business search",
+          "Confirm name availability on your state's SOS business search",
           "Decide registered agent (you, partner, or paid service)",
-          "Create your GA SOS account and pre-fill the Articles of Organization",
+          "Create your state SOS account and pre-fill the Articles of Organization",
         ],
         takeaway:
-          "Your GA LLC filing packet — Articles pre-filled, registered agent set, ready to submit.",
+          "Your state LLC filing packet — Articles pre-filled, registered agent set, ready to submit.",
         followUp:
           "Submit the Articles of Organization and pay the filing fee from home — typically a 10-minute step once you're ready.",
       },
@@ -88,10 +88,10 @@ export const STAGES: Stage[] = [
         title: "Compliance & legal kit",
         deliverable:
           "Your Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business; local license and sales-tax requirements documented for you.",
-        tool: "GA compliance checklist + contract frameworks",
+        tool: "State & local compliance checklist + contract frameworks",
         details: [
-          "Document Gwinnett city/county business license requirements",
-          "Note GA sales tax registration steps if you'll sell taxable items",
+          "Document your city/county business license requirements",
+          "Note your state's sales tax registration steps if you'll sell taxable items",
           "Customize Terms of Service and Privacy Policy from vetted frameworks",
           "Customize a 1-page service agreement / SOW for your first sale",
         ],
