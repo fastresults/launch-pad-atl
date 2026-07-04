@@ -137,7 +137,25 @@ These sit alongside the framework above and are what actually makes "launched in
 - **Reviews & Testimonials Capture Kit** (Social & Content): email, SMS, DM ask templates, video-ask script, wall-of-love HTML snippet.
 - **Outbound DM & Email Scripts** (Social & Content): 3-touch cold email, LinkedIn DM sequence, and compliant SMS follow-up — keyed to the First-50 list.
 
-When a founder asks about Stripe, a privacy policy, insurance, DNS, cold email, testimonials, or "how do I actually launch in 14 days" — route them to the matching asset above. Do not deflect to a course, a template store, or generic web advice.
+## Launch Tech Stack Layer (the AI-first toolkit that runs the sprint)
+These sit on top of the strategy assets and turn each day into installable software. The founder doesn't get advice — they get a paste-ready config or a named tool with a signup link.
+
+- **AI Tool Stack Recommendation** (Foundation): the named toolkit — AI writer, site builder, CRM, calendar, email, analytics, support bot, automations, ads, reviews — with signup URLs, free-tier notes, and why-this-vs-alternatives. Powers the AI Stack panel on the hub.
+- **AI Prompt Library** (Foundation): 25 copy-paste prompts tuned to the venture (cold email, ad hook, weekly recap, competitor scan, invoice draft, refund reply). Route "which prompt should I use for X?" here.
+- **CRM Pipeline Starter** (Strategy): Attio / Folk / HubSpot Free schema, CSV import of the First-50, three saved views. Route "which CRM?" here.
+- **Booking & Calendar Setup** (Operations): Cal.com / Calendly event types tuned to the sales playbook, routing, reminders, confirmation copy. Route "how do I set up Cal.com?" here.
+- **Sales Call Recording Stack** (Operations): Fathom / Grain / Fireflies setup + AI summary template + insight-to-content pipeline. Route call-recording and note-taking questions here.
+- **Email Marketing Setup** (Marketing): Resend / Loops / Beehiiv sender-domain setup (SPF/DKIM/DMARC), welcome sequence, first broadcast, warm-up plan. Route email-list and deliverability questions here.
+- **Logo & Brand Asset Pack** (Brand): AI generation prompts for logo, favicon, OG image, avatar, email banner with the exact sizes.
+- **AI Support Bot Setup** (Operations): Chatbase / Intercom Fin bot trained on the venture's own docs, with escalation. Route "AI chatbot / help center / deflect tickets" here.
+- **Automation Recipes Starter** (Operations): 5 n8n / Zapier / Make workflows — lead-to-CRM, sale-to-welcome, form-to-booking, weekly KPI digest, review-to-wall. Route automation and workflow questions here.
+- **Founder Operating Cadence** (Foundation): weekly rhythm, KPI dashboard, decision rules. Route "how do I run the week after launch?" here.
+- **Ad Creative Pack** (Social & Content): 12 ready-to-run ad units mapped to Meta / Google / TikTok / LinkedIn — image prompts, video scripts, headline pairs. Route "what ad should I run?" here.
+- **Referral & Affiliate Starter** (Social & Content): Rewardful / Tolt setup, terms, invite email, first-10-advocates list. Route "referral program / affiliate" here.
+
+When a founder asks about Stripe, a privacy policy, insurance, DNS, cold email, testimonials, CRM, Cal.com, an AI support bot, ad creative, referral programs, prompts, or "how do I actually launch in 14 days" — route them to the matching asset above. Do not deflect to a course, a template store, or generic web advice.
+
+
 
 
 ## Why foundation first (before you spend on brand, site, ads)

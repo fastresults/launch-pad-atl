@@ -92,6 +92,9 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: AlertCircle, title: "Problem / Solution Brief", tooltip: "A crisp account of the painful problem you solve and exactly how your offer removes it. You'll talk about your business in plain language that makes customers nod, buy faster, and tell their friends without you scripting it." },
       { icon: Sparkles, title: "Value Proposition", tooltip: "The single sentence that explains why a customer should pick you over every alternative — including doing nothing. Drop it on your website, in your pitch, on your business card, and watch conversion and referrals climb immediately." },
       { icon: CalendarClock, title: "14-Day Launch Plan", tooltip: "The dated, day-by-day sprint that sequences every other asset into fourteen blocks — owner, output, and 'done' for each. You'll stop wondering what to do tomorrow morning and start every day of the launch knowing exactly which move ships revenue." },
+      { icon: Sparkles, title: "AI Tool Stack Recommendation", tooltip: "Your named AI-first toolkit — the exact tools for writing, site building, CRM, calendar, email, analytics, support, automation, ads, and reviews. You'll stop wasting the first week comparing SaaS and start Day 2 already knowing which links to open." },
+      { icon: MessageSquare, title: "AI Prompt Library", tooltip: "Twenty-five copy-paste prompts tuned to your venture — cold email, ad hook, weekly recap, competitor scan, invoice draft, refund reply. You'll stop writing prompts from scratch and start reusing what actually works, every week." },
+      { icon: Activity, title: "Founder Operating Cadence", tooltip: "Your weekly rhythm — Monday plan, daily 10-min AI standup, Friday retro, and a KPI dashboard with metrics named and their sources. You'll stop drifting after the sprint ends and start running the business on the numbers." },
     ],
   },
   {
@@ -107,6 +110,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: MessageSquare, title: "Brand & Messaging", tooltip: "The core message, tone, and proof points that make your brand feel like one voice everywhere. Your site, social, sales calls, and packaging finally line up — and customers start describing you the way you want to be described." },
       { icon: ListChecks, title: "First-50 Warm List", tooltip: "Fifty named prospects you can actually reach — with contact, angle, and the specific ask for each. You'll walk out of day two with a pipeline instead of a persona, and your first customer conversations start the same afternoon." },
       { icon: Beaker, title: "Pre-Sell Offer & Waitlist Test", tooltip: "A forty-eight-hour validation offer — deposit, LOI, or paid pilot — that proves real demand before the full site ships. You'll spend the rest of the sprint building for buyers you've already met, not customers you hope show up." },
+      { icon: Users, title: "CRM Pipeline Starter", tooltip: "A ready-to-import CRM setup (Attio, Folk, or HubSpot Free) with stages, custom fields, saved views, and your First-50 pre-loaded. You'll stop tracking deals in a spreadsheet and start Day 3 with a real pipeline you can actually work." },
     ],
   },
   {
@@ -121,6 +125,10 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Megaphone, title: "Marketing Plan", tooltip: "Your channels, monthly spend, content cadence, and the metrics that tell you what's working. Marketing stops being a guessing game; you spend dollars where they return dollars and quietly turn off everything that doesn't." },
       { icon: Package, title: "Fulfillment SOP", tooltip: "The step-by-step of how order number one through ten actually gets delivered — with time and cost per unit. You'll ship the first sale without scrambling, know your true margin, and hand fulfillment to a teammate without the business breaking." },
       { icon: LifeBuoy, title: "Customer Support Starter", tooltip: "A shared support inbox, response SLA, canned replies, and refund and return rules — ready before day fifteen problems arrive. You'll answer the first customer question inside an hour and never lose a buyer to silence." },
+      { icon: CalendarDays, title: "Booking & Calendar Setup", tooltip: "Cal.com or Calendly event types tuned to your sales motion — discovery, working session, onboarding — with routing, reminders, and confirmation copy. You'll stop trading emails to book a call and start Day 6 with a real link to send." },
+      { icon: Mic, title: "Sales Call Recording Stack", tooltip: "Fathom, Grain, or Fireflies wired up with an AI summary template, tagging convention, and a call-to-content pipeline. You'll stop forgetting what the customer said and start turning every conversation into product and marketing fuel." },
+      { icon: LifeBuoy, title: "AI Support Bot Setup", tooltip: "A Chatbase or Intercom Fin bot trained on your own docs, with guardrails and escalation to your support inbox. You'll deflect the easy 60% of tickets on Day 12 and only see the questions that actually need a human." },
+      { icon: Zap, title: "Automation Recipes Starter", tooltip: "Five n8n, Zapier, or Make workflows tuned to your stack — lead → CRM + Slack, sale → welcome + review ask, weekly KPI digest, form → booking, review → wall-of-love. You'll stop doing repetitive work by Week 2." },
     ],
   },
   {
@@ -165,6 +173,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Palette, title: "Visual Identity Brief", tooltip: "A clear brief for the logo, colors, type, and visual feel — ready to hand to a designer or an AI tool. You'll skip months of revisions, get an identity you actually love, and look credible from day one." },
       { icon: Mic, title: "Brand Voice & Tone Guide", tooltip: "How your brand sounds — word choice, rhythm, what to avoid — so anyone writing for you sounds like you. Founders, contractors, and AI tools all produce on-brand copy without you rewriting every sentence yourself." },
       { icon: BookOpen, title: "Brand Guidelines Book", tooltip: "One document that holds your logo rules, colors, type, voice, and examples in one place. Hand it to any vendor, freelancer, or new hire and they'll produce on-brand work without forty rounds of feedback from you." },
+      { icon: Palette, title: "Logo & Brand Asset Pack", tooltip: "AI-generation prompts for logo, favicon, OG image, avatar, and email banner — with the exact sizes and formats. You'll walk into Day 11 with everything you need to ship a site that looks like a real brand, not an AI demo." },
     ],
   },
   {
@@ -178,6 +187,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: AtSign, title: "Domain, Email & DNS Checklist", tooltip: "Domain purchased, business email live, SPF, DKIM, and DMARC set — and a support alias routed to the right person. Your outreach lands in inboxes instead of spam, and you look like a real company from your very first email." },
       { icon: Activity, title: "Analytics & Pixel Setup", tooltip: "GA4, the ad pixels your channels need, conversion events, and a UTM convention wired before you spend a dollar. You'll know what actually converted, cut ad spend that doesn't pay back, and double down on the channels that do." },
       { icon: MousePointerClick, title: "Landing Page & Waitlist Test", tooltip: "A one-page offer test live by day four — before the full site — so paid ads and warm outreach have a destination while you finish building. You'll validate the hook, collect emails, and turn early clicks into paying customers." },
+      { icon: Mail, title: "Email Marketing Setup", tooltip: "Resend, Loops, or Beehiiv wired to your domain with SPF/DKIM/DMARC, a 5-email welcome sequence, first broadcast, and a deliverability warm-up plan. You'll stop landing in spam and start owning the audience that keeps buying." },
     ],
   },
   {
@@ -196,6 +206,8 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Target, title: "Paid Ads Starter Pack", tooltip: "A starter set of ad targets, hooks, and budgets tuned to your offer and your buyer. You'll launch your first paid campaign without burning rent money, learn fast what converts, and scale only what actually pays back." },
       { icon: MessageSquareQuote, title: "Reviews & Testimonials Capture Kit", tooltip: "Request templates, direct links to Google, Yelp, or G2, a video-ask script, and a wall-of-love page ready to embed. You'll turn every happy first customer into public proof — and stop losing week-two buyers who need to see someone went before them." },
       { icon: Send, title: "Outbound DM & Email Scripts", tooltip: "Cold and warm outreach scripts tied directly to your First-50 list — opener, follow-up, and the specific ask. You'll actually work the pipeline instead of hoping content does it for you, and book the first sales calls in week one." },
+      { icon: Target, title: "Ad Creative Pack", tooltip: "Twelve ready-to-run ad units — 4 static image prompts, 4 short-form video scripts, 4 headline+body pairs — mapped to Meta, Google, TikTok, and LinkedIn. You'll launch Day 14 with creative that's tuned to your offer, not a generic template." },
+      { icon: Share2, title: "Referral & Affiliate Starter", tooltip: "Rewardful, Tolt, or a manual program with terms, invite email, tracking convention, and a first-10-advocates list. You'll turn every happy customer into your cheapest channel — and stop paying full CAC on Day 15." },
     ],
   },
 ];

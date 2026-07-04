@@ -54,6 +54,7 @@ import { SocialStudio } from "@/components/hub/SocialStudio";
 import { ContentStudio } from "@/components/hub/ContentStudio";
 import { FounderRoadmapCard } from "@/components/hub/FounderRoadmapCard";
 import { LaunchPlanner14Day } from "@/components/hub/LaunchPlanner14Day";
+import { AIStackPanel } from "@/components/hub/AIStackPanel";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
 import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
 import {
@@ -1169,6 +1170,27 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         isGeneratingKey={(key) => genOne.isPending && genOne.variables?.documentType === key}
         jobRunning={jobRunning}
       />
+
+      <AIStackPanel
+        snapshotId={snapshot.id}
+        userId={snapshot.user_id}
+        stackDoc={docs.find((d: any) => d.document_type === "ai_tool_stack_recommendation") ?? null}
+        onGenerateStack={() => genOne.mutate({ documentType: "ai_tool_stack_recommendation" })}
+        onScrollToDoc={(key) => {
+          const el = document.getElementById(`doc-${key}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.classList.add("ring-2", "ring-primary");
+            setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 1600);
+          }
+        }}
+        onOpenDoc={(key) => {
+          const d = docs.find((x: any) => x.document_type === key);
+          if (d) setViewerDoc(d);
+        }}
+        isGenerating={genOne.isPending && genOne.variables?.documentType === "ai_tool_stack_recommendation"}
+      />
+
 
 
       {showHelper && (
