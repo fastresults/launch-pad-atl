@@ -40,6 +40,36 @@ export function RegisterFramework() {
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
+  // Context: which workshop is the user registering for?
+  const [params] = useSearchParams();
+  const workshopSlug = params.get("workshop");
+  const preselectedDateIso = params.get("date");
+  const buildWorkshop = workshopSlug ? getBuildWorkshop(workshopSlug) : undefined;
+
+  const ctx = buildWorkshop
+    ? {
+        eyebrow: `${buildWorkshop.title} · ${buildWorkshop.priceLabel}`,
+        heroTitleLead: buildWorkshop.oneLiner,
+        heroTitleEmphasis: null as string | null,
+        heroBlurb: buildWorkshop.subhead,
+        asideBlurb: `${buildWorkshop.title} — small cohort, working session with Adam Anderson. Live online. Coffee optional.`,
+        walkOuts: buildWorkshop.walkOuts as string[] | null,
+        priceLabel: buildWorkshop.priceLabel,
+        priceCents: 19_700,
+        footerLine: `${buildWorkshop.walkOuts.length} deliverables · built live with Adam · yours to keep.`,
+      }
+    : {
+        eyebrow: `Strategic Foundation Workshop · ${WORKSHOP_PRICE_LABEL}`,
+        heroTitleLead: "Reserve your seat —",
+        heroTitleEmphasis: `${WORKSHOP_PRICE_LABEL}.`,
+        heroBlurb: "Walk out with the strategic foundation for your startup: positioning, ideal customer, offer & pricing, 12-month economics, a 90-day roadmap, and a build/hire/buy decision tree. Coffee and refreshments included.",
+        asideBlurb: "Strategic Foundation Workshop — small cohort, working session with Adam Anderson. Coffee and light refreshments provided.",
+        walkOuts: null as string[] | null,
+        priceLabel: WORKSHOP_PRICE_LABEL,
+        priceCents: WORKSHOP_PRICE_CENTS,
+        footerLine: `${TOTAL_DELIVERABLES} startup assets total · built live with Adam · yours to keep.`,
+      };
+
   const { data: cohorts = [] } = useQuery<Cohort[]>({
     queryKey: ["cohorts"],
     queryFn: () => listCohorts(),
@@ -50,19 +80,28 @@ export function RegisterFramework() {
     () => cohorts.filter((c) => c.status !== "sold_out"),
     [cohorts],
   );
-  const defaultCohort = useMemo(
-    () => getNextAvailable(openCohorts) ?? FALLBACK_COHORT,
-    [openCohorts],
-  );
+  const defaultCohort = useMemo(() => {
+    if (preselectedDateIso) {
+      const match = openCohorts.find((c) => c.startISO === preselectedDateIso);
+      if (match) return match;
+    }
+    return getNextAvailable(openCohorts) ?? FALLBACK_COHORT;
+  }, [openCohorts, preselectedDateIso]);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: { stage: "idea", industry: "", cohort_id: defaultCohort.id },
   });
+
+  // Keep cohort_id in sync once cohorts load or preselected date resolves.
+  useEffect(() => {
+    setValue("cohort_id", defaultCohort.id);
+  }, [defaultCohort.id, setValue]);
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
