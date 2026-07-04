@@ -2,8 +2,9 @@ import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
+import { getUpcomingSessions } from "@/lib/build-workshop-schedule";
 
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, CalendarDays } from "lucide-react";
 
 export default function BuildIndexPage() {
   return (
@@ -30,6 +31,7 @@ export default function BuildIndexPage() {
           <div className="grid gap-5 md:grid-cols-2">
             {BUILD_WORKSHOPS.map((w) => {
               const Icon = w.icon;
+              const upcoming = getUpcomingSessions(w.slug, new Date(), 3);
               return (
                 <Link
                   key={w.slug}
@@ -60,6 +62,22 @@ export default function BuildIndexPage() {
                       ))}
                     </ul>
                   </div>
+                  {upcoming.length > 0 && (
+                    <div className="mt-5 border-t border-white/10 pt-4">
+                      <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                        <CalendarDays className="size-3.5" /> Upcoming dates
+                      </div>
+                      <ul className="mt-2 space-y-1 text-sm">
+                        {upcoming.map((s) => (
+                          <li key={s.startISO} className="text-muted-foreground">
+                            <span className="text-foreground">{s.dateLabel}</span>
+                            <span className="mx-1.5 opacity-40">·</span>
+                            {s.timeLabel}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
                     Learn more
                     <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />

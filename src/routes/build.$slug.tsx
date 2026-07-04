@@ -2,6 +2,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { getBuildWorkshop, BUILD_WORKSHOPS, getWorkshopAgencyOffer } from "@/lib/build-workshops";
+import { getUpcomingSessions } from "@/lib/build-workshop-schedule";
 import {
   ArrowRight,
   Check,
@@ -22,6 +23,7 @@ export default function BuildWorkshopPage() {
   const Icon = w.icon;
   const offer = getWorkshopAgencyOffer(w.slug)!;
   const otherWorkshops = BUILD_WORKSHOPS.filter((x) => x.slug !== w.slug).slice(0, 3);
+  const upcoming = getUpcomingSessions(w.slug, new Date(), 12);
 
   return (
     <div className="min-h-screen">
@@ -76,6 +78,40 @@ export default function BuildWorkshopPage() {
           </div>
         </div>
       </section>
+
+      {/* Upcoming dates */}
+      {upcoming.length > 0 && (
+        <section className="border-b border-white/5 bg-white/[0.02] py-14 md:py-16">
+          <div className="mx-auto max-w-5xl px-6">
+            <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-primary md:text-sm">
+              <Calendar className="size-4" /> Upcoming dates
+            </div>
+            <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+              Pick your session.{" "}
+              <span className="text-gradient-brand">Reserve your seat.</span>
+            </h2>
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+              {upcoming.map((s) => (
+                <li
+                  key={s.startISO}
+                  className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-card px-5 py-4"
+                >
+                  <div>
+                    <div className="text-base font-medium tracking-tight">{s.dateLabel}</div>
+                    <div className="text-sm text-muted-foreground">{s.timeLabel}</div>
+                  </div>
+                  <Link
+                    to={`/register?workshop=${w.slug}&date=${encodeURIComponent(s.startISO)}`}
+                    className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20 md:text-sm"
+                  >
+                    Reserve <ArrowRight className="size-3.5" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {/* The pain */}
       <section className="py-16 md:py-24">
