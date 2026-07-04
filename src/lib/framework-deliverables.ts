@@ -194,6 +194,8 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Heart, title: "Community Engagement Playbook", tooltip: "The simple rules and templates for replies, DMs, reviews, and customer moments that turn followers into fans. You'll spend less time agonizing over what to say and build the kind of word-of-mouth that no ad budget can buy." },
       { icon: Star, title: "Influencer & Partnership Brief", tooltip: "A short brief you can send to local influencers, complementary brands, or community partners. You'll unlock collaborations that put you in front of warm audiences for free — instead of paying for cold ads to strangers who don't know you." },
       { icon: Target, title: "Paid Ads Starter Pack", tooltip: "A starter set of ad targets, hooks, and budgets tuned to your offer and your buyer. You'll launch your first paid campaign without burning rent money, learn fast what converts, and scale only what actually pays back." },
+      { icon: MessageSquareQuote, title: "Reviews & Testimonials Capture Kit", tooltip: "Request templates, direct links to Google, Yelp, or G2, a video-ask script, and a wall-of-love page ready to embed. You'll turn every happy first customer into public proof — and stop losing week-two buyers who need to see someone went before them." },
+      { icon: Send, title: "Outbound DM & Email Scripts", tooltip: "Cold and warm outreach scripts tied directly to your First-50 list — opener, follow-up, and the specific ask. You'll actually work the pipeline instead of hoping content does it for you, and book the first sales calls in week one." },
     ],
   },
 ];
