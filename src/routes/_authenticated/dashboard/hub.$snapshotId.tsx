@@ -1094,8 +1094,13 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               </Button>
             )}
             {heroSecondary && (
-              <Button size="sm" variant="ghost" onClick={heroSecondary.onClick}>
+              <Button size="sm" variant="outline" onClick={heroSecondary.onClick} disabled={bulk.isPending}>
                 {heroSecondary.label}
+              </Button>
+            )}
+            {heroTertiary && (
+              <Button size="sm" variant="ghost" onClick={heroTertiary.onClick}>
+                {heroTertiary.label}
               </Button>
             )}
           </div>
