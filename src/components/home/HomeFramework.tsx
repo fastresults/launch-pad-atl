@@ -77,17 +77,17 @@ function Hero() {
 
 
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
-          Where modern founders{" "}
-          <span className="text-gradient-brand">begin.</span>
+          Launch a profitable business in{" "}
+          <span className="text-gradient-brand">14 days.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          One morning. Four working stages. Bring nothing but the idea and the intention to build it — by 11:30 AM you walk out nearly launch-ready, with your first customer named, your offer priced, and a signed 90-day plan for what's next. {WORKSHOP_PRICE_LABEL}, yours to keep.{" "}
-          <span className="font-medium text-white">Full support during and after the workshop</span>, available if you want it.
+          One morning in the room with Adam. Two weeks to your first paying customer — or the Plan B you finally leave the day job for. You walk out with your offer priced, your first channel open, and outreach going out that afternoon. {WORKSHOP_PRICE_LABEL} once, yours forever.{" "}
+          <span className="font-medium text-white">Full support during and after</span>, if you want it.
         </p>
 
 
         <p className="mt-4 max-w-2xl text-sm text-white/80 md:text-base">
-          Coffee's on us — no pressure, ever.
+          Adam in the room. Not a bot. Not a course. Not a slide deck.
         </p>
 
 
