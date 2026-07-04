@@ -88,10 +88,10 @@ export const STAGES: Stage[] = [
         title: "Compliance & legal kit",
         deliverable:
           "Your Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business; local license and sales-tax requirements documented for you.",
-        tool: "GA compliance checklist + contract frameworks",
+        tool: "State & local compliance checklist + contract frameworks",
         details: [
-          "Document Gwinnett city/county business license requirements",
-          "Note GA sales tax registration steps if you'll sell taxable items",
+          "Document your city/county business license requirements",
+          "Note your state's sales tax registration steps if you'll sell taxable items",
           "Customize Terms of Service and Privacy Policy from vetted frameworks",
           "Customize a 1-page service agreement / SOW for your first sale",
         ],
