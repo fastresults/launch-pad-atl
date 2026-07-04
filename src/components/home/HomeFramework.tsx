@@ -11,7 +11,6 @@ import {
   BUILD_LAYER,
   FOUNDATION_FIRST_REASONS,
   FRAMEWORK_STAGES,
-  TOTAL_DELIVERABLES,
   WORKSHOP_PRICE_LABEL,
 } from "@/lib/framework-deliverables";
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
