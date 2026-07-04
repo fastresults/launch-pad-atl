@@ -95,9 +95,8 @@ function geoToMarketScope(
 }
 
 export async function getCanonicalFounderContext(): Promise<CanonicalFounderContext | null> {
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData?.user;
-  if (!user) return null;
+  let userId: string;
+  try { userId = await getEffectiveUserId(); } catch { return null; }
 
   const [
     profileRes,
@@ -107,13 +106,14 @@ export async function getCanonicalFounderContext(): Promise<CanonicalFounderCont
     pubProfileRes,
     intakeRes,
   ] = await Promise.all([
-    supabase.from("attendee_profiles").select("*").eq("user_id", user.id).maybeSingle(),
-    supabase.from("attendee_business_brief").select("*").eq("user_id", user.id).maybeSingle(),
-    supabase.from("attendee_founder_profile").select("*").eq("user_id", user.id).maybeSingle(),
-    supabase.from("attendee_market_profile").select("*").eq("user_id", user.id).maybeSingle(),
-    supabase.from("profiles").select("display_name,email").eq("user_id", user.id).maybeSingle(),
-    supabase.from("member_intakes").select("*").eq("user_id", user.id).maybeSingle(),
+    supabase.from("attendee_profiles").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("attendee_business_brief").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("attendee_founder_profile").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("attendee_market_profile").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("profiles").select("display_name,email").eq("user_id", userId).maybeSingle(),
+    supabase.from("member_intakes").select("*").eq("user_id", userId).maybeSingle(),
   ]);
+
 
   const profile: any = profileRes.data ?? {};
   const brief: any = briefRes.data ?? {};
