@@ -80,6 +80,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     number: "02",
     name: "Strategy",
     intro: "How you win — and how you compound the lead.",
+    benefit: "Walk out knowing exactly who you sell to, how you beat the alternatives, and the ninety-day plan that turns the strategy into first paying customers.",
     items: [
       { icon: BarChart3, title: "Market Analysis", tooltip: "A grounded read of how big the opportunity really is in your city, category, and price band. You'll stop guessing if demand is real and start sizing spend, hiring, and pricing decisions with actual numbers behind you." },
       { icon: Users, title: "Customer Personas", tooltip: "Vivid profiles of the two or three people most likely to buy — their pain, budget, vocabulary, and buying triggers. Marketing stops being random; every ad, email, and conversation lands with someone you can picture by name." },
