@@ -55,19 +55,20 @@ export default function SchedulePage() {
             Idea in. <span className="text-gradient-brand">Launch plan out.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
-            The Strategic Foundation Workshop is one morning. Five pillars — Foundation to
-            Governance — plus three bonus tracks (Brand, Marketing, Social &amp; Content). By
-            11:30 AM you walk out with all five pillars done and up to <strong className="text-foreground">30 AI-generated ship-ready documents</strong>{" "}
-            (PDFs, DOCX, XLSX, CSV, PNG) waiting in your dashboard — produced live by workshop
-            staff and released before you leave the room.
+            One morning. Foundation is the drafting stage — you write the one-page story of your
+            startup. Every stage after Foundation is a{" "}
+            <strong className="text-foreground">mentored working session</strong>: you bring a
+            working attempt, staff apply an operator, CFO, or brand-lead lens to your specific
+            startup, and you leave with sharper thinking plus reviewed working drafts on your
+            dashboard you continue to refine.
           </p>
 
           {/* Stat ribbon */}
           <div className="mt-8 grid grid-cols-1 gap-3 border-t border-white/10 pt-6 sm:grid-cols-3 md:mt-10 md:pt-8">
             {[
               { stat: "2h 45m", label: "working time" },
-              { stat: "5 pillars", label: "+ 3 bonus tracks shipped" },
-              { stat: "~30 docs", label: "AI-generated to your dashboard" },
+              { stat: "1 drafting", label: "+ 7 mentored review stages" },
+              { stat: "~30 drafts", label: "reviewed working docs on your dashboard" },
             ].map((s) => (
               <div
                 key={s.label}
@@ -256,8 +257,8 @@ export default function SchedulePage() {
               One day. One door. Twenty seats.
             </h3>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              Idea in at 8:45 AM. Five pillars done, three bonus tracks shipped, and up to
-              30 AI-generated documents in your dashboard by 11:30 AM.
+              Idea in at 8:45 AM. Foundation drafted, seven mentored review sessions completed,
+              and ~30 reviewed working documents on your dashboard by 11:30 AM.
             </p>
             <div className="mt-6 flex justify-center">
               <Link
