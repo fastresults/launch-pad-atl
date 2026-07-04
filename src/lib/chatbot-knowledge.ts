@@ -114,6 +114,20 @@ Eight additional capabilities. Each is a separate half-day workshop (from ${WORK
 our team can build it done-for-you.
 ${buildLayerBlock()}
 
+## Done-for-you Tracks (/services)
+The workshop gives you the strategic foundation. The **Tracks** on /services are how our team
+builds it — brand, site, systems — done-for-you. You do NOT have to attend the workshop first;
+Tracks stand alone. Three named Tracks, each a curated bundle of the individual services below:
+
+${tracksBlock()}
+
+## Individual done-for-you services (/services)
+Every capability in the build layer is also available on its own — pick just what you need.
+Each has a starting price; Tracks are bespoke and scoped in a 20-min discovery call.
+
+${servicesBlock()}
+
+
 ## Two equal default tracks — pick the one that fits
 - **Main Street Startup** — cafés, salons, fitness studios, trades, local services, indie products, solo professional practices.
 - **Online / DTC / Digital** — DTC and e-commerce brands (Shopify, Amazon, marketplaces), creators and info products, digital services and agencies, small SaaS and subscription products.
