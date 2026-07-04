@@ -1,16 +1,28 @@
-Remove the Hero section from `/services` and promote the Tracks section to hero styling so it becomes the page opener.
+# Make the concierge aware of /services (Launch/Growth/Operate Tracks + agency services)
 
-**`src/routes/services.tsx`:**
+The public chatbot doesn't know terms like "Launch Track" because the knowledge corpus only covers the workshop + BUILD_LAYER capability list. It never mentions the three done-for-you Tracks or the per-service scope on `/services`.
 
-1. Remove `<Hero />` from the page composition and delete the `Hero` function entirely.
-2. Restyle `Tracks` to serve as the hero:
-   - Section: swap `border-t border-white/5 bg-white/[0.02] py-16 md:py-24` → `border-b border-white/5 py-16 md:py-24` (matches old Hero framing, no muted band).
-   - Add the eyebrow chip above the heading: rounded pill with `<Sparkles />` + copy `Done-for-you · Three tracks, built by our team` (replaces the current "Bundles that map to where you are" small-caps label).
-   - Promote the heading from `h2` to `h1` and bump to `text-4xl md:text-5xl lg:text-6xl font-semibold leading-[1.05]`. Keep current copy ("Three tracks. Pick the one that matches the stage you're in.") with the gradient span on the second clause.
-   - Keep the current intro paragraph as-is (it already reads as hero subcopy).
-   - Add the two hero CTAs above the track grid: primary "Book a discovery call" → `/contact?intent=discovery` (hero-gradient pill), secondary "Start with a workshop — from $197" → `/build` (outline pill).
-   - Add the proof line below CTAs: `Work shipped for Citigroup · Mayo Clinic · 3M · Disney · government, Main Street, and online brands alike` (small-caps, muted).
-   - Track cards grid: unchanged.
-3. Imports: `Sparkles` and `ArrowRight` stay (both already imported). No new imports.
+## Fix
 
-Nothing else on the page changes.
+1. **`src/lib/chatbot-knowledge.ts`** — import `AGENCY_TRACKS` and `AGENCY_SERVICES` from `@/lib/agency-services` and render two new sections into `CONCIERGE_KNOWLEDGE`:
+
+   - **`## Done-for-you Tracks (/services)`** — for each track: name, tagline, outcome, what's included (mapped from `includedSlugs` to capability names), price label, timeline label, CTA route. Explicitly list "Launch Track", "Growth Track", "Operate Track" so the model matches on those exact names.
+   - **`## Individual done-for-you services`** — for each of the 8 services: capability name, one-liner, deliverables bullets, price label, timeline, workshop route (`/build/<slug>`), contact route.
+   - Add a short intro line clarifying: workshop = strategic foundation; Tracks/services = done-for-you build after (or independent of) the workshop.
+
+2. **Canned Q&A additions** in the same file (append to "Common questions"):
+   - "What's the Launch Track / Growth Track / Operate Track?" → one-line each, point to `/services`.
+   - "How much does the done-for-you build cost?" → tracks are bespoke after a 20-min discovery call; individual services have `From $X` starting prices on `/services`.
+   - "Do I have to do the workshop first?" → no, Tracks/services stand alone; workshop is recommended for founders who don't yet have strategic clarity.
+
+3. **`supabase/functions/venture-chatbot/knowledge.ts`** — regenerate from the updated `CONCIERGE_KNOWLEDGE` (same script used last time: render via tsx, escape backticks/`${`, write as template literal).
+
+4. **Deploy** `venture-chatbot` edge function so the new corpus ships.
+
+5. **Minor system-prompt tweak** in `supabase/functions/venture-chatbot/index.ts` — add Tracks, agency services, and `/services` to the "answer questions about…" sentence so the model treats them as in-scope rather than deflecting.
+
+## Verification
+
+- Ask the deployed chatbot "what is the Launch Track?" and "what does the Launch Track include beyond the foundation workshop?" — expect answers referencing brand identity, website that converts, and legal/financial/operational scaffolding, and pointing to `/services`.
+
+No UI changes. No schema changes. One source-of-truth file (`chatbot-knowledge.ts`) drives both the site copy and the edge function corpus.
