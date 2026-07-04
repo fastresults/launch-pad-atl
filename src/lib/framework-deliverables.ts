@@ -91,6 +91,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Eye, title: "Vision & Mission", tooltip: "The north-star statement that keeps every decision pointed the same direction. You'll stop chasing every shiny idea, say no faster, and rally future teammates and customers around a story they actually want to be part of." },
       { icon: AlertCircle, title: "Problem / Solution Brief", tooltip: "A crisp account of the painful problem you solve and exactly how your offer removes it. You'll talk about your business in plain language that makes customers nod, buy faster, and tell their friends without you scripting it." },
       { icon: Sparkles, title: "Value Proposition", tooltip: "The single sentence that explains why a customer should pick you over every alternative — including doing nothing. Drop it on your website, in your pitch, on your business card, and watch conversion and referrals climb immediately." },
+      { icon: CalendarClock, title: "14-Day Launch Plan", tooltip: "The dated, day-by-day sprint that sequences every other asset into fourteen blocks — owner, output, and 'done' for each. You'll stop wondering what to do tomorrow morning and start every day of the launch knowing exactly which move ships revenue." },
     ],
   },
   {
