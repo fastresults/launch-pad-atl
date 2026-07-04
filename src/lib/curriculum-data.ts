@@ -31,13 +31,13 @@ export const STAGES: Stage[] = [
     summary: "The legal foundation. Leave with a filing-ready packet and the legal kit you need to sell.",
     oneLiner: "Legal foundation",
     takeHome:
-      "Your Georgia LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding model with 12-month runway, a business plan with pro formas, an investor-ready pitch deck, and a fundraising kit ready to send. File Monday, start taking money the same week.",
+      "Your state LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding model with 12-month runway, a business plan with pro formas, an investor-ready pitch deck, and a fundraising kit ready to send. File Monday, start taking money the same week.",
     walkOut: [
-      "Articles of Organization pre-filled in your GA Secretary of State account",
+      "Articles of Organization pre-filled in your Secretary of State account (all 50 states supported)",
       "EIN application completed and submitted — number issued in the session",
       "Business-bank shortlist + bank application checklist filled for your business",
       "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business",
-      "Local license + sales-tax requirements documented for your county",
+      "Local license + sales-tax requirements documented for your state and county",
       "Funding model & 12-month runway: real costs, margins, break-even, and cash picture by month",
       "Business plan with pro formas: short narrative plan + 12-month P&L, cash flow, and break-even pro forma a bank or investor will accept",
       "Investor-ready pitch deck: 10 slides in your brand (problem, solution, market, offer, traction, model, GTM, team, ask, use of funds)",
