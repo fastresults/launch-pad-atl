@@ -911,6 +911,27 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const [showUnlock, setShowUnlock] = useState(false);
   const [openDeckSlug, setOpenDeckSlug] = useState<string | null>(null);
 
+  // Per-section open/collapse state (persisted per snapshot)
+  const openSectionsKey = `hub:sectionOpen:${snapshotId}`;
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const raw = window.localStorage.getItem(`hub:sectionOpen:${snapshotId}`);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(openSectionsKey, JSON.stringify(openSections));
+    } catch {}
+  }, [openSections, openSectionsKey]);
+  const toggleSection = useCallback((cat: string) => {
+    setOpenSections((prev) => ({ ...prev, [cat]: !(prev[cat] ?? false) }));
+  }, []);
+
   const cancel = useMutation({
     mutationFn: (jobId: string) => cancelJob({ data: { jobId } }),
     onSuccess: () => { toast.success("Stopping…"); qc.invalidateQueries({ queryKey: ["hub"] }); },
