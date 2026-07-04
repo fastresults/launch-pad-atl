@@ -369,7 +369,7 @@ function WorkshopBand() {
             <span className="text-gradient-brand">Hire us if it's a fit.</span>
           </h2>
           <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-            Take any of the eight workshops — $197, $297, or $397 depending on the capability. You leave with the strategy, the frameworks, and the exact tool stack to ship it yourself. Decide in the room whether to DIY, hire someone else, or hand it to our team. If you hire us for any engagement over $1,000, your workshop fee is credited back.
+            Take any of the eight workshops — $197, $297, or $397 depending on the capability. You leave with the strategy, the frameworks, and the exact tool stack to ship it yourself. Decide in the room whether to DIY, hire someone else, or hand it to our team. If you hire us for any bespoke engagement after, your workshop fee is credited back against the scope.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link
