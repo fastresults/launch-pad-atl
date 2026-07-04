@@ -1,15 +1,19 @@
 import { FRAMEWORK_STAGES } from "@/lib/framework-deliverables";
+import { STAGE_PRODUCTIZATION } from "@/lib/workshop-productization";
 import { ArrowRight, CheckCircle2, AlertTriangle } from "lucide-react";
 import { SlideLayout } from "../SlideLayout";
 import { DeliverableSlide } from "../DeliverableSlide";
 import { SlotText, SlotImage } from "../slots";
+import { buildProductizationSlides } from "../ProductizationSlides";
 import type { Slide } from "../SlideDeck";
 
 const STAGE = FRAMEWORK_STAGES[4]; // Governance
 const KICKER = `${STAGE.number} · ${STAGE.name.toUpperCase()}`;
+const PROD = STAGE_PRODUCTIZATION["governance"];
 const TOTAL_STAGES = FRAMEWORK_STAGES.length;
 const TOTAL_DELIVS = STAGE.items.length;
-const TOTAL_SLIDES = 5 + TOTAL_DELIVS + 1;
+// 5 overview + 4 productization + N per-deliverable + 1 recap
+const TOTAL_SLIDES = 5 + 4 + TOTAL_DELIVS + 1;
 
 const pl = (i: number) => `${i} / ${TOTAL_SLIDES}`;
 
