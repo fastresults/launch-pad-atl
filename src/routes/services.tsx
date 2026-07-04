@@ -2,14 +2,11 @@ import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 
-import { AGENCY_SERVICES, AGENCY_TRACKS, getAgencyService } from "@/lib/agency-services";
-import { getBuildWorkshop } from "@/lib/build-workshops";
+import { AGENCY_TRACKS, getAgencyService } from "@/lib/agency-services";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import {
   ArrowRight,
-  Check,
   Sparkles,
-  Clock,
   Award,
   Compass,
   FileText,
