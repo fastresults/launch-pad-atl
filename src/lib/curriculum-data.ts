@@ -20,595 +20,396 @@ export type Stage = {
   duration: string;
   covers: string[];
   tasks: Task[];
+  bonus?: boolean;
 };
 
+// Mirrors FRAMEWORK_STAGES (src/lib/framework-deliverables.ts) so the on-site
+// /schedule agenda uses the same 5 pillars + 3 bonus tracks the founder sees on
+// their dashboard after registering. Titles, ordering, and numbering match the
+// framework verbatim. In-room copy describes what's produced live; followUp
+// describes what continues on the dashboard.
 export const STAGES: Stage[] = [
   {
     n: 1,
-    slug: "form",
-    title: "Form the business",
-    shortTitle: "form",
-    summary: "The legal foundation. Leave with a filing-ready packet and the legal kit you need to sell.",
-    oneLiner: "Legal foundation",
+    slug: "foundation",
+    title: "Foundation",
+    shortTitle: "foundation",
+    oneLiner: "The bedrock every defensible startup is built on.",
+    summary:
+      "The one-page story of your startup. Vision, problem, and value prop tight enough that customers buy, partners lean in, and hires say yes.",
     takeHome:
-      "Your state formation packet (LLC, S-Corp election, or Sole Proprietor — whichever fits), EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding model with 12-month runway, a business plan with pro formas, an investor-ready pitch deck, and a fundraising kit ready to send. File Monday, start taking money the same week.",
+      "Your Executive Summary, Vision & Mission, Problem/Solution Brief, and Value Proposition — the four Foundation deliverables — drafted, sharpened in-room, and ready to paste into your website, pitch, and first sales conversation.",
     walkOut: [
-      "Formation documents pre-filled in your state's filing agency account — Articles of Organization or Certificate of Formation, whichever your state uses (all 50 states supported)",
-      "Structure recommendation — LLC, S-Corp election, or Sole Proprietor — matched to your revenue and salary plans",
-      "Operating Agreement drafted for your members and ownership split",
-      "EIN application completed and submitted — number issued in the session",
-      "Business-bank shortlist + bank application checklist filled for your business",
-      "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business",
-      "Local license + sales-tax requirements documented for your state and county",
-      "Funding model & 12-month runway: real costs, margins, break-even, and cash picture by month",
-      "Business plan with pro formas: short narrative plan + 12-month P&L, cash flow, and break-even pro forma a bank or investor will accept",
-      "Investor-ready pitch deck: 10 slides in your brand (problem, solution, market, offer, traction, model, GTM, team, ask, use of funds)",
-      "Fundraising kit: 1-page raise summary, funder outreach list with email framework, and your path picked across grants, microloans, SBA, and friends-and-family",
+      "Executive Summary — a one-page snapshot of what you do, who it's for, how you make money, and why now",
+      "Vision & Mission — the north-star statement your team, customers, and future hires can rally behind",
+      "Problem / Solution Brief — the painful problem you solve and exactly how your offer removes it, in plain language",
+      "Value Proposition — the single sentence that explains why a customer picks you over every alternative",
     ],
-
     afterWorkshop: [
-      "Submit your state's formation document + filing fee from home (about 10 minutes — skip if you chose Sole Proprietor)",
-      "Open the business bank account (1–7 days after you apply)",
-      "File local business license and sales-tax registration once the entity is approved",
+      "Paste your Value Prop onto your homepage hero within 48 hours",
+      "Test the Executive Summary on 3 people who fit your buyer profile — refine based on where they get confused",
     ],
-    duration: "60 min",
-    covers: ["Entity structure", "State formation packet", "EIN", "Operating agreement", "T&Cs / privacy", "Service agreement"],
+    duration: "25 min",
+    covers: ["Executive Summary", "Vision & Mission", "Problem/Solution", "Value Prop"],
     tasks: [
       {
-        title: "Choose your structure & prepare your state formation packet",
+        title: "Draft the Foundation four",
         deliverable:
-          "Your state-specific packet: structure chosen (LLC, S-Corp, or Sole Proprietor), name confirmed available, registered agent selected, member info entered, Secretary of State account created, and your state's formation document (Articles of Organization or Certificate of Formation) pre-filled.",
-        tool: "Secretary of State filing walk-through — all 50 states, LLC / S-Corp / Sole Prop",
+          "Executive Summary, Vision & Mission, Problem/Solution Brief, and Value Proposition — all four saved to your dashboard's Foundation stage.",
+        tool: "Foundation drafting worksheet + AI-assisted sharpener",
         details: [
-          "Pick LLC vs Sole Proprietor vs S-Corp election using a 5-question decision tree tuned to your revenue and salary plans",
-          "Confirm name availability on your state's SOS business search",
-          "Decide registered agent (you, partner, or paid service)",
-          "Create your state SOS account and pre-fill your state's formation document (Articles of Organization or Certificate of Formation)",
+          "Write the one-sentence value prop first using the [Who] + [Problem] + [Outcome] + [Unfair advantage] frame",
+          "Draft vision (10-year picture) and mission (what you do every day) side by side",
+          "Name the problem in the customer's own words, not yours",
+          "Compose the Executive Summary last — it's a distillation of the other three",
         ],
         takeaway:
-          "Your state formation packet — structure locked, formation document pre-filled, registered agent set, ready to submit.",
+          "Your Foundation pillar complete — the 60-second story of your startup, sharp enough to open every conversation.",
         followUp:
-          "Submit your state's formation document and pay the filing fee from home — typically a 10-minute step (skip if you chose Sole Proprietor).",
-      },
-      {
-        title: "Get your EIN & lock the business bank choice",
-        deliverable:
-          "Your EIN issued in the session, your business-bank choice locked, and your bank application checklist completed for your business.",
-        tool: "IRS EIN portal + banking checklist",
-        details: [
-          "Apply for your EIN on the IRS portal — issued in the session",
-          "Compare 3 business banks on fees, integrations, and ACH limits",
-          "Pick your bank and complete the application checklist (docs needed)",
-          "Pick a bookkeeping tool (Wave / QuickBooks) and bookmark the signup",
-        ],
-        takeaway:
-          "Your EIN + chosen business bank + bookkeeping tool — ready to apply.",
-        followUp:
-          "Submit the bank application with your documents — most banks open the account in 1–7 days.",
-      },
-      {
-        title: "Compliance & legal kit",
-        deliverable:
-          "Your Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business; local license and sales-tax requirements documented for you.",
-        tool: "State & local compliance checklist + contract frameworks",
-        details: [
-          "Document your city/county business license requirements",
-          "Note your state's sales tax registration steps if you'll sell taxable items",
-          "Customize Terms of Service and Privacy Policy from vetted frameworks",
-          "Customize a 1-page service agreement / SOW for your first sale",
-        ],
-        takeaway:
-          "Your signed Terms of Service, Privacy Policy, and 1-page Service Agreement — customized to your business.",
-        followUp:
-          "File the local business license and (if applicable) sales-tax registration once your entity is approved.",
-      },
-      {
-        title: "Funding model, business plan with pro formas, pitch deck & fundraising kit",
-        deliverable:
-          "Your funding model with 12-month runway, a business plan with pro formas (12-month P&L, cash flow, and break-even), a 10-slide investor-ready pitch deck in your brand, and a fundraising kit — 1-page raise summary, funder outreach list with email framework, and your path picked across grants, microloans, SBA, and friends-and-family.",
-        tool: "Funding model + business plan + pitch deck + raise kit frameworks",
-        details: [
-          "Build the funding model: startup costs, monthly burn, break-even, and a 12-month cash picture",
-          "Build a 12-month P&L, cash flow, and break-even pro forma alongside a short narrative business plan",
-          "Pick the funding path: grants, microloans, SBA, revenue-based, line of credit, friends & family, or equity",
-          "Draft the 10-slide pitch deck in your brand: problem, solution, market, offer, traction, model, GTM, team, ask, use of funds",
-          "Write the 1-page raise summary and customize the funder outreach email framework so it's ready to send",
-        ],
-        takeaway:
-          "Your funding model, business plan with pro formas, investor-ready pitch deck, and fundraising kit — ready to send.",
-        followUp:
-          "Build out the funder list and send the outreach in the first 2 weeks; book intro calls with anyone who replies.",
-
+          "Foundation deliverables land on your dashboard immediately. Revise them anytime — every downstream stage inherits this language.",
       },
     ],
   },
   {
     n: 2,
-    slug: "customer",
-    title: "Customer & market",
-    shortTitle: "customer",
-    summary: "Who you serve, what they'll pay for, and how you beat the competition.",
-    oneLiner: "Demand & proof",
+    slug: "strategy",
+    title: "Strategy",
+    shortTitle: "strategy",
+    oneLiner: "How you win — and how you compound the lead.",
+    summary:
+      "Who you sell to, how you beat the alternatives, and the 90-day plan that turns strategy into first paying customers.",
     takeHome:
-      "A sourced 1-page research brief on your idea (market size, trend, regulation, suppliers, real customer quotes), one named first customer with their problems priced in dollars, a starter prospect list you begin in-session, a validated outreach script, a competitive research pack, and a one-sentence competitive advantage brief — your defensible 'secret sauce' pulled from the research.",
+      "Your Market Analysis, Customer Personas, Competitive Positioning, Go-to-Market Plan, and Brand & Messaging — the five Strategy deliverables — sized to your city, category, and price band with real numbers behind them.",
     walkOut: [
-      "1-page idea-research brief: market size, trend, regulation, supplier/competitor scan, and sourced customer quotes",
-      "1-page profile of your first named buyer with their top 3 problems priced in dollars",
-      "Starter prospect list begun in-session with the source framework and CSV export ready",
-      "Outreach script customized to that specific buyer",
-      "Competitive research pack: 3 competitors compared on offer, price, and positioning, with sourced customer quotes and a one-page 'what makes you different' summary",
-      "Competitive advantage brief: your defensible 'secret sauce' written in one sentence, sourced from the research + competitor scan",
+      "Market Analysis — a grounded read of how big the opportunity is in your city, category, and price band",
+      "Customer Personas — two or three vivid buyer profiles with pain, budget, vocabulary, and buying triggers",
+      "Competitive Positioning — an honest map of the alternatives and the wedge only you can own",
+      "Go-to-Market Plan — the exact sequence of channels, offers, and moves for your first 90 days",
+      "Brand & Messaging — core message, tone, and proof points that make you sound like one voice everywhere",
     ],
-
     afterWorkshop: [
-      "Fill out the prospect list and run discovery calls within the next 2 weeks",
+      "Run your Go-to-Market plan's Week 1 action inside 7 days",
+      "Send one outreach message using your persona vocabulary and log the response",
     ],
-    duration: "60 min",
-    covers: ["Your first customer", "Validation script", "3-competitor look", "What makes you different"],
+    duration: "25 min",
+    covers: ["Market Analysis", "Personas", "Positioning", "GTM", "Brand & Messaging"],
     tasks: [
       {
-        title: "Research the idea from every angle",
+        title: "Size the market and lock the buyer",
         deliverable:
-          "A one-page research brief on your idea: market size, trend direction, regulation/permits, supplier/competitor scan, pricing benchmarks, and real customer quotes pulled from forums or reviews — with source links.",
-        tool: "Idea-research brief framework",
+          "Market Analysis + Customer Personas + Competitive Positioning saved to Strategy.",
+        tool: "Market sizing calculator + persona canvas + competitive matrix",
         details: [
-          "Write 5 research questions that would kill or confirm the idea",
-          "Pull market-size and trend data from public sources (IBISWorld snippets, BLS, Statista free)",
-          "Scan regulation, permits, and licensing for the business type in your county",
-          "Pull real customer quotes from Reddit, Facebook groups, or product reviews — log every URL",
+          "Estimate TAM/SAM/SOM using local data, not top-down guesses",
+          "Build 2–3 personas from real conversations or research, not archetypes",
+          "Map 3–5 alternatives (including 'do nothing') and where you win",
         ],
-        takeaway:
-          "Your idea-research brief — sourced, dated, and decision-ready.",
+        takeaway: "Market sized, buyer named, wedge identified.",
+        followUp: "Refine personas on your dashboard as you talk to real customers.",
       },
       {
-        title: "Pick your first real customer",
-        deliverable:
-          "A one-page profile of one specific buyer for your business, their top 3 problems, and what each problem costs them in dollars.",
-        tool: "Customer profile worksheet",
+        title: "Plan the first 90 days and lock the voice",
+        deliverable: "Go-to-Market Plan + Brand & Messaging saved to Strategy.",
+        tool: "90-day GTM sequencer + messaging house",
         details: [
-          "Name one specific buyer (role, industry, company size, location)",
-          "List their top-3 pains in their own words",
-          "Attach a dollar cost to each pain (time, lost revenue, risk)",
-          "Map where they already hang out — online and offline",
+          "Pick 2 channels max for the first 90 days — pick channels your persona actually uses",
+          "Draft your core message, 3 supporting messages, and 3 proof points",
+          "Write your first outreach script and post using the messaging house",
         ],
-        takeaway:
-          "Your first customer profile — one specific buyer named, their top problems priced in dollars, and where to find them.",
-      },
-      {
-        title: "Estimate the market + write a short script you'll send",
-        deliverable:
-          "A real-world estimate of how many buyers exist for your business, a starter prospect list you begin in-session, and a short outreach script customized to your first customer.",
-        tool: "Market snapshot framework + validation script",
-        details: [
-          "Estimate how many buyers exist, how many you can realistically reach, and how many you'll win in year one",
-          "Start your prospect list from LinkedIn, local groups, or referrals using the source framework",
-          "Customize the problem-discovery script for your first customer",
-          "Pick a scoring rubric: pain confirmed, willingness to pay, intro to others",
-        ],
-        takeaway:
-          "Your market snapshot + starter prospect list + outreach script — customized to your business.",
+        takeaway: "You know what to do Monday, and you sound like one brand doing it.",
         followUp:
-          "Fill out the prospect list and run discovery calls in the next 2 weeks; score each one.",
+          "GTM and messaging feed the Operations Marketing Plan and, if you unlock Bonus, the Social & Content calendar.",
       },
-      {
-        title: "Competitive research pack + competitive advantage brief",
-        deliverable:
-          "A competitive research pack: 3 competitors compared on offer, price, channel, proof, and weakness, with sourced customer quotes and a one-page 'what makes you different' summary — plus a one-sentence competitive advantage brief (your defensible 'secret sauce') you can put on the website and in pitches.",
-        tool: "Competitive research framework + advantage brief",
-        details: [
-          "Identify 3 real competitors (2 direct + 1 substitute)",
-          "Score each on offer, price, channel, proof, and weakness",
-          "Pull sourced customer quotes that show where each competitor falls short",
-          "Distill the research + competitor weaknesses into one defensible advantage and write it as a one-sentence positioning line",
-          "Write a one-line positioning statement: For X, who Y, we are Z because…",
-        ],
-        takeaway:
-          "Your competitive research pack plus a competitive advantage brief — your 'secret sauce' written in one sentence you can defend.",
-      },
-
     ],
   },
   {
     n: 3,
-    slug: "offer",
-    title: "Offer & product",
-    shortTitle: "offer",
-    summary: "What you actually sell, how it's delivered, and the price tag.",
-    oneLiner: "What you sell & what it costs",
+    slug: "operations",
+    title: "Operations",
+    shortTitle: "operations",
+    oneLiner: "What you build, sell, and ship — week after week.",
+    summary:
+      "The roadmap, weekly workflow, sales playbook, and marketing plan that let you deliver reliably and hand pieces to a teammate.",
     takeHome:
-      "Your offer written in one sentence a buyer can say yes or no to, your price set from a 3-competitor scan, value to the customer, and your real costs, the exact number of sales you need to break even, and a signed go / pivot / kill viability score — on a one-page offer sheet.",
+      "Your Product Roadmap, Operating Plan, Sales Playbook, and Marketing Plan — the four Operations deliverables — set up so the business can run without you reinventing every order.",
     walkOut: [
-      "Your one-sentence offer locked",
-      "First-version scope mapped step-by-step from sale to handoff",
-      "Competitor + value-based pricing: 3-competitor price scan, value & cost-plus anchors, real cost per sale, break-even number, and payment terms",
-      "Signed viability scorecard with a go / pivot / kill decision, scored on 6 dimensions with evidence",
+      "Product Roadmap — a 12-month sequence of what you launch and in what order",
+      "Operating Plan — the week-by-week workflow that turns your offer into something you can deliver reliably",
+      "Sales Playbook — discovery questions, objections, asks, closes — a repeatable script that moves stranger → signed deal",
+      "Marketing Plan — channels, monthly spend, content cadence, and the metrics that tell you what's working",
     ],
-    afterWorkshop: [],
-    duration: "60 min",
-    covers: ["Offer in one sentence", "What's in V1", "Competitor + value-based pricing"],
-
+    afterWorkshop: [
+      "Run one week of your Operating Plan and log where it broke",
+      "Use your Sales Playbook on 3 conversations and refine the objection responses",
+    ],
+    duration: "25 min",
+    covers: ["Roadmap", "Operating Plan", "Sales Playbook", "Marketing Plan"],
     tasks: [
       {
-        title: "Write the offer in one sentence",
-        deliverable:
-          "Your offer written in one clear sentence a buyer can say yes or no to.",
-        tool: "Offer-builder framework",
+        title: "Roadmap and weekly ops",
+        deliverable: "Product Roadmap + Operating Plan saved to Operations.",
+        tool: "12-month roadmap + weekly workflow builder",
         details: [
-          "Use the formula: We help [who] achieve [outcome] in [time] without [pain]",
-          "Test it against your first-customer profile",
-          "Strip jargon — read it aloud to a partner",
-          "Lock the final sentence; it feeds your website and pitch",
+          "Sequence what you ship in the next 12 months — revenue-driving items first",
+          "Map your delivery workflow week by week: intake → produce → deliver → invoice → follow-up",
+          "Identify the 2–3 steps a future hire could take off your plate",
         ],
-        takeaway:
-          "Your one-sentence offer — the line you'll use on your website, in pitches, and in DMs.",
+        takeaway: "You know what to build, and how the business runs on repeat.",
+        followUp: "Roadmap and workflow live on your dashboard; edit as you learn.",
       },
       {
-        title: "Decide what your first version actually includes",
-        deliverable:
-          "A one-page map of how your business delivers — every step from sale to handoff, with what's in and what's out.",
-        tool: "First-version scope + delivery steps",
+        title: "Sales and marketing systems",
+        deliverable: "Sales Playbook + Marketing Plan saved to Operations.",
+        tool: "Discovery/objection script + channel-spend planner",
         details: [
-          "List what's IN scope for the first version — and what's explicitly OUT",
-          "Map the 5–8 steps from sale to delivery",
-          "Identify tools, suppliers, or contractors needed",
-          "Estimate time-to-fulfill so pricing covers your hours",
+          "Write your 5 discovery questions, top 3 objections, and close language",
+          "Set monthly spend by channel and the one metric per channel you'll watch",
+          "Draft your content cadence — how often, what format, who owns it",
         ],
-        takeaway:
-          "Your first-version scope — mapped step-by-step from sale to handoff.",
-      },
-      {
-        title: "Set price using competitor + value benchmarks",
-        deliverable:
-          "Your pricing sheet built from a 3-competitor price scan and the value to your customer, with real cost per sale, margin, break-even, and payment terms.",
-        tool: "Competitor + value-based pricing calculator",
-        details: [
-          "Scan 3 named competitors and capture their public prices and what's included",
-          "Set price using value, cost-plus, and competitor anchors",
-          "Compute what each sale actually costs you to make",
-          "Calculate units/month to break even and to hit a target income",
-          "Define deposit, milestones, refund policy, and accepted payment methods",
-        ],
-        takeaway:
-          "Your pricing sheet — anchored to competitors and customer value — plus exact break-even number and payment terms.",
-      },
-
-      {
-        title: "Score the idea — go / pivot / kill",
-        deliverable:
-          "A signed one-page viability scorecard rating your business on demand evidence, willingness to pay, unit economics, founder fit, regulatory load, and time to first dollar — each 0–5 with the evidence written next to it.",
-        tool: "Viability scorecard",
-        details: [
-          "Score each of the 6 dimensions 0–5 against the research, customer profile, and pricing",
-          "Write one sentence of evidence per score — no number stands alone",
-          "Total the score: ≥22 go, 15–21 pivot the weakest dimension, <15 kill",
-          "Write your one-sentence recommendation and sign it",
-        ],
-        takeaway:
-          "Your signed viability scorecard with a go / pivot / kill decision and the evidence behind it.",
+        takeaway: "You have a script that closes and a plan that spends on what works.",
+        followUp:
+          "Marketing Plan feeds directly into your Social & Content bonus track if you unlock it.",
       },
     ],
   },
   {
     n: 4,
-    slug: "build",
-    title: "Build the first working version",
-    shortTitle: "build",
+    slug: "finance",
+    title: "Finance",
+    shortTitle: "finance",
+    oneLiner: "The numbers investors, banks, and you can trust.",
     summary:
-      "Set up how you'll actually deliver. Pick what kind of business you're building, set up your free apps, and draft what your first customer will get.",
-    oneLiner: "Your first working version",
+      "A 12-month P&L, unit economics, funding plan, budget, and pitch outline you can defend to a banker or investor — and use yourself to price, spend, and hire with confidence.",
     takeHome:
-      "Your delivery process mapped step-by-step, the free apps that run it set up with your accounts, your first customer's deliverable drafted and rehearsed, 3 written SOPs (sales intake, fulfillment, onboarding) loaded into your project hub, and a sourcing & staffing plan for the raw goods, services, and talent you'll need — before a real customer ever sees it.",
+      "Your Financial Model, Unit Economics, Funding Strategy, Budget & Pro Forma, and Pitch Deck Outline — the five Finance deliverables — tied to real assumptions and ready to hand to a bank, SBA officer, or investor.",
     walkOut: [
-      "Sale-to-happy-customer map with the app you'll use at each step",
-      "Free-app accounts created in your name: project hub, files, scheduling, business email alias",
-      "Your first customer's deliverable drafted and rehearsed end-to-end",
-      "5-point quality checklist for anything that goes to a real customer",
-      "Operations & workflow: 3 runnable SOPs (intake, fulfillment, onboarding) in your project hub plus a one-page weekly operating rhythm",
-      "Sourcing & staffing plan: named suppliers, contractors, or hires for raw goods, services, and talent — with a first-call list",
+      "Financial Model — 12-month P&L and cash flow with your real cost and revenue assumptions",
+      "Unit Economics — the math on what one customer costs to win and pays back over time",
+      "Funding Strategy — the cheapest capital that actually fits (bootstrap, savings, grants, loans, F&F, investors)",
+      "Budget & Pro Forma — a line-by-line forecast in the format a bank, landlord, or SBA officer expects",
+      "Pitch Deck Outline — the slide-by-slide narrative for partners, investors, and first big customers",
     ],
-
     afterWorkshop: [
-      "Run the rehearsed deliverable past your first paying customer and iterate",
-      "Upgrade to paid app tiers as revenue justifies",
+      "Pressure-test your financial model with a bookkeeper or SCORE mentor within 2 weeks",
+      "Pursue the top capital source from your Funding Strategy this month",
     ],
-    duration: "60 min",
-    covers: ["Service / online / product", "Your free app setup", "What the customer receives"],
+    duration: "25 min",
+    covers: ["Financial Model", "Unit Economics", "Funding", "Pro Forma", "Pitch Deck"],
     tasks: [
       {
-        title: "Pick what kind of business you're building and map the steps",
-        deliverable:
-          "A one-page picture of how a sale becomes a happy customer for your business (sale → intake → delivery → handoff) with the app you'll use at each step.",
-        tool: "Build type picker + step-by-step map",
+        title: "Model the business and the unit",
+        deliverable: "Financial Model + Unit Economics saved to Finance.",
+        tool: "12-month P&L template + CAC/LTV worksheet",
         details: [
-          "Service: intake → kickoff → delivery framework → recap loop",
-          "Online: pick a no-code stack (Lovable, Notion, Framer, Webflow, Shopify, GHL) and name the first screen",
-          "Physical product: supplier/manufacturer shortlist + sample-order checklist + packaging decision",
-          "Mark every step that depends on a vendor, contractor, or sample order",
+          "Build the P&L month-by-month with real prices, real costs, real cadence",
+          "Calculate CAC and LTV for your first channel",
+          "Identify the 3 levers that actually move the trajectory",
         ],
-        takeaway:
-          "Your business mapped sale-to-happy-customer, with the app you'll use at each step.",
-        followUp:
-          "Run the steps end-to-end with one test buyer (or sample order) in the first 2 weeks and revise the map.",
+        takeaway: "You know when cash gets tight and which levers to pull.",
+        followUp: "Update monthly on your dashboard — actuals vs. plan.",
       },
       {
-        title: "Set up your free apps",
-        deliverable:
-          "Free accounts created for the apps you'll run your business on, plus a one-page picture of how they connect (no paid plans signed today).",
-        tool: "Free-app checklist",
+        title: "Fund it and pitch it",
+        deliverable: "Funding Strategy + Budget & Pro Forma + Pitch Deck Outline saved to Finance.",
+        tool: "Capital-source decision tree + bank-ready pro forma + 10-slide outline",
         details: [
-          "Project hub: seed a Notion / ClickUp / Trello workspace from a starter framework",
-          "Files & assets: create your Drive / Dropbox folder structure",
-          "Comms: set up scheduling (Cal.com / Calendly free) + business email alias",
-          "Build-type tool: Loom (service) / Figma (online) / supplier portal accounts (physical)",
+          "Pick your funding path from the decision tree — cheapest capital that fits",
+          "Draft the line-by-line pro forma in the format banks accept",
+          "Sketch the 10-slide narrative: problem, solution, market, offer, traction, model, GTM, team, ask, use of funds",
         ],
-        takeaway:
-          "Your free-app accounts — set up, connected, and mapped to how your business runs.",
-        followUp:
-          "Upgrade to paid tiers as revenue justifies and connect any integrations that require billing.",
-      },
-      {
-        title: "Draft what your first customer will actually receive",
-        deliverable:
-          "Three pieces of your first customer's deliverable drafted and saved to your folder, plus a 5-point quality checklist you'll run before you send anything to a real customer.",
-        tool: "Customer-delivery frameworks (per build type)",
-        details: [
-          "Service: kickoff doc + delivery framework + recap email — all three drafted",
-          "Online: landing/demo screen sketched in your builder + onboarding flow outlined + first email drafted",
-          "Physical: product spec sheet + unboxing/insert-card draft + first-customer thank-you note",
-          "Write a 5-point quality checklist (quality, accuracy, timing, tone, follow-up)",
-        ],
-        takeaway:
-          "Your first customer's deliverable — drafted and rehearsed end-to-end with a 5-point quality checklist.",
-        followUp:
-          "Run the drafts past your first paying customer and iterate after their feedback.",
-      },
-      {
-        title: "Operations & workflow + sourcing & staffing plan",
-        deliverable:
-          "3 written SOPs specific to your business (sales intake, fulfillment, customer onboarding) loaded into your project hub as runnable frameworks, a one-page weekly operating rhythm, and a sourcing & staffing plan naming the suppliers, contractors, or first hires you'll need for raw goods, services, and talent.",
-        tool: "SOP frameworks + weekly operating rhythm + sourcing & staffing plan",
-        details: [
-          "Pick the 3 highest-leverage workflows: sales intake, fulfillment, customer onboarding",
-          "Write each as a numbered SOP: trigger → inputs → steps → owner → tools → definition of done",
-          "Add a 'what breaks this' section listing the top 3 failure modes and the recovery step",
-          "Draft a one-page weekly operating rhythm: standing blocks, review cadence, and the 3 numbers you check every Friday",
-          "Load all 3 SOPs into Notion / ClickUp / Trello as runnable frameworks anyone on the team can follow",
-          "Identify named sources for raw goods, services, and talent — suppliers, contractors, and any first hires — and capture them as a first-call list",
-        ],
-        takeaway:
-          "Your operations & workflow plus a sourcing & staffing plan — SOPs, weekly rhythm, and a first-call list for goods, services, and talent.",
-        followUp:
-          "Run each SOP once with a real or rehearsed customer in the first 2 weeks; revise the steps that broke.",
-
+        takeaway: "You walk into any money conversation with the document they expect.",
+        followUp: "Deck outline generates a full deck template on your dashboard.",
       },
     ],
   },
   {
     n: 5,
-    slug: "brand",
-    title: "Brand & website",
-    shortTitle: "brand",
+    slug: "governance",
+    title: "Governance",
+    shortTitle: "governance",
+    oneLiner: "The legal and risk scaffolding that keeps you bankable.",
     summary:
-      "Your logo, palette, fonts, and a complete website tailored to your business — built and ready to host.",
-    oneLiner: "Brand & website",
+      "Entity, risk, and advisory scaffolding in place — so you're bankable, insurable, and no longer one bad surprise away from personal exposure.",
     takeHome:
-      "Your logo, color palette, and font pairing generated from your business name; a complete website tailored to your business — Home, Offer, About, and Contact pages built in your site builder and ready to host the moment your domain resolves; payments, business email, and analytics queued for one-click activation.",
+      "Your Legal Structure Brief, Risk Register, and Board & Governance Plan — the three Governance deliverables — plus the concrete formation packet, EIN, operating agreement, and legal kit you file this week.",
     walkOut: [
-      "Logo, 4-color palette, and font pairing saved to your brand-kit folder",
-      "A complete website built in your site builder — Home, Offer, About, Contact pages designed in your brand, written in your voice, mobile-checked",
-      "On-page SEO filled per page (title, meta, single H1, image alts)",
-      "Stripe (or Square) application filled out for your business",
-      "GA4 property created with your tracking snippet copied",
-      "Business-email provider chosen with MX setup steps documented",
+      "Legal Structure Brief — plain-English recommendation on entity (LLC / S-Corp / Sole Prop), ownership, and day-one contracts",
+      "State formation packet pre-filled in your Secretary of State account (all 50 states supported)",
+      "EIN application completed and submitted — number issued in the session",
+      "Operating Agreement drafted for your members and ownership split",
+      "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business",
+      "Risk Register — the specific moves that defuse the top risks to your business",
+      "Board & Governance Plan — lightweight structure for advisors, mentors, or partners who open doors",
     ],
     afterWorkshop: [
-      "Buy your domain and point DNS to your site builder (15 minutes + propagation)",
-      "Click Publish on the website (under an hour once DNS resolves)",
-      "Finish Stripe KYC (1–3 days)",
-      "Install the GA4 tracking snippet on the published site",
-      "Verify business email on your domain",
+      "Submit your state's formation document + filing fee from home (about 10 min — skip if Sole Prop)",
+      "Open the business bank account (1–7 days after you apply)",
+      "File local business license and sales-tax registration once the entity is approved",
+      "Line up your first advisor conversation from your Board & Governance Plan",
     ],
-    duration: "75 min",
-    covers: ["Brand kit", "Bespoke website", "SEO per page", "Payments / email / analytics"],
+    duration: "25 min",
+    covers: ["Legal Structure", "Formation packet", "EIN", "Risk Register", "Advisors"],
     tasks: [
       {
-        title: "Name, domain & brand kit",
+        title: "Choose structure & prepare your state formation packet",
         deliverable:
-          "Domain availability confirmed for your business + cart ready + your brand kit folder assembled (logo, palette, fonts) and saved.",
-        tool: "Domain check + brand kit",
+          "Legal Structure Brief + state formation packet: structure chosen (LLC, S-Corp, or Sole Proprietor), name confirmed, registered agent selected, formation document pre-filled.",
+        tool: "Secretary of State filing walk-through — all 50 states, LLC / S-Corp / Sole Prop",
         details: [
-          "Confirm name availability (.com, USPTO TESS, social handles)",
-          "Pick a registrar and load the domain into your cart",
-          "Generate logo + 4-color palette + 2 fonts in your brand kit",
-          "Save brand assets to a shared folder (Drive / Notion)",
+          "Pick LLC vs Sole Prop vs S-Corp election using a 5-question decision tree tuned to your revenue and salary plans",
+          "Confirm name availability on your state's SOS business search",
+          "Decide registered agent (you, partner, or paid service)",
+          "Create your state SOS account and pre-fill your state's formation document",
         ],
         takeaway:
-          "Your brand identity — logo, color palette, font pairing, and a one-line vision and mission anchoring it.",
+          "Structure locked, formation document pre-filled, registered agent set, ready to submit.",
         followUp:
-          "Complete the domain purchase and point DNS to your site builder — usually 15 minutes plus propagation.",
+          "Submit your state's formation document from home — typically a 10-minute step (skip if Sole Prop).",
       },
       {
-        title: "Build your website",
+        title: "EIN, bank, and legal kit",
         deliverable:
-          "A complete website built for your business — Home, Offer, About, and Contact pages designed in your brand kit, written with your locked messaging, mobile-ready, and configured for SEO. Ready to host.",
-        tool: "Site builder + on-page SEO checklist",
+          "EIN issued, bank shortlist locked, Operating Agreement drafted, Terms/Privacy/Service Agreement customized.",
+        tool: "IRS EIN portal + banking checklist + contract frameworks",
         details: [
-          "Pick a starter framework and apply your brand kit",
-          "Build Home and Offer pages with your locked messaging",
-          "Build About and Contact pages (headline + sections + form)",
-          "Fill on-page SEO per page: title, meta, single H1, image alts",
+          "Apply for the EIN live in-session and save the confirmation letter",
+          "Pick your business bank from the shortlist and complete the application checklist",
+          "Customize Terms of Service and Privacy Policy from vetted frameworks",
+          "Customize a 1-page Service Agreement / SOW for your first sale",
         ],
-        takeaway:
-          "Your bespoke website — built, branded, written, and SEO-configured in your site builder. Hosting-ready.",
+        takeaway: "You can legally sign contracts and take money this week.",
         followUp:
-          "Connect your domain, do a final mobile pass, and click Publish — usually under an hour once DNS resolves.",
+          "Open the bank account once your entity is approved (1–7 days after filing).",
       },
       {
-        title: "Payments, business email & analytics",
-        deliverable:
-          "Stripe (or Square) application filled out for your business; GA4 property created with your tracking snippet ready; business email on your domain set up step-by-step; welcome-email copy drafted.",
-        tool: "Essentials setup checklist",
+        title: "Risk register and governance",
+        deliverable: "Risk Register + Board & Governance Plan saved to Governance.",
+        tool: "Risk-inventory worksheet + advisor mapping canvas",
         details: [
-          "Pick Stripe or Square; complete the application info checklist",
-          "Create your GA4 property and copy the tracking snippet",
-          "Pick an email provider (Google Workspace / Zoho) and document MX steps",
-          "Decide your welcome-email copy for new leads",
+          "List the top 8 risks (financial, legal, operational, market) and score them",
+          "Name a specific mitigation for each of the top 3",
+          "Identify 2–3 advisors or mentors and how you'll engage them",
         ],
-        takeaway:
-          "Your payments, business email, and analytics — accounts created and configured to your business, queued for final activation.",
-        followUp:
-          "Finish payments KYC, install the GA4 snippet on your published site, and verify business email — typically 1–3 days.",
+        takeaway: "You've seen the predictable problems coming and have the room to help solve them.",
+        followUp: "Board & Governance Plan generates outreach templates on your dashboard.",
       },
     ],
   },
   {
     n: 6,
-    slug: "marketing",
-    title: "Marketing & creatives",
-    shortTitle: "marketing",
+    slug: "brand",
+    title: "Brand",
+    shortTitle: "brand",
+    bonus: true,
+    oneLiner: "An identity worth premium pricing — system, not stickers.",
     summary:
-      "Your printable business card and flyer, your social channels branded, and a 30-day plan to put it all in motion.",
-    oneLiner: "Plan & creatives",
+      "A brand system — strategy, messaging, visual brief, voice, guidelines — that earns premium pricing and stops you rebuilding your identity every six months.",
     takeHome:
-      "A printable business card and flyer designed in your brand, your social channels claimed and branded (profile copy, banner, link-in-bio), six on-brand posts and a 60-second founder video script — your full launch kit, ready to print and configure.",
+      "Preview of the Brand bonus track: Brand Strategy Framework, Messaging House, Visual Identity Brief, Voice & Tone Guide, and Brand Guidelines Book. Full build continues on your dashboard.",
     walkOut: [
-      "Headline, 3 value props, 30-second pitch, and 100-word founder bio",
-      "Print-ready business card (front/back) designed in your brand",
-      "Print-ready 1-page flyer designed in your brand",
-      "Instagram, LinkedIn, and one of TikTok/YouTube/X — handles claimed, profile copy, link-in-bio, and banner filled in",
-      "6 on-brand post drafts + 60-second founder video script",
-      "Marketing & communications: audience, channels, messaging pillars, 30-day content calendar, weekly budget, and 3 weekly KPIs",
+      "Brand track queued to your dashboard with today's Foundation + Strategy inputs pre-loaded",
+      "Kickoff on your Brand Strategy Framework — purpose, promise, audience, positioning",
+      "First pass at your Visual Identity Brief for a designer or AI tool",
     ],
     afterWorkshop: [
-      "Send the print files to your printer",
-      "Schedule the 6 posts in Buffer / Later / Meta Business Suite",
-      "Record the 60-second founder video",
+      "Complete Brand Strategy Framework and Messaging House on your dashboard this week",
+      "Hand your Visual Identity Brief to a designer or AI generator; loop the output back to your dashboard",
     ],
-    duration: "60 min",
-    covers: ["Messaging kit", "Print creatives", "Social channels branded", "30-day plan"],
+    duration: "Bonus — continues on dashboard",
+    covers: ["Brand Strategy", "Messaging House", "Visual Identity", "Voice", "Guidelines"],
     tasks: [
       {
-        title: "Core messaging kit",
+        title: "Bonus preview: Brand system",
         deliverable:
-          "Your headline, 3 value props, 30-second pitch, and 100-word founder bio — written for your business.",
-        tool: "Messaging kit framework",
+          "Brand bonus track unlocked with 5 deliverables queued: Strategy Framework, Messaging House, Visual Identity Brief, Voice & Tone Guide, Guidelines Book.",
+        tool: "Dashboard bonus track — AI-assisted drafting",
         details: [
-          "Write a headline that names the buyer + outcome",
-          "Draft 3 value props mapped to the top-3 customer pains",
-          "Rehearse a 30-second verbal pitch",
-          "Write a 100-word founder bio for site, social, and outreach",
+          "See how today's Foundation and Strategy work seeds your brand system",
+          "Preview your Brand Strategy Framework generated from your Vision, Personas, and Positioning",
+          "Get the Visual Identity Brief template to hand to a designer or generator",
         ],
-        takeaway:
-          "Your headline, 3 value props, 30-second pitch, and founder bio.",
-      },
-      {
-        title: "Your print and social kit",
-        deliverable:
-          "Printable business card and flyer designed in your brand; Instagram, LinkedIn, and one of TikTok/YouTube/X claimed with your profile copy, link-in-bio, and banner; 6 on-brand post drafts; 60-second founder video script.",
-        tool: "Creative kit frameworks (print + social)",
-        details: [
-          "Design a business card (front/back) in your brand kit — print-ready",
-          "Design a 1-page flyer / one-pager for events, walk-ins, and partner shelves",
-          "Claim handles on Instagram, LinkedIn, and one of TikTok / YouTube / X — fill profile copy, link-in-bio, banner",
-          "Draft 6 posts (hooks, proof, offer) + 1 sixty-second video script you can record this week",
-        ],
-        takeaway:
-          "Your launch creative kit — business card and flyer ready to print, social channels branded and ready to configure, 6 posts and a video script ready to publish.",
+        takeaway: "Brand track unlocked and pre-seeded with your Foundation + Strategy inputs.",
         followUp:
-          "Send the print files to your printer and schedule the 6 posts in Buffer / Later / Meta Business Suite; record the video.",
-      },
-      {
-        title: "Marketing & communications",
-        deliverable:
-          "Your marketing & communications: audience, channels, messaging pillars, 30-day content calendar, weekly budget, and 3 numbers to check every week.",
-        tool: "Marketing & communications framework",
-        details: [
-          "Lock the audience and the 3 messaging pillars you'll repeat across every channel",
-          "Pick your top-2 acquisition channels (1 organic, 1 outbound or paid)",
-          "Set a weekly time + dollar budget per channel",
-          "Build a 30-day content + outreach calendar (publish dates locked)",
-          "Define 3 KPIs: leads/week, reply rate, conversion to sale",
-        ],
-        takeaway:
-          "Your marketing & communications — audience, channels, messaging pillars, 30-day calendar, weekly budget, 3 weekly KPIs.",
+          "Complete all 5 Brand deliverables on your dashboard — most founders finish in 2–3 sessions over the following week.",
       },
     ],
   },
   {
     n: 7,
-    slug: "launch",
-    title: "Launch plan",
-    shortTitle: "launch",
+    slug: "marketing",
+    title: "Marketing",
+    shortTitle: "marketing",
+    bonus: true,
+    oneLiner: "The AI-builder prompt that ships your site in a weekend.",
     summary:
-      "Your dated 90-day plan, your launch-day checklist, and the weekly check-in that keeps you moving.",
-    oneLiner: "90-day plan",
+      "A complete website PRD ready to hand to an AI builder — launch a revenue-ready site in a weekend instead of paying $20K and waiting three months.",
     takeHome:
-      "Your signed, dated 90-day plan with a go-to-market feeding it (first 3 paying customers → 10 → repeatable channel), your launch-day checklist with personal outreach drafts ready to send, and an accountability partner on next Monday's calendar.",
+      "Preview of the Marketing bonus track: your full Website PRD (AI-builder prompt), pre-loaded with today's Foundation, Strategy, and Brand inputs.",
     walkOut: [
-      "Go-to-market: target segment, offer, pricing, channel mix, week-by-week tactics, and KPIs that prove it's working",
-      "Signed, dated 30/60/90 plan: first 3 paying customers → 10 → repeatable channel",
-      "Personal announcement list started in-session",
-      "Personal outreach drafts saved (DM, email, voice note)",
-      "Day-of launch timeline locked",
-      "Starter CRM seeded with your announcement list",
-      "3 weekly metrics defined + accountability partner paired with cadence agreed",
+      "Marketing bonus track queued to your dashboard",
+      "Website PRD skeleton generated from your Value Prop, Personas, GTM, and Brand messaging",
+      "Recommended AI builder + hosting stack ready to execute",
     ],
     afterWorkshop: [
-      "Pick your launch date and send the drafts that morning",
-      "Both partners put the 4 weekly check-ins on each other's calendars",
+      "Feed your Website PRD into an AI builder this weekend and ship v1",
+      "Wire payments, email, and analytics from the recommended stack",
     ],
-    duration: "45 min",
-    covers: ["90-day plan", "Launch-day checklist", "Outreach drafts", "Accountability"],
+    duration: "Bonus — continues on dashboard",
+    covers: ["Website PRD", "AI-builder prompt"],
     tasks: [
       {
-        title: "Sign your 90-day plan (30 / 60 / 90)",
+        title: "Bonus preview: Website PRD",
         deliverable:
-          "Your signed, dated 90-day plan for your business: first 3 customers → 10 → repeatable channel.",
-        tool: "Launch plan framework",
+          "Website PRD queued on your dashboard, pre-populated with today's Foundation, Strategy, and Brand outputs.",
+        tool: "Dashboard bonus track — Website PRD generator",
         details: [
-          "Lock the go-to-market: target segment, offer, pricing, channel mix, and week-by-week tactics feeding the 30/60/90",
-          "Day 1–30: ship offer, close first 3 paying customers",
-          "Day 31–60: refine fulfillment, reach 10 customers, collect testimonials",
-          "Day 61–90: double down on the channel that worked, kill what didn't",
-          "Sign and date it — print copy goes on the wall",
+          "See the pages, sections, copy blocks, and CTAs your PRD will include",
+          "Review the recommended AI builder + hosting stack for your budget",
+          "Understand the weekend build path from PRD to launched site",
         ],
-        takeaway:
-          "Your signed 90-day plan — first 3 paying customers → 10 → repeatable channel.",
-      },
-      {
-        title: "Launch-day checklist & outreach drafts",
-        deliverable:
-          "Your personal announcement list started in-session, personal outreach drafts written from frameworks you've customized, and a day-of timeline (drafts saved, not sent).",
-        tool: "Launch checklist + outreach frameworks",
-        details: [
-          "Start your personal announcement list (friends, peers, past clients) using the source framework",
-          "Customize personal outreach drafts (DM, email, voice note) from the frameworks",
-          "Identify 3 partner / press / community asks for a co-launch boost",
-          "Lock a day-of timeline: 8 AM post → 10 AM email → 2 PM follow-ups",
-        ],
-        takeaway:
-          "Your launch-day checklist + personal outreach drafts — ready to send.",
+        takeaway: "Website PRD ready to hand to an AI builder.",
         followUp:
-          "Fill out the list, pick your launch date, send the drafts that morning, and work the day-of timeline.",
+          "Finalize the PRD on your dashboard, then ship v1 in a weekend using the recommended stack.",
       },
+    ],
+  },
+  {
+    n: 8,
+    slug: "social-content",
+    title: "Social & Content",
+    shortTitle: "social",
+    bonus: true,
+    oneLiner: "The distribution engine that earns attention on repeat.",
+    summary:
+      "90 days of content, a launch kit, and a paid-ads starter pack — a distribution engine that earns attention on repeat instead of costing more each month.",
+    takeHome:
+      "Preview of the Social & Content bonus track: Audit & Setup, Content Pillars, 90-Day Calendar, Launch Kit, Community Playbook, Partnership Brief, and Paid Ads Starter Pack.",
+    walkOut: [
+      "Social & Content bonus track queued to your dashboard",
+      "Content Pillars drafted from your Positioning and Personas",
+      "First 2 weeks of your 90-Day Content Calendar generated",
+    ],
+    afterWorkshop: [
+      "Complete Audit & Setup and finish your 90-day calendar on your dashboard this week",
+      "Launch your first paid-ads test from the Starter Pack once your site is live",
+    ],
+    duration: "Bonus — continues on dashboard",
+    covers: ["Social Setup", "Content Pillars", "90-Day Calendar", "Launch Kit", "Paid Ads"],
+    tasks: [
       {
-        title: "Sales pipeline + accountability",
+        title: "Bonus preview: Distribution engine",
         deliverable:
-          "Your starter CRM seeded with your announcement list + 3 weekly metrics defined + accountability partner identified + cadence agreed.",
-        tool: "CRM starter + accountability pairing",
+          "Social & Content bonus track unlocked with 7 deliverables queued and Content Pillars + first 2 weeks of calendar pre-drafted.",
+        tool: "Dashboard bonus track — AI-assisted content system",
         details: [
-          "Seed a free CRM (HubSpot / Notion) with the announcement list",
-          "Define 3 weekly metrics: pipeline added, calls booked, sales closed",
-          "Pair with a cohort accountability partner",
-          "Agree on a weekly 20-min check-in cadence and channel",
+          "Review your Content Pillars generated from Positioning and Personas",
+          "Preview the first two weeks of your 90-day content calendar",
+          "Get the Launch Content Kit templates for your opening week",
         ],
-        takeaway:
-          "Your starter CRM populated, weekly metrics defined, and an accountability partner booked on the calendar.",
+        takeaway: "Distribution engine unlocked and pre-seeded.",
         followUp:
-          "Both partners put the 4 weekly check-ins on each other's calendars after the workshop.",
+          "Finish the full 90-day calendar and the remaining 6 deliverables on your dashboard.",
       },
     ],
   },
 ];
-
-export const stageBySlug = (slug: string) => STAGES.find((s) => s.slug === slug);
