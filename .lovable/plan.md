@@ -1,50 +1,21 @@
 ## Goal
-Generate a recurring 2026 workshop schedule per workshop, auto-drop dates that have already elapsed, and surface the upcoming dates in each card on `/build` and on each `/build/:slug` detail page.
+Extend the auto-rolling 2026 schedule to the remaining 4 workshops, on Thursdays and Fridays, using the same 2nd-weekday-of-month pattern and the same AM/PM time blocks already in `src/lib/build-workshop-schedule.ts`. UI already renders whatever `getUpcomingSessions(slug)` returns, so no route changes needed.
 
-## Cadence (through Dec 2026)
+## Cadence (through Dec 2026, all ET)
 
-| Workshop | Slug | Day | Time (ET) |
+| Workshop | Slug | Day | Time |
 |---|---|---|---|
-| Build your brand | `brand-identity` | 2nd Tuesday, every month | 9:30–11:30 am |
-| Convert your website | `website-that-converts` | 2nd Wednesday, every month | 9:30–11:30 am |
-| Own your social presence | `social-presence` | 2nd Tuesday, **even months** (Feb, Apr, Jun, Aug, Oct, Dec) | 1:30–4:00 pm |
-| Engineer your content | `content-engine` | 2nd Tuesday, **odd months** (Jan, Mar, May, Jul, Sep, Nov) | 1:30–4:00 pm |
-
-Other workshops (AI OS, etc.) unchanged — no schedule shown.
+| Run on AI | `ai-operating-system` | 2nd Thursday, every month | 9:30–11:30 am |
+| Automate your revenue | `email-crm-automation` | 2nd Thursday, every month | 1:30–4:00 pm |
+| Close more sales | `sales-systems` | 2nd Friday, every month | 9:30–11:30 am |
+| Scaffold your business | `legal-financial-ops` | 2nd Friday, every month | 1:30–4:00 pm |
 
 ## Files
 
-**New: `src/lib/build-workshop-schedule.ts`**
-- `type ScheduledSession = { dateISO: string; label: string; startTime: string; endTime: string; }`
-- `getNthWeekdayOfMonth(year, month, weekday, n)` helper.
-- `WORKSHOP_SCHEDULES: Record<slug, { weekday, nth, months, startTime, endTime, timezone }>` for the 4 slugs above.
-- `getUpcomingSessions(slug, now = new Date(), limit = 6): ScheduledSession[]` — generates all 2026 (and remaining 2025) occurrences, filters `dateISO >= today (ET)`, returns first `limit`. Uses ET boundary so a same-day 9:30 am session still shows until it starts (compare against session end time, not midnight).
-- Date labels formatted like `Tue, Feb 10, 2026 · 9:30–11:30 am ET`.
+**Edit: `src/lib/build-workshop-schedule.ts`**
+- Add 4 entries to `WORKSHOP_SCHEDULES` with weekday `4` (Thu) or `5` (Fri), `nth: 2`, no `months` filter (every month), reusing the existing `09:30/11:30` and `13:30/16:00` time pairs and their `timeLabel` strings.
 
-**Edit: `src/routes/build.tsx`**
-- For each workshop card, if `getUpcomingSessions(w.slug).length > 0`, render a new block below the walk-outs list:
-  - Heading: "Upcoming dates"
-  - Show next 3 sessions as compact rows (calendar icon + date + time).
-  - "+ N more" line if more remain.
-
-**Edit: `src/routes/build.$slug.tsx`**
-- New "Schedule" section after the hero / agenda, showing next 6 upcoming sessions as a list. Each row: date, time, "Reserve seat →" link to `/register?workshop=<slug>&date=<iso>`.
-- If schedule empty (workshop with no cadence, or past Dec 2026), section is hidden.
-
-## Auto-drop logic
-- Pure client-side; `new Date()` at render time.
-- No DB, no cron. When today passes the last 2026 date the sections simply render nothing.
-- All time math done in America/New_York via `Intl.DateTimeFormat` for label rendering; underlying ISO stored as `YYYY-MM-DDTHH:mm:00-05:00` / `-04:00` computed with a small DST helper (US DST: 2nd Sun Mar → 1st Sun Nov).
-
-## UI notes
-- Reuse existing `Calendar` lucide icon already imported on the detail page.
-- Cards on `/build` grow slightly; keep spacing consistent with the current border-top divider pattern.
-- No copy uses "template" or "business" — say "workshop" and "startup" per project rules.
+That's it — no route, component, or type changes. Cards on `/build` and detail pages on `/build/:slug` already pull from `getUpcomingSessions`, so the new dates will appear automatically and past dates will drop off as they elapse.
 
 ## Out of scope
-- Cohort/capacity tracking, seat counts, or wiring these dates into the `cohorts` table.
-- Registration flow changes beyond passing `date` as a query param.
-- Time-zone selector; ET only for now.
-
-## Open follow-ups (not blocking)
-- Later: persist these as real `cohorts` rows so registration + calendar invites work end-to-end. Flag only — not part of this change.
+- Cohort/DB rows, registration wiring, or capacity tracking (same as prior plan).
