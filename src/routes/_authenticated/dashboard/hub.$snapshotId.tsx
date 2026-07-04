@@ -1313,7 +1313,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 ? "Brand updated"
                 : "Concept updated";
               return (
-                <div key={t.type} className={`rounded-xl border bg-card p-4 ${stale ? "border-status-warning/40" : brandGated ? "border-primary/30" : "border-white/10"}`}>
+                <div key={t.type} id={`doc-${t.type}`} className={`scroll-mt-24 rounded-xl border bg-card p-4 transition-shadow ${stale ? "border-status-warning/40" : brandGated ? "border-primary/30" : "border-white/10"}`}>
                   <div className="flex items-start gap-2">
                     <Icon className={`mt-0.5 h-4 w-4 ${tone}`} />
                     <div className="min-w-0 flex-1">
