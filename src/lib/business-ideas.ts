@@ -1,3 +1,64 @@
+import imgAiReceptionistForTrades from "@/assets/ideas/ai-receptionist-for-trades.jpg.asset.json";
+import imgFractionalBookkeepingForMedSpas from "@/assets/ideas/fractional-bookkeeping-for-med-spas.jpg.asset.json";
+import imgLinkedinGhostwritingForExecs from "@/assets/ideas/linkedin-ghostwriting-for-execs.jpg.asset.json";
+import imgFacelessYoutubeCourseFunnel from "@/assets/ideas/faceless-youtube-course-funnel.jpg.asset.json";
+import imgDoneWithYouShopifyLaunchesForMakers from "@/assets/ideas/done-with-you-shopify-launches-for-makers.jpg.asset.json";
+import imgAiInboxCleanupForSmallBusinesses from "@/assets/ideas/ai-inbox-cleanup-for-small-businesses.jpg.asset.json";
+import imgNotionAiOpsForSmallBusinesses from "@/assets/ideas/notion-ai-ops-for-small-businesses.jpg.asset.json";
+import imgNichePaidNewsletterSponsorships from "@/assets/ideas/niche-paid-newsletter-sponsorships.jpg.asset.json";
+import imgEtsyShopCricutNurserySigns from "@/assets/ideas/etsy-shop-cricut-nursery-signs.jpg.asset.json";
+import imgDoneForYouAiContentForRealtors from "@/assets/ideas/done-for-you-ai-content-for-realtors.jpg.asset.json";
+import imgWhatnotLiveResellShop from "@/assets/ideas/whatnot-live-resell-shop.jpg.asset.json";
+import imgOnlineTutoringWithAiTools from "@/assets/ideas/online-tutoring-with-ai-tools.jpg.asset.json";
+import imgBookkeepingForBarbershops from "@/assets/ideas/bookkeeping-for-barbershops.jpg.asset.json";
+import imgNotionFrameworksForContractors from "@/assets/ideas/notion-frameworks-for-contractors.jpg.asset.json";
+import imgDoneWithYouAiLeadGenForTrades from "@/assets/ideas/done-with-you-ai-lead-gen-for-trades.jpg.asset.json";
+import imgFacelessTiktokShopAffiliateBrand from "@/assets/ideas/faceless-tiktok-shop-affiliate-brand.jpg.asset.json";
+import imgMobileCarDetailing from "@/assets/ideas/mobile-car-detailing.jpg.asset.json";
+import imgSelfPourCoffeeKioskInACoWorkSpace from "@/assets/ideas/self-pour-coffee-kiosk-in-a-co-work-space.jpg.asset.json";
+import imgVendingMachineRouteAtScale from "@/assets/ideas/vending-machine-route-at-scale.jpg.asset.json";
+import imgPressureWashingForCommercialBuildings from "@/assets/ideas/pressure-washing-for-commercial-buildings.jpg.asset.json";
+import imgPopUpNailBarInsideSalons from "@/assets/ideas/pop-up-nail-bar-inside-salons.jpg.asset.json";
+import imgPopUpGolfSimulatorTrailer from "@/assets/ideas/pop-up-golf-simulator-trailer.jpg.asset.json";
+import imgPopUpAxeThrowingNights from "@/assets/ideas/pop-up-axe-throwing-nights.jpg.asset.json";
+import imgHairBraidingStudioInASpareRoom from "@/assets/ideas/hair-braiding-studio-in-a-spare-room.jpg.asset.json";
+import imgMobilePetGroomingVan from "@/assets/ideas/mobile-pet-grooming-van.jpg.asset.json";
+import imgMobileBoatRvDetailing from "@/assets/ideas/mobile-boat-rv-detailing.jpg.asset.json";
+import imgSoberCuriousBottleShopPopUp from "@/assets/ideas/sober-curious-bottle-shop-pop-up.jpg.asset.json";
+import imgSolarPanelCleaningRoute from "@/assets/ideas/solar-panel-cleaning-route.jpg.asset.json";
+import imgMicrogreensForChefsSubscribers from "@/assets/ideas/microgreens-for-chefs-subscribers.jpg.asset.json";
+import imgPickleballLessonsBeginnerClinics from "@/assets/ideas/pickleball-lessons-beginner-clinics.jpg.asset.json";
+import imgJunkHaulingWithASecondTruck from "@/assets/ideas/junk-hauling-with-a-second-truck.jpg.asset.json";
+import imgMobileAutoGlassReplacement from "@/assets/ideas/mobile-auto-glass-replacement.jpg.asset.json";
+import imgEpoxyGarageFloors from "@/assets/ideas/epoxy-garage-floors.jpg.asset.json";
+import imgMobileIvWellnessTherapy from "@/assets/ideas/mobile-iv-wellness-therapy.jpg.asset.json";
+import imgHomeOrganizationConcierge from "@/assets/ideas/home-organization-concierge.jpg.asset.json";
+import imgSeniorTechHelpHomeVisits from "@/assets/ideas/senior-tech-help-home-visits.jpg.asset.json";
+import imgSeniorErrandConciergeService from "@/assets/ideas/senior-errand-concierge-service.jpg.asset.json";
+import imgMobileNotaryLoanSigningAgent from "@/assets/ideas/mobile-notary-loan-signing-agent.jpg.asset.json";
+import imgPetSittingDogWalking from "@/assets/ideas/pet-sitting-dog-walking.jpg.asset.json";
+import imgRouteBasedLawnCare from "@/assets/ideas/route-based-lawn-care.jpg.asset.json";
+import imgEvChargerInstallReferralBusiness from "@/assets/ideas/ev-charger-install-referral-business.jpg.asset.json";
+import imgChristmasLightInstallOctJan from "@/assets/ideas/christmas-light-install-oct-jan.jpg.asset.json";
+import imgFaithBasedEventWeddingPlanning from "@/assets/ideas/faith-based-event-wedding-planning.jpg.asset.json";
+import imgRealEstateDrone3dMatterportTours from "@/assets/ideas/real-estate-drone-3d-matterport-tours.jpg.asset.json";
+import imgGhostKitchenBrandOnDoordash from "@/assets/ideas/ghost-kitchen-brand-on-doordash.jpg.asset.json";
+import imgWeeklyCorporateLunchRoute from "@/assets/ideas/weekly-corporate-lunch-route.jpg.asset.json";
+import imgSundayMealPrepForWorkingMoms from "@/assets/ideas/sunday-meal-prep-for-working-moms.jpg.asset.json";
+import imgFunctionalBakingGlutenFreeSourdoughSubs from "@/assets/ideas/functional-baking-gluten-free-sourdough-subs.jpg.asset.json";
+import imgCaribbeanLunchPlatesAtOfficeParks from "@/assets/ideas/caribbean-lunch-plates-at-office-parks.jpg.asset.json";
+import imgWeddingCookieFavorBoxes from "@/assets/ideas/wedding-cookie-favor-boxes.jpg.asset.json";
+import imgColdPressedJuiceSubscription from "@/assets/ideas/cold-pressed-juice-subscription.jpg.asset.json";
+import imgShortFormVideoAgencyForMedSpas from "@/assets/ideas/short-form-video-agency-for-med-spas.jpg.asset.json";
+import imgAmazonFbaWholesale from "@/assets/ideas/amazon-fba-wholesale.jpg.asset.json";
+import imgResumeLinkedinRewrites from "@/assets/ideas/resume-linkedin-rewrites.jpg.asset.json";
+import imgWeddingOfficiantCeremonyCoach from "@/assets/ideas/wedding-officiant-ceremony-coach.jpg.asset.json";
+import imgShortFormVideoEditingForRealtors from "@/assets/ideas/short-form-video-editing-for-realtors.jpg.asset.json";
+import imgTwoTruckHandymanCrew from "@/assets/ideas/two-truck-handyman-crew.jpg.asset.json";
+import imgHusbandWifeAirbnbManagement from "@/assets/ideas/husband-wife-airbnb-management.jpg.asset.json";
+import imgSaturdayFamilyCarWash from "@/assets/ideas/saturday-family-car-wash.jpg.asset.json";
+import imgFamilyCleaningCrewForAirbnbs from "@/assets/ideas/family-cleaning-crew-for-airbnbs.jpg.asset.json";
+
 export type BusinessCategory =
   | "online"
   | "main-street"
@@ -14,6 +75,7 @@ export type BusinessIdea = {
   incomePotential: string;
   firstCustomers: string;
   stageHint: string;
+  image: string;
 };
 
 export const BUSINESS_CATEGORIES: { id: BusinessCategory | "all"; label: string }[] = [
@@ -36,6 +98,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$10k–$25k / mo",
     firstCustomers: "Drive-bys to 30 trade shops with a 1-page demo",
     stageHint: "Stage 2 builds your pitch.",
+    image: imgAiReceptionistForTrades.url,
   },
   {
     name: "Fractional bookkeeping for med-spas",
@@ -45,6 +108,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$8k–$18k / mo",
     firstCustomers: "DM 50 med-spa owners on IG with a 90-day offer",
     stageHint: "Stage 7 gets your first 5 retainers.",
+    image: imgFractionalBookkeepingForMedSpas.url,
   },
   {
     name: "LinkedIn ghostwriting for execs",
@@ -54,6 +118,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$10k–$25k / mo",
     firstCustomers: "Cold-DM 40 founders with 3 sample posts in their voice",
     stageHint: "Stage 2 picks the niche.",
+    image: imgLinkedinGhostwritingForExecs.url,
   },
   {
     name: "Faceless YouTube + course funnel",
@@ -63,6 +128,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$15k / mo (after 6 mo)",
     firstCustomers: "TikTok + Shorts cross-posts in your niche",
     stageHint: "Stage 6 writes your first 30 scripts.",
+    image: imgFacelessYoutubeCourseFunnel.url,
   },
   {
     name: "Done-with-you Shopify launches for makers",
@@ -72,6 +138,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$7k–$14k / mo",
     firstCustomers: "Etsy sellers ready to own their store — DM 50 of them",
     stageHint: "Stage 5 builds your sample store.",
+    image: imgDoneWithYouShopifyLaunchesForMakers.url,
   },
   {
     name: "AI inbox cleanup for small businesses",
@@ -81,6 +148,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$9k / mo",
     firstCustomers: "Realtors, contractors, LinkedIn DMs",
     stageHint: "Stage 2 builds your offer.",
+    image: imgAiInboxCleanupForSmallBusinesses.url,
   },
   {
     name: "Notion + AI ops for small businesses",
@@ -90,6 +158,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$5k–$15k / mo",
     firstCustomers: "Contractors, gym owners, salon owners in your city",
     stageHint: "Stage 4 builds the delivery flow.",
+    image: imgNotionAiOpsForSmallBusinesses.url,
   },
   {
     name: "Niche paid newsletter + sponsorships",
@@ -99,6 +168,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$2k–$12k / mo",
     firstCustomers: "Pick a niche you know. Post 2 free issues a week for 60 days.",
     stageHint: "Stage 2 picks the niche.",
+    image: imgNichePaidNewsletterSponsorships.url,
   },
   {
     name: "Etsy shop: Cricut nursery signs",
@@ -108,6 +178,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$1.5k–$5k / mo",
     firstCustomers: "Etsy traffic, IG reels, baby-shower hashtags",
     stageHint: "Stage 5 builds your shop.",
+    image: imgEtsyShopCricutNurserySigns.url,
   },
   {
     name: "Done-for-you AI content for realtors",
@@ -117,6 +188,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$7k–$15k / mo",
     firstCustomers: "Walk into one brokerage with a free sample for 3 agents",
     stageHint: "Stage 6 builds your sample reel.",
+    image: imgDoneForYouAiContentForRealtors.url,
   },
   {
     name: "Whatnot live-resell shop",
@@ -126,6 +198,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$2k–$10k / mo",
     firstCustomers: "Whatnot's own viewers — your first stream tonight",
     stageHint: "Stage 4 builds your weekly show flow.",
+    image: imgWhatnotLiveResellShop.url,
   },
   {
     name: "Online tutoring with AI tools",
@@ -135,6 +208,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$8k / mo",
     firstCustomers: "Parent Facebook groups + 3 local school counselors",
     stageHint: "Stage 2 builds the offer parents say yes to.",
+    image: imgOnlineTutoringWithAiTools.url,
   },
   {
     name: "Bookkeeping for barbershops",
@@ -144,6 +218,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$8k / mo",
     firstCustomers: "5 shops in your zip code, walk in, leave a card",
     stageHint: "Stage 7 gets your first 5 clients.",
+    image: imgBookkeepingForBarbershops.url,
   },
   {
     name: "Notion frameworks for contractors",
@@ -153,6 +228,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$1k–$4k / mo",
     firstCustomers: "Contractor Facebook groups, Gumroad, LinkedIn",
     stageHint: "Stage 2 picks who you sell to.",
+    image: imgNotionFrameworksForContractors.url,
   },
   {
     name: "Done-with-you AI lead-gen for trades",
@@ -162,6 +238,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$8k–$20k / mo",
     firstCustomers: "Roofers, HVAC, fence builders — 20 cold calls/day for 30 days",
     stageHint: "Stage 6 writes your outbound.",
+    image: imgDoneWithYouAiLeadGenForTrades.url,
   },
   {
     name: "Faceless TikTok Shop affiliate brand",
@@ -171,6 +248,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$1k–$10k / mo",
     firstCustomers: "TikTok's algorithm — show up daily for 60 days",
     stageHint: "Stage 6 builds your first 30 videos.",
+    image: imgFacelessTiktokShopAffiliateBrand.url,
   },
 
   // ============== MAIN STREET (14) ==============
@@ -182,6 +260,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$4k–$9k / mo",
     firstCustomers: "Neighbors, apartment complexes, FB groups",
     stageHint: "Stage 4 builds your service flow.",
+    image: imgMobileCarDetailing.url,
   },
   {
     name: "Self-pour coffee kiosk in a co-work space",
@@ -191,6 +270,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$8k / mo per location",
     firstCustomers: "Walk into 10 co-work spaces with a revenue-split pitch",
     stageHint: "Stage 2 builds the landlord pitch.",
+    image: imgSelfPourCoffeeKioskInACoWorkSpace.url,
   },
   {
     name: "Vending machine route at scale",
@@ -200,6 +280,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$4k–$12k / mo",
     firstCustomers: "Owner-operators who'll split revenue. Knock on doors.",
     stageHint: "Stage 7 maps your first route.",
+    image: imgVendingMachineRouteAtScale.url,
   },
   {
     name: "Pressure washing for commercial buildings",
@@ -209,6 +290,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$8k–$18k / mo",
     firstCustomers: "Property managers — 30 emails + before/after photos",
     stageHint: "Stage 7 maps your first route.",
+    image: imgPressureWashingForCommercialBuildings.url,
   },
   {
     name: "Pop-up nail bar inside salons",
@@ -218,6 +300,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$2.5k–$6k / mo",
     firstCustomers: "Salon walk-ins, IG before/after posts",
     stageHint: "Stage 1 gets your license right.",
+    image: imgPopUpNailBarInsideSalons.url,
   },
   {
     name: "Pop-up golf simulator trailer",
@@ -227,6 +310,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$5k–$15k / mo",
     firstCustomers: "10 breweries within 30 miles. One yes books your weekends.",
     stageHint: "Stage 6 builds your event flyer.",
+    image: imgPopUpGolfSimulatorTrailer.url,
   },
   {
     name: "Pop-up axe-throwing nights",
@@ -236,6 +320,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$10k / mo",
     firstCustomers: "Breweries, corporate team builds, birthday parties",
     stageHint: "Stage 5 builds your booking site.",
+    image: imgPopUpAxeThrowingNights.url,
   },
   {
     name: "Hair braiding studio in a spare room",
@@ -245,6 +330,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$8k / mo",
     firstCustomers: "IG portfolio, friends-of-friends, referrals",
     stageHint: "Stage 1 gets your permits right.",
+    image: imgHairBraidingStudioInASpareRoom.url,
   },
   {
     name: "Mobile pet grooming van",
@@ -254,6 +340,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$6k–$14k / mo",
     firstCustomers: "FB neighborhood groups + vet office bulletins",
     stageHint: "Stage 4 builds the daily route.",
+    image: imgMobilePetGroomingVan.url,
   },
   {
     name: "Mobile boat & RV detailing",
@@ -263,6 +350,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$6k–$15k / mo",
     firstCustomers: "Marina office bulletin boards, RV storage owners",
     stageHint: "Stage 2 builds your tiered offer.",
+    image: imgMobileBoatRvDetailing.url,
   },
   {
     name: "Sober-curious bottle shop pop-up",
@@ -272,6 +360,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$2k–$9k / mo (event-based)",
     firstCustomers: "Farmer's markets, wellness studios, women's groups",
     stageHint: "Stage 5 builds your brand kit.",
+    image: imgSoberCuriousBottleShopPopUp.url,
   },
   {
     name: "Solar panel cleaning route",
@@ -281,6 +370,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$5k–$12k / mo",
     firstCustomers: "Door-hangers in solar-heavy neighborhoods",
     stageHint: "Stage 7 builds the quarterly route.",
+    image: imgSolarPanelCleaningRoute.url,
   },
   {
     name: "Microgreens for chefs & subscribers",
@@ -290,6 +380,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$8k / mo",
     firstCustomers: "Knock on 10 farm-to-table kitchens with a free sample",
     stageHint: "Stage 4 builds the weekly flow.",
+    image: imgMicrogreensForChefsSubscribers.url,
   },
   {
     name: "Pickleball lessons & beginner clinics",
@@ -299,6 +390,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$8k / mo",
     firstCustomers: "Parks & Rec partnerships + 2 IG posts a week",
     stageHint: "Stage 2 builds the clinic packages.",
+    image: imgPickleballLessonsBeginnerClinics.url,
   },
 
   // ============== SERVICE (14) ==============
@@ -310,6 +402,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$10k–$25k / mo",
     firstCustomers: "Thumbtack, Facebook Marketplace, realtors",
     stageHint: "Stage 6 builds your ad creatives.",
+    image: imgJunkHaulingWithASecondTruck.url,
   },
   {
     name: "Mobile auto-glass replacement",
@@ -319,6 +412,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$10k–$22k / mo",
     firstCustomers: "Body shops + insurance referral network",
     stageHint: "Stage 1 covers the certifications.",
+    image: imgMobileAutoGlassReplacement.url,
   },
   {
     name: "Epoxy garage floors",
@@ -328,6 +422,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$10k–$30k / mo",
     firstCustomers: "Door-hangers in 5 new subdivisions",
     stageHint: "Stage 6 builds the before/after ads.",
+    image: imgEpoxyGarageFloors.url,
   },
   {
     name: "Mobile IV + wellness therapy",
@@ -337,6 +432,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$8k–$18k / mo",
     firstCustomers: "Yoga studios, corporate offices, bachelorette planners",
     stageHint: "Stage 1 sorts the medical structure.",
+    image: imgMobileIvWellnessTherapy.url,
   },
   {
     name: "Home-organization concierge",
@@ -346,6 +442,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$5k–$12k / mo",
     firstCustomers: "Realtor referrals + 3 free portfolio jobs for IG",
     stageHint: "Stage 5 builds your portfolio site.",
+    image: imgHomeOrganizationConcierge.url,
   },
   {
     name: "Senior tech help — home visits",
@@ -355,6 +452,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$7k / mo",
     firstCustomers: "Church bulletins, senior centers, NextDoor",
     stageHint: "Stage 2 writes your offer in plain English.",
+    image: imgSeniorTechHelpHomeVisits.url,
   },
   {
     name: "Senior errand & concierge service",
@@ -364,6 +462,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$8k / mo",
     firstCustomers: "Doctor offices, churches, NextDoor",
     stageHint: "Stage 2 builds the packages.",
+    image: imgSeniorErrandConciergeService.url,
   },
   {
     name: "Mobile notary + loan signing agent",
@@ -373,6 +472,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$8k / mo",
     firstCustomers: "Title companies, real estate offices, Snapdocs",
     stageHint: "Stage 1 walks you through credentials.",
+    image: imgMobileNotaryLoanSigningAgent.url,
   },
   {
     name: "Pet sitting & dog walking",
@@ -382,6 +482,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$2k–$6k / mo",
     firstCustomers: "Rover, NextDoor, vet bulletin boards",
     stageHint: "Stage 5 builds your booking page.",
+    image: imgPetSittingDogWalking.url,
   },
   {
     name: "Route-based lawn care",
@@ -391,6 +492,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$5k–$12k / mo (in season)",
     firstCustomers: "Door hangers on one street, then the next",
     stageHint: "Stage 7 builds your route plan.",
+    image: imgRouteBasedLawnCare.url,
   },
   {
     name: "EV-charger install referral business",
@@ -400,6 +502,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$10k / mo",
     firstCustomers: "EV owner FB groups + 3 dealership partnerships",
     stageHint: "Stage 2 builds the referral pitch.",
+    image: imgEvChargerInstallReferralBusiness.url,
   },
   {
     name: "Christmas light install (Oct–Jan)",
@@ -409,6 +512,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$15k–$50k / season",
     firstCustomers: "Door hangers in 3 nicer neighborhoods in September",
     stageHint: "Stage 6 builds the fall ads.",
+    image: imgChristmasLightInstallOctJan.url,
   },
   {
     name: "Faith-based event & wedding planning",
@@ -418,6 +522,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$5k–$15k / mo (seasonal)",
     firstCustomers: "Pastor referrals + 3 styled-shoot portfolio photos",
     stageHint: "Stage 5 builds your portfolio site.",
+    image: imgFaithBasedEventWeddingPlanning.url,
   },
   {
     name: "Real estate drone + 3D Matterport tours",
@@ -427,6 +532,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$6k–$15k / mo",
     firstCustomers: "3 agents at one brokerage. Word travels fast.",
     stageHint: "Stage 6 builds your sample reel.",
+    image: imgRealEstateDrone3dMatterportTours.url,
   },
 
   // ============== FOOD & HANDS (7) ==============
@@ -438,6 +544,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$8k–$20k / mo",
     firstCustomers: "DoorDash + IG ads inside a 5-mile radius",
     stageHint: "Stage 2 builds the concept + menu.",
+    image: imgGhostKitchenBrandOnDoordash.url,
   },
   {
     name: "Weekly corporate-lunch route",
@@ -447,6 +554,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$10k–$22k / mo",
     firstCustomers: "Office managers in 5 buildings near you",
     stageHint: "Stage 7 maps the weekly route.",
+    image: imgWeeklyCorporateLunchRoute.url,
   },
   {
     name: "Sunday meal prep for working moms",
@@ -456,6 +564,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$7k / mo",
     firstCustomers: "10 moms in your subdivision, then their friends",
     stageHint: "Stage 4 builds the weekly delivery flow.",
+    image: imgSundayMealPrepForWorkingMoms.url,
   },
   {
     name: "Functional baking — gluten-free & sourdough subs",
@@ -465,6 +574,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$2k–$6k / mo",
     firstCustomers: "Celiac + wellness groups on Facebook",
     stageHint: "Stage 5 builds the subscription page.",
+    image: imgFunctionalBakingGlutenFreeSourdoughSubs.url,
   },
   {
     name: "Caribbean lunch plates at office parks",
@@ -474,6 +584,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$2k–$6k / mo (1 day a week)",
     firstCustomers: "One office park, one email blast, one Friday",
     stageHint: "Stage 2 builds the menu & pricing.",
+    image: imgCaribbeanLunchPlatesAtOfficeParks.url,
   },
   {
     name: "Wedding cookie + favor boxes",
@@ -483,6 +594,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$2k–$6k / mo (seasonal)",
     firstCustomers: "Wedding planners, IG, The Knot",
     stageHint: "Stage 5 builds your portfolio site.",
+    image: imgWeddingCookieFavorBoxes.url,
   },
   {
     name: "Cold-pressed juice subscription",
@@ -492,6 +604,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$8k / mo",
     firstCustomers: "Yoga studios, gyms, IG fitness accounts",
     stageHint: "Stage 5 builds your subscription page.",
+    image: imgColdPressedJuiceSubscription.url,
   },
 
   // ============== SIDE → FULL-TIME (5) ==============
@@ -503,6 +616,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$8k–$20k / mo",
     firstCustomers: "DM 30 med-spas with a free sample reel",
     stageHint: "Stage 7 gets your first 3 retainers.",
+    image: imgShortFormVideoAgencyForMedSpas.url,
   },
   {
     name: "Amazon FBA wholesale",
@@ -512,6 +626,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$15k / mo",
     firstCustomers: "Amazon's traffic — your first SKU live in 30 days",
     stageHint: "Stage 1 gets the seller account + LLC right.",
+    image: imgAmazonFbaWholesale.url,
   },
   {
     name: "Resume + LinkedIn rewrites",
@@ -521,6 +636,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$2k–$6k / mo",
     firstCustomers: "LinkedIn posts, alumni groups, career-change Reddit",
     stageHint: "Stage 2 writes your one-sentence offer.",
+    image: imgResumeLinkedinRewrites.url,
   },
   {
     name: "Wedding officiant + ceremony coach",
@@ -530,6 +646,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$2k–$6k / mo (seasonal)",
     firstCustomers: "Wedding planners, Zola, The Knot",
     stageHint: "Stage 5 builds your booking site.",
+    image: imgWeddingOfficiantCeremonyCoach.url,
   },
   {
     name: "Short-form video editing for realtors",
@@ -539,6 +656,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$3k–$8k / mo",
     firstCustomers: "DM 50 realtors with a free sample edit",
     stageHint: "Stage 7 gets your first 5 retainers.",
+    image: imgShortFormVideoEditingForRealtors.url,
   },
 
   // ============== FAMILY-RUN (4) ==============
@@ -550,6 +668,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$10k–$22k / mo",
     firstCustomers: "Thumbtack + 50 doors in two subdivisions",
     stageHint: "Stage 7 plans the first 90 days.",
+    image: imgTwoTruckHandymanCrew.url,
   },
   {
     name: "Husband-wife Airbnb management",
@@ -559,6 +678,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$8k–$18k / mo",
     firstCustomers: "Message 30 Airbnb hosts in your city directly",
     stageHint: "Stage 2 builds the pitch to hosts.",
+    image: imgHusbandWifeAirbnbManagement.url,
   },
   {
     name: "Saturday family car wash",
@@ -568,6 +688,7 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$1k–$3k / mo (1 day a week)",
     firstCustomers: "Driveway sign + church parking lot permission",
     stageHint: "Stage 4 builds the weekly workflow.",
+    image: imgSaturdayFamilyCarWash.url,
   },
   {
     name: "Family cleaning crew for Airbnbs",
@@ -577,5 +698,6 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     incomePotential: "$4k–$10k / mo",
     firstCustomers: "Message 30 Airbnb hosts in your city directly",
     stageHint: "Stage 2 builds the host pitch.",
+    image: imgFamilyCleaningCrewForAirbnbs.url,
   },
 ];
