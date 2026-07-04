@@ -183,8 +183,8 @@ export const AGENCY_TRACKS: AgencyTrack[] = [
     outcome:
       "Brand, website, and the legal scaffolding to invoice on day one. Most founders' first three months — compressed into four weeks.",
     includedSlugs: ["brand-identity", "website-that-converts", "legal-financial-ops"],
-    priceLabel: "From $4,875",
-    timelineLabel: "4–6 weeks",
+    priceLabel: "Bespoke — priced after a 20-min discovery call",
+    timelineLabel: "Sprint engagement",
     ctaHref: "/contact?track=launch",
   },
   {
