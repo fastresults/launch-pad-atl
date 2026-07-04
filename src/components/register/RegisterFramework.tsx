@@ -257,36 +257,47 @@ export function RegisterFramework() {
           <aside className="space-y-6">
             <div className="rounded-2xl border border-white/10 bg-card p-6 md:p-8">
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-semibold tabular-nums md:text-5xl">{WORKSHOP_PRICE_LABEL}</span>
+                <span className="text-4xl font-semibold tabular-nums md:text-5xl">{ctx.priceLabel}</span>
                 <span className="text-sm text-muted-foreground">one-time</span>
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
-                Strategic Foundation Workshop — small cohort, working session with Adam Anderson. Coffee and light refreshments provided.
+                {ctx.asideBlurb}
               </p>
 
               <div className="mt-6 text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 What you walk out with
               </div>
-              <ul className="mt-3 space-y-3 text-sm">
-                {FRAMEWORK_STAGES.map((stage) => (
-                  <li key={stage.number} className="flex gap-3">
-                    <Check className="mt-0.5 size-4 shrink-0 text-primary" />
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2 font-medium">
-                        <span>Stage {Number(stage.number)} · {stage.items.length} startup assets</span>
-                        {stage.bonus && (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.18em] text-white">
-                            <Sparkles className="size-2.5" /> Bonus
-                          </span>
-                        )}
+              {ctx.walkOuts ? (
+                <ul className="mt-3 space-y-3 text-sm">
+                  {ctx.walkOuts.map((item) => (
+                    <li key={item} className="flex gap-3">
+                      <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                      <span className="font-medium leading-snug">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="mt-3 space-y-3 text-sm">
+                  {FRAMEWORK_STAGES.map((stage) => (
+                    <li key={stage.number} className="flex gap-3">
+                      <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2 font-medium">
+                          <span>Stage {Number(stage.number)} · {stage.items.length} startup assets</span>
+                          {stage.bonus && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.18em] text-white">
+                              <Sparkles className="size-2.5" /> Bonus
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{stage.name}</div>
                       </div>
-                      <div className="text-xs text-muted-foreground">{stage.name}</div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
+              )}
               <div className="mt-3 text-xs text-muted-foreground">
-                {TOTAL_DELIVERABLES} startup assets total · built live with Adam · yours to keep.
+                {ctx.footerLine}
               </div>
               <div className="mt-6 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs text-muted-foreground">
                 <CalendarDays className="size-4 shrink-0" />
