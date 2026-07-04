@@ -187,6 +187,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: AtSign, title: "Domain, Email & DNS Checklist", tooltip: "Domain purchased, business email live, SPF, DKIM, and DMARC set — and a support alias routed to the right person. Your outreach lands in inboxes instead of spam, and you look like a real company from your very first email." },
       { icon: Activity, title: "Analytics & Pixel Setup", tooltip: "GA4, the ad pixels your channels need, conversion events, and a UTM convention wired before you spend a dollar. You'll know what actually converted, cut ad spend that doesn't pay back, and double down on the channels that do." },
       { icon: MousePointerClick, title: "Landing Page & Waitlist Test", tooltip: "A one-page offer test live by day four — before the full site — so paid ads and warm outreach have a destination while you finish building. You'll validate the hook, collect emails, and turn early clicks into paying customers." },
+      { icon: Mail, title: "Email Marketing Setup", tooltip: "Resend, Loops, or Beehiiv wired to your domain with SPF/DKIM/DMARC, a 5-email welcome sequence, first broadcast, and a deliverability warm-up plan. You'll stop landing in spam and start owning the audience that keeps buying." },
     ],
   },
   {
