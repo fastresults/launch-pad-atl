@@ -245,7 +245,7 @@ export function RegisterFramework() {
                 disabled={isSubmitting}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white hover:opacity-90 disabled:opacity-60"
               >
-                {isSubmitting ? "Reserving…" : `Reserve seat — ${WORKSHOP_PRICE_LABEL}`}
+                {isSubmitting ? "Reserving…" : `Reserve seat — ${ctx.priceLabel}`}
                 {!isSubmitting && <ArrowRight className="size-4" />}
               </button>
               <p className="text-center text-xs text-muted-foreground">
