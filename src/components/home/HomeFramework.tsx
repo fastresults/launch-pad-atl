@@ -71,13 +71,13 @@ function Hero() {
           <div>
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white md:text-sm md:tracking-[0.2em]">
 
-          <Star className="size-3.5 fill-current" /> Thu, Jul 23, 2026 · Norcross, GA · 20 seats
+          <Star className="size-3.5 fill-current" /> The 14-Day Launch Method · Thu, Jul 23, 2026 · Norcross, GA
         </p>
 
 
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
-          Launch a profitable business in{" "}
-          <span className="text-gradient-brand">14 days.</span>
+          The 14-Day Launch Method.{" "}
+          <span className="text-gradient-brand">First paying customer in two weeks.</span>
         </h1>
 
         {/* Old way / New way — the epiphany beat */}
@@ -85,25 +85,25 @@ function Hero() {
           <div className="rounded-xl border border-white/10 bg-black/25 p-4 backdrop-blur">
             <div className="text-[10px] uppercase tracking-[0.22em] text-white/50">The old way</div>
             <p className="mt-1.5 text-sm leading-snug text-white/80">
-              A year. An agency. A co-founder. A maybe.
+              An accelerator seat. A year of courses. A raw-AI rabbit hole.
             </p>
           </div>
           <div className="rounded-xl border border-primary/40 bg-gradient-to-br from-primary/20 to-primary/5 p-4 backdrop-blur">
             <div className="text-[10px] uppercase tracking-[0.22em] text-primary">The new way</div>
             <p className="mt-1.5 text-sm leading-snug text-white">
-              One morning with Adam. Fourteen days to your first paying customer.
+              One live morning inside The 14-Day Launch Method. Revenue in two weeks.
             </p>
           </div>
         </div>
 
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          This is the 14-Day Launch Method — the same playbook founders are quietly using to skip the year of guessing and land their first paying customer in two weeks. Not raw AI, not another course. A proven system, run live by the operator who built it, in one focused morning. {WORKSHOP_PRICE_LABEL} once, yours forever.{" "}
+          The 14-Day Launch Method is the operator-led method quietly replacing accelerators, courses, and raw AI — the playbook modern founders are using to skip the year of guessing and land their first paying customer in two weeks. Run live by Adam, the operator who built it, in one focused morning. {WORKSHOP_PRICE_LABEL} once, yours forever.{" "}
           <span className="font-medium text-white">Full support during and after</span>, if you want it.
         </p>
 
 
         <p className="mt-4 max-w-2xl text-sm text-white/80 md:text-base">
-          A framework, not a prompt. An operator, not a chatbot.
+          Not another course. Not raw AI. The operator-led method replacing both.
         </p>
 
 
@@ -177,14 +177,14 @@ function Framework() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          How modern businesses get launched now
+          Inside The 14-Day Launch Method
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
           A business ready to take money.{" "}
           <span className="text-gradient-brand">Built with Adam in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Straight AI hands you a folder of docs and no customers. A framework — run in the room by an operator who's shipped — hands you a business. Your offer priced, your first customer named, your first channel open, outreach going out that afternoon. {WORKSHOP_PRICE_LABEL} once, yours to run with.
+          Raw AI hands you a folder of documents and no customers. An accelerator hands you a year of homework. The 14-Day Launch Method — run in the room by the operator who built it — hands you a business: offer priced, first customer named, first channel open, outreach going out that afternoon. {WORKSHOP_PRICE_LABEL} once, yours to run with.
         </p>
 
 
@@ -347,7 +347,7 @@ function HonestRoadmap() {
           </div>
 
           <p className="mx-auto mt-10 max-w-3xl text-base text-muted-foreground md:text-lg">
-            DIY any of it. Hire anyone. Or hand it to our team. Either way, the workshop is the DIY playbook — the same strategy, frameworks, and tool stack our team runs from.{" "}
+            DIY any of it. Hire anyone. Or hand it to our team. Either way, each half-day is the same playbook Adam's team runs from — the working sessions that extend The 14-Day Launch Method after your first customer.{" "}
             <span className="font-medium text-foreground">
               Foundation first. Build when ready.
             </span>{" "}

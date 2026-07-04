@@ -28,7 +28,7 @@ const MODES: Mode[] = [
     title: "In-person with Adam",
     format: "Norcross, GA · 20 seats",
     promise:
-      "One morning in the room with Adam. Two weeks to your first paying customer — offer priced, first channel open, outreach out that day.",
+      "The 14-Day Launch Method, live in the room with Adam. Two weeks to your first paying customer — offer priced, first channel open, outreach out that day.",
     price: `${WORKSHOP_PRICE_LABEL} — yours to keep`,
     cta: "Reserve a seat",
     to: "/register",
@@ -39,7 +39,7 @@ const MODES: Mode[] = [
     title: "Live on Zoom with Adam",
     format: "Remote · small cohort",
     promise:
-      "Same morning, same Adam, same 14-day path to first revenue — done live over video from wherever you are.",
+      "The 14-Day Launch Method, run live over video with Adam — same operator, same 14-day path to first revenue, from wherever you are.",
     price: "Lower price · next cohort forming",
     cta: "Join the next webinar",
     to: "/webinar",
@@ -50,7 +50,7 @@ const MODES: Mode[] = [
     title: "Adam launches it for you",
     format: "Adam + creative team · 14-day build",
     promise:
-      "Skip the build. Adam and his team launch your business end-to-end — brand, site, social, systems — and hand you a live business ready to invoice.",
+      "The 14-Day Launch Method, run for you. Adam and his team ship the brand, site, social, and systems — and hand you a live business ready to invoice.",
     price: "$4,799 · everything included",
     cta: "Have Adam build it",
     to: "/one-on-one",
@@ -78,9 +78,9 @@ export function AccessModeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Three ways to launch the modern way.</DialogTitle>
+          <DialogTitle className="text-2xl">Three ways to run The 14-Day Launch Method.</DialogTitle>
           <DialogDescription>
-            Same framework. Same 14-day path to first revenue. Pick the format — in the room, live on Zoom, or done for you.
+            Same method. Same 14-day path to first revenue. Pick the format — in the room, live on Zoom, or done for you.
           </DialogDescription>
         </DialogHeader>
         <div className="mt-2 grid gap-3 md:grid-cols-3">

@@ -46,7 +46,7 @@ export default function SchedulePage() {
       <section className="border-b border-white/5 py-12 md:py-20">
         <div className="mx-auto max-w-4xl px-6">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-gradient-brand md:text-sm md:tracking-[0.2em]">
-            Strategic Foundation Workshop · Agenda
+            The 14-Day Launch Method · Agenda
           </p>
           <p className="mb-4 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
             {EVENT.dateLabel} · {EVENT.timeLabel}
@@ -55,13 +55,13 @@ export default function SchedulePage() {
             Idea in. <span className="text-gradient-brand">Launch assets out.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
-            This is what a modern launch morning looks like. Foundation is the
-            drafting stage — you write the one-page story of your startup.
-            Every stage after Foundation is a{" "}
+            This is one live morning inside The 14-Day Launch Method — the operator-led method
+            replacing accelerators, courses, and raw AI. Foundation is the drafting stage — you
+            write the one-page story of your startup. Every stage after Foundation is a{" "}
             <strong className="text-foreground">mentored working session</strong>: you bring a
-            working attempt, an operator applies a CFO, brand-lead, or
-            distribution lens to your specific startup, and you leave with
-            sharper thinking plus reviewed drafts on your dashboard you keep refining.
+            working attempt, an operator applies a CFO, brand-lead, or distribution lens to your
+            specific startup, and you leave with sharper thinking plus reviewed drafts on your
+            dashboard you keep refining.
           </p>
 
           {/* Stat ribbon */}
