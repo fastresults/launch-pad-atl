@@ -118,6 +118,136 @@ our team can build it done-for-you.
 - **Close more sales** — Walk out with a sales script that qualifies and closes. A repeatable script and pipeline that moves a stranger to a signed deal — with the objections, the asks, and the close already written.
 - **Scaffold your business** — Entity. Contracts. Books. Done. LLC, EIN, operating agreement, client contracts, and a clean books setup — the boring scaffolding that keeps you legal, bankable, and ready to scale.
 
+## Done-for-you Tracks (/services)
+The workshop gives you the strategic foundation. The **Tracks** on /services are how our team
+builds it — brand, site, systems — done-for-you. You do NOT have to attend the workshop first;
+Tracks stand alone. Three named Tracks, each a curated bundle of the individual services below:
+
+### Launch Track
+- Tagline: From an idea to a business you can take money for.
+- Outcome: Brand, website, and the legal scaffolding to invoice on day one. Most founders' first three months — compressed into four weeks.
+- Includes:
+  - Brand identity
+  - A website that converts
+  - Legal, financial, and operational scaffolding
+- Pricing: Bespoke — priced after a 20-min discovery call
+- Timeline: Sprint engagement
+- CTA: /contact?track=launch
+
+### Growth Track (most popular)
+- Tagline: The customer-acquisition engine, running every month.
+- Outcome: Distribution you own. Content that compounds. A follow-up machine that catches the revenue first-touch sales always misses.
+- Includes:
+  - Social presence
+  - A content engine
+  - Email, CRM, and automation
+- Pricing: Bespoke — priced after a 20-min discovery call
+- Timeline: Monthly retainer
+- CTA: /contact?track=growth
+
+### Operate Track
+- Tagline: Two people doing the work of ten. Pipeline you can forecast.
+- Outcome: AI built into how you ship. A sales motion that doesn't depend on your mood. The leverage every late-stage startup wishes it had earlier.
+- Includes:
+  - AI as your operating system
+  - Sales systems
+- Pricing: Bespoke — priced after a 20-min discovery call
+- Timeline: 30-day sprint
+- CTA: /contact?track=operate
+
+## Individual done-for-you services (/services)
+Every capability in the build layer is also available on its own — pick just what you need.
+Each has a starting price; Tracks are bespoke and scoped in a 20-min discovery call.
+
+### Brand identity
+- One-liner: A premium brand system, shipped in 14 days — not a logo, a language.
+- Deliverables:
+  - Logo system + usage rules
+  - Voice, archetype, and visual guidelines
+  - Asset pack (favicon, social, deck, signature)
+- Pricing: From $2,900
+- Timeline: 2 weeks
+- Half-day workshop route: /build/brand-identity
+- Done-for-you contact: /contact?service=brand-identity
+
+### A website that converts
+- One-liner: A revenue surface — not a brochure — wired to payments and analytics on day one.
+- Deliverables:
+  - Site design, build, and on-page copy
+  - Stripe, GA4, and CRM events wired live
+  - Pre-launch QA + post-launch CRO sprint
+- Pricing: From $4,800
+- Timeline: 2–3 weeks
+- Half-day workshop route: /build/website-that-converts
+- Done-for-you contact: /contact?service=website-that-converts
+
+### Social presence
+- One-liner: Two channels, owned. Profiles rebuilt to convert, a calendar shipped, cadence held.
+- Deliverables:
+  - Channel selection + profile rebuild
+  - 30-day content calendar with assets
+  - Posting + engagement stack you can run weekly
+- Pricing: From $1,800 setup + $1,200/mo
+- Timeline: Live in 2 weeks
+- Half-day workshop route: /build/social-presence
+- Done-for-you contact: /contact?service=social-presence
+
+### A content engine
+- One-liner: Pillars, SEO map, and eight anchor pieces a month — repurposed across every channel.
+- Deliverables:
+  - Editorial system + 90-day calendar
+  - 8 anchor pieces / month (blog, video, or both)
+  - Repurposing flow into social, email, SEO
+- Pricing: From $2,400/mo
+- Timeline: Ongoing
+- Half-day workshop route: /build/content-engine
+- Done-for-you contact: /contact?service=content-engine
+
+### AI as your operating system
+- One-liner: Ten workflows rewired around AI, documented, and owned by your team — not by a vendor.
+- Deliverables:
+  - Workflow audit + ROI model
+  - 10 automations built, tested, and handed off
+  - Prompt library + governance doc
+- Pricing: From $4,500
+- Timeline: 30 days
+- Half-day workshop route: /build/ai-operating-system
+- Done-for-you contact: /contact?service=ai-operating-system
+
+### Email, CRM, and automation
+- One-liner: The follow-up machine. CRM live, sequences written, deliverability fixed — for good.
+- Deliverables:
+  - CRM picked, set up, and your data imported
+  - 3 production sequences (welcome, nurture, win-back)
+  - Lifecycle automation + SPF/DKIM/DMARC dialed
+- Pricing: From $3,200
+- Timeline: 3 weeks
+- Half-day workshop route: /build/email-crm-automation
+- Done-for-you contact: /contact?service=email-crm-automation
+
+### Sales systems
+- One-liner: A repeatable motion: ICP, script, pipeline, and the weekly rhythm that holds it together.
+- Deliverables:
+  - ICP scorecard + discovery script
+  - Pipeline built in your CRM with exit criteria
+  - 30-day enablement so your team runs it solo
+- Pricing: From $3,800
+- Timeline: 30 days
+- Half-day workshop route: /build/sales-systems
+- Done-for-you contact: /contact?service=sales-systems
+
+### Legal, financial, and operational scaffolding
+- One-liner: LLC, EIN, contracts, books, payroll — done, not promised.
+- Deliverables:
+  - Entity formation + EIN + bank-ready paperwork
+  - Contract suite (MSA, NDA, contractor, IP)
+  - Bookkeeping + invoicing + insurance checklist
+- Pricing: From $1,200
+- Timeline: 10 business days
+- Half-day workshop route: /build/legal-financial-ops
+- Done-for-you contact: /contact?service=legal-financial-ops
+
+
 ## Two equal default tracks — pick the one that fits
 - **Main Street Startup** — cafés, salons, fitness studios, trades, local services, indie products, solo professional practices.
 - **Online / DTC / Digital** — DTC and e-commerce brands (Shopify, Amazon, marketplaces), creators and info products, digital services and agencies, small SaaS and subscription products.
@@ -149,6 +279,11 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 - **Do you take equity?** No. It's a flat $297 workshop fee.
 - **Is there follow-up support?** Yes — full support available during and after; also 30 days of group-channel access on any half-day build workshop.
 - **Can your team build the brand/site/ads for me later?** Yes — see /services. Every workshop capability has a done-for-you equivalent.
+- **What's the Launch Track?** Our done-for-you sprint that gets a new founder from idea to invoicing: brand identity, a website that converts, and legal/financial/operational scaffolding. Bespoke, priced after a 20-min discovery call. See /services.
+- **What's the Growth Track?** The customer-acquisition engine: social presence, content engine, and email/CRM/automation. Monthly retainer, bespoke — our most popular Track. See /services.
+- **What's the Operate Track?** Leverage for a small team: AI as your operating system + sales systems. 30-day sprint, bespoke. See /services.
+- **How much does the done-for-you build cost?** Tracks are bespoke and priced after a 20-min discovery call at /contact?intent=discovery. Individual services have starting prices listed on /services (e.g. brand identity from $2,900, website from $4,800).
+- **Do I have to attend the workshop before hiring your team?** No. Tracks and individual services stand alone. The workshop is recommended if you don't yet have strategic clarity; if you do, go straight to /services.
 - **How do I register?** Go to /register and reserve one of the 20 seats. Cohorts fill.
 - **What if I miss this cohort?** Join the waitlist; a new cohort opens next.
 - **What if I need help right now?** Email through /contact and we'll route you personally.
