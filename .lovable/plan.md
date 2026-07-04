@@ -1,18 +1,13 @@
 ## Change
-In `src/routes/build.$slug.tsx`, add the workshop title into the "Upcoming dates" section so it's clear which workshop the dates belong to.
+In `src/routes/build.$slug.tsx`, add the workshop title above the date on each row in the "Upcoming dates" list.
 
-**Edit:** update the eyebrow line inside the schedule section from:
+**Edit:** inside the `<li>` for each session, prepend a small primary-color eyebrow line with `{w.title}` above the existing date/time block.
 
+Row layout becomes:
 ```
-UPCOMING DATES
-```
-
-to:
-
-```
-UPCOMING DATES · {w.title}
+Scaffold your business          [ Reserve → ]
+Fri, Jul 10, 2026
+1:30–4:00 pm ET
 ```
 
-(rendered inline with the calendar icon, matching the existing uppercase/tracking style).
-
-No other changes. The `Pick your session. Reserve your seat.` headline and the date rows below stay as-is.
+Styling: `text-xs uppercase tracking-[0.16em] text-primary` for the title line, matching existing eyebrow style. No other changes.
