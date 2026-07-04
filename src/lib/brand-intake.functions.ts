@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
+
 
 export type BrandPackage = {
   user_id: string;
