@@ -1008,6 +1008,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   let heroSub: string;
   let heroPrimary: { label: string; onClick: () => void; disabled?: boolean; loading?: boolean } | null = null;
   let heroSecondary: { label: string; onClick: () => void } | null = null;
+  let heroTertiary: { label: string; onClick: () => void } | null = null;
   let heroShowProgress = false;
   let heroDone = false;
 
@@ -1034,20 +1035,36 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     heroSecondary = { label: "Generate all (re-run)", onClick: () => setShowUnlock(true) };
   } else {
     const isFirstRun = completeCount === 0;
+    const remaining = total - completeCount;
+    const nextRemaining = nextCategory.total - nextCategory.done;
     heroTitle = isFirstRun
       ? "Let's build your startup kit, one section at a time"
       : "Pick up where you left off";
     heroSub = isFirstRun
       ? `We'll write your ${total} documents in guided sections — Foundation first, then Strategy, Operations, and the rest. Generate one section, read it, then move on.`
-      : `${completeCount} of ${total} done. Next up: ${nextCategory.cat} (${nextCategory.total - nextCategory.done} doc${nextCategory.total - nextCategory.done === 1 ? "" : "s"} left).`;
+      : `${completeCount} of ${total} done — ${remaining} remaining. Next section: ${nextCategory.cat}.`;
     heroShowProgress = !isFirstRun;
-    heroPrimary = {
-      label: `Generate ${nextCategory.cat} (${nextCategory.total - nextCategory.done} doc${nextCategory.total - nextCategory.done === 1 ? "" : "s"})`,
-      onClick: () => bulk.mutate({ category: nextCategory.cat }),
-      disabled: bulk.isPending,
-      loading: bulk.isPending,
-    };
-    heroSecondary = { label: `Generate all ${total}`, onClick: () => setShowUnlock(true) };
+    if (isFirstRun) {
+      heroPrimary = {
+        label: `Generate ${nextCategory.cat} (${nextRemaining} doc${nextRemaining === 1 ? "" : "s"})`,
+        onClick: () => bulk.mutate({ category: nextCategory.cat }),
+        disabled: bulk.isPending,
+        loading: bulk.isPending,
+      };
+      heroSecondary = { label: `Generate all ${total}`, onClick: () => setShowUnlock(true) };
+    } else {
+      heroPrimary = {
+        label: `Generate remaining ${remaining} doc${remaining === 1 ? "" : "s"}`,
+        onClick: () => bulk.mutate({ category: null }),
+        disabled: bulk.isPending,
+        loading: bulk.isPending,
+      };
+      heroSecondary = {
+        label: `Just ${nextCategory.cat} (${nextRemaining})`,
+        onClick: () => bulk.mutate({ category: nextCategory.cat }),
+      };
+      heroTertiary = { label: `Re-run all ${total}`, onClick: () => setShowUnlock(true) };
+    }
   }
 
   const pct = jobRunning
@@ -1077,8 +1094,13 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               </Button>
             )}
             {heroSecondary && (
-              <Button size="sm" variant="ghost" onClick={heroSecondary.onClick}>
+              <Button size="sm" variant="outline" onClick={heroSecondary.onClick} disabled={bulk.isPending}>
                 {heroSecondary.label}
+              </Button>
+            )}
+            {heroTertiary && (
+              <Button size="sm" variant="ghost" onClick={heroTertiary.onClick}>
+                {heroTertiary.label}
               </Button>
             )}
           </div>

@@ -1,63 +1,38 @@
-# Integration Pass — Wire the 16 New Assets Into the Generation Pipeline
+## Problem
 
-The 16 new asset rows exist in `venture_document_types`, but they will currently generate with the generic `BASE_SYSTEM_PROMPT` and a NULL `context_keys` slice. That produces generic advice instead of the paste-ready artifacts the existing 34 emit. This pass closes those gaps so the new assets behave like first-class citizens end-to-end.
+The hero card on the Hub shows "Pick up where you left off — 34 of 50 done" with two buttons:
 
-## What's missing today
+- **Primary**: `Generate Foundation (1 doc)` — only fires the next incomplete category
+- **Secondary**: `Generate all 50` — opens an "unlock" confirmation dialog and re-runs *everything*, including docs already written
 
-Traced through `supabase/functions/venture-generate-document/index.ts` and `venture-bulk-generate/index.ts`:
+There is no single-click way to say "just finish the remaining 16." The user has to either walk category-by-category or trigger a full re-run through a gated dialog.
 
-1. **No specialized prompt.** `_shared/deliverable-prompts.ts::SPECIALIZED_PROMPTS` has 15+ entries (one per legacy type). None of the 16 new types are keyed there, so each falls back to the base analyst prompt — long-form Markdown *about* the topic instead of the actual artifact (link, checklist, script, contract, policy).
-2. **`context_keys` is NULL for the new rows.** The context slicer (`pickBrainSlice`) sends the full brain when keys are null, wasting tokens and producing off-topic output. The legacy 34 all have targeted keys.
-3. **`model_tier` defaults to `'flash'` for every new row.** Fine for most, but the day-by-day sprint plan, pricing sheet, and payments setup should reason harder (`pro`), and list-shaped assets (First-50, DNS checklist) can drop to `'lite'` to save credits.
-4. **Chatbot knowledge doesn't mention the new capabilities.** `src/lib/chatbot-knowledge.ts` and `supabase/functions/venture-chatbot/knowledge.ts` still describe the 34-asset framework and never mention payments, legal policy pack, outbound scripts, etc. — so the concierge can't route questions to them.
-5. **No PRD-style bias toward paste-ready artifacts.** Existing prompts (website_prd, launch_content_kit, paid_ads_starter_pack) are explicit about deliverable *shape* — tables, fenced blocks, exact section headings. The new prompts must follow the same discipline.
+Good news: the backend already does the right thing. `venture-bulk-generate` builds a `completeSet` from existing docs and filters them out of each dependency layer, so a bulk call with `category: null` will only generate what's missing. The gap is purely UI/labeling.
 
-## Rewrite direction: every new asset ships an AI-first artifact
+## Fix
 
-Each specialized prompt will end with one **`## Paste-Ready`** block (fenced) containing the artifact a founder can literally copy into Stripe, DocuSign, their inbox, their site, or GA4. The markdown above the block is the *why*; the fenced block is the *thing*.
+Replace the current secondary "Generate all N" button with a **"Generate remaining {N}"** primary-style action whenever `completeCount > 0` and `completeCount < total`. It calls the existing `bulk.mutate({ category: null })` directly — no unlock dialog, since nothing is being overwritten.
 
-Artifact shapes per new type:
+Rework the hero action layout in `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` (around lines 1035–1050) for the "in progress" state:
 
-| Type | Paste-ready block |
-|---|---|
-| `launch_plan_14day` | Day 1–14 table (Date/Focus/Owner/Output/Done-when) + a Google Calendar-importable ICS-style outline |
-| `first_50_warm_list` | 50-row Markdown table (Name/Company/Contact/Angle/Ask/Status) seeded from persona + market context |
-| `pre_sell_offer_test` | Landing-page copy block + 3-email pre-sell sequence + deposit link script |
-| `fulfillment_sop` | Numbered SOP + per-step time/cost table + handoff checklist |
-| `customer_support_starter` | 8 canned reply templates + SLA table + refund decision tree |
-| `payments_checkout_setup` | Stripe setup checklist + product/price JSON payload + checkout link CTA copy + tax/receipt config table |
-| `business_bank_books_starter` | Chart of accounts (CSV block) + bank/tool comparison + first-week reconciliation SOP |
-| `pricing_offer_sheet` | Tier table + one-page offer sheet Markdown + objection→response script |
-| `terms_privacy_refund_pack` | Three fenced Markdown docs (ToS, Privacy, Refund) tuned to entity + offer, ready to paste to `/legal/*` |
-| `insurance_starter` | Coverage recommendation table + carrier shortlist + COI request email template |
-| `contractor_1099_kit` | MSA + SOW Markdown template + W-9 request email + IP-assignment clause block |
-| `domain_email_dns_checklist` | Registrar/host recommendation + full DNS record table (A, MX, SPF, DKIM, DMARC) + verification steps |
-| `analytics_pixel_setup` | GA4 event map table + pixel install snippet block + UTM naming convention + dashboard sketch |
-| `landing_page_waitlist_test` | Full one-page Markdown site copy + form field spec + 2-email confirmation sequence |
-| `reviews_testimonials_kit` | Request email + SMS + DM templates + video-ask script + wall-of-love HTML snippet |
-| `outbound_dm_email_scripts` | 3-touch email sequence + LinkedIn DM sequence + SMS follow-up, keyed to `first_50_warm_list` |
+- **Primary CTA**: `Generate remaining {total - completeCount} docs` → `bulk.mutate({ category: null })`
+- **Secondary CTA**: `Just {nextCategory.cat} ({N} doc{s})` → `bulk.mutate({ category: nextCategory.cat })` (keeps the guided per-section option for users who want to review as they go)
+- **Tertiary (text link)**: `Re-run all {total}` → still opens `setShowUnlock(true)`, since that path *does* overwrite completed docs
 
-Every prompt inherits `OUTPUT_FOOTER` (no footnotes, `QUALITY_SCORE` trailer) and enforces "no TBD / no `[insert …]`" like the existing prompts.
+Update the subtitle line so the count of what's left is unambiguous: `34 of 50 done — 16 remaining. Next section: Foundation.`
 
-## Files to change
+When `completeCount === 0` (first run), keep today's behavior: primary generates the first category, secondary is the gated "generate all."
 
-1. **`supabase/functions/_shared/deliverable-prompts.ts`** — append 16 `SPECIALIZED_PROMPTS` entries in the shapes above.
-2. **Migration (SQL via the migration tool)** — one migration that:
-   - Sets `context_keys` per new type (existing brain keys: `identity`, `problem`, `solution`, `customer`, `business_model_summary`, `market_facts`, `differentiators`, `known_numbers`).
-   - Sets `model_tier` per new type:
-     - `pro`: `launch_plan_14day`, `pricing_offer_sheet`, `payments_checkout_setup`, `business_bank_books_starter`, `terms_privacy_refund_pack`
-     - `lite`: `first_50_warm_list`, `domain_email_dns_checklist`, `customer_support_starter`, `reviews_testimonials_kit`
-     - `flash` (default): the remaining seven.
-3. **`src/lib/chatbot-knowledge.ts`** and **`supabase/functions/venture-chatbot/knowledge.ts`** — add a short section listing the new capabilities under the 14-Day Launch Method so the concierge routes questions ("do you help with Stripe setup?", "what about a privacy policy?") to the right asset instead of deflecting.
-4. **Nothing else touched.** Homepage counts derive from `TOTAL_DELIVERABLES` (already 50). Image header pipeline (`venture-document-image`) reads from the catalog, so it will generate headers for new types on first request with no code change.
+When `completeCount === total`, keep today's "kit is ready" state unchanged.
 
-## Out of scope
+## Files touched
 
-- No changes to the base model gateway, brain schema, or existing 34 prompts.
-- No new brain context keys (reuse the eight already produced by intake).
-- No UI changes — new rows flow through the existing hub, dashboard, and bulk-generate flow.
+- `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` — only the hero-card state machine (~15 lines around 1035–1050) and the button rendering block just below it to support a third action slot.
+
+No backend, no migration, no changes to `venture-bulk-generate`, no changes to the unlock dialog. Purely a UI/labeling change that surfaces a capability the backend already has.
 
 ## Verification
 
-- `bunx tsgo --noEmit` on the edited TS files.
-- Spot-generate 3 of the new types against a live venture (`launch_plan_14day`, `payments_checkout_setup`, `terms_privacy_refund_pack`) and confirm each returns a paste-ready fenced artifact plus a `QUALITY_SCORE` ≥ 70.
+- Load the Hub with a partially complete kit (34/50) and confirm the new "Generate remaining 16 docs" button appears and starts a job that only writes the 16 missing types.
+- Confirm the guided per-section button still works.
+- Confirm the "kit is ready" and first-run states are visually unchanged.
