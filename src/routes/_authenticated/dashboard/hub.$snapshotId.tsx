@@ -912,11 +912,11 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const [openDeckSlug, setOpenDeckSlug] = useState<string | null>(null);
 
   // Per-section open/collapse state (persisted per snapshot)
-  const openSectionsKey = `hub:sectionOpen:${snapshotId}`;
+  const openSectionsKey = `hub:sectionOpen:${snapshot.id}`;
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
     if (typeof window === "undefined") return {};
     try {
-      const raw = window.localStorage.getItem(`hub:sectionOpen:${snapshotId}`);
+      const raw = window.localStorage.getItem(`hub:sectionOpen:${snapshot.id}`);
       return raw ? JSON.parse(raw) : {};
     } catch {
       return {};
