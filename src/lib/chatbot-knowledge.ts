@@ -64,20 +64,25 @@ ${deliv}
 
 export const CONCIERGE_KNOWLEDGE = `# Startup Labs — Concierge Knowledge Base
 
-## What Startup Labs is
-Startup Labs is Atlanta's founder-first startup workshop. In one morning (8:45–11:30 AM),
-founders walk in with an idea and walk out with a complete strategic foundation for their
-startup — ${TOTAL_DELIVERABLES} tangible **startup assets** across eight categories, plus a signed
-90-day plan. Facilitated live by Adam Anderson, serial entrepreneur (OPEN Interactive;
-work shipped for Citigroup, Mayo Clinic, 3M, Disney).
+## What Startup Labs is (lead with this)
+Startup Labs is the fastest legal path from a business idea to your first paying customer. **One morning
+in the room with Adam Anderson. Two weeks to first revenue.** Not a course. Not a slide deck. Not an AI
+that "generates a business." Adam sits at your table, prices your offer, names the first customer, opens
+the first channel, and gets your outreach going out the same afternoon.
 
-Positioning: Atlanta's #1 startup accelerator for Main Street **and online** founders —
-cafés, salons, trades, local services, indie brands on one side; DTC and e-commerce brands,
-creators, digital services, agencies and small SaaS on the other. Marketplace and deep tech
-supported too.
+Two audiences, one promise:
+- **Full-time founders** — 14 days to a business that pays you.
+- **Plan B founders** — a real side business you can build evenings and weekends, strong enough to eventually leave the day job on your terms.
+
+Facilitated live by Adam Anderson — serial entrepreneur, co-founder of OPEN Interactive, work shipped for
+Citigroup, Mayo Clinic, 3M, Disney. Not a moderator. Not a TA. Adam, in the room.
+
+Positioning: Atlanta's #1 launch accelerator for Main Street **and online** founders — cafés, salons, trades,
+local services, indie brands on one side; DTC and e-commerce brands, creators, digital services, agencies
+and small SaaS on the other. Marketplace and deep tech supported too.
 
 ## Price & offer
-- **${WORKSHOP_PRICE_LABEL}** — Strategic Foundation Workshop, all ${TOTAL_DELIVERABLES} startup assets, kept forever.
+- **${WORKSHOP_PRICE_LABEL}** — Launch Day with Adam. You keep everything you build in the room.
 - Coffee and light refreshments included.
 - Full support during and after the workshop, available if you want it.
 - 7-day refund: if you don't get value, email within 7 days for a no-friction refund.
@@ -88,8 +93,10 @@ supported too.
 - Location: Norcross, GA (metro Atlanta)
 - Seats: 20 per cohort, one cohort at a time.
 
-## The 34 startup assets you leave with
-Every asset is generated live from your idea, market, and numbers — then refined with you in the room.
+## What you actually leave the room with
+The point is a business that can take money in 14 days — priced offer, named first customer, first channel open,
+outreach ready to send. Everything below is the paperwork that backs that up: worked out with Adam, kept forever,
+so a banker, partner, or first hire understands your business in 60 seconds.
 
 ${stagesBlock()}
 
