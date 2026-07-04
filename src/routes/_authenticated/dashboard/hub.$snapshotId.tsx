@@ -73,8 +73,12 @@ import {
   Upload,
   FileText,
   X,
+  ChevronsDownUp,
+  ChevronsUpDown,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { SectionHeader } from "@/components/hub/SectionHeader";
 
 const STEPS = [
   { n: 1, key: "concept", label: "Your idea" },
@@ -907,6 +911,27 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const [showUnlock, setShowUnlock] = useState(false);
   const [openDeckSlug, setOpenDeckSlug] = useState<string | null>(null);
 
+  // Per-section open/collapse state (persisted per snapshot)
+  const openSectionsKey = `hub:sectionOpen:${snapshotId}`;
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const raw = window.localStorage.getItem(`hub:sectionOpen:${snapshotId}`);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(openSectionsKey, JSON.stringify(openSections));
+    } catch {}
+  }, [openSections, openSectionsKey]);
+  const toggleSection = useCallback((cat: string) => {
+    setOpenSections((prev) => ({ ...prev, [cat]: !(prev[cat] ?? false) }));
+  }, []);
+
   const cancel = useMutation({
     mutationFn: (jobId: string) => cancelJob({ data: { jobId } }),
     onSuccess: () => { toast.success("Stopping…"); qc.invalidateQueries({ queryKey: ["hub"] }); },
@@ -1216,9 +1241,31 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       )}
 
       {/* Document list */}
-      <div className="space-y-1">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your documents</h3>
-        <p className="text-xs text-muted-foreground">Sections unlock in order. Use the per-section button to generate a whole section at once, or hit Generate on any single document.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your documents</h3>
+          <p className="text-xs text-muted-foreground">Sections unlock in order. Use the per-section button to generate a whole section at once, or hit Generate on any single document.</p>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 px-2 text-xs text-muted-foreground"
+            onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, true])))}
+          >
+            <ChevronsUpDown className="mr-1 h-3 w-3" />
+            Expand all
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 px-2 text-xs text-muted-foreground"
+            onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, false])))}
+          >
+            <ChevronsDownUp className="mr-1 h-3 w-3" />
+            Collapse all
+          </Button>
+        </div>
       </div>
 
       {/* Category stepper */}
@@ -1242,69 +1289,96 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         </div>
       )}
 
-      {categories.map(([cat, items]) => {
+      {categories.map(([cat, items], catIndex) => {
         const catDone = items.filter((t: any) => completedKeys.has(t.type)).length;
         const catTotal = items.length;
         const catComplete = catDone === catTotal;
         const catGenerating = jobRunning && bulk.variables?.category === cat;
         const deck = deckStateByCat.get(cat);
-        return (
-        <section key={cat} className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
-              {cat} <span className="ml-1 normal-case text-muted-foreground/60">· {catDone}/{catTotal}</span>
-            </h4>
-            <div className="flex flex-wrap items-center gap-2">
-              {deck && (
-                deck.unlocked && deck.available ? (
-                  <Button size="sm" variant="outline" onClick={() => setOpenDeckSlug(deck.slug)}>
-                    <Presentation className="mr-1 h-3 w-3" />
-                    Open facilitator deck
-                  </Button>
-                ) : !deck.available ? (
-                  <Button size="sm" variant="outline" disabled title="Deck coming soon">
-                    <Lock className="mr-1 h-3 w-3" />
-                    Deck coming soon
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled
-                    title={`Deck unlocks when ${deck.prevLabel ?? "the previous section"} is complete`}
-                  >
-                    <Lock className="mr-1 h-3 w-3" />
-                    Unlocks after {deck.prevLabel ?? "previous section"}
-                  </Button>
-                )
+        const isActive = !jobRunning && nextCategory?.cat === cat;
+        const isLocked = deck ? !deck.unlocked && !catComplete : false;
+        const defaultOpen = isActive || (catDone > 0 && !catComplete);
+        const isOpen = openSections[cat] ?? defaultOpen;
+        const status: "complete" | "in_progress" | "not_started" | "locked" | "generating" = catGenerating
+          ? "generating"
+          : catComplete
+            ? "complete"
+            : isLocked
+              ? "locked"
+              : catDone > 0
+                ? "in_progress"
+                : isActive
+                  ? "in_progress"
+                  : "not_started";
+        const contentId = `hub-section-${slugify(cat)}`;
+        const headerActions = (
+          <>
+            {deck && (
+              deck.unlocked && deck.available ? (
+                <Button size="sm" variant="outline" onClick={() => setOpenDeckSlug(deck.slug)}>
+                  <Presentation className="mr-1 h-3 w-3" />
+                  Open facilitator deck
+                </Button>
+              ) : !deck.available ? (
+                <Button size="sm" variant="outline" disabled title="Deck coming soon">
+                  <Lock className="mr-1 h-3 w-3" />
+                  Deck coming soon
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled
+                  title={`Deck unlocks when ${deck.prevLabel ?? "the previous section"} is complete`}
+                >
+                  <Lock className="mr-1 h-3 w-3" />
+                  Unlocks after {deck.prevLabel ?? "previous section"}
+                </Button>
+              )
+            )}
+            <Button
+              size="sm"
+              variant={catComplete ? "ghost" : "outline"}
+              disabled={bulk.isPending || jobRunning}
+              onClick={() => {
+                const needsBrandKit = items.some((t: any) => BRAND_KIT_REQUIRED_TYPES.has(t.type));
+                if (needsBrandKit && !brandKitLocked) {
+                  toast.error("Finish the Brand Wizard first — it powers the Website PRD.");
+                  openBrandWizard();
+                  return;
+                }
+                bulk.mutate({ category: cat });
+              }}
+            >
+              {catGenerating ? (
+                <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
+              ) : catDone > 0 ? (
+                <><RefreshCw className="mr-1 h-3 w-3" />Regenerate this section</>
+              ) : (
+                <><Sparkles className="mr-1 h-3 w-3" />Generate this section</>
               )}
-              <Button
-                size="sm"
-                variant={catComplete ? "ghost" : "outline"}
-                disabled={bulk.isPending || jobRunning}
-                onClick={() => {
-                  // If this section contains a brand-kit-gated deliverable
-                  // and the kit isn't locked yet, redirect to the wizard.
-                  const needsBrandKit = items.some((t: any) => BRAND_KIT_REQUIRED_TYPES.has(t.type));
-                  if (needsBrandKit && !brandKitLocked) {
-                    toast.error("Finish the Brand Wizard first — it powers the Website PRD.");
-                    openBrandWizard();
-                    return;
-                  }
-                  bulk.mutate({ category: cat });
-                }}
-              >
-                {catGenerating ? (
-                  <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
-                ) : catDone > 0 ? (
-                  <><RefreshCw className="mr-1 h-3 w-3" />Regenerate this section</>
-                ) : (
-                  <><Sparkles className="mr-1 h-3 w-3" />Generate this section</>
-                )}
-              </Button>
-            </div>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
+            </Button>
+          </>
+        );
+        return (
+        <Collapsible key={cat} open={isOpen} onOpenChange={() => toggleSection(cat)} asChild>
+          <section className="space-y-3">
+            <SectionHeader
+              cat={cat}
+              index={catIndex}
+              done={catDone}
+              total={catTotal}
+              isOpen={isOpen}
+              onToggle={() => toggleSection(cat)}
+              status={status}
+              contentId={contentId}
+              actions={headerActions}
+            />
+            <CollapsibleContent
+              id={contentId}
+              className="overflow-hidden data-[state=closed]:hidden"
+            >
+              <div className="grid gap-3 pt-1 md:grid-cols-2">
             {items.map((t) => {
               const d = docByType.get(t.type);
               const deps = (t.dependencies ?? []) as string[];
@@ -1426,8 +1500,10 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 <LegalSetupCard />
               </div>
             )}
-          </div>
-        </section>
+              </div>
+            </CollapsibleContent>
+          </section>
+        </Collapsible>
         );
       })}
 
