@@ -57,7 +57,7 @@ export function SectionHeader({
   } as React.CSSProperties;
 
   return (
-    <div className="group relative flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-card/60 p-3 pl-4 transition-shadow hover:shadow-md sm:gap-4 sm:p-4 sm:pl-5">
+    <div style={containerStyle} className="group relative flex flex-wrap items-center gap-3 rounded-xl border p-3 pl-4 transition-shadow hover:shadow-md sm:gap-4 sm:p-4 sm:pl-5">
       {/* Accent left bar */}
       <span
         aria-hidden
