@@ -14,8 +14,9 @@ export function FacilitatorCTA() {
         Want Adam launching your founders in your room?
       </h2>
       <p className="mt-3 text-base text-muted-foreground md:mt-4 md:text-lg mb-6">
-        Half-day and full-day formats for teams, conferences, and private cohorts. Custom-scoped,
-        practitioner-led, and built so the room leaves with real revenue moves shipped that morning —
+        Half-day and full-day formats for teams, conferences, and private cohorts. This is the method
+        modern founders are quietly using to launch in weeks instead of years — framework-driven,
+        operator-led, AI-accelerated. Your room leaves with real revenue moves shipped that morning,
         not a slide deck and a vague to-do list.
       </p>
       <Button asChild size="lg" className="btn-glow">

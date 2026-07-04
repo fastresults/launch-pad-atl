@@ -86,11 +86,10 @@ export default function OneOnOnePage() {
               <span className="text-gradient-brand">Adam launches your business — in 14 days.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-              Your paycheck is Plan A. Your Plan B is the business you keep
-              meaning to launch. Adam and his creative team build it <em>for</em>{" "}
-              you — offer, brand, website, social, systems — and hand you a live
-              business ready to invoice inside two weeks. You stay founder.
-              They ship it.
+              The old way to hire this out was $40k and six months of
+              agency ping-pong. The new way is Adam and his creative team,
+              flat fee, live business in fourteen days — brand, site, social,
+              systems, and a named first customer. You stay founder. They ship it.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">

@@ -37,10 +37,12 @@ export default function WebinarPage() {
               <span className="text-gradient-brand">14 days to first revenue.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-              Can't make the trip to Atlanta? Same morning with Adam, done over
-              video in a small live cohort. You walk out of the session with your
-              offer priced, your first customer named, your first channel open,
-              and outreach going out that afternoon.
+              Come see how modern founders are actually launching now. Not
+              raw AI generating documents — an operator running a framework,
+              compressing months of guessing into one live morning. Same room
+              with Adam, done over video in a small cohort. You leave with
+              your offer priced, your first customer named, your first channel
+              open, and outreach going out that afternoon.
             </p>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
