@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
+
 
 export type AdAspect = "1:1" | "4:5" | "9:16";
 
