@@ -117,6 +117,29 @@ The distribution engine that earns attention on repeat.
   - Influencer & Partnership Brief: A short brief you can send to local influencers, complementary brands, or community partners. You'll unlock collaborations that put you in front of warm audiences for free — instead of paying for cold ads to strangers who don't know you.
   - Paid Ads Starter Pack: A starter set of ad targets, hooks, and budgets tuned to your offer and your buyer. You'll launch your first paid campaign without burning rent money, learn fast what converts, and scale only what actually pays back.
 
+## Launch Enablement Layer (the 14-Day Launch Method gap-closers)
+These sit alongside the framework above and are what actually makes "launched in 14 days" a real outcome instead of a slogan. Every one of them is generated as a paste-ready artifact — the founder copies it into Stripe, DocuSign, Google Calendar, GA4, or their inbox, not "advice" about doing it.
+
+- **14-Day Launch Plan** (Foundation): the dated day-by-day sprint with owner, output, and definition of done for every day — plus a calendar-importable outline.
+- **First-50 Warm List** (Strategy): 50-row prospect list with angle and ask, seeded from the founder's own personas and market.
+- **Pre-Sell Offer & Waitlist Test** (Strategy): a 48-hour validation offer, landing copy, 3-email sequence, and deposit link script.
+- **Fulfillment SOP** (Operations): step-by-step delivery for orders 1–10 with time and cost per unit, plus a per-order checklist.
+- **Customer Support Starter** (Operations): shared inbox setup, SLA, 8 canned reply templates, and a refund decision tree.
+- **Payments & Checkout Setup** (Finance): Stripe setup, tax/receipt config, product/price JSON, Payment Link config, checkout CTA copy.
+- **Business Bank & Bookkeeping Starter** (Finance): bank + books recommendation, first-week checklist, chart of accounts CSV, weekly money ritual.
+- **Pricing Page & Offer Sheet** (Finance): 3-tier pricing table, full pricing-page copy, one-page offer sheet, objection→response script.
+- **Terms, Privacy & Refund Pack** (Governance): three ready-to-paste Markdown docs tuned to the entity and offer — ToS, Privacy, Refund.
+- **Insurance Starter** (Governance): coverage recommendation, carrier shortlist, broker outreach email, COI response template.
+- **Contractor & 1099 Kit** (Governance): MSA, SOW, W-9 request email, drop-in IP assignment clause.
+- **Domain, Email & DNS Checklist** (Marketing): registrar + email provider pick, full DNS record table (A, MX, SPF, DKIM, DMARC), BIND-style zone file.
+- **Analytics & Pixel Setup** (Marketing): GA4 event map, `<head>` snippets, `track()` helper, UTM cheat sheet — wired before spend starts.
+- **Landing Page & Waitlist Test** (Marketing): one-page landing copy live by Day 4, form spec, 2-email confirmation sequence.
+- **Reviews & Testimonials Capture Kit** (Social & Content): email, SMS, DM ask templates, video-ask script, wall-of-love HTML snippet.
+- **Outbound DM & Email Scripts** (Social & Content): 3-touch cold email, LinkedIn DM sequence, and compliant SMS follow-up — keyed to the First-50 list.
+
+When a founder asks about Stripe, a privacy policy, insurance, DNS, cold email, testimonials, or "how do I actually launch in 14 days" — route them to the matching asset above. Do not deflect to a course, a template store, or generic web advice.
+
+
 ## Why foundation first (before you spend on brand, site, ads)
 - A wrong-headed brand is expensive to undo. Logos and websites built before positioning is locked become $20K mistakes you redo a year later.
 - A great website with no ICP doesn't convert. Traffic without a defined buyer is just noise — and paid traffic is expensive noise.
