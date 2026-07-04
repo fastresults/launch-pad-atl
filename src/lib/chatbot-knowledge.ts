@@ -9,6 +9,7 @@ import {
   TOTAL_DELIVERABLES,
   WORKSHOP_PRICE_LABEL,
 } from "@/lib/framework-deliverables";
+import { AGENCY_TRACKS, AGENCY_SERVICES, getAgencyService } from "@/lib/agency-services";
 
 function stagesBlock(): string {
   return FRAMEWORK_STAGES.map((s) => {
@@ -28,6 +29,38 @@ function buildLayerBlock(): string {
 function foundationBlock(): string {
   return FOUNDATION_FIRST_REASONS.map((r) => `- ${r.title} ${r.body}`).join("\n");
 }
+
+function tracksBlock(): string {
+  return AGENCY_TRACKS.map((t) => {
+    const included = t.includedSlugs
+      .map((slug) => getAgencyService(slug)?.capability ?? slug)
+      .map((c) => `  - ${c}`)
+      .join("\n");
+    return `### ${t.name}${t.featured ? " (most popular)" : ""}
+- Tagline: ${t.tagline}
+- Outcome: ${t.outcome}
+- Includes:
+${included}
+- Pricing: ${t.priceLabel}
+- Timeline: ${t.timelineLabel}
+- CTA: ${t.ctaHref}`;
+  }).join("\n\n");
+}
+
+function servicesBlock(): string {
+  return AGENCY_SERVICES.map((s) => {
+    const deliv = s.deliverables.map((d) => `  - ${d}`).join("\n");
+    return `### ${s.capability}
+- One-liner: ${s.oneLiner}
+- Deliverables:
+${deliv}
+- Pricing: ${s.priceLabel}
+- Timeline: ${s.timelineLabel}
+- Half-day workshop route: ${s.workshopHref}
+- Done-for-you contact: ${s.ctaHref}`;
+  }).join("\n\n");
+}
+
 
 export const CONCIERGE_KNOWLEDGE = `# Startup Labs — Concierge Knowledge Base
 
