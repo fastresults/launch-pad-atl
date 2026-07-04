@@ -65,9 +65,9 @@ export async function deleteAsset(assetId: string): Promise<void> {
 }
 
 export async function listBrandAssets(): Promise<BrandAsset[]> {
-  const { data: userRes } = await supabase.auth.getUser();
-  const uid = userRes?.user?.id;
-  if (!uid) return [];
+  let uid: string;
+  try { uid = await getEffectiveUserId(); } catch { return []; }
+
   const { data, error } = await supabase
     .from("social_brand_assets")
     .select("*")
