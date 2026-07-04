@@ -1008,6 +1008,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   let heroSub: string;
   let heroPrimary: { label: string; onClick: () => void; disabled?: boolean; loading?: boolean } | null = null;
   let heroSecondary: { label: string; onClick: () => void } | null = null;
+  let heroTertiary: { label: string; onClick: () => void } | null = null;
   let heroShowProgress = false;
   let heroDone = false;
 
