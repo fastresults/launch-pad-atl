@@ -1,7 +1,9 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
 import { generateDocument, listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import { generateSocialCover } from "@/lib/social-cover.functions";
+
 
 export type SocialGoals = {
   objectives?: string[];          // ["customers","trust","investors","hire","community"]
