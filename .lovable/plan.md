@@ -1,33 +1,28 @@
-
 ## Goal
-Add hover/tap tooltips to each of the eight "What you walk out with" stage rows on `/register` — Strategic Foundation Workshop only. Each tooltip extolls the benefits and outcomes of that stage.
+Make it unmistakable that `/schedule` is the agenda for the **Strategic Foundation Workshop** (the in-person morning workshop). Right now the page opens with "Idea in. Launch plan out." with no workshop name in sight.
 
-## Scope
-Applies only to the fallback (Strategic Foundation Workshop) branch of `RegisterFramework.tsx` — the `FRAMEWORK_STAGES.map(...)` list at lines 281–296. The `ctx.walkOuts` branch used by the eight Build workshops is untouched.
+## Changes — `src/routes/schedule.tsx` (hero section only)
 
-## Changes
+1. **Add an eyebrow label above the date line** — small uppercase tag reading `Strategic Foundation Workshop · Agenda`, styled like the existing eyebrow tokens (`text-xs uppercase tracking-[0.18em]`) but using the brand gradient text (`text-gradient-brand`) so it visually anchors the page.
 
-**1. `src/lib/framework-deliverables.ts`** — extend `FrameworkStage` with an optional `benefit: string` and add one benefit copy line per stage (Foundation, Strategy, Operations, Finance, Governance, Brand, Marketing, Social & Content). Each ~140–180 chars, outcome-oriented (what the founder walks away able to do), matching the existing plain-language voice of the deliverable tooltips.
+2. **Move the date/time line to sit under the eyebrow** as a secondary meta line (unchanged copy: `{EVENT.dateLabel} · {EVENT.timeLabel}`), so the hierarchy becomes:
+   - Workshop name (eyebrow)
+   - Date · time (meta)
+   - H1 "Idea in. Launch plan out."
+   - Existing sub-paragraph
 
-Draft copy:
-- **Foundation** — "Leave with the one-page story of your startup — vision, problem, and value prop tight enough that customers buy, partners lean in, and hires say yes."
-- **Strategy** — "Walk out knowing exactly who you sell to, how you beat the alternatives, and the ninety-day plan that turns the strategy into first paying customers."
-- **Operations** — "The roadmap, weekly workflow, and sales playbook that let you deliver reliably — and hand pieces to a teammate without the business breaking."
-- **Finance** — "A twelve-month P&L, unit economics, and funding plan you can defend to a banker or investor — and use yourself to price, spend, and hire with confidence."
-- **Governance** — "Entity, risk, and advisory scaffolding in place — so you're bankable, insurable, and no longer one bad surprise away from personal exposure."
-- **Brand** *(bonus)* — "A brand system — strategy, messaging, visual brief, voice, guidelines — that earns premium pricing and stops you rebuilding your identity every six months."
-- **Marketing** *(bonus)* — "A complete website PRD ready to hand to an AI builder — launch a revenue-ready site in a weekend instead of paying $20K and waiting three months."
-- **Social & Content** *(bonus)* — "Ninety days of content, a launch kit, and a paid-ads starter pack — a distribution engine that earns attention on repeat instead of costing more each month."
+3. **Tighten the H1 sub-paragraph** to name the workshop once in prose: change "One morning. Four working stages…" to "The Strategic Foundation Workshop is one morning. Four working stages. By 11:30 AM you walk out with the full plan in your hands and a signed, dated 90-day playbook for what to do next."
 
-**2. `src/components/register/RegisterFramework.tsx`** — wrap each stage row in the fallback list with a shadcn `Tooltip` (`Tooltip`, `TooltipTrigger`, `TooltipContent`, `TooltipProvider`). Trigger = the existing row (`asChild`), content = `stage.benefit`. Keep the row visually unchanged; add a subtle affordance (`cursor-help` on the trigger). Wrap the `<ul>` in one `TooltipProvider` with `delayDuration={150}`.
+4. **Footer CTA tile heading** — change "One day. One door. Twenty seats." to keep the punch but reinforce identity: leave the H3 as-is and add a small eyebrow above it reading `Strategic Foundation Workshop`, same styling as the hero eyebrow. This ties the bottom of the page back to the workshop name.
 
-No changes to layout, spacing, price card, or the Build-workshops branch.
+5. **Browser tab title** — the route currently inherits the default `<title>`. Add a `<title>` update via a lightweight `useEffect` at the top of `SchedulePage` setting `document.title = "Schedule — Strategic Foundation Workshop"` on mount (matches the pattern used elsewhere in the app; no new deps).
 
-## Technical notes
-- shadcn tooltip already lives at `src/components/ui/tooltip.tsx` (standard install) — no new deps.
-- On touch devices, Radix tooltip opens on tap; acceptable per request ("tooltips"), no separate mobile treatment.
-- Tooltip content stays short (single sentence) to render cleanly at `max-w-xs`.
+## Out of scope
+- No changes to `SCHEDULE`, `STAGES`, timeline rendering, day-at-a-glance rail, or session content.
+- No changes to routing, cohort data, or the register flow.
+- No changes to other workshop pages (`/build/*`) — those already carry their own workshop names.
 
 ## Verification
-- Load `/register` (no `?workshop=` param), hover each of the 8 rows, confirm the correct benefit copy appears.
-- Load `/register?workshop=brand-identity`, confirm no tooltips appear on the walk-outs list (Build branch untouched).
+- Load `/schedule`: hero shows "Strategic Foundation Workshop · Agenda" eyebrow above the date, prose paragraph names the workshop, browser tab reads "Schedule — Strategic Foundation Workshop".
+- Footer CTA tile shows the workshop eyebrow above "One day. One door. Twenty seats."
+- Timeline, stage anchors (`#stage-N`), and the "Reserve your seat" link are unchanged.
