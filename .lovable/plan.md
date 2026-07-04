@@ -1,18 +1,18 @@
-## Goal
-Flatten all 8 workshops on `/build` and `/build/:slug` to a single `$197` price.
+## Change
+In `src/routes/build.$slug.tsx`, add the workshop title into the "Upcoming dates" section so it's clear which workshop the dates belong to.
 
-## Files & edits
+**Edit:** update the eyebrow line inside the schedule section from:
 
-**`src/lib/build-workshops.ts`**
-1. Set `priceLabel: "$197"` on all 8 workshop entries (currently a mix of $197 / $297 / $397 at lines 93, 192, 291, 391, 491, 591, 691, 791).
-2. Update every `faq: makeCommonFaq("$…")` call to `makeCommonFaq("$197")` (lines 284, 384, 584, 684, 784, 885 — the two already at $197 stay $197).
-3. Collapse `workshopPriceForRetailCents()` so every branch returns `{ cents: 19_700, label: "$197" }`. Keeps the tier-drift dev warning happy without ripping out the helper (still called by other code paths).
+```
+UPCOMING DATES
+```
 
-**`src/routes/build.tsx` (hero copy)**
-- Existing line: "Each half-day workshop — **from $197** — …". Change "from $197" → "$197 each" so it reads correctly now that pricing is flat.
+to:
 
-No other route/component/type changes. The `Workshop · $197` chip on each card and the `Reserve your seat — $197` CTA on each detail page will update automatically from the data change.
+```
+UPCOMING DATES · {w.title}
+```
 
-## Out of scope
-- Agency service pricing in `agency-services.ts` (unchanged).
-- Payments/checkout wiring.
+(rendered inline with the calendar icon, matching the existing uppercase/tracking style).
+
+No other changes. The `Pick your session. Reserve your seat.` headline and the date rows below stay as-is.
