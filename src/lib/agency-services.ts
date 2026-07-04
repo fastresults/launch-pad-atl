@@ -195,8 +195,8 @@ export const AGENCY_TRACKS: AgencyTrack[] = [
     outcome:
       "Distribution you own. Content that compounds. A follow-up machine that catches the revenue first-touch sales always misses.",
     includedSlugs: ["social-presence", "content-engine", "email-crm-automation"],
-    priceLabel: "From $2,925/mo",
-    timelineLabel: "Ongoing",
+    priceLabel: "Bespoke — priced after a 20-min discovery call",
+    timelineLabel: "Monthly retainer",
     featured: true,
     ctaHref: "/contact?track=growth",
   },
