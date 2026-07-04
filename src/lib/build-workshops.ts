@@ -276,7 +276,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         emphasis: "and proof in the analytics.",
       },
       decisionBody:
-        "By 11:30 you'll have a sitemap, two wireframed pages, a copy outline in your buyer's words, and a live conversion event firing into GA4. You'll also know whether to ship it on Webflow, Framer, or hand it to our team — with the 12-month cost math on the table.",
+        "By 11:30 you'll have a sitemap, two wireframed pages, a copy outline in your buyer's words, and a live conversion event firing into GA4. You'll also leave with the stack decision in writing — the right platform for your team (or hand it to ours) — with the 12-month cost math on the table.",
       otherWorkshopsHeadline: "The other systems your site will drive traffic into.",
       faqHeadline: "Site questions, answered without the agency hedge.",
     },
