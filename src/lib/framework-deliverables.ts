@@ -92,6 +92,9 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: AlertCircle, title: "Problem / Solution Brief", tooltip: "A crisp account of the painful problem you solve and exactly how your offer removes it. You'll talk about your business in plain language that makes customers nod, buy faster, and tell their friends without you scripting it." },
       { icon: Sparkles, title: "Value Proposition", tooltip: "The single sentence that explains why a customer should pick you over every alternative — including doing nothing. Drop it on your website, in your pitch, on your business card, and watch conversion and referrals climb immediately." },
       { icon: CalendarClock, title: "14-Day Launch Plan", tooltip: "The dated, day-by-day sprint that sequences every other asset into fourteen blocks — owner, output, and 'done' for each. You'll stop wondering what to do tomorrow morning and start every day of the launch knowing exactly which move ships revenue." },
+      { icon: Sparkles, title: "AI Tool Stack Recommendation", tooltip: "Your named AI-first toolkit — the exact tools for writing, site building, CRM, calendar, email, analytics, support, automation, ads, and reviews. You'll stop wasting the first week comparing SaaS and start Day 2 already knowing which links to open." },
+      { icon: MessageSquare, title: "AI Prompt Library", tooltip: "Twenty-five copy-paste prompts tuned to your venture — cold email, ad hook, weekly recap, competitor scan, invoice draft, refund reply. You'll stop writing prompts from scratch and start reusing what actually works, every week." },
+      { icon: Activity, title: "Founder Operating Cadence", tooltip: "Your weekly rhythm — Monday plan, daily 10-min AI standup, Friday retro, and a KPI dashboard with metrics named and their sources. You'll stop drifting after the sprint ends and start running the business on the numbers." },
     ],
   },
   {
