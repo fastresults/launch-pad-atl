@@ -126,14 +126,20 @@ export function RegisterFramework() {
       <section className="border-b border-white/5 py-12 md:py-20">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-            <Sparkles className="size-3.5" /> Strategic Foundation Workshop · {WORKSHOP_PRICE_LABEL}
+            <Sparkles className="size-3.5" /> {ctx.eyebrow}
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
-            Reserve your seat —{" "}
-            <span className="text-gradient-brand">{WORKSHOP_PRICE_LABEL}.</span>
+            {ctx.heroTitleEmphasis ? (
+              <>
+                {ctx.heroTitleLead}{" "}
+                <span className="text-gradient-brand">{ctx.heroTitleEmphasis}</span>
+              </>
+            ) : (
+              <span className="text-gradient-brand">{ctx.heroTitleLead}</span>
+            )}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
-            Walk out with the strategic foundation for your startup: positioning, ideal customer, offer & pricing, 12-month economics, a 90-day roadmap, and a build/hire/buy decision tree. Coffee and refreshments included.
+            {ctx.heroBlurb}
           </p>
 
         </div>
