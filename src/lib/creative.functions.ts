@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
 import type { AssetType } from "@/lib/creative-vibes";
+
 
 export type BrandAsset = {
   id: string;
