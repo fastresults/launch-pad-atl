@@ -119,6 +119,8 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Settings, title: "Operating Plan", tooltip: "The week-by-week workflow that turns your offer into something you can deliver reliably. You'll stop reinventing every order, free up hours each week, and have something a future hire can actually be trained to run." },
       { icon: Handshake, title: "Sales Playbook", tooltip: "A repeatable script — discovery questions, objections, asks, closes — that moves a stranger to a signed deal. Close more conversations, stop discounting under pressure, and bring on help knowing the system will close without you." },
       { icon: Megaphone, title: "Marketing Plan", tooltip: "Your channels, monthly spend, content cadence, and the metrics that tell you what's working. Marketing stops being a guessing game; you spend dollars where they return dollars and quietly turn off everything that doesn't." },
+      { icon: Package, title: "Fulfillment SOP", tooltip: "The step-by-step of how order number one through ten actually gets delivered — with time and cost per unit. You'll ship the first sale without scrambling, know your true margin, and hand fulfillment to a teammate without the business breaking." },
+      { icon: LifeBuoy, title: "Customer Support Starter", tooltip: "A shared support inbox, response SLA, canned replies, and refund and return rules — ready before day fifteen problems arrive. You'll answer the first customer question inside an hour and never lose a buyer to silence." },
     ],
   },
   {
