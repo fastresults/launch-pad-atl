@@ -144,6 +144,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     name: "Marketing",
     bonus: true,
     intro: "The AI-builder prompt that ships your site in a weekend.",
+    benefit: "A complete website PRD ready to hand to an AI builder — launch a revenue-ready site in a weekend instead of paying $20K and waiting three months.",
     items: [
       { icon: Globe, title: "Website PRD (AI-builder prompt)", tooltip: "A complete product requirements document — pages, copy, sections, calls to action — written so an AI builder can ship your site in a weekend. You'll skip the $20K agency quote and launch a real revenue-ready website fast." },
     ],
