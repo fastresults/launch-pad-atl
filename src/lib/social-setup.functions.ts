@@ -34,10 +34,9 @@ export type ProgressRow = {
 };
 
 async function getUserId(): Promise<string> {
-  const { data } = await supabase.auth.getUser();
-  if (!data?.user?.id) throw new Error("Not signed in");
-  return data.user.id;
+  return await getEffectiveUserId();
 }
+
 
 export async function getBrand(): Promise<BrandKit | null> {
   const uid = await getUserId();
