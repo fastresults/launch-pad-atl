@@ -206,6 +206,8 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Target, title: "Paid Ads Starter Pack", tooltip: "A starter set of ad targets, hooks, and budgets tuned to your offer and your buyer. You'll launch your first paid campaign without burning rent money, learn fast what converts, and scale only what actually pays back." },
       { icon: MessageSquareQuote, title: "Reviews & Testimonials Capture Kit", tooltip: "Request templates, direct links to Google, Yelp, or G2, a video-ask script, and a wall-of-love page ready to embed. You'll turn every happy first customer into public proof — and stop losing week-two buyers who need to see someone went before them." },
       { icon: Send, title: "Outbound DM & Email Scripts", tooltip: "Cold and warm outreach scripts tied directly to your First-50 list — opener, follow-up, and the specific ask. You'll actually work the pipeline instead of hoping content does it for you, and book the first sales calls in week one." },
+      { icon: Target, title: "Ad Creative Pack", tooltip: "Twelve ready-to-run ad units — 4 static image prompts, 4 short-form video scripts, 4 headline+body pairs — mapped to Meta, Google, TikTok, and LinkedIn. You'll launch Day 14 with creative that's tuned to your offer, not a generic template." },
+      { icon: Share2, title: "Referral & Affiliate Starter", tooltip: "Rewardful, Tolt, or a manual program with terms, invite email, tracking convention, and a first-10-advocates list. You'll turn every happy customer into your cheapest channel — and stop paying full CAC on Day 15." },
     ],
   },
 ];
