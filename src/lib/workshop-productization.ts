@@ -53,6 +53,8 @@ export type DeliverableDetail = {
 
 export type StageProductization = {
   slug: string;
+  /** One-line description of the mentoring lens this session applies to the founder's work. */
+  perspective?: string;
   signatureBuild: SignatureBuild;
   liveWorksheet: LiveWorksheet;
   shipReadyArtifact: ShipReadyArtifact;
@@ -66,6 +68,8 @@ const AI_DEFAULT = "Lovable AI · google/gemini-3-flash-preview";
 export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
   strategy: {
     slug: "strategy",
+    perspective:
+      "This session applies an operator's lens — how a seasoned founder sizes a real local market, names the actual buyer, and picks a wedge that competitors can't casually copy — to the drafts you bring in.",
     signatureBuild: {
       title: "Sized market + Named buyer + 90-day GTM sequencer",
       duration: "25 min live",
@@ -97,7 +101,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "90-day GTM sequence (week-by-week with channel, offer, metric)",
         "First 30 days: 5 outreach messages (cold email, LinkedIn DM, warm intro ask, referral request, follow-up)",
       ],
-      released: "Dropped into your dashboard before you leave the room.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
@@ -140,6 +144,8 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
 
   operations: {
     slug: "operations",
+    perspective:
+      "This session applies a chief-of-staff lens — how someone who has run the back office of a small business pressure-tests your weekly workflow, sales conversations, and channel spend so the business can run without you touching every step.",
     signatureBuild: {
       title: "Weekly Ops Loop + Sales Playbook + Channel spend planner",
       duration: "25 min live",
@@ -171,7 +177,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "Marketing Plan — channel mix, monthly spend, content cadence, one metric per channel",
         "Delegation Map — the 3 steps a first hire could own",
       ],
-      released: "Dropped into your dashboard before you leave the room.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
@@ -209,6 +215,8 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
 
   finance: {
     slug: "finance",
+    perspective:
+      "This session applies a CFO-and-investor lens — how someone who has read hundreds of models reviews your assumptions, unit economics, and funding path, and points out where your story doesn't yet hold up.",
     signatureBuild: {
       title: "12-Month Pro Forma + Unit Economics + Funding decision tree",
       duration: "25 min live",
@@ -238,7 +246,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "Funding Strategy Memo picking the cheapest capital path with next-step contacts",
         "Pitch Deck v1 (10 slides) auto-populated with your Foundation story, market size, model, and ask",
       ],
-      released: "Dropped into your dashboard before you leave the room.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
@@ -281,6 +289,8 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
 
   governance: {
     slug: "governance",
+    perspective:
+      "This session applies a small-business counsel lens — someone who has helped founders pick the right structure, spot the predictable risks, and open advisor conversations that actually open doors.",
     signatureBuild: {
       title: "Entity decision tree + SOS filing + EIN live + Legal Kit",
       duration: "25 min live",
@@ -312,7 +322,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "Risk Register PDF with top 3 mitigations drafted",
         "Advisor Outreach Pack — 3 personalized emails to prospective advisors in your industry",
       ],
-      released: "Dropped into your dashboard before you leave the room. EIN confirmation arrives from IRS separately.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product. EIN confirmation arrives from IRS separately.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
@@ -347,6 +357,8 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
 
   brand: {
     slug: "brand",
+    perspective:
+      "This session applies a brand-lead lens — how a strategist who has shaped dozens of brands stress-tests your positioning, messaging, and visual direction so the brand system feels intentional rather than accidental.",
     signatureBuild: {
       title: "Brand Strategy Framework + Messaging House + Visual direction",
       duration: "25 min live",
@@ -379,7 +391,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "Color palette + type pairing (hex codes + Google Fonts links)",
         "Voice & Tone one-pager with do/don't examples",
       ],
-      released: "Dropped into your dashboard before you leave the room. Full Guidelines Book continues on your dashboard.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product. Full Guidelines Book continues on your dashboard.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
@@ -424,6 +436,8 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
 
   marketing: {
     slug: "marketing",
+    perspective:
+      "This session applies a product-and-web lens — how a seasoned PM/marketer reviews your site plan, sequences pages and CTAs, and directs you toward a build you can actually ship on a weekend.",
     signatureBuild: {
       title: "Website PRD + AI-builder Prompt Pack + Copy Deck",
       duration: "25 min live",
@@ -455,7 +469,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "Copy Deck DOCX — every page's H1/H2/body written in your brand voice",
         "Weekend Build Checklist (Fri night → Sun evening → live)",
       ],
-      released: "Dropped into your dashboard before you leave the room. Attendees with a laptop leave with v0 scaffolded.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product. Attendees with a laptop leave with v0 scaffolded.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
@@ -482,6 +496,8 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
 
   "social-and-content": {
     slug: "social-and-content",
+    perspective:
+      "This session applies a distribution-lead lens — how a content strategist reviews your pillars, calendar, and launch plan and redirects you toward posts that earn attention on repeat, not just fill a queue.",
     signatureBuild: {
       title: "Content Pillars + First 14 posts + Launch Week Kit",
       duration: "25 min live",
@@ -515,7 +531,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "Paid Ads Starter — 3 target segments, 5 ad hooks, budget guardrails",
         "5 AI-generated launch graphics sized for LinkedIn/IG/Twitter",
       ],
-      released: "Dropped into your dashboard before you leave the room. First 14 posts can be scheduled in-room if you connect your account.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product. First 14 posts can be scheduled in-room if you connect your account.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
