@@ -1500,8 +1500,10 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 <LegalSetupCard />
               </div>
             )}
-          </div>
-        </section>
+              </div>
+            </CollapsibleContent>
+          </section>
+        </Collapsible>
         );
       })}
 
