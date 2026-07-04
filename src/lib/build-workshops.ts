@@ -214,7 +214,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "Wireframes for your homepage and #1 conversion page using the proof-stack pattern",
       "Page-by-page copy outline: hero, proof, offer, objection, CTA — written in your buyer's words",
       "Conversion event plan wired live to GA4 and your CRM (you'll see the first event fire)",
-      "Stack decision — Webflow vs Framer vs custom — with a 12-month cost projection",
+      "Stack decision in writing — the right platform for your team, with a 12-month cost projection",
       "Pre-launch QA checklist (30 items) so you ship without an embarrassing leak on day one",
     ],
     agenda: [
@@ -276,7 +276,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         emphasis: "and proof in the analytics.",
       },
       decisionBody:
-        "By 11:30 you'll have a sitemap, two wireframed pages, a copy outline in your buyer's words, and a live conversion event firing into GA4. You'll also know whether to ship it on Webflow, Framer, or hand it to our team — with the 12-month cost math on the table.",
+        "By 11:30 you'll have a sitemap, two wireframed pages, a copy outline in your buyer's words, and a live conversion event firing into GA4. You'll also leave with the stack decision in writing — the right platform for your team (or hand it to ours) — with the 12-month cost math on the table.",
       otherWorkshopsHeadline: "The other systems your site will drive traffic into.",
       faqHeadline: "Site questions, answered without the agency hedge.",
     },
