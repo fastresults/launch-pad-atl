@@ -93,6 +93,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     number: "03",
     name: "Operations",
     intro: "What you build, sell, and ship — week after week.",
+    benefit: "The roadmap, weekly workflow, and sales playbook that let you deliver reliably — and hand pieces to a teammate without the business breaking.",
     items: [
       { icon: Map, title: "Product Roadmap", tooltip: "A clear sequence of what you'll launch, in what order, over the next twelve months. You'll stop building features no one asked for, ship the things that drive revenue first, and have a calendar customers can trust." },
       { icon: Settings, title: "Operating Plan", tooltip: "The week-by-week workflow that turns your offer into something you can deliver reliably. You'll stop reinventing every order, free up hours each week, and have something a future hire can actually be trained to run." },
