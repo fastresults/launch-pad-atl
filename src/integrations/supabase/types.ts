@@ -3094,6 +3094,47 @@ export type Database = {
         }
         Relationships: []
       }
+      venture_tool_stack_status: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          snapshot_id: string
+          status: string
+          tool_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          snapshot_id: string
+          status?: string
+          tool_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          snapshot_id?: string
+          status?: string
+          tool_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_tool_stack_status_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_testimonials: {
         Row: {
           created_at: string
