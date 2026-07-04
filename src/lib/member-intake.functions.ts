@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
-async function uid() { return (await supabase.auth.getUser()).data.user!.id; }
+import { getEffectiveUserId } from "@/lib/effective-user";
+
+async function uid() { return await getEffectiveUserId(); }
 
 const STARTUP_TYPE_TO_ARCHETYPE: Record<string, string> = {
   "online-services": "service",

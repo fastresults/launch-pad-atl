@@ -1,7 +1,9 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 
-async function uid() { return (await supabase.auth.getUser()).data.user!.id; }
+import { getEffectiveUserId } from "@/lib/effective-user";
+
+async function uid() { return await getEffectiveUserId(); }
 
 export interface ExtractedFounder { name?: string; bio?: string; experience?: string }
 

@@ -1,7 +1,9 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 
-async function uid() { return (await supabase.auth.getUser()).data.user!.id; }
+import { getEffectiveUserId } from "@/lib/effective-user";
+
+async function uid() { return await getEffectiveUserId(); }
 
 export async function getMyIntake(data: { stage: number }) {
   const { data: row } = await supabase.from("stage_intakes").select("*").eq("user_id", await uid()).eq("stage", data.stage).maybeSingle();
