@@ -68,6 +68,8 @@ const AI_DEFAULT = "Lovable AI · google/gemini-3-flash-preview";
 export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
   strategy: {
     slug: "strategy",
+    perspective:
+      "This session applies an operator's lens — how a seasoned founder sizes a real local market, names the actual buyer, and picks a wedge that competitors can't casually copy — to the drafts you bring in.",
     signatureBuild: {
       title: "Sized market + Named buyer + 90-day GTM sequencer",
       duration: "25 min live",
@@ -142,6 +144,8 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
 
   operations: {
     slug: "operations",
+    perspective:
+      "This session applies a chief-of-staff lens — how someone who has run the back office of a small business pressure-tests your weekly workflow, sales conversations, and channel spend so the business can run without you touching every step.",
     signatureBuild: {
       title: "Weekly Ops Loop + Sales Playbook + Channel spend planner",
       duration: "25 min live",
@@ -211,6 +215,8 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
 
   finance: {
     slug: "finance",
+    perspective:
+      "This session applies a CFO-and-investor lens — how someone who has read hundreds of models reviews your assumptions, unit economics, and funding path, and points out where your story doesn't yet hold up.",
     signatureBuild: {
       title: "12-Month Pro Forma + Unit Economics + Funding decision tree",
       duration: "25 min live",
@@ -283,6 +289,8 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
 
   governance: {
     slug: "governance",
+    perspective:
+      "This session applies a small-business counsel lens — someone who has helped founders pick the right structure, spot the predictable risks, and open advisor conversations that actually open doors.",
     signatureBuild: {
       title: "Entity decision tree + SOS filing + EIN live + Legal Kit",
       duration: "25 min live",
@@ -349,6 +357,8 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
 
   brand: {
     slug: "brand",
+    perspective:
+      "This session applies a brand-lead lens — how a strategist who has shaped dozens of brands stress-tests your positioning, messaging, and visual direction so the brand system feels intentional rather than accidental.",
     signatureBuild: {
       title: "Brand Strategy Framework + Messaging House + Visual direction",
       duration: "25 min live",
@@ -426,6 +436,8 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
 
   marketing: {
     slug: "marketing",
+    perspective:
+      "This session applies a product-and-web lens — how a seasoned PM/marketer reviews your site plan, sequences pages and CTAs, and directs you toward a build you can actually ship on a weekend.",
     signatureBuild: {
       title: "Website PRD + AI-builder Prompt Pack + Copy Deck",
       duration: "25 min live",
@@ -484,6 +496,8 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
 
   "social-and-content": {
     slug: "social-and-content",
+    perspective:
+      "This session applies a distribution-lead lens — how a content strategist reviews your pillars, calendar, and launch plan and redirects you toward posts that earn attention on repeat, not just fill a queue.",
     signatureBuild: {
       title: "Content Pillars + First 14 posts + Launch Week Kit",
       duration: "25 min live",
