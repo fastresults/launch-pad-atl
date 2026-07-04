@@ -338,8 +338,8 @@ function Proof() {
               No handoffs to a junior team
             </h2>
             <p className="text-2xl font-semibold tracking-tight md:text-3xl lg:text-4xl">
-              The same operators who'd charge $50K elsewhere —{" "}
-              <span className="text-gradient-brand">working on your business this month.</span>
+              The same operators who'd cost a multiple elsewhere —{" "}
+              <span className="text-gradient-brand">scoped honestly to what your startup actually needs.</span>
             </p>
             <p className="mt-5 text-muted-foreground">
               We've shipped work for Citigroup, Mayo Clinic, 3M, and Disney. Built full digital systems for a Caribbean nation's government. Produced one of the region's biggest business summits for five years running. And we've started enough of our own companies to know which corners cost you later.
