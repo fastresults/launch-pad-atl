@@ -110,6 +110,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: MessageSquare, title: "Brand & Messaging", tooltip: "The core message, tone, and proof points that make your brand feel like one voice everywhere. Your site, social, sales calls, and packaging finally line up — and customers start describing you the way you want to be described." },
       { icon: ListChecks, title: "First-50 Warm List", tooltip: "Fifty named prospects you can actually reach — with contact, angle, and the specific ask for each. You'll walk out of day two with a pipeline instead of a persona, and your first customer conversations start the same afternoon." },
       { icon: Beaker, title: "Pre-Sell Offer & Waitlist Test", tooltip: "A forty-eight-hour validation offer — deposit, LOI, or paid pilot — that proves real demand before the full site ships. You'll spend the rest of the sprint building for buyers you've already met, not customers you hope show up." },
+      { icon: Users, title: "CRM Pipeline Starter", tooltip: "A ready-to-import CRM setup (Attio, Folk, or HubSpot Free) with stages, custom fields, saved views, and your First-50 pre-loaded. You'll stop tracking deals in a spreadsheet and start Day 3 with a real pipeline you can actually work." },
     ],
   },
   {
