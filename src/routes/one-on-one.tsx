@@ -64,10 +64,10 @@ export default function OneOnOnePage() {
   const [modesOpen, setModesOpen] = useState(false);
 
   useEffect(() => {
-    document.title = "Plan B, Built For You — $4,799 Done-For-You Startup with Adam";
+    document.title = "Adam launches your business for you — 14 days, $4,799 done-for-you";
     const meta = document.querySelector('meta[name="description"]');
     const desc =
-      "Activate your Plan B profit generator. Adam and his creative team build your startup end-to-end — brand, website, social, systems — for $4,799. The best-value done-for-you build on the market.";
+      "Skip the build. Adam and his team launch your business for you in 14 days — brand, site, social, systems, and your first paying customer named. $4,799, everything in.";
     if (meta) meta.setAttribute("content", desc);
   }, []);
 
@@ -79,17 +79,18 @@ export default function OneOnOnePage() {
         <section className="border-b border-white/5 py-16 md:py-24">
           <div className="mx-auto max-w-4xl px-6">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-primary">
-              <Wand2 className="size-3.5" /> Your Plan B profit generator · built for you
+              <Wand2 className="size-3.5" /> Adam builds it. You keep the profit.
             </p>
             <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
-              Activate your Plan B.{" "}
-              <span className="text-gradient-brand">We build the business. You keep the profit.</span>
+              Skip the build.{" "}
+              <span className="text-gradient-brand">Adam launches your business — in 14 days.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-              Your paycheck is Plan A. Your Plan B is the startup you keep meaning
-              to launch. Adam and his creative team build it <em>for</em> you —
-              brand, website, social channels, positioning, and systems — so your
-              second income stream is live in weeks, not "someday."
+              Your paycheck is Plan A. Your Plan B is the business you keep
+              meaning to launch. Adam and his creative team build it <em>for</em>{" "}
+              you — offer, brand, website, social, systems — and hand you a live
+              business ready to invoice inside two weeks. You stay founder.
+              They ship it.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
