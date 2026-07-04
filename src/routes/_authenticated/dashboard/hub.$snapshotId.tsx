@@ -1289,69 +1289,96 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         </div>
       )}
 
-      {categories.map(([cat, items]) => {
+      {categories.map(([cat, items], catIndex) => {
         const catDone = items.filter((t: any) => completedKeys.has(t.type)).length;
         const catTotal = items.length;
         const catComplete = catDone === catTotal;
         const catGenerating = jobRunning && bulk.variables?.category === cat;
         const deck = deckStateByCat.get(cat);
-        return (
-        <section key={cat} className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
-              {cat} <span className="ml-1 normal-case text-muted-foreground/60">· {catDone}/{catTotal}</span>
-            </h4>
-            <div className="flex flex-wrap items-center gap-2">
-              {deck && (
-                deck.unlocked && deck.available ? (
-                  <Button size="sm" variant="outline" onClick={() => setOpenDeckSlug(deck.slug)}>
-                    <Presentation className="mr-1 h-3 w-3" />
-                    Open facilitator deck
-                  </Button>
-                ) : !deck.available ? (
-                  <Button size="sm" variant="outline" disabled title="Deck coming soon">
-                    <Lock className="mr-1 h-3 w-3" />
-                    Deck coming soon
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled
-                    title={`Deck unlocks when ${deck.prevLabel ?? "the previous section"} is complete`}
-                  >
-                    <Lock className="mr-1 h-3 w-3" />
-                    Unlocks after {deck.prevLabel ?? "previous section"}
-                  </Button>
-                )
+        const isActive = !jobRunning && nextCategory?.cat === cat;
+        const isLocked = deck ? !deck.unlocked && !catComplete : false;
+        const defaultOpen = isActive || (catDone > 0 && !catComplete);
+        const isOpen = openSections[cat] ?? defaultOpen;
+        const status: "complete" | "in_progress" | "not_started" | "locked" | "generating" = catGenerating
+          ? "generating"
+          : catComplete
+            ? "complete"
+            : isLocked
+              ? "locked"
+              : catDone > 0
+                ? "in_progress"
+                : isActive
+                  ? "in_progress"
+                  : "not_started";
+        const contentId = `hub-section-${slugify(cat)}`;
+        const headerActions = (
+          <>
+            {deck && (
+              deck.unlocked && deck.available ? (
+                <Button size="sm" variant="outline" onClick={() => setOpenDeckSlug(deck.slug)}>
+                  <Presentation className="mr-1 h-3 w-3" />
+                  Open facilitator deck
+                </Button>
+              ) : !deck.available ? (
+                <Button size="sm" variant="outline" disabled title="Deck coming soon">
+                  <Lock className="mr-1 h-3 w-3" />
+                  Deck coming soon
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled
+                  title={`Deck unlocks when ${deck.prevLabel ?? "the previous section"} is complete`}
+                >
+                  <Lock className="mr-1 h-3 w-3" />
+                  Unlocks after {deck.prevLabel ?? "previous section"}
+                </Button>
+              )
+            )}
+            <Button
+              size="sm"
+              variant={catComplete ? "ghost" : "outline"}
+              disabled={bulk.isPending || jobRunning}
+              onClick={() => {
+                const needsBrandKit = items.some((t: any) => BRAND_KIT_REQUIRED_TYPES.has(t.type));
+                if (needsBrandKit && !brandKitLocked) {
+                  toast.error("Finish the Brand Wizard first — it powers the Website PRD.");
+                  openBrandWizard();
+                  return;
+                }
+                bulk.mutate({ category: cat });
+              }}
+            >
+              {catGenerating ? (
+                <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
+              ) : catDone > 0 ? (
+                <><RefreshCw className="mr-1 h-3 w-3" />Regenerate this section</>
+              ) : (
+                <><Sparkles className="mr-1 h-3 w-3" />Generate this section</>
               )}
-              <Button
-                size="sm"
-                variant={catComplete ? "ghost" : "outline"}
-                disabled={bulk.isPending || jobRunning}
-                onClick={() => {
-                  // If this section contains a brand-kit-gated deliverable
-                  // and the kit isn't locked yet, redirect to the wizard.
-                  const needsBrandKit = items.some((t: any) => BRAND_KIT_REQUIRED_TYPES.has(t.type));
-                  if (needsBrandKit && !brandKitLocked) {
-                    toast.error("Finish the Brand Wizard first — it powers the Website PRD.");
-                    openBrandWizard();
-                    return;
-                  }
-                  bulk.mutate({ category: cat });
-                }}
-              >
-                {catGenerating ? (
-                  <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
-                ) : catDone > 0 ? (
-                  <><RefreshCw className="mr-1 h-3 w-3" />Regenerate this section</>
-                ) : (
-                  <><Sparkles className="mr-1 h-3 w-3" />Generate this section</>
-                )}
-              </Button>
-            </div>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
+            </Button>
+          </>
+        );
+        return (
+        <Collapsible key={cat} open={isOpen} onOpenChange={() => toggleSection(cat)} asChild>
+          <section className="space-y-3">
+            <SectionHeader
+              cat={cat}
+              index={catIndex}
+              done={catDone}
+              total={catTotal}
+              isOpen={isOpen}
+              onToggle={() => toggleSection(cat)}
+              status={status}
+              contentId={contentId}
+              actions={headerActions}
+            />
+            <CollapsibleContent
+              id={contentId}
+              className="data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden"
+            >
+              <div className="grid gap-3 pt-1 md:grid-cols-2">
             {items.map((t) => {
               const d = docByType.get(t.type);
               const deps = (t.dependencies ?? []) as string[];
