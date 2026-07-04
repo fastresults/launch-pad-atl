@@ -105,6 +105,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     number: "04",
     name: "Finance",
     intro: "The numbers investors, banks, and you can trust.",
+    benefit: "A twelve-month P&L, unit economics, and funding plan you can defend to a banker or investor — and use yourself to price, spend, and hire with confidence.",
     items: [
       { icon: LineChart, title: "Financial Model", tooltip: "A twelve-month P&L and cash flow you can defend to a banker, partner, or yourself. You'll see exactly when cash gets tight, what a slow month does, and the few levers that actually change the trajectory." },
       { icon: Calculator, title: "Unit Economics", tooltip: "The math on what one customer truly costs to win and what they pay back over time. You'll price with confidence, kill unprofitable offers, and finally know whether spending more on marketing makes you more money or less." },
