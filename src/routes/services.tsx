@@ -22,7 +22,7 @@ export default function ServicesPage() {
     <div className="min-h-screen">
       <SiteHeader />
       <Hero />
-      <CapabilityGrid />
+      
       <Tracks />
       <Process />
       <Proof />
