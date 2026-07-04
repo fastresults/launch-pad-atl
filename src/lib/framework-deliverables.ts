@@ -130,6 +130,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     name: "Brand",
     bonus: true,
     intro: "An identity worth premium pricing — system, not stickers.",
+    benefit: "A brand system — strategy, messaging, visual brief, voice, guidelines — that earns premium pricing and stops you rebuilding your identity every six months.",
     items: [
       { icon: Compass, title: "Brand Strategy Framework", tooltip: "The strategic foundation under your brand — purpose, promise, audience, positioning. Every logo, color, and word downstream has a reason behind it, and you stop redoing your brand every time something feels off." },
       { icon: MessageCircle, title: "Brand Messaging House", tooltip: "Your headline, supporting messages, and proof — organized so every page, post, and pitch pulls from the same well. You'll write faster, sound consistent everywhere, and stop staring at a blinking cursor wondering what to say." },
