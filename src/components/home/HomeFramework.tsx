@@ -97,7 +97,7 @@ function Hero() {
         </div>
 
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          This is how modern businesses get launched now. Not raw AI spitting out documents — a real operator, working a real framework, compressing what used to take twelve months into one focused morning. {WORKSHOP_PRICE_LABEL} once, yours forever.{" "}
+          This is the 14-Day Launch Method — the same playbook founders are quietly using to skip the year of guessing and land their first paying customer in two weeks. Not raw AI, not another course. A proven system, run live by the operator who built it, in one focused morning. {WORKSHOP_PRICE_LABEL} once, yours forever.{" "}
           <span className="font-medium text-white">Full support during and after</span>, if you want it.
         </p>
 
