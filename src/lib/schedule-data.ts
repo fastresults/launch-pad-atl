@@ -49,14 +49,15 @@ export const FLOW_STAGES = STAGES.map((s) => ({
   afterWorkshop: s.afterWorkshop,
 }));
 
-// Schedule = check-in + 6 stages + 2 breaks, working time = 360 min.
+// Schedule = check-in + 5 core pillar sessions + 2 breaks + bonus preview + close.
+// Mirrors FRAMEWORK_STAGES so /schedule and the dashboard tell the same story.
 const stageBlock = (n: number, time: string): Session => {
   const s = STAGES[n - 1];
   return {
     time,
     duration: s.duration,
     stage: s.n,
-    title: `${s.title}`,
+    title: s.title,
     description: s.summary,
     kind: "session",
   };
@@ -67,26 +68,46 @@ export const SCHEDULE: Session[] = [
     time: "8:45 AM",
     duration: "15 min",
     title: "Check-in — coffee & refreshments",
-    description: "Coffee, light breakfast, and refreshments provided. Settle in, meet the room, share your idea in one sentence.",
+    description:
+      "Coffee, light breakfast, and refreshments provided. Settle in, meet the room, share your idea in one sentence.",
     kind: "session",
   },
-  stageBlock(1, "9:00 AM"),
-  stageBlock(2, "9:40 AM"),
+  stageBlock(1, "9:00 AM"),   // Foundation
+  stageBlock(2, "9:25 AM"),   // Strategy
   {
-    time: "10:15 AM",
+    time: "9:50 AM",
     duration: "10 min",
     title: "Refreshment break",
     description: "Refill your coffee, stretch, regroup. Refreshments stay out all morning.",
     kind: "break",
   },
-  stageBlock(3, "10:25 AM"),
-  stageBlock(4, "10:55 AM"),
+  stageBlock(3, "10:00 AM"),  // Operations
+  stageBlock(4, "10:25 AM"),  // Finance
+  {
+    time: "10:50 AM",
+    duration: "10 min",
+    title: "Refreshment break",
+    description: "Second break. Stretch, refill, regroup for Governance and the bonus preview.",
+    kind: "break",
+  },
+  stageBlock(5, "11:00 AM"),  // Governance (includes entity/EIN/legal packet)
+  {
+    time: "11:25 AM",
+    duration: "5 min",
+    title: "Bonus tracks preview — Brand · Marketing · Social & Content",
+    description:
+      "Quick tour of the three bonus tracks that unlock on your dashboard the moment you leave: a full brand system, an AI-builder website PRD, and a 90-day distribution engine.",
+    kind: "session",
+  },
   {
     time: "11:30 AM",
     duration: "—",
-    title: "Close — strategic foundation in hand",
-    description: "You walk out with your six strategic startup assets and a signed 90-day roadmap.",
+    title: "Close — 5 pillars in hand, dashboard unlocked",
+    description:
+      "You walk out with all 5 core pillars — Foundation, Strategy, Operations, Finance, Governance — completed live, and 3 bonus tracks (Brand, Marketing, Social & Content) queued on your dashboard.",
     kind: "break",
   },
 ];
+
+
 
