@@ -2,8 +2,9 @@ import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
+import { getUpcomingSessions } from "@/lib/build-workshop-schedule";
 
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, CalendarDays } from "lucide-react";
 
 export default function BuildIndexPage() {
   return (
