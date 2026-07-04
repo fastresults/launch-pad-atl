@@ -59,9 +59,8 @@ export function workshopPriceForRetailCents(retailCents: number): {
   cents: number;
   label: string;
 } {
-  if (retailCents < 200_000) return { cents: 19_700, label: "$197" };
-  if (retailCents < 300_000) return { cents: 29_700, label: "$297" };
-  return { cents: 39_700, label: "$397" };
+  void retailCents;
+  return { cents: 19_700, label: "$197" };
 }
 
 function makeCommonFaq(priceLabel: string): FAQ[] {
