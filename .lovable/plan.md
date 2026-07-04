@@ -1,32 +1,62 @@
-# Photo headers for every startup-idea card
+# Unify the site around The 14-Day Launch Method
 
-## What ships
-- One horizontal photorealistic image per idea in `src/lib/business-ideas.ts` — **67 images total**.
-- Added as a new `image` field on each `BusinessIdea`, so the card component picks it up automatically and existing filters/marquee logic stay untouched.
-- `IdeaCard` in `src/components/home/HomeBusinessIdeasScroller.tsx` gets a top image band (roughly 16:9, `object-cover`), category/income chips overlap the image or move just under it, headline + offer sit beneath. Card widens slightly on desktop (~340px) so the photo reads.
+## The single message
 
-## Image spec
-- Format: **JPG**, 1024×576 (16:9 horizontal), `fast` quality tier.
-- Style rules baked into every prompt for a coherent look across 67 cards:
-  - Photorealistic, natural daylight, shallow depth of field, no text/logos/watermarks, no people's faces front-and-center (subject or hands-only where a person is needed), color grade leaning warm-neutral to match the site's dark UI, no stock-photo cheesiness.
-- Prompts derived per idea from `name` + `offer` (e.g. *"Mobile car detailing"* → "Detailer's hands wiping a wet black sedan hood at a suburban driveway, morning light, water beads, microfiber cloth, shallow depth of field, photorealistic, no text").
-- Files: `src/assets/ideas/<slug>.jpg` (slug from idea name). ES6-imported into `business-ideas.ts` so Vite hashes and lazy-loads them.
+- **Name (always capitalized, always the same):** The 14-Day Launch Method
+- **Positioning line (one-liner that follows the name):** The operator-led method replacing accelerators, courses, and raw AI.
+- **Old-way / new-way frame:** the old way is a year of courses, an accelerator seat, or a raw-AI rabbit hole. The new way is one live morning inside The 14-Day Launch Method — an operator running a proven playbook, first customer named, first channel open, revenue in two weeks.
+- **Movement language to sprinkle (not overuse):** "quietly taking over," "modern founders are using," "the method behind the momentum."
 
-## Data + component wiring
-1. Add `image: string` to `BusinessIdea` type.
-2. Add an `image:` line to each of the 67 entries pointing at the imported asset.
-3. Update `IdeaCard`: image band on top (rounded top corners, `aspect-video`, `object-cover`, `loading="lazy"`), overlay category chip top-left and income chip top-right on a subtle gradient scrim; name + offer stay in the body.
-4. Bump card width from `w-[280px] sm:w-[320px]` to `w-[300px] sm:w-[340px]` so the photo has room without breaking marquee rhythm.
+## Language rules for this pass
 
-## Execution
-- Generate all 67 in parallel batches via `imagegen--generate_image` (fast tier, 1024×576, JPG).
-- After generation, spot-check ~6 across categories; regen individual ones only if a prompt clearly missed.
-- No backend, no schema, no route changes.
+- Replace generic "framework" copy with **The 14-Day Launch Method** where it's positioning the offer. Keep the word "framework" only where it describes a *component inside* the method (e.g. "the pricing framework we run in the room") — never as the top-level thing being sold.
+- Kill weak stand-ins: "a real framework," "a proven system," "our process," "our method" → replace with the named phrase.
+- Never say "template." (Existing rule.)
+- Never say "business" in place of "startup" in user-facing copy. (Existing rule.)
+- Every hero, sub-hero, and primary CTA block on marketing pages should reference the Method by name at least once.
 
-## Cost / scope callout — one confirmation before I burn credits
-Generating 67 photorealistic images (fast tier) is the expensive part of this task. Two things worth confirming so I don't spend twice:
+## Files to rewrite (full unification pass)
 
-1. **All 67 in one pass, or start with one category (e.g. Online, 16 cards) as a style test first, then greenlight the rest?** Starting with 16 costs ~1/4 and lets you veto the visual direction before I generate the other 51.
-2. **Quality tier — `fast` (default, cheapest, good for card thumbnails) or `standard` (higher fidelity, ~3–4× cost)?** At the size these render on the marquee, `fast` is almost certainly enough — but if you want them to hold up on a Retina laptop at close range, `standard` is the safer call.
+**Marketing pages — hero + sub-hero + CTA blocks:**
+- `src/components/home/HomeFramework.tsx` — lead hero, framework section, CTA band. Method named in the eyebrow and again in the CTA.
+- `src/components/register/RegisterFramework.tsx` — rewrite the "what you're registering for" language around the Method.
+- `src/routes/webinar.tsx` — hero, HIGHLIGHTS array, cohort card copy.
+- `src/routes/one-on-one.tsx` — reframe as "The 14-Day Launch Method, run one-on-one with Adam."
+- `src/routes/services.tsx` — position agency services as "the same assets we ship inside The 14-Day Launch Method."
+- `src/routes/build.tsx` and `src/routes/build.$slug.tsx` — subhead + CTA.
+- `src/routes/schedule.tsx` — intro paragraph.
+- `src/routes/facilitator.tsx` shell (via components below).
 
-Default if you don't answer: **`fast`, all 67 in one pass**, using the style rules above.
+**Facilitator surface:**
+- `src/components/facilitator/FacilitatorHero.tsx`
+- `src/components/facilitator/FacilitatorStory.tsx`
+- `src/components/facilitator/FacilitatorPillars.tsx`
+- `src/components/facilitator/FacilitatorAudience.tsx`
+- `src/components/facilitator/FacilitatorCTA.tsx`
+
+**Shared UI copy:**
+- `src/components/home/AccessModeDialog.tsx` — three formats framed as "three ways to run The 14-Day Launch Method."
+- `src/components/site/Header.tsx` — only if a tagline/nav label references "framework."
+
+**Meta + concierge:**
+- `index.html` — `<title>`, `<meta name="description">`, `og:title`, `og:description`, `twitter:title`, `twitter:description` all lead with the Method name and positioning line.
+- `src/lib/chatbot-knowledge.ts` and `supabase/functions/venture-chatbot/knowledge.ts` — teach the concierge the name, the one-liner, and the old-way/new-way framing so every bot answer reinforces it.
+
+## Explicitly out of scope
+
+- Workshop slide components under `src/components/workshop-slides/` — internal, in-room use.
+- Dashboard / authenticated routes under `src/routes/_authenticated/`.
+- Admin routes.
+- `src/lib/framework-deliverables.ts`, `src/lib/workflow.ts`, `src/lib/business-ideas.ts`, `src/lib/schedule-data.ts` — data/logic, not marketing voice.
+- Legal pages (`terms.tsx`, `privacy.tsx`).
+
+## How I'll write the copy
+
+- Every marketing hero gets the same shape: **eyebrow** ("The 14-Day Launch Method") → **headline** (outcome, not feature) → **sub** (old way vs. new way, one sentence) → **CTA** (verb + Method).
+- Concrete over vague: "first paying customer in 14 days," "offer priced by lunch," "outreach going out that afternoon" — never "get results faster."
+- One repeated closer across pages: *Not another course. Not raw AI. The operator-led method replacing both.*
+- No emoji, no hype adjectives ("revolutionary," "game-changing"). The name + the specificity is the marketing.
+
+## Verification
+
+After the rewrite I'll grep for stray uses of "a framework," "our framework," "the framework," "a proven system," and "our method" in the files above to confirm nothing generic slipped through, and confirm `index.html` meta + chatbot knowledge both lead with the Method name.

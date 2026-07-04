@@ -64,10 +64,10 @@ export default function OneOnOnePage() {
   const [modesOpen, setModesOpen] = useState(false);
 
   useEffect(() => {
-    document.title = "Adam launches your business for you — 14 days, $4,799 done-for-you";
+    document.title = "The 14-Day Launch Method, done for you — Adam builds it in 14 days · $4,799";
     const meta = document.querySelector('meta[name="description"]');
     const desc =
-      "Skip the build. Adam and his team launch your business for you in 14 days — brand, site, social, systems, and your first paying customer named. $4,799, everything in.";
+      "The 14-Day Launch Method, run for you by Adam and his team. Brand, site, social, systems, and your first paying customer named — delivered in 14 days. $4,799, everything in. The operator-led method replacing accelerators, courses, and raw AI.";
     if (meta) meta.setAttribute("content", desc);
   }, []);
 
@@ -79,17 +79,18 @@ export default function OneOnOnePage() {
         <section className="border-b border-white/5 py-16 md:py-24">
           <div className="mx-auto max-w-4xl px-6">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-primary">
-              <Wand2 className="size-3.5" /> Adam builds it. You keep the profit.
+              <Wand2 className="size-3.5" /> The 14-Day Launch Method · Done for you
             </p>
             <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
-              Skip the build.{" "}
-              <span className="text-gradient-brand">Adam launches your business — in 14 days.</span>
+              The 14-Day Launch Method,{" "}
+              <span className="text-gradient-brand">run for you by Adam and his team.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-              The old way to hire this out was $40k and six months of
-              agency ping-pong. The new way is Adam and his creative team,
-              flat fee, live business in fourteen days — brand, site, social,
-              systems, and a named first customer. You stay founder. They ship it.
+              The old way was $40k and six months of agency ping-pong. The new way is
+              the operator-led method replacing accelerators, courses, and raw AI —
+              executed for you at a flat fee. Brand, site, social, systems, and a
+              named first customer, live in fourteen days. You stay founder. Adam's
+              team ships it.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">

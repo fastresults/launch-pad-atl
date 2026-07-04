@@ -60,11 +60,11 @@ export function RegisterFramework() {
         footerLine: `${buildWorkshop.walkOuts.length} deliverables · built live with Adam · yours to keep.`,
       }
     : {
-        eyebrow: `How modern founders launch now · ${WORKSHOP_PRICE_LABEL} · Norcross, GA`,
-        heroTitleLead: "The fastest legal path to your",
-        heroTitleEmphasis: `first paying customer.`,
-        heroBlurb: "The old way took a year, an agency, a co-founder, and a prayer. The new way takes a morning: Adam runs the framework in the room with you, and you leave with a live offer, a named first customer, and outreach going out that afternoon. Two weeks to first revenue. Coffee and refreshments on us.",
-        asideBlurb: "One morning with Adam Anderson — small cohort, working session, real business built. Not a bot, not a course, not a folder of PDFs. This is how modern businesses get launched now.",
+        eyebrow: `The 14-Day Launch Method · ${WORKSHOP_PRICE_LABEL} · Norcross, GA`,
+        heroTitleLead: "Reserve your seat inside",
+        heroTitleEmphasis: `The 14-Day Launch Method.`,
+        heroBlurb: "The operator-led method replacing accelerators, courses, and raw AI. One morning with Adam — offer priced, first customer named, outreach going out that afternoon. Fourteen days to first revenue. Coffee and refreshments on us.",
+        asideBlurb: "One live morning inside The 14-Day Launch Method with Adam Anderson — small cohort, real business built. Not another course. Not raw AI. The operator-led method replacing both.",
         walkOuts: null as string[] | null,
         priceLabel: WORKSHOP_PRICE_LABEL,
         priceCents: WORKSHOP_PRICE_CENTS,
