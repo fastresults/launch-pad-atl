@@ -289,9 +289,8 @@ export function provenanceLabel(source: string): string {
 // AI run rebuilds the compressed reasoning blob from fresh canonical data.
 export async function markAllMySnapshotBrainsDirty(): Promise<void> {
   try {
-    const { data: u } = await supabase.auth.getUser();
-    const uid = u?.user?.id;
-    if (!uid) return;
+    let uid: string;
+    try { uid = await getEffectiveUserId(); } catch { return; }
     await supabase
       .from("venture_snapshots")
       .update({ snapshot_brain_dirty: true })
@@ -299,4 +298,5 @@ export async function markAllMySnapshotBrainsDirty(): Promise<void> {
   } catch (e) {
     console.warn("[markAllMySnapshotBrainsDirty] failed", e);
   }
+
 }
