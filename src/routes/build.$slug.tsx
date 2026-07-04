@@ -84,7 +84,7 @@ export default function BuildWorkshopPage() {
         <section className="border-b border-white/5 bg-white/[0.02] py-14 md:py-16">
           <div className="mx-auto max-w-5xl px-6">
             <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-primary md:text-sm">
-              <Calendar className="size-4" /> Upcoming dates
+              <Calendar className="size-4" /> Upcoming dates · {w.title}
             </div>
             <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
               Pick your session.{" "}
