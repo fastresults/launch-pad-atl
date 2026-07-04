@@ -68,6 +68,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     number: "01",
     name: "Foundation",
     intro: "The bedrock every defensible startup is built on.",
+    benefit: "Leave with the one-page story of your startup — vision, problem, and value prop tight enough that customers buy, partners lean in, and hires say yes.",
     items: [
       { icon: FileText, title: "Executive Summary", tooltip: "A one-page snapshot of your startup — what you do, who it's for, how you make money, and why now. Hand it to a banker, partner, or future hire and they'll understand the business in 60 seconds flat." },
       { icon: Eye, title: "Vision & Mission", tooltip: "The north-star statement that keeps every decision pointed the same direction. You'll stop chasing every shiny idea, say no faster, and rally future teammates and customers around a story they actually want to be part of." },
