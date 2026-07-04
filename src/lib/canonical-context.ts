@@ -11,6 +11,7 @@
 // Setup intake) call this once on mount and use it to prefill the form.
 // They never need to know which table a value came from.
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
 
 export type CanonicalFounderContext = {
   identity: {
