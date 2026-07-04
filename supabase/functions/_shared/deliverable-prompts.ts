@@ -341,6 +341,193 @@ ${QF}`,
 2. \`\`\`markdown labeled \`# LinkedIn DM sequence (3-touch)\` — Connection note (≤300 chars), Day-2 opener, Day-6 value drop. Each with the same token set.
 3. \`\`\`markdown labeled \`# SMS follow-up (1-touch, opt-in only)\` — a single SMS ≤160 chars sent only after a warm reply or event, with the compliance line (STOP to opt out) included.
 ${QF}`,
+
+  ai_tool_stack_recommendation: `You are a fractional CTO picking the actual AI-first tool stack this founder will install this week. Ground every pick in identity, solution, customer, business_model_summary, and differentiators. Every recommendation must be a named product with a working URL — no "a good CRM" placeholders, no invented tools. Prefer free-tier or generous-trial tools where quality allows. Output Markdown:
+# {Company} — AI-First Tool Stack
+## Stack Thesis (3-5 sentences: how AI compounds the founder's leverage, what NOT to buy in the first 30 days, the single biggest risk of over-tooling)
+## Stack Table — a markdown table with EXACTLY these rows in this order: AI Writer & Research | Site Builder | CRM & Pipeline | Calendar & Booking | Email Marketing | Transactional Email | Analytics | Support / AI Support Bot | Automations | Ads Manager | Reviews & Testimonials | Call Recording. Columns: Job | Pick | Why this for this venture | Alternative | Free tier? | Monthly cost at scale | Setup time (min).
+## Order of Operations (which 4 tools go in first — before Day 3, before Day 7, before Day 10, before Day 14)
+## Cost Envelope (total $/mo at launch, at first $1k MRR, at first $10k MRR)
+## Do-Not-Buy List (3-5 tools founders waste money on in the first 30 days, with why)
+## Paste-Ready — one fenced \`\`\`json block labeled \`# ai_stack_checklist.json\` shaped as:
+\`\`\`json
+{
+  "tools": [
+    { "key": "kebab-case-id", "job": "CRM & Pipeline", "name": "Attio", "url": "https://attio.com", "why": "…", "setup_minutes": 20, "linked_asset_key": "crm_pipeline_starter", "day": 3, "free_tier": true }
+  ]
+}
+\`\`\`
+Include every row from the Stack Table. \`linked_asset_key\` must be one of: crm_pipeline_starter, booking_calendar_setup, email_marketing_setup, analytics_pixel_setup, ai_support_bot_setup, automation_recipes_starter, paid_ads_starter_pack, reviews_testimonials_kit, sales_call_recording_stack, website_prd, ai_prompt_library, domain_email_dns_checklist. No prose outside the fence.${QF}`,
+
+  ai_prompt_library: `You are a prompt engineer writing 25 copy-paste prompts the founder will actually use every week. Each prompt must be tuned to THIS venture's identity, customer, and voice — no generic "You are a helpful assistant" boilerplate. Every prompt uses \`{{VARIABLE}}\` tokens for the parts the founder fills in. Output Markdown:
+# {Company} — AI Prompt Library
+## How to Use (1 paragraph: which model to paste each into by default, when to switch to a reasoning model, how to store these in Raycast / ChatGPT projects / Claude projects)
+## The 25 Prompts — grouped under these five section headings, exactly 5 prompts each: **Sell**, **Ship**, **Support**, **Market**, **Operate**. Every prompt formatted as:
+### N. {Short Prompt Name}
+**When to use:** one sentence
+**Paste this:**
+\`\`\`text
+{full prompt with {{VARIABLE}} tokens, tuned to this venture}
+\`\`\`
+Every prompt must reference at least one venture-specific detail (persona name, offer name, pricing tier, differentiator) so it can't be reused verbatim by a different founder.
+## Paste-Ready — one fenced \`\`\`markdown block labeled \`# prompt_library.md\` containing all 25 prompts back-to-back in a single Markdown file, ready to save to a repo or Notion page. Nothing outside the fence.${QF}`,
+
+  crm_pipeline_starter: `You are a revenue-ops lead standing up the CRM on Day 3 so the First-50 list lives somewhere real by end of day. Recommend Attio (default), Folk, or HubSpot Free — pick one based on customer + business_model_summary and defend the pick in 2 sentences. Ground stages in the sales_playbook when available. Output Markdown:
+# {Company} — CRM Pipeline Starter
+## Tool Pick (which CRM, why this one for this venture, free tier vs paid trigger, migration risk)
+## Pipeline Stages — table: Stage | Definition | Entry criteria | Exit criteria | Owner | Typical days-in-stage. Include exactly 6 stages ending in Won and Lost.
+## Custom Fields — table: Field | Type | Options | Purpose. Cover at minimum: Segment, Buying Trigger, Deal Size, Priority, Next Action, Next Action Date, Source.
+## Saved Views (3 named views: "Today's Priorities", "Stalled >7 days", "Warm — Ready to Close")
+## Weekly Pipeline Ritual (Monday review, Friday retro — what to look at, decisions to make)
+## Paste-Ready — two fenced blocks, in this order:
+1. \`\`\`json labeled \`# crm_schema.json\` — full JSON of stages, custom fields, and views the founder can hand to the CRM's import/API or recreate manually.
+2. \`\`\`csv labeled \`# first_50_import.csv\` — header row \`name,company,email,phone,segment,stage,buying_trigger,deal_size,priority,next_action,next_action_date,source,notes\` and 25 pre-populated rows derived from the venture's segments (label the rest "Add name" so the founder fills them in). Every row's Stage must be a valid stage from the schema.
+${QF}`,
+
+  booking_calendar_setup: `You are a sales-ops lead wiring the booking calendar on Day 6 so warm outreach has a real link to send. Default to Cal.com; recommend Calendly only if the customer profile demands it. Ground event types in sales_playbook. Output Markdown:
+# {Company} — Booking & Calendar Setup
+## Tool Pick (Cal.com vs Calendly for this venture, one-time setup time, monthly cost at scale)
+## Event Types — table: Name | Duration | Purpose (stage of the funnel) | Buffer | Locations | Confirmation copy summary. Include exactly: Discovery (20m), Working Session (45m), Onboarding (30m), plus one venture-specific event type.
+## Routing & Availability (working hours in the founder's timezone, holds around focus blocks, round-robin rules if a teammate joins)
+## Reminders (email + SMS cadence: T-24h, T-1h, T+5min no-show)
+## Confirmation & Reschedule Copy (voice notes: warm, specific, one CTA)
+## Paste-Ready — two fenced blocks:
+1. \`\`\`json labeled \`# calcom_event_types.json\` — array of event-type objects (slug, title, length, description, locations[], requiresConfirmation, minimumBookingNotice, bufferBefore/After, hidden). Slugs kebab-case. Ready to paste into Cal.com API or import.
+2. \`\`\`markdown labeled \`# booking_email_copy.md\` — three email copies: Confirmation, T-24h reminder, No-show follow-up. Each: SUBJECT, BODY (60-120 words), CTA link label.
+${QF}`,
+
+  sales_call_recording_stack: `You are a sales-ops lead installing an AI call-recording + insight pipeline so every sales/customer conversation feeds the content and product roadmap. Default to Fathom (free, unlimited); recommend Grain or Fireflies only when the customer or team warrants it. Output Markdown:
+# {Company} — Sales Call Recording Stack
+## Tool Pick (Fathom vs Grain vs Fireflies for this venture, cost envelope, permission/consent posture)
+## Recording Policy (which calls get recorded, how consent is captured, retention, who can access)
+## Tagging Convention — table: Tag | When to apply | Downstream use (goes to CRM field, content backlog, roadmap, or FAQ)
+## AI Summary Template (the exact fields the summary must contain — Attendees, Buying Signals, Objections, Next Action, Owner, Due, Content Ideas)
+## Insight → Content Pipeline (weekly ritual: pull tagged Content Ideas, turn 3 into posts, log source call in the CRM)
+## Paste-Ready — one fenced \`\`\`markdown block labeled \`# call_summary_template.md\` containing the summary template the founder pastes into Fathom's AI or their own note tool after every call. Include \`{{CALL_DATE}}\`, \`{{ATTENDEES}}\`, \`{{DEAL_STAGE}}\`, \`{{NEXT_ACTION}}\` tokens.${QF}`,
+
+  email_marketing_setup: `You are an email deliverability lead standing up the venture's owned-audience channel on Day 10. Ground everything in identity, customer, and brand_voice_tone_guide when available. Recommend Resend (default for founders who ship code), Loops (default for SaaS), or Beehiiv (default for creator/newsletter model) — pick one, defend it in 2 sentences. Output Markdown:
+# {Company} — Email Marketing Setup
+## Tool Pick (Resend vs Loops vs Beehiiv for this venture, free tier, monthly cost at 1k / 10k subs)
+## Sender Domain Setup (subdomain choice — \`mail.company.com\` vs root — plus SPF, DKIM, DMARC records the founder pastes into their DNS; reference domain_email_dns_checklist as the upstream doc)
+## List Architecture — table: List / Audience | Purpose | Opt-in source | Suppression rules. Include at minimum: Waitlist, Customers, Prospects, Broadcasts.
+## Deliverability Warm-Up Plan (Week 1 daily sends starting at ≤50, ramp to 500 by Week 4, subject-line variety, engagement tracking)
+## Governance (who can send broadcasts, review checklist, unsubscribe promise, GDPR/CAN-SPAM footer)
+## Paste-Ready — three fenced blocks in this order:
+1. \`\`\`text labeled \`# dns_records.txt\` — the exact SPF, DKIM, DMARC records to paste (with placeholders for the DKIM public key + selector the provider issues).
+2. \`\`\`markdown labeled \`# welcome_sequence.md\` — a 5-email welcome sequence (Day 0 Welcome, Day 1 Origin/Why, Day 3 Best Content, Day 5 Soft Offer, Day 7 Ask). Each email: SUBJECT, PREVIEW, BODY (150-220 words), CTA. Voice matches the brand_voice_tone_guide.
+3. \`\`\`markdown labeled \`# first_broadcast.md\` — one launch-week broadcast with SUBJECT, PREVIEW, BODY, CTA, and a 3-line "Why we're emailing you" opener suitable for a first send.
+${QF}`,
+
+  logo_brand_asset_pack: `You are a brand designer briefing an AI image generator (Midjourney / Ideogram / Nano Banana) to produce the venture's launch-week visual assets on Day 11. Ground every prompt in visual_identity_brief and brand_strategy_framework. Never invent asset dimensions — use the standards below. Output Markdown:
+# {Company} — Logo & Brand Asset Pack
+## Visual Thesis (3-5 sentences: what the brand should *feel* like, what it must NEVER look like, references to steal from and references to avoid)
+## Asset Inventory — table: Asset | Dimensions | File formats | Where it lives (site, email, social, favicon, OG) | Notes
+## Prompt Discipline (rules the founder applies to every generation — negative prompts, seed re-use, iteration loop, when to pick vs regenerate)
+## Paste-Ready — one fenced \`\`\`markdown block labeled \`# brand_asset_prompts.md\` containing exactly these sections, each with 3 prompt variants ready to paste into an image generator, using this shape:
+\`\`\`
+### Logo (3 directions)
+Aspect: 1:1 · Output: SVG-friendly, transparent background · Model: Midjourney v6 / Ideogram
+1. {prompt v1}
+2. {prompt v2}
+3. {prompt v3}
+
+### Favicon
+Aspect: 1:1 · Output: 512×512 PNG, high contrast at 32×32 · …
+{prompts}
+
+### OG Image
+Aspect: 1200×630 · Output: PNG with legible text at social preview size · …
+{prompts}
+
+### Founder Avatar / Brand Mark
+Aspect: 1:1 · Output: 800×800 …
+{prompts}
+
+### Email Banner
+Aspect: 1600×400 · Output: PNG …
+{prompts}
+\`\`\`
+Every prompt must reference at least two specific palette or type cues from the visual_identity_brief so a different venture couldn't paste them verbatim.${QF}`,
+
+  ai_support_bot_setup: `You are a support engineer deploying the venture's AI FAQ / support bot on Day 12, trained on this venture's own artifacts. Default to Chatbase; recommend Intercom Fin only when customer_support_starter shows a high-volume premium motion. Escalation must land in the support inbox from customer_support_starter. Output Markdown:
+# {Company} — AI Support Bot Setup
+## Tool Pick (Chatbase vs Intercom Fin vs Fin-on-Zendesk for this venture, cost envelope, self-host option)
+## Training Sources — bulleted list of the exact venture docs the bot ingests (Terms/Privacy/Refund, Fulfillment SOP, Customer Support Starter canned replies, Pricing Page, FAQ from customer_personas). Every item must be a real asset the founder has generated.
+## Guardrails (topics the bot never answers — refunds >$X, legal, medical, ETA promises — with the exact refusal copy)
+## Escalation Rules (which intents route to human, how the ticket lands in the support inbox, on-call rotation, SLAs)
+## Weekly Bot Health Review (KPIs: deflection rate, escalation rate, top-5 unanswered intents, what to add to training)
+## Paste-Ready — three fenced blocks:
+1. \`\`\`text labeled \`# system_prompt.txt\` — the full system prompt for the bot: role, voice (match brand_voice_tone_guide), guardrails, refusal template, escalation trigger phrases. Use \`{{COMPANY}}\`, \`{{SUPPORT_EMAIL}}\` tokens.
+2. \`\`\`json labeled \`# training_sources.json\` — array of source docs \`[{ "title": "…", "type": "asset_key", "url_or_key": "customer_support_starter" }, …]\`.
+3. \`\`\`html labeled \`# widget_snippet.html\` — the drop-in \`<script>\` snippet (with \`{{BOT_ID}}\` token) plus the CSS variables to theme it to the brand.
+${QF}`,
+
+  automation_recipes_starter: `You are a workflow automation lead installing 5 workflows on Day 12 that remove the founder from repetitive work. Default to n8n (self-host or Cloud) when the founder is technical; Zapier or Make for non-technical. Every recipe must wire real named tools from the ai_tool_stack_recommendation (CRM, Stripe, calendar, email, Slack). Output Markdown:
+# {Company} — Automation Recipes Starter
+## Tool Pick (n8n vs Zapier vs Make for this founder, monthly cost at first 1k runs)
+## Naming & Ownership (folder/tag convention, error-notification channel, review cadence)
+## The 5 Recipes — for each one: **Trigger**, **Steps** (numbered), **Outputs**, **Failure handling**, **Setup time (min)**, **Time saved / week**. Recipes:
+1. New lead (form or First-50 import) → CRM row + Slack ping + welcome email in the marketing tool
+2. New Stripe successful checkout → Customer created in CRM + welcome sequence started + review-ask scheduled for T+7d
+3. Booking form submitted → Cal.com link sent + CRM Next Action set + reminder queued
+4. Weekly KPI digest → pulls CRM + Stripe + GA4, drafts a Slack/email summary every Monday 8am
+5. New review captured (Senja / typeform / Google) → adds to wall-of-love + posts to social queue + logs in CRM
+## Paste-Ready — one fenced \`\`\`json block labeled \`# automation_recipes.json\` — array of five recipe objects shaped as \`{ "name", "trigger": { "type", "source", "filters" }, "steps": [ { "action", "app", "config" } ], "on_error": "…", "linked_asset_keys": ["crm_pipeline_starter","payments_checkout_setup",…] }\`. Ready to import into n8n or reference during a manual Zapier build. Use kebab-case IDs.${QF}`,
+
+  founder_operating_cadence: `You are a startup operator installing the founder's weekly rhythm on Day 13 — the ritual that keeps the venture on the numbers after the sprint ends. Ground KPIs in financial_model + go_to_market_plan + known_numbers. Output Markdown:
+# {Company} — Founder Operating Cadence
+## Rhythm Thesis (3-5 sentences: what a good week looks like, the single failure mode this cadence prevents)
+## Weekly Rhythm — table: Slot | Day/Time | Duration | Purpose | Output. Include at minimum: Monday Plan, Daily 10-min AI Recap Standup, Tue/Thu Deep Work Blocks, Weekly Pipeline Review, Friday Retro, Monthly Numbers Review.
+## KPI Dashboard — table: Metric | Definition | Source | Target (Month 1) | Target (Month 3) | Owner | Review cadence. Metrics must be venture-specific — pulled from the business model and known_numbers, not a generic SaaS list.
+## Decision Rules (what triggers a pivot, what triggers a hire, what triggers cutting a channel — thresholds in numbers)
+## Tooling (which of the recommended AI tools the founder opens for each ritual — Notion/Linear for plan, Fathom for standup transcript, CRM for pipeline review)
+## Paste-Ready — two fenced blocks:
+1. \`\`\`markdown labeled \`# operating_cadence.md\` — a Notion/Linear-friendly template with headings for each ritual, a fill-in-the-blank agenda, and a "Definition of done" line under each.
+2. \`\`\`json labeled \`# kpi_dashboard.json\` — array of KPI objects \`{ "metric", "definition", "source", "target_month_1", "target_month_3", "owner", "cadence" }\` ready to seed a dashboard tool.
+${QF}`,
+
+  ad_creative_pack: `You are a performance-creative lead producing 12 ready-to-run ad units on Day 14, mapped to Meta, Google, TikTok, and LinkedIn. Ground every unit in pricing_offer_sheet, brand_messaging, and paid_ads_starter_pack. Every image prompt must be pasteable into Midjourney/Ideogram; every script pasteable into a TikTok/Reels caption; every headline pair pasteable into Ads Manager. Output Markdown:
+# {Company} — Ad Creative Pack
+## Creative Thesis (which hook, which offer, which persona this batch tests; what gets killed if a variant underperforms)
+## Distribution Map — table: Channel | Format | Recommended units from this pack | Daily test budget | Winning-signal (CTR/CPA)
+## Naming Convention (\`{channel}_{offer}_{hook}_{variant}\` — used across Ads Manager and UTM)
+## Paste-Ready — one fenced \`\`\`markdown block labeled \`# ad_creative_pack.md\` containing exactly these four sections, each with the specified units:
+\`\`\`
+### Static Image Ads (4) — for Meta / LinkedIn feed
+Aspect: 1:1 · Model: Ideogram or Midjourney
+1. {image prompt v1 with venture-specific palette + hook overlay text}
+2. {v2}
+3. {v3}
+4. {v4}
+
+### Short-Form Video Scripts (4) — for Reels / TikTok / Shorts
+Length: 20-40s · Format: Hook (0-3s) → Problem (3-10s) → Proof (10-20s) → CTA (20-30s)
+1. {full script with on-screen text cues + voiceover + b-roll notes}
+2. {v2}
+3. {v3}
+4. {v4}
+
+### Headline + Body Pairs (4) — for Google Search + LinkedIn Sponsored
+Format: 3 headline variants (≤30 chars) + 2 body variants (≤90 chars) + CTA
+1. {v1}
+2. {v2}
+3. {v3}
+4. {v4}
+\`\`\`
+Every unit must reference at least one specific persona pain and one specific pricing tier or offer element from this venture's pricing_offer_sheet.${QF}`,
+
+  referral_affiliate_starter: `You are a growth lead installing the referral/affiliate motion on Day 14 so early customers become the venture's cheapest channel. Default to Rewardful (Stripe-native SaaS), Tolt (SaaS with Paddle option), or a manual Airtable-based program for non-SaaS. Ground the reward in pricing_offer_sheet unit economics — reward can't destroy margin. Output Markdown:
+# {Company} — Referral & Affiliate Starter
+## Program Thesis (who this program is FOR — customers, partners, or affiliates — and why this venture can afford it)
+## Tool Pick (Rewardful vs Tolt vs Manual/Airtable for this venture, cost envelope, minimum viable setup)
+## Offer & Terms — table: Row for Referrer reward, Referee reward, Payout method, Payout timing, Cookie window, Fraud rules, Termination clause. Numbers must reconcile with pricing_offer_sheet.
+## Advocate Identification (how to find the first 10 advocates — from customers with 5-star reviews, high-NPS respondents, repeat buyers, or logo-worthy partners)
+## Weekly Ritual (how the founder reviews new referrals, thanks the advocate, and turns wins into social proof)
+## Paste-Ready — three fenced blocks:
+1. \`\`\`markdown labeled \`# referral_terms.md\` — the founder-facing Terms & Conditions the founder pastes onto \`/referral-terms\`, tuned to entity + jurisdiction.
+2. \`\`\`markdown labeled \`# invite_email.md\` — the invite email to send to a happy customer or partner: SUBJECT, BODY (140-200 words), CTA link label, PS line. Use \`{{FIRST_NAME}}\`, \`{{REFERRAL_LINK}}\` tokens.
+3. \`\`\`csv labeled \`# first_10_advocates.csv\` — header \`name,company,relationship,why_theyd_refer,ask,channel,status\` with 10 pre-populated rows (labeled by segment — the founder fills in the names).
+${QF}`,
 };
 
 
