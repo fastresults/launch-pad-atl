@@ -18,8 +18,6 @@ export default function ServicesPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <Hero />
-      
       <Tracks />
       <Process />
       <Proof />
@@ -31,21 +29,23 @@ export default function ServicesPage() {
   );
 }
 
-/* ─────────────── Hero ─────────────── */
 
-function Hero() {
+
+/* ─────────────── Productized tracks ─────────────── */
+
+function Tracks() {
   return (
     <section className="border-b border-white/5 py-16 md:py-24">
-      <div className="mx-auto max-w-5xl px-6">
+      <div className="mx-auto max-w-6xl px-6">
         <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          <Sparkles className="size-3.5" /> Done-for-you · The 8 capabilities, built by our team
+          <Sparkles className="size-3.5" /> Done-for-you · Three tracks, built by our team
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
-          You shouldn't have to learn eight jobs{" "}
-          <span className="text-gradient-brand">to start one business.</span>
+          Three tracks.{" "}
+          <span className="text-gradient-brand">Pick the one that matches the stage you're in.</span>
         </h1>
-        <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-          You took the workshop and ran the playbook yourself — or you've already decided you'd rather buy the result than build it. Either way, here's what our team ships, capability by capability, on a fixed scope and a fixed clock.
+        <p className="mt-5 max-w-3xl text-base text-muted-foreground md:text-lg">
+          You don't buy eight things at once. You buy the right three. Each track bundles the capabilities that compound together — scoped honestly to what your startup actually needs, priced after a short discovery call.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
@@ -66,28 +66,7 @@ function Hero() {
         <p className="mt-8 text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-sm">
           Work shipped for Citigroup · Mayo Clinic · 3M · Disney · government, Main Street, and online brands alike
         </p>
-      </div>
-    </section>
-  );
-}
 
-
-/* ─────────────── Productized tracks ─────────────── */
-
-function Tracks() {
-  return (
-    <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
-      <div className="mx-auto max-w-6xl px-6">
-        <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          Bundles that map to where you are
-        </p>
-        <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-          Three tracks.{" "}
-          <span className="text-gradient-brand">Pick the one that matches the stage you're in.</span>
-        </h2>
-        <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          You don't buy eight things at once. You buy the right three. Each track bundles the capabilities that compound together — scoped honestly to what your startup actually needs, priced after a short discovery call.
-        </p>
 
         <div className="mt-12 grid gap-5 md:grid-cols-3">
           {AGENCY_TRACKS.map((t) => {
