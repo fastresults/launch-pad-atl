@@ -148,6 +148,9 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Scale, title: "Legal Structure Brief", tooltip: "A plain-English recommendation on entity, ownership, and the contracts you actually need on day one. You'll set up the business correctly the first time, protect your personal assets, and avoid the legal cleanup bills founders pay later." },
       { icon: ShieldAlert, title: "Risk Register", tooltip: "An honest list of what could derail the business — and the specific moves that defuse each one. You'll sleep better, get insurance priced right, and stop being blindsided by the predictable problems every small business hits." },
       { icon: Landmark, title: "Board & Governance Plan", tooltip: "A lightweight structure for advisors, mentors, or partners who hold you accountable and open doors. You'll get smarter outside counsel in the room, make faster decisions, and look credible to banks, investors, and serious customers." },
+      { icon: FileCheck, title: "Terms, Privacy & Refund Pack", tooltip: "The customer-facing legal set every checkout, app store, and enterprise buyer expects — terms of service, privacy policy, and refund policy tuned to your offer. You'll pass Stripe review, procurement, and app review the first time." },
+      { icon: Umbrella, title: "Insurance Starter", tooltip: "A general-liability and errors-and-omissions quote path with the exact coverage your buyers, landlords, and venues ask about. You'll answer the first COI request the same day and stop losing enterprise deals to a missing certificate." },
+      { icon: FileSignature, title: "Contractor & 1099 Kit", tooltip: "Master services agreement, statement of work, W-9, and IP assignment — ready to send to your first contractor before they touch anything. You'll hire fast, protect the work you're paying for, and file cleanly at year-end." },
     ],
   },
   {
