@@ -79,7 +79,7 @@ export const STAGES: Stage[] = [
     summary:
       "A mentored working session on strategy. You bring your Foundation and a first attempt at market, buyer, and wedge — staff apply an operator's lens, redirect what's fuzzy, and sharpen the plan live. You leave with a Strategy Brief, personas, and a 90-day GTM sequencer as reviewed working drafts you keep refining.",
     takeHome:
-      "A reviewed Strategy Brief PDF (8–10 pages) + 5 outreach message drafts + 90-Day GTM sequencer + Persona Cards — all saved to your dashboard as working documents you continue to iterate on.",
+      "A reviewed Strategy Brief PDF (8–10 pages) + 5 outreach message drafts + 90-Day GTM sequencer + Persona Cards — all saved to your dashboard as working assets you continue to iterate on.",
     walkOut: [
       "Signature build: TAM/SAM/SOM sizer with your ZIP + category + price band, sourced",
       "Signature build: Persona canvas built from your pasted customer interview transcript",
@@ -123,7 +123,7 @@ export const STAGES: Stage[] = [
           "Persona Cards printable for the wall",
           "Everything writes back to your dashboard's Strategy stage",
         ],
-        takeaway: "You leave with the document your bank, partner, or first buyer expects.",
+        takeaway: "You leave with the asset your bank, partner, or first buyer expects.",
         followUp:
           "Monday move: send outreach message #1 to 10 personas. Log in the Sequencer. Refine Friday.",
       },
@@ -138,7 +138,7 @@ export const STAGES: Stage[] = [
     summary:
       "A mentored working session on how the business runs week to week. You bring your current workflow, offer, and sales conversations — staff apply a chief-of-staff lens, question where you're the bottleneck, and redirect until the business could survive without you touching every step.",
     takeHome:
-      "A reviewed Operations Playbook + Weekly Ops SOP + Sales Playbook + First-Hire SOP — working documents on your dashboard, ready for you to run for a real week and refine from what breaks.",
+      "A reviewed Operations Playbook + Weekly Ops SOP + Sales Playbook + First-Hire SOP — working assets on your dashboard, ready for you to run for a real week and refine from what breaks.",
     walkOut: [
       "Signature build: Weekly Ops Loop mapped as Kanban (intake → produce → deliver → invoice → follow-up) with owner + tool per step",
       "Signature build: 12-month product roadmap sequenced, revenue-weighted",
@@ -197,7 +197,7 @@ export const STAGES: Stage[] = [
     summary:
       "A mentored working session on the numbers. You bring pricing, cost, cadence, and a funding hypothesis — staff apply a CFO-and-investor lens, challenge assumptions, and redirect until the model, unit economics, and capital path hold up under real scrutiny.",
     takeHome:
-      "A reviewed 12-Month Pro Forma XLSX + Funding Strategy Memo + Pitch Deck v1 + Unit Economics — working documents on your dashboard, ready for the next money conversation and for you to tune as real numbers come in.",
+      "A reviewed 12-Month Pro Forma XLSX + Funding Strategy Memo + Pitch Deck v1 + Unit Economics — working assets on your dashboard, ready for the next money conversation and for you to tune as real numbers come in.",
     walkOut: [
       "Signature build: 12-month P&L with real formulas (revenue, COGS, opex, cash, runway) from your inputs",
       "Signature build: CAC / LTV calculated live for your first channel",
@@ -241,7 +241,7 @@ export const STAGES: Stage[] = [
           "Pitch Deck v1 auto-populated from your Foundation story, market size, and model",
           "Everything writes back to your dashboard's Finance stage",
         ],
-        takeaway: "You walk into any money conversation this week with the document they expect.",
+        takeaway: "You walk into any money conversation this week with the asset they expect.",
         followUp:
           "Monday move: book one banker or SBA meeting using the Pro Forma and Memo.",
       },
@@ -256,7 +256,7 @@ export const STAGES: Stage[] = [
     summary:
       "A mentored working session on structure and risk. You bring your revenue plan, ownership picture, and top worries — staff apply a small-business-counsel lens, redirect on entity choice, walk you through the filings live, and pressure-test the risks you're most exposed to.",
     takeHome:
-      "EIN confirmation + pre-filled formation doc + a reviewed Legal Kit (Operating Agreement, Terms + Privacy, Service Agreement, Risk Register, 3 advisor outreach drafts) — working documents you take to your own counsel or use as-is to move this week.",
+      "EIN confirmation + pre-filled formation doc + a reviewed Legal Kit (Operating Agreement, Terms + Privacy, Service Agreement, Risk Register, 3 advisor outreach drafts) — working assets you take to your own counsel or use as-is to move this week.",
     walkOut: [
       "Signature build: 5-question entity decision tree (LLC / S-Corp / Sole Prop) with plain-English recommendation",
       "Signature build: SOS account created, name confirmed, registered agent set, formation doc pre-filled",
