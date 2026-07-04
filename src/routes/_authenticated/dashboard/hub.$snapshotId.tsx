@@ -1137,6 +1137,39 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
       {heroDone && <FounderRoadmapCard snapshot={snapshot} documentCount={completeCount} />}
 
+      <LaunchPlanner14Day
+        docs={docs}
+        typeByKey={typeByKey}
+        completedKeys={completedKeys}
+        onOpenDoc={(d) => setViewerDoc(d)}
+        onGenerateDoc={(key) => {
+          const t = typeByKey.get(key) as any;
+          if (!t) return;
+          if (t.intake_schema) {
+            const d = docs.find((x: any) => x.document_type === key);
+            setIntakeTarget({
+              type: t.type,
+              name: t.name,
+              schema: t.intake_schema,
+              initial: d?.intake_answers ?? null,
+              isRegenerate: false,
+            });
+          } else {
+            genOne.mutate({ documentType: key });
+          }
+        }}
+        onScrollToDoc={(key) => {
+          const el = document.getElementById(`doc-${key}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.classList.add("ring-2", "ring-primary");
+            setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 1600);
+          }
+        }}
+        isGeneratingKey={(key) => genOne.isPending && genOne.variables?.documentType === key}
+        jobRunning={jobRunning}
+      />
+
 
       {showHelper && (
         <div className="flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-card/40 px-4 py-2 text-xs text-muted-foreground">
