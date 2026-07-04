@@ -18,8 +18,6 @@ export default function ServicesPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <Hero />
-      
       <Tracks />
       <Process />
       <Proof />
@@ -31,45 +29,6 @@ export default function ServicesPage() {
   );
 }
 
-/* ─────────────── Hero ─────────────── */
-
-function Hero() {
-  return (
-    <section className="border-b border-white/5 py-16 md:py-24">
-      <div className="mx-auto max-w-5xl px-6">
-        <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          <Sparkles className="size-3.5" /> Done-for-you · The 8 capabilities, built by our team
-        </p>
-        <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
-          You shouldn't have to learn eight jobs{" "}
-          <span className="text-gradient-brand">to start one business.</span>
-        </h1>
-        <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-          You took the workshop and ran the playbook yourself — or you've already decided you'd rather buy the result than build it. Either way, here's what our team ships, capability by capability, on a fixed scope and a fixed clock.
-        </p>
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
-          <Link
-            to="/contact?intent=discovery"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 sm:w-auto"
-          >
-            Book a discovery call <ArrowRight className="size-4" />
-          </Link>
-          <Link
-            to="/build"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-base font-medium text-foreground transition-colors hover:bg-white/10 sm:w-auto"
-          >
-            Start with a workshop — from $197
-          </Link>
-        </div>
-
-        <p className="mt-8 text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-sm">
-          Work shipped for Citigroup · Mayo Clinic · 3M · Disney · government, Main Street, and online brands alike
-        </p>
-      </div>
-    </section>
-  );
-}
 
 
 /* ─────────────── Productized tracks ─────────────── */
