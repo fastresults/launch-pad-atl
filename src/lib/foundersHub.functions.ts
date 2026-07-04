@@ -374,7 +374,7 @@ export async function archiveSnapshot(input: any): Promise<void> {
 
 export async function deleteSnapshot(input: any): Promise<void> {
   const { id } = unwrap<{ id: string }>(input);
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const userId = await uid().catch(() => undefined);
   const { error } = await supabase.from("venture_snapshots").delete().eq("id", id);
   if (error) throw new Error(error.message);
   if (userId) await resetWorkspaceIfEmpty(userId);
