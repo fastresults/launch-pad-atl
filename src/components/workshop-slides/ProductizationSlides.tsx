@@ -1,22 +1,84 @@
-import { Wrench, Sparkles, FileText, Package, ArrowRight } from "lucide-react";
+import { Wrench, Sparkles, FileText, Package, ArrowRight, Users, Eye, Lightbulb } from "lucide-react";
 import { SlideLayout } from "./SlideLayout";
 import type { Slide } from "./SlideDeck";
 import type { StageProductization } from "@/lib/workshop-productization";
 
-type Ctx = { stageKicker: string; pageLabel: (n: number) => string };
+type Ctx = { stageKicker: string; pageLabel: (n: number) => string; startPage: number };
+
+function MentoredSessionSlide({
+  stageKicker,
+  pageLabel,
+  data,
+}: { stageKicker: string; pageLabel: (n: number) => string; data: StageProductization }) {
+  const perspective = data.perspective ?? "Expert perspective applied live to your specific startup.";
+  return (
+    <SlideLayout stageKicker={stageKicker} pageLabel={pageLabel(6)}>
+      <div className="max-w-[1600px]">
+        <div className="slide-kicker font-semibold text-primary mb-6 inline-flex items-center gap-3">
+          <Users style={{ width: 24, height: 24 }} /> How this session works
+        </div>
+        <h2 className="slide-title font-semibold tracking-tight mb-4">
+          A mentored working session — not a lecture, not a done-for-you deliverable.
+        </h2>
+        <p className="slide-body-lg text-muted-foreground max-w-[1300px] mb-10">
+          {perspective}
+        </p>
+        <div className="grid grid-cols-3 gap-5">
+          <div className="rounded-2xl border-2 border-primary/20 bg-primary/5 p-6">
+            <div className="rounded-xl bg-primary/10 p-3 inline-flex mb-4">
+              <FileText className="text-primary" style={{ width: 28, height: 28 }} strokeWidth={1.5} />
+            </div>
+            <div className="slide-caption font-semibold uppercase tracking-wider text-primary mb-2">
+              What you bring
+            </div>
+            <p className="slide-body">
+              Your Foundation drafts and a real working attempt at this stage's questions — however rough.
+            </p>
+          </div>
+          <div className="rounded-2xl border-2 border-primary/30 bg-primary/10 p-6">
+            <div className="rounded-xl bg-primary/20 p-3 inline-flex mb-4">
+              <Eye className="text-primary" style={{ width: 28, height: 28 }} strokeWidth={1.5} />
+            </div>
+            <div className="slide-caption font-semibold uppercase tracking-wider text-primary mb-2">
+              What happens in the room
+            </div>
+            <p className="slide-body">
+              Live review, targeted questions, redirection, and pattern-matching against other startups — applied to <em>your</em> context.
+            </p>
+          </div>
+          <div className="rounded-2xl border-2 border-primary/20 bg-primary/5 p-6">
+            <div className="rounded-xl bg-primary/10 p-3 inline-flex mb-4">
+              <Lightbulb className="text-primary" style={{ width: 28, height: 28 }} strokeWidth={1.5} />
+            </div>
+            <div className="slide-caption font-semibold uppercase tracking-wider text-primary mb-2">
+              What you leave with
+            </div>
+            <p className="slide-body">
+              A sharper version of your own thinking, plus a working artifact on your dashboard you continue to refine.
+            </p>
+          </div>
+        </div>
+        <p className="slide-caption text-muted-foreground mt-6 italic">
+          Foundation is the only stage that is pure drafting. Every stage after Foundation is a mentored review of your work.
+        </p>
+      </div>
+    </SlideLayout>
+  );
+}
 
 function BuildToolSlide({
   stageKicker,
   pageLabel,
+  startPage,
   data,
 }: Ctx & { data: StageProductization }) {
   const { signatureBuild } = data;
   return (
-    <SlideLayout stageKicker={stageKicker} pageLabel={pageLabel(6)}>
+    <SlideLayout stageKicker={stageKicker} pageLabel={pageLabel(startPage)}>
       <div className="grid grid-cols-12 gap-10 items-start">
         <div className="col-span-7">
           <div className="slide-kicker font-semibold text-primary mb-6 inline-flex items-center gap-3">
-            <Wrench style={{ width: 24, height: 24 }} /> Signature in-room build
+            <Wrench style={{ width: 24, height: 24 }} /> In-room working exercise
           </div>
           <h2 className="slide-title font-semibold tracking-tight mb-6">{signatureBuild.title}</h2>
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-sm font-semibold text-primary mb-8">
@@ -29,7 +91,7 @@ function BuildToolSlide({
         <div className="col-span-5">
           <div className="rounded-2xl border-2 border-primary/20 bg-primary/5 p-6">
             <div className="slide-caption font-semibold uppercase tracking-wider text-primary mb-4">
-              What you bring
+              What you bring in
             </div>
             <ul className="space-y-3">
               {signatureBuild.inputs.map((input, i) => (
@@ -49,14 +111,15 @@ function BuildToolSlide({
 function LiveWorksheetSlide({
   stageKicker,
   pageLabel,
+  startPage,
   data,
 }: Ctx & { data: StageProductization }) {
   const { liveWorksheet } = data;
   return (
-    <SlideLayout stageKicker={stageKicker} pageLabel={pageLabel(7)}>
+    <SlideLayout stageKicker={stageKicker} pageLabel={pageLabel(startPage + 1)}>
       <div className="max-w-[1500px]">
         <div className="slide-kicker font-semibold text-primary mb-6 inline-flex items-center gap-3">
-          <Sparkles style={{ width: 24, height: 24 }} /> Live worksheet
+          <Sparkles style={{ width: 24, height: 24 }} /> How the review runs
         </div>
         <h2 className="slide-title font-semibold tracking-tight mb-10">{liveWorksheet.headline}</h2>
         <ol className="space-y-4">
@@ -82,15 +145,16 @@ function LiveWorksheetSlide({
 function ArtifactPreviewSlide({
   stageKicker,
   pageLabel,
+  startPage,
   data,
 }: Ctx & { data: StageProductization }) {
   const { shipReadyArtifact } = data;
   return (
-    <SlideLayout stageKicker={stageKicker} pageLabel={pageLabel(8)}>
+    <SlideLayout stageKicker={stageKicker} pageLabel={pageLabel(startPage + 2)}>
       <div className="grid grid-cols-12 gap-10 items-start">
         <div className="col-span-7">
           <div className="slide-kicker font-semibold text-primary mb-6 inline-flex items-center gap-3">
-            <FileText style={{ width: 24, height: 24 }} /> Ship-ready artifact
+            <FileText style={{ width: 24, height: 24 }} /> Working artifact you leave with
           </div>
           <h2 className="slide-title font-semibold tracking-tight mb-6">
             {shipReadyArtifact.title}
@@ -130,15 +194,15 @@ function ArtifactPreviewSlide({
 function TakeHomeKitSlide({
   stageKicker,
   pageLabel,
+  startPage,
   data,
-  nextName,
 }: Ctx & { data: StageProductization; nextName?: string }) {
   const { takeHomeKit } = data;
   return (
-    <SlideLayout stageKicker={stageKicker} pageLabel={pageLabel(9)}>
+    <SlideLayout stageKicker={stageKicker} pageLabel={pageLabel(startPage + 3)}>
       <div className="max-w-[1600px]">
         <div className="slide-kicker font-semibold text-primary mb-6 inline-flex items-center gap-3">
-          <Package style={{ width: 24, height: 24 }} /> Take-home kit
+          <Package style={{ width: 24, height: 24 }} /> Continue on your dashboard
         </div>
         <h2 className="slide-title font-semibold tracking-tight mb-10">{takeHomeKit.headline}</h2>
         <div className="grid grid-cols-2 gap-4 mb-10">
@@ -169,10 +233,23 @@ function TakeHomeKitSlide({
   );
 }
 
+/** Mentored-session framing slide — inserted at position 6 in every post-Foundation deck. */
+export function mentoredSessionSlide(
+  slug: string,
+  stageKicker: string,
+  data: StageProductization,
+  pageLabel: (n: number) => string,
+): Slide {
+  return {
+    id: `${slug}-mentored-session`,
+    title: "How this session works",
+    render: () => <MentoredSessionSlide stageKicker={stageKicker} pageLabel={pageLabel} data={data} />,
+  };
+}
+
 /**
- * Build the 4 productization slides that get inserted between the
- * "Deliverables overview" slide (5) and the per-deliverable slides.
- * Pages 6, 7, 8, 9 in the standard 10+N stage skeleton.
+ * Build the 4 productization slides that get inserted after the mentored-session
+ * slide. Default startPage = 7 (i.e., 5 overview + 1 mentored-session + these 4).
  */
 export function buildProductizationSlides(
   slug: string,
@@ -180,27 +257,28 @@ export function buildProductizationSlides(
   data: StageProductization,
   pageLabel: (n: number) => string,
   nextName?: string,
+  startPage = 7,
 ): Slide[] {
-  const ctx: Ctx & { data: StageProductization } = { stageKicker, pageLabel, data };
+  const ctx: Ctx & { data: StageProductization } = { stageKicker, pageLabel, startPage, data };
   return [
     {
       id: `${slug}-build-tool`,
-      title: "Signature build",
+      title: "In-room working exercise",
       render: () => <BuildToolSlide {...ctx} />,
     },
     {
       id: `${slug}-live-worksheet`,
-      title: "Live worksheet",
+      title: "How the review runs",
       render: () => <LiveWorksheetSlide {...ctx} />,
     },
     {
       id: `${slug}-artifact`,
-      title: "Ship-ready artifact",
+      title: "Working artifact",
       render: () => <ArtifactPreviewSlide {...ctx} />,
     },
     {
       id: `${slug}-take-home`,
-      title: "Take-home kit",
+      title: "Continue on dashboard",
       render: () => <TakeHomeKitSlide {...ctx} nextName={nextName} />,
     },
   ];

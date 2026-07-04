@@ -53,6 +53,8 @@ export type DeliverableDetail = {
 
 export type StageProductization = {
   slug: string;
+  /** One-line description of the mentoring lens this session applies to the founder's work. */
+  perspective?: string;
   signatureBuild: SignatureBuild;
   liveWorksheet: LiveWorksheet;
   shipReadyArtifact: ShipReadyArtifact;
