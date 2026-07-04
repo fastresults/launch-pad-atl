@@ -1,55 +1,81 @@
-## Diagnosis
+# Reframe: "Launch a profitable business in 14 days — with Adam"
 
-You are currently impersonating Stachio Williams as an admin (the impersonation session is active in the DB log). The "StartupLabs" venture showing up under Stachio's account is not actually attached to Stachio — it's **your own** venture leaking through the impersonation view. Confirmed in the database: the only `venture_snapshots` row named "StartupLabs" belongs to your admin user, not to Stachio.
+## The strategic frame
 
-### Root cause
+Right now the copy sells **artifacts** ("20 startup assets," "documents," "AI venture workflow"). Buyers of workshops don't wire money for artifacts — they wire money for **the outcome those artifacts unlock**: a business that makes money, fast, without them quitting their day job on faith.
 
-Impersonation is only implemented in the `AuthContext` (it swaps `user.id` for downstream React reads). But the data-fetching functions bypass the context entirely and call `supabase.auth.getUser()` directly to get the id they filter by:
+New positioning, one sentence:
 
-```ts
-// src/lib/foundersHub.functions.ts
-async function uid() {
-  const u = (await supabase.auth.getUser()).data.user;
-  return u.id;                       // <-- always the real actor (admin), never the impersonation target
-}
+> **Launch a profitable business in 14 days — or a real Plan B by the weekend. Built with Adam, in the room, not by a bot.**
 
-export async function listSnapshots() {
-  return supabase.from("venture_snapshots").select("*").eq("user_id", await uid());
-}
-```
+Three pillars every page will hammer:
 
-Because RLS lets admins read any row (`is_admin(auth.uid())`), the query succeeds and returns **your** ventures while the surrounding UI thinks it's showing Stachio's. Same pattern exists in most `*.functions.ts` files (brief, filing, stageIntake, member-intake, brandKit, brand-intake, legal-setup, discovery, media, creative, venture-sources, canonical-context, founderMemory).
+1. **Outcome, not output.** Lead with "profitable business" / "paying customers" / "first revenue" — not "assets," "deliverables," or "documents."
+2. **Human > AI.** Adam is the differentiator. AI is the accelerant behind the curtain; the promise is *Adam's hand on your business*, not "AI does the work." Attendees leave saying "Adam helped me launch," not "the AI made my deck."
+3. **Speed to income.** Every format (workshop, webinar, done-for-you) is positioned as **the fastest legitimate path to your first paying customer** — 14 days, not 14 months.
 
-This is a display bug, not a data-integrity bug — no snapshot has actually been reassigned. When you stop impersonating, Stachio's real (empty) data will show. But it also means every admin-impersonation session today is showing the admin's data, not the target's.
+## Copy rules (apply everywhere)
 
-## Plan
+- **Say:** "launch," "profitable," "paying customers," "first revenue," "in 14 days," "Plan B," "your business, live," "built with Adam."
+- **Don't say:** "20 startup assets," "deliverables," "documents," "AI venture workflow," "generate," "investor-ready docs" as the hero promise. (Keep these as *supporting proof* deep in the page, never the headline.)
+- **Never** put "AI" in a headline or CTA. AI shows up once, low on the page, as "we use AI so Adam can spend the hour on *your* business, not on formatting."
+- Keep the existing "startup" vs "business" rule for user-facing nouns describing the thing being built — but the *outcome* is a "profitable business" / "real income."
 
-1. **Add one shared helper** in a new file `src/lib/effective-user.ts`:
-   - `getEffectiveUserId()` — reads `sessionStorage["sl.impersonation.v1"]` (same key `use-auth.tsx` uses), verifies the actor is admin via `user_roles`, and returns the target id when impersonating, else the actor's `auth.uid`. Safe fallback to actor id on any error.
-   - Non-async cached admin check within a single tick to avoid an extra round-trip per call.
+## Files to audit and rewrite
 
-2. **Swap every client-side `uid()` filter** to use the helper. Concrete files touched (grep-verified):
-   - `src/lib/foundersHub.functions.ts` (listSnapshots + all `.eq("user_id", …)` sites and storage path prefixes)
-   - `src/lib/brief.functions.ts`
-   - `src/lib/filing.functions.ts`
-   - `src/lib/stageIntake.functions.ts`
-   - `src/lib/member-intake.functions.ts`
-   - `src/lib/brandKit.functions.ts`
-   - `src/lib/brand-intake.functions.ts`
-   - `src/lib/legal-setup.functions.ts`
-   - `src/lib/discovery.functions.ts`
-   - `src/lib/media.functions.ts`
-   - `src/lib/creative.functions.ts`
-   - `src/lib/venture-sources.ts`
-   - `src/lib/canonical-context.ts` (all six parallel queries in `getCanonicalFounderContext`)
-   - `src/lib/founderMemory.functions.ts`
-   - `src/lib/social-setup.functions.ts` and `src/lib/social-autopilot.functions.ts` (`getUserId` helper — same fix)
+Hero + primary conversion surfaces (deep rewrite):
 
-3. **Storage paths.** A few functions build storage keys like `${uid}/${snapshotId}/…`. Route those through the same helper so uploads during impersonation land in the target's folder (or, for safety, block uploads while impersonating — see Q1 below).
+1. `src/routes/index.tsx` → `src/components/home/HomeFramework.tsx` and hero components — new H1, subhead, section headers, CTA labels.
+2. `src/routes/build.tsx` and `src/routes/build.$slug.tsx` — workshop landing pages.
+3. `src/routes/webinar.tsx` — webinar sell page.
+4. `src/routes/one-on-one.tsx` — done-for-you with Adam (this one *already* leans human; sharpen the 14-day promise).
+5. `src/routes/services.tsx` — reframe services as "what we build for you *after* you're live and taking money."
+6. `src/routes/schedule.tsx` — reframe the day as "the day you launch," not "the day you generate assets."
+7. `src/routes/facilitator.tsx` — Adam bio page; strengthen "in your room" outcome language.
+8. `src/components/register/RegisterFramework.tsx` — hero eyebrow, headline, aside copy, walk-out list, footer line.
+9. `src/components/home/AccessModeDialog.tsx` — three-mode picker copy (workshop / webinar / done-for-you).
+10. `src/components/facilitator/FacilitatorCTA.tsx` — CTA framing.
 
-4. **Verify.** With impersonation active on Stachio, `/dashboard/hub` should show Stachio's ventures (currently none) instead of StartupLabs. Stop impersonation → your own hub returns to normal. Also spot-check `/dashboard/brief` and `/dashboard/legal-setup` render Stachio's blank state.
+Shared strings / config:
 
-## Questions before I build
+11. `src/lib/framework-deliverables.ts` — rename stage descriptions from asset-lists to outcome-statements ("Stage 1: You know exactly who will pay you and why" rather than "5 startup assets"). Keep asset counts as supporting bullets, not the headline.
+12. `src/lib/build-workshops.ts` — rewrite `oneLiner`, `subhead`, and `walkOuts` for each build workshop around income/launch outcomes.
+13. `src/lib/cohorts.ts` / `src/lib/schedule-data.ts` — session titles/blurbs.
+14. `src/lib/chatbot-knowledge.ts` + `supabase/functions/venture-chatbot/knowledge.ts` — update the public chatbot's positioning paragraph so it answers "what is this?" with the new frame (currently answers with capability lists).
+15. `index.html` — `<title>` and meta description.
 
-1. **While impersonating, should admins be able to write/mutate the target's data** (create ventures, edit brief, upload files), or only read? Read-only impersonation is safer and closes a whole class of "admin accidentally saved to member's account" bugs; the DB log already assumes write is possible.
-2. Anything I should NOT swap over — e.g. admin-only routes under `_admin/` that are supposed to always use the actor id?
+Supporting UI (light copy pass, keep functional labels):
+
+16. `src/components/hub/FoundersHubGate.tsx` — reframe the gate message.
+17. `src/components/dashboard/*` — audit any hero/empty-state copy that says "generate documents" → "get to your first customer."
+18. Email templates in `src/lib/email-templates/` — confirmation and reply copy.
+
+## Concrete headline swaps (proposed, to be finalized once approved)
+
+| Where | Today | Proposed |
+|---|---|---|
+| Home H1 | (asset/AI-led) | **Launch a profitable business in 14 days. With Adam, in the room.** |
+| Home sub | "20 startup assets…" | "One morning with Adam. Two weeks to your first paying customer — or a Plan B strong enough to leave the day job on your terms." |
+| Register eyebrow | "Strategic Foundation Workshop · $197" | "Launch Day with Adam · $197 · Norcross, GA" |
+| Register H1 | "Reserve your seat — $197." | "The fastest legal way to your first paying customer." |
+| Register aside | "Small cohort, working session…" | "You leave with a live business — offer priced, first channel open, first outreach sent. Not a folder of PDFs." |
+| Webinar H1 | (current) | "Launch your business live on Zoom. Two weeks to revenue." |
+| One-on-one H1 | (current) | "Skip the build. Adam launches your business *for* you — live in 14 days." |
+| Services H1 | (capability list) | "Already live? Here's how Adam's team scales you from first dollar to first hire." |
+| AccessModeDialog title | "Three ways to work with Adam" | "Three ways to launch with Adam" |
+| Chatbot "what is this?" | capability paragraph | Outcome paragraph led by 14-day launch promise. |
+
+## What I won't change
+
+- Backend field names, DB columns, deliverable keys, admin UI, workflow internals, pricing numbers, or the underlying framework structure. This is a copy/positioning pass on user-facing marketing surfaces only.
+- The "startup" vs "business" noun rule stays: the *thing being built* is still "your startup"; the *outcome* is "a profitable business / real income."
+
+## Technical notes
+
+Pure string edits in React components and a few `.ts` copy modules. No schema, no routes, no logic. Chatbot knowledge update requires editing both `src/lib/chatbot-knowledge.ts` and the mirrored `supabase/functions/venture-chatbot/knowledge.ts` (edge function auto-deploys on save).
+
+## Open questions before I start
+
+1. **"14 days"** — is that a promise you'll stand behind publicly, or should I hedge to "2 weeks" / "by month-end"? The number is load-bearing for the whole reframe.
+2. **"Plan B" language** — safe to lean into "keep your day job, build your Plan B on the side"? It broadens the audience beyond full-time founders but changes who shows up.
+3. Any headlines above you want to lock, kill, or rewrite before I roll them across all surfaces?

@@ -64,20 +64,25 @@ ${deliv}
 
 export const CONCIERGE_KNOWLEDGE = `# Startup Labs — Concierge Knowledge Base
 
-## What Startup Labs is
-Startup Labs is Atlanta's founder-first startup workshop. In one morning (8:45–11:30 AM),
-founders walk in with an idea and walk out with a complete strategic foundation for their
-startup — ${TOTAL_DELIVERABLES} tangible **startup assets** across eight categories, plus a signed
-90-day plan. Facilitated live by Adam Anderson, serial entrepreneur (OPEN Interactive;
-work shipped for Citigroup, Mayo Clinic, 3M, Disney).
+## What Startup Labs is (lead with this)
+Startup Labs is the fastest legal path from a business idea to your first paying customer. **One morning
+in the room with Adam Anderson. Two weeks to first revenue.** Not a course. Not a slide deck. Not an AI
+that "generates a business." Adam sits at your table, prices your offer, names the first customer, opens
+the first channel, and gets your outreach going out the same afternoon.
 
-Positioning: Atlanta's #1 startup accelerator for Main Street **and online** founders —
-cafés, salons, trades, local services, indie brands on one side; DTC and e-commerce brands,
-creators, digital services, agencies and small SaaS on the other. Marketplace and deep tech
-supported too.
+Two audiences, one promise:
+- **Full-time founders** — 14 days to a business that pays you.
+- **Plan B founders** — a real side business you can build evenings and weekends, strong enough to eventually leave the day job on your terms.
+
+Facilitated live by Adam Anderson — serial entrepreneur, co-founder of OPEN Interactive, work shipped for
+Citigroup, Mayo Clinic, 3M, Disney. Not a moderator. Not a TA. Adam, in the room.
+
+Positioning: Atlanta's #1 launch accelerator for Main Street **and online** founders — cafés, salons, trades,
+local services, indie brands on one side; DTC and e-commerce brands, creators, digital services, agencies
+and small SaaS on the other. Marketplace and deep tech supported too.
 
 ## Price & offer
-- **${WORKSHOP_PRICE_LABEL}** — Strategic Foundation Workshop, all ${TOTAL_DELIVERABLES} startup assets, kept forever.
+- **${WORKSHOP_PRICE_LABEL}** — Launch Day with Adam. You keep everything you build in the room.
 - Coffee and light refreshments included.
 - Full support during and after the workshop, available if you want it.
 - 7-day refund: if you don't get value, email within 7 days for a no-friction refund.
@@ -88,8 +93,10 @@ supported too.
 - Location: Norcross, GA (metro Atlanta)
 - Seats: 20 per cohort, one cohort at a time.
 
-## The 34 startup assets you leave with
-Every asset is generated live from your idea, market, and numbers — then refined with you in the room.
+## What you actually leave the room with
+The point is a business that can take money in 14 days — priced offer, named first customer, first channel open,
+outreach ready to send. Everything below is the paperwork that backs that up: worked out with Adam, kept forever,
+so a banker, partner, or first hire understands your business in 60 seconds.
 
 ${stagesBlock()}
 
@@ -148,35 +155,37 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 
 
 ## Common questions (canned answers)
-- **What do I leave with?** All ${TOTAL_DELIVERABLES} startup assets, editable and yours forever, plus a 90-day plan you can run Monday.
-- **Do I need a business idea already?** Yes — bring the idea and the intention. We handle the strategy, math, and copy.
-- **What if I already have a logo/website?** Great — Brand Wizard has a track that ingests existing assets so nothing gets thrown away.
-- **Is this good for a Plan B / side hustle?** Yes. Most founders come from a full-time job and want a plan they can act on evenings and weekends.
-- **Is this good for a licensed trade (electrician, plumber, salon)?** Yes — the Main Street Startup track is built for exactly this.
+- **What do I leave with?** A business that can take money in 14 days — priced offer, named first customer, first channel open, outreach ready to send — plus the working docs that back it, all built with Adam in the room and yours forever.
+- **How fast until I'm actually making money?** The goal is your first paying customer within 14 days of the workshop. Not a projection — that's how the session is designed: the outreach going out that afternoon is real outreach, to real people, from your real offer.
+- **Is Adam actually in the room?** Yes. Adam sits at your table for the session — not a moderator, not a TA, not an AI. That's the whole point.
+- **Isn't this just AI generating documents?** No. Adam runs the room. We use AI behind the scenes so Adam spends the morning on *your* business — pricing your offer, naming your first customer, opening your first channel — instead of on formatting.
+- **Do I need a business idea already?** Yes — bring the idea and the intention. We handle the strategy, math, offer, and outreach.
+- **What if I already have a logo/website?** Great — we keep what works, sharpen the rest, and focus the morning on getting you selling.
+- **Is this good for a Plan B / side hustle?** Yes — this is the fastest way to build a real second income you can run evenings and weekends, strong enough to eventually leave the day job on your terms. No fantasy.
+- **Is this good for a licensed trade (electrician, plumber, salon)?** Yes — the Main Street track is built for exactly this.
 - **Is this good for an online store, DTC brand, creator, or digital service?** Yes — the Online / DTC / Digital track covers Shopify/Amazon brands, creators and info products, digital services and agencies, and small SaaS.
 - **Refunds?** 7-day no-friction refund by email.
-- **Is Adam actually in the room?** Yes. He sits at your table for the session — not a moderator, not a TA.
-- **Do you take equity?** No. It's a flat ${WORKSHOP_PRICE_LABEL} workshop fee.
-- **Is there follow-up support?** Yes — full support available during and after; also 30 days of group-channel access on any half-day build workshop.
-- **Can your team build the brand/site/ads for me later?** Yes — see /services. Every workshop capability has a done-for-you equivalent.
-- **What's the Launch Track?** Our done-for-you sprint that gets a new founder from idea to invoicing: brand identity, a website that converts, and legal/financial/operational scaffolding. Bespoke, priced after a 20-min discovery call. See /services.
-- **What's the Growth Track?** The customer-acquisition engine: social presence, content engine, and email/CRM/automation. Monthly retainer, bespoke — our most popular Track. See /services.
-- **What's the Operate Track?** Leverage for a small team: AI as your operating system + sales systems. 30-day sprint, bespoke. See /services.
-- **How much does the done-for-you build cost?** Tracks are bespoke and priced after a 20-min discovery call at /contact?intent=discovery. Individual services have starting prices listed on /services (e.g. brand identity from $2,900, website from $4,800).
-- **Do I have to attend the workshop before hiring your team?** No. Tracks and individual services stand alone. The workshop is recommended if you don't yet have strategic clarity; if you do, go straight to /services.
+- **Do you take equity?** No. Flat ${WORKSHOP_PRICE_LABEL} workshop fee.
+- **Is there follow-up support?** Yes — full support available during and after; also 30 days of group-channel access on any half-day session.
+- **Can Adam's team build the brand/site/ads for me later?** Yes — see /services. Every capability has a done-for-you option, or you can hand the whole launch to Adam for $4,799 (see /one-on-one).
+- **What's the fastest way to income if I don't want to build it myself?** /one-on-one — Adam and his team launch your business for you in 14 days. $4,799 flat.
+- **How much does the done-for-you build cost?** $4,799 for the full 14-day launch build with Adam (/one-on-one). Larger scale-up Tracks are bespoke and priced after a 20-min call at /contact?intent=discovery.
+- **Do I have to attend the workshop before hiring Adam's team?** No. Tracks and the done-for-you build stand alone.
 - **How do I register?** Go to /register and reserve one of the 20 seats. Cohorts fill.
 - **What if I miss this cohort?** Join the waitlist; a new cohort opens next.
 - **What if I need help right now?** Email through /contact and we'll route you personally.
 
 ## Tone & guardrails
 - Speak plainly, founder-to-founder — confident, no fluff, no jargon, no emojis.
+- Lead with the outcome (14 days to first revenue, Adam in the room), not with document counts, asset lists, or "AI."
+- Never put "AI" front and center. If asked, be honest: Adam runs the room; AI is behind the scenes so his time goes to *your* business, not to formatting.
 - Never invent pricing, dates, guarantees, outcomes, or funding promises.
 - Never give legal, tax, medical, or financial advice — point them to /contact or a qualified pro.
 - If a question is off-topic (weather, sports, unrelated companies), redirect politely to what Startup Labs can help with.
 - If a question isn't covered here, say so and offer to route them via /contact.
 - Keep answers under ~180 words unless the user asks for depth. Prefer short paragraphs or tight bullets.
-- Refer to the things founders leave with as "startup assets," never "deliverables."
-- Refer to the thing they're building as "your startup," never "your business."
+- Refer to what founders leave with as their "business" or "launch" — the supporting docs are "startup assets," never "deliverables."
+- Refer to the thing they're building as "your startup" or "your business" (both OK when talking about the launched outcome).
 - Refer to the workshop structure as a "framework," never a "template."
 `;
 

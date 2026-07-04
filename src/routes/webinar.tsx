@@ -6,20 +6,20 @@ import { ArrowRight, Video, Calendar, Clock, Users, CheckCircle2 } from "lucide-
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
 
 const HIGHLIGHTS = [
-  "The full 4-stage StartupLabs framework, run live over video",
-  "Working session — bring your idea, leave with a plan",
-  "Small cohort, real-time feedback from Adam",
-  "Recording + all generated assets yours to keep",
+  "One live morning with Adam — offer priced, first customer named, first channel open",
+  "Two weeks to first revenue — the same plan we run in the room, over video",
+  "Small cohort so Adam works your business, not a Zoom crowd",
+  "Recording plus the assets that back the plan — yours to keep",
 ];
 
 export default function WebinarPage() {
   const [modesOpen, setModesOpen] = useState(false);
 
   useEffect(() => {
-    document.title = "Live Webinar — StartupLabs with Adam Anderson";
+    document.title = "Launch live on Zoom — 14 days to first revenue with Adam Anderson";
     const meta = document.querySelector('meta[name="description"]');
     const desc =
-      "Join a live remote cohort and run the StartupLabs framework with Adam. Same four stages, done over video — walk out with a signed 90-day plan.";
+      "Can't make Atlanta? Launch your business live on Zoom with Adam in a small cohort. Two weeks from webinar day to your first paying customer.";
     if (meta) meta.setAttribute("content", desc);
   }, []);
 
@@ -30,16 +30,17 @@ export default function WebinarPage() {
         <section className="border-b border-white/5 py-16 md:py-24">
           <div className="mx-auto max-w-4xl px-6">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-primary">
-              <Video className="size-3.5" /> Live webinar
+              <Video className="size-3.5" /> Live webinar · with Adam
             </p>
             <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
-              Same framework.{" "}
-              <span className="text-gradient-brand">Remote. Live with Adam.</span>
+              Launch your business live on Zoom.{" "}
+              <span className="text-gradient-brand">14 days to first revenue.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-              Can't make the trip to Atlanta? Run the StartupLabs framework in a
-              small live webinar cohort. Same working session, same generated
-              assets, same signed 90-day plan — done over video with Adam.
+              Can't make the trip to Atlanta? Same morning with Adam, done over
+              video in a small live cohort. You walk out of the session with your
+              offer priced, your first customer named, your first channel open,
+              and outreach going out that afternoon.
             </p>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
