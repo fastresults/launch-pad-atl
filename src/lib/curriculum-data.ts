@@ -50,21 +50,21 @@ export const STAGES: Stage[] = [
       "File local business license and sales-tax registration once the entity is approved",
     ],
     duration: "60 min",
-    covers: ["GA LLC packet", "EIN", "T&Cs / privacy", "Service agreement"],
+    covers: ["State LLC packet", "EIN", "T&Cs / privacy", "Service agreement"],
     tasks: [
       {
-        title: "Choose structure & prepare the GA LLC filing",
+        title: "Choose structure & prepare your state LLC filing",
         deliverable:
-          "Your filing packet for your business: name confirmed available, registered agent chosen, member info entered, GA SOS account created, Articles of Organization pre-filled.",
-        tool: "GA Secretary of State filing walk-through",
+          "Your filing packet for your business: name confirmed available, registered agent chosen, member info entered, Secretary of State account created, Articles of Organization pre-filled.",
+        tool: "Secretary of State filing walk-through (all 50 states)",
         details: [
           "Pick LLC vs sole prop vs S-corp using a 5-question decision tree",
-          "Confirm name availability on the GA SOS business search",
+          "Confirm name availability on your state's SOS business search",
           "Decide registered agent (you, partner, or paid service)",
-          "Create your GA SOS account and pre-fill the Articles of Organization",
+          "Create your state SOS account and pre-fill the Articles of Organization",
         ],
         takeaway:
-          "Your GA LLC filing packet — Articles pre-filled, registered agent set, ready to submit.",
+          "Your state LLC filing packet — Articles pre-filled, registered agent set, ready to submit.",
         followUp:
           "Submit the Articles of Organization and pay the filing fee from home — typically a 10-minute step once you're ready.",
       },
