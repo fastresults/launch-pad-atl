@@ -101,7 +101,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "90-day GTM sequence (week-by-week with channel, offer, metric)",
         "First 30 days: 5 outreach messages (cold email, LinkedIn DM, warm intro ask, referral request, follow-up)",
       ],
-      released: "Dropped into your dashboard before you leave the room.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
@@ -177,7 +177,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "Marketing Plan — channel mix, monthly spend, content cadence, one metric per channel",
         "Delegation Map — the 3 steps a first hire could own",
       ],
-      released: "Dropped into your dashboard before you leave the room.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
@@ -246,7 +246,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "Funding Strategy Memo picking the cheapest capital path with next-step contacts",
         "Pitch Deck v1 (10 slides) auto-populated with your Foundation story, market size, model, and ask",
       ],
-      released: "Dropped into your dashboard before you leave the room.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
@@ -322,7 +322,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "Risk Register PDF with top 3 mitigations drafted",
         "Advisor Outreach Pack — 3 personalized emails to prospective advisors in your industry",
       ],
-      released: "Dropped into your dashboard before you leave the room. EIN confirmation arrives from IRS separately.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product. EIN confirmation arrives from IRS separately.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
@@ -391,7 +391,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "Color palette + type pairing (hex codes + Google Fonts links)",
         "Voice & Tone one-pager with do/don't examples",
       ],
-      released: "Dropped into your dashboard before you leave the room. Full Guidelines Book continues on your dashboard.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product. Full Guidelines Book continues on your dashboard.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
@@ -469,7 +469,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "Copy Deck DOCX — every page's H1/H2/body written in your brand voice",
         "Weekend Build Checklist (Fri night → Sun evening → live)",
       ],
-      released: "Dropped into your dashboard before you leave the room. Attendees with a laptop leave with v0 scaffolded.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product. Attendees with a laptop leave with v0 scaffolded.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
@@ -531,7 +531,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         "Paid Ads Starter — 3 target segments, 5 ad hooks, budget guardrails",
         "5 AI-generated launch graphics sized for LinkedIn/IG/Twitter",
       ],
-      released: "Dropped into your dashboard before you leave the room. First 14 posts can be scheduled in-room if you connect your account.",
+      released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product. First 14 posts can be scheduled in-room if you connect your account.",
     },
     takeHomeKit: {
       headline: "In your dashboard by 11:30 AM",
