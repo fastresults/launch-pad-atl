@@ -45,15 +45,19 @@ export default function SchedulePage() {
       {/* Hero */}
       <section className="border-b border-white/5 py-12 md:py-20">
         <div className="mx-auto max-w-4xl px-6">
-          <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-gradient-brand md:text-sm md:tracking-[0.2em]">
+            Strategic Foundation Workshop · Agenda
+          </p>
+          <p className="mb-4 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
             {EVENT.dateLabel} · {EVENT.timeLabel}
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
             Idea in. <span className="text-gradient-brand">Launch plan out.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
-            One morning. Four working stages. By 11:30 AM you walk out with the full
-            plan in your hands and a signed, dated 90-day playbook for what to do next.
+            The Strategic Foundation Workshop is one morning. Four working stages. By 11:30 AM
+            you walk out with the full plan in your hands and a signed, dated 90-day playbook
+            for what to do next.
           </p>
 
           {/* Stat ribbon */}
