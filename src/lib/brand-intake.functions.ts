@@ -53,10 +53,10 @@ async function call(body: any) {
 }
 
 export async function getBrandPackage(): Promise<BrandPackage | null> {
-  const { data: u } = await supabase.auth.getUser();
-  const uid = u?.user?.id;
-  if (!uid) return null;
+  let uid: string;
+  try { uid = await getEffectiveUserId(); } catch { return null; }
   const { data, error } = await supabase
+
     .from("social_setup_brand_package")
     .select("*")
     .eq("user_id", uid)
