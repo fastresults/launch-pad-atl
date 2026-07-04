@@ -208,7 +208,7 @@ export const AGENCY_TRACKS: AgencyTrack[] = [
     outcome:
       "AI built into how you ship. A sales motion that doesn't depend on your mood. The leverage every late-stage startup wishes it had earlier.",
     includedSlugs: ["ai-operating-system", "sales-systems"],
-    priceLabel: "From $5,200",
+    priceLabel: "Bespoke — priced after a 20-min discovery call",
     timelineLabel: "30-day sprint",
     ctaHref: "/contact?track=operate",
   },
