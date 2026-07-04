@@ -18,10 +18,10 @@ export default function BuildIndexPage() {
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
             Launched already?{" "}
-            <span className="text-gradient-brand">Grow it with Adam, one morning at a time.</span>
+            <span className="text-gradient-brand">Grow it the new way — one morning at a time.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            Once your business is live and taking money, eight half-day sessions with Adam — <span className="text-foreground">$197 each</span> — build the layers that turn a launched business into a growing one. Brand. Site that converts. Content engine. Sales script. Automations. DIY each one with Adam in the room, or hand it to the team that would otherwise charge you $5K+.
+            The old way to grow was hire an agency and hope. The new way is Adam's operators, working the same framework that launched you. Eight half-day sessions — <span className="text-foreground">$197 each</span> — that build the layers turning a launched business into a growing one. Brand. Site that converts. Content engine. Sales script. Automations. DIY each one with Adam in the room, or hand it to the team that would otherwise charge you $5K+.
           </p>
         </div>
       </section>

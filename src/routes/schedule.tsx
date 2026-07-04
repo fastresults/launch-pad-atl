@@ -55,12 +55,13 @@ export default function SchedulePage() {
             Idea in. <span className="text-gradient-brand">Launch assets out.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
-            One morning. Foundation is the drafting stage — you write the one-page story of your
-            startup. Every stage after Foundation is a{" "}
+            This is what a modern launch morning looks like. Foundation is the
+            drafting stage — you write the one-page story of your startup.
+            Every stage after Foundation is a{" "}
             <strong className="text-foreground">mentored working session</strong>: you bring a
-            working attempt, staff apply an operator, CFO, or brand-lead lens to your specific
-            startup, and you leave with sharper thinking plus reviewed working drafts on your
-            dashboard you continue to refine.
+            working attempt, an operator applies a CFO, brand-lead, or
+            distribution lens to your specific startup, and you leave with
+            sharper thinking plus reviewed drafts on your dashboard you keep refining.
           </p>
 
           {/* Stat ribbon */}

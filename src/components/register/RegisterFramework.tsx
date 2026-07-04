@@ -60,11 +60,11 @@ export function RegisterFramework() {
         footerLine: `${buildWorkshop.walkOuts.length} deliverables · built live with Adam · yours to keep.`,
       }
     : {
-        eyebrow: `Launch Day with Adam · ${WORKSHOP_PRICE_LABEL} · Norcross, GA`,
+        eyebrow: `How modern founders launch now · ${WORKSHOP_PRICE_LABEL} · Norcross, GA`,
         heroTitleLead: "The fastest legal path to your",
         heroTitleEmphasis: `first paying customer.`,
-        heroBlurb: "One morning in the room with Adam. Two weeks to first revenue — offer priced, first channel open, outreach going out the same day. Or a Plan B strong enough to leave the day job on your terms. Coffee and refreshments on us.",
-        asideBlurb: "One morning with Adam Anderson — small cohort, working session, real business built. You leave with a live offer, a named first customer, and the outreach ready to send. Not a folder of PDFs.",
+        heroBlurb: "The old way took a year, an agency, a co-founder, and a prayer. The new way takes a morning: Adam runs the framework in the room with you, and you leave with a live offer, a named first customer, and outreach going out that afternoon. Two weeks to first revenue. Coffee and refreshments on us.",
+        asideBlurb: "One morning with Adam Anderson — small cohort, working session, real business built. Not a bot, not a course, not a folder of PDFs. This is how modern businesses get launched now.",
         walkOuts: null as string[] | null,
         priceLabel: WORKSHOP_PRICE_LABEL,
         priceCents: WORKSHOP_PRICE_CENTS,

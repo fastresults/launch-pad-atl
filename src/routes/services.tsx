@@ -42,10 +42,10 @@ function Tracks() {
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
           Launched and taking money?{" "}
-          <span className="text-gradient-brand">This is how Adam's team scales you from first dollar to first hire.</span>
+          <span className="text-gradient-brand">This is how modern operators scale from first dollar to first hire.</span>
         </h1>
         <p className="mt-5 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Once your business is live, three tracks turn a working idea into a growing operation. You don't buy eight things at once — you buy the three that compound. Scoped honestly to what your business needs next, priced after a short call with Adam.
+          The old way to scale meant a five-figure agency, a six-month rebuild, and a sales pitch every quarter. The new way is Adam's team running the same framework that launched you — three tracks that turn a working idea into a growing operation. You don't buy eight things at once. You buy the three that compound.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
