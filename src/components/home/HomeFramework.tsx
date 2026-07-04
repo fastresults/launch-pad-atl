@@ -224,11 +224,11 @@ function Framework() {
 
 function HonestRoadmap() {
   const included = [
-    `All ${TOTAL_DELIVERABLES} startup assets — Foundation, Strategy, Operations, Finance, Governance, Brand, Marketing, and Social & Content`,
-    "Built live with Adam, for your idea — not a framework",
-    "Yours to keep forever — plus a 90-day action plan you walk out with",
-    "Working time with Adam in a small room",
-    "Coffee and light refreshments throughout",
+    "A priced offer and the first customer you'll sell it to — named, not hypothetical",
+    "The one channel you open week one — and the first outreach going out that day",
+    "A 90-day roadmap from first dollar to steady income, built with Adam for your business",
+    "Working time in a 20-seat room with Adam himself — not a moderator, not a TA",
+    "Coffee, refreshments, and a room built for founders who came to work",
   ];
 
   return (
@@ -238,11 +238,11 @@ function HonestRoadmap() {
           The honest roadmap
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-          The plan is the starting line.{" "}
-          <span className="text-gradient-brand">The business is what you build on top of it.</span>
+          Two weeks to first revenue.{" "}
+          <span className="text-gradient-brand">A real business by month two.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Every founder we've watched fail had the same problem: they skipped the foundation, then spent $50K on a website, brand, and ads that couldn't tell a coherent story. The workshop gives founders the story, the frameworks, and the tool stack to ship it. After that, the modern build layer — site, social, content, AI, sales — is what turns the story into revenue.
+          Every founder we've watched fail did the same thing: they burned six months and $30K on a logo, a site, and ads that told nobody a coherent story — and never asked a single customer for money. The workshop flips it. Adam sits with you, prices your offer, opens your first channel, and gets you selling in the next 14 days. Everything else — the polish, the systems, the scale — comes after the money starts.
         </p>
 
 
