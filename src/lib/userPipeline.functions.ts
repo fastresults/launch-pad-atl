@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
 
 function unwrap<T>(input: any): T {
   if (input && typeof input === "object" && "data" in input && Object.keys(input).length === 1) {
@@ -9,8 +10,9 @@ function unwrap<T>(input: any): T {
 }
 
 async function uid() {
-  return (await supabase.auth.getUser()).data.user!.id;
+  return await getEffectiveUserId();
 }
+
 
 async function buildWorkflow(userId: string) {
   const [briefRes, filingRes, typesRes, delivRes] = await Promise.all([
