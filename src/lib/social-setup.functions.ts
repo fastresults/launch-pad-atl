@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
 import type { SetupStage } from "@/lib/zernio-setup-guides";
+
 
 export type BrandKit = {
   user_id: string;
