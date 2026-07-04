@@ -14,14 +14,14 @@ export default function BuildIndexPage() {
       <section className="border-b border-white/5 py-16 md:py-24">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-            <Sparkles className="size-3.5" /> The Modern Build Layer · 8 Workshops
+            <Sparkles className="size-3.5" /> After Launch Day · 8 Working Sessions with Adam
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
-            Eight workshops.{" "}
-            <span className="text-gradient-brand">One business that actually runs.</span>
+            Launched already?{" "}
+            <span className="text-gradient-brand">Grow it with Adam, one morning at a time.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            Strategy is the foundation. These eight capabilities are the building. Each half-day workshop — <span className="text-foreground">$197 each</span> — hands you the strategy, the frameworks, and the exact tool stack to ship it yourself. Or hand it to the team that would otherwise charge you $5K+ to build it for you.
+            Once your business is live and taking money, eight half-day sessions with Adam — <span className="text-foreground">$197 each</span> — build the layers that turn a launched business into a growing one. Brand. Site that converts. Content engine. Sales script. Automations. DIY each one with Adam in the room, or hand it to the team that would otherwise charge you $5K+.
           </p>
         </div>
       </section>
