@@ -30,9 +30,8 @@ export async function getBrandKit(snapshotId: string): Promise<BrandKit | null> 
 }
 
 export async function upsertBrandKit(snapshotId: string, patch: Partial<BrandKit>): Promise<BrandKit> {
-  const { data: u } = await supabase.auth.getUser();
-  const uid = u?.user?.id;
-  if (!uid) throw new Error("Not signed in");
+  const uid = await getEffectiveUserId();
+
   const { data, error } = await supabase
     .from("venture_brand_kits")
     .upsert(
