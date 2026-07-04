@@ -251,7 +251,7 @@ const PROCESS_STEPS = [
   {
     icon: FileText,
     title: "Scope",
-    detail: "Fixed price, fixed startup assets, fixed clock. No T&M, no surprise invoices.",
+    detail: "Fixed scope, fixed startup assets, fixed clock — set together in discovery. Flat fee, no T&M, no surprise invoices.",
   },
   {
     icon: Hammer,
