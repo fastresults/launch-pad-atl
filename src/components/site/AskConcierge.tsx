@@ -329,7 +329,7 @@ export function AskConcierge() {
               <div className="flex h-full flex-col justify-between gap-4">
                 <div>
                   <p className="text-sm text-foreground">
-                    Hey — ask me anything about Startup Labs. The workshop, the 34 startup assets, pricing, cohorts, or what to expect.
+                    Hey — ask me anything about Startup Labs. The workshop, the 50 startup assets, pricing, cohorts, or what to expect.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">

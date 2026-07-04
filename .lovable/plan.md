@@ -1,62 +1,77 @@
-# Unify the site around The 14-Day Launch Method
+# 14-Day Launch Method — Asset Audit
 
-## The single message
+Reviewed all 34 deliverables in `src/lib/framework-deliverables.ts` across Foundation, Strategy, Operations, Finance, Governance, Brand, Marketing, and Social & Content, plus the `BUILD_LAYER` execution pieces.
 
-- **Name (always capitalized, always the same):** The 14-Day Launch Method
-- **Positioning line (one-liner that follows the name):** The operator-led method replacing accelerators, courses, and raw AI.
-- **Old-way / new-way frame:** the old way is a year of courses, an accelerator seat, or a raw-AI rabbit hole. The new way is one live morning inside The 14-Day Launch Method — an operator running a proven playbook, first customer named, first channel open, revenue in two weeks.
-- **Movement language to sprinkle (not overuse):** "quietly taking over," "modern founders are using," "the method behind the momentum."
+Verdict: the 34 assets teach founders how to **think** about a startup, but several concrete pieces required to actually **take money in 14 days** are missing or implied but not delivered. Below is what holds up, what's soft, and what to add.
 
-## Language rules for this pass
+## What already carries weight (keep as-is)
+- **Foundation** — Exec Summary, Vision, Problem/Solution, Value Prop. Solid one-page story.
+- **Strategy** — Market, Personas, Positioning, GTM, Messaging. Complete.
+- **Brand (bonus)** — Strategy → Messaging → Visual → Voice → Guidelines. Complete system.
+- **BUILD_LAYER** covers brand, website, social, content engine, AI ops, 16-email nurture, sales script, entity/contracts/books.
 
-- Replace generic "framework" copy with **The 14-Day Launch Method** where it's positioning the offer. Keep the word "framework" only where it describes a *component inside* the method (e.g. "the pricing framework we run in the room") — never as the top-level thing being sold.
-- Kill weak stand-ins: "a real framework," "a proven system," "our process," "our method" → replace with the named phrase.
-- Never say "template." (Existing rule.)
-- Never say "business" in place of "startup" in user-facing copy. (Existing rule.)
-- Every hero, sub-hero, and primary CTA block on marketing pages should reference the Method by name at least once.
+## Gaps that block a real 14-day launch
 
-## Files to rewrite (full unification pass)
+### 1. Foundation — missing the sprint itself
+- **14-Day Launch Plan (day-by-day)** — the calendar that sequences the other 34 assets into 14 dated blocks with owner, output, and "definition of done." Without this, the method is a promise, not a plan.
 
-**Marketing pages — hero + sub-hero + CTA blocks:**
-- `src/components/home/HomeFramework.tsx` — lead hero, framework section, CTA band. Method named in the eyebrow and again in the CTA.
-- `src/components/register/RegisterFramework.tsx` — rewrite the "what you're registering for" language around the Method.
-- `src/routes/webinar.tsx` — hero, HIGHLIGHTS array, cohort card copy.
-- `src/routes/one-on-one.tsx` — reframe as "The 14-Day Launch Method, run one-on-one with Adam."
-- `src/routes/services.tsx` — position agency services as "the same assets we ship inside The 14-Day Launch Method."
-- `src/routes/build.tsx` and `src/routes/build.$slug.tsx` — subhead + CTA.
-- `src/routes/schedule.tsx` — intro paragraph.
-- `src/routes/facilitator.tsx` shell (via components below).
+### 2. Strategy — no path to the first buyer
+- **First-50 Warm List** — named prospects with contact, angle, and ask. This is the difference between "we have a persona" and "we have a pipeline on day 3."
+- **Pre-Sell Offer / Waitlist Test** — a 48-hour validation offer (deposit, LOI, or paid pilot) that proves demand *before* the site ships.
 
-**Facilitator surface:**
-- `src/components/facilitator/FacilitatorHero.tsx`
-- `src/components/facilitator/FacilitatorStory.tsx`
-- `src/components/facilitator/FacilitatorPillars.tsx`
-- `src/components/facilitator/FacilitatorAudience.tsx`
-- `src/components/facilitator/FacilitatorCTA.tsx`
+### 3. Operations — nothing on delivering the first sale
+- **Fulfillment SOP** — how order #1 through #10 actually gets delivered, step by step, with time and cost per unit.
+- **Customer Support Starter** — inbox, response SLA, canned replies, refund/return rules. Day-15 problems that must be answered on day 14.
 
-**Shared UI copy:**
-- `src/components/home/AccessModeDialog.tsx` — three formats framed as "three ways to run The 14-Day Launch Method."
-- `src/components/site/Header.tsx` — only if a tagline/nav label references "framework."
+### 4. Finance — the money can't actually move
+- **Payments & Checkout Setup** — Stripe/Square account, tax, payout, receipts, one live checkout link. Today there's a Financial Model but no way to *collect*.
+- **Business Bank + Bookkeeping Starter** — bank account opened, card issued, books tool connected, chart of accounts seeded.
+- **Pricing Page & Offer Sheet** — packaged tiers, terms, what's included, what's not — the artifact the checkout link points at.
 
-**Meta + concierge:**
-- `index.html` — `<title>`, `<meta name="description">`, `og:title`, `og:description`, `twitter:title`, `twitter:description` all lead with the Method name and positioning line.
-- `src/lib/chatbot-knowledge.ts` and `supabase/functions/venture-chatbot/knowledge.ts` — teach the concierge the name, the one-liner, and the old-way/new-way framing so every bot answer reinforces it.
+### 5. Governance — bankable ≠ transactable
+- **Terms of Service, Privacy Policy, Refund Policy** — required by Stripe, app stores, and any B2B buyer's procurement. Legal Structure Brief covers entity, not customer-facing policy.
+- **Insurance Starter** — GL/E&O quote and bind path; landlords, venues, and enterprise buyers ask on day one.
+- **Contractor / 1099 Kit** — MSA, SOW, W-9, IP assignment. First hire is almost always a contractor.
 
-## Explicitly out of scope
+### 6. Marketing — the site can ship but can't be measured or found
+- **Domain, Email, DNS Checklist** — domain purchase, Google Workspace, SPF/DKIM/DMARC, support@ alias. The Website PRD assumes these exist.
+- **Analytics & Pixel Setup** — GA4, Meta/TikTok pixel, conversion events, UTM convention. Without this, the paid ads starter has nothing to optimize against.
+- **Landing Page / Waitlist Test** — a one-page offer test that runs *before* the full site, so paid ads and warm outreach have a destination on day 4, not day 12.
 
-- Workshop slide components under `src/components/workshop-slides/` — internal, in-room use.
-- Dashboard / authenticated routes under `src/routes/_authenticated/`.
-- Admin routes.
-- `src/lib/framework-deliverables.ts`, `src/lib/workflow.ts`, `src/lib/business-ideas.ts`, `src/lib/schedule-data.ts` — data/logic, not marketing voice.
-- Legal pages (`terms.tsx`, `privacy.tsx`).
+### 7. Social & Content — attention without proof
+- **Reviews & Testimonials Capture Kit** — request templates, Google/Yelp/G2 links, video ask script, wall-of-love page. Traction dies without social proof by week two.
+- **Outbound DM / Email Scripts** — cold-warm scripts tied to the First-50 list above. Content Calendar handles inbound; nothing today handles outbound.
 
-## How I'll write the copy
+## Recommended additions (12 new assets)
 
-- Every marketing hero gets the same shape: **eyebrow** ("The 14-Day Launch Method") → **headline** (outcome, not feature) → **sub** (old way vs. new way, one sentence) → **CTA** (verb + Method).
-- Concrete over vague: "first paying customer in 14 days," "offer priced by lunch," "outreach going out that afternoon" — never "get results faster."
-- One repeated closer across pages: *Not another course. Not raw AI. The operator-led method replacing both.*
-- No emoji, no hype adjectives ("revolutionary," "game-changing"). The name + the specificity is the marketing.
+| # | Stage | New deliverable |
+|---|-------|-----------------|
+| 1 | Foundation | 14-Day Launch Plan (day-by-day) |
+| 2 | Strategy | First-50 Warm List |
+| 3 | Strategy | Pre-Sell Offer / Waitlist Test |
+| 4 | Operations | Fulfillment SOP |
+| 5 | Operations | Customer Support Starter |
+| 6 | Finance | Payments & Checkout Setup |
+| 7 | Finance | Business Bank + Bookkeeping Starter |
+| 8 | Finance | Pricing Page & Offer Sheet |
+| 9 | Governance | ToS / Privacy / Refund Policy Pack |
+| 10 | Governance | Insurance Starter |
+| 11 | Governance | Contractor / 1099 Kit |
+| 12 | Marketing | Domain, Email, DNS Checklist |
+| 13 | Marketing | Analytics & Pixel Setup |
+| 14 | Marketing | Landing Page / Waitlist Test |
+| 15 | Social & Content | Reviews & Testimonials Capture Kit |
+| 16 | Social & Content | Outbound DM / Email Scripts |
 
-## Verification
+(That's 16 candidate adds — cut, merge, or defer any you don't want promoted to the marketing framework.)
 
-After the rewrite I'll grep for stray uses of "a framework," "our framework," "the framework," "a proven system," and "our method" in the files above to confirm nothing generic slipped through, and confirm `index.html` meta + chatbot knowledge both lead with the Method name.
+## Proposed next step
+1. You approve the list (or edit it down).
+2. I'll add the accepted items to `FRAMEWORK_STAGES` in `src/lib/framework-deliverables.ts` with icon, title, and the same tooltip voice as the existing 34.
+3. Mirror the additions in `venture_document_types` migration + chatbot knowledge so the DB, dashboard, and bot stay in sync.
+4. Update the homepage/register counts (currently derived from `TOTAL_DELIVERABLES`, so this is automatic) and any hard-coded "34" references — I'll grep and fix.
+
+## Out of scope for this pass
+- Redesigning stage order or renaming stages.
+- Rewriting existing tooltips.
+- Touching workshop pricing, session structure, or curriculum data.

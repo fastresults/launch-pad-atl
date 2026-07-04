@@ -37,8 +37,25 @@ import {
   TrendingUp,
   Zap,
   Mail,
+  CalendarClock,
+  ListChecks,
+  Beaker,
+  Package,
+  LifeBuoy,
+  CreditCard,
+  Building2,
+  Tag,
+  FileCheck,
+  Umbrella,
+  FileSignature,
+  AtSign,
+  Activity,
+  MousePointerClick,
+  MessageSquareQuote,
+  Send,
   type LucideIcon,
 } from "lucide-react";
+
 
 
 export const WORKSHOP_PRICE_CENTS = 29700;
@@ -74,6 +91,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Eye, title: "Vision & Mission", tooltip: "The north-star statement that keeps every decision pointed the same direction. You'll stop chasing every shiny idea, say no faster, and rally future teammates and customers around a story they actually want to be part of." },
       { icon: AlertCircle, title: "Problem / Solution Brief", tooltip: "A crisp account of the painful problem you solve and exactly how your offer removes it. You'll talk about your business in plain language that makes customers nod, buy faster, and tell their friends without you scripting it." },
       { icon: Sparkles, title: "Value Proposition", tooltip: "The single sentence that explains why a customer should pick you over every alternative — including doing nothing. Drop it on your website, in your pitch, on your business card, and watch conversion and referrals climb immediately." },
+      { icon: CalendarClock, title: "14-Day Launch Plan", tooltip: "The dated, day-by-day sprint that sequences every other asset into fourteen blocks — owner, output, and 'done' for each. You'll stop wondering what to do tomorrow morning and start every day of the launch knowing exactly which move ships revenue." },
     ],
   },
   {
@@ -87,6 +105,8 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Crosshair, title: "Competitive Positioning", tooltip: "An honest map of who else is in the ring and the wedge only you can own. You'll stop competing on price, win the comparison conversation, and give customers a reason to choose you that competitors can't copy." },
       { icon: Rocket, title: "Go-to-Market Plan", tooltip: "The exact sequence of channels, offers, and moves that get you from zero to your first paying customers. No more wondering what to do Monday — you walk out with the first ninety days mapped step by step." },
       { icon: MessageSquare, title: "Brand & Messaging", tooltip: "The core message, tone, and proof points that make your brand feel like one voice everywhere. Your site, social, sales calls, and packaging finally line up — and customers start describing you the way you want to be described." },
+      { icon: ListChecks, title: "First-50 Warm List", tooltip: "Fifty named prospects you can actually reach — with contact, angle, and the specific ask for each. You'll walk out of day two with a pipeline instead of a persona, and your first customer conversations start the same afternoon." },
+      { icon: Beaker, title: "Pre-Sell Offer & Waitlist Test", tooltip: "A forty-eight-hour validation offer — deposit, LOI, or paid pilot — that proves real demand before the full site ships. You'll spend the rest of the sprint building for buyers you've already met, not customers you hope show up." },
     ],
   },
   {
@@ -99,6 +119,8 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Settings, title: "Operating Plan", tooltip: "The week-by-week workflow that turns your offer into something you can deliver reliably. You'll stop reinventing every order, free up hours each week, and have something a future hire can actually be trained to run." },
       { icon: Handshake, title: "Sales Playbook", tooltip: "A repeatable script — discovery questions, objections, asks, closes — that moves a stranger to a signed deal. Close more conversations, stop discounting under pressure, and bring on help knowing the system will close without you." },
       { icon: Megaphone, title: "Marketing Plan", tooltip: "Your channels, monthly spend, content cadence, and the metrics that tell you what's working. Marketing stops being a guessing game; you spend dollars where they return dollars and quietly turn off everything that doesn't." },
+      { icon: Package, title: "Fulfillment SOP", tooltip: "The step-by-step of how order number one through ten actually gets delivered — with time and cost per unit. You'll ship the first sale without scrambling, know your true margin, and hand fulfillment to a teammate without the business breaking." },
+      { icon: LifeBuoy, title: "Customer Support Starter", tooltip: "A shared support inbox, response SLA, canned replies, and refund and return rules — ready before day fifteen problems arrive. You'll answer the first customer question inside an hour and never lose a buyer to silence." },
     ],
   },
   {
@@ -112,6 +134,9 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Banknote, title: "Funding Strategy", tooltip: "A clear-eyed plan for how you'll fund the business — bootstrap, savings, grants, a loan, friends and family, or investors. You'll stop chasing the wrong kind of money and pursue the cheapest capital that actually fits." },
       { icon: ClipboardList, title: "Budget & Pro Forma", tooltip: "A line-by-line budget and forecast tied to real assumptions about your market and pricing. You'll walk into a bank, an SBA meeting, or a landlord conversation with the document they expect — and be taken seriously immediately." },
       { icon: Presentation, title: "Pitch Deck Outline", tooltip: "A tight slide-by-slide outline of the story that gets a partner, investor, or first big customer to lean in. You'll stop rebuilding decks from scratch and have a narrative spine you reuse for every important conversation." },
+      { icon: CreditCard, title: "Payments & Checkout Setup", tooltip: "A live Stripe account, tax and payout wired, receipts branded, and one working checkout link tied to your offer. You'll actually collect money on day fourteen instead of promising invoices you can't send." },
+      { icon: Building2, title: "Business Bank & Bookkeeping Starter", tooltip: "Business bank account opened, debit card in hand, books tool connected, and a clean chart of accounts seeded to your model. You'll separate personal and business from dollar one and never dread tax season again." },
+      { icon: Tag, title: "Pricing Page & Offer Sheet", tooltip: "Your packaged tiers, terms, what's included, and what's not — the artifact your checkout link points at and your sales conversations close against. You'll stop negotiating from scratch and start protecting your margin on every deal." },
     ],
   },
   {
@@ -123,6 +148,9 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Scale, title: "Legal Structure Brief", tooltip: "A plain-English recommendation on entity, ownership, and the contracts you actually need on day one. You'll set up the business correctly the first time, protect your personal assets, and avoid the legal cleanup bills founders pay later." },
       { icon: ShieldAlert, title: "Risk Register", tooltip: "An honest list of what could derail the business — and the specific moves that defuse each one. You'll sleep better, get insurance priced right, and stop being blindsided by the predictable problems every small business hits." },
       { icon: Landmark, title: "Board & Governance Plan", tooltip: "A lightweight structure for advisors, mentors, or partners who hold you accountable and open doors. You'll get smarter outside counsel in the room, make faster decisions, and look credible to banks, investors, and serious customers." },
+      { icon: FileCheck, title: "Terms, Privacy & Refund Pack", tooltip: "The customer-facing legal set every checkout, app store, and enterprise buyer expects — terms of service, privacy policy, and refund policy tuned to your offer. You'll pass Stripe review, procurement, and app review the first time." },
+      { icon: Umbrella, title: "Insurance Starter", tooltip: "A general-liability and errors-and-omissions quote path with the exact coverage your buyers, landlords, and venues ask about. You'll answer the first COI request the same day and stop losing enterprise deals to a missing certificate." },
+      { icon: FileSignature, title: "Contractor & 1099 Kit", tooltip: "Master services agreement, statement of work, W-9, and IP assignment — ready to send to your first contractor before they touch anything. You'll hire fast, protect the work you're paying for, and file cleanly at year-end." },
     ],
   },
   {
@@ -147,6 +175,9 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     benefit: "A complete website PRD ready to hand to an AI builder — launch a revenue-ready site in a weekend instead of paying $20K and waiting three months.",
     items: [
       { icon: Globe, title: "Website PRD (AI-builder prompt)", tooltip: "A complete product requirements document — pages, copy, sections, calls to action — written so an AI builder can ship your site in a weekend. You'll skip the $20K agency quote and launch a real revenue-ready website fast." },
+      { icon: AtSign, title: "Domain, Email & DNS Checklist", tooltip: "Domain purchased, business email live, SPF, DKIM, and DMARC set — and a support alias routed to the right person. Your outreach lands in inboxes instead of spam, and you look like a real company from your very first email." },
+      { icon: Activity, title: "Analytics & Pixel Setup", tooltip: "GA4, the ad pixels your channels need, conversion events, and a UTM convention wired before you spend a dollar. You'll know what actually converted, cut ad spend that doesn't pay back, and double down on the channels that do." },
+      { icon: MousePointerClick, title: "Landing Page & Waitlist Test", tooltip: "A one-page offer test live by day four — before the full site — so paid ads and warm outreach have a destination while you finish building. You'll validate the hook, collect emails, and turn early clicks into paying customers." },
     ],
   },
   {
@@ -163,6 +194,8 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Heart, title: "Community Engagement Playbook", tooltip: "The simple rules and templates for replies, DMs, reviews, and customer moments that turn followers into fans. You'll spend less time agonizing over what to say and build the kind of word-of-mouth that no ad budget can buy." },
       { icon: Star, title: "Influencer & Partnership Brief", tooltip: "A short brief you can send to local influencers, complementary brands, or community partners. You'll unlock collaborations that put you in front of warm audiences for free — instead of paying for cold ads to strangers who don't know you." },
       { icon: Target, title: "Paid Ads Starter Pack", tooltip: "A starter set of ad targets, hooks, and budgets tuned to your offer and your buyer. You'll launch your first paid campaign without burning rent money, learn fast what converts, and scale only what actually pays back." },
+      { icon: MessageSquareQuote, title: "Reviews & Testimonials Capture Kit", tooltip: "Request templates, direct links to Google, Yelp, or G2, a video-ask script, and a wall-of-love page ready to embed. You'll turn every happy first customer into public proof — and stop losing week-two buyers who need to see someone went before them." },
+      { icon: Send, title: "Outbound DM & Email Scripts", tooltip: "Cold and warm outreach scripts tied directly to your First-50 list — opener, follow-up, and the specific ask. You'll actually work the pipeline instead of hoping content does it for you, and book the first sales calls in week one." },
     ],
   },
 ];
