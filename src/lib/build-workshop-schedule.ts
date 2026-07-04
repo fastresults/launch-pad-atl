@@ -144,8 +144,8 @@ export function getUpcomingSessions(
       const day = d.getUTCDate();
       const startISO = toEtIso(year, month, day, rule.startTime);
       const endISO = toEtIso(year, month, day, rule.endTime);
-      // Drop sessions whose end time has already passed.
-      if (new Date(endISO).getTime() < now.getTime()) continue;
+      // Drop sessions the moment they start.
+      if (new Date(startISO).getTime() <= now.getTime()) continue;
       sessions.push({
         startISO,
         endISO,
