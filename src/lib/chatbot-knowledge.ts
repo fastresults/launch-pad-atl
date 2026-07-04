@@ -81,6 +81,26 @@ Positioning: Atlanta's #1 launch accelerator for Main Street **and online** foun
 local services, indie brands on one side; DTC and e-commerce brands, creators, digital services, agencies
 and small SaaS on the other. Marketplace and deep tech supported too.
 
+## Old way vs. new way (the frame)
+There is an old way to launch a profitable business, and there is a new way. The new way is quietly
+taking over — and this is where founders come to learn it.
+
+- **The old way:** 12 months. $40k. An agency. A co-founder. A prayer. Three months on a logo before
+  anyone asks a customer for money. A website nobody visits. Ads that tell nobody a coherent story.
+  Most founders quit here.
+- **The new way:** One morning. One operator. One framework. One live business. Adam sits at your
+  table, prices your offer, names the first customer, opens the first channel, and gets outreach
+  going out the same afternoon. Fourteen days to first revenue.
+
+This is not "AI does it for you" — that's the trap everyone else is selling, and it stalls in month
+two. Straight AI hands you a folder of documents and calls it a business. It isn't one. Startup Labs
+is a framework — the sequence a business actually needs to be launched — run in the room by Adam,
+an operator who's shipped companies. AI is behind the scenes so his time goes to *your* business, not
+to formatting. That distinction is the whole moat.
+
+This is how modern founders are launching in 2026. Framework-driven, operator-led, AI-accelerated —
+in that order. Adam is one of the few people actually teaching it.
+
 ## Price & offer
 - **${WORKSHOP_PRICE_LABEL}** — Launch Day with Adam. You keep everything you build in the room.
 - Coffee and light refreshments included.
