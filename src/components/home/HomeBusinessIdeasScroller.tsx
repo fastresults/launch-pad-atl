@@ -20,18 +20,27 @@ const CATEGORY_LABEL: Record<BusinessCategory, string> = {
 
 function IdeaCard({ idea }: { idea: BusinessIdea }) {
   return (
-    <div className="group/idea relative w-[280px] shrink-0 rounded-xl border border-primary/15 bg-gradient-to-br from-card to-card/40 p-4 shadow-sm transition-colors hover:border-primary/40 sm:w-[320px]">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-primary">
+    <div className="group/idea relative w-[300px] shrink-0 overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-br from-card to-card/40 shadow-sm transition-colors hover:border-primary/40 sm:w-[340px]">
+      <div className="relative aspect-video w-full overflow-hidden bg-muted">
+        <img
+          src={idea.image}
+          alt={idea.name}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover/idea:scale-105"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/90 via-card/10 to-card/40" />
+        <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-primary/40 bg-background/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-primary backdrop-blur">
           {CATEGORY_LABEL[idea.category]}
         </span>
-        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+        <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full border border-border/50 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-foreground backdrop-blur">
           <TrendingUp className="h-3 w-3" />
           {idea.incomePotential}
         </span>
       </div>
-      <h4 className="mb-1 text-sm font-semibold leading-snug text-foreground">{idea.name}</h4>
-      <p className="line-clamp-2 text-xs text-muted-foreground">{idea.offer}</p>
+      <div className="p-4">
+        <h4 className="mb-1 text-sm font-semibold leading-snug text-foreground">{idea.name}</h4>
+        <p className="line-clamp-2 text-xs text-muted-foreground">{idea.offer}</p>
+      </div>
     </div>
   );
 }
