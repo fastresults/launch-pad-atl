@@ -41,13 +41,17 @@ export function SectionHeader({
   const accentStyle = { color: `hsl(var(${meta.accentVar}))` } as React.CSSProperties;
   const accentBarStyle = { backgroundColor: `hsl(var(${meta.accentVar}))` } as React.CSSProperties;
   const chipStyle = {
-    backgroundColor: `hsl(var(${meta.accentVar}) / 0.12)`,
+    backgroundColor: `hsl(var(${meta.accentVar}) / 0.18)`,
     color: `hsl(var(${meta.accentVar}))`,
-    borderColor: `hsl(var(${meta.accentVar}) / 0.3)`,
+    borderColor: `hsl(var(${meta.accentVar}) / 0.35)`,
   } as React.CSSProperties;
   const progressFillStyle = {
     width: `${pct}%`,
     backgroundColor: `hsl(var(${meta.accentVar}))`,
+  } as React.CSSProperties;
+  const containerStyle = {
+    backgroundImage: `linear-gradient(90deg, hsl(var(${meta.accentVar}) / 0.10), hsl(var(${meta.accentVar}) / 0.03) 55%, hsl(var(--card) / 0.6))`,
+    borderColor: `hsl(var(${meta.accentVar}) / 0.25)`,
   } as React.CSSProperties;
 
   return (
