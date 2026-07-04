@@ -1,11 +1,15 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveUserId } from "@/lib/effective-user";
 
 async function uid() {
-  const user = (await supabase.auth.getUser()).data.user;
-  if (!user) throw new Error("You must be signed in to upload media.");
-  return user.id;
+  try {
+    return await getEffectiveUserId();
+  } catch {
+    throw new Error("You must be signed in to upload media.");
+  }
 }
+
 
 type Scope = "master" | "user";
 
