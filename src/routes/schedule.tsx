@@ -55,17 +55,18 @@ export default function SchedulePage() {
             Idea in. <span className="text-gradient-brand">Launch plan out.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
-            The Strategic Foundation Workshop is one morning. Four working stages. By 11:30 AM
-            you walk out with the full plan in your hands and a signed, dated 90-day playbook
-            for what to do next.
+            The Strategic Foundation Workshop is one morning. Five pillars — Foundation to
+            Governance — plus three bonus tracks (Brand, Marketing, Social &amp; Content)
+            queued to your dashboard. By 11:30 AM you walk out with all five pillars done and
+            the same framework live on your dashboard for what comes next.
           </p>
 
           {/* Stat ribbon */}
           <div className="mt-8 grid grid-cols-1 gap-3 border-t border-white/10 pt-6 sm:grid-cols-3 md:mt-10 md:pt-8">
             {[
               { stat: "2h 45m", label: "working time" },
-              { stat: "4 stages", label: "idea → plan" },
-              { stat: "6 things done", label: "before lunch" },
+              { stat: "5 pillars", label: "done in the room" },
+              { stat: "+ 3 bonus", label: "queued on dashboard" },
             ].map((s) => (
               <div
                 key={s.label}
