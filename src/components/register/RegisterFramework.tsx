@@ -18,6 +18,7 @@ import {
 } from "@/lib/framework-deliverables";
 import { getBuildWorkshop } from "@/lib/build-workshops";
 import { ArrowRight, Check, CheckCircle2, Sparkles, CalendarDays } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const FormSchema = z.object({
   name: z.string().trim().min(1, "Please enter your name").max(120),
