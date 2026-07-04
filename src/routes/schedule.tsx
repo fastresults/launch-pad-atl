@@ -56,17 +56,18 @@ export default function SchedulePage() {
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
             The Strategic Foundation Workshop is one morning. Five pillars — Foundation to
-            Governance — plus three bonus tracks (Brand, Marketing, Social &amp; Content)
-            queued to your dashboard. By 11:30 AM you walk out with all five pillars done and
-            the same framework live on your dashboard for what comes next.
+            Governance — plus three bonus tracks (Brand, Marketing, Social &amp; Content). By
+            11:30 AM you walk out with all five pillars done and up to <strong className="text-foreground">30 AI-generated ship-ready documents</strong>{" "}
+            (PDFs, DOCX, XLSX, CSV, PNG) waiting in your dashboard — produced live by workshop
+            staff and released before you leave the room.
           </p>
 
           {/* Stat ribbon */}
           <div className="mt-8 grid grid-cols-1 gap-3 border-t border-white/10 pt-6 sm:grid-cols-3 md:mt-10 md:pt-8">
             {[
               { stat: "2h 45m", label: "working time" },
-              { stat: "5 pillars", label: "done in the room" },
-              { stat: "+ 3 bonus", label: "queued on dashboard" },
+              { stat: "5 pillars", label: "+ 3 bonus tracks shipped" },
+              { stat: "~30 docs", label: "AI-generated to your dashboard" },
             ].map((s) => (
               <div
                 key={s.label}
