@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,6 +16,7 @@ import {
   WORKSHOP_PRICE_CENTS,
   WORKSHOP_PRICE_LABEL,
 } from "@/lib/framework-deliverables";
+import { getBuildWorkshop } from "@/lib/build-workshops";
 import { ArrowRight, Check, CheckCircle2, Sparkles, CalendarDays } from "lucide-react";
 
 const FormSchema = z.object({
