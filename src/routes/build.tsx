@@ -21,7 +21,7 @@ export default function BuildIndexPage() {
             <span className="text-gradient-brand">Grow it the new way — one morning at a time.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            The old way to grow was hire an agency and hope. The new way is Adam's operators, working the same framework that launched you. Eight half-day sessions — <span className="text-foreground">$197 each</span> — that build the layers turning a launched business into a growing one. Brand. Site that converts. Content engine. Sales script. Automations. DIY each one with Adam in the room, or hand it to the team that would otherwise charge you $5K+.
+            Old way: hire a $10k/month agency, wait a quarter, hope the retainer earns its keep. New way: eight half-day sessions with Adam — <span className="text-foreground">$197 each</span> — working the same framework that launched you. One morning, one layer, live by lunch. Brand. A site that converts. Content engine. Sales script. Automations. Ship each one yourself with Adam in the room, or hand it to the team that would otherwise bill you $5K+ for the same work.
           </p>
         </div>
       </section>
