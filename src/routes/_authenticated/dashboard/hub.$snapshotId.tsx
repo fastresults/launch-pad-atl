@@ -1241,9 +1241,31 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       )}
 
       {/* Document list */}
-      <div className="space-y-1">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your documents</h3>
-        <p className="text-xs text-muted-foreground">Sections unlock in order. Use the per-section button to generate a whole section at once, or hit Generate on any single document.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your documents</h3>
+          <p className="text-xs text-muted-foreground">Sections unlock in order. Use the per-section button to generate a whole section at once, or hit Generate on any single document.</p>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 px-2 text-xs text-muted-foreground"
+            onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, true])))}
+          >
+            <ChevronsUpDown className="mr-1 h-3 w-3" />
+            Expand all
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 px-2 text-xs text-muted-foreground"
+            onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, false])))}
+          >
+            <ChevronsDownUp className="mr-1 h-3 w-3" />
+            Collapse all
+          </Button>
+        </div>
       </div>
 
       {/* Category stepper */}
