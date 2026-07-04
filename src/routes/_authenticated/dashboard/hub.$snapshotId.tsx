@@ -53,6 +53,7 @@ const BRAND_KIT_REQUIRED_TYPES = new Set<string>(["website_prd"]);
 import { SocialStudio } from "@/components/hub/SocialStudio";
 import { ContentStudio } from "@/components/hub/ContentStudio";
 import { FounderRoadmapCard } from "@/components/hub/FounderRoadmapCard";
+import { LaunchPlanner14Day } from "@/components/hub/LaunchPlanner14Day";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
 import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
 import {
