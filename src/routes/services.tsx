@@ -2,14 +2,11 @@ import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 
-import { AGENCY_SERVICES, AGENCY_TRACKS, getAgencyService } from "@/lib/agency-services";
-import { getBuildWorkshop } from "@/lib/build-workshops";
+import { AGENCY_TRACKS, getAgencyService } from "@/lib/agency-services";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import {
   ArrowRight,
-  Check,
   Sparkles,
-  Clock,
   Award,
   Compass,
   FileText,
@@ -22,7 +19,7 @@ export default function ServicesPage() {
     <div className="min-h-screen">
       <SiteHeader />
       <Hero />
-      <CapabilityGrid />
+      
       <Tracks />
       <Process />
       <Proof />
@@ -74,85 +71,6 @@ function Hero() {
   );
 }
 
-/* ─────────────── Capability ↔ Service grid ─────────────── */
-
-function CapabilityGrid() {
-  return (
-    <section className="py-16 md:py-24">
-      <div className="mx-auto max-w-6xl px-6">
-        <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          The eight capabilities, built for you
-        </p>
-        <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-          Same eight capabilities as the workshops.{" "}
-          <span className="text-gradient-brand">Shipped — not taught.</span>
-        </h2>
-        <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Every card below is the same scope a workshop hands you the strategy, frameworks, and tool stack to build yourself (from $197). Hire us when you'd rather own the result than the learning curve.
-        </p>
-
-        <div className="mt-10 grid gap-5 md:grid-cols-2">
-          {AGENCY_SERVICES.map((s) => {
-            const Icon = s.icon;
-            return (
-              <div
-                key={s.slug}
-                className="group flex flex-col rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-primary/40 md:p-7"
-              >
-                <div className="mb-4 flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-xl border border-primary/30 bg-primary/10 p-2.5">
-                      <Icon className="size-5 text-primary" />
-                    </div>
-                    <h3 className="text-xl font-semibold tracking-tight md:text-2xl">
-                      {s.capability}
-                    </h3>
-                  </div>
-                  <span className="shrink-0 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                    <Clock className="mr-1 inline size-3" />
-                    {s.timelineLabel}
-                  </span>
-                </div>
-
-                <p className="text-base text-muted-foreground">{s.oneLiner}</p>
-
-                <ul className="mt-5 space-y-2 text-sm">
-                  {s.deliverables.map((d) => (
-                    <li key={d} className="flex items-start gap-2">
-                      <Check className="mt-0.5 size-4 shrink-0 text-primary" />
-                      <span>{d}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-5">
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.18em] text-primary">
-                      {s.priceLabel}
-                    </div>
-                    <Link
-                      to={s.workshopHref}
-                      className="mt-1 inline-block text-xs text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      Or DIY it — {getBuildWorkshop(s.slug)?.priceLabel ?? "$197"} workshop (strategy + tools + process) →
-                    </Link>
-                  </div>
-                  <Link
-                    to={s.ctaHref}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm font-medium transition-colors hover:bg-white/10"
-                  >
-                    Scope it
-                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 /* ─────────────── Productized tracks ─────────────── */
 
