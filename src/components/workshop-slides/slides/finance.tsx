@@ -36,7 +36,7 @@ const STAGE_QUESTIONS = [
   "When does cash get tight — and what's your plan three months before it does?",
   "What does one customer actually cost to win and earn back?",
   "Which type of capital fits this business — and which would kill it?",
-  "Could you walk into a bank, SBA office, or partner meeting with documents they expect?",
+  "Could you walk into a bank, SBA office, or partner meeting with assets they expect?",
 ];
 
 const DELIV_IMAGES = [

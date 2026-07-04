@@ -33,7 +33,7 @@ const STAGE_BREAKS = [
 ];
 
 const STAGE_QUESTIONS = [
-  "Can you brief a website in one document a builder could ship from?",
+  "Can you brief a website in one asset a builder could ship from?",
   "Do every page and CTA map back to your offer and buyer?",
   "Will the copy sound like your brand on day one — not after rewrites?",
   "Can you launch a revenue-ready site in a weekend, not a quarter?",

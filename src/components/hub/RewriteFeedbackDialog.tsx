@@ -133,7 +133,7 @@ export function RewriteFeedbackDialog({ target, onClose, onSubmit }: Props) {
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Rewrite {target?.name ?? "document"}</DialogTitle>
+          <DialogTitle>Rewrite {target?.name ?? "asset"}</DialogTitle>
           <DialogDescription>
             Tell us what's off and what you'd like changed. The next version will follow your guidance.
           </DialogDescription>

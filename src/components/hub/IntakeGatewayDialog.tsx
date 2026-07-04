@@ -322,10 +322,10 @@ export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: P
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{target?.name ?? "Document"} — quick inputs</DialogTitle>
+          <DialogTitle>{target?.name ?? "Asset"} — quick inputs</DialogTitle>
           <DialogDescription>
             {target?.schema?.description ??
-              "Answer a few quick questions so this document reflects your real numbers, not generic placeholders."}
+              "Answer a few quick questions so this asset reflects your real numbers, not generic placeholders."}
           </DialogDescription>
         </DialogHeader>
 

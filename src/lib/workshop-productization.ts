@@ -277,7 +277,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
       {
         buildMechanic: "Line-by-line pro forma rendered in the format banks and landlords expect.",
         inputs: ["12-Month P&L", "Your market analysis"],
-        takeaway: "You walk into any money conversation with the document they expect.",
+        takeaway: "You walk into any money conversation with the asset they expect.",
       },
       {
         buildMechanic: "10-slide narrative auto-populated from Foundation + Strategy + Financial Model.",
@@ -429,7 +429,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
       {
         buildMechanic: "Continues on dashboard — Brand Guidelines Book assembles from every prior artifact.",
         inputs: ["Everything above"],
-        takeaway: "One document any vendor or new hire can use to stay on brand.",
+        takeaway: "One asset any vendor or new hire can use to stay on brand.",
       },
     ],
   },
