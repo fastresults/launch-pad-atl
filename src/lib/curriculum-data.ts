@@ -31,9 +31,11 @@ export const STAGES: Stage[] = [
     summary: "The legal foundation. Leave with a filing-ready packet and the legal kit you need to sell.",
     oneLiner: "Legal foundation",
     takeHome:
-      "Your state LLC filing packet, EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding model with 12-month runway, a business plan with pro formas, an investor-ready pitch deck, and a fundraising kit ready to send. File Monday, start taking money the same week.",
+      "Your state formation packet (LLC, S-Corp election, or Sole Proprietor — whichever fits), EIN application, and signed legal kit (Terms, Privacy, Service Agreement) — all customized to your business and ready to submit, plus a funding model with 12-month runway, a business plan with pro formas, an investor-ready pitch deck, and a fundraising kit ready to send. File Monday, start taking money the same week.",
     walkOut: [
-      "Articles of Organization pre-filled in your Secretary of State account (all 50 states supported)",
+      "Formation documents pre-filled in your state's filing agency account — Articles of Organization or Certificate of Formation, whichever your state uses (all 50 states supported)",
+      "Structure recommendation — LLC, S-Corp election, or Sole Proprietor — matched to your revenue and salary plans",
+      "Operating Agreement drafted for your members and ownership split",
       "EIN application completed and submitted — number issued in the session",
       "Business-bank shortlist + bank application checklist filled for your business",
       "Terms of Service, Privacy Policy, and 1-page Service Agreement customized to your business",
@@ -45,28 +47,28 @@ export const STAGES: Stage[] = [
     ],
 
     afterWorkshop: [
-      "Submit the Articles + filing fee from home (about 10 minutes)",
+      "Submit your state's formation document + filing fee from home (about 10 minutes — skip if you chose Sole Proprietor)",
       "Open the business bank account (1–7 days after you apply)",
       "File local business license and sales-tax registration once the entity is approved",
     ],
     duration: "60 min",
-    covers: ["State LLC packet", "EIN", "T&Cs / privacy", "Service agreement"],
+    covers: ["Entity structure", "State formation packet", "EIN", "Operating agreement", "T&Cs / privacy", "Service agreement"],
     tasks: [
       {
-        title: "Choose structure & prepare your state LLC filing",
+        title: "Choose your structure & prepare your state formation packet",
         deliverable:
-          "Your filing packet for your business: name confirmed available, registered agent chosen, member info entered, Secretary of State account created, Articles of Organization pre-filled.",
-        tool: "Secretary of State filing walk-through (all 50 states)",
+          "Your state-specific packet: structure chosen (LLC, S-Corp, or Sole Proprietor), name confirmed available, registered agent selected, member info entered, Secretary of State account created, and your state's formation document (Articles of Organization or Certificate of Formation) pre-filled.",
+        tool: "Secretary of State filing walk-through — all 50 states, LLC / S-Corp / Sole Prop",
         details: [
-          "Pick LLC vs sole prop vs S-corp using a 5-question decision tree",
+          "Pick LLC vs Sole Proprietor vs S-Corp election using a 5-question decision tree tuned to your revenue and salary plans",
           "Confirm name availability on your state's SOS business search",
           "Decide registered agent (you, partner, or paid service)",
-          "Create your state SOS account and pre-fill the Articles of Organization",
+          "Create your state SOS account and pre-fill your state's formation document (Articles of Organization or Certificate of Formation)",
         ],
         takeaway:
-          "Your state LLC filing packet — Articles pre-filled, registered agent set, ready to submit.",
+          "Your state formation packet — structure locked, formation document pre-filled, registered agent set, ready to submit.",
         followUp:
-          "Submit the Articles of Organization and pay the filing fee from home — typically a 10-minute step once you're ready.",
+          "Submit your state's formation document and pay the filing fee from home — typically a 10-minute step (skip if you chose Sole Proprietor).",
       },
       {
         title: "Get your EIN & lock the business bank choice",
