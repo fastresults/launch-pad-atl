@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, AlertTriangle } from "lucide-react";
 import { SlideLayout } from "../SlideLayout";
 import { DeliverableSlide } from "../DeliverableSlide";
 import { SlotText, SlotImage } from "../slots";
-import { buildProductizationSlides } from "../ProductizationSlides";
+import { buildProductizationSlides, mentoredSessionSlide } from "../ProductizationSlides";
 import type { Slide } from "../SlideDeck";
 
 const STAGE = FRAMEWORK_STAGES[1]; // Strategy
@@ -12,8 +12,8 @@ const PROD = STAGE_PRODUCTIZATION["strategy"];
 const KICKER = `${STAGE.number} · ${STAGE.name.toUpperCase()}`;
 const TOTAL_STAGES = FRAMEWORK_STAGES.length;
 const TOTAL_DELIVS = STAGE.items.length;
-// 5 overview + 4 productization + N per-deliverable + 1 recap
-const TOTAL_SLIDES = 5 + 4 + TOTAL_DELIVS + 1;
+// 5 overview + 1 mentored-session + 4 productization + N per-deliverable + 1 recap
+const TOTAL_SLIDES = 6 + 4 + TOTAL_DELIVS + 1;
 
 const pl = (i: number) => `${i} / ${TOTAL_SLIDES}`;
 
@@ -309,6 +309,7 @@ export const strategySlides: Slide[] = [
   },
 
   // 6..9 — Productization slides (Build tool · Live worksheet · Ship-ready artifact · Take-home kit)
+  mentoredSessionSlide("strategy", KICKER, PROD, pl),
   ...buildProductizationSlides("strategy", KICKER, PROD, pl, FRAMEWORK_STAGES[2]?.name),
 
   // 10..(9+N) — one slide per deliverable
@@ -320,7 +321,7 @@ export const strategySlides: Slide[] = [
       render: () => (
         <DeliverableSlide
           stageKicker={KICKER}
-          pageLabel={pl(10 + i)}
+          pageLabel={pl(11 + i)}
           index={i + 1}
           total={TOTAL_DELIVS}
           deliverable={item}
