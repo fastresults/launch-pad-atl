@@ -57,6 +57,7 @@ export type FrameworkStage = {
   intro: string;
   items: FrameworkDeliverable[];
   bonus?: boolean;
+  benefit?: string;
 };
 
 // Mirrors the live `venture_document_types` table (active = true, ordered by
