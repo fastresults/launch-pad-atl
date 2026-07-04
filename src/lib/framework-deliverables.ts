@@ -118,6 +118,7 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     number: "05",
     name: "Governance",
     intro: "The legal and risk scaffolding that keeps you bankable.",
+    benefit: "Entity, risk, and advisory scaffolding in place — so you're bankable, insurable, and no longer one bad surprise away from personal exposure.",
     items: [
       { icon: Scale, title: "Legal Structure Brief", tooltip: "A plain-English recommendation on entity, ownership, and the contracts you actually need on day one. You'll set up the business correctly the first time, protect your personal assets, and avoid the legal cleanup bills founders pay later." },
       { icon: ShieldAlert, title: "Risk Register", tooltip: "An honest list of what could derail the business — and the specific moves that defuse each one. You'll sleep better, get insurance priced right, and stop being blindsided by the predictable problems every small business hits." },
