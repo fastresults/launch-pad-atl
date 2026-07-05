@@ -74,7 +74,9 @@ export function LaunchPlanner14Day({
   jobRunning,
   isPhysical = false,
   sourcingOnlyKeys,
+  onOpenDayDeck,
 }: Props) {
+
   const optionalKeys = useMemo(
     () =>
       !isPhysical
