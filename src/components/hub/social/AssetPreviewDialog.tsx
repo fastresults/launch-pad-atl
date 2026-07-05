@@ -251,6 +251,17 @@ export function AssetPreviewDialog({
             {(() => {
               const sz = asset.lastLogoSize;
               const label = sz === "sm" ? "Small" : sz === "lg" ? "Large" : sz === "md" ? "Medium" : "Default (medium)";
+              const composited = asset.qaNotes?.logo_composited;
+              const skipReason: string | undefined = asset.qaNotes?.logo_skipped;
+              const showWarning = composited === false;
+              const warnCopy =
+                skipReason === "svg_unsupported"
+                  ? "SVG logos aren't supported yet — upload a PNG or JPG in Brand Studio › Logo."
+                  : skipReason === "too_large"
+                  ? "Your logo file is over 4 MB — upload a smaller PNG/JPG in Brand Studio › Logo."
+                  : skipReason === "download_failed"
+                  ? "We couldn't fetch your primary logo file — re-upload it in Brand Studio › Logo."
+                  : "No primary brand logo on this kit — image was generated without your mark. Add one in Brand Studio › Logo.";
               return (
                 <div>
                   <div className="flex items-center justify-between">
@@ -271,6 +282,11 @@ export function AssetPreviewDialog({
                     <span className="font-medium">{label}</span>
                     <span className="text-muted-foreground"> — composited over a reserved zone for guaranteed legibility.</span>
                   </div>
+                  {showWarning && (
+                    <div className="mt-1 rounded border border-amber-500/40 bg-amber-500/10 p-2 text-[11px] text-amber-900 dark:text-amber-200">
+                      <span className="font-medium">Logo missing on this image.</span> {warnCopy}
+                    </div>
+                  )}
                 </div>
               );
             })()}
