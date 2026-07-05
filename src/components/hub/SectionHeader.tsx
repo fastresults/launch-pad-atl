@@ -1,4 +1,4 @@
-import { ChevronRight, CheckCircle2, Lock, Loader2, Circle } from "lucide-react";
+import { ChevronRight, CheckCircle2, Lock, Loader2, Circle, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getStageMeta } from "@/lib/stage-meta";
 
@@ -12,6 +12,12 @@ export type SectionHeaderProps = {
   status: "complete" | "in_progress" | "not_started" | "locked" | "generating";
   actions?: React.ReactNode;
   contentId: string;
+  /** Optional overrides — allow non-stage surfaces (studios) to reuse this header */
+  icon?: LucideIcon;
+  label?: string;
+  tagline?: string;
+  accentVar?: string;
+  badges?: React.ReactNode;
 };
 
 const STATUS_META: Record<SectionHeaderProps["status"], { label: string; className: string; Icon: typeof CheckCircle2 }> = {
