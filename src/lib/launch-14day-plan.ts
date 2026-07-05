@@ -73,9 +73,9 @@ export const LAUNCH_14DAY_PLAN: LaunchDay[] = [
     day: 6,
     week: 1,
     theme: "Turn on the sales machine",
-    objective: "Sequence the moves, open your calendar, and record every call.",
-    doneWhen: "GTM + outbound scripts + booking link + recording stack all live.",
-    assetKeys: ["go_to_market_plan", "sales_playbook", "outbound_dm_email_scripts", "booking_calendar_setup", "sales_call_recording_stack"],
+    objective: "Sequence the moves, open your calendar, and record every call. Physical-product founders also line up their supplier shortlist.",
+    doneWhen: "GTM + outbound scripts + booking link + recording stack all live. Physical products: supplier shortlist scored and first outreach sent.",
+    assetKeys: ["go_to_market_plan", "sales_playbook", "outbound_dm_email_scripts", "booking_calendar_setup", "sales_call_recording_stack", "supplier_shortlist"],
     category: "Operations",
   },
   {
