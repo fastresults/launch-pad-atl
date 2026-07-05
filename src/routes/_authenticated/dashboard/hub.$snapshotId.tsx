@@ -1616,6 +1616,26 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         onUnlocked={() => bulk.mutate({ category: null })}
       />
       <DeckDialog slug={openDeckSlug} onOpenChange={(o) => { if (!o) setOpenDeckSlug(null); }} />
+      <DaySprintDeckDialog
+        day={openDayDeck}
+        typeByKey={typeByKey}
+        completedKeys={completedKeys}
+        isPhysical={isPhysical}
+        sourcingOnlyKeys={SOURCING_ONLY_TYPES}
+        onOpenChange={(o) => { if (!o) setOpenDayDeck(null); }}
+        onJumpToAsset={(key) => {
+          setOpenDayDeck(null);
+          setTimeout(() => {
+            const el = document.getElementById(`doc-${key}`);
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth", block: "center" });
+              el.classList.add("ring-2", "ring-primary");
+              setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 1600);
+            }
+          }, 100);
+        }}
+      />
+
     </div>
   );
 }
