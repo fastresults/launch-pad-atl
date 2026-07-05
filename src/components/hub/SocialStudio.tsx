@@ -47,28 +47,41 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
   const [advanced, setAdvanced] = useState(false);
 
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Share2 className="h-4 w-4 text-status-info" />
-          <h3 className="text-sm font-semibold">Social Studio</h3>
-          {!locked && (
+    <div className="space-y-3">
+      <SectionHeader
+        cat="Social Studio"
+        index={1}
+        done={hasStrategy ? 6 : locked ? 1 : 0}
+        total={6}
+        isOpen
+        onToggle={() => {}}
+        contentId="social-studio-body"
+        status={hasStrategy ? "complete" : locked ? "in_progress" : "locked"}
+        icon={Share2}
+        label="Social Studio"
+        tagline="Channel kits, strategy & covers from your brand"
+        accentVar="--status-tip"
+        badges={
+          !locked ? (
             <span className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-muted-foreground">
               <Lock className="h-3 w-3" /> Brand-gated
             </span>
-          )}
-        </div>
-        {locked && (
-          <button
-            type="button"
-            onClick={() => setAdvanced((a) => !a)}
-            className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground"
-          >
-            <Wand2 className="h-3 w-3" />
-            {advanced ? "Switch to guided" : "Advanced mode"}
-          </button>
-        )}
-      </div>
+          ) : null
+        }
+        actions={
+          locked ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setAdvanced((a) => !a)}
+            >
+              <Wand2 className="mr-1 h-3 w-3" />
+              {advanced ? "Switch to guided" : "Advanced mode"}
+            </Button>
+          ) : null
+        }
+      />
+      <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
 
       {!locked && <SocialStudioGate snapshot={snapshot} kit={kit} />}
 
