@@ -957,9 +957,19 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const docs = docsQ.data ?? [];
   const docByType = useMemo(() => new Map(docs.map((d) => [d.document_type, d])), [docs]);
   const typeByKey = useMemo(() => new Map(types.map((t: any) => [t.type, t])), [types]);
+  // For non-physical ventures, sourcing assets are optional — exclude them from headline totals
+  // so counters like "48/48 assets ready" reflect what the founder actually needs to ship.
+  const requiredTypes = isPhysical
+    ? types
+    : types.filter((t: any) => !SOURCING_ONLY_TYPES.has(t.type));
   const completedKeys = new Set(docs.filter((d) => d.status === "complete").map((d) => d.document_type));
-  const completeCount = completedKeys.size;
-  const total = types.length;
+  const completeCount = new Set(
+    docs
+      .filter((d) => d.status === "complete")
+      .map((d) => d.document_type)
+      .filter((k) => requiredTypes.some((t: any) => t.type === k)),
+  ).size;
+  const total = requiredTypes.length;
   const job = jobQ.data;
   const jobRunning = job?.status === "running" || job?.status === "queued";
   const failures = failuresQ.data ?? [];
