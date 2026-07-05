@@ -6,6 +6,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { FoundersHubGate } from "@/components/hub/FoundersHubGate";
+import { TrackChip } from "@/components/hub/TrackChip";
+import { trackFor } from "@/lib/asset-tracks";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
