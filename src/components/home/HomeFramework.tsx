@@ -71,7 +71,7 @@ function Hero() {
           <div>
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white md:text-sm md:tracking-[0.2em]">
 
-          <Star className="size-3.5 fill-current" /> The 14-Day Launch Method · Thu, Jul 23, 2026 · Norcross, GA
+          <Star className="size-3.5 fill-current" /> The 14-Day Launch Method · Wed, Aug 19, 2026 · Norcross, GA
         </p>
 
 
