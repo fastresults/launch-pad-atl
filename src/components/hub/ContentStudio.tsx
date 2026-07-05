@@ -152,49 +152,87 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
 
   if (!locked) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-card p-4">
-        <div className="flex items-center gap-2">
-          <Newspaper className="h-4 w-4 text-status-info" />
-          <h3 className="text-sm font-semibold">Content Studio</h3>
-          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-muted-foreground">
-            <Lock className="h-3 w-3" /> Brand-gated
-          </span>
+      <div className="space-y-3">
+        <SectionHeader
+          cat="Content Studio"
+          index={2}
+          done={0}
+          total={5}
+          isOpen
+          onToggle={() => {}}
+          contentId="content-studio-body"
+          status="locked"
+          icon={Newspaper}
+          label="Content Studio"
+          tagline="Turn planned posts into on-brand ads"
+          accentVar="--status-info"
+          badges={
+            <span className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-muted-foreground">
+              <Lock className="h-3 w-3" /> Brand-gated
+            </span>
+          }
+        />
+        <div className="rounded-2xl border border-white/10 bg-card p-4">
+          <p className="text-xs text-muted-foreground">
+            Lock your Brand Wizard first — Content Studio uses your palette, typography and logo to
+            keep every ad visually consistent with your channel covers.
+          </p>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Lock your Brand Wizard first — Content Studio uses your palette, typography and logo to
-          keep every ad visually consistent with your channel covers.
-        </p>
       </div>
     );
   }
 
   if (!calendarDoc) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-card p-4">
-        <div className="flex items-center gap-2">
-          <Newspaper className="h-4 w-4 text-status-info" />
-          <h3 className="text-sm font-semibold">Content Studio</h3>
+      <div className="space-y-3">
+        <SectionHeader
+          cat="Content Studio"
+          index={2}
+          done={0}
+          total={5}
+          isOpen
+          onToggle={() => {}}
+          contentId="content-studio-body"
+          status="not_started"
+          icon={Newspaper}
+          label="Content Studio"
+          tagline="Turn planned posts into on-brand ads"
+          accentVar="--status-info"
+        />
+        <div className="rounded-2xl border border-white/10 bg-card p-4">
+          <p className="text-xs text-muted-foreground">
+            Generate your <b>90-Day Content Calendar</b> startup asset first — Content Studio turns
+            each planned post into a 1:1 / 4:5 / 9:16 social ad using your locked brand kit.
+          </p>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Generate your <b>90-Day Content Calendar</b> startup asset first — Content Studio turns
-          each planned post into a 1:1 / 4:5 / 9:16 social ad using your locked brand kit.
-        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
-      <header className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Newspaper className="h-4 w-4 text-status-info" />
-          <h3 className="text-sm font-semibold">Content Studio</h3>
-          <Badge variant="outline" className="text-[10px]">Step {step} of 5</Badge>
-        </div>
-        <div className="text-[10px] text-muted-foreground">
-          {ads.length} ads generated · {posts.length} planned posts
-        </div>
-      </header>
+    <div className="space-y-3">
+      <SectionHeader
+        cat="Content Studio"
+        index={2}
+        done={step}
+        total={5}
+        isOpen
+        onToggle={() => {}}
+        contentId="content-studio-body"
+        status={step >= 5 ? "complete" : "in_progress"}
+        icon={Newspaper}
+        label="Content Studio"
+        tagline="Turn planned posts into on-brand ads"
+        accentVar="--status-info"
+        badges={<Badge variant="outline" className="text-[10px]">Step {step} of 5</Badge>}
+        actions={
+          <span className="text-[10px] text-muted-foreground">
+            {ads.length} ads generated · {posts.length} planned posts
+          </span>
+        }
+      />
+      <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
+
 
       {step === 1 && (
         <Step1Calendar
