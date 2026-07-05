@@ -123,7 +123,8 @@ export function LaunchPlanner14Day({
 
 
     const base =
-      "group relative flex h-20 w-full flex-col items-start justify-between rounded-xl border p-2.5 text-left transition-all";
+      "group relative flex h-24 w-full flex-col items-start justify-between rounded-xl border p-2.5 text-left transition-all";
+
     const stateClass =
       state === "complete"
         ? "border-status-success/40 bg-status-success/10 hover:bg-status-success/15"
