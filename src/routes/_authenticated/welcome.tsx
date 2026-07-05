@@ -130,7 +130,7 @@ export default function WelcomePage() {
               <div className="text-sm text-muted-foreground">
                 Want to skip the wait?{" "}
                 <Link to="/register" className="text-foreground underline">
-                  Register for a workshop
+                  Reserve your 14-Day Launch seat
                 </Link>{" "}
                 — paying immediately unlocks your dashboard.
               </div>
