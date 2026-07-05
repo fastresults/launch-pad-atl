@@ -99,7 +99,7 @@ function BeforeMode({
             {firstName ? `Welcome` : `Welcome`}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Your workshop is in <strong className="text-foreground">{state.daysUntil} {state.daysUntil === 1 ? "day" : "days"}</strong>. Let's get you ready.
+            Your 14-Day Sprint kicks off in <strong className="text-foreground">{state.daysUntil} {state.daysUntil === 1 ? "day" : "days"}</strong>. Let's get you ready.
           </p>
         </div>
         <ProgressRing value={pct} label={`${briefScore}/${briefTotal}`} sublabel="ready" size={96} stroke={8} />
