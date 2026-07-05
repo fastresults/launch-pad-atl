@@ -13,15 +13,23 @@ interface Props {
   onScrollToDoc: (key: string) => void;
   isGeneratingKey?: (key: string) => boolean;
   jobRunning?: boolean;
+  isPhysical?: boolean;
+  sourcingOnlyKeys?: Set<string>;
 }
 
-function tileState(day: LaunchDay, completedKeys: Set<string>, typeByKey: Map<string, any>) {
-  const keys = day.assetKeys.filter((k) => typeByKey.has(k));
-  if (keys.length === 0) return { state: "pending" as const, done: 0, total: 0 };
-  const done = keys.filter((k) => completedKeys.has(k)).length;
-  if (done === keys.length) return { state: "complete" as const, done, total: keys.length };
-  if (done > 0) return { state: "partial" as const, done, total: keys.length };
-  return { state: "pending" as const, done, total: keys.length };
+function tileState(
+  day: LaunchDay,
+  completedKeys: Set<string>,
+  typeByKey: Map<string, any>,
+  isOptional: (k: string) => boolean,
+) {
+  const allKeys = day.assetKeys.filter((k) => typeByKey.has(k));
+  const requiredKeys = allKeys.filter((k) => !isOptional(k));
+  if (requiredKeys.length === 0) return { state: "pending" as const, done: 0, total: 0 };
+  const done = requiredKeys.filter((k) => completedKeys.has(k)).length;
+  if (done === requiredKeys.length) return { state: "complete" as const, done, total: requiredKeys.length };
+  if (done > 0) return { state: "partial" as const, done, total: requiredKeys.length };
+  return { state: "pending" as const, done, total: requiredKeys.length };
 }
 
 export function LaunchPlanner14Day({
