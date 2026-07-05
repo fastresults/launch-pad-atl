@@ -193,7 +193,7 @@ export default function WelcomePage() {
 
             <div className="flex items-center justify-between pt-2">
               <Link to="/register" className="text-sm text-muted-foreground underline">
-                Or register for a workshop directly →
+                Or join the 14-Day Launch directly →
               </Link>
               <Button type="submit" disabled={submitting}>
                 {submitting ? "Submitting..." : "Submit & request workshop"}
