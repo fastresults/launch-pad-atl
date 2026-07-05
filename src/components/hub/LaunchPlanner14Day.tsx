@@ -274,17 +274,27 @@ export function LaunchPlanner14Day({
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {isComplete
-                        ? "Ready to open"
-                        : generating
-                          ? "Writing now…"
-                          : optional
-                            ? "Optional — skip unless you're shipping a physical product"
-                            : "Not started yet"}
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                      <span>
+                        {isComplete
+                          ? "Ready to open"
+                          : generating
+                            ? "Writing now…"
+                            : optional
+                              ? "Optional — skip unless shipping a physical product"
+                              : "Not started yet"}
+                      </span>
+                      {(t?.estimated_minutes ?? 0) > 0 && (
+                        <span className="inline-flex items-center gap-1">
+                          <span className="opacity-40">·</span>
+                          <Clock className="h-3 w-3" />
+                          <span className="tabular-nums">{timeChipLabel(track, t.estimated_minutes)}</span>
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
+
                 <div className="flex items-center gap-1">
                   {isComplete ? (
                     <>
