@@ -80,7 +80,7 @@ export function BriefStatusCard({ answered, total }: Props) {
           Your startup brief is locked in.
         </h2>
         <p className="mt-3 text-base md:text-lg text-muted-foreground max-w-2xl">
-          All {total} answers saved. Your facilitator's AI will read from this on workshop day.
+          All {total} answers saved. Your AI will read from this throughout your 14-Day Sprint.
           You can review or rewrite anything below.
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
