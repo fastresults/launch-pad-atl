@@ -221,8 +221,8 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
         index={2}
         done={step}
         total={5}
-        isOpen
-        onToggle={() => {}}
+        isOpen={expanded}
+        onToggle={() => setExpanded((v) => !v)}
         contentId="content-studio-body"
         status={step >= 5 ? "complete" : "in_progress"}
         icon={Newspaper}
@@ -236,6 +236,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           </span>
         }
       />
+      {expanded && (
       <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
 
 
