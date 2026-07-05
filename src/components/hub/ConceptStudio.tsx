@@ -139,7 +139,7 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
               Sharpen the wording of a concept you already believe in.
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              <b>When to use this:</b> the concept is roughly right and you just need a tight {WORD_MIN}–{WORD_MAX} word north-star + value prop. This locks the language used across all 21 documents.
+              <b>When to use this:</b> the concept is roughly right and you just need a tight {WORD_MIN}–{WORD_MAX} word north-star + value prop. This locks the language used across all your startup assets.
             </p>
           </div>
           {!locked && !snapshot.concept_summary && (
