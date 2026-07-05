@@ -59,7 +59,7 @@ export function FounderRoadmapCard({ snapshot, documentCount }: Props) {
             </div>
             <h2 className="mt-2 text-2xl font-bold tracking-tight">Your Founder Roadmap</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              A narrative founder playbook synthesized from your entire workshop — written to share with
+              A narrative founder playbook synthesized from your entire 14-Day Sprint — written to share with
               co-founders and investors. Cover, verdict, the <span className="font-medium text-foreground">first 45 days</span>,
               your <span className="font-medium text-foreground">first year</span>, money, and how to talk about it.
             </p>
