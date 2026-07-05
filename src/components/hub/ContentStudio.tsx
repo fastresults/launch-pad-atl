@@ -330,6 +330,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
       )}
 
       </div>
+      )}
     </div>
   );
 }
