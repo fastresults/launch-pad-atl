@@ -331,6 +331,21 @@ async function runResearch(supabase: any, snapshotId: string) {
   const geo = [city, region].filter(Boolean).join(", ");
   const keyword = (companyName || industryShort || concept.split(/[.\n]/)[0] || "").slice(0, 80);
 
+  // ---------- Step 0: Sourcing classifier ----------
+  // Cheap (flash-lite) — decides whether the sourcing sub-steps below run.
+  await updateProgress(supabase, snapshotId, "classify", 5, "Classifying product vs. service");
+  const sourcingProfile: SourcingProfile = await classifySourcing({
+    concept,
+    industry,
+    sub_industry: snap.sub_industry,
+    track: snap.track,
+  });
+  await supabase
+    .from("venture_snapshots")
+    .update({ sourcing_profile: sourcingProfile })
+    .eq("id", snapshotId);
+
+
   // ---------- Step 1: Own/competitor seed scrape ----------
   await updateProgress(supabase, snapshotId, "scraping", 10, "Scraping the seed website");
   const ownArtifacts: Artifact[] = [];
