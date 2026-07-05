@@ -918,6 +918,8 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
   const [showUnlock, setShowUnlock] = useState(false);
   const [openDeckSlug, setOpenDeckSlug] = useState<string | null>(null);
+  const [openDayDeck, setOpenDayDeck] = useState<LaunchDay | null>(null);
+
 
   // Per-section open/collapse state (persisted per snapshot)
   const openSectionsKey = `hub:sectionOpen:${snapshot.id}`;
