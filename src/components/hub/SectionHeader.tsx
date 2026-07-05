@@ -100,14 +100,15 @@ export function SectionHeader({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h3 className="truncate text-base font-semibold tracking-tight sm:text-lg">
-              {getStageMeta(cat).label}
+              {resolvedLabel}
             </h3>
             <span className="hidden text-xs text-muted-foreground tabular-nums sm:inline">
               {done}/{total}
             </span>
+            {badges}
           </div>
           <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground sm:text-sm">
-            {getStageMeta(cat).tagline}
+            {resolvedTagline}
           </p>
         </div>
       </button>
