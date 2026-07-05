@@ -45,6 +45,7 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
   const hasStrategy = auditDoc || pillarsDoc || calendarDoc || launchDoc;
 
   const [advanced, setAdvanced] = useState(false);
+  const [expanded, setExpanded] = useState(locked && !hasStrategy);
 
   return (
     <div className="space-y-3">
@@ -53,8 +54,8 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
         index={1}
         done={hasStrategy ? 6 : locked ? 1 : 0}
         total={6}
-        isOpen
-        onToggle={() => {}}
+        isOpen={expanded}
+        onToggle={() => setExpanded((v) => !v)}
         contentId="social-studio-body"
         status={hasStrategy ? "complete" : locked ? "in_progress" : "locked"}
         icon={Share2}
@@ -81,6 +82,7 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
           ) : null
         }
       />
+      {expanded && (
       <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
 
       {!locked && <SocialStudioGate snapshot={snapshot} kit={kit} />}
@@ -160,6 +162,7 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
         </Tabs>
       )}
       </div>
+      )}
     </div>
   );
 }

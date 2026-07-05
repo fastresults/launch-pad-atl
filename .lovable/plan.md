@@ -1,82 +1,49 @@
-# Unify Studio headers with the framework section-card style
+# Fix non-working accordion toggles on the Hub
 
-Goal: make the **Brand Wizard & bonus tools** wrapper and its three children (**Brand Studio**, **Social Studio**, **Content Studio**) render with the exact same header treatment used by the numbered framework sections (Strategy / Operations / Finance / Marketing / Governance / Brand / Social & Content in screenshot 4).
+## Audit result
 
-That header style, produced by `src/components/hub/SectionHeader.tsx`, has:
-- A colored **accent left bar** and subtle horizontal gradient tinted by the accent
-- A **round two-digit index chip** (e.g. `09`) in the accent color
-- Section **icon**, **title**, small **count** (`n/n`), and **tagline** underneath
-- A **thin progress bar** (accent-filled), a rounded **status pill** (Complete / In progress / …)
-- Right-aligned **action buttons** (outline style, `size="sm"`)
+After the studio restyle, three of the four new headers use `SectionHeader` but never actually toggle anything. The framework category rows (Strategy / Operations / …) still work correctly.
 
-Only the four surfaces above are being restyled. No logic changes.
+| Accordion | File | Toggle behavior | Status |
+| --- | --- | --- | --- |
+| Framework categories (Strategy, Operations, Finance, Marketing, Governance, Brand, Social & Content) | `hub.$snapshotId.tsx` ~1370 | `Collapsible` + `toggleSection(cat)` state | ✅ works |
+| Brand Wizard & bonus tools (outer wrapper) | `hub.$snapshotId.tsx` ~1515 | `SectionHeader.onToggle` sets `details.open` imperatively | ❌ chevron/`aria-expanded` don't update; React state desynced from native `<details>` |
+| Brand Studio | `BrandStudio.tsx` ~48 | `isOpen` hardcoded `true`, `onToggle={() => {}}` | ❌ click does nothing |
+| Social Studio | `SocialStudio.tsx` ~56 | same as above | ❌ click does nothing |
+| Content Studio (all 3 variants) | `ContentStudio.tsx` ~161/193/219 | same as above | ❌ click does nothing |
 
-## Scope of changes (presentation only)
+Root cause: the three studios were rewritten to reuse `SectionHeader` for its visual style, but never wired to any open/close state — the body is always rendered, and clicking the header is a no-op. The outer bonus wrapper tries to drive a native `<details>` element imperatively, which doesn't trigger a React re-render, so the chevron never rotates even when the panel actually opens.
 
-### 1. Generalize `SectionHeader` so studios can reuse it
-`SectionHeader` currently derives its icon, label, tagline and accent from `getStageMeta(cat)`. Extend the props with optional overrides so studios can plug in without adding fake stage-meta rows:
+## Fix plan (presentation + local state only, no logic changes)
 
-```text
-+ icon?: LucideIcon
-+ label?: string
-+ tagline?: string
-+ accentVar?: string   // e.g. "--stage-brand", "--status-info"
-+ badges?: ReactNode   // extra pills next to title (Locked, Brand-gated, Required for Website PRD)
-```
+### 1. Brand Studio, Social Studio, Content Studio
+Each component gets its own `useState<boolean>(defaultOpen)` and:
+- passes `isOpen={open}` and `onToggle={() => setOpen(o => !o)}` to `SectionHeader`
+- wraps its existing body card in `{open && (...) }`
 
-When present, these override the `getStageMeta(cat)` values. All existing call-sites keep working unchanged.
+Default-open rules per studio (keeps current behavior):
+- **Brand Studio** — open when kit is unlocked/in-progress, closed once `locked` (user rarely edits after lock)
+- **Social Studio** — open when brand is locked and no strategy yet; else closed
+- **Content Studio** — open on the active step; closed on the two gated variants (still show the explanatory paragraph, but collapsed body under a working chevron)
 
-### 2. `hub.$snapshotId.tsx` — "Brand Wizard & bonus tools" wrapper (lines ~1515–1543)
-Replace the `<details><summary>…</summary></details>` block with the same `Collapsible` + `SectionHeader` pattern used above for framework categories:
-
-- `index` = next number after the last framework section (e.g. `08` if Social & Content was 08 → this becomes `09`)
-- `icon` = `Wand2` (or `Sparkles`)
-- `label` = "Brand Wizard & bonus tools"
-- `tagline` = existing copy ("Lock your brand colors, typography and logo here — the Website PRD generation uses them verbatim.")
-- `done/total` = number of the three studios that are "ready" (Brand locked, Social kit generated, Content calendar generated) out of 3
-- `status` = `complete` when all 3 ready, `in_progress` when any progress, `not_started` otherwise
-- `badges` = existing "Required for Website PRD" pill when brand kit unlocked
-- `actions` = none (children have their own)
-- Keep the existing default-open logic
-
-### 3. `BrandStudio.tsx` (header at lines 41–64)
-Replace the current flat header with `SectionHeader`:
-- `icon` = `Palette`, `accentVar` = `--stage-brand` (matches the framework Brand row's purple)
-- `label` = "Brand Studio", `tagline` = "Lock palette, typography & logo — powers Website PRD"
-- `done/total` = `kit.step ?? 0` / `5`
-- `status` = `complete` when `locked`, `in_progress` when `kit && !locked`, `not_started` otherwise
-- `badges` = existing `Locked` / `Step n / 5` pill
-- `actions` = existing `Reset` + `Start / Resume / Edit brand` buttons (outline `size="sm"`)
-- Body (palette swatches, typography, logos, wizard mount) is unchanged, just moved under the new header inside the same card
-
-### 4. `SocialStudio.tsx` (header at lines 49–70)
-- `icon` = `Share2`, `accentVar` = `--stage-social` (matches Social & Content purple)
-- `label` = "Social Studio", `tagline` = "Channel kits, strategy & covers from your brand"
-- `done/total` = wizard step / 6 (Goals → Build plan → Channels → Style → Build kit → Launch)
-- `status` derived from `locked` + progress
-- `badges` = existing "Brand-gated" / step chip
-- `actions` = existing "Advanced mode" toggle as an outline `size="sm"` button
-- Tabs and body unchanged
-
-### 5. `ContentStudio.tsx` (three headers at lines 152–196)
-Replace all three variants (loading, brand-gated gate, calendar-missing gate, main step header) with `SectionHeader`:
-- `icon` = `Newspaper`, `accentVar` = `--stage-social` (or a dedicated content accent if defined)
-- `label` = "Content Studio", `tagline` = "Turn planned posts into on-brand ads"
-- `done/total` = `step` / `5`
-- Right-side meta ("13 ads generated · 9 planned posts") rendered as a small `text-xs text-muted-foreground` line inside `actions`
-- Gated variants use `status = "locked"` with the existing explanatory paragraph kept below the header
+### 2. Brand Wizard & bonus tools wrapper (`hub.$snapshotId.tsx`)
+Replace the imperative `<details>` with the same `Collapsible` + state pattern used by framework categories:
+- Add `bonusOpen` to `openSections` state (or a dedicated `useState`), default matches current `(completeCount === total && total > 0) || !brandKitLocked`
+- `SectionHeader.isOpen={bonusOpen}` / `onToggle={() => setBonusOpen(o => !o)}`
+- Body wrapped in `<CollapsibleContent>` (or `{bonusOpen && …}`) — remove the `<details>/<summary>` wrapper entirely
+- Preserve `brandStudioRef` scroll target on the outer `<section>`
 
 ## Files touched
-- `src/components/hub/SectionHeader.tsx` — add optional `icon` / `label` / `tagline` / `accentVar` / `badges` props (backward compatible)
-- `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` — swap the `<details>` wrapper for `Collapsible` + `SectionHeader`
-- `src/components/hub/BrandStudio.tsx` — replace header
-- `src/components/hub/SocialStudio.tsx` — replace header
-- `src/components/hub/ContentStudio.tsx` — replace all four header variants
-
-## Non-goals
-- No changes to studio logic, wizard flows, generation, gating rules, or data.
-- No changes to the framework section cards themselves — they already define the target style.
-- No new colors added to `index.css` unless a studio has no existing accent token; in that case reuse `--stage-brand` / `--stage-social` / `--status-info`.
+- `src/components/hub/BrandStudio.tsx`
+- `src/components/hub/SocialStudio.tsx`
+- `src/components/hub/ContentStudio.tsx` (all 3 return branches)
+- `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` (bonus wrapper only)
 
 ## Verification
-After edits: reload `/dashboard/hub/:id`, scroll to the Bonus tools block. All four headers should visually match the Strategy/Operations/Finance rows — same left bar, index chip, icon, title, progress bar, status pill, and right-aligned outline buttons — in both light and dark themes.
+Reload `/dashboard/hub/:id`. Click each of the four headers (Bonus wrapper, Brand Studio, Social Studio, Content Studio):
+- chevron rotates
+- `aria-expanded` flips
+- body collapses/expands
+- initial defaults match current UX (nothing that used to be visible on load becomes hidden)
+
+Framework category rows remain untouched and continue to work.
