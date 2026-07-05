@@ -346,8 +346,8 @@ function NoCohortMode({ briefScore, briefTotal, pitch }: { briefScore: number; b
       <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Welcome</h1>
       <p className="mt-2 text-muted-foreground">
         {done
-          ? "Your brief is locked in. We'll email you the moment your workshop date is set."
-          : "We haven't matched you to a workshop date yet. While you wait, start your brief."}
+          ? "Your brief is locked in. We'll email you the moment your 14-Day Sprint start date is set."
+          : "We haven't set your 14-Day Sprint start date yet. While you wait, start your brief."}
       </p>
       <BriefStatusCard answered={briefScore} total={briefTotal} />
     </>
