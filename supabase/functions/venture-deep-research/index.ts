@@ -10,6 +10,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
+import { classifySourcing, type SourcingProfile } from "../_shared/sourcing-classifier.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
