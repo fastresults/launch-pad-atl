@@ -429,7 +429,7 @@ function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; tot
                   </p>
                   <ul className="list-inside list-disc text-xs text-muted-foreground">
                     <li>The startup record</li>
-                    <li>All generated documents and revisions</li>
+                    <li>All generated assets and revisions</li>
                     <li>All generation jobs and failure logs</li>
                     <li>Uploaded document images</li>
                   </ul>
