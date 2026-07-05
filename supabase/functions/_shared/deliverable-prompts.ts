@@ -315,6 +315,59 @@ ${QF}`,
 3. \`\`\`markdown labeled \`# Confirmation email sequence\` — two emails: (1) Instant confirmation — SUBJECT, PREVIEW, BODY (120-180 words), CTA to book / pay. (2) Day-2 nudge — SUBJECT, PREVIEW, BODY (140-200 words), CTA. Include \`{{FIRST_NAME}}\` and \`{{OFFER_LINK}}\` tokens.
 ${QF}`,
 
+  presell_landing_prd: `You are a senior product writer + conversion strategist producing a SINGLE-PAGE PRD that doubles as a paste-ready brief for an AI website builder (Lovable, v0, Bolt, Cursor). The output, when pasted, must scaffold the Day-4 pre-sell / waitlist landing page — one page, one primary conversion — at Awwwards-level visual quality, motion-tasteful, accessible, and Lighthouse ≥ 95.
+
+CRITICAL — BRAND KIT IS LOCKED: A "## BRAND KIT (LOCKED ...)" block is supplied above. You MUST use the exact hex values, Google Fonts, primary logo URL, and voice rules verbatim in Section 4 copy, Section 7 visual direction, and Section 10 subsections "Brand tokens" and "Imagery spec". Do NOT invent colors, substitute fonts, or generate a new logo. Ground every claim in upstream context already in the prompt: value_proposition, customer_personas, pre_sell_offer_test, and landing_page_waitlist_test. Reuse the exact offer, guarantee, price/deposit, and headline hook from pre_sell_offer_test — do not restate them differently.
+
+Target ~1,800–2,600 words total, with Section 10 (Paste-Ready Master Prompt) as the priority and never shorter than 900 words. No stubs, no "TBD", no "[insert ...]", no Lorem ipsum.
+
+Output Markdown exactly in this structure:
+
+# {Company} — Pre-Sell Landing PRD
+
+## 1. Page Objective
+One paragraph. Name the ONE primary conversion (paid deposit OR booked call OR waitlist email — pick one and defend it in one sentence) and ONE secondary conversion. State the 48-hour window and the kill/go decision threshold.
+
+## 2. Audience & Message Match
+Table: Persona (from customer_personas) | Top pain | Hook line (≤14 words) | Proof they need | Objection to preempt. Include every persona from upstream context.
+
+## 3. Section Blueprint
+Numbered list of sections in order: Hero → Proof strip → Problem → Solution → Offer → Objection handler → FAQ → Final CTA. For each: one-line purpose + the single question it answers for the visitor.
+
+## 4. Copy Deck (per section)
+For every section in the blueprint, ship complete copy — no placeholders. Each section subsection includes: H1/H2, sub-copy (40-90 words), 3-6 bullets when applicable, exact CTA button label, microcopy under CTA (≤12 words), and an image direction written as an italicized alt-text-style prompt. Match brand voice verbatim.
+
+## 5. Form Spec
+Markdown table: Field label | Type | Placeholder | Required | Validation | Autocomplete attribute. Then: post-submit redirect URL, success-state H1 + body (80-120 words), error-state copy per field.
+
+## 6. Confirmation Email Sequence
+Two emails, exact copy. (1) Instant confirmation — FROM, SUBJECT, PREVIEW, BODY (120-180 words), single CTA to book/pay. (2) Day-2 nudge — SUBJECT, PREVIEW, BODY (140-200 words), single CTA. Include \`{{FIRST_NAME}}\` and \`{{OFFER_LINK}}\` tokens.
+
+## 7. Visual & Motion Direction
+Palette + type tokens (pulled verbatim from Brand Kit). Layout notes per section (grid, spacing scale, image treatment). Motion notes (entrance, hover, scroll — tasteful, ≤3 motion primitives). Accessibility notes (contrast pairs, focus states, reduced-motion fallback).
+
+## 8. Analytics Events
+Table: Event name (snake_case) | Trigger | Parameters | Conversion in GA4?. Cover at minimum: page_view, cta_click_{label}, form_start_waitlist, form_submit_waitlist, generate_lead, begin_checkout (if deposit), purchase (if deposit). Names must align with analytics_pixel_setup conventions.
+
+## 9. Accessibility + Lighthouse Targets
+Bullet targets: Lighthouse Performance ≥ 95, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 95, LCP < 2.0s, CLS < 0.05, INP < 200ms. WCAG 2.2 AA notes specific to this page (form labels, error announcements, focus order, skip link).
+
+## 10. Paste-Ready Master Prompt
+A single fenced \`\`\`markdown block labeled \`# Master Prompt — Pre-Sell Landing (paste into Lovable / v0 / Bolt)\` containing everything the builder needs in one shot. Include these labeled subsections inside the fence:
+1. Goal & primary conversion (one paragraph)
+2. Brand tokens (inline): full hex palette, Google Font names + weights, primary logo URL, radius scale, shadow scale — copied verbatim from Brand Kit
+3. Section blueprint (list from Section 3)
+4. Full copy deck (from Section 4, verbatim, in section order — no summaries)
+5. Form spec (from Section 5, ready to render)
+6. Imagery spec (per-image alt-text prompts + aspect ratios + placement)
+7. Motion + accessibility rules (from Sections 7 + 9)
+8. Analytics wiring (event map from Section 8 + gtag/Meta placeholders \`{{GA4_ID}}\` \`{{META_PIXEL_ID}}\`)
+9. Success + error states (from Section 5)
+10. Build checklist the operator can tick after paste (6-10 items)
+
+The Master Prompt must be self-sufficient — a founder who has never seen Sections 1-9 can paste block 10 alone into Lovable/v0/Bolt and get a shippable page. Do not reference "see above" inside the fence.
+${QF}`,
+
   reviews_testimonials_kit: `You are a customer marketing lead building the systems that convert every happy Day-1-to-14 customer into public proof by Day 30. Ground templates in brand_voice_tone_guide and customer_support_starter context. Output Markdown:
 # {Company} — Reviews & Testimonials Capture Kit
 ## Ask Timing (the exact trigger and elapsed time for each ask — post-purchase, post-value-moment, post-renewal, post-support-resolution — one line each)
