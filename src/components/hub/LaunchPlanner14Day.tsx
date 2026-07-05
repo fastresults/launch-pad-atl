@@ -41,7 +41,15 @@ export function LaunchPlanner14Day({
   onScrollToDoc,
   isGeneratingKey,
   jobRunning,
+  isPhysical = false,
+  sourcingOnlyKeys,
 }: Props) {
+  const optionalKeys = useMemo(
+    () => sourcingOnlyKeys ?? new Set<string>(["supplier_shortlist", "bom_and_landed_cost"]),
+    [sourcingOnlyKeys],
+  );
+  const isOptional = (k: string) => !isPhysical && optionalKeys.has(k);
+
   const docByType = useMemo(() => {
     const m = new Map<string, any>();
     for (const d of docs ?? []) m.set(d.document_type, d);
@@ -49,8 +57,8 @@ export function LaunchPlanner14Day({
   }, [docs]);
 
   const daysWithState = useMemo(
-    () => LAUNCH_14DAY_PLAN.map((d) => ({ day: d, ...tileState(d, completedKeys, typeByKey) })),
-    [completedKeys, typeByKey],
+    () => LAUNCH_14DAY_PLAN.map((d) => ({ day: d, ...tileState(d, completedKeys, typeByKey, isOptional) })),
+    [completedKeys, typeByKey, isPhysical, optionalKeys],
   );
 
   const daysComplete = daysWithState.filter((d) => d.state === "complete").length;
