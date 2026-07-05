@@ -1223,7 +1223,9 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         }}
         isGeneratingKey={(key) => genOne.isPending && genOne.variables?.documentType === key}
         jobRunning={jobRunning}
+        onOpenDayDeck={(d) => setOpenDayDeck(d)}
       />
+
 
       <AIStackPanel
         snapshotId={snapshot.id}
