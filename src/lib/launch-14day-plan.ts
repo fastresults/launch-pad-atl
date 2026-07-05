@@ -127,9 +127,9 @@ export const LAUNCH_14DAY_PLAN: LaunchDay[] = [
     day: 12,
     week: 2,
     theme: "Ops, support bot, automations",
-    objective: "Prove you can deliver order #1 with a support bot and 5 workflows already running.",
-    doneWhen: "Fulfillment SOP + AI support bot + 5 automations live.",
-    assetKeys: ["fulfillment_sop", "customer_support_starter", "operating_plan", "ai_support_bot_setup", "automation_recipes_starter"],
+    objective: "Prove you can deliver order #1 with a support bot and 5 workflows already running. Physical-product founders lock the BOM and landed-cost model.",
+    doneWhen: "Fulfillment SOP + AI support bot + 5 automations live. Physical products: BOM + landed-cost per unit + break-even units signed off.",
+    assetKeys: ["fulfillment_sop", "customer_support_starter", "operating_plan", "ai_support_bot_setup", "automation_recipes_starter", "bom_and_landed_cost"],
     category: "Operations",
   },
   {
