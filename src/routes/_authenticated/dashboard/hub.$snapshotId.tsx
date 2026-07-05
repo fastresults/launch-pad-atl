@@ -863,7 +863,8 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const [showFailures, setShowFailures] = useState(false);
   const [rewriteTarget, setRewriteTarget] = useState<{ type: string; name: string } | null>(null);
   const [intakeTarget, setIntakeTarget] = useState<IntakeTarget>(null);
-  const brandStudioRef = useRef<HTMLDetailsElement | null>(null);
+  const brandStudioRef = useRef<HTMLElement | null>(null);
+  const [bonusOpen, setBonusOpen] = useState(true);
 
   const brandKitQ = useQuery({
     queryKey: ["brandKit", snapshot.id],
@@ -875,8 +876,8 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const brandKitLockedAt = brandKit?.locked_at ?? null;
 
   const openBrandWizard = useCallback(() => {
+    setBonusOpen(true);
     if (brandStudioRef.current) {
-      brandStudioRef.current.open = true;
       brandStudioRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, []);
