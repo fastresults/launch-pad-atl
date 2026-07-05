@@ -61,6 +61,12 @@ import {
 export const WORKSHOP_PRICE_CENTS = 29700;
 export const WORKSHOP_PRICE_LABEL = "$297";
 
+// Product copy source-of-truth. Use these constants for user-facing strings
+// so the app never drifts on asset counts or sprint naming again.
+export const TOTAL_ASSETS_LABEL = "60+";
+export const SPRINT_LABEL = "14-Day Sprint";
+export const SPRINT_METHOD_LABEL = "14-Day Launch Method";
+
 export type FrameworkDeliverable = {
   icon: LucideIcon;
   title: string;
