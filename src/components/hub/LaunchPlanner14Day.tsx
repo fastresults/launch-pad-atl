@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, CheckCircle2, Circle, ArrowRight, Loader2, ExternalLink, Rocket, Clock, Presentation } from "lucide-react";
+import { Sparkles, CheckCircle2, Circle, ArrowRight, Loader2, ExternalLink, Rocket, Clock, Presentation, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LAUNCH_14DAY_PLAN, CATEGORY_DOT, type LaunchDay } from "@/lib/launch-14day-plan";
 import { TRACK_META, TRACK_ORDER, trackFor, timeSplit, formatDuration, timeChipLabel, type AssetTrack } from "@/lib/asset-tracks";
@@ -8,6 +8,21 @@ import { TrackChip } from "@/components/hub/TrackChip";
 
 const SORT_STORAGE_KEY = "hub:launch14:sortMode";
 type SortMode = "sequence" | "track";
+
+// Cross-references between sprint assets. Key = row asset, value = companion
+// asset that lives elsewhere in the framework and directly supports it.
+const COMPANION_ASSET: Record<string, { key: string; label: string; category: string }> = {
+  pre_sell_offer_test: {
+    key: "presell_landing_prd",
+    label: "Pre-Sell Landing PRD + AI-builder prompt",
+    category: "Marketing",
+  },
+  landing_page_waitlist_test: {
+    key: "presell_landing_prd",
+    label: "Pre-Sell Landing PRD + AI-builder prompt",
+    category: "Marketing",
+  },
+};
 
 
 
@@ -292,8 +307,27 @@ export function LaunchPlanner14Day({
                         </span>
                       )}
                     </div>
+                    {(() => {
+                      const companion = COMPANION_ASSET[k];
+                      if (!companion || !typeByKey.has(companion.key) || k === companion.key) return null;
+                      const cDoc = docByType.get(companion.key);
+                      const cReady = cDoc?.status === "complete";
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => onScrollToDoc(companion.key)}
+                          className="mt-1 inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/10"
+                          title={`Jump to ${companion.label} in ${companion.category}`}
+                        >
+                          <FileText className="h-3 w-3" />
+                          {cReady ? "Ready" : "Available"}: {companion.label} · under {companion.category}
+                          <ArrowRight className="h-3 w-3" />
+                        </button>
+                      );
+                    })()}
                   </div>
                 </div>
+
 
                 <div className="flex items-center gap-1">
                   {isComplete ? (
