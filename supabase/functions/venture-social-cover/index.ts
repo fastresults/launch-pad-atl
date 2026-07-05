@@ -356,7 +356,7 @@ Deno.serve(async (req) => {
     }
 
     const ctx = await loadVentureContext(admin, snapshotId);
-    const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
+    const { dataUrl: logoDataUrl, bytes: logoBytes, skipReason: logoSkipReason } = await fetchPrimaryLogo(admin, kit);
 
     const isAvatar = asset.kind === "avatar";
 
