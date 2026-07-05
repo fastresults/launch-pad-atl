@@ -199,7 +199,8 @@ Schema:
     "customer_voice": [{ "quote": "", "source_url": "", "theme": "" }],
     "pricing_benchmarks": [{ "competitor": "", "tier": "", "price": "", "url": "" }],
     "gaps": ["..."],
-    "confidence": { "company": 0, "competitors": 0, "market": 0, "customer_voice": 0, "pricing": 0, "overall": 0 }
+    "sourcing": { "moq_range": "", "unit_cost_range": "", "lead_time_days": "", "landed_cost_pct": "", "suppliers": [{ "name": "", "url": "", "country": "", "pros": "", "cons": "" }], "regulatory": ["..."], "materials": ["..."], "citations": ["..."] },
+    "confidence": { "company": 0, "competitors": 0, "market": 0, "customer_voice": 0, "pricing": 0, "sourcing": 0, "overall": 0 }
   },
   "extracted_data": {
     "foundation": { "company_name": "", "founder_name": "", "location": "", "industry": "", "concept": "", "problem": "" },
