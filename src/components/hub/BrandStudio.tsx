@@ -78,59 +78,59 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
           </>
         }
       />
-      <div className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
+      {expanded && (
+        <div className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
+          {!kit && (
+            <p className="text-xs text-muted-foreground">
+              A 5-step guided wizard: brand DNA → palette → typography → moodboard & logo → voice & style guide.
+              You pick the direction at every step. The final style guide saves to your <b>My Files</b>.
+            </p>
+          )}
 
-      {!kit && (
-        <p className="text-xs text-muted-foreground">
-          A 5-step guided wizard: brand DNA → palette → typography → moodboard & logo → voice & style guide.
-          You pick the direction at every step. The final style guide saves to your <b>My Files</b>.
-        </p>
-      )}
-
-      {kit && (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Palette — click to edit</div>
-            <div className="mt-1 flex flex-wrap gap-1.5">
-              {kit.palette?.colors ? Object.entries(kit.palette.colors).map(([k, v]: any) => (
-                <div key={k} className="flex items-center gap-1 rounded-full border border-white/10 bg-background/40 px-1.5 py-0.5 text-[10px]">
-                  <EditablePaletteSwatch
-                    tokenKey={k}
-                    value={v as string}
-                    size="sm"
-                    onChange={async (hex) => {
-                      const nextColors = { ...(kit.palette?.colors ?? {}), [k]: hex };
-                      await upsertBrandKit(snapshot.id, {
-                        palette: { ...(kit.palette ?? {}), colors: nextColors, source: "user-edited" },
-                      });
-                      qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
-                    }}
-                  />
-                  <span className="text-muted-foreground">{k}</span>
+          {kit && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Palette — click to edit</div>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {kit.palette?.colors ? Object.entries(kit.palette.colors).map(([k, v]: any) => (
+                    <div key={k} className="flex items-center gap-1 rounded-full border border-white/10 bg-background/40 px-1.5 py-0.5 text-[10px]">
+                      <EditablePaletteSwatch
+                        tokenKey={k}
+                        value={v as string}
+                        size="sm"
+                        onChange={async (hex) => {
+                          const nextColors = { ...(kit.palette?.colors ?? {}), [k]: hex };
+                          await upsertBrandKit(snapshot.id, {
+                            palette: { ...(kit.palette ?? {}), colors: nextColors, source: "user-edited" },
+                          });
+                          qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+                        }}
+                      />
+                      <span className="text-muted-foreground">{k}</span>
+                    </div>
+                  )) : <span className="text-xs text-muted-foreground">Not chosen yet</span>}
                 </div>
-              )) : <span className="text-xs text-muted-foreground">Not chosen yet</span>}
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Typography</div>
+                <div className="mt-1 text-xs">
+                  <div className="font-semibold">{kit.typography?.heading?.family ?? "—"}</div>
+                  <div className="text-muted-foreground">{kit.typography?.body?.family ?? "—"}</div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Typography</div>
-            <div className="mt-1 text-xs">
-              <div className="font-semibold">{kit.typography?.heading?.family ?? "—"}</div>
-              <div className="text-muted-foreground">{kit.typography?.body?.family ?? "—"}</div>
+          )}
+
+          {Array.isArray(kit?.logos) && kit.logos.length > 0 && (
+            <div className="grid grid-cols-4 gap-2 pt-2">
+              {kit.logos.slice(0, 4).map((a: any, i: number) => (
+                a.url ? <img key={i} src={a.url} className="aspect-square w-full rounded border border-white/10 object-cover" /> : null
+              ))}
             </div>
-          </div>
+          )}
         </div>
       )}
-
-      {Array.isArray(kit?.logos) && kit.logos.length > 0 && (
-        <div className="grid grid-cols-4 gap-2 pt-2">
-          {kit.logos.slice(0, 4).map((a: any, i: number) => (
-            a.url ? <img key={i} src={a.url} className="aspect-square w-full rounded border border-white/10 object-cover" /> : null
-          ))}
-        </div>
-      )}
-
-        <BrandWizard snapshot={snapshot} open={open} onOpenChange={setOpen} />
-      </div>
+      <BrandWizard snapshot={snapshot} open={open} onOpenChange={setOpen} />
     </div>
   );
 }
