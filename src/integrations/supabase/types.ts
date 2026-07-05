@@ -2796,6 +2796,7 @@ export type Database = {
           snapshot_brain_dirty: boolean
           snapshot_brain_updated_at: string | null
           source_materials: Json | null
+          sourcing_profile: Json | null
           status: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry: string | null
           track: string | null
@@ -2842,6 +2843,7 @@ export type Database = {
           snapshot_brain_dirty?: boolean
           snapshot_brain_updated_at?: string | null
           source_materials?: Json | null
+          sourcing_profile?: Json | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry?: string | null
           track?: string | null
@@ -2888,6 +2890,7 @@ export type Database = {
           snapshot_brain_dirty?: boolean
           snapshot_brain_updated_at?: string | null
           source_materials?: Json | null
+          sourcing_profile?: Json | null
           status?: Database["public"]["Enums"]["venture_snapshot_status"]
           sub_industry?: string | null
           track?: string | null
