@@ -218,8 +218,8 @@ export default function DeliverablesPage() {
           <h1 className="text-3xl font-semibold tracking-tight">Your startup assets</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {allDocs.length === 0
-              ? "Documents you generate in the Hub show up here."
-              : `${readyCount} ready of ${allDocs.length} ${allDocs.length === 1 ? "document" : "documents"} across ${snapshots.length} ${snapshots.length === 1 ? "venture" : "ventures"}.`}
+              ? "Assets you generate in the Hub show up here."
+              : `${readyCount} ready of ${allDocs.length} ${allDocs.length === 1 ? "asset" : "assets"} across ${snapshots.length} ${snapshots.length === 1 ? "venture" : "ventures"}.`}
           </p>
         </div>
         <Button asChild variant="outline">
