@@ -46,8 +46,8 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
         index={0}
         done={locked ? 5 : (kit?.step ?? 0)}
         total={5}
-        isOpen
-        onToggle={() => {}}
+        isOpen={expanded}
+        onToggle={() => setExpanded((v) => !v)}
         contentId="brand-studio-body"
         status={locked ? "complete" : kit ? "in_progress" : "not_started"}
         icon={Palette}
