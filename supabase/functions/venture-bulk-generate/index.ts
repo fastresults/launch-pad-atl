@@ -28,6 +28,7 @@ import {
   specializedPrompt,
   stripCitations,
 } from "../_shared/deliverable-prompts.ts";
+import { renderSourcingBlock } from "../_shared/sourcing-classifier.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 
 const MAX_USER_PROMPT_CHARS = 120_000;
