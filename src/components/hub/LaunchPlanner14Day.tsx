@@ -22,7 +22,31 @@ interface Props {
   jobRunning?: boolean;
   isPhysical?: boolean;
   sourcingOnlyKeys?: Set<string>;
+  onOpenDayDeck?: (day: LaunchDay) => void;
 }
+
+function dayMinutes(day: LaunchDay, typeByKey: Map<string, any>, optionalKeys: Set<string>): number {
+  return day.assetKeys
+    .filter((k) => typeByKey.has(k) && !optionalKeys.has(k))
+    .reduce((s, k) => s + (typeByKey.get(k)?.estimated_minutes ?? 0), 0);
+}
+
+function daySplit(day: LaunchDay, typeByKey: Map<string, any>, optionalKeys: Set<string>) {
+  return day.assetKeys
+    .filter((k) => typeByKey.has(k) && !optionalKeys.has(k))
+    .reduce(
+      (acc, k) => {
+        const mins = typeByKey.get(k)?.estimated_minutes ?? 0;
+        const s = timeSplit(trackFor(k), mins);
+        acc.total += mins;
+        acc.read += s.read;
+        acc.do += s.do;
+        return acc;
+      },
+      { total: 0, read: 0, do: 0 },
+    );
+}
+
 
 function tileState(
   day: LaunchDay,
