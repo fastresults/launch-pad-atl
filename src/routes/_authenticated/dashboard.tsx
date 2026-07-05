@@ -119,7 +119,7 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       key: "deliverables",
       to: "/dashboard/workflow",
       label: "Deliverables",
-      tooltip: "Generate your 20 investor-ready documents across five pillars. Build one at a time or run the remaining batch. Each card shows what's locked, what's queued, what's ready to read.",
+      tooltip: "Generate your 60+ founder-ready startup assets across six tracks. Build one at a time or run the remaining batch. Each card shows what's locked, what's queued, what's ready to read.",
       icon: ListChecks,
       dimmed: mode === "during",
     },
