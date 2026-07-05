@@ -100,7 +100,7 @@ export default function WelcomePage() {
           </h1>
           <p className="mt-3 text-muted-foreground">
             Tell us what you're building. A member of our team will reach out to arrange your
-            workshop and get your dashboard set up.
+            14-Day Launch and get your dashboard set up.
           </p>
         </div>
 
