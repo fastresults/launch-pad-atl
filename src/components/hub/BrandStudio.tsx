@@ -39,30 +39,45 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
   };
 
   return (
-    <div className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Palette className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-semibold">Brand Studio</h3>
-          {locked && (
-            <Badge variant="outline" className="gap-1 text-[10px]"><Lock className="h-3 w-3" />Locked</Badge>
-          )}
-          {!locked && kit && (
-            <Badge variant="outline" className="text-[10px]">Step {kit.step ?? 1} / 5</Badge>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {kit && (
-            <Button size="sm" variant="ghost" onClick={onReset} disabled={reset.isPending} title="Reset & start over">
-              <RotateCcw className="mr-1 h-3 w-3" />Reset
+    <div className="space-y-3">
+      <SectionHeader
+        cat="Brand Studio"
+        index={0}
+        done={locked ? 5 : (kit?.step ?? 0)}
+        total={5}
+        isOpen
+        onToggle={() => {}}
+        contentId="brand-studio-body"
+        status={locked ? "complete" : kit ? "in_progress" : "not_started"}
+        icon={Palette}
+        label="Brand Studio"
+        tagline="Lock palette, typography & logo — powers Website PRD"
+        accentVar="--brand-violet"
+        badges={
+          <>
+            {locked && (
+              <Badge variant="outline" className="gap-1 text-[10px]"><Lock className="h-3 w-3" />Locked</Badge>
+            )}
+            {!locked && kit && (
+              <Badge variant="outline" className="text-[10px]">Step {kit.step ?? 1} / 5</Badge>
+            )}
+          </>
+        }
+        actions={
+          <>
+            {kit && (
+              <Button size="sm" variant="ghost" onClick={onReset} disabled={reset.isPending} title="Reset & start over">
+                <RotateCcw className="mr-1 h-3 w-3" />Reset
+              </Button>
+            )}
+            <Button size="sm" onClick={() => setOpen(true)}>
+              <Sparkles className="mr-1 h-3 w-3" />
+              {kit ? (locked ? "Edit brand" : "Resume wizard") : "Start brand wizard"}
             </Button>
-          )}
-          <Button size="sm" onClick={() => setOpen(true)}>
-            <Sparkles className="mr-1 h-3 w-3" />
-            {kit ? (locked ? "Edit brand" : "Resume wizard") : "Start brand wizard"}
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
+      <div className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
 
       {!kit && (
         <p className="text-xs text-muted-foreground">
