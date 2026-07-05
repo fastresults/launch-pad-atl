@@ -24,6 +24,7 @@ import { AssetPreviewDialog, type PreviewableAsset } from "@/components/hub/soci
 import { RegenerateAssetDialog } from "@/components/hub/social/RegenerateAssetDialog";
 import { AssetImage } from "@/components/hub/social/AssetImage";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { SectionHeader } from "@/components/hub/SectionHeader";
 
 const ART_DIRECTIONS = [
   { id: "editorial", label: "Editorial" },
