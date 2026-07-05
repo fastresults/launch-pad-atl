@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, CheckCircle2, Circle, ArrowRight, Loader2, ExternalLink, Rocket, Clock, Presentation } from "lucide-react";
+import { Sparkles, CheckCircle2, Circle, ArrowRight, Loader2, ExternalLink, Rocket, Clock, Presentation, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LAUNCH_14DAY_PLAN, CATEGORY_DOT, type LaunchDay } from "@/lib/launch-14day-plan";
 import { TRACK_META, TRACK_ORDER, trackFor, timeSplit, formatDuration, timeChipLabel, type AssetTrack } from "@/lib/asset-tracks";
@@ -8,6 +8,21 @@ import { TrackChip } from "@/components/hub/TrackChip";
 
 const SORT_STORAGE_KEY = "hub:launch14:sortMode";
 type SortMode = "sequence" | "track";
+
+// Cross-references between sprint assets. Key = row asset, value = companion
+// asset that lives elsewhere in the framework and directly supports it.
+const COMPANION_ASSET: Record<string, { key: string; label: string; category: string }> = {
+  pre_sell_offer_test: {
+    key: "presell_landing_prd",
+    label: "Pre-Sell Landing PRD + AI-builder prompt",
+    category: "Marketing",
+  },
+  landing_page_waitlist_test: {
+    key: "presell_landing_prd",
+    label: "Pre-Sell Landing PRD + AI-builder prompt",
+    category: "Marketing",
+  },
+};
 
 
 
