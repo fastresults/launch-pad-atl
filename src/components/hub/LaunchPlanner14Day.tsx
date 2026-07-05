@@ -352,34 +352,60 @@ export function LaunchPlanner14Day({
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <div className="text-xs text-muted-foreground">
-                    {active.done}/{active.total} assets ready today
+                  {(() => {
+                    const s = daySplit(active.day, typeByKey, optionalKeys);
+                    return (
+                      <div className="text-right">
+                        <div className="text-xs text-muted-foreground">
+                          {active.done}/{active.total} ready · <span className="tabular-nums">≈ {formatDuration(s.total)}</span> focused work
+                        </div>
+                        {(s.read > 0 || s.do > 0) && (
+                          <div className="mt-0.5 text-[11px] text-muted-foreground/80 tabular-nums">
+                            {s.read > 0 && <span className="text-indigo-400">Read {formatDuration(s.read)}</span>}
+                            {s.read > 0 && s.do > 0 && <span className="mx-1 opacity-40">·</span>}
+                            {s.do > 0 && <span className="text-teal-400">Build {formatDuration(s.do)}</span>}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  <div className="flex items-center gap-2">
+                    {onOpenDayDeck && availableKeys.length > 0 && (
+                      <Button
+                        size="sm"
+                        onClick={() => onOpenDayDeck(active.day)}
+                        className="gap-1.5"
+                      >
+                        <Presentation className="h-3.5 w-3.5" /> Open Day Deck
+                      </Button>
+                    )}
+                    {availableKeys.length > 1 && (
+                      <div
+                        className="inline-flex items-center gap-0.5 rounded-md border border-white/10 bg-background/40 p-0.5"
+                        role="group"
+                        aria-label="Sort assets"
+                      >
+                        <span className="pl-2 pr-1 text-[10px] uppercase tracking-wider text-muted-foreground">Sort</span>
+                        {(["sequence", "track"] as SortMode[]).map((mode) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => setSortMode(mode)}
+                            aria-pressed={sortMode === mode}
+                            className={`rounded px-2 py-1 text-[11px] font-medium transition-colors ${
+                              sortMode === mode
+                                ? "bg-primary text-primary-foreground"
+                                : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            {mode === "sequence" ? "Sequence" : "By track"}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {availableKeys.length > 1 && (
-                    <div
-                      className="inline-flex items-center gap-0.5 rounded-md border border-white/10 bg-background/40 p-0.5"
-                      role="group"
-                      aria-label="Sort assets"
-                    >
-                      <span className="pl-2 pr-1 text-[10px] uppercase tracking-wider text-muted-foreground">Sort</span>
-                      {(["sequence", "track"] as SortMode[]).map((mode) => (
-                        <button
-                          key={mode}
-                          type="button"
-                          onClick={() => setSortMode(mode)}
-                          aria-pressed={sortMode === mode}
-                          className={`rounded px-2 py-1 text-[11px] font-medium transition-colors ${
-                            sortMode === mode
-                              ? "bg-primary text-primary-foreground"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          {mode === "sequence" ? "Sequence" : "By track"}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
+
               </div>
 
               {availableKeys.length === 0 ? (
