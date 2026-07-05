@@ -231,7 +231,7 @@ function EmptyState({ tab }: { tab: Tab }) {
       <h2 className="text-xl font-semibold">Start your first startup</h2>
       <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
         Drop in a URL or describe your concept. We'll enrich it with market research,
-        let you review the brief, then generate a full set of investor-ready documents.
+        let you review the brief, then generate a full set of founder-ready startup assets.
       </p>
       <Button asChild className="mt-5">
         <Link to="/dashboard/hub/new">
