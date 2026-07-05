@@ -129,6 +129,8 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
       { icon: Mic, title: "Sales Call Recording Stack", tooltip: "Fathom, Grain, or Fireflies wired up with an AI summary template, tagging convention, and a call-to-content pipeline. You'll stop forgetting what the customer said and start turning every conversation into product and marketing fuel." },
       { icon: LifeBuoy, title: "AI Support Bot Setup", tooltip: "A Chatbase or Intercom Fin bot trained on your own docs, with guardrails and escalation to your support inbox. You'll deflect the easy 60% of tickets on Day 12 and only see the questions that actually need a human." },
       { icon: Zap, title: "Automation Recipes Starter", tooltip: "Five n8n, Zapier, or Make workflows tuned to your stack — lead → CRM + Slack, sale → welcome + review ask, weekly KPI digest, form → booking, review → wall-of-love. You'll stop doing repetitive work by Week 2." },
+      { icon: Package, title: "Supplier Shortlist", tooltip: "For physical-product startups only — a 5-10 supplier shortlist with MOQ, unit cost, lead time, pros/cons, and a first-outreach message you can paste today. You'll stop cold-messaging Alibaba and start with vendors already scored against your product." },
+      { icon: Calculator, title: "BOM & Landed-Cost Model", tooltip: "For physical-product startups only — bill of materials, unit cost stack, freight/duty/landed-cost math, and break-even units at your current price. You'll know your true margin before the first PO ships instead of after the first bad quarter." },
     ],
   },
   {
