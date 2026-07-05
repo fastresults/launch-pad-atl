@@ -82,6 +82,7 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
           ) : null
         }
       />
+      {expanded && (
       <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
 
       {!locked && <SocialStudioGate snapshot={snapshot} kit={kit} />}
