@@ -1186,6 +1186,8 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         docs={docs}
         typeByKey={typeByKey}
         completedKeys={completedKeys}
+        isPhysical={isPhysical}
+        sourcingOnlyKeys={SOURCING_ONLY_TYPES}
         onOpenDoc={(d) => setViewerDoc(d)}
         onGenerateDoc={(key) => {
           const t = typeByKey.get(key) as any;
