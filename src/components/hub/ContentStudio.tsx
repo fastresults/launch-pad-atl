@@ -159,8 +159,8 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           index={2}
           done={0}
           total={5}
-          isOpen
-          onToggle={() => {}}
+          isOpen={expanded}
+          onToggle={() => setExpanded((v) => !v)}
           contentId="content-studio-body"
           status="locked"
           icon={Newspaper}
@@ -173,12 +173,14 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
             </span>
           }
         />
-        <div className="rounded-2xl border border-white/10 bg-card p-4">
-          <p className="text-xs text-muted-foreground">
-            Lock your Brand Wizard first — Content Studio uses your palette, typography and logo to
-            keep every ad visually consistent with your channel covers.
-          </p>
-        </div>
+        {expanded && (
+          <div className="rounded-2xl border border-white/10 bg-card p-4">
+            <p className="text-xs text-muted-foreground">
+              Lock your Brand Wizard first — Content Studio uses your palette, typography and logo to
+              keep every ad visually consistent with your channel covers.
+            </p>
+          </div>
+        )}
       </div>
     );
   }
