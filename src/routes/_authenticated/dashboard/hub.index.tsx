@@ -403,7 +403,7 @@ function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; tot
           <AlertDialogHeader>
             <AlertDialogTitle>Archive this startup?</AlertDialogTitle>
             <AlertDialogDescription>
-              You can restore it from the Archived tab anytime. Your documents stay safe — nothing is deleted.
+              You can restore it from the Archived tab anytime. Your assets stay safe — nothing is deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
