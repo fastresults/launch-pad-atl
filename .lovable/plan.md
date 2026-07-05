@@ -1,158 +1,58 @@
-## Goal
-Two connected additions to the 14-day sprint panel:
-1. Show **estimated time** on every asset row, split into "read" vs "do" based on its track, with a per-day total at the top.
-2. Add a **Day Sprint Deck** — a per-day facilitator-style slide presentation, opened from the day panel, that walks the founder through that day's assets and how to execute them.
+# Add "Pre-Sell Landing PRD" — Day 4 Marketing asset
 
-## Part 1 — Estimated hours
+Today Day 4 ships two Strategy-tinted assets (`pre_sell_offer_test`, `landing_page_waitlist_test`). Neither is a hand-off spec an AI website builder can consume the way `website_prd` is on Day 11. We'll add a third asset that plays that role for the Day-4 pre-sell page — a scoped-down PRD patterned after Website PRD, filed under Marketing, and mapped into the 14-Day planner.
 
-### Source of truth
-`venture_document_types.estimated_minutes` already exists on every asset and is loaded into `typeByKey`. No DB change. No content backfill needed.
+## New asset
 
-### Read vs Do classification
-Derive from the existing track:
-- Introduction, Education → **read** time (absorb / internalize)
-- Tracking → **read + configure** (split 50/50)
-- Action → **do** time (build / ship / deploy)
+- **Key:** `presell_landing_prd`
+- **Name:** "Pre-Sell Landing PRD (AI-builder prompt)"
+- **Category:** Marketing
+- **Track:** Education (matches `website_prd`)
+- **Dependencies:** `value_proposition`, `customer_personas`, `pre_sell_offer_test`, `landing_page_waitlist_test`
+- **Estimated minutes:** 6
+- **Brand-kit required:** yes (so brand tokens flow in like Website PRD)
+- **Purpose:** Turn the Day-4 pre-sell offer + landing copy + form spec into a single paste-ready PRD that Lovable / v0 / Bolt can scaffold into a live one-pager in one shot, at the same visual bar as the Day-11 Website PRD but scoped to a single conversion page.
 
-Helper in `src/lib/asset-tracks.ts`:
-```ts
-export function timeSplit(track: AssetTrack, minutes: number):
-  { read: number; do: number } {
-  switch (track) {
-    case "Introduction":
-    case "Education": return { read: minutes, do: 0 };
-    case "Tracking":  return { read: Math.round(minutes/2), do: Math.ceil(minutes/2) };
-    case "Action":    return { read: 0, do: minutes };
-  }
-}
-export function formatDuration(min: number): string {
-  if (min < 60) return `${min}m`;
-  const h = Math.floor(min/60), m = min % 60;
-  return m ? `${h}h ${m}m` : `${h}h`;
-}
-```
+## PRD output shape (mirrors `website_prd`, single-page scope)
 
-### Row rendering (LaunchPlanner14Day)
-Under the asset title/subtitle line, replace the current "Ready to open / Not started" line's tail with:
-```
-Ready to open · ⏱ 25m read
-Not started · ⏱ 45m to build
-```
-- Icon: `Clock` from lucide.
-- Suffix picks label from `timeSplit`: `Xm read`, `Xm to build`, or `Xm read + Ym build` for Tracking.
-- Optional assets show their time in muted amber to match the Physical-products pill.
+1. Page objective + primary/secondary conversion
+2. Audience & message match (persona → hook → proof)
+3. Section blueprint (Hero, Proof, Problem, Solution, Offer, Objection handler, FAQ, Final CTA)
+4. Copy deck per section (H1/H2, sub-copy, bullets, CTA labels, microcopy — no lorem)
+5. Form spec (fields, validation, success/error states, redirect)
+6. Confirmation email sequence (instant + Day-2 nudge)
+7. Visual + motion direction (image briefs, palette + type tokens from brand kit, motion notes)
+8. Analytics events (aligned with `analytics_pixel_setup` naming)
+9. Accessibility + Lighthouse targets
+10. **Paste-Ready Master Prompt** — single fenced block for Lovable/v0/Bolt (same convention as Website PRD Section 8, so `DocumentViewer`'s existing PRD extractor works unchanged)
 
-### Day summary (top of detail panel)
-Replace the current `active.done/active.total assets ready today` line with a two-line meta strip:
-```
-5/6 ready today · ≈ 3h 20m focused work
-Read 1h 40m · Build 1h 40m
-```
-Computed by summing `estimated_minutes` for `available` keys and running each through `timeSplit`. Optional (physical-only) assets are counted only when `isPhysical` — matches existing "optional" logic.
+## Files to change
 
-### Day tile (grid)
-Add a small `⏱ 3h 20m` line under the `done/total` counter on each day tile (`text-[10px] text-muted-foreground`) so founders can eyeball the sprint load without opening a day. Skip on very tight grids if it clips — the tile currently has room.
+**Backend**
+- New migration `supabase/migrations/<ts>_add_presell_landing_prd.sql`: insert row into `venture_document_types` (Marketing, sort_order between 46 and 47, deps above, icon `LayoutTemplate`).
+- `supabase/functions/_shared/deliverable-prompts.ts`: add `presell_landing_prd` prompt patterned after `website_prd` but page-scoped, grounded in the deps above.
+- `supabase/functions/_shared/venture-context.ts`: add `presell_landing_prd` to `BRAND_KIT_REQUIRED_TYPES`.
+- `supabase/functions/venture-chatbot/knowledge.ts`: mention the new asset under Day 4.
 
-### Framework category rows
-The framework item card already renders `~{t.estimated_minutes} min`. Leave as-is (that surface is per-item, not per-day totals).
+**Frontend**
+- `src/lib/launch-14day-plan.ts`: add `"presell_landing_prd"` to Day 4 `assetKeys`.
+- `src/lib/asset-tracks.ts`: map `presell_landing_prd: "Education"`.
+- `src/lib/framework-deliverables.ts`: add tile under Marketing with tooltip.
+- `src/lib/launch-14day-guidance.ts`: extend Day 4 `suggestedSchedule` to mention handing the PRD to the builder.
+- `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx`: add `presell_landing_prd` to the client-side `BRAND_KIT_REQUIRED_TYPES` set so the same Brand-Wizard gate + toast fires as for Website PRD.
+- `src/lib/chatbot-knowledge.ts`: parallel copy update.
 
-## Part 2 — Day Sprint Deck
-
-A per-day presentation modeled on the existing Facilitator Deck (`DeckDialog` + `SlideLayout` + `ScaledSlide`), but driven dynamically from the day's plan + asset metadata — so we get 14 decks "for free" without hand-authoring 100+ slides.
-
-### Entry point
-In `LaunchPlanner14Day` day panel header, next to the sort toggle, add:
-```
-[▶ Open Day Deck]
-```
-Primary-styled button with `Presentation` icon. Opens the deck for `active.day`.
-
-### New component: `src/components/hub/DaySprintDeckDialog.tsx`
-Reuses the same visual chrome as `DeckDialog` (dark stage, top bar, side arrows, progress bar, thumbnail rail, ←/→/F/Esc keys, fullscreen). It differs only in that its `slides` array is built from a `LaunchDay` + `typeByKey` + track/time helpers, not from a static registry.
-
-Signature:
-```ts
-type Props = {
-  day: LaunchDay | null;
-  typeByKey: Map<string, VentureDocumentType>;
-  completedKeys: Set<string>;
-  isPhysical: boolean;
-  sourcingOnlyKeys?: Set<string>;
-  onOpenChange: (open: boolean) => void;
-  onJumpToAsset?: (key: string) => void; // closes deck + scrolls
-};
-```
-
-### Slide sequence (dynamic per day)
-1. **Cover** — `Day N · <Category>` kicker, `<theme>` as `slide-title-lg`, `<objective>` subtitle. Bottom-right badge: `≈ Xh Ym focused work`.
-2. **Why today matters** — pull `objective` + a canned "why this day" line derived from `category`/`week` (map of 14 curated one-liners in `src/lib/launch-14day-guidance.ts`).
-3. **What "done" looks like** — `doneWhen` rendered as a large statement with a `CheckCircle2` icon.
-4. **The plan (overview)** — 2-column bento of assets grouped by track (Intro/Edu/Track/Action columns collapse to available tracks). Each card: track chip, asset name, `⏱ time`, one-line description from `type.description`.
-5. **N asset slides** — one per available asset, in track order (Introduction → Education → Tracking → Action):
-   - Kicker: `Asset K of N · <TRACK>`
-   - Title: asset name
-   - Left half: `type.description` + a short "How to complete this" body — a canned template keyed by track:
-     - **Introduction**: "Read the generated asset end-to-end. Rewrite anything that doesn't sound like you. Save the final line as the version you'll repeat out loud this week."
-     - **Education**: "Skim once for the whole. Re-read the section that maps to what you'll do next. Copy the 3 highest-leverage moves into your notes."
-     - **Tracking**: "Set it up in the tool it lives in. Enter your first real row today. Add a check to your weekly cadence."
-     - **Action**: "Block a focused session. Follow the checklist inside the asset. Ship the smallest working version — not the perfect one."
-   - Right half: status pill (Ready to open / Not started / Writing / Optional–physical), `⏱ estimated time`, and a large `Open this asset ▸` button that calls `onJumpToAsset(key)`.
-   - Optional (physical-only) assets get a subtle "Skip unless you're shipping a physical product" note when `!isPhysical`.
-6. **Order of operations** — numbered vertical list of assets in the order to tackle them today (Intro → Edu → Track → Action). Small time chips beside each.
-7. **Time budget** — big stat row: `Total ≈ Xh Ym`, `Read Ah Bm`, `Build Ah Bm`, `# assets`. Under it: a suggested schedule for a working day (curated per day in the guidance file, or a generic template: "Morning: read Intro + Edu. Midday: configure Tracking. Afternoon: ship Action.").
-8. **Common pitfalls** — 3 bullets from the guidance file per day (curated). Falls back to a generic 3-pitfall list if the day isn't in the map yet.
-9. **Do this next** — CTA slide: primary button `Start with <first-not-complete asset>` that closes the deck and jumps to that asset. Secondary: `Close deck`.
-
-Total: ~7 fixed + 2–6 dynamic asset slides = 9–15 slides per day.
-
-### New data file: `src/lib/launch-14day-guidance.ts`
-Adds per-day guidance the deck reads:
-```ts
-export type DayGuidance = {
-  why: string;               // one paragraph, "why today matters"
-  suggestedSchedule: string; // 1–2 sentences
-  pitfalls: string[];        // 3 items
-};
-export const DAY_GUIDANCE: Record<number, DayGuidance> = {
-  1: { ... },
-  ...
-  14: { ... },
-};
-```
-Curated, short, in the voice already used by `doneWhen`/`objective`. This is the only real writing task in the whole feature.
-
-### Slide implementation
-- Reuse `SlideLayout` for consistent chrome (kicker, page label, dark/light variant). Use `variant="dark"` for cover and CTA, default light for the rest.
-- Use the semantic slide typography classes (`slide-title`, `slide-subtitle`, `slide-body-lg`, `slide-kicker`, `slide-chrome`) already defined in `src/styles.css`.
-- Track chips reuse `TrackChip` from `src/components/hub/TrackChip.tsx`.
-- No `SlotText`/`SlotImage` overrides — these are ephemeral, per-venture decks, not the editable stage decks.
-
-### Deck dialog chrome
-Rather than fork `DeckDialog`, extract the chrome into `<DeckShell slides={...} title="Day N — Theme" open onOpenChange={...}>` (small refactor of `DeckDialog.tsx`) and have both the stage decks and the day decks render through it:
-- `DeckDialog` becomes `DeckShell` + a thin wrapper that resolves `slug → slides` and loads overrides.
-- `DaySprintDeckDialog` builds its slides array in-memory and passes to `DeckShell`. No override fetching.
-
-### Wiring
-In `hub.$snapshotId.tsx`:
-- Add `openDayDeckDay: number | null` state.
-- Pass `onOpenDayDeck={(day) => setOpenDayDeckDay(day)}` prop into `LaunchPlanner14Day`.
-- Render `<DaySprintDeckDialog day={activeDay} typeByKey={...} completedKeys={...} isPhysical={...} onOpenChange={...} onJumpToAsset={(k) => { setOpenDayDeckDay(null); scrollToDoc(k); }} />`.
-
-## Files touched
-- **New:** `src/lib/launch-14day-guidance.ts` — per-day guidance content (14 entries).
-- **New:** `src/components/hub/DaySprintDeckDialog.tsx` — dynamic deck for a single day.
-- **Edit:** `src/components/workshop-slides/DeckDialog.tsx` — extract chrome into `DeckShell` (or export a reusable inner component).
-- **Edit:** `src/lib/asset-tracks.ts` — add `timeSplit` + `formatDuration` helpers.
-- **Edit:** `src/components/hub/LaunchPlanner14Day.tsx` — time on rows, day-summary meta, day-tile time chip, "Open Day Deck" button, wire callback.
-- **Edit:** `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` — mount `DaySprintDeckDialog`, wire jump-to-asset.
+**No changes needed**
+- `DocumentViewer.tsx`'s PRD-specific UI is keyed on `document_type === "website_prd"`. Since the Day-4 PRD is a different, simpler artifact, we leave that special-case alone — the new asset renders with the standard viewer. (If you'd rather it share the "Master Prompt" extractor + repair UI, say the word and I'll widen the check to a small set.)
 
 ## Verification
-- Day 6 panel shows `6/6 ready · ≈ 3h 15m focused work · Read 1h 20m · Build 1h 55m` and each row shows a `⏱` chip.
-- Each grid tile shows a `⏱` sub-line.
-- Click `Open Day Deck` on Day 3 → deck opens with cover slide "Day 3 · Strategy — Name your buyers, load the CRM"; arrow keys navigate; asset slides render Customer Personas / First-50 Warm List / CRM Pipeline Starter each with their track, time, and "Open this asset ▸" CTA.
-- Clicking `Open this asset ▸` in the deck closes the dialog and scrolls to the matching asset card below.
-- `Esc` and `F` behave as they do in the existing facilitator deck.
-- `bunx tsgo --noEmit` clean.
 
-## Open question (optional)
-I've defaulted the read/do split by track. If you'd rather have a real per-asset `read_minutes` / `do_minutes` (DB migration + backfill on `venture_document_types`), say so and I'll swap Part 1 to use those columns instead. Track-derived is faster to ship and easy to override later.
+- Day 4 tile shows `3/3 ready` and time chip updates.
+- Planner row for `presell_landing_prd` shows the Education track chip and the `⏱ 6m read` chip.
+- Day Sprint Deck picks it up automatically (slides are generated from `assetKeys`).
+- Generating the asset produces the 10-section markdown with a paste-ready fenced block.
+- Brand Wizard gate blocks generation with the same toast as Website PRD when brand tokens are missing.
+
+## Open question
+
+Track = **Education** (spec/blueprint, like Website PRD). If you'd rather it read as **Action** (because Day 4 is a shipping day), I'll flip the track + time split — say which you prefer.
