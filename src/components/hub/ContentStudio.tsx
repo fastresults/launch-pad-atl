@@ -193,8 +193,8 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           index={2}
           done={0}
           total={5}
-          isOpen
-          onToggle={() => {}}
+          isOpen={expanded}
+          onToggle={() => setExpanded((v) => !v)}
           contentId="content-studio-body"
           status="not_started"
           icon={Newspaper}
@@ -202,12 +202,14 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           tagline="Turn planned posts into on-brand ads"
           accentVar="--status-info"
         />
-        <div className="rounded-2xl border border-white/10 bg-card p-4">
-          <p className="text-xs text-muted-foreground">
-            Generate your <b>90-Day Content Calendar</b> startup asset first — Content Studio turns
-            each planned post into a 1:1 / 4:5 / 9:16 social ad using your locked brand kit.
-          </p>
-        </div>
+        {expanded && (
+          <div className="rounded-2xl border border-white/10 bg-card p-4">
+            <p className="text-xs text-muted-foreground">
+              Generate your <b>90-Day Content Calendar</b> startup asset first — Content Studio turns
+              each planned post into a 1:1 / 4:5 / 9:16 social ad using your locked brand kit.
+            </p>
+          </div>
+        )}
       </div>
     );
   }
