@@ -181,7 +181,7 @@ export function renderSources(ctx: VentureContext, perSourceCap = 6000): string 
  * The Brand Kit (palette, typography, primary logo, voice) is injected as
  * authoritative context for these prompts.
  */
-export const BRAND_KIT_REQUIRED_TYPES = new Set<string>(["website_prd"]);
+export const BRAND_KIT_REQUIRED_TYPES = new Set<string>(["website_prd", "presell_landing_prd"]);
 
 export type BrandKitRow = {
   status?: string | null;
