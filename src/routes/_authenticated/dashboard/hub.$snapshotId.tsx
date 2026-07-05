@@ -946,12 +946,14 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     refetchInterval: 10000,
   });
 
-  // Hide sourcing-only asset types unless this venture is classified as a physical product.
-  const SOURCING_ONLY_TYPES = new Set(["supplier_shortlist", "bom_and_landed_cost"]);
-  const isPhysical = (snapshot as any)?.sourcing_profile?.is_physical_product === true;
-  const types = (typesQ.data ?? []).filter(
-    (t: any) => isPhysical || !SOURCING_ONLY_TYPES.has(t.type),
+  // Sourcing assets are always surfaced; when the venture isn't classified as physical,
+  // the UI badges them "Physical products only" and excludes them from required counters.
+  const SOURCING_ONLY_TYPES = useMemo(
+    () => new Set(["supplier_shortlist", "bom_and_landed_cost"]),
+    [],
   );
+  const isPhysical = (snapshot as any)?.sourcing_profile?.is_physical_product === true;
+  const types = typesQ.data ?? [];
   const docs = docsQ.data ?? [];
   const docByType = useMemo(() => new Map(docs.map((d) => [d.document_type, d])), [docs]);
   const typeByKey = useMemo(() => new Map(types.map((t: any) => [t.type, t])), [types]);
