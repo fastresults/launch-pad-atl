@@ -954,8 +954,8 @@ export function DocumentViewer({
               disabled={saving}
               title={
                 savedCount > 0
-                  ? "Save a new version to your Documents library"
-                  : "Save this startup asset to Dashboard → Documents"
+                  ? "Save a new version to your assets vault"
+                  : "Save this startup asset to Dashboard → My files"
               }
             >
               {saving ? (

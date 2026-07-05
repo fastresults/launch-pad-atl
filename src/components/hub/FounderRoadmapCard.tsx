@@ -59,7 +59,7 @@ export function FounderRoadmapCard({ snapshot, documentCount }: Props) {
             </div>
             <h2 className="mt-2 text-2xl font-bold tracking-tight">Your Founder Roadmap</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              A narrative founder playbook synthesized from your entire workshop — written to share with
+              A narrative founder playbook synthesized from your entire 14-Day Sprint — written to share with
               co-founders and investors. Cover, verdict, the <span className="font-medium text-foreground">first 45 days</span>,
               your <span className="font-medium text-foreground">first year</span>, money, and how to talk about it.
             </p>
@@ -95,7 +95,7 @@ export function FounderRoadmapCard({ snapshot, documentCount }: Props) {
             ) : (
               <Button size="lg" onClick={() => generate.mutate()} disabled={generate.isPending || isGenerating}>
                 {generate.isPending || isGenerating ? (
-                  <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Synthesizing every document…</>
+                  <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Synthesizing every asset…</>
                 ) : (
                   <><Sparkles className="mr-1.5 h-4 w-4" /> Generate my Founder Roadmap</>
                 )}

@@ -46,7 +46,7 @@ export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEdit
           <UnlockCard
             icon={<FileText className="h-4 w-4" />}
             title="Deliverables that sound like you"
-            body="Every one of the 50 startup assets is generated from your own words and numbers."
+            body="Every one of the 60+ startup assets is generated from your own words and numbers."
           />
         </div>
       </div>
@@ -72,7 +72,7 @@ export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEdit
             onClick={onSeeDeliverables}
             className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/10 px-5 py-3 text-sm font-medium hover:bg-muted/30"
           >
-            See all 50 startup assets
+            See all 60+ startup assets
           </button>
         </div>
       </div>

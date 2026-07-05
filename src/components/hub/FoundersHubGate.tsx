@@ -19,11 +19,11 @@ export function FoundersHubGate({ children }: { children: ReactNode }) {
     return (
       <div className="mx-auto max-w-xl rounded-2xl border border-white/10 bg-card p-8 text-center">
         <Lock className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
-        <h1 className="text-2xl font-semibold tracking-tight">Founders Hub opens on workshop day</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Founders Hub unlocks when your 14-Day Sprint begins</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Your facilitator will unlock the AI venture workflow at the start of your session.
-          Once granted, you'll be able to generate 20 investor-ready documents from a single
-          business concept.
+          Your facilitator will unlock the AI venture workflow at the start of your sprint.
+          Once granted, you'll be able to generate 60+ founder-ready startup assets from a
+          single venture concept.
         </p>
       </div>
     );

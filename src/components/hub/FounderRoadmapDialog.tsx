@@ -205,7 +205,7 @@ export function FounderRoadmapDialog({
               {generatedAt ? new Date(generatedAt).toLocaleString() : "Just generated"}
               {readMin ? ` · ~${readMin} min read` : ""}
               {wordCount ? ` · ${wordCount.toLocaleString()} words` : ""}
-              {documentCount ? ` · synthesized from ${documentCount} documents` : ""}
+              {documentCount ? ` · synthesized from ${documentCount} assets` : ""}
               {typeof qualityScore === "number" ? ` · Quality ${qualityScore}/100` : ""}
             </div>
           </div>
@@ -252,7 +252,7 @@ export function FounderRoadmapDialog({
                     <p className="mt-4 text-[15px] leading-relaxed text-foreground/90">{cover}</p>
                   ) : (
                     <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
-                      A narrative founder playbook synthesized from your entire workshop.
+                      A narrative founder playbook synthesized from your entire 14-Day Sprint.
                     </p>
                   )}
                   {stats.length > 0 && (

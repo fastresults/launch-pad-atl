@@ -99,7 +99,7 @@ function BeforeMode({
             {firstName ? `Welcome` : `Welcome`}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Your workshop is in <strong className="text-foreground">{state.daysUntil} {state.daysUntil === 1 ? "day" : "days"}</strong>. Let's get you ready.
+            Your 14-Day Sprint kicks off in <strong className="text-foreground">{state.daysUntil} {state.daysUntil === 1 ? "day" : "days"}</strong>. Let's get you ready.
           </p>
         </div>
         <ProgressRing value={pct} label={`${briefScore}/${briefTotal}`} sublabel="ready" size={96} stroke={8} />
@@ -108,7 +108,7 @@ function BeforeMode({
       {/* Workshop countdown card */}
       <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-primary/10 via-card to-card p-6 md:p-8">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary">
-          <Calendar className="h-4 w-4" /> Your workshop
+          <Calendar className="h-4 w-4" /> Your 14-Day Sprint
         </div>
         <div className="mt-2 text-2xl md:text-3xl font-semibold tracking-tight">{cohort.dateLabel}</div>
         <div className="mt-1 text-sm text-muted-foreground">8:00 AM – 4:30 PM ET</div>
@@ -346,8 +346,8 @@ function NoCohortMode({ briefScore, briefTotal, pitch }: { briefScore: number; b
       <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Welcome</h1>
       <p className="mt-2 text-muted-foreground">
         {done
-          ? "Your brief is locked in. We'll email you the moment your workshop date is set."
-          : "We haven't matched you to a workshop date yet. While you wait, start your brief."}
+          ? "Your brief is locked in. We'll email you the moment your 14-Day Sprint start date is set."
+          : "We haven't set your 14-Day Sprint start date yet. While you wait, start your brief."}
       </p>
       <BriefStatusCard answered={briefScore} total={briefTotal} />
     </>
@@ -381,7 +381,7 @@ function WalkOutPreview() {
   return (
     <section>
       <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-        By 11:30 AM on workshop day, you'll have all of this
+        By the end of Day 1 of your sprint, you'll have all of this
       </h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {stages.map((n) => (

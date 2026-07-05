@@ -100,7 +100,7 @@ export default function WelcomePage() {
           </h1>
           <p className="mt-3 text-muted-foreground">
             Tell us what you're building. A member of our team will reach out to arrange your
-            workshop and get your dashboard set up.
+            14-Day Launch and get your dashboard set up.
           </p>
         </div>
 
@@ -130,7 +130,7 @@ export default function WelcomePage() {
               <div className="text-sm text-muted-foreground">
                 Want to skip the wait?{" "}
                 <Link to="/register" className="text-foreground underline">
-                  Register for a workshop
+                  Reserve your 14-Day Launch seat
                 </Link>{" "}
                 — paying immediately unlocks your dashboard.
               </div>
@@ -193,10 +193,10 @@ export default function WelcomePage() {
 
             <div className="flex items-center justify-between pt-2">
               <Link to="/register" className="text-sm text-muted-foreground underline">
-                Or register for a workshop directly →
+                Or join the 14-Day Launch directly →
               </Link>
               <Button type="submit" disabled={submitting}>
-                {submitting ? "Submitting..." : "Submit & request workshop"}
+                {submitting ? "Submitting..." : "Submit & request my sprint seat"}
               </Button>
             </div>
           </form>

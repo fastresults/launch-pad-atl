@@ -101,7 +101,7 @@ function LibraryInner() {
           </div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Your startups</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Turn a single concept into {totalDocs || 20} investor-ready documents.
+            Turn a single venture concept into {totalDocs || 60}+ founder-ready startup assets.
           </p>
         </div>
         {hasVentures ? (
@@ -231,7 +231,7 @@ function EmptyState({ tab }: { tab: Tab }) {
       <h2 className="text-xl font-semibold">Start your first startup</h2>
       <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
         Drop in a URL or describe your concept. We'll enrich it with market research,
-        let you review the brief, then generate a full set of investor-ready documents.
+        let you review the brief, then generate a full set of founder-ready startup assets.
       </p>
       <Button asChild className="mt-5">
         <Link to="/dashboard/hub/new">
@@ -391,7 +391,7 @@ function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; tot
         </p>
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            {totalDocs ? `${snapshot.doc_count ?? 0} / ${totalDocs} documents` : `${snapshot.doc_count ?? 0} documents`}
+            {totalDocs ? `${snapshot.doc_count ?? 0} / ${totalDocs} assets` : `${snapshot.doc_count ?? 0} assets`}
             {snapshot.updated_at && <span className="ml-2 opacity-70">· {relativeTime(snapshot.updated_at)}</span>}
           </span>
           <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
@@ -403,7 +403,7 @@ function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; tot
           <AlertDialogHeader>
             <AlertDialogTitle>Archive this startup?</AlertDialogTitle>
             <AlertDialogDescription>
-              You can restore it from the Archived tab anytime. Your documents stay safe — nothing is deleted.
+              You can restore it from the Archived tab anytime. Your assets stay safe — nothing is deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -429,7 +429,7 @@ function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; tot
                   </p>
                   <ul className="list-inside list-disc text-xs text-muted-foreground">
                     <li>The startup record</li>
-                    <li>All generated documents and revisions</li>
+                    <li>All generated assets and revisions</li>
                     <li>All generation jobs and failure logs</li>
                     <li>Uploaded document images</li>
                   </ul>

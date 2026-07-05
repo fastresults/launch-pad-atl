@@ -1,58 +1,69 @@
-# Add "Pre-Sell Landing PRD" — Day 4 Marketing asset
+# Copy audit & rewrite — reflect the 14-Day Sprint + 60+ assets
 
-Today Day 4 ships two Strategy-tinted assets (`pre_sell_offer_test`, `landing_page_waitlist_test`). Neither is a hand-off spec an AI website builder can consume the way `website_prd` is on Day 11. We'll add a third asset that plays that role for the Day-4 pre-sell page — a scoped-down PRD patterned after Website PRD, filed under Marketing, and mapped into the 14-Day planner.
+Full inventory found **34 stale strings across 13 files**, plus 4 open questions. Two dominant issues:
 
-## New asset
+- Language still says **"workshop / workshop day / workshop morning / session"** where it should say **14-Day Sprint / 14-Day Launch Method**.
+- Asset counts are wrong everywhere: **20, 21, 34, 50** appear across the app while the real number resolves to **75** (from `FRAMEWORK_DELIVERABLES.length`). Marketing has been rounding to **60+**.
+- Recurring violation of the project rule: user-facing copy must say **"asset(s)"**, not **"document(s)"**.
 
-- **Key:** `presell_landing_prd`
-- **Name:** "Pre-Sell Landing PRD (AI-builder prompt)"
-- **Category:** Marketing
-- **Track:** Education (matches `website_prd`)
-- **Dependencies:** `value_proposition`, `customer_personas`, `pre_sell_offer_test`, `landing_page_waitlist_test`
-- **Estimated minutes:** 6
-- **Brand-kit required:** yes (so brand tokens flow in like Website PRD)
-- **Purpose:** Turn the Day-4 pre-sell offer + landing copy + form spec into a single paste-ready PRD that Lovable / v0 / Bolt can scaffold into a live one-pager in one shot, at the same visual bar as the Day-11 Website PRD but scoped to a single conversion page.
+## Step 1 — Establish a single source of truth
 
-## PRD output shape (mirrors `website_prd`, single-page scope)
+Add two exports to unblock every rewrite:
 
-1. Page objective + primary/secondary conversion
-2. Audience & message match (persona → hook → proof)
-3. Section blueprint (Hero, Proof, Problem, Solution, Offer, Objection handler, FAQ, Final CTA)
-4. Copy deck per section (H1/H2, sub-copy, bullets, CTA labels, microcopy — no lorem)
-5. Form spec (fields, validation, success/error states, redirect)
-6. Confirmation email sequence (instant + Day-2 nudge)
-7. Visual + motion direction (image briefs, palette + type tokens from brand kit, motion notes)
-8. Analytics events (aligned with `analytics_pixel_setup` naming)
-9. Accessibility + Lighthouse targets
-10. **Paste-Ready Master Prompt** — single fenced block for Lovable/v0/Bolt (same convention as Website PRD Section 8, so `DocumentViewer`'s existing PRD extractor works unchanged)
+- `TOTAL_ASSETS_LABEL = "60+"` in `src/lib/framework-deliverables.ts` (or a new `src/lib/product-copy.ts`) — the human-friendly figure used in all marketing/UI copy.
+- `SPRINT_LABEL = "14-Day Sprint"` and `SPRINT_METHOD_LABEL = "14-Day Launch Method"` in the same file, so future rewrites don't drift again.
 
-## Files to change
+Every string below uses these constants where it makes sense. The internal `TOTAL_DELIVERABLES` (75) stays as-is for progress math.
 
-**Backend**
-- New migration `supabase/migrations/<ts>_add_presell_landing_prd.sql`: insert row into `venture_document_types` (Marketing, sort_order between 46 and 47, deps above, icon `LayoutTemplate`).
-- `supabase/functions/_shared/deliverable-prompts.ts`: add `presell_landing_prd` prompt patterned after `website_prd` but page-scoped, grounded in the deps above.
-- `supabase/functions/_shared/venture-context.ts`: add `presell_landing_prd` to `BRAND_KIT_REQUIRED_TYPES`.
-- `supabase/functions/venture-chatbot/knowledge.ts`: mention the new asset under Day 4.
+## Step 2 — Rewrite by surface
 
-**Frontend**
-- `src/lib/launch-14day-plan.ts`: add `"presell_landing_prd"` to Day 4 `assetKeys`.
-- `src/lib/asset-tracks.ts`: map `presell_landing_prd: "Education"`.
-- `src/lib/framework-deliverables.ts`: add tile under Marketing with tooltip.
-- `src/lib/launch-14day-guidance.ts`: extend Day 4 `suggestedSchedule` to mention handing the PRD to the builder.
-- `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx`: add `presell_landing_prd` to the client-side `BRAND_KIT_REQUIRED_TYPES` set so the same Brand-Wizard gate + toast fires as for Website PRD.
-- `src/lib/chatbot-knowledge.ts`: parallel copy update.
+### Hub gate + hub index + concept studio
+- `FoundersHubGate.tsx` (lines 22, 25–26) — gate headline + body.
+- `ConceptStudio.tsx` (142) — "all 21 documents" → asset-neutral wording.
+- `BulkUnlockDialog.tsx` (56) — "documents" → "assets".
+- `FounderRoadmapCard.tsx` (62, 98), `FounderRoadmapDialog.tsx` (208, 255) — "workshop" → "14-Day Sprint", "documents" → "assets".
+- `hub.index.tsx` (104, 234, 394, 406, 432) — five occurrences of "documents" + a wrong `20` fallback.
 
-**No changes needed**
-- `DocumentViewer.tsx`'s PRD-specific UI is keyed on `document_type === "website_prd"`. Since the Day-4 PRD is a different, simpler artifact, we leave that special-case alone — the new asset renders with the standard viewer. (If you'd rather it share the "Master Prompt" extractor + repair UI, say the word and I'll widen the check to a small set.)
+### Dashboard shell + day page
+- `dashboard.tsx` (93, 122, 130, 138) — hub tile tooltip counts + "workshop/session" language.
+- `day.tsx` (27, 44, 67, 113) — "Your workshop morning" headline, "workshop date" fallback, and reframe the "one at a time" coach paragraph as sprint days.
 
-## Verification
+### Deliverables + asset viewer
+- `deliverables.tsx` (222, 408) — "document/documents" → "asset/assets".
+- `DocumentViewer.tsx` (958) — reconcile "startup asset" ↔ "Dashboard → Documents" (route stays `/dashboard/documents`, label becomes "Your assets vault" to match `files.tsx`).
 
-- Day 4 tile shows `3/3 ready` and time chip updates.
-- Planner row for `presell_landing_prd` shows the Education track chip and the `⏱ 6m read` chip.
-- Day Sprint Deck picks it up automatically (slides are generated from `assetKeys`).
-- Generating the asset produces the 10-section markdown with a paste-ready fenced block.
-- Brand Wizard gate blocks generation with the same toast as Website PRD when brand tokens are missing.
+### Brief + welcome
+- `BriefStatusCard.tsx` (83) — "workshop day" → sprint framing.
+- `BriefCompleteScreen.tsx` (49, 75) — "50 startup assets" → `60+`.
+- `welcome.tsx` (103, 133, 196, 199) — "Register for a workshop" CTAs → "Reserve your 14-Day Launch seat" (keep the underlying route/action unchanged).
 
-## Open question
+### Landing / chatbot
+- `AskConcierge.tsx` (332) — chatbot welcome line: "50 startup assets" → `60+`, "workshop" → "14-Day Launch Method".
 
-Track = **Education** (spec/blueprint, like Website PRD). If you'd rather it read as **Action** (because Day 4 is a shipping day), I'll flip the track + time split — say which you prefer.
+### Public docs
+- `public/business-case.md` (53, 116) — "34 deliverables" → "60+ founder-ready startup assets across 8 tracks". Same for the `.txt` / `.html` mirrors of the business case; check and align in the same pass.
+
+## Step 3 — Two follow-up sweeps (small, but confirm first)
+
+1. **Chatbot knowledge base** — `supabase/functions/venture-chatbot/knowledge.ts` was flagged but not yet audited. Read it, apply the same rewrites (asset count + sprint framing), redeploy the function.
+2. **Price consistency in `business-case.md`** — still says `$197` while `WORKSHOP_PRICE_LABEL` is `$297`. Not part of the "copy freshness" ask, so I'll flag it but only fix if you confirm.
+
+## Step 4 — Guardrails so this doesn't rot again
+
+- Add an ESLint `no-restricted-syntax` rule (or a `scripts/check-copy.mjs` pre-commit) that flags user-facing strings containing: `\b\d{2}\s+(documents?|deliverables?|assets?)\b`, the bare word `workshop` inside `src/routes/_authenticated/**` and `src/components/hub/**`, and `document(s)` inside JSX text nodes in those same trees. Emits a warning, not an error, so the /build/ workshop routes stay untouched.
+- Point the rule's error message at `src/lib/product-copy.ts` so contributors reach for the constants.
+
+## What I will NOT change
+
+- `/build/*` routes and `WORKSHOP_PRICE_LABEL` — "workshop" is a legitimate product name there (8 post-sprint build sessions).
+- Any DB column, route path, edge function name, `document_type` value, `DocumentViewer` component identifier, or `MediaType` — those stay `document*` per project memory.
+- Any behavior, data, or backend logic. This is a copy-only pass.
+
+## Files touched (final list)
+
+Source-of-truth: `src/lib/framework-deliverables.ts` (or new `src/lib/product-copy.ts`).
+UI: `FoundersHubGate.tsx`, `ConceptStudio.tsx`, `BulkUnlockDialog.tsx`, `FounderRoadmapCard.tsx`, `FounderRoadmapDialog.tsx`, `hub.index.tsx`, `dashboard.tsx`, `day.tsx`, `deliverables.tsx`, `DocumentViewer.tsx`, `BriefStatusCard.tsx`, `BriefCompleteScreen.tsx`, `welcome.tsx`, `AskConcierge.tsx`.
+Static: `public/business-case.md` (+ `.txt` / `.html` if they mirror the same numbers).
+Optional follow-ups (with your OK): `supabase/functions/venture-chatbot/knowledge.ts`, business-case price sweep, lint guardrail.
+
+Approve and I'll execute Step 1 → Step 2 → Step 3 (with confirmation) → Step 4 in one pass.
