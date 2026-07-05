@@ -1,13 +1,14 @@
 // @ts-nocheck
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, CheckCircle2, Circle, ArrowRight, Loader2, ExternalLink, Rocket } from "lucide-react";
+import { Sparkles, CheckCircle2, Circle, ArrowRight, Loader2, ExternalLink, Rocket, Clock, Presentation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LAUNCH_14DAY_PLAN, CATEGORY_DOT, type LaunchDay } from "@/lib/launch-14day-plan";
-import { TRACK_META, TRACK_ORDER, trackFor, type AssetTrack } from "@/lib/asset-tracks";
+import { TRACK_META, TRACK_ORDER, trackFor, timeSplit, formatDuration, timeChipLabel, type AssetTrack } from "@/lib/asset-tracks";
 import { TrackChip } from "@/components/hub/TrackChip";
 
 const SORT_STORAGE_KEY = "hub:launch14:sortMode";
 type SortMode = "sequence" | "track";
+
 
 
 interface Props {
@@ -21,7 +22,31 @@ interface Props {
   jobRunning?: boolean;
   isPhysical?: boolean;
   sourcingOnlyKeys?: Set<string>;
+  onOpenDayDeck?: (day: LaunchDay) => void;
 }
+
+function dayMinutes(day: LaunchDay, typeByKey: Map<string, any>, optionalKeys: Set<string>): number {
+  return day.assetKeys
+    .filter((k) => typeByKey.has(k) && !optionalKeys.has(k))
+    .reduce((s, k) => s + (typeByKey.get(k)?.estimated_minutes ?? 0), 0);
+}
+
+function daySplit(day: LaunchDay, typeByKey: Map<string, any>, optionalKeys: Set<string>) {
+  return day.assetKeys
+    .filter((k) => typeByKey.has(k) && !optionalKeys.has(k))
+    .reduce(
+      (acc, k) => {
+        const mins = typeByKey.get(k)?.estimated_minutes ?? 0;
+        const s = timeSplit(trackFor(k), mins);
+        acc.total += mins;
+        acc.read += s.read;
+        acc.do += s.do;
+        return acc;
+      },
+      { total: 0, read: 0, do: 0 },
+    );
+}
+
 
 function tileState(
   day: LaunchDay,
@@ -49,7 +74,9 @@ export function LaunchPlanner14Day({
   jobRunning,
   isPhysical = false,
   sourcingOnlyKeys,
+  onOpenDayDeck,
 }: Props) {
+
   const optionalKeys = useMemo(
     () =>
       !isPhysical
@@ -96,7 +123,8 @@ export function LaunchPlanner14Day({
 
 
     const base =
-      "group relative flex h-20 w-full flex-col items-start justify-between rounded-xl border p-2.5 text-left transition-all";
+      "group relative flex h-24 w-full flex-col items-start justify-between rounded-xl border p-2.5 text-left transition-all";
+
     const stateClass =
       state === "complete"
         ? "border-status-success/40 bg-status-success/10 hover:bg-status-success/15"
@@ -124,16 +152,23 @@ export function LaunchPlanner14Day({
           <div className="line-clamp-2 text-[11px] font-medium leading-tight text-foreground">
             {day.theme}
           </div>
-          <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
-            {state === "complete" ? (
-              <CheckCircle2 className="h-3 w-3 text-status-success" />
-            ) : (
-              <Circle className="h-3 w-3" />
-            )}
-            <span>
+          <div className="mt-1 flex items-center justify-between gap-1 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              {state === "complete" ? (
+                <CheckCircle2 className="h-3 w-3 text-status-success" />
+              ) : (
+                <Circle className="h-3 w-3" />
+              )}
               {done}/{total || "–"}
             </span>
+            {dayMinutes(day, typeByKey, optionalKeys) > 0 && (
+              <span className="flex items-center gap-0.5 tabular-nums">
+                <Clock className="h-2.5 w-2.5" />
+                {formatDuration(dayMinutes(day, typeByKey, optionalKeys))}
+              </span>
+            )}
           </div>
+
         </div>
       </button>
     );
@@ -239,17 +274,27 @@ export function LaunchPlanner14Day({
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {isComplete
-                        ? "Ready to open"
-                        : generating
-                          ? "Writing now…"
-                          : optional
-                            ? "Optional — skip unless you're shipping a physical product"
-                            : "Not started yet"}
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                      <span>
+                        {isComplete
+                          ? "Ready to open"
+                          : generating
+                            ? "Writing now…"
+                            : optional
+                              ? "Optional — skip unless shipping a physical product"
+                              : "Not started yet"}
+                      </span>
+                      {(t?.estimated_minutes ?? 0) > 0 && (
+                        <span className="inline-flex items-center gap-1">
+                          <span className="opacity-40">·</span>
+                          <Clock className="h-3 w-3" />
+                          <span className="tabular-nums">{timeChipLabel(track, t.estimated_minutes)}</span>
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
+
                 <div className="flex items-center gap-1">
                   {isComplete ? (
                     <>
@@ -307,34 +352,60 @@ export function LaunchPlanner14Day({
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <div className="text-xs text-muted-foreground">
-                    {active.done}/{active.total} assets ready today
+                  {(() => {
+                    const s = daySplit(active.day, typeByKey, optionalKeys);
+                    return (
+                      <div className="text-right">
+                        <div className="text-xs text-muted-foreground">
+                          {active.done}/{active.total} ready · <span className="tabular-nums">≈ {formatDuration(s.total)}</span> focused work
+                        </div>
+                        {(s.read > 0 || s.do > 0) && (
+                          <div className="mt-0.5 text-[11px] text-muted-foreground/80 tabular-nums">
+                            {s.read > 0 && <span className="text-indigo-400">Read {formatDuration(s.read)}</span>}
+                            {s.read > 0 && s.do > 0 && <span className="mx-1 opacity-40">·</span>}
+                            {s.do > 0 && <span className="text-teal-400">Build {formatDuration(s.do)}</span>}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  <div className="flex items-center gap-2">
+                    {onOpenDayDeck && availableKeys.length > 0 && (
+                      <Button
+                        size="sm"
+                        onClick={() => onOpenDayDeck(active.day)}
+                        className="gap-1.5"
+                      >
+                        <Presentation className="h-3.5 w-3.5" /> Open Day Deck
+                      </Button>
+                    )}
+                    {availableKeys.length > 1 && (
+                      <div
+                        className="inline-flex items-center gap-0.5 rounded-md border border-white/10 bg-background/40 p-0.5"
+                        role="group"
+                        aria-label="Sort assets"
+                      >
+                        <span className="pl-2 pr-1 text-[10px] uppercase tracking-wider text-muted-foreground">Sort</span>
+                        {(["sequence", "track"] as SortMode[]).map((mode) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => setSortMode(mode)}
+                            aria-pressed={sortMode === mode}
+                            className={`rounded px-2 py-1 text-[11px] font-medium transition-colors ${
+                              sortMode === mode
+                                ? "bg-primary text-primary-foreground"
+                                : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            {mode === "sequence" ? "Sequence" : "By track"}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {availableKeys.length > 1 && (
-                    <div
-                      className="inline-flex items-center gap-0.5 rounded-md border border-white/10 bg-background/40 p-0.5"
-                      role="group"
-                      aria-label="Sort assets"
-                    >
-                      <span className="pl-2 pr-1 text-[10px] uppercase tracking-wider text-muted-foreground">Sort</span>
-                      {(["sequence", "track"] as SortMode[]).map((mode) => (
-                        <button
-                          key={mode}
-                          type="button"
-                          onClick={() => setSortMode(mode)}
-                          aria-pressed={sortMode === mode}
-                          className={`rounded px-2 py-1 text-[11px] font-medium transition-colors ${
-                            sortMode === mode
-                              ? "bg-primary text-primary-foreground"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          {mode === "sequence" ? "Sequence" : "By track"}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
+
               </div>
 
               {availableKeys.length === 0 ? (

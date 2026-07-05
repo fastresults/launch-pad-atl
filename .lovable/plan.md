@@ -1,138 +1,158 @@
 ## Goal
-Categorize every asset in the 14-day sprint into one of four **tracks** — Introduction, Education, Tracking, Action — surface the track on each row, and let the founder sort/group the day's assets by track.
+Two connected additions to the 14-day sprint panel:
+1. Show **estimated time** on every asset row, split into "read" vs "do" based on its track, with a per-day total at the top.
+2. Add a **Day Sprint Deck** — a per-day facilitator-style slide presentation, opened from the day panel, that walks the founder through that day's assets and how to execute them.
 
-## Track definitions
-- **Introduction** — sets identity, positions the business, defines who/what/why (mission, personas, positioning, messaging).
-- **Education** — teaches, plans, recommends, briefs; things you read and internalize (playbooks, briefs, plan docs, prompt library, framework).
-- **Tracking** — measurement, pipelines, calendars, cadences, financial models — instruments you watch.
-- **Action** — deploy/ship/execute; live setups, kits, tests, launches, integrations.
+## Part 1 — Estimated hours
 
-## Asset → Track map (all 48)
+### Source of truth
+`venture_document_types.estimated_minutes` already exists on every asset and is loaded into `typeByKey`. No DB change. No content backfill needed.
 
-```text
-Day 1  Lock the concept
-  executive_summary                    Introduction
-  vision_mission                       Introduction
-  problem_solution                     Introduction
-  ai_tool_stack_recommendation         Education
+### Read vs Do classification
+Derive from the existing track:
+- Introduction, Education → **read** time (absorb / internalize)
+- Tracking → **read + configure** (split 50/50)
+- Action → **do** time (build / ship / deploy)
 
-Day 2  Sharpen the offer
-  value_proposition                    Introduction
-  pricing_offer_sheet                  Action
-  ai_prompt_library                    Education
-
-Day 3  Name your buyers, load the CRM
-  customer_personas                    Introduction
-  first_50_warm_list                   Tracking
-  crm_pipeline_starter                 Tracking
-
-Day 4  Validate demand
-  pre_sell_offer_test                  Action
-  landing_page_waitlist_test           Action
-
-Day 5  Pick your wedge
-  competitive_positioning              Introduction
-  market_analysis                      Education
-
-Day 6  Turn on the sales machine
-  go_to_market_plan                    Education
-  sales_playbook                       Education
-  outbound_dm_email_scripts            Action
-  booking_calendar_setup               Action
-  sales_call_recording_stack           Tracking
-  supplier_shortlist                   Action
-
-Day 7  Message + brand voice
-  brand_messaging                      Introduction
-  brand_messaging_house                Introduction
-  brand_voice_tone_guide               Education
-  brand_strategy_framework             Education
-
-Day 8  Legal + entity
-  legal_structure_brief                Education
-  terms_privacy_refund_pack            Action
-  insurance_starter                    Action
-
-Day 9  Money infrastructure
-  payments_checkout_setup              Action
-  business_bank_books_starter          Action
-
-Day 10 Domain, email, tracking
-  domain_email_dns_checklist           Action
-  analytics_pixel_setup                Tracking
-  email_marketing_setup                Action
-
-Day 11 Ship the site + brand pack
-  website_prd                          Education
-  visual_identity_brief                Introduction
-  logo_brand_asset_pack                Action
-
-Day 12 Ops, support bot, automations
-  fulfillment_sop                      Education
-  customer_support_starter             Action
-  operating_plan                       Education
-  ai_support_bot_setup                 Action
-  automation_recipes_starter           Action
-  bom_and_landed_cost                  Tracking
-
-Day 13 Content + weekly rhythm
-  launch_content_kit                   Action
-  content_calendar_90day               Tracking
-  social_media_audit_setup             Tracking
-  founder_operating_cadence            Tracking
-
-Day 14 Launch day + proof + growth loops
-  paid_ads_starter_pack                Action
-  reviews_testimonials_kit             Action
-  financial_model                      Tracking
-  ad_creative_pack                     Action
-  referral_affiliate_starter           Action
+Helper in `src/lib/asset-tracks.ts`:
+```ts
+export function timeSplit(track: AssetTrack, minutes: number):
+  { read: number; do: number } {
+  switch (track) {
+    case "Introduction":
+    case "Education": return { read: minutes, do: 0 };
+    case "Tracking":  return { read: Math.round(minutes/2), do: Math.ceil(minutes/2) };
+    case "Action":    return { read: 0, do: minutes };
+  }
+}
+export function formatDuration(min: number): string {
+  if (min < 60) return `${min}m`;
+  const h = Math.floor(min/60), m = min % 60;
+  return m ? `${h}h ${m}m` : `${h}h`;
+}
 ```
 
-Track totals across the sprint: **Introduction 11 · Education 11 · Tracking 10 · Action 16**.
+### Row rendering (LaunchPlanner14Day)
+Under the asset title/subtitle line, replace the current "Ready to open / Not started" line's tail with:
+```
+Ready to open · ⏱ 25m read
+Not started · ⏱ 45m to build
+```
+- Icon: `Clock` from lucide.
+- Suffix picks label from `timeSplit`: `Xm read`, `Xm to build`, or `Xm read + Ym build` for Tracking.
+- Optional assets show their time in muted amber to match the Physical-products pill.
 
-## Changes
+### Day summary (top of detail panel)
+Replace the current `active.done/active.total assets ready today` line with a two-line meta strip:
+```
+5/6 ready today · ≈ 3h 20m focused work
+Read 1h 40m · Build 1h 40m
+```
+Computed by summing `estimated_minutes` for `available` keys and running each through `timeSplit`. Optional (physical-only) assets are counted only when `isPhysical` — matches existing "optional" logic.
 
-### 1. New file `src/lib/asset-tracks.ts`
-- Export `type AssetTrack = "Introduction" | "Education" | "Tracking" | "Action"`.
-- Export `ASSET_TRACK: Record<string, AssetTrack>` seeded with the 48-entry map above.
-- Export `TRACK_META: Record<AssetTrack, { label, icon, dot, chip, order }>`:
-  - Introduction — `Compass` icon, `bg-indigo-400`, chip `bg-indigo-500/10 text-indigo-300 border-indigo-400/30`, order 1
-  - Education — `BookOpen` icon, `bg-primary`, chip `bg-primary/10 text-primary border-primary/30`, order 2
-  - Tracking — `Activity` icon, `bg-amber-400`, chip `bg-amber-500/10 text-amber-300 border-amber-400/30`, order 3
-  - Action — `Zap` icon, `bg-teal-400`, chip `bg-teal-500/10 text-teal-300 border-teal-400/30`, order 4
-- Export helper `trackFor(key: string): AssetTrack` (defaults to `Action` if key is missing, logs a dev warning so future assets don't fall through the cracks).
+### Day tile (grid)
+Add a small `⏱ 3h 20m` line under the `done/total` counter on each day tile (`text-[10px] text-muted-foreground`) so founders can eyeball the sprint load without opening a day. Skip on very tight grids if it clips — the tile currently has room.
 
-### 2. `src/components/hub/LaunchPlanner14Day.tsx` — render track + add sort control
-- Import `ASSET_TRACK`, `TRACK_META`, `trackFor`.
-- Add a `sortMode` state: `"sequence" | "track"` (default `"sequence"`; persisted to `localStorage` under `hub:launch14:sortMode`).
-- Above the asset list, add a compact segmented control on the right side of the day header row:
-  ```
-  Sort:  [ Sequence ] [ By track ]
-  ```
-  Small (`h-7 text-xs`), muted background, active segment uses `bg-primary text-primary-foreground`.
-- Row rendering: after the asset title, render a small `TrackChip` (rounded-full, `text-[10px] uppercase tracking-wide`, icon + label, uses `TRACK_META[track].chip`). Chip sits on the same line as the title, right after the "Physical products only" pill when both apply.
-- When `sortMode === "track"`:
-  - Group the day's filtered `assetKeys` by track using `TRACK_META.order`.
-  - Render each non-empty track as a subsection: a small header row with the track dot + label + count (`Introduction · 2`), then the row `<li>`s below it. Preserve the current row visuals (checkmark, name, subtitle, buttons).
-  - Track-group headers are `text-[11px] font-semibold uppercase tracking-wider text-muted-foreground` with a colored dot from `TRACK_META[track].dot`.
-- When `sortMode === "sequence"`: current behavior, unchanged, chips still appear.
+### Framework category rows
+The framework item card already renders `~{t.estimated_minutes} min`. Leave as-is (that surface is per-item, not per-day totals).
 
-### 3. Framework category cards (`src/routes/_authenticated/dashboard/hub.$snapshotId.tsx`)
-- The framework-deliverables item list currently renders item titles with a tooltip only. Add the same `TrackChip` next to each item title (small, inline) so the classification is visible everywhere the asset is listed — not just inside the sprint. Look up via `trackFor(assetType)` using the mapping between framework item titles and deliverable keys already present in the render loop (search for the item.title → type resolver near the framework category renderer).
+## Part 2 — Day Sprint Deck
 
-### 4. Optional (nice-to-have, include in same pass)
-- Sprint header meta line: after `48/48 assets ready`, append a one-line track breakdown when hovered/tooltipped — e.g. `11 Intro · 11 Edu · 10 Track · 16 Action`. Cheap, informative, no layout impact.
+A per-day presentation modeled on the existing Facilitator Deck (`DeckDialog` + `SlideLayout` + `ScaledSlide`), but driven dynamically from the day's plan + asset metadata — so we get 14 decks "for free" without hand-authoring 100+ slides.
+
+### Entry point
+In `LaunchPlanner14Day` day panel header, next to the sort toggle, add:
+```
+[▶ Open Day Deck]
+```
+Primary-styled button with `Presentation` icon. Opens the deck for `active.day`.
+
+### New component: `src/components/hub/DaySprintDeckDialog.tsx`
+Reuses the same visual chrome as `DeckDialog` (dark stage, top bar, side arrows, progress bar, thumbnail rail, ←/→/F/Esc keys, fullscreen). It differs only in that its `slides` array is built from a `LaunchDay` + `typeByKey` + track/time helpers, not from a static registry.
+
+Signature:
+```ts
+type Props = {
+  day: LaunchDay | null;
+  typeByKey: Map<string, VentureDocumentType>;
+  completedKeys: Set<string>;
+  isPhysical: boolean;
+  sourcingOnlyKeys?: Set<string>;
+  onOpenChange: (open: boolean) => void;
+  onJumpToAsset?: (key: string) => void; // closes deck + scrolls
+};
+```
+
+### Slide sequence (dynamic per day)
+1. **Cover** — `Day N · <Category>` kicker, `<theme>` as `slide-title-lg`, `<objective>` subtitle. Bottom-right badge: `≈ Xh Ym focused work`.
+2. **Why today matters** — pull `objective` + a canned "why this day" line derived from `category`/`week` (map of 14 curated one-liners in `src/lib/launch-14day-guidance.ts`).
+3. **What "done" looks like** — `doneWhen` rendered as a large statement with a `CheckCircle2` icon.
+4. **The plan (overview)** — 2-column bento of assets grouped by track (Intro/Edu/Track/Action columns collapse to available tracks). Each card: track chip, asset name, `⏱ time`, one-line description from `type.description`.
+5. **N asset slides** — one per available asset, in track order (Introduction → Education → Tracking → Action):
+   - Kicker: `Asset K of N · <TRACK>`
+   - Title: asset name
+   - Left half: `type.description` + a short "How to complete this" body — a canned template keyed by track:
+     - **Introduction**: "Read the generated asset end-to-end. Rewrite anything that doesn't sound like you. Save the final line as the version you'll repeat out loud this week."
+     - **Education**: "Skim once for the whole. Re-read the section that maps to what you'll do next. Copy the 3 highest-leverage moves into your notes."
+     - **Tracking**: "Set it up in the tool it lives in. Enter your first real row today. Add a check to your weekly cadence."
+     - **Action**: "Block a focused session. Follow the checklist inside the asset. Ship the smallest working version — not the perfect one."
+   - Right half: status pill (Ready to open / Not started / Writing / Optional–physical), `⏱ estimated time`, and a large `Open this asset ▸` button that calls `onJumpToAsset(key)`.
+   - Optional (physical-only) assets get a subtle "Skip unless you're shipping a physical product" note when `!isPhysical`.
+6. **Order of operations** — numbered vertical list of assets in the order to tackle them today (Intro → Edu → Track → Action). Small time chips beside each.
+7. **Time budget** — big stat row: `Total ≈ Xh Ym`, `Read Ah Bm`, `Build Ah Bm`, `# assets`. Under it: a suggested schedule for a working day (curated per day in the guidance file, or a generic template: "Morning: read Intro + Edu. Midday: configure Tracking. Afternoon: ship Action.").
+8. **Common pitfalls** — 3 bullets from the guidance file per day (curated). Falls back to a generic 3-pitfall list if the day isn't in the map yet.
+9. **Do this next** — CTA slide: primary button `Start with <first-not-complete asset>` that closes the deck and jumps to that asset. Secondary: `Close deck`.
+
+Total: ~7 fixed + 2–6 dynamic asset slides = 9–15 slides per day.
+
+### New data file: `src/lib/launch-14day-guidance.ts`
+Adds per-day guidance the deck reads:
+```ts
+export type DayGuidance = {
+  why: string;               // one paragraph, "why today matters"
+  suggestedSchedule: string; // 1–2 sentences
+  pitfalls: string[];        // 3 items
+};
+export const DAY_GUIDANCE: Record<number, DayGuidance> = {
+  1: { ... },
+  ...
+  14: { ... },
+};
+```
+Curated, short, in the voice already used by `doneWhen`/`objective`. This is the only real writing task in the whole feature.
+
+### Slide implementation
+- Reuse `SlideLayout` for consistent chrome (kicker, page label, dark/light variant). Use `variant="dark"` for cover and CTA, default light for the rest.
+- Use the semantic slide typography classes (`slide-title`, `slide-subtitle`, `slide-body-lg`, `slide-kicker`, `slide-chrome`) already defined in `src/styles.css`.
+- Track chips reuse `TrackChip` from `src/components/hub/TrackChip.tsx`.
+- No `SlotText`/`SlotImage` overrides — these are ephemeral, per-venture decks, not the editable stage decks.
+
+### Deck dialog chrome
+Rather than fork `DeckDialog`, extract the chrome into `<DeckShell slides={...} title="Day N — Theme" open onOpenChange={...}>` (small refactor of `DeckDialog.tsx`) and have both the stage decks and the day decks render through it:
+- `DeckDialog` becomes `DeckShell` + a thin wrapper that resolves `slug → slides` and loads overrides.
+- `DaySprintDeckDialog` builds its slides array in-memory and passes to `DeckShell`. No override fetching.
+
+### Wiring
+In `hub.$snapshotId.tsx`:
+- Add `openDayDeckDay: number | null` state.
+- Pass `onOpenDayDeck={(day) => setOpenDayDeckDay(day)}` prop into `LaunchPlanner14Day`.
+- Render `<DaySprintDeckDialog day={activeDay} typeByKey={...} completedKeys={...} isPhysical={...} onOpenChange={...} onJumpToAsset={(k) => { setOpenDayDeckDay(null); scrollToDoc(k); }} />`.
 
 ## Files touched
-- **New:** `src/lib/asset-tracks.ts`
-- **Edit:** `src/components/hub/LaunchPlanner14Day.tsx` — track chips, sort control, grouped rendering.
-- **Edit:** `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` — chip on framework category item rows; optional sprint-header breakdown.
+- **New:** `src/lib/launch-14day-guidance.ts` — per-day guidance content (14 entries).
+- **New:** `src/components/hub/DaySprintDeckDialog.tsx` — dynamic deck for a single day.
+- **Edit:** `src/components/workshop-slides/DeckDialog.tsx` — extract chrome into `DeckShell` (or export a reusable inner component).
+- **Edit:** `src/lib/asset-tracks.ts` — add `timeSplit` + `formatDuration` helpers.
+- **Edit:** `src/components/hub/LaunchPlanner14Day.tsx` — time on rows, day-summary meta, day-tile time chip, "Open Day Deck" button, wire callback.
+- **Edit:** `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` — mount `DaySprintDeckDialog`, wire jump-to-asset.
 
 ## Verification
-- Load `/dashboard/hub/:id`; open Day 1 → each row shows a colored track chip (Executive Summary/Vision & Mission/Problem = Introduction; AI Tool Stack = Education).
-- Toggle **Sort: By track** on Day 6 — three subgroups appear in order: Education (GTM Plan, Sales Playbook), Tracking (Sales Call Recording Stack), Action (Outbound Scripts, Booking & Calendar, Supplier Shortlist).
-- Toggle back to Sequence — rows return to their original order.
-- Refresh → sort preference persists.
-- Framework category "Strategy" card now shows track chips beside item titles.
+- Day 6 panel shows `6/6 ready · ≈ 3h 15m focused work · Read 1h 20m · Build 1h 55m` and each row shows a `⏱` chip.
+- Each grid tile shows a `⏱` sub-line.
+- Click `Open Day Deck` on Day 3 → deck opens with cover slide "Day 3 · Strategy — Name your buyers, load the CRM"; arrow keys navigate; asset slides render Customer Personas / First-50 Warm List / CRM Pipeline Starter each with their track, time, and "Open this asset ▸" CTA.
+- Clicking `Open this asset ▸` in the deck closes the dialog and scrolls to the matching asset card below.
+- `Esc` and `F` behave as they do in the existing facilitator deck.
 - `bunx tsgo --noEmit` clean.
+
+## Open question (optional)
+I've defaulted the read/do split by track. If you'd rather have a real per-asset `read_minutes` / `do_minutes` (DB migration + backfill on `venture_document_types`), say so and I'll swap Part 1 to use those columns instead. Track-derived is faster to ship and easy to override later.

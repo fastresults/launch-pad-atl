@@ -8,6 +8,9 @@ import remarkGfm from "remark-gfm";
 import { FoundersHubGate } from "@/components/hub/FoundersHubGate";
 import { TrackChip } from "@/components/hub/TrackChip";
 import { trackFor } from "@/lib/asset-tracks";
+import { DaySprintDeckDialog } from "@/components/hub/DaySprintDeckDialog";
+import type { LaunchDay } from "@/lib/launch-14day-plan";
+
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -915,6 +918,8 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
   const [showUnlock, setShowUnlock] = useState(false);
   const [openDeckSlug, setOpenDeckSlug] = useState<string | null>(null);
+  const [openDayDeck, setOpenDayDeck] = useState<LaunchDay | null>(null);
+
 
   // Per-section open/collapse state (persisted per snapshot)
   const openSectionsKey = `hub:sectionOpen:${snapshot.id}`;
@@ -1218,7 +1223,9 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         }}
         isGeneratingKey={(key) => genOne.isPending && genOne.variables?.documentType === key}
         jobRunning={jobRunning}
+        onOpenDayDeck={(d) => setOpenDayDeck(d)}
       />
+
 
       <AIStackPanel
         snapshotId={snapshot.id}
@@ -1609,6 +1616,26 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         onUnlocked={() => bulk.mutate({ category: null })}
       />
       <DeckDialog slug={openDeckSlug} onOpenChange={(o) => { if (!o) setOpenDeckSlug(null); }} />
+      <DaySprintDeckDialog
+        day={openDayDeck}
+        typeByKey={typeByKey}
+        completedKeys={completedKeys}
+        isPhysical={isPhysical}
+        sourcingOnlyKeys={SOURCING_ONLY_TYPES}
+        onOpenChange={(o) => { if (!o) setOpenDayDeck(null); }}
+        onJumpToAsset={(key) => {
+          setOpenDayDeck(null);
+          setTimeout(() => {
+            const el = document.getElementById(`doc-${key}`);
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth", block: "center" });
+              el.classList.add("ring-2", "ring-primary");
+              setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 1600);
+            }
+          }, 100);
+        }}
+      />
+
     </div>
   );
 }
