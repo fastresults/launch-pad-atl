@@ -53,7 +53,7 @@ export function BulkUnlockDialog({
             <Lock className="h-4 w-4" /> Unlock "Generate all"
           </DialogTitle>
           <DialogDescription>
-            This writes all {totalDocs} documents in one go and uses significant credits. Enter your unlock code
+            This writes all {totalDocs} assets in one go and uses significant credits. Enter your unlock code
             to continue. The guided category-by-category flow does not require a code.
           </DialogDescription>
         </DialogHeader>
