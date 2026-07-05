@@ -196,7 +196,7 @@ export default function WelcomePage() {
                 Or join the 14-Day Launch directly →
               </Link>
               <Button type="submit" disabled={submitting}>
-                {submitting ? "Submitting..." : "Submit & request workshop"}
+                {submitting ? "Submitting..." : "Submit & request my sprint seat"}
               </Button>
             </div>
           </form>
