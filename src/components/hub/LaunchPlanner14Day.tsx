@@ -307,8 +307,27 @@ export function LaunchPlanner14Day({
                         </span>
                       )}
                     </div>
+                    {(() => {
+                      const companion = COMPANION_ASSET[k];
+                      if (!companion || !typeByKey.has(companion.key) || k === companion.key) return null;
+                      const cDoc = docByType.get(companion.key);
+                      const cReady = cDoc?.status === "complete";
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => onScrollToDoc(companion.key)}
+                          className="mt-1 inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/10"
+                          title={`Jump to ${companion.label} in ${companion.category}`}
+                        >
+                          <FileText className="h-3 w-3" />
+                          {cReady ? "Ready" : "Available"}: {companion.label} · under {companion.category}
+                          <ArrowRight className="h-3 w-3" />
+                        </button>
+                      );
+                    })()}
                   </div>
                 </div>
+
 
                 <div className="flex items-center gap-1">
                   {isComplete ? (
