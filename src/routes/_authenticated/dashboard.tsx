@@ -135,7 +135,7 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       key: "files",
       to: "/dashboard/files",
       label: "My files",
-      tooltip: "One shelf for everything yours: the documents your AI built for you, the PDFs and contracts you've uploaded, and the brand photos and logos you and your designer keep adding.",
+      tooltip: "One shelf for everything yours: the assets your AI built for you, the PDFs and contracts you've uploaded, and the brand photos and logos you and your designer keep adding.",
       icon: FolderOpen,
     },
     {
