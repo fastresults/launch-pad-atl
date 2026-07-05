@@ -38,13 +38,21 @@ export function SectionHeader({
   status,
   actions,
   contentId,
+  icon,
+  label,
+  tagline,
+  accentVar,
+  badges,
 }: SectionHeaderProps) {
   const meta = getStageMeta(cat);
-  const Icon = meta.icon;
+  const Icon = icon ?? meta.icon;
+  const resolvedLabel = label ?? meta.label;
+  const resolvedTagline = tagline ?? meta.tagline;
+  const resolvedAccentVar = accentVar ?? meta.accentVar;
   const statusMeta = STATUS_META[status];
   const StatusIcon = statusMeta.Icon;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-  const accentColor = `var(${meta.accentVar})`;
+  const accentColor = `var(${resolvedAccentVar})`;
   const mix = (pct: number) => `color-mix(in oklab, ${accentColor} ${pct}%, transparent)`;
   const accentStyle = { color: accentColor } as React.CSSProperties;
   const accentBarStyle = { backgroundColor: accentColor } as React.CSSProperties;
