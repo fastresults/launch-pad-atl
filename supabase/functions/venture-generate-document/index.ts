@@ -27,6 +27,7 @@ import {
   specializedPrompt,
   stripCitations,
 } from "../_shared/deliverable-prompts.ts";
+import { renderSourcingBlock } from "../_shared/sourcing-classifier.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
 
@@ -309,12 +310,14 @@ export async function generateOne(
   const preamble = compactPreamble(ctx);
 
   const brandBlock = brandKitBlock(brandKit);
+  const sourcingBlock = renderSourcingBlock(snap.sourcing_profile, snap.research_brief?.sourcing);
   const userPrompt = [
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
     `Category: ${type.category}`,
     brandBlock,
     preamble,
+    sourcingBlock,
     brainSlice
       ? `\n## Venture brain (compressed, authoritative — every section must reflect these)\n${JSON.stringify(brainSlice, null, 2)}`
       : `\n## Venture brief (fallback — brain not yet computed)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,

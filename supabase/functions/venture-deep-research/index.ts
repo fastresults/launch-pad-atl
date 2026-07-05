@@ -10,6 +10,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
+import { classifySourcing, type SourcingProfile } from "../_shared/sourcing-classifier.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -198,7 +199,8 @@ Schema:
     "customer_voice": [{ "quote": "", "source_url": "", "theme": "" }],
     "pricing_benchmarks": [{ "competitor": "", "tier": "", "price": "", "url": "" }],
     "gaps": ["..."],
-    "confidence": { "company": 0, "competitors": 0, "market": 0, "customer_voice": 0, "pricing": 0, "overall": 0 }
+    "sourcing": { "moq_range": "", "unit_cost_range": "", "lead_time_days": "", "landed_cost_pct": "", "suppliers": [{ "name": "", "url": "", "country": "", "pros": "", "cons": "" }], "regulatory": ["..."], "materials": ["..."], "citations": ["..."] },
+    "confidence": { "company": 0, "competitors": 0, "market": 0, "customer_voice": 0, "pricing": 0, "sourcing": 0, "overall": 0 }
   },
   "extracted_data": {
     "foundation": { "company_name": "", "founder_name": "", "location": "", "industry": "", "concept": "", "problem": "" },
@@ -303,7 +305,99 @@ function mergeExtracted(existing: any, next: any): any {
   return next ?? existing;
 }
 
+// ============ Sourcing step (physical products only) ============
+
+const SUPPLIER_SURFACES: Record<string, string[]> = {
+  manufacture:    ["site:alibaba.com", "site:made-in-china.com", "site:indiamart.com", "site:thomasnet.com", "site:makersrow.com"],
+  private_label:  ["site:alibaba.com", "site:makersrow.com", "site:faire.com"],
+  wholesale:      ["site:faire.com", "site:alibaba.com", "site:indiamart.com"],
+  dropship:       ["site:alibaba.com", "site:spocket.co", "site:cjdropshipping.com"],
+  handmade:       ["site:etsy.com/wholesale", "site:faire.com"],
+  print_on_demand:["site:printful.com", "site:printify.com", "site:gelato.com"],
+  unknown:        ["site:alibaba.com", "site:thomasnet.com", "site:faire.com"],
+  none:           [],
+};
+
+async function runSourcingStep(
+  supabase: any,
+  snapshotId: string,
+  ctx: { concept: string; companyName: string; industryShort: string; country: string; profile: SourcingProfile },
+) {
+  const { profile } = ctx;
+  const productHint = ctx.industryShort || (ctx.concept.split(/[.\n]/)[0] ?? "").slice(0, 60);
+  const surfaces = SUPPLIER_SURFACES[profile.sourcing_mode] ?? SUPPLIER_SURFACES.unknown;
+
+  // (a) Supplier discovery — up to 6 Firecrawl searches, capped hits.
+  const supplierHits: { url: string; title?: string; description?: string; surface?: string }[] = [];
+  for (const surface of surfaces.slice(0, 3)) {
+    const q = `${productHint} supplier manufacturer ${surface}`;
+    const hits = await fcSearch(q, { limit: 5 });
+    for (const h of hits) supplierHits.push({ ...h, surface });
+    if (supplierHits.length >= 18) break;
+  }
+  if (supplierHits.length) {
+    await appendArtifacts(supabase, snapshotId, [{
+      step: "sourcing_suppliers",
+      fetched_at: new Date().toISOString(),
+      content: JSON.stringify(supplierHits.slice(0, 18), null, 2),
+      metadata: { surfaces, product_form: profile.product_form, sourcing_mode: profile.sourcing_mode },
+    }]);
+  }
+
+  // (b) Benchmarks — MOQ, unit cost range, lead time, freight rule of thumb.
+  const benchmarks = await pplxResearch(
+    `Give concrete benchmarks a first-time founder needs to source and land a ${profile.product_form} product (${productHint}) for sale in ${ctx.country || "the US"} under a "${profile.sourcing_mode}" model.
+Cover with numbers:
+1. Typical MOQ range (units per SKU, per supplier country).
+2. Typical unit cost range at MOQ (USD).
+3. Typical lead time (days) from PO to delivered.
+4. Tooling / mold / setup cost when applicable (USD).
+5. Incoterm norms (EXW / FOB / DDP) and freight rule-of-thumb (% of unit cost).
+6. Landed-cost markup vs unit cost (typical multiplier).
+Cite sources for every numeric claim.`,
+  );
+  if (benchmarks) {
+    await appendArtifacts(supabase, snapshotId, [{
+      step: "sourcing_benchmarks",
+      fetched_at: new Date().toISOString(),
+      content: benchmarks.content,
+      metadata: { citations: benchmarks.citations, source: "perplexity:sonar-pro" },
+    }]);
+  }
+
+  // (c) Regulatory — light pass; single Perplexity call scoped to .gov citations.
+  if (profile.regulatory_flags.length) {
+    const reg = await pplxResearch(
+      `List the specific ${profile.regulatory_flags.join(", ")} certifications, labeling requirements, and testing steps a first-time founder must complete before selling a ${profile.product_form} product (${productHint}) in ${ctx.country || "the US"}. Keep it to bullets — cert name, what it certifies, who issues, typical timeline, typical cost. Cite .gov sources.`,
+    );
+    if (reg) {
+      await appendArtifacts(supabase, snapshotId, [{
+        step: "sourcing_regulatory",
+        fetched_at: new Date().toISOString(),
+        content: reg.content,
+        metadata: { citations: reg.citations, flags: profile.regulatory_flags },
+      }]);
+    }
+  }
+
+  // (d) Materials — only for a real manufacture mode.
+  if (profile.sourcing_mode === "manufacture") {
+    const mats = await pplxResearch(
+      `Name the raw materials and typical spot-price indexes a founder should track when manufacturing a ${profile.product_form} product (${productHint}). For each: material name, unit, current price range, where to check the index (published source). Keep the list to 5 materials or fewer.`,
+    );
+    if (mats) {
+      await appendArtifacts(supabase, snapshotId, [{
+        step: "sourcing_materials",
+        fetched_at: new Date().toISOString(),
+        content: mats.content,
+        metadata: { citations: mats.citations },
+      }]);
+    }
+  }
+}
+
 // ============ Main pipeline ============
+
 
 async function runResearch(supabase: any, snapshotId: string) {
   const { data: snap, error } = await supabase
@@ -329,6 +423,21 @@ async function runResearch(supabase: any, snapshotId: string) {
     "local" | "regional" | "national" | "international";
   const geo = [city, region].filter(Boolean).join(", ");
   const keyword = (companyName || industryShort || concept.split(/[.\n]/)[0] || "").slice(0, 80);
+
+  // ---------- Step 0: Sourcing classifier ----------
+  // Cheap (flash-lite) — decides whether the sourcing sub-steps below run.
+  await updateProgress(supabase, snapshotId, "classify", 5, "Classifying product vs. service");
+  const sourcingProfile: SourcingProfile = await classifySourcing({
+    concept,
+    industry,
+    sub_industry: snap.sub_industry,
+    track: snap.track,
+  });
+  await supabase
+    .from("venture_snapshots")
+    .update({ sourcing_profile: sourcingProfile })
+    .eq("id", snapshotId);
+
 
   // ---------- Step 1: Own/competitor seed scrape ----------
   await updateProgress(supabase, snapshotId, "scraping", 10, "Scraping the seed website");
@@ -412,6 +521,18 @@ async function runResearch(supabase: any, snapshotId: string) {
     }
   }
   if (compArtifacts.length) await appendArtifacts(supabase, snapshotId, compArtifacts);
+
+  // ---------- Step 3b: Sourcing & manufacturing (physical products only) ----------
+  if (sourcingProfile.is_physical_product) {
+    await updateProgress(supabase, snapshotId, "sourcing", 50, "Researching suppliers & sourcing");
+    await runSourcingStep(supabase, snapshotId, {
+      concept,
+      companyName,
+      industryShort,
+      country,
+      profile: sourcingProfile,
+    });
+  }
 
   // ---------- Step 4: Industry/market via Perplexity (geo + scope anchored) ----------
   await updateProgress(supabase, snapshotId, "market", 60, "Analyzing the market with Perplexity");

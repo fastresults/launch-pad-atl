@@ -528,7 +528,34 @@ Every unit must reference at least one specific persona pain and one specific pr
 2. \`\`\`markdown labeled \`# invite_email.md\` — the invite email to send to a happy customer or partner: SUBJECT, BODY (140-200 words), CTA link label, PS line. Use \`{{FIRST_NAME}}\`, \`{{REFERRAL_LINK}}\` tokens.
 3. \`\`\`csv labeled \`# first_10_advocates.csv\` — header \`name,company,relationship,why_theyd_refer,ask,channel,status\` with 10 pre-populated rows (labeled by segment — the founder fills in the names).
 ${QF}`,
+
+  supplier_shortlist: `You are a sourcing lead building a 5-10 supplier shortlist for a first-time founder launching a physical product. Ground every recommendation in the supplied "## Sourcing context" block (product_form, sourcing_mode, regulatory_flags) and in any supplier hits or benchmarks that appear in the research brief. Never invent supplier names — if the research corpus lists candidates, name them; otherwise recommend named marketplaces / directories the founder can search (Alibaba, Made-in-China, IndiaMART, ThomasNet, Faire, Maker's Row, Printful, Printify, Gelato) and label the row as "search on {surface}". Output Markdown:
+# {Company} — Supplier Shortlist
+## Sourcing Thesis (3-5 sentences: which sourcing mode this venture should default to and why, based on volume, margin, lead-time tolerance, and regulatory posture)
+## Evaluation Rubric (table: Criterion | Weight | Pass/Fail bar. Include at minimum: MOQ fit, unit cost fit, lead time fit, quality signals, communication, samples-before-PO, IP protection, regulatory posture)
+## Shortlist — a markdown table with EXACTLY 5-10 rows. Columns: # | Supplier or Directory | Country | MOQ | Unit cost range | Lead time (days) | Strengths | Risks | Contact URL | Fit score (1-5)
+## Sample & PO Playbook (numbered steps from first outreach to first paid PO: qualification questions, sample order, quality inspection, escrow terms, PO template, freight decision)
+## Red Flags (5-7 signals that mean walk away — no BIS/ISO paperwork, no phone number, no reference customers, insists on wire before sample, quotes that dodge MOQ, etc.)
+## Paste-Ready — two fenced blocks, in this order:
+1. \`\`\`markdown labeled \`# First-outreach email\` — SUBJECT and BODY (140-220 words) the founder pastes into a supplier's contact form or email. Use \`{{SUPPLIER_NAME}}\`, \`{{PRODUCT}}\`, \`{{TARGET_MOQ}}\`, \`{{TARGET_UNIT_COST}}\`, \`{{TARGET_LEAD_TIME}}\` tokens. Ask the six qualification questions inline.
+2. \`\`\`csv labeled \`# supplier_shortlist.csv\` — header \`num,supplier_or_directory,country,moq,unit_cost_range,lead_time_days,strengths,risks,contact_url,fit_score,status\` and one row per shortlist entry above. Comma-escape any values with commas.
+${QF}`,
+
+  bom_and_landed_cost: `You are a sourcing analyst modeling the true cost of getting one unit into a US customer's hands for a first-time founder. Ground every line item in the supplied "## Sourcing context" block and in supplier_shortlist context when present. Never leave a line blank — if a number is unknown, use a clearly labeled reasonable assumption and note the source ("assumed", "supplier quote", "benchmark").
+Output Markdown:
+# {Company} — BOM & Landed-Cost Model
+## Assumptions (bulleted: SKU, target sale price, target MOQ, sourcing mode, country of origin, incoterm, destination, freight mode. Every value one line.)
+## Bill of Materials — markdown table with columns: Line | Component / Material | Spec | Supplier or type | Unit | Qty per finished unit | Unit price | Extended cost | Notes. Include a Total row.
+## Landed-Cost Stack — markdown table with columns: Cost bucket | Value (per unit, USD) | % of landed. Rows in this order: Unit cost (BOM total), Tooling amortized per unit, Packaging, Freight (allocated per unit), Duty & customs, Insurance, 3PL / fulfillment, Payment processing, Returns reserve, Other. Totals row = Landed cost per unit.
+## Margin Math (contribution margin per unit at target sale price = sale price − landed cost − variable marketing per unit; gross margin %; break-even units to cover fixed overhead from the financial model when present)
+## Sensitivity Table — Base / Downside / Upside on the two most sensitive levers (unit cost ±20%, freight ±30%). Show landed cost per unit and contribution margin for each cell.
+## Reorder Rule (in one paragraph: reorder point in units, safety stock rule, cycle stock rule, lead-time buffer)
+## Paste-Ready — two fenced blocks in this order:
+1. \`\`\`csv labeled \`# bill_of_materials.csv\` — header \`line,component,spec,supplier_or_type,unit,qty_per_unit,unit_price_usd,extended_cost_usd,notes\` and one row per BOM line plus a final \`TOTAL\` row.
+2. \`\`\`csv labeled \`# landed_cost_stack.csv\` — header \`bucket,value_per_unit_usd,pct_of_landed\` and one row per landed-cost bucket plus a final \`LANDED_COST_PER_UNIT\` row.
+${QF}`,
 };
+
 
 
 export function specializedPrompt(documentType: string): string | null {
