@@ -13,15 +13,23 @@ interface Props {
   onScrollToDoc: (key: string) => void;
   isGeneratingKey?: (key: string) => boolean;
   jobRunning?: boolean;
+  isPhysical?: boolean;
+  sourcingOnlyKeys?: Set<string>;
 }
 
-function tileState(day: LaunchDay, completedKeys: Set<string>, typeByKey: Map<string, any>) {
-  const keys = day.assetKeys.filter((k) => typeByKey.has(k));
-  if (keys.length === 0) return { state: "pending" as const, done: 0, total: 0 };
-  const done = keys.filter((k) => completedKeys.has(k)).length;
-  if (done === keys.length) return { state: "complete" as const, done, total: keys.length };
-  if (done > 0) return { state: "partial" as const, done, total: keys.length };
-  return { state: "pending" as const, done, total: keys.length };
+function tileState(
+  day: LaunchDay,
+  completedKeys: Set<string>,
+  typeByKey: Map<string, any>,
+  isOptional: (k: string) => boolean,
+) {
+  const allKeys = day.assetKeys.filter((k) => typeByKey.has(k));
+  const requiredKeys = allKeys.filter((k) => !isOptional(k));
+  if (requiredKeys.length === 0) return { state: "pending" as const, done: 0, total: 0 };
+  const done = requiredKeys.filter((k) => completedKeys.has(k)).length;
+  if (done === requiredKeys.length) return { state: "complete" as const, done, total: requiredKeys.length };
+  if (done > 0) return { state: "partial" as const, done, total: requiredKeys.length };
+  return { state: "pending" as const, done, total: requiredKeys.length };
 }
 
 export function LaunchPlanner14Day({
@@ -33,7 +41,15 @@ export function LaunchPlanner14Day({
   onScrollToDoc,
   isGeneratingKey,
   jobRunning,
+  isPhysical = false,
+  sourcingOnlyKeys,
 }: Props) {
+  const optionalKeys = useMemo(
+    () => sourcingOnlyKeys ?? new Set<string>(["supplier_shortlist", "bom_and_landed_cost"]),
+    [sourcingOnlyKeys],
+  );
+  const isOptional = (k: string) => !isPhysical && optionalKeys.has(k);
+
   const docByType = useMemo(() => {
     const m = new Map<string, any>();
     for (const d of docs ?? []) m.set(d.document_type, d);
@@ -41,8 +57,8 @@ export function LaunchPlanner14Day({
   }, [docs]);
 
   const daysWithState = useMemo(
-    () => LAUNCH_14DAY_PLAN.map((d) => ({ day: d, ...tileState(d, completedKeys, typeByKey) })),
-    [completedKeys, typeByKey],
+    () => LAUNCH_14DAY_PLAN.map((d) => ({ day: d, ...tileState(d, completedKeys, typeByKey, isOptional) })),
+    [completedKeys, typeByKey, isPhysical, optionalKeys],
   );
 
   const daysComplete = daysWithState.filter((d) => d.state === "complete").length;
@@ -192,10 +208,15 @@ export function LaunchPlanner14Day({
                   const d = docByType.get(k);
                   const isComplete = d?.status === "complete";
                   const generating = d?.status === "generating" || isGeneratingKey?.(k);
+                  const optional = isOptional(k);
                   return (
                     <li
                       key={k}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/5 bg-background/40 px-3 py-2"
+                      className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 ${
+                        optional
+                          ? "border-dashed border-amber-400/30 bg-amber-500/5"
+                          : "border-white/5 bg-background/40"
+                      }`}
                     >
                       <div className="flex min-w-0 items-center gap-2">
                         {isComplete ? (
@@ -206,9 +227,25 @@ export function LaunchPlanner14Day({
                           <Circle className="h-4 w-4 shrink-0 text-muted-foreground" />
                         )}
                         <div className="min-w-0">
-                          <div className="truncate text-sm font-medium">{t?.name ?? k}</div>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="truncate text-sm font-medium">{t?.name ?? k}</span>
+                            {optional && (
+                              <span
+                                className="rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300"
+                                title="Only needed if you're shipping a physical product"
+                              >
+                                Physical products only
+                              </span>
+                            )}
+                          </div>
                           <div className="text-[11px] text-muted-foreground">
-                            {isComplete ? "Ready to open" : generating ? "Writing now…" : "Not started yet"}
+                            {isComplete
+                              ? "Ready to open"
+                              : generating
+                                ? "Writing now…"
+                                : optional
+                                  ? "Optional — skip unless you're shipping a physical product"
+                                  : "Not started yet"}
                           </div>
                         </div>
                       </div>
@@ -226,9 +263,10 @@ export function LaunchPlanner14Day({
                           <>
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant={optional ? "ghost" : "outline"}
                               onClick={() => onGenerateDoc(k)}
                               disabled={generating || jobRunning}
+                              title={optional ? "Only needed if you're shipping a physical product" : undefined}
                             >
                               {generating ? (
                                 <Loader2 className="mr-1 h-3 w-3 animate-spin" />

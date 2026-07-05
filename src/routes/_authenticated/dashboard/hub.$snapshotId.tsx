@@ -946,18 +946,30 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     refetchInterval: 10000,
   });
 
-  // Hide sourcing-only asset types unless this venture is classified as a physical product.
-  const SOURCING_ONLY_TYPES = new Set(["supplier_shortlist", "bom_and_landed_cost"]);
-  const isPhysical = (snapshot as any)?.sourcing_profile?.is_physical_product === true;
-  const types = (typesQ.data ?? []).filter(
-    (t: any) => isPhysical || !SOURCING_ONLY_TYPES.has(t.type),
+  // Sourcing assets are always surfaced; when the venture isn't classified as physical,
+  // the UI badges them "Physical products only" and excludes them from required counters.
+  const SOURCING_ONLY_TYPES = useMemo(
+    () => new Set(["supplier_shortlist", "bom_and_landed_cost"]),
+    [],
   );
+  const isPhysical = (snapshot as any)?.sourcing_profile?.is_physical_product === true;
+  const types = typesQ.data ?? [];
   const docs = docsQ.data ?? [];
   const docByType = useMemo(() => new Map(docs.map((d) => [d.document_type, d])), [docs]);
   const typeByKey = useMemo(() => new Map(types.map((t: any) => [t.type, t])), [types]);
+  // For non-physical ventures, sourcing assets are optional — exclude them from headline totals
+  // so counters like "48/48 assets ready" reflect what the founder actually needs to ship.
+  const requiredTypes = isPhysical
+    ? types
+    : types.filter((t: any) => !SOURCING_ONLY_TYPES.has(t.type));
   const completedKeys = new Set(docs.filter((d) => d.status === "complete").map((d) => d.document_type));
-  const completeCount = completedKeys.size;
-  const total = types.length;
+  const completeCount = new Set(
+    docs
+      .filter((d) => d.status === "complete")
+      .map((d) => d.document_type)
+      .filter((k) => requiredTypes.some((t: any) => t.type === k)),
+  ).size;
+  const total = requiredTypes.length;
   const job = jobQ.data;
   const jobRunning = job?.status === "running" || job?.status === "queued";
   const failures = failuresQ.data ?? [];
@@ -1174,6 +1186,8 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         docs={docs}
         typeByKey={typeByKey}
         completedKeys={completedKeys}
+        isPhysical={isPhysical}
+        sourcingOnlyKeys={SOURCING_ONLY_TYPES}
         onOpenDoc={(d) => setViewerDoc(d)}
         onGenerateDoc={(key) => {
           const t = typeByKey.get(key) as any;
