@@ -90,7 +90,7 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       key: "today",
       to: "/dashboard",
       label: "Today",
-      tooltip: "Your daily check-in. Before workshop day you'll see a countdown and venue; during the workshop, the live block in session; after, your 90-day progress and the next action waiting on you.",
+      tooltip: "Your daily check-in. Before your 14-Day Sprint you'll see a countdown and venue; during the sprint, the live day in play; after, your 90-day progress and the next action waiting on you.",
       icon: Home,
     },
     {
