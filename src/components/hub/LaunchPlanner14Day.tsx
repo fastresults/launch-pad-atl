@@ -21,10 +21,10 @@ function tileState(
   day: LaunchDay,
   completedKeys: Set<string>,
   typeByKey: Map<string, any>,
-  isOptional: (k: string) => boolean,
+  optionalKeys: Set<string>,
 ) {
   const allKeys = day.assetKeys.filter((k) => typeByKey.has(k));
-  const requiredKeys = allKeys.filter((k) => !isOptional(k));
+  const requiredKeys = allKeys.filter((k) => !optionalKeys.has(k));
   if (requiredKeys.length === 0) return { state: "pending" as const, done: 0, total: 0 };
   const done = requiredKeys.filter((k) => completedKeys.has(k)).length;
   if (done === requiredKeys.length) return { state: "complete" as const, done, total: requiredKeys.length };
