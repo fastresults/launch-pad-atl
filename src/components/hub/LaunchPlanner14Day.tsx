@@ -21,10 +21,10 @@ function tileState(
   day: LaunchDay,
   completedKeys: Set<string>,
   typeByKey: Map<string, any>,
-  isOptional: (k: string) => boolean,
+  optionalKeys: Set<string>,
 ) {
   const allKeys = day.assetKeys.filter((k) => typeByKey.has(k));
-  const requiredKeys = allKeys.filter((k) => !isOptional(k));
+  const requiredKeys = allKeys.filter((k) => !optionalKeys.has(k));
   if (requiredKeys.length === 0) return { state: "pending" as const, done: 0, total: 0 };
   const done = requiredKeys.filter((k) => completedKeys.has(k)).length;
   if (done === requiredKeys.length) return { state: "complete" as const, done, total: requiredKeys.length };
@@ -45,10 +45,13 @@ export function LaunchPlanner14Day({
   sourcingOnlyKeys,
 }: Props) {
   const optionalKeys = useMemo(
-    () => sourcingOnlyKeys ?? new Set<string>(["supplier_shortlist", "bom_and_landed_cost"]),
-    [sourcingOnlyKeys],
+    () =>
+      !isPhysical
+        ? (sourcingOnlyKeys ?? new Set<string>(["supplier_shortlist", "bom_and_landed_cost"]))
+        : new Set<string>(),
+    [sourcingOnlyKeys, isPhysical],
   );
-  const isOptional = (k: string) => !isPhysical && optionalKeys.has(k);
+  const isOptional = (k: string) => optionalKeys.has(k);
 
   const docByType = useMemo(() => {
     const m = new Map<string, any>();
@@ -57,8 +60,8 @@ export function LaunchPlanner14Day({
   }, [docs]);
 
   const daysWithState = useMemo(
-    () => LAUNCH_14DAY_PLAN.map((d) => ({ day: d, ...tileState(d, completedKeys, typeByKey, isOptional) })),
-    [completedKeys, typeByKey, isPhysical, optionalKeys],
+    () => LAUNCH_14DAY_PLAN.map((d) => ({ day: d, ...tileState(d, completedKeys, typeByKey, optionalKeys) })),
+    [completedKeys, typeByKey, optionalKeys],
   );
 
   const daysComplete = daysWithState.filter((d) => d.state === "complete").length;
