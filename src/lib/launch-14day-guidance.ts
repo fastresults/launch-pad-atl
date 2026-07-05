@@ -38,7 +38,7 @@ export const DAY_GUIDANCE: Record<number, DayGuidance> = {
   },
   4: {
     why: "The market votes with money before it votes with opinions. A 48-hour pre-sell tells you whether to build or pivot — before you sink two weeks.",
-    suggestedSchedule: "Morning: draft the pre-sell offer + guarantee. Midday: put up the waitlist or checkout page. Afternoon: personally message every First-50 contact.",
+    suggestedSchedule: "Morning: draft the pre-sell offer + guarantee. Midday: generate the Pre-Sell Landing PRD and paste it into Lovable/v0/Bolt to scaffold the page. Afternoon: personally message every First-50 contact.",
     pitfalls: [
       "Asking for interest instead of a deposit — 'interested' means no.",
       "Hiding behind a landing page — DM 50 humans yourself.",

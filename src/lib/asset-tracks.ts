@@ -21,6 +21,7 @@ export const ASSET_TRACK: Record<string, AssetTrack> = {
   // Day 4
   pre_sell_offer_test: "Action",
   landing_page_waitlist_test: "Action",
+  presell_landing_prd: "Education",
   // Day 5
   competitive_positioning: "Introduction",
   market_analysis: "Education",
