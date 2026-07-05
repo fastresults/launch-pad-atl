@@ -46,7 +46,7 @@ export function BriefCompleteScreen({ onGenerateFirst, onSeeDeliverables, onEdit
           <UnlockCard
             icon={<FileText className="h-4 w-4" />}
             title="Deliverables that sound like you"
-            body="Every one of the 50 startup assets is generated from your own words and numbers."
+            body="Every one of the 60+ startup assets is generated from your own words and numbers."
           />
         </div>
       </div>
