@@ -75,6 +75,7 @@ import {
   X,
   ChevronsDownUp,
   ChevronsUpDown,
+  Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
@@ -1513,34 +1514,54 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       })}
 
       {/* Bonus tools - deferred. Brand Wizard lives here and is required for Website PRD. */}
-      <details
-        ref={brandStudioRef}
-        id="brand-studio"
-        open={(completeCount === total && total > 0) || !brandKitLocked}
-        className="rounded-2xl border border-white/10 bg-card/40 p-4 scroll-mt-24"
-      >
-        <summary className="cursor-pointer list-none">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                Brand Wizard & bonus tools
-                {!brandKitLocked && (
+      {(() => {
+        const bonusIndex = categories.length;
+        const bonusOpen = (completeCount === total && total > 0) || !brandKitLocked;
+        const bonusStatus: "complete" | "in_progress" | "not_started" = brandKitLocked
+          ? "complete"
+          : "in_progress";
+        return (
+          <section
+            ref={brandStudioRef as any}
+            id="brand-studio"
+            className="space-y-3 scroll-mt-24"
+          >
+            <SectionHeader
+              cat="Brand Wizard & bonus tools"
+              index={bonusIndex}
+              done={brandKitLocked ? 1 : 0}
+              total={1}
+              isOpen={bonusOpen}
+              onToggle={() => {
+                const el = document.getElementById("brand-studio-details") as HTMLDetailsElement | null;
+                if (el) el.open = !el.open;
+              }}
+              contentId="brand-studio-details"
+              status={bonusStatus}
+              icon={Wand2}
+              label="Brand Wizard & bonus tools"
+              tagline="Lock your brand colors, typography and logo — the Website PRD uses them verbatim."
+              accentVar="--brand-violet"
+              badges={
+                !brandKitLocked ? (
                   <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
                     Required for Website PRD
                   </Badge>
-                )}
+                ) : null
+              }
+            />
+            <details id="brand-studio-details" open={bonusOpen}>
+              <summary className="sr-only">Show / hide</summary>
+              <div className="space-y-4 pt-1">
+                <BrandStudio snapshot={snapshot} />
+                <SocialStudio snapshot={snapshot} />
+                <ContentStudio snapshot={snapshot} />
               </div>
-              <div className="text-xs text-muted-foreground">Lock your brand colors, typography and logo here — the Website PRD generation uses them verbatim.</div>
-            </div>
-            <span className="text-xs text-muted-foreground">Show / hide</span>
-          </div>
-        </summary>
-        <div className="mt-4 space-y-4">
-          <BrandStudio snapshot={snapshot} />
-          <SocialStudio snapshot={snapshot} />
-          <ContentStudio snapshot={snapshot} />
-        </div>
-      </details>
+            </details>
+          </section>
+        );
+      })()}
+
 
       <DocumentViewer doc={viewerDoc} open={viewerDoc !== null} onOpenChange={(o) => !o && setViewerDoc(null)} />
       <RewriteFeedbackDialog

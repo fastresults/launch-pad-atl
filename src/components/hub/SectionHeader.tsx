@@ -1,4 +1,4 @@
-import { ChevronRight, CheckCircle2, Lock, Loader2, Circle } from "lucide-react";
+import { ChevronRight, CheckCircle2, Lock, Loader2, Circle, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getStageMeta } from "@/lib/stage-meta";
 
@@ -12,6 +12,12 @@ export type SectionHeaderProps = {
   status: "complete" | "in_progress" | "not_started" | "locked" | "generating";
   actions?: React.ReactNode;
   contentId: string;
+  /** Optional overrides — allow non-stage surfaces (studios) to reuse this header */
+  icon?: LucideIcon;
+  label?: string;
+  tagline?: string;
+  accentVar?: string;
+  badges?: React.ReactNode;
 };
 
 const STATUS_META: Record<SectionHeaderProps["status"], { label: string; className: string; Icon: typeof CheckCircle2 }> = {
@@ -32,13 +38,21 @@ export function SectionHeader({
   status,
   actions,
   contentId,
+  icon,
+  label,
+  tagline,
+  accentVar,
+  badges,
 }: SectionHeaderProps) {
   const meta = getStageMeta(cat);
-  const Icon = meta.icon;
+  const Icon = icon ?? meta.icon;
+  const resolvedLabel = label ?? meta.label;
+  const resolvedTagline = tagline ?? meta.tagline;
+  const resolvedAccentVar = accentVar ?? meta.accentVar;
   const statusMeta = STATUS_META[status];
   const StatusIcon = statusMeta.Icon;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-  const accentColor = `var(${meta.accentVar})`;
+  const accentColor = `var(${resolvedAccentVar})`;
   const mix = (pct: number) => `color-mix(in oklab, ${accentColor} ${pct}%, transparent)`;
   const accentStyle = { color: accentColor } as React.CSSProperties;
   const accentBarStyle = { backgroundColor: accentColor } as React.CSSProperties;
@@ -86,14 +100,15 @@ export function SectionHeader({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h3 className="truncate text-base font-semibold tracking-tight sm:text-lg">
-              {getStageMeta(cat).label}
+              {resolvedLabel}
             </h3>
             <span className="hidden text-xs text-muted-foreground tabular-nums sm:inline">
               {done}/{total}
             </span>
+            {badges}
           </div>
           <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground sm:text-sm">
-            {getStageMeta(cat).tagline}
+            {resolvedTagline}
           </p>
         </div>
       </button>
