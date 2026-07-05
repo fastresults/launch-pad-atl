@@ -13,6 +13,7 @@ import { SocialStudioGate } from "@/components/hub/social/SocialStudioGate";
 import { CoverArtTab } from "@/components/hub/social/CoverArtTab";
 import { ChannelSetupTab } from "@/components/hub/social/ChannelSetupTab";
 import { SocialAutopilot } from "@/components/hub/social/SocialAutopilot";
+import { SectionHeader } from "@/components/hub/SectionHeader";
 
 export function SocialStudio({ snapshot }: { snapshot: any }) {
   const kitQ = useQuery({
