@@ -433,6 +433,15 @@ async function runJob(supabase: any, snapshotId: string, jobId: string, category
     (t: any) => !t.intake_schema || haveAnswers.has(t.type),
   );
 
+  // Skip sourcing-only asset types for non-physical-product ventures so they
+  // don't sit as pending forever. Keep them for physical products, and always
+  // keep them if the founder has explicitly saved intake for one.
+  const SOURCING_ONLY_TYPES = new Set(["supplier_shortlist", "bom_and_landed_cost"]);
+  const isPhysical = ctx.snap?.sourcing_profile?.is_physical_product === true;
+  if (!isPhysical) {
+    types = types.filter((t: any) => !SOURCING_ONLY_TYPES.has(t.type) || haveAnswers.has(t.type));
+  }
+
   if (category && category.trim().length > 0) {
     const wanted = category.trim().toLowerCase();
     types = types.filter((t: any) => String(t.category ?? "").toLowerCase() === wanted);
