@@ -54,8 +54,8 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
         index={1}
         done={hasStrategy ? 6 : locked ? 1 : 0}
         total={6}
-        isOpen
-        onToggle={() => {}}
+        isOpen={expanded}
+        onToggle={() => setExpanded((v) => !v)}
         contentId="social-studio-body"
         status={hasStrategy ? "complete" : locked ? "in_progress" : "locked"}
         icon={Share2}
