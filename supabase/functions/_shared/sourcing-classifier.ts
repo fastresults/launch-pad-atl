@@ -89,8 +89,8 @@ export async function classifySourcing(input: {
   }
 }
 
-// Convenience — compact block ready to paste into any downstream doc prompt.
-// Returns "" when there's no sourcing signal so callers can `.filter(Boolean)`.
+// Compact block ready to inject into any downstream doc prompt. Returns ""
+// when there's no sourcing signal so callers can `.filter(Boolean)`.
 export function renderSourcingBlock(
   profile: SourcingProfile | null | undefined,
   sourcing: any /* research_brief.sourcing */,
@@ -107,7 +107,11 @@ export function renderSourcingBlock(
     if (sourcing.lead_time_days) lines.push(`- Lead time (days): ${sourcing.lead_time_days}`);
     if (sourcing.landed_cost_pct) lines.push(`- Landed-cost markup vs unit cost: ${sourcing.landed_cost_pct}`);
     if (Array.isArray(sourcing.suppliers) && sourcing.suppliers.length) {
-      lines.push(`- Suppliers under review: ${sourcing.suppliers.slice(0, 6).map((s: any) => s.name ?? s.url ?? "").filter(Boolean).join("; ")}`);
+      const s = sourcing.suppliers.slice(0, 6)
+        .map((x: any) => x.name ?? x.url ?? "")
+        .filter(Boolean)
+        .join("; ");
+      if (s) lines.push(`- Suppliers under review: ${s}`);
     }
     if (Array.isArray(sourcing.regulatory) && sourcing.regulatory.length) {
       lines.push(`- Regulatory notes: ${sourcing.regulatory.slice(0, 5).join(" · ")}`);
