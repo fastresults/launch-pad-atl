@@ -27,6 +27,7 @@ import {
   specializedPrompt,
   stripCitations,
 } from "../_shared/deliverable-prompts.ts";
+import { renderSourcingBlock } from "../_shared/sourcing-classifier.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
 
