@@ -1,8 +1,14 @@
 // @ts-nocheck
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Sparkles, CheckCircle2, Circle, ArrowRight, Loader2, ExternalLink, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LAUNCH_14DAY_PLAN, CATEGORY_DOT, type LaunchDay } from "@/lib/launch-14day-plan";
+import { TRACK_META, TRACK_ORDER, trackFor, type AssetTrack } from "@/lib/asset-tracks";
+import { TrackChip } from "@/components/hub/TrackChip";
+
+const SORT_STORAGE_KEY = "hub:launch14:sortMode";
+type SortMode = "sequence" | "track";
+
 
 interface Props {
   docs: any[];
@@ -73,9 +79,21 @@ export function LaunchPlanner14Day({
   const [openDay, setOpenDay] = useState<number>(firstIncomplete);
   const active = daysWithState.find((d) => d.day.day === openDay) ?? daysWithState[0];
 
+  const [sortMode, setSortMode] = useState<SortMode>("sequence");
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(SORT_STORAGE_KEY);
+      if (saved === "sequence" || saved === "track") setSortMode(saved);
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try { window.localStorage.setItem(SORT_STORAGE_KEY, sortMode); } catch {}
+  }, [sortMode]);
+
   const renderTile = (entry: typeof daysWithState[number]) => {
     const { day, state, done, total } = entry;
     const isOpen = openDay === day.day;
+
 
     const base =
       "group relative flex h-20 w-full flex-col items-start justify-between rounded-xl border p-2.5 text-left transition-all";
@@ -181,120 +199,177 @@ export function LaunchPlanner14Day({
           </div>
         </div>
 
-        {/* Detail panel */}
-        {active && (
-          <div className="mt-6 rounded-xl border border-white/10 bg-card/70 p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className={`h-2 w-2 rounded-full ${CATEGORY_DOT[active.day.category]}`} aria-hidden />
-                  <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    Day {active.day.day} · {active.day.category}
-                  </span>
-                </div>
-                <h3 className="mt-1 text-lg font-semibold">{active.day.theme}</h3>
-                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{active.day.objective}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground">Done when:</span> {active.day.doneWhen}
-                </p>
-              </div>
-              <div className="text-right text-xs text-muted-foreground">
-                {active.done}/{active.total} assets ready today
-              </div>
-            </div>
+        {active && (() => {
+          const availableKeys = active.day.assetKeys.filter((k) => typeByKey.has(k));
 
-            <ul className="mt-4 space-y-2">
-              {active.day.assetKeys
-                .filter((k) => typeByKey.has(k))
-                .map((k) => {
-                  const t = typeByKey.get(k);
-                  const d = docByType.get(k);
-                  const isComplete = d?.status === "complete";
-                  const generating = d?.status === "generating" || isGeneratingKey?.(k);
-                  const optional = isOptional(k);
-                  return (
-                    <li
-                      key={k}
-                      className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 ${
-                        optional
-                          ? "border-dashed border-amber-400/30 bg-amber-500/5"
-                          : "border-white/5 bg-background/40"
-                      }`}
+          const renderRow = (k: string) => {
+            const t = typeByKey.get(k);
+            const d = docByType.get(k);
+            const isComplete = d?.status === "complete";
+            const generating = d?.status === "generating" || isGeneratingKey?.(k);
+            const optional = isOptional(k);
+            const track = trackFor(k);
+            return (
+              <li
+                key={k}
+                className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 ${
+                  optional
+                    ? "border-dashed border-amber-400/30 bg-amber-500/5"
+                    : "border-white/5 bg-background/40"
+                }`}
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  {isComplete ? (
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-status-success" />
+                  ) : generating ? (
+                    <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
+                  ) : (
+                    <Circle className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  )}
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="truncate text-sm font-medium">{t?.name ?? k}</span>
+                      <TrackChip track={track} />
+                      {optional && (
+                        <span
+                          className="rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300"
+                          title="Only needed if you're shipping a physical product"
+                        >
+                          Physical products only
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {isComplete
+                        ? "Ready to open"
+                        : generating
+                          ? "Writing now…"
+                          : optional
+                            ? "Optional — skip unless you're shipping a physical product"
+                            : "Not started yet"}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  {isComplete ? (
+                    <>
+                      <Button size="sm" onClick={() => onOpenDoc(d)}>
+                        Open <ArrowRight className="ml-1 h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => onScrollToDoc(k)} title="Jump to card below">
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        size="sm"
+                        variant={optional ? "ghost" : "outline"}
+                        onClick={() => onGenerateDoc(k)}
+                        disabled={generating || jobRunning}
+                        title={optional ? "Only needed if you're shipping a physical product" : undefined}
+                      >
+                        {generating ? (
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="mr-1 h-3 w-3" />
+                        )}
+                        Generate
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => onScrollToDoc(k)} title="Jump to card below">
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </li>
+            );
+          };
+
+          const grouped: Array<{ track: AssetTrack; keys: string[] }> = TRACK_ORDER
+            .map((tr) => ({ track: tr, keys: availableKeys.filter((k) => trackFor(k) === tr) }))
+            .filter((g) => g.keys.length > 0);
+
+          return (
+            <div className="mt-6 rounded-xl border border-white/10 bg-card/70 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${CATEGORY_DOT[active.day.category]}`} aria-hidden />
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Day {active.day.day} · {active.day.category}
+                    </span>
+                  </div>
+                  <h3 className="mt-1 text-lg font-semibold">{active.day.theme}</h3>
+                  <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{active.day.objective}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">Done when:</span> {active.day.doneWhen}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <div className="text-xs text-muted-foreground">
+                    {active.done}/{active.total} assets ready today
+                  </div>
+                  {availableKeys.length > 1 && (
+                    <div
+                      className="inline-flex items-center gap-0.5 rounded-md border border-white/10 bg-background/40 p-0.5"
+                      role="group"
+                      aria-label="Sort assets"
                     >
-                      <div className="flex min-w-0 items-center gap-2">
-                        {isComplete ? (
-                          <CheckCircle2 className="h-4 w-4 shrink-0 text-status-success" />
-                        ) : generating ? (
-                          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
-                        ) : (
-                          <Circle className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        )}
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="truncate text-sm font-medium">{t?.name ?? k}</span>
-                            {optional && (
-                              <span
-                                className="rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300"
-                                title="Only needed if you're shipping a physical product"
-                              >
-                                Physical products only
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[11px] text-muted-foreground">
-                            {isComplete
-                              ? "Ready to open"
-                              : generating
-                                ? "Writing now…"
-                                : optional
-                                  ? "Optional — skip unless you're shipping a physical product"
-                                  : "Not started yet"}
-                          </div>
+                      <span className="pl-2 pr-1 text-[10px] uppercase tracking-wider text-muted-foreground">Sort</span>
+                      {(["sequence", "track"] as SortMode[]).map((mode) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => setSortMode(mode)}
+                          aria-pressed={sortMode === mode}
+                          className={`rounded px-2 py-1 text-[11px] font-medium transition-colors ${
+                            sortMode === mode
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {mode === "sequence" ? "Sequence" : "By track"}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {availableKeys.length === 0 ? (
+                <ul className="mt-4">
+                  <li className="rounded-lg border border-dashed border-white/10 bg-background/30 px-3 py-4 text-center text-xs text-muted-foreground">
+                    No assets mapped to this day yet.
+                  </li>
+                </ul>
+              ) : sortMode === "sequence" ? (
+                <ul className="mt-4 space-y-2">{availableKeys.map(renderRow)}</ul>
+              ) : (
+                <div className="mt-4 space-y-4">
+                  {grouped.map(({ track, keys }) => {
+                    const meta = TRACK_META[track];
+                    const Icon = meta.icon;
+                    return (
+                      <div key={track}>
+                        <div className="mb-2 flex items-center gap-2">
+                          <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} aria-hidden />
+                          <Icon className="h-3 w-3 text-muted-foreground" aria-hidden />
+                          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            {meta.label} <span className="text-muted-foreground/70">· {keys.length}</span>
+                          </span>
+                          <div className="ml-2 h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" aria-hidden />
                         </div>
+                        <ul className="space-y-2">{keys.map(renderRow)}</ul>
                       </div>
-                      <div className="flex items-center gap-1">
-                        {isComplete ? (
-                          <>
-                            <Button size="sm" onClick={() => onOpenDoc(d)}>
-                              Open <ArrowRight className="ml-1 h-3 w-3" />
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => onScrollToDoc(k)} title="Jump to card below">
-                              <ExternalLink className="h-3 w-3" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              size="sm"
-                              variant={optional ? "ghost" : "outline"}
-                              onClick={() => onGenerateDoc(k)}
-                              disabled={generating || jobRunning}
-                              title={optional ? "Only needed if you're shipping a physical product" : undefined}
-                            >
-                              {generating ? (
-                                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                              ) : (
-                                <Sparkles className="mr-1 h-3 w-3" />
-                              )}
-                              Generate
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => onScrollToDoc(k)} title="Jump to card below">
-                              <ExternalLink className="h-3 w-3" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              {active.day.assetKeys.filter((k) => typeByKey.has(k)).length === 0 && (
-                <li className="rounded-lg border border-dashed border-white/10 bg-background/30 px-3 py-4 text-center text-xs text-muted-foreground">
-                  No assets mapped to this day yet.
-                </li>
+                    );
+                  })}
+                </div>
               )}
-            </ul>
-          </div>
-        )}
+            </div>
+          );
+        })()}
+
       </div>
     </div>
   );
