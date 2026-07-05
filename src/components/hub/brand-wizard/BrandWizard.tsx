@@ -678,7 +678,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
               <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">Required</span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Show us 1–3 logos you admire. We'll study their composition, weight, and abstraction — never copy them — to ground your concepts. This step is required so your logos don't look generic.
+              <span className="font-medium text-foreground">Inspiration only</span> — these guide the AI when it <em>generates</em> new logo directions for you. They are never composited onto your social covers. To place your own existing logo on generated images, upload it in the Existing Brand step (or later in Brand Studio › Logo).
             </p>
           </div>
         </div>
