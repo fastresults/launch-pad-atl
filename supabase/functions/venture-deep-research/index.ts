@@ -429,6 +429,18 @@ async function runResearch(supabase: any, snapshotId: string) {
   }
   if (compArtifacts.length) await appendArtifacts(supabase, snapshotId, compArtifacts);
 
+  // ---------- Step 3b: Sourcing & manufacturing (physical products only) ----------
+  if (sourcingProfile.is_physical_product) {
+    await updateProgress(supabase, snapshotId, "sourcing", 50, "Researching suppliers & sourcing");
+    await runSourcingStep(supabase, snapshotId, {
+      concept,
+      companyName,
+      industryShort,
+      country,
+      profile: sourcingProfile,
+    });
+  }
+
   // ---------- Step 4: Industry/market via Perplexity (geo + scope anchored) ----------
   await updateProgress(supabase, snapshotId, "market", 60, "Analyzing the market with Perplexity");
   const scopeClause = scope === "local"
