@@ -75,6 +75,7 @@ import {
   X,
   ChevronsDownUp,
   ChevronsUpDown,
+  Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
