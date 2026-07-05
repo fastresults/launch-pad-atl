@@ -24,7 +24,7 @@ export default function WorkshopDayPage() {
     <div className="space-y-10">
       {/* Header */}
       <div>
-        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Your workshop morning</h1>
+        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Your 14-Day Sprint</h1>
         <p className="mt-2 text-muted-foreground">
           {cohort
             ? `${cohort.dateLabel} · ${EVENT.timeLabel}. One focused morning with a founder coach — you walk out clear on what you're building, who it's for, how it makes money, and what to ship first.`
