@@ -42,7 +42,7 @@ export default function GoalsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">30 / 60 / 90 day goals</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Plan your post-workshop sprint.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Plan what happens after your 14-Day Sprint.</p>
       </div>
 
       <div className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
