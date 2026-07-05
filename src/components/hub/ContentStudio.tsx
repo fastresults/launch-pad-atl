@@ -94,6 +94,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
   const [direction, setDirection] = useState<string>("editorial");
   const [aspects, setAspects] = useState<AdAspect[]>(["1:1"]);
   const [autoRunWeek, setAutoRunWeek] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState(true);
 
   // Hydrate from progress
   useEffect(() => {
