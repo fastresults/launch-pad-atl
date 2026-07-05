@@ -138,3 +138,36 @@ export function trackChipClass(track: AssetTrack, extra = "") {
   const m = TRACK_META[track];
   return `inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${m.chip} ${extra}`.trim();
 }
+
+// Split an asset's estimated_minutes into read vs do time based on its track.
+// Introduction/Education = pure read. Action = pure do. Tracking = 50/50.
+export function timeSplit(track: AssetTrack, minutes: number): { read: number; do: number } {
+  const m = Math.max(0, Math.round(minutes ?? 0));
+  switch (track) {
+    case "Introduction":
+    case "Education":
+      return { read: m, do: 0 };
+    case "Tracking":
+      return { read: Math.round(m / 2), do: Math.ceil(m / 2) };
+    case "Action":
+      return { read: 0, do: m };
+  }
+}
+
+export function formatDuration(min: number): string {
+  const m = Math.max(0, Math.round(min ?? 0));
+  if (m === 0) return "0m";
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  const rem = m % 60;
+  return rem ? `${h}h ${rem}m` : `${h}h`;
+}
+
+// Short verb suffix for a row-level time chip, e.g. "25m read" / "45m to build".
+export function timeChipLabel(track: AssetTrack, minutes: number): string {
+  const { read, do: build } = timeSplit(track, minutes);
+  if (read && build) return `${formatDuration(read)} read + ${formatDuration(build)} setup`;
+  if (build) return `${formatDuration(build)} to build`;
+  return `${formatDuration(read)} read`;
+}
+
