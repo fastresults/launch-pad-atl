@@ -110,7 +110,7 @@ export default function WorkshopDayPage() {
         </div>
       ) : (
         <div className="rounded-2xl border border-white/10 bg-card p-6 text-sm text-muted-foreground">
-          We haven't matched you to a workshop date yet. We'll let you know.
+          We haven't set your 14-Day Sprint start date yet. We'll let you know.
         </div>
       )}
 
