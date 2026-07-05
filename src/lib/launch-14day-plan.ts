@@ -57,7 +57,7 @@ export const LAUNCH_14DAY_PLAN: LaunchDay[] = [
     theme: "Validate demand",
     objective: "Run a 48-hour pre-sell so real money votes before you build.",
     doneWhen: "At least one paid deposit or five written commitments.",
-    assetKeys: ["pre_sell_offer_test", "landing_page_waitlist_test"],
+    assetKeys: ["pre_sell_offer_test", "landing_page_waitlist_test", "presell_landing_prd"],
     category: "Strategy",
   },
   {
