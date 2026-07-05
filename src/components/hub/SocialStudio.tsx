@@ -45,6 +45,7 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
   const hasStrategy = auditDoc || pillarsDoc || calendarDoc || launchDoc;
 
   const [advanced, setAdvanced] = useState(false);
+  const [expanded, setExpanded] = useState(locked && !hasStrategy);
 
   return (
     <div className="space-y-3">
