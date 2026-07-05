@@ -79,9 +79,21 @@ export function LaunchPlanner14Day({
   const [openDay, setOpenDay] = useState<number>(firstIncomplete);
   const active = daysWithState.find((d) => d.day.day === openDay) ?? daysWithState[0];
 
+  const [sortMode, setSortMode] = useState<SortMode>("sequence");
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(SORT_STORAGE_KEY);
+      if (saved === "sequence" || saved === "track") setSortMode(saved);
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try { window.localStorage.setItem(SORT_STORAGE_KEY, sortMode); } catch {}
+  }, [sortMode]);
+
   const renderTile = (entry: typeof daysWithState[number]) => {
     const { day, state, done, total } = entry;
     const isOpen = openDay === day.day;
+
 
     const base =
       "group relative flex h-20 w-full flex-col items-start justify-between rounded-xl border p-2.5 text-left transition-all";
