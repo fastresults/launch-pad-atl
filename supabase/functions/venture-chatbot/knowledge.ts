@@ -134,6 +134,7 @@ These sit alongside the framework above and are what actually makes "launched in
 - **Domain, Email & DNS Checklist** (Marketing): registrar + email provider pick, full DNS record table (A, MX, SPF, DKIM, DMARC), BIND-style zone file.
 - **Analytics & Pixel Setup** (Marketing): GA4 event map, `<head>` snippets, `track()` helper, UTM cheat sheet — wired before spend starts.
 - **Landing Page & Waitlist Test** (Marketing): one-page landing copy live by Day 4, form spec, 2-email confirmation sequence.
+- **Pre-Sell Landing PRD (AI-builder prompt)** (Marketing): a scoped one-page PRD — sections, copy deck, form spec, confirmation emails, analytics events, brand tokens, paste-ready master prompt — so Lovable/v0/Bolt scaffolds the Day-4 pre-sell page in one shot.
 - **Reviews & Testimonials Capture Kit** (Social & Content): email, SMS, DM ask templates, video-ask script, wall-of-love HTML snippet.
 - **Outbound DM & Email Scripts** (Social & Content): 3-touch cold email, LinkedIn DM sequence, and compliant SMS follow-up — keyed to the First-50 list.
 
