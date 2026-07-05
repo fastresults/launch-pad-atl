@@ -1517,7 +1517,6 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       {/* Bonus tools - deferred. Brand Wizard lives here and is required for Website PRD. */}
       {(() => {
         const bonusIndex = categories.length;
-        const bonusOpen = (completeCount === total && total > 0) || !brandKitLocked;
         const bonusStatus: "complete" | "in_progress" | "not_started" = brandKitLocked
           ? "complete"
           : "in_progress";
@@ -1533,11 +1532,8 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               done={brandKitLocked ? 1 : 0}
               total={1}
               isOpen={bonusOpen}
-              onToggle={() => {
-                const el = document.getElementById("brand-studio-details") as HTMLDetailsElement | null;
-                if (el) el.open = !el.open;
-              }}
-              contentId="brand-studio-details"
+              onToggle={() => setBonusOpen((v) => !v)}
+              contentId="brand-studio-body"
               status={bonusStatus}
               icon={Wand2}
               label="Brand Wizard & bonus tools"
@@ -1551,17 +1547,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 ) : null
               }
             />
-            <details id="brand-studio-details" open={bonusOpen}>
-              <summary className="sr-only">Show / hide</summary>
-              <div className="space-y-4 pt-1">
+            {bonusOpen && (
+              <div id="brand-studio-body" className="space-y-4 pt-1">
                 <BrandStudio snapshot={snapshot} />
                 <SocialStudio snapshot={snapshot} />
                 <ContentStudio snapshot={snapshot} />
               </div>
-            </details>
+            )}
           </section>
         );
       })()}
+
 
 
       <DocumentViewer doc={viewerDoc} open={viewerDoc !== null} onOpenChange={(o) => !o && setViewerDoc(null)} />
