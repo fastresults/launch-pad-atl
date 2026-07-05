@@ -8,6 +8,9 @@ import remarkGfm from "remark-gfm";
 import { FoundersHubGate } from "@/components/hub/FoundersHubGate";
 import { TrackChip } from "@/components/hub/TrackChip";
 import { trackFor } from "@/lib/asset-tracks";
+import { DaySprintDeckDialog } from "@/components/hub/DaySprintDeckDialog";
+import type { LaunchDay } from "@/lib/launch-14day-plan";
+
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
