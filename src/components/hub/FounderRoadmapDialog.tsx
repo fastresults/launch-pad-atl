@@ -205,7 +205,7 @@ export function FounderRoadmapDialog({
               {generatedAt ? new Date(generatedAt).toLocaleString() : "Just generated"}
               {readMin ? ` · ~${readMin} min read` : ""}
               {wordCount ? ` · ${wordCount.toLocaleString()} words` : ""}
-              {documentCount ? ` · synthesized from ${documentCount} documents` : ""}
+              {documentCount ? ` · synthesized from ${documentCount} assets` : ""}
               {typeof qualityScore === "number" ? ` · Quality ${qualityScore}/100` : ""}
             </div>
           </div>
