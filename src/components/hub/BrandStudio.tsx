@@ -128,7 +128,8 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
         </div>
       )}
 
-      <BrandWizard snapshot={snapshot} open={open} onOpenChange={setOpen} />
+        <BrandWizard snapshot={snapshot} open={open} onOpenChange={setOpen} />
+      </div>
     </div>
   );
 }
