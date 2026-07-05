@@ -95,7 +95,7 @@ export function FounderRoadmapCard({ snapshot, documentCount }: Props) {
             ) : (
               <Button size="lg" onClick={() => generate.mutate()} disabled={generate.isPending || isGenerating}>
                 {generate.isPending || isGenerating ? (
-                  <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Synthesizing every document…</>
+                  <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Synthesizing every asset…</>
                 ) : (
                   <><Sparkles className="mr-1.5 h-4 w-4" /> Generate my Founder Roadmap</>
                 )}
