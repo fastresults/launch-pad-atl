@@ -151,16 +151,23 @@ export function LaunchPlanner14Day({
           <div className="line-clamp-2 text-[11px] font-medium leading-tight text-foreground">
             {day.theme}
           </div>
-          <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
-            {state === "complete" ? (
-              <CheckCircle2 className="h-3 w-3 text-status-success" />
-            ) : (
-              <Circle className="h-3 w-3" />
-            )}
-            <span>
+          <div className="mt-1 flex items-center justify-between gap-1 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              {state === "complete" ? (
+                <CheckCircle2 className="h-3 w-3 text-status-success" />
+              ) : (
+                <Circle className="h-3 w-3" />
+              )}
               {done}/{total || "–"}
             </span>
+            {dayMinutes(day, typeByKey, optionalKeys) > 0 && (
+              <span className="flex items-center gap-0.5 tabular-nums">
+                <Clock className="h-2.5 w-2.5" />
+                {formatDuration(dayMinutes(day, typeByKey, optionalKeys))}
+              </span>
+            )}
           </div>
+
         </div>
       </button>
     );
