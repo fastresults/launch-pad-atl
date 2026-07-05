@@ -530,6 +530,7 @@ Deno.serve(async (req) => {
     }
     (qa as any).logo_composited = logoComposited;
     (qa as any).logo_size = logoSize;
+    if (!logoComposited && logoSkipReason) (qa as any).logo_skipped = logoSkipReason;
 
     const fileId = crypto.randomUUID();
     const storagePath = `social-cover/${userId}/${snapshotId}/${platform.platform}/${asset.kind}/${direction}-${fileId}.png`;
