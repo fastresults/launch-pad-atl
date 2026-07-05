@@ -381,7 +381,7 @@ function WalkOutPreview() {
   return (
     <section>
       <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-        By 11:30 AM on workshop day, you'll have all of this
+        By the end of Day 1 of your sprint, you'll have all of this
       </h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {stages.map((n) => (
