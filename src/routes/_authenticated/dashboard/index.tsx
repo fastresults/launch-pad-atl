@@ -108,7 +108,7 @@ function BeforeMode({
       {/* Workshop countdown card */}
       <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-primary/10 via-card to-card p-6 md:p-8">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary">
-          <Calendar className="h-4 w-4" /> Your workshop
+          <Calendar className="h-4 w-4" /> Your 14-Day Sprint
         </div>
         <div className="mt-2 text-2xl md:text-3xl font-semibold tracking-tight">{cohort.dateLabel}</div>
         <div className="mt-1 text-sm text-muted-foreground">8:00 AM – 4:30 PM ET</div>
