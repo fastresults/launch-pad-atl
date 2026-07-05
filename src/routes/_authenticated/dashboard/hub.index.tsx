@@ -101,7 +101,7 @@ function LibraryInner() {
           </div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Your startups</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Turn a single concept into {totalDocs || 20} investor-ready documents.
+            Turn a single venture concept into {totalDocs || 60}+ founder-ready startup assets.
           </p>
         </div>
         {hasVentures ? (
