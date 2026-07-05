@@ -1436,6 +1436,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="truncate text-sm font-medium">{t.name}</h4>
+                        <TrackChip track={trackFor(t.type)} />
                         {needsBrandKit && (
                           <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
                             Requires Brand Kit
@@ -1447,6 +1448,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                           </Badge>
                         )}
                       </div>
+
                       <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{t.description}</p>
                       <div className="mt-1 text-[10px] text-muted-foreground">{statusLine} · ~{t.estimated_minutes} min</div>
                     </div>
