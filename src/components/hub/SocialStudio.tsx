@@ -159,6 +159,7 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
           </TabsContent>
         </Tabs>
       )}
+      </div>
     </div>
   );
 }
