@@ -51,6 +51,8 @@ type DroppedFile = {
   error?: string;
 };
 
+type UrlIntent = "own" | "pattern";
+
 type ScrapedUrl = {
   id: string;
   url: string;
@@ -59,6 +61,7 @@ type ScrapedUrl = {
   text?: string;
   charCount?: number;
   error?: string;
+  intent?: UrlIntent;
 };
 
 type IntakeTab = "upload" | "link" | "speak" | "type";
@@ -68,6 +71,24 @@ const MAX_FILES = 5;
 const MAX_BYTES = 20 * 1024 * 1024;
 const ACCEPT =
   ".pdf,.txt,.md,.markdown,.docx,.rtf,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,application/rtf,image/*";
+
+/** Parse the intent/URL/title header a URL scrape stores at the top of its markdown body. */
+function parseUrlCaptureMeta(text: string | null | undefined): {
+  intent: UrlIntent;
+  url: string | null;
+  title: string | null;
+} {
+  if (!text) return { intent: "own", url: null, title: null };
+  const head = text.slice(0, 1500);
+  const titleMatch = head.match(/^#\s+(.+)$/m);
+  const sourceMatch = head.match(/^Source:\s*(\S+)/im);
+  const intentMatch = head.match(/^Intent:\s*(own|pattern)\b/im);
+  return {
+    intent: intentMatch && intentMatch[1].toLowerCase() === "pattern" ? "pattern" : "own",
+    url: sourceMatch?.[1] ?? null,
+    title: titleMatch?.[1]?.trim() ?? null,
+  };
+}
 
 type Path = "own" | "competitor" | "manual";
 
