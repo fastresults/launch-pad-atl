@@ -145,6 +145,7 @@ function Inner() {
   const [aiFilled, setAiFilled] = useState<Record<string, boolean>>({});
   const [filling, setFilling] = useState(false);
   const [seedUrlChoice, setSeedUrlChoice] = useState<string>(""); // "" = random
+  const draftRunRef = useRef(0);
 
   // Founder + market context
   const [founderName, setFounderName] = useState(prefill?.founder_name ?? "");
@@ -459,6 +460,7 @@ function Inner() {
       const hasDraft = businessConcept.trim().length >= 20;
       if (!hasFiles && !hasOwnUrls && !hasPattern && !hasDraft) return;
       if (drafting) return;
+      const runId = ++draftRunRef.current;
       // Identity fields (name, contact, address, own website) should NEVER come
       // from a pattern reference. If pattern refs are the only signal about
       // identity we have, lock down the identity setters entirely.
@@ -477,6 +479,7 @@ function Inner() {
         if (error) throw error;
         const concept = (data?.concept ?? "").trim();
         if (!concept) throw new Error("Empty draft from the model");
+        if (runId !== draftRunRef.current) return;
 
         setBusinessConcept(concept);
         markFilled("businessConcept");
@@ -535,7 +538,7 @@ function Inner() {
       } catch (e) {
         if (!opts?.auto) toast.error(e instanceof Error ? e.message : "Couldn't process the document");
       } finally {
-        setDrafting(false);
+        if (runId === draftRunRef.current) setDrafting(false);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -581,6 +584,8 @@ function Inner() {
     }
   };
   const resetStepOne = () => {
+    resetStepOneRef.current = true;
+    draftRunRef.current += 1;
     // Unselect every chip so nothing in memory feeds synthesis.
     setReuseSelected({});
     // Clear transient intake.
@@ -611,9 +616,9 @@ function Inner() {
     setFromBrief(false);
     autoSigRef.current = "";
     setResetOpen(false);
-    toast.success("Cleared. Add a source or type your concept to start again.");
+    toast.success("Step 1 cleared. Your library is still saved — add a source or type your concept to start again.");
   };
-  const anySelectedChips = Object.values(reuseSelected).some(Boolean);
+  const anySelectedChips = activeMemoryChips.length > 0;
 
   // Flip a saved memory chip's own↔pattern intent in place.
   const flipMemoryIntent = async (row: VentureSource, next: "own" | "pattern") => {
@@ -731,7 +736,7 @@ function Inner() {
     ? "Reading your sources…"
     : processed
       ? `Filled ${Object.keys(aiFilled).length} field${Object.keys(aiFilled).length === 1 ? "" : "s"} from your sources`
-      : "Drop a doc, paste a link, speak, or type — we'll fill the rest";
+      : "Drop an asset, paste a link, speak, or type — we'll fill the rest";
 
   return (
     <div className="space-y-6 pb-32">
