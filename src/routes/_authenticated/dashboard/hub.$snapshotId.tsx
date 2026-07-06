@@ -1136,7 +1136,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
       {/* Hero — either the generate/next-action card, OR the Founder Roadmap once the kit is done */}
       {heroDone ? (
-        <FounderRoadmapCard snapshot={snapshot} documentCount={completeCount} />
+        <FounderRoadmapCard snapshot={snapshot} documentCount={completeCount} docs={docs} />
       ) : (
         <div className="rounded-2xl border border-white/10 bg-card p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
