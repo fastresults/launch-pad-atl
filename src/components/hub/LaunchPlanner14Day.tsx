@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, CheckCircle2, Circle, ArrowRight, Loader2, ExternalLink, Rocket, Clock, Presentation, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LAUNCH_14DAY_PLAN, CATEGORY_DOT, type LaunchDay } from "@/lib/launch-14day-plan";
@@ -38,6 +38,7 @@ interface Props {
   isPhysical?: boolean;
   sourcingOnlyKeys?: Set<string>;
   onOpenDayDeck?: (day: LaunchDay) => void;
+  snapshotId?: string;
 }
 
 function dayMinutes(day: LaunchDay, typeByKey: Map<string, any>, optionalKeys: Set<string>): number {
@@ -90,6 +91,7 @@ export function LaunchPlanner14Day({
   isPhysical = false,
   sourcingOnlyKeys,
   onOpenDayDeck,
+  snapshotId,
 }: Props) {
 
   const optionalKeys = useMemo(
