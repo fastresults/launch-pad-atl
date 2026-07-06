@@ -16,9 +16,20 @@ import {
   attachSourcesToSnapshot,
   listVentureSources,
   deleteVentureSource,
+  updateVentureSourceIntent,
   type VentureSource,
 } from "@/lib/venture-sources";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   ArrowLeft,
   Loader2,
@@ -35,6 +46,8 @@ import {
   ChevronDown,
   ChevronUp,
   Mic,
+  Compass,
+  RotateCcw,
   Type as TypeIcon,
 } from "lucide-react";
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
@@ -537,6 +550,81 @@ function Inner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [combinedDocs.map((d) => d.id).join("|"), readyUrls.map((u) => u.id).join("|")]);
 
+  // Reset Step 1 — the founder can wipe every AI signal and every transient
+  // source they've added on this page and start again with a clean slate.
+  // Library files themselves are NOT deleted; they just become unselected.
+  const [resetOpen, setResetOpen] = useState(false);
+
+  const canonicalDefault = (key: string): string => {
+    const ctx = canonicalCtx;
+    switch (key) {
+      case "companyName": return prefill?.company_name ?? ctx?.concept?.company_name ?? "";
+      case "diff": return prefill?.differentiation_statement ?? ctx?.concept?.differentiation ?? "";
+      case "founderName": return prefill?.founder_name ?? ctx?.identity?.full_name ?? "";
+      case "founderEmail": return prefill?.founder_email ?? ctx?.identity?.email ?? "";
+      case "founderPhone": return prefill?.founder_phone ?? ctx?.identity?.phone ?? "";
+      case "city": return prefill?.city ?? "";
+      case "region": return prefill?.region ?? "";
+      case "country": return prefill?.country ?? "United States";
+      case "websiteUrl": return "";
+      case "subIndustry": return prefill?.sub_industry ?? "";
+      case "businessConcept": return prefill?.business_concept ?? ctx?.concept?.business_concept_blob ?? "";
+      case "industry": return prefill?.industry ?? ctx?.market?.industry ?? "";
+      default: return "";
+    }
+  };
+  const resetStepOne = () => {
+    // Unselect every chip so nothing in memory feeds synthesis.
+    setReuseSelected({});
+    // Clear transient intake.
+    setFiles([]);
+    setScrapedUrls([]);
+    setUrlInput("");
+    setNextUrlIntent("own");
+    setIntakeTab("upload");
+    setAddMoreOpen(false);
+    // Reset every field the AI touched back to its prefill/canonical default.
+    const setters: Record<string, (v: string) => void> = {
+      companyName: setCompanyName,
+      diff: setDiff,
+      founderName: setFounderName,
+      founderEmail: setFounderEmail,
+      founderPhone: setFounderPhone,
+      city: setCity,
+      region: setRegion,
+      country: setCountry,
+      websiteUrl: setWebsiteUrl,
+      subIndustry: setSubIndustry,
+      businessConcept: setBusinessConcept,
+      industry: setIndustry,
+    };
+    for (const key of Object.keys(aiFilled)) {
+      const setter = setters[key];
+      if (setter) setter(canonicalDefault(key));
+      if (key === "marketScope") setMarketScope(prefill?.market_scope ?? "local");
+    }
+    setAiFilled({});
+    setProcessed(false);
+    autoSigRef.current = "";
+    setResetOpen(false);
+    toast.success("Cleared. Add a source or type your concept to start again.");
+  };
+  const anySelectedChips = Object.values(reuseSelected).some(Boolean);
+
+  // Flip a saved memory chip's own↔pattern intent in place.
+  const flipMemoryIntent = async (row: VentureSource, next: "own" | "pattern") => {
+    try {
+      const updated = await updateVentureSourceIntent(row.id, next);
+      setReusable((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+      // Force re-synthesis on next signal — intent change means identity gating may change.
+      autoSigRef.current = "";
+      toast.success(next === "pattern" ? "Marked as pattern only" : "Marked as your own");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't update");
+    }
+  };
+
+
   const create = useMutation({
     mutationFn: () =>
       createSnapshot({
@@ -675,13 +763,39 @@ function Inner() {
                 : "Here's everything we're already using as your single source of truth. We'll carry all of it into this startup snapshot."}
             </p>
           </div>
-          {drafting && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+          <div className="flex items-center gap-2">
+            {drafting && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setResetOpen(true)}
+              className="text-muted-foreground hover:text-foreground"
+              title="Clear every source and every AI-filled field"
+            >
+              <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+              Reset step 1
+            </Button>
+          </div>
+
         </div>
 
         {/* Memory chips — what we already have in collective memory */}
         {!memoryEmpty && (
           <div className="space-y-3">
+            {anySelectedChips && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setReuseSelected({})}
+                  className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+                >
+                  Deselect all
+                </button>
+              </div>
+            )}
             <div className="flex flex-wrap gap-2">
+
               {memoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin, intent }) => {
                 const ready = !!(row.extracted_text ?? "").trim();
                 const Icon = isUrlCapture ? Globe : isAudio ? Mic : isImage ? FileText : FileText;
@@ -714,11 +828,21 @@ function Inner() {
                     <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
                     <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
-                    {isPattern && (
-                      <span className="shrink-0 rounded-full border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
-                        Pattern
-                      </span>
-                    )}
+                    {isUrlCapture ? (
+                      <button
+                        type="button"
+                        onClick={() => flipMemoryIntent(row, isPattern ? "own" : "pattern")}
+                        title={isPattern ? "Click to use as your own site instead" : "Click to use as a pattern reference only"}
+                        className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider transition ${
+                          isPattern
+                            ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
+                            : "border-white/20 bg-background/60 text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {isPattern ? "Pattern" : "Mine"}
+                      </button>
+                    ) : null}
+
 
                     <button
                       type="button"
@@ -884,53 +1008,63 @@ function Inner() {
               Paste a URL — your own site, or a startup you want to learn from. Up to {MAX_URLS}.
             </p>
 
-            {/* Intent toggle — decides how the AI treats the next URL */}
-            <div className="rounded-xl border border-white/10 bg-background/40 p-3">
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                This link is…
+            {/* Intent toggle — always visible, prominent, decides how the AI treats the next URL. */}
+            <div className="rounded-xl border-2 border-primary/20 bg-background/40 p-3">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
+                How should we use this link?
               </div>
-              <div className="grid gap-1.5 sm:grid-cols-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {([
                   {
                     k: "own" as UrlIntent,
-                    label: "My own site or doc",
+                    icon: Globe,
+                    label: "My own site",
                     hint: "Pull name, contact, location, and content.",
                   },
                   {
                     k: "pattern" as UrlIntent,
-                    label: "A pattern to learn from",
-                    hint: "Use the shape only. Won't copy their name or address.",
+                    icon: Compass,
+                    label: "Pattern only",
+                    hint: "Learn the shape. Won't copy their name or address.",
                   },
                 ]).map((opt) => {
                   const active = nextUrlIntent === opt.k;
+                  const OptIcon = opt.icon;
                   return (
                     <button
                       key={opt.k}
                       type="button"
                       onClick={() => setNextUrlIntent(opt.k)}
-                      className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
+                      aria-pressed={active}
+                      className={`rounded-lg border-2 px-3 py-2.5 text-left text-sm transition ${
                         active
-                          ? "border-primary/60 bg-primary/10"
-                          : "border-white/10 bg-background/40 hover:border-white/25"
+                          ? "border-primary bg-primary/10 shadow-sm"
+                          : "border-white/10 bg-background/40 hover:border-white/30"
                       }`}
                     >
                       <div className="flex items-center gap-2 font-medium">
                         <span
-                          className={`h-2 w-2 rounded-full ${active ? "bg-primary" : "bg-muted-foreground/40"}`}
-                        />
+                          className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+                            active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                          }`}
+                        >
+                          {active && <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />}
+                        </span>
+                        <OptIcon className={`h-4 w-4 ${active ? "text-primary" : "text-muted-foreground"}`} />
                         {opt.label}
                       </div>
-                      <div className="mt-0.5 pl-4 text-[11px] text-muted-foreground">{opt.hint}</div>
+                      <div className="mt-1 pl-6 text-[11px] leading-snug text-muted-foreground">{opt.hint}</div>
                     </button>
                   );
                 })}
               </div>
               {nextUrlIntent === "pattern" && (
-                <p className="mt-2 text-[11px] text-muted-foreground">
-                  You'll fill in your own startup name, location, and contact below — we won't take them from the pattern site.
+                <p className="mt-2 rounded-md bg-primary/5 px-2 py-1.5 text-[11px] text-foreground/80">
+                  You'll enter your own startup name, location, and contact below — we won't take them from the pattern site.
                 </p>
               )}
             </div>
+
 
             <div className="flex gap-2">
               <Input
@@ -965,11 +1099,15 @@ function Inner() {
                       <span className="font-medium">{u.title || u.url}</span>
                       {u.title && <span className="ml-1 text-xs text-muted-foreground">· {u.url}</span>}
                     </span>
-                    {u.intent === "pattern" && (
-                      <span className="shrink-0 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                        Pattern
-                      </span>
-                    )}
+                    <span
+                      className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                        u.intent === "pattern"
+                          ? "border-primary/40 bg-primary/10 text-primary"
+                          : "border-white/20 bg-background/60 text-muted-foreground"
+                      }`}
+                    >
+                      {u.intent === "pattern" ? "Pattern" : "Mine"}
+                    </span>
                     <span
                       className={`shrink-0 text-[11px] uppercase tracking-wider ${
                         u.status === "ready"
@@ -1491,6 +1629,24 @@ function Inner() {
           </Button>
         </div>
       </div>
+
+      <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset step 1?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This clears every source used for this venture, the auto-drafted concept, and every AI-filled
+              field. Anything you typed yourself stays put. Files in your library are not deleted — they're
+              just unselected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep everything</AlertDialogCancel>
+            <AlertDialogAction onClick={resetStepOne}>Yes, reset</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 }
