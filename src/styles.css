@@ -225,11 +225,11 @@
  * than an error. Runs continuously; the surrounding component gates it. */
 @keyframes attract-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 0%, transparent);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 0 6px hsl(var(--primary) / 0.35);
+    box-shadow: 0 0 0 6px color-mix(in oklab, var(--primary) 35%, transparent);
     transform: scale(1.03);
   }
 }
