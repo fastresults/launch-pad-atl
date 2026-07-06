@@ -13,7 +13,19 @@ import {
 } from "@/components/ui/sheet";
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
 
-const nav = [
+const leftNav = [
+  { to: "/build", label: "workshops" },
+  { to: "/services", label: "services" },
+  { to: "/schedule", label: "schedule" },
+] as const;
+
+const rightNav = [
+  { to: "/facilitator", label: "facilitator" },
+  { to: "/contact", label: "contact" },
+] as const;
+
+// Full list for mobile sheet (preserves original order incl. home + register)
+const mobileNav = [
   { to: "/", label: "home" },
   { to: "/build", label: "workshops" },
   { to: "/services", label: "services" },
@@ -50,6 +62,31 @@ export function SiteHeader() {
               {n.label}
             </NavLink>
           ))}
+      <div className="mx-auto flex max-w-7xl items-center gap-4 px-3 py-2 sm:px-4 md:px-6">
+        {/* Left edge: logo + product nav */}
+        <div className="flex min-w-0 shrink items-center gap-7">
+          <Link to="/" className="flex min-w-0 shrink items-center font-semibold tracking-tight" aria-label="Startup Labs — home">
+            <StartupLabsLogo className="h-8 w-auto text-foreground sm:h-9 md:h-12" />
+          </Link>
+          <nav className="hidden items-center gap-7 text-sm text-muted-foreground lg:flex">
+            {leftNav.map((n) => (
+              <NavLink key={n.to} to={n.to} className={navLinkClass}>
+                {n.label}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+
+        {/* Spacer pushes right group to the edge */}
+        <div className="flex-1" />
+
+        {/* Right edge: orientation nav + auth + CTA */}
+        <div className="hidden items-center gap-7 text-sm text-muted-foreground lg:flex">
+          {rightNav.map((n) => (
+            <NavLink key={n.to} to={n.to} className={navLinkClass}>
+              {n.label}
+            </NavLink>
+          ))}
           <button
             type="button"
             onClick={() => setModesOpen(true)}
@@ -60,17 +97,13 @@ export function SiteHeader() {
           {isAdmin && (
             <Link to="/admin" className="transition-colors hover:text-foreground">admin</Link>
           )}
-        </nav>
-
-        {/* Desktop right */}
-        <div className="hidden items-center gap-3 lg:flex">
           {isAuthenticated ? (
             <>
-              <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">dashboard</Link>
-              <button onClick={() => signOut()} className="text-sm text-muted-foreground hover:text-foreground">sign out</button>
+              <Link to="/dashboard" className="hover:text-foreground">dashboard</Link>
+              <button onClick={() => signOut()} className="hover:text-foreground">sign out</button>
             </>
           ) : (
-            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">sign in</Link>
+            <Link to="/login" className="hover:text-foreground">sign in</Link>
           )}
           <Link to="/register" className="rounded-full bg-hero-gradient px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90">
             {ctaFull}
