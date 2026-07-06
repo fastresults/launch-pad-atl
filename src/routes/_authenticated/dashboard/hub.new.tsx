@@ -320,10 +320,12 @@ function Inner() {
       toast.error("Already added that URL");
       return;
     }
+    const intent: UrlIntent = nextUrlIntent;
     const entry: ScrapedUrl = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       url: normalized,
       status: "scraping",
+      intent,
     };
     setScrapedUrls((prev) => [...prev, entry]);
     setUrlInput("");
@@ -349,13 +351,19 @@ function Inner() {
         // "Your source memory" alongside uploads.
         try {
           const host = new URL(normalized).hostname.replace(/^www\./, "");
-          const baseName = (r.title || host).replace(/[^\w\-.]+/g, "_").slice(0, 80) || "link";
-          const md = `# ${r.title || normalized}\n\nSource: ${normalized}\n\n${text}`;
+          const patternSuffix = intent === "pattern" ? "__pattern" : "";
+          const baseName = ((r.title || host).replace(/[^\w\-.]+/g, "_").slice(0, 80) || "link") + patternSuffix;
+          // The `Intent:` header line is what we read back later to route this
+          // scrape into "own" vs "pattern reference" buckets at synthesis time.
+          const md = `# ${r.title || normalized}\n\nSource: ${normalized}\nIntent: ${intent}\n\n${text}`;
           const file = new File([md], `${baseName}.md`, { type: "text/markdown" });
           const row = await uploadVentureSource({ file, kind: "venture_source", waitForExtraction: true });
           appendToMemory(row);
           setScrapedUrls((curr) => curr.filter((x) => x.id !== entry.id));
         } catch (persistErr) {
+          // Fall back to keeping the URL in its own list if persistence fails.
+          setScrapedUrls((curr) =>
+
           // Fall back to keeping the URL in its own list if persistence fails.
           setScrapedUrls((curr) =>
             curr.map((x) =>
