@@ -70,6 +70,7 @@ function relativeTime(iso?: string) {
 }
 
 function LibraryInner() {
+  const { isAdmin } = useAuth();
   const [tab, setTab] = useState<Tab>("active");
   const [showComingSoon, setShowComingSoon] = useState(false);
   const { data: snapshots = [], isLoading } = useQuery({
