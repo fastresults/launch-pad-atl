@@ -735,6 +735,16 @@ function Inner() {
               })}
             </div>
 
+            {hasPatternRefs && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs text-foreground/90">
+                <span className="font-semibold text-primary">Pattern references active.</span>{" "}
+                We'll use those sites for shape and positioning only — not for your startup's
+                name, address, or contact info. Fill those in below.
+              </div>
+            )}
+
+
+
             {/* Anything else? */}
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-background/40 p-3">
               <div className="text-sm">
