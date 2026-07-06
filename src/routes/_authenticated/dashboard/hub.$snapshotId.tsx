@@ -1261,15 +1261,6 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         />
       </div>
 
-
-
-      {showHelper && (
-        <div className="flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-card/40 px-4 py-2 text-xs text-muted-foreground">
-          <span>This page writes your full startup kit. Hit one button and we'll do the rest — you can read each asset as it finishes.</span>
-          <button type="button" onClick={() => setShowHelper(false)} className="text-muted-foreground hover:text-foreground">✕</button>
-        </div>
-      )}
-
       {/* Stale-concept banner */}
       {staleCount > 0 && (
         <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-status-warning/40 bg-status-warning/10 px-4 py-3 text-sm text-status-warning">
@@ -1285,34 +1276,33 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         </div>
       )}
 
-      {/* Document list */}
-      <SectionIntro copy={HUB_DASHBOARD_INTROS.library} />
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your assets</h3>
-          <p className="text-xs text-muted-foreground">Sections unlock in order. Use the per-section button to generate a whole section at once, or hit Generate on any single asset.</p>
-        </div>
-        <div className="flex items-center gap-1">
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs text-muted-foreground"
-            onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, true])))}
-          >
-            <ChevronsUpDown className="mr-1 h-3 w-3" />
-            Expand all
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs text-muted-foreground"
-            onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, false])))}
-          >
-            <ChevronsDownUp className="mr-1 h-3 w-3" />
-            Collapse all
-          </Button>
-        </div>
-      </div>
+      {/* Document list — quiet eyebrow + inline expand/collapse actions */}
+      <SectionIntro
+        copy={HUB_DASHBOARD_INTROS.library}
+        actions={
+          <>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 px-2 text-xs text-muted-foreground"
+              onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, true])))}
+            >
+              <ChevronsUpDown className="mr-1 h-3 w-3" />
+              Expand all
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 px-2 text-xs text-muted-foreground"
+              onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, false])))}
+            >
+              <ChevronsDownUp className="mr-1 h-3 w-3" />
+              Collapse all
+            </Button>
+          </>
+        }
+      />
+
 
       {/* Category stepper */}
       {categoryProgress.length > 0 && (
