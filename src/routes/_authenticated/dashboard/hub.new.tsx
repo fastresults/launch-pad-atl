@@ -1629,6 +1629,24 @@ function Inner() {
           </Button>
         </div>
       </div>
+
+      <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset step 1?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This clears every source used for this venture, the auto-drafted concept, and every AI-filled
+              field. Anything you typed yourself stays put. Files in your library are not deleted — they're
+              just unselected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep everything</AlertDialogCancel>
+            <AlertDialogAction onClick={resetStepOne}>Yes, reset</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 }
