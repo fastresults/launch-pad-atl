@@ -268,6 +268,22 @@ function buildContextBundle(ctx: VentureContext, allDocs: any[]) {
   sections.push({ protect: true, body: `# Venture: ${snap.company_name ?? "(unnamed)"}` });
   sections.push({ protect: true, body: compactPreamble(ctx) });
 
+  // KIT FACTS — authoritative counts the model must prefer over any legacy
+  // numbers embedded in source assets (e.g. "34 deliverables", "12-week"
+  // program, "$197 workshop"). These are the ONLY trustworthy figures for
+  // program shape, asset count, and sprint length.
+  const completedDocs = allDocs.filter((d: any) => d.content);
+  const kitByTrack: Record<AssetTrack, number> = { Introduction: 0, Education: 0, Tracking: 0, Action: 0 };
+  for (const d of completedDocs) kitByTrack[trackFor(d.document_type)]++;
+  const kitFacts = [
+    `## KIT FACTS — authoritative counts (override any legacy figures in source assets)`,
+    `- Total completed assets in this kit: **${completedDocs.length}**`,
+    `- Tracks covered: Introduction (${kitByTrack.Introduction}), Education (${kitByTrack.Education}), Tracking (${kitByTrack.Tracking}), Action (${kitByTrack.Action})`,
+    `- Sprint length: **14 days** (Days 1–14 completed; roadmap Day 15 → Day 365 forward-looking)`,
+    `- If a source asset mentions "34 deliverables", "12-week incubator", "$197 workshop", "single morning", or any earlier program shape, treat it as stale and use these KIT FACTS instead. Do not repeat those legacy phrases.`,
+  ].join("\n");
+  sections.push({ protect: true, body: kitFacts });
+
   // Brain slice — every key, since the roadmap synthesizes across the entire venture.
   const brainSlice = pickBrainSlice(ctx.brain, null);
   if (brainSlice) {
