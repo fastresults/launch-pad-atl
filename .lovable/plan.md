@@ -1,101 +1,99 @@
-# Venture Workspace — Minimalist Guided Pass
+# Elevate the Founder Roadmap
 
-## What's cluttered (audit from the captured screen)
+## Why it feels "legacy"
 
-The page currently stacks **five hero-weight blocks** in the first fold, several of which say the same thing twice:
+The generator (`supabase/functions/venture-generate-roadmap/index.ts`) was written when a venture had roughly a dozen deliverables. The kit now spans **60+ assets** across four tracks (Introduction / Education / Tracking / Action, `src/lib/asset-tracks.ts`) covering legal, payments, DNS, ads, content calendar, financial model, brand system, ops SOPs, automation, referral, etc. The current prompt:
 
-1. **`01 · NEXT ACTION` intro** (eyebrow + what + why + "How to use" pill)
-2. **"Your startup kit is ready" banner** (green gradient, own CTA)
-3. **"The Big Picture — Your Founder Roadmap" card** (purple gradient, own CTA + Regenerate)
-4. **`02 · 14-DAY LAUNCH METHOD` intro** — followed immediately by the planner's own header **"14-DAY LAUNCH METHOD · Your day-by-day sprint"** (identical eyebrow, twice, back to back)
-5. **`03 · AI TOOLKIT` intro** — followed immediately by the AI Stack panel's own header **"YOUR AI STACK · Turn your 14-day plan into an installable toolkit"** (again, duplicate)
+- **PROTECTED_TYPES = 11 docs.** Everything else is `smartExcerpt`ed to **1,800 chars** — so ~50 of the founder's assets arrive as truncated stubs. The synthesis literally can't see them.
+- **Chapter list is fixed at 13** and skewed to strategy / VC framing. There is no chapter on Ops & Systems, Brand System, Growth Engine, Legal & Money Plumbing, or Content & Community — all major buckets in the expanded kit.
+- **Stat Strip is hard-coded to 6 rows** ("Recommended raise", "Breakeven month" …) that only make sense for one persona. For Main Street track it's already partially patched via `TRACK_ADDENDUM`, but the strip still doesn't reflect what the kit actually produced (assets built, sprint days completed, brand system status, financial model status, GTM channels picked, etc.).
+- **No traceability.** The doc never says "this comes from your Sales Playbook" in a scannable way, so the founder can't jump from a claim back to the source asset.
+- **Fixed 45-day sprint** duplicates the 14-Day Sprint the founder just did. The roadmap should pick up on Day 15, not restart at Day 1.
+- **Card + dialog** (`FounderRoadmapCard`, `FounderRoadmapDialog`) only surface word count, quality score, generated date — no signal of coverage ("synthesized from 63 of 63 assets across 4 tracks").
 
-Every SectionIntro also carries its own **"How to use"** pill in the same slot — four of them down the page. The `01 · Next action` intro contradicts reality once the kit is done (there *is* no next action; it's all generated). The result: a founder scrolls past four competing "start here" surfaces before reaching actual assets.
+## Recommendation
 
-## Guiding principles for this pass
-
-- **One hero, not five.** Only one block in the first fold gets the visual weight of a primary card.
-- **Never title the same section twice.** SectionIntro OR the component's internal header — not both.
-- **State-aware guidance.** What appears depends on progress: pre-generation shows "next action"; post-generation shows "your roadmap." They never both shout at once.
-- **Guidance stays, chrome shrinks.** Keep the numbered orientation + "How to use" affordance, but make it a quiet rail — not a repeated banner.
+Treat the roadmap as the **capstone that reads every asset**, structured around the four tracks the founder actually completed, with a visible chain of custody back to each source doc.
 
 ## Plan
 
-### 1. Collapse the SectionIntro chrome into an in-header line
+### 1. Feed the full kit into the model (edge function)
 
-Change `SectionIntro` from a full-width bordered block into a **single-line eyebrow row** with the "How to use" as a tiny icon-only info button on the far right. Remove the left border bar. Remove the "what/why" sub-copy from the section header itself — move the "why it matters" sentence into the "How to use" popover as its first line. This eliminates ~3 lines of vertical clutter per section and stops it from competing with the component title underneath.
+`supabase/functions/venture-generate-roadmap/index.ts`
 
-New shape (one line, muted, above the real component):
-`01 · NEXT ACTION ────────────────────────────  ⓘ`
+- **Expand `PROTECTED_TYPES`** to include every deliverable the founder actually completed for this snapshot. Rather than a static allow-list, pass the top-N docs by length/track weight in full; excerpt only when total budget forces it.
+- **Raise the excerpt floor** from 1,800 → 3,500 chars for non-protected docs, and bump `MAX_PROMPT_CHARS` from 140k → 200k (Gemini 3 Flash context supports it).
+- **Group source blocks by track** in `buildContextBundle` — Introduction / Education / Tracking / Action — so the model can synthesize per bucket instead of alphabetically by `document_type`.
+- **Emit a coverage manifest** (JSON) alongside the markdown: `{ assetsUsed: string[], assetsTruncated: string[], tracksCovered: {...} }` and persist to a new `roadmap_coverage jsonb` column on `venture_snapshots` (migration).
 
-The popover now reads: **Why this matters:** … · **How to use:** 1. …  2. …
+### 2. Restructure the prompt around the expanded kit
 
-### 2. Remove duplicate titles from the two planner components
+Replace the current 13-chapter shape with a track-aware structure that mirrors what the founder built:
 
-- `LaunchPlanner14Day.tsx` (lines ~198–208): delete the internal `14-DAY LAUNCH METHOD` eyebrow + `Your day-by-day sprint` H2 + description paragraph. Keep only the progress pill on the right. The SectionIntro row above now provides the title.
-- `AIStackPanel.tsx` (headers around lines ~130 and ~160): remove the internal `YOUR AI STACK` eyebrow + duplicate H3. Keep the body + CTA.
+```text
+Cover & Verdict
+Stat Strip (dynamic: assets built, sprint days, brand system status,
+             financial model status, GTM channels, legal status, etc.)
+Part I  — The Business You've Built           (was Ch 1–3)
+Part II — The Market You're Entering          (was Ch 4–5)
+Part III — Your Growth Engine                 (NEW — pulls GTM, sales
+             playbook, content calendar, ads, referral, email)
+Part IV — Your Brand System                   (NEW — brand strategy,
+             messaging house, voice, visual identity, logo pack)
+Part V  — Your Operating System               (NEW — legal, payments,
+             DNS, analytics, support, automation, SOPs, cadence)
+Part VI — Money, Runway & Unit Economics      (was Ch 8, deeper)
+Part VII — The Next 90 Days (Day 15 → Day 105)  (replaces 45-day sprint)
+Part VIII — Year One, in Three Phases         (was Ch 7)
+Part IX — How to Talk About This              (was Ch 9)
+Part X  — Your Operating Cadence              (was Ch 11)
+The One Thing · Closing Note
+```
 
-Rationale: the SectionIntro row IS the title. The component just renders content.
+Rules the prompt must enforce:
 
-### 3. Merge the two victory banners into one adaptive hero
+- **Every claim carries a source tag** in the form `[from: <Asset Name>]` (max 2 per paragraph, styled quietly in the UI).
+- **The 90-day plan explicitly starts at Day 15** and picks up from the last day of the 14-Day Sprint.
+- **Stat Strip is generated, not templated.** Model chooses 6–8 metrics from what's actually in the kit; each row must cite a source asset.
+- **Each Part opens with a 1-sentence "what this Part pulls from" line** listing the asset names it synthesizes.
 
-Today, once the kit is done, the page shows both **"Your startup kit is ready"** (green) AND **"Your Founder Roadmap"** (purple) as separate top-of-page cards. Merge into a **single state-aware hero**:
+### 3. Track-aware "Read next" (replaces Chapter 12)
 
-- **State A — not started / partial** (`completeCount < total`): show the current "Generate next / Generate all" hero. No roadmap card yet.
-- **State B — kit complete** (`heroDone === true`): the hero itself becomes the roadmap card — headline "Your startup kit is ready · 63 assets", primary CTA "**Open Founder Roadmap**", secondary "View first asset", tertiary ghost "Regenerate all". The standalone `FounderRoadmapCard` is not rendered separately.
+Replace the flat "5 documents to read next" with a **4×2 grid** — two next-best reads per track (Intro / Edu / Tracking / Action) — grounded in what the founder has NOT yet opened (join with `venture_documents.last_opened_at` if present, else fall back to model choice).
 
-This removes one full hero-card from the first fold and eliminates the "which purple button do I click?" ambiguity.
+### 4. UI: show the elevated shape
 
-### 4. Drop the `01 · Next action` SectionIntro entirely
+- **`FounderRoadmapDialog.tsx`**
+  - Left nav becomes two-level: **Part → Chapter**, with a small track chip next to each Part where relevant.
+  - Header meta row adds: `Synthesized from N of M assets · 4 tracks · Day 15 → Day 365`.
+  - Render `[from: …]` tags as inline pills that link back to `#/dashboard/hub/:snapshotId?asset=<slug>`.
+  - Add a "Coverage" popover (ⓘ) listing every asset used vs truncated, sourced from `roadmap_coverage`.
+- **`FounderRoadmapCard.tsx`** (still used as the hero when `heroDone`)
+  - Replace the single "63 assets" line with a **4-chip strip** showing per-track coverage (`Intro 8 · Edu 14 · Tracking 9 · Action 32`), each chip clickable to filter the library below.
+  - Keep primary CTA "Open Founder Roadmap" (per selected element) but add a secondary "See coverage" ghost.
 
-Its content ("the single most important thing to generate right now") is redundant with the hero's headline and CTA. The hero already IS the next action. Keeping the intro adds noise without new information.
+### 5. Regeneration ergonomics
 
-Renumber remaining sections: **01 · 14-Day Launch Method**, **02 · AI Toolkit**, **03 · Your asset library**.
-
-### 5. Quiet the asset-library preamble
-
-Above the accordion stack the page currently shows:
-- SectionIntro "04 · Your asset library" (with what/why/how-to)
-- an H3 "Your assets" + long descriptive paragraph
-- Expand-all / Collapse-all buttons
-- A category-progress chip strip (6 chips)
-
-Collapse to:
-- One SectionIntro row: `03 · YOUR ASSET LIBRARY  ⓘ` with Expand/Collapse on the right
-- The category-progress chip strip stays (it's real progress data, not chrome)
-- Delete the H3 "Your assets" and its paragraph — the numbered eyebrow already labels it
-
-### 6. Move the persistent "This page writes your full startup kit…" helper strip
-
-That amber banner at the very bottom repeats what the hero already says. Remove it (it's already dismissible; make it default-hidden and only surface via the "?" chip in the page header for users who explicitly ask for the tour).
-
-### 7. Welcome strip refinement
-
-Keep `DashboardWelcomeStrip` but auto-hide it once `completeCount > 0` (already done) AND once the user has been on the page more than one session. On repeat visits with 0 progress, show a slimmer one-line version, not the full padded card.
+- When the kit changes after the roadmap was generated (new assets, brand wizard rerun, financial model updated), mark `roadmap_status = 'stale'` and show a subtle "Kit has changed since this was written — regenerate?" ribbon in the dialog header. Uses existing `roadmap_generated_at` vs `max(venture_documents.updated_at)`.
 
 ## Files to change
 
-- **Edit:** `src/components/hub/SectionIntro.tsx` — collapse to single-line row + icon-only info popover; move "why" into popover.
-- **Edit:** `src/components/hub/LaunchPlanner14Day.tsx` — delete internal eyebrow/title/description block (~lines 198–208), keep progress pill.
-- **Edit:** `src/components/hub/AIStackPanel.tsx` — delete internal eyebrow/title in both `heroDone`/`!stackDoc` branches.
-- **Edit:** `src/components/hub/FounderRoadmapCard.tsx` — no longer rendered standalone; extract its data (word count, generated date, quality score) into a helper so the hero can display them in State B.
-- **Edit:** `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` (`GenerateStep`):
-  - Remove `<SectionIntro copy={HUB_DASHBOARD_INTROS.next_action} />` above the hero.
-  - Remove separate `<FounderRoadmapCard />` render — fold into hero.
-  - Renumber remaining SectionIntro copy 01→02→03.
-  - Delete the "Your assets" H3 + paragraph; keep only the SectionIntro + Expand/Collapse row.
-  - Remove the amber helper strip (or hide by default).
-- **Edit:** `src/lib/hub-dashboard-copy.ts` — drop the `next_action` entry, renumber eyebrows, restructure copy so `why` is popover-only.
+- **Edit** `supabase/functions/venture-generate-roadmap/index.ts` — prompt rewrite, expanded protection, track grouping, coverage manifest, dynamic Stat Strip, Day-15 sprint start, source-tag rule.
+- **New migration** — add `roadmap_coverage jsonb` and (optional) `roadmap_structure_version int` to `venture_snapshots`; GRANT unchanged (column-add).
+- **Edit** `src/components/hub/FounderRoadmapDialog.tsx` — two-level nav, coverage popover, source-tag pill renderer, staleness ribbon, updated meta row.
+- **Edit** `src/components/hub/FounderRoadmapCard.tsx` — per-track coverage chip strip, secondary "See coverage" action.
+- **Edit** `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` — pass `roadmap_coverage` + track counts into the card and dialog; wire the "regenerate if stale" ribbon.
 
 ## Out of scope
 
-- No changes to generation logic, edge functions, brand-kit gate, day-deck dialog, or the accordion internals.
-- No color/typography changes — this is a structural/IA pass, not a visual restyle. The chosen palette and section colors stay.
-- The category-progress chip strip and the per-section headers inside the accordion stay as they are.
+- No changes to the 14-Day Sprint planner, AI Stack, brand wizard, or asset accordion.
+- No model swap — stay on `google/gemini-3-flash-preview`.
+- No new deliverable types.
+- No visual restyle of the roadmap dialog beyond the additions above.
 
 ## Verification
 
-- Fresh venture (0 assets): first fold shows welcome strip → single "generate" hero → sprint planner (no duplicate title) → AI stack → asset library. That's it.
-- Complete venture (63/63): first fold shows single hero card that IS the roadmap (green tone, Founder Roadmap as primary CTA). No separate purple roadmap card underneath.
-- Each SectionIntro is a single quiet line, not a bordered block. Clicking ⓘ opens why + how-to.
-- No two adjacent blocks carry the same eyebrow text.
+- Complete venture (60+ assets): coverage manifest lists ≥90% of completed docs as "used", <10% "truncated"; Stat Strip rows all carry a source; Part III / IV / V exist and cite ops/brand/growth assets by name; 90-day plan begins "Day 15".
+- Dialog meta reads `Synthesized from N of M assets · 4 tracks`; per-track chips render on the hero card.
+- Regenerating after editing one asset flips `roadmap_status` to `stale` and shows the ribbon until a new run completes.
+- Existing roadmaps without `roadmap_coverage` still render (graceful fallback — coverage popover hidden, chips omitted).
