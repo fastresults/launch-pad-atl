@@ -336,10 +336,11 @@ export function FounderRoadmapDialog({
                      const el = document.getElementById(s.id);
                      el?.scrollIntoView({ behavior: "smooth", block: "start" });
                    }}
-                   className="block truncate rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
+                   className={`block truncate rounded-md px-2 py-1 text-xs hover:bg-muted hover:text-foreground ${s.isPart ? "mt-2 font-semibold text-foreground" : "text-muted-foreground pl-4"}`}>
                   {s.navLabel}
                 </a>
               ))}
+
             </nav>
           </aside>
 
