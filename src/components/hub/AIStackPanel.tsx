@@ -72,9 +72,10 @@ export function AIStackPanel({
   onScrollToDoc,
   onOpenDoc,
   isGenerating,
+  compact = false,
 }: Props) {
   const qc = useQueryClient();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(compact);
 
   const tools = useMemo(() => extractStackJson(stackDoc?.content), [stackDoc?.content]);
   const hasStack = tools.length > 0;
