@@ -364,8 +364,6 @@ function Inner() {
           // Fall back to keeping the URL in its own list if persistence fails.
           setScrapedUrls((curr) =>
 
-          // Fall back to keeping the URL in its own list if persistence fails.
-          setScrapedUrls((curr) =>
             curr.map((x) =>
               x.id === entry.id
                 ? {
