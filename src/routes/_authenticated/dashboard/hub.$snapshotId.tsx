@@ -1286,7 +1286,6 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       )}
 
       {/* Document list */}
-      {/* Document list */}
       <SectionIntro copy={HUB_DASHBOARD_INTROS.library} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
