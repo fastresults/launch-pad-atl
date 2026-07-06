@@ -1257,7 +1257,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
 
       <div className="space-y-3">
-        <SectionIntro copy={HUB_DASHBOARD_INTROS.toolkit} />
+        <SectionIntro copy={HUB_DASHBOARD_INTROS.toolkit} variant={isGuided ? "minimal" : "full"} />
         <AIStackPanel
           snapshotId={snapshot.id}
           userId={snapshot.user_id}
@@ -1276,6 +1276,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             if (d) setViewerDoc(d);
           }}
           isGenerating={genOne.isPending && genOne.variables?.documentType === "ai_tool_stack_recommendation"}
+          compact={isGuided}
         />
       </div>
 
