@@ -1378,53 +1378,25 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                   : "not_started";
         const contentId = `hub-section-${slugify(cat)}`;
         const headerActions = (
-          <>
-            {deck && (
-              deck.unlocked && deck.available ? (
-                <Button size="sm" variant="outline" onClick={() => setOpenDeckSlug(deck.slug)}>
-                  <Presentation className="mr-1 h-3 w-3" />
-                  Open facilitator deck
-                </Button>
-              ) : !deck.available ? (
-                <Button size="sm" variant="outline" disabled title="Deck coming soon">
-                  <Lock className="mr-1 h-3 w-3" />
-                  Deck coming soon
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled
-                  title={`Deck unlocks when ${deck.prevLabel ?? "the previous section"} is complete`}
-                >
-                  <Lock className="mr-1 h-3 w-3" />
-                  Unlocks after {deck.prevLabel ?? "previous section"}
-                </Button>
-              )
-            )}
-            <Button
-              size="sm"
-              variant={catComplete ? "ghost" : "outline"}
-              disabled={bulk.isPending || jobRunning}
-              onClick={() => {
-                const needsBrandKit = items.some((t: any) => BRAND_KIT_REQUIRED_TYPES.has(t.type));
-                if (needsBrandKit && !brandKitLocked) {
-                  toast.error("Finish the Brand Wizard first — it powers the Website PRD.");
-                  openBrandWizard();
-                  return;
-                }
-                bulk.mutate({ category: cat });
-              }}
-            >
-              {catGenerating ? (
-                <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
-              ) : catDone > 0 ? (
-                <><RefreshCw className="mr-1 h-3 w-3" />Regenerate this section</>
-              ) : (
-                <><Sparkles className="mr-1 h-3 w-3" />Generate this section</>
-              )}
-            </Button>
-          </>
+          <CategoryActions
+            mode={viewMode}
+            deck={deck}
+            catDone={catDone}
+            catComplete={catComplete}
+            catGenerating={catGenerating}
+            disabled={bulk.isPending || jobRunning}
+            catLabel={cat}
+            onOpenDeck={(slug) => setOpenDeckSlug(slug)}
+            onRegenerate={() => {
+              const needsBrandKit = items.some((t: any) => BRAND_KIT_REQUIRED_TYPES.has(t.type));
+              if (needsBrandKit && !brandKitLocked) {
+                toast.error("Finish the Brand Wizard first — it powers the Website PRD.");
+                openBrandWizard();
+                return;
+              }
+              bulk.mutate({ category: cat });
+            }}
+          />
         );
         return (
         <Collapsible key={cat} open={isOpen} onOpenChange={() => toggleSection(cat)} asChild>
