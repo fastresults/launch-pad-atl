@@ -1008,53 +1008,63 @@ function Inner() {
               Paste a URL — your own site, or a startup you want to learn from. Up to {MAX_URLS}.
             </p>
 
-            {/* Intent toggle — decides how the AI treats the next URL */}
-            <div className="rounded-xl border border-white/10 bg-background/40 p-3">
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                This link is…
+            {/* Intent toggle — always visible, prominent, decides how the AI treats the next URL. */}
+            <div className="rounded-xl border-2 border-primary/20 bg-background/40 p-3">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
+                How should we use this link?
               </div>
-              <div className="grid gap-1.5 sm:grid-cols-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {([
                   {
                     k: "own" as UrlIntent,
-                    label: "My own site or doc",
+                    icon: Globe,
+                    label: "My own site",
                     hint: "Pull name, contact, location, and content.",
                   },
                   {
                     k: "pattern" as UrlIntent,
-                    label: "A pattern to learn from",
-                    hint: "Use the shape only. Won't copy their name or address.",
+                    icon: Compass,
+                    label: "Pattern only",
+                    hint: "Learn the shape. Won't copy their name or address.",
                   },
                 ]).map((opt) => {
                   const active = nextUrlIntent === opt.k;
+                  const OptIcon = opt.icon;
                   return (
                     <button
                       key={opt.k}
                       type="button"
                       onClick={() => setNextUrlIntent(opt.k)}
-                      className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
+                      aria-pressed={active}
+                      className={`rounded-lg border-2 px-3 py-2.5 text-left text-sm transition ${
                         active
-                          ? "border-primary/60 bg-primary/10"
-                          : "border-white/10 bg-background/40 hover:border-white/25"
+                          ? "border-primary bg-primary/10 shadow-sm"
+                          : "border-white/10 bg-background/40 hover:border-white/30"
                       }`}
                     >
                       <div className="flex items-center gap-2 font-medium">
                         <span
-                          className={`h-2 w-2 rounded-full ${active ? "bg-primary" : "bg-muted-foreground/40"}`}
-                        />
+                          className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+                            active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                          }`}
+                        >
+                          {active && <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />}
+                        </span>
+                        <OptIcon className={`h-4 w-4 ${active ? "text-primary" : "text-muted-foreground"}`} />
                         {opt.label}
                       </div>
-                      <div className="mt-0.5 pl-4 text-[11px] text-muted-foreground">{opt.hint}</div>
+                      <div className="mt-1 pl-6 text-[11px] leading-snug text-muted-foreground">{opt.hint}</div>
                     </button>
                   );
                 })}
               </div>
               {nextUrlIntent === "pattern" && (
-                <p className="mt-2 text-[11px] text-muted-foreground">
-                  You'll fill in your own startup name, location, and contact below — we won't take them from the pattern site.
+                <p className="mt-2 rounded-md bg-primary/5 px-2 py-1.5 text-[11px] text-foreground/80">
+                  You'll enter your own startup name, location, and contact below — we won't take them from the pattern site.
                 </p>
               )}
             </div>
+
 
             <div className="flex gap-2">
               <Input
