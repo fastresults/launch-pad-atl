@@ -2,11 +2,20 @@
 import { useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Copy, Download, FileText, Printer, X } from "lucide-react";
+import { Copy, Download, FileText, Printer, X, AlertCircle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
 import { toast } from "sonner";
+
+interface RoadmapCoverage {
+  per_track?: Record<string, { total: number; used: number }>;
+  total_assets?: number;
+  used_count?: number;
+  skipped_labels?: string[];
+  tag_matches?: string[];
+}
 
 interface Props {
   open: boolean;
@@ -17,6 +26,48 @@ interface Props {
   wordCount?: number | null;
   qualityScore?: number | null;
   documentCount?: number | null;
+  coverage?: RoadmapCoverage | null;
+  isStale?: boolean;
+}
+
+// Replace `[from: Asset Name]` inline tags with a compact marker the renderer
+// can style. We swap for a distinct unicode wrapper so the markdown parser
+// leaves it untouched, then a `p` renderer walks the text nodes.
+const SRC_OPEN = "\u2308"; // ⌈
+const SRC_CLOSE = "\u2309"; // ⌉
+function markSourceTags(md: string): string {
+  return md.replace(/\[from:\s*([^\]]+?)\]/gi, (_m, name) => `${SRC_OPEN}${name.trim()}${SRC_CLOSE}`);
+}
+function renderWithSourcePills(text: string): (string | JSX.Element)[] {
+  const parts: (string | JSX.Element)[] = [];
+  const re = new RegExp(`${SRC_OPEN}([^${SRC_CLOSE}]+)${SRC_CLOSE}`, "g");
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let key = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    parts.push(
+      <span
+        key={`src-${key++}`}
+        className="ml-1 inline-flex items-center rounded border border-primary/30 bg-primary/10 px-1 py-[1px] text-[10px] font-medium uppercase tracking-wide text-primary align-baseline"
+        title={`Source: ${m[1]}`}
+      >
+        {m[1]}
+      </span>,
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
+function transformChildren(children: any): any {
+  if (typeof children === "string") return renderWithSourcePills(children);
+  if (Array.isArray(children)) {
+    return children.flatMap((c, i) =>
+      typeof c === "string" ? renderWithSourcePills(c).map((n, j) => (typeof n === "string" ? n : <span key={`i${i}-${j}`}>{n}</span>)) : c,
+    );
+  }
+  return children;
 }
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -94,28 +145,37 @@ function extractCoverAndStats(md: string) {
   return { cover, stats, rest: out.join("\n").trim() };
 }
 
-// Map H2 heading text → chapter eyebrow label (or null for none)
+// Map H2 heading text → chapter/part eyebrow label (or null for none)
 function chapterEyebrow(text: string): string | null {
   const t = text.trim();
+  const mp = t.match(/^Part\s+([IVX]+)\s*[—-]\s*(.+)$/i);
+  if (mp) return `Part ${mp[1].toUpperCase()}`;
   const m = t.match(/^Chapter\s+(\d+)\s*[—-]\s*(.+)$/i);
   if (m) return `Chapter ${m[1]}`;
   if (/^the one thing$/i.test(t)) return "The takeaway";
   if (/^closing note$/i.test(t)) return "From your partner";
+  if (/^read next/i.test(t)) return "What to open next";
+  if (/^why this matters$/i.test(t)) return "The bigger picture";
+  if (/^the road ahead/i.test(t)) return "Team Evove";
   return null;
 }
 
 function chapterTitle(text: string): string {
+  const mp = text.match(/^Part\s+[IVX]+\s*[—-]\s*(.+)$/i);
+  if (mp) return mp[1].trim();
   const m = text.match(/^Chapter\s+\d+\s*[—-]\s*(.+)$/i);
   return m ? m[1].trim() : text;
 }
 
 export function FounderRoadmapDialog({
-  open, onOpenChange, companyName, content, generatedAt, wordCount, qualityScore, documentCount,
+  open, onOpenChange, companyName, content, generatedAt, wordCount, qualityScore, documentCount, coverage, isStale,
 }: Props) {
   const title = `${companyName ?? "Your"} — Founder Roadmap`;
   const bodyRef = useRef<HTMLDivElement | null>(null);
 
-  const { cover, stats, rest } = useMemo(() => extractCoverAndStats(content || ""), [content]);
+  const marked = useMemo(() => markSourceTags(content || ""), [content]);
+  const { cover, stats, rest } = useMemo(() => extractCoverAndStats(marked), [marked]);
+
 
   // Build a section index from H2s (from the cleaned `rest`)
   const sections = useMemo(() => {
@@ -124,12 +184,16 @@ export function FounderRoadmapDialog({
       const text = m[1].trim();
       const id = text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
       const eyebrow = chapterEyebrow(text);
+      const isPart = /^Part\s+/i.test(text);
       const navLabel = eyebrow && eyebrow.startsWith("Chapter")
         ? `${eyebrow.replace("Chapter ", "Ch. ")} — ${chapterTitle(text)}`
-        : text;
-      return { id, text, navLabel };
+        : eyebrow && eyebrow.startsWith("Part")
+          ? `${eyebrow} — ${chapterTitle(text)}`
+          : text;
+      return { id, text, navLabel, isPart };
     });
   }, [rest]);
+
 
   const readMin = wordCount ? Math.max(1, Math.round(wordCount / 220)) : null;
 
@@ -178,12 +242,12 @@ export function FounderRoadmapDialog({
       </div>
     ),
     th: ({ node, ...props }: any) => <th className="border-b border-border bg-muted/60 px-3 py-2 text-left text-[10px] uppercase tracking-wider text-muted-foreground" {...props} />,
-    td: ({ node, ...props }: any) => <td className="border-b border-border/60 px-3 py-2 align-top text-sm" {...props} />,
+    td: ({ node, children, ...props }: any) => <td className="border-b border-border/60 px-3 py-2 align-top text-sm" {...props}>{transformChildren(children)}</td>,
     blockquote: ({ node, ...props }: any) => (
       <blockquote className="my-6 rounded-r-lg border-l-4 border-primary bg-primary/5 px-5 py-4 text-base italic leading-relaxed text-foreground" {...props} />
     ),
-    p: ({ node, ...props }: any) => <p className="my-4 text-[15px] leading-[1.75] text-foreground/90" {...props} />,
-    li: ({ node, ...props }: any) => <li className="my-1.5 text-[15px] leading-[1.7]" {...props} />,
+    p: ({ node, children, ...props }: any) => <p className="my-4 text-[15px] leading-[1.75] text-foreground/90" {...props}>{transformChildren(children)}</p>,
+    li: ({ node, children, ...props }: any) => <li className="my-1.5 text-[15px] leading-[1.7]" {...props}>{transformChildren(children)}</li>,
     hr: () => <hr className="my-10 border-border" />,
     strong: ({ node, ...props }: any) => <strong className="font-semibold text-foreground" {...props} />,
     em: ({ node, ...props }: any) => <em className="italic text-foreground/90" {...props} />,
@@ -201,13 +265,54 @@ export function FounderRoadmapDialog({
         <div className="flex items-center justify-between gap-3 border-b border-border bg-background/95 px-5 py-3 backdrop-blur">
           <div className="min-w-0">
             <div className="truncate text-base font-semibold">{title}</div>
-            <div className="text-[11px] text-muted-foreground">
-              {generatedAt ? new Date(generatedAt).toLocaleString() : "Just generated"}
-              {readMin ? ` · ~${readMin} min read` : ""}
-              {wordCount ? ` · ${wordCount.toLocaleString()} words` : ""}
-              {documentCount ? ` · synthesized from ${documentCount} assets` : ""}
-              {typeof qualityScore === "number" ? ` · Quality ${qualityScore}/100` : ""}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+              <span>{generatedAt ? new Date(generatedAt).toLocaleString() : "Just generated"}</span>
+              {readMin ? <span>· ~{readMin} min read</span> : null}
+              {wordCount ? <span>· {wordCount.toLocaleString()} words</span> : null}
+              {coverage?.total_assets ? (
+                <span>· Synthesized from {coverage.used_count ?? 0} of {coverage.total_assets} assets · 4 tracks · Day 15 → Day 365</span>
+              ) : documentCount ? (
+                <span>· synthesized from {documentCount} assets</span>
+              ) : null}
+              {typeof qualityScore === "number" ? <span>· Quality {qualityScore}/100</span> : null}
+              {coverage ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="ml-1 inline-flex items-center gap-1 rounded-full border border-border/60 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide hover:text-foreground">
+                      <Info className="h-3 w-3" /> Coverage
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-80 text-xs">
+                    <div className="mb-1 font-semibold">Assets cited</div>
+                    <div className="mb-2 text-[11px] text-muted-foreground">Every claim in the roadmap that could be tagged has one. Uncited assets can be folded in with a Regenerate.</div>
+                    {coverage.per_track ? (
+                      <div className="mb-2 grid grid-cols-2 gap-1">
+                        {Object.entries(coverage.per_track).map(([t, c]: any) => (
+                          <div key={t} className="rounded border border-border/60 px-2 py-1">
+                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t}</div>
+                            <div className="text-xs font-semibold">{c.used}/{c.total}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    {coverage.skipped_labels?.length ? (
+                      <>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Not yet cited</div>
+                        <div className="mt-1 max-h-40 overflow-y-auto text-[11px] leading-relaxed">
+                          {coverage.skipped_labels.slice(0, 40).join(" · ")}
+                          {coverage.skipped_labels.length > 40 ? "…" : ""}
+                        </div>
+                      </>
+                    ) : null}
+                  </PopoverContent>
+                </Popover>
+              ) : null}
             </div>
+            {isStale ? (
+              <div className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-amber-300">
+                <AlertCircle className="h-3 w-3" /> Kit changed since this was written
+              </div>
+            ) : null}
           </div>
           <div className="flex items-center gap-1">
             <Button size="sm" variant="ghost" onClick={onCopy}><Copy className="mr-1 h-3.5 w-3.5" />Copy</Button>
@@ -217,6 +322,7 @@ export function FounderRoadmapDialog({
             <Button size="sm" variant="ghost" onClick={() => onOpenChange(false)}><X className="h-4 w-4" /></Button>
           </div>
         </div>
+
 
         <div className="grid h-[calc(92vh-56px)] grid-cols-[220px_1fr] overflow-hidden">
           {/* Section nav */}
@@ -230,10 +336,11 @@ export function FounderRoadmapDialog({
                      const el = document.getElementById(s.id);
                      el?.scrollIntoView({ behavior: "smooth", block: "start" });
                    }}
-                   className="block truncate rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
+                   className={`block truncate rounded-md px-2 py-1 text-xs hover:bg-muted hover:text-foreground ${s.isPart ? "mt-2 font-semibold text-foreground" : "text-muted-foreground pl-4"}`}>
                   {s.navLabel}
                 </a>
               ))}
+
             </nav>
           </aside>
 
