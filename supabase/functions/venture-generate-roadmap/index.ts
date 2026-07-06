@@ -404,17 +404,67 @@ async function generateRoadmap(supabase: any, snapshotId: string) {
   const aiJson = await aiRes.json();
   let raw = aiJson.choices?.[0]?.message?.content ?? "";
 
+  // Parse QUALITY_SCORE + COVERAGE trailers (either order, either on last lines).
   let quality = 80;
   const qm = raw.match(/QUALITY_SCORE:\s*(\d{1,3})/i);
   if (qm) {
     quality = Math.max(0, Math.min(100, parseInt(qm[1], 10)));
-    raw = raw.replace(/QUALITY_SCORE:\s*\d{1,3}\s*$/i, "").trim();
+    raw = raw.replace(/^\s*QUALITY_SCORE:\s*\d{1,3}\s*$/im, "").trim();
   }
+  let modelCoverage: { used?: string[]; skipped?: string[] } | null = null;
+  const cm = raw.match(/COVERAGE:\s*(\{[\s\S]*\})\s*$/i);
+  if (cm) {
+    try { modelCoverage = JSON.parse(cm[1]); } catch { modelCoverage = null; }
+    raw = raw.replace(/^\s*COVERAGE:\s*\{[\s\S]*\}\s*$/im, "").trim();
+  }
+
   raw = stripCitations(raw);
   if (!/^#\s*Your Founder Roadmap/im.test(raw)) {
     raw = `# Your Founder Roadmap\n\n${raw}`;
   }
   const wordCount = raw.split(/\s+/).filter(Boolean).length;
+
+  // Coverage manifest: cross-reference what the model claims vs what we actually
+  // detect via [from: Asset Name] tags in the markdown, grouped by track.
+  const allNames = new Map<string, string>(); // labelLower -> document_type
+  for (const d of allDocs as any[]) allNames.set(labelFor(d.document_type).toLowerCase(), d.document_type);
+  const tagRegex = /\[from:\s*([^\]]+?)\]/gi;
+  const detectedLabels = new Set<string>();
+  let m: RegExpExecArray | null;
+  while ((m = tagRegex.exec(raw)) !== null) {
+    const name = m[1].trim();
+    if (allNames.has(name.toLowerCase())) detectedLabels.add(name);
+  }
+  const usedTypes = new Set<string>();
+  for (const label of detectedLabels) {
+    const t = allNames.get(label.toLowerCase());
+    if (t) usedTypes.add(t);
+  }
+  // Union with model-declared "used"
+  for (const label of modelCoverage?.used ?? []) {
+    const t = allNames.get(label.toLowerCase());
+    if (t) usedTypes.add(t);
+  }
+  const perTrack: Record<AssetTrack, { total: number; used: number }> = {
+    Introduction: { total: 0, used: 0 }, Education: { total: 0, used: 0 },
+    Tracking: { total: 0, used: 0 }, Action: { total: 0, used: 0 },
+  };
+  const skipped: string[] = [];
+  for (const d of allDocs as any[]) {
+    const t = trackFor(d.document_type);
+    perTrack[t].total += 1;
+    if (usedTypes.has(d.document_type)) perTrack[t].used += 1;
+    else skipped.push(labelFor(d.document_type));
+  }
+  const coverage = {
+    version: STRUCTURE_VERSION,
+    total_assets: (allDocs as any[]).length,
+    used_count: usedTypes.size,
+    used_types: [...usedTypes],
+    skipped_labels: skipped,
+    tag_matches: [...detectedLabels],
+    per_track: perTrack,
+  };
 
   await supabase
     .from("venture_snapshots")
@@ -424,10 +474,12 @@ async function generateRoadmap(supabase: any, snapshotId: string) {
       roadmap_word_count: wordCount,
       roadmap_status: "complete",
       roadmap_generated_at: new Date().toISOString(),
+      roadmap_coverage: coverage,
+      roadmap_structure_version: STRUCTURE_VERSION,
     })
     .eq("id", snapshotId);
 
-  return { quality, wordCount };
+  return { quality, wordCount, coverage };
 }
 
 Deno.serve(async (req) => {
