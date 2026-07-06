@@ -1147,7 +1147,10 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
   return (
     <div className="space-y-6">
-      <DashboardWelcomeStrip snapshotId={snapshot.id} hasProgress={completeCount > 0} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <DashboardWelcomeStrip snapshotId={snapshot.id} hasProgress={completeCount > 0} />
+        <ViewModeToggle value={viewMode} onChange={setViewMode} />
+      </div>
 
       {/* Hero — either the generate/next-action card, OR the Founder Roadmap once the kit is done */}
       {heroDone ? (
