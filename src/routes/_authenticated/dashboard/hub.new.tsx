@@ -1099,11 +1099,15 @@ function Inner() {
                       <span className="font-medium">{u.title || u.url}</span>
                       {u.title && <span className="ml-1 text-xs text-muted-foreground">· {u.url}</span>}
                     </span>
-                    {u.intent === "pattern" && (
-                      <span className="shrink-0 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                        Pattern
-                      </span>
-                    )}
+                    <span
+                      className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                        u.intent === "pattern"
+                          ? "border-primary/40 bg-primary/10 text-primary"
+                          : "border-white/20 bg-background/60 text-muted-foreground"
+                      }`}
+                    >
+                      {u.intent === "pattern" ? "Pattern" : "Mine"}
+                    </span>
                     <span
                       className={`shrink-0 text-[11px] uppercase tracking-wider ${
                         u.status === "ready"
