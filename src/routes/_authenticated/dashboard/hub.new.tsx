@@ -783,7 +783,19 @@ function Inner() {
         {/* Memory chips — what we already have in collective memory */}
         {!memoryEmpty && (
           <div className="space-y-3">
+            {anySelectedChips && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setReuseSelected({})}
+                  className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+                >
+                  Deselect all
+                </button>
+              </div>
+            )}
             <div className="flex flex-wrap gap-2">
+
               {memoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin, intent }) => {
                 const ready = !!(row.extracted_text ?? "").trim();
                 const Icon = isUrlCapture ? Globe : isAudio ? Mic : isImage ? FileText : FileText;
