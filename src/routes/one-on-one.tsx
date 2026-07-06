@@ -82,7 +82,7 @@ export default function OneOnOnePage() {
               <Wand2 className="size-3.5" /> The 14-Day Launch Method · Done for you
             </p>
             <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
-              Adam Anderson's Startup Process,{" "}
+              Anderson's Process,{" "}
               <span className="text-gradient-brand">run for you by his team.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
