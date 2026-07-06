@@ -816,11 +816,21 @@ function Inner() {
                     <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
                     <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
-                    {isPattern && (
-                      <span className="shrink-0 rounded-full border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
-                        Pattern
-                      </span>
-                    )}
+                    {isUrlCapture ? (
+                      <button
+                        type="button"
+                        onClick={() => flipMemoryIntent(row, isPattern ? "own" : "pattern")}
+                        title={isPattern ? "Click to use as your own site instead" : "Click to use as a pattern reference only"}
+                        className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider transition ${
+                          isPattern
+                            ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
+                            : "border-white/20 bg-background/60 text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {isPattern ? "Pattern" : "Mine"}
+                      </button>
+                    ) : null}
+
 
                     <button
                       type="button"
