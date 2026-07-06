@@ -64,6 +64,8 @@ import { AIStackPanel } from "@/components/hub/AIStackPanel";
 import { SectionIntro } from "@/components/hub/SectionIntro";
 import { DashboardWelcomeStrip } from "@/components/hub/DashboardWelcomeStrip";
 import { HUB_DASHBOARD_INTROS } from "@/lib/hub-dashboard-copy";
+import { ViewModeToggle, type HubViewMode } from "@/components/hub/ViewModeToggle";
+import { CategoryActions } from "@/components/hub/CategoryActions";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
 import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
 import {
@@ -875,6 +877,19 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const brandStudioRef = useRef<HTMLElement | null>(null);
   const [bonusOpen, setBonusOpen] = useState(true);
 
+  // Guided vs advanced UI density. Persisted per-snapshot so returning users keep their choice.
+  const viewModeKey = `hub:viewMode:${snapshot.id}`;
+  const [viewMode, setViewModeState] = useState<HubViewMode>(() => {
+    if (typeof window === "undefined") return "guided";
+    const stored = window.localStorage.getItem(viewModeKey);
+    return stored === "advanced" ? "advanced" : "guided";
+  });
+  const setViewMode = useCallback((v: HubViewMode) => {
+    setViewModeState(v);
+    try { window.localStorage.setItem(viewModeKey, v); } catch {}
+  }, [viewModeKey]);
+  const isGuided = viewMode === "guided";
+
   const brandKitQ = useQuery({
     queryKey: ["brandKit", snapshot.id],
     queryFn: () => getBrandKit(snapshot.id),
@@ -1132,7 +1147,10 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
   return (
     <div className="space-y-6">
-      <DashboardWelcomeStrip snapshotId={snapshot.id} hasProgress={completeCount > 0} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <DashboardWelcomeStrip snapshotId={snapshot.id} hasProgress={completeCount > 0} />
+        <ViewModeToggle value={viewMode} onChange={setViewMode} />
+      </div>
 
       {/* Hero — either the generate/next-action card, OR the Founder Roadmap once the kit is done */}
       {heroDone ? (
@@ -1199,7 +1217,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
 
       <div className="space-y-3">
-        <SectionIntro copy={HUB_DASHBOARD_INTROS.sprint} />
+        <SectionIntro copy={HUB_DASHBOARD_INTROS.sprint} variant={isGuided ? "minimal" : "full"} />
         <LaunchPlanner14Day
         docs={docs}
         typeByKey={typeByKey}
@@ -1239,7 +1257,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
 
       <div className="space-y-3">
-        <SectionIntro copy={HUB_DASHBOARD_INTROS.toolkit} />
+        <SectionIntro copy={HUB_DASHBOARD_INTROS.toolkit} variant={isGuided ? "minimal" : "full"} />
         <AIStackPanel
           snapshotId={snapshot.id}
           userId={snapshot.user_id}
@@ -1258,54 +1276,66 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             if (d) setViewerDoc(d);
           }}
           isGenerating={genOne.isPending && genOne.variables?.documentType === "ai_tool_stack_recommendation"}
+          compact={isGuided}
         />
       </div>
 
-      {/* Stale-concept banner */}
+      {/* Stale-concept banner — full in advanced, compact chip in guided */}
       {staleCount > 0 && (
-        <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-status-warning/40 bg-status-warning/10 px-4 py-3 text-sm text-status-warning">
-          <div className="flex items-start gap-2">
-            <RefreshCw className="mt-0.5 h-4 w-4 shrink-0" />
-            <div>
-              <div className="font-medium">Concept changed since last generation</div>
-              <div className="text-xs opacity-90">
-                {staleCount} asset{staleCount === 1 ? "" : "s"} {staleCount === 1 ? "was" : "were"} written before your latest concept update. Rewrite them to match.
+        isGuided ? (
+          <div className="inline-flex items-center gap-2 rounded-full border border-status-warning/40 bg-status-warning/10 px-3 py-1 text-xs text-status-warning">
+            <RefreshCw className="h-3 w-3" />
+            {staleCount} asset{staleCount === 1 ? "" : "s"} out of date · rewrite to match concept
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-status-warning/40 bg-status-warning/10 px-4 py-3 text-sm text-status-warning">
+            <div className="flex items-start gap-2">
+              <RefreshCw className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <div className="font-medium">Concept changed since last generation</div>
+                <div className="text-xs opacity-90">
+                  {staleCount} asset{staleCount === 1 ? "" : "s"} {staleCount === 1 ? "was" : "were"} written before your latest concept update. Rewrite them to match.
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )
       )}
 
-      {/* Document list — quiet eyebrow + inline expand/collapse actions */}
-      <SectionIntro
-        copy={HUB_DASHBOARD_INTROS.library}
-        actions={
-          <>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 px-2 text-xs text-muted-foreground"
-              onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, true])))}
-            >
-              <ChevronsUpDown className="mr-1 h-3 w-3" />
-              Expand all
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 px-2 text-xs text-muted-foreground"
-              onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, false])))}
-            >
-              <ChevronsDownUp className="mr-1 h-3 w-3" />
-              Collapse all
-            </Button>
-          </>
-        }
-      />
+      {/* Document list header */}
+      {isGuided ? (
+        <h2 className="px-1 text-lg font-semibold tracking-tight">Your assets</h2>
+      ) : (
+        <SectionIntro
+          copy={HUB_DASHBOARD_INTROS.library}
+          actions={
+            <>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-xs text-muted-foreground"
+                onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, true])))}
+              >
+                <ChevronsUpDown className="mr-1 h-3 w-3" />
+                Expand all
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-xs text-muted-foreground"
+                onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, false])))}
+              >
+                <ChevronsDownUp className="mr-1 h-3 w-3" />
+                Collapse all
+              </Button>
+            </>
+          }
+        />
+      )}
 
 
-      {/* Category stepper */}
-      {categoryProgress.length > 0 && (
+      {/* Category stepper — jump-nav, advanced only. In guided mode the section headers directly below already convey progress. */}
+      {!isGuided && categoryProgress.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {categoryProgress.map((c, i) => {
             const active = !jobRunning && nextCategory?.cat === c.cat;
@@ -1348,53 +1378,25 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                   : "not_started";
         const contentId = `hub-section-${slugify(cat)}`;
         const headerActions = (
-          <>
-            {deck && (
-              deck.unlocked && deck.available ? (
-                <Button size="sm" variant="outline" onClick={() => setOpenDeckSlug(deck.slug)}>
-                  <Presentation className="mr-1 h-3 w-3" />
-                  Open facilitator deck
-                </Button>
-              ) : !deck.available ? (
-                <Button size="sm" variant="outline" disabled title="Deck coming soon">
-                  <Lock className="mr-1 h-3 w-3" />
-                  Deck coming soon
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled
-                  title={`Deck unlocks when ${deck.prevLabel ?? "the previous section"} is complete`}
-                >
-                  <Lock className="mr-1 h-3 w-3" />
-                  Unlocks after {deck.prevLabel ?? "previous section"}
-                </Button>
-              )
-            )}
-            <Button
-              size="sm"
-              variant={catComplete ? "ghost" : "outline"}
-              disabled={bulk.isPending || jobRunning}
-              onClick={() => {
-                const needsBrandKit = items.some((t: any) => BRAND_KIT_REQUIRED_TYPES.has(t.type));
-                if (needsBrandKit && !brandKitLocked) {
-                  toast.error("Finish the Brand Wizard first — it powers the Website PRD.");
-                  openBrandWizard();
-                  return;
-                }
-                bulk.mutate({ category: cat });
-              }}
-            >
-              {catGenerating ? (
-                <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing {cat}…</>
-              ) : catDone > 0 ? (
-                <><RefreshCw className="mr-1 h-3 w-3" />Regenerate this section</>
-              ) : (
-                <><Sparkles className="mr-1 h-3 w-3" />Generate this section</>
-              )}
-            </Button>
-          </>
+          <CategoryActions
+            mode={viewMode}
+            deck={deck}
+            catDone={catDone}
+            catComplete={catComplete}
+            catGenerating={catGenerating}
+            disabled={bulk.isPending || jobRunning}
+            catLabel={cat}
+            onOpenDeck={(slug) => setOpenDeckSlug(slug)}
+            onRegenerate={() => {
+              const needsBrandKit = items.some((t: any) => BRAND_KIT_REQUIRED_TYPES.has(t.type));
+              if (needsBrandKit && !brandKitLocked) {
+                toast.error("Finish the Brand Wizard first — it powers the Website PRD.");
+                openBrandWizard();
+                return;
+              }
+              bulk.mutate({ category: cat });
+            }}
+          />
         );
         return (
         <Collapsible key={cat} open={isOpen} onOpenChange={() => toggleSection(cat)} asChild>

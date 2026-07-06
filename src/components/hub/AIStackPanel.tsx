@@ -35,6 +35,7 @@ interface Props {
   onScrollToDoc: (key: string) => void;
   onOpenDoc: (key: string) => void;
   isGenerating?: boolean;
+  compact?: boolean;
 }
 
 // Extract the ai_stack_checklist.json block from the generated markdown.
@@ -71,9 +72,10 @@ export function AIStackPanel({
   onScrollToDoc,
   onOpenDoc,
   isGenerating,
+  compact = false,
 }: Props) {
   const qc = useQueryClient();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(compact);
 
   const tools = useMemo(() => extractStackJson(stackDoc?.content), [stackDoc?.content]);
   const hasStack = tools.length > 0;
@@ -124,6 +126,30 @@ export function AIStackPanel({
 
   // Empty state — no stack doc yet
   if (!hasStack) {
+    if (compact) {
+      return (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-primary/30 bg-card/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2 text-sm">
+            <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+            <span className="truncate font-medium">AI Toolkit</span>
+            <span
+              className="truncate text-xs text-muted-foreground"
+              title="Generate your AI Tool Stack Recommendation and this panel becomes a live setup checklist — signup, configure, and go-live for every tool the sprint needs."
+            >
+              Turn your plan into an installable toolkit
+            </span>
+          </div>
+          <Button size="sm" onClick={onGenerateStack} disabled={isGenerating}>
+            {isGenerating ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+            )}
+            Generate
+          </Button>
+        </div>
+      );
+    }
     return (
       <div className="relative overflow-hidden rounded-2xl border border-dashed border-primary/30 bg-card/40 p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
