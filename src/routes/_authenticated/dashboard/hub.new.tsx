@@ -211,9 +211,13 @@ function Inner() {
         if (r.used_in_brief || r.kind === "brief_source") origin = "brief";
         else if (r.kind === "founder_bio") origin = "founder";
         else if (r.snapshot_id) origin = "venture";
-        return { row: r, name, isUrlCapture, isAudio, isImage, origin };
+        const meta = isUrlCapture
+          ? parseUrlCaptureMeta(r.extracted_text)
+          : { intent: "own" as UrlIntent, url: null, title: null };
+        return { row: r, name, isUrlCapture, isAudio, isImage, origin, intent: meta.intent, capturedUrl: meta.url, capturedTitle: meta.title };
       });
   }, [reusable]);
+
 
   const memoryEmpty = memoryChips.length === 0;
   const showCollectionUI = memoryEmpty || addMoreOpen;
