@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, CheckCircle2, Circle, ArrowRight, Loader2, ExternalLink, Rocket, Clock, Presentation, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LAUNCH_14DAY_PLAN, CATEGORY_DOT, type LaunchDay } from "@/lib/launch-14day-plan";
@@ -38,6 +38,7 @@ interface Props {
   isPhysical?: boolean;
   sourcingOnlyKeys?: Set<string>;
   onOpenDayDeck?: (day: LaunchDay) => void;
+  snapshotId?: string;
 }
 
 function dayMinutes(day: LaunchDay, typeByKey: Map<string, any>, optionalKeys: Set<string>): number {
@@ -90,6 +91,7 @@ export function LaunchPlanner14Day({
   isPhysical = false,
   sourcingOnlyKeys,
   onOpenDayDeck,
+  snapshotId,
 }: Props) {
 
   const optionalKeys = useMemo(
@@ -121,6 +123,68 @@ export function LaunchPlanner14Day({
   const [openDay, setOpenDay] = useState<number>(firstIncomplete);
   const active = daysWithState.find((d) => d.day.day === openDay) ?? daysWithState[0];
 
+  // --- Attract-loop pulse ---------------------------------------------------
+  // First-time visitors don't always realize the day tiles are clickable, so we
+  // walk a soft pulse from Day 1 -> Day 14 until the user interacts. Any real
+  // interaction dismisses the loop for this sprint permanently.
+  const attractKey = snapshotId ? `hub:sprintAttractDismissed:${snapshotId}` : null;
+  const sprintDone = daysWithState.length > 0 && daysWithState.every((d) => d.state === "complete");
+  const [attractOn, setAttractOn] = useState(false);
+  const [attractDay, setAttractDay] = useState<number | null>(null);
+  const prefersReducedMotion = useMemo(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+  const attractContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const dismissAttract = useCallback((persist: boolean) => {
+    setAttractOn(false);
+    setAttractDay(null);
+    if (persist && attractKey) {
+      try { window.localStorage.setItem(attractKey, "1"); } catch {}
+    }
+  }, [attractKey]);
+
+  useEffect(() => {
+    if (sprintDone || prefersReducedMotion || !attractKey) return;
+    try {
+      if (window.localStorage.getItem(attractKey)) return;
+    } catch { /* storage blocked; still animate */ }
+    const t = window.setTimeout(() => setAttractOn(true), 1200);
+    return () => window.clearTimeout(t);
+  }, [attractKey, sprintDone, prefersReducedMotion]);
+
+  useEffect(() => {
+    if (!attractOn || daysWithState.length === 0) return;
+    let i = 0;
+    // Pick the first day that isn't the currently-open one so we don't stack rings.
+    const pickNext = (idx: number) => {
+      let d = daysWithState[idx % daysWithState.length].day.day;
+      if (d === openDay) d = daysWithState[(idx + 1) % daysWithState.length].day.day;
+      return d;
+    };
+    setAttractDay(pickNext(0));
+    const tick = window.setInterval(() => {
+      i = (i + 1) % daysWithState.length;
+      setAttractDay(pickNext(i));
+    }, 1800);
+    return () => window.clearInterval(tick);
+  }, [attractOn, openDay, daysWithState]);
+
+  // Pause when the planner is off-screen; resume on re-entry (unless dismissed).
+  useEffect(() => {
+    const el = attractContainerRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const dismissed = attractKey ? (() => { try { return !!window.localStorage.getItem(attractKey); } catch { return false; } })() : false;
+    if (dismissed || sprintDone || prefersReducedMotion) return;
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.intersectionRatio < 0.2) setAttractOn(false);
+      else setAttractOn(true);
+    }, { threshold: [0, 0.2, 0.5] });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [attractKey, sprintDone, prefersReducedMotion]);
+
   const [sortMode, setSortMode] = useState<SortMode>("sequence");
   useEffect(() => {
     try {
@@ -147,13 +211,17 @@ export function LaunchPlanner14Day({
           ? "border-primary/40 bg-primary/10 hover:bg-primary/15"
           : "border-white/10 bg-card/60 hover:bg-card/80";
     const ring = isOpen ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "";
+    const attracting = !isOpen && attractOn && attractDay === day.day;
+    const attractClass = attracting ? "animate-attract-pulse ring-2 ring-primary/50 ring-offset-2 ring-offset-background z-10" : "";
 
     return (
       <button
         key={day.day}
         type="button"
-        onClick={() => setOpenDay(day.day)}
-        className={`${base} ${stateClass} ${ring}`}
+        onClick={() => { dismissAttract(true); setOpenDay(day.day); }}
+        onMouseEnter={() => dismissAttract(true)}
+        onFocus={() => dismissAttract(true)}
+        className={`${base} ${stateClass} ${ring} ${attractClass}`}
         aria-label={`Day ${day.day}: ${day.theme}`}
         aria-expanded={isOpen}
       >
@@ -190,7 +258,11 @@ export function LaunchPlanner14Day({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-background via-card to-background p-6 shadow-sm">
+    <div
+      ref={attractContainerRef}
+      onClickCapture={() => dismissAttract(true)}
+      className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-background via-card to-background p-6 shadow-sm"
+    >
       <div className="absolute -left-20 -top-20 h-56 w-56 rounded-full bg-primary/10 blur-3xl" aria-hidden />
       <div className="absolute -right-20 -bottom-20 h-56 w-56 rounded-full bg-fuchsia-500/10 blur-3xl" aria-hidden />
 
