@@ -1,86 +1,59 @@
-## What went wrong
+## Goal
 
-The last draft was a copywriter's playbook — me, talking to Startuplabs, about how to sell. Wrong reader, wrong voice, wrong job. A prospect opening that PDF would feel like they'd walked in on a strategy meeting about themselves.
+Add a third founder archetype — **The AI-Displaced Employee** — to the Startuplabs Report as a peer to the Cubicle Escapee and the Idea Hoarder. Not a bolt-on paragraph. A first-class ICP that shows up everywhere the other two do.
 
-## What the report actually needs to be
+## Who this person is
 
-A **prospect-facing whitepaper** that a founder considering Startuplabs reads end-to-end and finishes ready to book. It **educates** (here's why you're stuck, here's what the market gets wrong, here's the specific mechanism that unsticks people like you) and **persuades** (here's the proof, here's the offer, here's the smallest next step).
+Not a stereotype. A specific human:
 
-The last 15–20% is an **Operator Appendix** — clearly labeled, walled off — that keeps the ad library, metrics dashboard, checklist, and A/B roadmap available to the team without polluting the prospect read.
+- Mid-30s to mid-50s. Knowledge worker. Marketing, legal, ops, support, design, mid-tier engineering, editorial, analytics, HR.
+- Was very good at their job. That is part of the wound.
+- Either already laid off in an "efficiency" or "reorg" round in the last 12 months, *or* watching the ground move under them in real time — headcount plans quietly rewritten, a peer's role folded into a workflow, their own scope narrowing.
+- Applied to a lot of jobs. Heard back on almost none. The market that existed for their skillset two years ago no longer exists at the same volume or the same price.
+- Has savings, severance, or a partner's income — a runway measured in months, not years.
+- Is not anti-AI. Is, in fact, using it constantly. The dissonance is exactly what makes this painful: they can see clearly that the tool taking their job is also the tool that could power the next one, and they don't know how to cross that gap alone.
 
-## Audience & voice
+The pain is not "I lost my job." It is: *the identity I built over fifteen years just got repriced by the market, and no amount of updating my LinkedIn is going to fix it.*
 
-**Primary reader:** the two founders — the Cubicle Escapee (W-2, stuck), the Idea Hoarder (has idea, no first customer). They downloaded this because they're already interested and want to be convinced (or disqualified).
+## Where the ICP appears in the report
 
-**Voice:** editorial whitepaper. Serious, warm, specific, unhurried. Second person. No hustle-porn, no MBA jargon, no "leverage / unlock / journey." A founder-to-founder tone with the credibility of a McKinsey brief.
+I'll add or edit these sections. Nothing else changes.
 
-**Every section answers one of three questions for the reader:**
-1. Is this me? (recognition)
-2. Why hasn't anything else worked? (education)
-3. What happens if I do this? (persuasion)
+**Executive Summary** — extend the "written for you" line to name all three archetypes.
 
-## Structure — prospect-first, operator-appendix
+**§2 The Two Founders → §2 The Three Founders This Is For** — rename the section and add a third portrait titled **The AI-Displaced Professional**. Same treatment as the other two: scenes, sentences a stuck reader recognizes as themselves, no demographics. ~350–450 words.
 
-**Front matter**
-- Cover
-- Executive Summary — what this report is, why it exists, the one-sentence thesis, who it's for
-- "What's new in this edition" callout
+**§3 Why You're Stuck** — add one paragraph acknowledging that for the AI-displaced reader, "stuck" is not procrastination — it is a market re-pricing they had no vote in. Reframes the section so this reader doesn't feel talked past.
 
-**Part I — The problem (education)**
-1. The One-Sentence Thesis
-2. The Two Founders This Is For — recognition portraits with scenes, not demographics
-3. Why You're Stuck (And Why It Isn't You) — the market truth, the ambient-doubt trap
-4. The Competitive Wedge — how Startuplabs compares to Content, Community, Cohorts, Coaching on five dimensions founders actually decide on (table, scored)
+**§8 Proof** — add one new scene: a specific AI-displaced professional (e.g. a senior content strategist, 47, laid off in a Q1 reorg) whose workshop outcome maps to their specific pain — not "replaced my salary" (may not be realistic yet) but "shipped a paid offer inside the runway window."
 
-**Part II — The mechanism (education → persuasion)**
-5. What Actually Ships a Founder — the four ingredients: a room, a date, a coach, a receipt
-6. Inside the Workshop — hour by hour, what you walk out with, what "done" looks like
-7. The Real Value Stack — reframed against pain, not hours (webinar / workshop / in-person)
-8. Proof — before/after founder scenes, the four numbers the room hits
+**§9 What Happens If You Come / §10 What Happens If You Don't** — add a short third-person track ("If you're the AI-displaced reader…") in each so both futures are honest for them too. The "if you don't" version for this archetype is materially different from the other two — it's not the trap of staying, it's the trap of a runway that runs out while still applying to jobs.
 
-**Part III — The decision (persuasion)**
-9. What Happens If You Come — the Monday after, the quarter after, the year after
-10. What Happens If You Don't — same three timeframes, same person, different path
-11. Objections, Answered Plainly — 12 objections, in prospect voice
-12. The Guarantee, The Room, The Deadline
-13. How to Book — the smallest next step
+**§11 Objections, Answered Plainly** — add three objections specific to this archetype:
+- *"I'm not an entrepreneur, I just need another job."*
+- *"I don't have time for this — I need income now."*
+- *"AI is going to eat whatever I build too."*
 
-**Operator Appendix (clearly marked "For the Startuplabs team")**
-- A. Funnel Metrics Dashboard — the 4 core numbers with targets and red-flag thresholds
-- B. Ad Copy Library — platform-ready copy for Meta/IG, X, YouTube pre-roll
-- C. Cart-close 5-email sequence
-- D. Nurture 5-email sequence
-- E. 90-Day Implementation Checklist — owners + deadlines
-- F. A/B Testing Roadmap — what to test, in what order, on what horizon
+**§13 How to Book** — one added line acknowledging the runway pressure and the fit of the webinar as the honest first step (not a hard sell).
 
-Target length: 32–40 pages, weighted heavily toward Parts I–III.
+**Front matter "What's new in this edition" callout** — add a bullet noting the third archetype is now included.
 
-## Visual system — light editorial
+## Voice guardrails
 
-Full break from the dark navy/purple.
-
-- **Background:** warm off-white `#FBF7F1` (paper), page interior `#FFFFFF` blocks where needed
-- **Ink:** near-black `#1B1B1F` body, `#3A3A42` secondary
-- **Accent:** rust orange `#B8532A` for rules, section numbers, callout borders, kickers
-- **Muted accent:** warm tan `#E9D9C4` for callout fills
-- **Type:** serif display for headings (Source Serif Pro or similar via built-in equivalent), clean sans (Helvetica) for body
-- **Rules:** thin rust underline beneath every H1/H2 — matches the screenshot
-- **Callouts:** cream-fill box with left rust rule, small-caps rust kicker inside — for thesis statements and pull quotes
-- **Section numbers:** large rust numeral before each H1 ("1. The One-Sentence Thesis") matching the screenshot exactly
-- **Executive Summary + "What's new" callout** styled to match the reference
+- Do not weaponize AI-panic. The reader is exhausted by hot takes about AI. Speak plainly.
+- Do not moralize about "learning to prompt." They already do.
+- Do not promise re-employment. Promise a *shipped offer inside a runway window.*
+- Keep the ban list: leverage, unlock, journey, ecosystem, empower, scale, in today's world.
 
 ## Deliverables
 
-- `.lovable/startuplabs-funnel-report.md` — **overwrite** (versioned mental model: v2). Full prospect-facing markdown, operator appendix at the end
-- `/mnt/documents/startuplabs-funnel-report-v2.pdf` — new file, does not overwrite v1, so the earlier version stays available for comparison
-
-## Craft standard
-
-Every page opens with a sentence a stuck founder recognizes as themselves. No section ends without either a payoff line the reader wants to screenshot, or a specific "here's what to do next." Numbers, dates, scenes. Ban list stays: leverage, unlock, journey, ecosystem, empower, scale, in today's world, at the end of the day.
+1. **Overwrite** `.lovable/startuplabs-funnel-report.md` — the canonical source, now with three archetypes woven through.
+2. **Overwrite** `public/adam-funnel-v1.md` — mirror of the same file so the public link stays current.
+3. **New file** `/mnt/documents/startuplabs-funnel-report-v3.pdf` — regenerated with the same light editorial visual system. v2 stays on disk for comparison.
 
 ## Out of scope
 
-- Editing live site copy
-- Building new site pages
-- Producing ad creative beyond written concepts
-- Rebuilding v1 — v1 stays as-is on disk and in `/mnt/documents/` for reference
+- Changing the visual system.
+- Rewriting the existing two archetypes.
+- Editing site copy or building new pages.
+- Making claims about AI job market data — this is a founder-facing report, not a labor economics paper.

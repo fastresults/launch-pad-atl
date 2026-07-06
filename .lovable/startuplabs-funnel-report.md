@@ -2,7 +2,7 @@
 
 **A field guide for people who keep almost starting.**
 
-Edition 2 · For prospective founders considering the Startuplabs Workshop
+Edition 3 · For prospective founders considering the Startuplabs Workshop
 
 ---
 
@@ -20,9 +20,10 @@ Startuplabs turns W-2 lifers and stuck idea-havers into paid founders in one wor
 
 **What's new in this edition**
 
+- A **third founder archetype** — the **AI-Displaced Professional** — added as a peer to the Cubicle Escapee and the Idea Hoarder. Woven through §2, §3, §8, §9, §10, and §11.
 - A **Competitive Wedge** (§4) that puts Startuplabs side-by-side with the four things you've probably already tried — content, community, cohorts, coaching — and scores each on the five dimensions founders actually decide on.
 - **What Happens If You Come / What Happens If You Don't** (§9–§10) — the same person, two different Mondays, one year out.
-- **Objections, Answered Plainly** (§11) — the twelve things you're thinking right now, addressed without spin.
+- **Objections, Answered Plainly** (§11) — now fifteen objections, addressed without spin.
 - A quiet **Operator Appendix** at the back for the Startuplabs team. You can skip it. It's here for transparency, not for you.
 
 ---
@@ -37,9 +38,9 @@ If that sentence describes what you're trying to become, keep reading. If it doe
 
 ---
 
-## 2. The Two Founders This Is For
+## 2. The Three Founders This Is For
 
-We built the workshop for two specific people. If you're one of them, everything in this report will feel a little too accurate. That's the point.
+We built the workshop for three specific people. If you're one of them, everything in this report will feel a little too accurate. That's the point.
 
 ### The Cubicle Escapee
 
@@ -65,11 +66,27 @@ Here is the truth about your idea: it is probably fine. It is possibly great. Bu
 
 You don't need another framework. You need a customer.
 
+### The AI-Displaced Professional
+
+You were very good at your job. That is part of the wound.
+
+Fifteen years, maybe twenty. Marketing, or legal, or ops, or design, or content, or analytics, or mid-tier engineering. You built a career on being the person who could think clearly, write cleanly, ship reliably. You were the one they gave the hard accounts to. And then, somewhere between the last two performance reviews, the language in your all-hands started changing. *Efficiency.* *Consolidation.* *AI-enabled workflows.* A peer's role got folded into a tool. Your scope narrowed. Your headcount plan quietly rewrote itself.
+
+Then the round came. Or the round is coming. You already know which one.
+
+You have applied to jobs. A lot of them. You have heard back on almost none. The recruiters who used to answer inside a week now answer inside a month, if at all, and the roles they float pay less than the one you left and want more than the one you left demanded. The market that existed for your skillset two years ago is not the same market. You can feel the repricing in your body, in the specific way your stomach drops when you refresh your inbox.
+
+The cruelest part: you are not anti-AI. You use it all day. You have already caught yourself building a workflow that would have taken your team a week and finishing it before lunch. Which means you can see, clearly, that the tool taking your job is also the tool that could power the next one — and you have no idea how to walk from here to there alone.
+
+You have a runway. You measure it in months, not years. Every week you spend applying is a week of that runway you cannot get back. And underneath all of it is the sentence you have not said out loud: *the identity I built over fifteen years just got repriced by the market, and no amount of updating my LinkedIn is going to fix it.*
+
+You are not looking for a hustle. You are looking for a way to convert the thing you already know into something a customer will pay for, before the runway ends.
+
 ---
 
 ## 3. Why You're Stuck (And Why It Isn't You)
 
-If you're either of the two founders above, you have almost certainly, at some point, decided the problem is you. That you lack discipline. That you're not the entrepreneur type. That maybe you're just not built for it.
+If you're any of the three founders above, you have almost certainly, at some point, decided the problem is you. That you lack discipline. That you're not the entrepreneur type. That maybe you're just not built for it.
 
 You're wrong, and it's worth being specific about why.
 
@@ -81,7 +98,9 @@ You're wrong, and it's worth being specific about why.
 
 **You're stuck because your inputs are ambient.** Twitter threads. Substack essays. Founder podcasts on the commute. A newsletter that tells you what six companies raised this week. None of it is bad. All of it is designed to be consumed forever, from anywhere, at any speed, with no output required. It is the intellectual equivalent of a treadmill you never step off.
 
-None of this is a character flaw. It is the predictable result of an environment engineered to keep you consuming. The way out isn't more willpower. It's a different environment.
+**And if you're the AI-displaced reader — stuck is the wrong word for what happened to you.** You did not procrastinate your way here. A market you built a career inside got repriced in eighteen months, and the standard advice — *network harder, tailor the résumé, upskill* — is the same advice being given to every other person on the same side of the same repricing. It is not that the advice is wrong. It is that the math no longer works: there are more of you than there are of the jobs. The way out is not more applications. It is a category shift — from *employee competing for a shrinking pool* to *operator with one paying customer.* One is a fight over supply. The other is the creation of demand. The workshop is where that shift starts.
+
+None of this is a character flaw. It is the predictable result of an environment engineered to keep you consuming, or a market that stopped needing you at the price you were being paid. The way out isn't more willpower. It's a different environment.
 
 ---
 
@@ -185,6 +204,8 @@ We could put logos here. We won't, because logos don't tell you whether the work
 
 **A married couple, mid-40s, one W-2 and one stay-at-home.** Arrived because *he* wanted to leave the job. Left with *her* running the new business full-time and him keeping the salary as intentional runway. Reframed the whole household plan in one weekend.
 
+**A senior content strategist, 47, laid off in a Q1 reorg.** Arrived four months into a job search that was going nowhere — 90+ applications, three interviews, zero offers. Left Sunday with a productized service aimed at exactly the kind of mid-market company that had just let her go, priced at $4,800 per engagement, and two prospects on her calendar for the following Tuesday. She closed the first one at $3,900 within eleven days. Not her old salary — not yet — but her first paid work in six months, and the first week since the layoff that didn't feel like drowning. Her words: *"I stopped applying and started selling. The switch cost one weekend."*
+
 We are not going to pretend everyone who walks in walks out with a customer. Most do. Some walk out with a validated *no*, which is the second-best possible outcome and the one nobody sells you on because it's hard to put on a landing page. The worst outcome — and it happens — is a person who leaves with a page and an offer and no conversations yet, and who then, over the following four weeks with the coach, gets there.
 
 The four numbers we track internally, and share with every cohort:
@@ -208,6 +229,8 @@ Play the tape forward. Same person. Two Mondays.
 
 **The year after.** You are running the business. Full-time, part-time, or as a very serious side thing that is on track to become full-time. You have had at least one month where you made more from the business than the job. You have hired one person, or you have deliberately chosen not to. The Sunday-night dread is gone, because Sundays are now for planning your own week.
 
+**If you're the AI-displaced reader, the tape looks slightly different.** The Monday after, you stop applying — not forever, but for two weeks — and instead run the plan you built Sunday. The quarter after, you have between one and four paying clients, none of whom are the size of your old employer, and all of whom pay you directly. The year after, you may or may not have replaced your salary in full, but you have replaced the thing underneath the salary: the answer to *"what do you do?"* It is now a sentence you own, not one that someone else's org chart can delete.
+
 None of this is guaranteed. All of it is what the median outcome looks like for someone who walks in, does the work, and shows up for the four weeks after.
 
 ---
@@ -221,6 +244,8 @@ Play the same tape forward, but skip the workshop.
 **The quarter after.** You will have bought two more books. You will have joined one more community. You will have watched between three and seven YouTube breakdowns of businesses very similar to the one you would have started. You will not have talked to a single prospective customer. You know this because you did not talk to a single prospective customer last quarter, either.
 
 **The year after.** The job is still the job. The bonus was good — the bonus is always good, that's the trap. The idea is still the idea, except now you're not sure if it's still valid, because someone else launched something adjacent and you can't tell if that means the market is there or the window has closed. You have had, by now, four separate Sunday nights where you googled *"is it too late to start a business at 40"* and closed the tab.
+
+**If you're the AI-displaced reader, the default is worse, because the default has a timer.** The Monday after, you send eight more applications. The quarter after, you've sent two hundred, taken four interviews, received zero offers, and the runway is now measurably shorter than it was the day you started this report. The year after, one of three things has happened: you took a role at 60–70% of your prior comp doing something you don't respect and can already see being automated again, you drained the runway to zero and are now in the harder version of this same conversation, or you gave up entirely and told yourself a story about *"taking time off."* None of those is a life. All of them are what happens when a market repricing meets a person who kept applying.
 
 We are not being dramatic. We are describing what happens by default, to smart, capable, cautious adults, when nothing intervenes. Default is not neutral. Default is a direction. Default is where you are already going.
 
@@ -256,6 +281,12 @@ Read the one that applies to you. Skip the rest.
 
 **"Can I just do this myself?"** Yes. You have had years to do this yourself. The relevant question is not *can* you. It is *are* you.
 
+**"I'm not an entrepreneur. I just need another job."** Understood. And you may find one. But look honestly at the last four months of your search and ask whether the pattern is likely to change in the next four. The workshop is not a bet against your job search. It is a parallel track that costs one weekend and produces a live offer — so that if the search does not turn around, you have not spent six more months building nothing.
+
+**"I don't have time for this — I need income now."** This is the objection we take most seriously. The workshop is one weekend. The four weeks after are structured to produce a first paying customer, not a business plan. If your runway is three months or less, the honest answer is: this is the fastest legal path we know of from *skilled professional with no offers* to *first invoice sent.* If your runway is under 30 days, tell us on the webinar and we will tell you honestly whether it's still worth it.
+
+**"AI is going to eat whatever I build too."** Probably some of it. So build the thing AI can't do on its own: the judgment layer, the relationship, the accountability, the *"call this specific human when it matters."* AI is a co-worker now, not a replacement for the person a customer trusts to be responsible when things go wrong. That person is what you are selling. The workshop is where you figure out to whom, for how much, and starting when.
+
 ---
 
 ## 12. The Guarantee, The Room, The Deadline
@@ -273,6 +304,8 @@ The deadline is real. The next cohort has a date. When it fills, it fills. There
 ## 13. How to Book
 
 The smallest next step is the free webinar. Sixty minutes. It answers three questions: *is this workshop for me, am I ready for it, and what specifically would I walk out with.* It is honest. It is not a pitch dressed up as content. If either of us decides you are not a fit, we say so on the call.
+
+If you're on a runway — recently laid off, or watching the ground move — say so when you register. We'll make time on the call to look at your specific situation, your specific skillset, and your specific timeline, and tell you honestly whether the workshop is the right move now, later, or not at all. That conversation is free. It is also the most useful sixty minutes most people in that position have had in months.
 
 Book the webinar. Show up. Decide.
 
