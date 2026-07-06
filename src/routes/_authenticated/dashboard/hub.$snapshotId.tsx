@@ -877,6 +877,19 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const brandStudioRef = useRef<HTMLElement | null>(null);
   const [bonusOpen, setBonusOpen] = useState(true);
 
+  // Guided vs advanced UI density. Persisted per-snapshot so returning users keep their choice.
+  const viewModeKey = `hub:viewMode:${snapshot.id}`;
+  const [viewMode, setViewModeState] = useState<HubViewMode>(() => {
+    if (typeof window === "undefined") return "guided";
+    const stored = window.localStorage.getItem(viewModeKey);
+    return stored === "advanced" ? "advanced" : "guided";
+  });
+  const setViewMode = useCallback((v: HubViewMode) => {
+    setViewModeState(v);
+    try { window.localStorage.setItem(viewModeKey, v); } catch {}
+  }, [viewModeKey]);
+  const isGuided = viewMode === "guided";
+
   const brandKitQ = useQuery({
     queryKey: ["brandKit", snapshot.id],
     queryFn: () => getBrandKit(snapshot.id),
