@@ -1,47 +1,63 @@
 ## Goal
 
-Retire the phrase **"operator-led"** in user-facing copy and replace with **"done-with-you"** — a category term prospects already understand (vs. done-for-you and DIY). Keep internal/technical uses of the noun "operator" intact where they carry meaning (e.g., "an operator applies a CFO lens" inside session descriptions).
+Introduce **"The Anderson Method"** as a proper-noun brand alternative used strategically alongside **"done-with-you method"** in high-impact placements — headlines, hero subheads, and section titles — while keeping **"The 14-Day Launch Method"** as the offer name.
 
-## The new positioning line
+## The three phrases and their jobs
 
-> **The done-with-you method replacing accelerators, courses, and raw AI.**
+| Phrase | Job | Where it lives |
+|---|---|---|
+| **The 14-Day Launch Method** | Offer name — what you buy | Eyebrows, meta titles, agenda headers, buttons, pricing |
+| **The Anderson Method** | Brand / authority handle — who's behind it | Hero headlines, section titles, quote pull-outs, one-liner reframes |
+| **the done-with-you method** | Category descriptor — how it works vs. alternatives | Positioning tagline, subheads explaining the model, body copy |
 
-Used everywhere the old tagline appeared.
+Rule of thumb: **Anderson Method** answers "*whose*", **done-with-you method** answers "*what kind*", **14-Day Launch Method** answers "*what you get*." Never stack all three in one sentence.
 
-## Files to update
+## Where to swap in "The Anderson Method"
 
-**Public site pages**
-- `src/routes/one-on-one.tsx` — 2 hits (meta description + hero subhead)
-- `src/routes/webinar.tsx` — 3 hits (meta, subtitle, hero)
-- `src/routes/services.tsx` — 2 hits (headline + intro paragraph)
-- `src/routes/build.tsx` — 1 hit ("extending the operator-led method…")
-- `src/routes/schedule.tsx` — 1 hit ("the operator-led method"); leave the two standalone "operator" noun uses that describe who's applying the lens
+**Home (`src/components/home/HomeFramework.tsx`)**
+- Line 100 body paragraph — reframe one sentence: "The 14-Day Launch Method is **The Anderson Method** in one focused morning — the done-with-you playbook quietly replacing accelerators, courses, and raw AI…" (keeps both phrases, each doing distinct work)
+- Line 180 section title "Inside The 14-Day Launch Method" → keep (offer-name context)
+- Add one authority pull-quote or eyebrow above the founder-story section: **"The Anderson Method"** as a standalone label
 
-**Chatbot & knowledge**
-- `src/lib/chatbot-knowledge.ts` — 6 hits total
-  - Swap the two tagline instances and the "Operator-led, method-driven" line
-  - Soften "operator-led, AI-accelerated methods" → "done-with-you, AI-accelerated methods"
-  - Keep "Adam, an operator who's shipped companies" — that's a noun describing Adam, not the jargon phrase
+**Webinar (`src/routes/webinar.tsx`)**
+- Line 40 hero subhead: swap the first sentence to lead with authority — "**The Anderson Method**, run live over video in a small cohort with the founder who built it." Keep the done-with-you tagline one paragraph down or in the meta.
 
-**Funnel report (already delivered)**
-- `.lovable/startuplabs-funnel-report.md` and `public/adam-funnel-v1.md` — the report doesn't use "operator-led" (only "Operator Appendix," which is a distinct internal-transparency section name). **No changes.** Confirm with a grep before finishing.
+**One-on-one (`src/routes/one-on-one.tsx`)**
+- Line 86 hero H1 second clause currently reads "run for you by Adam and his team." Reframe as: "**The Anderson Method,** run for you by Adam's team." Keep done-with-you in meta description (line 70).
 
-## What stays
+**Services (`src/routes/services.tsx`)**
+- Line 45 H1: "Scale with **The Anderson Method** that launched you." (replaces "the same done-with-you method that launched you" in the *headline only*) — keep done-with-you in the body paragraph on line 48 so both phrases appear on the page.
 
-- **"Operator Appendix"** in the report — different meaning (internal working docs), not the jargon phrase.
-- **"an operator applies a CFO/brand/distribution lens"** in `schedule.tsx` and `curriculum-data.ts` — describes the human doing the work in a session.
-- **"Adam, an operator who's shipped companies"** in chatbot knowledge — noun, not tagline.
-- **`idealOperator` field** in `business-ideas.ts` — internal data key, never rendered as that string.
-- **`Travel › Tour operator`** industry option — unrelated.
+**Build (`src/routes/build.tsx`)**
+- Add an eyebrow or a short pull-line: "**The Anderson Method**, one morning at a time." Body paragraph on line 24 keeps "done-with-you."
+
+**Schedule (`src/routes/schedule.tsx`)**
+- Body paragraph on line 58 keeps done-with-you (it's explaining the model). No headline change needed.
+
+**Chatbot knowledge (`src/lib/chatbot-knowledge.ts`)**
+- Add a short "Brand vocabulary" block near the top of tone/guardrails:
+  - Offer name: *The 14-Day Launch Method*
+  - Brand/authority handle: *The Anderson Method* — use in headline-style openers, authority moments, and when contrasting Adam vs. software/agencies
+  - Category descriptor: *the done-with-you method replacing accelerators, courses, and raw AI* — use in the positioning line at least once per conversation
+- Update the "Always name the offer" guardrail so the assistant knows both phrases are approved and when to reach for each.
+
+## What does NOT change
+
+- Meta titles and URL slugs stay 14-Day Launch Method.
+- Buttons, pricing labels, agenda headers, cohort/registration copy, and the funnel report stay as-is.
+- The positioning tagline (*done-with-you method replacing accelerators, courses, and raw AI*) is preserved verbatim wherever it currently lives — it just isn't the only phrase carrying the hero anymore.
+- Noun uses of "operator" (Adam, session lenses) are untouched.
+- No visual, layout, or component structure changes.
 
 ## Verification
 
-1. `rg -i "operator-led"` on `src/` and `public/` returns zero hits.
-2. `rg "done-with-you"` shows the new tagline in every place the old one lived.
-3. Spot-check the three highest-traffic pages (`/`, `/webinar`, `/services`) in the preview to confirm hero + meta read cleanly.
+1. Each key page (home, webinar, one-on-one, services, build) contains **all three** phrases at least once — offer name, Anderson Method, done-with-you method — each in the role above.
+2. No sentence stacks all three.
+3. Meta descriptions still contain the full positioning tagline for SEO.
+4. Chatbot guardrails updated.
 
 ## Out of scope
 
-- No visual/layout changes.
-- No edits to the funnel report content or PDF.
-- No rewrites of surrounding paragraphs — surgical phrase swap only.
+- Renaming the offer, changing pricing, restructuring pages.
+- Editing the funnel report or PDF.
+- Adding new hero images or components.
