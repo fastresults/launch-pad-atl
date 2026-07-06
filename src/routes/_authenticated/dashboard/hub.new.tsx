@@ -550,6 +550,81 @@ function Inner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [combinedDocs.map((d) => d.id).join("|"), readyUrls.map((u) => u.id).join("|")]);
 
+  // Reset Step 1 — the founder can wipe every AI signal and every transient
+  // source they've added on this page and start again with a clean slate.
+  // Library files themselves are NOT deleted; they just become unselected.
+  const [resetOpen, setResetOpen] = useState(false);
+  const [patternGuardOpen, setPatternGuardOpen] = useState(false);
+  const canonicalDefault = (key: string): string => {
+    const ctx = canonicalCtx;
+    switch (key) {
+      case "companyName": return prefill?.company_name ?? ctx?.concept?.company_name ?? "";
+      case "diff": return prefill?.differentiation_statement ?? ctx?.concept?.differentiation ?? "";
+      case "founderName": return prefill?.founder_name ?? ctx?.identity?.full_name ?? "";
+      case "founderEmail": return prefill?.founder_email ?? ctx?.identity?.email ?? "";
+      case "founderPhone": return prefill?.founder_phone ?? ctx?.identity?.phone ?? "";
+      case "city": return prefill?.city ?? "";
+      case "region": return prefill?.region ?? "";
+      case "country": return prefill?.country ?? "United States";
+      case "websiteUrl": return "";
+      case "subIndustry": return prefill?.sub_industry ?? "";
+      case "businessConcept": return prefill?.business_concept ?? ctx?.concept?.business_concept_blob ?? "";
+      case "industry": return prefill?.industry ?? ctx?.market?.industry ?? "";
+      default: return "";
+    }
+  };
+  const resetStepOne = () => {
+    // Unselect every chip so nothing in memory feeds synthesis.
+    setReuseSelected({});
+    // Clear transient intake.
+    setFiles([]);
+    setScrapedUrls([]);
+    setUrlInput("");
+    setNextUrlIntent("own");
+    setIntakeTab("upload");
+    setAddMoreOpen(false);
+    // Reset every field the AI touched back to its prefill/canonical default.
+    const setters: Record<string, (v: string) => void> = {
+      companyName: setCompanyName,
+      diff: setDiff,
+      founderName: setFounderName,
+      founderEmail: setFounderEmail,
+      founderPhone: setFounderPhone,
+      city: setCity,
+      region: setRegion,
+      country: setCountry,
+      websiteUrl: setWebsiteUrl,
+      subIndustry: setSubIndustry,
+      businessConcept: setBusinessConcept,
+      industry: setIndustry,
+    };
+    for (const key of Object.keys(aiFilled)) {
+      const setter = setters[key];
+      if (setter) setter(canonicalDefault(key));
+      if (key === "marketScope") setMarketScope(prefill?.market_scope ?? "local");
+    }
+    setAiFilled({});
+    setProcessed(false);
+    autoSigRef.current = "";
+    setResetOpen(false);
+    toast.success("Cleared. Add a source or type your concept to start again.");
+  };
+  const anySelectedChips = Object.values(reuseSelected).some(Boolean);
+
+  // Flip a saved memory chip's own↔pattern intent in place.
+  const flipMemoryIntent = async (row: VentureSource, next: "own" | "pattern") => {
+    try {
+      const updated = await updateVentureSourceIntent(row.id, next);
+      setReusable((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+      // Force re-synthesis on next signal — intent change means identity gating may change.
+      autoSigRef.current = "";
+      toast.success(next === "pattern" ? "Marked as pattern only" : "Marked as your own");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't update");
+    }
+  };
+
+
   const create = useMutation({
     mutationFn: () =>
       createSnapshot({
