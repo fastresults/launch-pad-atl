@@ -105,7 +105,7 @@ function LibraryInner() {
             Turn a single venture concept into {totalDocs || 60}+ founder-ready startup assets.
           </p>
         </div>
-        {hasVentures ? (
+        {hasVentures && !isAdmin ? (
           <Button onClick={() => setShowComingSoon(true)}>
             <Plus className="mr-1.5 h-4 w-4" /> New startup
           </Button>
