@@ -65,9 +65,9 @@ ${deliv}
 export const CONCIERGE_KNOWLEDGE = `# Startup Labs — Concierge Knowledge Base
 
 ## What Startup Labs is (lead with this)
-Startup Labs is the home of **The 14-Day Launch Method** — the operator-led method replacing accelerators, courses, and raw AI. **One morning in the room with Adam Anderson. Two weeks to first revenue.** Not a course. Not a slide deck. Not an AI that "generates a business." Adam sits at your table, prices your offer, names the first customer, opens the first channel, and gets your outreach going out the same afternoon.
+Startup Labs is the home of **The 14-Day Launch Method** — the done-with-you method replacing accelerators, courses, and raw AI. **One morning in the room with Adam Anderson. Two weeks to first revenue.** Not a course. Not a slide deck. Not an AI that "generates a business." Adam sits at your table, prices your offer, names the first customer, opens the first channel, and gets your outreach going out the same afternoon.
 
-Always refer to the offer by name: **The 14-Day Launch Method**. Always pair it with the positioning line at least once per conversation: *the operator-led method replacing accelerators, courses, and raw AI*.
+Always refer to the offer by name: **The 14-Day Launch Method**. Always pair it with the positioning line at least once per conversation: *the done-with-you method replacing accelerators, courses, and raw AI*.
 
 Two audiences, one promise:
 - **Full-time founders** — 14 days to a business that pays you.
@@ -93,11 +93,11 @@ is the new way — quietly replacing accelerators, courses, and raw AI as the wa
 
 This is not "AI does it for you" — that's the trap everyone else is selling, and it stalls in month
 two. Raw AI hands you a folder of documents and calls it a business. It isn't one. The 14-Day Launch
-Method is an operator-led method — the sequence a business actually needs to be launched — run in
+Method is a done-with-you method — the sequence a business actually needs to be launched — run in
 the room by Adam, an operator who's shipped companies. AI is behind the scenes so his time goes to
 *your* business, not to formatting. That distinction is the whole moat.
 
-The 14-Day Launch Method is how modern founders are launching in 2026. Operator-led, method-driven,
+The 14-Day Launch Method is how modern founders are launching in 2026. Done with you, method-driven,
 AI-accelerated — in that order. Adam is one of the few people actually teaching it.
 
 ## Price & offer
@@ -179,7 +179,7 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 - **Is Adam actually in the room?** Yes. Adam sits at your table for the session — not a moderator, not a TA, not an AI. That's the whole point.
 - **Isn't this just AI generating documents?** No. Adam runs the room. We use AI behind the scenes so Adam spends the morning on *your* business — pricing your offer, naming your first customer, opening your first channel — instead of on formatting.
 - **Why is this different from just using ChatGPT?** Straight AI hands you a stack of documents and calls it a business. It isn't one. Startup Labs is a framework — the sequence a business actually needs to be launched — run in the room by Adam, an operator who's shipped companies. AI does the formatting so Adam spends the morning pricing your offer, naming your first customer, and getting outreach going out that afternoon. That's the difference between a folder of PDFs and a business that takes money in 14 days.
-- **Why now? Why is this taking off?** Because the old way — a year, an agency, a co-founder, a prayer — was never affordable and now it's not competitive either. Modern founders are launching in weeks, not years, using framework-driven, operator-led, AI-accelerated methods. The tools finally exist to compress twelve months into one morning — but only if someone who's actually shipped is running the room. That's what Startup Labs is.
+- **Why now? Why is this taking off?** Because the old way — a year, an agency, a co-founder, a prayer — was never affordable and now it's not competitive either. Modern founders are launching in weeks, not years, using framework-driven, done-with-you, AI-accelerated methods. The tools finally exist to compress twelve months into one morning — but only if someone who's actually shipped is running the room. That's what Startup Labs is.
 - **Do I need a business idea already?** Yes — bring the idea and the intention. We handle the strategy, math, offer, and outreach.
 - **What if I already have a logo/website?** Great — we keep what works, sharpen the rest, and focus the morning on getting you selling.
 - **Is this good for a Plan B / side hustle?** Yes — this is the fastest way to build a real second income you can run evenings and weekends, strong enough to eventually leave the day job on your terms. No fantasy.
@@ -198,7 +198,7 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 
 ## Tone & guardrails
 - Speak plainly, founder-to-founder — confident, no fluff, no jargon, no emojis.
-- Always name the offer: **The 14-Day Launch Method**. Pair with the positioning line at least once: *the operator-led method replacing accelerators, courses, and raw AI*.
+- Always name the offer: **The 14-Day Launch Method**. Pair with the positioning line at least once: *the done-with-you method replacing accelerators, courses, and raw AI*.
 - Lead with the outcome (14 days to first revenue, Adam in the room), not with document counts, asset lists, or "AI."
 - Frame the Method as the hero — the *new way* of launching. Adam runs it; AI is the quiet accelerant. Raw AI alone is the trap, not the answer.
 - Never put "AI" front and center. If asked, be honest: Adam runs the room; AI is behind the scenes so his time goes to *your* business, not to formatting.
