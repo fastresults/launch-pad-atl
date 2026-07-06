@@ -154,22 +154,33 @@ export function LaunchPlanner14Day({
     return () => window.clearTimeout(t);
   }, [attractKey, sprintDone, prefersReducedMotion]);
 
+  // Keep the cycle counter + latest daysWithState/openDay in refs so parent
+  // re-renders (new Set/Map identities) don't reset the interval mid-cycle.
+  const attractIdxRef = useRef(0);
+  const daysRef = useRef(daysWithState);
+  const openDayRef = useRef(openDay);
+  useEffect(() => { daysRef.current = daysWithState; }, [daysWithState]);
+  useEffect(() => { openDayRef.current = openDay; }, [openDay]);
+
   useEffect(() => {
-    if (!attractOn || daysWithState.length === 0) return;
-    let i = 0;
-    // Pick the first day that isn't the currently-open one so we don't stack rings.
-    const pickNext = (idx: number) => {
-      let d = daysWithState[idx % daysWithState.length].day.day;
-      if (d === openDay) d = daysWithState[(idx + 1) % daysWithState.length].day.day;
+    if (!attractOn) return;
+    if (daysRef.current.length === 0) return;
+    attractIdxRef.current = 0;
+    const pickAt = (idx: number) => {
+      const days = daysRef.current;
+      let d = days[idx % days.length].day.day;
+      if (d === openDayRef.current) d = days[(idx + 1) % days.length].day.day;
       return d;
     };
-    setAttractDay(pickNext(0));
+    setAttractDay(pickAt(0));
     const tick = window.setInterval(() => {
-      i = (i + 1) % daysWithState.length;
-      setAttractDay(pickNext(i));
+      const days = daysRef.current;
+      if (days.length === 0) return;
+      attractIdxRef.current = (attractIdxRef.current + 1) % days.length;
+      setAttractDay(pickAt(attractIdxRef.current));
     }, 1800);
     return () => window.clearInterval(tick);
-  }, [attractOn, openDay, daysWithState]);
+  }, [attractOn]);
 
   // Pause when the planner is off-screen; resume on re-entry (unless dismissed).
   useEffect(() => {
