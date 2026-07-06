@@ -1,95 +1,103 @@
 
-# Minimal Hub UI for Novice Users
+# Attract-loop pulse on the 14-day sprint tiles
 
-## Problem
+## Goal
 
-The current hub page (screenshot) stacks four competing surfaces on top of each other:
+First-time visitors don't realize the day cards are clickable. Add a subtle "attract" animation that walks a soft pulse from Day 1 → Day 14, one tile at a time, until the user interacts. On any real interaction the loop stops permanently for that user + sprint.
 
-1. **02 · AI Toolkit** intro + big "Generate my AI Stack" panel
-2. Full-width amber **"Concept changed since last generation"** banner
-3. **03 · Your Asset Library** intro + Expand/Collapse all + info icon
-4. A row of 8 **category chips** with "n/n ✓" counts (Foundation 8/8, Strategy 8/8, …)
-5. Per-category header (Foundation) with: numbered token, compass icon, title, count "8/8", subtitle, progress bar, "Complete" badge, **Open facilitator deck**, **Regenerate this section**
+## Behavior spec
 
-A novice sees five progress signals for the same thing and four possible next actions. There is no single obvious next step.
+- **What pulses**: a single tile at a time, in order Day 1, 2, 3, … 14, then back to 1.
+- **Pulse look**: a soft outline ring that fades in (0.9s) and fades out (0.9s) on the active tile, plus a very small scale (1 → 1.03 → 1). Not bouncy, not distracting. Reduced-motion users get only a static ring cue on the current tile (no scale, no continuous animation).
+- **Cadence**: ~1.8s per tile. One day gets highlighted at a time; the currently-open day (`openDay`) is skipped so the loop doesn't fight the ring already on the user's active card.
+- **Start**: begins ~1200 ms after the planner mounts (avoids competing with page-in fade). Only runs if the sprint isn't 100% complete — a finished sprint doesn't need a nudge.
+- **Stop conditions** (any one):
+  1. User clicks any day tile.
+  2. User hovers any day tile (mouse) or focuses one via keyboard.
+  3. User clicks anywhere inside the planner card (Open Day Deck, sort toggle, an asset row).
+  4. User scrolls the planner off-screen (via `IntersectionObserver` — pauses; resumes if they scroll back and haven't dismissed).
+- **Persistence**: once stopped by real interaction (not just scroll-away), write a flag to `localStorage` under `hub:sprintAttractDismissed:<snapshotId>`. Future visits to this sprint never replay the loop.
+- **Accessibility**: the pulse is decorative — no `aria-live`, no focus change, no keyboard trap. Respects `prefers-reduced-motion: reduce` by rendering a single static hint ring on Day 1 only.
 
-## Recommendation: one primary action per section, everything else behind "Advanced"
+## Implementation
 
-Keep the guided philosophy from the last pass. Do not remove capabilities — demote them. Introduce a page-level `viewMode: "guided" | "advanced"` state (persisted in `localStorage` per user) with a small toggle in the page header. Default = **guided** for anyone whose sprint is not yet complete.
+All changes live in `src/components/hub/LaunchPlanner14Day.tsx` plus one small keyframe in `tailwind.config.ts`.
 
-### Guided mode changes (default)
+**1. New keyframe + animation utility** in `tailwind.config.ts`:
 
-**AI Toolkit section (02)**
-- Remove the section eyebrow + intro paragraph. The panel headline already says what it is.
-- Collapse `AIStackPanel` to a single row: title on the left, one CTA on the right. Drop the descriptive sub-copy — move it into a tooltip on an `(i)` icon.
-- After generation, the panel shrinks to a one-line "AI Stack ready · View" link. It stops competing for attention.
-
-**Stale-concept banner**
-- Replace the full-width amber block with a small inline chip next to the affected section title: `↻ 1 asset out of date · Rewrite`. Clicking it opens the same rewrite flow.
-- Only show at the top of the page when >3 assets are stale.
-
-**Asset Library section (03)**
-- Remove the eyebrow "03 · Your asset library", the intro paragraph, and the info icon. Keep only an `<h2>Your assets</h2>`.
-- **Remove the 8 category chip row entirely in guided mode.** It duplicates the category headers directly below and adds no new information. In advanced mode it returns as a jump-nav.
-- Remove **Expand all / Collapse all** from guided mode. Auto-open only the next incomplete category; keep completed categories collapsed by default. Power users get the toggles back in advanced mode.
-
-**Per-category header (Foundation, Strategy, …)**
-- Keep: numbered token, title, one-line subtitle, single status pill (either `In progress 3/8`, `Complete`, or `Locked`).
-- Remove the standalone progress bar — the "3/8" pill already conveys it. Bring the bar back only inside the expanded panel.
-- Collapse the two right-side buttons into one **primary** action that changes with state:
-  - not started → **Start**
-  - in progress → **Continue**
-  - complete → **Review**
-- Move **Open facilitator deck** and **Regenerate this section** into a `⋯` overflow menu on the row. Novices never see them unless they look; power users still reach them in one click.
-
-**Page header**
-- Add a compact segmented control: `Guided · Advanced`. Persist choice in `localStorage` under `hub:viewMode:<snapshotId>`.
-
-### Advanced mode
-
-Restores today's behavior verbatim: intros, chips, Expand/Collapse all, dual buttons, full stale banner. Nothing is lost, just gated.
-
-### Visual result for a novice
-
-The screenshot area collapses from ~5 stacked blocks to:
-
-```text
-Your assets                              [Guided ▾]
-────────────────────────────────────────────────
-01  Foundation           Complete           Review  ⋯
-02  Strategy             In progress 3/8    Continue ⋯
-03  Operations           Locked             —
-…
+```ts
+keyframes: {
+  "attract-pulse": {
+    "0%, 100%": { boxShadow: "0 0 0 0 hsl(var(--primary) / 0)", transform: "scale(1)" },
+    "50%":      { boxShadow: "0 0 0 6px hsl(var(--primary) / 0.35)", transform: "scale(1.03)" },
+  },
+},
+animation: {
+  "attract-pulse": "attract-pulse 1.6s ease-in-out",
+},
 ```
 
-One eye path, one obvious next click per row.
+**2. Planner state and effect**:
 
-## Technical Notes
+```ts
+const attractKey = `hub:sprintAttractDismissed:${snapshotId}`;
+const [attractIdx, setAttractIdx] = useState<number | null>(null);
+const [attractOn, setAttractOn] = useState(false);
+const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+const sprintDone = daysWithState.every((d) => d.state === "complete");
 
-- New state in `hub.$snapshotId.tsx`:
-  ```ts
-  const [viewMode, setViewMode] = useState<"guided" | "advanced">(() =>
-    (localStorage.getItem(`hub:viewMode:${snapshotId}`) as any) ?? "guided"
-  );
-  ```
-  Persist on change; pass `viewMode` down to `AIStackPanel`, category renderer, and the stale banner.
-- `SectionIntro`: accept a `variant?: "full" | "minimal"` prop. In `minimal`, render only the `<h2>` (no eyebrow, no paragraph, no info icon).
-- `AIStackPanel`: add `compact?: boolean`. In compact, single-row layout; hide description; move it into an accessible tooltip.
-- Category row: extract the current two-button cluster into a small `<CategoryActions>` component that renders either the primary+overflow (guided) or the current dual buttons (advanced).
-- Stale banner: extract logic; in guided render `<StaleChip count sectionKey />` inline in the relevant category header when `count <= 3`, otherwise fall back to the current banner.
-- Category chip strip (`1. Foundation 8/8 …`): gate the JSX at line 1308–1326 behind `viewMode === "advanced"`.
-- Expand-all / Collapse-all `SectionIntro` actions (lines 1282–1303): only pass `actions` when `viewMode === "advanced"`.
+useEffect(() => {
+  if (prefersReducedMotion || sprintDone) return;
+  if (localStorage.getItem(attractKey)) return;
+  const start = window.setTimeout(() => setAttractOn(true), 1200);
+  return () => window.clearTimeout(start);
+}, [attractKey, prefersReducedMotion, sprintDone]);
 
-No backend, edge function, or data-model changes. All work is in:
+useEffect(() => {
+  if (!attractOn) return;
+  let i = 0;
+  setAttractIdx(daysWithState[0].day.day);
+  const tick = window.setInterval(() => {
+    i = (i + 1) % daysWithState.length;
+    // skip whichever day the user has open so the two cues don't stack
+    let next = daysWithState[i].day.day;
+    if (next === openDay) { i = (i + 1) % daysWithState.length; next = daysWithState[i].day.day; }
+    setAttractIdx(next);
+  }, 1800);
+  return () => window.clearInterval(tick);
+}, [attractOn, openDay, daysWithState]);
 
-- `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx`
-- `src/components/hub/SectionIntro.tsx`
-- `src/components/hub/AIStackPanel.tsx`
-- one new `src/components/hub/CategoryActions.tsx`
-- one new `src/components/hub/ViewModeToggle.tsx`
+const dismissAttract = useCallback((persist = true) => {
+  setAttractOn(false);
+  setAttractIdx(null);
+  if (persist) { try { localStorage.setItem(attractKey, "1"); } catch {} }
+}, [attractKey]);
+```
+
+**3. Wire dismissal**: wrap the planner root in a single `onClickCapture={() => dismissAttract()}` and `onMouseEnterCapture` / `onFocusCapture` on the tile grid. The existing `onClick={() => setOpenDay(day.day)}` still fires normally after the capture-phase handler.
+
+**4. Apply the ring**: in `renderTile`, add:
+
+```ts
+const attracting = attractIdx === day.day && !isOpen;
+const attractClass = attracting
+  ? "animate-attract-pulse ring-2 ring-primary/50 ring-offset-2 ring-offset-background"
+  : "";
+```
+
+Reduced-motion fallback: instead of the animation, render a static `ring-2 ring-primary/40` on Day 1 only, cleared on first interaction.
+
+**5. Pause when off-screen**: an `IntersectionObserver` on the planner root sets `attractOn` false when `intersectionRatio < 0.2` and true again when it re-enters (only if not persisted-dismissed). This avoids animating in a background tab or below the fold.
+
+## Why this approach
+
+- **Sequential, not simultaneous**: one moving pulse reads as guidance ("click these"), whereas pulsing all 14 at once reads as an error/emergency.
+- **Skips the already-open day**: prevents the double-highlight confusion in the screenshot where Day 2 is already ringed.
+- **Persisted dismissal**: novices see it once, power users never see it again.
+- **Pure CSS keyframe + interval**: no animation library, no layout thrash, ~40 lines of code.
 
 ## Out of scope
 
-- Founder Roadmap card (already redesigned last pass)
-- LaunchPlanner14Day internals
-- Copy rewrites beyond removing the two intro paragraphs shown above
+- Any change to card content, colors, layout, or click behavior.
+- Attract cues elsewhere on the page (asset library rows, roadmap card).
+- Onboarding tour / coach-mark overlays — heavier pattern, not asked for.
