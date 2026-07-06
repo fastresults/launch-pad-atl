@@ -258,7 +258,11 @@ export function LaunchPlanner14Day({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-background via-card to-background p-6 shadow-sm">
+    <div
+      ref={attractContainerRef}
+      onClickCapture={() => dismissAttract(true)}
+      className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-background via-card to-background p-6 shadow-sm"
+    >
       <div className="absolute -left-20 -top-20 h-56 w-56 rounded-full bg-primary/10 blur-3xl" aria-hidden />
       <div className="absolute -right-20 -bottom-20 h-56 w-56 rounded-full bg-fuchsia-500/10 blur-3xl" aria-hidden />
 
