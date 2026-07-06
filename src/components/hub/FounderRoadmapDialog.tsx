@@ -70,6 +70,26 @@ function transformChildren(children: any): any {
   return children;
 }
 
+const inlineMarkdownComponents = {
+  p: ({ children }: any) => <>{transformChildren(children)}</>,
+  strong: ({ children }: any) => <strong className="font-semibold text-foreground">{transformChildren(children)}</strong>,
+  em: ({ children }: any) => <em className="italic text-foreground/90">{transformChildren(children)}</em>,
+  code: ({ children }: any) => <code className="rounded bg-muted px-1 py-0.5 font-mono text-[12px] text-foreground">{children}</code>,
+  a: ({ href, children }: any) => (
+    <a href={href} target="_blank" rel="noreferrer" className="text-primary underline decoration-primary/40 underline-offset-4 hover:decoration-primary">
+      {children}
+    </a>
+  ),
+};
+
+function InlineMarkdown({ children }: { children: string }) {
+  return (
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={inlineMarkdownComponents as any}>
+      {children}
+    </ReactMarkdown>
+  );
+}
+
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -249,8 +269,16 @@ export function FounderRoadmapDialog({
     p: ({ node, children, ...props }: any) => <p className="my-4 text-[15px] leading-[1.75] text-foreground/90" {...props}>{transformChildren(children)}</p>,
     li: ({ node, children, ...props }: any) => <li className="my-1.5 text-[15px] leading-[1.7]" {...props}>{transformChildren(children)}</li>,
     hr: () => <hr className="my-10 border-border" />,
-    strong: ({ node, ...props }: any) => <strong className="font-semibold text-foreground" {...props} />,
-    em: ({ node, ...props }: any) => <em className="italic text-foreground/90" {...props} />,
+    strong: ({ node, children, ...props }: any) => <strong className="font-semibold text-foreground" {...props}>{transformChildren(children)}</strong>,
+    em: ({ node, children, ...props }: any) => <em className="italic text-foreground/90" {...props}>{transformChildren(children)}</em>,
+    a: ({ node, href, children, ...props }: any) => (
+      <a href={href} target="_blank" rel="noreferrer" className="text-primary underline decoration-primary/40 underline-offset-4 hover:decoration-primary" {...props}>
+        {transformChildren(children)}
+      </a>
+    ),
+    code: ({ node, inline, children, ...props }: any) => (
+      <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[12.5px] text-foreground" {...props}>{children}</code>
+    ),
   }), []);
 
   return (
@@ -356,7 +384,9 @@ export function FounderRoadmapDialog({
                     {companyName ?? "Your venture"}
                   </h1>
                   {cover ? (
-                    <p className="mt-4 text-[15px] leading-relaxed text-foreground/90">{cover}</p>
+                    <div className="mt-4 space-y-3 text-[15px] leading-relaxed text-foreground/90 [&_p]:m-0">
+                      <InlineMarkdown>{cover}</InlineMarkdown>
+                    </div>
                   ) : (
                     <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
                       A narrative founder playbook synthesized from your entire 14-Day Sprint.
@@ -367,7 +397,9 @@ export function FounderRoadmapDialog({
                       {stats.map((s, idx) => (
                         <div key={idx} className="rounded-lg border border-border bg-background/70 px-3 py-2.5">
                           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</div>
-                          <div className="mt-0.5 text-sm font-semibold text-foreground line-clamp-2">{s.value}</div>
+                          <div className="mt-0.5 line-clamp-2 text-sm font-semibold text-foreground">
+                            <InlineMarkdown>{s.value}</InlineMarkdown>
+                          </div>
                         </div>
                       ))}
                     </div>
