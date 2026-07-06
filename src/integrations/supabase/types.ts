@@ -2786,9 +2786,11 @@ export type Database = {
           research_artifacts: Json | null
           research_brief: Json | null
           roadmap_content: string | null
+          roadmap_coverage: Json | null
           roadmap_generated_at: string | null
           roadmap_quality_score: number | null
           roadmap_status: string | null
+          roadmap_structure_version: number | null
           roadmap_word_count: number | null
           saved_enhancements: Json
           scraped_content: string | null
@@ -2833,9 +2835,11 @@ export type Database = {
           research_artifacts?: Json | null
           research_brief?: Json | null
           roadmap_content?: string | null
+          roadmap_coverage?: Json | null
           roadmap_generated_at?: string | null
           roadmap_quality_score?: number | null
           roadmap_status?: string | null
+          roadmap_structure_version?: number | null
           roadmap_word_count?: number | null
           saved_enhancements?: Json
           scraped_content?: string | null
@@ -2880,9 +2884,11 @@ export type Database = {
           research_artifacts?: Json | null
           research_brief?: Json | null
           roadmap_content?: string | null
+          roadmap_coverage?: Json | null
           roadmap_generated_at?: string | null
           roadmap_quality_score?: number | null
           roadmap_status?: string | null
+          roadmap_structure_version?: number | null
           roadmap_word_count?: number | null
           saved_enhancements?: Json
           scraped_content?: string | null
