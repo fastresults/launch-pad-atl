@@ -1134,69 +1134,69 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     <div className="space-y-6">
       <DashboardWelcomeStrip snapshotId={snapshot.id} hasProgress={completeCount > 0} />
 
-      {/* Hero next-action card */}
-      <div className="space-y-3">
-        <SectionIntro copy={HUB_DASHBOARD_INTROS.next_action} />
-        <div className={`rounded-2xl border p-6 ${heroDone ? "border-status-success/30 bg-status-success/5" : "border-white/10 bg-card"}`}>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <h2 className="text-xl font-semibold">{heroTitle}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{heroSub}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {heroPrimary && (
-              <Button size="lg" onClick={heroPrimary.onClick} disabled={heroPrimary.disabled}>
-                {heroPrimary.loading ? (
-                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="mr-1.5 h-4 w-4" />
-                )}
-                {heroPrimary.label}
-              </Button>
-            )}
-            {heroSecondary && (
-              <Button size="sm" variant="outline" onClick={heroSecondary.onClick} disabled={bulk.isPending}>
-                {heroSecondary.label}
-              </Button>
-            )}
-            {heroTertiary && (
-              <Button size="sm" variant="ghost" onClick={heroTertiary.onClick}>
-                {heroTertiary.label}
-              </Button>
-            )}
-          </div>
-        </div>
-        {heroShowProgress && (
-          <div className="mt-4 space-y-1.5">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{completeCount} of {total} done</span>
-              <span>{pct}%</span>
+      {/* Hero — either the generate/next-action card, OR the Founder Roadmap once the kit is done */}
+      {heroDone ? (
+        <FounderRoadmapCard snapshot={snapshot} documentCount={completeCount} />
+      ) : (
+        <div className="rounded-2xl border border-white/10 bg-card p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xl font-semibold">{heroTitle}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{heroSub}</p>
             </div>
-            <Progress value={pct} />
+            <div className="flex items-center gap-2">
+              {heroPrimary && (
+                <Button size="lg" onClick={heroPrimary.onClick} disabled={heroPrimary.disabled}>
+                  {heroPrimary.loading ? (
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="mr-1.5 h-4 w-4" />
+                  )}
+                  {heroPrimary.label}
+                </Button>
+              )}
+              {heroSecondary && (
+                <Button size="sm" variant="outline" onClick={heroSecondary.onClick} disabled={bulk.isPending}>
+                  {heroSecondary.label}
+                </Button>
+              )}
+              {heroTertiary && (
+                <Button size="sm" variant="ghost" onClick={heroTertiary.onClick}>
+                  {heroTertiary.label}
+                </Button>
+              )}
+            </div>
           </div>
-        )}
-        {failures.length > 0 && (
-          <button
-            type="button"
-            onClick={() => setShowFailures((v) => !v)}
-            className="mt-3 inline-flex items-center gap-1 text-xs text-status-warning hover:text-status-warning/80"
-          >
-            <AlertCircle className="h-3 w-3" />
-            {failures.length} asset{failures.length === 1 ? "" : "s"} need another try
-          </button>
-        )}
-        {showFailures && failures.length > 0 && (
-          <ul className="mt-2 space-y-1 rounded-lg border border-status-warning/20 bg-status-warning/5 p-2 text-xs text-status-warning">
-            {failures.slice(0, 6).map((f: any) => {
-              const t = typeByKey.get(f.document_type) as any;
-              return <li key={f.id}><span className="font-medium">{t?.name ?? f.document_type}</span> — {f.error}</li>;
-            })}
-          </ul>
-        )}
+          {heroShowProgress && (
+            <div className="mt-4 space-y-1.5">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{completeCount} of {total} done</span>
+                <span>{pct}%</span>
+              </div>
+              <Progress value={pct} />
+            </div>
+          )}
+          {failures.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowFailures((v) => !v)}
+              className="mt-3 inline-flex items-center gap-1 text-xs text-status-warning hover:text-status-warning/80"
+            >
+              <AlertCircle className="h-3 w-3" />
+              {failures.length} asset{failures.length === 1 ? "" : "s"} need another try
+            </button>
+          )}
+          {showFailures && failures.length > 0 && (
+            <ul className="mt-2 space-y-1 rounded-lg border border-status-warning/20 bg-status-warning/5 p-2 text-xs text-status-warning">
+              {failures.slice(0, 6).map((f: any) => {
+                const t = typeByKey.get(f.document_type) as any;
+                return <li key={f.id}><span className="font-medium">{t?.name ?? f.document_type}</span> — {f.error}</li>;
+              })}
+            </ul>
+          )}
         </div>
-      </div>
+      )}
 
-      {heroDone && <FounderRoadmapCard snapshot={snapshot} documentCount={completeCount} />}
 
       <div className="space-y-3">
         <SectionIntro copy={HUB_DASHBOARD_INTROS.sprint} />
@@ -1261,15 +1261,6 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         />
       </div>
 
-
-
-      {showHelper && (
-        <div className="flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-card/40 px-4 py-2 text-xs text-muted-foreground">
-          <span>This page writes your full startup kit. Hit one button and we'll do the rest — you can read each asset as it finishes.</span>
-          <button type="button" onClick={() => setShowHelper(false)} className="text-muted-foreground hover:text-foreground">✕</button>
-        </div>
-      )}
-
       {/* Stale-concept banner */}
       {staleCount > 0 && (
         <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-status-warning/40 bg-status-warning/10 px-4 py-3 text-sm text-status-warning">
@@ -1285,34 +1276,33 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         </div>
       )}
 
-      {/* Document list */}
-      <SectionIntro copy={HUB_DASHBOARD_INTROS.library} />
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your assets</h3>
-          <p className="text-xs text-muted-foreground">Sections unlock in order. Use the per-section button to generate a whole section at once, or hit Generate on any single asset.</p>
-        </div>
-        <div className="flex items-center gap-1">
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs text-muted-foreground"
-            onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, true])))}
-          >
-            <ChevronsUpDown className="mr-1 h-3 w-3" />
-            Expand all
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs text-muted-foreground"
-            onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, false])))}
-          >
-            <ChevronsDownUp className="mr-1 h-3 w-3" />
-            Collapse all
-          </Button>
-        </div>
-      </div>
+      {/* Document list — quiet eyebrow + inline expand/collapse actions */}
+      <SectionIntro
+        copy={HUB_DASHBOARD_INTROS.library}
+        actions={
+          <>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 px-2 text-xs text-muted-foreground"
+              onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, true])))}
+            >
+              <ChevronsUpDown className="mr-1 h-3 w-3" />
+              Expand all
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 px-2 text-xs text-muted-foreground"
+              onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, false])))}
+            >
+              <ChevronsDownUp className="mr-1 h-3 w-3" />
+              Collapse all
+            </Button>
+          </>
+        }
+      />
+
 
       {/* Category stepper */}
       {categoryProgress.length > 0 && (
