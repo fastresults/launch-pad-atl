@@ -1,76 +1,101 @@
-# Venture Dashboard — Guided Onboarding for Novice Users
+# Venture Workspace — Minimalist Guided Pass
 
-## Problem
+## What's cluttered (audit from the captured screen)
 
-On `/dashboard/hub/:snapshotId` (the GenerateStep) a first-time founder lands on a wall of powerful tooling with no orientation:
+The page currently stacks **five hero-weight blocks** in the first fold, several of which say the same thing twice:
 
-1. A **Hero next-action card** (generate all / next category)
-2. The **14-Day Launch Method** planner (Anderson's method)
-3. The **AI Stack** panel
-4. The **Your assets** accordion stack (six category sections)
+1. **`01 · NEXT ACTION` intro** (eyebrow + what + why + "How to use" pill)
+2. **"Your startup kit is ready" banner** (green gradient, own CTA)
+3. **"The Big Picture — Your Founder Roadmap" card** (purple gradient, own CTA + Regenerate)
+4. **`02 · 14-DAY LAUNCH METHOD` intro** — followed immediately by the planner's own header **"14-DAY LAUNCH METHOD · Your day-by-day sprint"** (identical eyebrow, twice, back to back)
+5. **`03 · AI TOOLKIT` intro** — followed immediately by the AI Stack panel's own header **"YOUR AI STACK · Turn your 14-day plan into an installable toolkit"** (again, duplicate)
 
-Each block launches into functionality without answering: *what is this, why do I need it, how do I use it?* Novices bounce or click randomly.
+Every SectionIntro also carries its own **"How to use"** pill in the same slot — four of them down the page. The `01 · Next action` intro contradicts reality once the kit is done (there *is* no next action; it's all generated). The result: a founder scrolls past four competing "start here" surfaces before reaching actual assets.
 
-## Goal
+## Guiding principles for this pass
 
-Add lightweight, dismissible orientation so a first-time user immediately understands the purpose and flow of each core section — without adding noise for repeat users.
+- **One hero, not five.** Only one block in the first fold gets the visual weight of a primary card.
+- **Never title the same section twice.** SectionIntro OR the component's internal header — not both.
+- **State-aware guidance.** What appears depends on progress: pre-generation shows "next action"; post-generation shows "your roadmap." They never both shout at once.
+- **Guidance stays, chrome shrinks.** Keep the numbered orientation + "How to use" affordance, but make it a quiet rail — not a repeated banner.
 
 ## Plan
 
-### 1. Page-level welcome strip (top of GenerateStep, above the hero)
+### 1. Collapse the SectionIntro chrome into an in-header line
 
-A one-time, dismissible banner shown until the user closes it or generates their first asset:
+Change `SectionIntro` from a full-width bordered block into a **single-line eyebrow row** with the "How to use" as a tiny icon-only info button on the far right. Remove the left border bar. Remove the "what/why" sub-copy from the section header itself — move the "why it matters" sentence into the "How to use" popover as its first line. This eliminates ~3 lines of vertical clutter per section and stops it from competing with the component title underneath.
 
-- Headline: **"This is your venture workspace"**
-- Sub: One sentence: *"Four things live here — your next action, a 14-day sprint plan, your AI toolkit, and 60+ founder-ready assets. Read the intro on each card, then start with the blue button."*
-- Dismiss "✕", persisted in `localStorage` under `hub:welcome:<snapshotId>:dismissed`.
-- Auto-hide once `completeCount > 0` (they've clearly moved past intro).
+New shape (one line, muted, above the real component):
+`01 · NEXT ACTION ────────────────────────────  ⓘ`
 
-### 2. Section intro headers ("What is this? Why does it matter?")
+The popover now reads: **Why this matters:** … · **How to use:** 1. …  2. …
 
-For each of the 4 major sections, add a compact intro block **directly above** the existing component. Each has:
+### 2. Remove duplicate titles from the two planner components
 
-- A **section eyebrow** (small uppercase label + numeric order: "01 · Next action", "02 · 14-Day Launch Method", "03 · AI Toolkit", "04 · Your asset library")
-- A **1-line "What it is"**
-- A **1-line "Why it matters"**
-- An **`i` Info popover** ("How to use this") with 2–3 short bullets
+- `LaunchPlanner14Day.tsx` (lines ~198–208): delete the internal `14-DAY LAUNCH METHOD` eyebrow + `Your day-by-day sprint` H2 + description paragraph. Keep only the progress pill on the right. The SectionIntro row above now provides the title.
+- `AIStackPanel.tsx` (headers around lines ~130 and ~160): remove the internal `YOUR AI STACK` eyebrow + duplicate H3. Keep the body + CTA.
 
-Copy (draft, in `src/lib/hub-dashboard-copy.ts`, single source of truth):
+Rationale: the SectionIntro row IS the title. The component just renders content.
 
-| Section | What it is | Why it matters | How to use it (popover) |
-|---|---|---|---|
-| Next action | The single most important thing to generate right now. | Removes decision paralysis — one click and the machine writes the next batch. | Click the blue button. Watch the progress bar. Read each asset as it lands. |
-| 14-Day Launch Method | Andersons proven 14-day sprint that turns a concept into a live business. | Every asset in your kit maps to a specific day — so you know *when* to read it, not just *what* it is. | Click any day to see that day's assets, why it matters, and what to ship by end of day. |
-| AI Toolkit | A personalized stack of AI tools chosen for your industry and workflow. | Your 14-day plan assumes you have the right tools installed — this gets you set up in an afternoon. | Generate the stack, then click each tool to install and paste API keys. |
-| Your asset library | All 60+ founder-ready assets grouped into six tracks (Foundation → Growth). | Sections unlock in order so you build in the right sequence — no writing ads before you have a brand. | Use "Generate this section" to batch a whole track, or hit Generate on any single asset. Expand/collapse as you go. |
+### 3. Merge the two victory banners into one adaptive hero
 
-### 3. First-run coach marks (optional, low priority)
+Today, once the kit is done, the page shows both **"Your startup kit is ready"** (green) AND **"Your Founder Roadmap"** (purple) as separate top-of-page cards. Merge into a **single state-aware hero**:
 
-If time permits, a 3-step tooltip tour ("Start here → then this → then this") triggered by a **"Show me around"** button in the welcome strip. Uses existing `Popover` primitive — no new dependency. Skipped if user dismissed the welcome strip.
+- **State A — not started / partial** (`completeCount < total`): show the current "Generate next / Generate all" hero. No roadmap card yet.
+- **State B — kit complete** (`heroDone === true`): the hero itself becomes the roadmap card — headline "Your startup kit is ready · 63 assets", primary CTA "**Open Founder Roadmap**", secondary "View first asset", tertiary ghost "Regenerate all". The standalone `FounderRoadmapCard` is not rendered separately.
 
-### 4. Repeat-user affordance
+This removes one full hero-card from the first fold and eliminates the "which purple button do I click?" ambiguity.
 
-Once dismissed, expose a small **"?" chip** in the page header ("New here? Show the tour") so users can re-open the intros. Persists dismissed state per-venture so orientation shows again on a *new* venture.
+### 4. Drop the `01 · Next action` SectionIntro entirely
+
+Its content ("the single most important thing to generate right now") is redundant with the hero's headline and CTA. The hero already IS the next action. Keeping the intro adds noise without new information.
+
+Renumber remaining sections: **01 · 14-Day Launch Method**, **02 · AI Toolkit**, **03 · Your asset library**.
+
+### 5. Quiet the asset-library preamble
+
+Above the accordion stack the page currently shows:
+- SectionIntro "04 · Your asset library" (with what/why/how-to)
+- an H3 "Your assets" + long descriptive paragraph
+- Expand-all / Collapse-all buttons
+- A category-progress chip strip (6 chips)
+
+Collapse to:
+- One SectionIntro row: `03 · YOUR ASSET LIBRARY  ⓘ` with Expand/Collapse on the right
+- The category-progress chip strip stays (it's real progress data, not chrome)
+- Delete the H3 "Your assets" and its paragraph — the numbered eyebrow already labels it
+
+### 6. Move the persistent "This page writes your full startup kit…" helper strip
+
+That amber banner at the very bottom repeats what the hero already says. Remove it (it's already dismissible; make it default-hidden and only surface via the "?" chip in the page header for users who explicitly ask for the tour).
+
+### 7. Welcome strip refinement
+
+Keep `DashboardWelcomeStrip` but auto-hide it once `completeCount > 0` (already done) AND once the user has been on the page more than one session. On repeat visits with 0 progress, show a slimmer one-line version, not the full padded card.
 
 ## Files to change
 
-- **New:** `src/lib/hub-dashboard-copy.ts` — the four intro copy blocks (single source of truth, matches the existing pattern in `src/lib/launch-14day-guidance.ts`).
-- **New:** `src/components/hub/SectionIntro.tsx` — reusable eyebrow + what/why + info popover component.
-- **New:** `src/components/hub/DashboardWelcomeStrip.tsx` — dismissible welcome banner with localStorage persistence.
-- **Edit:** `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` — inside `GenerateStep` (around lines 1130–1300):
-  - Insert `<DashboardWelcomeStrip />` above the hero card.
-  - Wrap the hero, `LaunchPlanner14Day`, `AIStackPanel`, and the "Your assets" header each in a `<SectionIntro>`.
-- **Edit (small):** `LaunchPlanner14Day.tsx` header — remove the redundant "14-Day Launch Method" chip if `SectionIntro` now provides it, to avoid double-titling. Same for `AIStackPanel`.
+- **Edit:** `src/components/hub/SectionIntro.tsx` — collapse to single-line row + icon-only info popover; move "why" into popover.
+- **Edit:** `src/components/hub/LaunchPlanner14Day.tsx` — delete internal eyebrow/title/description block (~lines 198–208), keep progress pill.
+- **Edit:** `src/components/hub/AIStackPanel.tsx` — delete internal eyebrow/title in both `heroDone`/`!stackDoc` branches.
+- **Edit:** `src/components/hub/FounderRoadmapCard.tsx` — no longer rendered standalone; extract its data (word count, generated date, quality score) into a helper so the hero can display them in State B.
+- **Edit:** `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` (`GenerateStep`):
+  - Remove `<SectionIntro copy={HUB_DASHBOARD_INTROS.next_action} />` above the hero.
+  - Remove separate `<FounderRoadmapCard />` render — fold into hero.
+  - Renumber remaining SectionIntro copy 01→02→03.
+  - Delete the "Your assets" H3 + paragraph; keep only the SectionIntro + Expand/Collapse row.
+  - Remove the amber helper strip (or hide by default).
+- **Edit:** `src/lib/hub-dashboard-copy.ts` — drop the `next_action` entry, renumber eyebrows, restructure copy so `why` is popover-only.
 
 ## Out of scope
 
-- No changes to generation logic, edge functions, or data models.
-- No changes to Review / Enriching steps — orientation is only for the post-review "workspace" view where the user reported the confusion.
-- No new dependencies.
+- No changes to generation logic, edge functions, brand-kit gate, day-deck dialog, or the accordion internals.
+- No color/typography changes — this is a structural/IA pass, not a visual restyle. The chosen palette and section colors stay.
+- The category-progress chip strip and the per-section headers inside the accordion stay as they are.
 
 ## Verification
 
-- Load the current venture as a fresh user (clear `localStorage`) → welcome strip + all four `SectionIntro` blocks visible.
-- Dismiss welcome → banner gone, section intros remain (they're not dismissible — they're structural).
-- Info popover on each section opens with the "how to use" bullets.
-- Repeat visit to same venture → welcome stays dismissed; new venture → welcome shows again.
+- Fresh venture (0 assets): first fold shows welcome strip → single "generate" hero → sprint planner (no duplicate title) → AI stack → asset library. That's it.
+- Complete venture (63/63): first fold shows single hero card that IS the roadmap (green tone, Founder Roadmap as primary CTA). No separate purple roadmap card underneath.
+- Each SectionIntro is a single quiet line, not a bordered block. Clicking ⓘ opens why + how-to.
+- No two adjacent blocks carry the same eyebrow text.
