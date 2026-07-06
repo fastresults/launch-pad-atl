@@ -554,7 +554,7 @@ function Inner() {
   // source they've added on this page and start again with a clean slate.
   // Library files themselves are NOT deleted; they just become unselected.
   const [resetOpen, setResetOpen] = useState(false);
-  const [patternGuardOpen, setPatternGuardOpen] = useState(false);
+
   const canonicalDefault = (key: string): string => {
     const ctx = canonicalCtx;
     switch (key) {
