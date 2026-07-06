@@ -763,7 +763,21 @@ function Inner() {
                 : "Here's everything we're already using as your single source of truth. We'll carry all of it into this startup snapshot."}
             </p>
           </div>
-          {drafting && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+          <div className="flex items-center gap-2">
+            {drafting && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setResetOpen(true)}
+              className="text-muted-foreground hover:text-foreground"
+              title="Clear every source and every AI-filled field"
+            >
+              <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+              Reset step 1
+            </Button>
+          </div>
+
         </div>
 
         {/* Memory chips — what we already have in collective memory */}
