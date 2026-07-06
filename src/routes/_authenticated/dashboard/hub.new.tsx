@@ -1733,8 +1733,8 @@ function Inner() {
             <AlertDialogTitle>Reset step 1?</AlertDialogTitle>
             <AlertDialogDescription>
               This clears every source used for this venture, the auto-drafted concept, and every AI-filled
-              field. Anything you typed yourself stays put. Files in your library are not deleted — they're
-              just unselected.
+              field. Files in your library are not deleted — they're just removed from this startup intake until
+              you add them again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
