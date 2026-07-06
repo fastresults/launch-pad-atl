@@ -35,6 +35,7 @@ interface Props {
   onScrollToDoc: (key: string) => void;
   onOpenDoc: (key: string) => void;
   isGenerating?: boolean;
+  compact?: boolean;
 }
 
 // Extract the ai_stack_checklist.json block from the generated markdown.
