@@ -211,13 +211,17 @@ export function LaunchPlanner14Day({
           ? "border-primary/40 bg-primary/10 hover:bg-primary/15"
           : "border-white/10 bg-card/60 hover:bg-card/80";
     const ring = isOpen ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "";
+    const attracting = !isOpen && attractOn && attractDay === day.day;
+    const attractClass = attracting ? "animate-attract-pulse ring-2 ring-primary/50 ring-offset-2 ring-offset-background z-10" : "";
 
     return (
       <button
         key={day.day}
         type="button"
-        onClick={() => setOpenDay(day.day)}
-        className={`${base} ${stateClass} ${ring}`}
+        onClick={() => { dismissAttract(true); setOpenDay(day.day); }}
+        onMouseEnter={() => dismissAttract(true)}
+        onFocus={() => dismissAttract(true)}
+        className={`${base} ${stateClass} ${ring} ${attractClass}`}
         aria-label={`Day ${day.day}: ${day.theme}`}
         aria-expanded={isOpen}
       >
