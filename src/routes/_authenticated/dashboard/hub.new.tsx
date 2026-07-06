@@ -122,6 +122,7 @@ function Inner() {
   const [files, setFiles] = useState<DroppedFile[]>([]);
   const [scrapedUrls, setScrapedUrls] = useState<ScrapedUrl[]>([]);
   const [urlInput, setUrlInput] = useState("");
+  const [nextUrlIntent, setNextUrlIntent] = useState<UrlIntent>("own");
   const [scrapingUrl, setScrapingUrl] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
