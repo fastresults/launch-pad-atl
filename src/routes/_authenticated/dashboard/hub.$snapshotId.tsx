@@ -61,6 +61,9 @@ import { ContentStudio } from "@/components/hub/ContentStudio";
 import { FounderRoadmapCard } from "@/components/hub/FounderRoadmapCard";
 import { LaunchPlanner14Day } from "@/components/hub/LaunchPlanner14Day";
 import { AIStackPanel } from "@/components/hub/AIStackPanel";
+import { SectionIntro } from "@/components/hub/SectionIntro";
+import { DashboardWelcomeStrip } from "@/components/hub/DashboardWelcomeStrip";
+import { HUB_DASHBOARD_INTROS } from "@/lib/hub-dashboard-copy";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
 import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
 import {
@@ -1129,8 +1132,12 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
   return (
     <div className="space-y-6">
+      <DashboardWelcomeStrip snapshotId={snapshot.id} hasProgress={completeCount > 0} />
+
       {/* Hero next-action card */}
-      <div className={`rounded-2xl border p-6 ${heroDone ? "border-status-success/30 bg-status-success/5" : "border-white/10 bg-card"}`}>
+      <div className="space-y-3">
+        <SectionIntro copy={HUB_DASHBOARD_INTROS.next_action} />
+        <div className={`rounded-2xl border p-6 ${heroDone ? "border-status-success/30 bg-status-success/5" : "border-white/10 bg-card"}`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h2 className="text-xl font-semibold">{heroTitle}</h2>
@@ -1186,11 +1193,14 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             })}
           </ul>
         )}
+        </div>
       </div>
 
       {heroDone && <FounderRoadmapCard snapshot={snapshot} documentCount={completeCount} />}
 
-      <LaunchPlanner14Day
+      <div className="space-y-3">
+        <SectionIntro copy={HUB_DASHBOARD_INTROS.sprint} />
+        <LaunchPlanner14Day
         docs={docs}
         typeByKey={typeByKey}
         completedKeys={completedKeys}
@@ -1225,27 +1235,31 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         jobRunning={jobRunning}
         onOpenDayDeck={(d) => setOpenDayDeck(d)}
       />
+      </div>
 
 
-      <AIStackPanel
-        snapshotId={snapshot.id}
-        userId={snapshot.user_id}
-        stackDoc={docs.find((d: any) => d.document_type === "ai_tool_stack_recommendation") ?? null}
-        onGenerateStack={() => genOne.mutate({ documentType: "ai_tool_stack_recommendation" })}
-        onScrollToDoc={(key) => {
-          const el = document.getElementById(`doc-${key}`);
-          if (el) {
-            el.scrollIntoView({ behavior: "smooth", block: "center" });
-            el.classList.add("ring-2", "ring-primary");
-            setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 1600);
-          }
-        }}
-        onOpenDoc={(key) => {
-          const d = docs.find((x: any) => x.document_type === key);
-          if (d) setViewerDoc(d);
-        }}
-        isGenerating={genOne.isPending && genOne.variables?.documentType === "ai_tool_stack_recommendation"}
-      />
+      <div className="space-y-3">
+        <SectionIntro copy={HUB_DASHBOARD_INTROS.toolkit} />
+        <AIStackPanel
+          snapshotId={snapshot.id}
+          userId={snapshot.user_id}
+          stackDoc={docs.find((d: any) => d.document_type === "ai_tool_stack_recommendation") ?? null}
+          onGenerateStack={() => genOne.mutate({ documentType: "ai_tool_stack_recommendation" })}
+          onScrollToDoc={(key) => {
+            const el = document.getElementById(`doc-${key}`);
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth", block: "center" });
+              el.classList.add("ring-2", "ring-primary");
+              setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 1600);
+            }
+          }}
+          onOpenDoc={(key) => {
+            const d = docs.find((x: any) => x.document_type === key);
+            if (d) setViewerDoc(d);
+          }}
+          isGenerating={genOne.isPending && genOne.variables?.documentType === "ai_tool_stack_recommendation"}
+        />
+      </div>
 
 
 
@@ -1272,6 +1286,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       )}
 
       {/* Document list */}
+      <SectionIntro copy={HUB_DASHBOARD_INTROS.library} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your assets</h3>
