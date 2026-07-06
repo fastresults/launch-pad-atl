@@ -242,12 +242,12 @@ export function FounderRoadmapDialog({
       </div>
     ),
     th: ({ node, ...props }: any) => <th className="border-b border-border bg-muted/60 px-3 py-2 text-left text-[10px] uppercase tracking-wider text-muted-foreground" {...props} />,
-    td: ({ node, ...props }: any) => <td className="border-b border-border/60 px-3 py-2 align-top text-sm" {...props} />,
+    td: ({ node, children, ...props }: any) => <td className="border-b border-border/60 px-3 py-2 align-top text-sm" {...props}>{transformChildren(children)}</td>,
     blockquote: ({ node, ...props }: any) => (
       <blockquote className="my-6 rounded-r-lg border-l-4 border-primary bg-primary/5 px-5 py-4 text-base italic leading-relaxed text-foreground" {...props} />
     ),
-    p: ({ node, ...props }: any) => <p className="my-4 text-[15px] leading-[1.75] text-foreground/90" {...props} />,
-    li: ({ node, ...props }: any) => <li className="my-1.5 text-[15px] leading-[1.7]" {...props} />,
+    p: ({ node, children, ...props }: any) => <p className="my-4 text-[15px] leading-[1.75] text-foreground/90" {...props}>{transformChildren(children)}</p>,
+    li: ({ node, children, ...props }: any) => <li className="my-1.5 text-[15px] leading-[1.7]" {...props}>{transformChildren(children)}</li>,
     hr: () => <hr className="my-10 border-border" />,
     strong: ({ node, ...props }: any) => <strong className="font-semibold text-foreground" {...props} />,
     em: ({ node, ...props }: any) => <em className="italic text-foreground/90" {...props} />,
