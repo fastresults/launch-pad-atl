@@ -39,6 +39,7 @@ import {
   X,
   Wand2,
   MapPin,
+  CheckCircle2,
   Plus,
   Link2,
   Globe,
