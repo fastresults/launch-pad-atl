@@ -1,53 +1,58 @@
 ## Goal
 
-Rename **"The Anderson Method"** → **"The Anderson Framework"** everywhere it appears, and eliminate any sentence that stacks two "method" words back-to-back.
+Replace the brand/authority handle **"The Anderson Framework"** with **"Adam Anderson's Startup Process"** everywhere it currently appears. Keep the three-phrase system intact — just swap the middle handle.
 
-## Why
-
-Two sequential "method"s (e.g., *"The 14-Day Launch Method is The Anderson Method…"*) read as a stutter. Reframing the brand handle as **The Anderson Framework** gives us three phrases with three distinct sounds — Method (offer), Framework (brand/authority), done-with-you (category) — that never collide in a single sentence.
-
-Note: this override applies only to the branded phrase **"The Anderson Framework"**. The existing chatbot guardrail — "framework" as a generic stand-in for the offer is still discouraged — stays intact.
-
-## The three phrases (updated)
+## Updated three phrases
 
 | Phrase | Job |
 |---|---|
 | **The 14-Day Launch Method** | Offer name — what you buy |
-| **The Anderson Framework** | Brand / authority handle — whose playbook it is |
+| **Adam Anderson's Startup Process** | Brand / authority handle — whose playbook it is |
 | **the done-with-you method replacing accelerators, courses, and raw AI** | Category descriptor / positioning line |
+
+Reads naturally without the "method / method" or "method / framework" collision, and puts Adam's full name in the headline for authority.
 
 ## Files to edit
 
-**Straight rename** — replace `Anderson Method` with `Anderson Framework`:
-- `src/routes/webinar.tsx` (line 40)
-- `src/routes/services.tsx` (line 45)
-- `src/routes/one-on-one.tsx` (line 85)
-- `src/routes/build.tsx` (line 21)
-- `src/lib/chatbot-knowledge.ts` (lines 201, 207) — also update the guardrail text about never inventing variants (list "Anderson Method," "Adam's Framework," "Anderson system" as banned variants)
+Straight phrase swap — `The Anderson Framework` → `Adam Anderson's Startup Process`:
 
-**Homepage rewrite (`src/components/home/HomeFramework.tsx`, line 100)** — currently: *"The 14-Day Launch Method is The Anderson Method in one focused morning — the done-with-you playbook…"*  
-Rewrite as: *"The 14-Day Launch Method is **The Anderson Framework** in one focused morning — the done-with-you playbook quietly replacing accelerators, courses, and raw AI. The way modern founders skip the year of guessing and land their first paying customer in two weeks. Run live by Adam, the operator who built it. $297 once, yours forever."*
+1. **`src/components/home/HomeFramework.tsx`** (line 100)  
+   *"The 14-Day Launch Method is **Adam Anderson's Startup Process** in one focused morning — the done-with-you playbook quietly replacing accelerators, courses, and raw AI…"*
 
-**Chatbot guardrail housekeeping (`src/lib/chatbot-knowledge.ts` line 214)** — the existing line reads: *"The word 'framework' may be used only to describe a component inside the Method (e.g. 'the pricing framework we run in the room') — never as the top-level offer."*  
-Add a one-clause exception: *"…never as the top-level offer. The only capitalized exception is the proper-noun brand handle **The Anderson Framework**."*
+2. **`src/routes/webinar.tsx`** (line 40)  
+   *"**Adam Anderson's Startup Process**, run live over video in a small cohort with the founder who built it —"*
+
+3. **`src/routes/one-on-one.tsx`** (line 85, H1 second line)  
+   *"**Adam Anderson's Startup Process**, run for you by Adam and his team."* — since Adam's name now leads the headline, tighten the follow-on clause to *"run for you by his team."* to avoid saying "Adam" twice.
+
+4. **`src/routes/services.tsx`** (line 45, H1)  
+   *"Scale with **Adam Anderson's Startup Process** that launched you."*
+
+5. **`src/routes/build.tsx`** (line 21, H1)  
+   *"Scale it with **Adam Anderson's Startup Process** — one morning at a time."*
+
+6. **`src/lib/chatbot-knowledge.ts`**
+   - Line 201 (brand vocabulary bullet): rename the handle, update banned-variants list to include *"Anderson Framework," "Anderson Method," "Adam's Process," "the Anderson system."*
+   - Line 207 (guardrail): "Reach for **Adam Anderson's Startup Process** in headline-style openers and authority moments."
+   - Line 220 (framework guardrail): drop the "Anderson Framework" exception — restore the original "framework only describes a component inside the Method" rule. The brand handle no longer uses the word framework, so no exception is needed.
 
 ## What does NOT change
 
-- Meta titles, URL slugs, buttons, pricing labels, agenda headers stay on **The 14-Day Launch Method**.
+- Meta titles, URL slugs, buttons, pricing, agenda headers stay on **The 14-Day Launch Method**.
 - The done-with-you positioning tagline stays verbatim.
-- Component `HomeFramework.tsx` filename stays (internal identifier, per project memory on framework/template naming).
+- Component filename `HomeFramework.tsx` stays.
+- Noun uses of "operator" for Adam and session lenses stay.
 - Funnel report untouched.
-- No visual, layout, or component changes.
+- No visual or layout changes.
 
 ## Verification
 
-1. `rg "Anderson Method" src` returns zero hits.
-2. `rg "Anderson Framework" src` shows the six placements.
-3. Home hero paragraph reads cleanly with no two consecutive "method" words.
-4. Chatbot guardrail block reflects the exception.
+1. `rg -i "anderson (framework|method)" src` returns zero hits.
+2. `rg "Adam Anderson's Startup Process" src` shows six placements.
+3. Home hero paragraph reads with no repeated-word stutter.
+4. `/one-on-one` H1 doesn't say "Adam" twice.
 
 ## Out of scope
 
-- Adding "Anderson Framework" to new locations beyond the current placements.
-- Editing pages that don't already use the brand handle (schedule, register, facilitator).
-- Renaming the offer or restructuring pages.
+- Renaming the offer, adding new pages, restructuring layouts.
+- Editing the funnel report/PDF.
