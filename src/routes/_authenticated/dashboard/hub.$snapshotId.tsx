@@ -1217,7 +1217,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
 
       <div className="space-y-3">
-        <SectionIntro copy={HUB_DASHBOARD_INTROS.sprint} />
+        <SectionIntro copy={HUB_DASHBOARD_INTROS.sprint} variant={isGuided ? "minimal" : "full"} />
         <LaunchPlanner14Day
         docs={docs}
         typeByKey={typeByKey}
