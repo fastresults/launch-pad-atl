@@ -297,13 +297,47 @@ function Inner() {
   const removeUrl = (id: string) => setScrapedUrls((prev) => prev.filter((u) => u.id !== id));
 
   const reusedIds = Object.entries(reuseSelected).filter(([, v]) => v).map(([k]) => k);
-  const reusedFiles = reusable.filter((r) => reusedIds.includes(r.id));
+  const reusedRows = reusable.filter((r) => reusedIds.includes(r.id));
   const readyFiles = files.filter((f) => f.status === "ready" && (f.text ?? "").trim());
   const readyUrls = scrapedUrls.filter((u) => u.status === "ready" && (u.text ?? "").trim());
+
+  // Split reused memory rows into "own" content (uploaded docs + own-tagged
+  // URL captures) vs "pattern references" (URL captures tagged as pattern).
+  // Pattern refs are handed to the AI as inspiration only — never as identity.
+  const reusedSplit = useMemo(() => {
+    const own: Array<{ filename: string; text: string; id: string }> = [];
+    const pattern: Array<{ url: string; title: string | null; text: string; id: string }> = [];
+    for (const r of reusedRows) {
+      const text = r.extracted_text ?? "";
+      if (!text.trim()) continue;
+      const name = r.original_name ?? "source";
+      const isUrlCapture = /\.(md|markdown)$/i.test(name);
+      const meta = isUrlCapture ? parseUrlCaptureMeta(text) : { intent: "own" as UrlIntent, url: null, title: null };
+      if (isUrlCapture && meta.intent === "pattern") {
+        pattern.push({ url: meta.url ?? name, title: meta.title, text, id: r.id });
+      } else {
+        own.push({ filename: name, text, id: r.id });
+      }
+    }
+    return { own, pattern };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reusedRows.map((r) => r.id).join("|")]);
+
   const combinedDocs = [
-    ...reusedFiles.map((r) => ({ filename: r.original_name, text: r.extracted_text ?? "", id: r.id })),
+    ...reusedSplit.own,
     ...readyFiles.map((f) => ({ filename: f.name, text: f.text ?? "", id: f.documentId })),
   ];
+  // Transient URL scrapes the founder just added on this page (before they
+  // land in memory) — respect their intent flag too.
+  const readyOwnUrls = readyUrls.filter((u) => (u.intent ?? "own") === "own");
+  const readyPatternUrls = readyUrls.filter((u) => u.intent === "pattern");
+  const patternRefs = [
+    ...reusedSplit.pattern,
+    ...readyPatternUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text ?? "", id: u.id })),
+  ];
+  const hasPatternRefs = patternRefs.length > 0;
+  const hasOwnSource = combinedDocs.length > 0 || readyOwnUrls.length > 0 || businessConcept.trim().length >= 20;
+
 
   const addUrl = async () => {
     const raw = urlInput.trim();
