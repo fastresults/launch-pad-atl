@@ -1,16 +1,22 @@
 // @ts-nocheck
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, RefreshCw, Sparkles, AlertCircle, BookOpen } from "lucide-react";
+import { Loader2, RefreshCw, Sparkles, AlertCircle, BookOpen, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { edgeErrorMessage } from "@/lib/edge-errors";
 import { FounderRoadmapDialog } from "./FounderRoadmapDialog";
+import { TRACK_META, TRACK_ORDER, trackFor, type AssetTrack } from "@/lib/asset-tracks";
 
-interface Props { snapshot: any; documentCount?: number; }
+interface Props {
+  snapshot: any;
+  documentCount?: number;
+  docs?: any[]; // completed venture_documents (needs document_type + updated_at)
+}
 
-export function FounderRoadmapCard({ snapshot, documentCount }: Props) {
+export function FounderRoadmapCard({ snapshot, documentCount, docs = [] }: Props) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
 
@@ -26,6 +32,42 @@ export function FounderRoadmapCard({ snapshot, documentCount }: Props) {
     return () => clearInterval(t);
   }, [isGenerating, qc, snapshot?.id]);
 
+  const coverage = snapshot?.roadmap_coverage as
+    | { per_track?: Record<AssetTrack, { total: number; used: number }>; used_count?: number; total_assets?: number; skipped_labels?: string[] }
+    | undefined
+    | null;
+
+  // Fallback per-track counts from `docs` when coverage is missing (legacy roadmaps).
+  const fallbackPerTrack = useMemo(() => {
+    const acc: Record<AssetTrack, { total: number; used: number }> = {
+      Introduction: { total: 0, used: 0 }, Education: { total: 0, used: 0 },
+      Tracking: { total: 0, used: 0 }, Action: { total: 0, used: 0 },
+    };
+    for (const d of docs) {
+      if (d?.status !== "complete") continue;
+      acc[trackFor(d.document_type)].total += 1;
+    }
+    return acc;
+  }, [docs]);
+
+  const perTrack = coverage?.per_track ?? fallbackPerTrack;
+  const totalAssets = coverage?.total_assets ?? documentCount ?? 0;
+  const usedCount = coverage?.used_count ?? 0;
+
+  // Staleness — roadmap generated before latest completed asset was updated.
+  const isStale = useMemo(() => {
+    if (!isComplete || !snapshot?.roadmap_generated_at) return false;
+    const genAt = new Date(snapshot.roadmap_generated_at).getTime();
+    if (!genAt) return false;
+    let latest = 0;
+    for (const d of docs) {
+      if (d?.status !== "complete" || !d?.updated_at) continue;
+      const t = new Date(d.updated_at).getTime();
+      if (t > latest) latest = t;
+    }
+    return latest > genAt + 60_000;
+  }, [isComplete, snapshot?.roadmap_generated_at, docs]);
+
   const generate = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("venture-generate-roadmap", {
@@ -36,7 +78,6 @@ export function FounderRoadmapCard({ snapshot, documentCount }: Props) {
       return data;
     },
     onMutate: async () => {
-      // Optimistic generating flag so the UI flips immediately
       await supabase.from("venture_snapshots").update({ roadmap_status: "generating" }).eq("id", snapshot.id);
       qc.invalidateQueries({ queryKey: ["hub", "snapshot", snapshot.id] });
     },
@@ -59,16 +100,62 @@ export function FounderRoadmapCard({ snapshot, documentCount }: Props) {
             </div>
             <h2 className="mt-2 text-2xl font-bold tracking-tight">Your Founder Roadmap</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              A narrative founder playbook synthesized from your entire 14-Day Sprint — written to share with
-              co-founders and investors. Cover, verdict, the <span className="font-medium text-foreground">first 45 days</span>,
-              your <span className="font-medium text-foreground">first year</span>, money, and how to talk about it.
+              A narrative capstone synthesized from every asset in your kit — the strategy, the market, your
+              growth engine, brand, ops, money, and the 90 days after the sprint. Written to share with a
+              co-founder, banker, or investor.
             </p>
+
             {isComplete && (
-              <div className="mt-2 text-[11px] text-muted-foreground">
-                Generated {snapshot.roadmap_generated_at ? new Date(snapshot.roadmap_generated_at).toLocaleString() : ""}
-                {snapshot.roadmap_word_count ? ` · ${snapshot.roadmap_word_count.toLocaleString()} words` : ""}
-                {typeof snapshot.roadmap_quality_score === "number" ? ` · Quality ${snapshot.roadmap_quality_score}/100` : ""}
-              </div>
+              <>
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  {TRACK_ORDER.map((t) => {
+                    const m = TRACK_META[t];
+                    const c = perTrack[t] ?? { total: 0, used: 0 };
+                    if (!c.total) return null;
+                    const label = coverage
+                      ? `${m.short} ${c.used}/${c.total}`
+                      : `${m.short} ${c.total}`;
+                    return (
+                      <span key={t} className={m.chip + " inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${m.dot}`} />
+                        {label}
+                      </span>
+                    );
+                  })}
+                  {coverage && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground">
+                          <Info className="h-3 w-3" /> Coverage
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-80 text-xs">
+                        <div className="mb-1 font-semibold">Synthesized from {usedCount} of {totalAssets} assets</div>
+                        <p className="text-muted-foreground">The roadmap cites each asset it drew on inline. Assets not referenced below can be surfaced with a Regenerate.</p>
+                        {coverage.skipped_labels?.length ? (
+                          <div className="mt-2">
+                            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Not yet cited</div>
+                            <div className="mt-1 max-h-40 overflow-y-auto text-[11px] leading-relaxed">
+                              {coverage.skipped_labels.slice(0, 30).join(" · ")}
+                              {coverage.skipped_labels.length > 30 ? "…" : ""}
+                            </div>
+                          </div>
+                        ) : null}
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                </div>
+                <div className="mt-2 text-[11px] text-muted-foreground">
+                  Generated {snapshot.roadmap_generated_at ? new Date(snapshot.roadmap_generated_at).toLocaleString() : ""}
+                  {snapshot.roadmap_word_count ? ` · ${snapshot.roadmap_word_count.toLocaleString()} words` : ""}
+                  {typeof snapshot.roadmap_quality_score === "number" ? ` · Quality ${snapshot.roadmap_quality_score}/100` : ""}
+                </div>
+                {isStale && (
+                  <div className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-[11px] text-amber-300">
+                    <AlertCircle className="h-3 w-3" /> Your kit has changed since this was written — regenerate to fold it in.
+                  </div>
+                )}
+              </>
             )}
             {isFailed && (
               <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-status-warning">
@@ -114,6 +201,8 @@ export function FounderRoadmapCard({ snapshot, documentCount }: Props) {
         wordCount={snapshot?.roadmap_word_count}
         qualityScore={snapshot?.roadmap_quality_score}
         documentCount={documentCount}
+        coverage={coverage ?? null}
+        isStale={isStale}
       />
     </>
   );
