@@ -583,28 +583,25 @@ function Inner() {
     setNextUrlIntent("own");
     setIntakeTab("upload");
     setAddMoreOpen(false);
-    // Reset every field the AI touched back to its prefill/canonical default.
-    const setters: Record<string, (v: string) => void> = {
-      companyName: setCompanyName,
-      diff: setDiff,
-      founderName: setFounderName,
-      founderEmail: setFounderEmail,
-      founderPhone: setFounderPhone,
-      city: setCity,
-      region: setRegion,
-      country: setCountry,
-      websiteUrl: setWebsiteUrl,
-      subIndustry: setSubIndustry,
-      businessConcept: setBusinessConcept,
-      industry: setIndustry,
-    };
-    for (const key of Object.keys(aiFilled)) {
-      const setter = setters[key];
-      if (setter) setter(canonicalDefault(key));
-      if (key === "marketScope") setMarketScope(prefill?.market_scope ?? "local");
-    }
+    // Full clean slate — clear EVERY Step 1 field regardless of whether the
+    // AI touched it. Anything canonicalCtx/prefill would re-restore is wiped
+    // too, otherwise the user perceives reset as broken when values stay put.
+    setCompanyName("");
+    setDiff("");
+    setFounderName("");
+    setFounderEmail("");
+    setFounderPhone("");
+    setCity("");
+    setRegion("");
+    setCountry("United States");
+    setWebsiteUrl("");
+    setSubIndustry("");
+    setBusinessConcept("");
+    setIndustry("");
+    setMarketScope("local");
     setAiFilled({});
     setProcessed(false);
+    setFromBrief(false);
     autoSigRef.current = "";
     setResetOpen(false);
     toast.success("Cleared. Add a source or type your concept to start again.");
