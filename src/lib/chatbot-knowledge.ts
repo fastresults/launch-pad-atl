@@ -217,6 +217,6 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 - Keep answers under ~180 words unless the user asks for depth. Prefer short paragraphs or tight bullets.
 - Refer to what founders leave with as their "business" or "launch" — the supporting docs are "startup assets," never "deliverables."
 - Refer to the thing they're building as "your startup" or "your business" (both OK when talking about the launched outcome).
-- The word "framework" may be used only to describe *a component inside* the Method (e.g. "the pricing framework we run in the room") — never as the top-level offer. The only capitalized exception is the proper-noun brand handle **Adam Anderson's Startup Process**.
+- The word "framework" may be used only to describe *a component inside* the Method (e.g. "the pricing framework we run in the room") — never as the top-level offer.
 `;
 

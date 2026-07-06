@@ -83,7 +83,7 @@ export default function OneOnOnePage() {
             </p>
             <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
               Adam Anderson's Startup Process,{" "}
-              <span className="text-gradient-brand">run for you by Adam and his team.</span>
+              <span className="text-gradient-brand">run for you by his team.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
               The old way was $40k and six months of agency ping-pong. The new way is
