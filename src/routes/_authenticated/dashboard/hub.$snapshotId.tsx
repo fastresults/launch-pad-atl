@@ -1280,47 +1280,58 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         />
       </div>
 
-      {/* Stale-concept banner */}
+      {/* Stale-concept banner — full in advanced, compact chip in guided */}
       {staleCount > 0 && (
-        <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-status-warning/40 bg-status-warning/10 px-4 py-3 text-sm text-status-warning">
-          <div className="flex items-start gap-2">
-            <RefreshCw className="mt-0.5 h-4 w-4 shrink-0" />
-            <div>
-              <div className="font-medium">Concept changed since last generation</div>
-              <div className="text-xs opacity-90">
-                {staleCount} asset{staleCount === 1 ? "" : "s"} {staleCount === 1 ? "was" : "were"} written before your latest concept update. Rewrite them to match.
+        isGuided ? (
+          <div className="inline-flex items-center gap-2 rounded-full border border-status-warning/40 bg-status-warning/10 px-3 py-1 text-xs text-status-warning">
+            <RefreshCw className="h-3 w-3" />
+            {staleCount} asset{staleCount === 1 ? "" : "s"} out of date · rewrite to match concept
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-status-warning/40 bg-status-warning/10 px-4 py-3 text-sm text-status-warning">
+            <div className="flex items-start gap-2">
+              <RefreshCw className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <div className="font-medium">Concept changed since last generation</div>
+                <div className="text-xs opacity-90">
+                  {staleCount} asset{staleCount === 1 ? "" : "s"} {staleCount === 1 ? "was" : "were"} written before your latest concept update. Rewrite them to match.
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )
       )}
 
-      {/* Document list — quiet eyebrow + inline expand/collapse actions */}
-      <SectionIntro
-        copy={HUB_DASHBOARD_INTROS.library}
-        actions={
-          <>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 px-2 text-xs text-muted-foreground"
-              onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, true])))}
-            >
-              <ChevronsUpDown className="mr-1 h-3 w-3" />
-              Expand all
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 px-2 text-xs text-muted-foreground"
-              onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, false])))}
-            >
-              <ChevronsDownUp className="mr-1 h-3 w-3" />
-              Collapse all
-            </Button>
-          </>
-        }
-      />
+      {/* Document list header */}
+      {isGuided ? (
+        <h2 className="px-1 text-lg font-semibold tracking-tight">Your assets</h2>
+      ) : (
+        <SectionIntro
+          copy={HUB_DASHBOARD_INTROS.library}
+          actions={
+            <>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-xs text-muted-foreground"
+                onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, true])))}
+              >
+                <ChevronsUpDown className="mr-1 h-3 w-3" />
+                Expand all
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-xs text-muted-foreground"
+                onClick={() => setOpenSections(Object.fromEntries(categories.map(([c]) => [c, false])))}
+              >
+                <ChevronsDownUp className="mr-1 h-3 w-3" />
+                Collapse all
+              </Button>
+            </>
+          }
+        />
+      )}
 
 
       {/* Category stepper */}
