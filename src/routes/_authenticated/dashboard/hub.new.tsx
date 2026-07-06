@@ -863,8 +863,57 @@ function Inner() {
         {showCollectionUI && intakeTab === "link" && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Paste a URL — your site, a competitor, or a relevant article. Up to {MAX_URLS}.
+              Paste a URL — your own site, or a startup you want to learn from. Up to {MAX_URLS}.
             </p>
+
+            {/* Intent toggle — decides how the AI treats the next URL */}
+            <div className="rounded-xl border border-white/10 bg-background/40 p-3">
+              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                This link is…
+              </div>
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {([
+                  {
+                    k: "own" as UrlIntent,
+                    label: "My own site or doc",
+                    hint: "Pull name, contact, location, and content.",
+                  },
+                  {
+                    k: "pattern" as UrlIntent,
+                    label: "A pattern to learn from",
+                    hint: "Use the shape only. Won't copy their name or address.",
+                  },
+                ]).map((opt) => {
+                  const active = nextUrlIntent === opt.k;
+                  return (
+                    <button
+                      key={opt.k}
+                      type="button"
+                      onClick={() => setNextUrlIntent(opt.k)}
+                      className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
+                        active
+                          ? "border-primary/60 bg-primary/10"
+                          : "border-white/10 bg-background/40 hover:border-white/25"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 font-medium">
+                        <span
+                          className={`h-2 w-2 rounded-full ${active ? "bg-primary" : "bg-muted-foreground/40"}`}
+                        />
+                        {opt.label}
+                      </div>
+                      <div className="mt-0.5 pl-4 text-[11px] text-muted-foreground">{opt.hint}</div>
+                    </button>
+                  );
+                })}
+              </div>
+              {nextUrlIntent === "pattern" && (
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  You'll fill in your own startup name, location, and contact below — we won't take them from the pattern site.
+                </p>
+              )}
+            </div>
+
             <div className="flex gap-2">
               <Input
                 type="url"
@@ -876,7 +925,7 @@ function Inner() {
                     addUrl();
                   }
                 }}
-                placeholder="https://example.com"
+                placeholder={nextUrlIntent === "pattern" ? "https://startup-you-admire.com" : "https://example.com"}
                 disabled={scrapingUrl || scrapedUrls.length >= MAX_URLS}
               />
               <Button
@@ -898,6 +947,11 @@ function Inner() {
                       <span className="font-medium">{u.title || u.url}</span>
                       {u.title && <span className="ml-1 text-xs text-muted-foreground">· {u.url}</span>}
                     </span>
+                    {u.intent === "pattern" && (
+                      <span className="shrink-0 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                        Pattern
+                      </span>
+                    )}
                     <span
                       className={`shrink-0 text-[11px] uppercase tracking-wider ${
                         u.status === "ready"
@@ -923,6 +977,7 @@ function Inner() {
             )}
           </div>
         )}
+
 
         {/* Speak tab */}
         {showCollectionUI && intakeTab === "speak" && (
