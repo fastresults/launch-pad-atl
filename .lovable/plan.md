@@ -1,81 +1,79 @@
-
 ## Goal
 
-Produce a **multi-pass strategic audit** of the StartupLabs / Launch Pad home experience — every section of copy, every one of the 60+ startup ideas, the promise made to the visitor — and translate the whole system into a signature, ownable framework: **The Anderson Method™**. Deliverable is a 25–40 page report shipped as both a polished PDF and a markdown source-of-truth in the repo.
+Produce a **Startuplabs Funnel Report** written in the voice of an award-winning conversion copywriter, aimed at founders who are (1) trapped in a W-2 and need a Plan B, and (2) have an idea but no path from zero to first customer. The report sells the paid workshop as the money-maker, while framing the full ladder: **cold traffic → webinar opt-in → paid workshop → in-person / high-ticket**.
 
-## Audience the report speaks to
+Delivered as branded **PDF + markdown source**, matching the existing report's visual system.
 
-Four founder archetypes, written to in this order:
+## What this report actually is
 
-1. **Aspiring first-time founder** — has an itch, no playbook.
-2. **Plan-B seeker** — W-2 professional wanting a real off-ramp.
-3. **Main Street / trades operator** — hands-on, local, physical work.
-4. **Family / couple operator** — building a household enterprise.
+Not an internal audit. This is a **funnel strategy + conversion copy playbook** — the kind of document a $50k copy consultant hands to a founder. It reads like a sales argument, not a spreadsheet.
 
-Every framework, insight, and rewrite in the report gets stress-tested against those four lenses.
+## Structure (targeting 28–36 pages)
 
-## Multi-pass audit methodology
+**1. Cover + Thesis (1–2 pp)**
+One sentence: *"Startuplabs turns W-2 lifers and stuck idea-havers into paid founders in one workshop cycle."* Plus the promise the funnel makes and who it's for.
 
-**Pass 1 — Inventory.** Extract every user-facing string from the home page, framework component, video testimonials block, and the 60 idea entries (name, offer, ideal operator, why smart, first customers, startup cost, income range, stage hint, annual potential). Build a single source table.
+**2. Who this is for — the two founders we're selling to (3 pp)**
+- **The Cubicle Escapee** — W-2, golden handcuffs, Sunday dread, spouse asking "when." Fears: losing insurance, looking stupid, the 6-month runway math.
+- **The Idea Hoarder** — Has the notebook, the domain, the Notion doc. No first customer. Fears: shipping to crickets, picking the wrong idea, sunk time.
+Pain-point inventory in their own words, pulled from real founder language. Objection map for each.
 
-**Pass 2 — Promise audit.** Score current hero, framework, and section copy against the four archetypes on: *permission* (do they see themselves?), *proof* (do they believe it?), *path* (do they know the next step?), *payoff* (do they feel the life change?).
+**3. The market truth Startuplabs exploits (2 pp)**
+Why generic "start a business" content fails these two founders. Why cohorts, MBAs, and YouTube gurus don't move them. The gap Startuplabs fills: *a named path, a dated deadline, a room of peers, and a coach who's done it.*
 
-**Pass 3 — Idea economics.** Aggregate the 60 ideas by category, startup cost band, annual income band, time-to-first-dollar, and archetype fit. Surface the real distribution of the offer — which archetypes are over/under-served, where the strongest ROI lives, and which ideas deserve to be flagship examples.
+**4. The real value stack — reframed (4 pp)**
+Workshop, webinar, in-person — each priced against the pain, not the hours.
+- Webinar = the permission slip (worth: the decision to stop researching)
+- Workshop = the runway compressor (worth: 6–18 months of solo trial-and-error, quantified in dollars and marriage-nights-back)
+- In-person = the identity shift (worth: becoming the person who ships)
+Each with a "if you don't do this, here's what next Sunday looks like" section.
 
-**Pass 4 — Life-change frame.** For each archetype, write the *before/after* narrative the site should be selling — not features, but the transformation. Tie specific ideas from the 60 to each transformation as proof.
+**5. The funnel — top to bottom (6–8 pp)**
+One connected journey. Each stage gets: **audience temperature, hook, promise, mechanism, CTA, primary objection, kill-shot line.**
+- **Top — cold → webinar opt-in.** Hook angles, ad concepts, landing page skeleton, headline swipes (10+), lead magnet alternatives.
+- **Middle — webinar → workshop.** Webinar structure that sells without selling, the transition moment, price reveal choreography, urgency mechanic that isn't sleazy, cart-close email sequence (5 emails, drop-in copy).
+- **Bottom — workshop → in-person / high-ticket.** In-workshop upgrade moments, the "graduation offer," application vs. open-cart, referral loop.
 
-**Pass 5 — Method synthesis.** Reverse-engineer the implicit playbook already inside the framework, the stages, and the 60 ideas into **The Anderson Method™** — a named, ownable, teachable seven-part system with a signature diagram, principles, and vocabulary.
+**6. Conversion copy kit for the paid workshop (5–7 pp)**
+The centerpiece. Drop-in copy blocks:
+- 8 hero headline variants (pain, promise, proof, curiosity, mechanism)
+- Subhead + first-100-words swipes
+- Value stack section (feature → advantage → benefit → identity)
+- Social proof frames (even before heavy testimonial library exists)
+- Guarantee / risk-reversal language
+- Objection-handling FAQ (12 objections, answered in-voice)
+- 3 CTA button variants + microcopy
+- Long-form sales page outline (fold-by-fold)
 
-**Pass 6 — Messaging rewrite kit.** Every audit finding becomes a concrete rewrite: new hero, new subheads per section, new CTA ladder, new archetype-specific entry paths, and language patterns that reinforce the Method.
+**7. Voice & messaging system (2 pp)**
+Founder-to-founder, blue-collar-smart, zero MBA jargon, no hustle-porn. Words we use / words we don't. Sentence rhythm rules. How to talk about money.
 
-**Pass 7 — Rollout playbook.** Prioritized changes with effort/impact, plus a 30/60/90 rollout for the site, sales page, emails, and social so the Method becomes the through-line everywhere.
+**8. 30/60/90 activation plan (2 pp)**
+Which pieces to ship first for fastest funnel lift. Testing priorities. What to measure at each stage (opt-in %, show-up %, workshop close %, in-person upgrade %).
 
-## The Anderson Method™ — working framework
+**9. Appendix (2–3 pp)**
+Headline swipe file, 5-email nurture, 5-email cart sequence, webinar slide-title outline.
 
-Seven stages, each an ownable verb + a principle drawn straight from the existing product:
+## Craft standard
 
-1. **Anchor** — pick the archetype and the honest starting point.
-2. **Name** — commit to a concrete idea from the 60, no drift.
-3. **Design** — shape the offer, pricing, and first-customer list.
-4. **Equip** — the minimum toolkit (LLC, permits, gear, brand).
-5. **Reach** — the exact first-30-days customer acquisition play.
-6. **Ship** — get the first paying customer in weeks, not quarters.
-7. **Scale** — the honest ladder from side income to life change.
-
-*(Acronym check: A-N-D-E-R-S-S doesn't spell cleanly, so we keep the name front and center and treat the seven stages as the "Anderson Seven." Final naming locked in the report.)*
-
-Every stage in the report gets: definition, why it matters, how the site already delivers it, the 2–3 signature ideas that best exemplify it, and the messaging patterns to use.
-
-## Report structure (25–40 pages)
-
-1. Executive summary (1 pg)
-2. The audience we're actually talking to — 4 archetypes with sharp portraits (3 pg)
-3. Current-state audit of the home page (5 pg) — section-by-section teardown with pull-quotes and scorecards
-4. The 60 ideas, decoded — economics, coverage map, hero picks (5 pg with tables)
-5. The transformation we're really selling — before/after per archetype (4 pg)
-6. Introducing The Anderson Method™ — origin story, seven stages, diagram (5 pg)
-7. The 60 ideas mapped to the Method (3 pg matrix)
-8. Messaging rewrite kit — hero, sections, CTAs, emails, social (4 pg)
-9. Rollout playbook — 30/60/90 with owners (2 pg)
-10. Appendix — full extracted copy inventory + full idea table (as many pages as needed)
+Written by "the copywriter you wish you could afford." Every page must:
+- Start with a founder feeling, not a framework.
+- Use specific dollar figures, dates, and scenes (Sunday 9pm, the drive home, the spouse conversation).
+- End sections with a line the reader wants to screenshot.
+- Never say "leverage," "unlock," "empower," "in today's world."
 
 ## Deliverables
 
-- **`/mnt/documents/anderson-method-audit.pdf`** — designed report using the site's dark-navy + primary-purple palette, real headings, callout boxes, category and archetype tables, the seven-stage diagram, and pull-quotes from actual site copy. Built with `reportlab` (Platypus) so tables and diagrams render cleanly, then visually QA'd page-by-page before delivery.
-- **`.lovable/anderson-method-audit.md`** — the same content in markdown as the editable source of truth for future revisions.
-- **`<presentation-artifact>`** tag surfacing the PDF for immediate download.
+- `.lovable/startuplabs-funnel-report.md` — full markdown source, copy-ready
+- `/mnt/documents/startuplabs-funnel-report.pdf` — designed, branded (same dark navy + purple system as the Anderson report), typographic hierarchy tuned for reading long-form copy (larger body, generous leading, pull-quotes, callouts for swipe copy)
 
-No changes to the live site in this pass — this is a strategy document. A follow-up plan can turn the messaging rewrite kit into actual copy changes once you approve the Method.
+## Source inputs
 
-## Technical notes
+`src/routes/index.tsx`, `HomeFramework.tsx`, `HomeBusinessIdeasScroller.tsx`, `VideoTestimonials.tsx`, `business-ideas.ts`, plus the existing `.lovable/anderson-method-audit.md` (used only as background context on what Startuplabs offers — not repeated).
 
-- Source extraction: `src/routes/index.tsx`, `src/components/home/HomeFramework.tsx`, `src/components/home/HomeBusinessIdeasScroller.tsx`, `src/components/home/VideoTestimonials.tsx`, `src/lib/business-ideas.ts`.
-- PDF built with `reportlab` Platypus; no unicode subscripts, dual-width tables in DXA-equivalents, header/footer with page numbers, project palette (`#0F0A1F` bg accents, `#a78bfa`/primary purple for callouts, off-white body).
-- Every page of the PDF converted to JPG and inspected before hand-off; any layout issues fixed and re-rendered.
-- Markdown lives in `.lovable/` so it's out of the app bundle but tracked in the repo.
+## Out of scope
 
-## Out of scope (this pass)
-
-- Editing home page copy, hero, or framework components.
-- Building a public `/method` marketing route.
-- SEO scans, ad copy, or funnel/analytics wiring — noted as follow-ups in the rollout section.
+- Editing live site copy (report provides drop-in blocks; implementation is a follow-up)
+- Paid-ad creative production, video scripts beyond webinar outline
+- Analytics instrumentation, CRM setup
+- Rebuilding the Anderson Method report — this is a separate, sales-first document
