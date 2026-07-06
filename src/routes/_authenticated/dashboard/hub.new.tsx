@@ -682,10 +682,11 @@ function Inner() {
         {!memoryEmpty && (
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
-              {memoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin }) => {
+              {memoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin, intent }) => {
                 const ready = !!(row.extracted_text ?? "").trim();
                 const Icon = isUrlCapture ? Globe : isAudio ? Mic : isImage ? FileText : FileText;
                 const selected = !!reuseSelected[row.id];
+                const isPattern = intent === "pattern";
                 const dot = !ready
                   ? "bg-status-danger"
                   : selected
@@ -697,13 +698,14 @@ function Inner() {
                   <div
                     key={row.id}
                     title={
-                      ready
+                      (isPattern ? "Pattern reference · " : "") +
+                      (ready
                         ? `${Math.round((row.extracted_text ?? "").length / 1000)}k chars · from ${originLabel}`
                         : row.extraction_error
                           ? `Couldn't read · from ${originLabel}`
-                          : `Processing… · from ${originLabel}`
+                          : `Processing… · from ${originLabel}`)
                     }
-                    className={`group inline-flex max-w-[260px] items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
+                    className={`group inline-flex max-w-[280px] items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
                       selected
                         ? "border-primary/40 bg-primary/10"
                         : "border-white/10 bg-background/40 opacity-60"
@@ -712,6 +714,12 @@ function Inner() {
                     <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
                     <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
+                    {isPattern && (
+                      <span className="shrink-0 rounded-full border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
+                        Pattern
+                      </span>
+                    )}
+
                     <button
                       type="button"
                       onClick={() =>
