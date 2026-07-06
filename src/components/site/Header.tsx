@@ -50,19 +50,8 @@ export function SiteHeader() {
   return (
     <>
     <header className="sticky top-0 z-50 border-b border-white/5 bg-background/70 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-2 sm:gap-3 sm:px-4 md:px-6">
-        <Link to="/" className="flex min-w-0 shrink items-center font-semibold tracking-tight" aria-label="Atlanta Startup Workshop">
-          <StartupLabsLogo className="h-8 w-auto text-foreground sm:h-9 md:h-12" />
-        </Link>
-
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-7 text-sm text-muted-foreground lg:flex">
-          {nav.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.to === "/"} className={navLinkClass}>
-              {n.label}
-            </NavLink>
-          ))}
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-3 py-2 sm:px-4 md:px-6">
+
         {/* Left edge: logo + product nav */}
         <div className="flex min-w-0 shrink items-center gap-7">
           <Link to="/" className="flex min-w-0 shrink items-center font-semibold tracking-tight" aria-label="Startup Labs — home">
@@ -129,7 +118,7 @@ export function SiteHeader() {
                 <SheetTitle className="sr-only">Navigation</SheetTitle>
                 <SheetDescription className="sr-only">Site navigation and account actions</SheetDescription>
                 <nav className="flex flex-col px-2 py-3">
-                  {nav.map((n) => (
+                  {mobileNav.map((n) => (
                     <NavLink
                       key={n.to}
                       to={n.to}
