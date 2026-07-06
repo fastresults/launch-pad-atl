@@ -1,55 +1,59 @@
-## Root cause
 
-The reset logic cleared field state, but Step 1 still renders saved memory chips from the full reusable library list. So even after `reuseSelected` is cleared, the Smashburger source remains visible in the "Your source memory" area, making it look like Reset failed.
+## Goal
 
-## Fix
+When a visitor hovers a card in the sliding startup-concepts scroller and the marquee pauses, a refined "AI briefing" popover fades in over the image — telling them who the ideal owner/operator is, why it's a smart move, and how much they could realistically make per year.
 
-Update Step 1 so **Reset step 1 removes all sources from the active venture intake view**, not just from synthesis state.
+## Recommendation
 
-### 1. Split "active sources" from "available library"
+Render the popover **inside the card** (anchored, not a global tooltip) so it appears smoothly over the image without breaking the marquee pause behavior or clipping at the row edges. Style it as a soft, blurred glass panel with a subtle primary-tinted border and a small "AI insight" chip — matches the existing Sparkles/`primary/15` language already used in `HomeBusinessIdeasScroller`.
 
-- Active Step 1 memory should render only selected sources: `reuseSelected[id] === true`.
-- Saved library sources should appear only inside the add-more picker / expanded memory selector.
-- After reset, no selected sources means the Smashburger chip disappears from the main Step 1 area.
+## Content model (data)
 
-### 2. Reset must create a clean active intake state
+The current `BusinessIdea` type has `offer`, `startupCost`, `incomePotential` (monthly), `firstCustomers`, `stageHint`. It's missing operator + rationale, and only carries monthly revenue.
 
-When the user confirms **Reset step 1**:
+Add two optional fields to `BusinessIdea` in `src/lib/business-ideas.ts`:
 
-- Clear `reuseSelected`.
-- Clear uploaded files, scraped URLs, URL input, AI-filled markers, processed state, auto-synthesis signature, and all Step 1 fields.
-- Set a small `hasResetStepOne` flag so the initial auto-attach behavior cannot re-select library memory immediately after reset.
-- Keep the saved library files intact.
+- `idealOperator: string` — one-line persona, e.g. *"Ex-service-industry pro who's great on the phone and wants a laptop business."*
+- `whySmart: string` — one-line thesis, e.g. *"Trades lose ~30% of after-hours calls. You plug the leak for less than one missed job/mo."*
 
-### 3. Correct the Step 1 UI copy after reset
+Annual income is **derived**, not stored: parse the existing `incomePotential` string ("$10k–$25k / mo", "$15k–$50k / season", "$3k–$15k / mo (after 6 mo)") with a small helper that:
 
-After reset, show the empty-state version:
+- extracts the low/high numbers,
+- multiplies by 12 for `/mo`, by 1 for `/season` or `/yr`,
+- returns a formatted annual range like *"$120k–$300k / yr"*,
+- preserves qualifiers like *"(after 6 mo)"* or *"(seasonal)"*.
 
-- Heading: `Give us something to work with`
-- Helper text: `Drop an asset, paste a link, speak, or type — we'll fill the rest.`
-- The Smashburger chip should not appear in this primary Step 1 area.
-- Keep **Yes, add more** so the user can intentionally re-add saved sources.
+Backfill `idealOperator` and `whySmart` for all 60+ ideas in the same file. Keep both lines tight (≤ ~110 chars) so the popover stays clean.
 
-### 4. Prevent accidental re-synthesis from hidden saved memory
+## Popover UX
 
-The synthesis inputs should use only active sources:
+In `src/components/home/HomeBusinessIdeasScroller.tsx`, update `IdeaCard`:
 
-- Selected saved sources
-- New uploads
-- New links
-- Typed / spoken concept
+- Wrap card in `relative` (already is) and add a hover/focus-visible state.
+- On `group-hover/idea` and `group-focus-within/idea`, fade in an absolutely-positioned overlay covering the **image area only** (not the title/offer footer), so the card's name stays anchored underneath.
+- Overlay styling: `bg-background/70 backdrop-blur-md`, `border border-primary/30`, `rounded-t-xl` (matches card top), `p-4`, `text-xs`, subtle `shadow-lg shadow-primary/10`, entry transition `opacity + translate-y-1` over 200ms.
+- Content layout:
+  - Header row: `Sparkles` icon + tiny uppercase label "AI insight" in `primary`.
+  - Three labeled blocks stacked with 8px gaps, each with a muted eyebrow and a foreground body line:
+    - **Ideal operator** — `idea.idealOperator`
+    - **Why it's smart** — `idea.whySmart`
+    - **Annual potential** — derived annual range, with a `TrendingUp` icon; keeps the existing monthly chip in the top-right for quick scan.
+- Accessibility: overlay is `aria-hidden` visual layer; add a visually hidden `<span>` inside the card containing the same three lines so screen readers get them without hover. Keyboard users: card becomes `tabIndex={0}` so `focus-within` reveals the overlay.
+- Touch/mobile: hover doesn't exist. Show a small `Info` button in the top-left corner (below the category chip) on `sm:hidden` that toggles the overlay on tap; on `sm:` and up rely on hover.
 
-Saved-but-unselected library sources must not feed the AI after reset.
+## Marquee interaction
 
-### 5. Verification
+The row already pauses on `mouseenter`. Because the overlay lives inside the card and the card is inside the flex row, hovering the overlay keeps the row paused (same element tree) — no extra JS needed. Verify by hovering: card should hold still, overlay fades in, moving the mouse out resumes scroll and fades the overlay out.
 
-Use the live preview to confirm this exact flow:
+## Files touched
 
-1. Load `/dashboard/hub/new` with Smashburger memory present.
-2. Click **Reset step 1**.
-3. Confirm **Yes, reset**.
-4. Verify:
-   - Smashburger chip is gone from the main Step 1 area.
-   - Step 1 shows the empty-state copy.
-   - Step 2 AI-filled badges are gone.
-   - Saved library source can still be re-added via **Yes, add more**.
+- `src/lib/business-ideas.ts` — add `idealOperator` + `whySmart` to the type and to every entry; export a small `toAnnualRange(incomePotential: string): string` helper.
+- `src/components/home/HomeBusinessIdeasScroller.tsx` — update `IdeaCard` with the popover overlay, mobile toggle, and a11y text; import the annual helper.
+
+No other components consume `BusinessIdea` in a way that breaks with two new optional fields (verified: `HomeBusinessIdeasScroller` is the only reader).
+
+## Verification
+
+- Playwright: hover a card in the scroller → assert row's animation `paused`, overlay visible, "Annual potential" line present with `/ yr`. Move mouse away → overlay hidden, animation `running`.
+- Spot-check three cards with different `incomePotential` shapes (`/mo`, `/season`, `/mo (after 6 mo)`) to confirm the annual formatter reads cleanly.
+- Light + dark: overlay contrast passes against varied photo backgrounds thanks to `bg-background/70 backdrop-blur-md`.
