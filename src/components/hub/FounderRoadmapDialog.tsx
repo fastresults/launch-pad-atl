@@ -184,12 +184,16 @@ export function FounderRoadmapDialog({
       const text = m[1].trim();
       const id = text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
       const eyebrow = chapterEyebrow(text);
+      const isPart = /^Part\s+/i.test(text);
       const navLabel = eyebrow && eyebrow.startsWith("Chapter")
         ? `${eyebrow.replace("Chapter ", "Ch. ")} — ${chapterTitle(text)}`
-        : text;
-      return { id, text, navLabel };
+        : eyebrow && eyebrow.startsWith("Part")
+          ? `${eyebrow} — ${chapterTitle(text)}`
+          : text;
+      return { id, text, navLabel, isPart };
     });
   }, [rest]);
+
 
   const readMin = wordCount ? Math.max(1, Math.round(wordCount / 220)) : null;
 
