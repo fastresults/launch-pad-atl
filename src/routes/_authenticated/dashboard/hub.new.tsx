@@ -434,16 +434,22 @@ function Inner() {
   const draftFromFiles = useCallback(
     async (opts?: { auto?: boolean }) => {
       const hasFiles = combinedDocs.length > 0;
-      const hasUrls = readyUrls.length > 0;
+      const hasOwnUrls = readyOwnUrls.length > 0;
+      const hasPattern = patternRefs.length > 0;
       const hasDraft = businessConcept.trim().length >= 20;
-      if (!hasFiles && !hasUrls && !hasDraft) return;
+      if (!hasFiles && !hasOwnUrls && !hasPattern && !hasDraft) return;
       if (drafting) return;
+      // Identity fields (name, contact, address, own website) should NEVER come
+      // from a pattern reference. If pattern refs are the only signal about
+      // identity we have, lock down the identity setters entirely.
+      const identityFromPatternOnly = hasPattern && !hasFiles && !hasOwnUrls;
       setDrafting(true);
       try {
         const { data, error } = await supabase.functions.invoke("venture-synthesize-concept", {
           body: {
             sources: combinedDocs.map((d) => ({ filename: d.filename, text: d.text })),
-            urls: readyUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text })),
+            urls: readyOwnUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text })),
+            patternUrls: patternRefs.map((p) => ({ url: p.url, title: p.title ?? null, text: p.text })),
             conceptDraft: hasDraft ? businessConcept.trim() : "",
             industryValues: INDUSTRIES.map((i) => i.value),
           },
@@ -463,22 +469,26 @@ function Inner() {
             filled.push(label);
           }
         };
-        setIf(data?.company_name, setCompanyName, "companyName", "company name");
+        const setIdentity = (val: unknown, setter: (v: string) => void, key: string, label: string) => {
+          if (identityFromPatternOnly) return;
+          setIf(val, setter, key, label);
+        };
+        setIdentity(data?.company_name, setCompanyName, "companyName", "company name");
         setIf(data?.differentiation_statement, setDiff, "diff", "differentiation");
-        setIf(data?.founder_name, setFounderName, "founderName", "founder name");
-        setIf(data?.founder_email, setFounderEmail, "founderEmail", "founder email");
-        setIf(data?.founder_phone, setFounderPhone, "founderPhone", "founder phone");
-        setIf(data?.city, setCity, "city", "city");
-        setIf(data?.region, setRegion, "region", "state / region");
+        setIdentity(data?.founder_name, setFounderName, "founderName", "founder name");
+        setIdentity(data?.founder_email, setFounderEmail, "founderEmail", "founder email");
+        setIdentity(data?.founder_phone, setFounderPhone, "founderPhone", "founder phone");
+        setIdentity(data?.city, setCity, "city", "city");
+        setIdentity(data?.region, setRegion, "region", "state / region");
         setIf(data?.sub_industry, setSubIndustry, "subIndustry", "sub-industry");
-        if (typeof data?.website_url === "string" && data.website_url.trim()) {
+        if (!identityFromPatternOnly && typeof data?.website_url === "string" && data.website_url.trim()) {
           setWebsiteUrl(data.website_url.trim());
           markFilled("websiteUrl");
           // Silently flip to "own" so enrichment re-scrapes the founder's site.
           setPath("own");
           filled.push("website");
         }
-        if (typeof data?.country === "string" && data.country.trim()) {
+        if (!identityFromPatternOnly && typeof data?.country === "string" && data.country.trim()) {
           setCountry(data.country.trim());
           markFilled("country");
           filled.push("country");
@@ -494,6 +504,7 @@ function Inner() {
           markFilled("industry");
           filled.push("industry");
         }
+
 
         setProcessed(true);
         if (opts?.auto) {
