@@ -64,7 +64,15 @@ Rules:
 - Infer "track" from cues (single-location food/retail/service → lifestyle; DTC product brand sold online → ecommerce_dtc; venture-scale SaaS/app → scalable_tech; two-sided platform → marketplace; hardware/biotech → deep_tech; nonprofit/mission → social_impact; internal corporate venture → corporate).
 - Default country to "United States" only if a US state, ZIP, or city is named.
 - Concept paragraph: 2–4 sentences, no headings, no "Here is", no buzzwords ("synergy", "revolutionary", "cutting-edge").
+
+PATTERN REFERENCES:
+- If a "PATTERN REFERENCES" section is provided, treat those pages as INSPIRATION ONLY. They describe a startup the founder wants to *learn the shape of* — not their own startup.
+- NEVER populate company_name, founder_name, founder_email, founder_phone, website_url, city, region, or country from a pattern reference. If those fields would only come from a pattern reference, leave them null.
+- DO use pattern references to inform industry, sub_industry, market_scope, track, differentiation_statement, and the *style/model* of the concept paragraph.
+- The concept paragraph, when a pattern reference is present, must be written as the FOUNDER'S OWN new startup (use "we" and a placeholder like "our shop" or "our platform" if no name is known) — not as a description of the reference brand. Do not name the reference brand in the concept.
+
 - Return ONLY the JSON object.`;
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
