@@ -145,28 +145,37 @@ function extractCoverAndStats(md: string) {
   return { cover, stats, rest: out.join("\n").trim() };
 }
 
-// Map H2 heading text → chapter eyebrow label (or null for none)
+// Map H2 heading text → chapter/part eyebrow label (or null for none)
 function chapterEyebrow(text: string): string | null {
   const t = text.trim();
+  const mp = t.match(/^Part\s+([IVX]+)\s*[—-]\s*(.+)$/i);
+  if (mp) return `Part ${mp[1].toUpperCase()}`;
   const m = t.match(/^Chapter\s+(\d+)\s*[—-]\s*(.+)$/i);
   if (m) return `Chapter ${m[1]}`;
   if (/^the one thing$/i.test(t)) return "The takeaway";
   if (/^closing note$/i.test(t)) return "From your partner";
+  if (/^read next/i.test(t)) return "What to open next";
+  if (/^why this matters$/i.test(t)) return "The bigger picture";
+  if (/^the road ahead/i.test(t)) return "Team Evove";
   return null;
 }
 
 function chapterTitle(text: string): string {
+  const mp = text.match(/^Part\s+[IVX]+\s*[—-]\s*(.+)$/i);
+  if (mp) return mp[1].trim();
   const m = text.match(/^Chapter\s+\d+\s*[—-]\s*(.+)$/i);
   return m ? m[1].trim() : text;
 }
 
 export function FounderRoadmapDialog({
-  open, onOpenChange, companyName, content, generatedAt, wordCount, qualityScore, documentCount,
+  open, onOpenChange, companyName, content, generatedAt, wordCount, qualityScore, documentCount, coverage, isStale,
 }: Props) {
   const title = `${companyName ?? "Your"} — Founder Roadmap`;
   const bodyRef = useRef<HTMLDivElement | null>(null);
 
-  const { cover, stats, rest } = useMemo(() => extractCoverAndStats(content || ""), [content]);
+  const marked = useMemo(() => markSourceTags(content || ""), [content]);
+  const { cover, stats, rest } = useMemo(() => extractCoverAndStats(marked), [marked]);
+
 
   // Build a section index from H2s (from the cleaned `rest`)
   const sections = useMemo(() => {
