@@ -254,6 +254,7 @@ function Inner() {
   const addFiles = useCallback(
     async (incoming: File[]) => {
       if (!incoming.length) return;
+      resetStepOneRef.current = false;
       const room = MAX_FILES - files.length;
       if (room <= 0) {
         toast.error(`Max ${MAX_FILES} files`);
@@ -536,7 +537,7 @@ function Inner() {
           toast.success(`Filled ${filled.length} field${filled.length === 1 ? "" : "s"} — review below`);
         }
       } catch (e) {
-        if (!opts?.auto) toast.error(e instanceof Error ? e.message : "Couldn't process the document");
+        if (runId === draftRunRef.current && !opts?.auto) toast.error(e instanceof Error ? e.message : "Couldn't process the asset");
       } finally {
         if (runId === draftRunRef.current) setDrafting(false);
       }
@@ -613,6 +614,7 @@ function Inner() {
     setMarketScope("local");
     setAiFilled({});
     setProcessed(false);
+    setDrafting(false);
     setFromBrief(false);
     autoSigRef.current = "";
     setResetOpen(false);
