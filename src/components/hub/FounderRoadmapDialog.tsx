@@ -2,11 +2,20 @@
 import { useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Copy, Download, FileText, Printer, X } from "lucide-react";
+import { Copy, Download, FileText, Printer, X, AlertCircle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
 import { toast } from "sonner";
+
+interface RoadmapCoverage {
+  per_track?: Record<string, { total: number; used: number }>;
+  total_assets?: number;
+  used_count?: number;
+  skipped_labels?: string[];
+  tag_matches?: string[];
+}
 
 interface Props {
   open: boolean;
@@ -17,6 +26,48 @@ interface Props {
   wordCount?: number | null;
   qualityScore?: number | null;
   documentCount?: number | null;
+  coverage?: RoadmapCoverage | null;
+  isStale?: boolean;
+}
+
+// Replace `[from: Asset Name]` inline tags with a compact marker the renderer
+// can style. We swap for a distinct unicode wrapper so the markdown parser
+// leaves it untouched, then a `p` renderer walks the text nodes.
+const SRC_OPEN = "\u2308"; // ⌈
+const SRC_CLOSE = "\u2309"; // ⌉
+function markSourceTags(md: string): string {
+  return md.replace(/\[from:\s*([^\]]+?)\]/gi, (_m, name) => `${SRC_OPEN}${name.trim()}${SRC_CLOSE}`);
+}
+function renderWithSourcePills(text: string): (string | JSX.Element)[] {
+  const parts: (string | JSX.Element)[] = [];
+  const re = new RegExp(`${SRC_OPEN}([^${SRC_CLOSE}]+)${SRC_CLOSE}`, "g");
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let key = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    parts.push(
+      <span
+        key={`src-${key++}`}
+        className="ml-1 inline-flex items-center rounded border border-primary/30 bg-primary/10 px-1 py-[1px] text-[10px] font-medium uppercase tracking-wide text-primary align-baseline"
+        title={`Source: ${m[1]}`}
+      >
+        {m[1]}
+      </span>,
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
+function transformChildren(children: any): any {
+  if (typeof children === "string") return renderWithSourcePills(children);
+  if (Array.isArray(children)) {
+    return children.flatMap((c, i) =>
+      typeof c === "string" ? renderWithSourcePills(c).map((n, j) => (typeof n === "string" ? n : <span key={`i${i}-${j}`}>{n}</span>)) : c,
+    );
+  }
+  return children;
 }
 
 function downloadBlob(blob: Blob, filename: string) {
