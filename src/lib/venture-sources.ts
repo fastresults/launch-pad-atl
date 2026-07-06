@@ -161,6 +161,52 @@ export async function retryExtraction(documentId: string): Promise<void> {
 }
 
 /**
+ * Rewrite the `Intent:` header line inside a URL-capture markdown source
+ * so the founder can flip a saved chip between "own" and "pattern" without
+ * re-scraping. Only affects `attendee_documents.extracted_text` — the stored
+ * markdown file in storage is not rewritten (the extracted_text is what
+ * downstream synthesis reads).
+ */
+export async function updateVentureSourceIntent(
+  documentId: string,
+  intent: "own" | "pattern",
+): Promise<VentureSource> {
+  const userId = await uid();
+  const { data: row, error: readErr } = await supabase
+    .from("attendee_documents")
+    .select("*")
+    .eq("id", documentId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (readErr) throw new Error(readErr.message);
+  if (!row) throw new Error("Source not found");
+  const current = (row.extracted_text ?? "") as string;
+  let next: string;
+  if (/^Intent:\s*(own|pattern)\b/im.test(current)) {
+    next = current.replace(/^Intent:\s*(own|pattern)\b.*$/im, `Intent: ${intent}`);
+  } else {
+    // Insert the Intent line right after a leading "Source:" line if present,
+    // otherwise prepend it above the body.
+    if (/^Source:\s*\S+/im.test(current)) {
+      next = current.replace(/^(Source:\s*\S+.*)$/im, `$1\nIntent: ${intent}`);
+    } else {
+      next = `Intent: ${intent}\n\n${current}`;
+    }
+  }
+  const { data: updated, error: upErr } = await supabase
+    .from("attendee_documents")
+    .update({ extracted_text: next })
+    .eq("id", documentId)
+    .eq("user_id", userId)
+    .select("*")
+    .single();
+  if (upErr) throw new Error(upErr.message);
+  notifySourcesChanged();
+  return updated as VentureSource;
+}
+
+
+/**
  * Build the source_materials payload for createSnapshot from a set of
  * attendee_documents rows. Skips files without extracted text.
  */
