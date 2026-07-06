@@ -1,61 +1,55 @@
+## Root cause
 
-## Two additions to Step 1 of `hub.new.tsx`
+The reset logic cleared field state, but Step 1 still renders saved memory chips from the full reusable library list. So even after `reuseSelected` is cleared, the Smashburger source remains visible in the "Your source memory" area, making it look like Reset failed.
 
-### 1. Reset control at Step 1
+## Fix
 
-Add a small **"Reset step 1"** button in the Step 1 header (right side, next to the drafting spinner). It opens a confirm dialog: *"Clear all sources and start over? Your source memory, pasted links, uploads, the auto-drafted concept, and every AI-filled field will be cleared. This doesn't delete files from your account library."*
+Update Step 1 so **Reset step 1 removes all sources from the active venture intake view**, not just from synthesis state.
 
-On confirm:
+### 1. Split "active sources" from "available library"
 
-- **Deselect every memory chip** — `setReuseSelected({})` so nothing in memory is fed to synthesis. Memory itself stays (the founder's library isn't destroyed), but chips render as "unused" (opacity-60, gray dot).
-- **Wipe transient intake state** — `setFiles([])`, `setScrapedUrls([])`, `setUrlInput("")`, `setNextUrlIntent("own")`, `setIntakeTab("upload")`, `setAddMoreOpen(false)`.
-- **Wipe AI-filled fields** — clear every value in `aiFilled` back to its prefill/canonical default. Anything the founder typed themselves stays. Concrete rule: for each `key` in `aiFilled`, reset the corresponding state using the same source the prefill effect uses (`prefill?.<field>` or `canonicalCtx.<field>`, or `""`). Then `setAiFilled({})`, `setProcessed(false)`, `autoSigRef.current = ""` so auto-synthesis will fire again on the next added source.
-- Toast: *"Cleared. Add a source or type your concept to start again."*
+- Active Step 1 memory should render only selected sources: `reuseSelected[id] === true`.
+- Saved library sources should appear only inside the add-more picker / expanded memory selector.
+- After reset, no selected sources means the Smashburger chip disappears from the main Step 1 area.
 
-A secondary **"Deselect all"** ghost link in the memory chip row (only shown when at least one chip is selected) does the lightweight version — just `setReuseSelected({})` without touching typed fields. This handles the common "I don't want any of my old sources influencing this new venture" case without the full nuclear reset.
+### 2. Reset must create a clean active intake state
 
-### 2. Make the own-vs-pattern choice unmissable
+When the user confirms **Reset step 1**:
 
-Today the intent toggle only lives on the Link tab, and once saved, the chip in "Your source memory" shows only a tiny "Pattern" badge (invisible in the attached screenshot because that chip was saved as "own"). Three changes:
+- Clear `reuseSelected`.
+- Clear uploaded files, scraped URLs, URL input, AI-filled markers, processed state, auto-synthesis signature, and all Step 1 fields.
+- Set a small `hasResetStepOne` flag so the initial auto-attach behavior cannot re-select library memory immediately after reset.
+- Keep the saved library files intact.
 
-**a. Promote the toggle to a full segmented control at the top of the Link tab, with icons and always-visible copy.**
+### 3. Correct the Step 1 UI copy after reset
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  How should we use this link?                               │
-│  ┌────────────────────────────┐ ┌──────────────────────────┐│
-│  │ ● [globe] My own site      │ │ ○ [compass] Pattern only ││
-│  │   Pull name, contact,      │ │   Learn the shape.       ││
-│  │   location, content.       │ │   Won't copy their name  ││
-│  │                            │ │   or address.            ││
-│  └────────────────────────────┘ └──────────────────────────┘│
-└─────────────────────────────────────────────────────────────┘
-```
+After reset, show the empty-state version:
 
-Default: **My own site**. Auto-flip to **Pattern only** when the pasted URL's hostname doesn't match a hostname the founder already typed into `websiteUrl` and the founder has typed any of their own identity fields. Founder can always override.
+- Heading: `Give us something to work with`
+- Helper text: `Drop an asset, paste a link, speak, or type — we'll fill the rest.`
+- The Smashburger chip should not appear in this primary Step 1 area.
+- Keep **Yes, add more** so the user can intentionally re-add saved sources.
 
-**b. Show the intent inline on every URL row and every memory chip — for both states, not just "pattern".**
+### 4. Prevent accidental re-synthesis from hidden saved memory
 
-- Own chip: subtle outline badge "Mine" (muted-foreground border).
-- Pattern chip: primary-tinted badge "Pattern" (already in place).
+The synthesis inputs should use only active sources:
 
-This removes the ambiguity in the screenshot where a chip with just a green dot could be either.
+- Selected saved sources
+- New uploads
+- New links
+- Typed / spoken concept
 
-**c. Let the founder flip a saved chip's intent without re-scraping.**
+Saved-but-unselected library sources must not feed the AI after reset.
 
-Click the badge on any URL-capture memory chip → toggles between "Mine" and "Pattern". Under the hood, rewrite the first `Intent:` line in the source's `extracted_text` via a new `updateVentureSourceIntent(id, intent)` helper in `src/lib/venture-sources.ts` (a targeted `update` on `attendee_documents.extracted_text`). Instant feedback, no re-scrape cost.
+### 5. Verification
 
-**d. Confirm-on-mismatch guard rail when the founder clicks "Create venture".**
+Use the live preview to confirm this exact flow:
 
-If the ONLY sources feeding synthesis are pattern references (no own docs, no typed concept ≥20 chars), and one or more identity fields are still empty, show a soft warning modal: *"Your sources are pattern references only. Add your startup's name, contact, and location before we generate — otherwise we'll leave those blank."* Buttons: **Add my details** (jumps to first empty identity field) / **Create anyway**.
-
-## Files to change
-
-- `src/routes/_authenticated/dashboard/hub.new.tsx` — Reset button + confirm dialog, `resetStepOne()` handler, "Deselect all" link, promoted segmented toggle, "Mine"/"Pattern" badges on all URL chips (memory + transient), click-to-flip on saved chips, pre-submit pattern-only guard modal.
-- `src/lib/venture-sources.ts` — `updateVentureSourceIntent(id: string, intent: "own" | "pattern")` that reads `extracted_text`, replaces or inserts the `Intent:` header line near the top, and updates the row.
-
-## Out of scope
-
-- Deleting files from the founder's actual library (reset only unselects them — deletion is destructive and stays on the individual chip's `X` button).
-- Changing the Upload / Speak / Type tabs — uploaded docs and typed concepts are always "own" and don't need an intent picker.
-- Anything downstream of `createSnapshot` — the concept + confirmed form fields are what feed the rest of the pipeline, so once Step 1 is clear the rest is already right.
+1. Load `/dashboard/hub/new` with Smashburger memory present.
+2. Click **Reset step 1**.
+3. Confirm **Yes, reset**.
+4. Verify:
+   - Smashburger chip is gone from the main Step 1 area.
+   - Step 1 shows the empty-state copy.
+   - Step 2 AI-filled badges are gone.
+   - Saved library source can still be re-added via **Yes, add more**.

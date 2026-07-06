@@ -40,6 +40,7 @@ import {
   Wand2,
   MapPin,
   CheckCircle2,
+  Plus,
   Link2,
   Globe,
   Library,
@@ -145,6 +146,7 @@ function Inner() {
   const [aiFilled, setAiFilled] = useState<Record<string, boolean>>({});
   const [filling, setFilling] = useState(false);
   const [seedUrlChoice, setSeedUrlChoice] = useState<string>(""); // "" = random
+  const draftRunRef = useRef(0);
 
   // Founder + market context
   const [founderName, setFounderName] = useState(prefill?.founder_name ?? "");
@@ -171,6 +173,7 @@ function Inner() {
   // Prefill from canonical context.
   const { data: canonicalCtx } = useCanonicalContext();
   useEffect(() => {
+    if (resetStepOneRef.current) return;
     if (!canonicalCtx) return;
     const ctx = canonicalCtx;
     setFounderName((cur) => cur || ctx.identity.full_name);
@@ -190,10 +193,12 @@ function Inner() {
   const [reusable, setReusable] = useState<VentureSource[]>([]);
   const [reuseSelected, setReuseSelected] = useState<Record<string, boolean>>({});
   const [addMoreOpen, setAddMoreOpen] = useState(false);
+  const resetStepOneRef = useRef(false);
   useEffect(() => {
     listVentureSources()
       .then((rows) => {
         setReusable(rows);
+        if (resetStepOneRef.current) return;
         // Auto-attach everything readable from the founder's existing memory
         // (brief sources, scraped URLs, founder bio, prior uploads). The
         // founder shouldn't have to re-check boxes for what we already have.
@@ -232,13 +237,16 @@ function Inner() {
   }, [reusable]);
 
 
-  const memoryEmpty = memoryChips.length === 0;
+  const activeMemoryChips = memoryChips.filter(({ row }) => !!reuseSelected[row.id]);
+  const inactiveMemoryChips = memoryChips.filter(({ row }) => !reuseSelected[row.id]);
+  const memoryEmpty = activeMemoryChips.length === 0;
   const showCollectionUI = memoryEmpty || addMoreOpen;
 
   // Append a freshly-saved source to the in-page memory so it shows up as a
   // pill in the "Your source memory" row immediately, instead of lingering in
   // a separate "SAVED" list below the dropzone.
   const appendToMemory = useCallback((row: VentureSource) => {
+    resetStepOneRef.current = false;
     setReusable((prev) => (prev.some((r) => r.id === row.id) ? prev : [row, ...prev]));
     setReuseSelected((prev) => ({ ...prev, [row.id]: true }));
   }, []);
@@ -247,6 +255,7 @@ function Inner() {
   const addFiles = useCallback(
     async (incoming: File[]) => {
       if (!incoming.length) return;
+      resetStepOneRef.current = false;
       const room = MAX_FILES - files.length;
       if (room <= 0) {
         toast.error(`Max ${MAX_FILES} files`);
@@ -355,6 +364,7 @@ function Inner() {
   const addUrl = async () => {
     const raw = urlInput.trim();
     if (!raw) return;
+    resetStepOneRef.current = false;
     if (scrapedUrls.length >= MAX_URLS) {
       toast.error(`Max ${MAX_URLS} URLs`);
       return;
@@ -452,6 +462,7 @@ function Inner() {
       const hasDraft = businessConcept.trim().length >= 20;
       if (!hasFiles && !hasOwnUrls && !hasPattern && !hasDraft) return;
       if (drafting) return;
+      const runId = ++draftRunRef.current;
       // Identity fields (name, contact, address, own website) should NEVER come
       // from a pattern reference. If pattern refs are the only signal about
       // identity we have, lock down the identity setters entirely.
@@ -470,6 +481,7 @@ function Inner() {
         if (error) throw error;
         const concept = (data?.concept ?? "").trim();
         if (!concept) throw new Error("Empty draft from the model");
+        if (runId !== draftRunRef.current) return;
 
         setBusinessConcept(concept);
         markFilled("businessConcept");
@@ -526,9 +538,9 @@ function Inner() {
           toast.success(`Filled ${filled.length} field${filled.length === 1 ? "" : "s"} — review below`);
         }
       } catch (e) {
-        if (!opts?.auto) toast.error(e instanceof Error ? e.message : "Couldn't process the document");
+        if (runId === draftRunRef.current && !opts?.auto) toast.error(e instanceof Error ? e.message : "Couldn't process the asset");
       } finally {
-        setDrafting(false);
+        if (runId === draftRunRef.current) setDrafting(false);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -574,6 +586,8 @@ function Inner() {
     }
   };
   const resetStepOne = () => {
+    resetStepOneRef.current = true;
+    draftRunRef.current += 1;
     // Unselect every chip so nothing in memory feeds synthesis.
     setReuseSelected({});
     // Clear transient intake.
@@ -601,12 +615,13 @@ function Inner() {
     setMarketScope("local");
     setAiFilled({});
     setProcessed(false);
+    setDrafting(false);
     setFromBrief(false);
     autoSigRef.current = "";
     setResetOpen(false);
-    toast.success("Cleared. Add a source or type your concept to start again.");
+    toast.success("Step 1 cleared. Your library is still saved — add a source or type your concept to start again.");
   };
-  const anySelectedChips = Object.values(reuseSelected).some(Boolean);
+  const anySelectedChips = activeMemoryChips.length > 0;
 
   // Flip a saved memory chip's own↔pattern intent in place.
   const flipMemoryIntent = async (row: VentureSource, next: "own" | "pattern") => {
@@ -724,7 +739,7 @@ function Inner() {
     ? "Reading your sources…"
     : processed
       ? `Filled ${Object.keys(aiFilled).length} field${Object.keys(aiFilled).length === 1 ? "" : "s"} from your sources`
-      : "Drop a doc, paste a link, speak, or type — we'll fill the rest";
+      : "Drop an asset, paste a link, speak, or type — we'll fill the rest";
 
   return (
     <div className="space-y-6 pb-32">
@@ -793,16 +808,13 @@ function Inner() {
             )}
             <div className="flex flex-wrap gap-2">
 
-              {memoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin, intent }) => {
+              {activeMemoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin, intent }) => {
                 const ready = !!(row.extracted_text ?? "").trim();
                 const Icon = isUrlCapture ? Globe : isAudio ? Mic : isImage ? FileText : FileText;
-                const selected = !!reuseSelected[row.id];
                 const isPattern = intent === "pattern";
                 const dot = !ready
                   ? "bg-status-danger"
-                  : selected
-                    ? "bg-status-success"
-                    : "bg-muted-foreground/40";
+                  : "bg-status-success";
                 const originLabel =
                   origin === "brief" ? "Brief" : origin === "founder" ? "Founder" : origin === "venture" ? "Venture" : "Library";
                 return (
@@ -816,11 +828,7 @@ function Inner() {
                           ? `Couldn't read · from ${originLabel}`
                           : `Processing… · from ${originLabel}`)
                     }
-                    className={`group inline-flex max-w-[280px] items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
-                      selected
-                        ? "border-primary/40 bg-primary/10"
-                        : "border-white/10 bg-background/40 opacity-60"
-                    }`}
+                    className="group inline-flex max-w-[280px] items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs transition"
                   >
                     <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
                     <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -843,13 +851,11 @@ function Inner() {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setReuseSelected((prev) => ({ ...prev, [row.id]: !prev[row.id] }))
-                      }
+                      onClick={() => setReuseSelected((prev) => ({ ...prev, [row.id]: false }))}
                       className="shrink-0 text-muted-foreground hover:text-foreground"
-                      aria-label={selected ? "Don't use for this venture" : "Use for this venture"}
+                      aria-label="Don't use for this venture"
                     >
-                      {selected ? <X className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 );
@@ -879,11 +885,101 @@ function Inner() {
                   type="button"
                   size="sm"
                   variant={addMoreOpen ? "outline" : "ghost"}
-                  onClick={() => setAddMoreOpen((v) => !v)}
+                  onClick={() => {
+                    resetStepOneRef.current = false;
+                    setAddMoreOpen((v) => !v);
+                  }}
                 >
                   {addMoreOpen ? "Hide" : "Yes, add more"}
                 </Button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {memoryEmpty && inactiveMemoryChips.length > 0 && !addMoreOpen && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-background/40 p-3">
+            <div className="text-sm">
+              <span className="font-medium">Want to reuse something saved?</span>{" "}
+              <span className="text-muted-foreground">Your library is still saved, but nothing is active for this startup.</span>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                resetStepOneRef.current = false;
+                setAddMoreOpen(true);
+              }}
+            >
+              Yes, add more
+            </Button>
+          </div>
+        )}
+
+        {showCollectionUI && inactiveMemoryChips.length > 0 && addMoreOpen && (
+          <div className="space-y-2 rounded-xl border border-white/10 bg-background/40 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-medium">Saved library sources</div>
+              <button
+                type="button"
+                onClick={() => setAddMoreOpen(false)}
+                className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+              >
+                Done
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {inactiveMemoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin, intent }) => {
+                const ready = !!(row.extracted_text ?? "").trim();
+                const Icon = isUrlCapture ? Globe : isAudio ? Mic : isImage ? FileText : FileText;
+                const isPattern = intent === "pattern";
+                const originLabel =
+                  origin === "brief" ? "Brief" : origin === "founder" ? "Founder" : origin === "venture" ? "Venture" : "Library";
+                return (
+                  <div
+                    key={row.id}
+                    title={
+                      ready
+                        ? `${Math.round((row.extracted_text ?? "").length / 1000)}k chars · from ${originLabel}`
+                        : row.extraction_error
+                          ? `Couldn't read · from ${originLabel}`
+                          : `Processing… · from ${originLabel}`
+                    }
+                    className="group inline-flex max-w-[280px] items-center gap-2 rounded-full border border-white/10 bg-background/40 px-3 py-1.5 text-xs opacity-80 transition hover:opacity-100"
+                  >
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${ready ? "bg-muted-foreground/40" : "bg-status-danger"}`} />
+                    <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
+                    {isUrlCapture ? (
+                      <button
+                        type="button"
+                        onClick={() => flipMemoryIntent(row, isPattern ? "own" : "pattern")}
+                        title={isPattern ? "Click to use as your own site instead" : "Click to use as a pattern reference only"}
+                        className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider transition ${
+                          isPattern
+                            ? "border-primary/30 bg-primary/5 text-primary/80 hover:bg-primary/10"
+                            : "border-white/20 bg-background/60 text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {isPattern ? "Pattern" : "Mine"}
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetStepOneRef.current = false;
+                        setReuseSelected((prev) => ({ ...prev, [row.id]: true }));
+                      }}
+                      className="shrink-0 text-muted-foreground hover:text-foreground"
+                      aria-label="Add to this venture"
+                      title="Add to this venture"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -1143,6 +1239,7 @@ function Inner() {
                 size="lg"
                 context="Founder describing their business concept — what they're building, who it's for, and why it matters."
                 onTranscript={(text) => {
+                    resetStepOneRef.current = false;
                   setBusinessConcept((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
                   markFilled("businessConcept");
                 }}
@@ -1165,7 +1262,10 @@ function Inner() {
               id="concept-type"
               ref={registerRef("businessConcept") as any}
               value={businessConcept}
-              onChange={(e) => setBusinessConcept(e.target.value)}
+              onChange={(e) => {
+                resetStepOneRef.current = false;
+                setBusinessConcept(e.target.value);
+              }}
               placeholder="What you're building, who it's for, why it matters."
               rows={6}
             />
@@ -1633,8 +1733,8 @@ function Inner() {
             <AlertDialogTitle>Reset step 1?</AlertDialogTitle>
             <AlertDialogDescription>
               This clears every source used for this venture, the auto-drafted concept, and every AI-filled
-              field. Anything you typed yourself stays put. Files in your library are not deleted — they're
-              just unselected.
+              field. Files in your library are not deleted — they're just removed from this startup intake until
+              you add them again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
