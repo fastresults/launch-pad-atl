@@ -1238,6 +1238,7 @@ function Inner() {
                 size="lg"
                 context="Founder describing their business concept — what they're building, who it's for, and why it matters."
                 onTranscript={(text) => {
+                    resetStepOneRef.current = false;
                   setBusinessConcept((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
                   markFilled("businessConcept");
                 }}
@@ -1260,7 +1261,10 @@ function Inner() {
               id="concept-type"
               ref={registerRef("businessConcept") as any}
               value={businessConcept}
-              onChange={(e) => setBusinessConcept(e.target.value)}
+              onChange={(e) => {
+                resetStepOneRef.current = false;
+                setBusinessConcept(e.target.value);
+              }}
               placeholder="What you're building, who it's for, why it matters."
               rows={6}
             />
