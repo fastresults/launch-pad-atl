@@ -219,6 +219,26 @@
 @utility animate-marquee-right {
   animation: marquee-right 125s linear infinite;
 }
+
+/* Attract-loop pulse for onboarding hints (e.g. sprint day tiles). Soft ring
+ * that fades in/out with a tiny scale so the pulse reads as "click me" rather
+ * than an error. Runs continuously; the surrounding component gates it. */
+@keyframes attract-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 6px hsl(var(--primary) / 0.35);
+    transform: scale(1.03);
+  }
+}
+@utility animate-attract-pulse {
+  animation: attract-pulse 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-attract-pulse { animation: none; }
+}
 .marquee-track:hover {
   animation-play-state: paused;
 }
