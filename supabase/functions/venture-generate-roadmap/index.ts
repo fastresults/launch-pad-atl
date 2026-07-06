@@ -292,21 +292,31 @@ function buildContextBundle(ctx: VentureContext, allDocs: any[]) {
     });
   }
 
-  // All other completed sibling docs
-  const siblings = allDocs.filter((d) => d.content && d.document_type !== EXEC_SUMMARY_TYPE);
-  siblings.sort((a, b) => a.document_type.localeCompare(b.document_type));
+  // All other completed sibling docs — grouped by track so the model can
+  // synthesize per bucket (Introduction / Education / Tracking / Action).
+  const siblings = allDocs.filter((d: any) => d.content && d.document_type !== EXEC_SUMMARY_TYPE);
   if (siblings.length) {
-    const blocks: string[] = [];
-    for (const d of siblings) {
-      const protect = PROTECTED_TYPES.has(d.document_type);
-      const intake = d.intake_answers && Object.keys(d.intake_answers).length
-        ? `\n_intake answers:_ ${JSON.stringify(d.intake_answers)}\n`
-        : "";
-      const body = protect ? d.content : smartExcerpt(d.content, 1800);
-      const dassess = d.deep_assessment ? `\n\n_deep assessment:_\n${smartExcerpt(d.deep_assessment, 800)}` : "";
-      blocks.push(`### ${d.document_type}${protect ? " [PROTECTED]" : ""}${intake}\n${body}${dassess}`);
+    const byTrack: Record<AssetTrack, any[]> = { Introduction: [], Education: [], Tracking: [], Action: [] };
+    for (const d of siblings) byTrack[trackFor(d.document_type)].push(d);
+    for (const t of TRACK_ORDER) {
+      byTrack[t].sort((a, b) => a.document_type.localeCompare(b.document_type));
     }
-    sections.push({ protect: false, body: `## All completed deliverables\n${blocks.join("\n\n---\n\n")}` });
+    const trackBlocks: string[] = [];
+    for (const t of TRACK_ORDER) {
+      if (!byTrack[t].length) continue;
+      const rows: string[] = [];
+      for (const d of byTrack[t]) {
+        const protect = PROTECTED_TYPES.has(d.document_type);
+        const intake = d.intake_answers && Object.keys(d.intake_answers).length
+          ? `\n_intake answers:_ ${JSON.stringify(d.intake_answers)}\n`
+          : "";
+        const body = protect ? d.content : smartExcerpt(d.content, EXPANDED_EXCERPT_CHARS);
+        const dassess = d.deep_assessment ? `\n\n_deep assessment:_\n${smartExcerpt(d.deep_assessment, 1200)}` : "";
+        rows.push(`#### ${labelFor(d.document_type)} \`(${d.document_type})\`${protect ? " [PROTECTED]" : ""}${intake}\n${body}${dassess}`);
+      }
+      trackBlocks.push(`### Track: ${t}\n${rows.join("\n\n---\n\n")}`);
+    }
+    sections.push({ protect: false, body: `## All completed assets (grouped by track)\n${trackBlocks.join("\n\n===\n\n")}` });
   }
 
   return sections;
