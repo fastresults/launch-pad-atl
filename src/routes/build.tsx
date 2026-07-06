@@ -21,7 +21,7 @@ export default function BuildIndexPage() {
             <span className="text-gradient-brand">Scale it the same way you launched — one morning at a time.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            Old way: hire a $10k/month agency, wait a quarter, hope the retainer earns its keep. New way: eight half-day working sessions with Adam — <span className="text-foreground">$197 each</span> — extending the operator-led method behind The 14-Day Launch Method. One morning, one layer, live by lunch. Brand. A site that converts. Content engine. Sales script. Automations. Ship each one yourself with Adam in the room, or hand it to the team that would otherwise bill you $5K+ for the same work.
+            Old way: hire a $10k/month agency, wait a quarter, hope the retainer earns its keep. New way: eight half-day working sessions with Adam — <span className="text-foreground">$197 each</span> — extending the done-with-you method behind The 14-Day Launch Method. One morning, one layer, live by lunch. Brand. A site that converts. Content engine. Sales script. Automations. Ship each one yourself with Adam in the room, or hand it to the team that would otherwise bill you $5K+ for the same work.
           </p>
         </div>
       </section>

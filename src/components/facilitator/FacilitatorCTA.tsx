@@ -15,7 +15,7 @@ export function FacilitatorCTA() {
       </h2>
       <p className="mt-3 text-base text-muted-foreground md:mt-4 md:text-lg mb-6">
         Half-day and full-day formats for teams, conferences, and private cohorts — Adam runs
-        The 14-Day Launch Method live, the operator-led method replacing accelerators, courses,
+        The 14-Day Launch Method live, the done-with-you method replacing accelerators, courses,
         and raw AI. Your room leaves with real revenue moves shipped that morning, not a slide
         deck and a vague to-do list.
       </p>

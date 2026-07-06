@@ -67,7 +67,7 @@ export default function OneOnOnePage() {
     document.title = "The 14-Day Launch Method, done for you — Adam builds it in 14 days · $4,799";
     const meta = document.querySelector('meta[name="description"]');
     const desc =
-      "The 14-Day Launch Method, run for you by Adam and his team. Brand, site, social, systems, and your first paying customer named — delivered in 14 days. $4,799, everything in. The operator-led method replacing accelerators, courses, and raw AI.";
+      "The 14-Day Launch Method, run for you by Adam and his team. Brand, site, social, systems, and your first paying customer named — delivered in 14 days. $4,799, everything in. The done-with-you method replacing accelerators, courses, and raw AI.";
     if (meta) meta.setAttribute("content", desc);
   }, []);
 
@@ -87,7 +87,7 @@ export default function OneOnOnePage() {
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
               The old way was $40k and six months of agency ping-pong. The new way is
-              the operator-led method replacing accelerators, courses, and raw AI —
+              the done-with-you method replacing accelerators, courses, and raw AI —
               executed for you at a flat fee. Brand, site, social, systems, and a
               named first customer, live in fourteen days. You stay founder. Adam's
               team ships it.

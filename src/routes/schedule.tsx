@@ -55,7 +55,7 @@ export default function SchedulePage() {
             Idea in. <span className="text-gradient-brand">Launch assets out.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
-            This is one live morning inside The 14-Day Launch Method — the operator-led method
+            This is one live morning inside The 14-Day Launch Method — the done-with-you method
             replacing accelerators, courses, and raw AI. Foundation is the drafting stage — you
             write the one-page story of your startup. Every stage after Foundation is a{" "}
             <strong className="text-foreground">mentored working session</strong>: you bring a

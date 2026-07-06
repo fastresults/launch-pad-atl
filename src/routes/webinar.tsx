@@ -7,7 +7,7 @@ import { AccessModeDialog } from "@/components/home/AccessModeDialog";
 
 const HIGHLIGHTS = [
   "One live morning inside The 14-Day Launch Method — offer priced, first customer named, first channel open",
-  "Fourteen days to first revenue — the same operator-led method we run in the room, over video",
+  "Fourteen days to first revenue — the same done-with-you method we run in the room, over video",
   "Small cohort so Adam works your business, not a Zoom crowd",
   "Recording plus the assets that back the plan — yours to keep",
 ];
@@ -19,7 +19,7 @@ export default function WebinarPage() {
     document.title = "The 14-Day Launch Method — live on Zoom with Adam Anderson";
     const meta = document.querySelector('meta[name="description"]');
     const desc =
-      "Can't make Atlanta? Run The 14-Day Launch Method live on Zoom with Adam in a small cohort — the operator-led method replacing accelerators, courses, and raw AI. Fourteen days from webinar day to your first paying customer.";
+      "Can't make Atlanta? Run The 14-Day Launch Method live on Zoom with Adam in a small cohort — the done-with-you method replacing accelerators, courses, and raw AI. Fourteen days from webinar day to your first paying customer.";
     if (meta) meta.setAttribute("content", desc);
   }, []);
 
@@ -37,8 +37,8 @@ export default function WebinarPage() {
               <span className="text-gradient-brand">First paying customer in two weeks.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-              The operator-led method replacing accelerators, courses, and raw AI —
-              run live over video in a small cohort with the operator who built it.
+              The done-with-you method replacing accelerators, courses, and raw AI —
+              run live over video in a small cohort with the founder who built it.
               One focused morning with Adam. You leave with your offer priced, your
               first customer named, your first channel open, and outreach going out
               that afternoon.
