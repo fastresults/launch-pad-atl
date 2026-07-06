@@ -190,10 +190,12 @@ function Inner() {
   const [reusable, setReusable] = useState<VentureSource[]>([]);
   const [reuseSelected, setReuseSelected] = useState<Record<string, boolean>>({});
   const [addMoreOpen, setAddMoreOpen] = useState(false);
+  const resetStepOneRef = useRef(false);
   useEffect(() => {
     listVentureSources()
       .then((rows) => {
         setReusable(rows);
+        if (resetStepOneRef.current) return;
         // Auto-attach everything readable from the founder's existing memory
         // (brief sources, scraped URLs, founder bio, prior uploads). The
         // founder shouldn't have to re-check boxes for what we already have.
@@ -232,7 +234,9 @@ function Inner() {
   }, [reusable]);
 
 
-  const memoryEmpty = memoryChips.length === 0;
+  const activeMemoryChips = memoryChips.filter(({ row }) => !!reuseSelected[row.id]);
+  const inactiveMemoryChips = memoryChips.filter(({ row }) => !reuseSelected[row.id]);
+  const memoryEmpty = activeMemoryChips.length === 0;
   const showCollectionUI = memoryEmpty || addMoreOpen;
 
   // Append a freshly-saved source to the in-page memory so it shows up as a
