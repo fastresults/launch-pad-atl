@@ -42,7 +42,7 @@ function Tracks() {
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
           Launched and taking money?{" "}
-          <span className="text-gradient-brand">Scale with Adam Anderson's Startup Process that launched you.</span>
+          <span className="text-gradient-brand">Scale with Anderson's Process that launched you.</span>
         </h1>
         <p className="mt-5 max-w-3xl text-base text-muted-foreground md:text-lg">
           The old way to scale meant a five-figure agency, a six-month rebuild, and a sales pitch every quarter. The new way is Adam's team running the same done-with-you method behind The 14-Day Launch Method — three tracks that turn a working idea into a growing operation. Not another course. Not raw AI. The method replacing both. You don't buy eight things at once. You buy the three that compound.
