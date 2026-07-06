@@ -197,10 +197,7 @@ export function LaunchPlanner14Day({
       <div className="relative">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-primary">
-              <Rocket className="h-3.5 w-3.5" /> 14-Day Launch Method
-            </div>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight">Your day-by-day sprint</h2>
+            <h2 className="text-2xl font-bold tracking-tight">Your day-by-day sprint</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               From concept to first paying customer in fourteen focused days. Click any day to see
               the exact assets you'll ship — and jump straight to them.
@@ -216,6 +213,7 @@ export function LaunchPlanner14Day({
             </div>
           </div>
         </div>
+
 
         {/* Week 1 */}
         <div className="mt-6">
