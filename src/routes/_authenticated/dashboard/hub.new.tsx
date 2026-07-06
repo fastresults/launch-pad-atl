@@ -825,11 +825,7 @@ function Inner() {
                           ? `Couldn't read · from ${originLabel}`
                           : `Processing… · from ${originLabel}`)
                     }
-                    className={`group inline-flex max-w-[280px] items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
-                      selected
-                        ? "border-primary/40 bg-primary/10"
-                        : "border-white/10 bg-background/40 opacity-60"
-                    }`}
+                    className="group inline-flex max-w-[280px] items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs transition"
                   >
                     <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
                     <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
