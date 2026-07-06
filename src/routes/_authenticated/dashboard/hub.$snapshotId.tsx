@@ -1252,6 +1252,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         isGeneratingKey={(key) => genOne.isPending && genOne.variables?.documentType === key}
         jobRunning={jobRunning}
         onOpenDayDeck={(d) => setOpenDayDeck(d)}
+        snapshotId={snapshot.id}
       />
       </div>
 
