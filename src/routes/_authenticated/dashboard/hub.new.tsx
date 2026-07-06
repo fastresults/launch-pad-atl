@@ -805,16 +805,13 @@ function Inner() {
             )}
             <div className="flex flex-wrap gap-2">
 
-              {memoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin, intent }) => {
+              {activeMemoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin, intent }) => {
                 const ready = !!(row.extracted_text ?? "").trim();
                 const Icon = isUrlCapture ? Globe : isAudio ? Mic : isImage ? FileText : FileText;
-                const selected = !!reuseSelected[row.id];
                 const isPattern = intent === "pattern";
                 const dot = !ready
                   ? "bg-status-danger"
-                  : selected
-                    ? "bg-status-success"
-                    : "bg-muted-foreground/40";
+                  : "bg-status-success";
                 const originLabel =
                   origin === "brief" ? "Brief" : origin === "founder" ? "Founder" : origin === "venture" ? "Venture" : "Library";
                 return (
@@ -855,13 +852,11 @@ function Inner() {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setReuseSelected((prev) => ({ ...prev, [row.id]: !prev[row.id] }))
-                      }
+                      onClick={() => setReuseSelected((prev) => ({ ...prev, [row.id]: false }))}
                       className="shrink-0 text-muted-foreground hover:text-foreground"
-                      aria-label={selected ? "Don't use for this venture" : "Use for this venture"}
+                      aria-label="Don't use for this venture"
                     >
-                      {selected ? <X className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 );
@@ -891,11 +886,101 @@ function Inner() {
                   type="button"
                   size="sm"
                   variant={addMoreOpen ? "outline" : "ghost"}
-                  onClick={() => setAddMoreOpen((v) => !v)}
+                  onClick={() => {
+                    resetStepOneRef.current = false;
+                    setAddMoreOpen((v) => !v);
+                  }}
                 >
                   {addMoreOpen ? "Hide" : "Yes, add more"}
                 </Button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {memoryEmpty && inactiveMemoryChips.length > 0 && !addMoreOpen && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-background/40 p-3">
+            <div className="text-sm">
+              <span className="font-medium">Want to reuse something saved?</span>{" "}
+              <span className="text-muted-foreground">Your library is still saved, but nothing is active for this startup.</span>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                resetStepOneRef.current = false;
+                setAddMoreOpen(true);
+              }}
+            >
+              Yes, add more
+            </Button>
+          </div>
+        )}
+
+        {showCollectionUI && inactiveMemoryChips.length > 0 && addMoreOpen && (
+          <div className="space-y-2 rounded-xl border border-white/10 bg-background/40 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-medium">Saved library sources</div>
+              <button
+                type="button"
+                onClick={() => setAddMoreOpen(false)}
+                className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+              >
+                Done
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {inactiveMemoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin, intent }) => {
+                const ready = !!(row.extracted_text ?? "").trim();
+                const Icon = isUrlCapture ? Globe : isAudio ? Mic : isImage ? FileText : FileText;
+                const isPattern = intent === "pattern";
+                const originLabel =
+                  origin === "brief" ? "Brief" : origin === "founder" ? "Founder" : origin === "venture" ? "Venture" : "Library";
+                return (
+                  <div
+                    key={row.id}
+                    title={
+                      ready
+                        ? `${Math.round((row.extracted_text ?? "").length / 1000)}k chars · from ${originLabel}`
+                        : row.extraction_error
+                          ? `Couldn't read · from ${originLabel}`
+                          : `Processing… · from ${originLabel}`
+                    }
+                    className="group inline-flex max-w-[280px] items-center gap-2 rounded-full border border-white/10 bg-background/40 px-3 py-1.5 text-xs opacity-80 transition hover:opacity-100"
+                  >
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${ready ? "bg-muted-foreground/40" : "bg-status-danger"}`} />
+                    <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
+                    {isUrlCapture ? (
+                      <button
+                        type="button"
+                        onClick={() => flipMemoryIntent(row, isPattern ? "own" : "pattern")}
+                        title={isPattern ? "Click to use as your own site instead" : "Click to use as a pattern reference only"}
+                        className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider transition ${
+                          isPattern
+                            ? "border-primary/30 bg-primary/5 text-primary/80 hover:bg-primary/10"
+                            : "border-white/20 bg-background/60 text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {isPattern ? "Pattern" : "Mine"}
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetStepOneRef.current = false;
+                        setReuseSelected((prev) => ({ ...prev, [row.id]: true }));
+                      }}
+                      className="shrink-0 text-muted-foreground hover:text-foreground"
+                      aria-label="Add to this venture"
+                      title="Add to this venture"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
