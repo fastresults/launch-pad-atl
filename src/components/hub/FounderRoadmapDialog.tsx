@@ -265,13 +265,54 @@ export function FounderRoadmapDialog({
         <div className="flex items-center justify-between gap-3 border-b border-border bg-background/95 px-5 py-3 backdrop-blur">
           <div className="min-w-0">
             <div className="truncate text-base font-semibold">{title}</div>
-            <div className="text-[11px] text-muted-foreground">
-              {generatedAt ? new Date(generatedAt).toLocaleString() : "Just generated"}
-              {readMin ? ` · ~${readMin} min read` : ""}
-              {wordCount ? ` · ${wordCount.toLocaleString()} words` : ""}
-              {documentCount ? ` · synthesized from ${documentCount} assets` : ""}
-              {typeof qualityScore === "number" ? ` · Quality ${qualityScore}/100` : ""}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+              <span>{generatedAt ? new Date(generatedAt).toLocaleString() : "Just generated"}</span>
+              {readMin ? <span>· ~{readMin} min read</span> : null}
+              {wordCount ? <span>· {wordCount.toLocaleString()} words</span> : null}
+              {coverage?.total_assets ? (
+                <span>· Synthesized from {coverage.used_count ?? 0} of {coverage.total_assets} assets · 4 tracks · Day 15 → Day 365</span>
+              ) : documentCount ? (
+                <span>· synthesized from {documentCount} assets</span>
+              ) : null}
+              {typeof qualityScore === "number" ? <span>· Quality {qualityScore}/100</span> : null}
+              {coverage ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="ml-1 inline-flex items-center gap-1 rounded-full border border-border/60 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide hover:text-foreground">
+                      <Info className="h-3 w-3" /> Coverage
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-80 text-xs">
+                    <div className="mb-1 font-semibold">Assets cited</div>
+                    <div className="mb-2 text-[11px] text-muted-foreground">Every claim in the roadmap that could be tagged has one. Uncited assets can be folded in with a Regenerate.</div>
+                    {coverage.per_track ? (
+                      <div className="mb-2 grid grid-cols-2 gap-1">
+                        {Object.entries(coverage.per_track).map(([t, c]: any) => (
+                          <div key={t} className="rounded border border-border/60 px-2 py-1">
+                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t}</div>
+                            <div className="text-xs font-semibold">{c.used}/{c.total}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    {coverage.skipped_labels?.length ? (
+                      <>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Not yet cited</div>
+                        <div className="mt-1 max-h-40 overflow-y-auto text-[11px] leading-relaxed">
+                          {coverage.skipped_labels.slice(0, 40).join(" · ")}
+                          {coverage.skipped_labels.length > 40 ? "…" : ""}
+                        </div>
+                      </>
+                    ) : null}
+                  </PopoverContent>
+                </Popover>
+              ) : null}
             </div>
+            {isStale ? (
+              <div className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-amber-300">
+                <AlertCircle className="h-3 w-3" /> Kit changed since this was written
+              </div>
+            ) : null}
           </div>
           <div className="flex items-center gap-1">
             <Button size="sm" variant="ghost" onClick={onCopy}><Copy className="mr-1 h-3.5 w-3.5" />Copy</Button>
@@ -281,6 +322,7 @@ export function FounderRoadmapDialog({
             <Button size="sm" variant="ghost" onClick={() => onOpenChange(false)}><X className="h-4 w-4" /></Button>
           </div>
         </div>
+
 
         <div className="grid h-[calc(92vh-56px)] grid-cols-[220px_1fr] overflow-hidden">
           {/* Section nav */}
