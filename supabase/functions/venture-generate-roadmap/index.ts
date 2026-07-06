@@ -26,8 +26,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
-const MAX_PROMPT_CHARS = 140_000;
+const MAX_PROMPT_CHARS = 200_000;
 const EXEC_SUMMARY_TYPE = "executive_summary";
+// Strategy assets whose full text MUST be preserved even under budget pressure.
+// Every other completed asset gets a large excerpt (see EXPANDED_EXCERPT_CHARS).
 const PROTECTED_TYPES = new Set([
   EXEC_SUMMARY_TYPE,
   "financial_model",
@@ -40,7 +42,44 @@ const PROTECTED_TYPES = new Set([
   "market_analysis",
   "vision_mission",
   "brand_strategy_framework",
+  "brand_messaging_house",
+  "sales_playbook",
+  "pricing_offer_sheet",
+  "operating_plan",
 ]);
+const EXPANDED_EXCERPT_CHARS = 3500;
+
+// Track classification (mirrors src/lib/asset-tracks.ts). Kept in-file so the
+// edge function has zero cross-package imports.
+type AssetTrack = "Introduction" | "Education" | "Tracking" | "Action";
+const ASSET_TRACK: Record<string, AssetTrack> = {
+  executive_summary: "Introduction", vision_mission: "Introduction", problem_solution: "Introduction",
+  ai_tool_stack_recommendation: "Education",
+  value_proposition: "Introduction", pricing_offer_sheet: "Action", ai_prompt_library: "Education",
+  customer_personas: "Introduction", first_50_warm_list: "Tracking", crm_pipeline_starter: "Tracking",
+  pre_sell_offer_test: "Action", landing_page_waitlist_test: "Action", presell_landing_prd: "Education",
+  competitive_positioning: "Introduction", market_analysis: "Education",
+  go_to_market_plan: "Education", sales_playbook: "Education", outbound_dm_email_scripts: "Action",
+  booking_calendar_setup: "Action", sales_call_recording_stack: "Tracking", supplier_shortlist: "Action",
+  brand_messaging: "Introduction", brand_messaging_house: "Introduction",
+  brand_voice_tone_guide: "Education", brand_strategy_framework: "Education",
+  legal_structure_brief: "Education", terms_privacy_refund_pack: "Action", insurance_starter: "Action",
+  payments_checkout_setup: "Action", business_bank_books_starter: "Action",
+  domain_email_dns_checklist: "Action", analytics_pixel_setup: "Tracking", email_marketing_setup: "Action",
+  website_prd: "Education", visual_identity_brief: "Introduction", logo_brand_asset_pack: "Action",
+  fulfillment_sop: "Education", customer_support_starter: "Action", operating_plan: "Education",
+  ai_support_bot_setup: "Action", automation_recipes_starter: "Action", bom_and_landed_cost: "Tracking",
+  launch_content_kit: "Action", content_calendar_90day: "Tracking", social_media_audit_setup: "Tracking",
+  founder_operating_cadence: "Tracking",
+  paid_ads_starter_pack: "Action", reviews_testimonials_kit: "Action", financial_model: "Tracking",
+  ad_creative_pack: "Action", referral_affiliate_starter: "Action",
+};
+const TRACK_ORDER: AssetTrack[] = ["Introduction", "Education", "Tracking", "Action"];
+function trackFor(k: string): AssetTrack { return ASSET_TRACK[k] ?? "Action"; }
+function labelFor(k: string): string {
+  return k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+const STRUCTURE_VERSION = 2;
 
 class GatewayError extends Error {
   status: number;
