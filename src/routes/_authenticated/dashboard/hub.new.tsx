@@ -39,7 +39,7 @@ import {
   X,
   Wand2,
   MapPin,
-  CheckCircle2,
+  Plus,
   Link2,
   Globe,
   Library,
@@ -171,6 +171,7 @@ function Inner() {
   // Prefill from canonical context.
   const { data: canonicalCtx } = useCanonicalContext();
   useEffect(() => {
+    if (resetStepOneRef.current) return;
     if (!canonicalCtx) return;
     const ctx = canonicalCtx;
     setFounderName((cur) => cur || ctx.identity.full_name);
@@ -243,6 +244,7 @@ function Inner() {
   // pill in the "Your source memory" row immediately, instead of lingering in
   // a separate "SAVED" list below the dropzone.
   const appendToMemory = useCallback((row: VentureSource) => {
+    resetStepOneRef.current = false;
     setReusable((prev) => (prev.some((r) => r.id === row.id) ? prev : [row, ...prev]));
     setReuseSelected((prev) => ({ ...prev, [row.id]: true }));
   }, []);
@@ -359,6 +361,7 @@ function Inner() {
   const addUrl = async () => {
     const raw = urlInput.trim();
     if (!raw) return;
+    resetStepOneRef.current = false;
     if (scrapedUrls.length >= MAX_URLS) {
       toast.error(`Max ${MAX_URLS} URLs`);
       return;
