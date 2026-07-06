@@ -1193,11 +1193,14 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             })}
           </ul>
         )}
+        </div>
       </div>
 
       {heroDone && <FounderRoadmapCard snapshot={snapshot} documentCount={completeCount} />}
 
-      <LaunchPlanner14Day
+      <div className="space-y-3">
+        <SectionIntro copy={HUB_DASHBOARD_INTROS.sprint} />
+        <LaunchPlanner14Day
         docs={docs}
         typeByKey={typeByKey}
         completedKeys={completedKeys}
