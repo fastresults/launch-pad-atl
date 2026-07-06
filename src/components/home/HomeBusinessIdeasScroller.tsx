@@ -69,15 +69,12 @@ function IdeaCard({ idea }: { idea: BusinessIdea }) {
             tapOpen ? "!opacity-100 !translate-y-0" : "",
           ].join(" ")}
         >
-          <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-              <Sparkles className="h-3 w-3" />
-              AI insight
-            </span>
+          <div className="flex items-center justify-end">
             <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
               {CATEGORY_LABEL[idea.category]}
             </span>
           </div>
+
 
           <div className="space-y-2.5 text-left">
             <div>
