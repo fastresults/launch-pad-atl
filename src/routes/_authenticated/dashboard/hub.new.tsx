@@ -51,6 +51,8 @@ type DroppedFile = {
   error?: string;
 };
 
+type UrlIntent = "own" | "pattern";
+
 type ScrapedUrl = {
   id: string;
   url: string;
@@ -59,6 +61,7 @@ type ScrapedUrl = {
   text?: string;
   charCount?: number;
   error?: string;
+  intent?: UrlIntent;
 };
 
 type IntakeTab = "upload" | "link" | "speak" | "type";
@@ -68,6 +71,24 @@ const MAX_FILES = 5;
 const MAX_BYTES = 20 * 1024 * 1024;
 const ACCEPT =
   ".pdf,.txt,.md,.markdown,.docx,.rtf,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,application/rtf,image/*";
+
+/** Parse the intent/URL/title header a URL scrape stores at the top of its markdown body. */
+function parseUrlCaptureMeta(text: string | null | undefined): {
+  intent: UrlIntent;
+  url: string | null;
+  title: string | null;
+} {
+  if (!text) return { intent: "own", url: null, title: null };
+  const head = text.slice(0, 1500);
+  const titleMatch = head.match(/^#\s+(.+)$/m);
+  const sourceMatch = head.match(/^Source:\s*(\S+)/im);
+  const intentMatch = head.match(/^Intent:\s*(own|pattern)\b/im);
+  return {
+    intent: intentMatch && intentMatch[1].toLowerCase() === "pattern" ? "pattern" : "own",
+    url: sourceMatch?.[1] ?? null,
+    title: titleMatch?.[1]?.trim() ?? null,
+  };
+}
 
 type Path = "own" | "competitor" | "manual";
 
@@ -101,6 +122,7 @@ function Inner() {
   const [files, setFiles] = useState<DroppedFile[]>([]);
   const [scrapedUrls, setScrapedUrls] = useState<ScrapedUrl[]>([]);
   const [urlInput, setUrlInput] = useState("");
+  const [nextUrlIntent, setNextUrlIntent] = useState<UrlIntent>("own");
   const [scrapingUrl, setScrapingUrl] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
@@ -189,9 +211,13 @@ function Inner() {
         if (r.used_in_brief || r.kind === "brief_source") origin = "brief";
         else if (r.kind === "founder_bio") origin = "founder";
         else if (r.snapshot_id) origin = "venture";
-        return { row: r, name, isUrlCapture, isAudio, isImage, origin };
+        const meta = isUrlCapture
+          ? parseUrlCaptureMeta(r.extracted_text)
+          : { intent: "own" as UrlIntent, url: null, title: null };
+        return { row: r, name, isUrlCapture, isAudio, isImage, origin, intent: meta.intent, capturedUrl: meta.url, capturedTitle: meta.title };
       });
   }, [reusable]);
+
 
   const memoryEmpty = memoryChips.length === 0;
   const showCollectionUI = memoryEmpty || addMoreOpen;
@@ -271,13 +297,47 @@ function Inner() {
   const removeUrl = (id: string) => setScrapedUrls((prev) => prev.filter((u) => u.id !== id));
 
   const reusedIds = Object.entries(reuseSelected).filter(([, v]) => v).map(([k]) => k);
-  const reusedFiles = reusable.filter((r) => reusedIds.includes(r.id));
+  const reusedRows = reusable.filter((r) => reusedIds.includes(r.id));
   const readyFiles = files.filter((f) => f.status === "ready" && (f.text ?? "").trim());
   const readyUrls = scrapedUrls.filter((u) => u.status === "ready" && (u.text ?? "").trim());
+
+  // Split reused memory rows into "own" content (uploaded docs + own-tagged
+  // URL captures) vs "pattern references" (URL captures tagged as pattern).
+  // Pattern refs are handed to the AI as inspiration only — never as identity.
+  const reusedSplit = useMemo(() => {
+    const own: Array<{ filename: string; text: string; id: string }> = [];
+    const pattern: Array<{ url: string; title: string | null; text: string; id: string }> = [];
+    for (const r of reusedRows) {
+      const text = r.extracted_text ?? "";
+      if (!text.trim()) continue;
+      const name = r.original_name ?? "source";
+      const isUrlCapture = /\.(md|markdown)$/i.test(name);
+      const meta = isUrlCapture ? parseUrlCaptureMeta(text) : { intent: "own" as UrlIntent, url: null, title: null };
+      if (isUrlCapture && meta.intent === "pattern") {
+        pattern.push({ url: meta.url ?? name, title: meta.title, text, id: r.id });
+      } else {
+        own.push({ filename: name, text, id: r.id });
+      }
+    }
+    return { own, pattern };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reusedRows.map((r) => r.id).join("|")]);
+
   const combinedDocs = [
-    ...reusedFiles.map((r) => ({ filename: r.original_name, text: r.extracted_text ?? "", id: r.id })),
+    ...reusedSplit.own,
     ...readyFiles.map((f) => ({ filename: f.name, text: f.text ?? "", id: f.documentId })),
   ];
+  // Transient URL scrapes the founder just added on this page (before they
+  // land in memory) — respect their intent flag too.
+  const readyOwnUrls = readyUrls.filter((u) => (u.intent ?? "own") === "own");
+  const readyPatternUrls = readyUrls.filter((u) => u.intent === "pattern");
+  const patternRefs = [
+    ...reusedSplit.pattern,
+    ...readyPatternUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text ?? "", id: u.id })),
+  ];
+  const hasPatternRefs = patternRefs.length > 0;
+  const hasOwnSource = combinedDocs.length > 0 || readyOwnUrls.length > 0 || businessConcept.trim().length >= 20;
+
 
   const addUrl = async () => {
     const raw = urlInput.trim();
@@ -298,10 +358,12 @@ function Inner() {
       toast.error("Already added that URL");
       return;
     }
+    const intent: UrlIntent = nextUrlIntent;
     const entry: ScrapedUrl = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       url: normalized,
       status: "scraping",
+      intent,
     };
     setScrapedUrls((prev) => [...prev, entry]);
     setUrlInput("");
@@ -327,8 +389,11 @@ function Inner() {
         // "Your source memory" alongside uploads.
         try {
           const host = new URL(normalized).hostname.replace(/^www\./, "");
-          const baseName = (r.title || host).replace(/[^\w\-.]+/g, "_").slice(0, 80) || "link";
-          const md = `# ${r.title || normalized}\n\nSource: ${normalized}\n\n${text}`;
+          const patternSuffix = intent === "pattern" ? "__pattern" : "";
+          const baseName = ((r.title || host).replace(/[^\w\-.]+/g, "_").slice(0, 80) || "link") + patternSuffix;
+          // The `Intent:` header line is what we read back later to route this
+          // scrape into "own" vs "pattern reference" buckets at synthesis time.
+          const md = `# ${r.title || normalized}\n\nSource: ${normalized}\nIntent: ${intent}\n\n${text}`;
           const file = new File([md], `${baseName}.md`, { type: "text/markdown" });
           const row = await uploadVentureSource({ file, kind: "venture_source", waitForExtraction: true });
           appendToMemory(row);
@@ -336,6 +401,7 @@ function Inner() {
         } catch (persistErr) {
           // Fall back to keeping the URL in its own list if persistence fails.
           setScrapedUrls((curr) =>
+
             curr.map((x) =>
               x.id === entry.id
                 ? {
@@ -368,16 +434,22 @@ function Inner() {
   const draftFromFiles = useCallback(
     async (opts?: { auto?: boolean }) => {
       const hasFiles = combinedDocs.length > 0;
-      const hasUrls = readyUrls.length > 0;
+      const hasOwnUrls = readyOwnUrls.length > 0;
+      const hasPattern = patternRefs.length > 0;
       const hasDraft = businessConcept.trim().length >= 20;
-      if (!hasFiles && !hasUrls && !hasDraft) return;
+      if (!hasFiles && !hasOwnUrls && !hasPattern && !hasDraft) return;
       if (drafting) return;
+      // Identity fields (name, contact, address, own website) should NEVER come
+      // from a pattern reference. If pattern refs are the only signal about
+      // identity we have, lock down the identity setters entirely.
+      const identityFromPatternOnly = hasPattern && !hasFiles && !hasOwnUrls;
       setDrafting(true);
       try {
         const { data, error } = await supabase.functions.invoke("venture-synthesize-concept", {
           body: {
             sources: combinedDocs.map((d) => ({ filename: d.filename, text: d.text })),
-            urls: readyUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text })),
+            urls: readyOwnUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text })),
+            patternUrls: patternRefs.map((p) => ({ url: p.url, title: p.title ?? null, text: p.text })),
             conceptDraft: hasDraft ? businessConcept.trim() : "",
             industryValues: INDUSTRIES.map((i) => i.value),
           },
@@ -397,22 +469,26 @@ function Inner() {
             filled.push(label);
           }
         };
-        setIf(data?.company_name, setCompanyName, "companyName", "company name");
+        const setIdentity = (val: unknown, setter: (v: string) => void, key: string, label: string) => {
+          if (identityFromPatternOnly) return;
+          setIf(val, setter, key, label);
+        };
+        setIdentity(data?.company_name, setCompanyName, "companyName", "company name");
         setIf(data?.differentiation_statement, setDiff, "diff", "differentiation");
-        setIf(data?.founder_name, setFounderName, "founderName", "founder name");
-        setIf(data?.founder_email, setFounderEmail, "founderEmail", "founder email");
-        setIf(data?.founder_phone, setFounderPhone, "founderPhone", "founder phone");
-        setIf(data?.city, setCity, "city", "city");
-        setIf(data?.region, setRegion, "region", "state / region");
+        setIdentity(data?.founder_name, setFounderName, "founderName", "founder name");
+        setIdentity(data?.founder_email, setFounderEmail, "founderEmail", "founder email");
+        setIdentity(data?.founder_phone, setFounderPhone, "founderPhone", "founder phone");
+        setIdentity(data?.city, setCity, "city", "city");
+        setIdentity(data?.region, setRegion, "region", "state / region");
         setIf(data?.sub_industry, setSubIndustry, "subIndustry", "sub-industry");
-        if (typeof data?.website_url === "string" && data.website_url.trim()) {
+        if (!identityFromPatternOnly && typeof data?.website_url === "string" && data.website_url.trim()) {
           setWebsiteUrl(data.website_url.trim());
           markFilled("websiteUrl");
           // Silently flip to "own" so enrichment re-scrapes the founder's site.
           setPath("own");
           filled.push("website");
         }
-        if (typeof data?.country === "string" && data.country.trim()) {
+        if (!identityFromPatternOnly && typeof data?.country === "string" && data.country.trim()) {
           setCountry(data.country.trim());
           markFilled("country");
           filled.push("country");
@@ -428,6 +504,7 @@ function Inner() {
           markFilled("industry");
           filled.push("industry");
         }
+
 
         setProcessed(true);
         if (opts?.auto) {
@@ -605,10 +682,11 @@ function Inner() {
         {!memoryEmpty && (
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
-              {memoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin }) => {
+              {memoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin, intent }) => {
                 const ready = !!(row.extracted_text ?? "").trim();
                 const Icon = isUrlCapture ? Globe : isAudio ? Mic : isImage ? FileText : FileText;
                 const selected = !!reuseSelected[row.id];
+                const isPattern = intent === "pattern";
                 const dot = !ready
                   ? "bg-status-danger"
                   : selected
@@ -620,13 +698,14 @@ function Inner() {
                   <div
                     key={row.id}
                     title={
-                      ready
+                      (isPattern ? "Pattern reference · " : "") +
+                      (ready
                         ? `${Math.round((row.extracted_text ?? "").length / 1000)}k chars · from ${originLabel}`
                         : row.extraction_error
                           ? `Couldn't read · from ${originLabel}`
-                          : `Processing… · from ${originLabel}`
+                          : `Processing… · from ${originLabel}`)
                     }
-                    className={`group inline-flex max-w-[260px] items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
+                    className={`group inline-flex max-w-[280px] items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
                       selected
                         ? "border-primary/40 bg-primary/10"
                         : "border-white/10 bg-background/40 opacity-60"
@@ -635,6 +714,12 @@ function Inner() {
                     <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
                     <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
+                    {isPattern && (
+                      <span className="shrink-0 rounded-full border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
+                        Pattern
+                      </span>
+                    )}
+
                     <button
                       type="button"
                       onClick={() =>
@@ -649,6 +734,16 @@ function Inner() {
                 );
               })}
             </div>
+
+            {hasPatternRefs && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs text-foreground/90">
+                <span className="font-semibold text-primary">Pattern references active.</span>{" "}
+                We'll use those sites for shape and positioning only — not for your startup's
+                name, address, or contact info. Fill those in below.
+              </div>
+            )}
+
+
 
             {/* Anything else? */}
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-background/40 p-3">
@@ -786,8 +881,57 @@ function Inner() {
         {showCollectionUI && intakeTab === "link" && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Paste a URL — your site, a competitor, or a relevant article. Up to {MAX_URLS}.
+              Paste a URL — your own site, or a startup you want to learn from. Up to {MAX_URLS}.
             </p>
+
+            {/* Intent toggle — decides how the AI treats the next URL */}
+            <div className="rounded-xl border border-white/10 bg-background/40 p-3">
+              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                This link is…
+              </div>
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {([
+                  {
+                    k: "own" as UrlIntent,
+                    label: "My own site or doc",
+                    hint: "Pull name, contact, location, and content.",
+                  },
+                  {
+                    k: "pattern" as UrlIntent,
+                    label: "A pattern to learn from",
+                    hint: "Use the shape only. Won't copy their name or address.",
+                  },
+                ]).map((opt) => {
+                  const active = nextUrlIntent === opt.k;
+                  return (
+                    <button
+                      key={opt.k}
+                      type="button"
+                      onClick={() => setNextUrlIntent(opt.k)}
+                      className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
+                        active
+                          ? "border-primary/60 bg-primary/10"
+                          : "border-white/10 bg-background/40 hover:border-white/25"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 font-medium">
+                        <span
+                          className={`h-2 w-2 rounded-full ${active ? "bg-primary" : "bg-muted-foreground/40"}`}
+                        />
+                        {opt.label}
+                      </div>
+                      <div className="mt-0.5 pl-4 text-[11px] text-muted-foreground">{opt.hint}</div>
+                    </button>
+                  );
+                })}
+              </div>
+              {nextUrlIntent === "pattern" && (
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  You'll fill in your own startup name, location, and contact below — we won't take them from the pattern site.
+                </p>
+              )}
+            </div>
+
             <div className="flex gap-2">
               <Input
                 type="url"
@@ -799,7 +943,7 @@ function Inner() {
                     addUrl();
                   }
                 }}
-                placeholder="https://example.com"
+                placeholder={nextUrlIntent === "pattern" ? "https://startup-you-admire.com" : "https://example.com"}
                 disabled={scrapingUrl || scrapedUrls.length >= MAX_URLS}
               />
               <Button
@@ -821,6 +965,11 @@ function Inner() {
                       <span className="font-medium">{u.title || u.url}</span>
                       {u.title && <span className="ml-1 text-xs text-muted-foreground">· {u.url}</span>}
                     </span>
+                    {u.intent === "pattern" && (
+                      <span className="shrink-0 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                        Pattern
+                      </span>
+                    )}
                     <span
                       className={`shrink-0 text-[11px] uppercase tracking-wider ${
                         u.status === "ready"
@@ -846,6 +995,7 @@ function Inner() {
             )}
           </div>
         )}
+
 
         {/* Speak tab */}
         {showCollectionUI && intakeTab === "speak" && (

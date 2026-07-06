@@ -64,7 +64,15 @@ Rules:
 - Infer "track" from cues (single-location food/retail/service → lifestyle; DTC product brand sold online → ecommerce_dtc; venture-scale SaaS/app → scalable_tech; two-sided platform → marketplace; hardware/biotech → deep_tech; nonprofit/mission → social_impact; internal corporate venture → corporate).
 - Default country to "United States" only if a US state, ZIP, or city is named.
 - Concept paragraph: 2–4 sentences, no headings, no "Here is", no buzzwords ("synergy", "revolutionary", "cutting-edge").
+
+PATTERN REFERENCES:
+- If a "PATTERN REFERENCES" section is provided, treat those pages as INSPIRATION ONLY. They describe a startup the founder wants to *learn the shape of* — not their own startup.
+- NEVER populate company_name, founder_name, founder_email, founder_phone, website_url, city, region, or country from a pattern reference. If those fields would only come from a pattern reference, leave them null.
+- DO use pattern references to inform industry, sub_industry, market_scope, track, differentiation_statement, and the *style/model* of the concept paragraph.
+- The concept paragraph, when a pattern reference is present, must be written as the FOUNDER'S OWN new startup (use "we" and a placeholder like "our shop" or "our platform" if no name is known) — not as a description of the reference brand. Do not name the reference brand in the concept.
+
 - Return ONLY the JSON object.`;
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -76,10 +84,11 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const sources: Array<{ filename?: string; text?: string }> = Array.isArray(body?.sources) ? body.sources : [];
     const urls: Array<{ url?: string; title?: string | null; text?: string }> = Array.isArray(body?.urls) ? body.urls : [];
+    const patternUrls: Array<{ url?: string; title?: string | null; text?: string }> = Array.isArray(body?.patternUrls) ? body.patternUrls : [];
     const conceptDraft: string = typeof body?.conceptDraft === "string" ? body.conceptDraft.trim() : "";
     const industryValues: string[] = Array.isArray(body?.industryValues) ? body.industryValues : [];
 
-    if (!sources.length && !urls.length && conceptDraft.length < 20) {
+    if (!sources.length && !urls.length && !patternUrls.length && conceptDraft.length < 20) {
       return new Response(JSON.stringify({ error: "Provide at least one source (file, URL, or ≥20 char concept draft)" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -89,7 +98,21 @@ Deno.serve(async (req) => {
     let used = 0;
     const fileParts: string[] = [];
     const urlParts: string[] = [];
-    // URLs first — they're noisier so cap them tighter when total cap is hit
+    const patternParts: string[] = [];
+    // Pattern refs are usually longer marketing pages — cap them tightest so
+    // they don't crowd out the founder's own sources.
+    const PATTERN_PER_CAP = Math.min(PER_FILE_CAP, 15_000);
+    for (const p of patternUrls) {
+      const text = (p?.text ?? "").trim();
+      if (!text) continue;
+      const label = (p?.title || p?.url || "pattern reference").toString().slice(0, 200);
+      const remaining = TOTAL_CAP - used;
+      if (remaining <= 0) break;
+      const slice = text.slice(0, Math.min(PATTERN_PER_CAP, remaining));
+      used += slice.length;
+      patternParts.push(`### ${label}\n${p?.url ? `(${p.url})\n` : ""}${slice}`);
+    }
+    // URLs next — they're noisier so cap them tighter when total cap is hit
     for (const u of urls) {
       const text = (u?.text ?? "").trim();
       if (!text) continue;
@@ -111,7 +134,7 @@ Deno.serve(async (req) => {
       fileParts.push(`### ${name}\n${slice}`);
     }
 
-    if (!fileParts.length && !urlParts.length && conceptDraft.length < 20) {
+    if (!fileParts.length && !urlParts.length && !patternParts.length && conceptDraft.length < 20) {
       return new Response(JSON.stringify({ error: "Sources were empty after extraction" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -123,9 +146,15 @@ Deno.serve(async (req) => {
       : `INDUSTRY_VALUES: (none supplied — set "industry" to null)`;
 
     const sections: string[] = [];
-    if (urlParts.length) sections.push(`WEB SOURCES (scraped pages):\n\n${urlParts.join("\n\n---\n\n")}`);
-    if (fileParts.length) sections.push(`UPLOADED DOCUMENTS:\n\n${fileParts.join("\n\n---\n\n")}`);
+    if (patternParts.length) {
+      sections.push(
+        `PATTERN REFERENCES (INSPIRATION ONLY — use for shape/model/positioning; DO NOT copy identity fields like company name, founder name/contact, website, or location from these):\n\n${patternParts.join("\n\n---\n\n")}`,
+      );
+    }
+    if (urlParts.length) sections.push(`WEB SOURCES (scraped pages — founder's own):\n\n${urlParts.join("\n\n---\n\n")}`);
+    if (fileParts.length) sections.push(`UPLOADED DOCUMENTS (founder's own):\n\n${fileParts.join("\n\n---\n\n")}`);
     if (conceptDraft) sections.push(`FOUNDER'S OWN DRAFT (verbatim, treat as primary intent):\n\n${conceptDraft}`);
+
 
     const userPrompt = `${industryBlock}
 
