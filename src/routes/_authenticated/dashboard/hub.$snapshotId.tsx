@@ -1132,8 +1132,12 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
   return (
     <div className="space-y-6">
+      <DashboardWelcomeStrip snapshotId={snapshot.id} hasProgress={completeCount > 0} />
+
       {/* Hero next-action card */}
-      <div className={`rounded-2xl border p-6 ${heroDone ? "border-status-success/30 bg-status-success/5" : "border-white/10 bg-card"}`}>
+      <div className="space-y-3">
+        <SectionIntro copy={HUB_DASHBOARD_INTROS.next_action} />
+        <div className={`rounded-2xl border p-6 ${heroDone ? "border-status-success/30 bg-status-success/5" : "border-white/10 bg-card"}`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h2 className="text-xl font-semibold">{heroTitle}</h2>
