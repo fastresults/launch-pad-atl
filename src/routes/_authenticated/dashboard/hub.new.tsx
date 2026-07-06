@@ -16,9 +16,20 @@ import {
   attachSourcesToSnapshot,
   listVentureSources,
   deleteVentureSource,
+  updateVentureSourceIntent,
   type VentureSource,
 } from "@/lib/venture-sources";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   ArrowLeft,
   Loader2,
@@ -35,6 +46,8 @@ import {
   ChevronDown,
   ChevronUp,
   Mic,
+  Compass,
+  RotateCcw,
   Type as TypeIcon,
 } from "lucide-react";
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
