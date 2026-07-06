@@ -61,6 +61,9 @@ import { ContentStudio } from "@/components/hub/ContentStudio";
 import { FounderRoadmapCard } from "@/components/hub/FounderRoadmapCard";
 import { LaunchPlanner14Day } from "@/components/hub/LaunchPlanner14Day";
 import { AIStackPanel } from "@/components/hub/AIStackPanel";
+import { SectionIntro } from "@/components/hub/SectionIntro";
+import { DashboardWelcomeStrip } from "@/components/hub/DashboardWelcomeStrip";
+import { HUB_DASHBOARD_INTROS } from "@/lib/hub-dashboard-copy";
 import { STAGE_DECKS, slugify } from "@/components/workshop-slides/registry";
 import { DeckDialog } from "@/components/workshop-slides/DeckDialog";
 import {
