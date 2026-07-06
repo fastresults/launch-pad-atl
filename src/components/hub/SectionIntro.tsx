@@ -12,10 +12,22 @@ import type { ReactNode } from "react";
 export function SectionIntro({
   copy,
   actions,
+  variant = "full",
 }: {
   copy: SectionIntroCopy;
   actions?: ReactNode;
+  variant?: "full" | "minimal";
 }) {
+  if (variant === "minimal") {
+    // Guided-mode: hide the eyebrow + info popover entirely.
+    // Only render if the caller has actions to surface.
+    if (!actions) return null;
+    return (
+      <div className="flex items-center justify-end gap-1 px-1">
+        {actions}
+      </div>
+    );
+  }
   return (
     <div className="flex items-center justify-between gap-3 px-1">
       <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
