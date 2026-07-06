@@ -1334,8 +1334,8 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       )}
 
 
-      {/* Category stepper */}
-      {categoryProgress.length > 0 && (
+      {/* Category stepper — jump-nav, advanced only. In guided mode the section headers directly below already convey progress. */}
+      {!isGuided && categoryProgress.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {categoryProgress.map((c, i) => {
             const active = !jobRunning && nextCategory?.cat === c.cat;
