@@ -40,7 +40,7 @@ export default function ContactPage() {
       <SiteHeader />
       <main className="flex-1">
         <div className="mx-auto max-w-2xl px-6 py-16 md:py-24">
-          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Get in touch</h1>
+          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Get <span className="text-gradient-brand">in touch</span></h1>
           <p className="mt-3 text-muted-foreground">
             Questions, concerns, or just curious how the program works? Drop us a note — a real person will reply within 1 business day.
           </p>
