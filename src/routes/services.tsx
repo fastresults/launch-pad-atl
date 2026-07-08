@@ -41,8 +41,8 @@ function Tracks() {
           <Sparkles className="size-3.5" /> After The 14-Day Pivot Method · Our team builds what comes next
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
-          Launched and taking money?{" "}
-          <span className="text-gradient-brand">Scale with the same Process that launched you.</span>
+          You launched.{" "}
+          <span className="text-gradient-brand">We'll scale it.</span>
         </h1>
         <p className="mt-5 max-w-3xl text-base text-muted-foreground md:text-lg">
           The old way to scale meant a five-figure agency, a six-month rebuild, and a sales pitch every quarter. The new way is our team running The 14-Day Pivot Method at scale — three tracks that turn a working idea into a growing operation. Not another course. Not raw AI. The method replacing both. You don't buy eight things at once. You buy the three that compound.
