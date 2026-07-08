@@ -29,7 +29,7 @@ export function FacilitatorHero() {
       {/* Headline column — keeps the existing left primary border */}
       <div className="order-2 md:order-1 md:flex-1 border-l-4 border-primary pl-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          The operator behind The 14-Day Launch Method
+          The operator behind The 14-Day Pivot Method
         </p>
         <h1 className="text-4xl font-semibold leading-tight tracking-tight text-foreground md:text-5xl lg:text-6xl">
           Adam Anderson
@@ -39,7 +39,7 @@ export function FacilitatorHero() {
           your seat.
         </h1>
         <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
-          Not a coach with a course. The operator who built The 14-Day Launch Method — a founder who&rsquo;s started companies, shipped products, and now runs the room himself. He knows what the first move looks like because he&rsquo;s made it, more than once.
+          Not a coach with a course. The operator who built The 14-Day Pivot Method — a founder who&rsquo;s started companies, shipped products, and now runs the room himself. He knows what the first move looks like because he&rsquo;s made it, more than once.
         </p>
       </div>
     </motion.section>

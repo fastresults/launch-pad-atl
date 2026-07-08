@@ -11,11 +11,11 @@ export function FacilitatorCTA() {
       className="border-l-4 border-primary bg-card rounded-xl p-10"
     >
       <h2 className="text-2xl font-semibold tracking-tight text-card-foreground md:text-3xl">
-        Bring The 14-Day Launch Method to your room.
+        Bring The 14-Day Pivot Method to your room.
       </h2>
       <p className="mt-3 text-base text-muted-foreground md:mt-4 md:text-lg mb-6">
         Half-day and full-day formats for teams, conferences, and private cohorts — Adam runs
-        The 14-Day Launch Method live, the done-with-you method replacing accelerators, courses,
+        The 14-Day Pivot Method live, the done-with-you method replacing accelerators, courses,
         and raw AI. Your room leaves with real revenue moves shipped that morning, not a slide
         deck and a vague to-do list.
       </p>

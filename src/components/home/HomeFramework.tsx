@@ -71,12 +71,12 @@ function Hero() {
           <div>
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white md:text-sm md:tracking-[0.2em]">
 
-          <Star className="size-3.5 fill-current" /> The 14-Day Launch Method · Wed, Aug 19, 2026 · Norcross, GA
+          <Star className="size-3.5 fill-current" /> The 14-Day Pivot Method · Wed, Aug 19, 2026 · Norcross, GA
         </p>
 
 
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
-          The 14-Day Launch Method.{" "}
+          The 14-Day Pivot Method.{" "}
           <span className="text-gradient-brand">First paying customer in two weeks.</span>
         </h1>
 
@@ -177,7 +177,7 @@ function Framework() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          Inside The 14-Day Launch Method
+          Inside The 14-Day Pivot Method
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
           A business ready to take money.{" "}
@@ -347,7 +347,7 @@ function HonestRoadmap() {
           </div>
 
           <p className="mx-auto mt-10 max-w-3xl text-base text-muted-foreground md:text-lg">
-            DIY any of it. Hire anyone. Or hand it to our team. Either way, each half-day is the same playbook Adam's team runs from — the working sessions that extend The 14-Day Launch Method after your first customer.{" "}
+            DIY any of it. Hire anyone. Or hand it to our team. Either way, each half-day is the same playbook Adam's team runs from — the working sessions that extend The 14-Day Pivot Method after your first customer.{" "}
             <span className="font-medium text-foreground">
               Foundation first. Build when ready.
             </span>{" "}

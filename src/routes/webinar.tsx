@@ -6,7 +6,7 @@ import { ArrowRight, Video, Calendar, Clock, Users, CheckCircle2 } from "lucide-
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
 
 const HIGHLIGHTS = [
-  "One live morning inside The 14-Day Launch Method — offer priced, first customer named, first channel open",
+  "One live morning inside The 14-Day Pivot Method — offer priced, first customer named, first channel open",
   "Fourteen days to first revenue — the same done-with-you method we run in the room, over video",
   "Small cohort so Adam works your business, not a Zoom crowd",
   "Recording plus the assets that back the plan — yours to keep",
@@ -16,10 +16,10 @@ export default function WebinarPage() {
   const [modesOpen, setModesOpen] = useState(false);
 
   useEffect(() => {
-    document.title = "The 14-Day Launch Method — live on Zoom with Adam Anderson";
+    document.title = "The 14-Day Pivot Method — live on Zoom with Adam Anderson";
     const meta = document.querySelector('meta[name="description"]');
     const desc =
-      "Can't make Atlanta? Run The 14-Day Launch Method live on Zoom with Adam in a small cohort — the done-with-you method replacing accelerators, courses, and raw AI. Fourteen days from webinar day to your first paying customer.";
+      "Can't make Atlanta? Run The 14-Day Pivot Method live on Zoom with Adam in a small cohort — the done-with-you method replacing accelerators, courses, and raw AI. Fourteen days from webinar day to your first paying customer.";
     if (meta) meta.setAttribute("content", desc);
   }, []);
 
@@ -30,10 +30,10 @@ export default function WebinarPage() {
         <section className="border-b border-white/5 py-16 md:py-24">
           <div className="mx-auto max-w-4xl px-6">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-primary">
-              <Video className="size-3.5" /> The 14-Day Launch Method · Live on Zoom
+              <Video className="size-3.5" /> The 14-Day Pivot Method · Live on Zoom
             </p>
             <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
-              The 14-Day Launch Method, live on Zoom.{" "}
+              The 14-Day Pivot Method, live on Zoom.{" "}
               <span className="text-gradient-brand">First paying customer in two weeks.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">

@@ -65,7 +65,7 @@ export const WORKSHOP_PRICE_LABEL = "$297";
 // so the app never drifts on asset counts or sprint naming again.
 export const TOTAL_ASSETS_LABEL = "60+";
 export const SPRINT_LABEL = "14-Day Sprint";
-export const SPRINT_METHOD_LABEL = "14-Day Launch Method";
+export const SPRINT_METHOD_LABEL = "14-Day Pivot Method";
 
 export type FrameworkDeliverable = {
   icon: LucideIcon;

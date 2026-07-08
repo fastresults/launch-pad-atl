@@ -14,14 +14,14 @@ export default function BuildIndexPage() {
       <section className="border-b border-white/5 py-16 md:py-24">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-            <Sparkles className="size-3.5" /> The 14-Day Launch Method · 8 Working Sessions with Adam
+            <Sparkles className="size-3.5" /> The 14-Day Pivot Method · 8 Working Sessions with Adam
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
             Launched already?{" "}
             <span className="text-gradient-brand">Scale it with the same method that launched you — one morning at a time.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            Old way: hire a $10k/month agency, wait a quarter, hope the retainer earns its keep. New way: eight half-day working sessions with Adam — <span className="text-foreground">$197 each</span> — extending the done-with-you method behind The 14-Day Launch Method. One morning, one layer, live by lunch. Brand. A site that converts. Content engine. Sales script. Automations. Ship each one yourself with Adam in the room, or hand it to the team that would otherwise bill you $5K+ for the same work.
+            Old way: hire a $10k/month agency, wait a quarter, hope the retainer earns its keep. New way: eight half-day working sessions with Adam — <span className="text-foreground">$197 each</span> — extending the done-with-you method behind The 14-Day Pivot Method. One morning, one layer, live by lunch. Brand. A site that converts. Content engine. Sales script. Automations. Ship each one yourself with Adam in the room, or hand it to the team that would otherwise bill you $5K+ for the same work.
           </p>
         </div>
       </section>
@@ -99,7 +99,7 @@ export default function BuildIndexPage() {
               Skip the learning curve. Hand it to our team.
             </h2>
             <p className="mt-4 text-base opacity-90 md:text-lg">
-              Same crew that runs The 14-Day Launch Method live, using the exact playbook and tool stack we teach in the room. We'll build the brand, the website, the systems, and the engines — so you can stay focused on customers.
+              Same crew that runs The 14-Day Pivot Method live, using the exact playbook and tool stack we teach in the room. We'll build the brand, the website, the systems, and the engines — so you can stay focused on customers.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link

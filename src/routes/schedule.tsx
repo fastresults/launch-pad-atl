@@ -46,7 +46,7 @@ export default function SchedulePage() {
       <section className="border-b border-white/5 py-12 md:py-20">
         <div className="mx-auto max-w-4xl px-6">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-gradient-brand md:text-sm md:tracking-[0.2em]">
-            The 14-Day Launch Method · Agenda
+            The 14-Day Pivot Method · Agenda
           </p>
           <p className="mb-4 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
             {EVENT.dateLabel} · {EVENT.timeLabel}
@@ -55,7 +55,7 @@ export default function SchedulePage() {
             Idea in. <span className="text-gradient-brand">Launch assets out.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
-            This is one live morning inside The 14-Day Launch Method — the done-with-you method
+            This is one live morning inside The 14-Day Pivot Method — the done-with-you method
             replacing accelerators, courses, and raw AI. Foundation is the drafting stage — you
             write the one-page story of your startup. Every stage after Foundation is a{" "}
             <strong className="text-foreground">mentored working session</strong>: you bring a

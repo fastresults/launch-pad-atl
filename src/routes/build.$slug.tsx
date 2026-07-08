@@ -277,7 +277,7 @@ export default function BuildWorkshopPage() {
               {offer.priceLabel}
             </p>
             <p className="mt-3 max-w-2xl text-sm opacity-90 md:text-base">
-              The working session hands you the strategy, playbook, and tool stack from The 14-Day Launch Method to ship it yourself. Decide you'd rather we build it? We'll credit the {w.priceLabel} toward any engagement over $1,000.
+              The working session hands you the strategy, playbook, and tool stack from The 14-Day Pivot Method to ship it yourself. Decide you'd rather we build it? We'll credit the {w.priceLabel} toward any engagement over $1,000.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link

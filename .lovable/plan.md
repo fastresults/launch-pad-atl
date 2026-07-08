@@ -1,88 +1,132 @@
-# Copy audit — homepage & adjacent pages
+# Copy pass 3 — one name only: The 14-Day Pivot Method. Adam dialed back.
 
-## Where I went wrong
+## Reframe
 
-Last pass I treated this like a naming-rules problem. The real problem is a copywriting problem: the hero hammers the same branded phrase four times in fewer than 100 words, then collides two branded phrases in one sentence.
+One brand across the entire site. The 14-Day Launch Method is retired from all user-facing copy.
 
-Current hero, in reading order:
+- **The 14-Day Pivot Method** — the *only* branded name. Used everywhere Launch Method appears today: eyebrows, H1s, buttons, meta titles, agendas, pricing lines, dialog headers, concierge intro.
+- **Adam** — the operator who built the method. Named once in the hero, once on the facilitator card, once in the done-for-you dialog card (that mode literally means he does it), plus his standalone facilitator page. Elsewhere: cut, or replaced with "the operator," "the facilitator," "our team," or dropped entirely.
 
-1. Eyebrow: **The 14-Day Launch Method** · Wed, Aug 19, 2026 · Norcross, GA
-2. H1: **The 14-Day Launch Method.** First paying customer in two weeks.
-3. New-way card: One live morning inside **The 14-Day Launch Method**. Revenue in two weeks.
-4. Paragraph: **The 14-Day Launch Method** is one focused morning of **The 14-Day Pivot Method** — …
-5. Micro-line: Not another course. Not raw AI. The done-with-you method replacing both.
+Rule of thumb: the method is the credibility; Adam is the proof point under the poster.
 
-Five mentions, two brand names, one tautology. A reader has already been told the name three times before we ask them to hold two names at once. That's the failure — not the rule.
+Note on code identifiers: `SPRINT_METHOD_LABEL` in `src/lib/framework-deliverables.ts` is a code constant — retype its *value* to "14-Day Pivot Method" but keep the identifier name.
 
-## The copywriter's read
+## Site-wide replacement
 
-- **Name once at the top. After that, use the room, the morning, the method, or the sprint.** Branded names lose weight when repeated; verbs and images gain it.
-- **"First paying customer in two weeks"** is the strongest phrase on the page. Protect it. Everything else supports it.
-- **"Two weeks" beats "14 days" in body copy.** Save "14-Day" for the branded name and the countdown/agenda.
-- **"Pivot Method" doesn't belong on the homepage at all.** It's an internal name for the underlying process. Introduce it *only* where the reader is asking "wait, what is this actually?" — the deep framework section or the concierge — never in the hero paragraph and never adjacent to Launch Method.
-- **The "old way vs. new way" beat is already doing the heavy lift.** The paragraph below it should build tension, not restate the name.
+Every user-facing string containing "The 14-Day Launch Method" or "14-Day Launch Method" is rewritten to "The 14-Day Pivot Method" / "14-Day Pivot Method." This is a global sweep.
 
-## The rewrites
+Files and lines affected:
 
-### 1. Hero paragraph — `src/components/home/HomeFramework.tsx` line 100
+- `src/components/home/HomeFramework.tsx` — lines 74, 79, 180, 350 (plus body edits below)
+- `src/components/home/AccessModeDialog.tsx` — lines 31, 42, 53, 81
+- `src/components/register/RegisterFramework.tsx` — lines 63, 65, 67
+- `src/components/facilitator/FacilitatorHero.tsx` — lines 32, 42
+- `src/components/facilitator/FacilitatorCTA.tsx` — lines 14, 18
+- `src/components/site/AskConcierge.tsx` — line 332
+- `src/routes/webinar.tsx` — lines 9, 19, 22, 33, 36
+- `src/routes/build.tsx` — lines 17, 24, 102
+- `src/routes/build.$slug.tsx` — line 280
+- `src/routes/schedule.tsx` — lines 49, 58
+- `src/routes/services.tsx` — lines 41, 48, 269, 296
+- `src/routes/one-on-one.tsx` — lines 67, 70, 82
+- `src/lib/hub-dashboard-copy.ts` — line 17 eyebrow
+- `src/lib/framework-deliverables.ts` — line 68 value only (keep constant name)
+- `src/lib/chatbot-knowledge.ts` — lines 68, 70, 84, 90, 100, 199–207 (rewrite the vocabulary block so it names only The 14-Day Pivot Method; remove the offer-vs-process distinction)
 
-**Before:**
-> The 14-Day Launch Method is one focused morning of **The 14-Day Pivot Method** — the done-with-you playbook quietly replacing accelerators, courses, and raw AI. The way modern founders skip the year of guessing and pivot to their first paying customer in two weeks. Run live by Adam, the operator who built it. $297 once, yours forever. **Full support during and after**, if you want it.
+## Additional body-copy rewrites (Pivot Method as anchor, Adam pulled back)
 
-**After (name dropped — it's already in the eyebrow, H1, and card above):**
-> One focused morning. A done-with-you playbook quietly replacing accelerators, courses, and raw AI. The way modern founders skip the year of guessing and land their first paying customer in two weeks — run live by Adam, the operator who built it. $297 once, yours forever. **Full support during and after**, if you want it.
+### 1. `src/components/home/HomeFramework.tsx`
 
-Why: brand already stated three times above; opening with "One focused morning" picks up the "new way" card and moves. No tautology, no second brand name, tighter cadence.
+**Hero paragraph (line 100):**
+Before: One focused morning. A done-with-you playbook quietly replacing accelerators, courses, and raw AI. …run live by Adam, the operator who built it…
+After: One focused morning of **The 14-Day Pivot Method** — the done-with-you system quietly replacing accelerators, courses, and raw AI. The way modern founders skip the year of guessing and land their first paying customer in two weeks. Built and run by Adam, the operator behind the method. $297 once, yours forever. Full support during and after, if you want it.
 
-### 2. Framework intro — `src/components/home/HomeFramework.tsx` line 187
+**New-way card (line 94):**
+Before: One live morning in the room with Adam. Revenue in two weeks.
+After: One live morning of **The 14-Day Pivot Method**. Revenue in two weeks.
 
-**Before:**
-> Raw AI hands you a folder of documents and no customers. An accelerator hands you a year of homework. The 14-Day Launch Method — run in the room by the operator who built it — hands you a business…
+**Modes CTA (line 123):**
+Before: Prefer to do it live — or have Adam's team build it for you?
+After: Prefer to do it live on Zoom — or have it built for you?
 
-**After (rhythm of three, brand name kept once because this section's eyebrow is "Inside The 14-Day Launch Method" and the reader is now deep enough to want the name):**
-> Raw AI hands you a folder of documents. An accelerator hands you a year of homework. This hands you a business — offer priced, first customer named, first channel open, outreach going out that afternoon. $297 once, yours to run with.
+**Framework H2 (line 184):**
+Before: A business ready to take money. Built with Adam in one morning.
+After: A business ready to take money. Built with **The 14-Day Pivot Method** in one morning.
 
-### 3. "New way" card — `src/components/home/HomeFramework.tsx` line 94
+**Framework intro (line 187):**
+Before: Raw AI hands you a folder of documents. An accelerator hands you a year of homework. This hands you a business…
+After: Raw AI hands you a folder of documents. An accelerator hands you a year of homework. **The 14-Day Pivot Method** hands you a business — offer priced, first customer named, first channel open, outreach going out that afternoon.
 
-**Before:** One live morning inside **The 14-Day Launch Method**. Revenue in two weeks.
+**HonestRoadmap included list (lines 246–247):**
+- "A 90-day roadmap …, built with Adam for your business" → "…built on the Pivot Method for your startup"
+- "Working time in a 20-seat room with Adam himself — not a moderator, not a TA" → "Working time in a 20-seat room with the operator who built the method — not a moderator, not a TA"
 
-**After:** One live morning in the room with Adam. Revenue in two weeks.
+**HonestRoadmap paragraph (line 262):**
+Before: The workshop flips it. Adam sits with you, prices your offer, opens your first channel…
+After: The workshop flips it. **The 14-Day Pivot Method** prices your offer, names your first customer, opens your first channel, and gets you selling in the next 14 days.
 
-Why: brand name is already in the H1 directly above the card. Substituting "in the room with Adam" adds a person and a place — both convert harder than a repeated brand name.
+**Build-layer paragraph (line 309):**
+Before: …Each is a half-day working session with Adam. Or hand the whole thing to his team.
+After: …Each is a half-day working session that extends the Pivot Method. Or hand the whole thing to our team.
 
-### 4. Micro-line — `src/components/home/HomeFramework.tsx` line 106
+**Build-layer closing (line 350):**
+Before: …the same playbook Adam's team runs from — the working sessions that extend The 14-Day Launch Method…
+After: …the same playbook our team runs from — the working sessions that extend **The 14-Day Pivot Method** after your first customer.
 
-**Keep as is.** "Not another course. Not raw AI. The done-with-you method replacing both." lands cleanly and doesn't repeat the brand.
+**Final CTA line (line 508):**
+Before: $297 gets you in the room with Adam and a real plan your startup can run with Monday.
+After: $297 gets you one morning of the Pivot Method and a real plan your startup can run with Monday.
 
-### 5. `src/routes/one-on-one.tsx` line 88–93 subhead
+### 2. `src/routes/build.tsx` line 24
+Before: …eight half-day working sessions with Adam — $197 each — extending the done-with-you method behind The 14-Day Launch Method… Ship each one yourself with Adam in the room, or hand it to the team…
+After: …eight half-day working sessions — $197 each — extending **The 14-Day Pivot Method** after your launch… Ship each one yourself in the room, or hand it to the team…
+(Keep Adam in the eyebrow — line 17 becomes "The 14-Day Pivot Method · 8 Working Sessions with Adam.")
 
-Already fixed the H1 last pass. The paragraph still says "the done-with-you method replacing accelerators, courses, and raw AI — executed for you at a flat fee." That's fine — keep.
+### 3. `src/routes/webinar.tsx`
+- Line 11 highlight: "Small cohort so Adam works your business, not a Zoom crowd" → "Small cohort so the method gets applied to your startup, not a Zoom crowd"
+- Line 42 body: "One focused morning with Adam." → "One focused morning of the Pivot Method."
 
-### 6. `src/routes/webinar.tsx` lines 36–44
+### 4. `src/routes/services.tsx`
+- Line 41 eyebrow: "…Adam's team builds what comes next" → "…Our team builds what comes next"
+- Line 48 body: "The new way is Adam's team running the same done-with-you method behind The 14-Day Launch Method…" → "The new way is our team running **The 14-Day Pivot Method** at scale…"
+- Keep Adam on the facilitator card at lines 217/222 (photo + name credit).
 
-The H1 says "**The 14-Day Launch Method,** live on Zoom." then the paragraph opens "The same method, run live over video…" — that's already tight after last pass. Keep.
+### 5. `src/routes/schedule.tsx` line 274
+Before: …worked out with Adam, not generated by a bot.
+After: …worked out with the operator, not generated by a bot.
 
-### 7. `src/routes/build.tsx` line 24
+### 6. `src/routes/one-on-one.tsx`
+This page's whole premise is done-for-you — Adam earns most of his mentions here. Only trim:
+- Line 92: "You stay founder. Adam's team ships it." → "You stay founder. Our team ships it."
+- Keep line 260 scarcity claim as-is.
 
-Body paragraph currently reads: "…extending the done-with-you method behind The 14-Day Launch Method." Now that the H1 no longer repeats a brand name, this reads cleanly. Keep.
+### 7. `src/components/home/AccessModeDialog.tsx`
+Beyond the name swap, leave the Adam mentions — this dialog is literally about *who* runs it, so his name is load-bearing per card.
 
-### 8. Anywhere else Pivot Method appears in user-facing copy
+## Chatbot / concierge vocabulary — `src/lib/chatbot-knowledge.ts`
 
-Only remaining hit after these rewrites is `src/lib/chatbot-knowledge.ts`, which is the concierge's internal vocabulary doc — correct home for it. No further changes.
+Rewrite the vocabulary block so it names only **The 14-Day Pivot Method**:
 
-## Files touched
+- Remove every "The 14-Day Launch Method" reference (lines 68, 70, 84, 90, 100, 200, 207).
+- Remove the offer-vs-process distinction (lines 199–207) — collapse to a single entry: *"The 14-Day Pivot Method — the done-with-you method replacing accelerators, courses, and raw AI. One focused morning, live with Adam. Two weeks to first revenue. Use this name in every reference."*
 
-- `src/components/home/HomeFramework.tsx` — three tightening edits (hero paragraph, new-way card, framework intro)
+## Code constant
 
-That's it. One file. The other pages already read cleanly after the last pass; the real damage was concentrated on the homepage.
+`src/lib/framework-deliverables.ts` line 68:
+```ts
+export const SPRINT_METHOD_LABEL = "14-Day Pivot Method";
+```
+Value only. Identifier stays `SPRINT_METHOD_LABEL` so no imports break.
 
 ## Out of scope
 
-- No changes to the offer name, price, dates, CTAs, section structure, or the Pivot Method as an internal/concierge concept.
-- Not touching dashboard, welcome, schedule, services, build/$slug, or AccessModeDialog — all read fine.
+- No layout, structure, price, date, or CTA changes.
+- No changes to routes/URLs.
+- No changes to `src/lib/launch-14day-plan.ts` filename or the `14-Day Sprint` dashboard label (that's the internal delivery-tracker term, not the offer name).
 
 ## Verification
 
-- `rg "14-Day Launch Method" src/components/home/HomeFramework.tsx` → should drop from 5 hits to 3 (eyebrow, H1, framework eyebrow).
-- `rg "Pivot Method" src/` → only `chatbot-knowledge.ts`.
-- Read the hero top-to-bottom out loud. It should land as: name → promise → old/new → one paragraph of texture → CTA. No name repeated back-to-back.
+- `rg -n "Launch Method" src/ public/` → zero user-facing hits. Only acceptable remaining match is the `SPRINT_METHOD_LABEL` identifier name (its string value is now "14-Day Pivot Method").
+- `rg -c "Pivot Method" src/components/home/HomeFramework.tsx` → ~5–6.
+- `rg -c "\bAdam\b" src/components/home/HomeFramework.tsx` → drops from 13 to ~4 (hero credit + dialog CTA area + facilitator card block).
+- Read the homepage top-to-bottom out loud: method as protagonist, Adam as credit line.

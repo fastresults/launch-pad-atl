@@ -60,11 +60,11 @@ export function RegisterFramework() {
         footerLine: `${buildWorkshop.walkOuts.length} deliverables · built live with the facilitator · yours to keep.`,
       }
     : {
-        eyebrow: `The 14-Day Launch Method · ${WORKSHOP_PRICE_LABEL} · Norcross, GA`,
+        eyebrow: `The 14-Day Pivot Method · ${WORKSHOP_PRICE_LABEL} · Norcross, GA`,
         heroTitleLead: "Reserve your seat inside",
-        heroTitleEmphasis: `The 14-Day Launch Method.`,
+        heroTitleEmphasis: `The 14-Day Pivot Method.`,
         heroBlurb: "The done-with-you method replacing accelerators, courses, and raw AI. One morning with the facilitator — offer priced, first customer named, outreach going out that afternoon. Fourteen days to first revenue. Coffee and refreshments on us.",
-        asideBlurb: "One live morning inside The 14-Day Launch Method — small cohort, real startup built. Not another course. Not raw AI. The done-with-you method replacing both.",
+        asideBlurb: "One live morning inside The 14-Day Pivot Method — small cohort, real startup built. Not another course. Not raw AI. The done-with-you method replacing both.",
         walkOuts: null as string[] | null,
         priceLabel: WORKSHOP_PRICE_LABEL,
         priceCents: WORKSHOP_PRICE_CENTS,

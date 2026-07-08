@@ -14,7 +14,7 @@ export const HUB_DASHBOARD_INTROS: Record<
   SectionIntroCopy
 > = {
   sprint: {
-    eyebrow: "01 · 14-Day Launch Method",
+    eyebrow: "01 · 14-Day Pivot Method",
     why: "The proven 14-day pivot — every asset in your kit maps to a specific day, so you know when to read it, not just what it is.",
     howTo: [
       "Click any day to see that day's assets and what to ship by end of day.",
