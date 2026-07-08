@@ -157,7 +157,7 @@ export function HomeBusinessIdeasScroller({
   subheading = "Online and Main Street, side by side — plus service, food, side hustles and family-run. Proof there's a clear path no matter what you're starting.",
 }: {
   eyebrow?: string;
-  heading?: React.ReactNode;
+  heading?: ReactNode;
   subheading?: string;
 } = {}) {
   const [filter, setFilter] = useState<FilterId>("all");
