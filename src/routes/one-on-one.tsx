@@ -82,8 +82,8 @@ export default function OneOnOnePage() {
               <Wand2 className="size-3.5" /> The 14-Day Launch Method · Done for you
             </p>
             <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
-              The 14-Day Pivot Method,{" "}
-              <span className="text-gradient-brand">run for you by our team.</span>
+              Your launch,{" "}
+              <span className="text-gradient-brand">done for you in 14 days.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
               The old way was $40k and six months of agency ping-pong. The new way is
