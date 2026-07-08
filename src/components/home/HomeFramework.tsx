@@ -71,12 +71,12 @@ function Hero() {
           <div>
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white md:text-sm md:tracking-[0.2em]">
 
-          <Star className="size-3.5 fill-current" /> The 14-Day Launch Method · Wed, Aug 19, 2026 · Norcross, GA
+          <Star className="size-3.5 fill-current" /> The 14-Day Pivot Method · Wed, Aug 19, 2026 · Norcross, GA
         </p>
 
 
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
-          The 14-Day Launch Method.{" "}
+          The 14-Day Pivot Method.{" "}
           <span className="text-gradient-brand">First paying customer in two weeks.</span>
         </h1>
 
@@ -91,13 +91,13 @@ function Hero() {
           <div className="rounded-xl border border-primary/40 bg-gradient-to-br from-primary/20 to-primary/5 p-4 backdrop-blur">
             <div className="text-[10px] uppercase tracking-[0.22em] text-primary">The new way</div>
             <p className="mt-1.5 text-sm leading-snug text-white">
-              One live morning in the room with Adam. Revenue in two weeks.
+              One live morning of The 14-Day Pivot Method. Revenue in two weeks.
             </p>
           </div>
         </div>
 
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          One focused morning. A done-with-you playbook quietly replacing accelerators, courses, and raw AI. The way modern founders skip the year of guessing and land their first paying customer in two weeks — run live by Adam, the operator who built it. {WORKSHOP_PRICE_LABEL} once, yours forever.{" "}
+          One focused morning of <span className="font-medium text-white">The 14-Day Pivot Method</span> — the done-with-you system quietly replacing accelerators, courses, and raw AI. The way modern founders skip the year of guessing and land their first paying customer in two weeks. Built and run by Adam, the operator behind the method. {WORKSHOP_PRICE_LABEL} once, yours forever.{" "}
           <span className="font-medium text-white">Full support during and after</span>, if you want it.
         </p>
 
@@ -120,7 +120,7 @@ function Hero() {
             onClick={() => setModesOpen(true)}
             className="text-sm text-white/80 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white hover:decoration-white sm:text-base"
           >
-            Prefer to do it live — or have Adam's team build it for you?
+            Prefer to do it live on Zoom — or have it built for you?
           </button>
         </div>
         <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
@@ -177,14 +177,14 @@ function Framework() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          Inside The 14-Day Launch Method
+          Inside The 14-Day Pivot Method
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
           A business ready to take money.{" "}
-          <span className="text-gradient-brand">Built with Adam in one morning.</span>
+          <span className="text-gradient-brand">Built with The 14-Day Pivot Method in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Raw AI hands you a folder of documents. An accelerator hands you a year of homework. This hands you a business — offer priced, first customer named, first channel open, outreach going out that afternoon. {WORKSHOP_PRICE_LABEL} once, yours to run with.
+          Raw AI hands you a folder of documents. An accelerator hands you a year of homework. The 14-Day Pivot Method hands you a business — offer priced, first customer named, first channel open, outreach going out that afternoon. {WORKSHOP_PRICE_LABEL} once, yours to run with.
         </p>
 
 
@@ -243,8 +243,8 @@ function HonestRoadmap() {
   const included = [
     "A priced offer and the first customer you'll sell it to — named, not hypothetical",
     "The one channel you open week one — and the first outreach going out that day",
-    "A 90-day roadmap from first dollar to steady income, built with Adam for your business",
-    "Working time in a 20-seat room with Adam himself — not a moderator, not a TA",
+    "A 90-day roadmap from first dollar to steady income, built on the Pivot Method for your startup",
+    "Working time in a 20-seat room with the operator who built the method — not a moderator, not a TA",
     "Coffee, refreshments, and a room built for founders who came to work",
   ];
 
@@ -259,7 +259,7 @@ function HonestRoadmap() {
           <span className="text-gradient-brand">A real business by month two.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Every founder we've watched fail did the same thing: they burned six months and $30K on a logo, a site, and ads that told nobody a coherent story — and never asked a single customer for money. The workshop flips it. Adam sits with you, prices your offer, opens your first channel, and gets you selling in the next 14 days. Everything else — the polish, the systems, the scale — comes after the money starts.
+          Every founder we've watched fail did the same thing: they burned six months and $30K on a logo, a site, and ads that told nobody a coherent story — and never asked a single customer for money. The workshop flips it. The 14-Day Pivot Method prices your offer, names your first customer, opens your first channel, and gets you selling in the next 14 days. Everything else — the polish, the systems, the scale — comes after the money starts.
         </p>
 
 
@@ -306,7 +306,7 @@ function HonestRoadmap() {
             <Sparkles className="size-4 text-primary" /> What comes after your first customer
           </div>
           <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-            Once you're live and taking money, eight more capabilities turn a launched business into a growing one — the brand, the site that converts, the content engine, the sales script, the automations. Each is a half-day working session with Adam. Or hand the whole thing to his team.
+            Once you're live and taking money, eight more capabilities turn a launched business into a growing one — the brand, the site that converts, the content engine, the sales script, the automations. Each is a half-day working session that extends the Pivot Method. Or hand the whole thing to our team.
           </p>
 
 
@@ -347,7 +347,7 @@ function HonestRoadmap() {
           </div>
 
           <p className="mx-auto mt-10 max-w-3xl text-base text-muted-foreground md:text-lg">
-            DIY any of it. Hire anyone. Or hand it to our team. Either way, each half-day is the same playbook Adam's team runs from — the working sessions that extend The 14-Day Launch Method after your first customer.{" "}
+            DIY any of it. Hire anyone. Or hand it to our team. Either way, each half-day is the same playbook our team runs from — the working sessions that extend The 14-Day Pivot Method after your first customer.{" "}
             <span className="font-medium text-foreground">
               Foundation first. Build when ready.
             </span>{" "}
@@ -505,7 +505,7 @@ function BottomCTA() {
               Stop turning the startup over in your head.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
-              {WORKSHOP_PRICE_LABEL} gets you in the room with Adam and a real plan your startup can run with Monday. If you want our team to build the brand, the site, or the launch after — we're a click away. If not, you keep the plan either way.
+              {WORKSHOP_PRICE_LABEL} gets you one morning of the Pivot Method and a real plan your startup can run with Monday. If you want our team to build the brand, the site, or the launch after — we're a click away. If not, you keep the plan either way.
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4 md:mt-8">
