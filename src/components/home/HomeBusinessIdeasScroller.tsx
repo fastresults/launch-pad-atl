@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Info, Sparkles, TrendingUp } from "lucide-react";
 import {
   BUSINESS_CATEGORIES,
