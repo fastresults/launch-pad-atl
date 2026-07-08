@@ -97,7 +97,7 @@ function Hero() {
         </div>
 
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          The 14-Day Launch Method is <span className="font-medium text-white">Adam Anderson's Startup Process</span> in one focused morning — the done-with-you playbook quietly replacing accelerators, courses, and raw AI. The way modern founders skip the year of guessing and land their first paying customer in two weeks. Run live by Adam, the operator who built it. {WORKSHOP_PRICE_LABEL} once, yours forever.{" "}
+          The 14-Day Launch Method is <span className="font-medium text-white">The 14-Day Pivot Method</span> in one focused morning — the done-with-you playbook quietly replacing accelerators, courses, and raw AI. The way modern founders skip the year of guessing and land their first paying customer in two weeks. Run live by Adam, the operator who built it. {WORKSHOP_PRICE_LABEL} once, yours forever.{" "}
           <span className="font-medium text-white">Full support during and after</span>, if you want it.
         </p>
 

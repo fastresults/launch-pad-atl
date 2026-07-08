@@ -1,58 +1,42 @@
-## Goal
+## Plan: Depersonalize the method name to "The 14-Day Pivot Method"
 
-Replace the brand/authority handle **"The Anderson Framework"** with **"Adam Anderson's Startup Process"** everywhere it currently appears. Keep the three-phrase system intact — just swap the middle handle.
+### Goal
+Replace all references to **Adam Anderson's Startup Process**, **Anderson's Process**, **Anderson Method**, and **Melange Method** with **The 14-Day Pivot Method**. Keep **The 14-Day Launch Method** as the offer name. Reduce but do not erase Adam Anderson as the named facilitator.
 
-## Updated three phrases
+### Scope
 
-| Phrase | Job |
-|---|---|
-| **The 14-Day Launch Method** | Offer name — what you buy |
-| **Adam Anderson's Startup Process** | Brand / authority handle — whose playbook it is |
-| **the done-with-you method replacing accelerators, courses, and raw AI** | Category descriptor / positioning line |
+#### 1. Route pages (marketing copy)
+- `src/routes/build.tsx` — replace "Anderson's Process" headline reference.
+- `src/routes/one-on-one.tsx` — replace "Anderson's Process" in the hero subheading.
+- `src/routes/webinar.tsx` — replace "Adam Anderson's Startup Process" in the body copy; keep page title referencing Adam Anderson as facilitator.
+- `src/routes/services.tsx` — no method-name changes; Adam Anderson name/alt text stays as facilitator identity.
 
-Reads naturally without the "method / method" or "method / framework" collision, and puts Adam's full name in the headline for authority.
+#### 2. Home page
+- `src/components/home/HomeFramework.tsx` — replace "Adam Anderson's Startup Process" with "The 14-Day Pivot Method" in the framework description. Keep Adam Anderson name/photo as facilitator identity.
 
-## Files to edit
+#### 3. Chatbot knowledge base
+- `src/lib/chatbot-knowledge.ts` — update the brand vocabulary section: remove "Adam Anderson's Startup Process" as an authority handle, add "The 14-Day Pivot Method" as the process name, and keep "The 14-Day Launch Method" as the offer name.
+- Update any inline references so the bot no longer instructs itself to use the Adam-branded process name.
 
-Straight phrase swap — `The Anderson Framework` → `Adam Anderson's Startup Process`:
+#### 4. Dashboard / registration copy
+- `src/lib/hub-dashboard-copy.ts` — replace "Anderson's proven 14-day sprint" with a depersonalized reference to The 14-Day Pivot Method.
+- `src/components/register/RegisterFramework.tsx` — reduce frequency of "Adam Anderson" where it appears twice in close proximity; keep one identity reference.
+- `src/lib/cohorts.ts` — keep workshop description factual; optionally reduce "Adam Anderson" to "the facilitator" if the sentence becomes overloaded with name references.
 
-1. **`src/components/home/HomeFramework.tsx`** (line 100)  
-   *"The 14-Day Launch Method is **Adam Anderson's Startup Process** in one focused morning — the done-with-you playbook quietly replacing accelerators, courses, and raw AI…"*
+#### 5. Public static assets
+- `public/business-case.txt`, `public/business-case.md`, `public/business-case.html` — update any references to the method/process name if present. These files primarily describe Adam's background, so facilitator identity references remain.
 
-2. **`src/routes/webinar.tsx`** (line 40)  
-   *"**Adam Anderson's Startup Process**, run live over video in a small cohort with the founder who built it —"*
+#### 6. Global verification
+- Run a search for "Adam Anderson's Startup Process", "Anderson's Process", "Anderson Method", and "Melange Method" to confirm zero remaining occurrences in `src/`.
+- Run `tsgo` typecheck to ensure no TypeScript errors from the copy changes.
 
-3. **`src/routes/one-on-one.tsx`** (line 85, H1 second line)  
-   *"**Adam Anderson's Startup Process**, run for you by Adam and his team."* — since Adam's name now leads the headline, tighten the follow-on clause to *"run for you by his team."* to avoid saying "Adam" twice.
+### Out of scope
+- Removing Adam Anderson entirely as a facilitator (he remains the named operator in the room).
+- Changing "The 14-Day Launch Method" offer name.
+- Renaming URLs or route paths.
 
-4. **`src/routes/services.tsx`** (line 45, H1)  
-   *"Scale with **Adam Anderson's Startup Process** that launched you."*
-
-5. **`src/routes/build.tsx`** (line 21, H1)  
-   *"Scale it with **Adam Anderson's Startup Process** — one morning at a time."*
-
-6. **`src/lib/chatbot-knowledge.ts`**
-   - Line 201 (brand vocabulary bullet): rename the handle, update banned-variants list to include *"Anderson Framework," "Anderson Method," "Adam's Process," "the Anderson system."*
-   - Line 207 (guardrail): "Reach for **Adam Anderson's Startup Process** in headline-style openers and authority moments."
-   - Line 220 (framework guardrail): drop the "Anderson Framework" exception — restore the original "framework only describes a component inside the Method" rule. The brand handle no longer uses the word framework, so no exception is needed.
-
-## What does NOT change
-
-- Meta titles, URL slugs, buttons, pricing, agenda headers stay on **The 14-Day Launch Method**.
-- The done-with-you positioning tagline stays verbatim.
-- Component filename `HomeFramework.tsx` stays.
-- Noun uses of "operator" for Adam and session lenses stay.
-- Funnel report untouched.
-- No visual or layout changes.
-
-## Verification
-
-1. `rg -i "anderson (framework|method)" src` returns zero hits.
-2. `rg "Adam Anderson's Startup Process" src` shows six placements.
-3. Home hero paragraph reads with no repeated-word stutter.
-4. `/one-on-one` H1 doesn't say "Adam" twice.
-
-## Out of scope
-
-- Renaming the offer, adding new pages, restructuring layouts.
-- Editing the funnel report/PDF.
+### Acceptance criteria
+- All method/process references point to **The 14-Day Pivot Method**.
+- The offer is still marketed as **The 14-Day Launch Method**.
+- No remaining occurrences of "Adam Anderson's Startup Process", "Anderson's Process", "Anderson Method", or "Melange Method" in `src/`.
+- Typecheck passes.

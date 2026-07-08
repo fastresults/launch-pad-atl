@@ -105,7 +105,7 @@ export function toPublicTaken(
 
 const EVENT_TITLE = "Ignite Business Launch Workshop";
 const EVENT_DETAILS =
-  "One-day, build-your-business workshop with Adam Anderson. You walk in with an idea, you walk out operationally launch-ready: LLC packet, EIN, offer, website draft, full marketing kit, and a signed 90-day plan. (Anything physical your business needs — space, equipment, inventory — is on you.)";
+  "One-day, build-your-startup workshop with the facilitator. You walk in with an idea, you walk out operationally launch-ready: LLC packet, EIN, offer, website draft, full marketing kit, and a signed 90-day plan. (Anything physical your startup needs — space, equipment, inventory — is on you.)";
 
 const MONTH_LONG = [
   "January", "February", "March", "April", "May", "June",
