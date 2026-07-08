@@ -37,7 +37,7 @@ export default function WebinarPage() {
               <span className="text-gradient-brand">First paying customer in two weeks.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-              <span className="font-medium text-foreground">Adam Anderson's Startup Process</span>, run live over video in a small cohort with the founder who built it —
+              <span className="font-medium text-foreground">The 14-Day Pivot Method</span>, run live over video in a small cohort —
               the done-with-you method replacing accelerators, courses, and raw AI.
               One focused morning with Adam. You leave with your offer priced, your
               first customer named, your first channel open, and outreach going out
