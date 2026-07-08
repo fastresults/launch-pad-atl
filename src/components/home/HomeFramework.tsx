@@ -91,13 +91,13 @@ function Hero() {
           <div className="rounded-xl border border-primary/40 bg-gradient-to-br from-primary/20 to-primary/5 p-4 backdrop-blur">
             <div className="text-[10px] uppercase tracking-[0.22em] text-primary">The new way</div>
             <p className="mt-1.5 text-sm leading-snug text-white">
-              One live morning inside The 14-Day Launch Method. Revenue in two weeks.
+              One live morning in the room with Adam. Revenue in two weeks.
             </p>
           </div>
         </div>
 
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          The 14-Day Launch Method is one focused morning of <span className="font-medium text-white">The 14-Day Pivot Method</span> — the done-with-you playbook quietly replacing accelerators, courses, and raw AI. The way modern founders skip the year of guessing and pivot to their first paying customer in two weeks. Run live by Adam, the operator who built it. {WORKSHOP_PRICE_LABEL} once, yours forever.{" "}
+          One focused morning. A done-with-you playbook quietly replacing accelerators, courses, and raw AI. The way modern founders skip the year of guessing and land their first paying customer in two weeks — run live by Adam, the operator who built it. {WORKSHOP_PRICE_LABEL} once, yours forever.{" "}
           <span className="font-medium text-white">Full support during and after</span>, if you want it.
         </p>
 
@@ -184,7 +184,7 @@ function Framework() {
           <span className="text-gradient-brand">Built with Adam in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Raw AI hands you a folder of documents and no customers. An accelerator hands you a year of homework. The 14-Day Launch Method — run in the room by the operator who built it — hands you a business: offer priced, first customer named, first channel open, outreach going out that afternoon. {WORKSHOP_PRICE_LABEL} once, yours to run with.
+          Raw AI hands you a folder of documents. An accelerator hands you a year of homework. This hands you a business — offer priced, first customer named, first channel open, outreach going out that afternoon. {WORKSHOP_PRICE_LABEL} once, yours to run with.
         </p>
 
 

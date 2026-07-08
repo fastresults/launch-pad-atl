@@ -1,93 +1,88 @@
-# Fix awkward Launch/Pivot Method copy across the homepage and pages
+# Copy audit — homepage & adjacent pages
 
-## The problem
+## Where I went wrong
 
-The two names collide in body copy. Right now readers hit sentences like:
+Last pass I treated this like a naming-rules problem. The real problem is a copywriting problem: the hero hammers the same branded phrase four times in fewer than 100 words, then collides two branded phrases in one sentence.
 
-> "The 14-Day Launch Method is The 14-Day Pivot Method in one focused morning."
+Current hero, in reading order:
 
-That reads like a tautology. The distinction we established last turn is real but only useful once — it should not appear inside a single sentence, and never as an "X is Y" definition. It also shouldn't be repeated in an eyebrow + headline stack on the same page.
+1. Eyebrow: **The 14-Day Launch Method** · Wed, Aug 19, 2026 · Norcross, GA
+2. H1: **The 14-Day Launch Method.** First paying customer in two weeks.
+3. New-way card: One live morning inside **The 14-Day Launch Method**. Revenue in two weeks.
+4. Paragraph: **The 14-Day Launch Method** is one focused morning of **The 14-Day Pivot Method** — …
+5. Micro-line: Not another course. Not raw AI. The done-with-you method replacing both.
 
-## The rule going forward
+Five mentions, two brand names, one tautology. A reader has already been told the name three times before we ask them to hold two names at once. That's the failure — not the rule.
 
-- **The 14-Day Launch Method** = the offer name. Used in eyebrows, buttons, agendas, meta titles, pricing, "what you're attending / buying."
-- **The 14-Day Pivot Method** = the process name. Used sparingly in body copy when we need to describe the *underlying method* — the pivot from job/side-hustle/fantasy startup to real income in 14 days.
-- Never define one in terms of the other in a single sentence. Never stack both names in the same eyebrow + H1 + first paragraph.
-- On any page, name the offer (Launch Method) in the eyebrow / hero. Only reach for "Pivot Method" once, later in the body, when we're describing the method itself — and only if it adds meaning.
+## The copywriter's read
 
-## Rewrites
+- **Name once at the top. After that, use the room, the morning, the method, or the sprint.** Branded names lose weight when repeated; verbs and images gain it.
+- **"First paying customer in two weeks"** is the strongest phrase on the page. Protect it. Everything else supports it.
+- **"Two weeks" beats "14 days" in body copy.** Save "14-Day" for the branded name and the countdown/agenda.
+- **"Pivot Method" doesn't belong on the homepage at all.** It's an internal name for the underlying process. Introduce it *only* where the reader is asking "wait, what is this actually?" — the deep framework section or the concierge — never in the hero paragraph and never adjacent to Launch Method.
+- **The "old way vs. new way" beat is already doing the heavy lift.** The paragraph below it should build tension, not restate the name.
 
-### 1. `src/components/home/HomeFramework.tsx` — the offending paragraph (line 100)
+## The rewrites
 
-Current:
-> The 14-Day Launch Method is **The 14-Day Pivot Method** in one focused morning — the done-with-you playbook quietly replacing accelerators, courses, and raw AI…
+### 1. Hero paragraph — `src/components/home/HomeFramework.tsx` line 100
 
-Rewrite (drops the "X is Y" collision, keeps Pivot Method as the *method* reference later):
+**Before:**
 > The 14-Day Launch Method is one focused morning of **The 14-Day Pivot Method** — the done-with-you playbook quietly replacing accelerators, courses, and raw AI. The way modern founders skip the year of guessing and pivot to their first paying customer in two weeks. Run live by Adam, the operator who built it. $297 once, yours forever. **Full support during and after**, if you want it.
 
-Rationale: same information, no tautology, "pivot" now earns its keep in the follow-on sentence.
+**After (name dropped — it's already in the eyebrow, H1, and card above):**
+> One focused morning. A done-with-you playbook quietly replacing accelerators, courses, and raw AI. The way modern founders skip the year of guessing and land their first paying customer in two weeks — run live by Adam, the operator who built it. $297 once, yours forever. **Full support during and after**, if you want it.
 
-### 2. `src/routes/build.tsx` — hero H1 (line 21) collides with the eyebrow
+Why: brand already stated three times above; opening with "One focused morning" picks up the "new way" card and moves. No tautology, no second brand name, tighter cadence.
 
-Eyebrow already says "The 14-Day Launch Method · 8 Working Sessions with Adam", so the H1 shouldn't reintroduce the sibling name.
+### 2. Framework intro — `src/components/home/HomeFramework.tsx` line 187
 
-Current H1:
-> Scale it with **The 14-Day Pivot Method** — one morning at a time.
+**Before:**
+> Raw AI hands you a folder of documents and no customers. An accelerator hands you a year of homework. The 14-Day Launch Method — run in the room by the operator who built it — hands you a business…
 
-Rewrite:
-> Scale it with the same method that launched you — one morning at a time.
+**After (rhythm of three, brand name kept once because this section's eyebrow is "Inside The 14-Day Launch Method" and the reader is now deep enough to want the name):**
+> Raw AI hands you a folder of documents. An accelerator hands you a year of homework. This hands you a business — offer priced, first customer named, first channel open, outreach going out that afternoon. $297 once, yours to run with.
 
-Then in the body paragraph (line 24) we already reference "the done-with-you method behind The 14-Day Launch Method" — no change needed. Pivot Method doesn't need to appear on this page.
+### 3. "New way" card — `src/components/home/HomeFramework.tsx` line 94
 
-### 3. `src/routes/one-on-one.tsx` — eyebrow + H1 collision (lines 82–85)
+**Before:** One live morning inside **The 14-Day Launch Method**. Revenue in two weeks.
 
-Eyebrow: "The 14-Day Launch Method · Done for you"
-H1 currently starts: "The 14-Day Pivot Method,"
+**After:** One live morning in the room with Adam. Revenue in two weeks.
 
-Rewrite H1 to lead with the outcome, not the sibling name:
-> Your launch, **done for you in 14 days.**
+Why: brand name is already in the H1 directly above the card. Substituting "in the room with Adam" adds a person and a place — both convert harder than a repeated brand name.
 
-Keep the surrounding subhead referencing "The 14-Day Launch Method, run for you by Adam and our team" (already true in meta description).
+### 4. Micro-line — `src/components/home/HomeFramework.tsx` line 106
 
-### 4. `src/routes/webinar.tsx` — line 40
+**Keep as is.** "Not another course. Not raw AI. The done-with-you method replacing both." lands cleanly and doesn't repeat the brand.
 
-Current:
-> **The 14-Day Pivot Method**, run live over video in a small cohort —
+### 5. `src/routes/one-on-one.tsx` line 88–93 subhead
 
-Rewrite (this page's offer is the Zoom cohort of the Launch Method; Pivot Method is the wrong name here):
-> **The 14-Day Launch Method**, run live over video in a small cohort —
+Already fixed the H1 last pass. The paragraph still says "the done-with-you method replacing accelerators, courses, and raw AI — executed for you at a flat fee." That's fine — keep.
 
-And to avoid Launch Method appearing 4× in a row on this page, soften the paragraph opener above it to "the same method, run live over video…"
+### 6. `src/routes/webinar.tsx` lines 36–44
 
-### 5. `src/lib/hub-dashboard-copy.ts` — line 17/18 collision
+The H1 says "**The 14-Day Launch Method,** live on Zoom." then the paragraph opens "The same method, run live over video…" — that's already tight after last pass. Keep.
 
-Eyebrow: "01 · 14-Day Launch Method"
-Body currently starts: "The 14-Day Pivot Method — the proven 14-day sprint…"
+### 7. `src/routes/build.tsx` line 24
 
-Rewrite body:
-> The proven 14-day pivot — every asset in your kit maps to a specific day, so you know when to read it, not just what it is.
+Body paragraph currently reads: "…extending the done-with-you method behind The 14-Day Launch Method." Now that the H1 no longer repeats a brand name, this reads cleanly. Keep.
 
-Drops the naming collision, keeps the word "pivot" as a verb where it works naturally.
+### 8. Anywhere else Pivot Method appears in user-facing copy
 
-### 6. `src/lib/chatbot-knowledge.ts` — already correct
-
-Lines 200–207 correctly document the offer-vs-process distinction for the concierge. No change.
+Only remaining hit after these rewrites is `src/lib/chatbot-knowledge.ts`, which is the concierge's internal vocabulary doc — correct home for it. No further changes.
 
 ## Files touched
 
-- `src/components/home/HomeFramework.tsx` — rewrite one paragraph
-- `src/routes/build.tsx` — rewrite hero H1
-- `src/routes/one-on-one.tsx` — rewrite hero H1
-- `src/routes/webinar.tsx` — swap Pivot → Launch in one sentence, soften preceding line
-- `src/lib/hub-dashboard-copy.ts` — rewrite one line
+- `src/components/home/HomeFramework.tsx` — three tightening edits (hero paragraph, new-way card, framework intro)
+
+That's it. One file. The other pages already read cleanly after the last pass; the real damage was concentrated on the homepage.
 
 ## Out of scope
 
-- No changes to the offer name, pricing, page structure, routes, or eyebrows.
-- No mass find/replace — every remaining "Launch Method" reference is contextually correct (eyebrows, buttons, meta titles, agenda headers, pricing copy).
-- Facilitator, AccessModeDialog, services, build.$slug, schedule pages already read cleanly — left alone.
+- No changes to the offer name, price, dates, CTAs, section structure, or the Pivot Method as an internal/concierge concept.
+- Not touching dashboard, welcome, schedule, services, build/$slug, or AccessModeDialog — all read fine.
 
 ## Verification
 
-- `rg "Pivot Method" src/` should show Pivot Method used at most once per page, and never in an "is a" definition next to Launch Method.
-- Read the homepage hero + framework block end-to-end for cadence.
+- `rg "14-Day Launch Method" src/components/home/HomeFramework.tsx` → should drop from 5 hits to 3 (eyebrow, H1, framework eyebrow).
+- `rg "Pivot Method" src/` → only `chatbot-knowledge.ts`.
+- Read the hero top-to-bottom out loud. It should land as: name → promise → old/new → one paragraph of texture → CTA. No name repeated back-to-back.
