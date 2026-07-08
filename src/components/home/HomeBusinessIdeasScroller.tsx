@@ -149,11 +149,15 @@ function MarqueeRow({
 
 export function HomeBusinessIdeasScroller({
   eyebrow = "What founders are building",
-  heading = "60+ startup ideas founders are actually launching",
+  heading = (
+    <>
+      60+ startup ideas founders are <span className="text-gradient-brand">actually launching</span>
+    </>
+  ),
   subheading = "Online and Main Street, side by side — plus service, food, side hustles and family-run. Proof there's a clear path no matter what you're starting.",
 }: {
   eyebrow?: string;
-  heading?: string;
+  heading?: React.ReactNode;
   subheading?: string;
 } = {}) {
   const [filter, setFilter] = useState<FilterId>("all");
