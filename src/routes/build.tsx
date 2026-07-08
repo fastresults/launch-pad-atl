@@ -17,8 +17,8 @@ export default function BuildIndexPage() {
             <Sparkles className="size-3.5" /> The 14-Day Pivot Method · 8 Working Sessions with Adam
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
-            Launched already?{" "}
-            <span className="text-gradient-brand">Scale it with the same method that launched you — one morning at a time.</span>
+            One morning.{" "}
+            <span className="text-gradient-brand">One layer. Live by lunch.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
             Old way: hire a $10k/month agency, wait a quarter, hope the retainer earns its keep. New way: eight half-day working sessions — <span className="text-foreground">$197 each</span> — extending The 14-Day Pivot Method after your launch. One morning, one layer, live by lunch. Brand. A site that converts. Content engine. Sales script. Automations. Ship each one yourself in the room, or hand it to the team that would otherwise bill you $5K+ for the same work.
