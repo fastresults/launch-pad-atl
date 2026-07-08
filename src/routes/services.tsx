@@ -38,14 +38,14 @@ function Tracks() {
     <section className="border-b border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          <Sparkles className="size-3.5" /> After The 14-Day Pivot Method · Adam's team builds what comes next
+          <Sparkles className="size-3.5" /> After The 14-Day Pivot Method · Our team builds what comes next
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
           Launched and taking money?{" "}
           <span className="text-gradient-brand">Scale with the same Process that launched you.</span>
         </h1>
         <p className="mt-5 max-w-3xl text-base text-muted-foreground md:text-lg">
-          The old way to scale meant a five-figure agency, a six-month rebuild, and a sales pitch every quarter. The new way is Adam's team running the same done-with-you method behind The 14-Day Pivot Method — three tracks that turn a working idea into a growing operation. Not another course. Not raw AI. The method replacing both. You don't buy eight things at once. You buy the three that compound.
+          The old way to scale meant a five-figure agency, a six-month rebuild, and a sales pitch every quarter. The new way is our team running The 14-Day Pivot Method at scale — three tracks that turn a working idea into a growing operation. Not another course. Not raw AI. The method replacing both. You don't buy eight things at once. You buy the three that compound.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">

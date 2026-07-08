@@ -8,7 +8,7 @@ import { AccessModeDialog } from "@/components/home/AccessModeDialog";
 const HIGHLIGHTS = [
   "One live morning inside The 14-Day Pivot Method — offer priced, first customer named, first channel open",
   "Fourteen days to first revenue — the same done-with-you method we run in the room, over video",
-  "Small cohort so Adam works your business, not a Zoom crowd",
+  "Small cohort so the method gets applied to your startup, not a Zoom crowd",
   "Recording plus the assets that back the plan — yours to keep",
 ];
 
@@ -39,7 +39,7 @@ export default function WebinarPage() {
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
               The same method, run live over video in a small cohort —
               the done-with-you playbook replacing accelerators, courses, and raw AI.
-              One focused morning with Adam. You leave with your offer priced, your
+              One focused morning of the Pivot Method. You leave with your offer priced, your
               first customer named, your first channel open, and outreach going out
               that afternoon.
             </p>

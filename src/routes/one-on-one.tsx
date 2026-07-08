@@ -89,7 +89,7 @@ export default function OneOnOnePage() {
               The old way was $40k and six months of agency ping-pong. The new way is
               the done-with-you method replacing accelerators, courses, and raw AI —
               executed for you at a flat fee. Brand, site, social, systems, and a
-              named first customer, live in fourteen days. You stay founder. Adam's
+              named first customer, live in fourteen days. You stay founder. Our
               team ships it.
             </p>
 
