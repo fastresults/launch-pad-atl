@@ -89,7 +89,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
   {
     slug: "brand-identity",
     priceCents: 29700,
-    priceLabel: "$197",
+    priceLabel: "$297",
     icon: Palette,
     title: "Build your brand",
     capability: "Brand identity",
@@ -181,14 +181,14 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       otherWorkshopsHeadline: "The other layers your brand will need to carry.",
       faqHeadline: "Brand questions, answered honestly.",
     },
-    faq: makeCommonFaq("$197"),
+    faq: makeCommonFaq("$297"),
   },
 
   /* ─────────── 2. WEBSITE THAT CONVERTS ─────────── */
   {
     slug: "website-that-converts",
     priceCents: 39700,
-    priceLabel: "$197",
+    priceLabel: "$397",
     icon: Globe,
     title: "Convert your website",
     capability: "A website that converts",
@@ -280,7 +280,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       otherWorkshopsHeadline: "The other systems your site will drive traffic into.",
       faqHeadline: "Site questions, answered without the agency hedge.",
     },
-    faq: makeCommonFaq("$197"),
+    faq: makeCommonFaq("$397"),
   },
 
   /* ─────────── 3. SOCIAL PRESENCE ─────────── */
@@ -387,7 +387,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
   {
     slug: "content-engine",
     priceCents: 29700,
-    priceLabel: "$197",
+    priceLabel: "$297",
     icon: PenTool,
     title: "Engineer your content",
     capability: "A content engine",
@@ -480,14 +480,14 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       otherWorkshopsHeadline: "The other channels your content will pour into.",
       faqHeadline: "Content questions, answered without the SEO theater.",
     },
-    faq: makeCommonFaq("$197"),
+    faq: makeCommonFaq("$297"),
   },
 
   /* ─────────── 5. AI AS YOUR OPERATING SYSTEM ─────────── */
   {
     slug: "ai-operating-system",
     priceCents: 39700,
-    priceLabel: "$197",
+    priceLabel: "$397",
     icon: Sparkles,
     title: "Run on AI",
     capability: "AI as your operating system",
@@ -580,14 +580,14 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       otherWorkshopsHeadline: "The other workflows AI will quietly absorb.",
       faqHeadline: "AI questions, answered without the hype-cycle math.",
     },
-    faq: makeCommonFaq("$197"),
+    faq: makeCommonFaq("$397"),
   },
 
   /* ─────────── 6. EMAIL, CRM & AUTOMATION ─────────── */
   {
     slug: "email-crm-automation",
     priceCents: 39700,
-    priceLabel: "$197",
+    priceLabel: "$397",
     icon: Mail,
     title: "Automate your revenue",
     capability: "Email, CRM, and automation",
@@ -680,14 +680,14 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       otherWorkshopsHeadline: "The other systems your sequences will feed.",
       faqHeadline: "Email questions, answered without the deliverability theater.",
     },
-    faq: makeCommonFaq("$197"),
+    faq: makeCommonFaq("$397"),
   },
 
   /* ─────────── 7. SALES SYSTEMS ─────────── */
   {
     slug: "sales-systems",
     priceCents: 39700,
-    priceLabel: "$197",
+    priceLabel: "$397",
     icon: TrendingUp,
     title: "Close more sales",
     capability: "Sales systems",
@@ -780,7 +780,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       otherWorkshopsHeadline: "The other systems that feed your pipeline.",
       faqHeadline: "Sales questions, answered without the closer's bravado.",
     },
-    faq: makeCommonFaq("$197"),
+    faq: makeCommonFaq("$397"),
   },
 
   /* ─────────── 8. LEGAL, FINANCIAL & OPS ─────────── */
