@@ -54,9 +54,9 @@ export default function ContactPage() {
           {submitted ? (
             <div className="mt-10 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-8 text-center">
               <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-400" />
-              <h2 className="mt-4 text-xl font-semibold">Message sent</h2>
+              <h2 className="mt-4 text-xl font-semibold">Got it — thanks for writing</h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Thanks{form.name ? `, ${form.name.split(/\s+/)[0]}` : ""}. We emailed you a confirmation and will get back to you within 1 business day.
+                Thanks{form.name ? `, ${form.name.split(/\s+/)[0]}` : ""}. We'll write back within one business day. Check your inbox for a quick confirmation.
               </p>
             </div>
           ) : (
