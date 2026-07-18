@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { startVersionCheck } from "@/lib/version-check";
+import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import App from "./App";
 import "./styles.css";
 
