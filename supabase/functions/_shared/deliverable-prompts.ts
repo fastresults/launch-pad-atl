@@ -149,7 +149,7 @@ A numbered checklist the founder ticks as the builder produces each route and gl
 ## Funding Gap & Recommendation (1 short paragraph: when cash dips, how much to raise, what the money buys, and the suggested instrument given the track.)
 Numbers must reconcile across sections. Never use TBD or placeholders. If a required input is missing from the intake, make a clearly-labeled reasonable assumption in the Key Assumptions table.${QF}`,
 
-  // ── 14-Day Launch Method gap-closers ────────────────────────────────────
+  // ── 14-Day Pivot Method gap-closers ────────────────────────────────────
   // Every prompt below ends with a "## Paste-Ready" fenced block containing
   // the actual artifact (script, table, contract, policy, config) so the
   // output is AI-first: something the founder pastes into Stripe, DocuSign,
