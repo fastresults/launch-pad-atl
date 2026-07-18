@@ -19,7 +19,7 @@ export default function BuildIndexPage() {
       <section className="border-b border-white/5 py-16 md:py-24">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-            <Sparkles className="size-3.5" /> Eight Saturday mornings · $197 each
+            <Sparkles className="size-3.5" /> Eight Saturday mornings · from $197
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
             Your foundation.{" "}
