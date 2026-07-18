@@ -17,8 +17,8 @@ import {
 
 export default function ServicesPage() {
   useDocumentTitle(
-    "Services — Scale with Anderson's Process",
-    "Ongoing done-with-you services from Adam Anderson: brand, web, content, and go-to-market — running the same process that launched you."
+    "Services — we'll build the rest for you",
+    "Once you've launched, our team keeps building — brand, website, content, and everything that brings customers in. Same crew, done for you."
   );
   return (
     <div className="min-h-screen">
@@ -43,14 +43,14 @@ function Tracks() {
     <section className="border-b border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          <Sparkles className="size-3.5" /> After The 14-Day Pivot Method · Our team builds what comes next
+          <Sparkles className="size-3.5" /> After your launch · our team builds what comes next
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
           You launched.{" "}
           <span className="text-gradient-brand">We'll scale it.</span>
         </h1>
         <p className="mt-5 max-w-3xl text-base text-muted-foreground md:text-lg">
-          The old way to scale meant a five-figure agency, a six-month rebuild, and a sales pitch every quarter. The new way is our team running The 14-Day Pivot Method at scale — three tracks that turn a working idea into a growing operation. Not another course. Not raw AI. The method replacing both. You don't buy eight things at once. You buy the three that compound.
+          The old way to grow: hire a big agency, sign a year-long contract, and wait months to see results. The new way: our team builds the next piece with you — three plainly-priced options, no surprise invoices, no year-long lock-in. Buy what you need, when you need it.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
@@ -58,18 +58,18 @@ function Tracks() {
             to="/contact?intent=discovery"
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 sm:w-auto"
           >
-            Book a discovery call <ArrowRight className="size-4" />
+            Book a free 30-minute call <ArrowRight className="size-4" />
           </Link>
           <Link
             to="/build"
             className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-base font-medium text-foreground transition-colors hover:bg-white/10 sm:w-auto"
           >
-            Start with a workshop — from $197
+            Start with a Saturday workshop — from $197
           </Link>
         </div>
 
         <p className="mt-8 text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-sm">
-          Work shipped for Citigroup · Mayo Clinic · 3M · Disney · government, Main Street, and online brands alike
+          We've built for Citigroup · Mayo Clinic · 3M · Disney — and for Main Street shops and online brands just like yours
         </p>
 
 
@@ -147,23 +147,23 @@ function Tracks() {
 const PROCESS_STEPS = [
   {
     icon: Compass,
-    title: "Diagnose",
-    detail: "A 30-minute call. We tell you what to buy, what to skip, and what to do yourself.",
+    title: "Talk it through",
+    detail: "A free 30-minute call. We'll tell you what to buy, what to skip, and what you can do yourself.",
   },
   {
     icon: FileText,
-    title: "Scope",
-    detail: "Fixed scope, fixed startup assets, fixed clock — set together in discovery. Flat fee, no T&M, no surprise invoices.",
+    title: "Agree on the plan",
+    detail: "One page, one price, one timeline — set together. No hourly billing, no surprise invoices.",
   },
   {
     icon: Hammer,
-    title: "Build",
-    detail: "Weekly demos, shared workspace, your team copied on every decision in real time.",
+    title: "We build",
+    detail: "You see progress every week. Shared workspace. Your team on every decision as it happens.",
   },
   {
     icon: PackageCheck,
-    title: "Hand off",
-    detail: "Documented systems, Loom walkthroughs, 30-day support — and you own everything.",
+    title: "You own it",
+    detail: "Everything handed over — files, accounts, passwords. Short videos walking you through how it all works. 30 days of help after.",
   },
 ];
 
@@ -172,11 +172,11 @@ function Process() {
     <section className="py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          How we engage
+          How it works
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
           Four steps.{" "}
-          <span className="text-gradient-brand">No mystery, no project drift.</span>
+          <span className="text-gradient-brand">No mystery. No creep.</span>
         </h2>
 
         <div className="mt-10 grid gap-4 md:grid-cols-4">
@@ -240,14 +240,14 @@ function Proof() {
               No handoffs to a junior team
             </h2>
             <p className="text-2xl font-semibold tracking-tight md:text-3xl lg:text-4xl">
-              The same operators who'd cost a multiple elsewhere —{" "}
-              <span className="text-gradient-brand">scoped honestly to what your startup actually needs.</span>
+              The same people who'd cost a fortune at a big agency —{" "}
+              <span className="text-gradient-brand">priced honestly for what your business actually needs.</span>
             </p>
             <p className="mt-5 text-muted-foreground">
-              We've shipped work for Citigroup, Mayo Clinic, 3M, and Disney. Built full digital systems for a Caribbean nation's government. Produced one of the region's biggest business summits for five years running. And we've started enough of our own companies to know which corners cost you later.
+              We've built for Citigroup, Mayo Clinic, 3M, and Disney. Built a full digital system for a Caribbean nation's government. Ran one of the region's biggest business summits five years running. And we've started enough of our own businesses to know which shortcuts cost you later.
             </p>
             <p className="mt-3 text-muted-foreground">
-              When you hire us, you get the operators who've sat in your seat. Not a sales rep, not an offshore team you'll never meet.
+              When you hire us, you get the people who've been where you are. Not a sales rep. Not an offshore team you'll never meet.
             </p>
           </div>
         </div>
@@ -264,27 +264,27 @@ function WorkshopBand() {
       <div className="mx-auto max-w-5xl px-6">
         <div className="rounded-3xl border border-primary/30 bg-card p-8 md:p-12">
           <p className="mb-3 text-xs uppercase tracking-[0.18em] text-primary md:text-sm md:tracking-[0.2em]">
-            <Sparkles className="mr-1 inline size-3.5" /> The math you should hear
+            <Sparkles className="mr-1 inline size-3.5" /> Try before you buy
           </p>
           <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            Try the method for as little as $197.{" "}
-            <span className="text-gradient-brand">Hire us if it's a fit.</span>
+            Come to a Saturday workshop first.{" "}
+            <span className="text-gradient-brand">Hire us only if it fits.</span>
           </h2>
           <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-            Take any of the eight working sessions that extend The 14-Day Pivot Method — $197, $297, or $397 depending on the capability. You leave with the strategy, the playbook, and the exact tool stack to ship it yourself. Decide in the room whether to DIY, hire someone else, or hand it to our team. If you hire us for any bespoke engagement after, your session fee is credited back against the scope.
+            Pick any of our eight Saturday workshops — $197, $297, or $397. Spend one morning with us and walk out with the piece done. Decide in the room whether to keep going yourself, hire someone else, or hand it to our team. If you hire us after, we credit your workshop fee back on the project.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link
               to="/build"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 sm:w-auto"
             >
-              See all 8 workshops <ArrowRight className="size-4" />
+              See all 8 Saturday workshops <ArrowRight className="size-4" />
             </Link>
             <Link
               to="/contact?intent=discovery"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-base font-medium text-foreground transition-colors hover:bg-white/10 sm:w-auto"
             >
-              Book a discovery call
+              Book a free 30-min call
             </Link>
           </div>
         </div>
@@ -297,28 +297,28 @@ function WorkshopBand() {
 
 const FAQS = [
   {
-    q: "Do I have to take the workshop first?",
-    a: "No. But it's the cheapest insurance against hiring the wrong thing — one live morning inside The 14-Day Pivot Method hands you the strategy, the playbook, and the tool stack to actually ship it yourself if you want to. Most founders who take it come back with a sharper scope and save more than they spend.",
+    q: "Do I have to come to a workshop first?",
+    a: "No — but it's the cheapest way to make sure you're hiring the right thing. One Saturday morning with us and you'll know exactly what you need built (and what you can skip). Most folks save more than they spend just from that clarity.",
   },
   {
-    q: "Can I bundle just two capabilities instead of a whole track?",
-    a: "Yes. The tracks are smart defaults, not gates. A discovery call sets the actual scope — we'd rather sell you less and win the next engagement than oversell once.",
+    q: "Can I just buy one piece instead of a whole package?",
+    a: "Yes. The three options are starting points, not rules. On our free call we'll build a plan that fits what you actually need — we'd rather sell you less and earn the next project than oversell once.",
   },
   {
-    q: "Who owns the work?",
-    a: "You do. Source files, accounts, domains, content, prompts — everything. We hand over keys at the end of every engagement. No vendor lock-in, ever.",
+    q: "Who owns everything when we're done?",
+    a: "You do. Files, accounts, passwords, domains, content — all yours. We hand over the keys at the end. Nothing locked up on our side, ever.",
   },
   {
-    q: "How fast do you start?",
-    a: "Within 7 days of a signed scope. Most engagements kick off the Monday after we agree.",
+    q: "How fast can we start?",
+    a: "Within a week of the plan being signed. Most projects start the Monday after we agree.",
   },
   {
-    q: "What if I already have a brand, site, or CRM in place?",
-    a: "We audit first. Then you choose — tune what's there or rebuild from scratch. We won't pretend something is broken just to bill for new work.",
+    q: "What if I already have a brand or a website?",
+    a: "We take a look first. Then you decide — tune what's there or start fresh. We won't tell you something's broken just to bill for new work.",
   },
   {
-    q: "Do you take equity or revenue share?",
-    a: "No. Fixed fees, clean books, clean exit. The relationship is healthier — and so is your cap table.",
+    q: "Do you take equity or a cut of my sales?",
+    a: "No. Flat fees. Clean books. Clean goodbye. It's healthier for you — and for your business.",
   },
 ];
 
@@ -327,7 +327,7 @@ function FAQ() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-3xl px-6">
         <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-          Questions, answered straight.
+          Straight answers.
         </h2>
         <div className="mt-10 space-y-4">
           {FAQS.map((f) => (
@@ -360,24 +360,24 @@ function FinalCTA() {
       <div className="mx-auto max-w-5xl px-6">
         <div className="rounded-3xl border border-white/10 bg-hero-gradient p-8 text-white md:p-12">
           <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-            Strategy is the foundation.{" "}
-            <span className="opacity-80">Execution is what makes it real.</span>
+            The plan is the start.{" "}
+            <span className="opacity-80">Building it is what makes it real.</span>
           </h2>
           <p className="mt-4 max-w-2xl text-base opacity-90 md:text-lg">
-            Two doors, same outcome: a business that attracts customers, converts them, and keeps them. Pick the one that fits how you want to spend the next 30 days.
+            Two doors, same finish: a business that brings customers in, turns them into buyers, and keeps them coming back. Pick the door that fits your next 30 days.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link
               to="/contact?intent=discovery"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-base font-medium text-black transition-opacity hover:opacity-90 sm:w-auto"
             >
-              Book a discovery call <ArrowRight className="size-4" />
+              Book a free 30-min call <ArrowRight className="size-4" />
             </Link>
             <Link
               to="/build"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/40 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
             >
-              Start with a workshop — from $197
+              Start with a Saturday workshop — from $197
             </Link>
           </div>
         </div>

@@ -24,8 +24,8 @@ async function submitInquiry(form: { name: string; email: string; phone: string;
 
 export default function ContactPage() {
   useDocumentTitle(
-    "Contact Startuplabs — talk to Adam Anderson",
-    "Ask about workshops, webinars, or a done-with-you build. We answer every inquiry personally."
+    "Contact Startuplabs — talk to Adam",
+    "Not sure which option fits, or want to talk it through first? Send a note — we write back within one business day."
   );
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "", website: "" });
   const [submitted, setSubmitted] = useState(false);
@@ -48,15 +48,15 @@ export default function ContactPage() {
         <div className="mx-auto max-w-2xl px-6 py-16 md:py-24">
           <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Get <span className="text-gradient-brand">in touch</span></h1>
           <p className="mt-3 text-muted-foreground">
-            Questions, concerns, or just curious how the program works? Drop us a note — a real person will reply within 1 business day.
+            Not sure which option fits, or just want to talk it through first? Send a note — Adam or someone on our team writes back within one business day. Real person. No bots.
           </p>
 
           {submitted ? (
             <div className="mt-10 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-8 text-center">
               <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-400" />
-              <h2 className="mt-4 text-xl font-semibold">Message sent</h2>
+              <h2 className="mt-4 text-xl font-semibold">Got it — thanks for writing</h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Thanks{form.name ? `, ${form.name.split(/\s+/)[0]}` : ""}. We emailed you a confirmation and will get back to you within 1 business day.
+                Thanks{form.name ? `, ${form.name.split(/\s+/)[0]}` : ""}. We'll write back within one business day. Check your inbox for a quick confirmation.
               </p>
             </div>
           ) : (
