@@ -147,23 +147,23 @@ function Tracks() {
 const PROCESS_STEPS = [
   {
     icon: Compass,
-    title: "Diagnose",
-    detail: "A 30-minute call. We tell you what to buy, what to skip, and what to do yourself.",
+    title: "Talk it through",
+    detail: "A free 30-minute call. We'll tell you what to buy, what to skip, and what you can do yourself.",
   },
   {
     icon: FileText,
-    title: "Scope",
-    detail: "Fixed scope, fixed startup assets, fixed clock — set together in discovery. Flat fee, no T&M, no surprise invoices.",
+    title: "Agree on the plan",
+    detail: "One page, one price, one timeline — set together. No hourly billing, no surprise invoices.",
   },
   {
     icon: Hammer,
-    title: "Build",
-    detail: "Weekly demos, shared workspace, your team copied on every decision in real time.",
+    title: "We build",
+    detail: "You see progress every week. Shared workspace. Your team on every decision as it happens.",
   },
   {
     icon: PackageCheck,
-    title: "Hand off",
-    detail: "Documented systems, Loom walkthroughs, 30-day support — and you own everything.",
+    title: "You own it",
+    detail: "Everything handed over — files, accounts, passwords. Short videos walking you through how it all works. 30 days of help after.",
   },
 ];
 
@@ -172,11 +172,11 @@ function Process() {
     <section className="py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          How we engage
+          How it works
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
           Four steps.{" "}
-          <span className="text-gradient-brand">No mystery, no project drift.</span>
+          <span className="text-gradient-brand">No mystery. No creep.</span>
         </h2>
 
         <div className="mt-10 grid gap-4 md:grid-cols-4">
