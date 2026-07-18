@@ -360,24 +360,24 @@ function FinalCTA() {
       <div className="mx-auto max-w-5xl px-6">
         <div className="rounded-3xl border border-white/10 bg-hero-gradient p-8 text-white md:p-12">
           <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-            Strategy is the foundation.{" "}
-            <span className="opacity-80">Execution is what makes it real.</span>
+            The plan is the start.{" "}
+            <span className="opacity-80">Building it is what makes it real.</span>
           </h2>
           <p className="mt-4 max-w-2xl text-base opacity-90 md:text-lg">
-            Two doors, same outcome: a business that attracts customers, converts them, and keeps them. Pick the one that fits how you want to spend the next 30 days.
+            Two doors, same finish: a business that brings customers in, turns them into buyers, and keeps them coming back. Pick the door that fits your next 30 days.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link
               to="/contact?intent=discovery"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-base font-medium text-black transition-opacity hover:opacity-90 sm:w-auto"
             >
-              Book a discovery call <ArrowRight className="size-4" />
+              Book a free 30-min call <ArrowRight className="size-4" />
             </Link>
             <Link
               to="/build"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/40 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
             >
-              Start with a workshop — from $197
+              Start with a Saturday workshop — from $197
             </Link>
           </div>
         </div>
