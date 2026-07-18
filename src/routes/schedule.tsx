@@ -62,9 +62,9 @@ export default function SchedulePage() {
           {/* Stat ribbon */}
           <div className="mt-8 grid grid-cols-1 gap-3 border-t border-white/10 pt-6 sm:grid-cols-3 md:mt-10 md:pt-8">
             {[
-              { stat: "2h 45m", label: "working time" },
-              { stat: "1 drafting", label: "+ 7 mentored review stages" },
-              { stat: "~30 drafts", label: "reviewed working docs on your dashboard" },
+              { stat: "2h 45m", label: "start to finish" },
+              { stat: "1 morning", label: "your business, on paper and live" },
+              { stat: "~30 pieces", label: "saved to your dashboard to keep working" },
             ].map((s) => (
               <div
                 key={s.label}
