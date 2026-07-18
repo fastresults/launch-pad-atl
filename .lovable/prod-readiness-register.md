@@ -12,7 +12,9 @@ Baseline captured: Phase 0 scans. Phase 1 in progress.
 - ✅ **2026-07-18** — DEFINER audit complete. Remaining 23 warnings are intentional exceptions documented in `@security-memory` (admin-guarded RPCs, self-scoped user RPCs, `has_role`/`is_admin` used by RLS, and two pgvector/pg_net extensions we won't relocate).
 - ⚠️ **Blocked on user action** — (1) Data disk 89% → resize in **Cloud → Advanced settings**. (2) Sentry + PostHog keys needed to wire observability (Phase 4).
 - ✅ **2026-07-18** — Phase 2: banned-copy sweep across `index.html`, chatbot knowledge, deliverable prompts. Authed smoke test — 7 key routes 200/no page errors.
-- ⏭️ Next when user is ready: Phase 2 (auth regression + email template sweep) or Phase 4 (observability) once keys land.
+- ✅ **2026-07-18** — Phase 3: bundle trim (~5 MB flyers removed, evolve-logo SVGO), JSON-LD (Org/Person/Event), GlobalErrorBoundary, per-route SEO titles. 24/24 QA green.
+- ✅ **2026-07-18** — Phase 5 prep: launch rehearsal package shipped — `.lovable/launch/k6-smoke.js`, `cutover-checklist.md`, `rollback-plan.md`. Ready to execute on cutover day.
+- ⚠️ **Still blocked on user**: (1) disk resize in Cloud → Advanced settings, (2) Sentry + PostHog keys for Phase 4 observability wiring, (3) Sentry `captureException` hookup inside `GlobalErrorBoundary` once DSN lands.
 
 
 
