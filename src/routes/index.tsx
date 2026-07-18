@@ -3,8 +3,9 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 
 export default function HomePage() {
   useDocumentTitle(
-    "Startuplabs — The 14-Day Pivot Method by Adam Anderson",
-    "Adam Anderson's done-with-you method for W-2 professionals ready to launch a real second income. Workshops, webinars, and 1:1 builds."
+    "Startuplabs — Start your side hustle in one morning",
+    "Come spend one Saturday morning in Atlanta (or live on Zoom). We help everyday people start their thing and get their first paying customer in two weeks — for $197."
   );
+
   return <HomeFramework />;
 }

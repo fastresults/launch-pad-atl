@@ -71,40 +71,40 @@ function Hero() {
           <div>
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white md:text-sm md:tracking-[0.2em]">
 
-          <Star className="size-3.5 fill-current" /> The 14-Day Pivot Method · Wed, Aug 19, 2026 · Norcross, GA
+          <Star className="size-3.5 fill-current" /> One Saturday morning · Aug 19 · Atlanta · Coffee on us
         </p>
 
 
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
-          The 14-Day Pivot Method.{" "}
-          <span className="text-gradient-brand">First paying customer in two weeks.</span>
+          Start your thing.{" "}
+          <span className="text-gradient-brand">Get your first paying customer in two weeks.</span>
         </h1>
 
         {/* Old way / New way — the epiphany beat */}
         <div className="mt-6 grid max-w-2xl gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-white/10 bg-black/25 p-4 backdrop-blur">
-            <div className="text-[10px] uppercase tracking-[0.22em] text-white/50">The old way</div>
+            <div className="text-[10px] uppercase tracking-[0.22em] text-white/50">The usual path</div>
             <p className="mt-1.5 text-sm leading-snug text-white/80">
-              An accelerator seat. A year of courses. A raw-AI rabbit hole.
+              A year of courses. A pile of tabs. Never actually starting.
             </p>
           </div>
           <div className="rounded-xl border border-primary/40 bg-gradient-to-br from-primary/20 to-primary/5 p-4 backdrop-blur">
-            <div className="text-[10px] uppercase tracking-[0.22em] text-primary">The new way</div>
+            <div className="text-[10px] uppercase tracking-[0.22em] text-primary">Our way</div>
             <p className="mt-1.5 text-sm leading-snug text-white">
-              One live morning of The 14-Day Pivot Method. Revenue in two weeks.
+              One morning with us. A real plan. Money in your account in two weeks.
             </p>
           </div>
         </div>
 
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          One focused morning of <span className="font-medium text-white">The 14-Day Pivot Method</span> — the done-with-you system quietly replacing accelerators, courses, and raw AI. The way modern founders skip the year of guessing and land their first paying customer in two weeks. Built and run by Adam, the operator behind the method. {WORKSHOP_PRICE_LABEL} once, yours forever.{" "}
-          <span className="font-medium text-white">Full support during and after</span>, if you want it.
+          Come spend one morning with us. We'll help you build the real thing — your side hustle, your shop, your online store — and walk you out with a plan you can actually run. Not a course. Not homework you'll never do. We sit down and do it <span className="font-medium text-white">with</span> you, in the room, for {WORKSHOP_PRICE_LABEL}.
         </p>
 
 
         <p className="mt-4 max-w-2xl text-sm text-white/80 md:text-base">
-          Not another course. Not raw AI. The done-with-you method replacing both.
+          For nurses, teachers, servers, coders, and everyone in between who's ready for a Plan B.
         </p>
+
 
 
 
@@ -120,22 +120,22 @@ function Hero() {
             onClick={() => setModesOpen(true)}
             className="text-sm text-white/80 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white hover:decoration-white sm:text-base"
           >
-            Prefer to do it live on Zoom — or have it built for you?
+            Can't make it to Atlanta? See the other two ways.
           </button>
         </div>
         <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
 
         <p className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-white/70 md:text-sm">
-          <span>Atlanta-built</span>
+          <span>Made in Atlanta</span>
           <span aria-hidden>·</span>
-          <span>Founder-first</span>
+          <span>Everyday people welcome</span>
           <span aria-hidden>·</span>
           <span>Coffee on us</span>
           <span aria-hidden>·</span>
-          <span>Full support available</span>
+          <span>We stick around after</span>
         </p>
         <p className="mt-2 max-w-2xl text-xs text-white/60 md:text-sm">
-          Two equal tracks — Main Street and Online. Cafés, salons, trades, local services and indie brands on one side; DTC and e-commerce brands, creators, digital services, agencies and small SaaS on the other. Pick the track that fits your startup. Marketplace and deep tech supported too.
+          Two rooms in one — one for local shops, cafés, salons, trades, and neighborhood services; one for online stores, side brands, and creators. Pick the room that fits what you're building. Not sure yet? Come anyway — we'll help you figure it out.
         </p>
 
         <div className="mt-10 grid max-w-3xl grid-cols-1 gap-3 text-white/90 sm:grid-cols-2 lg:grid-cols-4 md:mt-12 md:gap-4">
@@ -143,7 +143,8 @@ function Hero() {
           <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
           <Meta icon={<MapPin className="size-4" />} label={`${EVENT.venueCity}, ${EVENT.venueRegion}`} />
           <Meta icon={<Clock className="size-4" />} label="8:45–11:30 AM · Coffee included" />
-          <Meta icon={<Users className="size-4" />} label="20 seats, one cohort" />
+          <Meta icon={<Users className="size-4" />} label="Just 20 seats" />
+
         </div>
           </div>
           <div className="hidden lg:flex justify-center">
@@ -177,15 +178,16 @@ function Framework() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          Inside The 14-Day Pivot Method
+          What you'll walk out with
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-          A business ready to take money.{" "}
-          <span className="text-gradient-brand">Built with The 14-Day Pivot Method in one morning.</span>
+          A real business ready to take money.{" "}
+          <span className="text-gradient-brand">Built with you in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Raw AI hands you a folder of documents. An accelerator hands you a year of homework. The 14-Day Pivot Method hands you a business — offer priced, first customer named, first channel open, outreach going out that afternoon. {WORKSHOP_PRICE_LABEL} once, yours to run with.
+          A course gives you videos. A chatbot gives you a folder of documents. We sit down with you and build the thing — what you're selling, who you're selling it to, and how to get your first "yes." By that afternoon you're not planning anymore. You're open. {WORKSHOP_PRICE_LABEL} once. Yours to run with.
         </p>
+
 
 
         <div className="mt-14 space-y-14 md:space-y-20">
@@ -241,33 +243,36 @@ function Framework() {
 
 function HonestRoadmap() {
   const included = [
-    "A priced offer and the first customer you'll sell it to — named, not hypothetical",
-    "The one channel you open week one — and the first outreach going out that day",
-    "A 90-day roadmap from first dollar to steady income, built on the Pivot Method for your startup",
-    "Working time in a 20-seat room with the operator who built the method — not a moderator, not a TA",
-    "Coffee, refreshments, and a room built for founders who came to work",
+    "What you're selling and what to charge for it — a price you can actually say out loud",
+    "The exact person you'll sell to first — real name, not 'my target market'",
+    "The one place you'll go find them this week — and the first message going out that day",
+    "A simple 90-day plan from your first dollar to steady side income",
+    "A seat in a small room with Adam — the guy who's actually done this, not a stand-in",
+    "Coffee, snacks, and a room full of people doing the exact same thing you are",
   ];
 
   return (
     <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          The honest roadmap
+          Here's the honest plan
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-          Two weeks to first revenue.{" "}
+          Two weeks to your first dollar.{" "}
           <span className="text-gradient-brand">A real business by month two.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Every founder we've watched fail did the same thing: they burned six months and $30K on a logo, a site, and ads that told nobody a coherent story — and never asked a single customer for money. The workshop flips it. The 14-Day Pivot Method prices your offer, names your first customer, opens your first channel, and gets you selling in the next 14 days. Everything else — the polish, the systems, the scale — comes after the money starts.
+          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we help you name your first customer, price what you're selling, and get the first "yes" going out that week. Everything pretty comes after the money starts.
         </p>
+
 
 
         {/* Act 1 — Why foundation first */}
         <div className="mt-12 md:mt-16">
           <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground md:text-sm">
-            <AlertTriangle className="size-4 text-primary" /> Why foundation first
+            <AlertTriangle className="size-4 text-primary" /> Start here first
           </div>
+
           <div className="grid gap-4 md:grid-cols-3">
             {FOUNDATION_FIRST_REASONS.map((r) => (
               <div
@@ -303,11 +308,12 @@ function HonestRoadmap() {
         {/* Act 3 — The modern build layer */}
         <div className="mt-12 md:mt-16">
           <div className="mb-2 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground md:text-sm">
-            <Sparkles className="size-4 text-primary" /> What comes after your first customer
+            <Sparkles className="size-4 text-primary" /> Once you have your first customer
           </div>
           <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-            Once you're live and taking money, eight more capabilities turn a launched business into a growing one — the brand, the site that converts, the content engine, the sales script, the automations. Each is a half-day working session that extends the Pivot Method. Or hand the whole thing to our team.
+            Once money's coming in, there are eight more mornings you can come back for — a real brand, a website that actually sells, a way to keep customers coming, a script for closing more of them, and simple systems that save you hours. One thing at a time, done together, done before lunch. Or just hand the list to our team and we'll build it for you.
           </p>
+
 
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -347,11 +353,11 @@ function HonestRoadmap() {
           </div>
 
           <p className="mx-auto mt-10 max-w-3xl text-base text-muted-foreground md:text-lg">
-            DIY any of it. Hire anyone. Or hand it to our team. Either way, each half-day is the same playbook our team runs from — the working sessions that extend The 14-Day Pivot Method after your first customer.{" "}
+            Do any of it yourself. Hire someone else. Or hand it to our team — same crew, same playbook.{" "}
             <span className="font-medium text-foreground">
-              Foundation first. Build when ready.
+              Get the basics right first. Add the rest when the money's coming in.
             </span>{" "}
-            That's not a slogan — it's the cheapest path to a real business.
+            That's the cheapest, saner way to actually pull this off.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
@@ -359,7 +365,7 @@ function HonestRoadmap() {
               to="/build"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 sm:w-auto"
             >
-              See all 8 workshops <ArrowRight className="size-4" />
+              See all 8 mornings <ArrowRight className="size-4" />
             </Link>
             <Link
               to="/services"
@@ -368,6 +374,7 @@ function HonestRoadmap() {
               Or have us build it for you
             </Link>
           </div>
+
         </div>
       </div>
     </section>
@@ -382,7 +389,7 @@ function Facilitator() {
           <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-hero-gradient">
             <div className="relative flex h-full flex-col justify-end p-6 text-white">
               <Award className="mb-3 size-6 opacity-80" />
-              <div className="text-sm uppercase tracking-[0.2em] opacity-80">Your facilitator</div>
+              <div className="text-sm uppercase tracking-[0.2em] opacity-80">Who's in the room with you</div>
               <div className="mt-1 flex items-center gap-3">
                 <div className="size-12 overflow-hidden rounded-full bg-white/15 backdrop-blur">
                   <img src={facilitatorPhoto} alt="Adam Anderson" className="size-full object-cover" />
@@ -390,30 +397,31 @@ function Facilitator() {
                 <div>
                   <div className="text-2xl font-semibold leading-tight">Adam Anderson</div>
                   <div className="text-xs uppercase tracking-[0.18em] opacity-80">
-                    Serial Entrepreneur · Operator
+                    Started a lot of businesses · Been in your seat
                   </div>
                 </div>
               </div>
               <div className="mt-4 text-base leading-snug opacity-95">
-                30 years of starting businesses. A few hours with yours.
+                30 years of starting things. A few hours with yours.
               </div>
             </div>
           </div>
           <div>
             <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-              Who's in the room with you
+              Meet Adam
             </h2>
             <p className="text-2xl font-semibold tracking-tight md:text-3xl lg:text-4xl">
               Adam Anderson —{" "}
-              <span className="text-gradient-brand">at your table for the session.</span>
+              <span className="text-gradient-brand">sitting at your table.</span>
             </p>
             <p className="mt-5 text-muted-foreground">
-              Co-Founder of OPEN Interactive and a serial entrepreneur who has personally started multiple companies and helped launch dozens more across tech, services, online brands, and Main Street. Along the way he's shipped work for Citigroup, Mayo Clinic, 3M, and Disney, built full digital systems for a Caribbean country's government, and produced one of the region's biggest business summits for five years running.
+              Adam has started a bunch of his own companies and helped a lot of everyday people start theirs — cafés, online stores, home services, side brands, you name it. Along the way he's also done big work for names you know like Citigroup, Mayo Clinic, 3M, and Disney. Fancy resume, regular guy.
             </p>
             <p className="mt-3 text-muted-foreground">
-              He's sat in your seat — more than once. He knows what the first move looks like, and what it takes to get from "good idea" to "running business."
+              He's sat in your seat more than once. He knows what the first move looks like, and he'll help you make it.
             </p>
           </div>
+
         </div>
       </div>
     </section>
@@ -425,21 +433,22 @@ function ServicesTeaser() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-4xl px-6 text-center">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          When you're ready to build it
+          Don't want to DIY?
         </p>
         <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-          When you're ready,{" "}
-          <span className="text-gradient-brand">we'll build it for you.</span>
+          We'll just{" "}
+          <span className="text-gradient-brand">build it for you.</span>
         </h2>
         <div className="mt-8 flex justify-center">
           <Link
             to="/services"
             className="group inline-flex items-center gap-3 rounded-full bg-hero-gradient px-7 py-3.5 text-base font-medium text-white transition-opacity hover:opacity-90"
           >
-            See all services
+            See what we build
             <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
+
       </div>
     </section>
   );
@@ -455,8 +464,9 @@ function Venue() {
           <div className="grid gap-8 md:grid-cols-[1.05fr_1fr] md:gap-10">
             <div>
               <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
-                Where it happens
+                Where we meet
               </h2>
+
               <p className="text-2xl font-semibold tracking-tight md:text-3xl lg:text-4xl">
                 {EVENT.venueName}
               </p>
@@ -502,11 +512,12 @@ function BottomCTA() {
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-hero-gradient p-8 md:p-12 lg:p-16">
           <div className="relative max-w-3xl text-white">
             <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-              Stop turning the startup over in your head.
+              Stop thinking about it. Come start it.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
-              {WORKSHOP_PRICE_LABEL} gets you one morning of the Pivot Method and a real plan your startup can run with Monday. If you want our team to build the brand, the site, or the launch after — we're a click away. If not, you keep the plan either way.
+              {WORKSHOP_PRICE_LABEL} gets you one morning with us and a real plan you can run with Monday. If you want us to build the brand, the site, or the whole launch after — we're right here. If not, you keep the plan either way.
             </p>
+
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4 md:mt-8">
               <Link
