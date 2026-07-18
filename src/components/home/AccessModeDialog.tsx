@@ -25,10 +25,10 @@ const MODES: Mode[] = [
   {
     id: "workshop",
     icon: <Users className="size-5" />,
-    title: "In-person with Adam",
-    format: "Norcross, GA · 20 seats",
+    title: "Come to Atlanta",
+    format: "In-person · just 20 seats",
     promise:
-      "The 14-Day Pivot Method, live in the room with Adam. Two weeks to your first paying customer — offer priced, first channel open, outreach out that day.",
+      "Spend one Saturday morning in the room with Adam. We build your plan together — what you're selling, who to, and how to get the first 'yes' — and you walk out ready to go.",
     price: `${WORKSHOP_PRICE_LABEL} — yours to keep`,
     cta: "Reserve a seat",
     to: "/register",
@@ -36,23 +36,23 @@ const MODES: Mode[] = [
   {
     id: "webinar",
     icon: <Video className="size-5" />,
-    title: "Live on Zoom with Adam",
-    format: "Remote · small cohort",
+    title: "Join us on Zoom",
+    format: "Live from anywhere · small group",
     promise:
-      "The 14-Day Pivot Method, run live over video with Adam — same operator, same 14-day path to first revenue, from wherever you are.",
-    price: "Lower price · next cohort forming",
-    cta: "Join the next webinar",
+      "Same morning, same Adam, same plan — just over video. Perfect if Atlanta's a hike or you'd rather do it from your kitchen table.",
+    price: "Lower price · next date opening soon",
+    cta: "Get on the list",
     to: "/webinar",
   },
   {
     id: "one_on_one",
     icon: <Wand2 className="size-5" />,
-    title: "Adam launches it for you",
-    format: "Adam + creative team · 14-day build",
+    title: "Have us build it for you",
+    format: "Adam + team · done in 14 days",
     promise:
-      "The 14-Day Pivot Method, run for you. Adam and his team ship the brand, site, social, and systems — and hand you a live business ready to invoice.",
+      "You've got the idea and the budget — you just want it built. We'll ship the brand, the site, the social, and the systems, and hand you a real business ready to take money.",
     price: "$4,799 · everything included",
-    cta: "Have Adam build it",
+    cta: "See what's included",
     to: "/one-on-one",
     featured: true,
   },
@@ -78,11 +78,12 @@ export function AccessModeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Three ways to run The 14-Day Pivot Method.</DialogTitle>
+          <DialogTitle className="text-2xl">Three ways to do this with us.</DialogTitle>
           <DialogDescription>
-            Same method. Same 14-day path to first revenue. Pick the format — in the room, live on Zoom, or done for you.
+            Same plan. Same two weeks to your first customer. Pick the one that fits your life — come to Atlanta, hop on Zoom, or let us build it for you.
           </DialogDescription>
         </DialogHeader>
+
         <div className="mt-2 grid gap-3 md:grid-cols-3">
           {MODES.map((m) => (
             <Link
@@ -100,9 +101,10 @@ export function AccessModeDialog({
             >
               {m.featured && (
                 <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
-                  <Sparkles className="size-3" /> White-glove
+                  <Sparkles className="size-3" /> Done for you
                 </span>
               )}
+
               <div className="flex items-center gap-2 text-primary">
                 {m.icon}
                 <h3 className="text-base font-semibold text-foreground">{m.title}</h3>
