@@ -24,8 +24,8 @@ async function submitInquiry(form: { name: string; email: string; phone: string;
 
 export default function ContactPage() {
   useDocumentTitle(
-    "Contact Startuplabs — talk to Adam Anderson",
-    "Ask about workshops, webinars, or a done-with-you build. We answer every inquiry personally."
+    "Contact Startuplabs — talk to Adam",
+    "Not sure which option fits, or want to talk it through first? Send a note — we write back within one business day."
   );
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "", website: "" });
   const [submitted, setSubmitted] = useState(false);
