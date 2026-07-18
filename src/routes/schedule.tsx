@@ -121,15 +121,11 @@ export default function SchedulePage() {
         <div className="mx-auto max-w-4xl px-6">
           <div className="mb-8 rounded-2xl border border-primary/25 bg-primary/5 p-5 md:p-6">
             <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-              How the sessions work
+              How the morning flows
             </div>
             <p className="text-sm text-foreground/90 md:text-base">
-              <strong>Foundation</strong> is the one drafting stage — you write the core story of
-              your startup with worksheet support. Every session after Foundation is a{" "}
-              <strong>mentored working session</strong>: you arrive with a working attempt, staff
-              apply an expert lens (operator, CFO, brand lead, distribution lead) to your specific
-              startup, and you leave with reviewed working drafts you continue to sharpen on your
-              dashboard.
+              <strong>The first stop is Foundation</strong> — you write down the story of your business in plain English, with a worksheet to help. Every stop after that is a{" "}
+              <strong>working session</strong>: you bring what you've written so far, Adam or someone on our team helps you sharpen it — money, brand, how you'll get customers — and you leave with the piece worked out and saved to your dashboard so you can keep refining it after.
             </p>
           </div>
           <ol className="relative space-y-6 border-l border-white/15 pl-6">
