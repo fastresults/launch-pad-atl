@@ -1,6 +1,14 @@
 # Production Readiness — Triage Register
 
-Baseline captured: Phase 0 automated scans (security scan, DB linter, dependency scan, DB health, slow queries).
+Baseline captured: Phase 0 scans. Phase 1 in progress.
+
+## Progress log
+
+- ✅ **2026-07-18** — Baseline scans captured; register created.
+- ✅ **2026-07-18** — Migration: added 6 hot-path indexes (`venture_documents`, `venture_brand_kits`, `venture_content_ads`, `venture_social_assets`, `ai_pipeline_runs`, `ai_pipeline_steps`).
+- ✅ **2026-07-18** — Migration: revoked `EXECUTE` on 13 SECURITY DEFINER functions from `anon`/PUBLIC. Linter findings **41 → 24**.
+- ⏭️ Next: relocate extensions out of `public`; add rate limiting / captcha to the 2 public write endpoints (`inquiries`, `founder_applications`); classify the 20 remaining authenticated-callable DEFINER RPCs.
+
 Owner column = who's accountable next. Status = `open` / `in-progress` / `done` / `wontfix`.
 
 ---
