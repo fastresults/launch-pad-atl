@@ -297,28 +297,28 @@ function WorkshopBand() {
 
 const FAQS = [
   {
-    q: "Do I have to take the workshop first?",
-    a: "No. But it's the cheapest insurance against hiring the wrong thing — one live morning inside The 14-Day Pivot Method hands you the strategy, the playbook, and the tool stack to actually ship it yourself if you want to. Most founders who take it come back with a sharper scope and save more than they spend.",
+    q: "Do I have to come to a workshop first?",
+    a: "No — but it's the cheapest way to make sure you're hiring the right thing. One Saturday morning with us and you'll know exactly what you need built (and what you can skip). Most folks save more than they spend just from that clarity.",
   },
   {
-    q: "Can I bundle just two capabilities instead of a whole track?",
-    a: "Yes. The tracks are smart defaults, not gates. A discovery call sets the actual scope — we'd rather sell you less and win the next engagement than oversell once.",
+    q: "Can I just buy one piece instead of a whole package?",
+    a: "Yes. The three options are starting points, not rules. On our free call we'll build a plan that fits what you actually need — we'd rather sell you less and earn the next project than oversell once.",
   },
   {
-    q: "Who owns the work?",
-    a: "You do. Source files, accounts, domains, content, prompts — everything. We hand over keys at the end of every engagement. No vendor lock-in, ever.",
+    q: "Who owns everything when we're done?",
+    a: "You do. Files, accounts, passwords, domains, content — all yours. We hand over the keys at the end. Nothing locked up on our side, ever.",
   },
   {
-    q: "How fast do you start?",
-    a: "Within 7 days of a signed scope. Most engagements kick off the Monday after we agree.",
+    q: "How fast can we start?",
+    a: "Within a week of the plan being signed. Most projects start the Monday after we agree.",
   },
   {
-    q: "What if I already have a brand, site, or CRM in place?",
-    a: "We audit first. Then you choose — tune what's there or rebuild from scratch. We won't pretend something is broken just to bill for new work.",
+    q: "What if I already have a brand or a website?",
+    a: "We take a look first. Then you decide — tune what's there or start fresh. We won't tell you something's broken just to bill for new work.",
   },
   {
-    q: "Do you take equity or revenue share?",
-    a: "No. Fixed fees, clean books, clean exit. The relationship is healthier — and so is your cap table.",
+    q: "Do you take equity or a cut of my sales?",
+    a: "No. Flat fees. Clean books. Clean goodbye. It's healthier for you — and for your business.",
   },
 ];
 
@@ -327,7 +327,7 @@ function FAQ() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-3xl px-6">
         <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-          Questions, answered straight.
+          Straight answers.
         </h2>
         <div className="mt-10 space-y-4">
           {FAQS.map((f) => (
