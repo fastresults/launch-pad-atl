@@ -9,8 +9,8 @@ import { ArrowRight, Sparkles, CalendarDays } from "lucide-react";
 
 export default function BuildIndexPage() {
   useDocumentTitle(
-    "Build workshops — 8 working sessions from Anderson's Process",
-    "Eight hands-on workshops that walk you through Anderson's Process — your startup foundation, live by lunch."
+    "Build workshops — eight Saturday mornings, one piece of your business each",
+    "Come spend one Saturday morning with us and walk out with one piece of your business done — your brand, your site, your follow-ups. $197 a session."
   );
   return (
     <div className="min-h-screen">
