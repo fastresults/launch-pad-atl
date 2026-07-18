@@ -7,9 +7,13 @@ Baseline captured: Phase 0 scans. Phase 1 in progress.
 - ✅ **2026-07-18** — Baseline scans captured; register created.
 - ✅ **2026-07-18** — Migration: added 6 hot-path indexes.
 - ✅ **2026-07-18** — Migration: revoked `EXECUTE` on 13 SECURITY DEFINER functions from `anon`/PUBLIC. Linter **41 → 24**.
-- ✅ **2026-07-18** — Migration: rate-limit trigger on `inquiries` + `founder_applications` (5 submissions / hour / email). Closes P0-3's residual risk (permissive INSERT policies are intentional but now bounded).
-- ⚠️ **Blocked on user action** — Data disk 89%. There's no `resize_disk` tool; user must open **Cloud → Advanced settings → Increase database disk** in the product.
-- ⏭️ Next: relocate `pgcrypto`/`vector` extensions out of `public`; audit the 20 remaining authenticated-callable DEFINER RPCs; wire Sentry + PostHog (needs keys).
+- ✅ **2026-07-18** — Migration: rate-limit trigger on `inquiries` + `founder_applications` (5 submissions / hour / email).
+- ✅ **2026-07-18** — Migration: locked `sweep_stuck_generations` to `service_role` only. Linter **24 → 23**.
+- ✅ **2026-07-18** — DEFINER audit complete. Remaining 23 warnings are intentional exceptions documented in `@security-memory` (admin-guarded RPCs, self-scoped user RPCs, `has_role`/`is_admin` used by RLS, and two pgvector/pg_net extensions we won't relocate).
+- ⚠️ **Blocked on user action** — (1) Data disk 89% → resize in **Cloud → Advanced settings**. (2) Sentry + PostHog keys needed to wire observability (Phase 4).
+- ⏭️ Next when user is ready: Phase 2 (auth regression + email template sweep) or Phase 4 (observability) once keys land.
+
+
 
 
 Owner column = who's accountable next. Status = `open` / `in-progress` / `done` / `wontfix`.
