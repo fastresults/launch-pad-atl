@@ -11,7 +11,7 @@ export function SiteFooter() {
           <span>· Norcross, GA</span>
         </div>
         <div className="flex flex-col items-center gap-1 md:flex-row md:gap-4">
-          <span>© {new Date().getFullYear()} · Foundation first. Build when ready.</span>
+          <span>© {new Date().getFullYear()} · Start it right. Grow it when you're ready.</span>
           <Link to="/services" className="underline-offset-4 hover:text-foreground hover:underline">
             Services
           </Link>

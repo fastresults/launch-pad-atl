@@ -81,8 +81,9 @@ export function SiteHeader() {
             onClick={() => setModesOpen(true)}
             className="transition-colors hover:text-foreground"
           >
-            ways to work
+            3 ways to start
           </button>
+
           {isAdmin && (
             <Link to="/admin" className="transition-colors hover:text-foreground">admin</Link>
           )}
@@ -139,8 +140,9 @@ export function SiteHeader() {
                     onClick={() => { close(); setModesOpen(true); }}
                     className="rounded-xl px-4 py-3 text-left text-base text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
                   >
-                    ways to work with Adam
+                    3 ways to start
                   </button>
+
                 </nav>
                 <div className="mt-auto space-y-3 border-t border-white/5 px-6 py-5">
                   <Link to="/register" onClick={close} className="flex w-full items-center justify-center rounded-full bg-hero-gradient px-5 py-3 text-base font-medium text-white">
