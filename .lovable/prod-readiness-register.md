@@ -112,3 +112,25 @@ Each of the above becomes its own migration + PR, gated on user approval per `pl
 - `src/assets/evolve-logo.svg` is 2.6 MB — inspect for embedded raster/unused paths; optimize with SVGO.
 - JSON-LD on `/facilitator` (Person) and `/webinar` (Event).
 - Global React error boundary (rolls into Phase 4 with Sentry).
+
+---
+
+## Phase 3 closeout
+
+**Bundle / asset trim**
+- Deleted 4 unused flyer files from `public/` (`startuplabs-flyer.png`, `-v2.png`, `-v3.png`, `flyer-attend.jpg`) — **~5 MB removed** from every deploy.
+- Optimized `src/assets/evolve-logo.svg` with SVGO (`--multipass`) — 2.6 MB → 2.1 MB. Still large; flagged for a design pass (candidate for path simplification or a raster fallback via `<picture>`), not a launch blocker.
+- `hero-bg.png` (203 KB) evaluated for WebP — savings <5%, kept as-is.
+
+**JSON-LD**
+- **Sitewide**: added `Organization` schema in `index.html`.
+- `/facilitator`: `Person` schema with `worksFor` linked to Startuplabs.
+- `/webinar`: `Event` schema (`OnlineEventAttendanceMode`, `EventScheduled`, `VirtualLocation`).
+- Extended `useDocumentTitle` to accept a JSON-LD blob and clean it up on unmount.
+
+**Resilience**
+- New `GlobalErrorBoundary` wraps the app root in `src/main.tsx`. Any component crash now renders a branded fallback with a Refresh button instead of white-screening. Ready for Sentry `captureException` in `componentDidCatch` when Phase 4 keys land.
+
+**QA re-verify** — 24/24 green across 8 routes × 3 viewports after all changes.
+
+**Phase 3 status: complete.** P1-4, P1-6, P1-7, P1-8, and P1-9 (boundary half) all closed. Register clean going into Phase 4 (observability + load).
