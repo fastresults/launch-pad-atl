@@ -48,7 +48,7 @@ export default function ContactPage() {
         <div className="mx-auto max-w-2xl px-6 py-16 md:py-24">
           <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Get <span className="text-gradient-brand">in touch</span></h1>
           <p className="mt-3 text-muted-foreground">
-            Questions, concerns, or just curious how the program works? Drop us a note — a real person will reply within 1 business day.
+            Not sure which option fits, or just want to talk it through first? Send a note — Adam or someone on our team writes back within one business day. Real person. No bots.
           </p>
 
           {submitted ? (
