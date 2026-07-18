@@ -43,14 +43,14 @@ function Tracks() {
     <section className="border-b border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          <Sparkles className="size-3.5" /> After The 14-Day Pivot Method · Our team builds what comes next
+          <Sparkles className="size-3.5" /> After your launch · our team builds what comes next
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
           You launched.{" "}
           <span className="text-gradient-brand">We'll scale it.</span>
         </h1>
         <p className="mt-5 max-w-3xl text-base text-muted-foreground md:text-lg">
-          The old way to scale meant a five-figure agency, a six-month rebuild, and a sales pitch every quarter. The new way is our team running The 14-Day Pivot Method at scale — three tracks that turn a working idea into a growing operation. Not another course. Not raw AI. The method replacing both. You don't buy eight things at once. You buy the three that compound.
+          The old way to grow: hire a big agency, sign a year-long contract, and wait months to see results. The new way: our team builds the next piece with you — three plainly-priced options, no surprise invoices, no year-long lock-in. Buy what you need, when you need it.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
@@ -58,18 +58,18 @@ function Tracks() {
             to="/contact?intent=discovery"
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 sm:w-auto"
           >
-            Book a discovery call <ArrowRight className="size-4" />
+            Book a free 30-minute call <ArrowRight className="size-4" />
           </Link>
           <Link
             to="/build"
             className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-base font-medium text-foreground transition-colors hover:bg-white/10 sm:w-auto"
           >
-            Start with a workshop — from $197
+            Start with a Saturday workshop — from $197
           </Link>
         </div>
 
         <p className="mt-8 text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-sm">
-          Work shipped for Citigroup · Mayo Clinic · 3M · Disney · government, Main Street, and online brands alike
+          We've built for Citigroup · Mayo Clinic · 3M · Disney — and for Main Street shops and online brands just like yours
         </p>
 
 
