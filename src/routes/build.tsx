@@ -26,7 +26,7 @@ export default function BuildIndexPage() {
             <span className="text-gradient-brand">Live by lunch.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            One Saturday morning. One piece of your business — your brand, your website, the words you use to sell, the emails that follow up, the tools that keep it running — built with you and done before lunch. Sessions from $197. No retainer. No waiting on an agency. Show up with your idea, walk out with the piece in your hands.
+            One Saturday morning. One piece of your business — your brand, your website, the words you use to sell, the emails that follow up, the tools that keep it running — built with you and done before lunch. No retainer. No waiting on an agency. Show up with your idea, walk out with the piece in your hands.
           </p>
         </div>
       </section>
