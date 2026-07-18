@@ -19,14 +19,14 @@ export default function BuildIndexPage() {
       <section className="border-b border-white/5 py-16 md:py-24">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-            <Sparkles className="size-3.5" /> The 14-Day Pivot Method · 8 Working Sessions
+            <Sparkles className="size-3.5" /> Eight Saturday mornings · $197 each
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
             Your foundation.{" "}
             <span className="text-gradient-brand">Live by lunch.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            Old way: hire a $10k/month agency, wait a quarter, hope the retainer earns its keep. New way: eight half-day working sessions — <span className="text-foreground">$197 each</span> — extending The 14-Day Pivot Method after your launch. One morning, one layer, live by lunch. Brand. A site that converts. Content engine. Sales script. Automations. Ship each one yourself in the room, or hand it to the team that would otherwise bill you $5K+ for the same work.
+            One Saturday morning. One piece of your business — your brand, your website, the words you use to sell, the emails that follow up, the tools that keep it running — built with you and done before lunch. $197 a session. No retainer. No waiting on an agency. Show up with your idea, walk out with the piece in your hands.
           </p>
         </div>
       </section>
