@@ -23,8 +23,13 @@ async function submitInquiry(form: { name: string; email: string; phone: string;
 }
 
 export default function ContactPage() {
+  useDocumentTitle(
+    "Contact Startuplabs — talk to Adam Anderson",
+    "Ask about workshops, webinars, or a done-with-you build. We answer every inquiry personally."
+  );
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "", website: "" });
   const [submitted, setSubmitted] = useState(false);
+
 
   const mutation = useMutation({
     mutationFn: () => submitInquiry(form),
