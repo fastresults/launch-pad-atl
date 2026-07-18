@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
 import { SiteFooter } from "@/components/site/Footer";
 import { SiteHeader } from "@/components/site/Header";
+import { useDocumentTitle } from "@/lib/use-document-title";
 
 async function submitInquiry(form: { name: string; email: string; phone: string; subject: string; message: string; website: string }) {
   const { error } = await supabase.from("inquiries").insert({
