@@ -76,7 +76,7 @@ function Hero() {
 
 
         <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
-          Start your thing.{" "}
+          Start your business.{" "}
           <span className="text-gradient-brand">Get your first paying customer in two weeks.</span>
         </h1>
 
@@ -97,7 +97,7 @@ function Hero() {
         </div>
 
         <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          Come spend one morning with us. We'll help you build the real thing — your side hustle, your shop, your online store — and walk you out with a plan you can actually run. Not a course. Not homework you'll never do. We sit down and do it <span className="font-medium text-white">with</span> you, in the room, for {WORKSHOP_PRICE_LABEL}.
+          Come spend one morning with us. We'll help you build the business you've been talking about — your side income, your shop, your online store — and walk you out with a plan you can actually run. Not a course. Not homework you'll never do. We sit down and do it <span className="font-medium text-white">with</span> you, in the room, for {WORKSHOP_PRICE_LABEL}.
         </p>
 
 
@@ -185,7 +185,7 @@ function Framework() {
           <span className="text-gradient-brand">Built with you in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          A course gives you videos. A chatbot gives you a folder of documents. We sit down with you and build the thing — what you're selling, who you're selling it to, and how to get your first "yes." By that afternoon you're not planning anymore. You're open. {WORKSHOP_PRICE_LABEL} once. Yours to run with.
+          A course gives you videos. A chatbot gives you a folder of documents. We sit down with you and build the business — what you're selling, who you're selling it to, and how to get your first "yes." By that afternoon you're not planning anymore. You're open. {WORKSHOP_PRICE_LABEL} once. Yours to run with.
         </p>
 
 
@@ -248,7 +248,7 @@ function HonestRoadmap() {
     "The one place you'll go find them this week — and the first message going out that day",
     "A simple 90-day plan from your first dollar to steady side income",
     "A seat in a small room with Adam — the guy who's actually done this, not a stand-in",
-    "Coffee, snacks, and a room full of people doing the exact same thing you are",
+    "Coffee, snacks, and a room full of people building the same kind of business you are",
   ];
 
   return (
@@ -311,7 +311,7 @@ function HonestRoadmap() {
             <Sparkles className="size-4 text-primary" /> Once you have your first customer
           </div>
           <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-            Once money's coming in, there are eight more mornings you can come back for — a real brand, a website that actually sells, a way to keep customers coming, a script for closing more of them, and simple systems that save you hours. One thing at a time, done together, done before lunch. Or just hand the list to our team and we'll build it for you.
+            Once money's coming in, there are eight more mornings you can come back for — a real brand, a website that actually sells, a way to keep customers coming, a script for closing more of them, and simple systems that save you hours. One piece at a time, done together, done before lunch. Or just hand the list to our team and we'll build it for you.
           </p>
 
 
@@ -402,7 +402,7 @@ function Facilitator() {
                 </div>
               </div>
               <div className="mt-4 text-base leading-snug opacity-95">
-                30 years of starting things. A few hours with yours.
+                30 years of starting businesses. A few hours with yours.
               </div>
             </div>
           </div>
