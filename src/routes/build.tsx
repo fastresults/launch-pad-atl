@@ -3,10 +3,15 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
 import { getUpcomingSessions } from "@/lib/build-workshop-schedule";
+import { useDocumentTitle } from "@/lib/use-document-title";
 
 import { ArrowRight, Sparkles, CalendarDays } from "lucide-react";
 
 export default function BuildIndexPage() {
+  useDocumentTitle(
+    "Build workshops — 8 working sessions from Anderson's Process",
+    "Eight hands-on workshops that walk you through Anderson's Process — your startup foundation, live by lunch."
+  );
   return (
     <div className="min-h-screen">
       <SiteHeader />

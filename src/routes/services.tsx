@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 
 import { AGENCY_TRACKS, getAgencyService } from "@/lib/agency-services";
+import { useDocumentTitle } from "@/lib/use-document-title";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import {
   ArrowRight,
@@ -15,6 +16,10 @@ import {
 } from "lucide-react";
 
 export default function ServicesPage() {
+  useDocumentTitle(
+    "Services — Scale with Anderson's Process",
+    "Ongoing done-with-you services from Adam Anderson: brand, web, content, and go-to-market — running the same process that launched you."
+  );
   return (
     <div className="min-h-screen">
       <SiteHeader />

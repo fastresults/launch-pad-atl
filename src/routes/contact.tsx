@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
 import { SiteFooter } from "@/components/site/Footer";
 import { SiteHeader } from "@/components/site/Header";
+import { useDocumentTitle } from "@/lib/use-document-title";
 
 async function submitInquiry(form: { name: string; email: string; phone: string; subject: string; message: string; website: string }) {
   const { error } = await supabase.from("inquiries").insert({
@@ -22,8 +23,13 @@ async function submitInquiry(form: { name: string; email: string; phone: string;
 }
 
 export default function ContactPage() {
+  useDocumentTitle(
+    "Contact Startuplabs — talk to Adam Anderson",
+    "Ask about workshops, webinars, or a done-with-you build. We answer every inquiry personally."
+  );
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "", website: "" });
   const [submitted, setSubmitted] = useState(false);
+
 
   const mutation = useMutation({
     mutationFn: () => submitInquiry(form),

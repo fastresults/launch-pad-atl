@@ -86,3 +86,29 @@ Owner column = who's accountable next. Status = `open` / `in-progress` / `done` 
 4. **DEFINER function audit** — enumerate all `SECURITY DEFINER` functions in `public`, decide `anon` vs `authenticated` vs `service_role` grants, ship a migration that revokes and re-grants.
 
 Each of the above becomes its own migration + PR, gated on user approval per `plan_mode_instructions`.
+
+---
+
+## Phase 3 progress (frontend/perf QA)
+
+**Banned-copy sweep (repo-wide)** — clean.
+- `rg -i "Anderson Method|14-Day Launch Method|operator-led"` across `src/`, `public/`, `index.html`, `supabase/functions/` returns **zero hits**.
+
+**QA matrix — 8 routes × 3 viewports (mobile 390 / tablet 768 / desktop 1280)** — 24/24 green.
+- `/`, `/facilitator`, `/build`, `/one-on-one`, `/services`, `/contact`, `/schedule`, `/hub`
+- All routes: HTTP 200, no `pageerror`, no `console.error`, `load` timings 126–471ms (localhost dev).
+- Results: `/tmp/browser/phase3/results.json`; desktop screenshots: `/tmp/browser/phase3/desktop_*.png`.
+
+**SEO — per-route titles** ✅
+- Created `src/lib/use-document-title.ts` (title + optional meta description, restores on unmount).
+- Applied to `/`, `/facilitator`, `/build`, `/services`, `/contact`. Combined with existing `/one-on-one`, `/schedule`, `/webinar` unique titles → **7 distinct titles across 8 routes** (hub inherits site default, acceptable for auth surface).
+
+**Hardcoded colors** — reviewed. All remaining `text-white`/`bg-black` hits are on gradient-buttons, dark-mode overlays, or workshop-slide dark variants (semantic-safe). No raw hex leakage in `src/`.
+
+**P1 items closed**: P1-4 (banned copy), P1-6 (QA matrix), P1-7 (repo grep passes), partial P1-8 (SEO titles).
+
+**Still open in Phase 3**:
+- Convert `hero-bg.png` (203 KB) and flyer PNGs (1.1–1.3 MB in `public/`) to WebP; add preload for hero.
+- `src/assets/evolve-logo.svg` is 2.6 MB — inspect for embedded raster/unused paths; optimize with SVGO.
+- JSON-LD on `/facilitator` (Person) and `/webinar` (Event).
+- Global React error boundary (rolls into Phase 4 with Sentry).
