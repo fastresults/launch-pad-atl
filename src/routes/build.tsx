@@ -98,13 +98,13 @@ export default function BuildIndexPage() {
         <div className="mx-auto max-w-4xl px-6">
           <div className="rounded-3xl border border-white/10 bg-hero-gradient p-8 text-white md:p-12">
             <p className="mb-3 text-xs uppercase tracking-[0.18em] opacity-80 md:text-sm md:tracking-[0.2em]">
-              Want it all done for you instead?
+              Rather we just build it?
             </p>
             <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-              Skip the learning curve. Hand it to our team.
+              Same team. We'll put it together for you.
             </h2>
             <p className="mt-4 text-base opacity-90 md:text-lg">
-              Same crew that runs The 14-Day Pivot Method live, using the exact playbook and tool stack we teach in the room. We'll build the brand, the website, the systems, and the engines — so you can stay focused on customers.
+              If your Saturdays are full — or you'd rather hand the whole thing over — Adam's team will build the brand, the website, the follow-ups, and the tools for you. Same crew that runs the workshops. Same care.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
