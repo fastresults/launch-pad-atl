@@ -7,8 +7,13 @@ import { FacilitatorPillars } from "@/components/facilitator/FacilitatorPillars"
 import { FacilitatorTimeline } from "@/components/facilitator/FacilitatorTimeline";
 import { FacilitatorAudience } from "@/components/facilitator/FacilitatorAudience";
 import { FacilitatorCTA } from "@/components/facilitator/FacilitatorCTA";
+import { useDocumentTitle } from "@/lib/use-document-title";
 
 export default function FacilitatorPage() {
+  useDocumentTitle(
+    "Adam Anderson — Facilitator behind The 14-Day Pivot Method",
+    "Meet Adam Anderson: the operator who runs the workshops, webinars, and 1:1 builds behind Startuplabs' done-with-you method."
+  );
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
