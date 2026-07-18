@@ -267,7 +267,7 @@ export default function BuildWorkshopPage() {
         <div className="mx-auto max-w-5xl px-6">
           <div className="rounded-3xl border border-white/10 bg-hero-gradient p-8 text-white md:p-12">
             <p className="mb-3 text-xs uppercase tracking-[0.18em] opacity-80 md:text-sm md:tracking-[0.2em]">
-              <Sparkles className="mr-1 inline size-3.5" /> The done-for-you path
+              <Sparkles className="mr-1 inline size-3.5" /> Or have us build it for you
             </p>
             <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
               {offer.name}
@@ -277,7 +277,7 @@ export default function BuildWorkshopPage() {
               {offer.priceLabel}
             </p>
             <p className="mt-3 max-w-2xl text-sm opacity-90 md:text-base">
-              The working session hands you the strategy, playbook, and tool stack from The 14-Day Pivot Method to ship it yourself. Decide you'd rather we build it? We'll credit the {w.priceLabel} toward any engagement over $1,000.
+              The Saturday workshop hands you everything you need to ship this piece yourself. If you'd rather hand it over instead, we'll credit your {w.priceLabel} back on any project over $1,000.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
