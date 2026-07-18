@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { ArrowRight, Video, Calendar, Clock, Users, CheckCircle2 } from "lucide-react";
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
+import { useDocumentTitle } from "@/lib/use-document-title";
 
 const HIGHLIGHTS = [
   "One live morning inside The 14-Day Pivot Method — offer priced, first customer named, first channel open",
@@ -12,16 +13,39 @@ const HIGHLIGHTS = [
   "Recording plus the assets that back the plan — yours to keep",
 ];
 
+const WEBINAR_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Event",
+  name: "The 14-Day Pivot Method — Live on Zoom",
+  description:
+    "One focused morning of The 14-Day Pivot Method, run live over video in a small cohort with Adam Anderson.",
+  eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+  eventStatus: "https://schema.org/EventScheduled",
+  url: "https://startuplabs.online/webinar",
+  organizer: {
+    "@type": "Organization",
+    name: "Startuplabs",
+    url: "https://startuplabs.online",
+  },
+  performer: {
+    "@type": "Person",
+    name: "Adam Anderson",
+  },
+  location: {
+    "@type": "VirtualLocation",
+    url: "https://startuplabs.online/webinar",
+  },
+};
+
 export default function WebinarPage() {
   const [modesOpen, setModesOpen] = useState(false);
 
-  useEffect(() => {
-    document.title = "The 14-Day Pivot Method — live on Zoom with Adam Anderson";
-    const meta = document.querySelector('meta[name="description"]');
-    const desc =
-      "Can't make Atlanta? Run The 14-Day Pivot Method live on Zoom with Adam in a small cohort — the done-with-you method replacing accelerators, courses, and raw AI. Fourteen days from webinar day to your first paying customer.";
-    if (meta) meta.setAttribute("content", desc);
-  }, []);
+  useDocumentTitle(
+    "The 14-Day Pivot Method — live on Zoom with Adam Anderson",
+    "Can't make Atlanta? Run The 14-Day Pivot Method live on Zoom with Adam in a small cohort — fourteen days from webinar day to your first paying customer.",
+    WEBINAR_JSON_LD,
+  );
+
 
   return (
     <div className="min-h-screen bg-background">
