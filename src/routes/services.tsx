@@ -264,27 +264,27 @@ function WorkshopBand() {
       <div className="mx-auto max-w-5xl px-6">
         <div className="rounded-3xl border border-primary/30 bg-card p-8 md:p-12">
           <p className="mb-3 text-xs uppercase tracking-[0.18em] text-primary md:text-sm md:tracking-[0.2em]">
-            <Sparkles className="mr-1 inline size-3.5" /> The math you should hear
+            <Sparkles className="mr-1 inline size-3.5" /> Try before you buy
           </p>
           <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            Try the method for as little as $197.{" "}
-            <span className="text-gradient-brand">Hire us if it's a fit.</span>
+            Come to a Saturday workshop first.{" "}
+            <span className="text-gradient-brand">Hire us only if it fits.</span>
           </h2>
           <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-            Take any of the eight working sessions that extend The 14-Day Pivot Method — $197, $297, or $397 depending on the capability. You leave with the strategy, the playbook, and the exact tool stack to ship it yourself. Decide in the room whether to DIY, hire someone else, or hand it to our team. If you hire us for any bespoke engagement after, your session fee is credited back against the scope.
+            Pick any of our eight Saturday workshops — $197, $297, or $397. Spend one morning with us and walk out with the piece done. Decide in the room whether to keep going yourself, hire someone else, or hand it to our team. If you hire us after, we credit your workshop fee back on the project.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link
               to="/build"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 sm:w-auto"
             >
-              See all 8 workshops <ArrowRight className="size-4" />
+              See all 8 Saturday workshops <ArrowRight className="size-4" />
             </Link>
             <Link
               to="/contact?intent=discovery"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-base font-medium text-foreground transition-colors hover:bg-white/10 sm:w-auto"
             >
-              Book a discovery call
+              Book a free 30-min call
             </Link>
           </div>
         </div>
