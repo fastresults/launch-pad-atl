@@ -5,9 +5,12 @@ Baseline captured: Phase 0 scans. Phase 1 in progress.
 ## Progress log
 
 - ✅ **2026-07-18** — Baseline scans captured; register created.
-- ✅ **2026-07-18** — Migration: added 6 hot-path indexes (`venture_documents`, `venture_brand_kits`, `venture_content_ads`, `venture_social_assets`, `ai_pipeline_runs`, `ai_pipeline_steps`).
-- ✅ **2026-07-18** — Migration: revoked `EXECUTE` on 13 SECURITY DEFINER functions from `anon`/PUBLIC. Linter findings **41 → 24**.
-- ⏭️ Next: relocate extensions out of `public`; add rate limiting / captcha to the 2 public write endpoints (`inquiries`, `founder_applications`); classify the 20 remaining authenticated-callable DEFINER RPCs.
+- ✅ **2026-07-18** — Migration: added 6 hot-path indexes.
+- ✅ **2026-07-18** — Migration: revoked `EXECUTE` on 13 SECURITY DEFINER functions from `anon`/PUBLIC. Linter **41 → 24**.
+- ✅ **2026-07-18** — Migration: rate-limit trigger on `inquiries` + `founder_applications` (5 submissions / hour / email). Closes P0-3's residual risk (permissive INSERT policies are intentional but now bounded).
+- ⚠️ **Blocked on user action** — Data disk 89%. There's no `resize_disk` tool; user must open **Cloud → Advanced settings → Increase database disk** in the product.
+- ⏭️ Next: relocate `pgcrypto`/`vector` extensions out of `public`; audit the 20 remaining authenticated-callable DEFINER RPCs; wire Sentry + PostHog (needs keys).
+
 
 Owner column = who's accountable next. Status = `open` / `in-progress` / `done` / `wontfix`.
 
