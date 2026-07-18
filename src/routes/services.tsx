@@ -17,8 +17,8 @@ import {
 
 export default function ServicesPage() {
   useDocumentTitle(
-    "Services — Scale with Anderson's Process",
-    "Ongoing done-with-you services from Adam Anderson: brand, web, content, and go-to-market — running the same process that launched you."
+    "Services — we'll build the rest for you",
+    "Once you've launched, our team keeps building — brand, website, content, and everything that brings customers in. Same crew, done for you."
   );
   return (
     <div className="min-h-screen">
