@@ -77,7 +77,7 @@ function Hero() {
           <div className="lg:col-span-8">
             <p className="mb-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
               <Star className="size-3.5 fill-current" />
-              One Saturday morning · {EVENT.venueCity} · Coffee on us
+              One Saturday morning · IGNITE Center at Greater Atlanta Christian School · Coffee on us
             </p>
 
             <h1 className="font-serif text-5xl leading-[1.05] text-[#3D3025] md:text-6xl lg:text-7xl">
@@ -111,7 +111,7 @@ function Hero() {
                   Just one Saturday morning to get the wheels turning.
                 </div>
                 <p className="mt-4 text-sm leading-relaxed text-[#5C4A38]">
-                  No complicated dashboards. No homework you'll never do. A plain-spoken roadmap to your first dollar &mdash; done together, in the room.
+                  No complicated dashboards. No homework you'll never do. A plain-spoken roadmap to your first dollar &mdash; done together, in the room at the IGNITE Center, Greater Atlanta Christian School.
                 </p>
               </div>
 
