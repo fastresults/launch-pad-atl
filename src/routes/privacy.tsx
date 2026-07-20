@@ -6,7 +6,7 @@ const UPDATED = "May 29, 2026";
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen">
+    <div className="marketing-surface min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-6 py-16 md:py-24">
         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
