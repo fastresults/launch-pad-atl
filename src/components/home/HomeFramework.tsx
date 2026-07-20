@@ -189,7 +189,8 @@ function Hero() {
 
 
             {/* Price + CTA card — snaps to bottom baseline with the designed-for list */}
-            <div className="mt-8 flex flex-1 flex-col rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] p-7 shadow-[0_20px_60px_-30px_rgba(61,48,37,0.35)]">
+            <div className="mt-6 flex flex-1 flex-col rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] p-7 shadow-[0_20px_60px_-30px_rgba(61,48,37,0.35)]">
+
               <div className="border-b border-[#E4D9C4] pb-5">
                 <div className="flex items-baseline gap-2">
                   <span className="font-serif text-6xl leading-none text-[#3D3025]">
