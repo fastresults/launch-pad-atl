@@ -346,6 +346,17 @@
 .marketing-surface [class*="bg-background/"] { background-color: transparent !important; }
 .marketing-surface [class*="bg-primary/"] { background-color: rgba(139, 115, 85, 0.08) !important; }
 .marketing-surface [class*="bg-emerald"] { background-color: #EEF1E9 !important; }
+/* Neutralize hover/focus/group-hover variants of bg-white so the base
+   button state stays transparent — the substring selector above would
+   otherwise fill hover-only classes unconditionally, producing white
+   text on a cream fill (fails contrast). */
+.marketing-surface [class*="hover:bg-white/"]:not(:hover),
+.marketing-surface [class*="focus:bg-white/"]:not(:focus),
+.marketing-surface [class*="focus-visible:bg-white/"]:not(:focus-visible),
+.marketing-surface [class*="group-hover:bg-white/"],
+.marketing-surface [class*="hover:bg-black/"]:not(:hover),
+.marketing-surface [class*="focus:bg-black/"]:not(:focus),
+.marketing-surface [class*="group-hover:bg-black/"] { background-color: transparent !important; }
 
 .marketing-surface .bg-white { background-color: #FFFFFF !important; color: #3D3025 !important; }
 .marketing-surface .bg-black { background-color: #3D3025 !important; color: #FAF8F5 !important; }
