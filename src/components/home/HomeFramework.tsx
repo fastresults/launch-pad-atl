@@ -84,7 +84,7 @@ function Hero() {
         {/* Hero — 6/6 symmetric editorial grid, shared bottom baseline */}
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
           {/* LEFT COLUMN — kicker, headline, deck, designed-for, pull quote */}
-          <div className="flex flex-col lg:col-span-6">
+          <div className="flex flex-col lg:col-span-8">
             <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
               <Star className="size-3.5 fill-current" />
               One focused morning · IGNITE Center · Coffee&rsquo;s on us
@@ -105,8 +105,8 @@ function Hero() {
               For nurses, teachers, servers, coders, couples on Main Street &mdash; anyone who&rsquo;s been meaning to start something. Come sit with us. We&rsquo;ll figure it out together.
             </p>
 
-            {/* Designed for */}
-            <div className="mt-8">
+            {/* Designed for — anchors the bottom of the left column */}
+            <div className="mt-auto pt-10">
               <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
                 Designed for
               </p>
@@ -117,24 +117,15 @@ function Hero() {
                 <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Families and couples building together</li>
               </ul>
             </div>
-
-            {/* Closing pull quote — anchors the bottom of the left column */}
-            <figure className="mt-auto border-l-2 border-[#C9B99A] pl-5 pt-10">
-              <blockquote className="font-serif text-xl italic leading-snug text-[#8B7355] md:text-2xl">
-                &ldquo;You don&rsquo;t need another course. You need one morning and someone who&rsquo;s built this before.&rdquo;
-              </blockquote>
-              <figcaption className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355]">
-                &mdash; Adam Anderson
-              </figcaption>
-            </figure>
           </div>
 
-          {/* RIGHT COLUMN — cup tucked into the price card as one composed object */}
-          <div className="flex flex-col lg:col-span-6">
-            <div className="relative mx-auto flex w-full max-w-[520px] flex-1 flex-col rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] px-7 pb-7 pt-32 shadow-[0_20px_60px_-30px_rgba(61,48,37,0.35)] lg:pt-36">
+          {/* RIGHT COLUMN — narrower composed object: cup+card, then quote */}
+          <div className="flex flex-col lg:col-span-4">
+            <div className="relative mx-auto flex w-full max-w-[360px] flex-col rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] px-6 pb-6 pt-24 shadow-[0_20px_60px_-30px_rgba(61,48,37,0.35)] lg:pt-28">
               {/* Cup + steam — breaks the top edge of the card */}
-              <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 -translate-y-24 lg:-translate-y-28">
-                <div className="relative mx-auto w-[280px] lg:w-[320px]">
+              <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 -translate-y-20 lg:-translate-y-24">
+                <div className="relative mx-auto w-[200px] lg:w-[224px]">
+
                   {/* Animated steam wisps rising from the cup */}
                   <svg
                     aria-hidden="true"
