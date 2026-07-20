@@ -45,7 +45,7 @@ export function BriefStatusCard({ answered, total }: Props) {
         description={
           <>
             You can talk instead of type. Your AI assistant uses these answers all day
-            Saturday to build your 25 startup assets. You're <strong className="text-foreground">0 of {total}</strong> done.
+            during the workshop to build your 25 startup assets. You're <strong className="text-foreground">0 of {total}</strong> done.
           </>
         }
         primary={{ to: "/dashboard/brief", label: "Start" }}

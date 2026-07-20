@@ -277,7 +277,7 @@ export default function BuildWorkshopPage() {
               {offer.priceLabel}
             </p>
             <p className="mt-3 max-w-2xl text-sm opacity-90 md:text-base">
-              The Saturday workshop hands you everything you need to ship this piece yourself. If you'd rather hand it over instead, we'll credit your {w.priceLabel} back on any project over $1,000.
+              The morning workshop hands you everything you need to ship this piece yourself. If you'd rather hand it over instead, we'll credit your {w.priceLabel} back on any project over $1,000.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link

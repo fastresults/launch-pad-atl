@@ -65,7 +65,7 @@ function Tracks() {
             to="/build"
             className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-base font-medium text-foreground transition-colors hover:bg-white/10 sm:w-auto"
           >
-            Start with a Saturday workshop — from $197
+            Start with a morning workshop — from $197
           </Link>
         </div>
 
@@ -268,18 +268,18 @@ function WorkshopBand() {
             <Sparkles className="mr-1 inline size-3.5" /> Try before you buy
           </p>
           <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            Come to a Saturday workshop first.{" "}
+            Come to a morning workshop first.{" "}
             <span className="text-gradient-brand">Hire us only if it fits.</span>
           </h2>
           <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-            Pick any of our eight Saturday workshops — $197, $297, or $397. Spend one morning with us and walk out with the piece done. Decide in the room whether to keep going yourself, hire someone else, or hand it to our team. If you hire us after, we credit your workshop fee back on the project.
+            Pick any of our eight morning workshops — $197, $297, or $397. Spend one morning with us and walk out with the piece done. Decide in the room whether to keep going yourself, hire someone else, or hand it to our team. If you hire us after, we credit your workshop fee back on the project.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link
               to="/build"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 sm:w-auto"
             >
-              See all 8 Saturday workshops <ArrowRight className="size-4" />
+              See all 8 morning workshops <ArrowRight className="size-4" />
             </Link>
             <Link
               to="/contact?intent=discovery"
@@ -299,7 +299,7 @@ function WorkshopBand() {
 const FAQS = [
   {
     q: "Do I have to come to a workshop first?",
-    a: "No — but it's the cheapest way to make sure you're hiring the right thing. One Saturday morning with us and you'll know exactly what you need built (and what you can skip). Most folks save more than they spend just from that clarity.",
+    a: "No — but it's the cheapest way to make sure you're hiring the right thing. One focused morning with us and you'll know exactly what you need built (and what you can skip). Most folks save more than they spend just from that clarity.",
   },
   {
     q: "Can I just buy one piece instead of a whole package?",
@@ -378,7 +378,7 @@ function FinalCTA() {
               to="/build"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/40 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
             >
-              Start with a Saturday workshop — from $197
+              Start with a morning workshop — from $197
             </Link>
           </div>
         </div>

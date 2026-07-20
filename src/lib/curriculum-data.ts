@@ -372,26 +372,26 @@ export const STAGES: Stage[] = [
     title: "Marketing",
     shortTitle: "marketing",
     bonus: true,
-    oneLiner: "Website shipped this weekend.",
+    oneLiner: "Website plan ready to ship fast.",
     summary:
-      "A mentored working session on your website plan. You bring your Foundation, Strategy, and Brand — staff apply a product-and-web lens, review sitemap and CTAs, and direct you toward a build spec you can actually scaffold with an AI builder over a weekend.",
+      "A mentored working session on your website plan. You bring your Foundation, Strategy, and Brand — staff apply a product-and-web lens, review sitemap and CTAs, and direct you toward a build spec you can actually scaffold quickly with an AI builder.",
     takeHome:
-      "A reviewed Website Package — PRD, AI-builder prompts for Lovable/Bolt/v0, a copy deck in your voice, and a Weekend Build Checklist — on your dashboard as a working brief you edit before you build.",
+      "A reviewed Website Package — PRD, AI-builder prompts for Lovable/Bolt/v0, a copy deck in your voice, and a Fast Build Checklist — on your dashboard as a working brief you edit before you build.",
     walkOut: [
       "Signature build: sitemap picked from 3 templates matched to your business model",
       "Signature build: CTAs + integrations chosen (payments, email, analytics)",
       "Signature build: PRD auto-assembled — pages, sections, copy blocks, CTAs, image briefs",
       "Signature build: Copy Deck writes every H1/H2/body in your brand voice",
       "Ship-ready artifact: AI-builder Prompt Pack (3 prompts) for Lovable, Bolt, and v0",
-      "Take-home kit: Weekend Build Checklist (Fri night → Sun evening → live)",
+      "Take-home kit: Fast Build Checklist (plan → scaffold → publish)",
     ],
     afterWorkshop: [
-      "This weekend: paste your prompt into Lovable/Bolt/v0 and scaffold the site",
+      "Next step: paste your prompt into Lovable/Bolt/v0 and scaffold the site",
       "Wire payments, email, and analytics from the recommended stack",
-      "Publish v1 by Sunday evening; iterate copy next week",
+      "Publish v1 on a clear deadline; iterate copy next week",
     ],
-    duration: "Bonus — in-room artifact + weekend build",
-    covers: ["Website PRD", "AI-builder Prompt Pack", "Copy Deck", "Weekend Checklist"],
+    duration: "Bonus — in-room artifact + fast build",
+    covers: ["Website PRD", "AI-builder Prompt Pack", "Copy Deck", "Fast Build Checklist"],
     tasks: [
       {
         title: "Signature build — sitemap, PRD, Copy Deck",
@@ -404,22 +404,22 @@ export const STAGES: Stage[] = [
           "PRD auto-assembles from Foundation + Strategy + Brand — pages, sections, image briefs, CTAs",
           "Copy Deck writes every H1/H2/body in your brand voice",
         ],
-        takeaway: "You skip the $20K agency quote and launch a real revenue-ready site in a weekend.",
+        takeaway: "You skip the $20K agency quote and launch a real revenue-ready site quickly.",
         followUp:
           "Staff releases the Website Package to your dashboard. Attendees with a laptop can start scaffolding in-room.",
       },
       {
         title: "Ship-ready artifact — Website Package",
         deliverable:
-          "Website PRD (PDF) + AI-builder Prompt Pack (3 prompts for Lovable, Bolt, v0) + Copy Deck DOCX + Weekend Build Checklist.",
+          "Website PRD (PDF) + AI-builder Prompt Pack (3 prompts for Lovable, Bolt, v0) + Copy Deck DOCX + Fast Build Checklist.",
         tool: "Lovable AI · google/gemini-3-flash-preview",
         details: [
           "PRD covers full pages, sections, copy blocks, CTAs, and image briefs",
           "Prompt Pack tuned for each builder — copy-paste to scaffold",
           "Copy Deck has every page's H1/H2/body already written in your voice",
-          "Weekend Build Checklist: Fri night → Sun evening → live",
+          "Fast Build Checklist: plan → scaffold → publish",
         ],
-        takeaway: "By Sunday evening, your site is live and taking money.",
+        takeaway: "Your site can go live fast and start taking money.",
         followUp:
           "Monday move: connect payments, email, and analytics from the recommended stack.",
       },

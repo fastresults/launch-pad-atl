@@ -56,7 +56,7 @@ import imgWeddingOfficiantCeremonyCoach from "@/assets/ideas/wedding-officiant-c
 import imgShortFormVideoEditingForRealtors from "@/assets/ideas/short-form-video-editing-for-realtors.jpg.asset.json";
 import imgTwoTruckHandymanCrew from "@/assets/ideas/two-truck-handyman-crew.jpg.asset.json";
 import imgHusbandWifeAirbnbManagement from "@/assets/ideas/husband-wife-airbnb-management.jpg.asset.json";
-import imgSaturdayFamilyCarWash from "@/assets/ideas/saturday-family-car-wash.jpg.asset.json";
+import imgWeekendFamilyCarWash from "@/assets/ideas/weekend-family-car-wash.jpg.asset.json";
 import imgFamilyCleaningCrewForAirbnbs from "@/assets/ideas/family-cleaning-crew-for-airbnbs.jpg.asset.json";
 
 export type BusinessCategory =
@@ -841,14 +841,14 @@ export const BUSINESS_IDEAS: BusinessIdea[] = [
     whySmart: "Recurring % of nightly rev on 20 units = strong six figures for a two-person team.",
   },
   {
-    name: "Saturday family car wash",
+    name: "Weekend family car wash",
     category: "family",
-    offer: "$30 hand wash, $50 with interior. 15 cars per Saturday.",
+    offer: "$30 hand wash, $50 with interior. 15 cars per weekend shift.",
     startupCost: "Starts under $500",
     incomePotential: "$1k–$3k / mo (1 day a week)",
     firstCustomers: "Driveway sign + church parking lot permission",
     stageHint: "Stage 4 builds the weekly workflow.",
-    image: imgSaturdayFamilyCarWash.url,
+    image: imgWeekendFamilyCarWash.url,
     idealOperator: "Family with kids old enough to help — teaches work ethic + earns cash.",
     whySmart: "One-day-a-week family project. Zero risk, teaches kids business fundamentals.",
   },

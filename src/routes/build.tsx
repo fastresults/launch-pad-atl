@@ -9,8 +9,8 @@ import { ArrowRight, Sparkles, CalendarDays } from "lucide-react";
 
 export default function BuildIndexPage() {
   useDocumentTitle(
-    "Build workshops — eight Saturday mornings, one piece of your business each",
-    "Come spend one Saturday morning with us and walk out with one piece of your business done — your brand, your site, your follow-ups. Sessions from $197."
+    "Build workshops — eight focused mornings, one piece of your business each",
+    "Come spend one focused morning with us and walk out with one piece of your business done — your brand, your site, your follow-ups. Sessions from $197."
   );
   return (
     <div className="marketing-surface min-h-screen">
@@ -23,7 +23,7 @@ export default function BuildIndexPage() {
               Issue No. 02 &mdash; The Workshops
             </div>
             <div className="font-serif text-sm italic text-[#8B7355]">
-              Eight Saturday mornings · from $197
+              Eight focused mornings · from $197
             </div>
           </div>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
@@ -32,7 +32,7 @@ export default function BuildIndexPage() {
                 Your foundation. <span className="italic text-[#8B7355]">Live by lunch.</span>
               </h1>
               <p className="mt-8 max-w-xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
-                One Saturday morning. One piece of your business &mdash; your brand, your website, the words you use to sell, the emails that follow up, the tools that keep it running &mdash; built with you and done before lunch. No retainer. No waiting on an agency.
+                One focused morning. One piece of your business &mdash; your brand, your website, the words you use to sell, the emails that follow up, the tools that keep it running &mdash; built with you and done before lunch. No retainer. No waiting on an agency.
               </p>
             </div>
             <div className="lg:col-span-4">
@@ -125,7 +125,7 @@ export default function BuildIndexPage() {
               Same team. We'll put it together for you.
             </h2>
             <p className="mt-4 text-base opacity-90 md:text-lg">
-              If your Saturdays are full — or you'd rather hand the whole thing over — Adam's team will build the brand, the website, the follow-ups, and the tools for you. Same crew that runs the workshops. Same care.
+              If your mornings are full — or you'd rather hand the whole thing over — Adam's team will build the brand, the website, the follow-ups, and the tools for you. Same crew that runs the workshops. Same care.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
