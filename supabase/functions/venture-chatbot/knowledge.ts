@@ -29,7 +29,7 @@ Raw AI hands you a folder of documents and calls it a business. It isn't one. We
 - 7-day refund: if you don't get value, email within 7 days for a no-friction refund.
 
 ## Event logistics
-- Date: Wednesday, August 19, 2026
+- Date: Thursday, August 20, 2026
 - Time: 8:45 AM – 11:30 AM
 - Location: Norcross, GA (metro Atlanta)
 - Seats: 20 per cohort, one cohort at a time.

@@ -235,7 +235,7 @@ export function formatPriceCents(cents: number): string {
 // imports of `EVENT` continue to work without crashing.
 export const FALLBACK_COHORT: Cohort = buildCohortFromRow({
   id: "fallback",
-  cohort_date: "2026-08-19",
+  cohort_date: "2026-08-20",
   tz: "EDT",
   start_time: "08:45",
   end_time: "11:30",
