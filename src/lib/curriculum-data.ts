@@ -38,30 +38,30 @@ export const STAGES: Stage[] = [
     summary:
       "The one drafting stage. You write the one-page story of your startup — vision, problem, and value prop — with worksheet support and AI sharpening. Every stage after Foundation switches modes: those are mentored working sessions that review your Foundation and pressure-test whatever you bring in.",
     takeHome:
-      "Your Executive Summary, Vision & Mission, Problem/Solution Brief, and Value Proposition — drafted by you, sharpened in-room, and inherited as the source of truth by every downstream stage.",
+      "Your one-page story, what you stand for, the problem you solve, and why customers pick you — drafted by you, sharpened in-room, and inherited as the source of truth by every downstream stage.",
     walkOut: [
-      "Executive Summary — a one-page snapshot of what you do, who it's for, how you make money, and why now",
-      "Vision & Mission — the north-star statement your team, customers, and future hires can rally behind",
-      "Problem / Solution Brief — the painful problem you solve and exactly how your offer removes it, in plain language",
-      "Value Proposition — the single sentence that explains why a customer picks you over every alternative",
+      "Your one-page story — a snapshot of what you do, who it's for, how you make money, and why now",
+      "What you stand for — the north-star statement your team, customers, and future hires can rally behind",
+      "The problem you solve — the painful problem and exactly how your offer removes it, in plain language",
+      "Why customers pick you — the single sentence that explains why a customer picks you over every alternative",
     ],
     afterWorkshop: [
-      "Paste your Value Prop onto your homepage hero within 48 hours",
-      "Test the Executive Summary on 3 people who fit your buyer profile — refine based on where they get confused",
+      "Paste the 'why customers pick you' line onto your homepage hero within 48 hours",
+      "Test your one-page story on 3 people who fit your buyer profile — refine based on where they get confused",
     ],
     duration: "25 min",
-    covers: ["Executive Summary", "Vision & Mission", "Problem/Solution", "Value Prop"],
+    covers: ["Your one-page story", "What you stand for", "The problem you solve", "Why customers pick you"],
     tasks: [
       {
         title: "Draft the Foundation four",
         deliverable:
-          "Executive Summary, Vision & Mission, Problem/Solution Brief, and Value Proposition — all four saved to your dashboard's Foundation stage.",
+          "Your one-page story, what you stand for, the problem you solve, and why customers pick you — all four saved to your dashboard's Foundation stage.",
         tool: "Foundation drafting worksheet + AI-assisted sharpener",
         details: [
-          "Write the one-sentence value prop first using the [Who] + [Problem] + [Outcome] + [Unfair advantage] frame",
+          "Write the one-sentence for why customers pick you first using the [Who] + [Problem] + [Outcome] + [Unfair advantage] frame",
           "Draft vision (10-year picture) and mission (what you do every day) side by side",
           "Name the problem in the customer's own words, not yours",
-          "Compose the Executive Summary last — it's a distillation of the other three",
+          "Compose your one-page story last — it's a distillation of the other three",
         ],
         takeaway:
           "Your Foundation pillar complete — the 60-second story of your startup, sharp enough to open every conversation.",
