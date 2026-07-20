@@ -299,7 +299,7 @@ export function RegisterFramework() {
                           </li>
                         </TooltipTrigger>
                         {stage.benefit && (
-                          <TooltipContent side="left" className="max-w-xs text-sm leading-snug">
+                          <TooltipContent side="left" className="max-w-xs border border-[#C9B99A] bg-[#F0EBE3] px-4 py-3 text-sm leading-snug text-[#3D3025] shadow-md rounded-none">
                             {stage.benefit}
                           </TooltipContent>
                         )}
