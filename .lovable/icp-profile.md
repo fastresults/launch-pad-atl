@@ -7,7 +7,7 @@
 
 ## 1. The One-Line ICP
 
-**A 30–45-year-old W-2 employee in metro Atlanta (or joining on Zoom from anywhere in the US) who has an idea for a business they'd own, no clear plan to start it, and is willing to spend one Saturday morning and $297 to stop guessing and walk out with a real plan.**
+**A 30–45-year-old W-2 employee in metro Atlanta (or joining on Zoom from anywhere in the US) who has an idea for a startup they'd own, no clear plan to start it, and is willing to spend one focused morning and $297 to stop guessing and walk out with a real plan.**
 
 Everything below is a variation on that person.
 
@@ -56,8 +56,8 @@ Everything below is a variation on that person.
 **Enters through.** In-person Foundation workshop in Atlanta ($297) or Zoom Foundation. Most likely to bring a spouse or friend.
 
 **Objections + answers.**
-- *"$297 is a lot for a Saturday."* — It's one dinner out. The next 90 days of guessing costs $13,900.
-- *"I don't have an idea yet."* — Bring the direction. We'll help you name the business by lunch.
+- *"$297 is a lot for one morning."* — It's one dinner out. The next 90 days of guessing costs $13,900.
+- *"I don't have an idea yet."* — Bring the direction. We'll help you name the startup before you leave.
 - *"What if I don't finish?"* — You finish. That's what the room is for.
 
 ---
@@ -85,7 +85,7 @@ Everything below is a variation on that person.
 **Enters through.** Zoom Foundation (they're often not in Atlanta), often followed within 30 days by a done-with-you engagement because they have both urgency *and* some savings to deploy.
 
 **Objections + answers.**
-- *"I should keep job hunting instead."* — Do both. One Saturday won't cost you a job you're going to get.
+- *"I should keep job hunting instead."* — Do both. One focused morning won't cost you a job you're going to get.
 - *"I'm too senior to start from zero."* — Your last 15 years are the reason your first customer says yes on day one.
 - *"I need income now, not in six months."* — Foundation gets your first paid customer in two weeks, not six months.
 
@@ -115,7 +115,7 @@ Everything below is a variation on that person.
 
 **Objections + answers.**
 - *"I already run a business — this is for beginners."* — Half the room is people like you. Foundation is where you fix what you skipped when you started.
-- *"I don't have a Saturday."* — You have Saturdays. You're just spending them working *in* the business. This one you spend *on* it.
+- *"I don't have a free morning."* — You have mornings. You're just spending them working *in* the startup. This one you spend *on* it.
 - *"I don't need a website / brand / plan."* — You need pricing you can defend and a way to get the next 10 customers. That's what you'll leave with.
 
 ---
@@ -134,7 +134,7 @@ Everything below is a variation on that person.
 2. One person doing all the work while the other "helps."
 3. Making the leap and finding out they had different versions of the plan in their heads.
 
-**What they've tried.** Long conversations at the kitchen table that end in "let's talk about it next weekend." One shared Google Doc that neither of them opened again. A conversation with a friend who runs a similar business that was helpful but too casual to act on.
+**What they've tried.** Long conversations at the kitchen table that end in "let's talk about it later." One shared Google Doc that neither of them opened again. A conversation with a friend who runs a similar startup that was helpful but too casual to act on.
 
 **Success at 6 months.** One shared plan they both signed off on. Clear roles ("I handle sales, you handle ops"). First customer. First fight *avoided* because the plan already answered the question.
 
@@ -194,14 +194,14 @@ These are the life events that flip someone from "someday" to "I registered":
 
 ## 6. Disqualifiers — who this is NOT for
 
-Be honest and fast. Sending the wrong person to a Saturday costs everyone.
+Be honest and fast. Sending the wrong person to a morning session costs everyone.
 
 - **Series A / venture-track founders** looking for an investor deck or a pitch coach. Wrong room.
 - **Credential collectors** who buy every course and finish none. We can't fix that in one morning.
 - **"Tell me my idea is great" shoppers** who want validation, not pressure-testing.
 - **Passive-income believers** who think a business runs itself. It doesn't. We won't pretend it does.
 - **Anyone who won't do the work in the room.** The room *is* the offer. If they won't show up present, refund them and move on.
-- **Under-18 or full-time student with no income** — the price + Saturday cost isn't the right bet for them yet.
+- **Under-18 or full-time student with no income** — the price + time cost isn't the right bet for them yet.
 
 ---
 
@@ -214,7 +214,7 @@ Be honest and fast. Sending the wrong person to a Saturday costs everyone.
 | C. Main Street | Foundation (in-person) | $297 | Higher-tier workshop ($397) + done-with-you | $1.5k–$5k |
 | D. Family / Couple | Foundation ×2 (in-person) | $594 | Done-with-you if they want faster launch | $2k–$6k |
 
-**Rule:** never sell above the ceiling on the first Saturday. Foundation earns the right to sell the next thing. Trying to close a $5k engagement in the room breaks trust in the room.
+**Rule:** never sell above the ceiling in the first morning session. Foundation earns the right to sell the next thing. Trying to close a $5k engagement in the room breaks trust in the room.
 
 ---
 

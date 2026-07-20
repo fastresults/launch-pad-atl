@@ -188,10 +188,10 @@ export const FRAMEWORK_STAGES: FrameworkStage[] = [
     number: "07",
     name: "Marketing",
     bonus: true,
-    intro: "The AI-builder prompt that ships your site in a weekend.",
-    benefit: "A complete website PRD ready to hand to an AI builder — launch a revenue-ready site in a weekend instead of paying $20K and waiting three months.",
+    intro: "The AI-builder prompt that helps ship your site fast.",
+    benefit: "A complete website PRD ready to hand to an AI builder — launch a revenue-ready site quickly instead of paying $20K and waiting three months.",
     items: [
-      { icon: Globe, title: "Website PRD (AI-builder prompt)", tooltip: "A complete product requirements asset — pages, copy, sections, calls to action — written so an AI builder can ship your site in a weekend. You'll skip the $20K agency quote and launch a real revenue-ready website fast." },
+      { icon: Globe, title: "Website PRD (AI-builder prompt)", tooltip: "A complete product requirements asset — pages, copy, sections, calls to action — written so an AI builder can ship your site fast. You'll skip the $20K agency quote and launch a real revenue-ready website fast." },
       { icon: AtSign, title: "Domain, Email & DNS Checklist", tooltip: "Domain purchased, business email live, SPF, DKIM, and DMARC set — and a support alias routed to the right person. Your outreach lands in inboxes instead of spam, and you look like a real company from your very first email." },
       { icon: Activity, title: "Analytics & Pixel Setup", tooltip: "GA4, the ad pixels your channels need, conversion events, and a UTM convention wired before you spend a dollar. You'll know what actually converted, cut ad spend that doesn't pay back, and double down on the channels that do." },
       { icon: MousePointerClick, title: "Landing Page & Waitlist Test", tooltip: "A one-page offer test live by day four — before the full site — so paid ads and warm outreach have a destination while you finish building. You'll validate the hook, collect emails, and turn early clicks into paying customers." },
