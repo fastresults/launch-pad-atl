@@ -421,7 +421,7 @@ Legend:
 | 27 | Pressure washing for commercial buildings | Main Street | C | 5 Reach |
 | 33 | Epoxy garage floors | Service | C | 5 Reach |
 | 57 | Two-truck handyman crew | Family | D | 4 Equip |
-| 59 | Saturday family car wash | Family | D | 1 Anchor |
+| 59 | Weekend family car wash | Family | D | 1 Anchor |
 | 60 | Family cleaning crew for Airbnbs | Family | D | 5 Reach |
 
 **Insight from the mapping:** every one of the seven stages has ≥5 ideas whose leverage sits inside it. That means the Method can be taught with genuine variety — a workshop cohort of six founders can each be at a *different* Method stage on the same idea, or the *same* Method stage on different ideas, and the room is always live.
@@ -443,7 +443,7 @@ Every finding above becomes a concrete rewrite. Nothing here is a *suggestion*; 
 > **First paying customer in 14 days.***
 
 **Sub-header:**
-> *A thirty-year operator's playbook — not an accelerator, not a course, not a raw-AI rabbit hole. One live morning with Adam Anderson. A named business by lunch. First revenue in fourteen days. $297 once, yours forever.*
+> *A thirty-year operator's playbook — not an accelerator, not a course, not a raw-AI rabbit hole. One live morning with Adam Anderson. A named startup by lunch. First revenue in fourteen days. $297 once, yours forever.*
 
 **Old-Way / New-Way (keep, with tightened copy):**
 - Old way: *A $10K accelerator seat. A year of courses. A raw-AI rabbit hole.*
@@ -547,7 +547,7 @@ Every ad, every reel, every LinkedIn post gets *one archetype and one doctrine.*
 4. **Finance** — *"The numbers investors, banks, and you can trust."*
 5. **Governance** — *"The legal and risk scaffolding that keeps you bankable."*
 6. **Brand** — *"An identity worth premium pricing — system, not stickers."*
-7. **Marketing** — *"The AI-builder prompt that ships your site in a weekend."*
+7. **Marketing** — *"The AI-builder prompt that helps ship your site fast."*
 8. **Social & Content** — *"The distribution engine that earns attention on repeat."*
 
 **Honest Roadmap headline:** *"Two weeks to first revenue. A real business by month two."*
@@ -561,7 +561,7 @@ Every ad, every reel, every LinkedIn post gets *one archetype and one doctrine.*
 
 **Facilitator lead:** *"Adam Anderson — at your table for the session. Co-Founder of OPEN Interactive and a serial entrepreneur who has personally started multiple companies and helped launch dozens more…"*
 
-**Bottom CTA:** *"Stop turning the startup over in your head. $297 gets you in the room with Adam and a real plan your startup can run with Monday."*
+**Bottom CTA:** *"Stop turning the startup over in your head. $297 gets you in the room with Adam and a real plan your startup can run with the next workday."*
 
 ### 10.2 Full 60-idea table (name · category · archetype · Method emphasis · annual low estimate)
 

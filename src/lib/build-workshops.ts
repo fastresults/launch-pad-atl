@@ -103,7 +103,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       },
       {
         title: "The $20K rebrand you'll pay for in month 13.",
-        body: "Founders pick a logo in a weekend, slap it on a deck, and discover a year in that the brand contradicts the actual offer. Then it's a full asset rebuild — site, deck, packaging, social — at agency rates.",
+        body: "Founders pick a logo too fast, slap it on a deck, and discover a year in that the brand contradicts the actual offer. Then it's a full asset rebuild — site, deck, packaging, social — at agency rates.",
       },
       {
         title: "AI makes every asset look like it's from a different company.",
@@ -146,7 +146,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     ],
     forYou: [
       "You're about to spend money on a website, deck, or packaging and want the brand right first",
-      "Your current brand was made in a weekend and now feels like a ceiling on what you can charge",
+      "Your current brand was made too fast and now feels like a ceiling on what you can charge",
       "You're tired of every new asset looking like it came from a different company",
     ],
     notForYou: [
