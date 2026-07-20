@@ -246,7 +246,7 @@ function Framework() {
                           <span className="text-base font-medium tracking-tight">{d.title}</span>
                         </li>
                       </TooltipTrigger>
-                      <TooltipContent side="top" sideOffset={6} className="max-w-[320px] text-sm leading-relaxed">
+                      <TooltipContent side="top" sideOffset={6} className="max-w-[320px] border border-[#C9B99A] bg-[#F0EBE3] px-4 py-3 text-sm leading-relaxed text-[#3D3025] shadow-md rounded-none">
                         {d.tooltip}
                       </TooltipContent>
                     </Tooltip>
