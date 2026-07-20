@@ -153,19 +153,19 @@ function Hero() {
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">01</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
-              <strong className="font-semibold">Name your first real customer.</strong> Not "my target market." A real person, by name.
+              <strong className="font-semibold">A live page at your domain.</strong> Not a mockup. A real URL a stranger can open.
             </p>
           </div>
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">02</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
-              <strong className="font-semibold">Set a price you can say out loud.</strong> Build a minimum offer before lunch.
+              <strong className="font-semibold">A priced offer that takes money.</strong> Set before lunch. Named first customer on it.
             </p>
           </div>
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">03</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
-              <strong className="font-semibold">Land your first "yes" in 14 days.</strong> Money in your account &mdash; not a course completion certificate.
+              <strong className="font-semibold">Your first outreach sent from the room.</strong> Real message, real prospect, before you leave.
             </p>
           </div>
         </div>
