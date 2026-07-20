@@ -199,14 +199,14 @@ function Framework() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          What you'll walk out with
+          What we actually build with you
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-          A real business ready to take money.{" "}
+          A real startup that takes money.{" "}
           <span className="text-gradient-brand">Built with you in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          A course gives you videos. A chatbot gives you a folder of documents. We sit down with you and build the business — what you're selling, who you're selling it to, and how to get your first "yes." By that afternoon you're not planning anymore. You're open. {WORKSHOP_PRICE_LABEL} once. Yours to run with.
+          A course gives you videos. A chatbot gives you a folder of files. We sit down and actually build the startup — the live page, the priced offer, the first message sent. By that afternoon you're not planning anymore. You're open. {WORKSHOP_PRICE_LABEL} once. Yours to run with.
         </p>
 
 
