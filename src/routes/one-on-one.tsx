@@ -72,7 +72,7 @@ export default function OneOnOnePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="marketing-surface min-h-screen bg-background">
       <SiteHeader />
       <main>
         {/* Hero */}
