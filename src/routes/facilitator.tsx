@@ -31,7 +31,7 @@ export default function FacilitatorPage() {
     FACILITATOR_JSON_LD,
   );
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="marketing-surface min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1 mx-auto w-full px-6 py-16 md:py-24" style={{ maxWidth: "860px" }}>
         <div className="space-y-12 md:space-y-20">
