@@ -9,7 +9,7 @@ Make the offer accurate everywhere: this is not tied to a specific day of the we
   - “one focused morning”
   - “a morning session”
   - “built in a morning”
-- Keep “Monday morning” only where it means the next practical workday after the workshop, unless it reads like the workshop must happen on a weekend.
+- Keep “next workday” phrasing where it means the practical follow-up after the workshop, without implying a fixed weekday.
 - Avoid inventing a new branded phrase. This is a clarity sweep, not another naming exercise.
 
 ### Scope
@@ -19,11 +19,11 @@ I found fixed-day references in:
 - Funnel/report markdown assets
 - ICP/internal planning docs
 
-I will update all user-facing and report-facing references that imply the workshop must happen on Saturday. Internal planning docs can also be cleaned so future copy does not reintroduce the same mistake.
+I will update all user-facing and report-facing references that imply the workshop must happen on a specific weekday. Internal planning docs can also be cleaned so future copy does not reintroduce the same mistake.
 
 ### Replacement approach
 Examples:
-- “one Saturday morning and $297” → “one focused morning and $297”
+- “one fixed weekday morning and $297” → “one focused morning and $297”
 - “Show up for the fixed weekday session” → “Show up for your morning session”
 - “The fixed weekday that changes the math” → “The morning that changes the math”
 - “You have that weekday” → “You have a morning”

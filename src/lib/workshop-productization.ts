@@ -330,7 +330,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         { name: "EIN Confirmation Letter", format: "PDF", note: "IRS-issued in session" },
         { name: "Pre-filled Formation Doc", format: "State-specific PDF", note: "Submit from home in ~10 min" },
         { name: "Operating Agreement", format: "DOCX", note: "Customized to your members" },
-        { name: "T&Cs + Privacy Policy", format: "DOCX × 2", note: "Paste into your site this weekend" },
+        { name: "T&Cs + Privacy Policy", format: "DOCX × 2", note: "Paste into your site after the session" },
         { name: "1-page Service Agreement / SOW", format: "DOCX", note: "Sign your first client Monday" },
         { name: "Risk Register + Advisor Outreach", format: "PDF + DOCX × 3", note: "Send one advisor email this week" },
       ],
@@ -437,7 +437,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
   marketing: {
     slug: "marketing",
     perspective:
-      "This session applies a product-and-web lens — how a seasoned PM/marketer reviews your site plan, sequences pages and CTAs, and directs you toward a build you can actually ship on a weekend.",
+      "This session applies a product-and-web lens — how a seasoned PM/marketer reviews your site plan, sequences pages and CTAs, and directs you toward a build you can actually ship fast.",
     signatureBuild: {
       title: "Website PRD + AI-builder Prompt Pack + Copy Deck",
       duration: "25 min live",
@@ -460,14 +460,14 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
       ],
     },
     shipReadyArtifact: {
-      title: "Website Package — PRD + AI-builder Prompts + Copy Deck + Weekend Build Checklist",
+      title: "Website Package — PRD + AI-builder Prompts + Copy Deck + Fast Build Checklist",
       format: "PDF · full PRD + DOCX copy deck + TXT prompt pack",
       aiModel: AI_DEFAULT,
       contains: [
         "Website PRD — full pages, sections, copy blocks, CTAs, image briefs",
         "AI-builder Prompt Pack — 3 ready-to-paste prompts optimized for Lovable, Bolt, and v0",
         "Copy Deck DOCX — every page's H1/H2/body written in your brand voice",
-        "Weekend Build Checklist (Fri night → Sun evening → live)",
+        "Fast Build Checklist (plan → scaffold → live)",
       ],
       released: "Sharpened live with staff review and saved to your dashboard — a working draft you continue to refine, not a finished product. Attendees with a laptop leave with v0 scaffolded.",
     },
@@ -477,9 +477,9 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         { name: "Website PRD", format: "PDF · full spec", note: "The blueprint" },
         { name: "AI-Builder Prompts", format: "TXT × 3 (Lovable, Bolt, v0)", note: "Copy-paste to scaffold" },
         { name: "Copy Deck", format: "DOCX · every page written", note: "H1/H2/body in your voice" },
-        { name: "Weekend Build Checklist", format: "PDF · 1 page", note: "Fri → Sun → live" },
+        { name: "Fast Build Checklist", format: "PDF · 1 page", note: "Plan → scaffold → live" },
       ],
-      mondayMove: "Weekend: paste the prompt into Lovable, wire payments/email/analytics from the checklist, ship v1.",
+      mondayMove: "Next move: paste the prompt into Lovable, wire payments/email/analytics from the checklist, ship v1.",
     },
     deliverableDetails: [
       {
@@ -489,7 +489,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
           "Strategy · Personas + GTM",
           "Brand · Messaging House + Visual Brief",
         ],
-        takeaway: "You skip the $20K agency quote and launch a real revenue-ready site in a weekend.",
+        takeaway: "You skip the $20K agency quote and launch a real revenue-ready site fast.",
       },
     ],
   },

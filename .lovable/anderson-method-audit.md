@@ -70,10 +70,10 @@ Every strategic finding in this report tests against four archetypes. Get sharpe
 - **Where the site currently misses:** they don't see themselves in phrases like "AI Prompt Library" or "Website PRD." Those are strategy-consultant words. They need "we set up the LLC, the website, the answering service, and the ads — in one morning."
 
 ### Archetype D — *The Family / Couple Operator*
-- **Life state:** two adults, often with kids, want to build something together — an Airbnb management team, a cleaning crew, a handyman crew, a Saturday car wash that teaches the kids. Trust is high. Time is low.
+- **Life state:** two adults, often with kids, want to build something together — an Airbnb management team, a cleaning crew, a handyman crew, a family car wash that teaches the kids. Trust is high. Time is low.
 - **Deepest fear:** blowing up the household finances or the relationship by taking a bad swing.
 - **What they secretly want:** a business that *fits their life* — one that plays to each partner's strengths, doesn't require a co-working membership, and can be run from the kitchen table.
-- **Where the site already speaks to them:** the "Family-run" filter and 4 ideas (two-truck handyman, husband-wife Airbnb management, Saturday family car wash, family Airbnb cleaning crew).
+- **Where the site already speaks to them:** the "Family-run" filter and 4 ideas (two-truck handyman, husband-wife Airbnb management, weekend family car wash, family Airbnb cleaning crew).
 - **Where the site currently misses:** the imagery, the testimonials, and the framework language are all *individual-founder-coded*. Nothing shows a couple standing next to a truck, or two partners at the workshop table. This archetype needs to see themselves twice.
 
 **Design implication:** Every hero variant, section, and email CTA in the rewrite kit will name at least one of these four archetypes explicitly. The site currently addresses "founders" — a word that flatters the aspiring first-timer and alienates the other three.
@@ -268,7 +268,7 @@ Selecting three per archetype. These twelve become the *proof cases* in the Ande
 ### 4.5 Coverage gaps (ideas to add in the next 30 days)
 
 - **Family-run needs 4 more ideas.** Suggested: family food truck route; parent-teen tutoring co-op; family sports lesson clinic (soccer, swim); parent-child pet-care route.
-- **Side → Full-time needs 5 more ideas.** Suggested: nights-and-weekends bookkeeper for local restaurants; Saturday-only mobile bike-repair route; evening notary; weekend wedding-photo-second-shooter; after-hours AI-content editor for local news.
+- **Side → Full-time needs 5 more ideas.** Suggested: off-hours bookkeeper for local restaurants; mobile bike-repair route; evening notary; event photo second-shooter; after-hours AI-content editor for local news.
 - **Zero "Plan-B for a specific profession" ideas.** Suggested: from-teacher-to-tutor, from-nurse-to-concierge-IV, from-accountant-to-fractional-CFO, from-corporate-marketer-to-agency-of-one, from-project-manager-to-fractional-COO.
 
 The last cluster is the one most likely to move conversion for Archetype B.

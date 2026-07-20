@@ -27,8 +27,8 @@ const STAGE_BREAKS = [
     body: "Without a tight PRD, scope drifts, deadlines slide, and the site ships outdated. Real customers wait while you wait for one more revision.",
   },
   {
-    title: "An AI builder that wastes a weekend.",
-    body: "Without a clear prompt — pages, copy, CTAs — the tools hallucinate sections, mismatch your brand, and produce a site you'll rewrite by Monday anyway.",
+    title: "An AI builder that wastes your time.",
+    body: "Without a clear prompt — pages, copy, CTAs — the tools hallucinate sections, mismatch your brand, and produce a site you'll rewrite by the next workday anyway.",
   },
 ];
 
@@ -36,7 +36,7 @@ const STAGE_QUESTIONS = [
   "Can you brief a website in one asset a builder could ship from?",
   "Do every page and CTA map back to your offer and buyer?",
   "Will the copy sound like your brand on day one — not after rewrites?",
-  "Can you launch a revenue-ready site in a weekend, not a quarter?",
+  "Can you launch a revenue-ready site fast, not in a quarter?",
 ];
 
 const DELIV_IMAGES = [
@@ -52,7 +52,7 @@ export const marketingSlides: Slide[] = [
         <div className="max-w-[1400px]">
           <SlotText slideId="cover" field="kicker" defaultValue={`Stage ${STAGE.number} of ${String(TOTAL_STAGES).padStart(2, "0")}`} as="div" className="slide-kicker font-semibold text-white/60 mb-10" />
           <SlotText slideId="cover" field="title" defaultValue="Marketing." as="h1" className="slide-title-lg font-semibold tracking-tight" />
-          <SlotText slideId="cover" field="subtitle" defaultValue="The AI-builder prompt that ships your site in a weekend. Marketing turns your brand into a place a customer can actually buy." as="p" className="slide-subtitle mt-10 text-white/80 max-w-[1200px]" />
+          <SlotText slideId="cover" field="subtitle" defaultValue="The AI-builder prompt that helps ship your site fast. Marketing turns your brand into a place a customer can actually buy." as="p" className="slide-subtitle mt-10 text-white/80 max-w-[1200px]" />
           <SlotImage
             slideId="cover"
             field="image"
@@ -72,9 +72,9 @@ export const marketingSlides: Slide[] = [
         <div className="max-w-[1500px]">
           <SlotText slideId="stakes" field="kicker" defaultValue="Why this stage exists" as="div" className="slide-kicker font-semibold text-primary mb-8" />
           <h2 className="slide-title font-semibold tracking-tight">
-            <SlotText slideId="stakes" field="title" defaultValue="A site is no longer a six-month project — it's a weekend, if you write the brief like a pro." />
+            <SlotText slideId="stakes" field="title" defaultValue="A site is no longer a six-month project — it's fast, if you write the brief like a pro." />
           </h2>
-          <SlotText slideId="stakes" field="body" defaultValue="Get this right and you launch a real, revenue-ready website without an agency invoice. Skip it and AI builders will gladly waste your weekend with a beautiful page that converts no one." as="p" className="slide-body-lg mt-10 text-muted-foreground max-w-[1300px]" />
+          <SlotText slideId="stakes" field="body" defaultValue="Get this right and you launch a real, revenue-ready website without an agency invoice. Skip it and AI builders will gladly waste your time with a beautiful page that converts no one." as="p" className="slide-body-lg mt-10 text-muted-foreground max-w-[1300px]" />
           <SlotImage
             slideId="stakes"
             field="image"
@@ -224,7 +224,7 @@ export const marketingSlides: Slide[] = [
           <div className="grid grid-cols-12 gap-10 items-center">
             <div className="col-span-7">
               <SlotText slideId="recap" field="kicker" defaultValue="Recap · what's next" as="div" className="slide-kicker font-semibold text-white/60 mb-8" />
-              <SlotText slideId="recap" field="title" defaultValue="A revenue-ready website is no longer a six-month project — it's a weekend with the right brief." as="h2" className="slide-title font-semibold tracking-tight" />
+              <SlotText slideId="recap" field="title" defaultValue="A revenue-ready website is no longer a six-month project — it moves fast with the right brief." as="h2" className="slide-title font-semibold tracking-tight" />
               <p className="slide-subtitle mt-8 text-white/80">
                 Next up — <span className="text-primary font-semibold">{next.number} {next.name}</span>:{" "}
                 {next.intro.toLowerCase()}
