@@ -200,7 +200,7 @@ function Hero() {
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">03</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
-              <strong className="font-semibold">Your first outreach sent from the room.</strong> Real message, real prospect, before you leave.
+              <strong className="font-semibold">Your first outreach written in the room.</strong> Message, list, and send button — ready before you leave.
             </p>
           </div>
         </div>
@@ -299,13 +299,14 @@ function Framework() {
 
 function HonestRoadmap() {
   const included = [
-    "A live page at your domain — real URL, not a mockup, up before lunch",
-    "A priced offer wired to take real money — with your first customer named on it",
-    "The first outreach message sent from the room — to a real prospect, from your real inbox",
-    "Your business bank + Stripe hooked up so revenue can actually land",
-    "A seat next to Adam — the operator who's actually done this, building it with you",
-    "Coffee, snacks, and a room full of people building the same kind of startup you are",
+    "A live landing page at your domain — real URL, up before lunch, not a mockup",
+    "A priced offer on the page — ready to accept your first customer",
+    "Your Foundation on the dashboard — positioning, ICP, and wedge, sharpened with staff",
+    "A 90-day go-to-market plan — personas + outreach sequence you can send this week",
+    "Brand v0 — name, mark, and voice you can actually use Monday morning",
+    "A seat next to Adam and 19 other founders — coffee, snacks, and a room building alongside you",
   ];
+
 
   return (
     <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
