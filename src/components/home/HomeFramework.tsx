@@ -90,23 +90,23 @@ function Hero() {
               One focused morning · IGNITE Center · Coffee&rsquo;s on us
             </p>
 
-            <h1 className="font-serif text-5xl leading-[1.02] text-[#3D3025] md:text-6xl">
+            <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[4.3rem]">
               Pull up a chair.
               <br />
               Let&rsquo;s start your business{" "}
               <span className="italic text-[#8B7355]">together, over coffee.</span>
             </h1>
 
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
               One quiet morning. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you actually build the thing. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
             </p>
 
-            <p className="mt-3 max-w-xl text-base text-[#7A6650]">
+            <p className="mt-3 max-w-2xl text-base text-[#7A6650]">
               For nurses, teachers, servers, coders, couples on Main Street &mdash; anyone who&rsquo;s been meaning to start something. Come sit with us. We&rsquo;ll figure it out together.
             </p>
 
             {/* Editorial pull quote — horizontal callout */}
-            <figure className="mt-8 max-w-xl border-t border-[#C9B99A] pt-5">
+            <figure className="mt-8 max-w-2xl border-t border-[#C9B99A] pt-5">
               <blockquote className="font-serif text-xl italic leading-snug text-[#8B7355] md:text-2xl">
                 &ldquo;You don&rsquo;t need another course. You need one morning and someone who&rsquo;s built this before.&rdquo;
               </blockquote>
