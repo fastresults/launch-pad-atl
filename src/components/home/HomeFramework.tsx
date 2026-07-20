@@ -84,7 +84,7 @@ function Hero() {
         {/* Hero — 7/5 editorial grid, shared bottom baseline */}
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
           {/* LEFT COLUMN — kicker, headline, deck, pull quote, designed-for */}
-          <div className="flex flex-col lg:col-span-7">
+          <div className="flex flex-col lg:col-span-8">
             <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
               <Star className="size-3.5 fill-current" />
               One focused morning · IGNITE Center · Coffee&rsquo;s on us
