@@ -67,7 +67,7 @@ function Hero() {
       className="relative overflow-hidden border-b border-[#E4D9C4]"
       style={{
         backgroundImage:
-          "radial-gradient(ellipse at 82% 28%, rgba(201,185,154,0.22), transparent 62%)",
+          "radial-gradient(ellipse at 88% 22%, rgba(201,185,154,0.20), transparent 60%)",
       }}
     >
       <div className="mx-auto max-w-6xl px-6 py-10 md:py-14">
@@ -81,19 +81,20 @@ function Hero() {
           </div>
         </div>
 
-        {/* Hero — 7/5 magazine split, coffee cup anchors the right column */}
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
-          <div className="lg:col-span-7">
-            <p className="mb-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
+        {/* Hero — 9/3 asymmetric editorial grid, shared top + bottom baselines */}
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
+          {/* LEFT COLUMN — kicker, headline, deck, secondary, designed-for */}
+          <div className="flex flex-col lg:col-span-8">
+            <p className="mb-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
               <Star className="size-3.5 fill-current" />
-              One focused morning · IGNITE Center at Greater Atlanta Christian School · Coffee&rsquo;s on us
+              One focused morning · IGNITE Center · Coffee&rsquo;s on us
             </p>
 
-            <h1 className="font-serif text-5xl leading-[1.05] text-[#3D3025] md:text-6xl lg:text-7xl">
+            <h1 className="font-serif text-5xl leading-[1.02] text-[#3D3025] md:text-6xl">
               Pull up a chair.
               <br />
               Let&rsquo;s start your business{" "}
-              <span className="italic text-[#8B7355]">&mdash; together, over coffee.</span>
+              <span className="italic text-[#8B7355]">together, over coffee.</span>
             </h1>
 
             <p className="mt-8 max-w-xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
@@ -103,18 +104,31 @@ function Hero() {
             <p className="mt-4 max-w-xl text-base text-[#7A6650]">
               For nurses, teachers, servers, coders, couples on Main Street &mdash; anyone who&rsquo;s been meaning to start something. Come sit with us. We&rsquo;ll figure it out together.
             </p>
+
+            {/* Designed for — closes the left column and balances the right card */}
+            <div className="mt-auto pt-10">
+              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
+                Designed for
+              </p>
+              <ul className="grid gap-x-8 gap-y-2 text-sm text-[#3D3025] sm:grid-cols-2">
+                <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Plan-B seekers ready to stop guessing</li>
+                <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Professionals whose jobs are changing</li>
+                <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Main Street operators &mdash; shops, trades, cafés</li>
+                <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Families and couples building together</li>
+              </ul>
+            </div>
           </div>
 
-          {/* Right column — coffee cup + soft price/CTA card */}
-          <div className="relative lg:col-span-5">
-            {/* Cup illustration — overlaps the card top edge */}
+          {/* RIGHT COLUMN — framed cup mark on top baseline, price card below */}
+          <div className="flex flex-col lg:col-span-4">
+            {/* Framed editorial coffee mark — sits on kicker baseline */}
             <motion.div
-              className="pointer-events-none relative z-10 mx-auto -mb-10 w-[280px] max-w-full md:w-[340px] lg:-mb-14 lg:w-[380px]"
-              initial={{ opacity: 0, y: 12 }}
+              className="mx-auto flex aspect-square w-full max-w-[280px] items-center justify-center rounded-full border border-[#C9B99A] bg-[#FBF7F1]/60 p-6 shadow-[0_10px_40px_-20px_rgba(61,48,37,0.25)] lg:max-w-none"
+              initial={{ opacity: 0, y: 8 }}
               animate={
                 reduceMotion
                   ? { opacity: 1, y: 0 }
-                  : { opacity: 1, y: [0, -6, 0] }
+                  : { opacity: 1, y: [0, -3, 0] }
               }
               transition={
                 reduceMotion
@@ -127,33 +141,31 @@ function Hero() {
                 alt=""
                 width={912}
                 height={1104}
-                className="h-auto w-full select-none"
+                className="pointer-events-none h-auto w-[86%] select-none"
                 draggable={false}
               />
             </motion.div>
 
-            <div className="relative rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] p-8 shadow-[0_20px_60px_-30px_rgba(61,48,37,0.35)]">
-              <div className="mb-6">
-                <span className="font-serif text-5xl text-[#3D3025]">
-                  {WORKSHOP_PRICE_LABEL}
-                </span>
-                <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.18em] text-[#8B7355]">
-                  Just one morning. Come as you are.
-                </span>
-              </div>
-
-              <div className="mb-8">
-                <div className="text-xl font-medium leading-snug text-[#3D3025]">
-                  You bring the idea. We&rsquo;ll bring the coffee &mdash; and build it with you.
+            {/* Price + CTA card — snaps to bottom baseline with the designed-for list */}
+            <div className="mt-8 flex flex-1 flex-col rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] p-7 shadow-[0_20px_60px_-30px_rgba(61,48,37,0.35)]">
+              <div className="border-b border-[#E4D9C4] pb-5">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-serif text-6xl leading-none text-[#3D3025]">
+                    {WORKSHOP_PRICE_LABEL}
+                  </span>
                 </div>
-                <p className="mt-4 text-sm leading-relaxed text-[#5C4A38]">
-                  No dashboards to learn. No homework you&rsquo;ll never do. You walk in with an idea and leave with a live page, a priced offer, and your first outreach going out &mdash; built with you, in the room at the IGNITE Center, Greater Atlanta Christian School.
+                <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#8B7355]">
+                  Just one morning. Come as you are.
                 </p>
               </div>
 
+              <p className="mt-5 text-base leading-snug text-[#3D3025]">
+                You bring the idea. We&rsquo;ll bring the coffee &mdash; and build it with you.
+              </p>
+
               <Link
                 to="/register"
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8B7355] px-6 py-4 text-base font-semibold text-[#FAF8F5] transition-colors hover:bg-[#6E5B42]"
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#8B7355] px-6 py-4 text-base font-semibold text-[#FAF8F5] transition-colors hover:bg-[#6E5B42]"
               >
                 Reserve your seat <ArrowRight className="size-4" />
               </Link>
@@ -165,19 +177,6 @@ function Hero() {
               >
                 Can&rsquo;t make it? See the other two ways.
               </button>
-            </div>
-
-            {/* Sidebar — who this is for */}
-            <div className="mt-8 hidden border-t border-[#C9B99A] pt-8 lg:block">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355]">
-                Designed for
-              </p>
-              <ul className="space-y-1.5 text-sm text-[#3D3025]">
-                <li>&bull; Plan-B seekers ready to stop guessing</li>
-                <li>&bull; Professionals whose jobs are changing under them</li>
-                <li>&bull; Main Street operators &mdash; shops, trades, salons, cafés</li>
-                <li>&bull; Families and couples building together</li>
-              </ul>
             </div>
           </div>
         </div>
