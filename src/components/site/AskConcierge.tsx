@@ -450,22 +450,22 @@ function MessageBubble({
   if (role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-sm text-primary-foreground">
+        <div className="max-w-[85%] rounded-md rounded-br-sm bg-[#8B7355] px-3.5 py-2 text-sm text-[#FAF8F5]">
           {content}
         </div>
       </div>
     );
   }
   return (
-    <div className="max-w-full text-sm text-foreground">
-      <div className="prose prose-sm prose-invert max-w-none prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground">
+    <div className="max-w-full text-sm text-[#2B1F14]">
+      <div className="prose prose-sm max-w-none prose-p:my-2 prose-p:leading-relaxed prose-p:text-[#2B1F14] prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-li:text-[#2B1F14] prose-a:text-[#B8532A] prose-a:no-underline hover:prose-a:underline prose-strong:text-[#2B1F14] prose-headings:font-serif prose-headings:text-[#2B1F14]">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
       </div>
       {onPlay && (
         <button
           type="button"
           onClick={speaking ? onStop : onPlay}
-          className="mt-1 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-foreground"
+          className="mt-1 inline-flex items-center gap-1 rounded-sm border border-[#E5DDD0] bg-[#FAF8F5] px-2.5 py-1 text-[11px] text-[#8B7355] transition-colors hover:border-[#8B7355] hover:bg-[#F0EBE3] hover:text-[#2B1F14]"
           aria-label={speaking ? "Stop playback" : "Listen to this reply"}
         >
           {speaking ? <Square className="size-3" /> : <Volume2 className="size-3" />}
