@@ -224,8 +224,19 @@ function Hero() {
                 Can&rsquo;t make it? See the other two ways.
               </button>
             </div>
+            </div>
+
+            {/* Closing pull quote — sits under the card, aligned to card width */}
+            <figure className="mx-auto mt-8 w-full max-w-[360px] border-l-2 border-[#C9B99A] pl-5">
+              <blockquote className="font-serif text-lg italic leading-snug text-[#8B7355] md:text-xl">
+                &ldquo;You don&rsquo;t need another course. You need one morning and someone who&rsquo;s built this before.&rdquo;
+              </blockquote>
+              <figcaption className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355]">
+                &mdash; Adam Anderson
+              </figcaption>
+            </figure>
           </div>
-        </div>
+
 
 
         <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
