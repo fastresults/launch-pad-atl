@@ -261,7 +261,7 @@ export function AskConcierge() {
           type="button"
           aria-label="Ask Startup Labs"
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full bg-hero-gradient px-4 py-3 text-sm font-medium text-white shadow-elegant shadow-primary/30 ring-1 ring-white/10 transition-transform hover:scale-[1.02] active:scale-100 md:bottom-6 md:right-6"
+          className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-md border border-[#6f5a42] bg-[#8B7355] px-4 py-3 text-sm font-medium text-[#FAF8F5] shadow-lg shadow-black/20 transition-transform hover:scale-[1.02] hover:bg-[#7a6549] active:scale-100 md:bottom-6 md:right-6"
         >
           <MessageCircle className="size-5" />
           <span className="hidden sm:inline">Ask Startup Labs</span>
@@ -274,17 +274,22 @@ export function AskConcierge() {
           role="dialog"
           aria-label="Startup Labs Concierge"
           className={cn(
-            "fixed z-50 flex flex-col overflow-hidden border border-white/10 bg-background shadow-2xl",
+            "fixed z-50 flex flex-col overflow-hidden border border-[#E5DDD0] bg-[#FAF8F5] text-[#2B1F14] shadow-2xl",
             // Mobile: bottom sheet full width. Desktop: bottom-right card.
-            "inset-x-3 bottom-3 max-h-[85vh] rounded-2xl",
+            "inset-x-3 bottom-3 max-h-[85vh] rounded-lg",
             "sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[380px] sm:max-h-[600px]",
           )}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/10 bg-hero-gradient px-4 py-3 text-white">
+          <div className="flex items-center justify-between border-b border-[#6f5a42] bg-[#8B7355] px-4 py-3 text-[#FAF8F5]">
             <div className="flex items-center gap-2">
-              <Sparkles className="size-4" />
-              <div className="text-sm font-semibold tracking-tight">Startup Labs Concierge</div>
+              <span
+                aria-hidden
+                className="inline-flex size-6 items-center justify-center rounded-full bg-[#FAF8F5]/15 font-serif text-[13px] leading-none text-[#FAF8F5]"
+              >
+                SL
+              </span>
+              <div className="font-serif text-base tracking-tight">Startup Labs Concierge</div>
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -296,8 +301,8 @@ export function AskConcierge() {
                   setVoiceOn((v) => !v);
                 }}
                 className={cn(
-                  "rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white",
-                  voiceOn && "text-white",
+                  "rounded-md p-1.5 text-[#FAF8F5]/80 transition-colors hover:bg-[#FAF8F5]/10 hover:text-[#FAF8F5]",
+                  voiceOn && "text-[#FAF8F5]",
                 )}
               >
                 {voiceOn ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
@@ -307,7 +312,7 @@ export function AskConcierge() {
                   type="button"
                   aria-label="Clear conversation"
                   onClick={clearAll}
-                  className="rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                  className="rounded-md p-1.5 text-[#FAF8F5]/80 transition-colors hover:bg-[#FAF8F5]/10 hover:text-[#FAF8F5]"
                 >
                   <Trash2 className="size-4" />
                 </button>
@@ -316,7 +321,7 @@ export function AskConcierge() {
                 type="button"
                 aria-label="Close"
                 onClick={() => setOpen(false)}
-                className="rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-md p-1.5 text-[#FAF8F5]/80 transition-colors hover:bg-[#FAF8F5]/10 hover:text-[#FAF8F5]"
               >
                 <X className="size-4" />
               </button>
@@ -324,11 +329,11 @@ export function AskConcierge() {
           </div>
 
           {/* Messages */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto bg-[#FAF8F5] px-4 py-4">
             {messages.length === 0 ? (
               <div className="flex h-full flex-col justify-between gap-4">
                 <div>
-                  <p className="text-sm text-foreground">
+                  <p className="text-sm leading-relaxed text-[#2B1F14]">
                     Hey — ask me anything about Startup Labs. The 14-Day Pivot Method, the 60+ startup assets, pricing, cohorts, or what to expect.
                   </p>
                 </div>
@@ -338,7 +343,7 @@ export function AskConcierge() {
                       key={s}
                       type="button"
                       onClick={() => send(s)}
-                      className="rounded-full border border-white/15 bg-white/[0.03] px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10"
+                      className="rounded-sm border border-[#E5DDD0] bg-[#FAF8F5] px-3 py-1.5 text-xs text-[#2B1F14] transition-colors hover:border-[#8B7355] hover:bg-[#F0EBE3]"
                     >
                       {s}
                     </button>
@@ -358,13 +363,13 @@ export function AskConcierge() {
                   />
                 ))}
                 {(pending || transcribing || speaking) && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="inline-flex size-2 animate-pulse rounded-full bg-primary" />
+                  <div className="flex items-center gap-2 text-xs text-[#8B7355]">
+                    <span className="inline-flex size-2 animate-pulse rounded-full bg-[#B8532A]" />
                     {transcribing ? "Transcribing…" : speaking ? "Speaking…" : "Thinking…"}
                   </div>
                 )}
                 {error && (
-                  <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive-foreground">
+                  <div className="rounded-md border border-[#B8532A]/40 bg-[#B8532A]/10 px-3 py-2 text-xs text-[#7a3418]">
                     {error}
                   </div>
                 )}
@@ -378,9 +383,9 @@ export function AskConcierge() {
               e.preventDefault();
               send(input);
             }}
-            className="border-t border-white/10 bg-background p-3"
+            className="border-t border-[#E5DDD0] bg-[#FAF8F5] p-3"
           >
-            <div className="flex items-end gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-2 focus-within:border-primary/50">
+            <div className="flex items-end gap-2 rounded-md border border-[#E5DDD0] bg-white p-2 focus-within:border-[#8B7355] focus-within:ring-1 focus-within:ring-[#8B7355]/30">
               <textarea
                 ref={inputRef}
                 rows={1}
@@ -393,7 +398,7 @@ export function AskConcierge() {
                   }
                 }}
                 placeholder={recording ? "Listening… tap the square to stop." : "Ask about the workshop, pricing, tracks…"}
-                className="max-h-32 min-h-[36px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                className="max-h-32 min-h-[36px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-[#2B1F14] placeholder:text-[#8B7355]/60 focus:outline-none"
                 disabled={pending || recording || transcribing}
               />
               <button
@@ -402,8 +407,8 @@ export function AskConcierge() {
                 onClick={recording ? stopRecording : startRecording}
                 disabled={pending || transcribing}
                 className={cn(
-                  "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/10 text-foreground transition-colors hover:bg-white/10 disabled:opacity-40",
-                  recording && "border-destructive/60 bg-destructive/20 text-destructive-foreground animate-pulse",
+                  "inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-[#E5DDD0] bg-[#FAF8F5] text-[#2B1F14] transition-colors hover:bg-[#F0EBE3] disabled:opacity-40",
+                  recording && "animate-pulse border-[#B8532A]/60 bg-[#B8532A]/15 text-[#7a3418]",
                 )}
               >
                 {transcribing ? <Loader2 className="size-4 animate-spin" /> : recording ? <Square className="size-4" /> : <Mic className="size-4" />}
@@ -412,18 +417,19 @@ export function AskConcierge() {
                 type="submit"
                 aria-label="Send"
                 disabled={pending || recording || transcribing || !input.trim()}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-[#8B7355] text-[#FAF8F5] transition-colors hover:bg-[#7a6549] disabled:opacity-40"
               >
                 <Send className="size-4" />
               </button>
             </div>
-            <p className="mt-2 text-[10px] leading-tight text-muted-foreground">
+            <p className="mt-2 text-[10px] leading-tight text-[#8B7355]">
               Answers are AI-generated from our site content. For anything time-sensitive, use{" "}
-              <a href="/contact" className="underline hover:text-foreground">/contact</a>.
+              <a href="/contact" className="text-[#B8532A] underline-offset-2 hover:underline">/contact</a>.
             </p>
           </form>
         </div>
       )}
+
     </>
   );
 }
