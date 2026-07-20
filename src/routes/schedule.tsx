@@ -39,8 +39,9 @@ export default function SchedulePage() {
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="marketing-surface min-h-screen">
       <SiteHeader />
+
 
       {/* Hero */}
       <section className="border-b border-white/5 py-12 md:py-20">
