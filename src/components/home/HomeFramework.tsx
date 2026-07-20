@@ -16,6 +16,8 @@ import {
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroBg from "@/assets/hero-bg.png";
+import heroCoffee from "@/assets/hero-coffee.png";
+import { motion, useReducedMotion } from "framer-motion";
 import atlSeal from "@/assets/atl-founder-friendly-seal.svg";
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
 import { useState } from "react";
@@ -59,8 +61,15 @@ export function HomeFramework() {
 function Hero() {
   const EVENT = useEvent();
   const [modesOpen, setModesOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
   return (
-    <section className="border-b border-[#E4D9C4]">
+    <section
+      className="relative overflow-hidden border-b border-[#E4D9C4]"
+      style={{
+        backgroundImage:
+          "radial-gradient(ellipse at 82% 28%, rgba(201,185,154,0.22), transparent 62%)",
+      }}
+    >
       <div className="mx-auto max-w-6xl px-6 py-10 md:py-14">
         {/* Magazine masthead */}
         <div className="mb-10 flex flex-col gap-2 border-b border-[#C9B99A] pb-4 md:flex-row md:items-end md:justify-between">
@@ -68,56 +77,83 @@ function Hero() {
             Issue No. 01 &mdash; The Pivot
           </div>
           <div className="font-serif text-sm italic text-[#8B7355]">
-            Your startup &mdash; built with you, in one morning
+            Pull up a chair
           </div>
         </div>
 
-        {/* Hero — 8/4 magazine split */}
+        {/* Hero — 7/5 magazine split, coffee cup anchors the right column */}
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-7">
             <p className="mb-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
               <Star className="size-3.5 fill-current" />
-              One focused morning · IGNITE Center at Greater Atlanta Christian School · Coffee on us
+              One focused morning · IGNITE Center at Greater Atlanta Christian School · Coffee&rsquo;s on us
             </p>
 
             <h1 className="font-serif text-5xl leading-[1.05] text-[#3D3025] md:text-6xl lg:text-7xl">
-              Start your business. Get your first paying customer in{" "}
-              <span className="italic text-[#8B7355]">two weeks.</span>
+              Pull up a chair.
+              <br />
+              Let&rsquo;s start your business{" "}
+              <span className="italic text-[#8B7355]">&mdash; together, over coffee.</span>
             </h1>
 
             <p className="mt-8 max-w-xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
-              The {WORKSHOP_PRICE_LABEL} morning that gets you off the couch and into a real business. For W-2 employees ready for a Plan B, professionals whose jobs are changing under them, and couples building on Main Street. We skip the fluff and go straight to revenue.
+              One quiet morning. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you actually build the thing. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
             </p>
 
             <p className="mt-4 max-w-xl text-base text-[#7A6650]">
-              For nurses, teachers, servers, coders, and everyone in between. Come on down &mdash; we'll help you figure it out in one morning.
+              For nurses, teachers, servers, coders, couples on Main Street &mdash; anyone who&rsquo;s been meaning to start something. Come sit with us. We&rsquo;ll figure it out together.
             </p>
           </div>
 
-          {/* Right column — price + commitment card */}
-          <div className="flex flex-col justify-between lg:col-span-4">
-            <div className="border border-[#C9B99A] bg-[#F0EBE3] p-8">
+          {/* Right column — coffee cup + soft price/CTA card */}
+          <div className="relative lg:col-span-5">
+            {/* Cup illustration — overlaps the card top edge */}
+            <motion.div
+              className="pointer-events-none relative z-10 mx-auto -mb-10 w-[280px] max-w-full md:w-[340px] lg:-mb-14 lg:w-[380px]"
+              initial={{ opacity: 0, y: 12 }}
+              animate={
+                reduceMotion
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 1, y: [0, -6, 0] }
+              }
+              transition={
+                reduceMotion
+                  ? { duration: 0.5 }
+                  : { opacity: { duration: 0.6 }, y: { duration: 6, repeat: Infinity, ease: "easeInOut" } }
+              }
+            >
+              <img
+                src={heroCoffee}
+                alt=""
+                width={912}
+                height={1104}
+                className="h-auto w-full select-none"
+                draggable={false}
+              />
+            </motion.div>
+
+            <div className="relative rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] p-8 shadow-[0_20px_60px_-30px_rgba(61,48,37,0.35)]">
               <div className="mb-6">
                 <span className="font-serif text-5xl text-[#3D3025]">
                   {WORKSHOP_PRICE_LABEL}
                 </span>
                 <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.18em] text-[#8B7355]">
-                  One-time. No subscription.
+                  Just one morning. Come as you are.
                 </span>
               </div>
 
               <div className="mb-8">
                 <div className="text-xl font-medium leading-snug text-[#3D3025]">
-                  Just one focused morning &mdash; and your startup is actually built.
+                  You bring the idea. We&rsquo;ll bring the coffee &mdash; and build it with you.
                 </div>
                 <p className="mt-4 text-sm leading-relaxed text-[#5C4A38]">
-                  No complicated dashboards. No homework you'll never do. You walk in with an idea and leave with a live page, a priced offer, and your first outreach going out &mdash; built with you, in the room at the IGNITE Center, Greater Atlanta Christian School.
+                  No dashboards to learn. No homework you&rsquo;ll never do. You walk in with an idea and leave with a live page, a priced offer, and your first outreach going out &mdash; built with you, in the room at the IGNITE Center, Greater Atlanta Christian School.
                 </p>
               </div>
 
               <Link
                 to="/register"
-                className="flex w-full items-center justify-center gap-2 bg-[#8B7355] px-6 py-4 text-base font-semibold text-[#FAF8F5] transition-colors hover:bg-[#6E5B42]"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8B7355] px-6 py-4 text-base font-semibold text-[#FAF8F5] transition-colors hover:bg-[#6E5B42]"
               >
                 Reserve your seat <ArrowRight className="size-4" />
               </Link>
@@ -127,7 +163,7 @@ function Hero() {
                 onClick={() => setModesOpen(true)}
                 className="mt-3 block w-full text-center text-sm text-[#8B7355] underline decoration-[#C9B99A] decoration-2 underline-offset-4 transition-colors hover:text-[#3D3025]"
               >
-                Can't make it? See the other two ways.
+                Can&rsquo;t make it? See the other two ways.
               </button>
             </div>
 
