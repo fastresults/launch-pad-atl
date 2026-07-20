@@ -361,11 +361,11 @@ function FinalCTA() {
       <div className="mx-auto max-w-5xl px-6">
         <div className="rounded-3xl border border-white/10 bg-hero-gradient p-8 text-white md:p-12">
           <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-            The plan is the start.{" "}
-            <span className="opacity-80">Building it is what makes it real.</span>
+            Idea to open.{" "}
+            <span className="opacity-80">Built, not written up.</span>
           </h2>
           <p className="mt-4 max-w-2xl text-base opacity-90 md:text-lg">
-            Two doors, same finish: a business that brings customers in, turns them into buyers, and keeps them coming back. Pick the door that fits your next 30 days.
+            Two doors, same finish: a real startup that's live, taking money, and bringing customers back. Pick the door that fits your next 30 days.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link

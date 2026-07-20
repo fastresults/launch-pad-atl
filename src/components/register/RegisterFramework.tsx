@@ -63,12 +63,12 @@ export function RegisterFramework() {
         eyebrow: `The 14-Day Pivot Method · ${WORKSHOP_PRICE_LABEL} · Norcross, GA`,
         heroTitleLead: "Reserve your seat inside",
         heroTitleEmphasis: `The 14-Day Pivot Method.`,
-        heroBlurb: "The done-with-you method replacing accelerators, courses, and raw AI. One morning with the facilitator — offer priced, first customer named, outreach going out that afternoon. Fourteen days to first revenue. Coffee and refreshments on us.",
-        asideBlurb: "One live morning inside The 14-Day Pivot Method — small cohort, real startup built. Not another course. Not raw AI. The done-with-you method replacing both.",
+        heroBlurb: "Done with you, not done for you or done alone. One morning with the facilitator where we actually build your startup — page live, offer priced, first outreach sent from your inbox. Fourteen days to first revenue. Coffee and refreshments on us.",
+        asideBlurb: "One live morning where we actually build your startup — real page live, real offer priced, real message sent. Not another course. Not raw AI. The real thing, built with you.",
         walkOuts: null as string[] | null,
         priceLabel: WORKSHOP_PRICE_LABEL,
         priceCents: WORKSHOP_PRICE_CENTS,
-        footerLine: `Everything you need to be selling by Monday · built with Adam · yours to keep.`,
+        footerLine: `Everything actually built and live by Monday · with Adam · yours to keep.`,
       };
 
   const { data: cohorts = [] } = useQuery<Cohort[]>({
@@ -266,7 +266,7 @@ export function RegisterFramework() {
               </p>
 
               <div className="mt-6 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                What you walk out with
+                What we actually build with you
               </div>
               {ctx.walkOuts ? (
                 <ul className="mt-3 space-y-3 text-sm">

@@ -15,7 +15,7 @@ const HIDDEN_PREFIXES = ["/login", "/signup", "/reset-password", "/unsubscribe",
 
 
 const STARTERS = [
-  "What do I leave with?",
+  "What actually gets built in the room?",
   "How much is it?",
   "When's the next cohort?",
   "Is this right for me?",
@@ -334,7 +334,7 @@ export function AskConcierge() {
               <div className="flex h-full flex-col justify-between gap-4">
                 <div>
                   <p className="text-sm leading-relaxed text-[#2B1F14]">
-                    Hey — ask me anything about Startup Labs. The 14-Day Pivot Method, the 60+ startup assets, pricing, cohorts, or what to expect.
+                    Hey — ask me anything about Startup Labs. What actually gets built in the room, pricing, cohorts, or what to expect.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">

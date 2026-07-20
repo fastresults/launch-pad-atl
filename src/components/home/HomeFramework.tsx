@@ -108,10 +108,10 @@ function Hero() {
 
               <div className="mb-8">
                 <div className="text-xl font-medium leading-snug text-[#3D3025]">
-                  Just one focused morning to get the wheels turning.
+                  Just one focused morning &mdash; and your startup is actually built.
                 </div>
                 <p className="mt-4 text-sm leading-relaxed text-[#5C4A38]">
-                  No complicated dashboards. No homework you'll never do. A plain-spoken roadmap to your first dollar &mdash; done together, in the room at the IGNITE Center, Greater Atlanta Christian School.
+                  No complicated dashboards. No homework you'll never do. You walk in with an idea and leave with a live page, a priced offer, and your first outreach going out &mdash; built with you, in the room at the IGNITE Center, Greater Atlanta Christian School.
                 </p>
               </div>
 
@@ -153,19 +153,19 @@ function Hero() {
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">01</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
-              <strong className="font-semibold">Name your first real customer.</strong> Not "my target market." A real person, by name.
+              <strong className="font-semibold">A live page at your domain.</strong> Not a mockup. A real URL a stranger can open.
             </p>
           </div>
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">02</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
-              <strong className="font-semibold">Set a price you can say out loud.</strong> Build a minimum offer before lunch.
+              <strong className="font-semibold">A priced offer that takes money.</strong> Set before lunch. Named first customer on it.
             </p>
           </div>
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">03</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
-              <strong className="font-semibold">Land your first "yes" in 14 days.</strong> Money in your account &mdash; not a course completion certificate.
+              <strong className="font-semibold">Your first outreach sent from the room.</strong> Real message, real prospect, before you leave.
             </p>
           </div>
         </div>
@@ -199,14 +199,14 @@ function Framework() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          What you'll walk out with
+          What we actually build with you
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-          A real business ready to take money.{" "}
+          A real startup that takes money.{" "}
           <span className="text-gradient-brand">Built with you in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          A course gives you videos. A chatbot gives you a folder of documents. We sit down with you and build the business — what you're selling, who you're selling it to, and how to get your first "yes." By that afternoon you're not planning anymore. You're open. {WORKSHOP_PRICE_LABEL} once. Yours to run with.
+          A course gives you videos. A chatbot gives you a folder of files. We sit down and actually build the startup — the live page, the priced offer, the first message sent. By that afternoon you're not planning anymore. You're open. {WORKSHOP_PRICE_LABEL} once. Yours to run with.
         </p>
 
 
@@ -264,26 +264,26 @@ function Framework() {
 
 function HonestRoadmap() {
   const included = [
-    "What you're selling and what to charge for it — a price you can actually say out loud",
-    "The exact person you'll sell to first — real name, not 'my target market'",
-    "The one place you'll go find them this week — and the first message going out that day",
-    "A simple 90-day plan from your first dollar to steady side income",
-    "A seat in a small room with Adam — the guy who's actually done this, not a stand-in",
-    "Coffee, snacks, and a room full of people building the same kind of business you are",
+    "A live page at your domain — real URL, not a mockup, up before lunch",
+    "A priced offer wired to take real money — with your first customer named on it",
+    "The first outreach message sent from the room — to a real prospect, from your real inbox",
+    "Your business bank + Stripe hooked up so revenue can actually land",
+    "A seat next to Adam — the operator who's actually done this, building it with you",
+    "Coffee, snacks, and a room full of people building the same kind of startup you are",
   ];
 
   return (
     <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          Here's the honest plan
+          Here's the honest promise
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
           Two weeks to your first dollar.{" "}
-          <span className="text-gradient-brand">A real business by month two.</span>
+          <span className="text-gradient-brand">A real startup by month two.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we help you name your first customer, price what you're selling, and get the first "yes" going out that week. Everything pretty comes after the money starts.
+          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we actually build your page, price the offer, and send the first message — from the room, to a real person. Everything pretty comes after the money starts.
         </p>
 
 

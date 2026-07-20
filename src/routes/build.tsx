@@ -9,8 +9,8 @@ import { ArrowRight, Sparkles, CalendarDays } from "lucide-react";
 
 export default function BuildIndexPage() {
   useDocumentTitle(
-    "Build workshops — eight focused mornings, one piece of your business each",
-    "Come spend one focused morning with us and walk out with one piece of your business done — your brand, your site, your follow-ups. Sessions from $197."
+    "Build workshops — eight focused mornings, one real piece of your startup each",
+    "Come spend one focused morning with us and walk out with one real piece of your startup actually built — brand live, site live, follow-ups running. Sessions from $197."
   );
   return (
     <div className="marketing-surface min-h-screen">
@@ -29,10 +29,10 @@ export default function BuildIndexPage() {
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
             <div className="lg:col-span-8">
               <h1 className="font-serif text-5xl leading-[1.05] text-[#3D3025] md:text-6xl lg:text-7xl">
-                Your foundation. <span className="italic text-[#8B7355]">Live by lunch.</span>
+                Actually built. <span className="italic text-[#8B7355]">Live by lunch.</span>
               </h1>
               <p className="mt-8 max-w-xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
-                One focused morning. One piece of your business &mdash; your brand, your website, the words you use to sell, the emails that follow up, the tools that keep it running &mdash; built with you and done before lunch. No retainer. No waiting on an agency.
+                One focused morning. One real piece of your startup &mdash; your brand shipped, your website live, your sales copy in the page, your follow-up emails sending, your tools running &mdash; built with you and live before lunch. Not notes about it. The thing itself. No retainer. No waiting on an agency.
               </p>
             </div>
             <div className="lg:col-span-4">
@@ -42,8 +42,8 @@ export default function BuildIndexPage() {
                 </p>
                 <ul className="mt-4 space-y-3 text-sm text-[#3D3025]">
                   <li>&bull; Show up with your idea</li>
-                  <li>&bull; We build the piece together</li>
-                  <li>&bull; You walk out with it done</li>
+                  <li>&bull; We build the real thing together</li>
+                  <li>&bull; You walk out with it live</li>
                 </ul>
               </div>
             </div>
@@ -78,7 +78,7 @@ export default function BuildIndexPage() {
                   </p>
                   <div className="mt-5 border-t border-white/10 pt-4">
                     <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                      You'll walk out with
+                      What actually gets built
                     </div>
                     <ul className="mt-2 space-y-1 text-sm">
                       {w.walkOuts.slice(0, 3).map((d) => (
@@ -122,10 +122,10 @@ export default function BuildIndexPage() {
               Rather we just build it?
             </p>
             <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-              Same team. We'll put it together for you.
+              Same team. We'll build it for you.
             </h2>
             <p className="mt-4 text-base opacity-90 md:text-lg">
-              If your mornings are full — or you'd rather hand the whole thing over — Adam's team will build the brand, the website, the follow-ups, and the tools for you. Same crew that runs the workshops. Same care.
+              If your mornings are full — or you'd rather hand the whole thing over — Adam's team will actually build the brand, the website, the follow-ups, and the tools for you. Real assets, live. Same crew that runs the workshops. Same care.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
