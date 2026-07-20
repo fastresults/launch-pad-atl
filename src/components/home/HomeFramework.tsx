@@ -135,7 +135,7 @@ function Hero() {
             <div
               className="relative mx-auto flex w-full max-w-[380px] items-end justify-center"
               style={{
-                height: 260,
+                height: 320,
                 backgroundImage:
                   "radial-gradient(ellipse at 50% 62%, rgba(201,185,154,0.28), transparent 65%)",
               }}
