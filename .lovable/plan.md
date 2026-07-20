@@ -1,46 +1,121 @@
-# Hero Redesign — Editorial Balance, Take 3
+## The problem
 
-## What's wrong with the current hero (honest critique)
+The 60+ deliverable titles on the homepage framework (and echoed in the workshop slides, chatbot, curriculum, and dashboard) read like an MBA syllabus: "Executive Summary," "Value Proposition," "Founder Operating Cadence," "BOM & Landed-Cost Model," "Contractor & 1099 Kit," "Pre-Sell Offer & Waitlist Test," "Go-to-Market Plan." For a Main Street, first-time, or trades operator this is intimidating — it signals "you don't belong in this room yet." We're inviting people to sit down over coffee; the labels should feel like that too.
 
-Looking at the screenshot as a hero designer would in a crit:
+## The principle (before the list)
 
-1. **The pull quote is stranded.** It sits ~600px below the "Designed for" list in the left column with nothing beside it — the right column ended at the price card, so the quote hangs in a sea of empty cream. That's not "asymmetric editorial," that's an orphan.
-2. **Two disconnected objects on the right.** The cup floats above a rectangle that floats above a quote. Three stacked islands, no shared spine. A proper editorial right rail is *one* composed column.
-3. **The cup broke the card's top edge, which read as an accident, not intent.** Without a frame or ground line, the cup looks like a sticker slapped on a receipt.
-4. **The vertical quote (one word per line) below the fold** is a symptom, not the cause — it's what happens when a `border-l` blockquote gets squeezed into a 4-col rail. It reads as broken layout, not typography.
-5. **The masthead steam wisp bleeds into the nav** — a nice idea executed in the wrong z-layer.
-6. **Left column ends abruptly at "Designed for"** with no visual weight to counter the price card's mass on the right. The composition tips right.
-7. **Two competing focal points at the same altitude** (headline + cup) with no connective tissue (no rule, no ground shadow, no aligned baseline). The eye ping-pongs.
+- **Say the thing, not the category.** "One-page story of your startup" instead of "Executive Summary."
+- **Verbs and outcomes over nouns and disciplines.** "Know your numbers" instead of "Financial Model."
+- **Kitchen-table English.** No "cadence," "framework," "SOP," "BOM," "TAM," "positioning," "pro forma," "MSA," "PRD," "SPF/DKIM."
+- **Under 5 words when possible.** Long enough to be clear, short enough to feel welcoming.
+- **Tooltips keep the specifics.** The friendly label is the front door; the detailed tooltip already there does the technical explaining.
+- **Section names stay** (Foundation, Strategy, Operations, Finance, Governance, Brand, Marketing, Social & Content) — they're already plain and act as a spine.
 
-## What "right" looks like
+## Proposed relabels (label → new label)
 
-One composed left column that closes cleanly. One composed right column that reads as a single object (cup → price → CTA → quote, top to bottom, on a shared spine). Both columns land on the same bottom baseline. No orphaned elements below the fold.
+**01 Foundation**
+- Executive Summary → **Your one-page story**
+- Vision & Mission → **What you stand for**
+- Problem / Solution Brief → **The problem you solve**
+- Value Proposition → **Why customers pick you**
+- 14-Day Launch Plan → **Your day-by-day launch plan**
+- AI Tool Stack Recommendation → **Your AI toolkit, picked for you**
+- AI Prompt Library → **25 ready-to-use AI prompts**
+- Founder Operating Cadence → **Your weekly rhythm**
 
-## The plan
+**02 Strategy**
+- Market Analysis → **How big the opportunity is**
+- Customer Personas → **Who you're selling to**
+- Competitive Positioning → **How you beat the alternatives**
+- Go-to-Market Plan → **Your first 90 days**
+- Brand & Messaging → **How you sound everywhere**
+- First-50 Warm List → **Your first 50 people to call**
+- Pre-Sell Offer & Waitlist Test → **A 48-hour demand test**
+- CRM Pipeline Starter → **A place to track every deal**
 
-### Left column (7/12)
-- Kicker, H1, deck, secondary paragraph — unchanged.
-- **Move the Adam Anderson pull quote here**, rendered horizontally as a proper editorial callout under the deck (not one-word-per-line). Serif italic, ~20px, 2 lines max, hairline rule above, small caps attribution below.
-- **"Designed for" list stays as the closer** — pushed to `mt-auto` so it anchors the bottom baseline.
-- Result: left column has 4 stacked blocks (kicker → H1+deck → pull quote → designed-for) with real visual weight top to bottom.
+**03 Operations**
+- Product Roadmap → **What you'll launch, in what order**
+- Operating Plan → **How the week actually runs**
+- Sales Playbook → **What to say to close the sale**
+- Marketing Plan → **Where your customers come from**
+- Fulfillment SOP → **How you deliver order #1**
+- Customer Support Starter → **How you answer customers fast**
+- Booking & Calendar Setup → **A real link to book a call**
+- Sales Call Recording Stack → **Every call captured and summarized**
+- AI Support Bot Setup → **An AI helper for easy questions**
+- Automation Recipes Starter → **5 things you'll stop doing by hand**
+- Supplier Shortlist → **Your top 5–10 suppliers, vetted** *(physical products)*
+- BOM & Landed-Cost Model → **What each unit really costs you** *(physical products)*
 
-### Right column (5/12) — one composed object
-- **Cup sits *above* the card as an integrated cameo**, but with a soft radial cream vignette behind it so it reads as intentional, not floating. Ground it with a very subtle drop shadow beneath the saucer.
-- Steam animation kept, but constrained inside the cameo zone (fix z-index so it never crosses the header).
-- Price card: `$297` display, "Just one morning" caption, one-line promise, primary CTA, secondary link. **Nothing else.**
-- Remove the below-card quote entirely (it moves to the left column).
-- Card gets a warmer treatment: no hard shadow, cream fill on cream page separated only by a hairline + generous internal padding — very Kinfolk/Cereal magazine.
+**04 Finance**
+- Financial Model → **Your 12-month money picture**
+- Unit Economics → **What one customer is really worth**
+- Funding Strategy → **How you'll pay for growth**
+- Budget & Pro Forma → **What you'll spend, month by month**
+- Pitch Deck Outline → **Your story on 10 slides**
+- Payments & Checkout Setup → **A live way to take money**
+- Business Bank & Bookkeeping Starter → **A business bank, books, and a debit card**
+- Pricing Page & Offer Sheet → **Your prices, in writing**
 
-### Shared structure
-- Grid: `lg:grid-cols-12`, left `col-span-7`, right `col-span-5`.
-- Both columns `flex flex-col` with the closing element on `mt-auto` → shared bottom baseline, no dead air.
-- Reduce section vertical padding from `py-14` to `py-10` on desktop; the composition should feel like a magazine spread, not a landing page with cushion.
-- Fix masthead steam clipping by giving the hero `isolate` and lowering the steam SVG z-index below the sticky header.
+**05 Governance**
+- Legal Structure Brief → **How to set the business up right**
+- Risk Register → **What could go wrong — and the fix**
+- Board & Governance Plan → **The advisors in your corner**
+- Terms, Privacy & Refund Pack → **The customer-facing legal set**
+- Insurance Starter → **The insurance customers ask about**
+- Contractor & 1099 Kit → **Contracts for your first hire**
 
-### Copy — unchanged
-All existing copy stays verbatim per the brief. This is purely a compositional and typographic fix.
+**06 Brand** *(bonus)*
+- Brand Strategy Framework → **What your brand stands for**
+- Brand Messaging House → **The words your brand uses**
+- Visual Identity Brief → **The look you hand to a designer**
+- Brand Voice & Tone Guide → **How your brand sounds**
+- Brand Guidelines Book → **Your brand rules, all in one place**
+- Logo & Brand Asset Pack → **Your logo, favicon, and images**
 
-## Files touched
-- `src/components/home/HomeFramework.tsx` — `Hero()` function only.
+**07 Marketing** *(bonus)*
+- Website PRD (AI-builder prompt) → **The build brief for your website**
+- Domain, Email & DNS Checklist → **Domain, business email, and setup**
+- Analytics & Pixel Setup → **A way to see what's working**
+- Landing Page & Waitlist Test → **A live page by day 4**
+- Pre-Sell Landing PRD (AI-builder prompt) → **The build brief for your pre-sell page**
+- Email Marketing Setup → **Business email that reaches the inbox**
 
-Nothing else changes.
+**08 Social & Content** *(bonus)*
+- Social Media Audit & Setup → **Your social accounts, cleaned up**
+- Content Strategy & Pillars → **What you'll post about**
+- 90-Day Content Calendar → **90 days of posts, planned**
+- Launch Content Kit → **Everything you need for launch week**
+- Community Engagement Playbook → **How to reply, DM, and thank people**
+- Influencer & Partnership Brief → **A note to send to partners**
+- Paid Ads Starter Pack → **Your first paid ad campaign, ready**
+- Reviews & Testimonials Capture Kit → **How you collect reviews on day 1**
+- Outbound DM & Email Scripts → **What to send to your first 50**
+- Ad Creative Pack → **12 ads ready to run**
+- Referral & Affiliate Starter → **How happy customers bring you more**
+
+## Where these labels have to change together
+
+`framework-deliverables.ts` is the source of truth, but the same strings are hardcoded in a handful of places. All must be updated in the same pass so nothing drifts:
+
+1. **`src/lib/framework-deliverables.ts`** — the `title` field on every item in `FRAMEWORK_STAGES` (the file the homepage, `/build`, `/register`, and the dashboard framework panel all read).
+2. **`src/lib/curriculum-data.ts`** — literal titles inside the curriculum copy blocks (Foundation lesson especially references "Executive Summary," "Vision & Mission," "Problem/Solution," "Value Prop" by name; same for later stages). Rewrite in place so lesson copy matches the new labels.
+3. **`src/lib/workshop-productization.ts`** — the `inputs: [...]` arrays that reference deliverable names verbatim (e.g. `"Foundation · Executive Summary"`). Update to the new labels.
+4. **`src/lib/launch-14day-guidance.ts`** — the sample day plan mentions "Executive Summary" and "Vision & Mission" by name. Rewrite to the new phrasing.
+5. **`src/lib/chatbot-knowledge.ts`** — the knowledge base is generated from `FRAMEWORK_STAGES` so it auto-updates, but scan for any hard-coded old labels and re-tune the concierge's answers to use the new plain names.
+6. **`public/adam-funnel-v1.md`** and the two funnel report source files under `.lovable/` — sweep for the old labels; they're used as marketing collateral and should stay consistent.
+7. **DB (`venture_document_types` table)** — a migration renames the `name` column values to match the new labels so the dashboard reads the same friendly names. The `slug`/internal keys stay as-is (per project memory: user copy changes, internal identifiers don't).
+
+## Out of scope
+
+- Tooltips (already good — they carry the technical detail).
+- Section names (already plain).
+- Category badges like "Bonus" / physical-products qualifiers.
+- Marketing plan structure, hero copy, pricing, and the coffee cup layout — no other changes to the page.
+
+## Verification
+
+- Load `/` and confirm every card in the framework grid reads in kitchen-table English.
+- Load `/build` and the founder dashboard framework panel — confirm the same names appear there.
+- Open the chatbot and ask "what do I get?" — confirm it now uses the plain names.
+- Grep for the old titles (`Executive Summary`, `Value Proposition`, `Founder Operating Cadence`, `BOM`, `1099 Kit`, `Pre-Sell Offer & Waitlist Test`, `Go-to-Market`, `Pro Forma`, `PRD`, `SOP`) across `src/`, `public/`, `.lovable/` — expect zero hits outside intentional internal identifiers.
