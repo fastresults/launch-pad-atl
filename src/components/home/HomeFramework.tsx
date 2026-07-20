@@ -68,7 +68,7 @@ function Hero() {
             Issue No. 01 &mdash; The Pivot
           </div>
           <div className="font-serif text-sm italic text-[#8B7355]">
-            A neighborly guide for the new operator
+            Your business &mdash; built with you, in one Saturday
           </div>
         </div>
 
