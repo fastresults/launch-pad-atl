@@ -78,7 +78,7 @@ export function AccessModeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Three ways to do this with us.</DialogTitle>
+          <DialogTitle className="font-serif text-3xl">Three ways to do this with us.</DialogTitle>
           <DialogDescription>
             Same plan. Same two weeks to your first customer. Pick the one that fits your life — come to Atlanta, hop on Zoom, or let us build it for you.
           </DialogDescription>
@@ -93,14 +93,14 @@ export function AccessModeDialog({
                 trackMode(m.id);
                 onOpenChange(false);
               }}
-              className={`group relative flex flex-col rounded-2xl border p-5 text-left transition hover:border-primary/60 hover:bg-primary/5 ${
+              className={`group relative flex flex-col rounded-sm border p-5 text-left transition hover:border-[#8B7355] ${
                 m.featured
-                  ? "border-primary/40 bg-primary/5"
-                  : "border-white/10 bg-card"
+                  ? "border-[#8B7355] bg-[#F0EBE3]"
+                  : "border-[#E4D9C4] bg-[#F5F0E5]"
               }`}
             >
               {m.featured && (
-                <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
+                <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-sm border border-[#C9B99A] bg-[#FAF8F5] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-[#3D3025]">
                   <Sparkles className="size-3" /> Done for you
                 </span>
               )}
