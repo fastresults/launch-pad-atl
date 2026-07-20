@@ -28,7 +28,7 @@ const MODES: Mode[] = [
     title: "Come to Atlanta",
     format: "In-person · just 20 seats",
     promise:
-      "Spend one Saturday morning in the room with Adam. We build your plan together — what you're selling, who to, and how to get the first 'yes' — and you walk out ready to go.",
+      "Spend one focused morning in the room with Adam. We build your plan together — what you're selling, who to, and how to get the first 'yes' — and you walk out ready to go.",
     price: `${WORKSHOP_PRICE_LABEL} — yours to keep`,
     cta: "Reserve a seat",
     to: "/register",

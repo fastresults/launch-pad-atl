@@ -80,7 +80,7 @@ export default function WorkshopDayPage() {
             </div>
             <h3 className="mt-2 text-lg font-semibold">Drop in a link or a paragraph, get all {TOTAL_DELIVERABLES} back</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Paste your site or describe your startup. We enrich it, generate every startup asset in order, and hand it back so you can walk in Saturday with something to react to — not a blank page.
+              Paste your site or describe your startup. We enrich it, generate every startup asset in order, and hand it back so you can walk in with something to react to — not a blank page.
             </p>
             <div className="mt-4">
               <Link to="/dashboard/hub/new" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-background/50 px-4 py-2.5 text-sm font-medium hover:bg-white/5">
