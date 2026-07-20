@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { MessageCircle, X, Send, Sparkles, Trash2, Mic, Square, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Trash2, Mic, Square, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeErrorMessage } from "@/lib/edge-errors";
 import { cn } from "@/lib/utils";
