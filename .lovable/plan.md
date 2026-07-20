@@ -1,74 +1,71 @@
-# ICP Profile — Startuplabs
+# Redesign around the ICP profiles
 
-Ship a single reference document the team can use to guide copy, offers, ads, and disqualification. Written in the same plain-spoken voice we've locked into the site.
+Goal: re-skin the site so a Plan-B Seeker, AI-Displaced Professional, Main Street Operator, or Family/Couple lands on the page and feels "this is for me, I can do this on a Saturday morning." Copy already got the plain-spoken sweep — this pass is visual: composition, palette, type, density, imagery register.
 
-## Deliverable
+## Scope (in this pass)
 
-**File:** `.lovable/icp-profile.md` (internal reference; can be copied to `public/` later if we want a shareable version).
+Public marketing surfaces only. No business logic, no route changes, no auth/data work.
 
-Length target: ~8–10 pages. Skimmable. Tables where useful, not decorative.
+- `/` (home hero + framework + workshops scroller + access-mode dialog)
+- `/build` (index + workshop card grid)
+- `/services`
+- `/schedule`
+- `/contact`
+- Shared: `Header`, `Footer`, section rhythm, button/pill styles
 
-## Structure
+Out of scope: `/facilitator`, `/webinar`, `/one-on-one`, admin, dashboard, auth screens.
 
-**1. One-line ICP (the north star)**
-Who we exist for in a single sentence — the 25–45 W-2 employee in metro Atlanta with an idea and no plan, willing to spend one Saturday and $297 to stop guessing.
+## Ritual (per the redesign skill)
 
-**2. Core demographics (the whole audience)**
-Age, income, geography (Atlanta metro primary, US-wide via Zoom), employment status, education, family stage, tech comfort. Ranges, not fake precision.
+Two acts. User picks in both — no guessing.
 
-**3. The four primary personas**
-Each persona gets the same one-page treatment so the team can compare them side-by-side:
+### Act 1 — Pin the taste
 
-- **A. The Plan-B Seeker** — W-2 employee (nurse, teacher, ops manager, corporate mid-level), 30–45, wants a second income they own. Most common buyer.
-- **B. The AI-Displaced Professional** — 35–55, recently laid off or watching their role erode, has savings + urgency, needs a business not another job hunt.
-- **C. The Main Street Operator** — trades, food, wellness, retail, real estate; already runs something small or is about to; needs foundation not vibes.
-- **D. The Family / Couple Operator** — husband-wife, parent-adult-child, or two friends starting together; wants a shared plan both people understand.
+Capture the current `/` preview at 1386px as the anchor image. Then one round of three visual questions:
 
-Per persona:
-- Snapshot (age, job, income, life stage, city archetype)
-- What they say out loud (2–3 real quotes)
-- What keeps them up at 11pm (top 3 pains)
-- What they've already tried and why it didn't stick
-- What "success" looks like to them 6 months out
-- The trigger event that makes them buy
-- Which offer they enter through (Foundation workshop / Zoom / done-with-you) and why
-- Objections + the one-line answer
+1. **Palette** — 3 swatch sets tuned to the ICP (warm/neighborly, confident/editorial, calm/trust). Current cream `#FBF7F1` + rust `#B8532A` is one option; two fresh alternatives sit beside it.
+2. **Type pairing** — 3 pairings that read grown-up but not corporate (e.g. `instrument-serif-work-sans`, `lora-nunito-sans`, `outfit-figtree`). No default Inter/Poppins.
+3. **Layout** — 3 wireframe structures for the home composition (e.g. `single-column`, `split-screen`, `magazine`).
 
-**4. Buying triggers (cross-persona)**
-The 5–7 life events that move someone from "thinking about it" to registering: layoff, second baby, spouse income drop, a specific dollar goal, turning 40, a friend's business win, a bad Monday.
+The three answers lock as hard constraints for Act 2.
 
-**5. Channels + language**
-Where they already are (Facebook groups, LinkedIn if displaced, Nextdoor, church, local podcasts, Instagram Reels), what words they use for their own problem ("side income," "my own thing," "get out of the rat race" — not "MVP," "GTM," "TAM").
+### Act 2 — Three rendered directions
 
-**6. Disqualifiers (who this is NOT for)**
-Series A founders, credential collectors, coach-shoppers, anyone who wants us to tell them their idea is great without pressure-testing it. Short list, blunt.
+Generate 3 full rendered directions of the home page using `design--create_directions`, with the captured screenshot attached as image reference. Palette, type, and layout are identical across all three — variation lives in:
 
-**7. Offer-to-persona matrix**
-One table mapping each persona → best entry offer → likely upsell path → price tolerance ceiling.
+- Hero composition and emphasis (headline scale, subhead rhythm, CTA weight)
+- Density (breathing room vs. information-rich)
+- Imagery register (portrait-led vs. object-led vs. type-led)
+- Section transitions and motion feel
+- Where "3 ways to start" and the workshop scroller sit in the fold
 
-**8. How to use this doc**
-Half-page for the team: copy checks, ad targeting, sales-call qualification, when to route to `/build` vs `/services` vs `/one-on-one`.
+Each direction gets a distinct point of view — e.g. "Sunday paper," "Neighborhood shop window," "Field guide." Not three tints of the same layout.
 
-## Voice + constraints
+Present the three back with one question: "Which direction should I build?"
 
-- Plain-spoken, 6th–8th grade reading level. Same voice as the current site sweep.
-- Banned words carry over: method, framework, operator (as a noun in body copy), cohort, funnel, ICP (in copy — we can use it in section headers here since this is an internal doc), GTM, MVP, TAM, pivot (as a noun).
-- Say "your business / side income / shop," never "your thing."
-- Every persona quote must sound like a real human, not a marketing composite.
+### Act 3 — Implement the chosen direction
 
-## Source material I'll draw from
+- Copy the chosen direction's tokens verbatim into `src/index.css` (HSL semantic tokens; no hardcoded colors in components).
+- Update `tailwind.config.ts` if new tokens are added.
+- Re-skin the in-scope routes and shared components to match hero alignment, section counts, density, and hierarchy of the chosen direction.
+- Keep all current copy intact (already ICP-aligned from the last sweep).
+- Verify with Playwright screenshots at 1386px and 390px.
 
-- `public/business-case.md` (already-approved voice + $13,900 alone-cost math)
-- `public/adam-funnel-v1.md` (existing archetype thinking: Cubicle Escapee, Idea Hoarder, AI-Displaced)
-- Current live copy: `src/routes/index.tsx`, `HomeFramework.tsx`, `AccessModeDialog.tsx`, `/build`, `/services`
-- Locked pricing: Foundation $297, lower-tier workshops $197, higher tiers $397
+## ICP guardrails the visuals must pass
 
-## Out of scope for this pass
+- Reads instantly to a 35-year-old nurse or teacher — not to a VC.
+- No "AI startup" aesthetic (no purple/indigo gradient on white, no glassmorphism dashboards).
+- Price and "one Saturday morning" are visible above the fold.
+- CTAs feel like "come on down," not "book a demo."
+- Photography/illustration register suggests real people and Main Street, not stock founders at whiteboards.
 
-- No code changes, no route edits, no UI.
-- Not writing new ads or landing pages — this is the source-of-truth doc those get written from later.
-- No PDF export yet (can add after the markdown is approved).
+## Deliverables
 
-## Open question before I write
+1. Three locked visual picks (palette / type / layout).
+2. Three rendered home-page directions.
+3. Implemented redesign across the 5 routes + shared chrome, matching the chosen direction.
+4. Before/after screenshots at desktop + mobile in `.lovable/redesign/`.
 
-Do you want the four personas as I've named them above (Plan-B Seeker / AI-Displaced / Main Street / Family-Couple), or do you want to swap one out — e.g. drop Family-Couple and add "Creator going pro" or "Technical builder who can't sell"? I'll default to the four above if you just say proceed.
+## What I need from you to start
+
+Approve this plan. On approval I'll capture the current `/` screenshot and fire the three visual-preference questions in one round.
