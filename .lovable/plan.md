@@ -1,28 +1,28 @@
-## Goal
-Drop the oval frame around the coffee cup so it sits naturally on the cream page, and give the steam a subtle, always-on drift.
+# Hero: bigger cup, tighter composition
 
-## Changes (hero only, `src/components/home/HomeFramework.tsx` + one new asset)
+Goal: Make the coffee cup and steam ~2× larger, and remove the excess vertical whitespace under the left column and around the cup on the right.
 
-1. **New illustration, no frame**
-   - Generate `src/assets/hero-coffee-nosteam.png` (transparent background) — same watercolor cup + saucer as today but *without* the drawn steam wisps. Cream page shows through directly.
+## Changes (all in `src/components/home/HomeFramework.tsx`, Hero only)
 
-2. **Remove the circular frame**
-   - Delete the `rounded-full border border-[#C9B99A] bg-[#FBF7F1]/60 ... shadow-...` container on the cup.
-   - Cup renders directly on the hero background, centered in the right column, sized to match current visual weight (~86% of column width, max ~280px).
-   - Keep the shared top/bottom baseline grid (kicker-aligned top, price card below).
+**Grid re-balance**
+- Shift from `lg:col-span-8 / lg:col-span-4` to `lg:col-span-7 / lg:col-span-5` so the right column has room for a larger cup without overflow.
+- Tighten grid gap on large screens: `lg:gap-14` → `lg:gap-10`.
 
-3. **Animated steam overlay**
-   - Add an inline SVG absolutely positioned above the cup rim (3 wisps, hand-drawn curved paths, stroke color `#8B7355` at ~35% opacity, slight blur).
-   - Animate each wisp with `framer-motion`:
-     - `y`: `0 → -8px` loop
-     - `opacity`: `0.15 → 0.45 → 0.15`
-     - `x`: tiny `±2px` sway
-     - Staggered delays (0s, 0.8s, 1.6s), 4–5s duration, `easeInOut`, infinite.
-   - Wrap in `useReducedMotion()` guard — if reduced, render static steam at mid opacity, no animation.
+**Coffee cup + steam (2× larger)**
+- Remove the `max-w-[280px]` cap and the inner `w-[86%]` shrink on the image; render the cup at full column width (`w-full`, on mobile cap at `max-w-[420px]` centered, was 280).
+- Move cup upward so steam breathes into the kicker row: wrap in a `-mt-4 lg:-mt-8` container and let steam extend above via `-translate-y-8`.
+- Steam SVG: grow from `h-[28%] w-[46%]` to `h-[46%] w-[72%]`, increase `strokeWidth` 2.2 → 3, and lengthen the wisp paths' vertical travel (`y: [0,-10,0]`) so motion reads at the larger scale.
 
-4. **Keep everything else untouched** — copy, price card, "Designed for" list, grid baselines, meta row all stay as-is.
+**Whitespace cleanup (left column)**
+- The big empty gap under the deck comes from `mt-auto pt-10` pushing "Designed for" to the bottom to match the tall right column. With the right column now taller (bigger cup + card), reduce to `mt-10 pt-0` so the list sits naturally under the paragraphs.
+- Reduce `mt-8` → `mt-6` on the deck paragraph and `mt-4` → `mt-3` on the secondary paragraph to tighten rhythm.
+- Section vertical padding: current outer `py-*` on the hero section — trim top padding one step (e.g. `pt-16` → `pt-10` on lg) so the masthead sits closer to the H1.
 
-## Technical notes
-- Reuse existing `motion` import and `reduceMotion` variable already in `Hero`.
-- Steam SVG lives inline (no new asset) so stroke color inherits from the palette and animates cheaply.
-- Position steam with `absolute -top-6 left-1/2 -translate-x-1/2` inside a `relative` cup wrapper.
+**Price card**
+- Reduce `mt-8` above the price card to `mt-6` so it hugs the cup baseline.
+
+## Guardrails
+- No copy changes.
+- No color/token changes; keep Warm Sand palette.
+- Preserve `useReducedMotion` behavior for steam + cup float.
+- Verify at 1280 and 1851 CSS widths that: (a) cup is visibly ~2× today's size, (b) no empty band between deck copy and "Designed for", (c) price card bottom aligns near the "Designed for" list bottom.

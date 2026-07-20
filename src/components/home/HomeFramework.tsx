@@ -82,9 +82,9 @@ function Hero() {
         </div>
 
         {/* Hero — 9/3 asymmetric editorial grid, shared top + bottom baselines */}
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-10">
           {/* LEFT COLUMN — kicker, headline, deck, secondary, designed-for */}
-          <div className="flex flex-col lg:col-span-8">
+          <div className="flex flex-col lg:col-span-7">
             <p className="mb-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
               <Star className="size-3.5 fill-current" />
               One focused morning · IGNITE Center · Coffee&rsquo;s on us
@@ -97,16 +97,16 @@ function Hero() {
               <span className="italic text-[#8B7355]">together, over coffee.</span>
             </h1>
 
-            <p className="mt-8 max-w-xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
               One quiet morning. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you actually build the thing. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
             </p>
 
-            <p className="mt-4 max-w-xl text-base text-[#7A6650]">
+            <p className="mt-3 max-w-xl text-base text-[#7A6650]">
               For nurses, teachers, servers, coders, couples on Main Street &mdash; anyone who&rsquo;s been meaning to start something. Come sit with us. We&rsquo;ll figure it out together.
             </p>
 
             {/* Designed for — closes the left column and balances the right card */}
-            <div className="mt-auto pt-10">
+            <div className="mt-10">
               <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
                 Designed for
               </p>
@@ -120,17 +120,17 @@ function Hero() {
           </div>
 
           {/* RIGHT COLUMN — cup on page (no frame), price card below */}
-          <div className="flex flex-col lg:col-span-4">
+          <div className="flex flex-col lg:col-span-5">
             {/* Coffee cup sits directly on the cream page with animated steam */}
-            <div className="relative mx-auto w-full max-w-[280px] lg:max-w-none">
+            <div className="relative mx-auto -mt-4 w-full max-w-[520px] lg:-mt-8 lg:max-w-none">
               {/* Animated steam wisps */}
               <svg
                 aria-hidden="true"
                 viewBox="0 0 120 90"
-                className="pointer-events-none absolute left-1/2 top-0 h-[28%] w-[46%] -translate-x-1/2 -translate-y-4"
+                className="pointer-events-none absolute left-1/2 top-0 h-[46%] w-[72%] -translate-x-1/2 -translate-y-8"
                 fill="none"
                 stroke="#8B7355"
-                strokeWidth={2.2}
+                strokeWidth={3}
                 strokeLinecap="round"
               >
                 {[
@@ -147,8 +147,8 @@ function Hero() {
                         ? { opacity: 0.35 }
                         : {
                             opacity: [0.15, 0.45, 0.15],
-                            y: [0, -6, 0],
-                            x: [0, i === 1 ? 2 : -2, 0],
+                            y: [0, -10, 0],
+                            x: [0, i === 1 ? 3 : -3, 0],
                           }
                     }
                     transition={
@@ -171,7 +171,7 @@ function Hero() {
                 alt=""
                 width={912}
                 height={1024}
-                className="pointer-events-none relative mx-auto h-auto w-[86%] select-none"
+                className="pointer-events-none relative mx-auto h-auto w-full select-none"
                 draggable={false}
                 initial={{ opacity: 0, y: 8 }}
                 animate={
@@ -187,8 +187,10 @@ function Hero() {
               />
             </div>
 
+
             {/* Price + CTA card — snaps to bottom baseline with the designed-for list */}
-            <div className="mt-8 flex flex-1 flex-col rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] p-7 shadow-[0_20px_60px_-30px_rgba(61,48,37,0.35)]">
+            <div className="mt-6 flex flex-1 flex-col rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] p-7 shadow-[0_20px_60px_-30px_rgba(61,48,37,0.35)]">
+
               <div className="border-b border-[#E4D9C4] pb-5">
                 <div className="flex items-baseline gap-2">
                   <span className="font-serif text-6xl leading-none text-[#3D3025]">
