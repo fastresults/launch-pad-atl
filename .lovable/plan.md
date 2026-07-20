@@ -1,79 +1,82 @@
-## The move
+## What's wrong with the current composition
 
-Right now the home hero is a magazine masthead + big serif headline on the left and a hard rectangular price card on the right. It reads like a newsstand cover, not an invitation. We swap the right column's visual anchor for an artistic coffee cup illustration with a soft ribbon of steam curling up behind the headline, and warm the surrounding copy + composition so the whole section feels like someone pulling out a chair for you.
+Looking at the screenshot against a 20-year editorial designer's eye:
 
-The offer, price, CTA, date, and "Designed for" list all stay — only the visual framing and a few sentences soften.
+1. **Cup is a floating orphan.** It hovers above the price card with a gap. No shared edge, no shared baseline, no frame — it looks pasted in.
+2. **Columns don't share top or bottom baselines.** Left kicker starts higher than the cup's top. Left column ends at the second paragraph; right column keeps going through cup → card → "Designed for" list. The eye has nowhere to rest.
+3. **"Designed for" list dangles.** It sits under the card with no counterpart on the left, so the right column tips heavy and the left tips empty.
+4. **Headline is huge and left-column-only.** A 7xl serif with no visual counterweight next to it creates a lopsided page — the cup can't hold that weight from across a gap.
+5. **Price is buried mid-card.** In award-winning editorial the number is a display element, not a stat inside a paragraph block.
 
-## New hero composition
+## The recomposition
+
+Move to a **9/3 asymmetric editorial layout on a shared grid** — the cup becomes a proper framed editorial illustration that anchors the masthead area, not a decoration on the price card.
 
 ```text
-┌───────────────────────────────────────────────────────────────┐
-│  Issue No. 01 — The Pivot        Pull up a chair (italic)     │
-│  ─────────────────────────────────────────────────────────    │
-│                                                               │
-│   Pull up a chair.                       ~~~   (steam wisps)  │
-│   Let's start your                        ~~                  │
-│   business together.                     ( ☕ )  hand-drawn    │
-│     — over coffee, in one morning         \_/   coffee cup    │
-│                                                               │
-│   [warm invite paragraph, shorter]      $297                  │
-│   [who it's for, plain]                 Reserve your seat →   │
-│                                          Can't make it? ...   │
-│                                                               │
-│  ── 01 live page · 02 priced offer · 03 first outreach ──     │
-│  Aug 20 · Atlanta · 8:45–11:30 · 20 seats                     │
-└───────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│ ISSUE No. 01 — THE PIVOT              Pull up a chair (italic)   │
+│ ══════════════════════════════════════════════════════════════   │
+│                                                                  │
+│  ★ ONE FOCUSED MORNING · IGNITE CENTER · COFFEE'S ON US          │
+│                                                                  │
+│  Pull up a chair.                              ╭──────────╮      │
+│  Let's start your business                     │   ~~~    │      │
+│  — together, over coffee.                      │  ( ☕ )   │      │
+│                                                │   \_/    │      │
+│  One quiet morning. A good cup of coffee.      ╰──────────╯      │
+│  Someone who's done this before, sitting                         │
+│  next to you while you actually build the      $297              │
+│  thing.                                        ─────              │
+│                                                Just one morning. │
+│  For nurses, teachers, servers, coders,        Come as you are.  │
+│  couples on Main Street — anyone who's                           │
+│  been meaning to start something.              [Reserve seat →]  │
+│                                                Can't make it? ...│
+│  Designed for:                                                   │
+│  • Plan-B seekers  • Main Street operators                       │
+│  • AI-displaced pros  • Couples building together                │
+│                                                                  │
+│ ──────────────────────────────────────────────────────────────   │
+│ 01 live page   02 priced offer   03 first outreach sent          │
+│ Thu Aug 20 · Norcross GA · 8:45–11:30 AM · 20 seats              │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-Left column (`lg:col-span-7`) carries the headline + invite copy. Right column (`lg:col-span-5`) becomes a stacked visual: the coffee cup illustration sits on top, the price/CTA card sits softly under it (no hard border — a warmer, rounded cream card with a thin espresso hairline). The cup art overlaps the top edge of the card by ~40px so it feels placed on the table, not stamped into a grid.
+### The specific composition moves
 
-## The coffee cup itself
+**1. Cup becomes a framed editorial mark.** Circular or soft-rounded-square frame, ~260px, thin espresso hairline, cream fill, cup illustration centered inside. Sits **inline with the top of the headline** (not floating above the card). Same top baseline as the headline first line. Steam breathes into the frame's negative space, not the page. Feels intentional — like a New Yorker section mark, not a sticker.
 
-Generate a single artistic hero asset via `imagegen--generate_image` (standard tier), transparent PNG, ~900×1100:
+**2. Grid switches to 9/3 on desktop.** Left column (`lg:col-span-9`) holds everything: kicker, headline, deck paragraph, secondary paragraph, "Designed for" as a compact horizontal 2×2 list. Right column (`lg:col-span-3`) is a single vertical stack: framed cup at top, price + CTA card below sharing the cup's left edge. Both columns snap to the **same top baseline** (kicker row) and **same bottom baseline** (above the promise strip).
 
-- Loose ink-and-watercolor illustration of a ceramic mug of coffee, three-quarter angle, sitting on a barely-suggested saucer.
-- Two or three delicate ribbons of steam curling upward, drawn with the same hand — organic, not symmetric, tapering to nothing.
-- Palette drawn from the marketing surface: espresso `#8B7355`, deep ink `#3D3025`, warm cream `#FAF8F5` highlights, one whisper of `#C9B99A` in the shadow. No purple, no gradient, no photorealism.
-- Feels like a New Yorker spot illustration — confident line, generous negative space, made by a human at the top of their craft.
-- Transparent background so the steam breathes into the cream page.
+**3. Price becomes a display element.** In the card, `$297` is set at the top as a large serif number with a rule under it — like a magazine dept header. The value prop and CTA follow. No more "One-time. No subscription." buried at the top.
 
-Save to `src/assets/hero-coffee.png` (via `.asset.json` pointer if it's over the assets threshold). Import into `HomeFramework.tsx`.
+**4. "Designed for" moves left, becomes horizontal.** Two columns of two items each, small caps kicker, inside the left column near the bottom. Balances the price card weight on the right and closes the left column with an intentional bottom edge.
 
-Motion: fade + gentle 0.6s float on the cup (framer-motion, `y: [0, -4, 0]`, `repeat: Infinity`, `duration: 6`, `ease: "easeInOut"`). Steam gets a very slow opacity shimmer via a second SVG overlay or CSS `@keyframes` — subtle, respects `prefers-reduced-motion`.
+**5. Headline scales back one notch.** From `text-7xl` to `text-6xl` on desktop (`lg:text-6xl` instead of `lg:text-7xl`), and drop the second-line break so the headline reads as three tight lines that don't sprawl the entire column width. This gives the cup room to sit beside it at the same optical weight.
 
-## Copy softens (hero only)
+**6. Card baseline aligns with the "Designed for" block on the left.** Bottom of the CTA card ≈ bottom of the "Designed for" list. That single alignment is what makes the whole thing snap into place.
 
-- **Kicker** (stays small caps, espresso): `One focused morning · IGNITE Center at Greater Atlanta Christian School · Coffee's on us`
-- **Headline** (serif, was "Start your business. Get your first paying customer in two weeks."):
-  > Pull up a chair.  
-  > Let's start your business — *together, over coffee.*
-- **Deck paragraph** (was the "skip the fluff" line):
-  > One quiet morning. A good cup of coffee. Someone who's done this before, sitting next to you while you actually build the thing. You'll leave with a real page, a real price, and your first customer already knowing your name.
-- **Second paragraph** stays warm and plain:
-  > For nurses, teachers, servers, coders, couples on Main Street — anyone who's been meaning to start something. Come sit with us. We'll figure it out together.
-- **Price card sub** softens: "Just one morning. Come as you are." replaces "One-time. No subscription."
-- **CTA** stays "Reserve your seat →" — already right.
+**7. Promise strip (01/02/03) and event meta stay** — they already work as the horizontal foot rule that closes the section.
 
-Everything below the hero (Framework, HonestRoadmap, Facilitator, etc.) is untouched.
+### Motion + illustration stay
 
-## Card + surface warming
+The watercolor cup asset stays as-is (user loved it). Framer-motion float stays but is dialed down to `y: [0, -3, 0]` since the cup now lives inside a frame — subtle. Steam-shimmer via opacity keyframe on the whole cup at ~5% amplitude.
 
-- Right-column card: swap the sharp `border-[#C9B99A] bg-[#F0EBE3]` block for a softer treatment — `rounded-2xl bg-[#FBF7F1] border border-[#E4D9C4] shadow-[0_20px_60px_-30px_rgba(61,48,37,0.25)]`. Same content, gentler container.
-- Section background gets a very faint radial wash behind the cup so the steam has somewhere to breathe: `radial-gradient(ellipse at 78% 30%, rgba(201,185,154,0.18), transparent 60%)` layered on the section.
-- Masthead rule stays; italic tagline updates to `Pull up a chair`.
+### Files touched
 
-## Technical notes
+- `src/components/home/HomeFramework.tsx` — rewrite the `Hero()` function only. No other functions change. No new imports beyond what's already there.
 
-Files touched:
-- `src/components/home/HomeFramework.tsx` — rewrite the `Hero()` function only (~lines 59–183). No other functions in the file change.
-- `src/assets/hero-coffee.png` (+ `.asset.json` if externalized) — new illustration.
-- Optional: small `<style>`-less CSS addition in `src/styles.css` for the steam shimmer keyframe (scoped under `.marketing-surface .hero-steam`).
-
-No route changes, no data changes, no chatbot changes.
+No CSS changes required — everything uses existing Tailwind arbitrary values and the `.marketing-surface` token system.
 
 ## QA before handoff
 
-1. View the rendered hero at 1386px and at 390px — cup must not clip the card or the headline on either.
-2. Confirm the CTA button contrast still passes on the new softer card background.
-3. Confirm `prefers-reduced-motion` disables both the float and the steam shimmer.
-4. Confirm the illustration reads as hand-drawn, not AI-glossy — if it renders too polished, regenerate once with stronger "loose ink, uneven line weight, watercolor bleed" language.
+1. Screenshot the hero at **1440px, 1024px, 768px, 390px**. Confirm:
+   - At every breakpoint, the kicker row and the top of the cup frame share a baseline (±2px).
+   - At every breakpoint, the "Designed for" block bottom and the CTA card bottom share a baseline (±8px).
+2. At 390px, the cup frame stacks above the card as a centered element ≤ 220px wide. The headline drops to `text-5xl`.
+3. Reduced motion disables the float.
+4. CTA button contrast still passes.
+
+## Also
+
+**Resume the Lovable Cloud backend** (`supabase--resume`) — user asked in the same turn.
