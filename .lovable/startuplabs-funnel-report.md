@@ -8,11 +8,11 @@ Edition 3 · For prospective founders considering the Startuplabs Workshop
 
 ## Executive Summary
 
-You didn't download this by accident. Somewhere between the Sunday-night pit in your stomach and the third notebook of ideas you never shipped, you started looking for a way out. This report is written for you.
+You didn't download this by accident. Somewhere between the workweek pit in your stomach and the third notebook of ideas you never shipped, you started looking for a way out. This report is written for you.
 
 It is not a brochure. It is an honest read on why most people who want to start a business never do, why the usual answers — more books, more podcasts, another course, another Slack community — quietly fail the exact people they're sold to, and what actually moves a person from *thinking about it* to *running one*.
 
-By the last page you'll know three things: whether you are the person this workshop is built for, what specifically it does to you over the course of one weekend, and what the honest cost of not doing it looks like a year from now.
+By the last page you'll know three things: whether you are the person this workshop is built for, what specifically it does over one focused workshop cycle, and what the honest cost of not doing it looks like a year from now.
 
 <callout kicker="THE ONE-SENTENCE THESIS">
 Startuplabs turns W-2 lifers and stuck idea-havers into paid founders in one workshop cycle — because we replace research with a room, a deadline, and a coach who has already done it.
@@ -46,7 +46,7 @@ We built the workshop for three specific people. If you're one of them, everythi
 
 You have a good job. That's the problem.
 
-The salary is real. The benefits are real. The 401(k) match is real. And every Sunday around 9 p.m., a very small, very specific dread starts assembling itself behind your ribs, because you can already see the week: the standup, the review cycle, the meeting that could have been a message, the promotion that would trap you harder.
+The salary is real. The benefits are real. The 401(k) match is real. And right before the workweek starts, a very small, very specific dread starts assembling itself behind your ribs, because you can already see the week: the standup, the review cycle, the meeting that could have been a message, the promotion that would trap you harder.
 
 You've done the math more than once. You know exactly how many months of runway you have if you left. You know what you'd cut. You've had the conversation with your partner, or you've rehearsed the conversation with your partner, and both times it ended the same way: *"Not yet. When we know what we're doing, then."*
 
@@ -110,7 +110,7 @@ You have alternatives. You have, in fact, probably tried most of them. Here is a
 
 | | **Content** (books, podcasts, YouTube) | **Community** (Slack, Discord, Twitter) | **Cohort courses** (6–12 wk, async) | **1:1 coaching** ($$$, weekly) | **Startuplabs Workshop** |
 |---|---|---|---|---|---|
-| **Forcing function** — is there a date you *cannot* move? | None | None | Soft | Weekly, easy to skip | **A weekend. It happens whether you're ready or not.** |
+| **Forcing function** — is there a date you *cannot* move? | None | None | Soft | Weekly, easy to skip | **A focused workshop session. It happens whether you're ready or not.** |
 | **Peer pressure** — will other humans notice if you no-show? | None | Low | Low | Just the coach | **A room of adults who paid to be there** |
 | **Coach who has actually done it** | Sometimes | Rarely | Often, at a distance | Yes, but slow | **In the room, in real time** |
 | **Time to first paid customer** | Never, statistically | Rarely | Months, if ever | Months | **Days to weeks** |
@@ -128,13 +128,13 @@ We put them back. That is the entire product.
 
 After a decade of watching people start businesses — and watching many more not start them — the ingredients are boring and short. Four things. If you have all four, you ship. If you're missing even one, you stall.
 
-**1. A room.** Not a Zoom. A physical or fully-present virtual space where you cannot alt-tab away from your own life. The room is not decorative. It is the mechanism. It compresses six months of ambient dabbling into forty-eight hours of undivided attention, because you have nowhere else to be.
+**1. A room.** Not a half-watched replay. A physical or fully-present virtual space where you cannot alt-tab away from your own life. The room is not decorative. It is the mechanism. It compresses six months of ambient dabbling into one focused session, because you have nowhere else to be.
 
-**2. A date.** A specific one. On the calendar. Non-refundable in the ways that matter. The date is what turns *someday* into *before Sunday.* Every founder who has ever shipped anything has, at some point, been rescued by a deadline they didn't choose.
+**2. A date.** A specific one. On the calendar. Non-refundable in the ways that matter. The date is what turns *someday* into *before the session ends.* Every founder who has ever shipped anything has, at some point, been rescued by a deadline they didn't choose.
 
 **3. A coach who has done it.** Not a facilitator with a deck. Not a hype account. A human being who has personally taken a thing from zero to customers, who can look at your specific idea and say *"the thing you're about to spend three weeks on doesn't matter — do this instead,"* and be right. Ninety percent of what a coach saves you is time you would have spent on the wrong thing.
 
-**4. A receipt.** Something you walk out with that proves the weekend happened. Not a certificate. A landing page that's live. An offer that's priced. A first customer, or the exact list of the next twenty conversations that will produce one. A thing that, on Monday morning, makes it impossible to pretend the weekend didn't count.
+**4. A receipt.** Something you walk out with that proves the session happened. Not a certificate. A landing page that's live. An offer that's priced. A first customer, or the exact list of the next twenty conversations that will produce one. A thing that, the next morning, makes it impossible to pretend the work didn't count.
 
 That's the whole recipe. Every hour of the workshop is engineered around delivering all four.
 
@@ -142,37 +142,37 @@ That's the whole recipe. Every hour of the workshop is engineered around deliver
 
 ## 6. Inside the Workshop
 
-Here is what the weekend actually looks like, so you can decide whether you want it before you pay for it.
+Here is what the workshop actually looks like, so you can decide whether you want it before you pay for it.
 
-### Friday evening — Arrival & Positioning
+### Session 1 — Arrival & Positioning
 
 You walk in. There are between twelve and twenty other people. Some of them look more prepared than you. Some of them look less. Within an hour that stops mattering, because everyone in the room has the same problem: they are all here because thinking about it stopped working.
 
-The first session is not a lecture. It is a knife. In ninety minutes we cut your idea — or your three ideas, or your no-idea-yet — down to a single sentence that a stranger can understand and either want or not want. Most people arrive with a paragraph. Most people leave Friday night with a sentence. Some people leave Friday night with a different sentence than the one they came in with, and that is the most valuable thing that will happen to them all year.
+The first session is not a lecture. It is a knife. In ninety minutes we cut your idea — or your three ideas, or your no-idea-yet — down to a single sentence that a stranger can understand and either want or not want. Most people arrive with a paragraph. Most people leave this block with a sentence. Some people leave with a different sentence than the one they came in with, and that is the most valuable thing that will happen to them all year.
 
-### Saturday — Offer, Price, Page
+### Session 2 — Offer, Price, Page
 
 By lunch you have an offer. A real one. A specific thing, for a specific person, at a specific price. Not a business plan. An offer.
 
-By dinner you have a landing page. Not a mockup. A live URL. If you cannot write, we help you write it. If you cannot design, we give you the template. The page is not the point — *shipping the page* is the point. It's the first thing this weekend that a stranger could see.
+By the end of the build block you have a landing page. Not a mockup. A live URL. If you cannot write, we help you write it. If you cannot design, we give you the framework. The page is not the point — *shipping the page* is the point. It's the first thing from the session that a stranger could see.
 
-Between sessions, one-on-one time with the coach. Fifteen minutes each. Enough to catch the specific place your specific idea is about to go wrong, and redirect it before you spend Saturday night on the wrong thing.
+Between working blocks, one-on-one time with the coach. Fifteen minutes each. Enough to catch the specific place your specific idea is about to go wrong, and redirect it before you spend more time on the wrong thing.
 
-### Sunday — Customers
+### Session 3 — Customers
 
-Sunday is not about polish. Sunday is about *the first person who is not your friend*.
+This block is not about polish. It is about *the first person who is not your friend*.
 
-You will reach out to real prospects. From the room. With the coach watching. You will send the message you have been afraid to send for two years, and you will send it in the next twenty minutes, and someone will reply before lunch, and the reply will either be a yes, a no, or a question. All three are wins. All three are more information than you have collected in the entire time you've been thinking about this.
+You will reach out to real prospects. From the room. With the coach watching. You will send the message you have been afraid to send for two years, and you will send it in the next twenty minutes, and the reply will either be a yes, a no, or a question. All three are wins. All three are more information than you have collected in the entire time you've been thinking about this.
 
-By Sunday afternoon, the room splits into three groups: people who have their first paying customer, people who have their first serious conversation with a paying customer, and people who have a validated *no* — which is worth more than the two years they were about to spend building the wrong thing.
+By the final block, the room splits into three groups: people who have their first paying customer, people who have their first serious conversation with a paying customer, and people who have a validated *no* — which is worth more than the two years they were about to spend building the wrong thing.
 
 You leave with a receipt. Live page, priced offer, at minimum one real conversation with a real prospect, and a written plan for the next thirty days that another human being has read and pressure-tested.
 
-### Monday morning
+### The next morning
 
-This is the part nobody talks about, so we will. Monday morning you wake up and the room isn't there. This is the moment 90% of programs fail their students.
+This is the part nobody talks about, so we will. The next morning you wake up and the room isn't there. This is the moment 90% of programs fail their students.
 
-We don't. You get a scheduled check-in on Wednesday. Another the following Monday. A private group of your cohort, moderated. And a coach who is contractually on the hook for your thirty-day plan, not just your weekend.
+We don't. You get scheduled follow-up. A private group of your cohort, moderated. And a coach who is contractually on the hook for your thirty-day plan, not just your workshop session.
 
 The workshop is the ignition. The four weeks after are the drive off the lot.
 
@@ -186,7 +186,7 @@ Here is what each part of Startuplabs actually is, measured against the pain it 
 
 **The free webinar (60 minutes)** — not an ad. A permission slip. By the end, you will know whether the workshop is for you *and* whether you are ready for it. If either answer is no, we say so. We turn away roughly one in four attendees. It is cheaper for both of us than a refund six weeks later.
 
-**The Workshop ($ — one weekend)** — a runway compressor. Whatever you were going to spend the next six months quietly not doing, we do in forty-eight hours, in a room, with a coach, on a deadline. The workshop is priced at roughly what most people spend on business books and courses they don't finish in a year. If you finish it, you will have spent less to ship than you have already spent to not-ship.
+**The Workshop ($ — one focused morning)** — a runway compressor. Whatever you were going to spend the next six months quietly not doing, we start in one focused room, with a coach, on a deadline. The workshop is priced at roughly what most people spend on startup books and courses they don't finish in a year. If you finish it, you will have spent less to ship than you have already spent to not-ship.
 
 **The In-Person Intensive ($$$ — multi-day, small group)** — an identity shift. For founders who are past *should I* and into *how big.* Different room, different problem, different price. Not for everyone reading this. Mentioned here only so you know the ladder exists.
 
@@ -198,20 +198,20 @@ The one you're deciding about is the middle one. That's the one this report is r
 
 We could put logos here. We won't, because logos don't tell you whether the workshop will work on *you.* Scenes do.
 
-**A software engineer, 34, two kids, $210K TC.** Arrived Friday with three ideas and a spreadsheet comparing them. Left Sunday with one offer, one paying beta customer at $500/mo, and a resignation letter he sent the following Friday. Nine months later, replaced his salary. His words about the weekend: *"I stopped negotiating with myself."*
+**A software engineer, 34, two kids, $210K TC.** Arrived with three ideas and a spreadsheet comparing them. Left with one offer, one paying beta customer at $500/mo, and a resignation letter he sent the following week. Nine months later, replaced his salary. His words about the workshop: *"I stopped negotiating with myself."*
 
-**A marketing director, 41, single, senior at a Fortune 500.** Arrived with an idea she'd had since 2021. Left Sunday having killed it — validated *no* — and with a completely different idea, born on Saturday afternoon, that had three signed LOIs by month two. Still at her job, running the side business on nights and weekends, now grossing more from the side than the salary.
+**A marketing director, 41, single, senior at a Fortune 500.** Arrived with an idea she'd had since 2021. Left having killed it — validated *no* — and with a completely different idea, born during the offer block, that had three signed LOIs by month two. Still at her job, running the side startup on nights and off-hours, now grossing more from the side than the salary.
 
-**A married couple, mid-40s, one W-2 and one stay-at-home.** Arrived because *he* wanted to leave the job. Left with *her* running the new business full-time and him keeping the salary as intentional runway. Reframed the whole household plan in one weekend.
+**A married couple, mid-40s, one W-2 and one stay-at-home.** Arrived because *he* wanted to leave the job. Left with *her* running the new startup full-time and him keeping the salary as intentional runway. Reframed the whole household plan in one focused morning.
 
-**A senior content strategist, 47, laid off in a Q1 reorg.** Arrived four months into a job search that was going nowhere — 90+ applications, three interviews, zero offers. Left Sunday with a productized service aimed at exactly the kind of mid-market company that had just let her go, priced at $4,800 per engagement, and two prospects on her calendar for the following Tuesday. She closed the first one at $3,900 within eleven days. Not her old salary — not yet — but her first paid work in six months, and the first week since the layoff that didn't feel like drowning. Her words: *"I stopped applying and started selling. The switch cost one weekend."*
+**A senior content strategist, 47, laid off in a Q1 reorg.** Arrived four months into a job search that was going nowhere — 90+ applications, three interviews, zero offers. Left with a productized service aimed at exactly the kind of mid-market company that had just let her go, priced at $4,800 per engagement, and two prospects on her calendar for the following week. She closed the first one at $3,900 within eleven days. Not her old salary — not yet — but her first paid work in six months, and the first week since the layoff that didn't feel like drowning. Her words: *"I stopped applying and started selling. The switch cost one focused morning."*
 
 We are not going to pretend everyone who walks in walks out with a customer. Most do. Some walk out with a validated *no*, which is the second-best possible outcome and the one nobody sells you on because it's hard to put on a landing page. The worst outcome — and it happens — is a person who leaves with a page and an offer and no conversations yet, and who then, over the following four weeks with the coach, gets there.
 
 The four numbers we track internally, and share with every cohort:
 
 - **% of attendees who leave with a live page and priced offer:** 97%+
-- **% who have at least one real prospect conversation by Sunday 5 p.m.:** 89%+
+- **% who have at least one real prospect conversation by the end of the workshop:** 89%+
 - **% who have first paying customer within 30 days:** 61%+
 - **% who report the workshop was worth the money at 90 days:** 94%+
 
@@ -223,13 +223,13 @@ Read those honestly. The last one is the one that matters. It is measured at a p
 
 Play the tape forward. Same person. Two Mondays.
 
-**The Monday after the workshop.** You wake up in your own bed. The page you built on Saturday is still live. The offer is still priced. The prospect you talked to on Sunday hasn't replied yet, and that is fine, because you know exactly what to do next, and it is on a written plan that another adult has read. You go to your day job. The day job feels different — smaller, and also less scary, because for the first time in years you know you can leave it, and you know approximately when.
+**The workday after the workshop.** You wake up in your own bed. The page you built in the session is still live. The offer is still priced. The prospect you messaged hasn't replied yet, and that is fine, because you know exactly what to do next, and it is on a written plan that another adult has read. You go to your day job. The day job feels different — smaller, and also less scary, because for the first time in years you know you can leave it, and you know approximately when.
 
 **The quarter after.** You have between one and eight paying customers. The page has been rewritten twice, because customers taught you what to write. You have had one bad week where nothing worked and you thought about quitting; you didn't, because the cohort group noticed you'd gone quiet and pinged you. You are still at the job, or you are not, depending on your runway. Either way, the decision is yours, on a timeline, based on numbers.
 
-**The year after.** You are running the business. Full-time, part-time, or as a very serious side thing that is on track to become full-time. You have had at least one month where you made more from the business than the job. You have hired one person, or you have deliberately chosen not to. The Sunday-night dread is gone, because Sundays are now for planning your own week.
+**The year after.** You are running the startup. Full-time, part-time, or as a very serious side thing that is on track to become full-time. You have had at least one month where you made more from the startup than the job. You have hired one person, or you have deliberately chosen not to. The workweek dread is gone, because the week is now yours to plan.
 
-**If you're the AI-displaced reader, the tape looks slightly different.** The Monday after, you stop applying — not forever, but for two weeks — and instead run the plan you built Sunday. The quarter after, you have between one and four paying clients, none of whom are the size of your old employer, and all of whom pay you directly. The year after, you may or may not have replaced your salary in full, but you have replaced the thing underneath the salary: the answer to *"what do you do?"* It is now a sentence you own, not one that someone else's org chart can delete.
+**If you're the AI-displaced reader, the tape looks slightly different.** The next workday, you stop applying — not forever, but for two weeks — and instead run the plan you built in the session. The quarter after, you have between one and four paying clients, none of whom are the size of your old employer, and all of whom pay you directly. The year after, you may or may not have replaced your salary in full, but you have replaced the thing underneath the salary: the answer to *"what do you do?"* It is now a sentence you own, not one that someone else's org chart can delete.
 
 None of this is guaranteed. All of it is what the median outcome looks like for someone who walks in, does the work, and shows up for the four weeks after.
 
@@ -239,11 +239,11 @@ None of this is guaranteed. All of it is what the median outcome looks like for 
 
 Play the same tape forward, but skip the workshop.
 
-**The Monday after this weekend.** You go to work. The idea is still in the doc. The domain is still parked. You read a Twitter thread on the commute about someone who launched something in a weekend and made $10K, and you feel that specific hot-cold feeling that has become your normal.
+**The next workday after this decision.** You go to work. The idea is still in the doc. The domain is still parked. You read a thread on the commute about someone who launched something in one focused sprint and made $10K, and you feel that specific hot-cold feeling that has become your normal.
 
 **The quarter after.** You will have bought two more books. You will have joined one more community. You will have watched between three and seven YouTube breakdowns of businesses very similar to the one you would have started. You will not have talked to a single prospective customer. You know this because you did not talk to a single prospective customer last quarter, either.
 
-**The year after.** The job is still the job. The bonus was good — the bonus is always good, that's the trap. The idea is still the idea, except now you're not sure if it's still valid, because someone else launched something adjacent and you can't tell if that means the market is there or the window has closed. You have had, by now, four separate Sunday nights where you googled *"is it too late to start a business at 40"* and closed the tab.
+**The year after.** The job is still the job. The bonus was good — the bonus is always good, that's the trap. The idea is still the idea, except now you're not sure if it's still valid, because someone else launched something adjacent and you can't tell if that means the market is there or the window has closed. You have had, by now, four separate late nights where you googled *"is it too late to start a business at 40"* and closed the tab.
 
 **If you're the AI-displaced reader, the default is worse, because the default has a timer.** The Monday after, you send eight more applications. The quarter after, you've sent two hundred, taken four interviews, received zero offers, and the runway is now measurably shorter than it was the day you started this report. The year after, one of three things has happened: you took a role at 60–70% of your prior comp doing something you don't respect and can already see being automated again, you drained the runway to zero and are now in the harder version of this same conversation, or you gave up entirely and told yourself a story about *"taking time off."* None of those is a life. All of them are what happens when a market repricing meets a person who kept applying.
 
@@ -261,13 +261,13 @@ Read the one that applies to you. Skip the rest.
 
 **"My idea isn't ready."** Ideas are never ready. Ideas become ready by meeting customers. The workshop is where they meet customers. Waiting for the idea to be ready before the workshop is like waiting to be in shape before joining the gym.
 
-**"I can't take the weekend off."** You can. You have taken worse weekends off for worse reasons. The question is whether this one is worth it. Read §9 and §10 again and answer for yourself.
+**"I can't take a morning off."** You can. You have given mornings to worse things for worse reasons. The question is whether this one is worth it. Read §9 and §10 again and answer for yourself.
 
 **"It's too expensive."** Compare the price to the twelve months of your life you are about to spend not starting. Compare it to one month of the salary you are trying to replace. Compare it to what you have already spent on books, courses, and domains for businesses you never launched. Then decide.
 
 **"What if I don't finish?"** You will. That's the mechanism. You are in a room, with witnesses, on a deadline, with a coach. The workshop is engineered so that not-finishing is harder than finishing. That is the entire design.
 
-**"What if my idea is stupid?"** Then you will find out by Sunday afternoon, from real prospects, instead of finding out in two years from your bank account. Discovering an idea is stupid is one of the most valuable outcomes the weekend produces. It is called a validated no, and it will save you between one and four years of your life.
+**"What if my idea is stupid?"** Then you will find out in the room, from real prospects, instead of finding out in two years from your bank account. Discovering an idea is stupid is one of the most valuable outcomes the workshop produces. It is called a validated no, and it will save you between one and four years of your life.
 
 **"I've tried programs like this before."** You haven't. You've tried cohorts, courses, and communities. Read §4 again. The forcing-function structure of the workshop is not the same product. The reason previous things didn't work is the reason this one does.
 
@@ -281,9 +281,9 @@ Read the one that applies to you. Skip the rest.
 
 **"Can I just do this myself?"** Yes. You have had years to do this yourself. The relevant question is not *can* you. It is *are* you.
 
-**"I'm not an entrepreneur. I just need another job."** Understood. And you may find one. But look honestly at the last four months of your search and ask whether the pattern is likely to change in the next four. The workshop is not a bet against your job search. It is a parallel track that costs one weekend and produces a live offer — so that if the search does not turn around, you have not spent six more months building nothing.
+**"I'm not an entrepreneur. I just need another job."** Understood. And you may find one. But look honestly at the last four months of your search and ask whether the pattern is likely to change in the next four. The workshop is not a bet against your job search. It is a parallel track that costs one focused morning and produces a live offer — so that if the search does not turn around, you have not spent six more months building nothing.
 
-**"I don't have time for this — I need income now."** This is the objection we take most seriously. The workshop is one weekend. The four weeks after are structured to produce a first paying customer, not a business plan. If your runway is three months or less, the honest answer is: this is the fastest legal path we know of from *skilled professional with no offers* to *first invoice sent.* If your runway is under 30 days, tell us on the webinar and we will tell you honestly whether it's still worth it.
+**"I don't have time for this — I need income now."** This is the objection we take most seriously. The workshop is one focused morning. The four weeks after are structured to produce a first paying customer, not a business plan. If your runway is three months or less, the honest answer is: this is the fastest legal path we know of from *skilled professional with no offers* to *first invoice sent.* If your runway is under 30 days, tell us on the webinar and we will tell you honestly whether it's still worth it.
 
 **"AI is going to eat whatever I build too."** Probably some of it. So build the thing AI can't do on its own: the judgment layer, the relationship, the accountability, the *"call this specific human when it matters."* AI is a co-worker now, not a replacement for the person a customer trusts to be responsible when things go wrong. That person is what you are selling. The workshop is where you figure out to whom, for how much, and starting when.
 
@@ -291,7 +291,7 @@ Read the one that applies to you. Skip the rest.
 
 ## 12. The Guarantee, The Room, The Deadline
 
-The guarantee is simple. If by Sunday at 5 p.m. you do not have a live landing page, a priced offer, and at least one real conversation with a prospective customer, we refund the workshop in full. No forms, no argument.
+The guarantee is simple. If by the end of the workshop you do not have a live landing page, a priced offer, and at least one real conversation with a prospective customer, we refund the workshop in full. No forms, no argument.
 
 We have refunded this fewer than five times in the history of the program. Not because we are strict. Because the mechanism works.
 
@@ -338,7 +338,7 @@ The four numbers the funnel is scored on, with green / yellow / red thresholds.
 | Webinar attendee → workshop purchase | ≥ 12% | 7–12% | < 7% |
 | Workshop grad → in-person intensive (T+90d) | ≥ 8% | 4–8% | < 4% |
 
-Secondary quality metrics: NPS at workshop Sunday 5 p.m., NPS at T+90d, refund rate, cohort fill time.
+Secondary quality metrics: NPS at workshop close, NPS at T+90d, refund rate, cohort fill time.
 
 ## Appendix B — Ad Copy Library
 
@@ -346,8 +346,8 @@ Secondary quality metrics: NPS at workshop Sunday 5 p.m., NPS at T+90d, refund r
 > You already know how many months of runway you have.
 > You already know what you'd cut.
 > You already know the conversation you need to have.
-> You do not know how to start on Monday.
-> That's the whole workshop. One weekend. →
+> You do not know how to start tomorrow.
+> That's the whole workshop. One focused morning. →
 
 **Meta / Instagram — Idea Hoarder, primary**
 > You bought the domain in 2023.
@@ -357,7 +357,7 @@ Secondary quality metrics: NPS at workshop Sunday 5 p.m., NPS at T+90d, refund r
 > Come close the doc. →
 
 **X — short**
-> The Sunday-night pit isn't about the job. It's about the version of you that keeps not starting. One weekend fixes that. Not a metaphor.
+> The workweek pit isn't about the job. It's about the version of you that keeps not starting. One focused morning interrupts that. Not a metaphor.
 
 **YouTube pre-roll — 15s**
 > You are five seconds from skipping this. So: you have an idea, you have not shipped it, and you know it isn't because you don't know enough. Come find out what it actually is. Link below.
@@ -407,7 +407,7 @@ Test order matters. Test the biggest lever first.
 2. **Webinar hook** — permission-slip framing (§7) vs. mechanism framing (§5). Sample: 2 cohorts. Winner: higher registrant-to-attendee rate.
 3. **Ad opener** — Cubicle Escapee vs. Idea Hoarder. Sample: 2 weeks per audience. Winner: cheaper webinar registration at equal-or-better attend rate.
 4. **Cart-close cadence** — 5-email (App. C) vs. 7-email compressed. Sample: 2 cohorts. Winner: purchase rate net of unsubscribes.
-5. **Guarantee copy** — "money back if no page, offer, conversation by Sunday 5 p.m." vs. shorter form. Sample: 2 cohorts. Winner: purchase rate, with refund rate as guardrail.
+5. **Guarantee copy** — "money back if no page, offer, conversation by workshop close" vs. shorter form. Sample: 2 cohorts. Winner: purchase rate, with refund rate as guardrail.
 
 Do not test in parallel on the same audience. Do not test copy tweaks under 10% expected lift. Do not run more than one page test per cohort.
 
