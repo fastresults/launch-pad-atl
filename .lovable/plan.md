@@ -1,64 +1,74 @@
-## Goal
+# ICP Profile — Startuplabs
 
-Carry the Pass 1 voice — plain, warm, Plan-B friendly, 6th–8th grade reading level — into the four remaining primary marketing routes so the tone is consistent from home through conversion. Copy only. No layout, price, date, schema, or route changes.
+Ship a single reference document the team can use to guide copy, offers, ads, and disqualification. Written in the same plain-spoken voice we've locked into the site.
 
-## Voice rules (inherited from Pass 1)
+## Deliverable
 
-- **Banned in body copy**: method, framework, operator, cohort, channel, outreach, DTC, SaaS, GTM, pivot (as a noun), ICP, funnel, accelerator, engine, stack, PRD.
-- **Lead words**: plan, morning, day, help, together, side income, your business, your shop, your store, walk out, first customer, first "yes".
-- **"Startup" stays** as the category word (project memory). Refer to what the reader is building as "your business" / "your side income" / "your shop".
-- **"The 14-Day Pivot Method"** may appear once per page, low in the fold, as a product name — never as a verb or as the hook.
-- **Adam** referenced as "Adam" or "our team". No "the operator."
+**File:** `.lovable/icp-profile.md` (internal reference; can be copied to `public/` later if we want a shareable version).
 
-## Route-by-route rewrite
+Length target: ~8–10 pages. Skimmable. Tables where useful, not decorative.
 
-### 1. `/build` — `src/routes/build.tsx`
-- **Eyebrow**: drop "The 14-Day Pivot Method · 8 Working Sessions" → "Eight Saturday mornings · $197 each."
-- **H1**: keep "Your foundation. Live by lunch." (already on-voice.)
-- **Sub**: replace the "Old way / New way … extending The 14-Day Pivot Method" paragraph with a plain-English version — one morning, one piece of your business built with you, walk out with it done. Name the eight pieces in reader words (brand, website, content, sales script, follow-ups) instead of jargon.
-- **Card chip**: "Workshop · $197" stays.
-- **CTA band ("Want it all done for you instead?")**: rewrite to "Rather we just build it?" with warm sub-copy — no "playbook", no "tool stack", no "engines."
+## Structure
 
-### 2. `/build/$slug` — `src/routes/build.$slug.tsx`
-- Rewrite the shared hero blurb, "what you'll walk out with" intro, and closing CTA to match. Keep per-workshop `walkOuts` bullet content (data lives in `src/lib/build-workshops.ts`) but soften any jargon in the surrounding prose. Note: bullet text itself is data — if it reads jargony we flag it, but changing it is a separate content pass on `build-workshops.ts` and out of scope unless you say otherwise.
+**1. One-line ICP (the north star)**
+Who we exist for in a single sentence — the 25–45 W-2 employee in metro Atlanta with an idea and no plan, willing to spend one Saturday and $297 to stop guessing.
 
-### 3. `/services` — `src/routes/services.tsx`
-- Hero, sub-hero, service-tier descriptions, and closing CTA rewritten to the same warm register.
-- Keep "Scale with the same Process that launched you." (user-approved).
-- Swap agency-speak ("engagement", "deliverables", "stack") for "what we build for you", "what you get", "the tools we set up."
+**2. Core demographics (the whole audience)**
+Age, income, geography (Atlanta metro primary, US-wide via Zoom), employment status, education, family stage, tech comfort. Ranges, not fake precision.
 
-### 4. `/schedule` — `src/routes/schedule.tsx`
-- Page intro + any section headings rewritten so a nurse reading on her phone gets it in one pass.
-- **Do not edit** `src/lib/schedule-data.ts` session titles/descriptions in this pass — they're shared with the dashboard and confirmation email. If they need softening we do it as a follow-up so we can eyeball every surface that renders them.
+**3. The four primary personas**
+Each persona gets the same one-page treatment so the team can compare them side-by-side:
 
-### 5. `/contact` — `src/routes/contact.tsx`
-- H1: keep "Get in touch" with gradient (already good).
-- Sub: rewrite "Questions, concerns, or just curious how the program works?" → warmer, e.g. "Not sure which option fits, or just want to talk it through? Send a note — Adam or someone on our team writes back within one business day."
-- Success state copy softened to match.
-- `useDocumentTitle` description: drop "done-with-you build" phrasing → plainer.
+- **A. The Plan-B Seeker** — W-2 employee (nurse, teacher, ops manager, corporate mid-level), 30–45, wants a second income they own. Most common buyer.
+- **B. The AI-Displaced Professional** — 35–55, recently laid off or watching their role erode, has savings + urgency, needs a business not another job hunt.
+- **C. The Main Street Operator** — trades, food, wellness, retail, real estate; already runs something small or is about to; needs foundation not vibes.
+- **D. The Family / Couple Operator** — husband-wife, parent-adult-child, or two friends starting together; wants a shared plan both people understand.
 
-## What doesn't change
+Per persona:
+- Snapshot (age, job, income, life stage, city archetype)
+- What they say out loud (2–3 real quotes)
+- What keeps them up at 11pm (top 3 pains)
+- What they've already tried and why it didn't stick
+- What "success" looks like to them 6 months out
+- The trigger event that makes them buy
+- Which offer they enter through (Foundation workshop / Zoom / done-with-you) and why
+- Objections + the one-line answer
 
-- No component structure, props, routes, prices, dates, form fields, or schema.
-- No changes to `build-workshops.ts`, `schedule-data.ts`, `curriculum-data.ts`, chatbot knowledge, emails, or SEO JSON-LD in this pass.
-- Brand-name policy unchanged.
+**4. Buying triggers (cross-persona)**
+The 5–7 life events that move someone from "thinking about it" to registering: layoff, second baby, spouse income drop, a specific dollar goal, turning 40, a friend's business win, a bad Monday.
 
-## Order of operations (once approved)
+**5. Channels + language**
+Where they already are (Facebook groups, LinkedIn if displaced, Nextdoor, church, local podcasts, Instagram Reels), what words they use for their own problem ("side income," "my own thing," "get out of the rat race" — not "MVP," "GTM," "TAM").
 
-1. `/build` + CTA band
-2. `/build/$slug` shared prose
-3. `/services`
-4. `/schedule` intro
-5. `/contact` + doc title
+**6. Disqualifiers (who this is NOT for)**
+Series A founders, credential collectors, coach-shoppers, anyone who wants us to tell them their idea is great without pressure-testing it. Short list, blunt.
 
-Single build turn, parallel file edits, then a quick preview check on each route.
+**7. Offer-to-persona matrix**
+One table mapping each persona → best entry offer → likely upsell path → price tolerance ceiling.
 
-## Voice check — before / after samples
+**8. How to use this doc**
+Half-page for the team: copy checks, ad targeting, sales-call qualification, when to route to `/build` vs `/services` vs `/one-on-one`.
 
-- Before (`/build` sub): *"Old way: hire a $10k/month agency… extending The 14-Day Pivot Method after your launch."*
-- After: **"One Saturday morning. One piece of your business — your brand, your website, your sales script — built with you and done before lunch. $197 a session. No retainer, no waiting on an agency."**
+## Voice + constraints
 
-- Before (`/contact` sub): *"Questions, concerns, or just curious how the program works? Drop us a note — a real person will reply within 1 business day."*
-- After: **"Not sure which option fits, or just want to talk it through first? Send a note — Adam or someone on our team writes back within one business day."**
+- Plain-spoken, 6th–8th grade reading level. Same voice as the current site sweep.
+- Banned words carry over: method, framework, operator (as a noun in body copy), cohort, funnel, ICP (in copy — we can use it in section headers here since this is an internal doc), GTM, MVP, TAM, pivot (as a noun).
+- Say "your business / side income / shop," never "your thing."
+- Every persona quote must sound like a real human, not a marketing composite.
 
-Say **proceed** and I'll sweep all four routes in one build turn.
+## Source material I'll draw from
+
+- `public/business-case.md` (already-approved voice + $13,900 alone-cost math)
+- `public/adam-funnel-v1.md` (existing archetype thinking: Cubicle Escapee, Idea Hoarder, AI-Displaced)
+- Current live copy: `src/routes/index.tsx`, `HomeFramework.tsx`, `AccessModeDialog.tsx`, `/build`, `/services`
+- Locked pricing: Foundation $297, lower-tier workshops $197, higher tiers $397
+
+## Out of scope for this pass
+
+- No code changes, no route edits, no UI.
+- Not writing new ads or landing pages — this is the source-of-truth doc those get written from later.
+- No PDF export yet (can add after the markdown is approved).
+
+## Open question before I write
+
+Do you want the four personas as I've named them above (Plan-B Seeker / AI-Displaced / Main Street / Family-Couple), or do you want to swap one out — e.g. drop Family-Couple and add "Creator going pro" or "Technical builder who can't sell"? I'll default to the four above if you just say proceed.
