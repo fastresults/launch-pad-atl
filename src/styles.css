@@ -1,6 +1,8 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+
 
 @custom-variant dark (&:is(.dark *));
 
@@ -277,3 +279,109 @@
 .slide-badge,
 .slide-page     { white-space: nowrap; }
 
+
+/* =========================================================
+ * Marketing surface — Warm Sand editorial magazine theme
+ * Scoped via `.marketing-surface`. Applied to public pages
+ * (home, build, services, schedule, contact) without touching
+ * the authenticated app's dark tokens.
+ * Palette: cream #FAF8F5 · sand #F0EBE3 · tan #C9B99A · espresso #8B7355
+ * Type: DM Serif Display headings + Fira Sans body
+ * ========================================================= */
+.marketing-surface {
+  --background: #FAF8F5;
+  --foreground: #3D3025;
+  --card: #FFFFFF;
+  --card-foreground: #3D3025;
+  --popover: #FFFFFF;
+  --popover-foreground: #3D3025;
+  --primary: #8B7355;
+  --primary-foreground: #FAF8F5;
+  --secondary: #F0EBE3;
+  --secondary-foreground: #3D3025;
+  --muted: #F0EBE3;
+  --muted-foreground: #7A6650;
+  --accent: #F0EBE3;
+  --accent-foreground: #3D3025;
+  --destructive: #B4412A;
+  --destructive-foreground: #FAF8F5;
+  --border: #E4D9C4;
+  --input: #C9B99A;
+  --ring: #8B7355;
+
+  background-color: #FAF8F5;
+  color: #3D3025;
+  font-family: 'Fira Sans', system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+}
+
+.marketing-surface :is(h1, h2, h3, h4),
+.marketing-surface .font-serif,
+.marketing-surface .font-editorial {
+  font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  font-style: normal;
+}
+
+/* ---- neutralize hardcoded dark-theme utilities ---- */
+.marketing-surface .text-white,
+.marketing-surface .text-white\/95,
+.marketing-surface .text-white\/90 { color: #3D3025 !important; }
+.marketing-surface .text-white\/80,
+.marketing-surface .text-white\/70 { color: #5C4A38 !important; }
+.marketing-surface .text-white\/60,
+.marketing-surface .text-white\/50,
+.marketing-surface .text-white\/40,
+.marketing-surface .text-white\/30 { color: #8B7355 !important; }
+.marketing-surface .text-black,
+.marketing-surface .text-neutral-900 { color: #3D3025 !important; }
+
+.marketing-surface [class*="border-white/"] { border-color: #E4D9C4 !important; }
+.marketing-surface [class*="border-primary/"] { border-color: #C9B99A !important; }
+.marketing-surface [class*="border-emerald"] { border-color: #4A6741 !important; }
+
+.marketing-surface [class*="bg-white/"] { background-color: #F5F0E5 !important; }
+.marketing-surface [class*="bg-black/"] { background-color: #F0EBE3 !important; }
+.marketing-surface [class*="bg-background/"] { background-color: transparent !important; }
+.marketing-surface [class*="bg-primary/"] { background-color: rgba(139, 115, 85, 0.08) !important; }
+.marketing-surface [class*="bg-emerald"] { background-color: #EEF1E9 !important; }
+
+.marketing-surface .bg-white { background-color: #FFFFFF !important; color: #3D3025 !important; }
+.marketing-surface .bg-black { background-color: #3D3025 !important; color: #FAF8F5 !important; }
+
+/* Kill the hero orange→magenta→violet gradient — use solid espresso on marketing pages */
+.marketing-surface .bg-hero-gradient {
+  background-image: none !important;
+  background-color: #8B7355 !important;
+  color: #FAF8F5 !important;
+}
+.marketing-surface .bg-hero-gradient * { color: inherit; }
+
+/* Kill the gradient-brand text — use italic espresso serif accent instead */
+.marketing-surface .text-gradient-brand {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: currentColor !important;
+  color: #8B7355 !important;
+  font-style: italic;
+}
+
+.marketing-surface .btn-glow,
+.marketing-surface .btn-glow-hero { box-shadow: none !important; }
+.marketing-surface .backdrop-blur,
+.marketing-surface .backdrop-blur-sm,
+.marketing-surface .backdrop-blur-md { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+
+/* Body-copy weight bumps for legibility on cream */
+.marketing-surface p,
+.marketing-surface li { font-weight: 400; }
+
+/* Sticky header on cream — remove the dark glass look */
+.marketing-surface header.sticky {
+  background-color: rgba(250, 248, 245, 0.9) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border-bottom: 1px solid #E4D9C4 !important;
+}

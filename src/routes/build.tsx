@@ -13,23 +13,44 @@ export default function BuildIndexPage() {
     "Come spend one Saturday morning with us and walk out with one piece of your business done — your brand, your site, your follow-ups. Sessions from $197."
   );
   return (
-    <div className="min-h-screen">
+    <div className="marketing-surface min-h-screen">
       <SiteHeader />
 
-      <section className="border-b border-white/5 py-16 md:py-24">
-        <div className="mx-auto max-w-4xl px-6 text-center">
-          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-            <Sparkles className="size-3.5" /> Eight Saturday mornings · from $197
-          </p>
-          <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
-            Your foundation.{" "}
-            <span className="text-gradient-brand">Live by lunch.</span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            One Saturday morning. One piece of your business — your brand, your website, the words you use to sell, the emails that follow up, the tools that keep it running — built with you and done before lunch. No retainer. No waiting on an agency. Show up with your idea, walk out with the piece in your hands.
-          </p>
+      <section className="border-b border-[#E4D9C4]">
+        <div className="mx-auto max-w-6xl px-6 py-10 md:py-14">
+          <div className="mb-10 flex flex-col gap-2 border-b border-[#C9B99A] pb-4 md:flex-row md:items-end md:justify-between">
+            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
+              Issue No. 02 &mdash; The Workshops
+            </div>
+            <div className="font-serif text-sm italic text-[#8B7355]">
+              Eight Saturday mornings · from $197
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
+            <div className="lg:col-span-8">
+              <h1 className="font-serif text-5xl leading-[1.05] text-[#3D3025] md:text-6xl lg:text-7xl">
+                Your foundation. <span className="italic text-[#8B7355]">Live by lunch.</span>
+              </h1>
+              <p className="mt-8 max-w-xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
+                One Saturday morning. One piece of your business &mdash; your brand, your website, the words you use to sell, the emails that follow up, the tools that keep it running &mdash; built with you and done before lunch. No retainer. No waiting on an agency.
+              </p>
+            </div>
+            <div className="lg:col-span-4">
+              <div className="border border-[#C9B99A] bg-[#F0EBE3] p-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355]">
+                  How it goes
+                </p>
+                <ul className="mt-4 space-y-3 text-sm text-[#3D3025]">
+                  <li>&bull; Show up with your idea</li>
+                  <li>&bull; We build the piece together</li>
+                  <li>&bull; You walk out with it done</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
+
 
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-6">
