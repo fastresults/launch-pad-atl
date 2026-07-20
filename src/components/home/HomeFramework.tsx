@@ -108,10 +108,10 @@ function Hero() {
 
               <div className="mb-8">
                 <div className="text-xl font-medium leading-snug text-[#3D3025]">
-                  Just one focused morning to get the wheels turning.
+                  Just one focused morning &mdash; and your startup is actually built.
                 </div>
                 <p className="mt-4 text-sm leading-relaxed text-[#5C4A38]">
-                  No complicated dashboards. No homework you'll never do. A plain-spoken roadmap to your first dollar &mdash; done together, in the room at the IGNITE Center, Greater Atlanta Christian School.
+                  No complicated dashboards. No homework you'll never do. You walk in with an idea and leave with a live page, a priced offer, and your first outreach going out &mdash; built with you, in the room at the IGNITE Center, Greater Atlanta Christian School.
                 </p>
               </div>
 
