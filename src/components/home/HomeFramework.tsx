@@ -264,26 +264,26 @@ function Framework() {
 
 function HonestRoadmap() {
   const included = [
-    "What you're selling and what to charge for it — a price you can actually say out loud",
-    "The exact person you'll sell to first — real name, not 'my target market'",
-    "The one place you'll go find them this week — and the first message going out that day",
-    "A simple 90-day plan from your first dollar to steady side income",
-    "A seat in a small room with Adam — the guy who's actually done this, not a stand-in",
-    "Coffee, snacks, and a room full of people building the same kind of business you are",
+    "A live page at your domain — real URL, not a mockup, up before lunch",
+    "A priced offer wired to take real money — with your first customer named on it",
+    "The first outreach message sent from the room — to a real prospect, from your real inbox",
+    "Your business bank + Stripe hooked up so revenue can actually land",
+    "A seat next to Adam — the operator who's actually done this, building it with you",
+    "Coffee, snacks, and a room full of people building the same kind of startup you are",
   ];
 
   return (
     <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          Here's the honest plan
+          Here's the honest promise
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
           Two weeks to your first dollar.{" "}
-          <span className="text-gradient-brand">A real business by month two.</span>
+          <span className="text-gradient-brand">A real startup by month two.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we help you name your first customer, price what you're selling, and get the first "yes" going out that week. Everything pretty comes after the money starts.
+          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we actually build your page, price the offer, and send the first message — from the room, to a real person. Everything pretty comes after the money starts.
         </p>
 
 
