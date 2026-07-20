@@ -80,7 +80,7 @@ export function AccessModeDialog({
         <DialogHeader>
           <DialogTitle className="font-serif text-3xl">Three ways to do this with us.</DialogTitle>
           <DialogDescription>
-            Same plan. Same two weeks to your first customer. Pick the one that fits your life — come to Atlanta, hop on Zoom, or let us build it for you.
+            Same real build. Same two weeks to your first customer. Pick the one that fits your life — come to Atlanta, hop on Zoom, or let us build it for you.
           </DialogDescription>
         </DialogHeader>
 

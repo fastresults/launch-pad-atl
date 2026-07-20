@@ -7,10 +7,10 @@ import { AccessModeDialog } from "@/components/home/AccessModeDialog";
 import { useDocumentTitle } from "@/lib/use-document-title";
 
 const HIGHLIGHTS = [
-  "One live morning inside The 14-Day Pivot Method — offer priced, first customer named, first channel open",
-  "Fourteen days to first revenue — the same done-with-you method we run in the room, over video",
-  "Small cohort so the method gets applied to your startup, not a Zoom crowd",
-  "Recording plus the assets that back the plan — yours to keep",
+  "One live morning where we actually build it with you — live page up, offer priced, first outreach sent from your inbox",
+  "Fourteen days to first revenue — real messages to real prospects, not another course to finish",
+  "Small cohort so the build happens on your startup, not a Zoom crowd",
+  "Recording plus every real asset built in the session — page, offer, message templates — yours to keep",
 ];
 
 const WEBINAR_JSON_LD = {
@@ -61,10 +61,9 @@ export default function WebinarPage() {
               <span className="text-gradient-brand">First paying customer in two weeks.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-              The same method, run live over video in a small cohort —
-              the done-with-you playbook replacing accelerators, courses, and raw AI.
-              One focused morning of the Pivot Method. You leave with your offer priced, your
-              first customer named, your first channel open, and outreach going out
+              The same real build, run live over video in a small cohort —
+              done-with-you, not done-to-you or done-alone.
+              One focused morning where we actually build your startup: your page goes live, your offer gets priced, and your first outreach goes out from your inbox
               that afternoon.
             </p>
 
