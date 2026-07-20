@@ -40,7 +40,7 @@ export function HomeFramework() {
   });
   const showScroller = settings?.show_business_ideas_scroller !== false;
   return (
-    <div className="min-h-screen">
+    <div className="marketing-surface min-h-screen">
       <SiteHeader />
       <Hero />
       <VideoTestimonials />
@@ -60,107 +60,128 @@ function Hero() {
   const EVENT = useEvent();
   const [modesOpen, setModesOpen] = useState(false);
   return (
-    <section className="relative overflow-hidden">
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${heroBg})` }}
-      />
-      <div className="absolute inset-0 bg-background/65" />
-      <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-24 lg:py-32">
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_auto]">
-          <div>
-        <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white md:text-sm md:tracking-[0.2em]">
-
-          <Star className="size-3.5 fill-current" /> One Saturday morning · Aug 19 · Atlanta · Coffee on us
-        </p>
-
-
-        <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-7xl">
-          Start your business.{" "}
-          <span className="text-gradient-brand">Get your first paying customer in two weeks.</span>
-        </h1>
-
-        {/* Old way / New way — the epiphany beat */}
-        <div className="mt-6 grid max-w-2xl gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-white/10 bg-black/25 p-4 backdrop-blur">
-            <div className="text-[10px] uppercase tracking-[0.22em] text-white/50">The usual path</div>
-            <p className="mt-1.5 text-sm leading-snug text-white/80">
-              A year of courses. A pile of tabs. Never actually starting.
-            </p>
+    <section className="border-b border-[#E4D9C4]">
+      <div className="mx-auto max-w-6xl px-6 py-10 md:py-14">
+        {/* Magazine masthead */}
+        <div className="mb-10 flex flex-col gap-2 border-b border-[#C9B99A] pb-4 md:flex-row md:items-end md:justify-between">
+          <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
+            Issue No. 01 &mdash; The Pivot
           </div>
-          <div className="rounded-xl border border-primary/40 bg-gradient-to-br from-primary/20 to-primary/5 p-4 backdrop-blur">
-            <div className="text-[10px] uppercase tracking-[0.22em] text-primary">Our way</div>
-            <p className="mt-1.5 text-sm leading-snug text-white">
-              One morning with us. A real plan. Money in your account in two weeks.
-            </p>
+          <div className="font-serif text-sm italic text-[#8B7355]">
+            A neighborly guide for the new operator
           </div>
         </div>
 
-        <p className="mt-5 max-w-2xl text-base text-white/90 md:mt-6 md:text-lg">
-          Come spend one morning with us. We'll help you build the business you've been talking about — your side income, your shop, your online store — and walk you out with a plan you can actually run. Not a course. Not homework you'll never do. We sit down and do it <span className="font-medium text-white">with</span> you, in the room, for {WORKSHOP_PRICE_LABEL}.
-        </p>
+        {/* Hero — 8/4 magazine split */}
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
+          <div className="lg:col-span-8">
+            <p className="mb-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
+              <Star className="size-3.5 fill-current" />
+              One Saturday morning · {EVENT.venueCity} · Coffee on us
+            </p>
 
+            <h1 className="font-serif text-5xl leading-[1.05] text-[#3D3025] md:text-6xl lg:text-7xl">
+              Start your business. Get your first paying customer in{" "}
+              <span className="italic text-[#8B7355]">two weeks.</span>
+            </h1>
 
-        <p className="mt-4 max-w-2xl text-sm text-white/80 md:text-base">
-          For nurses, teachers, servers, coders, and everyone in between who's ready for a Plan B.
-        </p>
+            <p className="mt-8 max-w-xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
+              The {WORKSHOP_PRICE_LABEL} morning that gets you off the couch and into a real business. For W-2 employees ready for a Plan B, professionals whose jobs are changing under them, and couples building on Main Street. We skip the fluff and go straight to revenue.
+            </p>
 
+            <p className="mt-4 max-w-xl text-base text-[#7A6650]">
+              For nurses, teachers, servers, coders, and everyone in between. Come on down &mdash; we'll help you figure it out in one morning.
+            </p>
+          </div>
 
+          {/* Right column — price + commitment card */}
+          <div className="flex flex-col justify-between lg:col-span-4">
+            <div className="border border-[#C9B99A] bg-[#F0EBE3] p-8">
+              <div className="mb-6">
+                <span className="font-serif text-5xl text-[#3D3025]">
+                  {WORKSHOP_PRICE_LABEL}
+                </span>
+                <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.18em] text-[#8B7355]">
+                  One-time. No subscription.
+                </span>
+              </div>
 
+              <div className="mb-8">
+                <div className="text-xl font-medium leading-snug text-[#3D3025]">
+                  Just one Saturday morning to get the wheels turning.
+                </div>
+                <p className="mt-4 text-sm leading-relaxed text-[#5C4A38]">
+                  No complicated dashboards. No homework you'll never do. A plain-spoken roadmap to your first dollar &mdash; done together, in the room.
+                </p>
+              </div>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 md:mt-10">
-          <Link
-            to="/register"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
-          >
-            Reserve your seat — {WORKSHOP_PRICE_LABEL} <ArrowRight className="size-4" />
-          </Link>
-          <button
-            type="button"
-            onClick={() => setModesOpen(true)}
-            className="text-sm text-white/80 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white hover:decoration-white sm:text-base"
-          >
-            Can't make it to Atlanta? See the other two ways.
-          </button>
+              <Link
+                to="/register"
+                className="flex w-full items-center justify-center gap-2 bg-[#8B7355] px-6 py-4 text-base font-semibold text-[#FAF8F5] transition-colors hover:bg-[#6E5B42]"
+              >
+                Reserve your seat <ArrowRight className="size-4" />
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => setModesOpen(true)}
+                className="mt-3 block w-full text-center text-sm text-[#8B7355] underline decoration-[#C9B99A] decoration-2 underline-offset-4 transition-colors hover:text-[#3D3025]"
+              >
+                Can't make it? See the other two ways.
+              </button>
+            </div>
+
+            {/* Sidebar — who this is for */}
+            <div className="mt-8 hidden border-t border-[#C9B99A] pt-8 lg:block">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355]">
+                Designed for
+              </p>
+              <ul className="space-y-1.5 text-sm text-[#3D3025]">
+                <li>&bull; Plan-B seekers ready to stop guessing</li>
+                <li>&bull; Professionals whose jobs are changing under them</li>
+                <li>&bull; Main Street operators &mdash; shops, trades, salons, cafés</li>
+                <li>&bull; Families and couples building together</li>
+              </ul>
+            </div>
+          </div>
         </div>
+
         <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
 
-        <p className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-white/70 md:text-sm">
-          <span>Made in Atlanta</span>
-          <span aria-hidden>·</span>
-          <span>Everyday people welcome</span>
-          <span aria-hidden>·</span>
-          <span>Coffee on us</span>
-          <span aria-hidden>·</span>
-          <span>We stick around after</span>
-        </p>
-        <p className="mt-2 max-w-2xl text-xs text-white/60 md:text-sm">
-          Two rooms in one — one for local shops, cafés, salons, trades, and neighborhood services; one for online stores, side brands, and creators. Pick the room that fits what you're building. Not sure yet? Come anyway — we'll help you figure it out.
-        </p>
+        {/* Magazine footnote — 3 promises */}
+        <div className="mt-16 grid grid-cols-1 gap-8 border-t border-[#C9B99A] pt-8 md:grid-cols-3">
+          <div className="flex flex-col">
+            <span className="font-serif text-3xl text-[#8B7355]">01</span>
+            <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
+              <strong className="font-semibold">Name your first real customer.</strong> Not "my target market." A real person, by name.
+            </p>
+          </div>
+          <div className="flex flex-col">
+            <span className="font-serif text-3xl text-[#8B7355]">02</span>
+            <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
+              <strong className="font-semibold">Set a price you can say out loud.</strong> Build a minimum offer before Saturday lunch.
+            </p>
+          </div>
+          <div className="flex flex-col">
+            <span className="font-serif text-3xl text-[#8B7355]">03</span>
+            <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
+              <strong className="font-semibold">Land your first "yes" in 14 days.</strong> Money in your account &mdash; not a course completion certificate.
+            </p>
+          </div>
+        </div>
 
-        <div className="mt-10 grid max-w-3xl grid-cols-1 gap-3 text-white/90 sm:grid-cols-2 lg:grid-cols-4 md:mt-12 md:gap-4">
-
+        {/* Event meta strip */}
+        <div className="mt-10 grid grid-cols-1 gap-3 text-sm text-[#5C4A38] sm:grid-cols-2 lg:grid-cols-4">
           <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
           <Meta icon={<MapPin className="size-4" />} label={`${EVENT.venueCity}, ${EVENT.venueRegion}`} />
           <Meta icon={<Clock className="size-4" />} label="8:45–11:30 AM · Coffee included" />
           <Meta icon={<Users className="size-4" />} label="Just 20 seats" />
-
-        </div>
-          </div>
-          <div className="hidden lg:flex justify-center">
-            <img
-              src={atlSeal}
-              alt="ATL Founder-Friendly Accelerator seal"
-              loading="eager"
-              decoding="async"
-              className="w-[340px] xl:w-[400px] opacity-30 drop-shadow-[0_8px_30px_rgba(0,0,0,0.45)]"
-            />
-          </div>
         </div>
       </div>
     </section>
   );
 }
+
 
 
 function Meta({ icon, label }: { icon: React.ReactNode; label: string }) {
