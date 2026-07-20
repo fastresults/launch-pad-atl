@@ -21,7 +21,7 @@ export default function ServicesPage() {
     "Once you've launched, our team keeps building — brand, website, content, and everything that brings customers in. Same crew, done for you."
   );
   return (
-    <div className="min-h-screen">
+    <div className="marketing-surface min-h-screen">
       <SiteHeader />
       <Tracks />
       <Process />
@@ -33,6 +33,7 @@ export default function ServicesPage() {
     </div>
   );
 }
+
 
 
 
