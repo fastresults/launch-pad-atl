@@ -1,24 +1,46 @@
-# Hero rebalance v3
+# Hero Redesign — Editorial Balance, Take 3
 
-## Moves (Hero in `src/components/home/HomeFramework.tsx`)
+## What's wrong with the current hero (honest critique)
 
-**Shrink the right column by ~30%**
-- Grid: `lg:col-span-6 / lg:col-span-6` → `lg:col-span-8 / lg:col-span-4`.
-- Card `max-w-[520px]` → `max-w-[360px]` (~30% narrower).
-- Cup width `280px / lg:320px` → `200px / lg:224px` so it stays proportional to the narrower card; steam scales with it.
-- Card negative-top translate reduced to match smaller cup (`-translate-y-20 lg:-translate-y-24`); card top padding reduced to `pt-24 lg:pt-28`.
+Looking at the screenshot as a hero designer would in a crit:
 
-**Move the pull quote from left → right, below the CTA/fine-print**
-- Delete the `<figure>` block from the left column.
-- Add it directly below the price card in the right column (outside the card, in the same column flex), so the reading order on the right is: cup → $297 → deck → Reserve → "Can't make it?" → quote.
-- Quote styling stays: italic serif, `#8B7355`, left hairline (`border-l-2 border-[#C9B99A] pl-5`), Adam Anderson cap-attribution.
-- Constrain quote to card width so the right column reads as one aligned stack.
+1. **The pull quote is stranded.** It sits ~600px below the "Designed for" list in the left column with nothing beside it — the right column ended at the price card, so the quote hangs in a sea of empty cream. That's not "asymmetric editorial," that's an orphan.
+2. **Two disconnected objects on the right.** The cup floats above a rectangle that floats above a quote. Three stacked islands, no shared spine. A proper editorial right rail is *one* composed column.
+3. **The cup broke the card's top edge, which read as an accident, not intent.** Without a frame or ground line, the cup looks like a sticker slapped on a receipt.
+4. **The vertical quote (one word per line) below the fold** is a symptom, not the cause — it's what happens when a `border-l` blockquote gets squeezed into a 4-col rail. It reads as broken layout, not typography.
+5. **The masthead steam wisp bleeds into the nav** — a nice idea executed in the wrong z-layer.
+6. **Left column ends abruptly at "Designed for"** with no visual weight to counter the price card's mass on the right. The composition tips right.
+7. **Two competing focal points at the same altitude** (headline + cup) with no connective tissue (no rule, no ground shadow, no aligned baseline). The eye ping-pongs.
 
-**Rebalance the left column**
-- With the quote gone, the left column ends on the "Designed for" grid. Push it to a shared bottom baseline with `mt-auto` on the "Designed for" wrapper so the four bullet items align with the bottom of the right-column quote.
-- Keep the deck + secondary paragraphs at their current spacing; the extra breathing room now reads as intentional editorial air (larger headline column) rather than an empty band, because the bottom baselines match.
+## What "right" looks like
 
-## Guardrails
-- No copy changes.
-- No palette changes.
-- Verify at 1386 and 1851 CSS widths: right column is visibly ~30% narrower; quote lives under the CTA; both columns end within ~24px of each other.
+One composed left column that closes cleanly. One composed right column that reads as a single object (cup → price → CTA → quote, top to bottom, on a shared spine). Both columns land on the same bottom baseline. No orphaned elements below the fold.
+
+## The plan
+
+### Left column (7/12)
+- Kicker, H1, deck, secondary paragraph — unchanged.
+- **Move the Adam Anderson pull quote here**, rendered horizontally as a proper editorial callout under the deck (not one-word-per-line). Serif italic, ~20px, 2 lines max, hairline rule above, small caps attribution below.
+- **"Designed for" list stays as the closer** — pushed to `mt-auto` so it anchors the bottom baseline.
+- Result: left column has 4 stacked blocks (kicker → H1+deck → pull quote → designed-for) with real visual weight top to bottom.
+
+### Right column (5/12) — one composed object
+- **Cup sits *above* the card as an integrated cameo**, but with a soft radial cream vignette behind it so it reads as intentional, not floating. Ground it with a very subtle drop shadow beneath the saucer.
+- Steam animation kept, but constrained inside the cameo zone (fix z-index so it never crosses the header).
+- Price card: `$297` display, "Just one morning" caption, one-line promise, primary CTA, secondary link. **Nothing else.**
+- Remove the below-card quote entirely (it moves to the left column).
+- Card gets a warmer treatment: no hard shadow, cream fill on cream page separated only by a hairline + generous internal padding — very Kinfolk/Cereal magazine.
+
+### Shared structure
+- Grid: `lg:grid-cols-12`, left `col-span-7`, right `col-span-5`.
+- Both columns `flex flex-col` with the closing element on `mt-auto` → shared bottom baseline, no dead air.
+- Reduce section vertical padding from `py-14` to `py-10` on desktop; the composition should feel like a magazine spread, not a landing page with cushion.
+- Fix masthead steam clipping by giving the hero `isolate` and lowering the steam SVG z-index below the sticky header.
+
+### Copy — unchanged
+All existing copy stays verbatim per the brief. This is purely a compositional and typographic fix.
+
+## Files touched
+- `src/components/home/HomeFramework.tsx` — `Hero()` function only.
+
+Nothing else changes.

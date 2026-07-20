@@ -64,15 +64,15 @@ function Hero() {
   const reduceMotion = useReducedMotion();
   return (
     <section
-      className="relative overflow-hidden border-b border-[#E4D9C4]"
+      className="relative isolate overflow-hidden border-b border-[#E4D9C4]"
       style={{
         backgroundImage:
           "radial-gradient(ellipse at 88% 22%, rgba(201,185,154,0.20), transparent 60%)",
       }}
     >
-      <div className="mx-auto max-w-6xl px-6 py-10 md:py-14">
+      <div className="mx-auto max-w-6xl px-6 py-10 md:py-12">
         {/* Magazine masthead */}
-        <div className="mb-6 flex flex-col gap-2 border-b border-[#C9B99A] pb-4 md:flex-row md:items-end md:justify-between">
+        <div className="mb-8 flex flex-col gap-2 border-b border-[#C9B99A] pb-4 md:flex-row md:items-end md:justify-between">
           <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
             Issue No. 01 &mdash; The Pivot
           </div>
@@ -81,10 +81,10 @@ function Hero() {
           </div>
         </div>
 
-        {/* Hero — 6/6 symmetric editorial grid, shared bottom baseline */}
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
-          {/* LEFT COLUMN — kicker, headline, deck, designed-for, pull quote */}
-          <div className="flex flex-col lg:col-span-8">
+        {/* Hero — 7/5 editorial grid, shared bottom baseline */}
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
+          {/* LEFT COLUMN — kicker, headline, deck, pull quote, designed-for */}
+          <div className="flex flex-col lg:col-span-7">
             <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
               <Star className="size-3.5 fill-current" />
               One focused morning · IGNITE Center · Coffee&rsquo;s on us
@@ -105,6 +105,16 @@ function Hero() {
               For nurses, teachers, servers, coders, couples on Main Street &mdash; anyone who&rsquo;s been meaning to start something. Come sit with us. We&rsquo;ll figure it out together.
             </p>
 
+            {/* Editorial pull quote — horizontal callout */}
+            <figure className="mt-8 max-w-xl border-t border-[#C9B99A] pt-5">
+              <blockquote className="font-serif text-xl italic leading-snug text-[#8B7355] md:text-2xl">
+                &ldquo;You don&rsquo;t need another course. You need one morning and someone who&rsquo;s built this before.&rdquo;
+              </blockquote>
+              <figcaption className="mt-3 text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
+                &mdash; Adam Anderson
+              </figcaption>
+            </figure>
+
             {/* Designed for — anchors the bottom of the left column */}
             <div className="mt-auto pt-10">
               <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
@@ -119,87 +129,82 @@ function Hero() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN — narrower composed object: cup+card, then quote */}
-          <div className="flex flex-col lg:col-span-4">
-            <div className="relative mx-auto flex w-full max-w-[360px] flex-col rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] px-6 pb-6 pt-24 shadow-[0_20px_60px_-30px_rgba(61,48,37,0.35)] lg:pt-28">
-              {/* Cup + steam — breaks the top edge of the card */}
-              <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 -translate-y-20 lg:-translate-y-24">
-                <div className="relative mx-auto w-[200px] lg:w-[224px]">
-
-                  {/* Animated steam wisps rising from the cup */}
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 120 90"
-                    className="pointer-events-none absolute left-1/2 top-0 h-[48%] w-[64%] -translate-x-1/2 -translate-y-6"
-                    fill="none"
-                    stroke="#8B7355"
-                    strokeWidth={3}
-                    strokeLinecap="round"
-                  >
-                    {[
-                      { d: "M40 82 C 32 62, 52 52, 40 32 C 32 18, 46 8, 40 0", delay: 0 },
-                      { d: "M60 82 C 52 60, 72 50, 60 30 C 52 16, 66 6, 60 0", delay: 0.9 },
-                      { d: "M80 82 C 72 62, 92 52, 80 32 C 72 18, 86 8, 80 0", delay: 1.7 },
-                    ].map((w, i) => (
-                      <motion.path
-                        key={i}
-                        d={w.d}
-                        initial={{ opacity: 0.2, y: 0, x: 0 }}
-                        animate={
-                          reduceMotion
-                            ? { opacity: 0.35 }
-                            : {
-                                opacity: [0.15, 0.45, 0.15],
-                                y: [0, -10, 0],
-                                x: [0, i === 1 ? 3 : -3, 0],
-                              }
-                        }
-                        transition={
-                          reduceMotion
-                            ? { duration: 0.5 }
-                            : {
-                                duration: 4.5,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                                delay: w.delay,
-                              }
-                        }
-                        style={{ filter: "blur(0.6px)" }}
-                      />
-                    ))}
-                  </svg>
-
-                  <motion.img
-                    src={heroCoffee}
-                    alt=""
-                    width={912}
-                    height={1024}
-                    className="pointer-events-none relative mx-auto h-auto w-full select-none"
-                    draggable={false}
-                    initial={{ opacity: 0, y: 8 }}
+          {/* RIGHT COLUMN — one composed object: cameo cup + price card */}
+          <div className="flex flex-col lg:col-span-5">
+            {/* Cameo — cup grounded in a soft cream vignette */}
+            <div
+              className="relative mx-auto flex w-full max-w-[380px] items-end justify-center"
+              style={{
+                height: 260,
+                backgroundImage:
+                  "radial-gradient(ellipse at 50% 62%, rgba(201,185,154,0.28), transparent 65%)",
+              }}
+            >
+              {/* Steam wisps — scoped inside the cameo, below header */}
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 120 90"
+                className="pointer-events-none absolute left-1/2 top-2 z-0 h-[52%] w-[52%] -translate-x-1/2"
+                fill="none"
+                stroke="#8B7355"
+                strokeWidth={3}
+                strokeLinecap="round"
+              >
+                {[
+                  { d: "M40 82 C 32 62, 52 52, 40 32 C 32 18, 46 8, 40 0", delay: 0 },
+                  { d: "M60 82 C 52 60, 72 50, 60 30 C 52 16, 66 6, 60 0", delay: 0.9 },
+                  { d: "M80 82 C 72 62, 92 52, 80 32 C 72 18, 86 8, 80 0", delay: 1.7 },
+                ].map((w, i) => (
+                  <motion.path
+                    key={i}
+                    d={w.d}
+                    initial={{ opacity: 0.2 }}
                     animate={
                       reduceMotion
-                        ? { opacity: 1, y: 0 }
-                        : { opacity: 1, y: [0, -3, 0] }
+                        ? { opacity: 0.35 }
+                        : {
+                            opacity: [0.15, 0.45, 0.15],
+                            y: [0, -10, 0],
+                            x: [0, i === 1 ? 3 : -3, 0],
+                          }
                     }
                     transition={
                       reduceMotion
                         ? { duration: 0.5 }
-                        : { opacity: { duration: 0.6 }, y: { duration: 6, repeat: Infinity, ease: "easeInOut" } }
+                        : { duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: w.delay }
                     }
+                    style={{ filter: "blur(0.6px)" }}
                   />
-                </div>
-              </div>
+                ))}
+              </svg>
 
-              {/* Hairline separator between cup zone and offer zone */}
-              <div className="mb-5 border-t border-[#E4D9C4]" />
+              <motion.img
+                src={heroCoffee}
+                alt=""
+                width={912}
+                height={1024}
+                className="relative z-10 mx-auto h-[240px] w-auto select-none drop-shadow-[0_18px_18px_rgba(61,48,37,0.18)]"
+                draggable={false}
+                initial={{ opacity: 0, y: 8 }}
+                animate={
+                  reduceMotion
+                    ? { opacity: 1, y: 0 }
+                    : { opacity: 1, y: [0, -3, 0] }
+                }
+                transition={
+                  reduceMotion
+                    ? { duration: 0.5 }
+                    : { opacity: { duration: 0.6 }, y: { duration: 6, repeat: Infinity, ease: "easeInOut" } }
+                }
+              />
+            </div>
 
+            {/* Price card — cream on cream, hairline only, no shadow */}
+            <div className="mx-auto mt-2 w-full max-w-[380px] rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] px-7 py-7">
               <div className="border-b border-[#E4D9C4] pb-5">
-                <div className="flex items-baseline gap-2">
-                  <span className="font-serif text-6xl leading-none text-[#3D3025]">
-                    {WORKSHOP_PRICE_LABEL}
-                  </span>
-                </div>
+                <span className="font-serif text-6xl leading-none text-[#3D3025]">
+                  {WORKSHOP_PRICE_LABEL}
+                </span>
                 <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#8B7355]">
                   Just one morning. Come as you are.
                 </p>
@@ -224,20 +229,11 @@ function Hero() {
                 Can&rsquo;t make it? See the other two ways.
               </button>
             </div>
-            </div>
 
-            {/* Closing pull quote — sits under the card, aligned to card width */}
-            <figure className="mx-auto mt-8 w-full max-w-[360px] border-l-2 border-[#C9B99A] pl-5">
-              <blockquote className="font-serif text-lg italic leading-snug text-[#8B7355] md:text-xl">
-                &ldquo;You don&rsquo;t need another course. You need one morning and someone who&rsquo;s built this before.&rdquo;
-              </blockquote>
-              <figcaption className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355]">
-                &mdash; Adam Anderson
-              </figcaption>
-            </figure>
+            {/* Bottom spacer to align baseline with left column's designed-for */}
+            <div className="mt-auto" />
           </div>
-
-
+        </div>
 
         <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
 
