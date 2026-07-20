@@ -111,7 +111,7 @@ export function SiteHeader() {
                 <Menu className="size-5" />
               </button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[82vw] max-w-sm border-white/10 bg-background p-0">
+            <SheetContent side="right" className="marketing-sheet w-[82vw] max-w-sm border-white/10 bg-background p-0">
               <div className="flex h-full flex-col">
                 <div className="flex items-center gap-3 border-b border-white/5 px-6 py-5">
                   <StartupLabsLogo className="h-9 w-auto text-foreground" />
