@@ -11,7 +11,7 @@ export type DayGuidance = {
 export const DAY_GUIDANCE: Record<number, DayGuidance> = {
   1: {
     why: "Today decides how everyone downstream — customers, investors, teammates, AI copilots — will hear your story. A fuzzy concept costs you refunds, redos, and ad spend for the next 13 days.",
-    suggestedSchedule: "Morning: read Executive Summary and Vision & Mission. Midday: rewrite the one-liner until a stranger can repeat it. Afternoon: lock the AI toolkit and paste API keys.",
+    suggestedSchedule: "Morning: draft your one-page story and what you stand for. Midday: rewrite the one-liner until a stranger can repeat it. Afternoon: lock the AI toolkit and paste API keys.",
     pitfalls: [
       "Writing for investors instead of buyers — buyers pay first.",
       "Skipping the AI stack because it feels tangential; you'll pay for that on Day 6.",
@@ -20,7 +20,7 @@ export const DAY_GUIDANCE: Record<number, DayGuidance> = {
   },
   2: {
     why: "A concept without a price is a hobby. Today makes it buyable, so tomorrow's demand test is real money vs. real money.",
-    suggestedSchedule: "Morning: draft Value Proposition. Midday: set headline price + 3 tiers. Afternoon: tune 25 prompts against your real workflow.",
+    suggestedSchedule: "Morning: draft the one sentence for why customers pick you. Midday: set headline price + 3 tiers. Afternoon: tune 25 prompts against your real workflow.",
     pitfalls: [
       "Under-pricing because you're scared — you can always discount, you can't always raise.",
       "Endless option-adding — three tiers, one recommended.",
@@ -38,7 +38,7 @@ export const DAY_GUIDANCE: Record<number, DayGuidance> = {
   },
   4: {
     why: "The market votes with money before it votes with opinions. A 48-hour pre-sell tells you whether to build or pivot — before you sink two weeks.",
-    suggestedSchedule: "Morning: draft the pre-sell offer + guarantee. Midday: generate the Pre-Sell Landing PRD and paste it into Lovable/v0/Bolt to scaffold the page. Afternoon: personally message every First-50 contact.",
+    suggestedSchedule: "Morning: draft the pre-sell offer + guarantee. Midday: generate the build brief for your pre-sell page and paste it into Lovable/v0/Bolt to scaffold the page. Afternoon: personally message every First-50 contact.",
     pitfalls: [
       "Asking for interest instead of a deposit — 'interested' means no.",
       "Hiding behind a landing page — DM 50 humans yourself.",
