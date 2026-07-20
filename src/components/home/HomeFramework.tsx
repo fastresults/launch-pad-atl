@@ -16,7 +16,7 @@ import {
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroBg from "@/assets/hero-bg.png";
-import heroCoffee from "@/assets/hero-coffee.png";
+import heroCoffee from "@/assets/hero-coffee-nosteam.png";
 import { motion, useReducedMotion } from "framer-motion";
 import atlSeal from "@/assets/atl-founder-friendly-seal.svg";
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
@@ -119,32 +119,73 @@ function Hero() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN — framed cup mark on top baseline, price card below */}
+          {/* RIGHT COLUMN — cup on page (no frame), price card below */}
           <div className="flex flex-col lg:col-span-4">
-            {/* Framed editorial coffee mark — sits on kicker baseline */}
-            <motion.div
-              className="mx-auto flex aspect-square w-full max-w-[280px] items-center justify-center rounded-full border border-[#C9B99A] bg-[#FBF7F1]/60 p-6 shadow-[0_10px_40px_-20px_rgba(61,48,37,0.25)] lg:max-w-none"
-              initial={{ opacity: 0, y: 8 }}
-              animate={
-                reduceMotion
-                  ? { opacity: 1, y: 0 }
-                  : { opacity: 1, y: [0, -3, 0] }
-              }
-              transition={
-                reduceMotion
-                  ? { duration: 0.5 }
-                  : { opacity: { duration: 0.6 }, y: { duration: 6, repeat: Infinity, ease: "easeInOut" } }
-              }
-            >
-              <img
+            {/* Coffee cup sits directly on the cream page with animated steam */}
+            <div className="relative mx-auto w-full max-w-[280px] lg:max-w-none">
+              {/* Animated steam wisps */}
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 120 90"
+                className="pointer-events-none absolute left-1/2 top-0 h-[28%] w-[46%] -translate-x-1/2 -translate-y-4"
+                fill="none"
+                stroke="#8B7355"
+                strokeWidth={2.2}
+                strokeLinecap="round"
+              >
+                {[
+                  { d: "M40 82 C 32 62, 52 52, 40 32 C 32 18, 46 8, 40 0", delay: 0 },
+                  { d: "M60 82 C 52 60, 72 50, 60 30 C 52 16, 66 6, 60 0", delay: 0.9 },
+                  { d: "M80 82 C 72 62, 92 52, 80 32 C 72 18, 86 8, 80 0", delay: 1.7 },
+                ].map((w, i) => (
+                  <motion.path
+                    key={i}
+                    d={w.d}
+                    initial={{ opacity: 0.2, y: 0, x: 0 }}
+                    animate={
+                      reduceMotion
+                        ? { opacity: 0.35 }
+                        : {
+                            opacity: [0.15, 0.45, 0.15],
+                            y: [0, -6, 0],
+                            x: [0, i === 1 ? 2 : -2, 0],
+                          }
+                    }
+                    transition={
+                      reduceMotion
+                        ? { duration: 0.5 }
+                        : {
+                            duration: 4.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: w.delay,
+                          }
+                    }
+                    style={{ filter: "blur(0.6px)" }}
+                  />
+                ))}
+              </svg>
+
+              <motion.img
                 src={heroCoffee}
                 alt=""
                 width={912}
-                height={1104}
-                className="pointer-events-none h-auto w-[86%] select-none"
+                height={1024}
+                className="pointer-events-none relative mx-auto h-auto w-[86%] select-none"
                 draggable={false}
+                initial={{ opacity: 0, y: 8 }}
+                animate={
+                  reduceMotion
+                    ? { opacity: 1, y: 0 }
+                    : { opacity: 1, y: [0, -3, 0] }
+                }
+                transition={
+                  reduceMotion
+                    ? { duration: 0.5 }
+                    : { opacity: { duration: 0.6 }, y: { duration: 6, repeat: Infinity, ease: "easeInOut" } }
+                }
               />
-            </motion.div>
+            </div>
 
             {/* Price + CTA card — snaps to bottom baseline with the designed-for list */}
             <div className="mt-8 flex flex-1 flex-col rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] p-7 shadow-[0_20px_60px_-30px_rgba(61,48,37,0.35)]">

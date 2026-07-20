@@ -1,34 +1,28 @@
-## Fix: Stop overpromising in the "$297 gets you" list
+## Goal
+Drop the oval frame around the coffee cup so it sits naturally on the cream page, and give the steam a subtle, always-on drift.
 
-The current list promises two things the workshop does **not** actually deliver in the room:
-- "Your business bank + Stripe hooked up so revenue can actually land" — we don't open bank accounts or provision Stripe for attendees.
-- "The first outreach message sent from the room — to a real prospect, from your real inbox" — we can coach the message, but we can't guarantee an attendee sends from their inbox live.
+## Changes (hero only, `src/components/home/HomeFramework.tsx` + one new asset)
 
-What the workshop actually ships to the dashboard (per `curriculum-data.ts` / `workshop-productization.ts`): Foundation (positioning, ICP, wedge), a Strategy Brief with personas and a 90-day GTM sequencer, brand v0, and a live landing page with a priced offer.
+1. **New illustration, no frame**
+   - Generate `src/assets/hero-coffee-nosteam.png` (transparent background) — same watercolor cup + saucer as today but *without* the drawn steam wisps. Cream page shows through directly.
 
-### Edit — `src/components/home/HomeFramework.tsx`, `HonestRoadmap` list (lines 301–308)
+2. **Remove the circular frame**
+   - Delete the `rounded-full border border-[#C9B99A] bg-[#FBF7F1]/60 ... shadow-...` container on the cup.
+   - Cup renders directly on the hero background, centered in the right column, sized to match current visual weight (~86% of column width, max ~280px).
+   - Keep the shared top/bottom baseline grid (kicker-aligned top, price card below).
 
-Replace the six-item list with an honest version tied to real dashboard artifacts:
+3. **Animated steam overlay**
+   - Add an inline SVG absolutely positioned above the cup rim (3 wisps, hand-drawn curved paths, stroke color `#8B7355` at ~35% opacity, slight blur).
+   - Animate each wisp with `framer-motion`:
+     - `y`: `0 → -8px` loop
+     - `opacity`: `0.15 → 0.45 → 0.15`
+     - `x`: tiny `±2px` sway
+     - Staggered delays (0s, 0.8s, 1.6s), 4–5s duration, `easeInOut`, infinite.
+   - Wrap in `useReducedMotion()` guard — if reduced, render static steam at mid opacity, no animation.
 
-```
-"A live landing page at your domain — real URL, up before lunch, not a mockup"
-"A priced offer on the page — ready to accept your first customer"
-"Your Foundation on the dashboard — positioning, ICP, and wedge, sharpened with staff"
-"A 90-day go-to-market plan — personas + outreach sequence you can send this week"
-"Brand v0 — name, mark, and voice you can actually use Monday morning"
-"A seat next to Adam and 19 other founders — coffee, snacks, and a room building alongside you"
-```
+4. **Keep everything else untouched** — copy, price card, "Designed for" list, grid baselines, meta row all stay as-is.
 
-### Also tighten the 3-promise magazine footnote (lines 186–206)
-
-Line 203 currently says "Your first outreach sent from the room." Soften to a promise we control:
-
-```
-"Your first outreach written in the room. Message, list, and send button — ready before you leave."
-```
-
-Lines 191 and 197 (live page + priced offer) stay — those are real deliverables.
-
-### Out of scope
-
-No changes to `/build`, `/services`, chatbot knowledge, or other pages in this pass — this is a targeted honesty fix on the home hero's included-list. If you want me to sweep the same overpromises across the site after, say the word.
+## Technical notes
+- Reuse existing `motion` import and `reduceMotion` variable already in `Hero`.
+- Steam SVG lives inline (no new asset) so stroke color inherits from the palette and animates cheaply.
+- Position steam with `absolute -top-6 left-1/2 -translate-x-1/2` inside a `relative` cup wrapper.
