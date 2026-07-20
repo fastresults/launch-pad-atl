@@ -130,7 +130,7 @@ function Hero() {
           </div>
 
           {/* RIGHT COLUMN — one composed object: cameo cup + price card */}
-          <div className="flex flex-col lg:col-span-5">
+          <div className="flex flex-col lg:col-span-4">
             {/* Cameo — cup grounded in a soft cream vignette */}
             <div
               className="relative mx-auto flex w-full max-w-[380px] items-end justify-center"
