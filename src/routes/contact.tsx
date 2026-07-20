@@ -42,14 +42,25 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="marketing-surface flex min-h-screen flex-col">
       <SiteHeader />
       <main className="flex-1">
-        <div className="mx-auto max-w-2xl px-6 py-16 md:py-24">
-          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Get <span className="text-gradient-brand">in touch</span></h1>
-          <p className="mt-3 text-muted-foreground">
-            Not sure which option fits, or just want to talk it through first? Send a note — Adam or someone on our team writes back within one business day. Real person. No bots.
+        <div className="mx-auto max-w-3xl px-6 py-16 md:py-24">
+          <div className="mb-8 flex flex-col gap-2 border-b border-[#C9B99A] pb-4 md:flex-row md:items-end md:justify-between">
+            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
+              Get in touch
+            </div>
+            <div className="font-serif text-sm italic text-[#8B7355]">
+              Real person. No bots.
+            </div>
+          </div>
+          <h1 className="font-serif text-5xl leading-[1.05] text-[#3D3025] md:text-6xl">
+            Let's <span className="italic text-[#8B7355]">talk it through.</span>
+          </h1>
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#5C4A38]">
+            Not sure which option fits, or just want to talk it through first? Send a note &mdash; Adam or someone on our team writes back within one business day.
           </p>
+
 
           {submitted ? (
             <div className="mt-10 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-8 text-center">
