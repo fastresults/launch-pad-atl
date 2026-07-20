@@ -166,10 +166,10 @@ ${servicesBlock()}
 After the workshop, every founder gets access to a dashboard with:
 - **Brand Wizard** — two paths: bring your existing logo/site (we ingest via Firecrawl) or generate a new brand kit (logo, palette, type).
 - **Social Studio** — agency-grade channel kits (Instagram, TikTok, LinkedIn, Facebook) with previewable assets. Gated behind Brand Wizard.
-- **Content Studio** — 1:1 social advertisements generated from your 90-Day Content Calendar, organized week-by-week in an accordion.
+- **Content Studio** — 1:1 social advertisements generated from your 90 days of posts, organized week-by-week in an accordion.
 - **Concept Studio / Epiphany Engine** — refine and rewrite deliverables with feedback (typed or voice).
 - **Founder Playbook + Roadmap** — a prominent summary of everything the workshop derived, with priorities and next moves.
-- **Budget & Pro Forma** — with a short intake gateway to collect the numbers we need before generating.
+- **What you'll spend, month by month** — with a short intake gateway to collect the numbers we need before generating.
 - **Rewrite with feedback** — every generated deliverable can be regenerated with a feedback dialog (mic + text).
 
 ## Deep dives
