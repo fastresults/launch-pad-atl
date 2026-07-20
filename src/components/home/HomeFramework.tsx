@@ -135,7 +135,7 @@ function Hero() {
             <div
               className="relative mx-auto flex w-full max-w-[380px] items-end justify-center"
               style={{
-                height: 260,
+                height: 320,
                 backgroundImage:
                   "radial-gradient(ellipse at 50% 62%, rgba(201,185,154,0.28), transparent 65%)",
               }}
@@ -183,7 +183,7 @@ function Hero() {
                 alt=""
                 width={912}
                 height={1024}
-                className="relative z-10 mx-auto h-[240px] w-auto select-none drop-shadow-[0_18px_18px_rgba(61,48,37,0.18)]"
+                className="relative z-10 mx-auto h-[300px] w-auto select-none drop-shadow-[0_18px_18px_rgba(61,48,37,0.18)]"
                 draggable={false}
                 initial={{ opacity: 0, y: 8 }}
                 animate={
