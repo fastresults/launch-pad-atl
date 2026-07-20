@@ -26,7 +26,7 @@ export default function BuildWorkshopPage() {
   const upcoming = getUpcomingSessions(w.slug, new Date(), 12);
 
   return (
-    <div className="min-h-screen">
+    <div className="marketing-surface min-h-screen">
       <SiteHeader />
 
       {/* Hero */}

@@ -48,7 +48,7 @@ export default function WebinarPage() {
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="marketing-surface min-h-screen bg-background">
       <SiteHeader />
       <main>
         <section className="border-b border-white/5 py-16 md:py-24">
