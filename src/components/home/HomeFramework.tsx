@@ -236,7 +236,6 @@ function Hero() {
           </div>
         </div>
 
-        </div>
 
         <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
 
