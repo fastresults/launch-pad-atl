@@ -356,7 +356,36 @@
   background-color: #8B7355 !important;
   color: #FAF8F5 !important;
 }
-.marketing-surface .bg-hero-gradient * { color: inherit; }
+.marketing-surface .bg-hero-gradient,
+.marketing-surface .bg-hero-gradient * {
+  color: #FAF8F5 !important;
+}
+.marketing-surface .bg-hero-gradient .text-gradient-brand,
+.marketing-surface .bg-hero-gradient [class*="text-[#8B7355]"],
+.marketing-surface .bg-hero-gradient [class*="text-[#3D3025]"],
+.marketing-surface .bg-hero-gradient [class*="text-primary"],
+.marketing-surface .bg-hero-gradient [class*="text-muted"],
+.marketing-surface .bg-hero-gradient [class*="text-foreground"] {
+  color: #FAF8F5 !important;
+  -webkit-text-fill-color: #FAF8F5 !important;
+  background: none !important;
+}
+/* Keep CTA buttons readable: cream/white button = espresso label */
+.marketing-surface .bg-hero-gradient .bg-white,
+.marketing-surface .bg-hero-gradient [class*="bg-[#FAF8F5]"],
+.marketing-surface .bg-hero-gradient [class*="bg-[#FBF7F1]"],
+.marketing-surface .bg-hero-gradient [class*="bg-[#F5F0E5]"],
+.marketing-surface .bg-hero-gradient [class*="bg-[#F0EBE3]"] {
+  color: #3D3025 !important;
+}
+.marketing-surface .bg-hero-gradient .bg-white *,
+.marketing-surface .bg-hero-gradient [class*="bg-[#FAF8F5]"] *,
+.marketing-surface .bg-hero-gradient [class*="bg-[#FBF7F1]"] *,
+.marketing-surface .bg-hero-gradient [class*="bg-[#F5F0E5]"] *,
+.marketing-surface .bg-hero-gradient [class*="bg-[#F0EBE3]"] * {
+  color: #3D3025 !important;
+  -webkit-text-fill-color: #3D3025 !important;
+}
 
 /* Kill the gradient-brand text — use italic espresso serif accent instead */
 .marketing-surface .text-gradient-brand {
@@ -366,6 +395,28 @@
   -webkit-text-fill-color: currentColor !important;
   color: #8B7355 !important;
   font-style: italic;
+}
+
+/* Marketing-scoped dialog: cream surface, espresso ink, serif titles.
+   Applied via <DialogContent> when the trigger is on a marketing route. */
+.marketing-dialog {
+  background-color: #FAF8F5 !important;
+  color: #3D3025 !important;
+  border: 1px solid #E4D9C4 !important;
+  border-radius: 4px !important;
+}
+.marketing-dialog [class*="text-muted"] { color: #6B5B47 !important; }
+.marketing-dialog [class*="text-foreground"] { color: #3D3025 !important; }
+.marketing-dialog [class*="text-primary"] { color: #8B7355 !important; }
+.marketing-dialog [class*="bg-card"] { background-color: #F5F0E5 !important; }
+.marketing-dialog [class*="border-white/"] { border-color: #E4D9C4 !important; }
+.marketing-dialog [class*="border-primary/"] { border-color: #C9B99A !important; }
+.marketing-dialog [class*="bg-primary/"] { background-color: rgba(139, 115, 85, 0.08) !important; }
+.marketing-dialog h1, .marketing-dialog h2, .marketing-dialog h3,
+.marketing-dialog [role="heading"] {
+  font-family: "DM Serif Display", ui-serif, Georgia, serif !important;
+  color: #3D3025 !important;
+  font-weight: 400 !important;
 }
 
 .marketing-surface .btn-glow,
