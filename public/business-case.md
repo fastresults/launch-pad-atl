@@ -1,6 +1,6 @@
 # The Business Case for Attending StartupLabs
 
-*A straight-talking report for the founder deciding whether one Saturday morning and $297 is worth it. Spoiler: this report exists because the math isn't close.*
+*A straight-talking report for the founder deciding whether one focused morning and $297 is worth it. Spoiler: this report exists because the math isn't close.*
 
 ---
 
@@ -42,7 +42,7 @@ Let's do the math you've been avoiding. Here's a conservative estimate of what t
 | **Subtotal** | **$13,900** |
 | The 6-month detour that ends in a pivot you could have made on day one | *unpriceable* |
 
-Compare that to **$297 and one Saturday morning** to lock down the foundation before you spend a dollar in the wrong direction.
+Compare that to **$297 and one focused morning** to lock down the foundation before you spend a dollar in the wrong direction.
 
 You don't need this report to tell you which side of that ledger is the better bet. You need it to give you permission to stop pretending the $13,900 number isn't real. It is. It's the most common silent tax on first-time founders, and it's almost entirely preventable.
 
@@ -129,7 +129,7 @@ This is the smallest check you'll ever write that has the biggest downstream eff
 
 Seats are limited — small cohorts are how the room works. That's real scarcity, not the fake kind some marketer added to a checkout page to make you click faster.
 
-The downside is bounded: one Saturday morning and $297. If you show up, do the work, and genuinely leave without a clearer path forward than you walked in with — we'll work with you to make it right. We don't want your money if the morning didn't earn it.
+The downside is bounded: one focused morning and $297. If you show up, do the work, and genuinely leave without a clearer path forward than you walked in with — we'll work with you to make it right. We don't want your money if the morning didn't earn it.
 
 The only real risk is not showing up.
 
@@ -161,13 +161,13 @@ Foundations don't build the house. They make the house possible. Stop trying to 
 
 ---
 
-## 12. The Saturday that changes the math.
+## 12. The morning that changes the math.
 
 Here's what to do, in order, right now:
 
 1. Pick the next available date.
 2. Reserve your seat.
-3. Show up Saturday morning with your idea and an open laptop.
+3. Show up for your morning session with your idea and an open laptop.
 4. Leave with a company on paper.
 
 That's it. That's the whole decision. You've spent more time than that picking a podcast episode.
