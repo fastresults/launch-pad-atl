@@ -64,10 +64,10 @@ export default function OneOnOnePage() {
   const [modesOpen, setModesOpen] = useState(false);
 
   useEffect(() => {
-    document.title = "The 14-Day Pivot Method, done for you — Adam builds it in 14 days · $4,799";
+    document.title = "The 14-Day Pivot Method, built for you — Adam ships it in 14 days · $4,799";
     const meta = document.querySelector('meta[name="description"]');
     const desc =
-      "The 14-Day Pivot Method, run for you by Adam and his team. Brand, site, social, systems, and your first paying customer named — delivered in 14 days. $4,799, everything in. The done-with-you method replacing accelerators, courses, and raw AI.";
+      "The 14-Day Pivot Method, built for you by Adam and his team. Real brand, live site, running social, live systems, and your first paying customer named — actually shipped in 14 days. $4,799, everything in.";
     if (meta) meta.setAttribute("content", desc);
   }, []);
 
@@ -79,18 +79,18 @@ export default function OneOnOnePage() {
         <section className="border-b border-white/5 py-16 md:py-24">
           <div className="mx-auto max-w-4xl px-6">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-primary">
-              <Wand2 className="size-3.5" /> The 14-Day Pivot Method · Done for you
+              <Wand2 className="size-3.5" /> The 14-Day Pivot Method · Built for you
             </p>
             <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
-              Your launch,{" "}
-              <span className="text-gradient-brand">done for you in 14 days.</span>
+              Your startup,{" "}
+              <span className="text-gradient-brand">actually built for you in 14 days.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-              The old way was $40k and six months of agency ping-pong. The new way is
-              the done-with-you method replacing accelerators, courses, and raw AI —
-              executed for you at a flat fee. Brand, site, social, systems, and a
-              named first customer, live in fourteen days. You stay founder. Our
-              team ships it.
+              The old way was $40k and six months of agency ping-pong. The new
+              way: our team actually builds the real thing for you at a flat fee.
+              Real brand, live site, running social, live systems, and a
+              named first customer — actually shipped in fourteen days. You stay
+              founder. Our team does the building.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">

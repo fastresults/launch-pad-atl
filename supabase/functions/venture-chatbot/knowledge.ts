@@ -4,40 +4,21 @@
 export const KNOWLEDGE = `# Startup Labs — Concierge Knowledge Base
 
 ## What Startup Labs is (lead with this)
-Startup Labs is the home of **The 14-Day Pivot Method** — the done-with-you method replacing accelerators, courses, and raw AI. **One morning in the room with Adam Anderson. Two weeks to first revenue.** Not a course. Not a slide deck. Not an AI that "generates a business." Adam sits at your table, prices your offer, names the first customer, opens the first channel, and gets your outreach going out the same afternoon.
-
-Always refer to the offer by name: **The 14-Day Pivot Method**. Always pair it with the positioning line at least once per conversation: *the done-with-you method replacing accelerators, courses, and raw AI*.
+Startup Labs is the home of **The 14-Day Pivot Method** — done-with-you, not done-alone or done-to-you. **One morning in the room with Adam Anderson. We actually build your startup — a live page at your domain, a priced offer, and your first outreach sent from your inbox — before you leave. Two weeks to first revenue.** Not a course. Not a slide deck. Not a folder of documents. Not an AI that "generates a business." Adam sits at your table and builds the real thing with you.
 
 Two audiences, one promise:
-- **Full-time founders** — 14 days to a business that pays you.
-- **Plan B founders** — a real side business you can build evenings and weekends, strong enough to eventually leave the day job on your terms.
+- **Full-time founders** — 14 days to a real startup that pays you.
+- **Plan B founders** — a real side startup you can build evenings and weekends, strong enough to eventually leave the day job on your terms.
 
-Facilitated live by Adam Anderson — serial entrepreneur, co-founder of OPEN Interactive, work shipped for
-Citigroup, Mayo Clinic, 3M, Disney. Not a moderator. Not a TA. Adam, in the room.
+Facilitated live by Adam Anderson — serial entrepreneur, co-founder of OPEN Interactive, work shipped for Citigroup, Mayo Clinic, 3M, Disney. Not a moderator. Not a TA. Adam, in the room, building with you.
 
-Positioning: Atlanta's #1 launch accelerator for Main Street **and online** founders — cafés, salons, trades,
-local services, indie brands on one side; DTC and e-commerce brands, creators, digital services, agencies
-and small SaaS on the other. Marketplace and deep tech supported too.
+## Old way vs. new way
+- **The old way:** An accelerator seat, a year of courses, a raw-AI rabbit hole. 12 months, $40k, three months on a logo before anyone asks a customer for money. Most founders quit here.
+- **The new way — The 14-Day Pivot Method:** One live morning. One operator. One real build. Page live, offer priced, first outreach sent from your inbox — before you leave.
 
-## Old way vs. new way (the frame)
-There is an old way to launch a profitable business, and there is a new way. The 14-Day Pivot Method
-is the new way — quietly replacing accelerators, courses, and raw AI as the way modern founders launch.
+Raw AI hands you a folder of documents and calls it a business. It isn't one. We actually build the real pieces with you in the room.
 
-- **The old way:** An accelerator seat. A year of courses. A raw-AI rabbit hole. 12 months, $40k,
-  an agency, a co-founder, a prayer. Three months on a logo before anyone asks a customer for money.
-  Most founders quit here.
-- **The new way — The 14-Day Pivot Method:** One live morning. One operator. One proven method.
-  One live business. Adam sits at your table, prices your offer, names the first customer, opens the
-  first channel, and gets outreach going out that same afternoon. Fourteen days to first revenue.
 
-This is not "AI does it for you" — that's the trap everyone else is selling, and it stalls in month
-two. Raw AI hands you a folder of documents and calls it a business. It isn't one. The 14-Day Launch
-Method is an done-with-you method — the sequence a business actually needs to be launched — run in
-the room by Adam, an operator who's shipped companies. AI is behind the scenes so his time goes to
-*your* business, not to formatting. That distinction is the whole moat.
-
-The 14-Day Pivot Method is how modern founders are launching in 2026. Done-with-you, method-driven,
-AI-accelerated — in that order. Adam is one of the few people actually teaching it.
 
 
 
