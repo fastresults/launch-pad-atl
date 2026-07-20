@@ -1,73 +1,58 @@
-## Goal
+## Plan: Hover Contrast Audit + Fix
 
-Restyle `src/components/site/AskConcierge.tsx` so the launcher, panel, header, message bubbles, composer, and starter chips match the site's warm-sand editorial redesign (cream `#FAF8F5`, tan `#F0EBE3`, espresso `#8B7355`, DM Serif Display + Fira Sans, square-ish corners). No behavior changes — voice, transcription, storage, and edge-function calls stay identical.
+### Goal
+Make every interactive hover/focus state readable across the redesigned warm editorial UI, especially buttons and CTA links on cream and espresso sections.
 
-## What's off today
+### What I confirmed from the code
+- The marketing pages use a scoped `.marketing-surface` theme in `src/styles.css`.
+- The current global overrides remap hardcoded dark-theme utilities like `text-white`, `bg-white/*`, `border-white/*`, and `bg-hero-gradient` into the cream/espresso palette.
+- The prior fix neutralized hover-only background classes when they are not hovered, but there are not yet explicit hovered-state contrast rules for cases like `hover:bg-white/10` on espresso sections.
+- Several marketing routes still use inline utility hover states such as `hover:bg-white/10`, `hover:opacity-90`, `hover:border-white/*`, and `hover:bg-primary/*`.
+- Shared buttons come from `src/components/ui/button.tsx`, while page-level CTAs and the chatbot use direct utility classes.
 
-Screenshot shows:
-- Purple/blue **gradient header** (`bg-hero-gradient` reads as brand purple against espresso elsewhere) — inconsistent with cream/espresso.
-- **Solid black panel body** (`bg-background` is dark) and dark composer — the rest of the marketing site is cream.
-- **Bright purple user bubbles** (`bg-primary`) — should be espresso on cream.
-- **Bright purple send button** and focus ring — same issue.
-- **White-on-dark type** in messages — should be espresso on cream.
-- Sans-serif header title — should be DM Serif Display to match mastheads.
-- Rounded pill launcher with purple gradient — should be square-cornered espresso to match buttons on `/build`, `/services`, etc.
+### Phase 1 — Define sitewide hover contrast rules
+Update the marketing-scoped CSS so hover/focus states have intentional pairings:
 
-## Redesign spec
+- **Espresso / hero sections**
+  - Primary cream/white CTA hover: keep espresso text.
+  - Outline CTA hover: switch to cream fill + espresso text, or stay transparent with clearly visible cream text.
+  - Text links/icons: maintain cream/white contrast, not muted tan-on-brown.
 
-Palette (hardcoded here, since the chatbot renders via portal-like fixed positioning outside `.marketing-surface` and needs to look identical on every route):
+- **Cream / sand sections**
+  - Espresso CTA hover: use a darker espresso shade with cream text.
+  - Outline CTA hover: use sand/tan fill with espresso text.
+  - Card hover: border/tint changes only, never light text on light fill.
 
-- Panel surface: `#FAF8F5` (cream)
-- Panel border: `#E5DDD0` (warm tan hairline)
-- Header bar: solid espresso `#8B7355` with cream text
-- Assistant text: `#2B1F14` (espresso ink) on cream
-- User bubble: espresso `#8B7355` bg + cream `#FAF8F5` text
-- Starter chips: cream bg, tan border, espresso text; hover fills to `#F0EBE3`
-- Composer input: `#FFFFFF` bg, tan border, espresso text, espresso focus ring
-- Send button: espresso bg, cream icon
-- Mic button: cream bg, tan border, espresso icon; recording state uses a rust `#B8532A` accent (matches existing site accent) instead of destructive red
-- Corners: `rounded-lg` panel, `rounded-md` bubbles/inputs, `rounded-sm` chips (square-ish editorial feel, no pill launcher)
-- Typography: header title uses `font-serif` (DM Serif Display already loaded); body uses default sans (Fira Sans)
+- **Dialogs, sheets, tooltips, chatbot**
+  - Match the same cream/sand/espresso hover behavior.
+  - Ensure close/icon buttons, starter buttons, voice/send buttons, and mobile sheet links remain readable on hover/focus.
 
-Launcher:
-- Replace pill+gradient with a square-cornered espresso card: `#8B7355` bg, cream text/icon, tan hairline border, subtle shadow. Keep `MessageCircle` icon and "Ask Startup Labs" label.
+### Phase 2 — Replace brittle hover utilities where needed
+Where CSS cannot safely infer context, update the component class names directly:
 
-Header:
-- Solid espresso bar, cream text, `font-serif` title "Startup Labs Concierge".
-- Replace `Sparkles` icon with a small serif monogram or drop the icon (Sparkles conflicts with editorial tone; per chat-ui-composition, Sparkles shouldn't be an agent identity mark). Use a small cream circle with "SL" in serif, or just the title alone.
-- Icon buttons (voice/clear/close) become cream-on-transparent with `hover:bg-cream/10`.
+- Marketing route CTAs in `/build`, dynamic build pages, `/services`, `/schedule`, `/webinar`, `/one-on-one`.
+- Header desktop/mobile nav and mobile sheet actions.
+- Chatbot launcher, panel controls, starter chips, send/voice/listen controls.
+- Dialog/sheet action buttons if they inherit old dark hover styling.
 
-Messages area:
-- Cream bg, espresso ink. Assistant markdown uses `prose` (not `prose-invert`) with espresso overrides.
-- Loading dot changes from `bg-primary` (purple) to `bg-[#B8532A]` (rust accent) so "Thinking…" reads as brand.
-- Error banner: cream card with rust border/text instead of destructive red.
+### Phase 3 — Normalize button behavior
+Keep the existing shared `Button` component intact for the app, but add marketing-safe scoped overrides so default, outline, ghost, and link buttons render correctly inside `.marketing-surface` and `.marketing-dialog`.
 
-Starter chips:
-- Cream bg, tan border, espresso text, `rounded-sm`, hover fills to `#F0EBE3` with espresso border.
+### Phase 4 — Visual QA pass
+Use browser checks to verify hover/focus contrast on representative pages:
 
-Composer:
-- White input surface inside a tan-bordered box; espresso focus ring.
-- Placeholder text in muted espresso `#8B7355/60`.
-- Send button espresso solid; disabled state 40% opacity.
-- Mic recording state uses rust ring + subtle pulse.
+- Home `/`
+- Workshops `/build`
+- Services `/services`
+- Schedule `/schedule`
+- Facilitator `/facilitator`
+- Register/contact modal or sheet states
+- Chatbot open + launcher states
 
-Footer helper text:
-- Muted espresso, `/contact` link in rust with underline on hover.
+For each page, inspect key buttons/links in normal and forced-hover states and fix any remaining low-contrast pairings.
 
-## Technical notes
-
-- All values are hardcoded hex in `AskConcierge.tsx` (not tokens) because the component renders as a global fixed overlay outside the `.marketing-surface` scope and must render identically whether the current route is themed or not.
-- No changes to logic, state, storage keys, edge-function calls, TTS, transcription, or hidden-prefix routing.
-- No changes to `src/styles.css` or shadcn tokens — this stays scoped to one file.
-- Preserve accessibility labels, keyboard handlers, focus management, and the `role="dialog"` semantics.
-
-## Files touched
-
-- `src/components/site/AskConcierge.tsx` — the only file changing.
-
-## Out of scope
-
-- Voice/audio behavior
-- Chatbot knowledge or system prompt
-- The dashboard/authenticated app chrome (chatbot is hidden there via `HIDDEN_PREFIXES`)
-- Moving to AI Elements or the AI SDK (this is a bespoke component tied to two edge functions; a rewrite would be a separate project)
+### Acceptance criteria
+- No white/cream text appears on light cream/sand hover fills.
+- No espresso/dark text appears on espresso hover fills.
+- Hover/focus states are visibly interactive but still brand-consistent.
+- The fix is scoped to marketing UI and does not disturb authenticated app screens.

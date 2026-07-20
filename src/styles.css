@@ -361,6 +361,62 @@
 .marketing-surface .bg-white { background-color: #FFFFFF !important; color: #3D3025 !important; }
 .marketing-surface .bg-black { background-color: #3D3025 !important; color: #FAF8F5 !important; }
 
+/* Marketing hover/focus contrast: every filled hover state gets an
+   intentional ink/fill pair instead of inheriting dark-theme utilities. */
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-white/"]:hover,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus:bg-white/"]:focus,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus-visible:bg-white/"]:focus-visible,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="group-hover:bg-white/"]:is(:hover, :focus-within) {
+  background-color: #F0EBE3 !important;
+  border-color: #C9B99A !important;
+  color: #3D3025 !important;
+  -webkit-text-fill-color: #3D3025 !important;
+}
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-white/"]:hover *,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus:bg-white/"]:focus *,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus-visible:bg-white/"]:focus-visible *,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="group-hover:bg-white/"]:is(:hover, :focus-within) * {
+  color: #3D3025 !important;
+  -webkit-text-fill-color: #3D3025 !important;
+}
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-black/"]:hover,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus:bg-black/"]:focus,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="group-hover:bg-black/"]:is(:hover, :focus-within),
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class~="bg-black"]:hover {
+  background-color: #3D3025 !important;
+  border-color: #3D3025 !important;
+  color: #FAF8F5 !important;
+  -webkit-text-fill-color: #FAF8F5 !important;
+}
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-black/"]:hover *,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus:bg-black/"]:focus *,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="group-hover:bg-black/"]:is(:hover, :focus-within) *,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class~="bg-black"]:hover * {
+  color: #FAF8F5 !important;
+  -webkit-text-fill-color: #FAF8F5 !important;
+}
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-primary/"]:hover,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus:bg-primary/"]:focus,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus-visible:bg-primary/"]:focus-visible {
+  background-color: #E7DED0 !important;
+  border-color: #C9B99A !important;
+  color: #3D3025 !important;
+  -webkit-text-fill-color: #3D3025 !important;
+}
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class~="bg-primary"]:hover,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class~="bg-hero-gradient"]:is(a, button):hover {
+  background-image: none !important;
+  background-color: #6F5A42 !important;
+  border-color: #6F5A42 !important;
+  color: #FAF8F5 !important;
+  -webkit-text-fill-color: #FAF8F5 !important;
+}
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class~="bg-primary"]:hover *,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class~="bg-hero-gradient"]:is(a, button):hover * {
+  color: #FAF8F5 !important;
+  -webkit-text-fill-color: #FAF8F5 !important;
+}
+
 /* Kill the hero orange→magenta→violet gradient — use solid espresso on marketing pages */
 .marketing-surface .bg-hero-gradient {
   background-image: none !important;
@@ -428,6 +484,47 @@
   font-family: "DM Serif Display", ui-serif, Georgia, serif !important;
   color: #3D3025 !important;
   font-weight: 400 !important;
+}
+
+.marketing-sheet {
+  --background: #FAF8F5;
+  --foreground: #3D3025;
+  --card: #FFFFFF;
+  --card-foreground: #3D3025;
+  --popover: #FFFFFF;
+  --popover-foreground: #3D3025;
+  --primary: #8B7355;
+  --primary-foreground: #FAF8F5;
+  --secondary: #F0EBE3;
+  --secondary-foreground: #3D3025;
+  --muted: #F0EBE3;
+  --muted-foreground: #6B5B47;
+  --accent: #F0EBE3;
+  --accent-foreground: #3D3025;
+  --border: #E4D9C4;
+  --input: #C9B99A;
+  --ring: #8B7355;
+  background-color: #FAF8F5 !important;
+  color: #3D3025 !important;
+  border-color: #E4D9C4 !important;
+}
+.marketing-sheet [class*="text-muted"] { color: #6B5B47 !important; }
+.marketing-sheet [class*="text-foreground"] { color: #3D3025 !important; }
+.marketing-sheet [class*="text-white"] { color: #3D3025 !important; }
+.marketing-sheet [class*="border-white/"] { border-color: #E4D9C4 !important; }
+.marketing-sheet [class*="bg-white/"] { background-color: #F0EBE3 !important; }
+.marketing-sheet [class*="hover:bg-white/"]:not(:hover),
+.marketing-sheet [class*="focus:bg-white/"]:not(:focus),
+.marketing-sheet [class*="focus-visible:bg-white/"]:not(:focus-visible) { background-color: transparent !important; }
+.marketing-sheet .bg-hero-gradient {
+  background-image: none !important;
+  background-color: #8B7355 !important;
+  color: #FAF8F5 !important;
+}
+.marketing-sheet .bg-hero-gradient,
+.marketing-sheet .bg-hero-gradient * {
+  color: #FAF8F5 !important;
+  -webkit-text-fill-color: #FAF8F5 !important;
 }
 
 .marketing-surface .btn-glow,

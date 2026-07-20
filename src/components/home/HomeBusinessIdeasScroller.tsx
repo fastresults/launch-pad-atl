@@ -209,7 +209,7 @@ export function HomeBusinessIdeasScroller({
                 className={[
                   "rounded-full border px-3 py-1.5 text-xs font-medium uppercase tracking-[0.14em] transition-colors",
                   active
-                    ? "border-primary/60 bg-primary/15 text-foreground"
+                    ? "border-primary/60 bg-secondary text-foreground"
                     : "border-border/60 bg-card/40 text-muted-foreground hover:border-primary/40 hover:text-foreground",
                 ].join(" ")}
               >
