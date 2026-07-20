@@ -3,8 +3,31 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
+
+const MARKETING_ROUTE_PATTERNS = [
+  /^\/$/,
+  /^\/build(\/|$)/,
+  /^\/services(\/|$)/,
+  /^\/schedule(\/|$)/,
+  /^\/contact(\/|$)/,
+  /^\/facilitator(\/|$)/,
+  /^\/one-on-one(\/|$)/,
+  /^\/webinar(\/|$)/,
+  /^\/register(\/|$)/,
+  /^\/privacy(\/|$)/,
+  /^\/terms(\/|$)/,
+];
+function useIsMarketingRoute() {
+  try {
+    const { pathname } = useLocation();
+    return MARKETING_ROUTE_PATTERNS.some((r) => r.test(pathname));
+  } catch {
+    return false;
+  }
+}
 
 const Dialog = DialogPrimitive.Root;
 
