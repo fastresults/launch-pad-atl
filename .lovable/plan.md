@@ -1,11 +1,13 @@
-Subtle venue name-drop on the home hero only — two light touches, no repetition anywhere else on the homepage.
+## Fix the masthead tagline
 
-**`src/components/home/HomeFramework.tsx`**
+Replace the out-of-context line in the home hero masthead (`src/components/home/HomeFramework.tsx`, line 71):
 
-1. Line 80 — eyebrow (already reads "One Saturday morning · Norcross · Coffee on us"). Change to:
-   `One Saturday morning · IGNITE Center at Greater Atlanta Christian School · Coffee on us`
+- **Remove**: "A neighborly guide for the new operator"
+- **Replace with** (recommended): **"Your business — built with you, in one Saturday"**
 
-2. Line 113–115 — price card supporting line. Append one short sentence so the venue reads as a credibility cue, not a boast:
-   `No complicated dashboards. No homework you'll never do. A plain-spoken roadmap to your first dollar — done together, in the room at the IGNITE Center, Greater Atlanta Christian School.`
+Alternate options if you'd prefer a different flavor:
+1. "Built-with-you businesses, one Saturday at a time"
+2. "We build the business with you — not for you, not alone"
+3. "A done-with-you sprint for first-time owners"
 
-That's it. No changes to the H1, subhead, other homepage sections, other routes, or the footer/venue block further down (which already names the school in full). Keeps the mention to exactly two subtle placements above the fold.
+No other copy or styling changes. Single-line edit.
