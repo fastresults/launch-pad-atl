@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { submitInquiry } from "@/lib/inquiries.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,16 +12,6 @@ import { SiteFooter } from "@/components/site/Footer";
 import { SiteHeader } from "@/components/site/Header";
 import { useDocumentTitle } from "@/lib/use-document-title";
 
-async function submitInquiry(form: { name: string; email: string; phone: string; subject: string; message: string; website: string }) {
-  const { error } = await supabase.from("inquiries").insert({
-    name: form.name,
-    email: form.email,
-    phone: form.phone || null,
-    subject: form.subject,
-    message: form.message,
-  });
-  if (error) throw new Error(error.message);
-}
 
 export default function ContactPage() {
   useDocumentTitle(
