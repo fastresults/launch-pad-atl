@@ -361,6 +361,21 @@
 .marketing-surface .bg-white { background-color: #FFFFFF !important; color: #3D3025 !important; }
 .marketing-surface .bg-black { background-color: #3D3025 !important; color: #FAF8F5 !important; }
 
+/* Espresso-filled controls must keep light ink, even inside marketing pages
+   where old dark-theme `text-white` utilities are remapped to espresso. */
+.marketing-surface [class*="bg-[#8B7355]"],
+.marketing-surface [class*="bg-[#6F5A42]"],
+.marketing-surface [class~="bg-primary"] {
+  color: #FAF8F5 !important;
+  -webkit-text-fill-color: #FAF8F5 !important;
+}
+.marketing-surface [class*="bg-[#8B7355]"] *,
+.marketing-surface [class*="bg-[#6F5A42]"] *,
+.marketing-surface [class~="bg-primary"] * {
+  color: #FAF8F5 !important;
+  -webkit-text-fill-color: #FAF8F5 !important;
+}
+
 /* Marketing hover/focus contrast: every filled hover state gets an
    intentional ink/fill pair instead of inheriting dark-theme utilities. */
 :is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-white/"]:hover,
