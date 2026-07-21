@@ -78,4 +78,24 @@ export async function replyToInquiry(input: any) {
     .from("inquiries")
     .update({ status: "replied", last_activity_at: new Date().toISOString() })
     .eq("id", id);
+
+  try {
+    const { enqueueTransactionalEmail } = await import("@/lib/email/enqueue");
+    const { data: inquiry } = await supabase
+      .from("inquiries")
+      .select("name, email, subject")
+      .eq("id", id)
+      .maybeSingle();
+    if (inquiry?.email) {
+      const firstName = (inquiry.name as string | null)?.trim().split(/\s+/)[0] || undefined;
+      await enqueueTransactionalEmail({
+        templateName: "inquiry-reply",
+        recipientEmail: inquiry.email as string,
+        idempotencyKey: `inquiry-reply-${id}-${Date.now()}`,
+        templateData: { firstName, subject: inquiry.subject, body, agentName: "Adam" },
+      });
+    }
+  } catch (e) {
+    console.warn("[replyToInquiry] email enqueue failed:", e);
+  }
 }
