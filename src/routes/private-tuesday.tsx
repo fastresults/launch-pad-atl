@@ -154,7 +154,7 @@ export default function PrivateTuesdayPage() {
                   </div>
                 ) : grouped.length === 0 ? (
                   <div className="mt-8 rounded-lg border border-[#E4D9C4] bg-[#F5F0E5] p-6 text-sm text-[#5A4A3A]">
-                    Everything's booked out right now. Email us and we'll open the next Tuesday for you.
+                    All Tuesdays are fully reserved. Email us and we'll open the next one for you.
                   </div>
                 ) : (
                   <div className="mt-6 space-y-5">
