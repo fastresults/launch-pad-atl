@@ -131,7 +131,7 @@ export default function PrivateTuesdayPage() {
                 <Calendar className="size-3.5" /> Tuesdays only
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-[#C9B99A] bg-white px-3 py-1">
-                <Clock className="size-3.5" /> 2-hour blocks · 9:30, 12:00, 2:30
+                <Clock className="size-3.5" /> Four 2-hour blocks · 9:30, 11:30, 1:30, 3:30
               </span>
             </div>
           </div>
