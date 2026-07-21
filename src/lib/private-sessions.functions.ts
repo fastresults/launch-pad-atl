@@ -75,7 +75,7 @@ export type ReserveResult = {
 };
 
 export async function reservePrivateSessionSlot(input: ReserveInput): Promise<ReserveResult> {
-  const { data, error } = await sb.rpc("reserve_private_session_slot", {
+  const { data, error } = await sbAny.rpc("reserve_private_session_slot", {
     _slot_id: input.slot_id,
     _name: input.name,
     _email: input.email,
@@ -96,7 +96,7 @@ export async function adminSetSlotStatus(
   status: "available" | "blocked",
   reason?: string,
 ): Promise<void> {
-  const { error } = await sb.rpc("admin_set_private_session_slot_status", {
+  const { error } = await sbAny.rpc("admin_set_private_session_slot_status", {
     _slot_id: slot_id,
     _status: status,
     _reason: reason ?? null,
@@ -105,7 +105,7 @@ export async function adminSetSlotStatus(
 }
 
 export async function adminListBookings() {
-  const { data, error } = await supabase
+  const { data, error } = await sbAny
     .from("private_session_bookings")
     .select("id, slot_id, name, email, phone, status, payment_status, amount_cents, created_at, confirmed_at")
     .order("created_at", { ascending: false });
