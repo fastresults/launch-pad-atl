@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Ban, CheckCircle2, RotateCcw } from "lucide-react";
+import { Loader2, Ban, CheckCircle2, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   ensurePrivateSessionSlots,
   listUpcomingPrivateSessionSlots,
   adminSetSlotStatus,
   adminListBookings,
+  adminReleaseBooking,
+  adminConfirmBooking,
   formatSlotDate,
   formatSlotTime,
   type PrivateSessionSlot,
@@ -139,27 +141,80 @@ export default function AdminPrivateSessionsPage() {
                       <th className="p-3">Payment</th>
                       <th className="p-3">Amount</th>
                       <th className="p-3">Created</th>
+                      <th className="p-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {bookings.map((b) => (
-                      <tr key={b.id} className="border-t">
-                        <td className="p-3">{b.name}</td>
-                        <td className="p-3">{b.email}</td>
-                        <td className="p-3">
-                          {b.status === "confirmed" ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-700">
-                              <CheckCircle2 className="size-3" /> {b.status}
-                            </span>
-                          ) : (
-                            b.status
-                          )}
-                        </td>
-                        <td className="p-3">{b.payment_status}</td>
-                        <td className="p-3">${(b.amount_cents / 100).toFixed(0)}</td>
-                        <td className="p-3">{new Date(b.created_at).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
+                    {bookings.map((b) => {
+                      const isActive = b.status !== "cancelled";
+                      return (
+                        <tr key={b.id} className="border-t">
+                          <td className="p-3">{b.name}</td>
+                          <td className="p-3">{b.email}</td>
+                          <td className="p-3">
+                            {b.status === "confirmed" ? (
+                              <span className="inline-flex items-center gap-1 text-emerald-700">
+                                <CheckCircle2 className="size-3" /> {b.status}
+                              </span>
+                            ) : (
+                              b.status
+                            )}
+                          </td>
+                          <td className="p-3">{b.payment_status}</td>
+                          <td className="p-3">${(b.amount_cents / 100).toFixed(0)}</td>
+                          <td className="p-3">{new Date(b.created_at).toLocaleDateString()}</td>
+                          <td className="p-3 text-right">
+                            <div className="flex justify-end gap-2">
+                              {isActive && b.payment_status !== "paid" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={busyId === b.id}
+                                  onClick={async () => {
+                                    setBusyId(b.id);
+                                    try {
+                                      await adminConfirmBooking(b.id);
+                                      toast.success("Booking confirmed");
+                                      await load();
+                                    } catch (e) {
+                                      toast.error(e instanceof Error ? e.message : "Failed");
+                                    } finally {
+                                      setBusyId(null);
+                                    }
+                                  }}
+                                  className="h-7 px-2 text-xs"
+                                >
+                                  <CheckCircle2 className="mr-1 size-3" /> Confirm paid
+                                </Button>
+                              )}
+                              {isActive && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  disabled={busyId === b.id}
+                                  onClick={async () => {
+                                    if (!confirm(`Release ${b.name}'s slot back to available?`)) return;
+                                    setBusyId(b.id);
+                                    try {
+                                      await adminReleaseBooking(b.id);
+                                      toast.success("Slot released");
+                                      await load();
+                                    } catch (e) {
+                                      toast.error(e instanceof Error ? e.message : "Failed");
+                                    } finally {
+                                      setBusyId(null);
+                                    }
+                                  }}
+                                  className="h-7 px-2 text-xs text-red-700 hover:text-red-800"
+                                >
+                                  <X className="mr-1 size-3" /> Release
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

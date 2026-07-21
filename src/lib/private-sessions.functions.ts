@@ -113,6 +113,19 @@ export async function adminListBookings() {
   return data ?? [];
 }
 
+export async function adminReleaseBooking(booking_id: string): Promise<void> {
+  const { error } = await sbAny.rpc("admin_release_private_session_booking", { _booking_id: booking_id });
+  if (error) throw new Error(error.message);
+}
+
+export async function adminConfirmBooking(booking_id: string, payment_ref?: string): Promise<void> {
+  const { error } = await sbAny.rpc("admin_confirm_private_session_booking", {
+    _booking_id: booking_id,
+    _payment_ref: payment_ref ?? null,
+  });
+  if (error) throw new Error(error.message);
+}
+
 // Format helpers
 export function formatSlotDate(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");

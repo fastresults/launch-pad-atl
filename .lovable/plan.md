@@ -1,101 +1,49 @@
-## Forensic email-delivery recovery plan
+## Problem
 
-You are right: this needs to stop being patched from symptoms. The next pass should be treated as a production incident with proof at every step.
+When someone reserves a Tuesday slot on `/private-tuesday`, the slot only stays blocked for a short 15-minute hold. If they don't complete payment in that window, `get_upcoming_private_session_slots()` flips it back to `available` and the public booking page hides `booked` slots entirely rather than showing them grayed out. There's also no admin action to confirm/release a specific reservation once it's held.
 
-## Confirmed facts from this audit
+Result: reservations disappear, times reopen automatically, and admins can't lock a Tuesday from the reservation side.
 
-- The sending domain is verified and the Lovable Cloud email setup reports healthy.
-- The email log has no new rows since May 30, even though new contact inquiries were created today.
-- Today’s contact submissions exist in the database, so the form insert works.
-- The current browser-side email helper tries to do email infrastructure work directly from the app: suppression checks, unsubscribe-token creation, send-log inserts, rendering templates, and enqueueing.
-- The database access rules for email infrastructure are service-only. That means the browser is not allowed to create unsubscribe tokens or send-log rows.
-- The recent network trace already showed the exact failure pattern: inserting into `email_unsubscribe_tokens` was rejected by access rules, then the helper returned before queueing any email.
-- There are no recent function logs for the app-email send path, which supports the conclusion that the send function was not being invoked.
+## Goal
 
-## Root issue to fix
+Once someone reserves a Tuesday slot, it stays visibly grayed out on the public page — permanently — unless an admin explicitly releases it. Admin gets clear controls to confirm, release, or cancel each reservation.
 
-The system is currently trying to send app emails from the browser/client path. That is the wrong boundary. Email enqueueing must happen in a trusted backend function that has service-level access to the email queue, token table, suppression list, and send log.
+## Changes
 
-The super-admin routing rule also needs to live at that backend boundary so every send path is forced to `fastresults@gmail.com`, regardless of which page or feature triggered it.
+### 1. Reservations persist (no auto-expire)
 
-## Phase 1 — Instrument before changing behavior
+- `reserve_private_session_slot` RPC: stop setting `hold_expires_at`. Once a booking row is created the slot goes to `booked` and stays there.
+- `get_upcoming_private_session_slots`: remove the "flip expired holds back to available" branch. Booked = booked.
+- Existing rows with a stale `hold_expires_at` in the past get cleared in the same migration (leaving their current status alone).
 
-1. Add a clear, single diagnostic trail for every email attempt:
-   - triggering feature, such as contact form or member approval
-   - template name
-   - original intended recipient
-   - final routed recipient
-   - idempotency key
-   - success/failure reason
-2. Make the contact submission return or log the email attempt result during testing, instead of silently swallowing failures.
-3. Remove “fire-and-forget” behavior until delivery is verified.
+### 2. Public page shows booked slots as grayed out (not hidden)
 
-## Phase 2 — Move email enqueueing to the backend
+`src/routes/private-tuesday.tsx`:
+- Remove the `if (s.status !== "available") continue;` filter so every slot in the day renders.
+- Render `booked` and `blocked` slots as disabled chips with a muted background, strikethrough time, and a "Reserved" / "Unavailable" label. Non-clickable.
+- `available` chips keep their current behavior.
 
-1. Use the existing app-email function as the single send entry point.
-2. Move suppression checks, unsubscribe token creation, rendering, logging, queue insertion, and routing override into the trusted backend function.
-3. Keep the browser/client code simple:
-   - insert or save the user action where appropriate
-   - call the backend email function with `templateName`, `recipientEmail`, `templateData`, and `idempotencyKey`
-4. Ensure the backend function always rewrites the final recipient to:
+### 3. Admin controls for reservations
 
-```text
-fastresults@gmail.com
-```
+`src/routes/_authenticated/_admin/admin.private-sessions.tsx` and `src/lib/private-sessions.functions.ts`:
+- Bookings table gains per-row actions: **Confirm paid**, **Release slot** (frees the Tuesday back to available and cancels the booking), **Mark no-show**.
+- Slot chips continue to support **Block / Open** for admin-initiated blocks, and now also show which booking (name + email) owns any `booked` slot with a "Release" shortcut.
+- Add two new SECURITY DEFINER RPCs, admin-only:
+  - `admin_release_private_session_booking(_booking_id uuid)` — cancels the booking and sets the slot back to `available`.
+  - `admin_confirm_private_session_booking(_booking_id uuid, _payment_ref text)` — thin wrapper around the existing `confirm_private_session_booking` gated by `is_admin()` so admins can confirm offline payments.
 
-5. Preserve the intended recipient in:
-   - subject prefix
-   - visible email banner
-   - send-log metadata
+### 4. Cleanup
 
-## Phase 3 — Fix all app email call sites, not just contact
+- Drop the never-fires background job that would have expired holds (if any cron entry exists for it).
+- Update copy on `/private-tuesday` empty state to say "That Tuesday is fully reserved" when a date has zero available slots but still has booked ones, instead of omitting the date.
 
-Audit and wire every app email trigger through the same backend send path:
+## Out of scope
 
-- contact inquiry confirmation
-- contact inquiry admin notification
-- founder application confirmation
-- member intake confirmation
-- member intake admin notification
-- member approval email
-- inquiry reply email
-- any test-send/debug email path
+- Payment integration changes. The reservation still creates a `pending_payment` booking; only its lifecycle changes (no auto-release).
+- Rescheduling flow. Admin release + user re-books is the path for now.
 
-No page should import the email template registry or directly touch email infrastructure tables.
+## Technical notes
 
-## Phase 4 — Verify with hard evidence
-
-Run one controlled contact-form test and verify all four layers:
-
-1. UI shows the form submitted successfully.
-2. Database contains the new inquiry row.
-3. Email log contains new rows for both expected emails.
-4. The latest status for each message becomes `sent`, with `recipient_email = fastresults@gmail.com` and metadata preserving the original intended recipient.
-
-Then check backend function logs for the same message IDs.
-
-## Phase 5 — Inbox verification and failure handling
-
-1. Confirm whether the provider accepted the email.
-2. If accepted but inbox does not receive it, check spam/promotions and suppression state for `fastresults@gmail.com`.
-3. If rejected or dead-lettered, fix the exact provider/queue error instead of changing application code blindly.
-4. Keep the diagnostic logs until the first successful end-to-end send is proven.
-
-## Acceptance criteria
-
-This is not complete until all of the following are true:
-
-- A fresh contact-form submission creates the inquiry row.
-- Two email attempts are logged for that submission.
-- Both are routed to `fastresults@gmail.com`.
-- Both reach `sent` status.
-- The original intended recipient is visible in metadata and subject/body routing indicators.
-- No browser-side code writes to email infrastructure tables.
-- No email trigger silently swallows a failure during verification.
-
-## Technical implementation notes
-
-- The current client-side helper should be replaced or reduced to a backend-function invoker.
-- The trusted backend send function should own the routing override and all queue/log/token operations.
-- The email function must be redeployed after changes.
-- Verification should use the email log and function logs before claiming success.
+- Migration order: (1) `CREATE OR REPLACE FUNCTION` for `reserve_private_session_slot` and `get_upcoming_private_session_slots`; (2) `CREATE OR REPLACE FUNCTION` for the two new admin RPCs; (3) `UPDATE private_session_slots SET hold_expires_at = NULL WHERE hold_expires_at IS NOT NULL;`. No table schema changes, no new GRANTs needed.
+- Admin RPCs guard with `IF NOT public.is_admin(auth.uid()) THEN RAISE EXCEPTION 'Not authorized' USING ERRCODE = '42501'; END IF;`.
+- Public page continues to call `listUpcomingPrivateSessionSlots()` — no client-side auth changes.

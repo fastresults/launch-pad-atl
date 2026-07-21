@@ -63,7 +63,6 @@ export default function PrivateTuesdayPage() {
   const grouped = useMemo(() => {
     const map = new Map<string, PrivateSessionSlot[]>();
     for (const s of slots) {
-      if (s.status !== "available") continue;
       const arr = map.get(s.session_date) ?? [];
       arr.push(s);
       map.set(s.session_date, arr);
@@ -155,7 +154,7 @@ export default function PrivateTuesdayPage() {
                   </div>
                 ) : grouped.length === 0 ? (
                   <div className="mt-8 rounded-lg border border-[#E4D9C4] bg-[#F5F0E5] p-6 text-sm text-[#5A4A3A]">
-                    Everything's booked out right now. Email us and we'll open the next Tuesday for you.
+                    All Tuesdays are fully reserved. Email us and we'll open the next one for you.
                   </div>
                 ) : (
                   <div className="mt-6 space-y-5">
@@ -165,6 +164,22 @@ export default function PrivateTuesdayPage() {
                         <div className="mt-3 flex flex-wrap gap-2">
                           {list.map((s) => {
                             const selected = selectedId === s.id;
+                            const unavailable = s.status !== "available";
+                            if (unavailable) {
+                              return (
+                                <div
+                                  key={s.id}
+                                  aria-disabled="true"
+                                  className="cursor-not-allowed rounded-md border border-[#E4D9C4] bg-[#EFE7D6] px-3 py-2 text-sm text-[#9A8B75] line-through"
+                                  title={s.status === "booked" ? "Reserved" : "Unavailable"}
+                                >
+                                  {formatSlotTime(s.start_time, s.end_time)}
+                                  <span className="ml-2 text-[10px] uppercase tracking-wide no-underline">
+                                    {s.status === "booked" ? "Reserved" : "Unavailable"}
+                                  </span>
+                                </div>
+                              );
+                            }
                             return (
                               <button
                                 key={s.id}
