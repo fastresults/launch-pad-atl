@@ -36,13 +36,17 @@ export async function getPrivateSessionSettings(): Promise<PrivateSessionSetting
   );
 }
 
+// Cast supabase client to any for RPCs the generated types file doesn't yet know about.
+const sb = supabase as unknown as {
+  rpc: (name: string, params?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+};
+
 export async function ensurePrivateSessionSlots(): Promise<void> {
-  // Best-effort — safe if it fails (page still renders existing slots).
-  await supabase.rpc("ensure_private_session_slots" as never);
+  await sb.rpc("ensure_private_session_slots");
 }
 
 export async function listUpcomingPrivateSessionSlots(): Promise<PrivateSessionSlot[]> {
-  const { data, error } = await supabase.rpc("get_upcoming_private_session_slots" as never);
+  const { data, error } = await sb.rpc("get_upcoming_private_session_slots");
   if (error) throw new Error(error.message);
   return (data as PrivateSessionSlot[]) ?? [];
 }
@@ -64,7 +68,7 @@ export type ReserveResult = {
 };
 
 export async function reservePrivateSessionSlot(input: ReserveInput): Promise<ReserveResult> {
-  const { data, error } = await supabase.rpc("reserve_private_session_slot" as never, {
+  const { data, error } = await sb.rpc("reserve_private_session_slot", {
     _slot_id: input.slot_id,
     _name: input.name,
     _email: input.email,
@@ -74,7 +78,8 @@ export async function reservePrivateSessionSlot(input: ReserveInput): Promise<Re
     _notes: input.notes ?? null,
   });
   if (error) throw new Error(error.message);
-  const row = Array.isArray(data) ? (data[0] as ReserveResult) : (data as ReserveResult);
+  const arr = data as ReserveResult[] | ReserveResult | null;
+  const row = Array.isArray(arr) ? arr[0] : arr;
   if (!row) throw new Error("Reservation failed");
   return row;
 }
@@ -84,7 +89,7 @@ export async function adminSetSlotStatus(
   status: "available" | "blocked",
   reason?: string,
 ): Promise<void> {
-  const { error } = await supabase.rpc("admin_set_private_session_slot_status" as never, {
+  const { error } = await sb.rpc("admin_set_private_session_slot_status", {
     _slot_id: slot_id,
     _status: status,
     _reason: reason ?? null,
