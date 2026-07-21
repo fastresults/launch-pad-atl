@@ -366,6 +366,7 @@
 .marketing-surface [class*="bg-[#8B7355]"],
 .marketing-surface [class*="bg-[#6F5A42]"],
 .marketing-surface [class~="bg-primary"] {
+  background-color: #8B7355 !important;
   color: #FAF8F5 !important;
   -webkit-text-fill-color: #FAF8F5 !important;
 }
