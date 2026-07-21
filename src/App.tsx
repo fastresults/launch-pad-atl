@@ -163,6 +163,7 @@ export default function App() {
             <Route path="/admin/decks/:slug" element={<AdminDeckEditor />} />
             <Route path="/admin/review" element={<AdminReview />} />
             <Route path="/admin/registrations" element={<AdminRegistrations />} />
+            <Route path="/admin/private-sessions" element={<AdminPrivateSessions />} />
             <Route path="/admin/members" element={<AdminMembers />} />
             <Route path="/admin/members/:userId/view" element={<AdminMembersUserView />} />
             <Route path="/admin/hub" element={<AdminHub />} />
