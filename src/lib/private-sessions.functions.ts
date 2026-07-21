@@ -48,17 +48,12 @@ export async function getPrivateSessionSettings(): Promise<PrivateSessionSetting
   );
 }
 
-// Cast supabase client to any for RPCs the generated types file doesn't yet know about.
-const sb = supabase as unknown as {
-  rpc: (name: string, params?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
-};
-
 export async function ensurePrivateSessionSlots(): Promise<void> {
-  await sb.rpc("ensure_private_session_slots");
+  await sbAny.rpc("ensure_private_session_slots");
 }
 
 export async function listUpcomingPrivateSessionSlots(): Promise<PrivateSessionSlot[]> {
-  const { data, error } = await sb.rpc("get_upcoming_private_session_slots");
+  const { data, error } = await sbAny.rpc("get_upcoming_private_session_slots");
   if (error) throw new Error(error.message);
   return (data as PrivateSessionSlot[]) ?? [];
 }
