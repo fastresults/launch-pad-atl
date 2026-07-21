@@ -62,6 +62,7 @@ const AdminDeckEditor = lazy(() => import("@/routes/_authenticated/_admin/admin.
 
 const AdminReview = lazy(() => import("@/routes/_authenticated/_admin/admin.review"));
 const AdminRegistrations = lazy(() => import("@/routes/_authenticated/_admin/admin.registrations"));
+const AdminPrivateSessions = lazy(() => import("@/routes/_authenticated/_admin/admin.private-sessions"));
 const AdminMembers = lazy(() => import("@/routes/_authenticated/_admin/admin.members"));
 const AdminMembersUserView = lazy(() => import("@/routes/_authenticated/_admin/admin.members.$userId.view"));
 const AdminHub = lazy(() => import("@/routes/_authenticated/_admin/admin.hub"));
