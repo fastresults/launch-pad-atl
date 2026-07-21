@@ -63,7 +63,6 @@ export default function PrivateTuesdayPage() {
   const grouped = useMemo(() => {
     const map = new Map<string, PrivateSessionSlot[]>();
     for (const s of slots) {
-      if (s.status !== "available") continue;
       const arr = map.get(s.session_date) ?? [];
       arr.push(s);
       map.set(s.session_date, arr);
