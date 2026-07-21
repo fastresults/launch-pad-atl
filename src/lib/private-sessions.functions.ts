@@ -1,5 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// The generated Supabase types don't include our new tables yet, so we cast
+// through a permissive shape for the new endpoints only.
+const sbAny = supabase as unknown as {
+  from: (table: string) => {
+    select: (cols: string) => {
+      eq: (c: string, v: unknown) => { maybeSingle: () => Promise<{ data: unknown; error: { message: string } | null }> };
+      order: (c: string, opts?: { ascending?: boolean }) => Promise<{ data: unknown; error: { message: string } | null }>;
+    };
+  };
+  rpc: (name: string, params?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+};
+
 export type SlotStatus = "available" | "blocked" | "booked";
 
 export type PrivateSessionSlot = {
@@ -19,14 +31,14 @@ export type PrivateSessionSettings = {
 };
 
 export async function getPrivateSessionSettings(): Promise<PrivateSessionSettings> {
-  const { data, error } = await supabase
+  const { data, error } = await sbAny
     .from("private_session_settings")
     .select("price_cents, weeks_ahead, hold_minutes, location_label, contact_email")
     .eq("id", 1)
     .maybeSingle();
   if (error) throw new Error(error.message);
   return (
-    data ?? {
+    (data as PrivateSessionSettings | null) ?? {
       price_cents: 29700,
       weeks_ahead: 8,
       hold_minutes: 15,
