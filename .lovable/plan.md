@@ -1,49 +1,101 @@
-## Root cause
+## Forensic email-delivery recovery plan
 
-The global routing override in `src/lib/email/enqueue.ts` is correct — but the contact form never calls it. `submitInquiry()` and `contact.tsx` insert a row into `inquiries` and stop. No DB trigger, no edge function, no client-side enqueue. `email_send_log` has no rows after May 30, confirming nothing has been sent from any user-facing form in almost two months.
+You are right: this needs to stop being patched from symptoms. The next pass should be treated as a production incident with proof at every step.
 
-## Fix
+## Confirmed facts from this audit
 
-### 1. Wire the contact form to enqueue both emails
+- The sending domain is verified and the Lovable Cloud email setup reports healthy.
+- The email log has no new rows since May 30, even though new contact inquiries were created today.
+- Today’s contact submissions exist in the database, so the form insert works.
+- The current browser-side email helper tries to do email infrastructure work directly from the app: suppression checks, unsubscribe-token creation, send-log inserts, rendering templates, and enqueueing.
+- The database access rules for email infrastructure are service-only. That means the browser is not allowed to create unsubscribe tokens or send-log rows.
+- The recent network trace already showed the exact failure pattern: inserting into `email_unsubscribe_tokens` was rejected by access rules, then the helper returned before queueing any email.
+- There are no recent function logs for the app-email send path, which supports the conclusion that the send function was not being invoked.
 
-In `src/lib/inquiries.functions.ts`, after a successful insert, call `enqueueTransactionalEmail` twice:
+## Root issue to fix
 
-- `inquiry-received` → to `data.email` (user confirmation). Override redirects to `fastresults@gmail.com`.
-- `inquiry-admin-notification` → to `fastresults@gmail.com` (admin ping). Override still applies; ends up at the same inbox with the `[→ fastresults@gmail.com]` prefix, which is fine.
+The system is currently trying to send app emails from the browser/client path. That is the wrong boundary. Email enqueueing must happen in a trusted backend function that has service-level access to the email queue, token table, suppression list, and send log.
 
-Use idempotency keys `inquiry-received-<inquiry.id>` and `inquiry-admin-<inquiry.id>`. Return the inserted row from the insert (`.select().single()`) so we have the id.
+The super-admin routing rule also needs to live at that backend boundary so every send path is forced to `fastresults@gmail.com`, regardless of which page or feature triggered it.
 
-Update `src/routes/contact.tsx` to await the new function (already does via `submitInquiry`) — no UI change.
+## Phase 1 — Instrument before changing behavior
 
-### 2. Audit every other submit path and re-wire the ones that dropped their enqueue
+1. Add a clear, single diagnostic trail for every email attempt:
+   - triggering feature, such as contact form or member approval
+   - template name
+   - original intended recipient
+   - final routed recipient
+   - idempotency key
+   - success/failure reason
+2. Make the contact submission return or log the email attempt result during testing, instead of silently swallowing failures.
+3. Remove “fire-and-forget” behavior until delivery is verified.
 
-Sweep `src/lib` and `src/routes` for direct `.insert(` on tables that used to trigger emails, matched against the 7 registered templates:
+## Phase 2 — Move email enqueueing to the backend
 
-- `founder_applications` → should enqueue `application-received`
-- `member_intakes` → should enqueue `member-intake-received` + `member-intake-admin-notification`
-- `member-approved` → admin approval action
-- `inquiry-reply` → admin reply action
+1. Use the existing app-email function as the single send entry point.
+2. Move suppression checks, unsubscribe token creation, rendering, logging, queue insertion, and routing override into the trusted backend function.
+3. Keep the browser/client code simple:
+   - insert or save the user action where appropriate
+   - call the backend email function with `templateName`, `recipientEmail`, `templateData`, and `idempotencyKey`
+4. Ensure the backend function always rewrites the final recipient to:
 
-For each, confirm whether the enqueue call is present. If missing, add it with an idempotency key derived from the row id. If already present, leave it.
+```text
+fastresults@gmail.com
+```
 
-### 3. Verify
+5. Preserve the intended recipient in:
+   - subject prefix
+   - visible email banner
+   - send-log metadata
 
-- Submit the contact form once. Confirm two new `email_send_log` rows appear (`pending` → `sent`) with `recipient_email = fastresults@gmail.com` and `metadata.original_recipient` set to the form email and to the admin address respectively.
-- Confirm the inbox at `fastresults@gmail.com` receives both, with the `[→ …]` subject prefix and the yellow dev-routing banner.
-- Repeat for one founder application and one member intake if those forms are reachable in the current build.
+## Phase 3 — Fix all app email call sites, not just contact
 
-### 4. Report
+Audit and wire every app email trigger through the same backend send path:
 
-Post a short summary listing which forms were already wired, which I re-wired, and the email_send_log evidence for the contact-form test.
+- contact inquiry confirmation
+- contact inquiry admin notification
+- founder application confirmation
+- member intake confirmation
+- member intake admin notification
+- member approval email
+- inquiry reply email
+- any test-send/debug email path
 
-## Not doing
+No page should import the email template registry or directly touch email infrastructure tables.
 
-- Not touching the override itself — it's correct.
-- Not adding a DB trigger to send emails; keeping the enqueue call in app code matches the existing pattern for the founder application and member intake flows.
-- Not changing templates, subjects, or the auth-email-hook.
+## Phase 4 — Verify with hard evidence
 
-## Files
+Run one controlled contact-form test and verify all four layers:
 
-- `src/lib/inquiries.functions.ts` — add enqueue calls, return inserted id.
-- `src/routes/contact.tsx` — no change expected (verify only).
-- Any other `*.functions.ts` files found in step 2 that are missing their enqueue call.
+1. UI shows the form submitted successfully.
+2. Database contains the new inquiry row.
+3. Email log contains new rows for both expected emails.
+4. The latest status for each message becomes `sent`, with `recipient_email = fastresults@gmail.com` and metadata preserving the original intended recipient.
+
+Then check backend function logs for the same message IDs.
+
+## Phase 5 — Inbox verification and failure handling
+
+1. Confirm whether the provider accepted the email.
+2. If accepted but inbox does not receive it, check spam/promotions and suppression state for `fastresults@gmail.com`.
+3. If rejected or dead-lettered, fix the exact provider/queue error instead of changing application code blindly.
+4. Keep the diagnostic logs until the first successful end-to-end send is proven.
+
+## Acceptance criteria
+
+This is not complete until all of the following are true:
+
+- A fresh contact-form submission creates the inquiry row.
+- Two email attempts are logged for that submission.
+- Both are routed to `fastresults@gmail.com`.
+- Both reach `sent` status.
+- The original intended recipient is visible in metadata and subject/body routing indicators.
+- No browser-side code writes to email infrastructure tables.
+- No email trigger silently swallows a failure during verification.
+
+## Technical implementation notes
+
+- The current client-side helper should be replaced or reduced to a backend-function invoker.
+- The trusted backend send function should own the routing override and all queue/log/token operations.
+- The email function must be redeployed after changes.
+- Verification should use the email log and function logs before claiming success.

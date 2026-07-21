@@ -3,6 +3,10 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { supabase } from '@/integrations/supabase/client'
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string
 
 type State =
   | { kind: 'loading' }
@@ -20,7 +24,9 @@ export default function UnsubscribePage() {
 
   useEffect(() => {
     if (!token) { setState({ kind: 'invalid' }); return }
-    fetch(`/email/unsubscribe?token=${encodeURIComponent(token)}`)
+    fetch(`${SUPABASE_URL}/functions/v1/handle-email-unsubscribe?token=${encodeURIComponent(token)}`, {
+      headers: { apikey: SUPABASE_ANON_KEY },
+    })
       .then(async (r) => {
         const body = await r.json().catch(() => ({}))
         if (!r.ok) { setState({ kind: 'invalid' }); return }
@@ -35,15 +41,12 @@ export default function UnsubscribePage() {
     if (!token) return
     setState({ kind: 'submitting' })
     try {
-      const r = await fetch('/email/unsubscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
+      const { data, error } = await supabase.functions.invoke('handle-email-unsubscribe', {
+        body: { token },
       })
-      const body = await r.json().catch(() => ({}))
-      if (r.ok && body.success) setState({ kind: 'done' })
-      else if (body.reason === 'already_unsubscribed') setState({ kind: 'already' })
-      else setState({ kind: 'error', message: body.error || 'Something went wrong.' })
+      if (!error && data?.success) setState({ kind: 'done' })
+      else if (data?.reason === 'already_unsubscribed') setState({ kind: 'already' })
+      else setState({ kind: 'error', message: data?.error || error?.message || 'Something went wrong.' })
     } catch (e: any) {
       setState({ kind: 'error', message: e?.message ?? 'Network error' })
     }

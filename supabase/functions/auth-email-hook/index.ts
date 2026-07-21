@@ -276,6 +276,8 @@ async function handleWebhook(req: Request): Promise<Response> {
       text: routedText,
       purpose: 'transactional',
       label: emailType,
+      original_recipient: originalRecipient,
+      dev_routed: true,
       queued_at: new Date().toISOString(),
     },
   })
