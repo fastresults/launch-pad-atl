@@ -1938,6 +1938,146 @@ export type Database = {
         }
         Relationships: []
       }
+      private_session_bookings: {
+        Row: {
+          amount_cents: number
+          business_idea: string | null
+          cancelled_at: string | null
+          confirmed_at: string | null
+          created_at: string
+          email: string
+          hold_expires_at: string | null
+          id: string
+          name: string
+          notes: string | null
+          payment_ref: string | null
+          payment_status: string
+          phone: string | null
+          slot_id: string
+          stage: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          business_idea?: string | null
+          cancelled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          email: string
+          hold_expires_at?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          payment_ref?: string | null
+          payment_status?: string
+          phone?: string | null
+          slot_id: string
+          stage?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          business_idea?: string | null
+          cancelled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          email?: string
+          hold_expires_at?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          payment_ref?: string | null
+          payment_status?: string
+          phone?: string | null
+          slot_id?: string
+          stage?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_session_bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: true
+            referencedRelation: "private_session_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      private_session_settings: {
+        Row: {
+          contact_email: string | null
+          created_at: string
+          hold_minutes: number
+          id: number
+          location_label: string
+          price_cents: number
+          updated_at: string
+          weeks_ahead: number
+        }
+        Insert: {
+          contact_email?: string | null
+          created_at?: string
+          hold_minutes?: number
+          id?: number
+          location_label?: string
+          price_cents?: number
+          updated_at?: string
+          weeks_ahead?: number
+        }
+        Update: {
+          contact_email?: string | null
+          created_at?: string
+          hold_minutes?: number
+          id?: number
+          location_label?: string
+          price_cents?: number
+          updated_at?: string
+          weeks_ahead?: number
+        }
+        Relationships: []
+      }
+      private_session_slots: {
+        Row: {
+          blocked_reason: string | null
+          created_at: string
+          end_time: string
+          hold_expires_at: string | null
+          id: string
+          session_date: string
+          start_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          blocked_reason?: string | null
+          created_at?: string
+          end_time: string
+          hold_expires_at?: string | null
+          id?: string
+          session_date: string
+          start_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          blocked_reason?: string | null
+          created_at?: string
+          end_time?: string
+          hold_expires_at?: string | null
+          id?: string
+          session_date?: string
+          start_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           approved_at: string | null
@@ -3328,6 +3468,10 @@ export type Database = {
         Args: { _code: string }
         Returns: undefined
       }
+      admin_set_private_session_slot_status: {
+        Args: { _reason: string; _slot_id: string; _status: string }
+        Returns: undefined
+      }
       admin_set_user_bulk_unlock: {
         Args: { _code: string; _user_id: string }
         Returns: undefined
@@ -3340,6 +3484,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      confirm_private_session_booking: {
+        Args: { _booking_id: string; _payment_ref: string }
+        Returns: undefined
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -3349,6 +3497,17 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      ensure_private_session_slots: { Args: never; Returns: undefined }
+      get_upcoming_private_session_slots: {
+        Args: never
+        Returns: {
+          end_time: string
+          id: string
+          session_date: string
+          start_time: string
+          status: string
+        }[]
       }
       has_role: {
         Args: {
@@ -3434,6 +3593,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      release_expired_private_session_holds: { Args: never; Returns: number }
       reserve_cohort_seat: {
         Args: {
           _cohort_id: string
@@ -3443,6 +3603,22 @@ export type Database = {
         Returns: {
           assigned_tier: string
           price_cents: number
+        }[]
+      }
+      reserve_private_session_slot: {
+        Args: {
+          _business_idea: string
+          _email: string
+          _name: string
+          _notes: string
+          _phone: string
+          _slot_id: string
+          _stage: string
+        }
+        Returns: {
+          amount_cents: number
+          booking_id: string
+          hold_expires_at: string
         }[]
       }
       reset_founder_workspace: { Args: { _user_id: string }; Returns: string[] }

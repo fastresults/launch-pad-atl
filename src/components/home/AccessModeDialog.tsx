@@ -129,6 +129,13 @@ export function AccessModeDialog({
           ))}
         </div>
         <p className="mt-2 text-center text-xs text-muted-foreground">
+          Want just you and Adam?{" "}
+          <Link to="/private-tuesday" onClick={() => onOpenChange(false)} className="underline hover:text-foreground">
+            Book a private Tuesday at IGNITE — $397
+          </Link>
+          .
+        </p>
+        <p className="mt-1 text-center text-xs text-muted-foreground">
           Not sure which fits?{" "}
           <Link to="/contact" onClick={() => onOpenChange(false)} className="underline hover:text-foreground">
             Ask Adam

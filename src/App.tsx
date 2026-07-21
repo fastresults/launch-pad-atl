@@ -25,6 +25,7 @@ const TermsPage = lazy(() => import("@/routes/terms"));
 const UnsubscribePage = lazy(() => import("@/routes/unsubscribe"));
 const WebinarPage = lazy(() => import("@/routes/webinar"));
 const OneOnOnePage = lazy(() => import("@/routes/one-on-one"));
+const PrivateTuesdayPage = lazy(() => import("@/routes/private-tuesday"));
 
 // Authenticated pages
 const WelcomePage = lazy(() => import("@/routes/_authenticated/welcome"));
@@ -61,6 +62,7 @@ const AdminDeckEditor = lazy(() => import("@/routes/_authenticated/_admin/admin.
 
 const AdminReview = lazy(() => import("@/routes/_authenticated/_admin/admin.review"));
 const AdminRegistrations = lazy(() => import("@/routes/_authenticated/_admin/admin.registrations"));
+const AdminPrivateSessions = lazy(() => import("@/routes/_authenticated/_admin/admin.private-sessions"));
 const AdminMembers = lazy(() => import("@/routes/_authenticated/_admin/admin.members"));
 const AdminMembersUserView = lazy(() => import("@/routes/_authenticated/_admin/admin.members.$userId.view"));
 const AdminHub = lazy(() => import("@/routes/_authenticated/_admin/admin.hub"));
@@ -120,6 +122,7 @@ export default function App() {
         <Route path="/unsubscribe" element={<UnsubscribePage />} />
         <Route path="/webinar" element={<WebinarPage />} />
         <Route path="/one-on-one" element={<OneOnOnePage />} />
+        <Route path="/private-tuesday" element={<PrivateTuesdayPage />} />
 
         {/* Authenticated routes */}
         <Route element={<AuthenticatedLayout />}>
@@ -160,6 +163,7 @@ export default function App() {
             <Route path="/admin/decks/:slug" element={<AdminDeckEditor />} />
             <Route path="/admin/review" element={<AdminReview />} />
             <Route path="/admin/registrations" element={<AdminRegistrations />} />
+            <Route path="/admin/private-sessions" element={<AdminPrivateSessions />} />
             <Route path="/admin/members" element={<AdminMembers />} />
             <Route path="/admin/members/:userId/view" element={<AdminMembersUserView />} />
             <Route path="/admin/hub" element={<AdminHub />} />

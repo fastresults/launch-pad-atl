@@ -35,6 +35,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { to: "/admin/members", label: "Members", icon: Shield, group: "Operations", badgeKey: "membersPending" },
   { to: "/admin/applications", label: "Applications", icon: FileText, group: "Operations", badgeKey: "applicationsPending" },
   { to: "/admin/registrations", label: "Registrations", icon: ClipboardList, group: "Operations" },
+  { to: "/admin/private-sessions", label: "Private Tuesdays", icon: CalendarRange, group: "Operations" },
   { to: "/admin/attendees", label: "Attendees", icon: Users, group: "Operations" },
   { to: "/admin/hub", label: "Founders Hub", icon: Sparkles, group: "Operations" },
   { to: "/admin/review", label: "Review queue", icon: Inbox, group: "Operations", super: true, badgeKey: "reviewPending" },
