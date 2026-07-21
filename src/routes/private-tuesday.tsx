@@ -164,6 +164,22 @@ export default function PrivateTuesdayPage() {
                         <div className="mt-3 flex flex-wrap gap-2">
                           {list.map((s) => {
                             const selected = selectedId === s.id;
+                            const unavailable = s.status !== "available";
+                            if (unavailable) {
+                              return (
+                                <div
+                                  key={s.id}
+                                  aria-disabled="true"
+                                  className="cursor-not-allowed rounded-md border border-[#E4D9C4] bg-[#EFE7D6] px-3 py-2 text-sm text-[#9A8B75] line-through"
+                                  title={s.status === "booked" ? "Reserved" : "Unavailable"}
+                                >
+                                  {formatSlotTime(s.start_time, s.end_time)}
+                                  <span className="ml-2 text-[10px] uppercase tracking-wide no-underline">
+                                    {s.status === "booked" ? "Reserved" : "Unavailable"}
+                                  </span>
+                                </div>
+                              );
+                            }
                             return (
                               <button
                                 key={s.id}
