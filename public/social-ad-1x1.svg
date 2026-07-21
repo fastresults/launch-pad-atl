@@ -71,18 +71,23 @@
   </g>
 
   <!-- Divider -->
-  <line x1="470" y1="915" x2="610" y2="915" stroke="#8B7355" stroke-width="1"/>
+  <line x1="470" y1="905" x2="610" y2="905" stroke="#8B7355" stroke-width="1"/>
 
   <!-- Sub -->
-  <text x="540" y="955" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" letter-spacing="4" fill="#5C4A38">
+  <text x="540" y="938" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" letter-spacing="4" fill="#5C4A38">
     ONE FOCUSED MORNING · $297
   </text>
 
   <!-- CTA -->
-  <g transform="translate(540, 990)">
-    <rect x="-140" y="0" width="280" height="52" rx="26" fill="#2A1A10"/>
-    <text x="0" y="34" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" letter-spacing="3" fill="#FDFAF3" font-weight="700">
+  <g transform="translate(540, 958)">
+    <rect x="-140" y="0" width="280" height="48" rx="24" fill="#2A1A10"/>
+    <text x="0" y="31" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17" letter-spacing="3" fill="#FDFAF3" font-weight="700">
       RESERVE YOUR SEAT
     </text>
   </g>
+
+  <!-- URL -->
+  <text x="540" y="1020" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="22" fill="#5C4A38">
+    startuplabs.online
+  </text>
 </svg>
