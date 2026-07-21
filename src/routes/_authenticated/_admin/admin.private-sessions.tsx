@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Ban, CheckCircle2, RotateCcw } from "lucide-react";
+import { Loader2, Ban, CheckCircle2, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   ensurePrivateSessionSlots,
   listUpcomingPrivateSessionSlots,
   adminSetSlotStatus,
   adminListBookings,
+  adminReleaseBooking,
+  adminConfirmBooking,
   formatSlotDate,
   formatSlotTime,
   type PrivateSessionSlot,
