@@ -121,6 +121,7 @@ export default function App() {
         <Route path="/unsubscribe" element={<UnsubscribePage />} />
         <Route path="/webinar" element={<WebinarPage />} />
         <Route path="/one-on-one" element={<OneOnOnePage />} />
+        <Route path="/private-tuesday" element={<PrivateTuesdayPage />} />
 
         {/* Authenticated routes */}
         <Route element={<AuthenticatedLayout />}>
