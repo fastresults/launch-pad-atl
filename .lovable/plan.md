@@ -1,54 +1,49 @@
-## Goal
+## Root cause
 
-Every email this app sends — no matter who the intended recipient is — must land in `fastresults@gmail.com` (super admin). This is a hard override, applied at the last point before enqueue/send, so nothing slips past it.
+The global routing override in `src/lib/email/enqueue.ts` is correct — but the contact form never calls it. `submitInquiry()` and `contact.tsx` insert a row into `inquiries` and stop. No DB trigger, no edge function, no client-side enqueue. `email_send_log` has no rows after May 30, confirming nothing has been sent from any user-facing form in almost two months.
 
-## Current state (verified)
+## Fix
 
-- App emails flow through one function: `src/lib/email/enqueue.ts` → `enqueueTransactionalEmail()` → `email_send_log` + `enqueue_email` RPC into the `transactional_emails` pgmq queue.
-- All 7 registered templates route through that single function: `application-received`, `inquiry-received`, `inquiry-admin-notification`, `inquiry-reply`, `member-intake-received`, `member-intake-admin-notification`, `member-approved`. The `TemplateEntry` type already supports a fixed `to:` override, but individual templates don't set it.
-- No `send-transactional-email` or `auth-email-hook` edge function exists in `supabase/functions/`. Auth emails (signup, magic link, password reset, email change) currently go directly through Lovable Cloud's default GoTrue templates — the app has no interception point today.
-- `fastresults@gmail.com` appears only as a `mailto:` contact link in `terms.tsx`, `privacy.tsx`, `HelpFab.tsx` — no routing logic references it.
+### 1. Wire the contact form to enqueue both emails
 
-## Plan
+In `src/lib/inquiries.functions.ts`, after a successful insert, call `enqueueTransactionalEmail` twice:
 
-### 1. Global override in the app-email enqueue path
+- `inquiry-received` → to `data.email` (user confirmation). Override redirects to `fastresults@gmail.com`.
+- `inquiry-admin-notification` → to `fastresults@gmail.com` (admin ping). Override still applies; ends up at the same inbox with the `[→ fastresults@gmail.com]` prefix, which is fine.
 
-In `src/lib/email/enqueue.ts`:
-- Add a module-level constant `SUPER_ADMIN_EMAIL = 'fastresults@gmail.com'`.
-- Immediately after normalizing the recipient, replace both `recipientEmail` and `normalized` with the super-admin address for every send. Keep the original in `templateData.__originalRecipient` and prepend it to the subject line (e.g. `[→ user@example.com] Welcome to the sprint`) so QA can still tell who it was meant for.
-- Skip the suppression check against the original recipient — only check suppression for `fastresults@gmail.com` (otherwise a suppressed real user would silently block admin visibility).
-- Use a stable unsubscribe token for the super admin address only (don't mint per-original-recipient tokens).
-- Route the queue payload's `to`, `recipient_email`, and log rows to `SUPER_ADMIN_EMAIL`.
+Use idempotency keys `inquiry-received-<inquiry.id>` and `inquiry-admin-<inquiry.id>`. Return the inserted row from the insert (`.select().single()`) so we have the id.
 
-Because every template — application confirmations, inquiry replies, member approvals, admin notifications — funnels through this one function, this single change covers 100% of app email surface.
+Update `src/routes/contact.tsx` to await the new function (already does via `submitInquiry`) — no UI change.
 
-### 2. Intercept auth emails
+### 2. Audit every other submit path and re-wire the ones that dropped their enqueue
 
-Auth emails don't touch `enqueue.ts` today, so the override above won't catch signup/password-reset/magic-link/email-change. Two options — pick one:
+Sweep `src/lib` and `src/routes` for direct `.insert(` on tables that used to trigger emails, matched against the 7 registered templates:
 
-- **A. Scaffold `auth-email-hook`** (recommended). Adds a Lovable-managed auth email hook + templates. In the hook, apply the same super-admin override before enqueueing to the `auth_emails` queue. Requires the email domain (`notify.startuplabs.online`) to already exist — it does. This is the cleanest fix and gives brand-matched auth email templates as a bonus.
-- **B. Disable custom auth email delivery.** Not viable — signup verification / password reset would break for the super admin too.
+- `founder_applications` → should enqueue `application-received`
+- `member_intakes` → should enqueue `member-intake-received` + `member-intake-admin-notification`
+- `member-approved` → admin approval action
+- `inquiry-reply` → admin reply action
 
-Plan chooses A.
+For each, confirm whether the enqueue call is present. If missing, add it with an idempotency key derived from the row id. If already present, leave it.
 
-### 3. Guard rails
+### 3. Verify
 
-- Add a one-line banner in the rendered email body (top of `Container`) that reads *"DEV ROUTING — originally addressed to `{originalRecipient}`"* so it's obvious in the inbox.
-- Log both the original and the routed recipient in `email_send_log` (add `metadata: { original_recipient }` on the pending row).
-- Add a single `README` note at `supabase/functions/_shared/EMAIL_ROUTING.md` documenting the override and how to remove it before launch.
+- Submit the contact form once. Confirm two new `email_send_log` rows appear (`pending` → `sent`) with `recipient_email = fastresults@gmail.com` and `metadata.original_recipient` set to the form email and to the admin address respectively.
+- Confirm the inbox at `fastresults@gmail.com` receives both, with the `[→ …]` subject prefix and the yellow dev-routing banner.
+- Repeat for one founder application and one member intake if those forms are reachable in the current build.
 
-### 4. Verification
+### 4. Report
 
-- Trigger the contact form → confirm `fastresults@gmail.com` receives the confirmation and the admin notification, both with the `[→ ...]` prefix.
-- Trigger a signup with a throwaway address → confirm the verification email lands in `fastresults@gmail.com`, not the throwaway.
-- Query `email_send_log`: every recent row's `recipient_email` = `fastresults@gmail.com`; `metadata.original_recipient` shows the intended user.
+Post a short summary listing which forms were already wired, which I re-wired, and the email_send_log evidence for the contact-form test.
 
-### Technical notes
+## Not doing
 
-- Files touched: `src/lib/email/enqueue.ts` (override + logging), `supabase/functions/auth-email-hook/index.ts` (new, via scaffold + override edit), template registry unchanged.
-- Reversal path: delete the constant + the 6-line override block; delete/disable `auth-email-hook`. Documented in the new README.
-- No schema migrations required — `email_send_log.metadata` is a JSONB column already provisioned by `setup_email_infra`.
+- Not touching the override itself — it's correct.
+- Not adding a DB trigger to send emails; keeping the enqueue call in app code matches the existing pattern for the founder application and member intake flows.
+- Not changing templates, subjects, or the auth-email-hook.
 
-### Open question
+## Files
 
-Confirm the scope: should the override apply in **all environments (dev, preview, published)**, or only in dev/preview and preserve normal delivery once published? Simplest and safest for a QA sweep is "everywhere until you tell me to remove it" — that's what this plan assumes.
+- `src/lib/inquiries.functions.ts` — add enqueue calls, return inserted id.
+- `src/routes/contact.tsx` — no change expected (verify only).
+- Any other `*.functions.ts` files found in step 2 that are missing their enqueue call.
