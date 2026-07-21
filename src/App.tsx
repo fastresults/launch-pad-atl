@@ -25,6 +25,7 @@ const TermsPage = lazy(() => import("@/routes/terms"));
 const UnsubscribePage = lazy(() => import("@/routes/unsubscribe"));
 const WebinarPage = lazy(() => import("@/routes/webinar"));
 const OneOnOnePage = lazy(() => import("@/routes/one-on-one"));
+const PrivateTuesdayPage = lazy(() => import("@/routes/private-tuesday"));
 
 // Authenticated pages
 const WelcomePage = lazy(() => import("@/routes/_authenticated/welcome"));
