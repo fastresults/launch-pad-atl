@@ -1,24 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import * as React from 'react'
-import { render } from '@react-email/components'
-import { TEMPLATES } from '@/lib/email-templates/registry'
-
-const SITE_NAME = 'Atlanta Startup Sprint'
-const SENDER_DOMAIN = 'notify.startuplabs.online'
-const FROM_DOMAIN = 'notify.startuplabs.online'
-
-// DEV ROUTING OVERRIDE — every outgoing app email is redirected to super admin.
-// Remove this constant and the override block below to restore normal delivery.
-// See supabase/functions/_shared/EMAIL_ROUTING.md
-const SUPER_ADMIN_EMAIL = 'fastresults@gmail.com'
-
-function generateToken(): string {
-  const bytes = new Uint8Array(32)
-  crypto.getRandomValues(bytes)
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
 
 interface EnqueueParams {
   templateName: string
@@ -29,139 +9,29 @@ interface EnqueueParams {
 }
 
 /**
- * Server-only: enqueue a transactional email without requiring a user JWT.
- * Use from public/unauthenticated server functions (e.g. founder applications).
- *
- * Does suppression check, unsubscribe token mgmt, template render, and pgmq enqueue.
- * Never throws — failures are logged so the calling action still completes.
+ * Enqueues an app email by calling the trusted backend email function.
+ * All protected email work happens server-side so browser RLS cannot block sends.
  */
 export async function enqueueTransactionalEmail(
   params: EnqueueParams,
 ): Promise<{ queued: boolean; reason?: string }> {
-  const { templateName, idempotencyKey } = params
-  const originalRecipient = params.recipientEmail
-  // DEV ROUTING OVERRIDE — force every send to the super admin.
-  const recipientEmail = SUPER_ADMIN_EMAIL
-  const templateData = { ...(params.templateData ?? {}), __originalRecipient: originalRecipient }
-  const messageId = crypto.randomUUID()
-  const normalized = recipientEmail.trim().toLowerCase()
-
-  const template = TEMPLATES[templateName]
-  if (!template) {
-    console.error('[email] template not found', { templateName })
-    return { queued: false, reason: 'template_not_found' }
-  }
-
-  // Suppression check
-  const { data: suppressed } = await supabase
-    .from('suppressed_emails')
-    .select('id')
-    .eq('email', normalized)
-    .maybeSingle()
-  if (suppressed) {
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: templateName,
-      recipient_email: recipientEmail,
-      status: 'suppressed',
-    })
-    return { queued: false, reason: 'suppressed' }
-  }
-
-  // Unsubscribe token (one per address)
-  let unsubscribeToken: string
-  const { data: existing } = await supabase
-    .from('email_unsubscribe_tokens')
-    .select('token, used_at')
-    .eq('email', normalized)
-    .maybeSingle()
-
-  if (existing?.token && !existing.used_at) {
-    unsubscribeToken = existing.token
-  } else if (!existing) {
-    unsubscribeToken = generateToken()
-    await supabase
-      .from('email_unsubscribe_tokens')
-      .upsert(
-        { token: unsubscribeToken, email: normalized },
-        { onConflict: 'email', ignoreDuplicates: true },
-      )
-    const { data: stored } = await supabase
-      .from('email_unsubscribe_tokens')
-      .select('token')
-      .eq('email', normalized)
-      .maybeSingle()
-    if (!stored?.token) {
-      console.error('[email] could not store unsubscribe token')
-      return { queued: false, reason: 'token_failed' }
-    }
-    unsubscribeToken = stored.token
-  } else {
-    // already used → treat as suppressed
-    return { queued: false, reason: 'already_unsubscribed' }
-  }
-
-  // Render
-  let html: string
-  let plainText: string
-  try {
-    const element = React.createElement(template.component, templateData)
-    html = await render(element)
-    plainText = await render(element, { plainText: true })
-  } catch (err) {
-    console.error('[email] render failed', { templateName, err })
-    return { queued: false, reason: 'render_failed' }
-  }
-
-  const rawSubject =
-    typeof template.subject === 'function'
-      ? template.subject(templateData)
-      : template.subject
-  const subject = `[→ ${originalRecipient}] ${rawSubject}`
-
-  // Inject a dev-routing banner at the top of the rendered HTML so it's obvious in the inbox.
-  const banner = `<div style="background:#FEF3C7;border:1px solid #F59E0B;color:#78350F;padding:8px 12px;font:12px/1.4 Arial,sans-serif;margin:0 0 12px;">DEV ROUTING — originally addressed to <strong>${originalRecipient}</strong></div>`
-  html = html.replace(/(<body[^>]*>)/i, (m) => `${m}${banner}`)
-  plainText = `DEV ROUTING — originally addressed to ${originalRecipient}\n\n${plainText}`
-
-  await supabase.from('email_send_log').insert({
-    message_id: messageId,
-    template_name: templateName,
-    recipient_email: recipientEmail,
-    status: 'pending',
-    metadata: { original_recipient: originalRecipient, dev_routed: true },
-  })
-
-  const { error: enqueueError } = await supabase.rpc('enqueue_email', {
-    queue_name: 'transactional_emails',
-    payload: {
-      message_id: messageId,
-      to: recipientEmail,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject,
-      html,
-      text: plainText,
-      purpose: 'transactional',
-      label: templateName,
-      idempotency_key: idempotencyKey,
-      unsubscribe_token: unsubscribeToken,
-      reply_to: params.replyTo,
-      queued_at: new Date().toISOString(),
+  const { data, error } = await supabase.functions.invoke('send-transactional-email', {
+    body: {
+      templateName: params.templateName,
+      recipientEmail: params.recipientEmail,
+      idempotencyKey: params.idempotencyKey,
+      templateData: params.templateData ?? {},
+      replyTo: params.replyTo,
     },
   })
 
-  if (enqueueError) {
-    console.error('[email] enqueue failed', enqueueError)
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: templateName,
-      recipient_email: recipientEmail,
-      status: 'failed',
-      error_message: 'Enqueue RPC failed',
-    })
-    return { queued: false, reason: 'enqueue_failed' }
+  if (error) {
+    console.error('[email] backend enqueue failed', error)
+    return { queued: false, reason: error.message || 'function_failed' }
   }
 
-  return { queued: true }
+  return {
+    queued: Boolean(data?.queued || data?.success),
+    reason: data?.reason,
+  }
 }
