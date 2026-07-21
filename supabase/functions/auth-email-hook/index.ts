@@ -285,9 +285,10 @@ async function handleWebhook(req: Request): Promise<Response> {
     await supabase.from('email_send_log').insert({
       message_id: messageId,
       template_name: emailType,
-      recipient_email: payload.data.email,
+      recipient_email: routedRecipient,
       status: 'failed',
       error_message: 'Failed to enqueue email',
+      metadata: { original_recipient: originalRecipient, dev_routed: true },
     })
     return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
       status: 500,
