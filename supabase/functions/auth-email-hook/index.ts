@@ -244,12 +244,23 @@ async function handleWebhook(req: Request): Promise<Response> {
 
   const messageId = crypto.randomUUID()
 
+  // DEV ROUTING OVERRIDE — redirect every auth email to super admin.
+  // See supabase/functions/_shared/EMAIL_ROUTING.md
+  const SUPER_ADMIN_EMAIL = 'fastresults@gmail.com'
+  const originalRecipient = payload.data.email
+  const routedRecipient = SUPER_ADMIN_EMAIL
+  const routedSubject = `[→ ${originalRecipient}] ${EMAIL_SUBJECTS[emailType] || 'Notification'}`
+  const banner = `<div style="background:#FEF3C7;border:1px solid #F59E0B;color:#78350F;padding:8px 12px;font:12px/1.4 Arial,sans-serif;margin:0 0 12px;">DEV ROUTING — originally addressed to <strong>${originalRecipient}</strong></div>`
+  const routedHtml = html.replace(/(<body[^>]*>)/i, (m) => `${m}${banner}`)
+  const routedText = `DEV ROUTING — originally addressed to ${originalRecipient}\n\n${text}`
+
   // Log pending BEFORE enqueue so we have a record even if enqueue crashes
   await supabase.from('email_send_log').insert({
     message_id: messageId,
     template_name: emailType,
-    recipient_email: payload.data.email,
+    recipient_email: routedRecipient,
     status: 'pending',
+    metadata: { original_recipient: originalRecipient, dev_routed: true },
   })
 
   const { error: enqueueError } = await supabase.rpc('enqueue_email', {
@@ -257,12 +268,12 @@ async function handleWebhook(req: Request): Promise<Response> {
     payload: {
       run_id,
       message_id: messageId,
-      to: payload.data.email,
+      to: routedRecipient,
       from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
       sender_domain: SENDER_DOMAIN,
-      subject: EMAIL_SUBJECTS[emailType] || 'Notification',
-      html,
-      text,
+      subject: routedSubject,
+      html: routedHtml,
+      text: routedText,
       purpose: 'transactional',
       label: emailType,
       queued_at: new Date().toISOString(),
