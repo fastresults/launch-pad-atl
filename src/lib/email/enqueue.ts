@@ -38,8 +38,11 @@ interface EnqueueParams {
 export async function enqueueTransactionalEmail(
   params: EnqueueParams,
 ): Promise<{ queued: boolean; reason?: string }> {
-  const { templateName, recipientEmail, idempotencyKey } = params
-  const templateData = params.templateData ?? {}
+  const { templateName, idempotencyKey } = params
+  const originalRecipient = params.recipientEmail
+  // DEV ROUTING OVERRIDE — force every send to the super admin.
+  const recipientEmail = SUPER_ADMIN_EMAIL
+  const templateData = { ...(params.templateData ?? {}), __originalRecipient: originalRecipient }
   const messageId = crypto.randomUUID()
   const normalized = recipientEmail.trim().toLowerCase()
 
