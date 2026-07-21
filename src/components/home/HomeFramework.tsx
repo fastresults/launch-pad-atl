@@ -228,6 +228,18 @@ function Hero() {
               >
                 Can&rsquo;t make it? See the other two ways.
               </button>
+
+              <div className="mt-5 border-t border-dashed border-[#C9B99A] pt-4 text-center">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-[#8B7355]">
+                  Prefer just you &amp; Adam?
+                </p>
+                <Link
+                  to="/private-tuesday"
+                  className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-[#3D3025] underline decoration-[#C9B99A] decoration-2 underline-offset-4 hover:text-[#8B7355]"
+                >
+                  Private Tuesday at IGNITE &mdash; $397 <ArrowRight className="size-3.5" />
+                </Link>
+              </div>
             </div>
 
             {/* Bottom spacer to align baseline with left column's designed-for */}
