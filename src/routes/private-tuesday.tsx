@@ -119,9 +119,9 @@ export default function PrivateTuesdayPage() {
               <span className="italic">at the table.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-[#5A4A3A] md:text-lg">
-              Two hours. One founder. Same real build as the workshop — landing page live,
+              Ninety minutes. One founder. Same real build as the workshop — landing page live,
               positioning locked, first outreach sent — except it's just the two of you,
-              at IGNITE, on a Tuesday morning or afternoon.
+              at IGNITE, on a Tuesday.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-[#5A4A3A]">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-[#C9B99A] bg-white px-3 py-1">
@@ -131,7 +131,7 @@ export default function PrivateTuesdayPage() {
                 <Calendar className="size-3.5" /> Tuesdays only
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-[#C9B99A] bg-white px-3 py-1">
-                <Clock className="size-3.5" /> Four 2-hour blocks · 9:30, 11:30, 1:30, 3:30
+                <Clock className="size-3.5" /> Four 90-min blocks · 9:30, 11:10, 12:50, 2:30
               </span>
             </div>
           </div>
