@@ -1,25 +1,30 @@
-## Goal
-The `/private-tuesday` page should always show a rolling 8-week window of open Tuesdays without any admin action. As each Tuesday (and each time slot within today) elapses, it disappears and a new Tuesday appears at the tail.
+## Update Private Tuesday sessions: 90 min blocks, 10 min breaks, 9:30 AM – 5:30 PM
 
-## Current state (verified)
-- `private_session_slots` is seeded through **Tuesday, Sep 8, 2026** — a fixed 8-week window from when it was first generated. Nothing extends it.
-- `ensure_private_session_slots()` already exists and is idempotent (ON CONFLICT DO NOTHING) — it inserts the next 8 Tuesdays × 3 time blocks. But nothing calls it on a schedule.
-- `get_upcoming_private_session_slots()` filters `session_date >= current_date`, so past *days* already drop off automatically. What it does **not** do: hide time blocks earlier today whose `end_time` has already passed (e.g. the 9:30–11:30 AM slot still shows at 2 PM on a Tuesday).
+### New daily schedule (4 blocks fit cleanly)
+Each session is 1h 30m with a 10-minute break between:
 
-## Changes
+1. 9:30 AM – 11:00 AM
+2. 11:10 AM – 12:40 PM
+3. 12:50 PM – 2:20 PM
+4. 2:30 PM – 4:00 PM
 
-### 1. Auto-extend the window (daily cron)
-Enable `pg_cron` + `pg_net` and schedule a job that runs `ensure_private_session_slots()` once a day just after midnight America/New_York. Because the function is idempotent, it safely tops the window back up to 8 future Tuesdays every day — so as one Tuesday elapses, a new one appears at the end.
+A 5th block (4:10–5:40) would run 10 minutes past the 5:30 PM cutoff, so 4 blocks is the max that respects the window and the break rule. If you want a 5th, we'd need to drop one break or trim the window — flag which and I'll adjust.
 
-Registered via `supabase--insert` (not migration) since cron SQL contains project-specific URLs/keys.
+### Changes
 
-### 2. Hide past-today time slots
-Update `get_upcoming_private_session_slots()` so a slot on today's date is excluded once its `end_time` has passed (evaluated in America/New_York, since the workshop is at IGNITE in Atlanta). Future days are unaffected.
+**Database** (`supabase--migration`)
+- Rewrite `ensure_private_session_slots()` to seed the four new start times (09:30, 11:10, 12:50, 14:30) with 90-minute duration.
+- Delete future unbooked slots that don't match the new times (keeps any already-booked slots intact so we don't strand a customer; I'll list any conflicts before deleting).
+- Re-run the function to backfill the rolling 8-week window.
+- Daily cron already calls this function — no cron changes needed.
 
-### 3. No UI changes required
-The page already renders whatever the RPC returns and the "next 8 weeks" copy stays accurate because the window is always kept at 8 weeks by the cron.
+**Copy sweep**
+- `src/routes/private-tuesday.tsx` — subhead: "Four 90-minute blocks, 9:30 AM–4:00 PM" (or similar), plus any "two-hour" phrasing.
+- `src/lib/chatbot-knowledge.ts` — update session length, times, and break note.
+- `src/components/home/HomeFramework.tsx` secondary CTA — verify wording (currently just says "Private Tuesday at IGNITE — $397", likely fine; adjust only if it mentions duration).
+- `src/routes/services.tsx`, `/one-on-one`, `AccessModeDialog`, and any other file referencing "2-hour" / "two-hour" / old times — rg sweep and update.
 
-## Technical notes
-- Cron cadence: `5 0 * * *` (00:05 daily) — cheap, and one-per-day is enough since Tuesdays only elapse once a week.
-- Timezone handling for #2: `(current_date + end_time) AT TIME ZONE 'America/New_York' > now()` guard added to the existing WHERE clause.
-- No schema changes, no new tables, no client changes.
+### Verification
+- `rg` for `2-hour|two-hour|9:30|11:30|1:30|3:30|12:00|2:30` to confirm no stale references remain.
+- Query `private_session_slots` to confirm only the four new start times exist for future Tuesdays.
+- Load `/private-tuesday` and confirm each Tuesday shows the four new blocks.
