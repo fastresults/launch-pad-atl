@@ -172,9 +172,10 @@ export default function PrivateTuesdayPage() {
                                 onClick={() => setSelectedId(s.id)}
                                 className={`rounded-md border px-3 py-2 text-sm transition ${
                                   selected
-                                    ? "border-[#8B7355] bg-[#8B7355] text-white hover:bg-[#6F5A42] hover:text-white"
+                                    ? "border-[#8B7355] bg-[#8B7355] hover:bg-[#6F5A42]"
                                     : "border-[#C9B99A] bg-[#FAF8F5] text-[#3D3025] hover:border-[#8B7355]"
                                 }`}
+                                style={selected ? { color: "#ffffff" } : undefined}
                               >
                                 {selected && <CheckCircle2 className="mr-1 inline size-3.5" />}
                                 {formatSlotTime(s.start_time, s.end_time)}
