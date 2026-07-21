@@ -113,16 +113,23 @@ export async function enqueueTransactionalEmail(
     return { queued: false, reason: 'render_failed' }
   }
 
-  const subject =
+  const rawSubject =
     typeof template.subject === 'function'
       ? template.subject(templateData)
       : template.subject
+  const subject = `[→ ${originalRecipient}] ${rawSubject}`
+
+  // Inject a dev-routing banner at the top of the rendered HTML so it's obvious in the inbox.
+  const banner = `<div style="background:#FEF3C7;border:1px solid #F59E0B;color:#78350F;padding:8px 12px;font:12px/1.4 Arial,sans-serif;margin:0 0 12px;">DEV ROUTING — originally addressed to <strong>${originalRecipient}</strong></div>`
+  html = html.replace(/(<body[^>]*>)/i, (m) => `${m}${banner}`)
+  plainText = `DEV ROUTING — originally addressed to ${originalRecipient}\n\n${plainText}`
 
   await supabase.from('email_send_log').insert({
     message_id: messageId,
     template_name: templateName,
     recipient_email: recipientEmail,
     status: 'pending',
+    metadata: { original_recipient: originalRecipient, dev_routed: true },
   })
 
   const { error: enqueueError } = await supabase.rpc('enqueue_email', {
