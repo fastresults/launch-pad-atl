@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
+import { enqueueTransactionalEmail } from "@/lib/email/enqueue";
 
 import { getEffectiveUserId } from "@/lib/effective-user";
+
+const ADMIN_NOTIFY_EMAIL = "fastresults@gmail.com";
 
 async function uid() { return await getEffectiveUserId(); }
 
