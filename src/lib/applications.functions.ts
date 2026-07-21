@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { enqueueTransactionalEmail } from "@/lib/email/enqueue";
 
 const ApplicationSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -16,6 +17,22 @@ const ApplicationSchema = z.object({
 
 export const submitFounderApplication = async (data: any) => {
   const parsed = ApplicationSchema.parse(data);
-  const { error } = await supabase.from("founder_applications").insert({ ...parsed, status: "pending" });
+  const { data: inserted, error } = await supabase
+    .from("founder_applications")
+    .insert({ ...parsed, status: "pending" })
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
+
+  const firstName = parsed.name?.trim().split(/\s+/)[0] || undefined;
+  try {
+    await enqueueTransactionalEmail({
+      templateName: "application-received",
+      recipientEmail: parsed.email,
+      idempotencyKey: `application-received-${inserted?.id}`,
+      templateData: { firstName, fullName: parsed.name },
+    });
+  } catch (e) {
+    console.warn("[submitFounderApplication] email enqueue failed:", e);
+  }
 };

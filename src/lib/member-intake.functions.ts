@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
+import { enqueueTransactionalEmail } from "@/lib/email/enqueue";
 
 import { getEffectiveUserId } from "@/lib/effective-user";
+
+const ADMIN_NOTIFY_EMAIL = "fastresults@gmail.com";
 
 async function uid() { return await getEffectiveUserId(); }
 
@@ -23,6 +26,40 @@ export async function submitMyIntake(data: { startup_type: string; startup_name?
   const userId = await uid();
   const { error } = await supabase.from("member_intakes").upsert({ ...data, user_id: userId, status: "submitted" }, { onConflict: "user_id" });
   if (error) throw new Error(error.message);
+
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    const email = authData?.user?.email;
+    const displayName = (authData?.user?.user_metadata?.full_name as string | undefined)
+      || (authData?.user?.user_metadata?.name as string | undefined)
+      || undefined;
+    const firstName = displayName?.trim().split(/\s+/)[0];
+    if (email) {
+      await Promise.all([
+        enqueueTransactionalEmail({
+          templateName: "member-intake-received",
+          recipientEmail: email,
+          idempotencyKey: `member-intake-received-${userId}`,
+          templateData: { firstName, startupName: data.startup_name || undefined },
+        }),
+        enqueueTransactionalEmail({
+          templateName: "member-intake-admin-notification",
+          recipientEmail: ADMIN_NOTIFY_EMAIL,
+          idempotencyKey: `member-intake-admin-${userId}`,
+          templateData: {
+            fromName: displayName,
+            fromEmail: email,
+            startupType: data.startup_type,
+            startupName: data.startup_name || undefined,
+            oneLineIdea: data.one_line_idea,
+            supportingInfo: data.supporting_info || undefined,
+          },
+        }),
+      ]);
+    }
+  } catch (e) {
+    console.warn("[submitMyIntake] email enqueue failed:", e);
+  }
 
   // R3 — pipe welcome answers directly into the canonical Brief tables so the
   // founder never has to retype them when they reach /dashboard/brief.
