@@ -7,6 +7,11 @@ const SITE_NAME = 'Atlanta Startup Sprint'
 const SENDER_DOMAIN = 'notify.startuplabs.online'
 const FROM_DOMAIN = 'notify.startuplabs.online'
 
+// DEV ROUTING OVERRIDE — every outgoing app email is redirected to super admin.
+// Remove this constant and the override block below to restore normal delivery.
+// See supabase/functions/_shared/EMAIL_ROUTING.md
+const SUPER_ADMIN_EMAIL = 'fastresults@gmail.com'
+
 function generateToken(): string {
   const bytes = new Uint8Array(32)
   crypto.getRandomValues(bytes)
