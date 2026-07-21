@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080" role="img" aria-label="Startuplabs — Your startup, built with you. One morning. $197.">
+  <defs>
+    <radialGradient id="paper" cx="50%" cy="42%" r="70%">
+      <stop offset="0%" stop-color="#FDFAF3"/>
+      <stop offset="60%" stop-color="#FAF6ED"/>
+      <stop offset="100%" stop-color="#F1E9D8"/>
+    </radialGradient>
+    <radialGradient id="cameo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F5EAD2" stop-opacity="1"/>
+      <stop offset="70%" stop-color="#F5EAD2" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#F5EAD2" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cupBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FBFAF7"/>
+      <stop offset="100%" stop-color="#E8E1D0"/>
+    </linearGradient>
+    <linearGradient id="coffee" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3A2418"/>
+      <stop offset="100%" stop-color="#5A3A26"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Paper background -->
+  <rect width="1080" height="1080" fill="url(#paper)"/>
+
+  <!-- Hairline frame -->
+  <rect x="48" y="48" width="984" height="984" fill="none" stroke="#8B7355" stroke-opacity="0.35" stroke-width="1"/>
+
+  <!-- Top masthead -->
+  <g font-family="Georgia, 'Times New Roman', serif" fill="#3E2C1C">
+    <text x="540" y="130" text-anchor="middle" font-size="22" letter-spacing="8" fill="#8B7355" font-family="Arial, Helvetica, sans-serif">STARTUPLABS · ATLANTA</text>
+    <line x1="380" y1="152" x2="700" y2="152" stroke="#8B7355" stroke-opacity="0.4" stroke-width="1"/>
+  </g>
+
+  <!-- Coffee cameo -->
+  <g transform="translate(540, 470)">
+    <ellipse cx="0" cy="0" rx="330" ry="330" fill="url(#cameo)"/>
+
+    <!-- Steam wisps -->
+    <g stroke="#8B7355" stroke-opacity="0.55" stroke-width="3" stroke-linecap="round" fill="none">
+      <path d="M -55 -190 C -75 -230, -35 -260, -55 -300"/>
+      <path d="M 0 -200 C -25 -245, 25 -275, 0 -320"/>
+      <path d="M 55 -190 C 35 -230, 75 -260, 55 -300"/>
+    </g>
+
+    <!-- Saucer -->
+    <ellipse cx="0" cy="150" rx="230" ry="26" fill="#D4C4A8" opacity="0.85"/>
+    <ellipse cx="0" cy="146" rx="215" ry="20" fill="#EFE4CE"/>
+
+    <!-- Cup body -->
+    <path d="M -155 -60 Q -170 100, -110 138 L 110 138 Q 170 100, 155 -60 Z" fill="url(#cupBody)" stroke="#8B7355" stroke-width="2"/>
+
+    <!-- Cup rim -->
+    <ellipse cx="0" cy="-60" rx="155" ry="28" fill="#2A1A10"/>
+    <ellipse cx="0" cy="-60" rx="155" ry="28" fill="none" stroke="#8B7355" stroke-width="2"/>
+    <ellipse cx="0" cy="-64" rx="148" ry="24" fill="url(#coffee)"/>
+    <ellipse cx="-40" cy="-70" rx="30" ry="4" fill="#7A5A44" opacity="0.6"/>
+
+    <!-- Handle -->
+    <path d="M 155 -20 Q 235 -10, 230 55 Q 225 105, 152 100" fill="none" stroke="#8B7355" stroke-width="10" stroke-linecap="round"/>
+    <path d="M 155 -20 Q 235 -10, 230 55 Q 225 105, 152 100" fill="none" stroke="#EFE4CE" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- Ground shadow -->
+    <ellipse cx="0" cy="185" rx="200" ry="12" fill="#8B7355" opacity="0.18"/>
+  </g>
+
+  <!-- Headline -->
+  <g font-family="Georgia, 'Times New Roman', serif" fill="#2A1A10" text-anchor="middle">
+    <text x="540" y="795" font-size="72" font-style="italic" font-weight="400">Your startup,</text>
+    <text x="540" y="875" font-size="72" font-weight="700">built with you.</text>
+  </g>
+
+  <!-- Divider -->
+  <line x1="470" y1="915" x2="610" y2="915" stroke="#8B7355" stroke-width="1"/>
+
+  <!-- Sub -->
+  <text x="540" y="955" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" letter-spacing="4" fill="#5C4A38">
+    ONE FOCUSED MORNING · $197
+  </text>
+
+  <!-- CTA -->
+  <g transform="translate(540, 990)">
+    <rect x="-140" y="0" width="280" height="52" rx="26" fill="#2A1A10"/>
+    <text x="0" y="34" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" letter-spacing="3" fill="#FDFAF3" font-weight="700">
+      RESERVE YOUR SEAT
+    </text>
+  </g>
+</svg>
