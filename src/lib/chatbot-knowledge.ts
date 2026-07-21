@@ -195,7 +195,7 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 - **What's the fastest way to income if I don't want to build it myself?** /one-on-one — Adam and his team build your startup for you in 14 days. $4,799 flat.
 - **How much does the done-for-you build cost?** $4,799 for the full 14-day build with Adam (/one-on-one). Larger scale-up Tracks are bespoke and priced after a 20-min call at /contact?intent=discovery.
 - **Do I have to attend the workshop before hiring Adam's team?** No. Tracks and the done-for-you build stand alone.
-- **Can I get 1-on-1 time with Adam without doing the full done-for-you build?** Yes — book "A Tuesday with Adam" at /private-tuesday. Private 2-hour build sessions at the IGNITE Center, Tuesdays only — four back-to-back blocks starting 9:30 AM, 11:30 AM, 1:30 PM, and 3:30 PM. $397. Same real build — just you and Adam at the table.
+- **Can I get 1-on-1 time with Adam without doing the full done-for-you build?** Yes — book "A Tuesday with Adam" at /private-tuesday. Private 90-minute build sessions at the IGNITE Center, Tuesdays only — four blocks with 10-minute breaks between: 9:30–11:00, 11:10–12:40, 12:50–2:20, and 2:30–4:00. $397. Same real build — just you and Adam at the table.
 - **How do I register?** Go to /register and reserve one of the 20 seats. Cohorts fill.
 - **What if I miss this cohort?** Join the waitlist; a new cohort opens next.
 - **What if I need help right now?** Email through /contact and we'll route you personally.
