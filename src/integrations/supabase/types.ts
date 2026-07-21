@@ -3464,6 +3464,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      admin_confirm_private_session_booking: {
+        Args: { _booking_id: string; _payment_ref: string }
+        Returns: undefined
+      }
+      admin_release_private_session_booking: {
+        Args: { _booking_id: string }
+        Returns: undefined
+      }
       admin_set_bulk_unlock_default: {
         Args: { _code: string }
         Returns: undefined
