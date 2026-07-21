@@ -23,7 +23,7 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 export default function PrivateTuesdayPage() {
   useDocumentTitle(
     "A Tuesday with Adam — 2 hours, 1-on-1 at IGNITE · $397",
-    "Book a private 2-hour build session with Adam at the IGNITE Center in Atlanta. Tuesdays only. Same real build — just you and Adam at the table."
+    "Book a private 90-minute build session with Adam at the IGNITE Center in Atlanta. Tuesdays only. Same real build — just you and Adam at the table.",
   );
 
   const navigate = useNavigate();
