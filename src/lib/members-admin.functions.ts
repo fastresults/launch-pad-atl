@@ -134,6 +134,26 @@ export async function approveMember(input: any) {
     })
     .eq("user_id", userId);
   if (error) throw new Error(error.message);
+
+  try {
+    const { enqueueTransactionalEmail } = await import("@/lib/email/enqueue");
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email, display_name")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (profile?.email) {
+      const firstName = (profile.display_name as string | null)?.trim().split(/\s+/)[0] || undefined;
+      await enqueueTransactionalEmail({
+        templateName: "member-approved",
+        recipientEmail: profile.email as string,
+        idempotencyKey: `member-approved-${userId}-${Date.now()}`,
+        templateData: { firstName, approvedVia: via ?? "admin" },
+      });
+    }
+  } catch (e) {
+    console.warn("[approveMember] email enqueue failed:", e);
+  }
 }
 
 export async function rejectMember(input: any) {
