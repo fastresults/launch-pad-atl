@@ -14,6 +14,7 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 
 
 export default function ContactPage() {
+
   useDocumentTitle(
     "Contact Startuplabs — talk to Adam",
     "Not sure which option fits, or want to talk it through first? Send a note — we write back within one business day."
