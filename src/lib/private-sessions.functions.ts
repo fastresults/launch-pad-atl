@@ -39,7 +39,7 @@ export async function getPrivateSessionSettings(): Promise<PrivateSessionSetting
   if (error) throw new Error(error.message);
   return (
     (data as PrivateSessionSettings | null) ?? {
-      price_cents: 29700,
+      price_cents: 39700,
       weeks_ahead: 8,
       hold_minutes: 15,
       location_label: "IGNITE Center · Greater Atlanta Christian School",
