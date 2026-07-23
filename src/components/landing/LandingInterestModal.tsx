@@ -55,6 +55,7 @@ export function LandingInterestModal({
       const message = [
         `City: ${parsed.data.city || "—"}`,
         `Phone: ${parsed.data.phone || "—"}`,
+        `Willing to give a brief video testimonial after the session: ${testimonialOk ? "Yes" : "No"}`,
         "",
         `Idea: ${parsed.data.idea}`,
         "",
