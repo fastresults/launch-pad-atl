@@ -5,22 +5,18 @@ import { SiteFooter } from "@/components/site/Footer";
 import { LandingVideoTestimonials } from "@/components/landing/LandingVideoTestimonials";
 import { LandingBusinessIdeasScroller } from "@/components/landing/LandingBusinessIdeasScroller";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
-import { useEvent } from "@/lib/use-event";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   BUILD_LAYER,
   FOUNDATION_FIRST_REASONS,
   FRAMEWORK_STAGES,
-  WORKSHOP_PRICE_LABEL,
 } from "@/lib/framework-deliverables";
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
-import heroBg from "@/assets/hero-bg.png";
 import heroCoffee from "@/assets/hero-coffee-nosteam.png";
 import { motion, useReducedMotion } from "framer-motion";
-import atlSeal from "@/assets/atl-founder-friendly-seal.svg";
-import { LandingAccessModeDialog } from "@/components/landing/LandingAccessModeDialog";
-import { useState } from "react";
+import { LandingInterestModal } from "@/components/landing/LandingInterestModal";
+import { createContext, useContext, useState } from "react";
 import {
   ArrowRight,
   Calendar,
@@ -34,6 +30,27 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
+// Landing-only, self-contained event + offer constants.
+// Editing these does NOT affect the live homepage / paid workshop funnel.
+const LANDING_EVENT = {
+  dateLabel: "Thursday, August 6, 2026 · morning",
+  venueName: "IGNITE Center at Greater Atlanta Christian School",
+  address: "1575 Indian Trail Lilburn Rd NW, Norcross, GA 30093",
+  venueCity: "Norcross",
+  venueRegion: "GA",
+  mapsUrl: "https://maps.google.com/?q=Greater+Atlanta+Christian+School",
+  mapsEmbedUrl:
+    "https://www.google.com/maps?q=Greater+Atlanta+Christian+School&output=embed",
+};
+const LANDING_OFFER = {
+  seats: 3,
+  city: "Atlanta",
+  applyByLabel: "July 30",
+};
+
+const InterestCtx = createContext<() => void>(() => {});
+const useOpenInterest = () => useContext(InterestCtx);
+
 export function LandingFramework() {
   const { data: settings } = useQuery({
     queryKey: ["site-settings"],
@@ -41,26 +58,31 @@ export function LandingFramework() {
     staleTime: 60_000,
   });
   const showScroller = settings?.show_business_ideas_scroller !== false;
+  const [interestOpen, setInterestOpen] = useState(false);
+  const openInterest = () => setInterestOpen(true);
   return (
-    <div className="marketing-surface min-h-screen">
-      <SiteHeader />
-      <Hero />
-      <LandingVideoTestimonials />
-      <Framework />
-      {showScroller && <LandingBusinessIdeasScroller />}
-      <HonestRoadmap />
-      <Facilitator />
-      <ServicesTeaser />
-      <Venue />
-      <BottomCTA />
-      <SiteFooter />
-    </div>
+    <InterestCtx.Provider value={openInterest}>
+      <div className="marketing-surface min-h-screen">
+        <SiteHeader />
+        <Hero />
+        <LandingVideoTestimonials />
+        <Framework />
+        {showScroller && <LandingBusinessIdeasScroller />}
+        <HonestRoadmap />
+        <Facilitator />
+        <ServicesTeaser />
+        <Venue />
+        <BottomCTA />
+        <SiteFooter />
+        <LandingInterestModal open={interestOpen} onOpenChange={setInterestOpen} />
+      </div>
+    </InterestCtx.Provider>
   );
 }
 
 function Hero() {
-  const EVENT = useEvent();
-  const [modesOpen, setModesOpen] = useState(false);
+  const EVENT = LANDING_EVENT;
+  const openInterest = useOpenInterest();
   const reduceMotion = useReducedMotion();
   return (
     <section
@@ -199,46 +221,39 @@ function Hero() {
               />
             </div>
 
-            {/* Price card — cream on cream, hairline only, no shadow */}
+            {/* Free-launch offer card */}
             <div className="mx-auto mt-2 w-full max-w-[380px] rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] px-7 py-7">
               <div className="border-b border-[#E4D9C4] pb-5">
-                <span className="font-serif text-6xl leading-none text-[#3D3025]">
-                  {WORKSHOP_PRICE_LABEL}
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#8B7355] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FAF8F5]">
+                  Free launch offer
                 </span>
+                <p className="mt-4 font-serif text-4xl leading-tight text-[#3D3025]">
+                  3 seats. Zero cost.
+                </p>
                 <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#8B7355]">
-                  Just one morning. Come as you are.
+                  Launching Startup Labs · Atlanta
                 </p>
               </div>
 
               <p className="mt-5 text-base leading-snug text-[#3D3025]">
-                You bring the idea. We&rsquo;ll bring the coffee &mdash; and build it with you.
+                We&rsquo;re setting up 3 Atlanta entrepreneurs in business &mdash; absolutely free &mdash; to launch Startup Labs. You bring the idea. We&rsquo;ll bring the coffee, and build it with you.
               </p>
-
-              <Link
-                to="/register"
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#8B7355] px-6 py-4 text-base font-semibold text-[#FAF8F5] transition-colors hover:bg-[#6E5B42]"
-              >
-                Reserve your seat <ArrowRight className="size-4" />
-              </Link>
 
               <button
                 type="button"
-                onClick={() => setModesOpen(true)}
-                className="mt-3 block w-full text-center text-sm text-[#8B7355] underline decoration-[#C9B99A] decoration-2 underline-offset-4 transition-colors hover:text-[#3D3025]"
+                onClick={openInterest}
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#8B7355] px-6 py-4 text-base font-semibold text-[#FAF8F5] transition-colors hover:bg-[#6E5B42]"
               >
-                Can&rsquo;t make it? See the other two ways.
+                Reserve your interest <ArrowRight className="size-4" />
               </button>
 
               <div className="mt-5 border-t border-dashed border-[#C9B99A] pt-4 text-center">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-[#8B7355]">
-                  Prefer just you &amp; Adam?
+                  Apply by {LANDING_OFFER.applyByLabel}
                 </p>
-                <Link
-                  to="/private-tuesday"
-                  className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-[#3D3025] underline decoration-[#C9B99A] decoration-2 underline-offset-4 hover:text-[#8B7355]"
-                >
-                  Private Tuesday at IGNITE &mdash; $397 <ArrowRight className="size-3.5" />
-                </Link>
+                <p className="mt-1 text-sm font-semibold text-[#3D3025]">
+                  Evaluation team responds by {LANDING_OFFER.applyByLabel}
+                </p>
               </div>
             </div>
 
@@ -247,7 +262,7 @@ function Hero() {
           </div>
         </div>
 
-        <LandingAccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
+
 
         {/* Magazine footnote — 3 promises */}
         <div className="mt-16 grid grid-cols-1 gap-8 border-t border-[#C9B99A] pt-8 md:grid-cols-3">
@@ -307,7 +322,7 @@ function Framework() {
           <span className="text-gradient-brand">Built with you in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          A course gives you videos. A chatbot gives you a folder of files. We sit down and actually build the startup — the live page, the priced offer, the first message sent. By that afternoon you're not planning anymore. You're open. {WORKSHOP_PRICE_LABEL} once. Yours to run with.
+          A course gives you videos. A chatbot gives you a folder of files. We sit down and actually build the startup — the live page, the priced offer, the first message sent. By that afternoon you're not planning anymore. You're open. One morning with us. Yours to run with.
         </p>
 
 
@@ -415,7 +430,7 @@ function HonestRoadmap() {
         <div className="mt-12 md:mt-16">
           <div className="rounded-2xl border border-primary/40 bg-card p-6 md:p-8">
             <div className="mb-4 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-primary">
-              What {WORKSHOP_PRICE_LABEL} gets you — 14 days from now
+              What one morning gets you — 14 days from now
             </div>
             <ul className="grid gap-3 sm:grid-cols-2 md:gap-4">
               {included.map((s) => (
@@ -453,7 +468,7 @@ function HonestRoadmap() {
                   <div className="mb-3 flex items-center justify-between">
                     <Icon className="size-5 text-primary" />
                     <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
-                      Workshop · {workshop?.priceLabel ?? "$197"}
+                      Workshop
                     </span>
                   </div>
                   <h3 className="text-base font-semibold leading-snug tracking-tight">
@@ -579,7 +594,8 @@ function ServicesTeaser() {
 
 
 function Venue() {
-  const EVENT = useEvent();
+  const EVENT = LANDING_EVENT;
+  const openInterest = useOpenInterest();
   return (
     <section className="py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
@@ -604,12 +620,13 @@ function Venue() {
                 >
                   <MapPin className="size-4" /> Get directions
                 </a>
-                <Link
-                  to="/register"
+                <button
+                  type="button"
+                  onClick={openInterest}
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
                 >
-                  Reserve seat <ArrowRight className="size-4" />
-                </Link>
+                  Reserve your interest <ArrowRight className="size-4" />
+                </button>
               </div>
             </div>
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-black/40 md:aspect-auto md:min-h-[280px]">
@@ -629,6 +646,7 @@ function Venue() {
 }
 
 function BottomCTA() {
+  const openInterest = useOpenInterest();
   return (
     <section className="pb-16 md:pb-24">
       <div className="mx-auto max-w-6xl px-6">
@@ -638,17 +656,18 @@ function BottomCTA() {
               Stop thinking about it. Come start it.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
-              {WORKSHOP_PRICE_LABEL} gets you one morning with us and a real plan you can run with Monday. If you want us to build the brand, the site, or the whole launch after — we're right here. If not, you keep the plan either way.
+              One morning with us and a real business you can run with Monday. Three Atlanta founders, chosen by our evaluation team, will do this together on August 6 — absolutely free. Tell us why it should be you.
             </p>
 
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4 md:mt-8">
-              <Link
-                to="/register"
+              <button
+                type="button"
+                onClick={openInterest}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-base font-medium text-neutral-900 transition-opacity hover:opacity-90 sm:w-auto"
               >
-                Reserve a seat — {WORKSHOP_PRICE_LABEL} <ArrowRight className="size-4" />
-              </Link>
+                Reserve your interest <ArrowRight className="size-4" />
+              </button>
               <Link
                 to="/services"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/40 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
