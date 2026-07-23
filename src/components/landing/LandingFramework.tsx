@@ -9,7 +9,7 @@ import {
   FOUNDATION_FIRST_REASONS,
   FRAMEWORK_STAGES,
 } from "@/lib/framework-deliverables";
-import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
+
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroCoffee from "@/assets/hero-coffee-nosteam.png";
 import { motion, useReducedMotion } from "framer-motion";
