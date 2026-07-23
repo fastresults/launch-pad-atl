@@ -14,6 +14,7 @@ import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroCoffee from "@/assets/hero-coffee-nosteam.png";
 import { motion, useReducedMotion } from "framer-motion";
 import { LandingInterestModal } from "@/components/landing/LandingInterestModal";
+import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 import { createContext, useContext, useState } from "react";
 import {
   ArrowRight,
@@ -61,6 +62,9 @@ export function LandingFramework() {
   return (
     <InterestCtx.Provider value={openInterest}>
       <div className="marketing-surface min-h-screen">
+        <div className="mx-auto flex max-w-7xl items-center px-4 py-5 sm:px-6 md:px-8">
+          <StartupLabsLogo className="h-9 w-auto text-foreground sm:h-10 md:h-12" />
+        </div>
         <Hero />
         <LandingVideoTestimonials />
         <Framework />
