@@ -1,27 +1,65 @@
-## Goal
+## What the logs show
 
-When `landing_only_mode` is ON, **everyone** sees the standalone free-launch landing page — including super admins. Today the gate has an `isSuperAdmin` bypass, which is why you're still seeing the old `$297` homepage.
+I checked the actual backend records, not inbox assumptions:
 
-## Change
+- The landing-page inquiry was created at `18:00:55 UTC`.
+- Two app emails were queued for that inquiry.
+- The email log shows both reached final status `sent` to `fastresults@gmail.com`:
+  - `inquiry-admin-notification`
+  - `inquiry-received`
+- The sender domain `notify.startuplabs.online` is verified.
+- `fastresults@gmail.com` is not on the suppression list.
+- No queue-worker failure logs matched the send attempt.
 
-Single file: `src/components/site/LandingOnlyGate.tsx`.
+So I do **not** see a backend enqueue/process failure. However, I do see two product issues that can make this feel broken and confusing:
 
-- Remove the `if (isSuperAdmin) return <>{children}</>;` bypass.
-- Keep the `ALLOWED_PATHS` allowlist (`/login`, `/reset-password`) so you can always sign in / recover.
-- Add `/admin/settings` (and the parent `/admin`) to the allowlist so super admins can still reach the toggle to turn landing-only mode back **off** without needing to sign out. Non-admins hitting those routes will still bounce off the existing `_authenticated/_admin` route guard, so this doesn't leak anything.
-- Keep the orange "Landing-only mode is ON" super-admin banner where it is (it already renders above the gate), so you always know why the site looks stripped-down and where to toggle it.
+1. The landing page still renders the shared site header/footer, so users see priced navigation and old CTAs while landing-only mode is on.
+2. The current inquiry helper treats email as “fire-and-forget” and swallows email enqueue failures. That means the form can show success even if admin-notification enqueue ever fails.
 
-## After this ships
+## Build plan
 
-- Visiting `/` (or anything else) with landing-only ON → the revised free-launch page for everyone, including you.
-- To edit the rest of the site: go to **Admin → Settings**, flip landing-only **off**, and the full site returns.
+### 1. Remove top navigation from landing-only mode
 
-## Files touched
+Update `src/components/landing/LandingFramework.tsx` so the standalone landing page no longer renders:
 
-- `src/components/site/LandingOnlyGate.tsx` — drop super-admin bypass, extend allowlist to admin settings.
+- `SiteHeader`
+- `SiteFooter`
+
+This makes landing-only mode exactly what you described: just the landing page, no confusing pricing nav, no services/register links, no shared paid-site CTA.
+
+### 2. Keep admin/settings reachable through the gate
+
+Keep the current `LandingOnlyGate` behavior from the last fix:
+
+- `/` and normal public routes show the standalone landing page when landing-only mode is ON.
+- `/admin/*`, `/login`, and `/reset-password` remain reachable so you can turn landing-only mode back off.
+
+### 3. Make landing interest emails admin-first and explicit
+
+Update the landing modal submission path so it does not rely on the generic “customer confirmation + admin notification” behavior as an ambiguous side effect.
+
+For landing free-launch interest:
+
+- Save the inquiry row as it does now.
+- Send the admin notification to `fastresults@gmail.com` as the primary required email.
+- Keep the applicant confirmation routed through the existing global super-admin override only if the app-wide email rule still requires every outgoing email to route to the super admin.
+- If the required admin notification fails to enqueue, surface an inline modal error instead of showing success.
+
+This keeps the form honest: success means the response was saved and the admin email was accepted into the mail pipeline.
+
+### 4. Preserve the existing full-site forms
+
+Do not change the contact form or other full-site inquiry forms except where they use the shared helper safely. The goal is to make the landing free-launch flow reliable without breaking the rest of the website.
 
 ## Verification
 
-- With landing-only ON, load `/` as super admin → see "3 seats. Zero cost." hero, August 6 date, Reserve-your-interest modal wired to every CTA.
-- `/admin/settings` still loads for super admins so the toggle is reachable.
-- Flip landing-only OFF → full site returns for everyone.
+After implementation:
+
+- Load `/` with landing-only mode ON as super admin.
+- Confirm there is no top navigation and no footer from the full site.
+- Confirm there are no visible `$297`, `$397`, “Reserve seat”, workshop nav, service nav, or dashboard/admin links on the landing page body.
+- Submit the landing modal.
+- Confirm:
+  - inquiry row is created,
+  - admin email log row exists for `fastresults@gmail.com`,
+  - final status becomes `sent` or a visible error appears if enqueue fails.
