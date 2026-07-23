@@ -322,7 +322,7 @@ function Framework() {
           <span className="text-gradient-brand">Built with you in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          A course gives you videos. A chatbot gives you a folder of files. We sit down and actually build the startup — the live page, the priced offer, the first message sent. By that afternoon you're not planning anymore. You're open. {WORKSHOP_PRICE_LABEL} once. Yours to run with.
+          A course gives you videos. A chatbot gives you a folder of files. We sit down and actually build the startup — the live page, the priced offer, the first message sent. By that afternoon you're not planning anymore. You're open. One morning with us. Yours to run with.
         </p>
 
 
