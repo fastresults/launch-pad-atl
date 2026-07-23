@@ -1,30 +1,23 @@
-
 ## Goal
 
-Write ready-to-paste social copy to accompany `public/landing-poster.png` — the free-launch offer (3 seats, Aug 6, 2026, IGNITE Center at Greater Atlanta Christian School, reserve by July 30). Save alongside the poster as `public/landing-poster-copy.md`.
+Landing page should reflect the 3-free-seat offer and never link out to full-site routes (which are hidden while landing-only mode is on).
 
-## Voice & guardrails (from project memory)
+## Changes — `src/components/landing/LandingFramework.tsx`
 
-- Warm, unhurried, "pull up a chair" — never hype.
-- No "plan / framework / blueprint / roadmap / documents" for the offer. Name the real artifact: live page, priced offer, first message sent.
-- Say "startup" (not business), "framework(s)" only for internal components, "asset(s)" not "documents."
-- No pricing anywhere — this is the free-launch landing offer.
-- Anchor link: **startuplabs.online**
-- Subtle IGNITE Center / Greater Atlanta Christian School name-drop, not overdone.
+1. **Seat count fixes**
+   - Line 294: `Just 20 seats` → `Just 3 seats · free`
+   - Line 388 (HonestRoadmap included list): `A seat next to Adam and 19 other founders…` → `A seat next to Adam and 2 other founders — coffee, snacks, and a small room building alongside you`
 
-## Deliverable
+2. **Remove full-site CTAs**
+   - **Build-layer cards (lines ~457–491):** The 4 cards currently link to `/build/:slug`. Convert them from `<Link>` to plain `<div>` cards, remove the "Learn more →" affordance and hover-link styling. Keep the visual card + copy so the "8 more mornings" story still lands.
+   - **Build-layer CTA row (lines ~501–514):** Remove the entire two-button row ("See all 8 mornings" → `/build`, "Or have us build it for you" → `/services`).
+   - **`ServicesTeaser` section (lines 569–593) + its render at line 74:** Delete the section and its usage. The landing shouldn't pitch the services page while it's hidden.
+   - **`BottomCTA` (lines 648–682):** Remove the secondary `<Link to="/services">See our services</Link>` button, keeping only the "Reserve your interest" primary button.
 
-One new file: `public/landing-poster-copy.md` with 4 captions tuned per surface:
-
-1. **LinkedIn — long form (primary).** Plan-B / cubicle-escapee angle. Names the free 3-seat launch, the morning, the real artifacts you leave with, the July 30 reservation deadline, IGNITE Center venue, link. Professional but warm; hashtags at the end.
-2. **LinkedIn — short variant.** 3–4 lines for lower-effort reshare.
-3. **Facebook feed (main).** Neighborly tone, slightly more emotional/story lead, coffee-cup imagery cue, clear "reserve by July 30" and link. Light emoji (☕) allowed, minimal hashtags.
-4. **Facebook — community/local groups variant.** Norcross / Gwinnett / Atlanta neighbor tone for local group shares, explicit that seats are free and limited to three, RSVP deadline, link.
-
-Each caption ends with the same CTA line pattern: `Reserve your seat → startuplabs.online · free · 3 seats · reserve by July 30`.
+3. **`LandingAccessModeDialog.tsx`** — not rendered by the landing (confirmed via grep), so no change needed. Leave file untouched.
 
 ## Out of scope
 
-- No component or route changes.
-- No new images (poster already exists).
-- No pricing, no "workshop $197/$397" mentions — landing-only free-launch context.
+- No copy changes beyond the two seat-count strings above.
+- No changes to `HomeFramework` / full-site pages.
+- No layout redesign — just removing/neutralizing the offending CTAs and section.
