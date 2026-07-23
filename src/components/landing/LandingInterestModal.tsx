@@ -131,6 +131,22 @@ export function LandingInterestModal({
                 <Label htmlFor="li-why">Why you? Why now?</Label>
                 <Textarea id="li-why" value={form.why} onChange={(e) => setForm({ ...form, why: e.target.value })} required rows={3} maxLength={1000} />
               </div>
+              <label
+                htmlFor="li-testimonial"
+                className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#E4D9C4] bg-[#FAF5EC] p-4 text-sm text-[#5C4A38] transition-colors hover:bg-[#F5EEDF]"
+              >
+                <input
+                  id="li-testimonial"
+                  type="checkbox"
+                  checked={testimonialOk}
+                  onChange={(e) => setTestimonialOk(e.target.checked)}
+                  className="mt-0.5 size-4 shrink-0 accent-[#8B7355]"
+                />
+                <span>
+                  <span className="font-semibold text-[#3D3025]">I'm open to a brief video testimonial.</span>{" "}
+                  If chosen, I'd be willing to share a short, candid on-camera reflection at the end of the morning — just a minute or two on what the session was worth to me. No script, no polish — your real words help another founder decide.
+                </span>
+              </label>
               {error && <p className="text-sm text-red-600">{error}</p>}
               <button
                 type="submit"
