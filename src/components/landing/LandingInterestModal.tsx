@@ -27,9 +27,11 @@ export function LandingInterestModal({
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", city: "", idea: "", why: "" });
+  const [testimonialOk, setTestimonialOk] = useState(false);
 
   const reset = () => {
     setForm({ name: "", email: "", phone: "", city: "", idea: "", why: "" });
+    setTestimonialOk(false);
     setDone(false);
     setError(null);
     setSubmitting(false);
