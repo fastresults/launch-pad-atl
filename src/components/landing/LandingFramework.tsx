@@ -48,6 +48,9 @@ const LANDING_OFFER = {
   applyByLabel: "July 30",
 };
 
+const InterestCtx = createContext<() => void>(() => {});
+const useOpenInterest = () => useContext(InterestCtx);
+
 export function LandingFramework() {
   const { data: settings } = useQuery({
     queryKey: ["site-settings"],
@@ -55,26 +58,31 @@ export function LandingFramework() {
     staleTime: 60_000,
   });
   const showScroller = settings?.show_business_ideas_scroller !== false;
+  const [interestOpen, setInterestOpen] = useState(false);
+  const openInterest = () => setInterestOpen(true);
   return (
-    <div className="marketing-surface min-h-screen">
-      <SiteHeader />
-      <Hero />
-      <LandingVideoTestimonials />
-      <Framework />
-      {showScroller && <LandingBusinessIdeasScroller />}
-      <HonestRoadmap />
-      <Facilitator />
-      <ServicesTeaser />
-      <Venue />
-      <BottomCTA />
-      <SiteFooter />
-    </div>
+    <InterestCtx.Provider value={openInterest}>
+      <div className="marketing-surface min-h-screen">
+        <SiteHeader />
+        <Hero />
+        <LandingVideoTestimonials />
+        <Framework />
+        {showScroller && <LandingBusinessIdeasScroller />}
+        <HonestRoadmap />
+        <Facilitator />
+        <ServicesTeaser />
+        <Venue />
+        <BottomCTA />
+        <SiteFooter />
+        <LandingInterestModal open={interestOpen} onOpenChange={setInterestOpen} />
+      </div>
+    </InterestCtx.Provider>
   );
 }
 
 function Hero() {
-  const EVENT = useEvent();
-  const [modesOpen, setModesOpen] = useState(false);
+  const EVENT = LANDING_EVENT;
+  const openInterest = useOpenInterest();
   const reduceMotion = useReducedMotion();
   return (
     <section
