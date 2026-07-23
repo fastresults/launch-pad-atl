@@ -26,6 +26,7 @@ export type SiteSettings = {
   registration_open: boolean;
   inquiry_notification_email: string | null;
   show_business_ideas_scroller: boolean;
+  landing_only_mode: boolean;
   dashboard_nav_visibility: DashboardNavVisibility;
   [key: string]: unknown;
 };
@@ -60,10 +61,12 @@ export async function getPublicSiteSettings(): Promise<SiteSettings> {
   const regOpen = map.get("registration_open");
   const inquiryEmail = map.get("inquiry_notification_email");
   const showScroller = map.get("show_business_ideas_scroller");
+  const landingOnly = map.get("landing_only_mode");
   return {
     registration_open: regOpen === false ? false : true,
     inquiry_notification_email: typeof inquiryEmail === "string" ? inquiryEmail : null,
     show_business_ideas_scroller: showScroller === false ? false : true,
+    landing_only_mode: landingOnly === true,
     dashboard_nav_visibility: coerceNavVisibility(map.get("dashboard_nav_visibility")),
   };
 }
