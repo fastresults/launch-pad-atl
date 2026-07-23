@@ -62,6 +62,9 @@ export function LandingFramework() {
   return (
     <InterestCtx.Provider value={openInterest}>
       <div className="marketing-surface min-h-screen">
+        <div className="mx-auto flex max-w-7xl items-center px-4 py-5 sm:px-6 md:px-8">
+          <StartupLabsLogo className="h-9 w-auto text-foreground sm:h-10 md:h-12" />
+        </div>
         <Hero />
         <LandingVideoTestimonials />
         <Framework />
