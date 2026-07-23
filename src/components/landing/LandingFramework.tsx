@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
-import { VideoTestimonials } from "@/components/home/VideoTestimonials";
-import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
+import { LandingVideoTestimonials } from "@/components/landing/LandingVideoTestimonials";
+import { LandingBusinessIdeasScroller } from "@/components/landing/LandingBusinessIdeasScroller";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import { useEvent } from "@/lib/use-event";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -19,7 +19,7 @@ import heroBg from "@/assets/hero-bg.png";
 import heroCoffee from "@/assets/hero-coffee-nosteam.png";
 import { motion, useReducedMotion } from "framer-motion";
 import atlSeal from "@/assets/atl-founder-friendly-seal.svg";
-import { AccessModeDialog } from "@/components/home/AccessModeDialog";
+import { LandingAccessModeDialog } from "@/components/landing/LandingAccessModeDialog";
 import { useState } from "react";
 import {
   ArrowRight,
@@ -34,7 +34,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-export function HomeFramework() {
+export function LandingFramework() {
   const { data: settings } = useQuery({
     queryKey: ["site-settings"],
     queryFn: getPublicSiteSettings,
@@ -45,9 +45,9 @@ export function HomeFramework() {
     <div className="marketing-surface min-h-screen">
       <SiteHeader />
       <Hero />
-      <VideoTestimonials />
+      <LandingVideoTestimonials />
       <Framework />
-      {showScroller && <HomeBusinessIdeasScroller />}
+      {showScroller && <LandingBusinessIdeasScroller />}
       <HonestRoadmap />
       <Facilitator />
       <ServicesTeaser />
@@ -247,7 +247,7 @@ function Hero() {
           </div>
         </div>
 
-        <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
+        <LandingAccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
 
         {/* Magazine footnote — 3 promises */}
         <div className="mt-16 grid grid-cols-1 gap-8 border-t border-[#C9B99A] pt-8 md:grid-cols-3">
