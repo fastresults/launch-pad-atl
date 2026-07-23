@@ -221,46 +221,39 @@ function Hero() {
               />
             </div>
 
-            {/* Price card — cream on cream, hairline only, no shadow */}
+            {/* Free-launch offer card */}
             <div className="mx-auto mt-2 w-full max-w-[380px] rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] px-7 py-7">
               <div className="border-b border-[#E4D9C4] pb-5">
-                <span className="font-serif text-6xl leading-none text-[#3D3025]">
-                  {WORKSHOP_PRICE_LABEL}
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#8B7355] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FAF8F5]">
+                  Free launch offer
                 </span>
+                <p className="mt-4 font-serif text-4xl leading-tight text-[#3D3025]">
+                  3 seats. Zero cost.
+                </p>
                 <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#8B7355]">
-                  Just one morning. Come as you are.
+                  Launching Startup Labs · Atlanta
                 </p>
               </div>
 
               <p className="mt-5 text-base leading-snug text-[#3D3025]">
-                You bring the idea. We&rsquo;ll bring the coffee &mdash; and build it with you.
+                We&rsquo;re setting up 3 Atlanta entrepreneurs in business &mdash; absolutely free &mdash; to launch Startup Labs. You bring the idea. We&rsquo;ll bring the coffee, and build it with you.
               </p>
-
-              <Link
-                to="/register"
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#8B7355] px-6 py-4 text-base font-semibold text-[#FAF8F5] transition-colors hover:bg-[#6E5B42]"
-              >
-                Reserve your seat <ArrowRight className="size-4" />
-              </Link>
 
               <button
                 type="button"
-                onClick={() => setModesOpen(true)}
-                className="mt-3 block w-full text-center text-sm text-[#8B7355] underline decoration-[#C9B99A] decoration-2 underline-offset-4 transition-colors hover:text-[#3D3025]"
+                onClick={openInterest}
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#8B7355] px-6 py-4 text-base font-semibold text-[#FAF8F5] transition-colors hover:bg-[#6E5B42]"
               >
-                Can&rsquo;t make it? See the other two ways.
+                Reserve your interest <ArrowRight className="size-4" />
               </button>
 
               <div className="mt-5 border-t border-dashed border-[#C9B99A] pt-4 text-center">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-[#8B7355]">
-                  Prefer just you &amp; Adam?
+                  Apply by {LANDING_OFFER.applyByLabel}
                 </p>
-                <Link
-                  to="/private-tuesday"
-                  className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-[#3D3025] underline decoration-[#C9B99A] decoration-2 underline-offset-4 hover:text-[#8B7355]"
-                >
-                  Private Tuesday at IGNITE &mdash; $397 <ArrowRight className="size-3.5" />
-                </Link>
+                <p className="mt-1 text-sm font-semibold text-[#3D3025]">
+                  Evaluation team responds by {LANDING_OFFER.applyByLabel}
+                </p>
               </div>
             </div>
 
@@ -269,7 +262,7 @@ function Hero() {
           </div>
         </div>
 
-        <LandingAccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
+
 
         {/* Magazine footnote — 3 promises */}
         <div className="mt-16 grid grid-cols-1 gap-8 border-t border-[#C9B99A] pt-8 md:grid-cols-3">
