@@ -594,7 +594,8 @@ function ServicesTeaser() {
 
 
 function Venue() {
-  const EVENT = useEvent();
+  const EVENT = LANDING_EVENT;
+  const openInterest = useOpenInterest();
   return (
     <section className="py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
