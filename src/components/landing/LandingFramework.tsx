@@ -71,7 +71,7 @@ export function LandingFramework() {
         {showScroller && <LandingBusinessIdeasScroller />}
         <HonestRoadmap />
         <Facilitator />
-        <ServicesTeaser />
+        
         <Venue />
         <BottomCTA />
         <LandingInterestModal open={interestOpen} onOpenChange={setInterestOpen} />
@@ -291,7 +291,7 @@ function Hero() {
           <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
           <Meta icon={<MapPin className="size-4" />} label={`${EVENT.venueCity}, ${EVENT.venueRegion}`} />
           <Meta icon={<Clock className="size-4" />} label="8:45–11:30 AM · Coffee included" />
-          <Meta icon={<Users className="size-4" />} label="Just 20 seats" />
+          <Meta icon={<Users className="size-4" />} label="Just 3 seats · free" />
         </div>
       </div>
     </section>
@@ -385,7 +385,7 @@ function HonestRoadmap() {
     "Your Foundation on the dashboard — positioning, ICP, and wedge, sharpened with staff",
     "A 90-day go-to-market plan — personas + outreach sequence you can send this week",
     "Brand v0 — name, mark, and voice you can actually use Monday morning",
-    "A seat next to Adam and 19 other founders — coffee, snacks, and a room building alongside you",
+    "A seat next to Adam and 2 other founders — coffee, snacks, and a small room building alongside you",
   ];
 
 
@@ -457,13 +457,10 @@ function HonestRoadmap() {
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {BUILD_LAYER.map((b) => {
               const Icon = b.icon;
-              const workshop = BUILD_WORKSHOPS.find((w) => w.capability === b.capability);
-              const href = workshop ? `/build/${workshop.slug}` : "/build";
               return (
-                <Link
+                <div
                   key={b.title}
-                  to={href}
-                  className="group flex flex-col rounded-2xl border border-white/10 bg-card p-5 transition-colors hover:border-primary/40 md:p-6"
+                  className="flex flex-col rounded-2xl border border-white/10 bg-card p-5 md:p-6"
                 >
                   <div className="mb-3 flex items-center justify-between">
                     <Icon className="size-5 text-primary" />
@@ -480,12 +477,7 @@ function HonestRoadmap() {
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     {b.description}
                   </p>
-
-                  <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-primary">
-                    Learn more
-                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
-                  </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -497,21 +489,6 @@ function HonestRoadmap() {
             </span>{" "}
             That's the cheapest, saner way to actually pull this off.
           </p>
-
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
-            <Link
-              to="/build"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 sm:w-auto"
-            >
-              See all 8 mornings <ArrowRight className="size-4" />
-            </Link>
-            <Link
-              to="/services"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-base font-medium text-foreground transition-colors hover:bg-white/10 sm:w-auto"
-            >
-              Or have us build it for you
-            </Link>
-          </div>
 
         </div>
       </div>
@@ -566,31 +543,6 @@ function Facilitator() {
   );
 }
 
-function ServicesTeaser() {
-  return (
-    <section className="border-t border-white/5 py-16 md:py-24">
-      <div className="mx-auto max-w-4xl px-6 text-center">
-        <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          Don't want to DIY?
-        </p>
-        <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-          We'll just{" "}
-          <span className="text-gradient-brand">build it for you.</span>
-        </h2>
-        <div className="mt-8 flex justify-center">
-          <Link
-            to="/services"
-            className="group inline-flex items-center gap-3 rounded-full bg-hero-gradient px-7 py-3.5 text-base font-medium text-white transition-opacity hover:opacity-90"
-          >
-            See what we build
-            <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </div>
-
-      </div>
-    </section>
-  );
-}
 
 
 function Venue() {
@@ -660,7 +612,7 @@ function BottomCTA() {
             </p>
 
 
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4 md:mt-8">
+            <div className="mt-7 md:mt-8">
               <button
                 type="button"
                 onClick={openInterest}
@@ -668,12 +620,6 @@ function BottomCTA() {
               >
                 Reserve your interest <ArrowRight className="size-4" />
               </button>
-              <Link
-                to="/services"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/40 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
-              >
-                See our services
-              </Link>
             </div>
           </div>
         </div>
