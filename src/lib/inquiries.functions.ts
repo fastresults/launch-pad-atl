@@ -3,7 +3,9 @@ import { enqueueTransactionalEmail } from "@/lib/email/enqueue";
 
 const ADMIN_NOTIFY_EMAIL = "fastresults@gmail.com";
 
-export async function submitInquiry(data: { name: string; email: string; phone?: string; subject: string; message: string; website?: string }) {
+type InquiryData = { name: string; email: string; phone?: string; subject: string; message: string; website?: string };
+
+async function createInquiry(data: InquiryData) {
   if (data.website) return;
   const { data: inserted, error } = await supabase
     .from("inquiries")
@@ -17,8 +19,12 @@ export async function submitInquiry(data: { name: string; email: string; phone?:
     .select("id")
     .single();
   if (error) throw new Error(error.message);
+  return inserted?.id as string | undefined;
+}
 
-  const inquiryId = inserted?.id;
+export async function submitInquiry(data: InquiryData) {
+  const inquiryId = await createInquiry(data);
+
   const firstName = data.name?.trim().split(/\s+/)[0] || undefined;
 
   // Fire-and-forget; failures are already swallowed inside enqueueTransactionalEmail.
@@ -45,5 +51,39 @@ export async function submitInquiry(data: { name: string; email: string; phone?:
     ]);
   } catch (e) {
     console.warn("[submitInquiry] email enqueue failed:", e);
+  }
+}
+
+export async function submitLandingFreeLaunchInquiry(data: InquiryData) {
+  const inquiryId = await createInquiry(data);
+  if (!inquiryId) return;
+
+  const adminEmail = await enqueueTransactionalEmail({
+    templateName: "inquiry-admin-notification",
+    recipientEmail: ADMIN_NOTIFY_EMAIL,
+    idempotencyKey: `landing-free-launch-admin-${inquiryId}`,
+    templateData: {
+      fromName: data.name,
+      fromEmail: data.email,
+      fromPhone: data.phone || undefined,
+      subject: data.subject,
+      message: data.message,
+    },
+  });
+
+  if (!adminEmail.queued) {
+    throw new Error("Your response was saved, but the admin email did not queue. Please try again or contact Startup Labs directly.");
+  }
+
+  const firstName = data.name?.trim().split(/\s+/)[0] || undefined;
+  const confirmation = await enqueueTransactionalEmail({
+    templateName: "inquiry-received",
+    recipientEmail: data.email,
+    idempotencyKey: `landing-free-launch-received-${inquiryId}`,
+    templateData: { firstName, subject: data.subject },
+  });
+
+  if (!confirmation.queued) {
+    console.warn("[submitLandingFreeLaunchInquiry] confirmation email enqueue failed", confirmation.reason);
   }
 }

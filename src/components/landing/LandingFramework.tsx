@@ -1,7 +1,5 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { SiteHeader } from "@/components/site/Header";
-import { SiteFooter } from "@/components/site/Footer";
 import { LandingVideoTestimonials } from "@/components/landing/LandingVideoTestimonials";
 import { LandingBusinessIdeasScroller } from "@/components/landing/LandingBusinessIdeasScroller";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
@@ -63,7 +61,6 @@ export function LandingFramework() {
   return (
     <InterestCtx.Provider value={openInterest}>
       <div className="marketing-surface min-h-screen">
-        <SiteHeader />
         <Hero />
         <LandingVideoTestimonials />
         <Framework />
@@ -73,7 +70,6 @@ export function LandingFramework() {
         <ServicesTeaser />
         <Venue />
         <BottomCTA />
-        <SiteFooter />
         <LandingInterestModal open={interestOpen} onOpenChange={setInterestOpen} />
       </div>
     </InterestCtx.Provider>
