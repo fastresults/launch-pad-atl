@@ -468,7 +468,7 @@ function HonestRoadmap() {
                   <div className="mb-3 flex items-center justify-between">
                     <Icon className="size-5 text-primary" />
                     <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
-                      Workshop · {workshop?.priceLabel ?? "$197"}
+                      Workshop
                     </span>
                   </div>
                   <h3 className="text-base font-semibold leading-snug tracking-tight">
