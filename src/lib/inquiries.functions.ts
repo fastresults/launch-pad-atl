@@ -7,19 +7,19 @@ type InquiryData = { name: string; email: string; phone?: string; subject: strin
 
 async function createInquiry(data: InquiryData) {
   if (data.website) return;
-  const { data: inserted, error } = await supabase
+  const inquiryId = crypto.randomUUID();
+  const { error } = await supabase
     .from("inquiries")
     .insert({
+      id: inquiryId,
       name: data.name,
       email: data.email,
       phone: data.phone || null,
       subject: data.subject,
       message: data.message,
-    })
-    .select("id")
-    .single();
+    });
   if (error) throw new Error(error.message);
-  return inserted?.id as string | undefined;
+  return inquiryId;
 }
 
 export async function submitInquiry(data: InquiryData) {
