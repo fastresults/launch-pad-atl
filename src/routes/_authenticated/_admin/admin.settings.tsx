@@ -46,6 +46,41 @@ export default function AdminSettingsPage() {
         description="Toggle homepage sections and manage the bulk-generation unlock code."
       />
 
+      {isSuperAdmin && (
+        <section className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-6 shadow-sm">
+          <h2 className="mb-1 text-lg font-semibold">Site mode</h2>
+          <p className="mb-6 text-sm text-muted-foreground">
+            Super-admin only. When landing-only mode is ON, every visitor — including approved members —
+            sees a single standalone landing page instead of the full website. Super admins bypass the lock
+            so you can keep editing. <code className="rounded bg-muted px-1">/login</code> and{" "}
+            <code className="rounded bg-muted px-1">/reset-password</code> stay reachable so you can always
+            sign in and switch it back off.
+          </p>
+
+          <div className="flex items-start justify-between gap-6 rounded-lg border border-border/60 bg-background/50 p-4">
+            <div className="flex-1">
+              <Label htmlFor="toggle-landing-only" className="text-sm font-medium">
+                Landing-only mode
+              </Label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {landingOnly
+                  ? "ON — the public sees only the standalone landing page."
+                  : "OFF — the full website is live for everyone."}
+              </p>
+            </div>
+            <Switch
+              id="toggle-landing-only"
+              checked={landingOnly}
+              disabled={isLoading || mutate.isPending}
+              onCheckedChange={(checked) =>
+                mutate.mutate({ key: "landing_only_mode", value: checked })
+              }
+            />
+          </div>
+        </section>
+      )}
+
+
       <section className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
         <h2 className="mb-1 text-lg font-semibold">Homepage sections</h2>
         <p className="mb-6 text-sm text-muted-foreground">
