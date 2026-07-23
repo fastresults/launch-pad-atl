@@ -646,6 +646,7 @@ function Venue() {
 }
 
 function BottomCTA() {
+  const openInterest = useOpenInterest();
   return (
     <section className="pb-16 md:pb-24">
       <div className="mx-auto max-w-6xl px-6">
@@ -655,17 +656,18 @@ function BottomCTA() {
               Stop thinking about it. Come start it.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
-              {WORKSHOP_PRICE_LABEL} gets you one morning with us and a real plan you can run with Monday. If you want us to build the brand, the site, or the whole launch after — we're right here. If not, you keep the plan either way.
+              One morning with us and a real business you can run with Monday. Three Atlanta founders, chosen by our evaluation team, will do this together on August 6 — absolutely free. Tell us why it should be you.
             </p>
 
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4 md:mt-8">
-              <Link
-                to="/register"
+              <button
+                type="button"
+                onClick={openInterest}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-base font-medium text-neutral-900 transition-opacity hover:opacity-90 sm:w-auto"
               >
-                Reserve a seat — {WORKSHOP_PRICE_LABEL} <ArrowRight className="size-4" />
-              </Link>
+                Reserve your interest <ArrowRight className="size-4" />
+              </button>
               <Link
                 to="/services"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/40 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
