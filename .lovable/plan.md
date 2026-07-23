@@ -1,46 +1,48 @@
-
 ## Goal
 
-Give super admins a switch that, when ON, hides the entire website behind a single dedicated landing page. Everyone (visitors and signed-in members alike) sees only the landing page. Super admins bypass the lock so they can keep editing, and `/login` + `/reset-password` stay reachable so the toggle can always be turned back off.
+Make the landing page (shown when super-admin turns on landing-only mode) a **full byte-for-byte duplicate** of today's homepage — then fully independent, so edits to the landing page never touch the live homepage and vice versa.
 
-## How it works
+Today `StandaloneLanding.tsx` just re-renders `<HomeFramework />`, so any change to the homepage would leak into the landing page. This plan forks it.
 
-1. New setting `landing_only_mode` (boolean, default `false`) stored in `site_settings`.
-2. On every page load, the app reads the setting via the existing `getPublicSiteSettings()` fetcher (already cached with React Query).
-3. A new `<LandingOnlyGate>` wrapper around the router:
-   - If `landing_only_mode = false` → render the site normally.
-   - If `landing_only_mode = true` AND the visitor is not a super admin → force the standalone landing page for any non-allowlisted route; allowlist is `/login`, `/reset-password`, and static assets.
-   - If super admin → render the full site normally, with a persistent banner reminding them "Landing-only mode is ON — visitors see the standalone page."
+## What to build
 
-## Landing page
+### 1. Duplicate the homepage component tree into `src/components/landing/`
 
-- Duplicate the current homepage into a new standalone route/component so it can be trimmed independently without touching `HomeFramework`.
-- New file: `src/routes/landing.tsx` rendering `<StandaloneLanding />`.
-- New component: `src/components/landing/StandaloneLanding.tsx` — starts as a copy of `HomeFramework` so nothing visually changes on day one; future edits happen only here.
-- The standalone page uses a minimal header (logo only, no nav, no CTA to `/register`) and a minimal footer (privacy/terms/contact-mailto only, no site links) so it truly stands alone.
+Create standalone copies (not re-exports) of every home component the landing page uses:
 
-## Routing behavior
+- `src/components/landing/LandingFramework.tsx` — copy of `src/components/home/HomeFramework.tsx` (664 lines)
+- `src/components/landing/LandingBusinessIdeasScroller.tsx` — copy of `HomeBusinessIdeasScroller.tsx`
+- `src/components/landing/LandingVideoTestimonials.tsx` — copy of `VideoTestimonials.tsx`
+- `src/components/landing/LandingAccessModeDialog.tsx` — copy of `AccessModeDialog.tsx`
 
-- Path resolution when `landing_only_mode` is ON and viewer is not super admin:
-  - `/login`, `/reset-password` → render normally (so admin can sign in and toggle off).
-  - Anything else, including `/`, `/build`, `/register`, `/dashboard/*`, `/admin/*` → render `<StandaloneLanding />` at the current URL (no redirect, so shared links still "work" and show the landing page).
-- Super admins see the site exactly as today. The `AuthenticatedLayout` gate is unchanged; the landing-only gate wraps *outside* it and short-circuits first for non-super-admins.
+Inside `LandingFramework.tsx`, rewrite the three internal imports to point at the new landing-scoped siblings instead of `@/components/home/*`. Everything else (shared UI primitives, brand assets, `@/lib/*` data, hooks) stays imported from the shared locations — those are cross-cutting building blocks, not homepage content.
 
-## Admin control
+### 2. Replace the current `StandaloneLanding.tsx`
 
-- New "Site mode" section in `src/routes/_authenticated/_admin/admin.settings.tsx`, visible to super admins only:
-  - Toggle: **Landing-only mode** (writes `landing_only_mode` to `site_settings`).
-  - Helper text explains what it does and warns that all visitors, including approved members, will only see the standalone landing page.
-- Uses existing `updateSiteSetting()` — no new backend endpoint required.
+Swap its one-line body to render `<LandingFramework />` instead of `<HomeFramework />`. Update the header comment to say the landing page is now a fully independent fork — edits here do not affect `/` (the live homepage) once the site toggles back on.
 
-## Files to add / change
+### 3. Leave everything else alone
 
-- Add: `src/routes/landing.tsx`, `src/components/landing/StandaloneLanding.tsx`, `src/components/landing/StandaloneHeader.tsx`, `src/components/landing/StandaloneFooter.tsx`, `src/components/site/LandingOnlyGate.tsx`, `src/components/admin/LandingOnlyBanner.tsx`.
-- Change: `src/App.tsx` (wrap router children with `LandingOnlyGate`), `src/lib/site-settings.functions.ts` (add `landing_only_mode` to `SiteSettings` with default `false`), `src/routes/_authenticated/_admin/admin.settings.tsx` (new toggle), `src/hooks/use-auth.tsx` if needed to expose `isSuperAdmin` (currently only `isAdmin`).
+- `/` route (`src/routes/index.tsx`) keeps rendering `HomeFramework` — the live-site homepage is untouched.
+- `LandingOnlyGate`, the admin toggle, `site_settings.landing_only_mode`, and `/login` / `/reset-password` bypasses stay exactly as they are.
+- No database changes.
+
+## What "independent" means after this ships
+
+| Change you make…                             | Affects live homepage `/` | Affects landing page |
+|----------------------------------------------|:-------------------------:|:--------------------:|
+| Edit `src/components/home/HomeFramework.tsx` | ✅                        | ❌                   |
+| Edit `src/components/landing/Landing*.tsx`   | ❌                        | ✅                   |
+| Edit a shared primitive (`ui/*`, brand, lib) | ✅                        | ✅                   |
+
+Shared primitives stay shared on purpose — you don't want to re-fork the design system, brand tokens, or data functions just to fork one page. If a specific dialog or lib helper needs to diverge later, we can fork it into `landing/` at that time.
+
+## Trade-off to acknowledge
+
+Duplicating ~700 lines of JSX means the two pages will drift over time. That drift is the whole point of this request. When you want landing-only copy or a stripped-down layout, edit the `landing/` files freely; the homepage will not move.
 
 ## Technical notes
 
-- `isSuperAdmin` derivation: `roles.includes("super_admin")`. Add to `use-auth` alongside `isAdmin`.
-- No DB migration required — `site_settings` is a key/value table already used for feature flags.
-- Setting is public-readable (already is) so the gate works before auth resolves; the gate treats "not-yet-authenticated" as non-super-admin, which is safe.
-- Preserves SPA routing: gate returns a component, never a redirect, so refreshing on `/build` while landing-only mode is on still shows the landing page without a 404.
+- Pure copy-paste of file contents, then a find-and-replace on the four internal home imports inside `LandingFramework.tsx`.
+- No new routes, no router changes, no changes to `App.tsx`.
+- Typecheck after the copy to confirm no dangling imports.
