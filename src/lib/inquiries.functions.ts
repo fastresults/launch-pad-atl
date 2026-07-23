@@ -24,6 +24,7 @@ async function createInquiry(data: InquiryData) {
 
 export async function submitInquiry(data: InquiryData) {
   const inquiryId = await createInquiry(data);
+  if (!inquiryId) return;
 
   const firstName = data.name?.trim().split(/\s+/)[0] || undefined;
 
@@ -72,7 +73,9 @@ export async function submitLandingFreeLaunchInquiry(data: InquiryData) {
   });
 
   if (!adminEmail.queued) {
-    throw new Error("Your response was saved, but the admin email did not queue. Please try again or contact Startup Labs directly.");
+    throw new Error(
+      "Your response was saved, but the admin email did not queue. Please try again or contact Startup Labs directly.",
+    );
   }
 
   const firstName = data.name?.trim().split(/\s+/)[0] || undefined;
