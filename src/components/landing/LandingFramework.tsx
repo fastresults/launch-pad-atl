@@ -620,12 +620,13 @@ function Venue() {
                 >
                   <MapPin className="size-4" /> Get directions
                 </a>
-                <Link
-                  to="/register"
+                <button
+                  type="button"
+                  onClick={openInterest}
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
                 >
-                  Reserve seat <ArrowRight className="size-4" />
-                </Link>
+                  Reserve your interest <ArrowRight className="size-4" />
+                </button>
               </div>
             </div>
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-black/40 md:aspect-auto md:min-h-[280px]">
