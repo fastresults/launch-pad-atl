@@ -5,21 +5,17 @@ import { SiteFooter } from "@/components/site/Footer";
 import { LandingVideoTestimonials } from "@/components/landing/LandingVideoTestimonials";
 import { LandingBusinessIdeasScroller } from "@/components/landing/LandingBusinessIdeasScroller";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
-import { useEvent } from "@/lib/use-event";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   BUILD_LAYER,
   FOUNDATION_FIRST_REASONS,
   FRAMEWORK_STAGES,
-  WORKSHOP_PRICE_LABEL,
 } from "@/lib/framework-deliverables";
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
-import heroBg from "@/assets/hero-bg.png";
 import heroCoffee from "@/assets/hero-coffee-nosteam.png";
 import { motion, useReducedMotion } from "framer-motion";
-import atlSeal from "@/assets/atl-founder-friendly-seal.svg";
-import { LandingAccessModeDialog } from "@/components/landing/LandingAccessModeDialog";
+import { LandingInterestModal } from "@/components/landing/LandingInterestModal";
 import { useState } from "react";
 import {
   ArrowRight,
@@ -33,6 +29,24 @@ import {
   Star,
   AlertTriangle,
 } from "lucide-react";
+
+// Landing-only, self-contained event + offer constants.
+// Editing these does NOT affect the live homepage / paid workshop funnel.
+const LANDING_EVENT = {
+  dateLabel: "Thursday, August 6, 2026 · morning",
+  venueName: "IGNITE Center at Greater Atlanta Christian School",
+  address: "1575 Indian Trail Lilburn Rd NW, Norcross, GA 30093",
+  venueCity: "Norcross",
+  venueRegion: "GA",
+  mapsUrl: "https://maps.google.com/?q=Greater+Atlanta+Christian+School",
+  mapsEmbedUrl:
+    "https://www.google.com/maps?q=Greater+Atlanta+Christian+School&output=embed",
+};
+const LANDING_OFFER = {
+  seats: 3,
+  city: "Atlanta",
+  applyByLabel: "July 30",
+};
 
 export function LandingFramework() {
   const { data: settings } = useQuery({
