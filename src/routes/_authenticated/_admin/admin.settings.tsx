@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import { getPublicSiteSettings, updateSiteSetting, DASHBOARD_NAV_KEYS, DEFAULT_DASHBOARD_NAV_VISIBILITY, type DashboardNavKey, type DashboardNavVisibility } from "@/lib/site-settings.functions";
 import { Home, Calendar, ClipboardList, ListChecks, Sparkles, FolderOpen, User } from "lucide-react";
 import {
@@ -20,6 +21,7 @@ import { Loader2, Lock, Trash2, Plus, KeyRound } from "lucide-react";
 
 export default function AdminSettingsPage() {
   const qc = useQueryClient();
+  const { isSuperAdmin } = useAuth();
   const { data, isLoading } = useQuery({
     queryKey: ["site-settings"],
     queryFn: getPublicSiteSettings,
@@ -35,6 +37,7 @@ export default function AdminSettingsPage() {
   });
 
   const showScroller = data?.show_business_ideas_scroller !== false;
+  const landingOnly = (data as any)?.landing_only_mode === true;
 
   return (
     <div className="container mx-auto max-w-3xl space-y-6 px-4 py-6">
