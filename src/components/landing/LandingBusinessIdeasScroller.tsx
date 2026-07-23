@@ -147,7 +147,7 @@ function MarqueeRow({
   );
 }
 
-export function HomeBusinessIdeasScroller({
+export function LandingBusinessIdeasScroller({
   eyebrow = "What founders are building",
   heading = (
     <>

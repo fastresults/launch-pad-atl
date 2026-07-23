@@ -13,7 +13,7 @@ const CARD_WIDTH_DESKTOP = 236; // 9:16 → 236 × 420
 const CARD_HEIGHT_DESKTOP = 420;
 const CARD_GAP = 16;
 
-export function VideoTestimonials() {
+export function LandingVideoTestimonials() {
   const { data: settings } = useQuery({
     queryKey: ["testimonial_settings"],
     queryFn: getTestimonialSettings,

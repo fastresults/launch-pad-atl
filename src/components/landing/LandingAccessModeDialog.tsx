@@ -67,7 +67,7 @@ function trackMode(id: Mode["id"]) {
   }
 }
 
-export function AccessModeDialog({
+export function LandingAccessModeDialog({
   open,
   onOpenChange,
 }: {
