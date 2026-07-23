@@ -51,10 +51,10 @@ export default function AdminSettingsPage() {
           <h2 className="mb-1 text-lg font-semibold">Site mode</h2>
           <p className="mb-6 text-sm text-muted-foreground">
             Super-admin only. When landing-only mode is ON, every visitor — including approved members —
-            sees a single standalone landing page instead of the full website. Super admins bypass the lock
-            so you can keep editing. <code className="rounded bg-muted px-1">/login</code> and{" "}
-            <code className="rounded bg-muted px-1">/reset-password</code> stay reachable so you can always
-            sign in and switch it back off.
+            sees a single standalone landing page instead of the full website. Admin pages stay reachable so
+            you can keep editing and switch it back off. <code className="rounded bg-muted px-1">/login</code>,{" "}
+            <code className="rounded bg-muted px-1">/reset-password</code>, and{" "}
+            <code className="rounded bg-muted px-1">/admin</code> stay reachable.
           </p>
 
           <div className="flex items-start justify-between gap-6 rounded-lg border border-border/60 bg-background/50 p-4">
