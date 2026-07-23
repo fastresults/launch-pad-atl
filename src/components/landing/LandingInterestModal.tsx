@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { submitInquiry } from "@/lib/inquiries.functions";
+import { submitLandingFreeLaunchInquiry } from "@/lib/inquiries.functions";
 import { ArrowRight, Check } from "lucide-react";
 import { z } from "zod";
 
@@ -58,11 +58,11 @@ export function LandingInterestModal({
         "",
         `Why you, why now: ${parsed.data.why}`,
       ].join("\n");
-      await submitInquiry({
+      await submitLandingFreeLaunchInquiry({
         name: parsed.data.name,
         email: parsed.data.email,
         phone: parsed.data.phone || undefined,
-        subject: `Free launch interest — ${parsed.data.name}`,
+        subject: `Landing free-launch interest — ${parsed.data.name}`,
         message,
       });
       setDone(true);
