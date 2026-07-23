@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AskConcierge } from "@/components/site/AskConcierge";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
+import { LandingOnlyGate } from "@/components/site/LandingOnlyGate";
+import { LandingOnlyBanner } from "@/components/admin/LandingOnlyBanner";
 
 // Layout guards
 import AuthenticatedLayout from "@/routes/_authenticated";
@@ -104,6 +106,8 @@ export default function App() {
     <Suspense fallback={<Loading />}>
       <ConfirmProvider>
       <ScrollToTop />
+      <LandingOnlyBanner />
+      <LandingOnlyGate>
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
@@ -197,6 +201,7 @@ export default function App() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </LandingOnlyGate>
       <AskConcierge />
       </ConfirmProvider>
     </Suspense>
