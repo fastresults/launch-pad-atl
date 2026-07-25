@@ -32,7 +32,7 @@ import {
 // Landing-only, self-contained event + offer constants.
 // Editing these does NOT affect the live homepage / paid workshop funnel.
 const LANDING_EVENT = {
-  dateLabel: "Thursday, August 6, 2026 · morning",
+  dateLabel: "Thursday, August 20, 2026 · morning",
   venueName: "IGNITE Center at Greater Atlanta Christian School",
   address: "1575 Indian Trail Lilburn Rd NW, Norcross, GA 30093",
   venueCity: "Norcross",
@@ -608,7 +608,7 @@ function BottomCTA() {
               Stop thinking about it. Come start it.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
-              One morning with us and a real business you can run with Monday. Three Atlanta founders, chosen by our evaluation team, will do this together on August 6 — absolutely free. Tell us why it should be you.
+              One morning with us and a real business you can run with Monday. Three Atlanta founders, chosen by our evaluation team, will do this together on August 20 — absolutely free. Tell us why it should be you.
             </p>
 
 
