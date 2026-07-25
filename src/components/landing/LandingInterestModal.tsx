@@ -86,7 +86,7 @@ export function LandingInterestModal({
             </div>
             <DialogTitle className="font-serif text-2xl text-[#3D3025]">You're in the evaluation pool.</DialogTitle>
             <p className="mt-3 text-[#5C4A38]">
-              Our evaluation team will reach out by <strong>July 30</strong>. Three Atlanta founders will be chosen for the August 6 morning — completely free.
+              Our evaluation team will reach out by <strong>July 30</strong>. Three Atlanta founders will be chosen for the August 20 morning — completely free.
             </p>
             <button
               type="button"
@@ -101,7 +101,7 @@ export function LandingInterestModal({
             <DialogHeader>
               <DialogTitle className="font-serif text-2xl text-[#3D3025]">Reserve your interest</DialogTitle>
               <DialogDescription className="text-[#5C4A38]">
-                We're setting up 3 Atlanta entrepreneurs in business — absolutely free — on August 6. Tell us about you. Our evaluation team will get back to you by <strong>July 30</strong>.
+                We're setting up 3 Atlanta entrepreneurs in business — absolutely free — on August 20. Tell us about you. Our evaluation team will get back to you by <strong>July 30</strong>.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="mt-2 space-y-4">
