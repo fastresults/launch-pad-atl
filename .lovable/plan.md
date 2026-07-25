@@ -1,23 +1,34 @@
 ## Goal
+Produce a single 1:1 promotional image for the next Foundation Workshop (Thursday, Aug 20, 2026 · IGNITE Center at Greater Atlanta Christian School) patterned after the attached HDSI "Chief AI Officer" ad — same layout DNA (left-aligned serif headline, portrait bleeding off the right, diagonal brand accent, small credibility line at the bottom), but featuring a **middle-aged woman** as the subject and StartupLabs branding/voice.
 
-Landing page should reflect the 3-free-seat offer and never link out to full-site routes (which are hidden while landing-only mode is on).
+## Deliverables
+1. `public/social-ad-startup-labs-aug20.jpg` — 1080×1080 promotional image
+2. `public/social-ad-startup-labs-aug20-copy.md` — matching LinkedIn + Facebook captions
 
-## Changes — `src/components/landing/LandingFramework.tsx`
+## Image concept (patterned after reference)
+- **Layout:** Left 55% = typography on soft cream/espresso background. Right 45% = confident middle-aged woman (mid-40s to early-50s), warm smile, in a bright, out-of-focus workspace. Two diagonal brand-blue accent bars sweep from the top-right corner (mirrors the HDSI red slashes but in StartupLabs blue `#628acf`).
+- **Top-left lockup:** StartupLabs logo mark + wordmark, small.
+- **Headline (large serif, italic emphasis on the middle line):**
+  > Start the business
+  > *you've been waiting on.*
+- **Sub-lockup (underlined label + small caps qualifier):**
+  > The Foundation Workshop
+  > ONE-MORNING BUILD
+- **Bottom credibility line (small):**
+  > Thursday, August 20, 2026 · 8:45–11:30 AM · IGNITE Center at Greater Atlanta Christian School, Norcross GA. Leave with a live page at your domain, a priced offer, and your first outreach sent — built with you, not handed to you. startuplabs.online
+- **Palette:** Cream `#FAF8F5` bg, espresso `#3D2E1F` type, brand blue `#628acf` diagonals — matches the site's Warm Sand system.
+- **Style rules:** No stock-looking gloss; editorial "Sunday paper" feel; woman photographed naturally (no AI-typical over-smoothed skin, no logos on her clothing, no visible text artifacts in the photo area).
 
-1. **Seat count fixes**
-   - Line 294: `Just 20 seats` → `Just 3 seats · free`
-   - Line 388 (HonestRoadmap included list): `A seat next to Adam and 19 other founders…` → `A seat next to Adam and 2 other founders — coffee, snacks, and a small room building alongside you`
+## Generation approach
+Use `imagegen--generate_image` at **premium** quality (typography must render cleanly). Single 1024×1024 render, then save to `public/`. If any text renders garbled on the first pass, re-run with a tightened prompt rather than post-editing.
 
-2. **Remove full-site CTAs**
-   - **Build-layer cards (lines ~457–491):** The 4 cards currently link to `/build/:slug`. Convert them from `<Link>` to plain `<div>` cards, remove the "Learn more →" affordance and hover-link styling. Keep the visual card + copy so the "8 more mornings" story still lands.
-   - **Build-layer CTA row (lines ~501–514):** Remove the entire two-button row ("See all 8 mornings" → `/build`, "Or have us build it for you" → `/services`).
-   - **`ServicesTeaser` section (lines 569–593) + its render at line 74:** Delete the section and its usage. The landing shouldn't pitch the services page while it's hidden.
-   - **`BottomCTA` (lines 648–682):** Remove the secondary `<Link to="/services">See our services</Link>` button, keeping only the "Reserve your interest" primary button.
+## Copy file contents
+Three short captions in `public/social-ad-startup-labs-aug20-copy.md`:
+- **LinkedIn (primary)** — Plan-B founder angle, one focused morning, artifact list, IGNITE Center credibility, CTA to `startuplabs.online`.
+- **LinkedIn (short reshare)** — one-liner + CTA.
+- **Facebook (local/community)** — neighborly Norcross tone, same CTA.
 
-3. **`LandingAccessModeDialog.tsx`** — not rendered by the landing (confirmed via grep), so no change needed. Leave file untouched.
+All captions end with: `startuplabs.online · Thursday, Aug 20 · reserve your seat`.
 
 ## Out of scope
-
-- No copy changes beyond the two seat-count strings above.
-- No changes to `HomeFramework` / full-site pages.
-- No layout redesign — just removing/neutralizing the offending CTAs and section.
+No site code changes, no route or component edits — image + markdown file only.
