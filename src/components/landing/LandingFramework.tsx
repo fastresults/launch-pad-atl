@@ -44,7 +44,7 @@ const LANDING_EVENT = {
 const LANDING_OFFER = {
   seats: 3,
   city: "Atlanta",
-  applyByLabel: "July 30",
+  applyByLabel: "August 10",
 };
 
 const InterestCtx = createContext<() => void>(() => {});
