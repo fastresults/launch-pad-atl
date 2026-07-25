@@ -2,7 +2,7 @@
 
 Ready-to-paste captions to pair with `public/landing-poster.png`.
 Voice: warm, unhurried, "pull up a chair." Never hype.
-Anchor: **startuplabs.online** · Free · 3 seats · Reserve by **July 30**
+Anchor: **startuplabs.online** · Free · 3 seats · Reserve by **August 10**
 
 ---
 
@@ -16,11 +16,11 @@ On **Thursday, August 20, 2026**, we're hosting our launch morning at the **IGNI
 
 Not a course. Not a workbook. Not a "we'll email you a roadmap." We build the thing with you, in the room, in one morning.
 
-There are three seats. They're free. We're picking founders by **July 30**, and the evaluation team will get back to everyone who reserves within 24 hours.
+There are three seats. They're free. We're picking founders by **August 10**, and the evaluation team will get back to everyone who reserves within 24 hours.
 
 If you've been quietly waiting for a nudge, this is it.
 
-Reserve your seat → startuplabs.online · free · 3 seats · reserve by July 30
+Reserve your seat → startuplabs.online · free · 3 seats · reserve by August 10
 
 #Entrepreneurship #StartupFounders #Atlanta #CareerPivot #Founders #SmallBusiness
 
@@ -32,7 +32,7 @@ Reserve your seat → startuplabs.online · free · 3 seats · reserve by July 3
 
 August 20 at the IGNITE Center in Atlanta — we sit down with three founders and actually build the startup with them. Live page, priced offer, first message sent. You leave with the thing, not a plan to make the thing.
 
-Reserving through **July 30** → startuplabs.online
+Reserving through **August 10** → startuplabs.online
 
 #Founders #Atlanta #Startups
 
@@ -48,9 +48,9 @@ You bring the idea you keep half-writing at 11pm. We bring the table, the coffee
 
 Hosted at the **IGNITE Center at Greater Atlanta Christian School**. Small on purpose. Warm on purpose.
 
-Reservations close **July 30** — the evaluation team gets back to everyone within 24 hours.
+Reservations close **August 10** — the evaluation team gets back to everyone within 24 hours.
 
-Pull up a chair → startuplabs.online · free · 3 seats · reserve by July 30
+Pull up a chair → startuplabs.online · free · 3 seats · reserve by August 10
 
 ---
 
@@ -60,9 +60,9 @@ Pull up a chair → startuplabs.online · free · 3 seats · reserve by July 30
 
 We're launching Startup Labs here in the Atlanta area, and to kick it off we're giving **three seats away, free**. On **Thursday morning, August 20**, we'll sit down together at the **IGNITE Center at Greater Atlanta Christian School** and actually build your startup with you — the page people can visit, the offer they can buy, and the first message that goes out the door. Real work, done together, in one morning. No fluff, no homework, no "we'll email you a workbook."
 
-Three seats. Free. Reservations close **July 30**, and we'll get back to everyone who applies within 24 hours.
+Three seats. Free. Reservations close **August 10**, and we'll get back to everyone who applies within 24 hours.
 
 Come have coffee with us and leave with a startup.
-startuplabs.online · free · 3 seats · reserve by July 30
+startuplabs.online · free · 3 seats · reserve by August 10
 
 #Atlanta #Norcross #GwinnettCounty #SmallBusiness #LocalFounders #StartupLabs
