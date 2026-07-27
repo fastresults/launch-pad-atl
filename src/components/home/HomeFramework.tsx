@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { VideoTestimonials } from "@/components/home/VideoTestimonials";
 import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
+import { StageSketch } from "@/components/home/StageSketch";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import { useEvent } from "@/lib/use-event";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
