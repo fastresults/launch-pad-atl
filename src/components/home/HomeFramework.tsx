@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { VideoTestimonials } from "@/components/home/VideoTestimonials";
 import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
+import { StageSketch } from "@/components/home/StageSketch";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import { useEvent } from "@/lib/use-event";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -315,23 +316,29 @@ function Framework() {
         <div className="mt-14 space-y-14 md:space-y-20">
           {FRAMEWORK_STAGES.map((stage) => (
             <div key={stage.number}>
-              <div className="flex items-baseline gap-4">
-                <span className="text-5xl font-semibold leading-none text-gradient-brand md:text-6xl">
-                  {stage.number}
-                </span>
-                <div>
-                  <h3 className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xl font-semibold leading-tight tracking-tight md:text-2xl">
-                    <span>{stage.name}</span>
-                    {stage.bonus && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white md:text-xs">
-                        <Sparkles className="size-3" /> Bonus
-                      </span>
-                    )}
-                  </h3>
-                  <p className="mt-1 text-sm text-muted-foreground md:text-base">
-                    {stage.intro}
-                  </p>
+              <div className="flex items-start justify-between gap-6">
+                <div className="flex items-baseline gap-4">
+                  <span className="text-5xl font-semibold leading-none text-gradient-brand md:text-6xl">
+                    {stage.number}
+                  </span>
+                  <div>
+                    <h3 className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xl font-semibold leading-tight tracking-tight md:text-2xl">
+                      <span>{stage.name}</span>
+                      {stage.bonus && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white md:text-xs">
+                          <Sparkles className="size-3" /> Bonus
+                        </span>
+                      )}
+                    </h3>
+                    <p className="mt-1 text-sm text-muted-foreground md:text-base">
+                      {stage.intro}
+                    </p>
+                  </div>
                 </div>
+                <StageSketch
+                  stage={stage.number}
+                  className="hidden size-20 shrink-0 text-foreground/60 md:block md:size-24"
+                />
               </div>
               <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
                 {stage.items.map((d) => {
