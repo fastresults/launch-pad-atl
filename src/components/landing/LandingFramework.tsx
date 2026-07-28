@@ -237,6 +237,11 @@ function Hero() {
                 <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#8B7355]">
                   Launching Startup Labs · Atlanta
                 </p>
+                <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-[#5C4A38]">
+                  <MapPin className="size-3.5 text-[#8B7355]" />
+                  In person · Norcross, GA (metro Atlanta)
+                </p>
+
               </div>
 
               <p className="mt-5 text-base leading-snug text-[#3D3025]">
