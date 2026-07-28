@@ -147,7 +147,7 @@ function Hero() {
                 Designed for
               </p>
               <ul className="grid gap-x-8 gap-y-2 text-sm text-[#3D3025] sm:grid-cols-2">
-                <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Plan-B seekers ready to stop guessing</li>
+                <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Atlanta-area Plan-B seekers ready to stop guessing</li>
                 <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Professionals whose jobs are changing</li>
                 <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Main Street operators &mdash; shops, trades, cafés</li>
                 <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Families and couples building together</li>
