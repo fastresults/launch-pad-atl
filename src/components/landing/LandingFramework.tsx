@@ -111,8 +111,8 @@ function Hero() {
           {/* LEFT COLUMN — kicker, headline, deck, pull quote, designed-for */}
           <div className="flex flex-col lg:col-span-8">
             <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
-              <Star className="size-3.5 fill-current" />
-              One focused morning · IGNITE Center · Coffee&rsquo;s on us
+              <MapPin className="size-3.5" />
+              In person in Atlanta · One focused morning · Coffee&rsquo;s on us
             </p>
 
             <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[4.3rem]">
@@ -123,8 +123,9 @@ function Hero() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
-              One quiet morning. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you actually build the thing. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
+              One quiet morning in Atlanta &mdash; at the IGNITE Center at Greater Atlanta Christian School in Norcross. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you actually build the thing. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
             </p>
+
 
             <p className="mt-3 max-w-2xl text-base text-[#7A6650]">
               For nurses, teachers, servers, coders, couples on Main Street &mdash; anyone who&rsquo;s been meaning to start something. Come sit with us. We&rsquo;ll figure it out together.
