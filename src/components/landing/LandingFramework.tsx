@@ -26,7 +26,7 @@ import {
   Check,
   Award,
   Sparkles,
-  Star,
+  
   AlertTriangle,
 } from "lucide-react";
 
