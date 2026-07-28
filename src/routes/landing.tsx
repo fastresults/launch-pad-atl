@@ -3,8 +3,9 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 
 export default function LandingRoute() {
   useDocumentTitle(
-    "Startuplabs — Your startup, actually built in one morning",
-    "Come spend one focused morning in Atlanta (or live on Zoom). We actually build your startup with you — live page, priced offer, first outreach sent — and land your first paying customer in two weeks. $297."
+    "Startuplabs Atlanta — Your startup, built with you in one morning",
+    "An in-person Atlanta workshop at the IGNITE Center in Norcross, GA. One focused morning — live page, priced offer, first outreach sent. 3 free seats, August 20."
   );
+
   return <StandaloneLanding />;
 }

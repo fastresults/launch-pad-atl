@@ -1,42 +1,33 @@
 ## Goal
 
-Give each numbered section (01 Foundation → 08) a small hand-drawn, cross-hatched accent illustration in the same espresso ink as the section type — matching the pencil-sketch style of the attached references (lamp, film strip, document, eye, cloaked figure, box).
+A visitor should know this is an in-person Atlanta workshop within the first screen — no scrolling.
 
-## Approach
+## Changes (all in `src/components/landing/LandingFramework.tsx`, hero area only)
 
-**Hand-authored SVG, not generated raster images.** The reference style (fine hatching, ink outlines) reproduces cleanly as stroke-based SVG, and SVG lets the art inherit the section font color via `currentColor` — so it stays perfectly on-brand in light/dark and needs no re-export if the palette shifts. Raster PNGs would need transparency handling, fixed color, and 8 separate generations that won't feel like one hand.
+1. **Masthead line (top of page, line ~98-105)**
+   - Right-side italic "Pull up a chair" becomes a location + date stamp: `Atlanta, Georgia · Thursday, August 20, 2026`.
+   - Keeps the magazine masthead look, puts the city in the very first line of text on the page.
 
-### New file: `src/components/home/StageSketch.tsx`
-- One component, `<StageSketch stage="01" />`, holding 8 inline SVGs.
-- Shared visual system so all eight read as one artist:
-  - `stroke="currentColor"`, `fill="none"`, 1.25px outlines with a lighter 0.6px hatch layer at ~45°.
-  - Slightly irregular paths (hand-drawn wobble), no perfect circles.
-  - `viewBox="0 0 120 120"`, rendered at ~72–88px.
-- Motifs per section, drawn from the plain-English promise of each:
-  - 01 Foundation — a laid cornerstone / stacked blocks
-  - 02 Strategy — a compass rose
-  - 03 Operations — meshed gears with a conveyor line
-  - 04 Finance — coin stack with a rising line
-  - 05 Governance — shield with a seal
-  - 06 Brand — ink pot and nib
-  - 07 Marketing — a lit desk lamp (directly echoing the attached lamp sketch)
-  - 08 (final stage) — a paper airplane / broadcast arc for distribution
+2. **Hero kicker (line ~111-114)**
+   - From: `One focused morning · IGNITE Center · Coffee's on us`
+   - To: `In person in Atlanta · One focused morning · Coffee's on us`
+   - Swap the star icon for a map-pin so it reads as a place, not a badge.
 
-### Edit: `src/components/home/HomeFramework.tsx` (`Framework`)
-- Wrap the existing stage header row so the number + title/intro sit left and the sketch sits at the far right of the row (`justify-between`, sketch `shrink-0`).
-- Sketch inherits color from the header (`text-[hsl(var(--foreground))]/70` sitting inside the espresso type block) at ~55–70% opacity so it stays an accent, not a focal point.
-- Hidden below `sm` to protect the mobile stack; `aria-hidden` since it carries no new information.
+3. **Headline sub-deck (line ~123-129)**
+   - Add the venue plainly in the supporting paragraph: "One quiet morning in Atlanta — at the IGNITE Center at Greater Atlanta Christian School in Norcross…" so the actual room is named above the fold instead of only in the map section far below.
 
-### Edit: `src/components/landing/LandingFramework.tsx`
-- Same treatment on the landing fork so the two surfaces don't drift, keyed off the same `stage.number`.
+4. **Offer card (line ~226-258)**
+   - Add a single map-pin line under the "3 seats. Zero cost." block: `In person · Norcross, GA (metro Atlanta)` so the location sits right next to the CTA button people click.
 
-## Technical notes
+5. **Designed-for list (line ~146-151)**
+   - Localize the first item slightly: "Atlanta-area Plan-B seekers ready to stop guessing" — one mention only, no repetition.
 
-- No new dependencies; no data-model change — `FRAMEWORK_STAGES` is untouched and the sketch is looked up by `stage.number`.
-- All strokes use `currentColor`, so the accent tracks the section font color automatically.
-- `vector-effect="non-scaling-stroke"` keeps hatch weight consistent at any render size.
-- Purely presentational: no changes to tooltips, deliverable data, or any business logic.
+6. **Page title / meta** (`src/routes/landing.tsx`)
+   - Title and description get "Atlanta" up front for search and social previews.
 
-## Verification
+## Guardrails
 
-Screenshot the homepage framework section at desktop and mobile widths, confirm all 8 sketches render, sit flush with their headers, match the type color, and don't push the deliverable grid.
+- No layout restructuring, no new sections, no new components.
+- Location mentioned deliberately, not repeated in every paragraph — masthead, kicker, deck, offer card, meta strip.
+- Free-offer framing, August 20 date, apply-by date, and all existing sections stay untouched.
+- Homepage (`HomeFramework.tsx`) is not touched — landing fork only.

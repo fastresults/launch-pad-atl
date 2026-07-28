@@ -26,7 +26,7 @@ import {
   Check,
   Award,
   Sparkles,
-  Star,
+  
   AlertTriangle,
 } from "lucide-react";
 
@@ -99,9 +99,11 @@ function Hero() {
           <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
             Issue No. 01 &mdash; The Pivot
           </div>
-          <div className="font-serif text-sm italic text-[#8B7355]">
-            Pull up a chair
+          <div className="flex items-center gap-1.5 font-serif text-sm italic text-[#8B7355]">
+            <MapPin className="size-3.5 not-italic" />
+            Atlanta, Georgia · Thursday, August 20, 2026
           </div>
+
         </div>
 
         {/* Hero — 7/5 editorial grid, shared bottom baseline */}
@@ -109,8 +111,8 @@ function Hero() {
           {/* LEFT COLUMN — kicker, headline, deck, pull quote, designed-for */}
           <div className="flex flex-col lg:col-span-8">
             <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
-              <Star className="size-3.5 fill-current" />
-              One focused morning · IGNITE Center · Coffee&rsquo;s on us
+              <MapPin className="size-3.5" />
+              In person in Atlanta · One focused morning · Coffee&rsquo;s on us
             </p>
 
             <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[4.3rem]">
@@ -121,8 +123,9 @@ function Hero() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
-              One quiet morning. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you actually build the thing. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
+              One quiet morning in Atlanta &mdash; at the IGNITE Center at Greater Atlanta Christian School in Norcross. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you actually build the thing. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
             </p>
+
 
             <p className="mt-3 max-w-2xl text-base text-[#7A6650]">
               For nurses, teachers, servers, coders, couples on Main Street &mdash; anyone who&rsquo;s been meaning to start something. Come sit with us. We&rsquo;ll figure it out together.
@@ -144,7 +147,7 @@ function Hero() {
                 Designed for
               </p>
               <ul className="grid gap-x-8 gap-y-2 text-sm text-[#3D3025] sm:grid-cols-2">
-                <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Plan-B seekers ready to stop guessing</li>
+                <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Atlanta-area Plan-B seekers ready to stop guessing</li>
                 <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Professionals whose jobs are changing</li>
                 <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Main Street operators &mdash; shops, trades, cafés</li>
                 <li className="flex gap-2"><span className="text-[#C9B99A]">&bull;</span> Families and couples building together</li>
@@ -234,6 +237,11 @@ function Hero() {
                 <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#8B7355]">
                   Launching Startup Labs · Atlanta
                 </p>
+                <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-[#5C4A38]">
+                  <MapPin className="size-3.5 text-[#8B7355]" />
+                  In person · Norcross, GA (metro Atlanta)
+                </p>
+
               </div>
 
               <p className="mt-5 text-base leading-snug text-[#3D3025]">
