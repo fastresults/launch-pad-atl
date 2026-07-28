@@ -99,9 +99,11 @@ function Hero() {
           <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
             Issue No. 01 &mdash; The Pivot
           </div>
-          <div className="font-serif text-sm italic text-[#8B7355]">
-            Pull up a chair
+          <div className="flex items-center gap-1.5 font-serif text-sm italic text-[#8B7355]">
+            <MapPin className="size-3.5 not-italic" />
+            Atlanta, Georgia · Thursday, August 20, 2026
           </div>
+
         </div>
 
         {/* Hero — 7/5 editorial grid, shared bottom baseline */}
