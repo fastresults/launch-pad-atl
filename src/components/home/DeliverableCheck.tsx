@@ -39,5 +39,6 @@ export function DeliverableCheck({
       <span className="flex-1 text-base font-medium leading-snug tracking-tight">
         {title}
       </span>
+    </li>
   );
 }
