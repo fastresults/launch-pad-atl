@@ -390,10 +390,10 @@ function HonestRoadmap() {
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
           Two weeks to your first dollar.{" "}
-          <span className="text-gradient-brand">A real startup by month two.</span>
+          <span className="text-gradient-brand">A foundation solid enough to build on.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we actually build your page, price the offer, and send the first message — from the room, to a real person. Everything pretty comes after the money starts.
+          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we build the foundation underneath it: your page live, the offer priced, the first message sent — from the room, to a real person. Everything you add later gets built on top of that, not instead of it.
         </p>
 
 
