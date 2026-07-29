@@ -646,7 +646,7 @@ function BottomCTA() {
               Stop thinking about it. Come start it.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
-              {WORKSHOP_PRICE_LABEL} gets you one morning with us and a real plan you can run with Monday. If you want us to build the brand, the site, or the whole launch after — we're right here. If not, you keep the plan either way.
+              {WORKSHOP_PRICE_LABEL} gets you one morning with us and a real foundation — page live, offer priced, first message sent — that you can keep building on Monday. If you want us to build the brand, the site, or the whole launch on top of it after, we're right here. If not, the foundation is yours either way.
             </p>
 
 
