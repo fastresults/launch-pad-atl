@@ -323,7 +323,7 @@ function Framework() {
           <span className="text-gradient-brand">Laid with you in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          A course gives you videos. A chatbot gives you a folder of files. We sit down and build the foundation your startup stands on — the live page, the priced offer, the first message sent. By that afternoon you're not planning anymore. You're standing on something real, and you know the next thing to build on it. {WORKSHOP_PRICE_LABEL} once. Yours to keep building.
+          A course gives you videos. A chatbot gives you a folder of files. We sit down and write the four foundations your startup runs on — brand, product, marketing, operations. By that afternoon you're not planning anymore. You're holding the actual words your business runs on, and you know the next thing to build on them. {WORKSHOP_PRICE_LABEL} once. Yours to keep building.
         </p>
 
         <p className="mt-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
