@@ -19,9 +19,9 @@ export function DeliverableCheck({
     <li
       tabIndex={0}
       className={cn(
-        "group flex cursor-help items-center gap-3.5 rounded-2xl border border-border/60 bg-card/40 px-4 py-3.5",
-        "transition-colors duration-200 hover:border-primary/40 hover:bg-card/70",
-        "focus:outline-none focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20",
+        "group flex cursor-help items-center gap-3.5 px-1 py-2.5",
+        "transition-colors duration-200",
+        "focus:outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-primary/20",
         className,
       )}
       {...rest}
