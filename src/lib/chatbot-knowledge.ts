@@ -88,16 +88,18 @@ is the new way — a done-with-you build replacing accelerators, courses, and ra
 - **The old way:** An accelerator seat. A year of courses. A raw-AI rabbit hole. 12 months, $40k,
   an agency, a co-founder, a prayer. Three months on a logo before anyone asks a customer for money.
   Most founders quit here.
-- **The new way — The 14-Day Pivot Method:** One live morning. One operator. One real build.
-  Adam sits at your table and actually builds it: page live, offer priced, first outreach sent from
-  your inbox — before you leave. Fourteen days to first revenue.
+- **The new way — The 14-Day Pivot Method:** One live morning. One operator. Four foundations written.
+  Adam sits at your table and writes them with you: brand named and positioned, one offer priced,
+  page copy and outreach written to named prospects, and how the business runs day to day — all before
+  lunch. Then you build on that the same week, with everything you need for first revenue inside 14 days.
 
 This is not "AI does it for you" — that's the trap everyone else is selling, and it stalls in month
 two. Raw AI hands you a folder of documents and calls it a business. It isn't one. The 14-Day Pivot
-Method is a done-with-you build — Adam sits at your table and ships the real pieces with you:
-your page goes live at your domain, your offer is priced and takes money, your first message goes
-out from your inbox. AI is behind the scenes so his time goes to *your* real build, not to formatting.
+Method is a done-with-you build — Adam sits at your table and writes the real foundations with you:
+the brand you'll use everywhere, the price someone actually pays, the page copy that sells it, and
+the operations behind the yes. AI is behind the scenes so his time goes to *your* real work, not to formatting.
 That distinction is the whole moat.
+
 
 The 14-Day Pivot Method is how modern founders are launching in 2026. Done with you, actually shipped,
 AI-accelerated — in that order. Adam is one of the few people actually running this in a room.
