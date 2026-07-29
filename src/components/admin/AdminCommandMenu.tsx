@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { ADMIN_GROUPS, ADMIN_GROUP_META, ADMIN_NAV_FLAT } from "@/lib/admin-nav";
-import { Search, ExternalLink, EyeOff, LogOut, Settings } from "lucide-react";
+import { Search, ExternalLink, Eye, EyeOff, LogOut, Settings } from "lucide-react";
 
 const RECENTS_KEY = "sl.admin.recent-pages";
 
