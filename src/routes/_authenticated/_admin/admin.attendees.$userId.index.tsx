@@ -31,6 +31,22 @@ export default function AttendeeDetail() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const handleViewAs = async () => {
+    if (!userId) return;
+    if (userId === actorUser?.id) {
+      navigate("/dashboard");
+      return;
+    }
+    const name = data?.profile?.display_name ?? data?.profile?.email ?? "member";
+    try {
+      await startImpersonation({ userId, name, email: data?.profile?.email ?? "" });
+      toast.success(`Opened dashboard as ${name}`);
+      navigate("/dashboard");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to open dashboard");
+    }
+  };
+
   if (isLoading) return <div className="text-sm text-muted-foreground">Loading…</div>;
   if (!data) return null;
 
