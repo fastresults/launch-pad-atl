@@ -275,30 +275,37 @@ function Hero() {
 
 
 
-        {/* Magazine footnote — 3 promises */}
+        {/* Magazine footnote — the four foundations */}
         <p className="mt-16 border-t border-[#C9B99A] pt-8 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355]">
-          The three foundation pieces you leave with
+          Four foundations get written with you this morning. Not outlined. Written.
         </p>
-        <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">01</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
-              <strong className="font-semibold">A live page at your domain.</strong> Not a mockup. A real URL a stranger can open.
+              <strong className="font-semibold">Brand.</strong> Your name, your positioning, and the way you sound. Locked in the room, in the words you&rsquo;ll use everywhere.
             </p>
           </div>
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">02</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
-              <strong className="font-semibold">A priced offer that takes money.</strong> Set before lunch. Named first customer on it.
+              <strong className="font-semibold">Product.</strong> One offer, priced, with the reason someone pays that number written in plain English.
             </p>
           </div>
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">03</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
-              <strong className="font-semibold">Your first outreach written in the room.</strong> Message, list, and send button — ready before you leave.
+              <strong className="font-semibold">Marketing.</strong> The real copy and structure for your page, plus fifty named prospects and the exact message to send each one.
+            </p>
+          </div>
+          <div className="flex flex-col">
+            <span className="font-serif text-3xl text-[#8B7355]">04</span>
+            <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
+              <strong className="font-semibold">Operations.</strong> How money comes in, what happens after the yes, and the working assets a banker or first hire reads in 60 seconds.
             </p>
           </div>
         </div>
+
 
         {/* Event meta strip */}
         <div className="mt-10 grid grid-cols-1 gap-3 text-sm text-[#5C4A38] sm:grid-cols-2 lg:grid-cols-4">
