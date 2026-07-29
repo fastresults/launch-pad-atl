@@ -7,7 +7,7 @@ import { AccessModeDialog } from "@/components/home/AccessModeDialog";
 import { useDocumentTitle } from "@/lib/use-document-title";
 
 const HIGHLIGHTS = [
-  "One live morning where we actually build it with you — live page up, offer priced, first outreach sent from your inbox",
+  "One live morning where we write the four foundations with you — brand named, offer priced, page copy and outreach written to named prospects",
   "Fourteen days to first revenue — real messages to real prospects, not another course to finish",
   "Small cohort so the build happens on your startup, not a Zoom crowd",
   "Recording plus every real asset built in the session — page, offer, message templates — yours to keep",
@@ -63,7 +63,7 @@ export default function WebinarPage() {
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
               The same real build, run live over video in a small cohort —
               done-with-you, not done-to-you or done-alone.
-              One focused morning where we actually build your startup: your page goes live, your offer gets priced, and your first outreach goes out from your inbox
+              One focused morning where we write the four foundations your startup runs on: brand named, offer priced, page copy written, and the exact message ready for a named prospect
               that afternoon.
             </p>
 
