@@ -1,4 +1,5 @@
 import { LandingFramework } from "@/components/landing/LandingFramework";
+import { AskConcierge } from "@/components/site/AskConcierge";
 
 /**
  * Standalone landing page shown to all non-super-admin visitors when
@@ -11,5 +12,10 @@ import { LandingFramework } from "@/components/landing/LandingFramework";
  * purpose; fork them into `landing/` only if they need to diverge.
  */
 export function StandaloneLanding() {
-  return <LandingFramework />;
+  return (
+    <>
+      <LandingFramework />
+      <AskConcierge />
+    </>
+  );
 }
