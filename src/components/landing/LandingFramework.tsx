@@ -364,26 +364,18 @@ function Framework() {
                 />
               </div>
               <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
-                {stage.items.map((d) => {
-                  const Icon = d.icon;
-                  return (
-                    <Tooltip key={d.title} delayDuration={150}>
-                      <TooltipTrigger asChild>
-                        <li
-                          tabIndex={0}
-                          className="flex cursor-help items-center gap-3 rounded-2xl border border-white/10 bg-card px-5 py-4 transition-colors hover:border-white/20 focus:outline-none focus-visible:border-primary/40"
-                        >
-                          <Icon className="size-5 shrink-0 text-primary" />
-                          <span className="text-base font-medium tracking-tight">{d.title}</span>
-                        </li>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" sideOffset={6} className="max-w-[320px] border border-[#C9B99A] bg-[#F0EBE3] px-4 py-3 text-sm leading-relaxed text-[#3D3025] shadow-md rounded-none">
-                        {d.tooltip}
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
+                {stage.items.map((d) => (
+                  <Tooltip key={d.title} delayDuration={150}>
+                    <TooltipTrigger asChild>
+                      <DeliverableCheck title={d.title} icon={d.icon} />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" sideOffset={6} className="max-w-[320px] border border-[#C9B99A] bg-[#F0EBE3] px-4 py-3 text-sm leading-relaxed text-[#3D3025] shadow-md rounded-none">
+                      {d.tooltip}
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
               </ul>
+
             </div>
           ))}
         </div>
