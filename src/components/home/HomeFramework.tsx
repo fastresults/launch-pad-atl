@@ -118,6 +118,10 @@ function Hero() {
               </figcaption>
             </figure>
 
+            <p className="mt-8 max-w-2xl text-xs font-semibold uppercase leading-relaxed tracking-[0.18em] text-[#8B7355]">
+              Accelerators pitch. Incubators mentor. Bootcamps lecture. You leave our room already open for business.
+            </p>
+
             {/* Designed for — anchors the bottom of the left column */}
             <div className="mt-auto pt-10">
               <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
