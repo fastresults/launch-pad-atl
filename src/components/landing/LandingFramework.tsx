@@ -77,6 +77,7 @@ export function LandingFramework() {
         
         <Venue />
         <BottomCTA />
+        <LandingFooter event={LANDING_EVENT} />
         <LandingInterestModal open={interestOpen} onOpenChange={setInterestOpen} />
       </div>
     </InterestCtx.Provider>
