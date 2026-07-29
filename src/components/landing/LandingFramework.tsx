@@ -132,6 +132,10 @@ function Hero() {
 
 
             <p className="mt-3 max-w-2xl text-base text-[#7A6650]">
+              No auditorium, no cohort of fifty, no pitch night. Three founders at one table for a single morning.
+            </p>
+
+            <p className="mt-3 max-w-2xl text-base text-[#7A6650]">
               For nurses, teachers, servers, coders, couples on Main Street &mdash; anyone who&rsquo;s been meaning to start something. Come sit with us. We&rsquo;ll figure it out together.
             </p>
 
@@ -231,10 +235,10 @@ function Hero() {
             <div className="mx-auto mt-2 w-full max-w-[380px] rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1] px-7 py-7">
               <div className="border-b border-[#E4D9C4] pb-5">
                 <span className="inline-flex items-center gap-2 rounded-full bg-[#8B7355] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FAF8F5]">
-                  Free launch offer
+                  Free launch offer · 3 seats left
                 </span>
                 <p className="mt-4 font-serif text-4xl leading-tight text-[#3D3025]">
-                  3 seats. Zero cost.
+                  3 seats left at the table.
                 </p>
                 <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#8B7355]">
                   Launching Startup Labs · Atlanta
@@ -243,12 +247,16 @@ function Hero() {
                   <MapPin className="size-3.5 text-[#8B7355]" />
                   In person · Norcross, GA (metro Atlanta)
                 </p>
+                <p className="mt-2 text-sm italic text-[#7A6650]">
+                  One table. Three founders. Nobody watching from the back.
+                </p>
 
               </div>
 
               <p className="mt-5 text-base leading-snug text-[#3D3025]">
-                Three Atlanta founders will leave with the written foundation for a startup they can build on immediately &mdash; brand nailed, offer priced, marketing copy and website PRD written, operations mapped.
+                It&rsquo;s three founders, one table, and one operator working through your business with you. You leave with the written foundation for a startup you can build on immediately &mdash; brand nailed, offer priced, marketing copy and website PRD written, operations mapped.
               </p>
+
 
               <button
                 type="button"
@@ -312,7 +320,7 @@ function Hero() {
           <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
           <Meta icon={<MapPin className="size-4" />} label={`${EVENT.venueCity}, ${EVENT.venueRegion}`} />
           <Meta icon={<Clock className="size-4" />} label="8:45–11:30 AM · Coffee included" />
-          <Meta icon={<Users className="size-4" />} label="Just 3 seats · free" />
+          <Meta icon={<Users className="size-4" />} label="3 seats left · one table · free" />
         </div>
       </div>
     </section>
@@ -408,7 +416,7 @@ function HonestRoadmap() {
     "Your page copy, written line by line — headline, proof, and call to action, ready to build",
     "Your Foundation on the dashboard — positioning, ICP, and wedge, sharpened with staff",
     "Your first outreach written — the message and the named person it goes to",
-    "A seat next to Adam and 2 other founders — coffee, snacks, and a small room building alongside you",
+    "A seat at a table of three — you, two other Atlanta founders, and Adam working through each business out loud, with coffee",
   ];
 
 
@@ -633,7 +641,7 @@ function BottomCTA() {
               Stop thinking about it. Come start it.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
-              One morning with us and the written foundation your startup can build on immediately. Three Atlanta founders, chosen by our evaluation team, will do this together on August 20 — absolutely free. Tell us why it should be you.
+              Three seats. One table. One morning. You leave with the written foundation your startup can build on immediately. Three Atlanta founders, chosen by our evaluation team, will do this together on August 20 — absolutely free. Tell us why it should be you.
             </p>
 
 
