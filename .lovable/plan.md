@@ -1,20 +1,49 @@
-## Where it is today
+## What I missed
 
-Impersonation can only be started from **System → Users & roles** (`/admin/users`) — each user row has a "View as" button, visible to super admins only. Exiting is surfaced in two places (sidebar footer pill and the ⌘K palette), but *starting* is not discoverable from Members, Attendees, the dashboard, or the command palette.
+The earlier sweeps hit the hero, the four-foundations blocks, and the chatbot — but not the `HonestRoadmap` section, where the claims live in a plain string array. Confirmed still overpromising in two files:
 
-## Changes
+- `src/components/home/HomeFramework.tsx` lines 386–391, 402, 406
+- `src/components/landing/LandingFramework.tsx` lines 406–411, 422, 426
 
-1. **Rename + describe the nav entry** (`src/lib/admin-nav.ts`): label stays "Users & roles" but description becomes "Grant admin access or view the app as a user", and add keywords `impersonate`, `view as`, `sign in as`, `act as` so ⌘K finds it by intent.
+Offending strings (identical in both):
+- "A live landing page at your domain — real URL, up before lunch, not a mockup" (page is not built in the room)
+- "A priced offer on the page — ready to accept your first customer" (nothing is on a live page)
+- "A 90-day go-to-market plan — personas + outreach sequence you can send this week" (violates the no-"plan"/no-"roadmap" rule)
+- "Brand v0 — name, mark, and voice you can actually use Monday morning" ("mark" implies a designed logo)
+- H2: "Two weeks to your first dollar." (promises revenue)
+- Body paragraph: "plus the exact message and the named person it goes to" — fine as *written*, but sits next to live-page claims
 
-2. **Command palette action** (`src/components/admin/AdminCommandMenu.tsx`): add a super-admin-only "View as a user…" action in the actions group that routes to `/admin/users`, sitting next to the existing "Exit impersonation" item.
+## The fix
 
-3. **"View as" on the people pages** — surface the action where admins already are:
-   - `admin.attendees.$userId.index.tsx`: add a "View as" button in the header action row (super admin only) calling `startImpersonation` with that user.
-   - `admin.members.tsx`: add "View as" to each member row's action set (super admin only).
-   Both reuse the exact `startImpersonation` call from `admin.users.tsx` so behavior and the confirm/banner flow stay identical.
+### 1. Rewrite the six included items (both files, identical copy)
 
-4. **Dashboard quick action** (`src/components/admin/dashboard/QuickActions.tsx`): add "View as a user" linking to `/admin/users` for super admins.
+```
+"Your brand written — name, voice, and the words you lead with"
+"Your one offer, priced — what it is, who it's for, what it costs"
+"Your page copy, written line by line — headline, proof, and call to action, ready to build"
+"Your Foundation on the dashboard — positioning, ICP, and wedge, sharpened with staff"
+"Your first outreach written — the message and the named person it goes to"
+"A seat next to Adam and <N> other founders — coffee, snacks, and a room building alongside you"
+```
+Keep the existing seat counts as-is: 19 on Home, 2 on Landing.
 
-## Technical notes
+### 2. Retitle the section header
 
-`startImpersonation` comes from `useAuth()` in `src/hooks/use-auth.tsx`; the active-session banner is `ImpersonationBanner.tsx` and needs no change. All new entry points are gated on `isSuperAdmin` — no change to who can impersonate.
+- Home eyebrow stays "Here's the honest promise"
+- H2 becomes: **"One morning of writing. The four foundations your startup runs on."** with the gradient span on "The four foundations your startup runs on."
+- Home block label: "What $197 gets you — written in the room" (keeps `WORKSHOP_PRICE_LABEL`)
+- Landing block label: "What one morning gets you — written in the room" (Landing is the free offer; no price)
+
+### 3. Tighten the lead paragraph (both files)
+
+Replace the closing sentence so the artifact is the writing, not a shipped site: "…In one morning we write the foundation underneath it: the brand, the priced offer, the page copy, and the way the money comes in — plus the exact first message and the named person it goes to. The building happens that same week, on top of what we wrote — not instead of it."
+
+### 4. Also correct the "Once you have your first customer" paragraph
+
+Both files, line 455 / 475: "done before lunch" on the eight follow-on mornings implies build-in-room again. Change to "One piece at a time, done together, with our team building it out after." Keep the eyebrow.
+
+## Out of scope unless you say otherwise
+
+`src/routes/build.tsx` ("Live by lunch", "your website live") is the paid Build sprint page, a different offer where things genuinely do get built. I'll leave it unless you confirm those sprints also only produce written work.
+
+`public/adam-funnel-v1.md` line 169 has the same "Live page" overclaim in the generated report. I'll leave the archived report alone unless you want it regenerated.

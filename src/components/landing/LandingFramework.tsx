@@ -403,13 +403,14 @@ function Framework() {
 
 function HonestRoadmap() {
   const included = [
-    "A live landing page at your domain — real URL, up before lunch, not a mockup",
-    "A priced offer on the page — ready to accept your first customer",
+    "Your brand written — name, voice, and the words you lead with",
+    "Your one offer, priced — what it is, who it's for, what it costs",
+    "Your page copy, written line by line — headline, proof, and call to action, ready to build",
     "Your Foundation on the dashboard — positioning, ICP, and wedge, sharpened with staff",
-    "A 90-day go-to-market plan — personas + outreach sequence you can send this week",
-    "Brand v0 — name, mark, and voice you can actually use Monday morning",
+    "Your first outreach written — the message and the named person it goes to",
     "A seat next to Adam and 2 other founders — coffee, snacks, and a small room building alongside you",
   ];
+
 
 
   return (
@@ -419,12 +420,13 @@ function HonestRoadmap() {
           Here's the honest promise
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-          Two weeks to your first dollar.{" "}
-          <span className="text-gradient-brand">A foundation solid enough to build on.</span>
+          One morning of writing.{" "}
+          <span className="text-gradient-brand">The four foundations your startup runs on.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we write the foundation underneath it: the brand, the priced offer, the page copy, and the way the business runs — plus the exact message and the named person it goes to. Everything you build that same week sits on top of that, not instead of it.
+          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we write the foundation underneath it: the brand, the priced offer, the page copy, and the way the money comes in — plus the exact first message and the named person it goes to. The building happens that same week, on top of what we wrote — not instead of it.
         </p>
+
 
 
 
@@ -453,7 +455,7 @@ function HonestRoadmap() {
         <div className="mt-12 md:mt-16">
           <div className="rounded-2xl border border-primary/40 bg-card p-6 md:p-8">
             <div className="mb-4 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-primary">
-              What one morning gets you — 14 days from now
+              What one morning gets you — written in the room
             </div>
             <ul className="grid gap-3 sm:grid-cols-2 md:gap-4">
               {included.map((s) => (
@@ -472,7 +474,7 @@ function HonestRoadmap() {
             <Sparkles className="size-4 text-primary" /> Once you have your first customer
           </div>
           <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-            The foundation holds the weight — here's what you stack on it. Once money's coming in, there are eight more mornings you can come back for: a real brand, a website that actually sells, a way to keep customers coming, a script for closing more of them, and simple systems that save you hours. One piece at a time, done together, done before lunch. Or just hand the list to our team and we'll build it for you.
+            The foundation holds the weight — here's what you stack on it. Once money's coming in, there are eight more mornings you can come back for: a real brand, a website that actually sells, a way to keep customers coming, a script for closing more of them, and simple systems that save you hours. One piece at a time, done together, with our team building it out after. Or just hand the list to our team and we'll build it for you.
           </p>
 
 
