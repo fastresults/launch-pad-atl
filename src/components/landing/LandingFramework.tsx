@@ -116,7 +116,7 @@ function Hero() {
           <div className="flex flex-col lg:col-span-8">
             <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
               <MapPin className="size-3.5" />
-              In person in Atlanta · One focused morning · Coffee&rsquo;s on us
+              In person in Atlanta · Atlanta&rsquo;s strongest startup foundation
             </p>
 
             <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[4.3rem]">
