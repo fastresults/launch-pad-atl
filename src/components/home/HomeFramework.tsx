@@ -14,6 +14,8 @@ import {
   FRAMEWORK_STAGES,
   WORKSHOP_PRICE_LABEL,
 } from "@/lib/framework-deliverables";
+import { DeliverableCheck } from "@/components/home/DeliverableCheck";
+
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroBg from "@/assets/hero-bg.png";
