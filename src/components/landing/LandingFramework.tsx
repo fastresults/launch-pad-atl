@@ -127,7 +127,7 @@ function Hero() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
-              One quiet morning in Atlanta &mdash; at the IGNITE Center at Greater Atlanta Christian School in Norcross. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you actually build the thing. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
+              One quiet morning in Atlanta &mdash; at the IGNITE Center at Greater Atlanta Christian School in Norcross. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you lay the foundation your business will stand on. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
             </p>
 
 
@@ -278,7 +278,10 @@ function Hero() {
 
 
         {/* Magazine footnote — 3 promises */}
-        <div className="mt-16 grid grid-cols-1 gap-8 border-t border-[#C9B99A] pt-8 md:grid-cols-3">
+        <p className="mt-16 border-t border-[#C9B99A] pt-8 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355]">
+          The three foundation pieces you leave with
+        </p>
+        <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3">
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">01</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
@@ -331,11 +334,11 @@ function Framework() {
           What we actually build with you
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-          A real startup that takes money.{" "}
-          <span className="text-gradient-brand">Built with you in one morning.</span>
+          A foundation that can take money.{" "}
+          <span className="text-gradient-brand">Laid with you in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          A course gives you videos. A chatbot gives you a folder of files. We sit down and actually build the startup — the live page, the priced offer, the first message sent. By that afternoon you're not planning anymore. You're open. One morning with us. Yours to run with.
+          A course gives you videos. A chatbot gives you a folder of files. We sit down and build the foundation your startup stands on — the live page, the priced offer, the first message sent. By that afternoon you're not planning anymore. You're standing on something real, and you know the next thing to build on it. One morning with us. Yours to keep building.
         </p>
 
         <p className="mt-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
@@ -412,10 +415,10 @@ function HonestRoadmap() {
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
           Two weeks to your first dollar.{" "}
-          <span className="text-gradient-brand">A real startup by month two.</span>
+          <span className="text-gradient-brand">A foundation solid enough to build on.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we actually build your page, price the offer, and send the first message — from the room, to a real person. Everything pretty comes after the money starts.
+          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we build the foundation underneath it: your page live, the offer priced, the first message sent — from the room, to a real person. Everything you add later gets built on top of that, not instead of it.
         </p>
 
 
@@ -464,7 +467,7 @@ function HonestRoadmap() {
             <Sparkles className="size-4 text-primary" /> Once you have your first customer
           </div>
           <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-            Once money's coming in, there are eight more mornings you can come back for — a real brand, a website that actually sells, a way to keep customers coming, a script for closing more of them, and simple systems that save you hours. One piece at a time, done together, done before lunch. Or just hand the list to our team and we'll build it for you.
+            The foundation holds the weight — here's what you stack on it. Once money's coming in, there are eight more mornings you can come back for: a real brand, a website that actually sells, a way to keep customers coming, a script for closing more of them, and simple systems that save you hours. One piece at a time, done together, done before lunch. Or just hand the list to our team and we'll build it for you.
           </p>
 
 

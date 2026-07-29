@@ -1,42 +1,34 @@
 ## Goal
 
-When landing-only mode is ON, the landing page currently ends at the closing CTA with no way to sign in. Add a proper footer to the landing page that contains an organized, on-brand sign-in area — so returning members, staff, and admins can get in without knowing the `/login` URL.
+The Foundation Workshop doesn't hand someone a finished startup — it builds the **foundation** underneath one: a live page, a priced offer, a first message sent, and the real pieces a founder keeps building on. Several Home blocks currently over-promise ("we actually build the startup", "a real startup by month two"). Fix the promise without going soft — the artifacts stay concrete and real.
 
-## What gets built
+## Copy rule for this pass
 
-**1. New `LandingFooter` component** (`src/components/landing/LandingFooter.tsx`), rendered as the last block inside `LandingFramework`, below the bottom CTA.
+- Say: *foundation*, *the pieces you build on*, *what your startup stands on*, *built with you, yours to keep building*.
+- Don't say: *we build your startup*, *a real startup by month two*, *you're open by lunch* as a completeness claim.
+- Keep every concrete artifact claim exactly as strong: live page, priced offer, first message sent, in the room, before lunch.
+- No "plan / blueprint / roadmap / framework / deliverables" language for the offer (existing standard).
 
-Three-column layout on desktop, stacked on mobile:
+## Blocks to rewrite — `src/components/home/HomeFramework.tsx`
 
-```text
-┌──────────────────────────────────────────────────────────┐
-│  [StartupLabs logo]        Workshop            Sign in    │
-│  One focused morning.      Aug 20, 2026        [ email  ] │
-│  Atlanta, Georgia.         IGNITE Center       [ pwd    ] │
-│                            Get directions      [Sign in ] │
-│                                                Google     │
-│                                                Forgot?    │
-├──────────────────────────────────────────────────────────┤
-│  © 2026 Startup Labs · Atlanta, GA                        │
-└──────────────────────────────────────────────────────────┘
-```
+1. **Hero subhead (~line 104)** — "…while you actually build the thing" → build the foundation your business stands on; keep the page/price/first-customer proof line intact.
 
-**2. Sign-in panel behavior**
+2. **Section eyebrow + H2 (~lines 306–309)** — "What we actually build with you" / "A real startup that takes money. Built with you in one morning." → reframe to the foundation that can take money, built with you in one morning.
 
-- Signed out: compact "Member sign in" card — email + password fields, primary Sign in button, "Continue with Google", and a quiet "Forgot?" reset link. Same auth calls the existing `/login` page uses (`signInWithPassword`, `lovable.auth.signInWithOAuth`, `resetPasswordForEmail`), so no new backend work.
-- Signed in: the card collapses to a greeting with the user's email plus two actions — "Go to dashboard" (or "Admin" for super admins) and "Sign out".
-- To keep the panel from competing with "Reserve your interest", it renders collapsed by default as a single quiet "Member sign in" link that expands the form in place. The landing page's only loud CTA remains the interest modal.
+3. **Section body (~line 313, the selected paragraph)** — rewrite the "we sit down and actually build the startup… By that afternoon you're not planning anymore. You're open." lines so the payoff is: you leave with a real, working foundation — live, priced, and already in front of a customer — and a clear next move, rather than a finished company.
 
-**3. Redirect on success**
+4. **Promise section (~lines 390–393)** — "Two weeks to your first dollar. A real startup by month two." → keep the first-dollar urgency, replace the month-two claim with a foundation-grounded outcome. Body paragraph adjusted the same way.
 
-After sign-in the user lands on `/admin` (super admin), `/dashboard` (approved member), or `/welcome` — matching the existing login redirect logic. Note: landing-only mode currently allowlists only `/login`, `/reset-password`, and `/admin`, so a non-admin signing in from the footer would bounce back to the landing page. Fix in the same change: add `/dashboard`, `/welcome`, and `/account` to the allowlist in `LandingOnlyGate`, gated on the visitor being authenticated — anonymous visitors still see only the landing page.
+5. **Stage 8 / build-layer paragraph (~line 442)** — light touch so the return mornings read as *building on the foundation*, not fixing what was missing.
 
-**4. Styling**
+6. **Closing CTA blocks (~lines 568, 646)** — align "we'll build it for you" and the price-promise line to the same foundation framing.
 
-Uses the landing page's warm editorial tokens (cream surface, espresso text, serif headings) — no hardcoded colors, no new tokens. Footer sits on a slightly deeper surface band so it visually terminates the page.
+7. **Three-promise footnote (01/02/03)** — add a one-line lead-in above the grid naming these as the foundation pieces you leave with. Individual promise copy unchanged.
 
-## Technical notes
+## Landing page
 
-- Files touched: new `src/components/landing/LandingFooter.tsx`; edits to `src/components/landing/LandingFramework.tsx` (render footer) and `src/components/site/LandingOnlyGate.tsx` (allowlist post-login routes for authenticated users).
-- No database, edge function, or auth-config changes.
-- The full-site `Footer.tsx` and `/login` route are untouched.
+`src/components/landing/LandingFramework.tsx` shares several of these strings. Apply the identical reframing to the matching blocks there so the two surfaces stay consistent.
+
+## Out of scope
+
+No layout, styling, component structure, pricing, dates, or backend changes — copy strings only.
