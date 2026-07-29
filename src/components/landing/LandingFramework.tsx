@@ -132,7 +132,7 @@ function Hero() {
 
 
             <p className="mt-3 max-w-2xl text-base text-[#7A6650]">
-              No auditorium, no cohort of fifty, no pitch night. Three founders at one table for a single morning.
+              No auditorium, no pitch night, no back row. A small room, a short table, and a single quiet morning.
             </p>
 
             <p className="mt-3 max-w-2xl text-base text-[#7A6650]">
@@ -238,7 +238,7 @@ function Hero() {
                   Free launch offer · 3 seats left
                 </span>
                 <p className="mt-4 font-serif text-4xl leading-tight text-[#3D3025]">
-                  3 seats left at the table.
+                  3 seats left.
                 </p>
                 <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#8B7355]">
                   Launching Startup Labs · Atlanta
@@ -248,13 +248,13 @@ function Hero() {
                   In person · Norcross, GA (metro Atlanta)
                 </p>
                 <p className="mt-2 text-sm italic text-[#7A6650]">
-                  One table. Three founders. Nobody watching from the back.
+                  A small room. Your name known. Nobody watching from the back.
                 </p>
 
               </div>
 
               <p className="mt-5 text-base leading-snug text-[#3D3025]">
-                It&rsquo;s three founders, one table, and one operator working through your business with you. You leave with the written foundation for a startup you can build on immediately &mdash; brand nailed, offer priced, marketing copy and website PRD written, operations mapped.
+                It&rsquo;s a small room and an operator working through your business with you, out loud. You leave with the written foundation for a startup you can build on immediately &mdash; brand nailed, offer priced, marketing copy and website PRD written, operations mapped.
               </p>
 
 
@@ -320,7 +320,7 @@ function Hero() {
           <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
           <Meta icon={<MapPin className="size-4" />} label={`${EVENT.venueCity}, ${EVENT.venueRegion}`} />
           <Meta icon={<Clock className="size-4" />} label="8:45–11:30 AM · Coffee included" />
-          <Meta icon={<Users className="size-4" />} label="3 seats left · one table · free" />
+          <Meta icon={<Users className="size-4" />} label="3 seats left · small room · free" />
         </div>
       </div>
     </section>
@@ -416,7 +416,7 @@ function HonestRoadmap() {
     "Your page copy, written line by line — headline, proof, and call to action, ready to build",
     "Your Foundation on the dashboard — positioning, ICP, and wedge, sharpened with staff",
     "Your first outreach written — the message and the named person it goes to",
-    "A seat at a table of three — you, two other Atlanta founders, and Adam working through each business out loud, with coffee",
+    "A seat in a small room — you, a few other Atlanta founders, and Adam working through each business out loud, with coffee",
   ];
 
 

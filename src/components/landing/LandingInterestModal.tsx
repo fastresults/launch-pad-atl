@@ -101,7 +101,7 @@ export function LandingInterestModal({
             <DialogHeader>
               <DialogTitle className="font-serif text-2xl text-[#3D3025]">Reserve your interest</DialogTitle>
               <DialogDescription className="text-[#5C4A38]">
-                One table, three seats, August 20 in Atlanta — free. Tell us about you. Our evaluation team will get back to you by <strong>August 10</strong>.
+                3 seats left · August 20 in Atlanta — free. Tell us about you. Our evaluation team will get back to you by <strong>August 10</strong>.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="mt-2 space-y-4">
