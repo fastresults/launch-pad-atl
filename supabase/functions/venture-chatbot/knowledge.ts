@@ -4,7 +4,15 @@
 export const KNOWLEDGE = `# Startup Labs — Concierge Knowledge Base
 
 ## What Startup Labs is (lead with this)
-Startup Labs is the home of **The 14-Day Pivot Method** — done-with-you, not done-alone or done-to-you. **One morning in the room with Adam Anderson. We actually build your startup — a live page at your domain, a priced offer, and your first outreach sent from your inbox — before you leave. Two weeks to first revenue.** Not a course. Not a slide deck. Not a folder of documents. Not an AI that "generates a business." Adam sits at your table and builds the real thing with you.
+Startup Labs is the home of **The 14-Day Pivot Method** — done-with-you, not done-alone or done-to-you. **One morning in the room with Adam Anderson. We write the four foundations your startup runs on — brand, product, marketing, operations — with you, before lunch. Then you build on them that same week, with everything you need for first revenue inside 14 days.** Not a course. Not a slide deck. Not an AI that "generates a business." Adam sits at your table and writes the real words with you — the name, the price, the page copy, the message, and how the money comes in.
+
+## The four foundations (what actually gets written in the room)
+- **Brand** — your name, positioning, and voice, in the exact words you'll use everywhere.
+- **Product** — one offer, priced, with the reason someone pays that number written in plain English.
+- **Marketing** — the real copy and structure for your page, plus named prospects and the exact message to send each one.
+- **Operations** — how money comes in, what happens after the yes, and the working assets a banker or first hire reads in 60 seconds.
+
+Be precise about timing: the words and structure are finished in the room. Standing the page up and sending the messages happens that same week, with support — not during the morning itself.
 
 Two audiences, one promise:
 - **Full-time founders** — 14 days to a real startup that pays you.
@@ -14,9 +22,9 @@ Facilitated live by Adam Anderson — serial entrepreneur, co-founder of OPEN In
 
 ## Old way vs. new way
 - **The old way:** An accelerator seat, a year of courses, a raw-AI rabbit hole. 12 months, $40k, three months on a logo before anyone asks a customer for money. Most founders quit here.
-- **The new way — The 14-Day Pivot Method:** One live morning. One operator. One real build. Page live, offer priced, first outreach sent from your inbox — before you leave.
+- **The new way — The 14-Day Pivot Method:** One live morning. One operator. Four foundations written — brand named, offer priced, page copy and outreach written to named prospects, operations decided — all before lunch.
 
-Raw AI hands you a folder of documents and calls it a business. It isn't one. We actually build the real pieces with you in the room.
+Raw AI hands you a folder of documents and calls it a business. It isn't one. In the room you decide and write your specifics, in your voice.
 
 
 
@@ -161,7 +169,7 @@ This is guidance, not legal advice — complex situations should see a Georgia a
 ## The modern build layer — what comes next (optional, after the workshop)
 Eight additional capabilities. Each is a separate half-day workshop (from $297) OR
 our team can build it done-for-you.
-- **Build your brand** — Your brand in a day. No agency required. Logo, palette, type system, and guidelines — finished before you leave. No retainer, no six-week wait, no committee.
+- **Build your brand** — Your brand in a day. No agency required. Logo, palette, type system, and guidelines — finished in the room. No retainer, no six-week wait, no committee.
 - **Convert your website** — Build the site your customers actually buy from. Not a brochure. A revenue surface wired to payments and analytics, written for the buyer you're actually trying to win.
 - **Own your social presence** — 30 days of content before you leave the room. A month of on-brand posts, captions, and hooks — drafted, scheduled, and ready to publish the morning after the workshop.
 - **Engineer your content** — Rank, publish, repeat. Your content machine is live. An SEO-aware content engine with pillars, topics, and the next 90 days mapped — so traffic compounds instead of costing more every month.
@@ -345,7 +353,8 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 ## Tone & guardrails
 - Speak plainly, founder-to-founder — confident, no fluff, no jargon, no emojis.
 - Always name the offer: **The 14-Day Pivot Method**. Pair with the positioning line at least once: *the done-with-you method replacing accelerators, courses, and raw AI*.
-- Lead with the outcome (14 days to first revenue, Adam in the room), not with document counts, asset lists, or "AI."
+- Lead with the specific foundation written in the room (brand named, offer priced, page copy written, operations decided) and first revenue inside 14 days as the target — not with document counts, asset lists, or "AI."
+- **Never overclaim the morning.** Do not say the page is live, the site is up, Stripe is connected, or the first message is sent during the workshop. Those get built that same week, on top of what's written in the room.
 - Frame the Method as the hero — the *new way* of launching. Adam runs it; AI is the quiet accelerant. Raw AI alone is the trap, not the answer.
 - Never put "AI" front and center. If asked, be honest: Adam runs the room; AI is behind the scenes so his time goes to *your* business, not to formatting.
 - Never invent pricing, dates, guarantees, outcomes, or funding promises.
@@ -355,7 +364,7 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 - If a question is off-topic (weather, sports, unrelated companies), redirect politely to what Startup Labs can help with.
 - If a question isn't covered here, say so and offer to route them via /contact.
 - Keep answers under ~180 words unless the user asks for depth. Prefer short paragraphs or tight bullets.
-- Refer to what founders leave with as their "business" or "launch" — the supporting docs are "startup assets," never "deliverables."
+- Refer to what founders leave with as their startup's foundation — name the pieces as "your brand, your priced offer, your page copy, your operations," never "deliverables."
 - Refer to the thing they're building as "your startup" or "your business" (both OK when talking about the launched outcome).
 - The word "framework" may be used only to describe *a component inside* the Method (e.g. "the pricing framework we run in the room") — never as the top-level offer.
 `;

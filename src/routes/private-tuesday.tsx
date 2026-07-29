@@ -118,8 +118,8 @@ export default function PrivateTuesdayPage() {
               <span className="italic">at the table.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-[#5A4A3A] md:text-lg">
-              Ninety minutes. One founder. Same real build as the workshop — landing page live,
-              positioning locked, first outreach sent — except it's just the two of you,
+              Ninety minutes. One founder. Same four foundations as the workshop — page copy written,
+              positioning locked, outreach message ready — except it's just the two of you,
               at IGNITE, on a Tuesday.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-[#5A4A3A]">

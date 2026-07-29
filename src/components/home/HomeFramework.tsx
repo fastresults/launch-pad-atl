@@ -101,7 +101,7 @@ function Hero() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
-              One quiet morning. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you lay the foundation your business will stand on. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name. No accelerator, incubator, or startup bootcamp in Atlanta hands you a stronger foundation than you&rsquo;ll walk out with here &mdash; page live, offer priced, first message sent, all before lunch.
+              One quiet morning. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you lay the foundation your business will stand on. You leave with the four foundations written, not outlined: your brand, your priced offer, your page copy, and the way the business runs. Not a summary of what to write &mdash; the actual words, ready to build on the same week.
             </p>
 
             <p className="mt-3 max-w-2xl text-base text-[#7A6650]">
@@ -111,14 +111,15 @@ function Hero() {
             {/* Editorial pull quote — horizontal callout */}
             <figure className="mt-8 max-w-2xl border-l-4 border-[#C9B99A] pl-5">
               <blockquote className="font-serif text-xl font-semibold leading-snug text-[#8B7355] md:text-2xl">
-                No accelerator, incubator, or startup bootcamp in Atlanta hands you a stronger foundation than you&rsquo;ll walk out with here.
+                No accelerator, incubator, or startup bootcamp in Atlanta hands you a stronger foundation than you&rsquo;ll walk out with here &mdash; brand, offer, page copy, and operations, all written before lunch.
               </blockquote>
             </figure>
 
 
             <p className="mt-8 max-w-2xl text-xs font-semibold uppercase leading-relaxed tracking-[0.18em] text-[#8B7355]">
-              Accelerators pitch. Incubators mentor. Bootcamps lecture. You leave our room already open for business.
+              Accelerators work on your pitch. Incubators work on your idea. We work on the four things a business stands on &mdash; and you leave holding all four in writing.
             </p>
+
 
             {/* Designed for — anchors the bottom of the left column */}
             <div className="mt-auto pt-10">
@@ -254,30 +255,37 @@ function Hero() {
 
         <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
 
-        {/* Magazine footnote — 3 promises */}
+        {/* Magazine footnote — the four foundations */}
         <p className="mt-16 border-t border-[#C9B99A] pt-8 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355]">
-          The three foundation pieces you leave with
+          Four foundations get written with you this morning. Not outlined. Written.
         </p>
-        <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">01</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
-              <strong className="font-semibold">A live page at your domain.</strong> Not a mockup. A real URL a stranger can open.
+              <strong className="font-semibold">Brand.</strong> Your name, your positioning, and the way you sound. Locked in the room, in the words you&rsquo;ll use everywhere.
             </p>
           </div>
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">02</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
-              <strong className="font-semibold">A priced offer that takes money.</strong> Set before lunch. Named first customer on it.
+              <strong className="font-semibold">Product.</strong> One offer, priced, with the reason someone pays that number written in plain English.
             </p>
           </div>
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">03</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
-              <strong className="font-semibold">Your first outreach written in the room.</strong> Message, list, and send button — ready before you leave.
+              <strong className="font-semibold">Marketing.</strong> The real copy and structure for your page, plus fifty named prospects and the exact message to send each one.
+            </p>
+          </div>
+          <div className="flex flex-col">
+            <span className="font-serif text-3xl text-[#8B7355]">04</span>
+            <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
+              <strong className="font-semibold">Operations.</strong> How money comes in, what happens after the yes, and the working assets a banker or first hire reads in 60 seconds.
             </p>
           </div>
         </div>
+
 
         {/* Event meta strip */}
         <div className="mt-10 grid grid-cols-1 gap-3 text-sm text-[#5C4A38] sm:grid-cols-2 lg:grid-cols-4">
@@ -315,7 +323,7 @@ function Framework() {
           <span className="text-gradient-brand">Laid with you in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          A course gives you videos. A chatbot gives you a folder of files. We sit down and build the foundation your startup stands on — the live page, the priced offer, the first message sent. By that afternoon you're not planning anymore. You're standing on something real, and you know the next thing to build on it. {WORKSHOP_PRICE_LABEL} once. Yours to keep building.
+          A course gives you videos. A chatbot gives you a folder of files. We sit down and write the four foundations your startup runs on — brand, product, marketing, operations. By that afternoon you're not planning anymore. You're holding the actual words your business runs on, and you know the next thing to build on them. {WORKSHOP_PRICE_LABEL} once. Yours to keep building.
         </p>
 
         <p className="mt-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
@@ -395,7 +403,7 @@ function HonestRoadmap() {
           <span className="text-gradient-brand">A foundation solid enough to build on.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we build the foundation underneath it: your page live, the offer priced, the first message sent — from the room, to a real person. Everything you add later gets built on top of that, not instead of it.
+          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we write the foundation underneath it: the brand, the priced offer, the page copy, and the way the business runs — plus the exact message and the named person it goes to. Everything you build that same week sits on top of that, not instead of it.
         </p>
 
 
@@ -648,7 +656,7 @@ function BottomCTA() {
               Stop thinking about it. Come start it.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
-              {WORKSHOP_PRICE_LABEL} gets you one morning with us and a real foundation — page live, offer priced, first message sent — that you can keep building on Monday. If you want us to build the brand, the site, or the whole launch on top of it after, we're right here. If not, the foundation is yours either way.
+              {WORKSHOP_PRICE_LABEL} gets you one morning with us and a real foundation in writing — brand, priced offer, page copy, operations — that you can start building on Monday. If you want us to build the brand, the site, or the whole launch on top of it after, we're right here. If not, the foundation is yours either way.
             </p>
 
 

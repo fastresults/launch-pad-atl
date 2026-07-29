@@ -28,7 +28,7 @@ const MODES: Mode[] = [
     title: "Come to Atlanta",
     format: "In-person · just 20 seats",
     promise:
-      "Spend one focused morning in the room with Adam. We actually build your startup together — the live page, the priced offer, the first outreach sent — and you walk out with it done.",
+      "Spend one focused morning in the room with Adam. We write the four foundations together — brand, priced offer, page copy, operations — and you walk out holding all four in writing.",
     price: `${WORKSHOP_PRICE_LABEL} — yours to keep`,
     cta: "Reserve a seat",
     to: "/register",
@@ -39,7 +39,7 @@ const MODES: Mode[] = [
     title: "Join us on Zoom",
     format: "Live from anywhere · small group",
     promise:
-      "Same morning, same Adam, same real build — just over video. Same live page, same priced offer, same first message sent. Perfect if Atlanta's a hike or you'd rather do it from your kitchen table.",
+      "Same morning, same Adam, same four foundations — just over video. Same brand, same priced offer, same page copy and outreach written with you. Perfect if Atlanta's a hike or you'd rather do it from your kitchen table.",
     price: "Lower price · next date opening soon",
     cta: "Get on the list",
     to: "/webinar",
