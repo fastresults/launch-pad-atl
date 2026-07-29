@@ -116,12 +116,15 @@ AI-accelerated — in that order. Adam is one of the few people actually running
 - Location: Norcross, GA (metro Atlanta)
 - Seats: 20 per cohort, one cohort at a time.
 
-## What actually gets built in the room
-The whole point is that we **actually build your startup** — not a plan, not a folder of documents, not a "framework." Before you leave you have:
-- **A live page at your domain** — real URL, not a mockup, up before lunch.
-- **A priced offer wired to take money** — Stripe connected, first customer named on it.
-- **Your first outreach sent from your inbox** — real message, real prospect, from the room.
-- **The working docs that back it** — worked out with Adam, kept forever, so a banker or partner understands the startup in 60 seconds.
+## What actually gets written in the room (the four foundations)
+The whole point is that we write the four foundations your startup runs on — not a plan, not a summary, not a "framework." Before you leave you have, in writing:
+- **Brand** — your name, positioning, and voice, in the exact words you'll use everywhere.
+- **Product** — one offer, priced, with the reason someone pays that number written in plain English.
+- **Marketing** — the real copy and structure for your page, plus named prospects and the exact message to send each one.
+- **Operations** — how money comes in, what happens after the yes, and the working assets a banker or first hire reads in 60 seconds.
+
+Be precise about timing: the words and structure are finished in the room. Putting the page up and sending the messages happens that same week, with Adam's support — not during the morning itself.
+
 
 ${stagesBlock()}
 
