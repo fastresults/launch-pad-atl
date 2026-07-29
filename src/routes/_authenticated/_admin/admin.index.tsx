@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card } from "@/components/ui/card";
 import { getAdminStats } from "@/lib/admin.functions";
+import { getAdminBadges } from "@/lib/admin-badges.functions";
 import { TriageCards } from "@/components/admin/dashboard/TriageCards";
 import { NextEventCard } from "@/components/admin/dashboard/NextEventCard";
 import { QuickActions } from "@/components/admin/dashboard/QuickActions";
@@ -15,12 +16,17 @@ export default function AdminDashboard() {
     queryFn: () => getAdminStats(),
     staleTime: 30_000,
   });
+  const badges = useQuery({
+    queryKey: ["admin", "badges"],
+    queryFn: getAdminBadges,
+    staleTime: 30_000,
+  });
 
   const metrics = [
     { label: "Registrations", value: stats.data?.registrations, to: "/admin/registrations" },
     { label: "Confirmed seats", value: stats.data?.confirmed, to: "/admin/registrations" },
     { label: "People with accounts", value: stats.data?.users, to: "/admin/members" },
-    { label: "Open inquiries", value: stats.data?.openInquiries, to: "/admin/inquiries" },
+    { label: "Unanswered inquiries", value: badges.data?.inquiriesNew, to: "/admin/inquiries" },
   ];
 
   return (
