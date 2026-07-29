@@ -1,33 +1,40 @@
 ## Goal
 
-A visitor should know this is an in-person Atlanta workshop within the first screen — no scrolling.
+The deliverable cards on the Home page currently read like generic buttons. Every one of these is *actually produced with you in the room*, so they should read as a checked-off list — a receipt, not a menu.
 
-## Changes (all in `src/components/landing/LandingFramework.tsx`, hero area only)
+## The design direction: "checked in the room"
 
-1. **Masthead line (top of page, line ~98-105)**
-   - Right-side italic "Pull up a chair" becomes a location + date stamp: `Atlanta, Georgia · Thursday, August 20, 2026`.
-   - Keeps the magazine masthead look, puts the city in the very first line of text on the page.
+One editorial move, applied consistently to all 8 stage grids:
 
-2. **Hero kicker (line ~111-114)**
-   - From: `One focused morning · IGNITE Center · Coffee's on us`
-   - To: `In person in Atlanta · One focused morning · Coffee's on us`
-   - Swap the star icon for a map-pin so it reads as a place, not a badge.
+```text
+┌──────────────────────────────────────────────┐
+│  (✓)   Your one-page story              [ ]  │   ← filled check mark, left
+└──────────────────────────────────────────────┘
+        title, medium weight        topic icon, faint, right
+```
 
-3. **Headline sub-deck (line ~123-129)**
-   - Add the venue plainly in the supporting paragraph: "One quiet morning in Atlanta — at the IGNITE Center at Greater Atlanta Christian School in Norcross…" so the actual room is named above the fold instead of only in the map section far below.
+- **Left: a real check mark.** A small filled circle (espresso/primary tint) with a white `Check` glyph — the visual anchor that says "done." Replaces the current colored topic icon in the lead position.
+- **Right: the topic icon, demoted.** The existing Lucide icon moves to the far right at ~30% opacity, so the category cue survives without competing with the check.
+- **Card treatment.** Softer, flatter surface than today's card: hairline border, subtle warm tint behind the check side, no heavy fill. Hover/focus lifts the border to primary and deepens the check circle — a gentle "it's yours" reaction rather than a button press.
+- **Rounded corners stay** (matches the site's editorial pill language), but padding tightens slightly so the rows scan as a list rather than eight separate buttons.
+- Tooltips, keyboard focus, and the `cursor-help` affordance all stay exactly as they are.
 
-4. **Offer card (line ~226-258)**
-   - Add a single map-pin line under the "3 seats. Zero cost." block: `In person · Norcross, GA (metro Atlanta)` so the location sits right next to the CTA button people click.
+## Reinforcing copy (small, one line)
 
-5. **Designed-for list (line ~146-151)**
-   - Localize the first item slightly: "Atlanta-area Plan-B seekers ready to stop guessing" — one mention only, no repetition.
+Under the section intro, add a single quiet line so the checks are unmistakable:
 
-6. **Page title / meta** (`src/routes/landing.tsx`)
-   - Title and description get "Atlanta" up front for search and social previews.
+> *Every item below is checked off with you, in the room — not homework.*
 
-## Guardrails
+Styled as small uppercase-tracked meta text matching the existing kickers.
 
-- No layout restructuring, no new sections, no new components.
-- Location mentioned deliberately, not repeated in every paragraph — masthead, kicker, deck, offer card, meta strip.
-- Free-offer framing, August 20 date, apply-by date, and all existing sections stay untouched.
-- Homepage (`HomeFramework.tsx`) is not touched — landing fork only.
+## Technical notes
+
+- New presentational component `src/components/home/DeliverableCheck.tsx` — renders one checked row (check badge, title, faint topic icon), so the markup isn't duplicated.
+- `src/components/home/HomeFramework.tsx` — the `Framework()` stage grid swaps its inline `<li>` for `<DeliverableCheck />`; the tooltip wrapper stays.
+- `src/components/landing/LandingFramework.tsx` — same swap, so the landing fork doesn't drift visually.
+- All colors via existing semantic tokens (`primary`, `card`, `muted-foreground`, warm border tokens already in use). No hardcoded hex added.
+- No data, copy content, or business-logic changes to `framework-deliverables.ts`.
+
+## Verification
+
+Screenshot the Home page framework section at desktop and mobile widths, confirm the checks read clearly on the warm background, hover/focus states behave, and tooltips still open.
