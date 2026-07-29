@@ -351,7 +351,7 @@ function Framework() {
                     {stage.number}
                   </span>
                   <div>
-                    <h3 className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xl font-semibold leading-tight tracking-tight md:text-2xl">
+                    <h3 className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[1.5625rem] font-semibold leading-tight tracking-tight md:text-[1.875rem]">
                       <span>{stage.name}</span>
                       {stage.bonus && (
                         <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white md:text-xs">
