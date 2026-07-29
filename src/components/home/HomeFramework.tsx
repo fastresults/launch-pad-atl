@@ -442,7 +442,7 @@ function HonestRoadmap() {
             <Sparkles className="size-4 text-primary" /> Once you have your first customer
           </div>
           <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-            Once money's coming in, there are eight more mornings you can come back for — a real brand, a website that actually sells, a way to keep customers coming, a script for closing more of them, and simple systems that save you hours. One piece at a time, done together, done before lunch. Or just hand the list to our team and we'll build it for you.
+            The foundation holds the weight — here's what you stack on it. Once money's coming in, there are eight more mornings you can come back for: a real brand, a website that actually sells, a way to keep customers coming, a script for closing more of them, and simple systems that save you hours. One piece at a time, done together, done before lunch. Or just hand the list to our team and we'll build it for you.
           </p>
 
 
