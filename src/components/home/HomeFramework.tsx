@@ -111,14 +111,15 @@ function Hero() {
             {/* Editorial pull quote — horizontal callout */}
             <figure className="mt-8 max-w-2xl border-l-4 border-[#C9B99A] pl-5">
               <blockquote className="font-serif text-xl font-semibold leading-snug text-[#8B7355] md:text-2xl">
-                No accelerator, incubator, or startup bootcamp in Atlanta hands you a stronger foundation than you&rsquo;ll walk out with here.
+                No accelerator, incubator, or startup bootcamp in Atlanta hands you a stronger foundation than you&rsquo;ll walk out with here &mdash; brand, offer, page copy, and operations, all written before lunch.
               </blockquote>
             </figure>
 
 
             <p className="mt-8 max-w-2xl text-xs font-semibold uppercase leading-relaxed tracking-[0.18em] text-[#8B7355]">
-              Accelerators pitch. Incubators mentor. Bootcamps lecture. You leave our room already open for business.
+              Accelerators work on your pitch. Incubators work on your idea. We work on the four things a business stands on &mdash; and you leave holding all four in writing.
             </p>
+
 
             {/* Designed for — anchors the bottom of the left column */}
             <div className="mt-auto pt-10">
