@@ -146,7 +146,7 @@ export function AdminCommandMenu() {
                 View as a user…
               </CommandItem>
             )}
-
+            {isImpersonating && (
               <CommandItem
                 value="exit impersonation stop viewing as"
                 onSelect={() => {
