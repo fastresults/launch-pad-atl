@@ -324,7 +324,7 @@ function Framework() {
             <div key={stage.number}>
               <div className="flex items-start justify-between gap-6">
                 <div className="flex items-baseline gap-4">
-                  <span className="text-5xl font-semibold leading-none text-gradient-brand md:text-6xl">
+                  <span className="text-5xl font-semibold leading-none text-gradient-brand opacity-20 md:text-6xl">
                     {stage.number}
                   </span>
                   <div>
