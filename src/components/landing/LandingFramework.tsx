@@ -17,6 +17,7 @@ import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroCoffee from "@/assets/hero-coffee-nosteam.png";
 import { motion, useReducedMotion } from "framer-motion";
 import { LandingInterestModal } from "@/components/landing/LandingInterestModal";
+import { LandingFooter } from "@/components/landing/LandingFooter";
 import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 import { createContext, useContext, useState } from "react";
 import {
@@ -77,6 +78,7 @@ export function LandingFramework() {
         
         <Venue />
         <BottomCTA />
+        <LandingFooter event={LANDING_EVENT} />
         <LandingInterestModal open={interestOpen} onOpenChange={setInterestOpen} />
       </div>
     </InterestCtx.Provider>
