@@ -20,7 +20,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Eye } from "lucide-react";
+import { Eye, UserRoundCheck } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 
 type Tab = "pending" | "approved" | "paused" | "rejected" | "no_intake";
