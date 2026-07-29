@@ -247,7 +247,7 @@ function Hero() {
               </div>
 
               <p className="mt-5 text-base leading-snug text-[#3D3025]">
-                We&rsquo;re setting up 3 Atlanta entrepreneurs in business &mdash; absolutely free &mdash; to launch Startup Labs. You bring the idea. We&rsquo;ll bring the coffee, and build it with you.
+                Three Atlanta founders will leave with the written foundation for a startup they can build on immediately &mdash; brand nailed, offer priced, marketing copy and website PRD written, operations mapped.
               </p>
 
               <button
@@ -336,14 +336,14 @@ function Framework() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          What we actually build with you
+          What we actually write with you
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
           A foundation that can take money.{" "}
           <span className="text-gradient-brand">Laid with you in one morning.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          A course gives you videos. A chatbot gives you a folder of files. We sit down and write the four foundations your startup runs on — brand, product, marketing, operations. By that afternoon you're not planning anymore. You're holding the actual words your business runs on, and you know the next thing to build on them. One morning with us. Yours to keep building.
+          A course gives you videos. A chatbot gives you a folder of files. We sit down and write the four foundations your startup can build on — brand, product, marketing, operations. By that afternoon you're not planning anymore. You're holding the actual words, website PRD, and operating foundation your startup builds from next. One morning with us. Yours to keep building.
         </p>
 
         <p className="mt-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
@@ -631,7 +631,7 @@ function BottomCTA() {
               Stop thinking about it. Come start it.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
-              One morning with us and a real business you can run with Monday. Three Atlanta founders, chosen by our evaluation team, will do this together on August 20 — absolutely free. Tell us why it should be you.
+              One morning with us and the written foundation your startup can build on immediately. Three Atlanta founders, chosen by our evaluation team, will do this together on August 20 — absolutely free. Tell us why it should be you.
             </p>
 
 

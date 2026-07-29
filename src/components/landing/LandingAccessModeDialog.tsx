@@ -28,7 +28,7 @@ const MODES: Mode[] = [
     title: "Come to Atlanta",
     format: "In-person · just 20 seats",
     promise:
-      "Spend one focused morning in the room with Adam. We write the four foundations together — brand, priced offer, page copy, operations — and you walk out holding all four in writing.",
+      "Spend one focused morning in the room with Adam. We write the four foundations together — brand, priced offer, page copy, website PRD, outreach copy, operations — and you walk out holding the foundation in writing.",
     price: `${WORKSHOP_PRICE_LABEL} — yours to keep`,
     cta: "Reserve a seat",
     to: "/register",
@@ -39,7 +39,7 @@ const MODES: Mode[] = [
     title: "Join us on Zoom",
     format: "Live from anywhere · small group",
     promise:
-      "Same morning, same Adam, same four foundations — just over video. Same brand, same priced offer, same page copy and outreach written with you. Perfect if Atlanta's a hike or you'd rather do it from your kitchen table.",
+      "Same morning, same Adam, same four foundations — just over video. Same brand, same priced offer, same page copy, website PRD, and outreach copy written with you. Perfect if Atlanta's a hike or you'd rather do it from your kitchen table.",
     price: "Lower price · next date opening soon",
     cta: "Get on the list",
     to: "/webinar",
@@ -50,7 +50,7 @@ const MODES: Mode[] = [
     title: "Have us build it for you",
     format: "Adam + team · done in 14 days",
     promise:
-      "You've got the idea and the budget — you just want it built. We'll ship the brand, the site, the social, and the systems, and hand you a real business ready to take money.",
+      "You've got the idea and the budget — you want the implementation handled. We'll ship the brand, site, social, and systems from the foundation, then hand you a startup ready to take money.",
     price: "$4,799 · everything included",
     cta: "See what's included",
     to: "/one-on-one",
@@ -80,7 +80,7 @@ export function LandingAccessModeDialog({
         <DialogHeader>
           <DialogTitle className="font-serif text-3xl">Three ways to do this with us.</DialogTitle>
           <DialogDescription>
-            Same real build. Same two weeks to your first customer. Pick the one that fits your life — come to Atlanta, hop on Zoom, or let us build it for you.
+            Same real foundation. Same target of your first customer within two weeks. Pick the one that fits your life — come to Atlanta, hop on Zoom, or let us build it for you.
           </DialogDescription>
         </DialogHeader>
 

@@ -4,7 +4,7 @@
 export const KNOWLEDGE = `# Startup Labs — Concierge Knowledge Base
 
 ## What Startup Labs is (lead with this)
-Startup Labs is the home of **The 14-Day Pivot Method** — done-with-you, not done-alone or done-to-you. **One morning in the room with Adam Anderson. We write the four foundations your startup runs on — brand, product, marketing, operations — with you, before lunch. Then you build on them that same week, with everything you need for first revenue inside 14 days.** Not a course. Not a slide deck. Not an AI that "generates a business." Adam sits at your table and writes the real words with you — the name, the price, the page copy, the message, and how the money comes in.
+Startup Labs is the home of **The 14-Day Pivot Method** — done-with-you, not done-alone or done-to-you. **One morning in the room with Adam Anderson. We write the four foundations your startup can build on — brand, product, marketing, operations — with you, before lunch.** Not a course. Not a slide deck. Not an AI that "generates a business." Adam sits at your table and writes the real words with you: the name and voice, the priced offer, the page copy and website PRD, the first outreach copy, and how the money comes in. The page build, message sending, and follow-through happen after the workshop, using the foundation written in the room.
 
 ## The four foundations (what actually gets written in the room)
 - **Brand** — your name, positioning, and voice, in the exact words you'll use everywhere.
@@ -15,14 +15,14 @@ Startup Labs is the home of **The 14-Day Pivot Method** — done-with-you, not d
 Be precise about timing: the words and structure are finished in the room. Standing the page up and sending the messages happens that same week, with support — not during the morning itself.
 
 Two audiences, one promise:
-- **Full-time founders** — 14 days to a real startup that pays you.
-- **Plan B founders** — a real side startup you can build evenings and weekends, strong enough to eventually leave the day job on your terms.
+- **Full-time founders** — a clear written foundation to build from immediately, with first revenue inside 14 days as the target.
+- **Plan B founders** — a real side startup foundation you can build evenings and weekends, strong enough to test a path beyond the day job.
 
-Facilitated live by Adam Anderson — serial entrepreneur, co-founder of OPEN Interactive, work shipped for Citigroup, Mayo Clinic, 3M, Disney. Not a moderator. Not a TA. Adam, in the room, building with you.
+Facilitated live by Adam Anderson — serial entrepreneur, co-founder of OPEN Interactive, work shipped for Citigroup, Mayo Clinic, 3M, Disney. Not a moderator. Not a TA. Adam, in the room, writing the foundation with you.
 
 ## Old way vs. new way
 - **The old way:** An accelerator seat, a year of courses, a raw-AI rabbit hole. 12 months, $40k, three months on a logo before anyone asks a customer for money. Most founders quit here.
-- **The new way — The 14-Day Pivot Method:** One live morning. One operator. Four foundations written — brand named, offer priced, page copy and outreach written to named prospects, operations decided — all before lunch.
+- **The new way — The 14-Day Pivot Method:** One live morning. One operator. Four foundations written — brand named, offer priced, page copy and website PRD written, outreach copy written to named prospects, operations decided — all before lunch.
 
 Raw AI hands you a folder of documents and calls it a business. It isn't one. In the room you decide and write your specifics, in your voice.
 
@@ -43,8 +43,8 @@ Raw AI hands you a folder of documents and calls it a business. It isn't one. In
 - Seats: 20 per cohort, one cohort at a time.
 
 ## What you actually leave the room with
-The four foundations your startup runs on, written with you before lunch: **brand** (name, positioning, voice),
-**product** (one offer, priced), **marketing** (page copy plus named prospects and the exact message for each),
+The four foundations your startup can build on, written with you before lunch: **brand** (name, positioning, voice),
+**product** (one offer, priced), **marketing** (page copy, website PRD, named prospects, and outreach copy),
 **operations** (how money comes in and the working assets behind it). Standing the page up and sending the
 messages happens that same week, on top of what's written in the room — first revenue inside 14 days is the target.
 Everything below is the written work that backs those foundations: worked out with Adam, kept forever,
@@ -125,7 +125,7 @@ These sit alongside the framework above and are what actually makes "launched in
 - **Contractor & 1099 Kit** (Governance): MSA, SOW, W-9 request email, drop-in IP assignment clause.
 - **Domain, Email & DNS Checklist** (Marketing): registrar + email provider pick, full DNS record table (A, MX, SPF, DKIM, DMARC), BIND-style zone file.
 - **Analytics & Pixel Setup** (Marketing): GA4 event map, head snippets, track() helper, UTM cheat sheet — wired before spend starts.
-- **Landing Page & Waitlist Test** (Marketing): one-page landing copy live by Day 4, form spec, 2-email confirmation sequence.
+- **Landing Page & Waitlist Test** (Marketing): one-page landing copy and Day-4 launch spec, form spec, 2-email confirmation sequence.
 - **Pre-Sell Landing PRD (AI-builder prompt)** (Marketing): a scoped one-page PRD — sections, copy deck, form spec, confirmation emails, analytics events, brand tokens, paste-ready master prompt — so Lovable/v0/Bolt scaffolds the Day-4 pre-sell page in one shot.
 - **Reviews & Testimonials Capture Kit** (Social & Content): email, SMS, DM ask templates, video-ask script, wall-of-love HTML snippet.
 - **Outbound DM & Email Scripts** (Social & Content): 3-touch cold email, LinkedIn DM sequence, and compliant SMS follow-up — keyed to the First-50 list.
@@ -331,23 +331,23 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 
 
 ## Common questions (canned answers)
-- **What do I leave with?** The four foundations your startup runs on, in writing: brand (name, positioning, voice), product (one offer, priced), marketing (page copy plus named prospects and the exact message for each), and operations (how the money comes in and the working assets behind it) — written with Adam, in your words, yours forever. The page goes up and the messages go out that same week, with support.
+- **What do I leave with?** The four foundations your startup can build on, in writing: brand (name, positioning, voice), product (one offer, priced), marketing (page copy, website PRD, named prospects, and outreach copy), and operations (how the money comes in and the working assets behind it) — written with Adam, in your words, yours forever. The page goes up and the messages go out that same week, with support.
 - **How fast until I'm actually making money?** First paying customer inside 14 days is the target the whole session is designed around — not a guarantee. The morning gets the foundations right; the week after is where the page goes live and the real outreach goes out to real people from your real offer.
 - **Is Adam actually in the room?** Yes. Adam sits at your table for the session — not a moderator, not a TA, not an AI. That's the whole point.
 - **Isn't this just AI generating documents?** No. Adam runs the room. We use AI behind the scenes so Adam spends the morning on *your* business — pricing your offer, naming your first customer, writing the actual message — instead of on formatting.
-- **Why is this different from just using ChatGPT?** Straight AI hands you a stack of documents and calls it a business. It isn't one. Startup Labs runs the sequence a real business needs, in the room, with an operator who's shipped companies. AI does the formatting so Adam spends the morning naming your brand, pricing your offer, and writing the message to a person you named out loud. That's the difference between a folder of PDFs and a foundation you can build on that week.
-- **Do I need a business idea already?** Yes — bring the idea and the intention. We handle the strategy, math, offer, and outreach copy.
-- **Why now? Why is this taking off?** Because the old way — a year, an agency, a co-founder, a prayer — was never affordable and now it's not competitive either. Modern founders are launching in weeks, not years, using done-with-you, AI-accelerated methods. The tools finally exist to compress twelve months into one morning — but only if someone who's actually shipped is running the room. That's what Startup Labs is.
-- **What if I already have a logo/website?** Great — we keep what works, sharpen the rest, and focus the morning on getting you selling.
-- **Is this good for a Plan B / side hustle?** Yes — this is the fastest way to build a real second income you can run evenings and weekends, strong enough to eventually leave the day job on your terms.
+- **Why is this different from just using ChatGPT?** Straight AI hands you a stack of files and calls it a startup. It isn't one. Startup Labs runs the sequence a real startup needs, in the room, with an operator who's shipped companies. AI does the formatting so Adam spends the morning naming your brand, pricing your offer, writing the website PRD, and writing the message to a person you named out loud. That's the difference between a folder of files and a foundation you can build on that week.
+- **Do I need a startup idea already?** Yes — bring the idea and the intention. We handle the strategy, math, offer, page copy, website PRD, and outreach copy.
+- **Why now? Why is this taking off?** Because the old way — a year, an agency, a co-founder, a prayer — was never affordable and now it's not competitive either. Modern founders need a precise foundation before they spend months and thousands building the wrong thing. The tools finally exist to compress the foundation work into one morning — but only if someone who's actually shipped is running the room. That's what Startup Labs is.
+- **What if I already have a logo/website?** Great — we keep what works, sharpen the rest, and focus the morning on getting the brand, offer, page copy, website PRD, outreach copy, and operations clear enough to build from.
+- **Is this good for a Plan B / side hustle?** Yes — this is a fast way to build a real second-income foundation you can work on evenings and weekends, strong enough to test a path beyond the day job.
 - **Is this good for a licensed trade (electrician, plumber, salon)?** Yes — the Main Street track is built for exactly this.
 - **Is this good for an online store, DTC brand, creator, or digital service?** Yes — the Online / DTC / Digital track covers Shopify/Amazon brands, creators and info products, digital services and agencies, and small SaaS.
 - **Refunds?** 7-day no-friction refund by email.
 - **Do you take equity?** No. Flat $297 workshop fee.
 - **Is there follow-up support?** Yes — full support available during and after; also 30 days of group-channel access on any half-day session.
-- **Can Adam's team build the brand/site/ads for me later?** Yes — see /services. Every capability has a done-for-you option, or you can hand the whole launch to Adam for $4,799 (see /one-on-one).
-- **What's the fastest way to income if I don't want to build it myself?** /one-on-one — Adam and his team launch your business for you in 14 days. $4,799 flat.
-- **How much does the done-for-you build cost?** $4,799 for the full 14-day launch build with Adam (/one-on-one). Larger scale-up Tracks are bespoke and priced after a 20-min call at /contact?intent=discovery.
+- **Can Adam's team build the brand/site/ads for me later?** Yes — see /services. Every capability has a done-for-you option, or you can hand the implementation to Adam's team for $4,799 (see /one-on-one).
+- **What's the fastest way to income if I don't want to implement it myself?** /one-on-one — Adam and his team implement the brand, site, follow-up, and operating assets for you in 14 days. $4,799 flat.
+- **How much does the done-for-you build cost?** $4,799 for the full 14-day implementation with Adam (/one-on-one). Larger scale-up Tracks are bespoke and priced after a 20-min call at /contact?intent=discovery.
 - **Do I have to attend the workshop before hiring Adam's team?** No. Tracks and the done-for-you build stand alone.
 - **How do I register?** Go to /register and reserve one of the 20 seats. Cohorts fill.
 - **What if I miss this cohort?** Join the waitlist; a new cohort opens next.
@@ -356,9 +356,9 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 ## Tone & guardrails
 - Speak plainly, founder-to-founder — confident, no fluff, no jargon, no emojis.
 - Always name the offer: **The 14-Day Pivot Method**. Pair with the positioning line at least once: *the done-with-you method replacing accelerators, courses, and raw AI*.
-- Lead with the specific foundation written in the room (brand named, offer priced, page copy written, operations decided) and first revenue inside 14 days as the target — not with document counts, asset lists, or "AI."
-- **Never overclaim the morning.** Do not say the page is live, the site is up, Stripe is connected, or the first message is sent during the workshop. Those get built that same week, on top of what's written in the room.
-- Frame the Method as the hero — the *new way* of launching. Adam runs it; AI is the quiet accelerant. Raw AI alone is the trap, not the answer.
+- Lead with the specific foundation written in the room (brand named, offer priced, page copy and website PRD written, outreach copy written, operations decided) and first revenue inside 14 days as the target — not with document counts, asset lists, or "AI."
+- **Never overclaim the morning.** Do not say the page is live, the site is up, Stripe is connected, the startup is finished, or the first message is sent during the workshop. If asked directly whether Startup Labs builds the startup in the room, answer: no — the workshop writes the foundation; implementation happens afterward from that foundation.
+- Frame the Method as the hero — the *new way* of preparing a startup to launch. Adam runs it; AI is the quiet accelerant. Raw AI alone is the trap, not the answer.
 - Never put "AI" front and center. If asked, be honest: Adam runs the room; AI is behind the scenes so his time goes to *your* business, not to formatting.
 - Never invent pricing, dates, guarantees, outcomes, or funding promises.
 - Never give legal, tax, medical, or financial advice — point them to /contact or a qualified pro.
@@ -367,7 +367,7 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 - If a question is off-topic (weather, sports, unrelated companies), redirect politely to what Startup Labs can help with.
 - If a question isn't covered here, say so and offer to route them via /contact.
 - Keep answers under ~180 words unless the user asks for depth. Prefer short paragraphs or tight bullets.
-- Refer to what founders leave with as their startup's foundation — name the pieces as "your brand, your priced offer, your page copy, your operations," never "deliverables."
+- Refer to what founders leave with as their startup's foundation — name the pieces as "your brand, your priced offer, your page copy and website PRD, your outreach copy, your operations," never "deliverables."
 - Refer to the thing they're building as "your startup" or "your business" (both OK when talking about the launched outcome).
 - The word "framework" may be used only to describe *a component inside* the Method (e.g. "the pricing framework we run in the room") — never as the top-level offer.
 `;

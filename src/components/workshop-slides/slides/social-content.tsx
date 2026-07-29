@@ -158,7 +158,7 @@ export const socialContentSlides: Slide[] = [
         <div className="max-w-[1500px]">
           <SlotText slideId="recap" field="kicker" defaultValue="That's a wrap · workshop complete" as="div" className="slide-kicker font-semibold text-white/60 mb-10" />
           <SlotText slideId="recap" field="title" defaultValue="Eight stages. Thirty-four startup assets. One founder-ready startup." as="h2" className="slide-title font-semibold tracking-tight" />
-          <SlotText slideId="recap" field="body" defaultValue="From Foundation to Social & Content — every attendee walks out with the documents, decks, and plans a real business is built on. This is what an Atlanta startup kit looks like." as="p" className="slide-subtitle mt-10 text-white/80 max-w-[1300px]" />
+          <SlotText slideId="recap" field="body" defaultValue="From Foundation to Social & Content — every attendee walks out with the written foundation a real startup is built on. This is what an Atlanta startup kit looks like." as="p" className="slide-subtitle mt-10 text-white/80 max-w-[1300px]" />
           <div className="mt-16 inline-flex items-center gap-4 px-8 py-5 rounded-2xl bg-primary text-primary-foreground slide-body-lg font-semibold">
             <Sparkles style={{ width: 36, height: 36 }} />
             <SlotText slideId="recap" field="cta" defaultValue="Open your Founder Playbook" />

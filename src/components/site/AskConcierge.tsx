@@ -9,13 +9,13 @@ import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const STORAGE_KEY = "sl.concierge.v1";
+const STORAGE_KEY = "sl.concierge.v2";
 const VOICE_PREF_KEY = "sl.concierge.voice.v1";
 const HIDDEN_PREFIXES = ["/login", "/signup", "/reset-password", "/unsubscribe", "/dashboard", "/admin", "/welcome", "/paused", "/workshop"];
 
 
 const STARTERS = [
-  "What actually gets built in the room?",
+  "What actually gets written in the room?",
   "How much is it?",
   "When's the next cohort?",
   "Is this right for me?",

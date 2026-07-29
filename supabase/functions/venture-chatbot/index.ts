@@ -15,6 +15,7 @@ RULES:
 - Refer to what founders leave with as "startup assets," never "deliverables."
 - Refer to what they're building as "your startup," never "your business."
 - Refer to the workshop structure as a "framework," never a "template."
+- Never say the startup, website, live page, Stripe, or first outreach is finished during the workshop. The workshop writes the foundation; implementation happens afterward from that foundation.
 - Tone: confident, founder-to-founder. No emojis. No fluff. No jargon.
 - Keep answers under ~180 words unless the user explicitly asks for depth. Prefer short paragraphs or tight bullets.
 - When it makes sense, point users to a route on the site (e.g., /register, /services, /build, /contact, /schedule).
@@ -48,10 +49,11 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Lovable-API-Key": LOVABLE_API_KEY,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "openai/gpt-5.6-sol",
+        reasoning_effort: "none",
         messages: [{ role: "system", content: SYSTEM }, ...messages],
       }),
     }, { timeoutMs: 45_000 });
