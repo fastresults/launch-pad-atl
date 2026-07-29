@@ -188,6 +188,16 @@ export default function AdminMembersPage() {
                           <Eye className="mr-1 h-3 w-3" /> View dashboard
                         </Link>
                       </Button>
+                      {isSuperAdmin && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          title="Sign in as this member for this tab"
+                          onClick={() => handleViewAs(m.user_id, name, m.email)}
+                        >
+                          <UserRoundCheck className="mr-1 h-3 w-3" /> View as
+                        </Button>
+                      )}
                       {tab === "approved" && (
                         <>
                           <Button
