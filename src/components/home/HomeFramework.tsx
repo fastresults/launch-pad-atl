@@ -435,7 +435,7 @@ function HonestRoadmap() {
         <div className="mt-12 md:mt-16">
           <div className="rounded-2xl border border-primary/40 bg-card p-6 md:p-8">
             <div className="mb-4 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-primary">
-              What {WORKSHOP_PRICE_LABEL} gets you — 14 days from now
+              What {WORKSHOP_PRICE_LABEL} gets you — written in the room
             </div>
             <ul className="grid gap-3 sm:grid-cols-2 md:gap-4">
               {included.map((s) => (
