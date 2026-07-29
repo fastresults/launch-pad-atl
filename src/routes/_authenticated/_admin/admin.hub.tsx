@@ -25,9 +25,9 @@ export default function AdminHubPage() {
           <div className="p-8 text-center text-sm text-muted-foreground">No ventures yet.</div>
         ) : (
           snapshots.map((s: any) => (
-            <div key={s.id} className="flex items-center justify-between gap-3 border-t border-white/5 p-4 first:border-t-0">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
+            <div key={s.id} className="flex flex-col gap-2 border-t border-white/5 p-4 first:border-t-0 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{s.company_name || "Untitled venture"}</span>
                   <Badge variant="outline" className="text-[10px] uppercase">{s.status}</Badge>
                 </div>
@@ -35,10 +35,11 @@ export default function AdminHubPage() {
                   {s.business_concept ?? s.website_url ?? ""}
                 </p>
               </div>
-              <Link to={`/admin/attendees/${s.user_id}`} className="text-xs text-muted-foreground underline">
+              <Link to={`/admin/attendees/${s.user_id}`} className="shrink-0 text-xs text-muted-foreground underline">
                 View attendee →
               </Link>
             </div>
+
           ))
         )}
       </div>
