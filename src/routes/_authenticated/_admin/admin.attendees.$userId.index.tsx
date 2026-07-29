@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { } from 'react-router-dom';
 import { getAttendeeDetail, triggerPipeline } from "@/lib/pipeline.functions";
@@ -11,7 +11,8 @@ import { useAuth } from "@/hooks/use-auth";
 export default function AttendeeDetail() {
   const { userId } = useParams();
   const qc = useQueryClient();
-  const { isSuperAdmin } = useAuth();
+  const navigate = useNavigate();
+  const { isSuperAdmin, actorUser, startImpersonation } = useAuth();
   
   
 
