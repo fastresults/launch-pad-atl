@@ -7,13 +7,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { ADMIN_NAV } from "@/lib/admin-nav";
+import { ADMIN_NAV_FLAT } from "@/lib/admin-nav";
 
 export function AdminBreadcrumb() {
   const { pathname } = useLocation();
 
   // find best matching nav item
-  const match = ADMIN_NAV.filter((n) => !n.external)
+  const match = ADMIN_NAV_FLAT.filter((n) => !n.external)
     .filter((n) => pathname === n.to || pathname.startsWith(n.to + "/"))
     .sort((a, b) => b.to.length - a.to.length)[0];
 

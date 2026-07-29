@@ -5,66 +5,309 @@ import {
   Users,
   Inbox,
   CalendarRange,
+  CalendarClock,
+  CalendarDays,
   Settings,
   Image as ImageIcon,
-  Shield,
+  ShieldCheck,
+  UserCog,
   ExternalLink,
   MessageSquare,
+  MessagesSquare,
   Share2,
   Send,
   BarChart3,
   Rocket,
   Video,
   Sparkles,
+  Presentation,
+  Wand2,
+  Megaphone,
   type LucideIcon,
 } from "lucide-react";
+
+export type AdminGroup =
+  | "Home"
+  | "People"
+  | "Schedule"
+  | "Workspace"
+  | "Marketing"
+  | "System";
+
+export type AdminBadgeKey =
+  | "reviewPending"
+  | "applicationsPending"
+  | "inquiriesNew"
+  | "membersPending";
 
 export type AdminNavItem = {
   to: string;
   label: string;
   icon: LucideIcon;
-  group: "Overview" | "Operations" | "Content" | "Social" | "System";
+  group: AdminGroup;
+  /** Short "what is this page for" line shown under the label / in search. */
+  description?: string;
+  /** Extra search terms for the command palette. */
+  keywords?: string[];
   super?: boolean;
-  badgeKey?: "reviewPending" | "applicationsPending" | "inquiriesNew" | "membersPending";
+  badgeKey?: AdminBadgeKey;
   external?: boolean;
+  /** Nested sub-navigation (rendered as a collapsible submenu). */
+  children?: AdminNavItem[];
+};
+
+export const ADMIN_GROUP_META: Record<AdminGroup, { label: string; hint: string }> = {
+  Home: { label: "Home", hint: "At-a-glance triage" },
+  People: { label: "People", hint: "Who is in the program" },
+  Schedule: { label: "Schedule", hint: "What is happening when" },
+  Workspace: { label: "Workspace", hint: "The work being produced" },
+  Marketing: { label: "Marketing", hint: "Reach and content" },
+  System: { label: "System", hint: "Access and configuration" },
 };
 
 export const ADMIN_NAV: AdminNavItem[] = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, group: "Overview" },
+  {
+    to: "/admin",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    group: "Home",
+    description: "What needs you right now",
+    keywords: ["home", "overview", "triage", "stats", "today"],
+  },
 
-  { to: "/admin/members", label: "Members", icon: Shield, group: "Operations", badgeKey: "membersPending" },
-  { to: "/admin/applications", label: "Applications", icon: FileText, group: "Operations", badgeKey: "applicationsPending" },
-  { to: "/admin/registrations", label: "Registrations", icon: ClipboardList, group: "Operations" },
-  { to: "/admin/private-sessions", label: "Private Tuesdays", icon: CalendarRange, group: "Operations" },
-  { to: "/admin/attendees", label: "Attendees", icon: Users, group: "Operations" },
-  { to: "/admin/hub", label: "Founders Hub", icon: Sparkles, group: "Operations" },
-  { to: "/admin/review", label: "Review queue", icon: Inbox, group: "Operations", super: true, badgeKey: "reviewPending" },
-  { to: "/admin/inquiries", label: "Inquiries", icon: MessageSquare, group: "Operations", badgeKey: "inquiriesNew" },
-  { to: "/admin/cohorts", label: "Cohorts", icon: CalendarRange, group: "Operations", super: true },
+  // ---------------------------------------------------------------- People
+  {
+    to: "/admin/members",
+    label: "Members",
+    icon: ShieldCheck,
+    group: "People",
+    description: "Accounts, access and status",
+    keywords: ["approve", "pending", "pause", "reject", "access", "intake", "roster"],
+    badgeKey: "membersPending",
+  },
+  {
+    to: "/admin/applications",
+    label: "Applications",
+    icon: FileText,
+    group: "People",
+    description: "Inbound founder applicants",
+    keywords: ["applicants", "applied", "shortlist", "select", "waitlist"],
+    badgeKey: "applicationsPending",
+  },
+  {
+    to: "/admin/attendees",
+    label: "Attendees",
+    icon: Users,
+    group: "People",
+    description: "Workshop rosters and their work",
+    keywords: ["founders", "students", "deliverables", "workflow", "impersonate"],
+  },
+  {
+    to: "/admin/inquiries",
+    label: "Inquiries",
+    icon: MessagesSquare,
+    group: "People",
+    description: "Landing and contact messages",
+    keywords: ["contact", "leads", "messages", "reply", "interest"],
+    badgeKey: "inquiriesNew",
+  },
 
+  // -------------------------------------------------------------- Schedule
+  {
+    to: "/admin/registrations",
+    label: "Registrations",
+    icon: ClipboardList,
+    group: "Schedule",
+    description: "Workshop signups",
+    keywords: ["signups", "seats", "confirmed", "tickets"],
+  },
+  {
+    to: "/admin/private-sessions",
+    label: "Private Tuesdays",
+    icon: CalendarClock,
+    group: "Schedule",
+    description: "One-on-one bookings",
+    keywords: ["1:1", "one on one", "slots", "bookings", "hold", "release"],
+  },
+  {
+    to: "/admin/cohorts",
+    label: "Cohorts",
+    icon: CalendarDays,
+    group: "Schedule",
+    description: "Dates, capacity and venue",
+    keywords: ["dates", "venue", "capacity", "pricing", "workshop date"],
+    super: true,
+  },
 
-  
-  { to: "/admin/media", label: "Media library", icon: ImageIcon, group: "Content", super: true },
-  { to: "/admin/decks", label: "Facilitator decks", icon: Sparkles, group: "Content" },
-  { to: "/admin/testimonials", label: "Video testimonials", icon: Video, group: "Content" },
+  // ------------------------------------------------------------- Workspace
+  {
+    to: "/admin/hub",
+    label: "Founders Hub",
+    icon: Sparkles,
+    group: "Workspace",
+    description: "Venture snapshots and assets",
+    keywords: ["ventures", "snapshots", "ideas", "assets"],
+  },
+  {
+    to: "/admin/review",
+    label: "Review queue",
+    icon: Inbox,
+    group: "Workspace",
+    description: "Assets waiting on approval",
+    keywords: ["approve", "pending review", "quality", "queue"],
+    super: true,
+    badgeKey: "reviewPending",
+  },
+  {
+    to: "/admin/decks",
+    label: "Facilitator decks",
+    icon: Presentation,
+    group: "Workspace",
+    description: "Slides used in the room",
+    keywords: ["slides", "workshop", "presentation", "deck"],
+  },
+  {
+    to: "/admin/media",
+    label: "Media library",
+    icon: ImageIcon,
+    group: "Workspace",
+    description: "Shared images and files",
+    keywords: ["images", "uploads", "files", "photos", "assets"],
+    super: true,
+  },
+  {
+    to: "/admin/testimonials",
+    label: "Video testimonials",
+    icon: Video,
+    group: "Workspace",
+    description: "Founder video proof",
+    keywords: ["video", "proof", "social proof", "reviews"],
+  },
 
-  { to: "/admin/social/setup", label: "Setup wizard", icon: Rocket, group: "Social", super: true },
-  { to: "/admin/social/setup/intake", label: "AI Brand Intake", icon: Sparkles, group: "Social", super: true },
-  { to: "/admin/social/setup/creative", label: "Creative Studio", icon: ImageIcon, group: "Social", super: true },
-  { to: "/admin/social", label: "Profiles & accounts", icon: Share2, group: "Social", super: true },
-  { to: "/admin/social/compose", label: "New post", icon: Send, group: "Social", super: true },
-  { to: "/admin/social/posts", label: "Posts", icon: MessageSquare, group: "Social", super: true },
-  { to: "/admin/social/analytics", label: "Analytics", icon: BarChart3, group: "Social", super: true },
+  // ------------------------------------------------------------- Marketing
+  {
+    to: "/admin/social",
+    label: "Social",
+    icon: Megaphone,
+    group: "Marketing",
+    description: "Accounts, posts and campaigns",
+    keywords: ["social", "marketing", "posts", "campaign"],
+    super: true,
+    children: [
+      {
+        to: "/admin/social",
+        label: "Profiles & accounts",
+        icon: Share2,
+        group: "Marketing",
+        description: "Connected platforms",
+        keywords: ["connect", "accounts", "instagram", "linkedin", "facebook"],
+        super: true,
+      },
+      {
+        to: "/admin/social/compose",
+        label: "New post",
+        icon: Send,
+        group: "Marketing",
+        description: "Write and schedule a post",
+        keywords: ["compose", "publish", "schedule", "write"],
+        super: true,
+      },
+      {
+        to: "/admin/social/posts",
+        label: "Posts",
+        icon: MessageSquare,
+        group: "Marketing",
+        description: "Everything queued and published",
+        keywords: ["queue", "published", "drafts", "history"],
+        super: true,
+      },
+      {
+        to: "/admin/social/analytics",
+        label: "Analytics",
+        icon: BarChart3,
+        group: "Marketing",
+        description: "Reach and engagement",
+        keywords: ["stats", "reach", "engagement", "performance"],
+        super: true,
+      },
+      {
+        to: "/admin/social/setup",
+        label: "Setup wizard",
+        icon: Rocket,
+        group: "Marketing",
+        description: "Connect platforms step by step",
+        keywords: ["onboarding", "connect", "wizard"],
+        super: true,
+      },
+      {
+        to: "/admin/social/setup/intake",
+        label: "Brand intake",
+        icon: Wand2,
+        group: "Marketing",
+        description: "AI brand questionnaire",
+        keywords: ["brand", "ai", "intake", "voice"],
+        super: true,
+      },
+      {
+        to: "/admin/social/setup/creative",
+        label: "Creative Studio",
+        icon: ImageIcon,
+        group: "Marketing",
+        description: "Generate creative assets",
+        keywords: ["images", "generate", "creative", "ads"],
+        super: true,
+      },
+    ],
+  },
 
-  { to: "/admin/users", label: "Users & roles", icon: Shield, group: "System", super: true },
-  { to: "/admin/settings", label: "Site settings", icon: Settings, group: "System", super: true },
-  { to: "/", label: "View public site", icon: ExternalLink, group: "System", external: true },
+  // ---------------------------------------------------------------- System
+  {
+    to: "/admin/users",
+    label: "Users & roles",
+    icon: UserCog,
+    group: "System",
+    description: "Grant and revoke admin access",
+    keywords: ["roles", "permissions", "admin", "super admin", "grant"],
+    super: true,
+  },
+  {
+    to: "/admin/settings",
+    label: "Site settings",
+    icon: Settings,
+    group: "System",
+    description: "Landing mode, nav and global config",
+    keywords: ["landing only", "toggle", "config", "settings", "nav visibility"],
+    super: true,
+  },
+  {
+    to: "/",
+    label: "View public site",
+    icon: ExternalLink,
+    group: "System",
+    description: "Open the live site in a new tab",
+    keywords: ["public", "live", "preview", "website"],
+    external: true,
+  },
 ];
 
-export const ADMIN_GROUPS: AdminNavItem["group"][] = [
-  "Overview",
-  "Operations",
-  "Content",
-  "Social",
+export const ADMIN_GROUPS: AdminGroup[] = [
+  "Home",
+  "People",
+  "Schedule",
+  "Workspace",
+  "Marketing",
   "System",
 ];
+
+/** Flattened list (parents + children) for search, breadcrumbs and matching. */
+export const ADMIN_NAV_FLAT: AdminNavItem[] = ADMIN_NAV.flatMap((item) =>
+  item.children && item.children.length > 0 ? [item, ...item.children] : [item],
+);
+
+/** Groups that render collapsed by default unless the active route lives inside. */
+export const ADMIN_COLLAPSED_GROUPS: AdminGroup[] = ["Marketing"];
+
+export function isNavItemActive(pathname: string, to: string) {
+  if (to === "/admin") return pathname === "/admin";
+  return pathname === to || pathname.startsWith(to + "/");
+}
