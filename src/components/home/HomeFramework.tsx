@@ -90,7 +90,7 @@ function Hero() {
           <div className="flex flex-col lg:col-span-8">
             <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
               <Star className="size-3.5 fill-current" />
-              One focused morning · IGNITE Center · Coffee&rsquo;s on us
+              Atlanta&rsquo;s strongest startup foundation · IGNITE Center
             </p>
 
             <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[4.3rem]">
