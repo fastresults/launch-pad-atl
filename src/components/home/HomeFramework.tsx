@@ -217,7 +217,7 @@ function Hero() {
               </div>
 
               <p className="mt-5 text-base leading-snug text-[#3D3025]">
-                You bring the idea. We&rsquo;ll bring the coffee &mdash; and build it with you.
+                You bring the idea. We&rsquo;ll bring the coffee &mdash; and write the foundation with you.
               </p>
 
               <Link

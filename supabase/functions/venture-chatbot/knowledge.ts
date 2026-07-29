@@ -337,17 +337,17 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 - **Isn't this just AI generating documents?** No. Adam runs the room. We use AI behind the scenes so Adam spends the morning on *your* business — pricing your offer, naming your first customer, writing the actual message — instead of on formatting.
 - **Why is this different from just using ChatGPT?** Straight AI hands you a stack of files and calls it a startup. It isn't one. Startup Labs runs the sequence a real startup needs, in the room, with an operator who's shipped companies. AI does the formatting so Adam spends the morning naming your brand, pricing your offer, writing the website PRD, and writing the message to a person you named out loud. That's the difference between a folder of files and a foundation you can build on that week.
 - **Do I need a startup idea already?** Yes — bring the idea and the intention. We handle the strategy, math, offer, page copy, website PRD, and outreach copy.
-- **Why now? Why is this taking off?** Because the old way — a year, an agency, a co-founder, a prayer — was never affordable and now it's not competitive either. Modern founders are launching in weeks, not years, using done-with-you, AI-accelerated methods. The tools finally exist to compress twelve months into one morning — but only if someone who's actually shipped is running the room. That's what Startup Labs is.
-- **What if I already have a logo/website?** Great — we keep what works, sharpen the rest, and focus the morning on getting you selling.
-- **Is this good for a Plan B / side hustle?** Yes — this is the fastest way to build a real second income you can run evenings and weekends, strong enough to eventually leave the day job on your terms.
+- **Why now? Why is this taking off?** Because the old way — a year, an agency, a co-founder, a prayer — was never affordable and now it's not competitive either. Modern founders need a precise foundation before they spend months and thousands building the wrong thing. The tools finally exist to compress the foundation work into one morning — but only if someone who's actually shipped is running the room. That's what Startup Labs is.
+- **What if I already have a logo/website?** Great — we keep what works, sharpen the rest, and focus the morning on getting the brand, offer, page copy, website PRD, outreach copy, and operations clear enough to build from.
+- **Is this good for a Plan B / side hustle?** Yes — this is a fast way to build a real second-income foundation you can work on evenings and weekends, strong enough to test a path beyond the day job.
 - **Is this good for a licensed trade (electrician, plumber, salon)?** Yes — the Main Street track is built for exactly this.
 - **Is this good for an online store, DTC brand, creator, or digital service?** Yes — the Online / DTC / Digital track covers Shopify/Amazon brands, creators and info products, digital services and agencies, and small SaaS.
 - **Refunds?** 7-day no-friction refund by email.
 - **Do you take equity?** No. Flat $297 workshop fee.
 - **Is there follow-up support?** Yes — full support available during and after; also 30 days of group-channel access on any half-day session.
-- **Can Adam's team build the brand/site/ads for me later?** Yes — see /services. Every capability has a done-for-you option, or you can hand the whole launch to Adam for $4,799 (see /one-on-one).
-- **What's the fastest way to income if I don't want to build it myself?** /one-on-one — Adam and his team launch your business for you in 14 days. $4,799 flat.
-- **How much does the done-for-you build cost?** $4,799 for the full 14-day launch build with Adam (/one-on-one). Larger scale-up Tracks are bespoke and priced after a 20-min call at /contact?intent=discovery.
+- **Can Adam's team build the brand/site/ads for me later?** Yes — see /services. Every capability has a done-for-you option, or you can hand the implementation to Adam's team for $4,799 (see /one-on-one).
+- **What's the fastest way to income if I don't want to implement it myself?** /one-on-one — Adam and his team implement the brand, site, follow-up, and operating assets for you in 14 days. $4,799 flat.
+- **How much does the done-for-you build cost?** $4,799 for the full 14-day implementation with Adam (/one-on-one). Larger scale-up Tracks are bespoke and priced after a 20-min call at /contact?intent=discovery.
 - **Do I have to attend the workshop before hiring Adam's team?** No. Tracks and the done-for-you build stand alone.
 - **How do I register?** Go to /register and reserve one of the 20 seats. Cohorts fill.
 - **What if I miss this cohort?** Join the waitlist; a new cohort opens next.
