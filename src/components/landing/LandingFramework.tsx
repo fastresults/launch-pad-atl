@@ -336,6 +336,10 @@ function Framework() {
           A course gives you videos. A chatbot gives you a folder of files. We sit down and actually build the startup — the live page, the priced offer, the first message sent. By that afternoon you're not planning anymore. You're open. One morning with us. Yours to run with.
         </p>
 
+        <p className="mt-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+          <Check className="size-3.5 text-primary" strokeWidth={3} />
+          Every item below is checked off with you, in the room — not homework.
+        </p>
 
 
         <div className="mt-14 space-y-14 md:space-y-20">
