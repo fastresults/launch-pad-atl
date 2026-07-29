@@ -61,9 +61,9 @@ export default function WebinarPage() {
               <span className="text-gradient-brand">First paying customer in two weeks.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-              The same real build, run live over video in a small cohort —
+              The same real foundation session, run live over video in a small cohort —
               done-with-you, not done-to-you or done-alone.
-              One focused morning where we write the four foundations your startup runs on: brand named, offer priced, page copy written, and the exact message ready for a named prospect
+              One focused morning where we write the four foundations your startup can build on: brand named, offer priced, page copy and website PRD written, and the exact outreach copy ready for a named prospect
               that afternoon.
             </p>
 
@@ -108,7 +108,7 @@ export default function WebinarPage() {
                 </button>
               </div>
               <p className="mt-4 text-xs text-muted-foreground">
-                Prefer we build it for you instead?{" "}
+                Prefer we implement it for you instead?{" "}
                 <Link to="/one-on-one" className="underline hover:text-foreground">
                   See the done-for-you build with Adam
                 </Link>

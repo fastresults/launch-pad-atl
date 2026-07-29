@@ -119,13 +119,13 @@ export default function BuildIndexPage() {
         <div className="mx-auto max-w-4xl px-6">
           <div className="rounded-3xl border border-white/10 bg-hero-gradient p-8 text-white md:p-12">
             <p className="mb-3 text-xs uppercase tracking-[0.18em] opacity-80 md:text-sm md:tracking-[0.2em]">
-              Rather we just build it?
+              Rather we implement it?
             </p>
             <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-              Same team. We'll build it for you.
+              Same team. We'll implement it for you.
             </h2>
             <p className="mt-4 text-base opacity-90 md:text-lg">
-              If your mornings are full — or you'd rather hand the whole thing over — Adam's team will actually build the brand, the website, the follow-ups, and the tools for you. Real assets, live. Same crew that runs the workshops. Same care.
+              If your mornings are full — or you'd rather hand the whole thing over — Adam's team will implement the brand, website, follow-ups, and tools from the foundation. Real assets, live. Same crew that runs the workshops. Same care.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link

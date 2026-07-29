@@ -87,7 +87,7 @@ export default function OneOnOnePage() {
             </h1>
             <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
               The old way was $40k and six months of agency ping-pong. The new
-              way: our team actually builds the real thing for you at a flat fee.
+              way: our team implements the real assets for you at a flat fee.
               Real brand, live site, running social, live systems, and a
               named first customer — actually shipped in fourteen days. You stay
               founder. Our team does the building.
