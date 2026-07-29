@@ -127,7 +127,7 @@ function Hero() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
-              One quiet morning in Atlanta &mdash; at the IGNITE Center at Greater Atlanta Christian School in Norcross. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you actually build the thing. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
+              One quiet morning in Atlanta &mdash; at the IGNITE Center at Greater Atlanta Christian School in Norcross. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you lay the foundation your business will stand on. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
             </p>
 
 
