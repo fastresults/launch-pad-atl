@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { ADMIN_GROUPS, ADMIN_GROUP_META, ADMIN_NAV_FLAT } from "@/lib/admin-nav";
-import { Search, ExternalLink, EyeOff, LogOut, Settings } from "lucide-react";
+import { Search, ExternalLink, Eye, EyeOff, LogOut, Settings } from "lucide-react";
 
 const RECENTS_KEY = "sl.admin.recent-pages";
 
@@ -137,6 +137,15 @@ export function AdminCommandMenu() {
               <ExternalLink className="mr-2 h-4 w-4" />
               Open public site in new tab
             </CommandItem>
+            {isSuperAdmin && !isImpersonating && (
+              <CommandItem
+                value="view as a user impersonate sign in as act as open user dashboard"
+                onSelect={() => go("/admin/users")}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                View as a user…
+              </CommandItem>
+            )}
             {isImpersonating && (
               <CommandItem
                 value="exit impersonation stop viewing as"

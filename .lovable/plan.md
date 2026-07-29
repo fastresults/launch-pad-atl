@@ -1,19 +1,20 @@
-## Problem
+## Where it is today
 
-In the admin console, long unbroken content (like the venture descriptions on Founders Hub) pushes the whole page wider than the browser window, so the sidebar and header get shoved off-screen and the page scrolls sideways.
-
-Confirmed cause: the admin content area (`SidebarInset` in `src/components/ui/sidebar.tsx`, line 320) is a flex child with `w-full flex-1` but no `min-w-0`. Flex children default to `min-width: auto`, so they refuse to shrink below their content width — any wide child (long text, tables, code) expands the entire layout instead of being clipped or wrapped.
-
-Secondary: on `/admin/hub`, each row's description uses `truncate` but the row is a `flex ... justify-between` whose text column can still grow; without a shrink constraint on the row it inherits the same blowout.
+Impersonation can only be started from **System → Users & roles** (`/admin/users`) — each user row has a "View as" button, visible to super admins only. Exiting is surfaced in two places (sidebar footer pill and the ⌘K palette), but *starting* is not discoverable from Members, Attendees, the dashboard, or the command palette.
 
 ## Changes
 
-1. `src/components/ui/sidebar.tsx` — add `min-w-0` (and `overflow-x-hidden` on the inset) so the content column can shrink to the available width. This is the single fix that resolves the blowout for every admin page, not just Founders Hub.
+1. **Rename + describe the nav entry** (`src/lib/admin-nav.ts`): label stays "Users & roles" but description becomes "Grant admin access or view the app as a user", and add keywords `impersonate`, `view as`, `sign in as`, `act as` so ⌘K finds it by intent.
 
-2. `src/routes/_authenticated/_admin.tsx` — add `min-w-0 overflow-x-auto` to the `<main>` wrapper so genuinely wide content (tables) scrolls inside the panel rather than breaking the page frame.
+2. **Command palette action** (`src/components/admin/AdminCommandMenu.tsx`): add a super-admin-only "View as a user…" action in the actions group that routes to `/admin/users`, sitting next to the existing "Exit impersonation" item.
 
-3. `src/routes/_authenticated/_admin/admin.hub.tsx` — make each row robust: `min-w-0` + `flex-1` on the text column, `shrink-0` on the "View attendee" link, and keep the description to a single truncated line. Also stack to two lines on narrow screens.
+3. **"View as" on the people pages** — surface the action where admins already are:
+   - `admin.attendees.$userId.index.tsx`: add a "View as" button in the header action row (super admin only) calling `startImpersonation` with that user.
+   - `admin.members.tsx`: add "View as" to each member row's action set (super admin only).
+   Both reuse the exact `startImpersonation` call from `admin.users.tsx` so behavior and the confirm/banner flow stay identical.
 
-## Verification
+4. **Dashboard quick action** (`src/components/admin/dashboard/QuickActions.tsx`): add "View as a user" linking to `/admin/users` for super admins.
 
-Load `/admin/hub` and a wide table page (`/admin/members`, `/admin/registrations`) at 1386px and at ~900px, confirm no horizontal page scrollbar and the sidebar stays anchored.
+## Technical notes
+
+`startImpersonation` comes from `useAuth()` in `src/hooks/use-auth.tsx`; the active-session banner is `ImpersonationBanner.tsx` and needs no change. All new entry points are gated on `isSuperAdmin` — no change to who can impersonate.

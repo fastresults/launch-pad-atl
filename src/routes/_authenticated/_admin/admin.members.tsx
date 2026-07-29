@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,7 +20,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Eye } from "lucide-react";
+import { Eye, UserRoundCheck } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 
 type Tab = "pending" | "approved" | "paused" | "rejected" | "no_intake";
@@ -33,6 +34,22 @@ export default function AdminMembersPage() {
   
   
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { isSuperAdmin, actorUser, startImpersonation } = useAuth();
+
+  const handleViewAs = async (userId: string, name: string, email?: string | null) => {
+    if (userId === actorUser?.id) {
+      navigate("/dashboard");
+      return;
+    }
+    try {
+      await startImpersonation({ userId, name, email: email ?? "" });
+      toast.success(`Opened dashboard as ${name}`);
+      navigate("/dashboard");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to open dashboard");
+    }
+  };
   const [tab, setTab] = useState<Tab>("pending");
   const [search, setSearch] = useState("");
   const [pauseTarget, setPauseTarget] = useState<{ userId: string; name: string } | null>(null);
@@ -171,6 +188,16 @@ export default function AdminMembersPage() {
                           <Eye className="mr-1 h-3 w-3" /> View dashboard
                         </Link>
                       </Button>
+                      {isSuperAdmin && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          title="Sign in as this member for this tab"
+                          onClick={() => handleViewAs(m.user_id, name, m.email)}
+                        >
+                          <UserRoundCheck className="mr-1 h-3 w-3" /> View as
+                        </Button>
+                      )}
                       {tab === "approved" && (
                         <>
                           <Button

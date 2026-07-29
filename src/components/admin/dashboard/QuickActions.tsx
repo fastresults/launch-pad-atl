@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { Send, CalendarDays, Users, Settings, Presentation, Megaphone } from "lucide-react";
+import { Send, CalendarDays, Users, Settings, Presentation, Megaphone, Eye } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -10,6 +10,7 @@ const ACTIONS: Action[] = [
   { to: "/admin/social/compose", label: "New social post", icon: Send, super: true },
   { to: "/admin/cohorts", label: "Cohort dates", icon: CalendarDays, super: true },
   { to: "/admin/attendees", label: "Attendee rosters", icon: Users },
+  { to: "/admin/users", label: "View as a user", icon: Eye, super: true },
   { to: "/admin/decks", label: "Facilitator decks", icon: Presentation },
   { to: "/admin/social", label: "Social accounts", icon: Megaphone, super: true },
   { to: "/admin/settings", label: "Site settings", icon: Settings, super: true },

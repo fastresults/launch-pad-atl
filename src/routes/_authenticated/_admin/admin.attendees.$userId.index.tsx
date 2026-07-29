@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { } from 'react-router-dom';
 import { getAttendeeDetail, triggerPipeline } from "@/lib/pipeline.functions";
@@ -11,7 +11,8 @@ import { useAuth } from "@/hooks/use-auth";
 export default function AttendeeDetail() {
   const { userId } = useParams();
   const qc = useQueryClient();
-  const { isSuperAdmin } = useAuth();
+  const navigate = useNavigate();
+  const { isSuperAdmin, actorUser, startImpersonation } = useAuth();
   
   
 
@@ -29,6 +30,22 @@ export default function AttendeeDetail() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const handleViewAs = async () => {
+    if (!userId) return;
+    if (userId === actorUser?.id) {
+      navigate("/dashboard");
+      return;
+    }
+    const name = data?.profile?.display_name ?? data?.profile?.email ?? "member";
+    try {
+      await startImpersonation({ userId, name, email: data?.profile?.email ?? "" });
+      toast.success(`Opened dashboard as ${name}`);
+      navigate("/dashboard");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to open dashboard");
+    }
+  };
 
   if (isLoading) return <div className="text-sm text-muted-foreground">Loading…</div>;
   if (!data) return null;
@@ -54,9 +71,13 @@ export default function AttendeeDetail() {
         </div>
         {isSuperAdmin && (
           <div className="flex gap-2">
+            <Button variant="outline" onClick={handleViewAs}>
+              View as
+            </Button>
             <Button asChild variant="outline">
               <Link to={`/admin/attendees/${userId}/workflow`}>Workflow</Link>
             </Button>
+
             <Button onClick={() => trigger.mutate()} disabled={trigger.isPending}>
               {trigger.isPending ? "Running pipeline…" : "Run full AI pipeline"}
             </Button>

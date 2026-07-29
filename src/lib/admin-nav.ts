@@ -266,8 +266,8 @@ export const ADMIN_NAV: AdminNavItem[] = [
     label: "Users & roles",
     icon: UserCog,
     group: "System",
-    description: "Grant and revoke admin access",
-    keywords: ["roles", "permissions", "admin", "super admin", "grant"],
+    description: "Grant admin access or view the app as a user",
+    keywords: ["roles", "permissions", "admin", "super admin", "grant", "impersonate", "view as", "sign in as", "act as"],
     super: true,
   },
   {
