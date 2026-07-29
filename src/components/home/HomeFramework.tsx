@@ -383,13 +383,14 @@ function Framework() {
 
 function HonestRoadmap() {
   const included = [
-    "A live landing page at your domain — real URL, up before lunch, not a mockup",
-    "A priced offer on the page — ready to accept your first customer",
+    "Your brand written — name, voice, and the words you lead with",
+    "Your one offer, priced — what it is, who it's for, what it costs",
+    "Your page copy, written line by line — headline, proof, and call to action, ready to build",
     "Your Foundation on the dashboard — positioning, ICP, and wedge, sharpened with staff",
-    "A 90-day go-to-market plan — personas + outreach sequence you can send this week",
-    "Brand v0 — name, mark, and voice you can actually use Monday morning",
+    "Your first outreach written — the message and the named person it goes to",
     "A seat next to Adam and 19 other founders — coffee, snacks, and a room building alongside you",
   ];
+
 
 
   return (
