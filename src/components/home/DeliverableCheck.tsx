@@ -32,13 +32,12 @@ export function DeliverableCheck({
       >
         <Check className="size-3.5" strokeWidth={3} />
       </span>
+      <Icon
+        aria-hidden
+        className="size-4 shrink-0 text-muted-foreground/50 transition-colors duration-200 group-hover:text-muted-foreground/80"
+      />
       <span className="flex-1 text-base font-medium leading-snug tracking-tight">
         {title}
       </span>
-      <Icon
-        aria-hidden
-        className="size-4 shrink-0 text-muted-foreground/40 transition-colors duration-200 group-hover:text-muted-foreground/70"
-      />
-    </li>
   );
 }
