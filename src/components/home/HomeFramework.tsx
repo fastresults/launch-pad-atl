@@ -403,7 +403,7 @@ function HonestRoadmap() {
           <span className="text-gradient-brand">A foundation solid enough to build on.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we build the foundation underneath it: your page live, the offer priced, the first message sent — from the room, to a real person. Everything you add later gets built on top of that, not instead of it.
+          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we write the foundation underneath it: the brand, the priced offer, the page copy, and the way the business runs — plus the exact message and the named person it goes to. Everything you build that same week sits on top of that, not instead of it.
         </p>
 
 
