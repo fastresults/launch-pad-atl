@@ -101,7 +101,7 @@ function Hero() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
-              One quiet morning. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you lay the foundation your business will stand on. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name. No accelerator, incubator, or startup bootcamp in Atlanta hands you a stronger foundation than you&rsquo;ll walk out with here &mdash; page live, offer priced, first message sent, all before lunch.
+              One quiet morning. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you lay the foundation your business will stand on. You leave with the four foundations written, not outlined: your brand, your priced offer, your page copy, and the way the business runs. Not a summary of what to write &mdash; the actual words, ready to build on the same week.
             </p>
 
             <p className="mt-3 max-w-2xl text-base text-[#7A6650]">
