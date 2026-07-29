@@ -10,6 +10,8 @@ import {
   FOUNDATION_FIRST_REASONS,
   FRAMEWORK_STAGES,
 } from "@/lib/framework-deliverables";
+import { DeliverableCheck } from "@/components/home/DeliverableCheck";
+
 
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroCoffee from "@/assets/hero-coffee-nosteam.png";
