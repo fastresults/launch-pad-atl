@@ -1,40 +1,42 @@
 ## Goal
 
-The deliverable cards on the Home page currently read like generic buttons. Every one of these is *actually produced with you in the room*, so they should read as a checked-off list — a receipt, not a menu.
+When landing-only mode is ON, the landing page currently ends at the closing CTA with no way to sign in. Add a proper footer to the landing page that contains an organized, on-brand sign-in area — so returning members, staff, and admins can get in without knowing the `/login` URL.
 
-## The design direction: "checked in the room"
+## What gets built
 
-One editorial move, applied consistently to all 8 stage grids:
+**1. New `LandingFooter` component** (`src/components/landing/LandingFooter.tsx`), rendered as the last block inside `LandingFramework`, below the bottom CTA.
+
+Three-column layout on desktop, stacked on mobile:
 
 ```text
-┌──────────────────────────────────────────────┐
-│  (✓)   Your one-page story              [ ]  │   ← filled check mark, left
-└──────────────────────────────────────────────┘
-        title, medium weight        topic icon, faint, right
+┌──────────────────────────────────────────────────────────┐
+│  [StartupLabs logo]        Workshop            Sign in    │
+│  One focused morning.      Aug 20, 2026        [ email  ] │
+│  Atlanta, Georgia.         IGNITE Center       [ pwd    ] │
+│                            Get directions      [Sign in ] │
+│                                                Google     │
+│                                                Forgot?    │
+├──────────────────────────────────────────────────────────┤
+│  © 2026 Startup Labs · Atlanta, GA                        │
+└──────────────────────────────────────────────────────────┘
 ```
 
-- **Left: a real check mark.** A small filled circle (espresso/primary tint) with a white `Check` glyph — the visual anchor that says "done." Replaces the current colored topic icon in the lead position.
-- **Right: the topic icon, demoted.** The existing Lucide icon moves to the far right at ~30% opacity, so the category cue survives without competing with the check.
-- **Card treatment.** Softer, flatter surface than today's card: hairline border, subtle warm tint behind the check side, no heavy fill. Hover/focus lifts the border to primary and deepens the check circle — a gentle "it's yours" reaction rather than a button press.
-- **Rounded corners stay** (matches the site's editorial pill language), but padding tightens slightly so the rows scan as a list rather than eight separate buttons.
-- Tooltips, keyboard focus, and the `cursor-help` affordance all stay exactly as they are.
+**2. Sign-in panel behavior**
 
-## Reinforcing copy (small, one line)
+- Signed out: compact "Member sign in" card — email + password fields, primary Sign in button, "Continue with Google", and a quiet "Forgot?" reset link. Same auth calls the existing `/login` page uses (`signInWithPassword`, `lovable.auth.signInWithOAuth`, `resetPasswordForEmail`), so no new backend work.
+- Signed in: the card collapses to a greeting with the user's email plus two actions — "Go to dashboard" (or "Admin" for super admins) and "Sign out".
+- To keep the panel from competing with "Reserve your interest", it renders collapsed by default as a single quiet "Member sign in" link that expands the form in place. The landing page's only loud CTA remains the interest modal.
 
-Under the section intro, add a single quiet line so the checks are unmistakable:
+**3. Redirect on success**
 
-> *Every item below is checked off with you, in the room — not homework.*
+After sign-in the user lands on `/admin` (super admin), `/dashboard` (approved member), or `/welcome` — matching the existing login redirect logic. Note: landing-only mode currently allowlists only `/login`, `/reset-password`, and `/admin`, so a non-admin signing in from the footer would bounce back to the landing page. Fix in the same change: add `/dashboard`, `/welcome`, and `/account` to the allowlist in `LandingOnlyGate`, gated on the visitor being authenticated — anonymous visitors still see only the landing page.
 
-Styled as small uppercase-tracked meta text matching the existing kickers.
+**4. Styling**
+
+Uses the landing page's warm editorial tokens (cream surface, espresso text, serif headings) — no hardcoded colors, no new tokens. Footer sits on a slightly deeper surface band so it visually terminates the page.
 
 ## Technical notes
 
-- New presentational component `src/components/home/DeliverableCheck.tsx` — renders one checked row (check badge, title, faint topic icon), so the markup isn't duplicated.
-- `src/components/home/HomeFramework.tsx` — the `Framework()` stage grid swaps its inline `<li>` for `<DeliverableCheck />`; the tooltip wrapper stays.
-- `src/components/landing/LandingFramework.tsx` — same swap, so the landing fork doesn't drift visually.
-- All colors via existing semantic tokens (`primary`, `card`, `muted-foreground`, warm border tokens already in use). No hardcoded hex added.
-- No data, copy content, or business-logic changes to `framework-deliverables.ts`.
-
-## Verification
-
-Screenshot the Home page framework section at desktop and mobile widths, confirm the checks read clearly on the warm background, hover/focus states behave, and tooltips still open.
+- Files touched: new `src/components/landing/LandingFooter.tsx`; edits to `src/components/landing/LandingFramework.tsx` (render footer) and `src/components/site/LandingOnlyGate.tsx` (allowlist post-login routes for authenticated users).
+- No database, edge function, or auth-config changes.
+- The full-site `Footer.tsx` and `/login` route are untouched.
