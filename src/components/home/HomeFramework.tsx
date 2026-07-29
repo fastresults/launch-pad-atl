@@ -109,14 +109,12 @@ function Hero() {
             </p>
 
             {/* Editorial pull quote — horizontal callout */}
-            <figure className="mt-8 max-w-2xl border-t border-[#C9B99A] pt-5">
-              <blockquote className="font-serif text-xl italic leading-snug text-[#8B7355] md:text-2xl">
-                &ldquo;You don&rsquo;t need another course. You need one morning and someone who&rsquo;s built this before.&rdquo;
+            <figure className="mt-8 max-w-2xl border-l-4 border-[#C9B99A] pl-5">
+              <blockquote className="font-serif text-xl font-semibold leading-snug text-[#8B7355] md:text-2xl">
+                No accelerator, incubator, or startup bootcamp in Atlanta hands you a stronger foundation than you&rsquo;ll walk out with here.
               </blockquote>
-              <figcaption className="mt-3 text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
-                &mdash; Adam Anderson
-              </figcaption>
             </figure>
+
 
             <p className="mt-8 max-w-2xl text-xs font-semibold uppercase leading-relaxed tracking-[0.18em] text-[#8B7355]">
               Accelerators pitch. Incubators mentor. Bootcamps lecture. You leave our room already open for business.
