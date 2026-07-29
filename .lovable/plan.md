@@ -1,57 +1,66 @@
-## What's actually true (confirmed)
+## Plan: stop the stale chatbot copy and replace the missed landing-page copy
 
-By the end of the morning, the founder leaves with:
+### 1. Fix the real chatbot source, not just the visible UI
+- Update the live chatbot knowledge corpus at `supabase/functions/venture-chatbot/knowledge.ts` anywhere it still implies:
+  - “we actually build your startup”
+  - “live page at your domain”
+  - “first outreach sent from your inbox”
+  - “real startup that pays you” as a guaranteed result
+  - “everything you need for first revenue inside 14 days” as a promise instead of a target
+- Keep the correct promise:
+  - Startup Labs helps founders write the foundation their startup can build on.
+  - The workshop nails the brand, product, marketing, and operational foundations.
+  - The website output is a website PRD / AI-builder prompt, not a completed website.
+  - Page setup, message sending, and implementation happen after the morning / same week, not in the room.
 
-- **Brand** — name, positioning, voice, the one-page story, why customers pick you. **Not** a logo, palette, or type system.
-- **Product** — one offer, priced, with the reason it costs that.
-- **Marketing** — the actual copy and structure of the page, plus the First-50 named prospect list and the exact outreach scripts. **The site is built after. No message is sent in the room.**
-- **Operations** — how money comes in, what happens after the yes, the weekly rhythm, and the working assets a banker or first hire reads in 60 seconds.
+### 2. Fix the local chatbot knowledge copy too
+- Mirror the same corrections in `src/lib/chatbot-knowledge.ts` so the source-of-truth copy and deployed chatbot corpus do not drift again.
+- Add hard wording rules inside the chatbot knowledge:
+  - Never say “we build your startup.”
+  - Never say “you leave with a live page at your domain.”
+  - Never say “your first outreach is sent from your inbox” unless describing post-workshop implementation.
+  - Say “written foundation,” “website PRD,” “page copy,” “outreach copy,” and “operational assets” instead.
 
-The site currently claims **"page live at your domain," "first message sent from your inbox," "before you leave," "two weeks to first revenue"** across the home hero, landing hero, both chatbot corpora, and several routes. Those are overclaims. This sweep replaces every one of them.
+### 3. Fix the exact stale chatbot answer shown in the attachment
+Replace the attached stale answer’s substance with this direction:
 
-## The honest hook (this is the upgrade, not a downgrade)
+> In the room, we do not pretend to finish the entire startup before lunch. We write the foundation your startup can build on: the brand, one priced offer, the marketing copy and website PRD, and the operating assets that explain how money comes in and what happens after the yes.  
+>  
+> The page build, outreach sending, and follow-through happen after the workshop, using the work written with you in the room. The goal is a startup foundation clear enough that a banker, partner, first hire, or first customer can understand what you do in 60 seconds.
 
-The precision *is* the pitch. Every other program sends you home with notes. This one sends you home with the finished words.
+### 4. Fix the missed landing-page copy from the attachments
+Update `src/components/landing/LandingFramework.tsx` and `src/components/landing/LandingFooter.tsx` where the copy currently says variants of:
+- “setting up 3 Atlanta entrepreneurs in business”
+- “build it with you”
+- “a real business you can run with Monday”
+- “One morning with us and a real business you can run with Monday”
 
-**Hero line (verbatim, home + landing):**
-> You leave with the four foundations written, not outlined: your brand, your priced offer, your page copy, and the way the business runs.
+Replace with more precise conversion copy:
+- “Three Atlanta founders will leave with the written foundation for a startup they can build on immediately.”
+- “Brand nailed. Offer priced. Marketing copy and website PRD written. Operations mapped.”
+- “Free, in-person Atlanta workshop on August 20.”
 
-**Supporting line:**
-> Not a summary of what to write. The actual words — ready to build on the same week.
+### 5. Sweep adjacent stale marketing/public copy
+- Search `public/`, `src/`, and `supabase/functions/` for stale phrases, especially:
+  - `actually build your startup`
+  - `real business you can run`
+  - `live page at your domain`
+  - `first outreach sent`
+  - `page people can visit`
+  - `offer they can buy`
+  - `ready to take money`
+- Update the public poster/social copy files only where they are still being used as current offer assets.
 
-## The four pillars (verbatim, identical on all surfaces)
+### 6. Redeploy and verify the live chatbot
+- Deploy the `venture-chatbot` backend function after changing the knowledge file.
+- Test the function with the exact prompt likely producing the screenshot, e.g. “What do I leave with?” and “What gets built in the room?”
+- Confirm the response no longer contains any banned claims and does include:
+  - brand foundation
+  - priced offer/product foundation
+  - marketing copy + website PRD
+  - operational assets/foundation
+  - same-week implementation framing
 
-- **Brand** — Your name, your positioning, and the way you sound. Locked in the room, in the words you'll use everywhere.
-- **Product** — One offer, priced, with the reason someone pays that number written in plain English.
-- **Marketing** — The real copy and structure for your page, plus fifty named prospects and the exact message to send each one.
-- **Operations** — How money comes in, what happens after the yes, and the working assets a banker or first hire reads in 60 seconds.
-
-## Files and the exact replacements
-
-**`src/components/home/HomeFramework.tsx`**
-- Hero deck: replace "page live, offer priced, first message sent" with the hero line + supporting line above.
-- Atlanta claim callout: keep the callout, change its proof tail to "— brand, offer, page copy, and operations, all written before lunch."
-- Lead-in above the deliverables grid: `Four foundations get written with you this morning. Not outlined. Written.` followed by the four pillar lines verbatim.
-- Contrast eyebrow: `Accelerators work on your pitch. Incubators work on your idea. We work on the four things a business stands on — and you leave holding all four in writing.`
-
-**`src/components/landing/LandingFramework.tsx`** — same hero line, same four pillars, verbatim. Free / 3-seat framing, August 20, reserve-by August 10 all unchanged.
-
-**`src/lib/chatbot-knowledge.ts`** and **`supabase/functions/venture-chatbot/knowledge.ts`** (must move in lockstep)
-1. Every "we actually build your startup" (~6) → "we write the four foundations your startup runs on — brand, product, marketing, operations — with you, in the room."
-2. New "The four foundations" section above the FAQ, with the four pillar lines verbatim.
-3. FAQ "What actually gets built in the room?" replaced with:
-   > Four foundations, written with you. Brand: your name, positioning, and voice. Product: one offer, priced, with the reason it costs that. Marketing: the real copy and structure for your page, plus fifty named prospects and the exact message for each. Operations: how money comes in, what happens after the yes, and the assets behind it. The site goes up and the messages go out in the days after — with everything already written.
-4. Delete "first outreach sent from your inbox," "page live at your domain," and "before you leave" from every outcome claim.
-5. "Fourteen days to first revenue" → "Everything you need for first revenue inside fourteen days" (target, not guarantee).
-6. Tone rules, appended:
-   > Never claim anything is published, sent, or live at the end of the morning. What exists is written: brand, priced offer, page copy, prospect list, outreach scripts, operating assets. Never say plan, blueprint, framework, playbook, roadmap, spec, or documents for the offer.
-
-**Overclaim sweep across the rest of the site** — `src/routes/index.tsx`, `build.tsx`, `webinar.tsx`, `register.tsx`, `RegisterFramework.tsx`, `AccessModeDialog.tsx`, `LandingAccessModeDialog.tsx`: same three phrases removed and replaced with the pillar language. `/one-on-one` and `/services` keep their done-for-you claims — those genuinely do ship a built site.
-
-## Out of scope
-
-Pricing, dates, layout, components, chat UI, edge function logic, and the done-for-you service claims.
-
-## Verification
-
-Grep all touched files for `page live`, `live page at your domain`, `first message sent`, `first outreach sent`, `before you leave`, `build your startup`, `blueprint`, `roadmap` — expect zero outside `/one-on-one` and `/services`. Confirm the four pillars appear identically in home, landing, and both corpora. Build, then open the concierge on the landing page and ask "what do I walk out with?" to confirm the honest answer comes back.
+### 7. Final verification pass
+- Run a final text search for the banned phrases across `src`, `supabase/functions`, and current public copy.
+- Check the landing page and chatbot behavior in the preview so the visible page and live bot match the corrected promise.
