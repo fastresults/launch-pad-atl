@@ -135,15 +135,13 @@ function Hero() {
               For nurses, teachers, servers, coders, couples on Main Street &mdash; anyone who&rsquo;s been meaning to start something. Come sit with us. We&rsquo;ll figure it out together.
             </p>
 
-            {/* Editorial pull quote — horizontal callout */}
-            <figure className="mt-8 max-w-2xl border-t border-[#C9B99A] pt-5">
-              <blockquote className="font-serif text-xl italic leading-snug text-[#8B7355] md:text-2xl">
-                &ldquo;You don&rsquo;t need another course. You need one morning and someone who&rsquo;s built this before.&rdquo;
+            {/* Editorial claim — left-bar callout */}
+            <figure className="mt-8 max-w-2xl border-l-4 border-[#C9B99A] pl-5">
+              <blockquote className="font-serif text-xl font-semibold leading-snug text-[#8B7355] md:text-2xl">
+                No accelerator, incubator, or startup bootcamp in Atlanta hands you a stronger foundation than you&rsquo;ll walk out with here.
               </blockquote>
-              <figcaption className="mt-3 text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
-                &mdash; Adam Anderson
-              </figcaption>
             </figure>
+
 
             {/* Designed for — anchors the bottom of the left column */}
             <div className="mt-auto pt-10">
