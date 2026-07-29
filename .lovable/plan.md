@@ -1,34 +1,51 @@
 ## Goal
 
-The Foundation Workshop doesn't hand someone a finished startup — it builds the **foundation** underneath one: a live page, a priced offer, a first message sent, and the real pieces a founder keeps building on. Several Home blocks currently over-promise ("we actually build the startup", "a real startup by month two"). Fix the promise without going soft — the artifacts stay concrete and real.
+Land one bold, defensible claim — **no accelerator, incubator, or startup bootcamp in Atlanta sends you home with a stronger foundation** — and let it echo lightly down the page. Three touchpoints, not a drumbeat.
 
-## Copy rule for this pass
+## The claim (primary wording)
 
-- Say: *foundation*, *the pieces you build on*, *what your startup stands on*, *built with you, yours to keep building*.
-- Don't say: *we build your startup*, *a real startup by month two*, *you're open by lunch* as a completeness claim.
-- Keep every concrete artifact claim exactly as strong: live page, priced offer, first message sent, in the room, before lunch.
-- No "plan / blueprint / roadmap / framework / deliverables" language for the offer (existing standard).
+> **No accelerator, incubator, or startup bootcamp in Atlanta hands you a stronger foundation than you'll walk out with here.**
 
-## Blocks to rewrite — `src/components/home/HomeFramework.tsx`
+Naming the actual category is the point. "Program" is vague — the reader should picture the specific alternatives they've considered: ATDC, Techstars-style accelerators, university incubators, weekend bootcamps, SBA/SCORE workshops, business coaches. Those pitch, mentor, and advise. We build.
 
-1. **Hero subhead (~line 104)** — "…while you actually build the thing" → build the foundation your business stands on; keep the page/price/first-customer proof line intact.
+Backed immediately by proof so it reads as fact, not bluster: page live, offer priced, first message sent — in one morning, before you leave the room.
 
-2. **Section eyebrow + H2 (~lines 306–309)** — "What we actually build with you" / "A real startup that takes money. Built with you in one morning." → reframe to the foundation that can take money, built with you in one morning.
+**Shorter echo forms** for tight slots:
+- `Atlanta's strongest startup foundation`
+- `Accelerators pitch. Incubators mentor. We build.`
 
-3. **Section body (~line 313, the selected paragraph)** — rewrite the "we sit down and actually build the startup… By that afternoon you're not planning anymore. You're open." lines so the payoff is: you leave with a real, working foundation — live, priced, and already in front of a customer — and a clear next move, rather than a finished company.
+## Touchpoint 1 — Hero kicker (`src/components/home/HomeFramework.tsx`, ~line 91)
 
-4. **Promise section (~lines 390–393)** — "Two weeks to your first dollar. A real startup by month two." → keep the first-dollar urgency, replace the month-two claim with a foundation-grounded outcome. Body paragraph adjusted the same way.
+Current: `One focused morning · IGNITE Center · Coffee's on us`
 
-5. **Stage 8 / build-layer paragraph (~line 442)** — light touch so the return mornings read as *building on the foundation*, not fixing what was missing.
+Change to: `Atlanta's strongest startup foundation · IGNITE Center`
 
-6. **Closing CTA blocks (~lines 568, 646)** — align "we'll build it for you" and the price-promise line to the same foundation framing.
+Star icon and styling unchanged.
 
-7. **Three-promise footnote (01/02/03)** — add a one-line lead-in above the grid naming these as the foundation pieces you leave with. Individual promise copy unchanged.
+## Touchpoint 2 — Hero deck, one added sentence (~line 103)
 
-## Landing page
+Keep the warm existing deck intact and append the claim in its full, category-naming form plus its proof, so the boldest statement on the page is substantiated in the same breath. No new element, no added visual weight.
 
-`src/components/landing/LandingFramework.tsx` shares several of these strings. Apply the identical reframing to the matching blocks there so the two surfaces stay consistent.
+## Touchpoint 3 — A quiet claim line above "Designed for" (~line 118)
+
+One small-caps `<p>` in the existing espresso `#8B7355` tracking style:
+
+`Accelerators pitch. Incubators mentor. Bootcamps lecture. You leave our room already open for business.`
+
+This is the only new DOM element in the hero — no card, border, or badge.
+
+## Touchpoint 4 — Reinforce once below the fold
+
+Sharpen the "What we actually build with you" eyebrow (~line 309) to name the contrast explicitly: `Not an accelerator. Not an incubator. Not a course.` H2 and body stay as previously rewritten.
+
+## Balance guardrails
+
+- Name the competitor *category*, never a specific named organization — no ATDC, Techstars, or university callouts.
+- No badges, ribbons, "#1", star ratings, or stacked superlatives.
+- Full claim stated **once**; other mentions are partial echoes.
+- Every superlative sits adjacent to concrete artifact proof.
+- Landing page (`LandingFramework.tsx`) gets the hero kicker + deck sentence only — shorter surface, no third echo.
 
 ## Out of scope
 
-No layout, styling, component structure, pricing, dates, or backend changes — copy strings only.
+Layout, palette, imagery, pricing, dates, backend. Copy plus one small `<p>` per surface.

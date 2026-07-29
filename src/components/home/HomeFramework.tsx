@@ -90,7 +90,7 @@ function Hero() {
           <div className="flex flex-col lg:col-span-8">
             <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
               <Star className="size-3.5 fill-current" />
-              One focused morning · IGNITE Center · Coffee&rsquo;s on us
+              Atlanta&rsquo;s strongest startup foundation · IGNITE Center
             </p>
 
             <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[4.3rem]">
@@ -101,7 +101,7 @@ function Hero() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
-              One quiet morning. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you lay the foundation your business will stand on. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
+              One quiet morning. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you lay the foundation your business will stand on. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name. No accelerator, incubator, or startup bootcamp in Atlanta hands you a stronger foundation than you&rsquo;ll walk out with here &mdash; page live, offer priced, first message sent, all before lunch.
             </p>
 
             <p className="mt-3 max-w-2xl text-base text-[#7A6650]">
@@ -117,6 +117,10 @@ function Hero() {
                 &mdash; Adam Anderson
               </figcaption>
             </figure>
+
+            <p className="mt-8 max-w-2xl text-xs font-semibold uppercase leading-relaxed tracking-[0.18em] text-[#8B7355]">
+              Accelerators pitch. Incubators mentor. Bootcamps lecture. You leave our room already open for business.
+            </p>
 
             {/* Designed for — anchors the bottom of the left column */}
             <div className="mt-auto pt-10">
@@ -306,7 +310,7 @@ function Framework() {
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          What we actually build with you
+          Not an accelerator. Not an incubator. Not a course.
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
           A foundation that can take money.{" "}
