@@ -1,66 +1,86 @@
-## Plan: stop the stale chatbot copy and replace the missed landing-page copy
+## Goal
 
-### 1. Fix the real chatbot source, not just the visible UI
-- Update the live chatbot knowledge corpus at `supabase/functions/venture-chatbot/knowledge.ts` anywhere it still implies:
-  - “we actually build your startup”
-  - “live page at your domain”
-  - “first outreach sent from your inbox”
-  - “real startup that pays you” as a guaranteed result
-  - “everything you need for first revenue inside 14 days” as a promise instead of a target
-- Keep the correct promise:
-  - Startup Labs helps founders write the foundation their startup can build on.
-  - The workshop nails the brand, product, marketing, and operational foundations.
-  - The website output is a website PRD / AI-builder prompt, not a completed website.
-  - Page setup, message sending, and implementation happen after the morning / same week, not in the room.
+Make the Super Admin console feel like a purpose-built operations console: everything findable in under two seconds, grouped by the job being done rather than by the order features were built.
 
-### 2. Fix the local chatbot knowledge copy too
-- Mirror the same corrections in `src/lib/chatbot-knowledge.ts` so the source-of-truth copy and deployed chatbot corpus do not drift again.
-- Add hard wording rules inside the chatbot knowledge:
-  - Never say “we build your startup.”
-  - Never say “you leave with a live page at your domain.”
-  - Never say “your first outreach is sent from your inbox” unless describing post-workshop implementation.
-  - Say “written foundation,” “website PRD,” “page copy,” “outreach copy,” and “operational assets” instead.
+## What's wrong today
 
-### 3. Fix the exact stale chatbot answer shown in the attachment
-Replace the attached stale answer’s substance with this direction:
+- The sidebar has 21 flat links across five groups (`src/lib/admin-nav.ts`). "Operations" alone holds 9 unrelated items — people, applications, bookings, inquiries, cohorts, review queue, Founders Hub.
+- Social has 7 top-level links (setup wizard, intake, creative studio, profiles, compose, posts, analytics) sitting at the same visual weight as "Site settings."
+- Two different items use the same Shield icon (Members, Users & roles), and "Members" vs "Attendees" vs "Users & roles" vs "Applications" are indistinguishable by label alone.
+- The dashboard at `/admin` is a 648-line page that dumps applications and members tables together — no at-a-glance triage, no entry point to the rest of the console.
+- The command palette exists (⌘K) but is unlabeled in the UI, has no keywords/aliases, and no actions — only navigation.
 
-> In the room, we do not pretend to finish the entire startup before lunch. We write the foundation your startup can build on: the brand, one priced offer, the marketing copy and website PRD, and the operating assets that explain how money comes in and what happens after the yes.  
->  
-> The page build, outreach sending, and follow-through happen after the workshop, using the work written with you in the room. The goal is a startup foundation clear enough that a banker, partner, first hire, or first customer can understand what you do in 60 seconds.
+## The new structure
 
-### 4. Fix the missed landing-page copy from the attachments
-Update `src/components/landing/LandingFramework.tsx` and `src/components/landing/LandingFooter.tsx` where the copy currently says variants of:
-- “setting up 3 Atlanta entrepreneurs in business”
-- “build it with you”
-- “a real business you can run with Monday”
-- “One morning with us and a real business you can run with Monday”
+Five task-based sections, each with a one-line purpose. Social collapses from 7 links into 1 parent + submenu.
 
-Replace with more precise conversion copy:
-- “Three Atlanta founders will leave with the written foundation for a startup they can build on immediately.”
-- “Brand nailed. Offer priced. Marketing copy and website PRD written. Operations mapped.”
-- “Free, in-person Atlanta workshop on August 20.”
+```text
+HOME
+  Dashboard              at-a-glance triage
 
-### 5. Sweep adjacent stale marketing/public copy
-- Search `public/`, `src/`, and `supabase/functions/` for stale phrases, especially:
-  - `actually build your startup`
-  - `real business you can run`
-  - `live page at your domain`
-  - `first outreach sent`
-  - `page people can visit`
-  - `offer they can buy`
-  - `ready to take money`
-- Update the public poster/social copy files only where they are still being used as current offer assets.
+PEOPLE                   who is in the program
+  Members                accounts, access, status      [pending badge]
+  Applications           inbound applicants            [pending badge]
+  Attendees              workshop rosters + their work
+  Inquiries              landing/contact messages      [new badge]
 
-### 6. Redeploy and verify the live chatbot
-- Deploy the `venture-chatbot` backend function after changing the knowledge file.
-- Test the function with the exact prompt likely producing the screenshot, e.g. “What do I leave with?” and “What gets built in the room?”
-- Confirm the response no longer contains any banned claims and does include:
-  - brand foundation
-  - priced offer/product foundation
-  - marketing copy + website PRD
-  - operational assets/foundation
-  - same-week implementation framing
+SCHEDULE                 what is happening when
+  Registrations          workshop signups
+  Private Tuesdays       1:1 bookings
+  Cohorts                dates, capacity, venue
 
-### 7. Final verification pass
-- Run a final text search for the banned phrases across `src`, `supabase/functions`, and current public copy.
-- Check the landing page and chatbot behavior in the preview so the visible page and live bot match the corrected promise.
+WORKSPACE                the work being produced
+  Founders Hub
+  Review queue                                         [pending badge]
+  Facilitator decks
+  Media library
+  Video testimonials
+
+MARKETING                (collapsible group, default closed)
+  Social  ▸  Overview · Compose · Posts · Analytics
+             Setup wizard · Brand intake · Creative Studio
+
+SYSTEM
+  Users & roles
+  Site settings
+  View public site  ↗
+```
+
+Rules applied:
+- Each item gets a unique, semantically obvious icon (no duplicate Shield).
+- Group labels carry a short subtitle on hover so "Members vs Attendees" is never a guess.
+- Marketing/Social becomes a collapsible `SidebarGroup` with a nested submenu, so the default sidebar shows ~13 items instead of 21.
+- Badges (pending counts) roll up to the group label when the group is collapsed, so nothing hides silently.
+- Super-admin-only items keep the existing `super` filter and gain a subtle lock affordance so it's clear why a regular admin sees fewer items.
+
+## Dashboard rebuild (`/admin`)
+
+Turn `/admin` into a triage cockpit instead of a table dump:
+
+1. **Needs you now** — a single row of action cards driven by the existing badge query: applications pending, members pending, inquiries new, review queue. Each card is one click into the filtered list. Zero-state reads "All clear."
+2. **Next event** — the upcoming cohort/workshop with seat count, plus next scheduled Private Tuesday.
+3. **Quick actions** — 4–6 buttons for the things a super admin actually does repeatedly (new post, add cohort, open latest application, site settings, landing-mode toggle status).
+4. **Recent activity** — a compact combined feed (latest applications, registrations, inquiries) replacing the two large tables.
+
+The existing full applications and members tables move to their dedicated pages (`/admin/applications`, `/admin/members`), which already exist — the dashboard stops duplicating them.
+
+## Command palette upgrade
+
+- Header trigger gets a visible "Search or jump to…" affordance instead of a bare icon.
+- Every nav item gains `keywords` (e.g. Members → "users, access, approve, roster"), so searching "approve" finds the right page.
+- Add an **Actions** group: toggle landing-only mode, exit impersonation, open public site, sign out.
+- Recent pages section at the top of the palette.
+
+## Small consistency fixes
+
+- Sidebar footer keeps the impersonation exit banner but restyled to match the design tokens (currently hardcoded amber classes).
+- Breadcrumbs reflect the new group names.
+- All colors via semantic tokens — no hardcoded amber/white classes.
+
+## Technical notes
+
+- `src/lib/admin-nav.ts` — restructure the `AdminNavItem` type: new `group` union, optional `children` for nested items, `keywords: string[]`, optional `description`.
+- `src/components/admin/AdminSidebar.tsx` — render collapsible groups via `Collapsible` + `SidebarMenuSub`, roll up badges, keep `collapsible="icon"` mini mode working.
+- `src/components/admin/AdminCommandMenu.tsx` — flatten nested items for search, add actions group and keyword matching.
+- `src/routes/_authenticated/_admin/admin.index.tsx` — rewrite as a composition of small new components under `src/components/admin/dashboard/` (`TriageCards`, `NextEventCard`, `QuickActions`, `ActivityFeed`), reusing `getAdminStats` and `getAdminBadges`. No backend or schema changes.
+- Routes in `src/App.tsx` stay exactly as they are — this is navigation and presentation only, so no links break.
