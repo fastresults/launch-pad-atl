@@ -320,7 +320,7 @@ function Hero() {
           <Meta icon={<Calendar className="size-4" />} label={EVENT.dateLabel} />
           <Meta icon={<MapPin className="size-4" />} label={`${EVENT.venueCity}, ${EVENT.venueRegion}`} />
           <Meta icon={<Clock className="size-4" />} label="8:45–11:30 AM · Coffee included" />
-          <Meta icon={<Users className="size-4" />} label="Just 3 seats · free" />
+          <Meta icon={<Users className="size-4" />} label="3 seats left · one table · free" />
         </div>
       </div>
     </section>
@@ -416,7 +416,7 @@ function HonestRoadmap() {
     "Your page copy, written line by line — headline, proof, and call to action, ready to build",
     "Your Foundation on the dashboard — positioning, ICP, and wedge, sharpened with staff",
     "Your first outreach written — the message and the named person it goes to",
-    "A seat next to Adam and 2 other founders — coffee, snacks, and a small room building alongside you",
+    "A seat at a table of three — you, two other Atlanta founders, and Adam working through each business out loud, with coffee",
   ];
 
 
@@ -641,7 +641,7 @@ function BottomCTA() {
               Stop thinking about it. Come start it.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">
-              One morning with us and the written foundation your startup can build on immediately. Three Atlanta founders, chosen by our evaluation team, will do this together on August 20 — absolutely free. Tell us why it should be you.
+              Three seats. One table. One morning. You leave with the written foundation your startup can build on immediately. Three Atlanta founders, chosen by our evaluation team, will do this together on August 20 — absolutely free. Tell us why it should be you.
             </p>
 
 
