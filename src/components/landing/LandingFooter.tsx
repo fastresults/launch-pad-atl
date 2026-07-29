@@ -30,8 +30,8 @@ export function LandingFooter({ event }: { event: FooterEvent }) {
           <div>
             <StartupLabsLogo className="h-9 w-auto text-foreground" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              One focused morning. You leave with a real business you can run
-              on Monday. Atlanta, Georgia.
+              One focused morning. You leave with the written foundation your
+              startup can build on immediately. Atlanta, Georgia.
             </p>
           </div>
 
