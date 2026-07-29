@@ -567,8 +567,8 @@ function ServicesTeaser() {
           Don't want to DIY?
         </p>
         <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-          We'll just{" "}
-          <span className="text-gradient-brand">build it for you.</span>
+          We'll build on the foundation{" "}
+          <span className="text-gradient-brand">for you.</span>
         </h2>
         <div className="mt-8 flex justify-center">
           <Link
