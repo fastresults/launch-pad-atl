@@ -137,7 +137,16 @@ export function AdminCommandMenu() {
               <ExternalLink className="mr-2 h-4 w-4" />
               Open public site in new tab
             </CommandItem>
-            {isImpersonating && (
+            {isSuperAdmin && !isImpersonating && (
+              <CommandItem
+                value="view as a user impersonate sign in as act as open user dashboard"
+                onSelect={() => go("/admin/users")}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                View as a user…
+              </CommandItem>
+            )}
+
               <CommandItem
                 value="exit impersonation stop viewing as"
                 onSelect={() => {
