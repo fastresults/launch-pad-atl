@@ -253,7 +253,10 @@ function Hero() {
         <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
 
         {/* Magazine footnote — 3 promises */}
-        <div className="mt-16 grid grid-cols-1 gap-8 border-t border-[#C9B99A] pt-8 md:grid-cols-3">
+        <p className="mt-16 border-t border-[#C9B99A] pt-8 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355]">
+          The three foundation pieces you leave with
+        </p>
+        <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3">
           <div className="flex flex-col">
             <span className="font-serif text-3xl text-[#8B7355]">01</span>
             <p className="mt-2 text-sm leading-relaxed text-[#3D3025]">
