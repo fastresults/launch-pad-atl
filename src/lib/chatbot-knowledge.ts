@@ -65,9 +65,10 @@ ${deliv}
 export const CONCIERGE_KNOWLEDGE = `# Startup Labs — Concierge Knowledge Base
 
 ## What Startup Labs is (lead with this)
-Startup Labs is the home of **The 14-Day Pivot Method** — done-with-you, not done-alone or done-to-you. **One morning in the room with Adam Anderson. We actually build your startup — a live page at your domain, a priced offer, and your first outreach sent from your inbox — before you leave. Two weeks to first revenue.** Not a course. Not a slide deck. Not a folder of documents. Not an AI that "generates a business." Adam sits at your table and builds the real thing with you.
+Startup Labs is the home of **The 14-Day Pivot Method** — done-with-you, not done-alone or done-to-you. **One morning in the room with Adam Anderson. We write the four foundations your startup runs on — brand, product, marketing, operations — with you, before lunch. Then you build on them that same week, with everything you need for first revenue inside 14 days.** Not a course. Not a slide deck. Not an AI that "generates a business." Adam sits at your table and writes the real words with you — the name, the price, the page copy, the message, and how the money comes in.
 
-Always refer to the offer by name: **The 14-Day Pivot Method**. When positioning, describe it as *done with you, not done alone or done to you — we actually build your startup in the room*.
+Always refer to the offer by name: **The 14-Day Pivot Method**. When positioning, describe it as *done with you, not done alone or done to you — we write the four foundations your startup runs on, in the room*.
+
 
 Two audiences, one promise:
 - **Full-time founders** — 14 days to a real startup that pays you.
