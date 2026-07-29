@@ -43,10 +43,13 @@ Raw AI hands you a folder of documents and calls it a business. It isn't one. In
 - Seats: 20 per cohort, one cohort at a time.
 
 ## What you actually leave the room with
-The point is a business that can take money in 14 days — priced offer, named first customer, first channel open,
-outreach ready to send. Everything below is the paperwork that backs that up: worked out with Adam, kept forever,
+The four foundations your startup runs on, written with you before lunch: **brand** (name, positioning, voice),
+**product** (one offer, priced), **marketing** (page copy plus named prospects and the exact message for each),
+**operations** (how money comes in and the working assets behind it). Standing the page up and sending the
+messages happens that same week, on top of what's written in the room — first revenue inside 14 days is the target.
+Everything below is the written work that backs those foundations: worked out with Adam, kept forever,
 so a banker, partner, or first hire understands your business in 60 seconds.
-Every asset is generated live from your idea, market, and numbers — then refined with you in the room.
+Every asset is drafted live from your idea, market, and numbers — then refined with you in the room.
 
 ### 01 · Foundation
 The bedrock every defensible startup is built on.
@@ -328,13 +331,13 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 
 
 ## Common questions (canned answers)
-- **What do I leave with?** A business that can take money in 14 days — priced offer, named first customer, first channel open, outreach ready to send — plus the working docs that back it, all built with Adam in the room and yours forever.
-- **How fast until I'm actually making money?** The goal is your first paying customer within 14 days of the workshop. Not a projection — that's how the session is designed: the outreach going out that afternoon is real outreach, to real people, from your real offer.
+- **What do I leave with?** The four foundations your startup runs on, in writing: brand (name, positioning, voice), product (one offer, priced), marketing (page copy plus named prospects and the exact message for each), and operations (how the money comes in and the working assets behind it) — written with Adam, in your words, yours forever. The page goes up and the messages go out that same week, with support.
+- **How fast until I'm actually making money?** First paying customer inside 14 days is the target the whole session is designed around — not a guarantee. The morning gets the foundations right; the week after is where the page goes live and the real outreach goes out to real people from your real offer.
 - **Is Adam actually in the room?** Yes. Adam sits at your table for the session — not a moderator, not a TA, not an AI. That's the whole point.
-- **Isn't this just AI generating documents?** No. Adam runs the room. We use AI behind the scenes so Adam spends the morning on *your* business — pricing your offer, naming your first customer, opening your first channel — instead of on formatting.
-- **Why is this different from just using ChatGPT?** Straight AI hands you a stack of documents and calls it a business. It isn't one. Startup Labs is a framework — the sequence a business actually needs to be launched — run in the room by Adam, an operator who's shipped companies. AI does the formatting so Adam spends the morning pricing your offer, naming your first customer, and getting outreach going out that afternoon. That's the difference between a folder of PDFs and a business that takes money in 14 days.
-- **Why now? Why is this taking off?** Because the old way — a year, an agency, a co-founder, a prayer — was never affordable and now it's not competitive either. Modern founders are launching in weeks, not years, using framework-driven, done-with-you, AI-accelerated methods. The tools finally exist to compress twelve months into one morning — but only if someone who's actually shipped is running the room. That's what Startup Labs is.
-- **Do I need a business idea already?** Yes — bring the idea and the intention. We handle the strategy, math, offer, and outreach.
+- **Isn't this just AI generating documents?** No. Adam runs the room. We use AI behind the scenes so Adam spends the morning on *your* business — pricing your offer, naming your first customer, writing the actual message — instead of on formatting.
+- **Why is this different from just using ChatGPT?** Straight AI hands you a stack of documents and calls it a business. It isn't one. Startup Labs runs the sequence a real business needs, in the room, with an operator who's shipped companies. AI does the formatting so Adam spends the morning naming your brand, pricing your offer, and writing the message to a person you named out loud. That's the difference between a folder of PDFs and a foundation you can build on that week.
+- **Do I need a business idea already?** Yes — bring the idea and the intention. We handle the strategy, math, offer, and outreach copy.
+- **Why now? Why is this taking off?** Because the old way — a year, an agency, a co-founder, a prayer — was never affordable and now it's not competitive either. Modern founders are launching in weeks, not years, using done-with-you, AI-accelerated methods. The tools finally exist to compress twelve months into one morning — but only if someone who's actually shipped is running the room. That's what Startup Labs is.
 - **What if I already have a logo/website?** Great — we keep what works, sharpen the rest, and focus the morning on getting you selling.
 - **Is this good for a Plan B / side hustle?** Yes — this is the fastest way to build a real second income you can run evenings and weekends, strong enough to eventually leave the day job on your terms.
 - **Is this good for a licensed trade (electrician, plumber, salon)?** Yes — the Main Street track is built for exactly this.
