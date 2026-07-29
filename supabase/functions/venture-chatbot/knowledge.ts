@@ -43,10 +43,13 @@ Raw AI hands you a folder of documents and calls it a business. It isn't one. In
 - Seats: 20 per cohort, one cohort at a time.
 
 ## What you actually leave the room with
-The point is a business that can take money in 14 days — priced offer, named first customer, first channel open,
-outreach ready to send. Everything below is the paperwork that backs that up: worked out with Adam, kept forever,
+The four foundations your startup runs on, written with you before lunch: **brand** (name, positioning, voice),
+**product** (one offer, priced), **marketing** (page copy plus named prospects and the exact message for each),
+**operations** (how money comes in and the working assets behind it). Standing the page up and sending the
+messages happens that same week, on top of what's written in the room — first revenue inside 14 days is the target.
+Everything below is the written work that backs those foundations: worked out with Adam, kept forever,
 so a banker, partner, or first hire understands your business in 60 seconds.
-Every asset is generated live from your idea, market, and numbers — then refined with you in the room.
+Every asset is drafted live from your idea, market, and numbers — then refined with you in the room.
 
 ### 01 · Foundation
 The bedrock every defensible startup is built on.
