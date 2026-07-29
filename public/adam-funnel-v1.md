@@ -210,7 +210,7 @@ We are not going to pretend everyone who walks in walks out with a customer. Mos
 
 The four numbers we track internally, and share with every cohort:
 
-- **% of attendees who leave with a live page and priced offer:** 97%+
+- **% of attendees who leave with page copy, website PRD, and priced offer:** 97%+
 - **% who have at least one real prospect conversation by the end of the workshop:** 89%+
 - **% who have first paying customer within 30 days:** 61%+
 - **% who report the workshop was worth the money at 90 days:** 94%+

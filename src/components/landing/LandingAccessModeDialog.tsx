@@ -50,7 +50,7 @@ const MODES: Mode[] = [
     title: "Have us build it for you",
     format: "Adam + team · done in 14 days",
     promise:
-      "You've got the idea and the budget — you just want it built. We'll ship the brand, the site, the social, and the systems, and hand you a real business ready to take money.",
+      "You've got the idea and the budget — you want the implementation handled. We'll ship the brand, site, social, and systems from the foundation, then hand you a startup ready to take money.",
     price: "$4,799 · everything included",
     cta: "See what's included",
     to: "/one-on-one",

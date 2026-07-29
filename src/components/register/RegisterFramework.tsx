@@ -63,12 +63,12 @@ export function RegisterFramework() {
         eyebrow: `The 14-Day Pivot Method · ${WORKSHOP_PRICE_LABEL} · Norcross, GA`,
         heroTitleLead: "Reserve your seat inside",
         heroTitleEmphasis: `The 14-Day Pivot Method.`,
-        heroBlurb: "Done with you, not done for you or done alone. One morning with the facilitator where we write the four foundations your startup runs on — brand named, offer priced, page copy written, operations decided. Everything you need for first revenue inside 14 days. Coffee and refreshments on us.",
-        asideBlurb: "One live morning where we write the four foundations your startup runs on — brand, priced offer, page copy, operations. Not another course. Not raw AI. Your actual words, written with you.",
+        heroBlurb: "Done with you, not done for you or done alone. One morning with the facilitator where we write the four foundations your startup can build on — brand named, offer priced, page copy and website PRD written, operations decided. Coffee and refreshments on us.",
+        asideBlurb: "One live morning where we write the four foundations your startup can build on — brand, priced offer, page copy, website PRD, operations. Not another course. Not raw AI. Your actual words, written with you.",
         walkOuts: null as string[] | null,
         priceLabel: WORKSHOP_PRICE_LABEL,
         priceCents: WORKSHOP_PRICE_CENTS,
-        footerLine: `Everything actually built and live by Monday · with Adam · yours to keep.`,
+        footerLine: `Brand, offer, website PRD, and operations written with Adam · yours to keep.`,
       };
 
   const { data: cohorts = [] } = useQuery<Cohort[]>({
@@ -266,7 +266,7 @@ export function RegisterFramework() {
               </p>
 
               <div className="mt-6 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                What we actually build with you
+                What we actually write with you
               </div>
               {ctx.walkOuts ? (
                 <ul className="mt-3 space-y-3 text-sm">

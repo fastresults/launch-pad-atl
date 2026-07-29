@@ -2,11 +2,11 @@ import { motion } from "framer-motion";
 import { Brain, Rocket, Megaphone, Globe, Shuffle, Users, type LucideIcon } from "lucide-react";
 
 const PILLARS: { icon: LucideIcon; title: string; desc: string }[] = [
-  { icon: Brain, title: "Practitioner-first AI fluency", desc: "Nothing taught in the room is theoretical. Every prompt, pattern, and workflow is one Adam ran in production this week — and he uses them in the room to write the foundations your startup runs on, not to explain how it could be done." },
-  { icon: Rocket, title: "Compressed time-to-launch", desc: "Hands pulled from shipping five AI-native SaaS products solo — the same operator hands that turn weeks of build into a morning, live in the room with you." },
-  { icon: Megaphone, title: "Narrative that compounds", desc: "Brand and messaging built with you on the spot — voice, positioning, first page copy — drawn from four decades of Fortune 500 and sovereign storytelling. You leave with the copy in your site, not slides about it." },
-  { icon: Globe, title: "Global operating range", desc: "Judgment stress-tested with Citigroup boardrooms, OECS heads of government, and the St. Kitts–Nevis pavilion at Expo 2020 Dubai — brought to bear on the actual pricing, page, and first move we ship for your startup." },
-  { icon: Shuffle, title: "Real-time build lens", desc: "Not a retrospective on what worked in 2019. A live read on what the frontier looks like the week you walk into the room — applied directly to what we're building for you that morning." },
+  { icon: Brain, title: "Practitioner-first AI fluency", desc: "Nothing taught in the room is theoretical. Every prompt, pattern, and workflow is one Adam ran in production this week — and he uses them in the room to write the foundations your startup can build on, not to explain how it could be done." },
+  { icon: Rocket, title: "Compressed time-to-launch", desc: "Hands pulled from shipping five AI-native SaaS products solo — the same operator hands that turn weeks of foundation work into one focused morning, live in the room with you." },
+  { icon: Megaphone, title: "Narrative that compounds", desc: "Brand and messaging written with you on the spot — voice, positioning, first page copy — drawn from four decades of Fortune 500 and sovereign storytelling. You leave with copy ready for your site build, not slides about it." },
+  { icon: Globe, title: "Global operating range", desc: "Judgment stress-tested with Citigroup boardrooms, OECS heads of government, and the St. Kitts–Nevis pavilion at Expo 2020 Dubai — brought to bear on your pricing, page copy, website PRD, and first move." },
+  { icon: Shuffle, title: "Real-time build lens", desc: "Not a retrospective on what worked in 2019. A live read on what the frontier looks like the week you walk into the room — applied directly to what we're writing with you that morning." },
   { icon: Users, title: "Executive-caliber delivery", desc: "A facilitator who has briefed prime ministers, CMOs, and conference mainstages — sitting at your table, doing the work with you, not lecturing at you." },
 ];
 

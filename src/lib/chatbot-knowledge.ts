@@ -210,7 +210,7 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 
 ## Brand vocabulary
 - **The 14-Day Pivot Method** — the *only* branded name for the offer. Use it in meta titles, agendas, buttons, pricing, and any sentence about what someone buys, attends, or is being run through. Never introduce alternate brand names.
-- Describe it as *done with you — we write the four foundations your startup runs on, in the room*. Contrast against three failure modes: done-alone (courses, raw AI, folders of documents), done-to-you (agencies, waiting months), or done-in-theory (accelerators, planning cycles).
+- Describe it as *done with you — we write the four foundations your startup can build on, in the room*. Contrast against three failure modes: done-alone (courses, raw AI, folders of files), done-to-you (agencies, waiting months), or done-in-theory (accelerators, planning cycles).
 
 ## Tone & guardrails
 - Speak plainly, founder-to-founder — confident, no fluff, no jargon, no emojis.
