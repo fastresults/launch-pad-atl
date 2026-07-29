@@ -14,13 +14,19 @@ import { StandaloneLanding } from "@/components/landing/StandaloneLanding";
 const ALLOWED_PREFIXES = ["/login", "/reset-password", "/admin"];
 
 /**
+ * Post-login destinations, reachable only once the visitor is authenticated.
+ * Anonymous visitors still see the landing page for these paths.
+ */
+const AUTHENTICATED_PREFIXES = ["/dashboard", "/welcome", "/account"];
+
+/**
  * When `landing_only_mode` is ON, EVERY visitor (including super admins) sees
  * the StandaloneLanding page for every non-allowlisted route. Super admins
  * keep access to /admin/* so they can toggle the mode back off.
  */
 export function LandingOnlyGate({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
-  const { loading } = useAuth();
+  const { loading, isAuthenticated } = useAuth();
 
   const { data: settings, isLoading: settingsLoading } = useQuery({
     queryKey: ["site-settings"],
@@ -32,9 +38,10 @@ export function LandingOnlyGate({ children }: { children: ReactNode }) {
 
   const landingOnly = (settings as any)?.landing_only_mode === true;
   if (!landingOnly) return <>{children}</>;
-  if (ALLOWED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-    return <>{children}</>;
-  }
+  const matches = (list: string[]) =>
+    list.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  if (matches(ALLOWED_PREFIXES)) return <>{children}</>;
+  if (isAuthenticated && matches(AUTHENTICATED_PREFIXES)) return <>{children}</>;
 
   return <StandaloneLanding />;
 }
