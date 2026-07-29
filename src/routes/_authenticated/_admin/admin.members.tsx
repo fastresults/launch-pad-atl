@@ -34,6 +34,22 @@ export default function AdminMembersPage() {
   
   
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { isSuperAdmin, actorUser, startImpersonation } = useAuth();
+
+  const handleViewAs = async (userId: string, name: string, email?: string | null) => {
+    if (userId === actorUser?.id) {
+      navigate("/dashboard");
+      return;
+    }
+    try {
+      await startImpersonation({ userId, name, email: email ?? "" });
+      toast.success(`Opened dashboard as ${name}`);
+      navigate("/dashboard");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to open dashboard");
+    }
+  };
   const [tab, setTab] = useState<Tab>("pending");
   const [search, setSearch] = useState("");
   const [pauseTarget, setPauseTarget] = useState<{ userId: string; name: string } | null>(null);
