@@ -400,12 +400,13 @@ function HonestRoadmap() {
           Here's the honest promise
         </p>
         <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
-          Two weeks to your first dollar.{" "}
-          <span className="text-gradient-brand">A foundation solid enough to build on.</span>
+          One morning of writing.{" "}
+          <span className="text-gradient-brand">The four foundations your startup runs on.</span>
         </h2>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
-          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we write the foundation underneath it: the brand, the priced offer, the page copy, and the way the business runs — plus the exact message and the named person it goes to. Everything you build that same week sits on top of that, not instead of it.
+          Almost everyone who tries to start a business does the same thing: they spend six months and a chunk of savings on a logo, a fancy site, and ads — and never actually ask a single person for money. We flip it. In one morning we write the foundation underneath it: the brand, the priced offer, the page copy, and the way the money comes in — plus the exact first message and the named person it goes to. The building happens that same week, on top of what we wrote — not instead of it.
         </p>
+
 
 
 
