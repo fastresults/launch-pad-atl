@@ -101,7 +101,7 @@ function Hero() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
-              One quiet morning. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you actually build the thing. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
+              One quiet morning. A good cup of coffee. Someone who&rsquo;s done this before, sitting next to you while you lay the foundation your business will stand on. You&rsquo;ll leave with a real page, a real price, and your first customer already knowing your name.
             </p>
 
             <p className="mt-3 max-w-2xl text-base text-[#7A6650]">
