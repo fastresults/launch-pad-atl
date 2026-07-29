@@ -54,9 +54,13 @@ export default function AttendeeDetail() {
         </div>
         {isSuperAdmin && (
           <div className="flex gap-2">
+            <Button variant="outline" onClick={handleViewAs}>
+              View as
+            </Button>
             <Button asChild variant="outline">
               <Link to={`/admin/attendees/${userId}/workflow`}>Workflow</Link>
             </Button>
+
             <Button onClick={() => trigger.mutate()} disabled={trigger.isPending}>
               {trigger.isPending ? "Running pipeline…" : "Run full AI pipeline"}
             </Button>
