@@ -132,6 +132,10 @@ function Hero() {
 
 
             <p className="mt-3 max-w-2xl text-base text-[#7A6650]">
+              No auditorium, no cohort of fifty, no pitch night. Three founders at one table for a single morning.
+            </p>
+
+            <p className="mt-3 max-w-2xl text-base text-[#7A6650]">
               For nurses, teachers, servers, coders, couples on Main Street &mdash; anyone who&rsquo;s been meaning to start something. Come sit with us. We&rsquo;ll figure it out together.
             </p>
 
