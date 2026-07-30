@@ -856,6 +856,83 @@ export type Database = {
           },
         ]
       }
+      brain_materials: {
+        Row: {
+          byte_size: number | null
+          chunk_count: number
+          created_at: string
+          doc_kind: string | null
+          error_message: string | null
+          extracted_text: string | null
+          id: string
+          key_points: Json
+          mime_type: string | null
+          snapshot_id: string | null
+          source_type: string
+          source_url: string | null
+          status: string
+          storage_bucket: string | null
+          storage_path: string | null
+          summary: string | null
+          tags: string[]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          byte_size?: number | null
+          chunk_count?: number
+          created_at?: string
+          doc_kind?: string | null
+          error_message?: string | null
+          extracted_text?: string | null
+          id?: string
+          key_points?: Json
+          mime_type?: string | null
+          snapshot_id?: string | null
+          source_type?: string
+          source_url?: string | null
+          status?: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          summary?: string | null
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          byte_size?: number | null
+          chunk_count?: number
+          created_at?: string
+          doc_kind?: string | null
+          error_message?: string | null
+          extracted_text?: string | null
+          id?: string
+          key_points?: Json
+          mime_type?: string | null
+          snapshot_id?: string | null
+          source_type?: string
+          source_url?: string | null
+          status?: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          summary?: string | null
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brain_materials_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bulk_unlock_codes: {
         Row: {
           code_hash: string
