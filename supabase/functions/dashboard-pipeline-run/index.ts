@@ -138,6 +138,9 @@ async function generateOne(
       console.warn("brain corpus retrieval failed", e);
     }
   }
+  console.log(
+    `[corpus] key=${type.key} user=${ctx.userId} snapshot=${ctx.snapshotId ?? "null"} corpus_chars=${corpusBlock.length}`,
+  );
   if (corpusBlock) contextBlock = [contextBlock, corpusBlock].join("\n\n");
 
 
