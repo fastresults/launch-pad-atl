@@ -20,6 +20,7 @@ import {
   pickBrainSlice,
 } from "../_shared/venture-context.ts";
 import { ensureSnapshotBrain, markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
+import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
 import { trackTone } from "../_shared/track-tones.ts";
 import {
   BASE_SYSTEM_PROMPT,
@@ -311,12 +312,29 @@ export async function generateOne(
 
   const brandBlock = brandKitBlock(brandKit);
   const sourcingBlock = renderSourcingBlock(snap.sourcing_profile, snap.research_brief?.sourcing);
+
+  // Ground the document in the founder's Second Brain corpus (uploaded
+  // materials + notes), retrieved for this specific deliverable.
+  let corpusBlock = "";
+  try {
+    corpusBlock = await brainCorpusBlock(
+      supabase,
+      ctx.userId,
+      snapshotId,
+      [type.name, type.description ?? "", snap.concept_summary ?? ""].filter(Boolean).join(" \u2014 "),
+      10,
+    );
+  } catch (e) {
+    console.warn("brain corpus retrieval failed", e);
+  }
+
   const userPrompt = [
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
     `Category: ${type.category}`,
     brandBlock,
     preamble,
+    corpusBlock,
     sourcingBlock,
     brainSlice
       ? `\n## Venture brain (compressed, authoritative — every section must reflect these)\n${JSON.stringify(brainSlice, null, 2)}`

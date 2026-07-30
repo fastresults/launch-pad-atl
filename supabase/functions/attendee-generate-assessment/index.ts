@@ -5,6 +5,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { compactPreamble, loadVentureContext } from "../_shared/venture-context.ts";
 import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
+import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
 import { MODELS } from "../_shared/models.ts";
 
 const corsHeaders = {
@@ -102,7 +103,7 @@ Deno.serve(async (req) => {
     if (primarySnap?.id) {
       try {
         const ctx = await loadVentureContext(admin, primarySnap.id);
-        if (!ctx.brain) ctx.brain = await ensureSnapshotBrain(admin, primarySnap.id);
+        ctx.brain = (await ensureSnapshotBrain(admin, primarySnap.id)) ?? ctx.brain;
         const brainBlock = ctx.brain
           ? `\n\n## Snapshot brain (authoritative compressed venture summary)\n\`\`\`json\n${JSON.stringify(ctx.brain, null, 2)}\n\`\`\``
           : "";
@@ -110,6 +111,20 @@ Deno.serve(async (req) => {
       } catch (e) {
         console.warn("venture context unavailable, falling back to raw brief", e);
       }
+    }
+
+    // Founder's Second Brain corpus for this deliverable.
+    let corpusBlock = "";
+    try {
+      corpusBlock = await brainCorpusBlock(
+        admin,
+        userId,
+        primarySnap?.id ?? null,
+        [type?.label ?? key, type?.description ?? ""].filter(Boolean).join(" \u2014 "),
+        8,
+      );
+    } catch (e) {
+      console.warn("brain corpus retrieval failed", e);
     }
 
     const otherBlocks: string[] = [];
@@ -134,6 +149,7 @@ Deno.serve(async (req) => {
       preambleBlock
         ? preambleBlock
         : `## Founder's Startup Brief\n${JSON.stringify(brief ?? {}, null, 2)}${founder ? `\n\n## Founder profile\n${JSON.stringify(founder, null, 2)}` : ""}${market ? `\n\n## Market profile\n${JSON.stringify(market, null, 2)}` : ""}`,
+      corpusBlock,
       otherBlocks.length ? `\n## Other completed deliverables for this founder (outline only)\n${otherBlocks.join("\n\n---\n\n")}` : "",
       `\n## The deliverable to assess (founder is reading this now)\n${targetMd}`,
       guidance,

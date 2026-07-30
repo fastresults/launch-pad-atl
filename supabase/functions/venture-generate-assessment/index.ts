@@ -6,6 +6,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { compactPreamble, distillDeps, loadVentureContext, pickBrainSlice } from "../_shared/venture-context.ts";
 import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
+import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
 
@@ -209,9 +210,7 @@ async function generateAssessment(
   if (!type) throw new Error(`Unknown document type: ${documentType}`);
 
   // Ensure brain exists (lazy compute on first deep assessment for this venture)
-  if (!ctx.brain) {
-    ctx.brain = await ensureSnapshotBrain(supabase, snapshotId);
-  }
+  ctx.brain = (await ensureSnapshotBrain(supabase, snapshotId)) ?? ctx.brain;
 
   await supabase
     .from("venture_documents")
@@ -220,6 +219,23 @@ async function generateAssessment(
     .eq("document_type", documentType);
 
   const { sections, provenance } = buildContextBundle(ctx, allDocs ?? [], type, documentType);
+
+  // Founder's Second Brain corpus for this deliverable.
+  try {
+    const corpus = await brainCorpusBlock(
+      supabase,
+      ctx.userId,
+      snapshotId,
+      [type.name ?? documentType, type.description ?? ""].filter(Boolean).join(" \u2014 "),
+      8,
+    );
+    if (corpus) {
+      sections.push(corpus);
+      provenance.push("second brain corpus");
+    }
+  } catch (e) {
+    console.warn("brain corpus retrieval failed", e);
+  }
 
   // The document under review — always last, always full
   const docSectionIdx = sections.length;

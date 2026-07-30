@@ -5,6 +5,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext, compactPreamble, renderSources } from "../_shared/venture-context.ts";
+import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { sanitizePaletteOption } from "../_shared/palette-rules.ts";
 
@@ -49,7 +50,8 @@ function brandBrief(ctx: any, kit: any) {
   const dnaBlock = kit?.dna
     ? `\n\n## Founder DNA selections\nPersonality: ${JSON.stringify(kit.dna.personality || {})}\nMood: ${(kit.dna.mood || []).join(", ") || "—"}\nBrands admired: ${(kit.dna.admired || []).join(", ") || "—"}\nKeywords: ${(kit.dna.keywords || []).join(", ") || "—"}`
     : "";
-  return `${compactPreamble(ctx)}${brainBlock}${sourcesBlock}${dnaBlock}`;
+  const corpusBlock = ctx.corpusBlock ? `\n\n${ctx.corpusBlock}` : "";
+  return `${compactPreamble(ctx)}${brainBlock}${corpusBlock}${sourcesBlock}${dnaBlock}`;
 }
 
 async function generatePalettes(ctx: any, kit: any) {
@@ -136,7 +138,7 @@ Write 2-3 sentences on the brand's voice. Then a "Voice Spectrum" Markdown table
 |---|---|---|---|---|
 | Directness | Direct | 2 | Vague | one concrete sentence |
 
-Include 5 rows (Directness, Expertise, Empathy, Brevity, Edge — or equivalents that fit the brand). Then a `### Do` bulleted list (4-6 items) and a `### Don't` bulleted list (4-6 items). Then `### Before / After` with 3 rewrites, each as two blockquotes (`> Before:` then `> After:`).
+Include 5 rows (Directness, Expertise, Empathy, Brevity, Edge — or equivalents that fit the brand). Then a \`### Do\` bulleted list (4-6 items) and a \`### Don't\` bulleted list (4-6 items). Then \`### Before / After\` with 3 rewrites, each as two blockquotes (\`> Before:\` then \`> After:\`).
 ## 3. Color System — Markdown table only: | Role | Hex | RGB | Usage | AA Pair |. No swatch art or block characters.
 ## 4. Typography — Markdown hierarchy table: | Level | Font | Weight | Size | Line-height | Use |. Include H1/H2/H3/body/caption and web + print fallback rows. No ASCII type specimens.
 ${logoSectionInstruction}
@@ -384,7 +386,19 @@ Deno.serve(async (req) => {
     if (!userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-    const ctx = await loadVentureContext(supabase, snapshotId);
+    const ctx: any = await loadVentureContext(supabase, snapshotId);
+    // Ground brand decisions in the founder's Second Brain corpus.
+    try {
+      ctx.corpusBlock = await brainCorpusBlock(
+        supabase,
+        ctx.userId,
+        snapshotId,
+        [ctx.snap?.company_name ?? "", ctx.snap?.concept_summary ?? "", "brand voice, name, look, customer"].filter(Boolean).join(" \u2014 "),
+        8,
+      );
+    } catch (e) {
+      console.warn("brain corpus retrieval failed", e);
+    }
     if (!ctx.snap || ctx.snap.user_id !== userId) {
       return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
