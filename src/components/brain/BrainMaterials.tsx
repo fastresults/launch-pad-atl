@@ -28,6 +28,15 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const WORKING = new Set(["queued", "uploading", "reading", "understanding", "indexing"]);
+const STALL_MS = 3 * 60 * 1000;
+
+/** A material still "working" long after its last update is stuck, not busy. */
+function isStalled(m: any) {
+  if (!WORKING.has(m.status)) return false;
+  const last = new Date(m.updated_at ?? m.created_at).getTime();
+  return Number.isFinite(last) && Date.now() - last > STALL_MS;
+}
+
 
 function prettySize(bytes?: number | null) {
   if (!bytes) return "";
