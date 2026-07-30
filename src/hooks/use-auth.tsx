@@ -72,30 +72,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!u) {
         if (active) {
           setRoles([]);
+          setRolesLoaded(true);
           setMemberStatus("pending");
           setApprovedVia(null);
           setFoundersHubAccess(false);
         }
         return;
       }
-      try {
-        const res = await getMyAccount();
-        if (active) {
-          setRoles(res.roles);
-          setMemberStatus(res.memberStatus);
-          setApprovedVia(res.approvedVia);
-          setFoundersHubAccess(res.foundersHubAccess);
-        }
-      } catch (e) {
-        console.error("Failed to load account", e);
-        if (active) {
-          setRoles([]);
-          setMemberStatus("pending");
-          setApprovedVia(null);
-          setFoundersHubAccess(false);
+      // One retry: a transient network blip must not look like "no roles".
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const res = await getMyAccount();
+          if (active) {
+            setRoles(res.roles);
+            setRolesLoaded(true);
+            setMemberStatus(res.memberStatus);
+            setApprovedVia(res.approvedVia);
+            setFoundersHubAccess(res.foundersHubAccess);
+          }
+          return;
+        } catch (e) {
+          if (attempt === 0) {
+            await new Promise((r) => setTimeout(r, 800));
+            continue;
+          }
+          console.error("Failed to load account", e);
+          if (active) {
+            setRoles([]);
+            setMemberStatus("pending");
+            setApprovedVia(null);
+            setFoundersHubAccess(false);
+          }
         }
       }
     };
+
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
