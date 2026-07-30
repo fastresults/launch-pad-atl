@@ -187,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
     }
     return actorUser;
-  }, [impersonation, isAdmin, actorUser]);
+  }, [impersonation, isAdmin, rolesLoaded, actorUser]);
 
   const signOut = async () => {
     sessionStorage.removeItem(IMPERSONATION_KEY);
@@ -209,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isSuperAdmin: roles.includes("super_admin"),
     isApprovedMember: isAdmin || memberStatus === "approved",
     signOut,
-    isImpersonating: !!impersonation && isAdmin,
+    isImpersonating: !!impersonation && (isAdmin || !rolesLoaded),
     impersonationTarget: impersonation,
     startImpersonation,
     stopImpersonation,
