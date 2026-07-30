@@ -189,12 +189,13 @@ export default function BrainMaterials({
                 </p>
               </div>
               <Badge
-                variant={m.status === "failed" ? "destructive" : m.status === "ready" ? "secondary" : "outline"}
+                variant={m.status === "failed" || isStalled(m) ? "destructive" : m.status === "ready" ? "secondary" : "outline"}
                 className="shrink-0 text-[9px]"
               >
-                {WORKING.has(m.status) && <Loader2 className="mr-1 h-2.5 w-2.5 animate-spin" />}
-                {STATUS_LABEL[m.status] ?? m.status}
+                {WORKING.has(m.status) && !isStalled(m) && <Loader2 className="mr-1 h-2.5 w-2.5 animate-spin" />}
+                {isStalled(m) ? "Stalled" : STATUS_LABEL[m.status] ?? m.status}
               </Badge>
+
             </div>
 
             {m.summary && <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">{m.summary}</p>}
