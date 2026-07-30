@@ -118,7 +118,7 @@ export default function WorkflowDetail() {
     setHeroError(null);
     try {
       const { data, error } = await supabase.functions.invoke("attendee-deliverable-image", {
-        body: { deliverableKey: key, force },
+        body: { deliverableKey: key, force, userId: user?.id },
       });
       if (error) throw error;
       if (data?.path) {
