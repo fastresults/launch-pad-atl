@@ -67,15 +67,25 @@ Deno.serve(async (req) => {
 
     const userClient = createClient(SUPABASE_URL, ANON_KEY, { global: { headers: { Authorization: auth } } });
     const { data: ures } = await userClient.auth.getUser();
-    const userId = ures?.user?.id;
-    if (!userId) return new Response(JSON.stringify({ error: "Not signed in" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const callerId = ures?.user?.id;
+    if (!callerId) return new Response(JSON.stringify({ error: "Not signed in" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { key, feedback, tags } = await req.json().catch(() => ({}));
+    const { key, feedback, tags, userId: bodyUserId } = await req.json().catch(() => ({}));
     if (!key || typeof key !== "string") {
       return new Response(JSON.stringify({ error: "key required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    // Admin impersonation: allow targeting another user only for admins.
+    let userId = callerId;
+    if (typeof bodyUserId === "string" && bodyUserId && bodyUserId !== callerId) {
+      const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", callerId);
+      const isAdmin = (roles ?? []).some((r: any) => r.role === "admin" || r.role === "super_admin");
+      if (!isAdmin) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      userId = bodyUserId;
+    }
+
 
     const [{ data: deliv }, { data: type }, { data: all }, { data: brief }, { data: founder }, { data: market }, { data: primarySnap }] = await Promise.all([
       admin.from("attendee_deliverables").select("*").eq("user_id", userId).eq("deliverable_key", key).maybeSingle(),
