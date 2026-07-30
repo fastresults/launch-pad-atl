@@ -142,14 +142,22 @@ Deno.serve(async (req) => {
     const snapshotId = body?.snapshotId as string | undefined;
     if (!snapshotId) return json({ error: "snapshotId required" }, 400);
 
-    // Ownership
+    // Ownership (admins may act on any venture, e.g. when impersonating)
+    const { data: adminRoles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .in("role", ["admin", "super_admin"]);
+    const isAdmin = (adminRoles ?? []).length > 0;
+
     const { data: snap } = await admin
       .from("venture_snapshots")
       .select("id, user_id, company_name, business_concept, value_proposition, differentiation_statement")
       .eq("id", snapshotId)
       .maybeSingle();
 
-    if (!snap || snap.user_id !== userId) return json({ error: "Forbidden" }, 403);
+    if (!snap || (snap.user_id !== userId && !isAdmin)) return json({ error: "Forbidden" }, 403);
+    const ownerId = snap.user_id as string;
 
     if (action === "list") {
       const { data } = await admin
@@ -235,7 +243,7 @@ Draft 3 posts for Week ${week}.`;
         newRows.push({
           id: `cc_ai_${hash}`,
           snapshot_id: snapshotId,
-          user_id: userId,
+          user_id: ownerId,
           week,
           day: p.day ?? null,
           platform,
@@ -295,7 +303,7 @@ Draft 3 posts for Week ${week}.`;
       rows.push({
         id: `cc_${hash}`,
         snapshot_id: snapshotId,
-        user_id: userId,
+        user_id: ownerId,
         week: p.week,
         day: p.day ?? null,
         platform: p.platform ?? null,
