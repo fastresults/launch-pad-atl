@@ -227,6 +227,8 @@ export async function getBrainStatus(userId: string, snapshotId: string | null) 
   memQ = snapshotId ? memQ.eq("snapshot_id", snapshotId) : memQ.is("snapshot_id", null);
   let noteQ = supabase.from("founder_brain_notes").select("id", { count: "exact", head: true }).eq("user_id", userId);
   noteQ = snapshotId ? noteQ.eq("snapshot_id", snapshotId) : noteQ.is("snapshot_id", null);
+  let matQ = supabase.from("brain_materials" as any).select("id", { count: "exact", head: true }).eq("user_id", userId);
+  matQ = snapshotId ? matQ.eq("snapshot_id", snapshotId) : matQ.is("snapshot_id", null);
 
   // The current workflow writes assets to venture_documents (snapshot-scoped).
   // Legacy accounts kept theirs in attendee_deliverables (user-scoped). When
@@ -239,9 +241,10 @@ export async function getBrainStatus(userId: string, snapshotId: string | null) 
         .eq("snapshot_id", snapshotId)
     : Promise.resolve({ data: [] as any[] });
 
-  const [{ count: memCount }, { count: noteCount }, vdocsRes, { data: delivs }] = await Promise.all([
+  const [{ count: memCount }, { count: noteCount }, { count: matCount }, vdocsRes, { data: delivs }] = await Promise.all([
     memQ,
     noteQ,
+    matQ,
     vdocsQ,
     supabase
       .from("attendee_deliverables")
