@@ -24,6 +24,8 @@ import {
   type BrainMessage, type BrainIndexingJob, type BrainVenture,
 } from "@/lib/brain.functions";
 import { useConfirm, usePrompt } from "@/components/ui/confirm-dialog";
+import { getImpersonationTarget } from "@/lib/effective-user";
+
 
 const STARTERS = [
   "What's the single riskiest assumption in my plan?",
@@ -390,8 +392,17 @@ export default function BrainPage() {
   const empty = history.length === 0;
   const assetsReadyWithoutMemory = (status?.generated ?? 0) > 0 && (status?.memoryChunks ?? 0) === 0;
 
+  const viewingAs = getImpersonationTarget();
+
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[320px_1fr]">
+      {viewingAs && (
+        <div className="rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-xs text-muted-foreground lg:col-span-2">
+          Viewing as <span className="font-semibold text-foreground">{viewingAs.email ?? viewingAs.name ?? viewingAs.userId}</span>
+          {" "}— anything you add here lands in their brain.
+        </div>
+      )}
+
       {/* Left: status + notes */}
       <aside className="space-y-4">
         <Card className="p-4">

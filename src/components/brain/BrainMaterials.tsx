@@ -28,6 +28,15 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const WORKING = new Set(["queued", "uploading", "reading", "understanding", "indexing"]);
+const STALL_MS = 3 * 60 * 1000;
+
+/** A material still "working" long after its last update is stuck, not busy. */
+function isStalled(m: any) {
+  if (!WORKING.has(m.status)) return false;
+  const last = new Date(m.updated_at ?? m.created_at).getTime();
+  return Number.isFinite(last) && Date.now() - last > STALL_MS;
+}
+
 
 function prettySize(bytes?: number | null) {
   if (!bytes) return "";
@@ -180,12 +189,13 @@ export default function BrainMaterials({
                 </p>
               </div>
               <Badge
-                variant={m.status === "failed" ? "destructive" : m.status === "ready" ? "secondary" : "outline"}
+                variant={m.status === "failed" || isStalled(m) ? "destructive" : m.status === "ready" ? "secondary" : "outline"}
                 className="shrink-0 text-[9px]"
               >
-                {WORKING.has(m.status) && <Loader2 className="mr-1 h-2.5 w-2.5 animate-spin" />}
-                {STATUS_LABEL[m.status] ?? m.status}
+                {WORKING.has(m.status) && !isStalled(m) && <Loader2 className="mr-1 h-2.5 w-2.5 animate-spin" />}
+                {isStalled(m) ? "Stalled" : STATUS_LABEL[m.status] ?? m.status}
               </Badge>
+
             </div>
 
             {m.summary && <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">{m.summary}</p>}
@@ -232,11 +242,12 @@ export default function BrainMaterials({
             )}
 
             <div className="mt-2 flex items-center gap-1">
-              {m.status === "failed" && (
+              {(m.status === "failed" || isStalled(m)) && (
                 <Button
                   size="sm" variant="ghost" className="h-6 px-1.5 text-[10px]"
                   onClick={async () => {
-                    try { await retryBrainMaterial(m.id); invalidate(); } catch (e: any) { toast.error(e?.message ?? "Retry failed"); }
+                    try { await retryBrainMaterial(m.id, userId); invalidate(); } catch (e: any) { toast.error(e?.message ?? "Retry failed"); }
+
                   }}
                 >
                   <RotateCw className="mr-1 h-3 w-3" /> Retry

@@ -57,6 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [approvedVia, setApprovedVia] = useState<"admin" | "payment" | null>(null);
   const [foundersHubAccess, setFoundersHubAccess] = useState(false);
   const [loading, setLoading] = useState(true);
+  // True only once roles have been fetched successfully. A failed fetch must not
+  // be read as "not an admin" — that silently drops an active impersonation.
+  const [rolesLoaded, setRolesLoaded] = useState(false);
+
   const [impersonation, setImpersonation] = useState<ImpersonationTarget | null>(() =>
     readStoredImpersonation(),
   );
@@ -68,30 +72,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!u) {
         if (active) {
           setRoles([]);
+          setRolesLoaded(true);
           setMemberStatus("pending");
           setApprovedVia(null);
           setFoundersHubAccess(false);
         }
         return;
       }
-      try {
-        const res = await getMyAccount();
-        if (active) {
-          setRoles(res.roles);
-          setMemberStatus(res.memberStatus);
-          setApprovedVia(res.approvedVia);
-          setFoundersHubAccess(res.foundersHubAccess);
-        }
-      } catch (e) {
-        console.error("Failed to load account", e);
-        if (active) {
-          setRoles([]);
-          setMemberStatus("pending");
-          setApprovedVia(null);
-          setFoundersHubAccess(false);
+      // One retry: a transient network blip must not look like "no roles".
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const res = await getMyAccount();
+          if (active) {
+            setRoles(res.roles);
+            setRolesLoaded(true);
+            setMemberStatus(res.memberStatus);
+            setApprovedVia(res.approvedVia);
+            setFoundersHubAccess(res.foundersHubAccess);
+          }
+          return;
+        } catch (e) {
+          if (attempt === 0) {
+            await new Promise((r) => setTimeout(r, 800));
+            continue;
+          }
+          console.error("Failed to load account", e);
+          if (active) {
+            setRoles([]);
+            setMemberStatus("pending");
+            setApprovedVia(null);
+            setFoundersHubAccess(false);
+          }
         }
       }
     };
+
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
@@ -119,13 +134,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
 
-  // Auto-clear impersonation if the actor is no longer admin.
+  // Auto-clear impersonation only once we know for sure the actor isn't an admin.
   useEffect(() => {
-    if (impersonation && !isAdmin && actorUser) {
+    if (impersonation && rolesLoaded && !isAdmin && actorUser) {
       sessionStorage.removeItem(IMPERSONATION_KEY);
       setImpersonation(null);
     }
-  }, [impersonation, isAdmin, actorUser]);
+  }, [impersonation, rolesLoaded, isAdmin, actorUser]);
+
 
   const startImpersonation: AuthState["startImpersonation"] = async (t) => {
     if (!isAdmin) throw new Error("Only admins can impersonate");
@@ -160,7 +176,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Effective user: swap id/email when impersonating. Downstream reads of `user.id` transparently
   // target the impersonated user. All authenticated Supabase requests still authenticate as the actor.
   const effectiveUser = useMemo<User | null>(() => {
-    if (impersonation && isAdmin && actorUser) {
+    // While roles are still loading, keep honouring an active impersonation —
+    // dropping to the actor mid-load would write into the wrong workspace.
+    if (impersonation && (isAdmin || !rolesLoaded) && actorUser) {
+
       return {
         ...actorUser,
         id: impersonation.userId,
@@ -168,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
     }
     return actorUser;
-  }, [impersonation, isAdmin, actorUser]);
+  }, [impersonation, isAdmin, rolesLoaded, actorUser]);
 
   const signOut = async () => {
     sessionStorage.removeItem(IMPERSONATION_KEY);
@@ -190,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isSuperAdmin: roles.includes("super_admin"),
     isApprovedMember: isAdmin || memberStatus === "approved",
     signOut,
-    isImpersonating: !!impersonation && isAdmin,
+    isImpersonating: !!impersonation && (isAdmin || !rolesLoaded),
     impersonationTarget: impersonation,
     startImpersonation,
     stopImpersonation,

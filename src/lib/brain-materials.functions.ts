@@ -49,10 +49,32 @@ export async function listBrainMaterials(userId: string, snapshotId: string | nu
   return (data ?? []).map(normalize);
 }
 
-async function startIngest(materialId: string) {
-  const { error } = await supabase.functions.invoke("brain-material-ingest", { body: { materialId } });
-  if (error) throw error;
+function readableError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err ?? "");
+  if (/jwt|401|not signed in|missing auth/i.test(raw)) {
+    return "Your session expired — sign in again, then retry.";
+  }
+  return raw || "Something went wrong.";
 }
+
+/** Kick off ingest. On failure the row is flipped to `failed` so the card can
+ * show the real reason and offer Retry instead of spinning on "Queued". */
+async function startIngest(materialId: string, ownerId?: string | null) {
+  try {
+    const { data, error } = await supabase.functions.invoke("brain-material-ingest", {
+      body: { materialId, ownerId: ownerId ?? undefined },
+    });
+    if (error) throw error;
+    if (data && typeof data === "object" && "error" in (data as any) && (data as any).error) {
+      throw new Error(String((data as any).error));
+    }
+  } catch (err) {
+    const message = readableError(err);
+    await supabase.from(TABLE).update({ status: "failed", error_message: message }).eq("id", materialId);
+    throw new Error(message);
+  }
+}
+
 
 /** Upload one file, create its row, and kick off AI extraction + indexing. */
 export async function uploadBrainMaterial(
@@ -71,7 +93,7 @@ export async function uploadBrainMaterial(
   const { error: upErr } = await supabase.storage
     .from("attendee-docs")
     .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
-  if (upErr) throw new Error(upErr.message);
+  if (upErr) throw new Error(`Upload failed: ${readableError(upErr)}`);
 
   const { data, error } = await supabase
     .from(TABLE)
@@ -88,13 +110,13 @@ export async function uploadBrainMaterial(
     })
     .select("*")
     .single();
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(`Couldn't save ${file.name}: ${readableError(error)}`);
 
   const row = data as any;
-  startIngest(row.id).catch(() => {
-    /* the row exists; the card offers Retry */
-  });
+  // Awaited: a failed kickoff now marks the row failed and surfaces the reason.
+  await startIngest(row.id, userId);
   return normalize(row);
+
 }
 
 /** Add a public URL as a material. */
@@ -123,17 +145,18 @@ export async function addBrainMaterialLink(
     })
     .select("*")
     .single();
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(`Couldn't save that link: ${readableError(error)}`);
 
   const row = data as any;
-  startIngest(row.id).catch(() => { /* retryable from the card */ });
+  await startIngest(row.id, userId);
   return normalize(row);
 }
 
-export async function retryBrainMaterial(materialId: string): Promise<void> {
+export async function retryBrainMaterial(materialId: string, ownerId?: string | null): Promise<void> {
   await supabase.from(TABLE).update({ status: "queued", error_message: null }).eq("id", materialId);
-  await startIngest(materialId);
+  await startIngest(materialId, ownerId);
 }
+
 
 export async function renameBrainMaterial(materialId: string, title: string): Promise<void> {
   const clean = title.trim().slice(0, 120);

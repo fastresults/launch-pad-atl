@@ -1,37 +1,37 @@
-## Goal
+## What I verified
 
-Today the only way to feed the Second Brain is a tiny drop handler that accepts .txt/.md/.csv/.json under 2MB, saves the raw text as a *note*, and then requires a manual "Rebuild memory" that wipes and re-embeds everything.
+- `brain_materials`, `founder_brain_memory` and the `attendee-docs` storage bucket all already allow an admin to read/write another founder's rows and files, so permissions are not blocking you.
+- One material exists — the TAP PDF, uploaded 19:07 under the member's account (jmdbenz), status ready, 6 chunks. No material rows or ingest calls have been recorded since.
+- There are **no ingest function calls in the logs** for your failed attempt, which means the failure happens in the browser *before* the file reaches the reader — and the current code can swallow that error, leaving no visible reason.
 
-This plan replaces that with a real **drop zone beside the brain** — drag in a PDF, Word doc, deck, spreadsheet, image, or a URL, any day of the week — where every file is read by AI first, distilled, and indexed into memory incrementally.
+Two real gaps in the upload path explain a silent/stuck upload:
 
-## What the founder sees
+1. **The ingest kickoff error is discarded.** In `src/lib/brain-materials.functions.ts`, `startIngest(...).catch(() => {})` throws away failures (expired token, function error). The row is created and sits at "Queued" forever with no message.
+2. **Impersonation state can be lost on re-login.** Impersonation lives in `sessionStorage`; after the sign-out you just hit, the Brain page may be acting as your admin account (which has a different venture), so the upload targets the wrong workspace or no snapshot at all.
 
-A **Materials** panel sitting next to the chat on `/dashboard/brain`:
+## What I'll build
 
-- A large drop zone: "Drop anything your startup runs on — PDFs, contracts, decks, spreadsheets, screenshots, links." Click-to-browse and paste-a-URL both work. Up to ~25MB per file, multiple files at once.
-- Each dropped item becomes a card showing title, type, size, and a live status pill: `Uploading → Reading → Understanding → In your brain` (or `Failed`, with Retry).
-- Once processed, the card shows the AI's own read of the document: a one-line summary, a few key takeaways, and auto-tags (e.g. `pricing`, `legal`, `competitor`). Expandable to the full extracted text.
-- Rename, preview/download, or remove. Removing a material deletes only its memory chunks — nothing else is touched.
-- Materials scope to the selected startup (or the account when none is selected), same as notes.
-- The status card gains a **Materials** stat, and chat answers cite documents by title.
+**1. Fail loudly instead of silently**
+- `startIngest` failures now flip the material row to `failed` with the actual message and show it on the card, so nothing hangs at "Queued".
+- Surface the raw storage / insert / invoke error text in the toast instead of a generic message.
+- Auto-recover: any material stuck in a working state for more than 3 minutes shows a "Stalled — Retry" state rather than spinning.
 
-Add a document tomorrow or next week: drop it, and it's live in the brain in under a minute. No rebuild, no lost chat history.
+**2. Make the ingest call robust**
+- Send the material's owner id with the request and confirm the function returns 202 before the card leaves "Queued".
+- Keep the existing admin bypass in `brain-material-ingest`, and add a clear 401 message when the caller's token has expired ("Your session expired — sign in again").
 
-## AI-first processing
+**3. Make impersonation obvious and sticky on the Brain page**
+- Show a small banner on `/dashboard/brain` naming whose brain you're editing ("Viewing as jmdbenz@gmail.com") whenever impersonation is active.
+- If impersonation was lost, the banner is absent — so you immediately see you're in your own workspace instead of guessing.
 
-Each material runs a three-pass pipeline before anything is embedded:
+**4. Close the delete gap**
+- Add owner+admin insert/delete access rules on the brain memory table so removing a material actually removes its chunks (today the cleanup silently does nothing and leaves orphan chunks in the brain).
 
-1. **Extract** — text-family files inline; PDF/DOCX/PPTX/XLSX through the same extraction path `venture-source-extract` already uses; images and scanned PDFs through a vision pass (`openai/gpt-5.6-sol`, image/file content blocks) so a photographed lease or a whiteboard shot still lands as text.
-2. **Understand** — one structured call (AI SDK `Output.object`) produces `{ title, summary, key_points[], tags[], doc_kind }`. This gives the card its human-readable identity and gives retrieval better hooks than raw page text.
-3. **Index** — the summary and key points are embedded as a high-signal header chunk, then the full text is chunked and embedded via the existing `_shared/brain-embed.ts` helpers into `founder_brain_memory` with `kind = 'material'`, `source_ref = <material_id>`.
-
-Only that material's prior rows are deleted before writing — no global wipe. Adding a doc next week costs one doc's worth of embedding.
+**5. Verify, not assume**
+- Drive the real page in a headless browser signed in as super admin with impersonation set to jmdbenz, upload a test file, and confirm: row created → reading → ready → chunk count > 0, with function logs to match. I'll report the observed states, and if it still fails I'll have the exact error rather than a blank.
 
 ## Technical notes
 
-- **Storage**: reuse the private `attendee-docs` bucket at `<user_id>/brain/<material_id>/<filename>`.
-- **Table** `public.brain_materials`: `id, user_id, snapshot_id, title, source_type ('file'|'link'), mime_type, byte_size, storage_bucket, storage_path, source_url, extracted_text, summary, key_points jsonb, tags text[], doc_kind, status, chunk_count, error_message, created_at, updated_at`. GRANTs to `authenticated` + `service_role`; RLS on `auth.uid() = user_id` with the existing admin bypass.
-- **Edge function** `brain-material-ingest`: verifies ownership, runs the three passes in the background via `EdgeRuntime.waitUntil`, writes progress to the existing `brain_indexing_jobs` row so the current polling UI is reused.
-- **`brain-reindex`** adds `'material'` to its wipe list and pulls `brain_materials` as a source so a full rebuild reproduces the same state; `brain-chat` gets a `material` citation label case.
-- **Client**: `src/lib/brain-materials.functions.ts` (upload / add link / list / retry / delete) and `src/components/brain/BrainMaterials.tsx`, mounted in `brain.tsx` beside Notes. The existing tiny-text drop handler is retired — one drop zone handles every type.
-- **Guardrails**: 25MB per file, ~200k characters of extracted text per material (truncated with a visible note), 25 materials per startup. Failures are recorded on the row so Retry is one call and a bad file never blocks chat.
+- Files: `src/lib/brain-materials.functions.ts`, `src/components/brain/BrainMaterials.tsx`, `src/routes/_authenticated/dashboard/brain.tsx`, `supabase/functions/brain-material-ingest/index.ts`.
+- One migration: add `INSERT`/`DELETE` policies on `public.founder_brain_memory` for `auth.uid() = user_id OR is_admin(auth.uid())` (it currently has `SELECT` only).
+- No change to the storage or `brain_materials` policies — those are already correct.
