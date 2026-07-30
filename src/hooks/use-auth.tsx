@@ -57,6 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [approvedVia, setApprovedVia] = useState<"admin" | "payment" | null>(null);
   const [foundersHubAccess, setFoundersHubAccess] = useState(false);
   const [loading, setLoading] = useState(true);
+  // True only once roles have been fetched successfully. A failed fetch must not
+  // be read as "not an admin" — that silently drops an active impersonation.
+  const [rolesLoaded, setRolesLoaded] = useState(false);
+
   const [impersonation, setImpersonation] = useState<ImpersonationTarget | null>(() =>
     readStoredImpersonation(),
   );
