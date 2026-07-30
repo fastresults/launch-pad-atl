@@ -275,6 +275,7 @@ export async function getBrainStatus(userId: string, snapshotId: string | null) 
   return {
     memoryChunks: memCount ?? 0,
     notes: noteCount ?? 0,
+    materials: matCount ?? 0,
     totalAssets,
     generated,
     assessed,
