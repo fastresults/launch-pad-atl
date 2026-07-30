@@ -74,6 +74,16 @@ async function runJob(admin: any, userId: string, jobId: string, snapshotId: str
     if (snapshotId) notesQuery.eq("snapshot_id", snapshotId);
     else notesQuery.is("snapshot_id", null);
 
+    // Uploaded materials (PDFs, docs, links) already have their text extracted
+    // and summarized by brain-material-ingest — a rebuild re-embeds them too.
+    const materialsQuery = admin
+      .from("brain_materials")
+      .select("id, title, summary, key_points, tags, doc_kind, extracted_text")
+      .eq("user_id", userId)
+      .not("extracted_text", "is", null);
+    if (snapshotId) materialsQuery.eq("snapshot_id", snapshotId);
+    else materialsQuery.is("snapshot_id", null);
+
     const [
       { data: brief },
       { data: founder },
@@ -82,6 +92,7 @@ async function runJob(admin: any, userId: string, jobId: string, snapshotId: str
       { data: delivs },
       { data: vdocs },
       { data: notes },
+      { data: materials },
       { data: snapshot },
     ] = await Promise.all([
       admin.from("attendee_business_brief").select("*").eq("user_id", userId).maybeSingle(),
@@ -99,6 +110,7 @@ async function runJob(admin: any, userId: string, jobId: string, snapshotId: str
             .eq("status", "complete")
         : Promise.resolve({ data: [] }),
       notesQuery,
+      materialsQuery,
       snapshotId
         ? admin.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle()
         : Promise.resolve({ data: null }),
@@ -110,7 +122,7 @@ async function runJob(admin: any, userId: string, jobId: string, snapshotId: str
       .from("founder_brain_memory")
       .delete()
       .eq("user_id", userId)
-      .in("kind", ["brief", "deliverable", "assessment", "goal", "note", "venture"]);
+      .in("kind", ["brief", "deliverable", "assessment", "goal", "note", "venture", "material"]);
     if (snapshotId) wipe.eq("snapshot_id", snapshotId);
     else wipe.is("snapshot_id", null);
     await wipe;
@@ -228,6 +240,24 @@ async function runJob(admin: any, userId: string, jobId: string, snapshotId: str
         source_ref: (n as { id: string }).id,
         title: "Founder note",
         content: (n as { content: string }).content,
+      });
+    }
+
+    for (const m of (materials ?? []) as Array<Record<string, unknown>>) {
+      const points = Array.isArray(m.key_points) ? (m.key_points as unknown[]).map((p) => `- ${String(p ?? "")}`) : [];
+      const tags = Array.isArray(m.tags) ? (m.tags as unknown[]).map((t) => String(t ?? "")) : [];
+      const header = [
+        `Material: ${m.title ?? "Untitled"}`,
+        m.doc_kind ? `Type: ${m.doc_kind}` : "",
+        m.summary ? `Summary: ${m.summary}` : "",
+        points.length ? `Key points:\n${points.join("\n")}` : "",
+        tags.length ? `Tags: ${tags.join(", ")}` : "",
+      ].filter(Boolean).join("\n");
+      sources.push({
+        kind: "material",
+        source_ref: String(m.id),
+        title: String(m.title ?? "Material"),
+        content: `${header}\n\n${String(m.extracted_text ?? "")}`,
       });
     }
 

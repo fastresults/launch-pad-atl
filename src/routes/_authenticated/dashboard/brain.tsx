@@ -8,6 +8,7 @@ import {
   Sparkles, Trash2, FileText, ChevronDown, ChevronRight, MessageSquare, Network,
 } from "lucide-react";
 import BrainMindMap from "@/components/brain/BrainMindMap";
+import BrainMaterials from "@/components/brain/BrainMaterials";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -386,48 +387,6 @@ export default function BrainPage() {
     }
   }
 
-  const [dragOver, setDragOver] = useState(false);
-  const [droppingFile, setDroppingFile] = useState(false);
-
-  async function handleFilesDropped(files: FileList | File[]) {
-    if (!userId) return;
-    const list = Array.from(files);
-    if (!list.length) return;
-    const TEXTUAL = /\.(txt|md|markdown|csv|json|log|rtf|html?)$/i;
-    const MAX = 2 * 1024 * 1024; // 2MB per note
-    setDroppingFile(true);
-    let saved = 0;
-    let skipped = 0;
-    try {
-      for (const f of list) {
-        const isTextMime = f.type.startsWith("text/") || f.type === "application/json" || f.type === "application/rtf";
-        if (!isTextMime && !TEXTUAL.test(f.name)) {
-          skipped++;
-          continue;
-        }
-        if (f.size > MAX) { skipped++; continue; }
-        const raw = await f.text();
-        const text = raw.trim();
-        if (!text) { skipped++; continue; }
-        const body = `**${f.name}**\n\n${text.slice(0, 20000)}`;
-        await saveBrainNote(userId, body, snapshotId, "file");
-        saved++;
-      }
-      if (saved) {
-        toast.success(`Saved ${saved} note${saved === 1 ? "" : "s"}. Rebuild memory to embed.`);
-        qc.invalidateQueries({ queryKey: ["brain", "notes", userId, snapshotId] });
-      }
-      if (skipped) {
-        toast.info(`Skipped ${skipped} file${skipped === 1 ? "" : "s"} (text/markdown/csv/json only, <2MB).`);
-      }
-    } catch (e: any) {
-      toast.error(e?.message ?? "Couldn't read file");
-    } finally {
-      setDroppingFile(false);
-      setDragOver(false);
-    }
-  }
-
   const empty = history.length === 0;
   const assetsReadyWithoutMemory = (status?.generated ?? 0) > 0 && (status?.memoryChunks ?? 0) === 0;
 
@@ -472,6 +431,7 @@ export default function BrainPage() {
             <Stat label="Assessments" value={String(status?.assessed ?? 0)} />
             <Stat label="Hero images" value={String(status?.heroReady ?? 0)} />
             <Stat label="Notes" value={String(status?.notes ?? 0)} />
+            <Stat label="Materials" value={String(status?.materials ?? 0)} />
             <Stat label="Memory chunks" value={String(status?.memoryChunks ?? 0)} className="col-span-2" />
           </div>
           <Button
@@ -534,6 +494,8 @@ export default function BrainPage() {
           </p>
         </Card>
 
+        {userId && <BrainMaterials userId={userId} snapshotId={snapshotId} />}
+
         <Card className="p-4">
           <button
             type="button"
@@ -546,34 +508,6 @@ export default function BrainPage() {
           <Button size="sm" variant="ghost" className="mt-2 w-full justify-start" onClick={addManualNote}>
             + Add a note
           </Button>
-          <div
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              if (e.dataTransfer?.files?.length) handleFilesDropped(e.dataTransfer.files);
-            }}
-            onClick={() => {
-              const inp = document.createElement("input");
-              inp.type = "file";
-              inp.multiple = true;
-              inp.accept = ".txt,.md,.markdown,.csv,.json,.log,.rtf,.html,text/*,application/json";
-              inp.onchange = () => { if (inp.files) handleFilesDropped(inp.files); };
-              inp.click();
-            }}
-            className={cn(
-              "mt-2 cursor-pointer rounded-lg border border-dashed border-border/60 bg-background/40 px-3 py-3 text-center text-[11px] text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5",
-              dragOver && "border-primary bg-primary/10 text-primary",
-              droppingFile && "opacity-60",
-            )}
-          >
-            {droppingFile
-              ? <span className="inline-flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Reading…</span>
-              : dragOver
-                ? "Drop to save as note"
-                : "Or drop a file here (.txt, .md, .csv, .json)"}
-          </div>
-
           {showNotes && (
             <ul className="mt-2 space-y-2 max-h-80 overflow-y-auto pr-1">
               {notes.length === 0 && <li className="text-xs text-muted-foreground">No notes yet.</li>}
