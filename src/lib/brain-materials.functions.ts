@@ -93,7 +93,7 @@ export async function uploadBrainMaterial(
   const { error: upErr } = await supabase.storage
     .from("attendee-docs")
     .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
-  if (upErr) throw new Error(upErr.message);
+  if (upErr) throw new Error(`Upload failed: ${readableError(upErr)}`);
 
   const { data, error } = await supabase
     .from(TABLE)
@@ -110,13 +110,13 @@ export async function uploadBrainMaterial(
     })
     .select("*")
     .single();
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(`Couldn't save ${file.name}: ${readableError(error)}`);
 
   const row = data as any;
-  startIngest(row.id).catch(() => {
-    /* the row exists; the card offers Retry */
-  });
+  // Awaited: a failed kickoff now marks the row failed and surfaces the reason.
+  await startIngest(row.id, userId);
   return normalize(row);
+
 }
 
 /** Add a public URL as a material. */
