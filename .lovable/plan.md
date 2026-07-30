@@ -1,37 +1,48 @@
-## What I verified
+## Goal
 
-- `brain_materials`, `founder_brain_memory` and the `attendee-docs` storage bucket all already allow an admin to read/write another founder's rows and files, so permissions are not blocking you.
-- One material exists — the TAP PDF, uploaded 19:07 under the member's account (jmdbenz), status ready, 6 chunks. No material rows or ingest calls have been recorded since.
-- There are **no ingest function calls in the logs** for your failed attempt, which means the failure happens in the browser *before* the file reaches the reader — and the current code can swallow that error, leaving no visible reason.
+Produce an extraordinary, build-ready PRD for The Athletes Prayer Foundation (TAP) website — written so it can be pasted into Lovable.dev and produce an award-caliber, multi-page nonprofit site that converts high-net-worth donors.
 
-Two real gaps in the upload path explain a silent/stuck upload:
+Source of truth: TAP's Second Brain corpus (198 chunks, ~250k chars) already in the workspace — brand messaging house, executive summary, GTM plan, legal structure brief, product roadmap, launch content kit, paid ads pack, founder notes. Everything in the PRD comes from that corpus; no invented facts.
 
-1. **The ingest kickoff error is discarded.** In `src/lib/brain-materials.functions.ts`, `startIngest(...).catch(() => {})` throws away failures (expired token, function error). The row is created and sits at "Queued" forever with no message.
-2. **Impersonation state can be lost on re-login.** Impersonation lives in `sessionStorage`; after the sign-out you just hit, the Brain page may be acting as your admin account (which has a different venture), so the upload targets the wrong workspace or no snapshot at all.
+## Deliverables
 
-## What I'll build
+1. `public/tap-website-prd.md` — the full PRD (long-form, ~20-30 sections).
+2. `/mnt/documents/tap-website-prd.pdf` — same content, styled, for sharing with the founder/board.
+3. Keeps the existing `public/PRD.md` in place (short version) — the new file supersedes it and I'll note that at the top.
 
-**1. Fail loudly instead of silently**
-- `startIngest` failures now flip the material row to `failed` with the actual message and show it on the card, so nothing hangs at "Queued".
-- Surface the raw storage / insert / invoke error text in the toast instead of a generic message.
-- Auto-recover: any material stuck in a working state for more than 3 minutes shows a "Stalled — Retry" state rather than spinning.
+## PRD structure
 
-**2. Make the ingest call robust**
-- Send the material's owner id with the request and confirm the function returns 202 before the card leaves "Queued".
-- Keep the existing admin bypass in `brain-material-ingest`, and add a clear 401 message when the caller's token has expired ("Your session expired — sign in again").
+**Part 1 — Strategy**
+- Mission, 501(c)(3) positioning, the "78% identity crisis" thesis
+- Two revenue engines the site must serve: program subscriptions (Pro / Student / Legacy Gift) and philanthropy (major gifts, recurring, institutional partnerships)
+- Donor personas: major-gift individual, athlete-alum donor, corporate/foundation sponsor, athletic director, parent — each with objections and the proof that answers them
+- Trust ladder: what a $50 donor needs vs. what a $50,000 donor needs (financial transparency, board, impact metrics, named giving)
 
-**3. Make impersonation obvious and sticky on the Brain page**
-- Show a small banner on `/dashboard/brain` naming whose brain you're editing ("Viewing as jmdbenz@gmail.com") whenever impersonation is active.
-- If impersonation was lost, the banner is absent — so you immediately see you're in your own workspace instead of guessing.
+**Part 2 — Brand and art direction (award-caliber)**
+- Full token set: colors with hex, typography scale, spacing, radii, motion rules
+- Art direction: chiaroscuro locker-room photography, parchment texture, gold-foil detail, generous negative space
+- Motion/interaction spec: scroll-reveal, sticky give bar, parallax hero, reduced-motion fallbacks
+- Explicit anti-patterns: churchy clip-art, stock handshake photos, neon sports gradients
 
-**4. Close the delete gap**
-- Add owner+admin insert/delete access rules on the brain memory table so removing a material actually removes its chunks (today the cleanup silently does nothing and leaves orphan chunks in the brain).
+**Part 3 — Multi-page architecture**
+Sitemap with a spec for each page: Home, The Time Capsule, Programs (Pro / Academy / Legacy Gift), Our Approach + Chaplain credentials, Impact & Stories, About / Board / Financials, Ways to Give (one-time, monthly, major gift, DAF, stock, planned giving, corporate matching), Partner With Us (ADs, agents, teams), Journal, Contact, plus legal/utility pages.
 
-**5. Verify, not assume**
-- Drive the real page in a headless browser signed in as super admin with impersonation set to jmdbenz, upload a test file, and confirm: row created → reading → ready → chunk count > 0, with function logs to match. I'll report the observed states, and if it still fails I'll have the exact error rather than a blank.
+Each page spec includes: purpose, primary KPI, H1 and subhead, section-by-section order, copy direction with real TAP language, imagery notes, CTA hierarchy, and internal links.
 
-## Technical notes
+**Part 4 — Donor conversion system**
+- Give flow UX: amount ladder, monthly-default toggle, cover-the-fees, impact equivalencies tied to real TAP unit costs
+- Major-gift path: private "Founder's Circle" page, calendar booking, downloadable case-for-support
+- Forms and routing logic by role (athlete / agent / AD / parent / donor)
+- Email follow-up sequences and receipting
 
-- Files: `src/lib/brain-materials.functions.ts`, `src/components/brain/BrainMaterials.tsx`, `src/routes/_authenticated/dashboard/brain.tsx`, `supabase/functions/brain-material-ingest/index.ts`.
-- One migration: add `INSERT`/`DELETE` policies on `public.founder_brain_memory` for `auth.uid() = user_id OR is_admin(auth.uid())` (it currently has `SELECT` only).
-- No change to the storage or `brain_materials` policies — those are already correct.
+**Part 5 — Build spec for Lovable**
+- Page-by-page component inventory, responsive rules, accessibility (WCAG 2.1 AA), performance budget
+- Data model for stories, programs, gift tiers, team
+- Integrations: payments/donations, CRM, calendar, analytics event list
+- SEO: per-page title/description, keyword targets, schema.org NonprofitOrganization + Article + FAQPage
+- Launch phases with acceptance criteria per phase
+- A ready-to-paste "Lovable build prompt" appendix that condenses the PRD into a single generation brief
+
+## Method
+
+Generate in three passes against the corpus (strategy/brand, page specs, technical/donor system) so each part gets full depth rather than a compressed single output, then assemble, QA the PDF page by page, and report anything the corpus didn't cover so you can fill it in.
