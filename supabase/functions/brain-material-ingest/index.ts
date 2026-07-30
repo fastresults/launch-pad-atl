@@ -174,11 +174,12 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const auth = req.headers.get("Authorization") ?? "";
-    if (!auth) return json({ error: "Missing auth" }, 401);
+    if (!auth) return json({ error: "Your session expired — sign in again, then retry." }, 401);
     const userClient = createClient(SUPABASE_URL, ANON_KEY, { global: { headers: { Authorization: auth } } });
     const { data: ures } = await userClient.auth.getUser();
     const userId = ures?.user?.id;
-    if (!userId) return json({ error: "Not signed in" }, 401);
+    if (!userId) return json({ error: "Your session expired — sign in again, then retry." }, 401);
+
 
     const body = await req.json().catch(() => ({}));
     const materialId = typeof body?.materialId === "string" ? body.materialId : "";
