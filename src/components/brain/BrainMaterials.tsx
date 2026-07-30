@@ -242,11 +242,12 @@ export default function BrainMaterials({
             )}
 
             <div className="mt-2 flex items-center gap-1">
-              {m.status === "failed" && (
+              {(m.status === "failed" || isStalled(m)) && (
                 <Button
                   size="sm" variant="ghost" className="h-6 px-1.5 text-[10px]"
                   onClick={async () => {
-                    try { await retryBrainMaterial(m.id); invalidate(); } catch (e: any) { toast.error(e?.message ?? "Retry failed"); }
+                    try { await retryBrainMaterial(m.id, userId); invalidate(); } catch (e: any) { toast.error(e?.message ?? "Retry failed"); }
+
                   }}
                 >
                   <RotateCw className="mr-1 h-3 w-3" /> Retry
