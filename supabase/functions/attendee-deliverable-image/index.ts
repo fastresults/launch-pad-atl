@@ -72,10 +72,18 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    const ownerId = isServiceRole ? (explicitUserId ?? callerId) : callerId;
+    let ownerId = isServiceRole ? (explicitUserId ?? callerId) : callerId;
+    // Admin impersonation: a signed-in admin may target another user's row.
+    if (!isServiceRole && explicitUserId && explicitUserId !== callerId) {
+      const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", callerId);
+      const isAdmin = (roles ?? []).some((r: any) => r.role === "admin" || r.role === "super_admin");
+      if (!isAdmin) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      ownerId = explicitUserId;
+    }
     if (!ownerId) {
       return new Response(JSON.stringify({ error: "userId required for service-role call" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
 
     const { data: deliverable } = await admin
       .from("attendee_deliverables")
