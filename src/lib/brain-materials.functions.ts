@@ -90,10 +90,11 @@ export async function uploadBrainMaterial(
     .single();
   if (error) throw new Error(error.message);
 
-  startIngest(data.id).catch(() => {
+  const row = data as any;
+  startIngest(row.id).catch(() => {
     /* the row exists; the card offers Retry */
   });
-  return normalize(data);
+  return normalize(row);
 }
 
 /** Add a public URL as a material. */
@@ -124,8 +125,9 @@ export async function addBrainMaterialLink(
     .single();
   if (error) throw new Error(error.message);
 
-  startIngest(data.id).catch(() => { /* retryable from the card */ });
-  return normalize(data);
+  const row = data as any;
+  startIngest(row.id).catch(() => { /* retryable from the card */ });
+  return normalize(row);
 }
 
 export async function retryBrainMaterial(materialId: string): Promise<void> {
