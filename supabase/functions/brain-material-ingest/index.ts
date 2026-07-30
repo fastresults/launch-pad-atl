@@ -13,6 +13,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import mammoth from "npm:mammoth@1.7.2";
 import { chunkText, embedTexts, toVectorLiteral } from "../_shared/brain-embed.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
+import { markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -315,6 +316,13 @@ async function runIngest(admin: any, material: any) {
       chunk_count: embedded,
       error_message: truncated ? "Very long file — only the first 200,000 characters were indexed." : null,
     });
+
+    // New material in the corpus invalidates the compressed venture summary so
+    // the next Generate rebuilds from it.
+    if (material.snapshot_id) {
+      await markSnapshotBrainDirty(admin, material.snapshot_id);
+    }
+
   } catch (e) {
     console.error("brain-material-ingest failed", e);
     await touch({ status: "failed", error_message: e instanceof Error ? e.message : String(e) });

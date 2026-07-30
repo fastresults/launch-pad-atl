@@ -4,6 +4,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { chunkText, embedTexts, toVectorLiteral } from "../_shared/brain-embed.ts";
+import { markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -329,6 +330,13 @@ async function runJob(admin: any, userId: string, jobId: string, snapshotId: str
       status: embedded > 0 ? "done" : "failed",
       finished_at: new Date().toISOString(),
     });
+
+    // The corpus changed — force the compressed snapshot brain to recompute on
+    // the next Generate so deliverables reflect the rebuilt memory.
+    if (snapshotId && embedded > 0) {
+      await markSnapshotBrainDirty(admin, snapshotId);
+    }
+
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("brain-reindex job crashed", msg);

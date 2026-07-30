@@ -8,6 +8,7 @@
 // will recompute on next demand.
 
 import { compactPreamble, loadVentureContext, renderSources, type VentureBrain } from "./venture-context.ts";
+import { loadCorpusDigest } from "./brain-corpus.ts";
 import { aiFetch } from "./ai-fetch.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
@@ -37,9 +38,15 @@ export async function computeSnapshotBrain(supabase: any, snapshotId: string): P
   // brain stays in lockstep with what the rest of the pipeline reasons over.
   const ctx = await loadVentureContext(supabase, snapshotId);
 
+  // Everything the founder put in their Second Brain (uploaded materials,
+  // notes, extracted sources) so the compressed brain — and therefore every
+  // downstream generator — reflects the latest corpus.
+  const corpus = await loadCorpusDigest(supabase, ctx.userId, snapshotId);
+
   const userPrompt = [
     compactPreamble(ctx),
     ctx.snap.business_concept ? `\n## Founder's raw concept\n${ctx.snap.business_concept}` : "",
+    corpus ? `\n## Founder's Second Brain corpus (authoritative)\n${corpus}` : "",
     ctx.sources.documents.length || ctx.sources.urls.length
       ? `\n## Founder-supplied source materials\n${renderSources(ctx, 4000)}`
       : "",

@@ -12,6 +12,7 @@ import {
   type VentureContext,
 } from "../_shared/venture-context.ts";
 import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
+import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
 import { stripCitations } from "../_shared/deliverable-prompts.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
@@ -383,6 +384,21 @@ async function generateRoadmap(supabase: any, snapshotId: string) {
     .eq("id", snapshotId);
 
   const bundle = buildContextBundle(ctx, allDocs);
+
+  // Founder's Second Brain corpus — protected so budget-fitting keeps it.
+  try {
+    const corpus = await brainCorpusBlock(
+      supabase,
+      ctx.userId,
+      snapshotId,
+      [ctx.snap.company_name ?? "", ctx.snap.concept_summary ?? "", "365-day roadmap"].filter(Boolean).join(" \u2014 "),
+      8,
+    );
+    if (corpus) bundle.push({ protect: true, body: corpus });
+  } catch (e) {
+    console.warn("brain corpus retrieval failed", e);
+  }
+
   const userPrompt = fitToBudget(bundle);
   const snap = ctx.snap;
 

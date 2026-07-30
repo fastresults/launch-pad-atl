@@ -13,6 +13,7 @@ import {
   type VentureContext,
 } from "../_shared/venture-context.ts";
 import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
+import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
 import { MODELS, modelForTier } from "../_shared/models.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 
@@ -88,6 +89,9 @@ async function generateOne(
     feedback?: string;
     tags?: string[];
     previous?: Content | null;
+    admin?: any;
+    userId?: string | null;
+    snapshotId?: string | null;
   },
 ): Promise<Content> {
   // Honor deliverable_types.default_model with safe tier mapping.
@@ -118,6 +122,24 @@ async function generateOne(
     // but tighter: brief only (no raw founder/market dumps).
     contextBlock = `## Founder's Startup Brief\n${JSON.stringify(ctx.brief ?? {}, null, 2)}`;
   }
+
+  // Retrieval over the founder's Second Brain corpus — the actual uploaded
+  // materials and notes, scoped to what THIS deliverable is about.
+  let corpusBlock = "";
+  if (ctx.admin && ctx.userId) {
+    try {
+      const query = [
+        type.label,
+        type.description ?? "",
+        ctx.venture?.snap?.concept_summary ?? ctx.venture?.snap?.business_concept ?? "",
+      ].filter(Boolean).join(" — ");
+      corpusBlock = await brainCorpusBlock(ctx.admin, ctx.userId, ctx.snapshotId ?? null, query, 10);
+    } catch (e) {
+      console.warn("brain corpus retrieval failed", e);
+    }
+  }
+  if (corpusBlock) contextBlock = [contextBlock, corpusBlock].join("\n\n");
+
 
   const system = `You are a senior startup coach writing a single founder-ready deliverable.
 Output STRICT JSON (no markdown fences) with this shape:
@@ -266,9 +288,10 @@ async function runJob(admin: any, userId: string, runId: string, opts: { key?: s
     if (primarySnap?.id) {
       try {
         venture = await loadVentureContext(admin, primarySnap.id);
-        if (!venture.brain) {
-          venture.brain = await ensureSnapshotBrain(admin, primarySnap.id);
-        }
+        // Always go through ensureSnapshotBrain: it returns the cached brain
+        // when clean and recomputes when the corpus changed (new material,
+        // rebuilt memory), so Generate never reuses a stale summary.
+        venture.brain = (await ensureSnapshotBrain(admin, primarySnap.id)) ?? venture.brain;
       } catch (e) {
         console.warn("loadVentureContext failed, falling back to raw brief", e);
         venture = null;
@@ -330,6 +353,9 @@ async function runJob(admin: any, userId: string, runId: string, opts: { key?: s
           feedback: isTarget ? opts.feedback : undefined,
           tags: isTarget ? opts.tags : undefined,
           previous: isTarget ? (upstream[t.key] ?? null) : null,
+          admin,
+          userId,
+          snapshotId: primarySnap?.id ?? null,
         });
 
 
