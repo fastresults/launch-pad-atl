@@ -24,6 +24,8 @@ import {
   type BrainMessage, type BrainIndexingJob, type BrainVenture,
 } from "@/lib/brain.functions";
 import { useConfirm, usePrompt } from "@/components/ui/confirm-dialog";
+import { getImpersonationTarget } from "@/lib/effective-user";
+
 
 const STARTERS = [
   "What's the single riskiest assumption in my plan?",
