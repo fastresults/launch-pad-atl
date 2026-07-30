@@ -194,8 +194,9 @@ Deno.serve(async (req) => {
     if (!material) return json({ error: "Material not found" }, 404);
     if (material.user_id !== userId) {
       const { data: isAdmin } = await admin.rpc("is_admin", { _user_id: userId });
-      if (!isAdmin) return json({ error: "Forbidden" }, 403);
+      if (!isAdmin) return json({ error: "You don't have access to this material." }, 403);
     }
+
 
     // deno-lint-ignore no-explicit-any
     const anyRuntime = (globalThis as any).EdgeRuntime;
