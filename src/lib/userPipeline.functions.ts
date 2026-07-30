@@ -89,8 +89,13 @@ export async function adminGetUserWorkflow(input: any) {
 }
 
 async function invokeRun(payload: Record<string, unknown>) {
+  // Always target the EFFECTIVE user. When an admin is impersonating a founder,
+  // the request still authenticates as the admin, so without this the pipeline
+  // would regenerate the admin's own deliverables and the founder's asset would
+  // appear unchanged.
+  const userId = await getEffectiveUserId();
   const { data, error } = await supabase.functions.invoke("dashboard-pipeline-run", {
-    body: payload,
+    body: { ...payload, userId },
   });
   if (error) throw new Error(error.message);
   if (data && data.ok === false) throw new Error(data.error ?? "Run failed");
@@ -105,8 +110,9 @@ export async function runMyDeliverable(input: any) {
 
 export async function runMyDeliverableAssessment(input: any) {
   const { key, feedback, tags } = unwrap<{ key: string; feedback?: string; tags?: string[] }>(input);
+  const userId = await getEffectiveUserId();
   const { data, error } = await supabase.functions.invoke("attendee-generate-assessment", {
-    body: { key, feedback, tags },
+    body: { key, feedback, tags, userId },
   });
   if (error) throw new Error(error.message);
   if (data && data.error) throw new Error(data.error);
