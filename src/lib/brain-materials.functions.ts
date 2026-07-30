@@ -145,17 +145,18 @@ export async function addBrainMaterialLink(
     })
     .select("*")
     .single();
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(`Couldn't save that link: ${readableError(error)}`);
 
   const row = data as any;
-  startIngest(row.id).catch(() => { /* retryable from the card */ });
+  await startIngest(row.id, userId);
   return normalize(row);
 }
 
-export async function retryBrainMaterial(materialId: string): Promise<void> {
+export async function retryBrainMaterial(materialId: string, ownerId?: string | null): Promise<void> {
   await supabase.from(TABLE).update({ status: "queued", error_message: null }).eq("id", materialId);
-  await startIngest(materialId);
+  await startIngest(materialId, ownerId);
 }
+
 
 export async function renameBrainMaterial(materialId: string, title: string): Promise<void> {
   const clean = title.trim().slice(0, 120);
