@@ -134,13 +134,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
 
-  // Auto-clear impersonation if the actor is no longer admin.
+  // Auto-clear impersonation only once we know for sure the actor isn't an admin.
   useEffect(() => {
-    if (impersonation && !isAdmin && actorUser) {
+    if (impersonation && rolesLoaded && !isAdmin && actorUser) {
       sessionStorage.removeItem(IMPERSONATION_KEY);
       setImpersonation(null);
     }
-  }, [impersonation, isAdmin, actorUser]);
+  }, [impersonation, rolesLoaded, isAdmin, actorUser]);
+
 
   const startImpersonation: AuthState["startImpersonation"] = async (t) => {
     if (!isAdmin) throw new Error("Only admins can impersonate");
