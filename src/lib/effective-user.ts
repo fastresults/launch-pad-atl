@@ -81,3 +81,8 @@ export async function getActorUserId(): Promise<string> {
 export function isImpersonating(): boolean {
   return readStoredImpersonation() !== null;
 }
+
+/** Synchronous read of who the session is impersonating (id/name/email), or null. */
+export function getImpersonationTarget(): { userId: string; name?: string; email?: string } | null {
+  return readStoredImpersonation();
+}
