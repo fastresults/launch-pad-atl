@@ -72,8 +72,8 @@ export type BrainIndexingJob = {
   created_at: string;
 };
 
-export async function rebuildBrainMemory(snapshotId: string | null): Promise<{ jobId: string }> {
-  const { data, error } = await supabase.functions.invoke("brain-reindex", { body: { snapshotId } });
+export async function rebuildBrainMemory(snapshotId: string | null, ownerId?: string): Promise<{ jobId: string }> {
+  const { data, error } = await supabase.functions.invoke("brain-reindex", { body: { snapshotId, ownerId } });
   if (error) throw error;
   if ((data as any)?.error) throw new Error((data as any).error);
   const jobId = (data as any).jobId as string | undefined;

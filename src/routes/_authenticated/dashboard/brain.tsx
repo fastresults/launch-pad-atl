@@ -240,7 +240,7 @@ export default function BrainPage() {
   }, [jobId, qc, userId, snapshotId]);
 
   const rebuild = useMutation({
-    mutationFn: () => rebuildBrainMemory(snapshotId),
+    mutationFn: () => rebuildBrainMemory(snapshotId, userId),
     onSuccess: ({ jobId: id }) => {
       setJobId(id);
       setJob({

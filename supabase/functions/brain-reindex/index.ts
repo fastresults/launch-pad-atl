@@ -25,20 +25,32 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const snapshotId: string | null = typeof body?.snapshotId === "string" && body.snapshotId ? body.snapshotId : null;
+    const requestedOwnerId: string | null =
+      typeof body?.ownerId === "string" && body.ownerId ? body.ownerId : null;
+
+    // Admins (and super admins) may rebuild another founder's brain — that's
+    // what the "view as" impersonation flow does.
+    let isAdmin = false;
+    if (requestedOwnerId && requestedOwnerId !== userId) {
+      const { data: adminFlag } = await admin.rpc("is_admin", { _user_id: userId });
+      isAdmin = adminFlag === true;
+      if (!isAdmin) return json({ error: "Not authorized for this founder" }, 403);
+    }
+    const ownerId = requestedOwnerId ?? userId;
 
     if (snapshotId) {
-      // Confirm the venture belongs to this user before we scope work to it.
+      // Confirm the venture belongs to the target founder before scoping work.
       const { data: snap } = await admin
         .from("venture_snapshots")
         .select("id, user_id")
         .eq("id", snapshotId)
         .maybeSingle();
-      if (!snap || snap.user_id !== userId) return json({ error: "Venture not found" }, 404);
+      if (!snap || snap.user_id !== ownerId) return json({ error: "Venture not found" }, 404);
     }
 
     const { data: job, error: jobErr } = await admin
       .from("brain_indexing_jobs")
-      .insert({ user_id: userId, snapshot_id: snapshotId, status: "queued" })
+      .insert({ user_id: ownerId, snapshot_id: snapshotId, status: "queued" })
       .select("id")
       .single();
     if (jobErr || !job) return json({ error: jobErr?.message ?? "Job create failed" }, 500);
@@ -46,7 +58,8 @@ Deno.serve(async (req) => {
     // Run the actual work in the background so we return immediately.
     // deno-lint-ignore no-explicit-any
     const anyRuntime = (globalThis as any).EdgeRuntime;
-    const work = runJob(admin, userId, job.id, snapshotId);
+    const work = runJob(admin, ownerId, job.id, snapshotId);
+
     if (anyRuntime?.waitUntil) {
       anyRuntime.waitUntil(work);
     } else {
