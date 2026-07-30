@@ -176,7 +176,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Effective user: swap id/email when impersonating. Downstream reads of `user.id` transparently
   // target the impersonated user. All authenticated Supabase requests still authenticate as the actor.
   const effectiveUser = useMemo<User | null>(() => {
-    if (impersonation && isAdmin && actorUser) {
+    // While roles are still loading, keep honouring an active impersonation —
+    // dropping to the actor mid-load would write into the wrong workspace.
+    if (impersonation && (isAdmin || !rolesLoaded) && actorUser) {
+
       return {
         ...actorUser,
         id: impersonation.userId,
