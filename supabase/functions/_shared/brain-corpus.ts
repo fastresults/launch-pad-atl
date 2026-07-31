@@ -92,6 +92,50 @@ export async function brainCorpusBlock(
 }
 
 /**
+ * Multi-query retrieval: run one lookup per topic and merge the results,
+ * deduped by content. A long document (a Website PRD, a brand book) covers
+ * many topics, and a single 10-chunk lookup only ever grounds one of them.
+ */
+export async function brainCorpusBlockMulti(
+  admin: any,
+  userId: string | null,
+  snapshotId: string | null,
+  queries: string[],
+  limitPerQuery = 8,
+  maxChunks = 48,
+): Promise<{ block: string; chunkCount: number; chars: number }> {
+  if (!userId || !queries.length) return { block: "", chunkCount: 0, chars: 0 };
+
+  const results = await Promise.all(
+    queries.map((q) =>
+      loadBrainCorpus(admin, userId, snapshotId, { query: q, limit: limitPerQuery }).catch(
+        () => [] as BrainChunk[],
+      ),
+    ),
+  );
+
+  const seen = new Set<string>();
+  const merged: BrainChunk[] = [];
+  // Round-robin across queries so no single topic dominates the budget.
+  const depth = Math.max(...results.map((r) => r.length), 0);
+  for (let i = 0; i < depth && merged.length < maxChunks; i++) {
+    for (const list of results) {
+      if (merged.length >= maxChunks) break;
+      const c = list[i];
+      if (!c) continue;
+      const sig = `${c.title ?? ""}|${(c.content ?? "").slice(0, 160)}`;
+      if (seen.has(sig)) continue;
+      seen.add(sig);
+      merged.push(c);
+    }
+  }
+
+  const block = renderBrainCorpus(merged, 1200);
+  return { block, chunkCount: merged.length, chars: block.length };
+}
+
+
+/**
  * A compact digest of the whole corpus (titles + leading text), used when
  * building the compressed snapshot brain so the summary itself reflects
  * everything the founder uploaded.

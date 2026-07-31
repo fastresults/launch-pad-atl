@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { forceRunMyRemaining, getMyWorkflow, runMyDeliverable, runMyRemaining, getMyRecentRuns } from "@/lib/userPipeline.functions";
+import { forceRunMyRemaining, getMyWorkflow, runMyDeliverable, runMyKeys, runMyRemaining, getMyRecentRuns, getMyRunSteps } from "@/lib/userPipeline.functions";
 import { countAnsweredBriefFields } from "@/lib/brief-progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,10 +33,24 @@ export default function WorkflowPage() {
 
   const { data } = useQuery({ queryKey: ["my", "workflow"], queryFn: () => getMyWorkflow(), refetchInterval: 5000 });
   const { data: recent } = useQuery({ queryKey: ["my", "recent-runs"], queryFn: () => getMyRecentRuns(), refetchInterval: 3000 });
+  // Live per-key state (queued / running / completed / failed) so every card
+  // reflects the run that's actually happening on the server.
+  const { data: steps } = useQuery({ queryKey: ["my", "run-steps"], queryFn: () => getMyRunSteps(), refetchInterval: 3000 });
+
+  const stepFor = (key: string) => (steps ?? {})[key] as
+    | { status: string; error?: string | null }
+    | undefined;
+  const isWriting = (key: string) => {
+    const st = stepFor(key)?.status;
+    return st === "running" || st === "queued";
+  };
 
   const runOne = useMutation({
     mutationFn: (key: string) => runMyDeliverable({ data: { key, runUpstream: true } }),
-    onSuccess: () => { toast.success("Generation complete"); qc.invalidateQueries({ queryKey: ["my"] }); },
+    onSuccess: () => {
+      toast.success("Started — this card updates live as it's written");
+      qc.invalidateQueries({ queryKey: ["my"] });
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Run failed"),
   });
 
@@ -44,19 +58,16 @@ export default function WorkflowPage() {
   const [openDeckSlug, setOpenDeckSlug] = useState<string | null>(null);
   const [runningCategoryStage, setRunningCategoryStage] = useState<number | null>(null);
 
-  const runCategory = async (stageN: number, keys: string[]) => {
+  const runCategory = async (stageN: number, keys: string[], onlyMissing = true) => {
     if (keys.length === 0) return;
     setRunningCategoryStage(stageN);
     try {
-      for (const key of keys) {
-        try {
-          await runMyDeliverable({ data: { key, runUpstream: true } });
-        } catch (e) {
-          toast.error(`${key}: ${e instanceof Error ? e.message : "failed"}`);
-        }
-      }
-      toast.success("Category ready");
+      // ONE server-side run, in dependency order — not N racing invocations.
+      await runMyKeys({ data: { keys, onlyMissing } });
+      toast.success(`Started ${keys.length} startup asset${keys.length === 1 ? "" : "s"} — they fill in live below`);
       qc.invalidateQueries({ queryKey: ["my"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Category run failed");
     } finally {
       setRunningCategoryStage(null);
     }
@@ -65,7 +76,7 @@ export default function WorkflowPage() {
   const runAll = useMutation({
     mutationFn: () => runMyRemaining(),
     onSuccess: () => {
-      toast.success("Queued — your co-founder is on it");
+      toast.success("Started — assets fill in live as each one is written");
       qc.invalidateQueries({ queryKey: ["my"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Bulk run failed"),
@@ -319,29 +330,58 @@ export default function WorkflowPage() {
               {(() => {
                 const stageTrig = group.items.filter((i) => i.user_can_trigger !== false);
                 const remainingKeys = stageTrig.filter((i) => !i.generated).map((i) => i.key);
+                const failedKeys = stageTrig
+                  .filter((i) => !i.generated && stepFor(i.key)?.status === "failed")
+                  .map((i) => i.key);
+                const writingCount = stageTrig.filter((i) => isWriting(i.key)).length;
                 const allDone = stageTrig.length > 0 && remainingKeys.length === 0;
-                const isRunning = runningCategoryStage === n;
+                const isRunning = runningCategoryStage === n || writingCount > 0;
                 if (allDone) {
                   return (
-                    <Button size="sm" variant="ghost" disabled>
-                      <CheckCircle2 className="mr-1 h-4 w-4 text-status-success" />
-                      Category complete
-                    </Button>
+                    <>
+                      <Button size="sm" variant="ghost" disabled>
+                        <CheckCircle2 className="mr-1 h-4 w-4 text-status-success" />
+                        Category complete
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => runCategory(n, stageTrig.map((i) => i.key), false)}
+                        disabled={!briefReady || isRunning}
+                        title="Rewrite every asset in this category from your Second Brain"
+                      >
+                        <Sparkles className="mr-1 h-4 w-4" />
+                        Regenerate category
+                      </Button>
+                    </>
                   );
                 }
                 return (
-                  <Button
-                    size="sm"
-                    onClick={() => runCategory(n, remainingKeys)}
-                    disabled={!briefReady || isRunning || remainingKeys.length === 0}
-                    title={!briefReady ? "Finish your Startup Brief first" : undefined}
-                  >
-                    {isRunning ? (
-                      <><Loader2 className="mr-1 h-4 w-4 animate-spin" />Generating…</>
-                    ) : (
-                      <><Play className="mr-1 h-4 w-4" />Generate this category ({remainingKeys.length})</>
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => runCategory(n, remainingKeys)}
+                      disabled={!briefReady || isRunning || remainingKeys.length === 0}
+                      title={!briefReady ? "Finish your Startup Brief first" : undefined}
+                    >
+                      {isRunning ? (
+                        <><Loader2 className="mr-1 h-4 w-4 animate-spin" />Writing {writingCount || remainingKeys.length}…</>
+                      ) : (
+                        <><Play className="mr-1 h-4 w-4" />Generate this category ({remainingKeys.length})</>
+                      )}
+                    </Button>
+                    {failedKeys.length > 0 && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => runCategory(n, failedKeys)}
+                        disabled={!briefReady || isRunning}
+                      >
+                        <AlertTriangle className="mr-1 h-4 w-4 text-status-warning" />
+                        Retry failed ({failedKeys.length})
+                      </Button>
                     )}
-                  </Button>
+                  </>
                 );
               })()}
               {deck && (
@@ -388,8 +428,19 @@ export default function WorkflowPage() {
                       </div>
                       {d.description && <p className="mt-1 text-xs text-muted-foreground">{d.description}</p>}
                       <div className="mt-2 flex flex-wrap items-center gap-1">
+                        {isWriting(d.key) && (
+                          <Badge variant="outline" className="gap-1 text-[10px] text-primary">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            {stepFor(d.key)?.status === "running" ? "Writing now" : "Queued"}
+                          </Badge>
+                        )}
+                        {!isWriting(d.key) && !d.generated && stepFor(d.key)?.status === "failed" && (
+                          <Badge variant="outline" className="gap-1 text-[10px] text-status-warning" title={stepFor(d.key)?.error ?? undefined}>
+                            <AlertTriangle className="h-3 w-3" /> Failed — retry
+                          </Badge>
+                        )}
                         {d.generated && <Badge variant="secondary" className="text-xs">Generated</Badge>}
-                        {!d.generated && !d.deps_met && <Badge variant="outline" className="text-xs">Waiting on upstream</Badge>}
+                        {!d.generated && !d.deps_met && !isWriting(d.key) && <Badge variant="outline" className="text-xs">Waiting on upstream</Badge>}
                         {d.generated && (
                           d.image_status === "ready" ? (
                             <Badge variant="outline" className="gap-1 text-[10px]" title="Hero image ready">
@@ -417,13 +468,13 @@ export default function WorkflowPage() {
                     <Button
                       size="sm"
                       variant={d.generated ? "outline" : "default"}
-                      disabled={!briefReady || runOne.isPending}
+                      disabled={!briefReady || isWriting(d.key) || (runOne.isPending && runOne.variables === d.key)}
                       onClick={() => runOne.mutate(d.key)}
                       title={!d.deps_met ? "We'll run upstream startup assets first, then this one." : undefined}
                     >
-                      {runOne.isPending && runOne.variables === d.key ? (
-                        <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Running…</>
-                      ) : d.generated ? "Regenerate" : "Generate"}
+                      {isWriting(d.key) || (runOne.isPending && runOne.variables === d.key) ? (
+                        <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Writing…</>
+                      ) : stepFor(d.key)?.status === "failed" && !d.generated ? "Retry" : d.generated ? "Regenerate" : "Generate"}
                     </Button>
                     {d.generated && (
                       <Button asChild size="sm" variant="ghost">

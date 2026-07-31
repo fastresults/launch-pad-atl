@@ -71,7 +71,11 @@ export default function WorkflowDetail() {
   const run = useMutation({
     mutationFn: (vars?: { feedback?: string; tags?: string[] }) =>
       runMyDeliverable({ data: { key, runUpstream: true, feedback: vars?.feedback, tags: vars?.tags } }),
-    onSuccess: () => { toast.success("Generation complete"); refetch(); qc.invalidateQueries({ queryKey: ["my"] }); },
+    onSuccess: () => {
+      toast.success("Started — this page updates live as it's written");
+      refetch();
+      qc.invalidateQueries({ queryKey: ["my"] });
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Run failed"),
   });
 
