@@ -1,10 +1,16 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { X, Eye } from "lucide-react";
+import { X, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function ImpersonationBanner() {
-  const { isImpersonating, impersonationTarget, stopImpersonation } = useAuth();
+  const {
+    isImpersonating,
+    impersonationTarget,
+    stopImpersonation,
+    viewMemberGates,
+    setViewMemberGates,
+  } = useAuth();
   const navigate = useNavigate();
   if (!isImpersonating || !impersonationTarget) return null;
   return (
@@ -18,17 +24,32 @@ export function ImpersonationBanner() {
             <span className="ml-2 opacity-70">— actions affect their account.</span>
           </span>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="border-amber-400/50 bg-transparent text-amber-100 hover:bg-amber-500/20"
-          onClick={async () => {
-            await stopImpersonation();
-            navigate("/admin/users");
-          }}
-        >
-          <X className="mr-1 h-3.5 w-3.5" /> Exit impersonation
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-amber-400/50 bg-transparent text-amber-100 hover:bg-amber-500/20"
+            onClick={() => setViewMemberGates(!viewMemberGates)}
+            title="Apply this member's own access rules instead of your admin bypass"
+          >
+            {viewMemberGates ? (
+              <><EyeOff className="mr-1 h-3.5 w-3.5" /> Member access: on</>
+            ) : (
+              <><Eye className="mr-1 h-3.5 w-3.5" /> Member access: off</>
+            )}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-amber-400/50 bg-transparent text-amber-100 hover:bg-amber-500/20"
+            onClick={async () => {
+              await stopImpersonation();
+              navigate("/admin/users");
+            }}
+          >
+            <X className="mr-1 h-3.5 w-3.5" /> Exit impersonation
+          </Button>
+        </div>
       </div>
     </div>
   );

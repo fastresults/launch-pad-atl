@@ -14,7 +14,7 @@ import { classifySourcing, type SourcingProfile } from "../_shared/sourcing-clas
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-impersonate-user",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 

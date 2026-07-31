@@ -25,6 +25,7 @@ import {
 } from "@/lib/brain.functions";
 import { useConfirm, usePrompt } from "@/components/ui/confirm-dialog";
 import { getImpersonationTarget } from "@/lib/effective-user";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 
 const STARTERS = [
@@ -326,7 +327,7 @@ export default function BrainPage() {
       const ext = (blob.type.split(";")[0].split("/")[1] || "webm").replace("mpeg", "mp3");
       const form = new FormData();
       form.append("file", new File([blob], `recording.${ext}`, { type: blob.type }));
-      const { data, error } = await supabase.functions.invoke("venture-transcribe", { body: form });
+      const { data, error } = await invokeEdge("venture-transcribe", { body: form });
       if (error) throw error;
       const text = ((data as any)?.text ?? "").trim();
       if (!text) { toast.info("Couldn't hear that"); return; }

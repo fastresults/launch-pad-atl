@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 export const ZERNIO_PLATFORMS = [
   { value: "twitter", label: "Twitter / X" },
@@ -19,7 +20,7 @@ export const ZERNIO_PLATFORMS = [
 ] as const;
 
 async function call(action: string, params: any = {}) {
-  const { data, error } = await supabase.functions.invoke("zernio", {
+  const { data, error } = await invokeEdge("zernio", {
     body: { action, params },
   });
   if (error) throw new Error(error.message || "Zernio request failed");

@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 import { getEffectiveUserId } from "@/lib/effective-user";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 async function uid() { return await getEffectiveUserId(); }
 
@@ -18,7 +19,7 @@ export async function upsertFounderProfile(data: any) {
 }
 export async function extractFounderFromText(input: any) {
   const payload = input?.data ?? input ?? {};
-  const { data, error } = await supabase.functions.invoke("founder-extract", { body: payload });
+  const { data, error } = await invokeEdge("founder-extract", { body: payload });
   if (error) throw new Error(error.message);
   if ((data as any)?.error) throw new Error((data as any).error);
   return { extracted: (data as any)?.extracted ?? {}, note: (data as any)?.note ?? null };
@@ -34,7 +35,7 @@ export async function upsertMarketProfile(data: any) {
 }
 
 async function callSummarize(title: string, kind: "founder" | "market", answers: Array<{label: string; value: string}>) {
-  const { data, error } = await supabase.functions.invoke("brief-summarize-block", {
+  const { data, error } = await invokeEdge("brief-summarize-block", {
     body: { title, kind, answers },
   });
   if (error) throw new Error(error.message);

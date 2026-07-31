@@ -3,14 +3,19 @@ import type { Session, User } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getMyAccount, type AppRole, type MemberStatus } from "@/lib/auth.functions";
-
-const IMPERSONATION_KEY = "sl.impersonation.v1";
+import {
+  IMPERSONATION_TTL_MS,
+  clearStoredImpersonation,
+  readStoredImpersonation,
+  writeStoredImpersonation,
+} from "@/lib/effective-user";
 
 type ImpersonationTarget = {
   userId: string;
   name: string;
   email: string;
   logId?: string;
+  startedAt?: number;
 };
 
 type AuthState = {
@@ -32,21 +37,17 @@ type AuthState = {
   // Impersonation
   isImpersonating: boolean;
   impersonationTarget: ImpersonationTarget | null;
+  /** Gate state of the impersonated member (what they actually see). */
+  targetMemberStatus: MemberStatus | null;
+  targetFoundersHubAccess: boolean | null;
+  /** When true, gates evaluate the member's own access instead of admin bypass. */
+  viewMemberGates: boolean;
+  setViewMemberGates: (v: boolean) => void;
   startImpersonation: (t: Omit<ImpersonationTarget, "logId">) => Promise<void>;
   stopImpersonation: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthState | null>(null);
-
-function readStoredImpersonation(): ImpersonationTarget | null {
-  try {
-    const raw = sessionStorage.getItem(IMPERSONATION_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as ImpersonationTarget;
-  } catch {
-    return null;
-  }
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
@@ -56,13 +57,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [memberStatus, setMemberStatus] = useState<MemberStatus>("pending");
   const [approvedVia, setApprovedVia] = useState<"admin" | "payment" | null>(null);
   const [foundersHubAccess, setFoundersHubAccess] = useState(false);
+  const [targetMemberStatus, setTargetMemberStatus] = useState<MemberStatus | null>(null);
+  const [targetFoundersHubAccess, setTargetFoundersHubAccess] = useState<boolean | null>(null);
+  const [viewMemberGates, setViewMemberGates] = useState(false);
   const [loading, setLoading] = useState(true);
   // True only once roles have been fetched successfully. A failed fetch must not
   // be read as "not an admin" — that silently drops an active impersonation.
   const [rolesLoaded, setRolesLoaded] = useState(false);
 
-  const [impersonation, setImpersonation] = useState<ImpersonationTarget | null>(() =>
-    readStoredImpersonation(),
+  const [impersonation, setImpersonation] = useState<ImpersonationTarget | null>(
+    () => readStoredImpersonation() as ImpersonationTarget | null,
   );
 
   useEffect(() => {
@@ -76,6 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setMemberStatus("pending");
           setApprovedVia(null);
           setFoundersHubAccess(false);
+          setTargetMemberStatus(null);
+          setTargetFoundersHubAccess(null);
         }
         return;
       }
@@ -89,6 +95,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setMemberStatus(res.memberStatus);
             setApprovedVia(res.approvedVia);
             setFoundersHubAccess(res.foundersHubAccess);
+            setTargetMemberStatus(res.targetMemberStatus);
+            setTargetFoundersHubAccess(res.targetFoundersHubAccess);
           }
           return;
         } catch (e) {
@@ -107,13 +115,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       setActorUser(s?.user ?? null);
+      // A token refresh must not churn the whole cache mid-impersonation —
+      // that's what made "viewing as" feel unstable on long sessions.
+      const isRefresh = event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION";
       setTimeout(() => {
         loadAccount(s?.user ?? null);
-        queryClient.invalidateQueries();
+        if (!isRefresh) queryClient.invalidateQueries();
       }, 0);
     });
 
@@ -137,32 +147,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Auto-clear impersonation only once we know for sure the actor isn't an admin.
   useEffect(() => {
     if (impersonation && rolesLoaded && !isAdmin && actorUser) {
-      sessionStorage.removeItem(IMPERSONATION_KEY);
+      clearStoredImpersonation();
       setImpersonation(null);
     }
   }, [impersonation, rolesLoaded, isAdmin, actorUser]);
 
+  // Expire impersonation after the TTL rather than letting a forgotten tab
+  // keep writing into a member's workspace.
+  useEffect(() => {
+    if (!impersonation) return;
+    const startedAt = impersonation.startedAt ?? Date.now();
+    const remaining = startedAt + IMPERSONATION_TTL_MS - Date.now();
+    const finish = () => {
+      clearStoredImpersonation();
+      setImpersonation(null);
+      setViewMemberGates(false);
+      queryClient.clear();
+    };
+    if (remaining <= 0) {
+      finish();
+      return;
+    }
+    const t = setTimeout(finish, remaining);
+    return () => clearTimeout(t);
+  }, [impersonation, queryClient]);
 
   const startImpersonation: AuthState["startImpersonation"] = async (t) => {
     if (!isAdmin) throw new Error("Only admins can impersonate");
-    let logId: string | undefined;
-    try {
-      const { data, error } = await supabase.rpc("start_impersonation", { _target: t.userId });
-      if (error) throw error;
-      logId = data as string;
-    } catch (e) {
-      console.warn("start_impersonation log failed", e);
-    }
-    const target: ImpersonationTarget = { ...t, logId };
-    sessionStorage.setItem(IMPERSONATION_KEY, JSON.stringify(target));
+    // The audit trail is not optional: if we can't log it, we don't do it.
+    const { data, error } = await supabase.rpc("start_impersonation", { _target: t.userId });
+    if (error) throw new Error(`Could not start impersonation (audit log failed): ${error.message}`);
+    const target: ImpersonationTarget = { ...t, logId: data as string, startedAt: Date.now() };
+    writeStoredImpersonation(target);
     setImpersonation(target);
+    setViewMemberGates(false);
     queryClient.clear();
   };
 
   const stopImpersonation: AuthState["stopImpersonation"] = async () => {
     const current = impersonation;
-    sessionStorage.removeItem(IMPERSONATION_KEY);
+    clearStoredImpersonation();
     setImpersonation(null);
+    setViewMemberGates(false);
+    setTargetMemberStatus(null);
+    setTargetFoundersHubAccess(null);
     queryClient.clear();
     if (current?.logId) {
       try {
@@ -179,7 +207,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // While roles are still loading, keep honouring an active impersonation —
     // dropping to the actor mid-load would write into the wrong workspace.
     if (impersonation && (isAdmin || !rolesLoaded) && actorUser) {
-
       return {
         ...actorUser,
         id: impersonation.userId,
@@ -189,31 +216,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return actorUser;
   }, [impersonation, isAdmin, rolesLoaded, actorUser]);
 
-  const signOut = async () => {
-    sessionStorage.removeItem(IMPERSONATION_KEY);
-    setImpersonation(null);
-    await supabase.auth.signOut();
-  };
+  const isImpersonating = !!impersonation && (isAdmin || !rolesLoaded);
+
+  // When impersonating and "view member gates" is on, report the member's own
+  // access so the admin sees exactly what the founder sees.
+  const effectiveMemberStatus: MemberStatus =
+    isImpersonating && viewMemberGates && targetMemberStatus ? targetMemberStatus : memberStatus;
+  const effectiveHubAccess =
+    isImpersonating && viewMemberGates && targetFoundersHubAccess !== null
+      ? targetFoundersHubAccess
+      : foundersHubAccess;
+  const gatesAsMember = isImpersonating && viewMemberGates;
 
   const value: AuthState = {
     user: effectiveUser,
     actorUser,
     session,
     roles,
-    memberStatus,
+    memberStatus: effectiveMemberStatus,
     approvedVia,
-    foundersHubAccess,
+    foundersHubAccess: effectiveHubAccess,
     loading,
     isAuthenticated: !!actorUser,
-    isAdmin,
-    isSuperAdmin: roles.includes("super_admin"),
-    isApprovedMember: isAdmin || memberStatus === "approved",
+    isAdmin: gatesAsMember ? false : isAdmin,
+    isSuperAdmin: gatesAsMember ? false : roles.includes("super_admin"),
+    isApprovedMember: gatesAsMember
+      ? effectiveMemberStatus === "approved"
+      : isAdmin || memberStatus === "approved",
     signOut,
-    isImpersonating: !!impersonation && (isAdmin || !rolesLoaded),
+    isImpersonating,
     impersonationTarget: impersonation,
+    targetMemberStatus,
+    targetFoundersHubAccess,
+    viewMemberGates,
+    setViewMemberGates,
     startImpersonation,
     stopImpersonation,
   };
+
+  async function signOut() {
+    clearStoredImpersonation();
+    setImpersonation(null);
+    await supabase.auth.signOut();
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

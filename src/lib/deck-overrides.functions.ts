@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { SlotMap } from "@/components/workshop-slides/slots";
 import { slotKey } from "@/components/workshop-slides/slots";
+import { getActorUserId } from "@/lib/effective-user";
 
 export type DeckOverrideRow = {
   id: string;
@@ -46,8 +47,8 @@ export async function saveTextOverride(args: {
   field: string;
   value: string | null;
 }) {
-  const { data: user } = await supabase.auth.getUser();
-  const updated_by = user?.user?.id ?? null;
+  // Audit field: always the real signed-in actor.
+  const updated_by = await getActorUserId().catch(() => null);
   if (args.value == null || args.value === "") {
     const { error } = await supabase
       .from("deck_slide_overrides")
@@ -91,8 +92,8 @@ export async function saveImageOverride(args: {
   imageUrl: string;
   imageAlt?: string;
 }) {
-  const { data: user } = await supabase.auth.getUser();
-  const updated_by = user?.user?.id ?? null;
+  // Audit field: always the real signed-in actor.
+  const updated_by = await getActorUserId().catch(() => null);
   const { data, error } = await supabase
     .from("deck_slide_overrides")
     .upsert(

@@ -9,10 +9,11 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import mammoth from "npm:mammoth@1.7.2";
 import { markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
+import { resolveOwner } from "../_shared/impersonation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-impersonate-user",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -99,7 +100,9 @@ Deno.serve(async (req) => {
     const { data: doc, error: loadErr } = await admin
       .from("attendee_documents").select("*").eq("id", documentId).maybeSingle();
     if (loadErr || !doc) throw new Error(loadErr?.message ?? "Document not found");
-    if (doc.user_id !== user.id) throw new Error("Forbidden");
+    const _own = await resolveOwner(req, user.id, userClient, corsHeaders);
+    if (_own.error) return _own.error;
+    if (doc.user_id !== _own.userId) throw new Error("Forbidden");
 
     const { data: blob, error: dlErr } = await admin.storage.from("attendee-docs").download(doc.storage_path);
     if (dlErr || !blob) throw new Error(dlErr?.message ?? "Could not download file");

@@ -6,6 +6,7 @@ import { MessageCircle, X, Send, Trash2, Mic, Square, Volume2, VolumeX, Loader2 
 import { supabase } from "@/integrations/supabase/client";
 import { edgeErrorMessage } from "@/lib/edge-errors";
 import { cn } from "@/lib/utils";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -167,7 +168,7 @@ export function AskConcierge() {
     setInput("");
     setPending(true);
     try {
-      const { data, error: err } = await supabase.functions.invoke("venture-chatbot", {
+      const { data, error: err } = await invokeEdge("venture-chatbot", {
         body: { messages: next },
       });
       if (err) throw err;
@@ -229,7 +230,7 @@ export function AskConcierge() {
       const ext = (blob.type.split(";")[0].split("/")[1] || "webm").replace("mpeg", "mp3");
       const form = new FormData();
       form.append("file", new File([blob], `recording.${ext}`, { type: blob.type }));
-      const { data, error: err } = await supabase.functions.invoke("venture-transcribe", { body: form });
+      const { data, error: err } = await invokeEdge("venture-transcribe", { body: form });
       if (err) throw err;
       const text = ((data as any)?.text ?? "").trim();
       if (!text) {

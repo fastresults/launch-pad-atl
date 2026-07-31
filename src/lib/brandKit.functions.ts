@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 import { getEffectiveUserId } from "@/lib/effective-user";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 
 export type BrandKit = {
@@ -45,7 +46,7 @@ export async function upsertBrandKit(snapshotId: string, patch: Partial<BrandKit
 }
 
 async function callWizard(body: any) {
-  const { data, error } = await supabase.functions.invoke("venture-brand-wizard", { body });
+  const { data, error } = await invokeEdge("venture-brand-wizard", { body });
   if (error) throw new Error(error.message || "Brand wizard request failed");
   if (data?.error) throw new Error(data.error);
   return data;

@@ -7,23 +7,54 @@
 // while the surrounding UI thinks it's showing the target — a display leak.
 //
 // Every fetcher that filters by `user_id` on the client should route through
-// `getEffectiveUserId()` instead of reading `auth.getUser().id` directly.
+// `getEffectiveUserId()` instead of reading `auth.getUser().id` directly, and
+// every edge call should go through `invokeEdge()` (src/lib/edge-invoke.ts).
 import { supabase } from "@/integrations/supabase/client";
 
-const IMPERSONATION_KEY = "sl.impersonation.v1";
+export const IMPERSONATION_KEY = "sl.impersonation.v1";
 
-type StoredImpersonation = { userId: string; name?: string; email?: string; logId?: string };
+/** Impersonation auto-expires so a forgotten session can't quietly write later. */
+export const IMPERSONATION_TTL_MS = 60 * 60 * 1000;
 
-function readStoredImpersonation(): StoredImpersonation | null {
+export type StoredImpersonation = {
+  userId: string;
+  name?: string;
+  email?: string;
+  logId?: string;
+  /** epoch ms when impersonation started */
+  startedAt?: number;
+};
+
+export function readStoredImpersonation(): StoredImpersonation | null {
   try {
     if (typeof sessionStorage === "undefined") return null;
     const raw = sessionStorage.getItem(IMPERSONATION_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StoredImpersonation;
-    return parsed && typeof parsed.userId === "string" && parsed.userId ? parsed : null;
+    if (!parsed || typeof parsed.userId !== "string" || !parsed.userId) return null;
+    if (parsed.startedAt && Date.now() - parsed.startedAt > IMPERSONATION_TTL_MS) {
+      sessionStorage.removeItem(IMPERSONATION_KEY);
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
+}
+
+export function clearStoredImpersonation() {
+  try {
+    sessionStorage.removeItem(IMPERSONATION_KEY);
+  } catch {
+    /* no-op */
+  }
+}
+
+export function writeStoredImpersonation(t: StoredImpersonation) {
+  sessionStorage.setItem(
+    IMPERSONATION_KEY,
+    JSON.stringify({ ...t, startedAt: t.startedAt ?? Date.now() }),
+  );
 }
 
 // Cache the actor's admin status for a short window to avoid a round-trip on
@@ -83,6 +114,6 @@ export function isImpersonating(): boolean {
 }
 
 /** Synchronous read of who the session is impersonating (id/name/email), or null. */
-export function getImpersonationTarget(): { userId: string; name?: string; email?: string } | null {
+export function getImpersonationTarget(): StoredImpersonation | null {
   return readStoredImpersonation();
 }

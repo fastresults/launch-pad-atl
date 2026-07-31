@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
+import { invokeEdge } from "@/lib/edge-invoke";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string
@@ -41,7 +42,7 @@ export default function UnsubscribePage() {
     if (!token) return
     setState({ kind: 'submitting' })
     try {
-      const { data, error } = await supabase.functions.invoke('handle-email-unsubscribe', {
+      const { data, error } = await invokeEdge('handle-email-unsubscribe', {
         body: { token },
       })
       if (!error && data?.success) setState({ kind: 'done' })

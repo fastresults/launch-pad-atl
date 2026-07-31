@@ -29,6 +29,7 @@ import {
   type CanonicalFounderContext,
 } from "@/lib/canonical-context";
 import { useCanonicalContext } from "@/hooks/use-canonical-context";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 // Common intake field ids → canonical context lookups. Anything not listed
 // falls through to the field's schema default. Keep this conservative so we
@@ -205,7 +206,7 @@ export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: P
       const form = new FormData();
       const ext = blob.type.includes("mp4") ? "mp4" : "webm";
       form.append("file", blob, `recording.${ext}`);
-      const { data, error } = await supabase.functions.invoke("venture-transcribe", { body: form });
+      const { data, error } = await invokeEdge("venture-transcribe", { body: form });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
       const text: string = data?.text ?? "";
@@ -268,7 +269,7 @@ export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: P
     }
     setEstimating(true);
     try {
-      const { data, error } = await supabase.functions.invoke("venture-estimate-intake", {
+      const { data, error } = await invokeEdge("venture-estimate-intake", {
         body: {
           snapshot_id: snapshotId,
           deliverable_type: target.type,

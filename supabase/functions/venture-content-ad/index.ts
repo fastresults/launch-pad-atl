@@ -17,7 +17,7 @@ import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-impersonate-user",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 

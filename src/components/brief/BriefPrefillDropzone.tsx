@@ -4,6 +4,7 @@ import { prefillBriefFromDocs, type BriefPrefillResponse } from "@/lib/brief.fun
 import { uploadVentureSource } from "@/lib/venture-sources";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 
 const ACCEPT = ".pdf,.docx,.txt,.md,.rtf,.png,.jpg,.jpeg,.webp,.mp3,.m4a,.wav,.webm,.ogg,.mp4";
@@ -97,7 +98,7 @@ export function BriefPrefillDropzone({
       const scrapedFiles: File[] = [];
       if (urls.length > 0) {
         try {
-          const { data, error } = await supabase.functions.invoke("venture-scrape-url", {
+          const { data, error } = await invokeEdge("venture-scrape-url", {
             body: { urls },
           });
           if (error) throw new Error(error.message);

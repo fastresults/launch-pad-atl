@@ -5,10 +5,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
+import { resolveOwner } from "../_shared/impersonation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-impersonate-user",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -236,8 +237,14 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: userRes } = await userClient.auth.getUser();
-    const userId = userRes?.user?.id;
+    let userId = userRes?.user?.id;
     if (!userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    // Impersonation: an admin may act on a member's behalf (validated server-side).
+    const actorId = userId;
+    const _own = await resolveOwner(req, actorId, userClient, corsHeaders);
+    if (_own.error) return _own.error;
+    userId = _own.userId;
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     const { data: snap } = await supabase.from("venture_snapshots").select("*").eq("id", snapshot_id).maybeSingle();

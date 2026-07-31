@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 export type BrainCitation = { n: number; kind: string; source_ref: string | null; title: string };
 export type BrainMessage = {
@@ -53,7 +54,7 @@ export async function sendBrainMessage(
   message: string,
   snapshotId: string | null,
 ): Promise<{ answer: string; citations: BrainCitation[] }> {
-  const { data, error } = await supabase.functions.invoke("brain-chat", { body: { message, snapshotId } });
+  const { data, error } = await invokeEdge("brain-chat", { body: { message, snapshotId } });
   if (error) throw error;
   if ((data as any)?.error) throw new Error((data as any).error);
   return { answer: (data as any).answer, citations: (data as any).citations ?? [] };
@@ -73,7 +74,7 @@ export type BrainIndexingJob = {
 };
 
 export async function rebuildBrainMemory(snapshotId: string | null, ownerId?: string): Promise<{ jobId: string }> {
-  const { data, error } = await supabase.functions.invoke("brain-reindex", { body: { snapshotId, ownerId } });
+  const { data, error } = await invokeEdge("brain-reindex", { body: { snapshotId, ownerId } });
   if (error) throw error;
   if ((data as any)?.error) throw new Error((data as any).error);
   const jobId = (data as any).jobId as string | undefined;
@@ -130,7 +131,7 @@ export async function formatContentAsNote(content: string, question?: string): P
   const raw = content.trim();
   if (!raw) return "";
   try {
-    const { data, error } = await supabase.functions.invoke("brain-note-format", {
+    const { data, error } = await invokeEdge("brain-note-format", {
       body: { content: raw, question: question?.trim() ?? "" },
     });
     if (error) throw error;

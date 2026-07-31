@@ -14,6 +14,7 @@ import mammoth from "npm:mammoth@1.7.2";
 import { chunkText, embedTexts, toVectorLiteral } from "../_shared/brain-embed.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
+import { resolveOwner } from "../_shared/impersonation.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -178,8 +179,14 @@ Deno.serve(async (req) => {
     if (!auth) return json({ error: "Your session expired — sign in again, then retry." }, 401);
     const userClient = createClient(SUPABASE_URL, ANON_KEY, { global: { headers: { Authorization: auth } } });
     const { data: ures } = await userClient.auth.getUser();
-    const userId = ures?.user?.id;
+    let userId = ures?.user?.id;
     if (!userId) return json({ error: "Your session expired — sign in again, then retry." }, 401);
+
+    // Impersonation: an admin may act on a member's behalf (validated server-side).
+    const actorId = userId;
+    const _own = await resolveOwner(req, actorId, userClient, corsHeaders);
+    if (_own.error) return _own.error;
+    userId = _own.userId;
 
 
     const body = await req.json().catch(() => ({}));

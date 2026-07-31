@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { edgeErrorMessage } from "@/lib/edge-errors";
 import { FounderRoadmapDialog } from "./FounderRoadmapDialog";
 import { TRACK_META, TRACK_ORDER, trackFor, type AssetTrack } from "@/lib/asset-tracks";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 interface Props {
   snapshot: any;
@@ -70,7 +71,7 @@ export function FounderRoadmapCard({ snapshot, documentCount, docs = [] }: Props
 
   const generate = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke("venture-generate-roadmap", {
+      const { data, error } = await invokeEdge("venture-generate-roadmap", {
         body: { snapshotId: snapshot.id },
       });
       if (error) throw new Error(error.message);

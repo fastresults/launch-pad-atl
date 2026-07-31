@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 import { getEffectiveUserId } from "@/lib/effective-user";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 function unwrap<T>(input: any): T {
   if (input && typeof input === "object" && "data" in input && Object.keys(input).length === 1) {
@@ -243,7 +244,7 @@ export async function createSnapshot(input: any): Promise<{ id: string }> {
   if (error) throw new Error(error.message);
 
   // Fire-and-forget deep research enrichment
-  void supabase.functions.invoke("venture-deep-research", { body: { snapshotId: data.id } });
+  void invokeEdge("venture-deep-research", { body: { snapshotId: data.id } });
 
   return { id: data.id };
 }
@@ -323,7 +324,7 @@ export async function appendSnapshotSources(input: any): Promise<void> {
     .eq("user_id", await uid());
   if (error) throw new Error(error.message);
 
-  void supabase.functions.invoke("venture-deep-research", { body: { snapshotId: id } });
+  void invokeEdge("venture-deep-research", { body: { snapshotId: id } });
 }
 
 
@@ -416,7 +417,7 @@ export async function retryEnrichment(input: any): Promise<void> {
     })
     .eq("id", id);
   if (error) throw new Error(error.message);
-  void supabase.functions.invoke("venture-deep-research", { body: { snapshotId: id } });
+  void invokeEdge("venture-deep-research", { body: { snapshotId: id } });
 }
 
 export async function listDocumentTypes(): Promise<VentureDocumentType[]> {
@@ -488,7 +489,7 @@ export async function generateDocument(input: any): Promise<void> {
     rewriteTags?: string[];
     intakeAnswers?: Record<string, any>;
   }>(input);
-  const { data, error } = await supabase.functions.invoke("venture-generate-document", {
+  const { data, error } = await invokeEdge("venture-generate-document", {
     body: { snapshotId, documentType, rewriteFeedback, rewriteTags, intakeAnswers },
   });
   if (error) throw new Error(error.message);
@@ -502,7 +503,7 @@ export async function generateDeepAssessment(input: any): Promise<void> {
     feedback?: string;
     tags?: string[];
   }>(input);
-  const { data, error } = await supabase.functions.invoke("venture-generate-assessment", {
+  const { data, error } = await invokeEdge("venture-generate-assessment", {
     body: { snapshotId, documentType, feedback, tags },
   });
   if (error) throw new Error(error.message);
@@ -511,7 +512,7 @@ export async function generateDeepAssessment(input: any): Promise<void> {
 
 export async function bulkGenerate(input: any): Promise<{ ok?: boolean; jobId?: string; category?: string | null }> {
   const { snapshotId, category } = unwrap<{ snapshotId: string; category?: string | null }>(input);
-  const { data, error } = await supabase.functions.invoke("venture-bulk-generate", {
+  const { data, error } = await invokeEdge("venture-bulk-generate", {
     body: { snapshotId, category: category ?? null },
   });
   if (error) {
@@ -712,7 +713,7 @@ export async function adminDeleteSnapshot(input: any): Promise<void> {
 // Concept refinement gateway
 export async function refineConcept(input: any): Promise<any> {
   const { snapshotId, action, payload } = unwrap<{ snapshotId: string; action: string; payload?: any }>(input);
-  const { data, error } = await supabase.functions.invoke("venture-concept-refine", {
+  const { data, error } = await invokeEdge("venture-concept-refine", {
     body: { snapshot_id: snapshotId, action, payload },
   });
   if (error) {
@@ -726,7 +727,7 @@ export async function refineConcept(input: any): Promise<any> {
 
 export async function generateBrandAsset(input: any): Promise<any> {
   const { snapshotId, kind, count, extra, referenceImages, regenerateDirection } = unwrap<{ snapshotId: string; kind: string; count?: number; extra?: string; referenceImages?: string[]; regenerateDirection?: any }>(input);
-  const { data, error } = await supabase.functions.invoke("venture-brand-assets", {
+  const { data, error } = await invokeEdge("venture-brand-assets", {
     body: { snapshotId, kind, count, extra, referenceImages, regenerateDirection },
   });
   if (error) {

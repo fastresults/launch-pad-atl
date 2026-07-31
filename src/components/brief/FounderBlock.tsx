@@ -12,6 +12,7 @@ import {
   upsertFounderProfile,
   createResumeUploadUrl,
 } from "@/lib/discovery.functions";
+import { getEffectiveUserId } from "@/lib/effective-user";
 
 type Props = {
   onDone: () => void;
@@ -141,10 +142,10 @@ export function FounderBlock({ onDone }: Props) {
       // without ever asking the founder to re-upload. Best-effort: don't
       // block extraction if the library write fails.
       try {
-        const { data: auth } = await supabase.auth.getUser();
-        if (auth.user) {
+        const ownerId = await getEffectiveUserId();
+        if (ownerId) {
           await supabase.from("attendee_documents").insert({
-            user_id: auth.user.id,
+            user_id: ownerId,
             storage_path: path,
             original_name: file.name,
             mime_type: file.type || null,
