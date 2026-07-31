@@ -298,29 +298,40 @@ Output STRICT JSON (no prose outside JSON, no markdown fences around the JSON) w
 Write ONLY the headings you are asked for, in order, one object each.
 Each body_markdown must be ${profile.wordsMin}-${profile.wordsMax} words of substantive, specific markdown. ${meta.baseVoice}${profile.systemExtra ? `\n${profile.systemExtra}` : ""}`;
 
-  const sections: { heading: string; body_markdown: string }[] = [];
-  for (let i = 0; i < spine.length; i += batchSize) {
-    const batch = spine.slice(i, i + batchSize);
-    const written = sections.map((s) => `- ${s.heading}`).join("\n");
+  // Batches are written in parallel (bounded) — a 14-section PRD written
+  // serially blows past the edge function's wall clock. The full spine is
+  // included in every prompt so each batch knows what the others cover.
+  const batches: string[][] = [];
+  for (let i = 0; i < spine.length; i += batchSize) batches.push(spine.slice(i, i + batchSize));
+  const fullSpine = spine.map((h, n) => `${n + 1}. ${h}`).join("\n");
+
+  const writeBatch = async (batch: string[], offset: number) => {
     const user = [
       sharedContext,
-      written ? `\n## Sections already written (do not repeat them)\n${written}` : "",
-      `\n## Write these sections now (exactly these headings, in this order)\n${batch.map((h, n) => `${i + n + 1}. ${h}`).join("\n")}`,
+      `\n## Full document outline (other sections are written separately — do NOT write them, do NOT repeat their content)\n${fullSpine}`,
+      `\n## Write these sections now (exactly these headings, in this order)\n${batch.map((h, n) => `${offset + n + 1}. ${h}`).join("\n")}`,
       "\nReturn ONLY the JSON object with these sections.",
     ].filter(Boolean).join("\n").slice(0, MAX_USER_PROMPT_CHARS);
-
     try {
       const raw = await callModel(model, system, user);
       const got = safeSections(raw);
-      if (got.length) {
-        sections.push(...got);
-      } else {
-        sections.push({ heading: batch[0], body_markdown: String(raw).slice(0, 8000) });
-      }
+      if (got.length) return got;
+      return [{ heading: batch[0], body_markdown: String(raw).slice(0, 8000) }];
     } catch (e) {
-      console.error(`[longform] batch failed for ${type.key} @${i}`, e);
+      console.error(`[longform] batch failed for ${type.key} @${offset}`, e);
+      return [] as { heading: string; body_markdown: string }[];
     }
+  };
+
+  const CONCURRENCY = 4;
+  const results: { heading: string; body_markdown: string }[][] = new Array(batches.length).fill(null).map(() => []);
+  for (let i = 0; i < batches.length; i += CONCURRENCY) {
+    const slice = batches.slice(i, i + CONCURRENCY);
+    const written = await Promise.all(slice.map((b, n) => writeBatch(b, (i + n) * batchSize)));
+    written.forEach((w, n) => { results[i + n] = w; });
   }
+  const sections = results.flat();
+
 
   if (!sections.length) throw new Error(`Long-form generation produced no sections for ${type.key}`);
 
