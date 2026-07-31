@@ -14,7 +14,14 @@
 //
 // Persist `userId` in ownership columns and `actorId` in audit columns.
 
-import { jsonResponse } from "./auth.ts";
+// NOTE: deliberately no import from ./auth.ts — that would be a circular
+// dependency (auth.ts imports this module) and the edge bundler fails on it.
+function jsonResponse(body: unknown, status: number, cors: Record<string, string>): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...cors, "Content-Type": "application/json" },
+  });
+}
 
 export const IMPERSONATION_HEADER = "x-impersonate-user";
 
