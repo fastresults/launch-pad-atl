@@ -94,7 +94,7 @@ async function invokeRun(payload: Record<string, unknown>) {
   // the request still authenticates as the admin, so without this the pipeline
   // would regenerate the admin's own deliverables and the founder's asset would
   // appear unchanged.
-  const userId = await getEffectiveUserId();
+  const userId = (payload.userId as string | undefined) || (await getEffectiveUserId());
   const { data, error } = await invokeEdge("dashboard-pipeline-run", {
     body: { ...payload, userId },
   });
@@ -105,8 +105,33 @@ async function invokeRun(payload: Record<string, unknown>) {
 
 export async function runMyDeliverable(input: any) {
   const { key, runUpstream, feedback, tags } = unwrap<{ key: string; runUpstream?: boolean; feedback?: string; tags?: string[] }>(input);
-  await invokeRun({ key, runUpstream: !!runUpstream, feedback, tags });
-  return { queued: true };
+  const data = await invokeRun({ key, runUpstream: !!runUpstream, feedback, tags });
+  return { queued: true, runId: data?.runId ?? null };
+}
+
+/** Run an ordered subset (a whole category) as ONE server-side run in
+ * dependency order, instead of firing N concurrent background jobs. */
+export async function runMyKeys(input: any) {
+  const { keys, onlyMissing } = unwrap<{ keys: string[]; onlyMissing?: boolean }>(input);
+  const data = await invokeRun({ keys, onlyMissing: onlyMissing !== false });
+  return { queued: true, runId: data?.runId ?? null };
+}
+
+/** Live per-key state for the workflow cards: the newest step row per key
+ * across recent runs. */
+export async function getMyRunSteps() {
+  const userId = await uid();
+  const { data } = await supabase
+    .from("ai_pipeline_steps")
+    .select("deliverable_key, status, error, run_id, created_at, started_at, finished_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(200);
+  const byKey: Record<string, any> = {};
+  for (const row of data ?? []) {
+    if (!byKey[row.deliverable_key]) byKey[row.deliverable_key] = row;
+  }
+  return byKey;
 }
 
 export async function runMyDeliverableAssessment(input: any) {
@@ -122,8 +147,8 @@ export async function runMyDeliverableAssessment(input: any) {
 
 
 export async function runMyRemaining() {
-  await invokeRun({ bulk: true });
-  return { queued: true };
+  const data = await invokeRun({ bulk: true });
+  return { queued: true, runId: data?.runId ?? null };
 }
 
 export async function forceRunMyRemaining() {
@@ -147,7 +172,7 @@ export async function forceRunMyRemaining() {
 }
 
 export async function adminRunForUser(input: any) {
-  const { userId, key, runUpstream, bulk } = unwrap<{
+  const { userId, key, runUpstream, bulk, forceRun } = unwrap<{
     userId: string;
     key?: string;
     runUpstream?: boolean;
