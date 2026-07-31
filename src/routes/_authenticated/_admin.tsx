@@ -7,6 +7,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminCommandMenu } from "@/components/admin/AdminCommandMenu";
 import { AdminErrorBoundary } from "@/components/admin/AdminErrorBoundary";
+import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 
 
 
@@ -30,6 +31,7 @@ export default function AdminLayout() {
       <SidebarProvider>
         <AdminSidebar />
         <SidebarInset>
+          <ImpersonationBanner />
           <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />

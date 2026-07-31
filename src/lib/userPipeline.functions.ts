@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 import { getEffectiveUserId } from "@/lib/effective-user";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 function unwrap<T>(input: any): T {
   if (input && typeof input === "object" && "data" in input && Object.keys(input).length === 1) {
@@ -94,7 +95,7 @@ async function invokeRun(payload: Record<string, unknown>) {
   // would regenerate the admin's own deliverables and the founder's asset would
   // appear unchanged.
   const userId = await getEffectiveUserId();
-  const { data, error } = await supabase.functions.invoke("dashboard-pipeline-run", {
+  const { data, error } = await invokeEdge("dashboard-pipeline-run", {
     body: { ...payload, userId },
   });
   if (error) throw new Error(error.message);
@@ -111,7 +112,7 @@ export async function runMyDeliverable(input: any) {
 export async function runMyDeliverableAssessment(input: any) {
   const { key, feedback, tags } = unwrap<{ key: string; feedback?: string; tags?: string[] }>(input);
   const userId = await getEffectiveUserId();
-  const { data, error } = await supabase.functions.invoke("attendee-generate-assessment", {
+  const { data, error } = await invokeEdge("attendee-generate-assessment", {
     body: { key, feedback, tags, userId },
   });
   if (error) throw new Error(error.message);

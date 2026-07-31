@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { RichMarkdown } from "@/components/markdown/RichMarkdown";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { getSignedStorageUrl } from "@/lib/storageSignedUrl";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 
 
@@ -117,7 +118,7 @@ export default function WorkflowDetail() {
     setHeroLoading(true);
     setHeroError(null);
     try {
-      const { data, error } = await supabase.functions.invoke("attendee-deliverable-image", {
+      const { data, error } = await invokeEdge("attendee-deliverable-image", {
         body: { deliverableKey: key, force, userId: user?.id },
       });
       if (error) throw error;

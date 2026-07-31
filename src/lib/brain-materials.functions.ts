@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 export type BrainMaterialStatus =
   | "queued"
@@ -61,7 +62,7 @@ function readableError(err: unknown): string {
  * show the real reason and offer Retry instead of spinning on "Queued". */
 async function startIngest(materialId: string, ownerId?: string | null) {
   try {
-    const { data, error } = await supabase.functions.invoke("brain-material-ingest", {
+    const { data, error } = await invokeEdge("brain-material-ingest", {
       body: { materialId, ownerId: ownerId ?? undefined },
     });
     if (error) throw error;

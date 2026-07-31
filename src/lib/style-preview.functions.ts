@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 export type StylePreview = {
   id: string;
@@ -16,7 +17,7 @@ export type StylePreview = {
 };
 
 async function call(body: any) {
-  const { data, error } = await supabase.functions.invoke("venture-style-preview", { body });
+  const { data, error } = await invokeEdge("venture-style-preview", { body });
   if (error) throw new Error(error.message || "Style preview request failed");
   if (data?.error) {
     const err: any = new Error(data.error);

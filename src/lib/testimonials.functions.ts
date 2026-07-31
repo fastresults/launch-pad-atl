@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getActorUserId } from "@/lib/effective-user";
 
 export type TestimonialSliderSettings = {
   enabled: boolean;
@@ -130,7 +131,8 @@ export async function uploadTestimonialFile(file: File, kind: "video" | "poster"
 }
 
 export async function createTestimonial(input: Partial<Testimonial>) {
-  const userId = (await supabase.auth.getUser()).data.user?.id ?? null;
+  // Audit field: always the real signed-in actor, never the impersonated member.
+  const userId = await getActorUserId().catch(() => null);
   const { data, error } = await supabase
     .from("video_testimonials")
     .insert({

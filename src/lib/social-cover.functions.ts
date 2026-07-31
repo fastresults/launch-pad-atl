@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 export type SocialAsset = {
   id: string;
@@ -28,7 +29,7 @@ export type SocialAsset = {
 };
 
 async function call(body: any) {
-  const { data, error } = await supabase.functions.invoke("venture-social-cover", { body });
+  const { data, error } = await invokeEdge("venture-social-cover", { body });
   if (error) throw new Error(error.message || "Social cover request failed");
   if (data?.error) {
     const err: any = new Error(data.error);

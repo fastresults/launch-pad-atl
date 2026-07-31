@@ -3,10 +3,11 @@
 // public.attendee_founder_profile for the calling user.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import mammoth from "npm:mammoth@1.7.2";
+import { resolveOwner } from "../_shared/impersonation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-impersonate-user",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -127,6 +128,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Impersonation: an admin may act on a member's behalf (validated server-side).
+    const _own = await resolveOwner(req, user.id, userClient, corsHeaders);
+    if (_own.error) return _own.error;
+    const effectiveUserId = _own.userId;
+
     const body = await req.json().catch(() => ({}));
     const raw_text: string | null = body.raw_text ?? null;
     const linkedin_url: string | null = body.linkedin_url ?? null;
@@ -197,7 +203,7 @@ Deno.serve(async (req) => {
 
     // Persist everything in a single upsert.
     const payload: Record<string, unknown> = {
-      user_id: user.id,
+      user_id: effectiveUserId,
       source,
       raw_text: raw_text ?? (extractedResumeText && extractedResumeText.length > 80 ? extractedResumeText.slice(0, 18000) : null),
       linkedin_url: linkedin_url ?? null,
@@ -223,7 +229,7 @@ Deno.serve(async (req) => {
     await admin
       .from("venture_snapshots")
       .update({ snapshot_brain_dirty: true })
-      .eq("user_id", user.id);
+      .eq("user_id", effectiveUserId);
 
     return new Response(JSON.stringify({ extracted, note }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },

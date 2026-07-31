@@ -24,6 +24,7 @@ export type LegalSetupProgress = {
 };
 
 import { getEffectiveUserId } from "@/lib/effective-user";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 async function uid(): Promise<string> {
   return await getEffectiveUserId();
@@ -73,7 +74,7 @@ export async function toggleLegalStep(stepKey: string, done: boolean): Promise<L
 }
 
 export async function generateOperatingAgreement(): Promise<{ markdown: string }> {
-  const { data, error } = await supabase.functions.invoke("venture-generate-operating-agreement", {
+  const { data, error } = await invokeEdge("venture-generate-operating-agreement", {
     body: {},
   });
   if (error) throw error;

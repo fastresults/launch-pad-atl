@@ -41,6 +41,7 @@ export interface VentureSource {
 }
 
 import { getEffectiveUserId } from "@/lib/effective-user";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 async function uid() {
   return await getEffectiveUserId();
@@ -155,7 +156,7 @@ export async function deleteVentureSource(id: string): Promise<void> {
 
 /** Manually retry extraction for a file. */
 export async function retryExtraction(documentId: string): Promise<void> {
-  const { error } = await supabase.functions.invoke("venture-source-extract", { body: { documentId } });
+  const { error } = await invokeEdge("venture-source-extract", { body: { documentId } });
   if (error) throw new Error(error.message);
   notifySourcesChanged();
 }

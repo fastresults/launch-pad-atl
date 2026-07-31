@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
 import { getSignedStorageUrl, invalidateSignedStorageUrl, primeSignedStorageUrl } from "@/lib/storageSignedUrl";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 const HERO_BUCKET = "venture-doc-images";
 
@@ -466,7 +467,7 @@ export function DocumentViewer({
     if (!doc?.snapshot_id) return;
     setPrdRepairing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("venture-generate-document", {
+      const { data, error } = await invokeEdge("venture-generate-document", {
         body: {
           snapshotId: doc.snapshot_id,
           documentType: "website_prd",
@@ -500,7 +501,7 @@ export function DocumentViewer({
     setAssessmentStatus("generating");
     setAssessmentError(null);
     try {
-      const { data, error } = await supabase.functions.invoke("venture-generate-assessment", {
+      const { data, error } = await invokeEdge("venture-generate-assessment", {
         body: { snapshotId: doc.snapshot_id, documentType: doc.document_type },
       });
       if (error) throw new Error(error.message);
@@ -669,7 +670,7 @@ export function DocumentViewer({
             // return a service-signed URL for already-ready visuals instead of
             // dropping the modal back to "Generate visual".
             if (heroStatus !== "ready" || !doc?.snapshot_id || !doc?.document_type) throw signError;
-            const { data, error } = await supabase.functions.invoke("venture-document-image", {
+            const { data, error } = await invokeEdge("venture-document-image", {
               body: { snapshotId: doc.snapshot_id, documentType: doc.document_type, force: false },
             });
             if (error || !data?.signedUrl) throw signError;
@@ -742,7 +743,7 @@ export function DocumentViewer({
     setHeroLoading(true);
     setHeroError(null);
     try {
-      const { data, error } = await supabase.functions.invoke("venture-document-image", {
+      const { data, error } = await invokeEdge("venture-document-image", {
         body: { snapshotId: doc.snapshot_id, documentType: doc.document_type, force, quality },
       });
       if (error) throw new Error(error.message);

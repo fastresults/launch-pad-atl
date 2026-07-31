@@ -34,6 +34,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { getEffectiveUserId } from "@/lib/effective-user";
 
 const briefSearchSchema = z.object({
   review: z.coerce.number().optional(),
@@ -86,7 +87,7 @@ export default function BriefWizard() {
       setWorkspaceResetting(true);
       setWorkspaceCheckError(null);
       try {
-        const uid = (await supabase.auth.getUser()).data.user?.id;
+        const uid = await getEffectiveUserId();
         if (!uid) throw new Error("Not signed in");
 
         const { count, error } = await supabase

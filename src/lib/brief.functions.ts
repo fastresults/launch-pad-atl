@@ -4,6 +4,7 @@ import type { BriefKey } from "@/lib/workflow";
 export type { BriefKey };
 
 import { getEffectiveUserId } from "@/lib/effective-user";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 async function uid() { return await getEffectiveUserId(); }
 
@@ -38,7 +39,7 @@ export async function summarizeBriefBlock(args: {
   kind?: "qa" | "founder" | "market";
   content?: string;
 }): Promise<CheckpointSummary> {
-  const { data, error } = await supabase.functions.invoke("brief-summarize-block", {
+  const { data, error } = await invokeEdge("brief-summarize-block", {
     body: {
       title: args.title ?? `Block ${args.block}`,
       kind: args.kind ?? "qa",
@@ -69,7 +70,7 @@ export type BriefPrefillResponse = {
 export async function prefillBriefFromDocs(files: File[]): Promise<BriefPrefillResponse> {
   const form = new FormData();
   for (const f of files) form.append("files", f, f.name);
-  const { data, error } = await supabase.functions.invoke("brief-prefill", { body: form });
+  const { data, error } = await invokeEdge("brief-prefill", { body: form });
   if (error) throw new Error(error.message);
   if ((data as any)?.error) throw new Error((data as any).error);
   return data as BriefPrefillResponse;

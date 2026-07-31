@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 import { getEffectiveUserId } from "@/lib/effective-user";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 
 export type AdAspect = "1:1" | "4:5" | "9:16";
@@ -43,7 +44,7 @@ export type ContentAd = {
 };
 
 async function invoke<T = any>(name: string, body: any): Promise<T> {
-  const { data, error } = await supabase.functions.invoke(name, { body });
+  const { data, error } = await invokeEdge(name, { body });
   if (error) throw error;
   if ((data as any)?.error) throw new Error((data as any).error);
   return data as T;

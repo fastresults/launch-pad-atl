@@ -54,6 +54,7 @@ import {
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { toast } from "sonner";
 import { useCanonicalContext } from "@/hooks/use-canonical-context";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 type DroppedFile = {
   id: string;
@@ -392,7 +393,7 @@ function Inner() {
     setUrlInput("");
     setScrapingUrl(true);
     try {
-      const { data, error } = await supabase.functions.invoke("venture-scrape-url", {
+      const { data, error } = await invokeEdge("venture-scrape-url", {
         body: { urls: [normalized] },
       });
       if (error) throw error;
@@ -469,7 +470,7 @@ function Inner() {
       const identityFromPatternOnly = hasPattern && !hasFiles && !hasOwnUrls;
       setDrafting(true);
       try {
-        const { data, error } = await supabase.functions.invoke("venture-synthesize-concept", {
+        const { data, error } = await invokeEdge("venture-synthesize-concept", {
           body: {
             sources: combinedDocs.map((d) => ({ filename: d.filename, text: d.text })),
             urls: readyOwnUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text })),
@@ -1346,7 +1347,7 @@ function Inner() {
                 let data: any = null;
                 try {
                   for (const seed of attempts) {
-                    const res = await supabase.functions.invoke("dev-reverse-engineer-concept", {
+                    const res = await invokeEdge("dev-reverse-engineer-concept", {
                       body: { url: seed.url, track },
                     });
                     if (!res.error && res.data?.company && res.data?.concept) {

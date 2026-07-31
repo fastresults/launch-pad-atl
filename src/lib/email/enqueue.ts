@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 interface EnqueueParams {
   templateName: string
@@ -15,7 +16,7 @@ interface EnqueueParams {
 export async function enqueueTransactionalEmail(
   params: EnqueueParams,
 ): Promise<{ queued: boolean; reason?: string }> {
-  const { data, error } = await supabase.functions.invoke('send-transactional-email', {
+  const { data, error } = await invokeEdge('send-transactional-email', {
     body: {
       templateName: params.templateName,
       recipientEmail: params.recipientEmail,

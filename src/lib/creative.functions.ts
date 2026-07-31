@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getEffectiveUserId } from "@/lib/effective-user";
 import type { AssetType } from "@/lib/creative-vibes";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 
 export type BrandAsset = {
@@ -25,7 +26,7 @@ export type BrandAsset = {
 };
 
 async function call(body: any) {
-  const { data, error } = await supabase.functions.invoke("brand-creative", { body });
+  const { data, error } = await invokeEdge("brand-creative", { body });
   if (error) throw new Error(error.message || "Creative request failed");
   if (data && typeof data === "object" && "error" in data && data.error) {
     const err: any = new Error(data.error);

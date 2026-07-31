@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Sparkles, ArrowRight, ExternalLink, Search, Send, X, Loader2 } from "lucide-react";
+import { invokeEdge } from "@/lib/edge-invoke";
+import { getEffectiveUserId } from "@/lib/effective-user";
 
 async function listMyVentureDocuments() {
-  const { data: userRes } = await supabase.auth.getUser();
-  const userId = userRes.user!.id;
+  const userId = await getEffectiveUserId();
 
   const { data: snaps } = await supabase
     .from("venture_snapshots")
@@ -181,7 +182,7 @@ export default function DeliverablesPage() {
     try {
       const { data: sess } = await supabase.auth.getSession();
       const token = sess?.session?.access_token;
-      const res = await supabase.functions.invoke("deliverables-ask", {
+      const res = await invokeEdge("deliverables-ask", {
         body: {
           question,
           snapshot_id: snapFilter !== "all" ? snapFilter : undefined,

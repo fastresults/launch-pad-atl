@@ -2,6 +2,7 @@
 // using keyword scoring (RLS-scoped via JWT), then synthesizes an answer with citations.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { resolveOwner } from "../_shared/impersonation.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -63,6 +64,10 @@ Deno.serve(async (req) => {
       });
     }
 
+    const _own = await resolveOwner(req, userRes.user.id, supabase, corsHeaders);
+    if (_own.error) return _own.error;
+    const effectiveUserId = _own.userId;
+
     const body = await req.json().catch(() => ({}));
     const question: string = (body?.question ?? "").toString().trim();
     const snapshotId: string | undefined = body?.snapshot_id || undefined;
@@ -77,7 +82,7 @@ Deno.serve(async (req) => {
     const snapQ = supabase
       .from("venture_snapshots")
       .select("id, company_name")
-      .eq("user_id", userRes.user.id);
+      .eq("user_id", effectiveUserId);
     const { data: snaps } = snapshotId ? await snapQ.eq("id", snapshotId) : await snapQ;
     const snapIds = (snaps ?? []).map((s) => s.id);
     if (snapIds.length === 0) {

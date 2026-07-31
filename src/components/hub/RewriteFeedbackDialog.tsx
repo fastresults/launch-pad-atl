@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { edgeErrorMessage } from "@/lib/edge-errors";
+import { invokeEdge } from "@/lib/edge-invoke";
 
 const QUICK_TAGS = [
   "Too generic",
@@ -106,7 +107,7 @@ export function RewriteFeedbackDialog({ target, onClose, onSubmit }: Props) {
       const form = new FormData();
       const ext = blob.type.includes("mp4") ? "mp4" : "webm";
       form.append("file", blob, `recording.${ext}`);
-      const { data, error } = await supabase.functions.invoke("venture-transcribe", { body: form });
+      const { data, error } = await invokeEdge("venture-transcribe", { body: form });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
       const text: string = data?.text ?? "";
