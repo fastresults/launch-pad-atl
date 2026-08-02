@@ -158,7 +158,7 @@ export default function OneOnOnePage() {
               templatized the parts that should be templatized and reserved the
               human hours for the parts that matter.
             </p>
-            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
               {INCLUDES.map(({ icon: Icon, title, body }) => (
                 <div key={title} className="flex flex-col rounded-2xl border border-white/10 bg-card p-5">
                   <div className="flex items-center gap-2 text-primary">
