@@ -7,11 +7,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Compile Tailwind's lg: utilities at the same boundary as the hand-written
+   hero rules. Breakpoints are static build tokens, not runtime aliases. */
+@theme {
+  --breakpoint-lg: 60rem;
+}
+
 @theme inline {
-  /* Desktop composition must switch on before 1024px — embedded previews and
-     smaller laptop windows render around 960–1000 CSS px and were falling into
-     the tablet branch. */
-  --breakpoint-lg: 60rem; /* 960px */
   --radius-sm: calc(var(--radius) - 4px);
 
   --radius-md: calc(var(--radius) - 2px);
@@ -836,31 +838,9 @@
   padding-bottom: 0 !important;
 }
 
-@media (min-width: 60rem) and (max-width: 79.999rem) {
-  .hero-cinematic {
-    min-height: calc(100svh - 3.5rem) !important;
-  }
-
-  .hero-content-shell {
-    max-width: 56rem !important;
-    padding-top: 4rem !important;
-  }
-
-  .hero-cinematic h1 {
-    max-width: 52rem !important;
-    font-size: 2.75rem !important;
-  }
-
-  .hero-prompt-form {
-    max-width: 52rem !important;
-  }
-
-  .hero-glass {
-    min-height: 10.5rem !important;
-  }
-}
-
-@media (min-width: 80rem) {
+/* One desktop composition from 960px upward. Viewport width changes the
+   surrounding whitespace only; it never scales the interface itself. */
+@media (min-width: 60rem) {
   .hero-cinematic {
     min-height: calc(100svh - 3.25rem) !important;
   }

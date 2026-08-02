@@ -1,43 +1,43 @@
-## Published Hero Scale Correction
+## Confirmed root cause
 
-### Confirmed root cause
-The published page is not browser-zoomed: `html` is 16px and `body` zoom is 1. The desktop CSS itself forces the oversized composition at 1280px and above:
+This is not browser zoom or a stale deployment. The live CSS creates two different desktop compositions:
 
-- Header: **60px** high
-- Logo: **40px** high / approximately **206px** wide
-- Headline: **52px**
-- Headline and prompt width: **940px**
-- Prompt card: **940 × 200px**
-- CTA: approximately **171 × 49px**
+- **960–1279px:** 40px logo, 44px headline, 832px × 188px prompt, 22px input, 15px CTA.
+- **1280px+:** 32px logo, 42px headline, 800px × 152px prompt, 18px input, 13px CTA.
 
-These large-screen overrides explain why every element appears magnified and why the hero lacks the whitespace shown in the target.
+That first desktop band is materially larger, so common laptop and scaled preview widths render the over-magnified composition. The CSS comment says desktop should use one compact scale, but the implementation still has two conflicting desktop tiers.
 
-### Implementation
-1. **Remove the magnifying desktop overrides**
-   - Replace the current `min-width: 80rem` rules that enlarge the logo, headline, prompt, and header.
-   - Keep a single compact desktop geometry rather than scaling components up as the viewport widens.
+A second breakpoint defect contributes to the inconsistency: the custom `lg` breakpoint is declared inside `@theme inline`, while the hero uses hand-written 60rem media queries. This can leave Tailwind’s header utilities and the hero rules switching at different boundaries.
 
-2. **Calibrate the header to the reference**
-   - Reduce header height and logo dimensions.
-   - Preserve the compact 13px navigation rhythm and wide left/right gutters.
-   - Ensure the navigation remains one line without increasing the overall header scale.
+## Implementation
 
-3. **Reduce the complete hero stack proportionally**
-   - Scale down the headline, prompt width/height, inner padding, input text, CTA, kicker, and “Now building” label together.
-   - Target a prompt around **760–820px wide** and **140–155px high** on standard desktop, rather than 940 × 200px.
-   - Keep the headline visually prominent without exceeding the reference proportions.
+1. **Align the desktop breakpoint**
+   - Move the custom `--breakpoint-lg: 60rem` token into a standard `@theme` block.
+   - Keep semantic color/radius aliases in `@theme inline`.
+   - Ensure header `lg:` utilities and hero desktop rules both switch at exactly 960px.
 
-4. **Restore intentional whitespace and placement**
-   - Position the compact stack slightly above the hero’s vertical center, matching the supplied reference.
-   - Use viewport-height-aware spacing so short laptop screens and taller desktop screens preserve the same visual balance.
-   - Avoid transforms or fixed offsets that make the stack drift toward the top or bottom.
+2. **Replace the two desktop size tiers with one composition**
+   - Collapse the 960–1279px and 1280px+ sizing rules into one `min-width: 60rem` block.
+   - Lock desktop geometry to the compact reference values already measured at 1280px+:
+     - Header: 52px
+     - Logo: 32px high
+     - Headline: 42px
+     - Prompt: 800px × 152px
+     - Input: 18px
+     - CTA: 13px with compact padding
+   - Wide viewports may add surrounding whitespace only; they must not enlarge components.
 
-5. **Keep tablet and mobile independent**
-   - Preserve the existing responsive structure below desktop.
-   - Add explicit compact-desktop and wide-desktop bands only where needed, without reintroducing size growth on wide monitors.
+3. **Make vertical placement deterministic**
+   - Keep the complete kicker/headline/prompt/label stack centered as one unit, slightly above the viewport midpoint.
+   - Use the same stack dimensions at 1000, 1280, 1576, and 1920px.
+   - Allow only viewport-height spacing to vary, not element scale.
 
-6. **Validate the actual published geometry**
-   - Check local and published output at **1280×720, 1576×1043, and 1920×1080**.
-   - Measure header, logo, headline, prompt, and CTA bounding boxes—not just visual screenshots.
-   - Compare screenshots against the target for whitespace, scale, glass treatment, and vertical placement before declaring completion.
-   - Publish the corrected build and repeat the same measurements on the public domain to confirm the deployed CSS matches local output.
+4. **Remove conflicting legacy desktop overrides**
+   - Delete the obsolete 60–79.999rem magnification rules rather than overriding them again.
+   - Keep the hero’s glass/input isolation from the broader marketing styles, but eliminate duplicate sizing paths.
+
+5. **Validate before publishing**
+   - Measure local output at 1000×800, 1280×720, 1576×1043, and 1920×1080.
+   - Confirm identical logo, headline, prompt, input, and CTA dimensions across all desktop widths.
+   - Compare screenshots for whitespace and vertical placement.
+   - Publish, then repeat the same DOM measurements on `startuplabs.online` to confirm the deployed composition matches local exactly.
