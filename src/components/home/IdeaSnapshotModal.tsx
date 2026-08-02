@@ -385,6 +385,48 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
   );
 }
 
+/**
+ * The one action set for this modal, ranked: learn more (primary),
+ * reserve (secondary), ask (tertiary). Same order everywhere it appears.
+ */
+function ActionRow({
+  registerTo,
+  onLearnMore,
+  onClose,
+  compact = false,
+}: {
+  registerTo: string;
+  onLearnMore: () => void;
+  onClose: () => void;
+  compact?: boolean;
+}) {
+  const size = compact ? "px-4 py-2 text-sm" : "";
+  return (
+    <div
+      className={`flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center ${
+        compact ? "sm:gap-2" : "sm:gap-3"
+      }`}
+    >
+      <button
+        type="button"
+        onClick={onLearnMore}
+        className={`hero-btn hero-btn-primary ${size}`}
+      >
+        Learn more about the morning
+        <ArrowDown className="h-4 w-4" aria-hidden="true" />
+      </button>
+      <Link to={registerTo} onClick={onClose} className={`hero-btn hero-btn-secondary ${size}`}>
+        Reserve my seat
+        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+      </Link>
+      <Link to="/contact" onClick={onClose} className={`hero-btn hero-btn-ghost ${size}`}>
+        Ask a question
+      </Link>
+    </div>
+  );
+}
+
+
 function MoneyTile({ caption, value }: { caption: string; value?: string }) {
   return (
     <div className="rounded-2xl border border-[rgba(244,246,255,0.10)] bg-[rgba(5,7,15,0.45)] p-3.5">
