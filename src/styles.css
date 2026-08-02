@@ -724,9 +724,9 @@
   color: var(--hero-fg) !important;
   letter-spacing: -0.035em;
   font-weight: 600;
-  /* Fluid across the whole desktop range instead of stepping and stopping at
-     48px — keeps headline/card proportion identical at 960px and 1920px. */
-  font-size: clamp(2.05rem, 1.15rem + 3.1vw, 4rem) !important;
+  /* Fluid across the desktop range, with a lower ceiling so the headline stops
+     growing before it crowds the gutters on 1512–1920px displays. */
+  font-size: clamp(2rem, 1.2rem + 2.5vw, 3.25rem) !important;
   line-height: 1.06;
   text-shadow: 0 2px 28px rgba(5, 7, 15, 0.7), 0 1px 3px rgba(5, 7, 15, 0.5);
 }
