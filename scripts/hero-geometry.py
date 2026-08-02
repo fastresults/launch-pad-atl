@@ -45,8 +45,9 @@ async def main():
             page = await context.new_page()
             await page.goto(
                 urljoin(BASE_URL, f"/?geometry-check={width}x{height}"),
-                wait_until="networkidle",
+                wait_until="domcontentloaded",
             )
+            await page.wait_for_selector(".sl-hero", state="visible", timeout=20_000)
             values = await page.evaluate(
                 """(selectors) => {
                   const output = {
