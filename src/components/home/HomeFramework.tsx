@@ -21,6 +21,8 @@ import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroBg from "@/assets/hero-bg.png";
 import heroCoffee from "@/assets/hero-coffee-nosteam.png";
+import heroCoffeeLoop from "@/assets/hero-coffee-loop.mp4.asset.json";
+
 import { motion, useReducedMotion } from "framer-motion";
 import atlSeal from "@/assets/atl-founder-friendly-seal.svg";
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
@@ -191,25 +193,33 @@ function HeroCopy() {
                 ))}
               </svg>
 
-              <motion.img
-                src={heroCoffee}
-                alt=""
-                width={912}
-                height={1024}
-                className="relative z-10 mx-auto h-[300px] w-auto select-none drop-shadow-[0_18px_18px_rgba(61,48,37,0.18)]"
-                draggable={false}
+              <motion.div
+                className="relative z-10 mx-auto h-[300px] w-full max-w-[300px] overflow-hidden rounded-2xl border border-[#E4D9C4] bg-[#FBF7F1]"
                 initial={{ opacity: 0, y: 8 }}
-                animate={
-                  reduceMotion
-                    ? { opacity: 1, y: 0 }
-                    : { opacity: 1, y: [0, -3, 0] }
-                }
-                transition={
-                  reduceMotion
-                    ? { duration: 0.5 }
-                    : { opacity: { duration: 0.6 }, y: { duration: 6, repeat: Infinity, ease: "easeInOut" } }
-                }
-              />
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                <video
+                  src={heroCoffeeLoop.url}
+                  poster={heroCoffee}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  aria-hidden="true"
+                  className="h-full w-full object-cover"
+                />
+                {/* Theme wash — ties the clip to the page palette */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse at 50% 62%, oklch(0.55 0.13 285 / 22%), transparent 70%), linear-gradient(to bottom, rgba(251,247,241,0.10), rgba(61,48,37,0.16))",
+                  }}
+                />
+              </motion.div>
+
             </div>
 
             {/* Price card — cream on cream, hairline only, no shadow */}
