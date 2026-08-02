@@ -14,6 +14,7 @@ RULES
 - Never promise income, guarantee outcomes, or give legal, tax, medical, or financial advice. Point permit/licensing items to "confirm with the county" instead of asserting rules.
 - Say "startup", never "business". Say "assets", never "documents". Never call the offer a plan, blueprint, framework, playbook, or roadmap.
 - Tone: founder-to-founder, warm, concrete, no hype, no emojis, no jargon.
+- Be brief. The whole read must be scannable in under a minute — keep total output under 1400 characters.
 - If the input is not a plausible startup idea (gibberish, a joke, off-topic, or hostile), return {"ok": false, "message": "<one friendly sentence asking them to describe the startup they want to start>"}.
 
 OUTPUT
@@ -22,14 +23,14 @@ Return ONLY valid JSON, no markdown fences:
   "ok": true,
   "idea_label": string,        // 2-5 words, title case, e.g. "Mobile Pet Grooming"
   "verdict": string,           // one sentence, e.g. "Mobile pet grooming works in Atlanta — here's why."
-  "why_atlanta": string[],     // 2-3 short paragraphs, each 2-3 sentences, Atlanta-specific
+  "why_atlanta": string[],     // EXACTLY 2 paragraphs, each at most 2 sentences, Atlanta-specific
   "signals": [                 // exactly 4
     { "label": string,         // e.g. "Market signal", "Who buys", "Starting price", "First 90 days"
       "value": string,         // short, punchy, <= 60 chars
       "note": string }         // one sentence of plain context
   ],
-  "first_moves": string[],     // 3-5 concrete first actions
-  "watch_outs": string[]       // 2-3 honest risks
+  "first_moves": string[],     // EXACTLY 4 concrete first actions, one short sentence each
+  "watch_outs": string[]       // EXACTLY 3 honest risks, one short sentence each
 }`;
 
 Deno.serve(async (req) => {
