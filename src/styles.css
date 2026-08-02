@@ -337,10 +337,16 @@
 }
 
 .marketing-surface {
-  --public-gutter: clamp(1.25rem, 2.5vw, 2rem);
-  --public-section-space: clamp(3rem, 5vw, 5rem);
-  --public-display-size: clamp(2.25rem, 3.4vw, 3.5rem);
-  --public-lead-size: clamp(1rem, 1.35vw, 1.125rem);
+  --public-gutter: clamp(1.5rem, 3vw, 2.5rem);
+  --public-section-space: clamp(2.75rem, 4.5vw, 5rem);
+  --public-display-size: clamp(1.875rem, 2.9vw, 3.5rem);
+  --public-lead-size: clamp(0.9375rem, 1.15vw, 1.125rem);
+  --public-h2-size: clamp(1.5rem, 2.2vw, 2.5rem);
+  --public-h3-size: clamp(1.125rem, 1.5vw, 1.5rem);
+  --public-eyebrow-size: clamp(0.6875rem, 0.85vw, 0.75rem);
+  --public-measure: 66rem;
+  --public-cta-height: 2.875rem;
+  --public-cta-size: 0.9375rem;
   background-color: var(--background);
   color: var(--foreground);
   font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
@@ -350,23 +356,41 @@
 
 /*
  * Public desktop scale.
- * A 1400-class physical display commonly exposes only 1100–1250 CSS pixels
- * once browser chrome and display scaling are accounted for.  That is still a
- * desktop composition, but it must not inherit the former wide-screen display
- * type and 6rem section rhythm.
+ * A 1400-class physical display commonly exposes only ~1024–1150 CSS pixels
+ * once display scaling and browser zoom are applied.  That band is a real
+ * desktop composition and gets its own restrained tier below; it must never
+ * inherit wide-screen display type or wide-screen section rhythm.
  */
 @media (min-width: 60rem) {
   .marketing-surface :is(h1, .public-display):not(.sl-hero__title) {
-    max-width: 48rem;
+    max-width: 40rem;
     font-size: var(--public-display-size) !important;
     line-height: 1.06 !important;
-    letter-spacing: 0 !important;
+    letter-spacing: -0.02em !important;
   }
 
   .marketing-surface :is(h1, .public-display):not(.sl-hero__title) + p,
   .marketing-surface .public-lead {
+    max-width: 60ch;
     font-size: var(--public-lead-size) !important;
-    line-height: 1.65 !important;
+    line-height: 1.6 !important;
+  }
+
+  .marketing-surface section:not(.sl-hero) :is(h2, .public-h2) {
+    font-size: var(--public-h2-size) !important;
+    line-height: 1.1 !important;
+  }
+
+  .marketing-surface section:not(.sl-hero) :is(h3, h4) {
+    font-size: var(--public-h3-size) !important;
+    line-height: 1.2 !important;
+  }
+
+  .marketing-surface .eyebrow,
+  .marketing-surface [class*="tracking-[0.2"],
+  .marketing-surface [class*="uppercase"][class*="tracking-"] {
+    font-size: var(--public-eyebrow-size) !important;
+    letter-spacing: 0.14em !important;
   }
 
   .marketing-surface section:not(.sl-hero) {
@@ -375,10 +399,34 @@
   }
 
   .marketing-surface section:not(.sl-hero) > [class*="max-w-"] {
+    max-width: min(var(--public-measure), 100%) !important;
+    margin-left: auto;
+    margin-right: auto;
     padding-left: var(--public-gutter);
     padding-right: var(--public-gutter);
   }
+
+  .marketing-surface section:not(.sl-hero) :is(a, button)[class*="rounded-full"]:not([class*="w-"]) {
+    min-height: var(--public-cta-height);
+    font-size: var(--public-cta-size) !important;
+  }
 }
+
+/* Compact desktop tier: 1024–1279 CSS px (scaled displays, browser zoom). */
+@media (min-width: 60rem) and (max-width: 79.99rem) {
+  .marketing-surface {
+    --public-measure: 62rem;
+    --public-section-space: 2.75rem;
+    --public-cta-height: 2.75rem;
+    --public-cta-size: 0.875rem;
+  }
+
+  .marketing-surface .sl-site-header__nav a,
+  .marketing-surface .sl-site-header__nav button {
+    font-size: 0.8125rem !important;
+  }
+}
+
 
 .marketing-surface :is(h1, h2, h3, h4),
 .marketing-surface .font-serif,
