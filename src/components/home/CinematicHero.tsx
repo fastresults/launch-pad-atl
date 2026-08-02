@@ -35,34 +35,24 @@ export function CinematicHero() {
         <div className="hero-grain" aria-hidden="true" />
       </div>
 
-      <div className="mx-auto w-full max-w-6xl px-6 pb-14 pt-28 md:pb-20">
+      <div className="mx-auto w-full max-w-6xl px-6 pb-14 pt-28 text-center md:pb-20">
         <p className="hero-kicker text-[11px] font-medium">
           Atlanta · IGNITE Center at Greater Atlanta Christian School
         </p>
-        <h1 className="mt-5 max-w-3xl text-4xl leading-[1.05] sm:text-5xl md:text-6xl">
-          Whatever you want to start,
-          <br />
-          we build the foundation with you.
+        <h1 className="mx-auto mt-5 max-w-4xl text-[2.75rem] leading-[1.05] sm:text-6xl md:text-7xl">
+          What would you like to start?
         </h1>
-        <p className="hero-sub mt-5 max-w-xl text-base md:text-lg">
-          One focused morning. Your brand, your offer, your live page, your first
-          message sent — written in the room, not left as homework.
-        </p>
 
         <div className="mt-8">
           <IdeaPrompt ghostText={typed} paused={paused} onTakeOver={takeOver} />
         </div>
 
-        <div className="mt-8 flex items-center gap-2" aria-hidden="true">
-          {scenes.map((scene, sceneIndex) => (
-            <span
-              key={scene.id}
-              className="hero-dot"
-              data-active={sceneIndex === index}
-            />
-          ))}
-        </div>
+        <p className="hero-nowbuilding mt-6 text-[11px] font-medium">
+          Now building:{" "}
+          <span className="hero-accent">{scenes[index]?.label}</span>
+        </p>
       </div>
+
     </section>
   );
 }
