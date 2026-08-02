@@ -39,7 +39,7 @@ export function CinematicHero() {
         <p className="hero-kicker text-[11px] font-medium">
           Atlanta · IGNITE Center at Greater Atlanta Christian School
         </p>
-        <h1 className="mx-auto mt-5 max-w-4xl text-[2.75rem] leading-[1.05] sm:text-6xl md:text-7xl">
+        <h1 className="mx-auto mt-5 max-w-4xl text-[2.1rem] leading-[1.08] sm:text-[2.75rem] md:text-5xl">
           What would you like to start?
         </h1>
 
