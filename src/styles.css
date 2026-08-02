@@ -692,271 +692,264 @@
 }
 
 /* ============================================================
- * Cinematic founder hero
- * Self-contained tokens so the warm `.marketing-surface` overrides
- * never leak into the midnight hero.
+ * Homepage first viewport — isolated rebuild.
+ * `sl-*` geometry is intentionally defined in this single block.
  * ============================================================ */
-.hero-cinematic {
-  --hero-ink: #05070F;
-  --hero-fg: #F4F6FF;
-  --hero-fg-soft: rgba(244, 246, 255, 0.72);
-  --hero-fg-faint: rgba(244, 246, 255, 0.78);
-  --hero-accent: #4C8CFF;
-  --hero-accent-text: #8FB6FF;
-  --hero-label-shadow: 0 1px 2px rgba(5, 7, 15, 0.75), 0 2px 18px rgba(5, 7, 15, 0.6);
-
-  --hero-haze-a: rgba(76, 140, 255, 0.16);
-  --hero-haze-b: rgba(122, 92, 255, 0.14);
-
-  --hero-glass: rgba(10, 14, 28, 0.42);
-  --hero-glass-line: rgba(244, 246, 255, 0.16);
-  position: relative;
-  isolation: isolate;
-  background-color: var(--hero-ink);
-  color: var(--hero-fg);
-  font-family: 'DM Sans', system-ui, sans-serif;
+.sl-site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 3.5rem;
+  border-bottom: 1px solid oklch(1 0 0 / 5%);
+  background: oklch(0.155 0.019 268 / 82%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
-.hero-cinematic :is(h1, h2, p, span, button, input, label) {
-  font-family: inherit;
-}
-
-.hero-cinematic h1 {
-  font-family: 'Outfit', system-ui, sans-serif !important;
-  color: var(--hero-fg) !important;
-  letter-spacing: -0.035em;
-  font-weight: 600;
-  font-size: 2rem !important;
-  line-height: 1.06;
-  text-shadow: 0 2px 28px rgba(5, 7, 15, 0.7), 0 1px 3px rgba(5, 7, 15, 0.5);
-}
-
-
-
-.hero-cinematic .hero-kicker {
-  color: var(--hero-fg-faint) !important;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  font-weight: 600;
-  text-shadow: var(--hero-label-shadow);
-}
-
-.hero-cinematic .hero-sub { color: var(--hero-fg-soft) !important; }
-.hero-cinematic .hero-faint { color: var(--hero-fg-faint) !important; }
-.hero-cinematic .hero-accent {
-  color: var(--hero-accent-text) !important;
-  text-shadow: var(--hero-label-shadow);
-}
-
-
-/* Scene layer -------------------------------------------------- */
-.hero-scene {
-  position: absolute;
-  inset: 0;
-  object-fit: cover;
+.sl-site-header__inner {
+  display: flex;
+  align-items: center;
   width: 100%;
   height: 100%;
+  gap: 1rem;
+  padding-inline: 1rem;
+}
+
+.sl-site-header__logo {
+  width: auto;
+  height: 2rem;
+  color: var(--foreground);
+}
+
+.sl-hero {
+  --sl-ink: oklch(0.1 0.02 270);
+  --sl-copy: oklch(0.98 0.006 260);
+  --sl-copy-soft: oklch(0.98 0.006 260 / 72%);
+  --sl-copy-faint: oklch(0.98 0.006 260 / 78%);
+  --sl-accent: oklch(0.7 0.15 255);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: calc(100svh - 3.5rem);
+  overflow: hidden;
+  place-items: center;
+  background: var(--sl-ink);
+  color: var(--sl-copy);
+  font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+.sl-hero__media,
+.sl-hero__scene,
+.sl-hero__scrim,
+.sl-hero__grain {
+  position: absolute;
+  inset: 0;
+}
+
+.sl-hero__media { z-index: -1; }
+
+.sl-hero__scene {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   opacity: 0;
-  /* Resting state matches the drift end frame so an outgoing scene keeps its
-     zoom while it fades instead of snapping back to scale(1). */
   transform: scale(1.14) translate3d(-1.2%, -1%, 0);
-  transition:
-    opacity 1400ms ease-in-out,
-    transform 1400ms ease-in-out;
-  will-change: opacity, transform;
-  backface-visibility: hidden;
   filter: brightness(1.08) contrast(1.03) saturate(1.04);
+  transition: opacity 1400ms ease-in-out, transform 1400ms ease-in-out;
+  backface-visibility: hidden;
+  will-change: opacity, transform;
 }
 
-
-.hero-scene[data-active="true"] {
+.sl-hero__scene[data-active="true"] {
   opacity: 1;
-  animation: hero-drift 7000ms linear forwards;
+  animation: sl-hero-drift 7000ms linear forwards;
 }
 
-
-@keyframes hero-drift {
+@keyframes sl-hero-drift {
   from { transform: scale(1.06) translate3d(0, 0, 0); }
   to { transform: scale(1.14) translate3d(-1.2%, -1%, 0); }
 }
 
-
-.hero-scrim {
-  position: absolute;
-  inset: 0;
+.sl-hero__scrim {
   background:
-    linear-gradient(to top, var(--hero-ink) 2%, rgba(5, 7, 15, 0.55) 26%, rgba(5, 7, 15, 0.14) 62%, rgba(5, 7, 15, 0.40) 100%),
-    radial-gradient(120% 90% at 20% 90%, var(--hero-haze-a), transparent 60%),
-    radial-gradient(100% 80% at 85% 15%, var(--hero-haze-b), transparent 62%);
+    linear-gradient(to top, oklch(0.1 0.02 270) 1%, oklch(0.1 0.02 270 / 55%) 25%, oklch(0.1 0.02 270 / 14%) 62%, oklch(0.1 0.02 270 / 42%) 100%),
+    radial-gradient(120% 90% at 20% 90%, oklch(0.62 0.15 255 / 16%), transparent 60%),
+    radial-gradient(100% 80% at 85% 15%, oklch(0.58 0.16 285 / 14%), transparent 62%);
 }
 
-
-.hero-grain {
-  position: absolute;
-  inset: 0;
+.sl-hero__grain {
   opacity: 0.06;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Glass prompt ------------------------------------------------- */
-.hero-glass {
-  background: var(--hero-glass) !important;
-  border: 1px solid var(--hero-glass-line) !important;
+.sl-hero__stack {
+  display: flex;
+  width: min(100% - 2rem, 50rem);
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transform: translateY(-5vh);
+}
+
+.sl-hero__kicker,
+.sl-hero__status {
+  margin: 0;
+  color: var(--sl-copy-faint);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px oklch(0.1 0.02 270 / 75%), 0 2px 18px oklch(0.1 0.02 270 / 60%);
+}
+
+.sl-hero__title {
+  margin: 1.25rem 0 0;
+  color: var(--sl-copy) !important;
+  font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 2rem !important;
+  font-weight: 600 !important;
+  line-height: 1.06 !important;
+  letter-spacing: 0 !important;
+  text-shadow: 0 2px 28px oklch(0.1 0.02 270 / 70%), 0 1px 3px oklch(0.1 0.02 270 / 50%);
+}
+
+.sl-hero__prompt {
+  width: 100%;
+  margin-top: 1.75rem;
+}
+
+.sl-hero__status { margin-top: 1.5rem; }
+.sl-hero__status span { color: var(--sl-accent); }
+
+.sl-prompt { width: 100%; }
+
+.sl-prompt__panel {
+  display: grid;
+  width: 100%;
   min-height: 9.5rem;
+  grid-template-rows: 1fr auto;
+  padding: 1.5rem;
+  overflow: hidden;
+  border: 1px solid oklch(0.98 0.006 260 / 16%);
+  border-radius: 1.5rem;
+  background: oklch(0.13 0.025 270 / 48%);
+  box-shadow: 0 40px 110px -34px oklch(0 0 0 / 85%), inset 0 1px 0 oklch(0.98 0.006 260 / 14%);
   backdrop-filter: blur(26px) saturate(150%);
   -webkit-backdrop-filter: blur(26px) saturate(150%);
-
-  box-shadow:
-    0 40px 110px -34px rgba(0, 0, 0, 0.85),
-    inset 0 1px 0 rgba(244, 246, 255, 0.14);
   transition: border-color 240ms ease, box-shadow 240ms ease;
 }
 
-/* Deterministic hero/header geometry. Desktop uses one compact composition;
-   wide viewports add whitespace rather than magnifying the interface. */
-.hero-content-shell {
-  max-width: 64rem !important;
-  padding-top: 4.5rem !important;
-  padding-bottom: 4rem !important;
-  transform: none !important;
+.sl-prompt__panel:focus-within {
+  border-color: oklch(0.7 0.15 255 / 58%);
+  box-shadow: 0 40px 110px -34px oklch(0 0 0 / 88%), inset 0 1px 0 oklch(0.98 0.006 260 / 18%), 0 0 0 1px oklch(0.7 0.15 255 / 28%);
 }
 
-.hero-prompt-form {
-  max-width: 58.75rem !important;
+.sl-prompt__field {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
 }
 
-.site-header {
-  height: 3.5rem;
-}
-
-.site-header-inner {
+.sl-prompt__input {
   width: 100%;
-  max-width: 92.5rem;
-  height: 3.5rem;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-/* One desktop composition from 960px upward. Viewport width changes the
-   surrounding whitespace only; it never scales the interface itself. */
-@media (min-width: 60rem) {
-  .hero-cinematic {
-    min-height: calc(100svh - 3.25rem) !important;
-  }
-
-  .hero-content-shell {
-    display: flex;
-    min-height: calc(100svh - 3.25rem) !important;
-    max-width: 56rem !important;
-    flex-direction: column;
-    justify-content: center;
-    padding-top: 2rem !important;
-    padding-bottom: 10vh !important;
-  }
-
-  .hero-cinematic h1 {
-    max-width: 50rem !important;
-    margin-top: 1.25rem !important;
-    font-size: 2.625rem !important;
-  }
-
-  .hero-prompt-wrap {
-    margin-top: 1.75rem !important;
-  }
-
-  .hero-prompt-form {
-    max-width: 50rem !important;
-  }
-
-  .hero-glass {
-    height: 9.5rem !important;
-    min-height: 9.5rem !important;
-    max-height: 9.5rem !important;
-    padding: 1.5rem !important;
-  }
-
-  .site-header,
-  .site-header-inner {
-    height: 3.25rem;
-  }
-
-  .site-header-logo {
-    height: 2rem !important;
-  }
-
-  .hero-input,
-  .hero-ghost {
-    font-size: 1.125rem !important;
-  }
-
-  .hero-cta {
-    padding: 0.625rem 1.25rem !important;
-    font-size: 0.8125rem !important;
-  }
-
-  .hero-cinematic .hero-nowbuilding {
-    margin-top: 1.5rem !important;
-  }
-}
-
-.hero-glass:focus-within {
-  border-color: rgba(76, 140, 255, 0.55) !important;
-  box-shadow:
-    0 40px 110px -34px rgba(0, 0, 0, 0.88),
-    inset 0 1px 0 rgba(244, 246, 255, 0.18),
-    0 0 0 1px rgba(76, 140, 255, 0.28);
-}
-
-.hero-input {
-  background: transparent !important;
+  padding: 0.25rem 0;
   border: 0 !important;
-  outline: none !important;
-  color: var(--hero-fg) !important;
-  caret-color: var(--hero-accent);
-  font-size: 1.375rem;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--sl-copy) !important;
+  caret-color: var(--sl-accent);
+  font: inherit;
+  font-size: 1.125rem;
+  -webkit-text-fill-color: var(--sl-copy) !important;
 }
 
-.hero-input::placeholder { color: transparent !important; }
-
-.hero-ghost {
-  color: var(--hero-fg-soft) !important;
-  font-size: 1.375rem;
+.sl-prompt__ghost {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  overflow: hidden;
+  color: var(--sl-copy-soft);
+  font-size: 1.125rem;
   pointer-events: none;
 }
 
-.hero-caret {
+.sl-prompt__caret {
   display: inline-block;
+  flex: none;
   width: 2px;
   height: 1.15em;
-  vertical-align: -0.18em;
   margin-left: 2px;
-  background: var(--hero-accent);
-  animation: hero-blink 1.05s steps(1, end) infinite;
+  background: var(--sl-accent);
+  animation: sl-caret-blink 1.05s steps(1, end) infinite;
 }
 
-@keyframes hero-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes sl-caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
 
-.hero-cta {
+.sl-prompt__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sl-prompt__footer p {
+  margin: 0;
+  color: var(--sl-copy-faint);
+  font-size: 0.875rem;
+}
+
+.sl-prompt__submit {
   display: inline-flex;
+  flex: none;
   align-items: center;
   gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border: 1px solid oklch(0.98 0.006 260 / 22%);
   border-radius: 999px;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9375rem;
+  background: oklch(0.98 0.006 260 / 10%);
+  color: var(--sl-copy);
+  font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--hero-fg) !important;
-  background: rgba(244, 246, 255, 0.1) !important;
-  border: 1px solid rgba(244, 246, 255, 0.22) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition: background 200ms ease, border-color 200ms ease, transform 180ms ease;
 }
 
-.hero-cta:hover {
-  background: rgba(244, 246, 255, 0.18) !important;
-  border-color: rgba(244, 246, 255, 0.4) !important;
-  transform: translateY(-1px);
+.sl-prompt__submit svg { width: 1rem; height: 1rem; }
+.sl-prompt__submit:hover { background: oklch(0.98 0.006 260 / 18%); border-color: oklch(0.98 0.006 260 / 40%); transform: translateY(-1px); }
+
+@media (min-width: 40rem) {
+  .sl-site-header__inner { padding-inline: 1.5rem; }
+}
+
+@media (min-width: 60rem) {
+  .sl-site-header { height: 3.25rem; }
+  .sl-site-header__inner { padding-inline: 2rem; }
+  .sl-hero { min-height: calc(100svh - 3.25rem); }
+  .sl-hero__title { font-size: 2.625rem !important; }
+}
+
+@media (max-width: 39.999rem) {
+  .sl-hero__stack { width: min(100% - 2rem, 32rem); transform: translateY(-2vh); }
+  .sl-hero__kicker { max-width: 23rem; font-size: 0.625rem; letter-spacing: 0.2em; }
+  .sl-prompt__panel { min-height: 10.5rem; padding: 1.25rem; border-radius: 1.25rem; }
+  .sl-prompt__footer { align-items: flex-end; }
+  .sl-prompt__footer p { max-width: 8rem; font-size: 0.8125rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-hero__scene { transform: scale(1.06); transition: opacity 1400ms ease-in-out; }
+  .sl-hero__scene[data-active="true"] { animation: none; transform: scale(1.06); }
+  .sl-prompt__caret { animation: none; }
 }
 
 /* Ranked action buttons used inside the hero snapshot modal */

@@ -15,8 +15,8 @@ export function CinematicHero() {
   const takeOver = useCallback(() => setPaused(true), []);
 
   return (
-    <section className="hero-cinematic flex min-h-[88vh] flex-col justify-start overflow-hidden md:min-h-screen">
-      <div className="absolute inset-0 -z-10">
+    <section className="sl-hero">
+      <div className="sl-hero__media" aria-hidden="true">
         {scenes.map((scene, sceneIndex) => (
           <img
             key={scene.id}
@@ -28,33 +28,26 @@ export function CinematicHero() {
             height={1024}
             loading={sceneIndex === 0 ? "eager" : "lazy"}
             decoding="async"
-            className="hero-scene"
+            className="sl-hero__scene"
           />
         ))}
-        <div className="hero-scrim" aria-hidden="true" />
-        <div className="hero-grain" aria-hidden="true" />
+        <div className="sl-hero__scrim" />
+        <div className="sl-hero__grain" />
       </div>
 
-      <div className="hero-content-shell mx-auto w-full px-6 text-center">
-        <p className="hero-kicker text-[11px] font-medium">
+      <div className="sl-hero__stack">
+        <p className="sl-hero__kicker">
           Atlanta · IGNITE Center at Greater Atlanta Christian School
         </p>
-        <h1 className="mx-auto mt-7 max-w-[940px] leading-[1.06]">
-          What would you like to start?
-        </h1>
-
-
-        <div className="hero-prompt-wrap mt-10">
+        <h1 className="sl-hero__title">What would you like to start?</h1>
+        <div className="sl-hero__prompt">
           <IdeaPrompt ghostText={typed} paused={paused} onTakeOver={takeOver} />
         </div>
-
-
-        <p className="hero-nowbuilding mt-8 text-[11px] font-medium">
+        <p className="sl-hero__status">
           Now building:{" "}
-          <span className="hero-accent">{scenes[index]?.label}</span>
+          <span>{scenes[index]?.label}</span>
         </p>
       </div>
-
     </section>
   );
 }

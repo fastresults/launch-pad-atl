@@ -51,13 +51,13 @@ export function SiteHeader() {
 
   return (
     <>
-    <header className="site-header sticky top-0 z-50 border-b border-white/5 bg-background/70 backdrop-blur">
-      <div className="site-header-inner mx-auto flex items-center gap-4 px-4 sm:px-6 lg:px-8">
+    <header className="sl-site-header">
+      <div className="sl-site-header__inner">
 
         {/* Left edge: logo + product nav */}
         <div className="flex min-w-0 shrink items-center gap-4 lg:gap-5 xl:gap-6">
           <Link to="/" className="flex min-w-0 shrink items-center font-semibold tracking-tight" aria-label="Startup Labs — home">
-            <StartupLabsLogo className="site-header-logo h-8 w-auto text-foreground sm:h-9 lg:h-10" />
+            <StartupLabsLogo className="sl-site-header__logo" />
           </Link>
           <nav className="hidden items-center gap-4 text-[0.8125rem] text-muted-foreground lg:flex lg:gap-5 xl:gap-6">
             {leftNav.map((n) => (

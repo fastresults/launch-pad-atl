@@ -1,43 +1,54 @@
 ## Confirmed root cause
 
-This is not browser zoom or a stale deployment. The live CSS creates two different desktop compositions:
+The hero is not controlled by one layout. Its geometry is currently split across:
 
-- **960–1279px:** 40px logo, 44px headline, 832px × 188px prompt, 22px input, 15px CTA.
-- **1280px+:** 32px logo, 42px headline, 800px × 152px prompt, 18px input, 13px CTA.
+- Tailwind sizing and spacing in `CinematicHero.tsx` and `IdeaPrompt.tsx`.
+- A second base geometry layer in `src/styles.css`.
+- A third desktop geometry layer inside the `60rem` media query.
+- Repeated `max-width`, height, margin, padding, and `!important` declarations that override one another.
+- Header dimensions governed separately from the hero, despite both forming the first-viewport composition.
 
-That first desktop band is materially larger, so common laptop and scaled preview widths render the over-magnified composition. The CSS comment says desktop should use one compact scale, but the implementation still has two conflicting desktop tiers.
+Examples already confirmed in the source include three competing prompt widths (`940px`, `58.75rem`, and `50rem`), two hero minimum-height paths, and spacing defined simultaneously in JSX and late CSS. Continuing to append overrides will preserve the failure mode.
 
-A second breakpoint defect contributes to the inconsistency: the custom `lg` breakpoint is declared inside `@theme inline`, while the hero uses hand-written 60rem media queries. This can leave Tailwind’s header utilities and the hero rules switching at different boundaries.
+## Rebuild
 
-## Implementation
+1. **Remove the existing hero implementation rather than override it again**
+   - Replace the current `CinematicHero` and `IdeaPrompt` presentation markup with a clean, purpose-built structure.
+   - Delete the legacy `.hero-*` layout rules that control geometry, spacing, and typography.
+   - Preserve only the working business behavior: randomized scenes, type animation, user input takeover, modal launch, and “Now building” label.
 
-1. **Align the desktop breakpoint**
-   - Move the custom `--breakpoint-lg: 60rem` token into a standard `@theme` block.
-   - Keep semantic color/radius aliases in `@theme inline`.
-   - Ensure header `lg:` utilities and hero desktop rules both switch at exactly 960px.
+2. **Build one isolated first-viewport composition**
+   - Use one hero root, one background layer, and one centered content stack.
+   - Make the hero occupy exactly the visible area below the header, not `100vh` plus the header.
+   - Reproduce the compact reference at the current 1576×1043 viewport:
+     - Compact 52px header and 32px logo.
+     - Content stack centered slightly above the visual midpoint.
+     - 42px headline.
+     - 800px × 152px prompt panel.
+     - 18px prompt text and compact footer controls.
+     - Large uninterrupted margins around the stack.
+   - Keep these desktop dimensions stable from 960px upward; wider screens gain whitespace, not larger components.
 
-2. **Replace the two desktop size tiers with one composition**
-   - Collapse the 960–1279px and 1280px+ sizing rules into one `min-width: 60rem` block.
-   - Lock desktop geometry to the compact reference values already measured at 1280px+:
-     - Header: 52px
-     - Logo: 32px high
-     - Headline: 42px
-     - Prompt: 800px × 152px
-     - Input: 18px
-     - CTA: 13px with compact padding
-   - Wide viewports may add surrounding whitespace only; they must not enlarge components.
+3. **Rebuild the glass prompt as a fixed internal grid**
+   - Separate the input row from the caption/action row so content cannot stretch the panel.
+   - Preserve the translucent dark glass, blur, border, and compact pill CTA shown in the reference.
+   - Prevent animated text, focus state, or button content from changing the panel dimensions.
 
-3. **Make vertical placement deterministic**
-   - Keep the complete kicker/headline/prompt/label stack centered as one unit, slightly above the viewport midpoint.
-   - Use the same stack dimensions at 1000, 1280, 1576, and 1920px.
-   - Allow only viewport-height spacing to vary, not element scale.
+4. **Align the header with the same composition**
+   - Keep the existing navigation destinations and authenticated links.
+   - Lock the desktop header height, logo, nav type, gaps, and reserve CTA to the compact proportions visible in the reference.
+   - Retain the existing mobile menu as a separate breakpoint composition.
 
-4. **Remove conflicting legacy desktop overrides**
-   - Delete the obsolete 60–79.999rem magnification rules rather than overriding them again.
-   - Keep the hero’s glass/input isolation from the broader marketing styles, but eliminate duplicate sizing paths.
+5. **Make the rebuild resistant to cascade regressions**
+   - Give the new hero a new scoped class namespace instead of reusing the accumulated `.hero-*` layout selectors.
+   - Keep all responsive geometry in one contiguous CSS section with only mobile and desktop states.
+   - Remove obsolete selectors after the replacement so no legacy rule can affect the new markup.
 
-5. **Validate before publishing**
-   - Measure local output at 1000×800, 1280×720, 1576×1043, and 1920×1080.
-   - Confirm identical logo, headline, prompt, input, and CTA dimensions across all desktop widths.
-   - Compare screenshots for whitespace and vertical placement.
-   - Publish, then repeat the same DOM measurements on `startuplabs.online` to confirm the deployed composition matches local exactly.
+## Verification and deployment
+
+- Verify rendered dimensions and screenshots at 1000×800, 1280×720, 1576×1043, and 1920×1080.
+- At 1576×1043, compare the rebuilt output directly with the attached compact reference, including header height, stack coordinates, prompt dimensions, and surrounding whitespace.
+- Test scene rotation, Ken Burns motion, typed prompt takeover, modal opening, and reduced-motion behavior.
+- Run the project build and lint checks.
+- Run the required security check, publish the verified build, then inspect `startuplabs.online` at the same viewport with a cache-busted request.
+- Compare local and deployed DOM measurements and screenshots; if they differ, diagnose the served build/version and republish only after the deployed output matches the compact reference.
