@@ -1,41 +1,40 @@
-# Published-Site Parity Recovery
+# Public-page desktop scale recovery
 
-## Confirmed diagnosis
+The screenshots expose the real failure: this is not a browser-wide `zoom` problem. At the effective viewport shown, the source itself activates large `lg` typography (`text-7xl`, `4.3rem`), generous vertical spacing, and narrow content widths. That makes every public page look enlarged even though the header and visual viewport are technically at scale 1. The previous parity test only proved that preview and production matched each other; it did not prove that either one looked correct.
 
-This is not another hero-layout problem.
+## 1. Replace the false parity gate with a visual-size gate
 
-- The Lovable designer is running app version `2026-08-02T21:06:10.242Z`.
-- `startuplabs.online` is still serving the older app version `2026-08-02T20:52:34.508Z` and the older bundled stylesheet `index-CAuk4Nw-.css`.
-- At the same controlled 1576×1043 viewport, the currently published build still renders the old fixed 800px prompt, while the designer contains the newer proportional implementation.
-- The production page itself reports normal root geometry (`16px` root font, `zoom: 1`, no root transform, `visualViewport.scale: 1`). Therefore another CSS size adjustment would repeat the previous mistake.
+- Stop treating matching preview/production rectangles as success.
+- Record the effective CSS viewport, screen dimensions, DPR, `visualViewport.scale`, root font size, headline size, body-copy size, container width, and first-viewport content density.
+- Add explicit acceptable desktop ranges at 1024, 1190/1200, 1280, 1400, 1576, and 1920 CSS pixels.
+- Fail when a headline, paragraph, card, header, or section consumes too much of the viewport—even if preview and production are identical.
 
-## Implementation
+## 2. Create one restrained desktop scale for every public page
 
-1. **Freeze the designer state**
-   - Make no further visual or copy changes.
-   - Treat the currently approved Lovable designer rendering as the source of truth.
+- Introduce shared public-page geometry tokens for header height, page gutter, content width, headline sizes, body sizes, card padding, and section spacing.
+- Treat 1024–1439px as a compact desktop/tablet-landscape tier rather than applying the current oversized `lg` composition.
+- Reserve the largest display sizes for genuinely wide screens only.
+- Remove page-specific oversized values such as the workshop `text-7xl`, homepage `4.3rem` headline, and excessive `md:py-24` spacing where they break first-viewport density.
+- Preserve the current midnight visual design, copy, imagery, and page structure; only correct scale and composition.
 
-2. **Strengthen the deployment identity check**
-   - Extend the existing version marker so the deployed HTML exposes both the app version and current CSS bundle identity.
-   - Update the parity gate to fail when preview and production do not serve the same release, before comparing any geometry.
+## 3. Recompose the affected first viewports
 
-3. **Test representative public pages**
-   - Compare `/`, `/workshops`, `/services`, and one additional public offer page in preview and production.
-   - At identical desktop and tablet viewports, record root font size, viewport width, header bounds, H1 bounds, primary content width, loaded CSS asset, and app version.
-   - Add screenshot comparison evidence for each route so a site-wide scaling difference cannot be mistaken for a hero-only issue.
+- **Homepage cinematic hero:** keep the current centered scene, but size the headline and glass prompt from bounded design tokens rather than viewport-percentage growth.
+- **Homepage copy section:** fit the headline, opening copy, image, and price panel into a balanced desktop composition without giant type or below-fold truncation.
+- **Workshops index:** reduce the “Actually built. Live by lunch.” headline, paragraph measure, top spacing, and side-panel scale so the section reads as a normal desktop page.
+- **All other public routes:** apply the same scale system to `/services`, `/schedule`, `/build/:slug`, `/facilitator`, `/contact`, `/webinar`, `/one-on-one`, `/register`, and legal pages so no route retains the enlarged legacy sizing.
+- Keep mobile behavior separate and unchanged unless a shared rule would otherwise regress it.
 
-4. **Publish the exact verified build**
-   - Run the security/build gates, then publish without making changes after verification.
-   - Confirm the custom domain serves the same app version and CSS bundle as the designer.
+## 4. Remove competing legacy styling
 
-5. **Production acceptance gate**
-   - Do not call the issue fixed until `startuplabs.online` passes release-identity and layout-parity checks on all selected public routes.
-   - If the same release measures identically in an isolated browser but the user’s existing browser still appears enlarged, verify the browser’s saved per-domain zoom separately with a 100% reset (`Cmd/Ctrl+0`); do not compensate for browser zoom by distorting the site CSS.
+- Consolidate the public-page typography and geometry rules instead of layering more overrides onto the legacy literal bridge.
+- Eliminate conflicting hardcoded headline sizes and redundant responsive classes from the affected page components.
+- Keep the isolated `sl-*` hero namespace, but make it consume the same shared desktop scale tokens as the rest of the public site.
 
-## Acceptance criteria
+## 5. Verify the actual failure conditions before publishing
 
-- Designer and custom domain report the same app version and production bundle.
-- Homepage geometry matches the designer at desktop and tablet widths.
-- Public-page headings, navigation, containers, and spacing match their designer equivalents.
-- No production-only `zoom`, root transform, font-size override, or alternate stylesheet is present.
-- Screenshots from the custom domain—not localhost—are the final proof.
+- Capture full viewport—not full-page—screenshots for homepage, workshops, services, and one workshop detail at every acceptance width.
+- Compare the 1190/1200 and 1400 cases directly with the attached screenshots, because those are the sizes the earlier checks failed to represent.
+- Assert no overlap, horizontal overflow, cropped first-viewport content, unintended mobile navigation, or display headline above the approved size range.
+- Run the same measurements against the published custom domain after deployment and require both release identity and visual-size acceptance.
+- Do not declare success from code inspection, build output, or local/production parity alone; success requires published screenshots at the failing desktop sizes.
