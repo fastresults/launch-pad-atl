@@ -761,10 +761,11 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, var(--hero-ink) 4%, rgba(5, 7, 15, 0.72) 38%, rgba(5, 7, 15, 0.28) 70%, rgba(5, 7, 15, 0.66) 100%),
+    linear-gradient(to top, var(--hero-ink) 2%, rgba(5, 7, 15, 0.55) 26%, rgba(5, 7, 15, 0.14) 62%, rgba(5, 7, 15, 0.40) 100%),
     radial-gradient(120% 90% at 20% 90%, var(--hero-haze-a), transparent 60%),
     radial-gradient(100% 80% at 85% 15%, var(--hero-haze-b), transparent 62%);
 }
+
 
 .hero-grain {
   position: absolute;
