@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { IdeaSnapshotModal } from "@/components/home/IdeaSnapshotModal";
 
 type IdeaPromptProps = {
   ghostText: string;
@@ -16,7 +16,8 @@ type IdeaPromptProps = {
 export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
+  const [snapshotIdea, setSnapshotIdea] = useState("");
+  const [snapshotOpen, setSnapshotOpen] = useState(false);
 
   useEffect(() => {
     if (value.length > 0 && !paused) onTakeOver();
@@ -26,7 +27,8 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
     event.preventDefault();
     const idea = (value.trim() || ghostText.trim()).replace(/\|$/, "");
     if (!idea) return;
-    navigate(`/register?idea=${encodeURIComponent(idea)}`);
+    setSnapshotIdea(idea);
+    setSnapshotOpen(true);
   };
 
   return (
@@ -60,6 +62,7 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
           </button>
         </div>
       </div>
+      <IdeaSnapshotModal idea={snapshotIdea} open={snapshotOpen} onOpenChange={setSnapshotOpen} />
     </form>
   );
 }

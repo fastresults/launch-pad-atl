@@ -875,3 +875,24 @@
 }
 .marketing-surface .hero-cinematic p,
 .marketing-surface .hero-cinematic li { color: inherit; }
+
+/* Cinematic modal surface --------------------------------------
+ * Same midnight token set as the hero, but without the hero's
+ * positioning/background rules so Radix's fixed centering survives. */
+.hero-modal {
+  --hero-ink: #05070F;
+  --hero-fg: #F4F6FF;
+  --hero-fg-soft: rgba(244, 246, 255, 0.72);
+  --hero-fg-faint: rgba(244, 246, 255, 0.44);
+  --hero-accent: #4C8CFF;
+  --hero-glass: rgba(10, 14, 28, 0.42);
+  --hero-glass-line: rgba(244, 246, 255, 0.16);
+  background-color: var(--hero-ink) !important;
+  color: var(--hero-fg);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+.hero-modal :is(h1, h2, h3, p, span, li, button, a) { font-family: inherit; }
+.hero-modal .hero-sub { color: var(--hero-fg-soft) !important; }
+.hero-modal .hero-faint { color: var(--hero-fg-faint) !important; }
+.hero-modal .hero-accent { color: var(--hero-accent) !important; }
