@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, Loader2, MapPin, AlertTriangle, Check } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 
 type Signal = { label: string; value: string; note: string };
 
@@ -208,8 +208,7 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
                 </p>
                 <div className="mt-5 flex flex-wrap items-center gap-3">
                   <Link
-                    to="/register"
-                    search={{ idea }}
+                    to={`/register?idea=${encodeURIComponent(idea)}`}
                     onClick={() => onOpenChange(false)}
                     className="hero-cta"
                   >
