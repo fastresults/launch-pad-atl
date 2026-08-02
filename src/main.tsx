@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
-import { startVersionCheck } from "@/lib/version-check";
+import { APP_VERSION, replaceStaleBuild, startVersionCheck } from "@/lib/version-check";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import App from "./App";
 import "./styles.css";
@@ -16,9 +16,13 @@ const queryClient = new QueryClient({
 
 function Root() {
   useEffect(() => {
-    return startVersionCheck(() => {
+    document.documentElement.dataset.appVersion = APP_VERSION;
+
+    return startVersionCheck((version) => {
+      if (replaceStaleBuild(version)) return;
+
       toast("A new version is available", {
-        description: "Refresh to load the latest update.",
+        description: "Refresh once to load the latest update.",
         duration: Infinity,
         action: {
           label: "Refresh",
@@ -42,7 +46,10 @@ function Root() {
   );
 }
 
-createRoot(document.getElementById("root")!).render(
+const root = document.getElementById("root");
+if (!root) throw new Error("Missing application root");
+
+createRoot(root).render(
   <StrictMode>
     <Root />
   </StrictMode>,
