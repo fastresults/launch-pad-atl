@@ -282,284 +282,408 @@
 
 
 /* =========================================================
- * Marketing surface — Warm Sand editorial magazine theme
- * Scoped via `.marketing-surface`. Applied to public pages
- * (home, build, services, schedule, contact) without touching
- * the authenticated app's dark tokens.
- * Palette: cream #FAF8F5 · sand #F0EBE3 · tan #C9B99A · espresso #8B7355
- * Type: DM Serif Display headings + Fira Sans body
+ * Marketing surface — Cinematic editorial system
+ * Scoped via `.marketing-surface` (public pages only; the
+ * authenticated app and admin console keep their own tokens).
+ *
+ * Midnight-navy canvas · blue-violet ambient haze ·
+ * near-white Outfit display type · ONE electric-blue accent ·
+ * glass panels over photography. All color is oklch.
  * ========================================================= */
-.marketing-surface {
-  --background: #FAF8F5;
-  --foreground: #3D3025;
-  --card: #FFFFFF;
-  --card-foreground: #3D3025;
-  --popover: #FFFFFF;
-  --popover-foreground: #3D3025;
-  --primary: #8B7355;
-  --primary-foreground: #FAF8F5;
-  --secondary: #F0EBE3;
-  --secondary-foreground: #3D3025;
-  --muted: #F0EBE3;
-  --muted-foreground: #7A6650;
-  --accent: #F0EBE3;
-  --accent-foreground: #3D3025;
-  --destructive: #B4412A;
-  --destructive-foreground: #FAF8F5;
-  --border: #E4D9C4;
-  --input: #C9B99A;
-  --ring: #8B7355;
+.marketing-surface,
+.marketing-dialog,
+.marketing-sheet {
+  --background: oklch(0.155 0.019 268);
+  --foreground: oklch(0.975 0.004 250);
+  --surface: oklch(0.205 0.021 268);
+  --card: oklch(0.198 0.021 268);
+  --card-foreground: oklch(0.975 0.004 250);
+  --popover: oklch(0.198 0.021 268);
+  --popover-foreground: oklch(0.975 0.004 250);
+  --primary: oklch(0.68 0.18 256);
+  --primary-foreground: oklch(0.16 0.03 264);
+  --secondary: oklch(0.245 0.022 268);
+  --secondary-foreground: oklch(0.975 0.004 250);
+  --muted: oklch(0.245 0.022 268);
+  --muted-foreground: oklch(0.775 0.018 260);
+  --accent: oklch(0.27 0.024 268);
+  --accent-foreground: oklch(0.975 0.004 250);
+  --destructive: oklch(0.62 0.21 25);
+  --destructive-foreground: oklch(0.975 0.004 250);
+  --border: oklch(0.82 0.03 260 / 14%);
+  --input: oklch(0.82 0.03 260 / 18%);
+  --ring: oklch(0.66 0.18 258);
 
-  background-color: #FAF8F5;
-  color: #3D3025;
-  font-family: 'Fira Sans', system-ui, -apple-system, sans-serif;
+  --brand-accent: oklch(0.68 0.18 256);
+  --brand-accent-soft: oklch(0.78 0.1 256);
+  --brand-violet: oklch(0.55 0.13 285);
+  --headline-dim: oklch(0.68 0.02 262);
+
+  --gradient-haze: radial-gradient(
+    120% 95% at 50% 8%,
+    oklch(0.5 0.13 272 / 55%) 0%,
+    oklch(0.34 0.1 268 / 35%) 32%,
+    transparent 70%
+  );
+  --gradient-brand: linear-gradient(
+    100deg,
+    var(--brand-accent),
+    var(--brand-violet) 70%,
+    var(--brand-accent-soft)
+  );
+
+  --radius: 0.75rem;
+}
+
+.marketing-surface {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
   font-weight: 400;
+  -webkit-font-smoothing: antialiased;
 }
 
 .marketing-surface :is(h1, h2, h3, h4),
 .marketing-surface .font-serif,
-.marketing-surface .font-editorial {
-  font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
-  font-weight: 400;
-  letter-spacing: -0.01em;
+.marketing-surface .font-editorial,
+.marketing-dialog :is(h1, h2, h3, h4),
+.marketing-sheet :is(h1, h2, h3, h4) {
+  font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
   font-style: normal;
+  letter-spacing: -0.035em;
+  color: var(--foreground);
 }
 
-/* ---- neutralize hardcoded dark-theme utilities ---- */
+/* Eyebrow / status line */
+.marketing-surface .eyebrow,
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--brand-accent);
+}
+
+/* ---------------------------------------------------------
+ * Legacy literal bridge.
+ * Public components still carry Warm Sand hex literals in
+ * arbitrary Tailwind classes. Rather than leave a single one
+ * behind (one literal breaks the whole system), every warm
+ * value is remapped onto a token here, case-insensitively.
+ * --------------------------------------------------------- */
+
+/* Ink — near-white display/body */
+.marketing-surface [class*="text-[#3D3025]" i],
+.marketing-surface [class*="text-[#2B1F14]" i],
+.marketing-surface [class*="text-[#2A1F17]" i],
+.marketing-surface [class*="text-[#111827]" i],
+.marketing-surface [class*="text-[#FAF8F5]" i],
+.marketing-surface [class*="text-[#FBF7F1]" i],
+.marketing-surface [class*="text-[#FFFFFF]" i],
 .marketing-surface .text-white,
-.marketing-surface .text-white\/95,
-.marketing-surface .text-white\/90 { color: #3D3025 !important; }
+.marketing-surface .text-black,
+.marketing-surface .text-neutral-900 {
+  color: var(--foreground) !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+}
+
+/* Secondary copy */
+.marketing-surface [class*="text-[#5C4A38]" i],
+.marketing-surface [class*="text-[#5A4A3A]" i],
+.marketing-surface [class*="text-[#7A6650]" i],
+.marketing-surface [class*="text-[#6B5B47]" i],
+.marketing-surface [class*="text-[#9A8B75]" i],
+.marketing-surface [class*="text-[#8A7862]" i],
+.marketing-surface [class*="text-[#6B7280]" i],
 .marketing-surface .text-white\/80,
-.marketing-surface .text-white\/70 { color: #5C4A38 !important; }
+.marketing-surface .text-white\/70,
 .marketing-surface .text-white\/60,
 .marketing-surface .text-white\/50,
 .marketing-surface .text-white\/40,
-.marketing-surface .text-white\/30 { color: #8B7355 !important; }
-.marketing-surface .text-black,
-.marketing-surface .text-neutral-900 { color: #3D3025 !important; }
-
-.marketing-surface [class*="border-white/"] { border-color: #E4D9C4 !important; }
-.marketing-surface [class*="border-primary/"] { border-color: #C9B99A !important; }
-.marketing-surface [class*="border-emerald"] { border-color: #4A6741 !important; }
-
-.marketing-surface [class*="bg-white/"] { background-color: #F5F0E5 !important; }
-.marketing-surface [class*="bg-black/"] { background-color: #F0EBE3 !important; }
-.marketing-surface [class*="bg-background/"] { background-color: transparent !important; }
-.marketing-surface [class*="bg-primary/"] { background-color: rgba(139, 115, 85, 0.08) !important; }
-.marketing-surface [class*="bg-emerald"] { background-color: #EEF1E9 !important; }
-/* Neutralize hover/focus/group-hover variants of bg-white so the base
-   button state stays transparent — the substring selector above would
-   otherwise fill hover-only classes unconditionally, producing white
-   text on a cream fill (fails contrast). */
-.marketing-surface [class*="hover:bg-white/"]:not(:hover),
-.marketing-surface [class*="focus:bg-white/"]:not(:focus),
-.marketing-surface [class*="focus-visible:bg-white/"]:not(:focus-visible),
-.marketing-surface [class*="group-hover:bg-white/"],
-.marketing-surface [class*="hover:bg-black/"]:not(:hover),
-.marketing-surface [class*="focus:bg-black/"]:not(:focus),
-.marketing-surface [class*="group-hover:bg-black/"] { background-color: transparent !important; }
-
-.marketing-surface .bg-white { background-color: #FFFFFF !important; color: #3D3025 !important; }
-.marketing-surface .bg-black { background-color: #3D3025 !important; color: #FAF8F5 !important; }
-
-/* Espresso-filled controls must keep light ink, even inside marketing pages
-   where old dark-theme `text-white` utilities are remapped to espresso. */
-.marketing-surface [class*="bg-[#8B7355]"],
-.marketing-surface [class*="bg-[#6F5A42]"],
-.marketing-surface [class~="bg-primary"] {
-  background-color: #8B7355 !important;
-  color: #FAF8F5 !important;
-  -webkit-text-fill-color: #FAF8F5 !important;
-}
-.marketing-surface [class*="bg-[#8B7355]"] *,
-.marketing-surface [class*="bg-[#6F5A42]"] *,
-.marketing-surface [class~="bg-primary"] * {
-  color: #FAF8F5 !important;
-  -webkit-text-fill-color: #FAF8F5 !important;
+.marketing-surface .text-white\/30 {
+  color: var(--muted-foreground) !important;
+  -webkit-text-fill-color: var(--muted-foreground) !important;
 }
 
-/* Marketing hover/focus contrast: every filled hover state gets an
-   intentional ink/fill pair instead of inheriting dark-theme utilities. */
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-white/"]:hover,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus:bg-white/"]:focus,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus-visible:bg-white/"]:focus-visible,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="group-hover:bg-white/"]:is(:hover, :focus-within) {
-  background-color: #F0EBE3 !important;
-  border-color: #C9B99A !important;
-  color: #3D3025 !important;
-  -webkit-text-fill-color: #3D3025 !important;
-}
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-white/"]:hover *,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus:bg-white/"]:focus *,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus-visible:bg-white/"]:focus-visible *,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="group-hover:bg-white/"]:is(:hover, :focus-within) * {
-  color: #3D3025 !important;
-  -webkit-text-fill-color: #3D3025 !important;
-}
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-black/"]:hover,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus:bg-black/"]:focus,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="group-hover:bg-black/"]:is(:hover, :focus-within),
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class~="bg-black"]:hover {
-  background-color: #3D3025 !important;
-  border-color: #3D3025 !important;
-  color: #FAF8F5 !important;
-  -webkit-text-fill-color: #FAF8F5 !important;
-}
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-black/"]:hover *,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus:bg-black/"]:focus *,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="group-hover:bg-black/"]:is(:hover, :focus-within) *,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class~="bg-black"]:hover * {
-  color: #FAF8F5 !important;
-  -webkit-text-fill-color: #FAF8F5 !important;
-}
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-primary/"]:hover,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus:bg-primary/"]:focus,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus-visible:bg-primary/"]:focus-visible {
-  background-color: #E7DED0 !important;
-  border-color: #C9B99A !important;
-  color: #3D3025 !important;
-  -webkit-text-fill-color: #3D3025 !important;
-}
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class~="bg-primary"]:hover,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class~="bg-hero-gradient"]:is(a, button):hover {
-  background-image: none !important;
-  background-color: #6F5A42 !important;
-  border-color: #6F5A42 !important;
-  color: #FAF8F5 !important;
-  -webkit-text-fill-color: #FAF8F5 !important;
-}
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class~="bg-primary"]:hover *,
-:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class~="bg-hero-gradient"]:is(a, button):hover * {
-  color: #FAF8F5 !important;
-  -webkit-text-fill-color: #FAF8F5 !important;
+/* The single accent */
+.marketing-surface [class*="text-[#8B7355]" i],
+.marketing-surface [class*="text-[#6F5A42]" i],
+.marketing-surface [class*="text-[#6E5B42]" i],
+.marketing-surface [class*="text-[#B8532A]" i],
+.marketing-surface [class*="text-[#7A3418]" i],
+.marketing-surface [class*="text-[#C9B99A]" i],
+.marketing-surface [class*="text-[#4A6741]" i],
+.marketing-surface [class*="text-[#628ACF]" i],
+.marketing-surface [class*="text-[#4F73B8]" i],
+.marketing-surface [class*="text-[#6366F1]" i],
+.marketing-surface [class*="text-emerald" i] {
+  color: var(--brand-accent) !important;
+  -webkit-text-fill-color: var(--brand-accent) !important;
 }
 
-/* Kill the hero orange→magenta→violet gradient — use solid espresso on marketing pages */
+/* Surfaces — cream/sand fills become raised midnight panels */
+.marketing-surface [class*="bg-[#FAF8F5]" i],
+.marketing-surface [class*="bg-[#FBF7F1]" i],
+.marketing-surface [class*="bg-[#FAF5EC]" i],
+.marketing-surface [class*="bg-[#F5F0E5]" i],
+.marketing-surface [class*="bg-[#F5EEDF]" i],
+.marketing-surface [class*="bg-[#EFE7D6]" i],
+.marketing-surface [class*="bg-[#FFFFFF]" i],
+.marketing-surface [class*="bg-white/" i],
+.marketing-surface .bg-white {
+  background-color: oklch(0.98 0.01 260 / 5%) !important;
+  color: var(--foreground) !important;
+}
+.marketing-surface [class*="bg-[#F0EBE3]" i],
+.marketing-surface [class*="bg-[#E5DDD0]" i],
+.marketing-surface [class*="bg-[#E7DED0]" i],
+.marketing-surface [class*="bg-[#EEF1E9]" i],
+.marketing-surface [class*="bg-emerald" i],
+.marketing-surface [class*="bg-black/" i],
+.marketing-surface .bg-black {
+  background-color: var(--surface) !important;
+  color: var(--foreground) !important;
+}
+.marketing-surface [class*="bg-background/" i] {
+  background-color: transparent !important;
+}
+
+/* Hover/focus-only fills must not paint their base state */
+.marketing-surface [class*="hover:bg-white/" i]:not(:hover),
+.marketing-surface [class*="focus:bg-white/" i]:not(:focus),
+.marketing-surface [class*="focus-visible:bg-white/" i]:not(:focus-visible),
+.marketing-surface [class*="group-hover:bg-white/" i],
+.marketing-surface [class*="hover:bg-black/" i]:not(:hover),
+.marketing-surface [class*="focus:bg-black/" i]:not(:focus),
+.marketing-surface [class*="group-hover:bg-black/" i],
+.marketing-surface [class*="hover:bg-[#" i]:not(:hover),
+.marketing-surface [class*="group-hover:bg-[#" i] {
+  background-color: transparent !important;
+}
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-white/" i]:hover,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-black/" i]:hover,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus:bg-white/" i]:focus,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="focus-visible:bg-white/" i]:focus-visible,
+:is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="group-hover:bg-white/" i]:is(:hover, :focus-within) {
+  background-color: oklch(0.98 0.01 260 / 9%) !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+}
+
+/* Borders — hairline alpha so photography reads through */
+.marketing-surface [class*="border-[#E4D9C4]" i],
+.marketing-surface [class*="border-[#C9B99A]" i],
+.marketing-surface [class*="border-[#E5DDD0]" i],
+.marketing-surface [class*="border-[#D0D0D0]" i],
+.marketing-surface [class*="border-[#E5E5E5]" i],
+.marketing-surface [class*="border-[#E2E8F0]" i],
+.marketing-surface [class*="border-white/" i],
+.marketing-surface [class*="border-primary/" i],
+.marketing-surface [class*="border-emerald" i] {
+  border-color: var(--border) !important;
+}
+.marketing-surface [class*="border-[#8B7355]" i],
+.marketing-surface [class*="border-[#6F5A42]" i],
+.marketing-surface [class*="border-[#B8532A]" i] {
+  border-color: color-mix(in oklab, var(--brand-accent) 55%, transparent) !important;
+}
+
+/* Filled controls — the one accent, with dark ink for contrast */
+.marketing-surface [class*="bg-[#8B7355]" i],
+.marketing-surface [class*="bg-[#6F5A42]" i],
+.marketing-surface [class*="bg-[#6E5B42]" i],
+.marketing-surface [class*="bg-[#2B1F14]" i],
+.marketing-surface [class*="bg-[#3D3025]" i],
+.marketing-surface [class*="bg-[#B8532A]" i],
+.marketing-surface [class~="bg-primary"],
 .marketing-surface .bg-hero-gradient {
   background-image: none !important;
-  background-color: #8B7355 !important;
-  color: #FAF8F5 !important;
+  background-color: var(--brand-accent) !important;
+  border-color: transparent !important;
+  color: var(--primary-foreground) !important;
+  -webkit-text-fill-color: var(--primary-foreground) !important;
 }
-.marketing-surface .bg-hero-gradient,
+.marketing-surface [class*="bg-[#8B7355]" i] *,
+.marketing-surface [class*="bg-[#6F5A42]" i] *,
+.marketing-surface [class*="bg-[#6E5B42]" i] *,
+.marketing-surface [class*="bg-[#2B1F14]" i] *,
+.marketing-surface [class*="bg-[#3D3025]" i] *,
+.marketing-surface [class*="bg-[#B8532A]" i] *,
+.marketing-surface [class~="bg-primary"] *,
 .marketing-surface .bg-hero-gradient * {
-  color: #FAF8F5 !important;
+  color: var(--primary-foreground) !important;
+  -webkit-text-fill-color: var(--primary-foreground) !important;
 }
-.marketing-surface .bg-hero-gradient .text-gradient-brand,
-.marketing-surface .bg-hero-gradient [class*="text-[#8B7355]"],
-.marketing-surface .bg-hero-gradient [class*="text-[#3D3025]"],
-.marketing-surface .bg-hero-gradient [class*="text-primary"],
-.marketing-surface .bg-hero-gradient [class*="text-muted"],
-.marketing-surface .bg-hero-gradient [class*="text-foreground"] {
-  color: #FAF8F5 !important;
-  -webkit-text-fill-color: #FAF8F5 !important;
-  background: none !important;
-}
-/* Keep CTA buttons readable: cream/white button = espresso label */
-.marketing-surface .bg-hero-gradient .bg-white,
-.marketing-surface .bg-hero-gradient [class*="bg-[#FAF8F5]"],
-.marketing-surface .bg-hero-gradient [class*="bg-[#FBF7F1]"],
-.marketing-surface .bg-hero-gradient [class*="bg-[#F5F0E5]"],
-.marketing-surface .bg-hero-gradient [class*="bg-[#F0EBE3]"] {
-  color: #3D3025 !important;
-}
-.marketing-surface .bg-hero-gradient .bg-white *,
-.marketing-surface .bg-hero-gradient [class*="bg-[#FAF8F5]"] *,
-.marketing-surface .bg-hero-gradient [class*="bg-[#FBF7F1]"] *,
-.marketing-surface .bg-hero-gradient [class*="bg-[#F5F0E5]"] *,
-.marketing-surface .bg-hero-gradient [class*="bg-[#F0EBE3]"] * {
-  color: #3D3025 !important;
-  -webkit-text-fill-color: #3D3025 !important;
+.marketing-surface :is(a, button)[class*="bg-[#8B7355]" i]:hover,
+.marketing-surface :is(a, button)[class~="bg-primary"]:hover,
+.marketing-surface :is(a, button).bg-hero-gradient:hover {
+  filter: brightness(1.08);
 }
 
-/* Kill the gradient-brand text — use italic espresso serif accent instead */
-.marketing-surface .text-gradient-brand {
-  background: none !important;
-  -webkit-background-clip: initial !important;
-  background-clip: initial !important;
-  -webkit-text-fill-color: currentColor !important;
-  color: #8B7355 !important;
-  font-style: italic;
+/* Tinted accent washes stay whisper-quiet on the dark canvas */
+.marketing-surface [class*="bg-primary/" i],
+.marketing-surface [class*="bg-[#8B7355]/" i] {
+  background-color: color-mix(in oklab, var(--brand-accent) 12%, transparent) !important;
+  color: var(--foreground) !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+}
+.marketing-surface [class*="bg-primary/" i] * {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
 }
 
-/* Marketing-scoped dialog: cream surface, espresso ink, serif titles.
-   Applied via <DialogContent> when the trigger is on a marketing route. */
-.marketing-dialog {
-  background-color: #FAF8F5 !important;
-  color: #3D3025 !important;
-  border: 1px solid #E4D9C4 !important;
-  border-radius: 4px !important;
-}
-.marketing-dialog [class*="text-muted"] { color: #6B5B47 !important; }
-.marketing-dialog [class*="text-foreground"] { color: #3D3025 !important; }
-.marketing-dialog [class*="text-primary"] { color: #8B7355 !important; }
-.marketing-dialog [class*="bg-card"] { background-color: #F5F0E5 !important; }
-.marketing-dialog [class*="border-white/"] { border-color: #E4D9C4 !important; }
-.marketing-dialog [class*="border-primary/"] { border-color: #C9B99A !important; }
-.marketing-dialog [class*="bg-primary/"] { background-color: rgba(139, 115, 85, 0.08) !important; }
-.marketing-dialog h1, .marketing-dialog h2, .marketing-dialog h3,
-.marketing-dialog [role="heading"] {
-  font-family: "DM Serif Display", ui-serif, Georgia, serif !important;
-  color: #3D3025 !important;
-  font-weight: 400 !important;
-}
-
+/* Marketing-scoped dialog + sheet inherit the same system */
+.marketing-dialog,
 .marketing-sheet {
-  --background: #FAF8F5;
-  --foreground: #3D3025;
-  --card: #FFFFFF;
-  --card-foreground: #3D3025;
-  --popover: #FFFFFF;
-  --popover-foreground: #3D3025;
-  --primary: #8B7355;
-  --primary-foreground: #FAF8F5;
-  --secondary: #F0EBE3;
-  --secondary-foreground: #3D3025;
-  --muted: #F0EBE3;
-  --muted-foreground: #6B5B47;
-  --accent: #F0EBE3;
-  --accent-foreground: #3D3025;
-  --border: #E4D9C4;
-  --input: #C9B99A;
-  --ring: #8B7355;
-  background-color: #FAF8F5 !important;
-  color: #3D3025 !important;
-  border-color: #E4D9C4 !important;
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-2xl, 1.25rem) !important;
+  font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
 }
-.marketing-sheet [class*="text-muted"] { color: #6B5B47 !important; }
-.marketing-sheet [class*="text-foreground"] { color: #3D3025 !important; }
-.marketing-sheet [class*="text-white"] { color: #3D3025 !important; }
-.marketing-sheet [class*="border-white/"] { border-color: #E4D9C4 !important; }
-.marketing-sheet [class*="bg-white/"] { background-color: #F0EBE3 !important; }
-.marketing-sheet [class*="hover:bg-white/"]:not(:hover),
-.marketing-sheet [class*="focus:bg-white/"]:not(:focus),
-.marketing-sheet [class*="focus-visible:bg-white/"]:not(:focus-visible) { background-color: transparent !important; }
-.marketing-sheet .bg-hero-gradient {
+:is(.marketing-dialog, .marketing-sheet) [class*="text-muted" i] { color: var(--muted-foreground) !important; }
+:is(.marketing-dialog, .marketing-sheet) [class*="text-foreground" i] { color: var(--foreground) !important; }
+:is(.marketing-dialog, .marketing-sheet) [class*="text-white" i] { color: var(--foreground) !important; }
+:is(.marketing-dialog, .marketing-sheet) [class*="text-[#3D3025]" i],
+:is(.marketing-dialog, .marketing-sheet) [class*="text-[#2B1F14]" i] { color: var(--foreground) !important; }
+:is(.marketing-dialog, .marketing-sheet) [class*="text-[#5C4A38]" i],
+:is(.marketing-dialog, .marketing-sheet) [class*="text-[#7A6650]" i] { color: var(--muted-foreground) !important; }
+:is(.marketing-dialog, .marketing-sheet) [class*="text-[#8B7355]" i] { color: var(--brand-accent) !important; }
+:is(.marketing-dialog, .marketing-sheet) [class*="border-" i] { border-color: var(--border) !important; }
+:is(.marketing-dialog, .marketing-sheet) [class*="bg-[#F" i],
+:is(.marketing-dialog, .marketing-sheet) [class*="bg-white" i],
+:is(.marketing-dialog, .marketing-sheet) [class*="bg-card" i] { background-color: oklch(0.98 0.01 260 / 5%) !important; }
+:is(.marketing-dialog, .marketing-sheet) [class*="bg-[#8B7355]" i],
+:is(.marketing-dialog, .marketing-sheet) .bg-hero-gradient,
+:is(.marketing-dialog, .marketing-sheet) [class~="bg-primary"] {
   background-image: none !important;
-  background-color: #8B7355 !important;
-  color: #FAF8F5 !important;
+  background-color: var(--brand-accent) !important;
+  color: var(--primary-foreground) !important;
 }
-.marketing-sheet .bg-hero-gradient,
-.marketing-sheet .bg-hero-gradient * {
-  color: #FAF8F5 !important;
-  -webkit-text-fill-color: #FAF8F5 !important;
+:is(.marketing-dialog, .marketing-sheet) [class*="bg-[#8B7355]" i] *,
+:is(.marketing-dialog, .marketing-sheet) .bg-hero-gradient *,
+:is(.marketing-dialog, .marketing-sheet) [class~="bg-primary"] * {
+  color: var(--primary-foreground) !important;
+  -webkit-text-fill-color: var(--primary-foreground) !important;
 }
 
-.marketing-surface .btn-glow,
-.marketing-surface .btn-glow-hero { box-shadow: none !important; }
-.marketing-surface .backdrop-blur,
-.marketing-surface .backdrop-blur-sm,
-.marketing-surface .backdrop-blur-md { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+/* Gradient text is part of the system again */
+.marketing-surface .text-gradient-brand {
+  background: var(--gradient-brand) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  font-style: normal;
+}
 
-/* Body-copy weight bumps for legibility on cream */
+/* Inputs read as glass, not paper */
+.marketing-surface :is(input, textarea, select):not([type="checkbox"]):not([type="radio"]) {
+  background-color: oklch(0.98 0.01 260 / 4%) !important;
+  border-color: var(--input) !important;
+  color: var(--foreground) !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+}
+.marketing-surface :is(input, textarea)::placeholder {
+  color: var(--muted-foreground) !important;
+  opacity: 0.75;
+}
+.marketing-surface :is(input, textarea, select):focus-visible {
+  outline: none !important;
+  border-color: color-mix(in oklab, var(--brand-accent) 60%, transparent) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand-accent) 22%, transparent) !important;
+}
+
+/* Section rhythm: hairline dividers instead of cream/sand bands */
+.marketing-surface section {
+  border-color: var(--border);
+}
+
+/* Body copy */
 .marketing-surface p,
-.marketing-surface li { font-weight: 400; }
+.marketing-surface li {
+  font-weight: 400;
+  color: color-mix(in oklab, var(--foreground) 82%, transparent);
+}
 
-/* Sticky header on cream — remove the dark glass look */
-.marketing-surface header.sticky {
-  background-color: rgba(250, 248, 245, 0.9) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  border-bottom: 1px solid #E4D9C4 !important;
+/* Sticky header — glass bar with a hairline underline */
+.marketing-surface header.sticky,
+.marketing-surface header.fixed {
+  background-color: oklch(0.155 0.019 268 / 72%) !important;
+  backdrop-filter: blur(18px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+/* Motion discipline — nothing snaps */
+.marketing-surface a,
+.marketing-surface button,
+.marketing-surface [role="button"] {
+  transition-property: color, background-color, border-color, opacity, box-shadow, transform, filter;
+  transition-duration: 240ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .marketing-surface *,
+  .marketing-surface *::before,
+  .marketing-surface *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---- Shared cinematic utilities (PRD §4) ---- */
+@utility hero-haze {
+  background-image: var(--gradient-haze);
+  filter: blur(20px);
+  opacity: 0.9;
+}
+@utility glass-panel {
+  background: oklch(0.185 0.021 268 / 20%);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 24px 60px -30px oklch(0.05 0.02 268 / 90%);
+}
+@utility gradient-ring {
+  position: relative;
+  background: var(--gradient-brand);
+  padding: 1.5px;
+}
+@utility glow-ring {
+  box-shadow: 0 0 0 1px var(--border), 0 0 60px -18px oklch(0.6 0.16 258 / 55%);
+}
+@utility bg-gradient-brand {
+  background-image: var(--gradient-brand);
+}
+@utility scene-fade {
+  mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+}
+@keyframes caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@utility caret {
+  display: inline-block;
+  width: 1px;
+  height: 1.1em;
+  vertical-align: -0.16em;
+  background: var(--brand-accent);
+  animation: caret-blink 1s steps(1) infinite;
+}
+@keyframes scene-drift-kf {
+  from { transform: scale(1.04); }
+  to { transform: scale(1.14); }
+}
+@utility scene-drift {
+  animation: scene-drift-kf 14s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-drift, .caret { animation: none !important; }
 }
 
 /* ============================================================
