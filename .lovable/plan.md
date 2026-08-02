@@ -1,58 +1,22 @@
-## Goal
+## What's happening
 
-Match the attached reference: a centered hero with one short question, a large glassy prompt card, an in-card caption and CTA button, and a scene label underneath.
+**Random order:** already implemented — `shuffleScenes()` Fisher-Yates shuffles the 15 scenes on every mount, so each visit gets a new sequence. I'll add one safeguard so the first scene is never the same as the previous visit (stored in `sessionStorage`), and so a reshuffle never repeats the prior order.
 
-## What changes on the home hero
+**The jerk:** in `src/styles.css`, the Ken Burns zoom (`hero-drift`, 9s) is attached only to `.hero-scene[data-active="true"]`. The moment a scene stops being active, the animation is stripped and its transform snaps from `scale(1.14)` back to `scale(1)` — instantly — while the image is still visibly fading out over 1400ms. That snap-back is the jerky shrink. There's also a timing mismatch: the drift runs 9s but the scene changes every ~7s, so the zoom is still mid-motion at the handoff.
 
-**1. Headline**
+## Fix
 
-Replace the two-line left-aligned H1 ("Whatever you want to start, we build the foundation with you.") with a single centered line:
+1. **`src/styles.css` — hold the end state on exit**
+   - Give `.hero-scene` a resting transform equal to the drift end state (`scale(1.14) translate3d(-1.2%, -1%, 0)`) so an outgoing image keeps its zoom instead of snapping back.
+   - Add `transform` to the transition alongside `opacity` with matching easing, so any residual change eases rather than jumps.
+   - Set the active drift duration to match the scene cycle (7s) with `animation-fill-mode: forwards` and a linear/`ease-out` curve that lands exactly where the resting transform sits — the animation ends and the static transform takes over with zero visual delta.
+   - Cross-fade tuning: keep opacity at ~1400ms ease-in-out on both entering and leaving layers so the two images overlap continuously (no gap, no double-exposure flash).
+   - Reduced-motion block stays: no drift, static scale.
 
-> **What would you like to start?**
+2. **`src/components/home/CinematicHero.tsx`** — no structural change needed; only ensure inactive images keep `data-active="false"` (already the case) and that the previously-active scene is allowed to finish its fade (it is, since all images stay mounted).
 
-Centered, large (roughly 3rem mobile → 4.5rem desktop), Outfit semibold, tight tracking — same weight/scale relationship as the reference.
-
-**2. Remove the current supporting copy from the hero**
-
-- The long sub-paragraph ("One focused morning. Your brand, your offer…") comes out — the reference has no subhead; the card carries the message.
-- The small caption under the box ("Type your own, or watch a few…") comes out; it is replaced by the in-card caption.
-- The Atlanta / IGNITE kicker stays but moves to centered above the headline, at the same faint uppercase treatment (it is credibility copy we agreed to keep subtle). If you'd rather match the reference exactly with nothing above the headline, say so and I'll drop it.
-
-**3. Prompt card — bigger, glassier, centered**
-
-Rework `IdeaPrompt` into a tall card instead of a single-row bar:
-
-```text
-┌──────────────────────────────────────────────────────────┐
-│  I want to open a med spa|                               │
-│                                                          │
-│                                                          │
-│  We build it. You own it.        [ Start For Free  → ]   │
-└──────────────────────────────────────────────────────────┘
-```
-
-- Width: centered, max ~1100px (wider than today's 2xl), full-bleed to page gutters on mobile.
-- Height: ~230–250px desktop / ~180px mobile, achieved with a top input row that grows and a bottom row pinned to the base.
-- Corners: `rounded-3xl`; padding ~28–32px.
-- Input row: same auto-typing ghost text + caret behavior as now, but at a larger type size (~1.375rem) so it reads like the reference.
-- Bottom-left caption: **We build it. You own it.** (faint white).
-- Bottom-right: pill button **Start For Free →** — translucent glass pill with a light border, not the current small blue square arrow button. Submits the same way (navigates to `/register?idea=…`), and remains usable even when the field is empty (falls back to the typed ghost idea).
-
-**4. Scene label under the card**
-
-Replace the row of progress dots with the centered label the reference shows:
-
-> NOW BUILDING: **MED SPA**
-
-Uppercase, wide tracking, faint white with the scene name in the electric-blue accent. Scene labels already exist in the scene data, so this just reads the active scene and switches with the cross-fade.
-
-## Technical details
-
-- `src/components/home/CinematicHero.tsx` — center the content column, swap the H1 copy, drop the subhead, render the new scene label row instead of `hero-dot`s, and keep the existing scene cross-fade / drift / scrim / grain layers untouched.
-- `src/components/home/IdeaPrompt.tsx` — restructure to a two-row card (input row + footer row), enlarge the ghost/input type scale, replace the icon button with a labelled pill CTA, and move the caption inside the card.
-- `src/styles.css` (hero block, lines ~692–839) — increase `.hero-glass` blur/inner-highlight for the larger surface, add `.hero-cta` pill styling, bump `.hero-input` / `.hero-ghost` font size, and add `.hero-nowbuilding` label styling. `.hero-dot` rules get removed with the dots.
-- No copy, layout, or token changes outside the hero; all other public pages keep the cinematic system as-is.
+3. **`src/lib/founder-scenes.ts`** — extend `shuffleScenes` to accept an "avoid" first-scene id, and have the hero read/write the last-shown first scene id in `sessionStorage` so consecutive visits never open on the same image or the same order.
 
 ## Verification
 
-Screenshot the home route at desktop and mobile widths and confirm: centered headline, card size and glass read matching the reference, caption and CTA aligned to the card's bottom corners, ghost text still typing and cycling, and the scene label swapping with each scene.
+Playwright run capturing hero frames across two full scene transitions to confirm the outgoing image no longer shrinks abruptly, plus two page loads to confirm different opening scenes.

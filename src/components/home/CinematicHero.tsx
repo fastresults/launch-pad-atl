@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { founderScenes, shuffleScenes } from "@/lib/founder-scenes";
+import { founderScenes, shuffleScenesForVisit } from "@/lib/founder-scenes";
 import { useSceneCycle } from "@/hooks/use-scene-cycle";
 import { IdeaPrompt } from "@/components/home/IdeaPrompt";
 
@@ -8,7 +8,7 @@ import { IdeaPrompt } from "@/components/home/IdeaPrompt";
  * slow drift, atmospheric haze, and a glass prompt in the lower third.
  */
 export function CinematicHero() {
-  const scenes = useMemo(() => shuffleScenes(founderScenes), []);
+  const scenes = useMemo(() => shuffleScenesForVisit(founderScenes), []);
   const [paused, setPaused] = useState(false);
   const phrases = useMemo(() => scenes.map((scene) => scene.phrase), [scenes]);
   const { typed, index } = useSceneCycle(phrases, !paused);
