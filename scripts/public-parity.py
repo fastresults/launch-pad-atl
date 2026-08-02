@@ -18,6 +18,9 @@ PUBLISHED = sys.argv[2] if len(sys.argv) > 2 else "https://startuplabs.online"
 ROUTES = ("/", "/services", "/build", "/build/brand", "/one-on-one")
 VIEWPORTS = (
     (1024, 900, 1.0),
+    (1027, 900, 1.0),
+    (1100, 900, 1.0),
+    (1152, 900, 1.0),
     (1190, 900, 1.0),
     (1200, 900, 1.0),
     (1280, 900, 1.0),
