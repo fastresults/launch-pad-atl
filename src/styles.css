@@ -811,8 +811,8 @@
   transition: border-color 240ms ease, box-shadow 240ms ease;
 }
 
-/* Deterministic hero/header geometry. Production must not grow these elements
-   with viewport width or anchor the content stack to the bottom of the hero. */
+/* Deterministic hero/header geometry. Desktop uses one compact composition;
+   wide viewports add whitespace rather than magnifying the interface. */
 .hero-content-shell {
   max-width: 64rem !important;
   padding-top: 4.5rem !important;
@@ -862,36 +862,61 @@
 
 @media (min-width: 80rem) {
   .hero-cinematic {
-    min-height: calc(100svh - 3.5rem) !important;
+    min-height: calc(100svh - 3.25rem) !important;
   }
 
   .hero-content-shell {
-    max-width: 64rem !important;
-    padding-top: 5.75rem !important;
+    display: flex;
+    min-height: calc(100svh - 3.25rem) !important;
+    max-width: 56rem !important;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: 2rem !important;
+    padding-bottom: 10vh !important;
   }
 
   .hero-cinematic h1 {
-    max-width: 58.75rem !important;
-    font-size: 3.25rem !important;
+    max-width: 50rem !important;
+    margin-top: 1.25rem !important;
+    font-size: 2.625rem !important;
+  }
+
+  .hero-prompt-wrap {
+    margin-top: 1.75rem !important;
   }
 
   .hero-prompt-form {
-    max-width: 58.75rem !important;
+    max-width: 50rem !important;
   }
 
   .hero-glass {
-    height: 12.5rem !important;
-    min-height: 12.5rem !important;
-    max-height: 12.5rem !important;
+    height: 9.5rem !important;
+    min-height: 9.5rem !important;
+    max-height: 9.5rem !important;
+    padding: 1.5rem !important;
   }
 
   .site-header,
   .site-header-inner {
-    height: 3.75rem;
+    height: 3.25rem;
   }
 
   .site-header-logo {
-    height: 2.5rem !important;
+    height: 2rem !important;
+  }
+
+  .hero-input,
+  .hero-ghost {
+    font-size: 1.125rem !important;
+  }
+
+  .hero-cta {
+    padding: 0.625rem 1.25rem !important;
+    font-size: 0.8125rem !important;
+  }
+
+  .hero-cinematic .hero-nowbuilding {
+    margin-top: 1.5rem !important;
   }
 }
 
