@@ -104,8 +104,8 @@ async def main():
                         if values[surface]["zoom"] != "1" or values[surface]["transform"] != "none":
                             failures.append(f"{case}: {label} {surface} is scaled")
                     h1_size = float(values["h1FontSize"].replace("px", "")) if values["h1FontSize"] else 0
-                    if width < 1440 and h1_size > 56:
-                        failures.append(f"{case}: {label} h1 is {h1_size:g}px on compact desktop")
+                    if width <= 1920 and h1_size > 56:
+                        failures.append(f"{case}: {label} h1 is {h1_size:g}px on desktop")
                     if values["h1"] and values["h1"]["width"] > width * 0.82:
                         failures.append(f"{case}: {label} h1 occupies too much viewport width")
                 report.append({"case": case, **pair})
