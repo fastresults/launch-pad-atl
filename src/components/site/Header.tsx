@@ -53,13 +53,17 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-3 py-2 sm:px-4 md:px-6">
 
         {/* Left edge: logo + product nav */}
-        <div className="flex min-w-0 shrink items-center gap-7">
+        <div className="flex min-w-0 shrink items-center gap-4 lg:gap-7">
           <Link to="/" className="flex min-w-0 shrink items-center font-semibold tracking-tight" aria-label="Startup Labs — home">
-            <StartupLabsLogo className="h-8 w-auto text-foreground sm:h-9 md:h-12" />
+            <StartupLabsLogo className="h-8 w-auto text-foreground sm:h-9 md:h-10 lg:h-12" />
           </Link>
-          <nav className="hidden items-center gap-7 text-sm text-muted-foreground lg:flex">
+          <nav className="hidden items-center gap-4 text-sm text-muted-foreground md:flex lg:gap-7">
             {leftNav.map((n) => (
-              <NavLink key={n.to} to={n.to} className={navLinkClass}>
+              <NavLink
+                key={n.to}
+                to={n.to}
+                className={`${n.to === "/schedule" ? "hidden lg:inline-flex " : ""}transition-colors hover:text-foreground`}
+              >
                 {n.label}
               </NavLink>
             ))}
@@ -70,16 +74,20 @@ export function SiteHeader() {
         <div className="flex-1" />
 
         {/* Right edge: orientation nav + auth + CTA */}
-        <div className="hidden items-center gap-7 text-sm text-muted-foreground lg:flex">
+        <div className="hidden items-center gap-4 text-sm text-muted-foreground md:flex lg:gap-7">
           {rightNav.map((n) => (
-            <NavLink key={n.to} to={n.to} className={navLinkClass}>
+            <NavLink
+              key={n.to}
+              to={n.to}
+              className={`${n.to === "/facilitator" ? "hidden lg:inline-flex " : ""}transition-colors hover:text-foreground`}
+            >
               {n.label}
             </NavLink>
           ))}
           <button
             type="button"
             onClick={() => setModesOpen(true)}
-            className="transition-colors hover:text-foreground"
+            className="whitespace-nowrap transition-colors hover:text-foreground"
           >
             3 ways to start
           </button>
@@ -90,18 +98,20 @@ export function SiteHeader() {
           {isAuthenticated ? (
             <>
               <Link to="/dashboard" className="hover:text-foreground">dashboard</Link>
-              <button onClick={() => signOut()} className="hover:text-foreground">sign out</button>
+              <button onClick={() => signOut()} className="whitespace-nowrap hover:text-foreground">sign out</button>
             </>
           ) : (
-            <Link to="/login" className="hover:text-foreground">sign in</Link>
+            <Link to="/login" className="whitespace-nowrap hover:text-foreground">sign in</Link>
           )}
-          <Link to="/register" className="rounded-full bg-hero-gradient px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90">
-            {ctaFull}
+          <Link to="/register" className="whitespace-nowrap rounded-full bg-hero-gradient px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90">
+            <span className="hidden lg:inline">{ctaFull}</span>
+            <span className="lg:hidden">{ctaMedium}</span>
           </Link>
         </div>
 
         {/* Mobile */}
-        <div className="flex shrink-0 items-center gap-1.5 lg:hidden">
+        <div className="flex shrink-0 items-center gap-1.5 md:hidden">
+
           <Link to="/register" className="rounded-full bg-hero-gradient px-3 py-1.5 text-xs font-medium text-white sm:text-sm">
             {ctaShort}
           </Link>
