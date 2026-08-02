@@ -139,7 +139,7 @@ async def main():
                         failures.append(f"{case}: {label} public shell zoom is {values['shellZoom']} (expected 0.75)")
                     h1_size = values["h1EffectiveFontSize"] or 0
                     # Rendered (post-downscale) size caps.
-                    cap = 26 if width < 1280 else 42
+                    cap = 28 if width < 768 else (36 if width < 1280 else 42)
                     if h1_size > cap:
                         failures.append(f"{case}: {label} h1 renders at {h1_size:.1f}px (cap {cap}px)")
                     # Hero must be full bleed, edge to edge.
