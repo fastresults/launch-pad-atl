@@ -32,7 +32,7 @@ export default defineConfig({
     tailwindcss(),
     tsconfigPaths(),
     {
-      name: "inject-app-version",
+      name: "inject-app-release",
       transformIndexHtml(html) {
         return html.replace(
           "</head>",
