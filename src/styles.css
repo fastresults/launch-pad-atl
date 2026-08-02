@@ -2,6 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
 
 
 @custom-variant dark (&:is(.dark *));
@@ -559,4 +560,158 @@
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
   border-bottom: 1px solid #E4D9C4 !important;
+}
+
+/* ============================================================
+ * Cinematic founder hero
+ * Self-contained tokens so the warm `.marketing-surface` overrides
+ * never leak into the midnight hero.
+ * ============================================================ */
+.hero-cinematic {
+  --hero-ink: #05070F;
+  --hero-fg: #F4F6FF;
+  --hero-fg-soft: rgba(244, 246, 255, 0.72);
+  --hero-fg-faint: rgba(244, 246, 255, 0.44);
+  --hero-accent: #4C8CFF;
+  --hero-haze-a: rgba(76, 140, 255, 0.28);
+  --hero-haze-b: rgba(122, 92, 255, 0.24);
+  --hero-glass: rgba(10, 14, 28, 0.42);
+  --hero-glass-line: rgba(244, 246, 255, 0.16);
+  position: relative;
+  isolation: isolate;
+  background-color: var(--hero-ink);
+  color: var(--hero-fg);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+.hero-cinematic :is(h1, h2, p, span, button, input, label) {
+  font-family: inherit;
+}
+
+.hero-cinematic h1 {
+  font-family: 'Outfit', system-ui, sans-serif !important;
+  color: var(--hero-fg) !important;
+  letter-spacing: -0.035em;
+  font-weight: 600;
+}
+
+.hero-cinematic .hero-kicker {
+  color: var(--hero-fg-faint) !important;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.hero-cinematic .hero-sub { color: var(--hero-fg-soft) !important; }
+.hero-cinematic .hero-faint { color: var(--hero-fg-faint) !important; }
+.hero-cinematic .hero-accent { color: var(--hero-accent) !important; }
+
+/* Scene layer -------------------------------------------------- */
+.hero-scene {
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1400ms ease-in-out;
+  will-change: opacity, transform;
+}
+
+.hero-scene[data-active="true"] {
+  opacity: 1;
+  animation: hero-drift 9s ease-out forwards;
+}
+
+@keyframes hero-drift {
+  from { transform: scale(1.06) translate3d(0, 0, 0); }
+  to { transform: scale(1.14) translate3d(-1.2%, -1%, 0); }
+}
+
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, var(--hero-ink) 4%, rgba(5, 7, 15, 0.72) 38%, rgba(5, 7, 15, 0.28) 70%, rgba(5, 7, 15, 0.66) 100%),
+    radial-gradient(120% 90% at 20% 90%, var(--hero-haze-a), transparent 60%),
+    radial-gradient(100% 80% at 85% 15%, var(--hero-haze-b), transparent 62%);
+}
+
+.hero-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Glass prompt ------------------------------------------------- */
+.hero-glass {
+  background: var(--hero-glass) !important;
+  border: 1px solid var(--hero-glass-line) !important;
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 24px 70px -24px rgba(0, 0, 0, 0.8);
+  transition: border-color 240ms ease, box-shadow 240ms ease;
+}
+
+.hero-glass:focus-within {
+  border-color: rgba(76, 140, 255, 0.55) !important;
+  box-shadow: 0 24px 70px -24px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(76, 140, 255, 0.28);
+}
+
+.hero-input {
+  background: transparent !important;
+  border: 0 !important;
+  outline: none !important;
+  color: var(--hero-fg) !important;
+  caret-color: var(--hero-accent);
+  font-size: 1.0625rem;
+}
+
+.hero-input::placeholder { color: transparent !important; }
+
+.hero-ghost {
+  color: var(--hero-fg-soft) !important;
+  font-size: 1.0625rem;
+  pointer-events: none;
+}
+
+.hero-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.15em;
+  vertical-align: -0.18em;
+  margin-left: 2px;
+  background: var(--hero-accent);
+  animation: hero-blink 1.05s steps(1, end) infinite;
+}
+
+@keyframes hero-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+.hero-send {
+  background: var(--hero-accent) !important;
+  color: #04101F !important;
+  border: 0 !important;
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.hero-send:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.hero-send:disabled { opacity: 0.45; transform: none; filter: none; }
+
+.hero-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(244, 246, 255, 0.28);
+  transition: background 400ms ease, width 400ms ease;
+}
+
+.hero-dot[data-active="true"] {
+  width: 18px;
+  background: var(--hero-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-scene[data-active="true"] { animation: none; transform: scale(1.06); }
+  .hero-caret { animation: none; }
 }
