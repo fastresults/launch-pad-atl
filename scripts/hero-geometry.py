@@ -22,8 +22,8 @@ SCREENSHOT_DIR = Path("/tmp/hero-geometry")
 
 # selector -> (min % of viewport width, max % of viewport width)
 RATIO_TARGETS = {
-    ".sl-hero__title": (24.0, 34.0),
-    ".sl-prompt__panel": (40.0, 47.0),
+    ".sl-hero__title": (29.0, 41.0),
+    ".sl-prompt__panel": (40.0, 49.0),
 }
 SELECTORS = {
     "header": ".sl-site-header",
