@@ -51,6 +51,16 @@ async def measure(page, base, route):
           const main = document.querySelector('main');
           const prompt = document.querySelector('.sl-prompt__panel');
           const sectionHeading = document.querySelector('main section:not(.sl-hero) h2');
+          const shell = document.querySelector('.public-surface');
+          const shellZoom = shell ? parseFloat(getComputedStyle(shell).zoom || '1') : 1;
+          const hero = document.querySelector('.sl-hero');
+          const insetSections = [...document.querySelectorAll('.public-surface section:not(.sl-hero)')]
+            .slice(0, 4)
+            .map(node => {
+              const box = node.getBoundingClientRect();
+              const pad = parseFloat(getComputedStyle(node).paddingLeft) * shellZoom;
+              return {left: box.left, width: box.width, padVisual: pad, padShare: pad / innerWidth};
+            });
           return {
             url: location.href,
             release: document.documentElement.dataset.appRelease,
@@ -61,6 +71,10 @@ async def measure(page, base, route):
             root: {fontSize: root.fontSize, zoom: root.zoom, transform: root.transform},
             body: {fontSize: body.fontSize, zoom: body.zoom, transform: body.transform},
             fonts: {status: document.fonts.status, body: body.fontFamily},
+            shellZoom,
+            heroBleed: hero ? {left: hero.getBoundingClientRect().left, width: hero.getBoundingClientRect().width} : null,
+            insetSections,
+            scrollWidth: document.documentElement.scrollWidth,
             assets: {
               css: [...document.querySelectorAll('link[rel="stylesheet"]')].map(node => node.href.split('/').pop()),
               js: [...document.querySelectorAll('script[src]')].map(node => node.src.split('/').pop()),
@@ -69,6 +83,7 @@ async def measure(page, base, route):
             header: inspect(header), h1: inspect(h1), main: inspect(main),
             prompt: inspect(prompt), sectionHeading: inspect(sectionHeading),
             h1FontSize: h1 ? getComputedStyle(h1).fontSize : null,
+            h1EffectiveFontSize: h1 ? parseFloat(getComputedStyle(h1).fontSize) * shellZoom : null,
             h1LineHeight: h1 ? getComputedStyle(h1).lineHeight : null,
             h1ViewportShare: h1 ? h1.getBoundingClientRect().width / innerWidth : null,
             firstViewportDensity: main ? Math.min(main.getBoundingClientRect().height, innerHeight) / innerHeight : null,
