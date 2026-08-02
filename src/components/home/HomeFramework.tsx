@@ -147,7 +147,7 @@ function HeroCopy() {
           </div>
 
           {/* RIGHT COLUMN — one composed object: cameo cup + price card */}
-          <div className="flex flex-col lg:col-span-4">
+          <div className="flex flex-col md:col-span-5 lg:col-span-4">
             {/* Cameo — cup grounded in a soft cream vignette */}
             <div
               className="relative mx-auto flex w-full max-w-[380px] items-end justify-center"
