@@ -1,40 +1,50 @@
-# Public-page desktop scale recovery
+# Why every previous fix "worked" and you still see this
 
-The screenshots expose the real failure: this is not a browser-wide `zoom` problem. At the effective viewport shown, the source itself activates large `lg` typography (`text-7xl`, `4.3rem`), generous vertical spacing, and narrow content widths. That makes every public page look enlarged even though the header and visual viewport are technically at scale 1. The previous parity test only proved that preview and production matched each other; it did not prove that either one looked correct.
+I reproduced your exact screenshots — same line breaks, same proportions — but **not at 1400px**. I had to set the browser to **1027 CSS pixels** to match them pixel for pixel.
 
-## 1. Replace the false parity gate with a visual-size gate
+What I verified this turn:
 
-- Stop treating matching preview/production rectangles as success.
-- Record the effective CSS viewport, screen dimensions, DPR, `visualViewport.scale`, root font size, headline size, body-copy size, container width, and first-viewport content density.
-- Add explicit acceptable desktop ranges at 1024, 1190/1200, 1280, 1400, 1576, and 1920 CSS pixels.
-- Fail when a headline, paragraph, card, header, or section consumes too much of the viewport—even if preview and production are identical.
+- The published site at `startuplabs.online` is serving the corrected stylesheet (the new scale tokens are in the live CSS bundle).
+- Measured live at 1400 CSS px: header 52px, `/services` H1 47.6px, `/build` H1 47.6px, home hero H1 31.5px. Those match the preview exactly.
+- Measured live at 1027 CSS px: the rendering is identical to your uploaded screenshots.
 
-## 2. Create one restrained desktop scale for every public page
+So your 1400px monitor is **not** giving the page 1400 CSS pixels. Between macOS display scaling and browser zoom, the page is being handed roughly **1024–1030 CSS pixels**. Every gate I built measured 1400 and passed; you were never looking at 1400. That is the miss.
 
-- Introduce shared public-page geometry tokens for header height, page gutter, content width, headline sizes, body sizes, card padding, and section spacing.
-- Treat 1024–1439px as a compact desktop/tablet-landscape tier rather than applying the current oversized `lg` composition.
-- Reserve the largest display sizes for genuinely wide screens only.
-- Remove page-specific oversized values such as the workshop `text-7xl`, homepage `4.3rem` headline, and excessive `md:py-24` spacing where they break first-viewport density.
-- Preserve the current midnight visual design, copy, imagery, and page structure; only correct scale and composition.
+At ~1030px the current design still looks magnified because the compact tier was never actually designed — it just inherits the wide-screen composition: content runs edge-to-edge with a ~50px gutter, body copy sits at 18px, CTA buttons are ~72px tall, the eyebrow pill spans 60% of the screen, and card headings hit ~34px.
 
-## 3. Recompose the affected first viewports
+## 1. Reproduce first, then design for the real viewport
 
-- **Homepage cinematic hero:** keep the current centered scene, but size the headline and glass prompt from bounded design tokens rather than viewport-percentage growth.
-- **Homepage copy section:** fit the headline, opening copy, image, and price panel into a balanced desktop composition without giant type or below-fold truncation.
-- **Workshops index:** reduce the “Actually built. Live by lunch.” headline, paragraph measure, top spacing, and side-panel scale so the section reads as a normal desktop page.
-- **All other public routes:** apply the same scale system to `/services`, `/schedule`, `/build/:slug`, `/facilitator`, `/contact`, `/webinar`, `/one-on-one`, `/register`, and legal pages so no route retains the enlarged legacy sizing.
-- Keep mobile behavior separate and unchanged unless a shared rule would otherwise regress it.
+- Lock the reference case at **1027x600 CSS px** (your actual rendering) and add 1024, 1100, and 1152 alongside it.
+- Also test with browser zoom at 110/125/150% on a 1400 physical window, since that is the mechanism producing your view.
 
-## 4. Remove competing legacy styling
+## 2. Build a genuine compact desktop tier (1024–1279 CSS px)
 
-- Consolidate the public-page typography and geometry rules instead of layering more overrides onto the legacy literal bridge.
-- Eliminate conflicting hardcoded headline sizes and redundant responsive classes from the affected page components.
-- Keep the isolated `sl-*` hero namespace, but make it consume the same shared desktop scale tokens as the rest of the public site.
+Separate from the wide tier, with its own token values:
 
-## 5. Verify the actual failure conditions before publishing
+- Centered content column capped around 62–66rem with real gutters (not edge-to-edge with 50px margins).
+- Display headline ~30–32px (currently ~35–48px depending on route).
+- Lead paragraph 16px / 1.6, measure capped near 60ch.
+- Eyebrow/kicker 11px with tighter tracking so it stops spanning the screen.
+- CTA buttons ~46px tall, 15px label.
+- Section vertical rhythm ~3rem, card padding and card headings scaled down to match.
+- Header stays 52px; nav type drops a step so it does not crowd the CTA pill.
 
-- Capture full viewport—not full-page—screenshots for homepage, workshops, services, and one workshop detail at every acceptance width.
-- Compare the 1190/1200 and 1400 cases directly with the attached screenshots, because those are the sizes the earlier checks failed to represent.
-- Assert no overlap, horizontal overflow, cropped first-viewport content, unintended mobile navigation, or display headline above the approved size range.
-- Run the same measurements against the published custom domain after deployment and require both release identity and visual-size acceptance.
-- Do not declare success from code inspection, build output, or local/production parity alone; success requires published screenshots at the failing desktop sizes.
+## 3. Apply it across every public route
+
+`/`, `/services`, `/build`, `/build/:slug`, `/schedule`, `/facilitator`, `/contact`, `/one-on-one`, `/webinar`, `/register`, legal pages — all driven by the shared tokens, no per-page overrides. The hero keeps its `sl-*` namespace but consumes the same compact-tier values.
+
+## 4. Replace the gate that lied
+
+- Add 1024/1027/1100/1152 to `scripts/hero-geometry.py` and `scripts/public-parity.py`.
+- Assert absolute caps at the compact tier: H1 ≤ 34px, lead ≤ 16px, content column ≤ 70% of viewport width at ≥1024, CTA height ≤ 50px, eyebrow ≤ 12px.
+- Fail on first-viewport density: hero H1 + prompt, or H1 + lead + CTAs, must fit within 600px of height.
+
+## 5. Verify with screenshots at your viewport, then publish
+
+- Capture `/`, `/services`, `/build`, `/schedule` at 1027 and 1152 and compare directly against your three uploads.
+- Publish, then re-measure the live domain at 1027 and confirm both the release ID and the size caps before I report anything as fixed.
+
+## Technical notes
+
+- Root cause is not zoom injected by our code, a stale build, or preview/production divergence — all three were ruled out by measurement this turn. It is that the 1024–1280 CSS-px band has no dedicated composition.
+- The current `clamp()` lower bounds (`2.25rem` display, `1rem` lead) are the floor being hit at 1030px; they are simply too large for that width and need to come down, with the wide-screen top end left as-is.
