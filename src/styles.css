@@ -337,11 +337,47 @@
 }
 
 .marketing-surface {
+  --public-gutter: clamp(1.25rem, 2.5vw, 2rem);
+  --public-section-space: clamp(3rem, 5vw, 5rem);
+  --public-display-size: clamp(2.25rem, 3.4vw, 3.5rem);
+  --public-lead-size: clamp(1rem, 1.35vw, 1.125rem);
   background-color: var(--background);
   color: var(--foreground);
   font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Public desktop scale.
+ * A 1400-class physical display commonly exposes only 1100–1250 CSS pixels
+ * once browser chrome and display scaling are accounted for.  That is still a
+ * desktop composition, but it must not inherit the former wide-screen display
+ * type and 6rem section rhythm.
+ */
+@media (min-width: 60rem) {
+  .marketing-surface :is(h1, .public-display):not(.sl-hero__title) {
+    max-width: 48rem;
+    font-size: var(--public-display-size) !important;
+    line-height: 1.06 !important;
+    letter-spacing: 0 !important;
+  }
+
+  .marketing-surface :is(h1, .public-display):not(.sl-hero__title) + p,
+  .marketing-surface .public-lead {
+    font-size: var(--public-lead-size) !important;
+    line-height: 1.65 !important;
+  }
+
+  .marketing-surface section:not(.sl-hero) {
+    padding-top: var(--public-section-space) !important;
+    padding-bottom: var(--public-section-space) !important;
+  }
+
+  .marketing-surface section:not(.sl-hero) > [class*="max-w-"] {
+    padding-left: var(--public-gutter);
+    padding-right: var(--public-gutter);
+  }
 }
 
 .marketing-surface :is(h1, h2, h3, h4),
@@ -979,7 +1015,7 @@
   /* Proportional composition: the hero holds the same share of the
      viewport at every desktop width instead of a frozen pixel size. */
   .sl-hero__title {
-    font-size: clamp(1.625rem, 2.67vw, 3.25rem) !important;
+    font-size: clamp(1.75rem, 2.25vw, 2.5rem) !important;
     margin-top: clamp(0.875rem, 1.25vw, 1.5rem);
   }
   .sl-hero__kicker,
@@ -987,14 +1023,14 @@
   .sl-hero__prompt { margin-top: clamp(1.125rem, 1.75vw, 2rem); }
   .sl-hero__status { margin-top: clamp(1rem, 1.5vw, 1.75rem); }
   .sl-hero__stack {
-    width: clamp(30rem, 51vw, 62rem);
+    width: clamp(30rem, 44vw, 48rem);
     top: clamp(-2rem, -1.27vw, -1rem);
   }
   .sl-prompt__panel {
     width: 100%;
-    height: clamp(7.75rem, 9.65vw, 11.5rem);
-    min-height: clamp(7.75rem, 9.65vw, 11.5rem);
-    max-height: clamp(7.75rem, 9.65vw, 11.5rem);
+    height: clamp(7.5rem, 8.5vw, 9rem);
+    min-height: clamp(7.5rem, 8.5vw, 9rem);
+    max-height: clamp(7.5rem, 8.5vw, 9rem);
     padding: clamp(1.125rem, 1.5vw, 1.875rem);
     border-radius: clamp(1.125rem, 1.5vw, 1.875rem);
   }
