@@ -907,12 +907,12 @@
 
   .hero-input,
   .hero-ghost {
-    font-size: 1.125rem;
+    font-size: 1.125rem !important;
   }
 
   .hero-cta {
-    padding: 0.625rem 1.25rem;
-    font-size: 0.8125rem;
+    padding: 0.625rem 1.25rem !important;
+    font-size: 0.8125rem !important;
   }
 
   .hero-cinematic .hero-nowbuilding {
