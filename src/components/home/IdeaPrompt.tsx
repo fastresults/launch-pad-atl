@@ -33,8 +33,8 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
 
   return (
     <form onSubmit={submit} className="mx-auto w-full max-w-[1100px]">
-      <div className="hero-glass flex min-h-[180px] flex-col justify-between rounded-3xl p-6 text-left sm:p-8 md:min-h-[240px]">
-        <div className="relative min-w-0">
+      <div className="hero-glass flex flex-col justify-between rounded-3xl p-6 text-left sm:p-8">
+        <div className="relative flex min-w-0 flex-1 items-center">
           {value.length === 0 && (
             <div
               aria-hidden="true"
@@ -53,6 +53,7 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
             className="hero-input w-full py-1"
           />
         </div>
+
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
           <p className="hero-faint text-sm">We build it. You own it.</p>

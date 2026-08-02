@@ -39,9 +39,10 @@ export function CinematicHero() {
         <p className="hero-kicker text-[11px] font-medium">
           Atlanta · IGNITE Center at Greater Atlanta Christian School
         </p>
-        <h1 className="mx-auto mt-5 max-w-4xl text-[2.1rem] leading-[1.08] sm:text-[2.75rem] md:text-5xl">
+        <h1 className="mx-auto mt-5 max-w-[1100px] leading-[1.06]">
           What would you like to start?
         </h1>
+
 
         <div className="mt-8">
           <IdeaPrompt ghostText={typed} paused={paused} onTakeOver={takeOver} />

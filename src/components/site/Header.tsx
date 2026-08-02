@@ -55,16 +55,16 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-3 py-2 sm:px-4 md:px-6">
 
         {/* Left edge: logo + product nav */}
-        <div className="flex min-w-0 shrink items-center gap-4 lg:gap-7">
+        <div className="flex min-w-0 shrink items-center gap-4 md:gap-6 xl:gap-7">
           <Link to="/" className="flex min-w-0 shrink items-center font-semibold tracking-tight" aria-label="Startup Labs — home">
-            <StartupLabsLogo className="h-8 w-auto text-foreground sm:h-9 md:h-10 lg:h-12" />
+            <StartupLabsLogo className="h-8 w-auto text-foreground sm:h-9 md:h-11 xl:h-12" />
           </Link>
-          <nav className="hidden items-center gap-4 text-sm text-muted-foreground md:flex lg:gap-7">
+          <nav className="hidden items-center gap-4 text-sm text-muted-foreground md:flex md:gap-6 xl:gap-7">
             {leftNav.map((n) => (
               <NavLink
                 key={n.to}
                 to={n.to}
-                className={`${n.to === "/schedule" ? "hidden lg:inline-flex " : ""}transition-colors hover:text-foreground`}
+                className="transition-colors hover:text-foreground"
               >
                 {n.label}
               </NavLink>
@@ -72,11 +72,12 @@ export function SiteHeader() {
           </nav>
         </div>
 
+
         {/* Spacer pushes right group to the edge */}
         <div className="flex-1" />
 
         {/* Right edge: orientation nav + auth + CTA */}
-        <div className="hidden items-center gap-4 text-sm text-muted-foreground md:flex lg:gap-7">
+        <div className="hidden items-center gap-4 text-sm text-muted-foreground md:flex md:gap-5 xl:gap-7">
           {rightNav.map((n) => (
             <NavLink
               key={n.to}
