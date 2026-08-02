@@ -106,7 +106,7 @@ export function SiteHeader() {
           ) : (
             <Link to="/login" className="whitespace-nowrap hover:text-foreground">sign in</Link>
           )}
-          <Link to="/register" className="whitespace-nowrap rounded-full bg-hero-gradient px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90">
+          <Link to="/register" className="whitespace-nowrap rounded-full bg-hero-gradient px-4 py-1.5 text-[0.8125rem] font-medium text-white transition-opacity hover:opacity-90">
             <span className="hidden lg:inline">{ctaFull}</span>
             <span className="lg:hidden">{ctaMedium}</span>
           </Link>
