@@ -5,8 +5,7 @@
 
 declare const __APP_VERSION__: string;
 
-const BOOT_VERSION: string =
-  typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
+const BOOT_VERSION: string = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
 
 const CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 min
 const VERSION_META_NAME = "app-version";
@@ -21,9 +20,7 @@ async function fetchDeployedVersion(): Promise<string | null> {
     });
     if (!res.ok) return null;
     const html = await res.text();
-    const match = html.match(
-      /<meta\s+name=["']app-version["']\s+content=["']([^"']+)["']/i,
-    );
+    const match = html.match(/<meta\s+name=["']app-version["']\s+content=["']([^"']+)["']/i);
     return match?.[1] ?? null;
   } catch {
     return null;

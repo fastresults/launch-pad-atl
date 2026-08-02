@@ -5,11 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
-import {
-  APP_VERSION,
-  replaceStaleBuild,
-  startVersionCheck,
-} from "@/lib/version-check";
+import { APP_VERSION, replaceStaleBuild, startVersionCheck } from "@/lib/version-check";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import App from "./App";
 import "./styles.css";
