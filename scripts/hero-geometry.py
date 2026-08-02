@@ -17,13 +17,13 @@ from playwright.async_api import async_playwright
 
 
 BASE_URL = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"
-WIDTHS = (1000, 1100, 1280, 1440, 1576, 1920)
+WIDTHS = (1024, 1190, 1200, 1280, 1400, 1576, 1920)
 SCREENSHOT_DIR = Path("/tmp/hero-geometry")
 
 # selector -> (min % of viewport width, max % of viewport width)
 RATIO_TARGETS = {
-    ".sl-hero__title": (35.0, 41.5),
-    ".sl-prompt__panel": (48.0, 55.0),
+    ".sl-hero__title": (24.0, 34.0),
+    ".sl-prompt__panel": (40.0, 47.0),
 }
 SELECTORS = {
     "header": ".sl-site-header",
@@ -129,6 +129,10 @@ async def main():
                 failures.append(f"{label}: stack not centered")
             if values["prompt"]["y"] + values["prompt"]["height"] > height:
                 failures.append(f"{label}: prompt panel overflows the viewport")
+            if values["title"]["fontSize"] > 40:
+                failures.append(f"{label}: hero title {values['title']['fontSize']:.0f}px is oversized")
+            if values["prompt"]["height"] > 145:
+                failures.append(f"{label}: prompt panel {values['prompt']['height']:.0f}px is too tall")
 
             await page.screenshot(
                 path=str(SCREENSHOT_DIR / f"hero-{label.replace('@', '-')}.png")

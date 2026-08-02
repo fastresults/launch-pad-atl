@@ -15,8 +15,16 @@ from playwright.async_api import async_playwright
 
 PREVIEW = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"
 PUBLISHED = sys.argv[2] if len(sys.argv) > 2 else "https://startuplabs.online"
-ROUTES = ("/", "/services", "/build", "/one-on-one")
-VIEWPORTS = ((1576, 1043, 1.8), (1024, 900, 1.0))
+ROUTES = ("/", "/services", "/build", "/build/brand", "/one-on-one")
+VIEWPORTS = (
+    (1024, 900, 1.0),
+    (1190, 900, 1.0),
+    (1200, 900, 1.0),
+    (1280, 900, 1.0),
+    (1400, 900, 1.0),
+    (1576, 1043, 1.8),
+    (1920, 1080, 1.0),
+)
 OUTPUT = Path("/tmp/public-parity")
 
 
@@ -41,11 +49,15 @@ async def measure(page, base, route):
             version: document.documentElement.dataset.appVersion,
             cssBundle: document.documentElement.dataset.cssBundle,
             viewport: {width: innerWidth, height: innerHeight, dpr: devicePixelRatio},
+            screen: {width: screen.width, height: screen.height},
             visualScale: visualViewport?.scale ?? null,
             root: {fontSize: root.fontSize, zoom: root.zoom, transform: root.transform},
             body: {fontSize: body.fontSize, zoom: body.zoom, transform: body.transform},
             header: rect(header), h1: rect(h1), main: rect(main),
             h1FontSize: h1 ? getComputedStyle(h1).fontSize : null,
+            h1LineHeight: h1 ? getComputedStyle(h1).lineHeight : null,
+            h1ViewportShare: h1 ? rect(h1).width / innerWidth : null,
+            firstViewportDensity: main ? Math.min(rect(main).height, innerHeight) / innerHeight : null,
           };
         }"""
     )
@@ -91,6 +103,11 @@ async def main():
                     for surface in ("root", "body"):
                         if values[surface]["zoom"] != "1" or values[surface]["transform"] != "none":
                             failures.append(f"{case}: {label} {surface} is scaled")
+                    h1_size = float(values["h1FontSize"].replace("px", "")) if values["h1FontSize"] else 0
+                    if width < 1440 and h1_size > 56:
+                        failures.append(f"{case}: {label} h1 is {h1_size:g}px on compact desktop")
+                    if values["h1"] and values["h1"]["width"] > width * 0.82:
+                        failures.append(f"{case}: {label} h1 occupies too much viewport width")
                 report.append({"case": case, **pair})
         await browser.close()
 
