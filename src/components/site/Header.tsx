@@ -40,7 +40,6 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [modesOpen, setModesOpen] = useState(false);
   const ctaFull = `Reserve seat — ${WORKSHOP_PRICE_LABEL}`;
-  const ctaMedium = `Reserve — ${WORKSHOP_PRICE_LABEL}`;
   const ctaShort = "Reserve";
 
 
@@ -55,11 +54,11 @@ export function SiteHeader() {
       <div className="sl-site-header__inner">
 
         {/* Left edge: logo + product nav */}
-        <div className="flex min-w-0 shrink items-center gap-4 lg:gap-5 xl:gap-6">
+        <div className="sl-site-header__left">
           <Link to="/" className="flex min-w-0 shrink items-center font-semibold tracking-tight" aria-label="Startup Labs — home">
             <StartupLabsLogo className="sl-site-header__logo" />
           </Link>
-          <nav className="hidden items-center gap-4 text-[0.8125rem] text-muted-foreground lg:flex lg:gap-5 xl:gap-6">
+          <nav className="sl-site-header__nav">
             {leftNav.map((n) => (
               <NavLink
                 key={n.to}
@@ -77,12 +76,12 @@ export function SiteHeader() {
         <div className="flex-1" />
 
         {/* Right edge: orientation nav + auth + CTA */}
-        <div className="hidden items-center gap-4 text-[0.8125rem] text-muted-foreground lg:flex xl:gap-6">
+        <div className="sl-site-header__actions">
           {rightNav.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
-              className={`${n.to === "/facilitator" ? "hidden lg:inline-flex " : ""}transition-colors hover:text-foreground`}
+                className="transition-colors hover:text-foreground"
             >
               {n.label}
             </NavLink>
@@ -106,14 +105,13 @@ export function SiteHeader() {
           ) : (
             <Link to="/login" className="whitespace-nowrap hover:text-foreground">sign in</Link>
           )}
-          <Link to="/register" className="whitespace-nowrap rounded-full bg-hero-gradient px-4 py-1.5 text-[0.8125rem] font-medium text-white transition-opacity hover:opacity-90">
-            <span className="hidden lg:inline">{ctaFull}</span>
-            <span className="lg:hidden">{ctaMedium}</span>
+          <Link to="/register" className="sl-site-header__cta bg-hero-gradient text-white transition-opacity hover:opacity-90">
+            <span>{ctaFull}</span>
           </Link>
         </div>
 
         {/* Mobile */}
-        <div className="flex shrink-0 items-center gap-1.5 lg:hidden">
+        <div className="sl-site-header__mobile">
 
           <Link to="/register" className="rounded-full bg-hero-gradient px-3 py-1.5 text-xs font-medium text-white sm:text-sm">
             {ctaShort}
