@@ -32,17 +32,16 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
   };
 
   return (
-    <form onSubmit={submit} className="hero-prompt-form mx-auto w-full max-w-[940px]">
-      <div className="hero-glass flex flex-col justify-between rounded-3xl p-6 text-left sm:p-8">
-
-        <div className="relative flex min-w-0 flex-1 items-center">
+    <form onSubmit={submit} className="sl-prompt">
+      <div className="sl-prompt__panel">
+        <div className="sl-prompt__field">
           {value.length === 0 && (
             <div
               aria-hidden="true"
-              className="hero-ghost pointer-events-none absolute inset-0 flex items-center"
+              className="sl-prompt__ghost"
             >
               <span className="truncate">{ghostText}</span>
-              <span className="hero-caret" />
+              <span className="sl-prompt__caret" />
             </div>
           )}
           <input
@@ -51,16 +50,14 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
             onChange={(event) => setValue(event.target.value)}
             onFocus={onTakeOver}
             aria-label="Tell us what you want to start"
-            className="hero-input w-full py-1"
+            className="sl-prompt__input"
           />
         </div>
-
-
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-          <p className="hero-faint text-sm">We build it. You own it.</p>
-          <button type="submit" className="hero-cta">
+        <div className="sl-prompt__footer">
+          <p>We build it. You own it.</p>
+          <button type="submit" className="sl-prompt__submit">
             Start For Free
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <ArrowRight aria-hidden="true" />
           </button>
         </div>
       </div>
