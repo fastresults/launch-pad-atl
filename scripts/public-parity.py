@@ -107,10 +107,16 @@ async def main():
                         if values[surface]["zoom"] != "1" or values[surface]["transform"] != "none":
                             failures.append(f"{case}: {label} {surface} is scaled")
                     h1_size = float(values["h1FontSize"].replace("px", "")) if values["h1FontSize"] else 0
-                    if width <= 1920 and h1_size > 56:
-                        failures.append(f"{case}: {label} h1 is {h1_size:g}px on desktop")
+                    # Compact desktop tier (1024-1279 CSS px) is what a scaled
+                    # 1400-class display actually reports; it gets a hard cap.
+                    cap = 34 if width < 1280 else 56
+                    if h1_size > cap:
+                        failures.append(f"{case}: {label} h1 is {h1_size:g}px (cap {cap}px)")
                     if values["h1"] and values["h1"]["width"] > width * 0.82:
                         failures.append(f"{case}: {label} h1 occupies too much viewport width")
+                    if values["main"] and width >= 1024 and values["main"]["width"] > width:
+                        failures.append(f"{case}: {label} main overflows the viewport")
+
                 report.append({"case": case, **pair})
         await browser.close()
 
