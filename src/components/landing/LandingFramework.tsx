@@ -65,20 +65,21 @@ export function LandingFramework() {
   const openInterest = () => setInterestOpen(true);
   return (
     <InterestCtx.Provider value={openInterest}>
-      <div className="marketing-surface min-h-screen">
+      <div className="public-surface min-h-screen">
         <div className="mx-auto flex max-w-7xl items-center px-4 py-5 sm:px-6 md:px-8">
           <StartupLabsLogo className="h-9 w-auto text-foreground sm:h-10 md:h-12" />
         </div>
-        <Hero />
-        <LandingVideoTestimonials />
-        <Framework />
-        {showScroller && <LandingBusinessIdeasScroller />}
-        <HonestRoadmap />
-        <Facilitator />
-        
-        <Venue />
-        <BottomCTA />
-        <LandingFooter event={LANDING_EVENT} />
+        <div className="public-story">
+          <Hero />
+          <LandingVideoTestimonials />
+          <Framework />
+          {showScroller && <LandingBusinessIdeasScroller />}
+          <HonestRoadmap />
+          <Facilitator />
+          <Venue />
+          <BottomCTA />
+          <LandingFooter event={LANDING_EVENT} />
+        </div>
         <LandingInterestModal open={interestOpen} onOpenChange={setInterestOpen} />
       </div>
     </InterestCtx.Provider>

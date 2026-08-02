@@ -40,6 +40,21 @@
   letter-spacing: 0;
 }
 
+.public-surface h1 {
+  font-size: 2.25rem;
+  line-height: 1.08;
+}
+
+.public-surface h2 {
+  font-size: 1.875rem;
+  line-height: 1.15;
+}
+
+.public-surface h3 {
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
 .public-surface :is(p, li) {
   color: color-mix(in oklab, var(--public-ink) 82%, transparent);
 }
@@ -327,6 +342,8 @@
 
 @media (min-width: 40rem) {
   .public-surface { --public-gutter: 1.5rem; }
+  .public-surface h1 { font-size: 2.75rem; }
+  .public-surface h2 { font-size: 2.125rem; }
   .public-surface .sl-hero__title { font-size: 2.25rem; }
   .public-surface .sl-prompt__input,
   .public-surface .sl-prompt__ghost { font-size: 1.125rem; }
@@ -356,6 +373,8 @@
 }
 
 @media (min-width: 90rem) {
+  .public-surface h1 { font-size: 3.25rem; }
+  .public-surface h2 { font-size: 2.375rem; }
   .public-surface .sl-hero__stack { width: 42rem; }
   .public-surface .sl-hero__title { font-size: 2.375rem; }
   .public-surface .sl-prompt__panel { min-height: 8.25rem; }
