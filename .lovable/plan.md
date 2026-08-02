@@ -1,28 +1,46 @@
-## Root cause
+## What I found (measured, not guessed)
 
-Nothing is broken in the responsive CSS itself — the breakpoints are simply set one tier too high. Verified by rendering the live site at several widths:
+Two stacked causes — the images are dark *and* the hero darkens them again.
 
-- **1440px wide** — correct: full horizontal nav, two-column editorial layout.
-- **834px (iPad portrait)** — collapses to the phone layout: hamburger menu, single stacked column, coffee image full width above a stacked price card.
-- **1280px** — correct, but content is capped at `max-w-6xl` (1152px) while the hero uses `max-w-7xl`, so the page narrows abruptly below the hero.
+**1. Source images are genuinely underexposed.** I measured average brightness (0–255) of all 21 scene files in `src/assets/scenes/`:
 
-Every major desktop layout switch in the public pages is gated at Tailwind's `lg` breakpoint = **1024px**:
+```text
+bakery        7.5   ← nearly black
+branding     10.6
+fitness      13.7
+coffee       22.4
+photography  23.4
+restaurant   29.7
+realestate   32.5
+foodtruck    35.6 ... roofing 36.1, detailing 39.3, matchmaking 41.0
+seniorcare   45.0 ... boutique 46.3, ecommerce 54.6, autoauction 55.6
+medspa       56.5, daycare 57.7, trucking 62.9, homehealth 66.4
+landscaping  90.9, cleaning 96.6  ← the only two that read as "lit"
+```
+A healthy photographic hero sits around 70–110. Nine images are below 35, i.e. mostly black frames.
 
-- `src/components/site/Header.tsx` — the full nav is `hidden … lg:flex`, and the hamburger is `lg:hidden`. Anything under 1024px gets the mobile menu.
-- `src/components/home/HomeFramework.tsx` — the hero-copy section is `grid-cols-1 lg:grid-cols-12`. Under 1024px it stacks.
+**2. The scrim on top removes most of what's left.** `.hero-scrim` in `src/styles.css:760` layers a near-opaque bottom gradient (`#05070F` at 4%, then 0.72 alpha at 38%), a 0.66-alpha top band, plus two colored haze radials. So even a well-exposed image loses ~60–70% of its luminance behind the copy area — and the copy area is exactly where the subject usually is.
 
-That 1024px line sits above iPad portrait (768–834px) **and** above the Lovable editor's preview iframe, which is a few hundred px narrower than the browser window — so on a 1512px laptop the preview renders under 1024px and shows the phone layout. That's what the report is describing.
+## The fix
 
-## Fix
+**A. Rebalance the scrim (biggest single win)**
+- Drop the bottom stop from 0.72 → ~0.55, raise the mid-clear window (0.28 → ~0.14), soften the top band 0.66 → ~0.40.
+- Keep enough darkness only directly behind the headline/glass card by narrowing the gradient to a bottom-weighted band instead of covering the full frame.
+- Reduce the two haze radials (0.28 / 0.24 → ~0.16 / 0.14) so they tint rather than muddy.
+- Verify headline and kicker still pass contrast against the brightest scenes (cleaning, landscaping) — if not, add a tighter local scrim behind the text block only rather than re-darkening the whole image.
 
-Move the desktop layout switch from `lg` (1024px) down to `md` (768px) on the public marketing surfaces, so tablets and narrow desktops get the desktop composition, and add a genuine tablet tier where things get tight.
+**B. Normalize the images at the CSS layer**
+- Add a `filter: brightness(...) contrast(...) saturate(...)` on `.hero-scene` to lift the whole set uniformly.
+- For the worst offenders, add a per-scene brightness multiplier driven by a data attribute or an inline CSS variable set from `src/lib/founder-scenes.ts`, so bakery/branding/fitness get a bigger lift than cleaning/landscaping (which need none, and would blow out with a global boost).
 
-1. **Header** — switch the horizontal nav to `md:flex` / hamburger to `md:hidden`. Between 768px and 1024px, tighten nav gap (`gap-4 lg:gap-7`), shrink the logo (`md:h-10 lg:h-12`), and shorten the CTA label to "Reserve — $197" until `lg`. Verify no wrap at 768px; if the full link set can't fit, keep `schedule` and `facilitator` hidden until `lg` rather than falling back to a hamburger.
-2. **HomeFramework hero-copy section** — `md:grid-cols-12` with `md:col-span-7 / md:col-span-5`, promoting to `lg:col-span-8 / lg:col-span-4`. Scale the headline through a middle step (`md:text-[3.6rem] lg:text-[4.3rem]`) so it doesn't overflow at 768px.
-3. **Container width** — raise the section container from `max-w-6xl` to `max-w-7xl` so the page body lines up with the hero instead of pinching in.
-4. **Same `lg:`→`md:` pass on the other public pages** that share the pattern: `src/components/landing/LandingFramework.tsx`, `src/routes/build.tsx`, `src/routes/one-on-one.tsx`, `src/routes/private-tuesday.tsx`. Authenticated/admin routes are left alone — they legitimately want the wide-only layout.
-5. **Chat widget overlap** — at 1280px the "Ask Startup Labs" bubble sits on top of the "Can't make it?" link; nudge its bottom offset up so it clears inline links.
+**C. Tone-correct the source files**
+- Re-expose the 9 images under ~35 average luma in place (gamma/levels lift preserving highlights) so the fix doesn't depend on CSS filters alone and mobile GPUs don't pay a filter cost. Files stay at the same paths, so no code changes needed for this part.
+- Re-measure after correction; target 65–95 average for every scene so the rotation stops flickering between "black frame" and "bright frame."
 
-## Verification
+**D. Verify**
+- Screenshot the hero at desktop and mobile widths across several rotation steps (including bakery and cleaning, the two extremes) and confirm: subject visible, headline legible, no scene reading as a black rectangle, no scene blowing out.
 
-Playwright screenshots at 768, 834, 1024, 1280 and 1512 CSS px, plus a ~950px pass to simulate the editor preview iframe, confirming: horizontal nav present from 768 up, two-column editorial layout from 768 up, no headline overflow or horizontal scroll at any of those widths.
+## Technical notes
+- Files touched: `src/styles.css` (`.hero-scene`, `.hero-scrim`, hero haze tokens), `src/lib/founder-scenes.ts` (optional per-scene exposure value), and the 9 underexposed JPEGs in `src/assets/scenes/`.
+- No component logic, rotation timing, or Ken Burns behavior changes.
+- Opacity stays at 100% as you last set it.

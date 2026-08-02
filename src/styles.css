@@ -695,8 +695,9 @@
   --hero-fg-soft: rgba(244, 246, 255, 0.72);
   --hero-fg-faint: rgba(244, 246, 255, 0.44);
   --hero-accent: #4C8CFF;
-  --hero-haze-a: rgba(76, 140, 255, 0.28);
-  --hero-haze-b: rgba(122, 92, 255, 0.24);
+  --hero-haze-a: rgba(76, 140, 255, 0.16);
+  --hero-haze-b: rgba(122, 92, 255, 0.14);
+
   --hero-glass: rgba(10, 14, 28, 0.42);
   --hero-glass-line: rgba(244, 246, 255, 0.16);
   position: relative;
@@ -715,7 +716,9 @@
   color: var(--hero-fg) !important;
   letter-spacing: -0.035em;
   font-weight: 600;
+  text-shadow: 0 2px 28px rgba(5, 7, 15, 0.7), 0 1px 3px rgba(5, 7, 15, 0.5);
 }
+
 
 .hero-cinematic .hero-kicker {
   color: var(--hero-fg-faint) !important;
@@ -743,7 +746,9 @@
     transform 1400ms ease-in-out;
   will-change: opacity, transform;
   backface-visibility: hidden;
+  filter: brightness(1.08) contrast(1.03) saturate(1.04);
 }
+
 
 .hero-scene[data-active="true"] {
   opacity: 1;
@@ -761,10 +766,11 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, var(--hero-ink) 4%, rgba(5, 7, 15, 0.72) 38%, rgba(5, 7, 15, 0.28) 70%, rgba(5, 7, 15, 0.66) 100%),
+    linear-gradient(to top, var(--hero-ink) 2%, rgba(5, 7, 15, 0.55) 26%, rgba(5, 7, 15, 0.14) 62%, rgba(5, 7, 15, 0.40) 100%),
     radial-gradient(120% 90% at 20% 90%, var(--hero-haze-a), transparent 60%),
     radial-gradient(100% 80% at 85% 15%, var(--hero-haze-b), transparent 62%);
 }
+
 
 .hero-grain {
   position: absolute;
