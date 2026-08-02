@@ -456,9 +456,7 @@
 .marketing-surface [class*="group-hover:bg-white/" i],
 .marketing-surface [class*="hover:bg-black/" i]:not(:hover),
 .marketing-surface [class*="focus:bg-black/" i]:not(:focus),
-.marketing-surface [class*="group-hover:bg-black/" i],
-.marketing-surface [class*="hover:bg-[#" i]:not(:hover),
-.marketing-surface [class*="group-hover:bg-[#" i] {
+.marketing-surface [class*="group-hover:bg-black/" i] {
   background-color: transparent !important;
 }
 :is(.marketing-surface, .marketing-dialog, .marketing-sheet) [class*="hover:bg-white/" i]:hover,
