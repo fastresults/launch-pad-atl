@@ -260,11 +260,19 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
                 <p className="mt-4 text-sm hero-faint">
                   Seats are capped so everyone gets built with, not talked at. $197.
                 </p>
-                <div className="mt-5 flex flex-wrap items-center gap-3">
+                <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3">
                   <Link to={registerTo} onClick={close} className="hero-cta">
                     Reserve my seat
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
+                  <button
+                    type="button"
+                    onClick={learnMore}
+                    className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4 hero-faint"
+                  >
+                    Not ready? Learn more about the morning
+                    <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
                   <Link
                     to="/contact"
                     onClick={close}
@@ -273,6 +281,7 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
                     Ask a question first
                   </Link>
                 </div>
+
               </div>
             </>
           )}
