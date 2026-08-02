@@ -1,36 +1,45 @@
 // Public "Atlanta viability snapshot" routine for the homepage hero.
-// Takes a founder's one-line startup idea and returns a short, grounded profile
-// of why that startup can work in metro Atlanta. No auth, no PII persisted.
+// Takes a founder's one-line startup idea and streams back a short, grounded
+// profile of why that startup can work in metro Atlanta — including an
+// illustrative money picture. No auth, no PII persisted.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-const SYSTEM = `You are a plainspoken startup analyst for Startup Labs, an Atlanta done-with-you startup workshop. A visitor types the startup they want to start. You write a short, honest, confidence-building profile of that startup in metro Atlanta.
+const SYSTEM = `You are a plainspoken startup analyst for Startup Labs, an Atlanta done-with-you startup workshop. A visitor types the startup they want to start. You write a short, honest, confidence-building profile of that startup in metro Atlanta, including what the money can realistically look like.
 
 RULES
 - Ground everything in durable, general characteristics of metro Atlanta: population growth, suburban sprawl and drive times, film/logistics/healthcare/tech employment, dense small-business and franchise activity, large commuter base, wide income spread across ITP/OTP counties (Fulton, DeKalb, Gwinnett, Cobb, Cherokee, Forsyth, Clayton, Henry).
-- NEVER invent citations, studies, sources, or precise statistics. Express numbers as ranges or directional signals ("typically $X–$Y", "most start solo and add a second van"). Never state a number as if sourced.
+- NEVER invent citations, studies, sources, or precise statistics. Money is ALWAYS expressed as a range and never as a promise, projection, or guarantee. Never state a number as if sourced.
 - Never promise income, guarantee outcomes, or give legal, tax, medical, or financial advice. Point permit/licensing items to "confirm with the county" instead of asserting rules.
 - Say "startup", never "business". Say "assets", never "documents". Never call the offer a plan, blueprint, framework, playbook, or roadmap.
 - Tone: founder-to-founder, warm, concrete, no hype, no emojis, no jargon.
-- Be brief. The whole read must be scannable in under a minute — keep total output under 1400 characters.
+- Be brief and scannable. Keep total output under 1200 characters.
 - If the input is not a plausible startup idea (gibberish, a joke, off-topic, or hostile), return {"ok": false, "message": "<one friendly sentence asking them to describe the startup they want to start>"}.
 
 OUTPUT
-Return ONLY valid JSON, no markdown fences:
+Return ONLY valid JSON, no markdown fences, with the keys in EXACTLY this order:
 {
   "ok": true,
   "idea_label": string,        // 2-5 words, title case, e.g. "Mobile Pet Grooming"
   "verdict": string,           // one sentence, e.g. "Mobile pet grooming works in Atlanta — here's why."
-  "why_atlanta": string[],     // EXACTLY 2 paragraphs, each at most 2 sentences, Atlanta-specific
-  "signals": [                 // exactly 4
-    { "label": string,         // e.g. "Market signal", "Who buys", "Starting price", "First 90 days"
-      "value": string,         // short, punchy, <= 60 chars
-      "note": string }         // one sentence of plain context
+  "economics": {
+    "typical_ticket": string,      // e.g. "$85–$150 per visit"
+    "volume_per_week": string,     // e.g. "6–12 clients"
+    "first_90_days": string,       // monthly revenue range by month 3, e.g. "$2k–$6k / mo"
+    "steady_state": string,        // monthly revenue range around month 12, e.g. "$8k–$18k / mo"
+    "startup_cost": string,        // e.g. "$1k–$5k to start"
+    "basis": string                // ONE sentence on how the range is framed (solo operator, part-time, etc.)
+  },
+  "signals": [                 // exactly 3
+    { "label": string,         // e.g. "Who buys", "Where demand sits", "How they find you"
+      "value": string,         // short, punchy, <= 45 chars
+      "note": string }         // one short sentence of plain context
   ],
   "first_moves": string[],     // EXACTLY 4 concrete first actions, one short sentence each
-  "watch_outs": string[]       // EXACTLY 3 honest risks, one short sentence each
+  "watch_outs": string[],      // EXACTLY 3 honest risks, one short sentence each
+  "why_atlanta": string        // ONE paragraph, at most 2 sentences, Atlanta-specific
 }`;
 
 Deno.serve(async (req) => {
@@ -52,6 +61,8 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "openai/gpt-5.6-sol",
         reasoning_effort: "none",
+        service_tier: "priority",
+        stream: true,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: SYSTEM },
@@ -60,8 +71,8 @@ Deno.serve(async (req) => {
       }),
     }, { timeoutMs: 60_000 });
 
-    if (!aiRes.ok) {
-      const txt = await aiRes.text();
+    if (!aiRes.ok || !aiRes.body) {
+      const txt = await aiRes.text().catch(() => "");
       const message = aiRes.status === 429
         ? "We're getting a lot of ideas right now — try again in a moment."
         : aiRes.status === 402
@@ -71,16 +82,16 @@ Deno.serve(async (req) => {
       return json({ error: message }, aiRes.status === 429 ? 429 : 502);
     }
 
-    const aiJson = await aiRes.json();
-    const content = aiJson?.choices?.[0]?.message?.content ?? "{}";
-    let parsed: any;
-    try {
-      parsed = JSON.parse(content);
-    } catch {
-      parsed = JSON.parse(String(content).replace(/^```(?:json)?\s*|\s*```$/g, "").trim());
-    }
-
-    return json(parsed);
+    // Pass the model stream straight through as SSE so the modal can render
+    // the verdict and money panel while the rest is still being written.
+    return new Response(aiRes.body, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
   } catch (e: any) {
     console.error("atlanta-viability failed", e);
     return json({ error: "Something went wrong. Try again in a moment." }, 500);
