@@ -1,28 +1,31 @@
-## Problem
+## Goal
 
-Both hero micro-labels — `ATLANTA · IGNITE CENTER…` and `NOW BUILDING: …` — use `--hero-fg-faint`, which is white at **44% opacity** with no shadow. Now that the scene photos are brightened and the scrim is lighter, 44% white over a mid-tone photo lands well under WCAG AA (roughly 2:1). The blue accent (`#4C8CFF`) on a dark-blue frame is similarly weak.
+Grow the cinematic hero rotation from 21 to **31 scenes** by pulling 10 more concepts straight from the live business-ideas dataset (`src/lib/business-ideas.ts`), so the typed phrase, the "Now building:" label, and the background photo all stay in sync.
 
-Wide letter-spacing (0.3em) at 11px makes it worse — thin, spaced glyphs need more contrast than body text, not less.
+## The 10 concepts (picked from the system data, no overlap with the existing 21)
 
-## Recommended fix (three layers, all in `src/styles.css`)
+| id | Typed phrase | Label |
+|---|---|---|
+| `petgrooming` | I want to start a mobile pet grooming van | Mobile pet grooming |
+| `junkhauling` | I want to start a junk hauling business | Junk hauling |
+| `pressurewashing` | I want to start a pressure washing company | Pressure washing |
+| `ghostkitchen` | I want to launch a ghost kitchen brand | Ghost kitchen |
+| `notary` | I want to become a mobile notary and loan signing agent | Mobile notary |
+| `pickleball` | I want to teach pickleball clinics | Pickleball clinics |
+| `holidaylights` | I want to start a Christmas light install business | Holiday light install |
+| `organizing` | I want to start a home organization service | Home organizing |
+| `vending` | I want to run a vending machine route | Vending route |
+| `handyman` | I want to build a two-truck handyman crew | Handyman crew |
 
-1. **Raise the label opacity**
-   - `--hero-fg-faint`: 0.44 → **0.78** white. Keeps the labels visually secondary to the H1 (which is 100%) but pushes them past AA on the brightened scenes.
+These span service, main-street, food, side-hustle and family-run categories, matching the mix already in the rotation.
 
-2. **Add a text shadow to detach text from photo**
-   - Apply the same treatment already on the H1 to `.hero-kicker` and `.hero-nowbuilding`:
-     `text-shadow: 0 1px 2px rgba(5,7,15,.75), 0 2px 18px rgba(5,7,15,.6)`
-   - This is what makes wide-tracked type legible over unpredictable imagery — a photo-independent dark halo, no matter which of the 21 scenes is showing.
+## Work
 
-3. **Brighten the accent word**
-   - `--hero-accent` stays `#4C8CFF` for buttons, but the inline accent used in "NOW BUILDING: **FOOD TRUCK**" gets a lighter tint (`#8FB6FF`) plus the same shadow, so the highlighted phrase reads brighter than the label rather than dimmer.
+1. **Generate 10 new scene photos** into `src/assets/scenes/` at 1536×1024, matched to the existing look: real Atlanta-feeling operators mid-work, cinematic natural light, shallow depth of field, no text or logos, no obviously synthetic faces. Same naming convention (`scene-petgrooming.jpg`, etc.).
+2. **Tone-normalize** each new image to the 65–80 mean-luma target established in the brightness pass, so no new scene reads darker or brighter than the rest of the rotation.
+3. **Register them in `src/lib/founder-scenes.ts`** — add the imports and 10 new `FounderScene` entries with `phrase`, `label`, `alt`. The shuffle (`shuffleScenesForVisit`) and typing cycle pick them up automatically; no component changes needed.
+4. **Verify** with Playwright: cycle the hero through several rotations and confirm the new scenes render, labels are legible against them, and there's no layout shift or flash from the added images.
 
-Optionally, bump the two labels' font-weight from 500 to 600 — a small stroke-weight increase buys real perceived contrast at that size.
+## Note on loading
 
-## What I'm not doing
-
-No re-darkening of the scrim or the photos — that would undo the brightness fix from the last pass. The correct place to solve label legibility is on the text itself, not by dimming the imagery again.
-
-## Verification
-
-Screenshot the hero across several rotation cycles (dark food-truck scene and bright trucking/daylight scenes) and confirm both labels stay readable at both extremes.
+All hero scenes except the first are `loading="lazy"`, so going from 21 to 31 doesn't change the initial page weight — only the first frame is eager.
