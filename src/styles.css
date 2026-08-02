@@ -852,7 +852,9 @@
 
 
 @media (prefers-reduced-motion: reduce) {
+  .hero-scene { transform: scale(1.06); transition: opacity 1400ms ease-in-out; }
   .hero-scene[data-active="true"] { animation: none; transform: scale(1.06); }
+
   .hero-caret { animation: none; }
 }
 
