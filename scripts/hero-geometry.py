@@ -114,8 +114,10 @@ async def main():
                         failures.append(
                             f"{label}: {key} occupies {ratio:.1f}% of width (want {low}-{high}%)"
                         )
-                if value["zoom"] != "1" or value["transform"] != "none":
+                # the background scene owns the Ken Burns drift transform
+                if key != "scene" and (value["zoom"] != "1" or value["transform"] != "none"):
                     failures.append(f"{label}: {key} has scale/zoom")
+
 
             if values["header"]["height"] > 60:
                 failures.append(f"{label}: header {values['header']['height']:.0f}px too tall")
