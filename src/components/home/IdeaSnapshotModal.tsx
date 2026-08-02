@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Loader2, MapPin, AlertTriangle, Check } from "lucide-react";
+import { ArrowRight, ArrowDown, Loader2, MapPin, AlertTriangle, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 
 type Signal = { label: string; value: string; note: string };
@@ -72,6 +72,20 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
   const label = snapshot?.idea_label || idea;
   const registerTo = `/register?idea=${encodeURIComponent(idea)}`;
   const close = () => onOpenChange(false);
+
+  /** Close the modal and land the visitor on the section right below the hero. */
+  const learnMore = () => {
+    onOpenChange(false);
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    window.requestAnimationFrame(() => {
+      window.setTimeout(() => {
+        document.getElementById("learn-more")?.scrollIntoView({
+          behavior: reduce ? "auto" : "smooth",
+          block: "start",
+        });
+      }, 120);
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -246,11 +260,19 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
                 <p className="mt-4 text-sm hero-faint">
                   Seats are capped so everyone gets built with, not talked at. $197.
                 </p>
-                <div className="mt-5 flex flex-wrap items-center gap-3">
+                <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3">
                   <Link to={registerTo} onClick={close} className="hero-cta">
                     Reserve my seat
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
+                  <button
+                    type="button"
+                    onClick={learnMore}
+                    className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4 hero-faint"
+                  >
+                    Not ready? Learn more about the morning
+                    <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
                   <Link
                     to="/contact"
                     onClick={close}
@@ -259,6 +281,7 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
                     Ask a question first
                   </Link>
                 </div>
+
               </div>
             </>
           )}
@@ -271,15 +294,26 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
               <span style={{ color: "var(--hero-fg)" }}>Thursday, Aug 20</span>
               <span className="hero-faint"> · IGNITE Center · $197</span>
             </p>
-            <Link
-              to={registerTo}
-              onClick={close}
-              className="hero-cta w-full justify-center sm:w-auto"
-            >
-              Reserve my seat
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
+            <div className="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center sm:gap-4">
+              <button
+                type="button"
+                onClick={learnMore}
+                className="inline-flex items-center justify-center gap-1.5 text-sm underline underline-offset-4 hero-faint"
+              >
+                Learn more
+                <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+              <Link
+                to={registerTo}
+                onClick={close}
+                className="hero-cta w-full justify-center sm:w-auto"
+              >
+                Reserve my seat
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
           </div>
+
         </div>
       </DialogContent>
     </Dialog>
