@@ -950,42 +950,63 @@
 
 @media (min-width: 60rem) {
   .sl-site-header { height: 3.25rem; }
-  .sl-site-header__inner { padding-inline: 2rem; }
-  .sl-site-header__left { gap: 1.5rem; }
+  .sl-site-header__inner { padding-inline: clamp(1.25rem, 2vw, 2rem); }
+  .sl-site-header__left { gap: clamp(1rem, 1.5vw, 1.5rem); }
+  .sl-site-header__logo { height: clamp(1.75rem, 2.03vw, 2rem); }
   .sl-site-header__nav,
   .sl-site-header__actions {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
+    gap: clamp(0.875rem, 1.25vw, 1.25rem);
     color: var(--muted-foreground);
-    font-size: 0.8125rem;
+    font-size: clamp(0.75rem, 0.825vw, 0.8125rem);
     line-height: 1;
   }
   .sl-site-header__cta {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.375rem 1rem;
+    padding: 0.375rem clamp(0.75rem, 1vw, 1rem);
     border-radius: 999px;
-    font-size: 0.8125rem;
+    font-size: clamp(0.75rem, 0.825vw, 0.8125rem);
     font-weight: 500;
     line-height: 1.5rem;
     white-space: nowrap;
   }
   .sl-site-header__mobile { display: none; }
   .sl-hero { min-height: calc(100svh - 3.25rem); }
-  .sl-hero__title { font-size: 2.625rem !important; }
+
+  /* Proportional composition: the hero holds the same share of the
+     viewport at every desktop width instead of a frozen pixel size. */
+  .sl-hero__title {
+    font-size: clamp(1.625rem, 2.67vw, 3.25rem) !important;
+    margin-top: clamp(0.875rem, 1.25vw, 1.5rem);
+  }
+  .sl-hero__kicker,
+  .sl-hero__status { font-size: clamp(0.625rem, 0.7vw, 0.8125rem); }
+  .sl-hero__prompt { margin-top: clamp(1.125rem, 1.75vw, 2rem); }
+  .sl-hero__status { margin-top: clamp(1rem, 1.5vw, 1.75rem); }
   .sl-hero__stack {
-    width: 50rem;
-    top: -2rem;
+    width: clamp(30rem, 51vw, 62rem);
+    top: clamp(-2rem, -1.27vw, -1rem);
   }
   .sl-prompt__panel {
-    width: 50rem;
-    height: 9.5rem;
-    min-height: 9.5rem;
-    max-height: 9.5rem;
+    width: 100%;
+    height: clamp(7.75rem, 9.65vw, 11.5rem);
+    min-height: clamp(7.75rem, 9.65vw, 11.5rem);
+    max-height: clamp(7.75rem, 9.65vw, 11.5rem);
+    padding: clamp(1.125rem, 1.5vw, 1.875rem);
+    border-radius: clamp(1.125rem, 1.5vw, 1.875rem);
+  }
+  .sl-prompt__input,
+  .sl-prompt__ghost { font-size: clamp(0.9375rem, 1.142vw, 1.375rem); }
+  .sl-prompt__footer p { font-size: clamp(0.8125rem, 0.888vw, 1.0625rem); }
+  .sl-prompt__submit {
+    padding: clamp(0.5rem, 0.635vw, 0.75rem) clamp(1rem, 1.27vw, 1.5rem);
+    font-size: clamp(0.75rem, 0.825vw, 1rem);
   }
 }
+
 
 @media (max-width: 39.999rem) {
   .sl-hero__stack { width: min(100% - 2rem, 32rem); top: -0.5rem; }

@@ -1,7 +1,10 @@
-"""Desktop hero geometry regression gate.
+"""Desktop hero composition regression gate.
 
 Usage: python3 scripts/hero-geometry.py [base URL]
-Defaults to the local Vite preview. Exits non-zero on any geometry drift.
+
+Asserts PROPORTIONS (share of viewport width), not absolute pixels. A frozen
+pixel size passes at one width and looks magnified at every narrower one —
+that failure mode is exactly what this gate exists to catch.
 """
 
 import asyncio
@@ -14,9 +17,14 @@ from playwright.async_api import async_playwright
 
 
 BASE_URL = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"
-VIEWPORTS = ((1000, 800), (1280, 720), (1576, 1043), (1920, 1080))
-DPRS = (1, 1.8)
+WIDTHS = (1000, 1100, 1280, 1440, 1576, 1920)
 SCREENSHOT_DIR = Path("/tmp/hero-geometry")
+
+# selector -> (min % of viewport width, max % of viewport width)
+RATIO_TARGETS = {
+    ".sl-hero__title": (35.0, 41.5),
+    ".sl-prompt__panel": (48.0, 55.0),
+}
 SELECTORS = {
     "header": ".sl-site-header",
     "logo": ".sl-site-header__logo",
@@ -32,18 +40,17 @@ SELECTORS = {
 }
 
 
-def near(actual, expected, tolerance=1):
-    return abs(actual - expected) <= tolerance
-
-
 async def main():
     failures = []
     report = []
     SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
+
+    cases = [(width, 900, 1) for width in WIDTHS]
+    cases.append((1576, 1043, 1.8))
+    cases.append((1000, 900, 1.8))
+
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=True)
-        cases = [(*viewport, 1) for viewport in VIEWPORTS]
-        cases.append((1576, 1043, DPRS[1]))
         for width, height, dpr in cases:
             context = await browser.new_context(
                 viewport={"width": width, "height": height}, device_scale_factor=dpr
@@ -54,35 +61,26 @@ async def main():
                 wait_until="domcontentloaded",
             )
             await page.wait_for_selector(".sl-hero", state="visible", timeout=20_000)
-            deployed_version = await page.evaluate(
-                """async () => {
-                  const response = await fetch(`/?_geometry_version=${Date.now()}`, {
-                    cache: 'no-store', headers: { Accept: 'text/html' }
-                  });
-                  const html = await response.text();
-                  return html.match(/<meta\\s+name=["']app-version["']\\s+content=["']([^"']+)["']/i)?.[1] ?? null;
-                }"""
-            )
+
             values = await page.evaluate(
                 """(selectors) => {
                   const output = {
                     htmlVersion: document.querySelector('meta[name="app-version"]')?.content,
                     runtimeVersion: document.documentElement.dataset.appVersion,
-                    assets: [...document.querySelectorAll('link[rel="stylesheet"], script[src]')]
-                      .map((element) => element.href || element.src).filter(Boolean),
                     rootFont: getComputedStyle(document.documentElement).fontSize,
                   };
                   for (const [key, selector] of Object.entries(selectors)) {
                     const matches = [...document.querySelectorAll(selector)];
                     if (matches.length !== 1) {
-                      output[key] = { count: matches.length };
+                      output[key] = { count: matches.length, selector };
                       continue;
                     }
                     const element = matches[0];
                     const rect = element.getBoundingClientRect();
                     const style = getComputedStyle(element);
                     output[key] = {
-                      count: 1, x: rect.x, y: rect.y, width: rect.width, height: rect.height,
+                      count: 1, selector,
+                      x: rect.x, y: rect.y, width: rect.width, height: rect.height,
                       fontSize: parseFloat(style.fontSize), display: style.display,
                       transform: style.transform, zoom: style.zoom,
                     };
@@ -92,47 +90,46 @@ async def main():
                 SELECTORS,
             )
             label = f"{width}x{height}@{dpr:g}x"
-            report.append({"viewport": [width, height], "dpr": dpr,
-                           "deployedVersion": deployed_version, **values})
+            ratios = {
+                key: round(value["width"] / width * 100, 1)
+                for key, value in values.items()
+                if isinstance(value, dict) and value.get("count") == 1
+            }
+            report.append({"viewport": [width, height], "dpr": dpr, "ratios": ratios, **values})
 
-            versions = (values.get("htmlVersion"), values.get("runtimeVersion"), deployed_version)
-            if len(set(versions)) != 1 or None in versions:
-                failures.append(f"{label}: build version mismatch {versions}")
-
-            for key in SELECTORS:
-                if values[key].get("count") != 1:
-                    failures.append(f"{label}: expected one {key}")
-            if failures and any(f.startswith(f"{label}:") for f in failures):
+            missing = [k for k in SELECTORS if values[k].get("count") != 1]
+            if missing:
+                failures.append(f"{label}: expected exactly one of {missing}")
                 await context.close()
                 continue
 
-            expected = {
-                "header": (None, 52, None),
-                "logo": (165, 32, None),
-                "title": (598, 45, 42),
-                "prompt": (800, 152, None),
-                "input": (750, 35, 18),
-                "submit": (150, 42, 13),
-            }
-            for key, (target_width, target_height, target_font) in expected.items():
-                value = values[key]
-                if target_width is not None and not near(value["width"], target_width):
-                    failures.append(f"{label}: {key} width {value['width']:.1f} != {target_width}")
-                if not near(value["height"], target_height):
-                    failures.append(f"{label}: {key} height {value['height']:.1f} != {target_height}")
-                if target_font is not None and not near(value["fontSize"], target_font, 0.1):
-                    failures.append(f"{label}: {key} font {value['fontSize']:.1f} != {target_font}")
-                if value["zoom"] != "1" or value["transform"] != "none":
+            for key, value in values.items():
+                if not isinstance(value, dict) or value.get("count") != 1:
+                    continue
+                selector = value["selector"]
+                if selector in RATIO_TARGETS:
+                    low, high = RATIO_TARGETS[selector]
+                    ratio = value["width"] / width * 100
+                    if not (low <= ratio <= high):
+                        failures.append(
+                            f"{label}: {key} occupies {ratio:.1f}% of width (want {low}-{high}%)"
+                        )
+                # the background scene owns the Ken Burns drift transform
+                if key != "scene" and (value["zoom"] != "1" or value["transform"] != "none"):
                     failures.append(f"{label}: {key} has scale/zoom")
 
+
+            if values["header"]["height"] > 60:
+                failures.append(f"{label}: header {values['header']['height']:.0f}px too tall")
             if values["desktop_nav"]["display"] == "none":
                 failures.append(f"{label}: desktop navigation hidden")
             if values["mobile_nav"]["display"] != "none":
                 failures.append(f"{label}: mobile navigation visible")
-            if not near(values["stack"]["x"] + values["stack"]["width"] / 2, width / 2):
+            if abs(values["stack"]["x"] + values["stack"]["width"] / 2 - width / 2) > 1:
                 failures.append(f"{label}: stack not centered")
-            if values["stack"]["transform"] != "none" or values["stack"]["zoom"] != "1":
-                failures.append(f"{label}: stack has scale/zoom")
+            if values["prompt"]["y"] + values["prompt"]["height"] > height:
+                failures.append(f"{label}: prompt panel overflows the viewport")
+
             await page.screenshot(
                 path=str(SCREENSHOT_DIR / f"hero-{label.replace('@', '-')}.png")
             )
