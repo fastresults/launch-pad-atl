@@ -21,6 +21,8 @@ import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
 import heroBg from "@/assets/hero-bg.png";
 import heroCoffee from "@/assets/hero-coffee-nosteam.png";
+import heroCoffeeLoop from "@/assets/hero-coffee-loop.mp4.asset.json";
+
 import { motion, useReducedMotion } from "framer-motion";
 import atlSeal from "@/assets/atl-founder-friendly-seal.svg";
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
