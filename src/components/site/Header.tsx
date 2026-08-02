@@ -51,15 +51,15 @@ export function SiteHeader() {
 
   return (
     <>
-    <header className="sticky top-0 z-50 border-b border-white/5 bg-background/70 backdrop-blur">
-      <div className="mx-auto flex max-w-[1400px] items-center gap-4 px-4 py-2 sm:px-6 md:px-8">
+    <header className="site-header sticky top-0 z-50 border-b border-white/5 bg-background/70 backdrop-blur">
+      <div className="site-header-inner mx-auto flex items-center gap-4 px-4 sm:px-6 lg:px-8">
 
         {/* Left edge: logo + product nav */}
-        <div className="flex min-w-0 shrink items-center gap-4 md:gap-5 xl:gap-6">
+        <div className="flex min-w-0 shrink items-center gap-4 lg:gap-5 xl:gap-6">
           <Link to="/" className="flex min-w-0 shrink items-center font-semibold tracking-tight" aria-label="Startup Labs — home">
-            <StartupLabsLogo className="h-8 w-auto text-foreground sm:h-9 md:h-10 xl:h-10" />
+            <StartupLabsLogo className="site-header-logo h-8 w-auto text-foreground sm:h-9 lg:h-10" />
           </Link>
-          <nav className="hidden items-center gap-4 text-[0.8125rem] text-muted-foreground md:flex md:gap-5 xl:gap-6">
+          <nav className="hidden items-center gap-4 text-[0.8125rem] text-muted-foreground lg:flex lg:gap-5 xl:gap-6">
             {leftNav.map((n) => (
               <NavLink
                 key={n.to}
@@ -77,7 +77,7 @@ export function SiteHeader() {
         <div className="flex-1" />
 
         {/* Right edge: orientation nav + auth + CTA */}
-        <div className="hidden items-center gap-4 text-[0.8125rem] text-muted-foreground md:flex md:gap-4 xl:gap-6">
+        <div className="hidden items-center gap-4 text-[0.8125rem] text-muted-foreground lg:flex xl:gap-6">
           {rightNav.map((n) => (
             <NavLink
               key={n.to}
@@ -113,7 +113,7 @@ export function SiteHeader() {
         </div>
 
         {/* Mobile */}
-        <div className="flex shrink-0 items-center gap-1.5 md:hidden">
+        <div className="flex shrink-0 items-center gap-1.5 lg:hidden">
 
           <Link to="/register" className="rounded-full bg-hero-gradient px-3 py-1.5 text-xs font-medium text-white sm:text-sm">
             {ctaShort}

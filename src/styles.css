@@ -724,9 +724,7 @@
   color: var(--hero-fg) !important;
   letter-spacing: -0.035em;
   font-weight: 600;
-  /* Fluid across the desktop range, with a lower ceiling so the headline stops
-     growing before it crowds the gutters on 1512–1920px displays. */
-  font-size: clamp(2rem, 1.2rem + 2.5vw, 3.25rem) !important;
+  font-size: 2rem !important;
   line-height: 1.06;
   text-shadow: 0 2px 28px rgba(5, 7, 15, 0.7), 0 1px 3px rgba(5, 7, 15, 0.5);
 }
@@ -803,8 +801,7 @@
 .hero-glass {
   background: var(--hero-glass) !important;
   border: 1px solid var(--hero-glass-line) !important;
-  /* Height tracks width so the card never reads as an empty stretched slab. */
-  min-height: clamp(9.5rem, 7.6rem + 5.5vw, 12.5rem);
+  min-height: 9.5rem;
   backdrop-filter: blur(26px) saturate(150%);
   -webkit-backdrop-filter: blur(26px) saturate(150%);
 
@@ -812,6 +809,90 @@
     0 40px 110px -34px rgba(0, 0, 0, 0.85),
     inset 0 1px 0 rgba(244, 246, 255, 0.14);
   transition: border-color 240ms ease, box-shadow 240ms ease;
+}
+
+/* Deterministic hero/header geometry. Production must not grow these elements
+   with viewport width or anchor the content stack to the bottom of the hero. */
+.hero-content-shell {
+  max-width: 64rem !important;
+  padding-top: 4.5rem !important;
+  padding-bottom: 4rem !important;
+  transform: none !important;
+}
+
+.hero-prompt-form {
+  max-width: 58.75rem !important;
+}
+
+.site-header {
+  height: 3.5rem;
+}
+
+.site-header-inner {
+  width: 100%;
+  max-width: 92.5rem;
+  height: 3.5rem;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+@media (min-width: 60rem) and (max-width: 79.999rem) {
+  .hero-cinematic {
+    min-height: calc(100svh - 3.5rem) !important;
+  }
+
+  .hero-content-shell {
+    max-width: 56rem !important;
+    padding-top: 4rem !important;
+  }
+
+  .hero-cinematic h1 {
+    max-width: 52rem !important;
+    font-size: 2.75rem !important;
+  }
+
+  .hero-prompt-form {
+    max-width: 52rem !important;
+  }
+
+  .hero-glass {
+    min-height: 10.5rem !important;
+  }
+}
+
+@media (min-width: 80rem) {
+  .hero-cinematic {
+    min-height: calc(100svh - 3.5rem) !important;
+  }
+
+  .hero-content-shell {
+    max-width: 64rem !important;
+    padding-top: 5.75rem !important;
+  }
+
+  .hero-cinematic h1 {
+    max-width: 58.75rem !important;
+    font-size: 3.25rem !important;
+  }
+
+  .hero-prompt-form {
+    max-width: 58.75rem !important;
+  }
+
+  .hero-glass {
+    height: 12.5rem !important;
+    min-height: 12.5rem !important;
+    max-height: 12.5rem !important;
+  }
+
+  .site-header,
+  .site-header-inner {
+    height: 3.75rem;
+  }
+
+  .site-header-logo {
+    height: 2.5rem !important;
+  }
 }
 
 .hero-glass:focus-within {

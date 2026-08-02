@@ -15,7 +15,7 @@ export function CinematicHero() {
   const takeOver = useCallback(() => setPaused(true), []);
 
   return (
-    <section className="hero-cinematic flex min-h-[88vh] flex-col justify-end overflow-hidden md:min-h-screen">
+    <section className="hero-cinematic flex min-h-[88vh] flex-col justify-start overflow-hidden md:min-h-screen">
       <div className="absolute inset-0 -z-10">
         {scenes.map((scene, sceneIndex) => (
           <img
@@ -35,7 +35,7 @@ export function CinematicHero() {
         <div className="hero-grain" aria-hidden="true" />
       </div>
 
-      <div className="mx-auto w-full max-w-5xl -translate-y-[10%] px-6 pb-16 pt-32 text-center md:pb-24">
+      <div className="hero-content-shell mx-auto w-full px-6 text-center">
         <p className="hero-kicker text-[11px] font-medium">
           Atlanta · IGNITE Center at Greater Atlanta Christian School
         </p>
