@@ -727,11 +727,17 @@
   color: var(--hero-fg-faint) !important;
   letter-spacing: 0.32em;
   text-transform: uppercase;
+  font-weight: 600;
+  text-shadow: var(--hero-label-shadow);
 }
 
 .hero-cinematic .hero-sub { color: var(--hero-fg-soft) !important; }
 .hero-cinematic .hero-faint { color: var(--hero-fg-faint) !important; }
-.hero-cinematic .hero-accent { color: var(--hero-accent) !important; }
+.hero-cinematic .hero-accent {
+  color: var(--hero-accent-text) !important;
+  text-shadow: var(--hero-label-shadow);
+}
+
 
 /* Scene layer -------------------------------------------------- */
 .hero-scene {
