@@ -695,8 +695,9 @@
   --hero-fg-soft: rgba(244, 246, 255, 0.72);
   --hero-fg-faint: rgba(244, 246, 255, 0.44);
   --hero-accent: #4C8CFF;
-  --hero-haze-a: rgba(76, 140, 255, 0.28);
-  --hero-haze-b: rgba(122, 92, 255, 0.24);
+  --hero-haze-a: rgba(76, 140, 255, 0.16);
+  --hero-haze-b: rgba(122, 92, 255, 0.14);
+
   --hero-glass: rgba(10, 14, 28, 0.42);
   --hero-glass-line: rgba(244, 246, 255, 0.16);
   position: relative;
