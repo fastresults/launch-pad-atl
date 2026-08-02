@@ -29,6 +29,16 @@ import sceneHolidayLights from "@/assets/scenes/scene-holidaylights.jpg";
 import sceneOrganizing from "@/assets/scenes/scene-organizing.jpg";
 import sceneVending from "@/assets/scenes/scene-vending.jpg";
 import sceneHandyman from "@/assets/scenes/scene-handyman.jpg";
+import sceneEpoxy from "@/assets/scenes/scene-epoxy.jpg";
+import sceneLawnCare from "@/assets/scenes/scene-lawncare.jpg";
+import sceneAirbnb from "@/assets/scenes/scene-airbnb.jpg";
+import sceneMobileIv from "@/assets/scenes/scene-mobileiv.jpg";
+import sceneSeniorTech from "@/assets/scenes/scene-seniortech.jpg";
+import sceneMealPrep from "@/assets/scenes/scene-mealprep.jpg";
+import sceneBookkeeping from "@/assets/scenes/scene-bookkeeping.jpg";
+import sceneResume from "@/assets/scenes/scene-resume.jpg";
+import sceneMicrogreens from "@/assets/scenes/scene-microgreens.jpg";
+import sceneDogWalking from "@/assets/scenes/scene-dogwalking.jpg";
 
 export type FounderScene = {
   id: string;
