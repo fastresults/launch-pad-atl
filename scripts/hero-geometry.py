@@ -17,7 +17,7 @@ from playwright.async_api import async_playwright
 
 
 BASE_URL = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"
-WIDTHS = (1024, 1190, 1200, 1280, 1400, 1576, 1920)
+WIDTHS = (1024, 1027, 1100, 1152, 1190, 1280, 1400, 1576, 1920)
 SCREENSHOT_DIR = Path("/tmp/hero-geometry")
 
 # selector -> (min % of viewport width, max % of viewport width)
