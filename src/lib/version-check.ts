@@ -1,16 +1,16 @@
 // Lightweight build-version check. Detects new deploys by re-fetching the
-// site's HTML shell and comparing the embedded build stamp against the one
+// site's HTML shell and comparing the content-derived release against the one
 // the running app booted with. Avoids the mobile-browser "stale index.html"
 // problem without needing a service worker.
 
 declare const __APP_VERSION__: string;
 declare const __RELEASE_ID__: string;
 
-const BOOT_VERSION: string = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
 const BOOT_RELEASE: string = typeof __RELEASE_ID__ !== "undefined" ? __RELEASE_ID__ : "dev";
+const BOOT_VERSION: string = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : BOOT_RELEASE;
 
 const CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 min
-const VERSION_META_NAME = "app-version";
+const VERSION_META_NAME = "app-release";
 const RELOAD_TARGET_KEY = "startuplabs:auto-reload-target";
 
 async function fetchDeployedVersion(): Promise<string | null> {
@@ -22,7 +22,7 @@ async function fetchDeployedVersion(): Promise<string | null> {
     });
     if (!res.ok) return null;
     const html = await res.text();
-    const match = html.match(/<meta\s+name=["']app-version["']\s+content=["']([^"']+)["']/i);
+    const match = html.match(/<meta\s+name=["']app-release["']\s+content=["']([^"']+)["']/i);
     return match?.[1] ?? null;
   } catch {
     return null;
@@ -33,15 +33,15 @@ export function startVersionCheck(onNewVersion: (v: string) => void): () => void
   let cancelled = false;
   let notified = false;
 
-  // A matching boot version proves the prior cache-busted replacement worked.
-  if (window.sessionStorage.getItem(RELOAD_TARGET_KEY) === BOOT_VERSION) {
+  // A matching content release proves the prior cache-busted replacement worked.
+  if (window.sessionStorage.getItem(RELOAD_TARGET_KEY) === BOOT_RELEASE) {
     window.sessionStorage.removeItem(RELOAD_TARGET_KEY);
   }
 
   const run = async () => {
     if (cancelled || notified || document.hidden) return;
     const deployed = await fetchDeployedVersion();
-    if (!deployed || deployed === BOOT_VERSION) return;
+    if (!deployed || deployed === BOOT_RELEASE) return;
     notified = true;
     onNewVersion(deployed);
   };

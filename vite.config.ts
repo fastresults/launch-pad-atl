@@ -6,8 +6,6 @@ import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
-const APP_VERSION = new Date().toISOString();
-
 function sourceReleaseId(): string {
   const hash = createHash("sha256");
   const roots = ["src", "index.html", "package.json", "vite.config.ts"];
@@ -28,6 +26,7 @@ function sourceReleaseId(): string {
 }
 
 const RELEASE_ID = sourceReleaseId();
+const APP_VERSION = RELEASE_ID;
 
 export default defineConfig({
   plugins: [
