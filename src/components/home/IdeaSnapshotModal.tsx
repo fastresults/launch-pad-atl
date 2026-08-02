@@ -356,26 +356,8 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
                 <p className="mt-4 text-sm hero-faint">
                   Seats are capped so everyone gets built with, not talked at. $197.
                 </p>
-                <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3">
-                  <Link to={registerTo} onClick={close} className="hero-cta">
-                    Reserve my seat
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={learnMore}
-                    className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4 hero-faint"
-                  >
-                    Not ready? Learn more about the morning
-                    <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
-                  </button>
-                  <Link
-                    to="/contact"
-                    onClick={close}
-                    className="text-sm underline underline-offset-4 hero-faint"
-                  >
-                    Ask a question first
-                  </Link>
+                <div className="mt-5">
+                  <ActionRow registerTo={registerTo} onLearnMore={learnMore} onClose={close} />
                 </div>
               </div>
             </>
@@ -389,30 +371,61 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
               <span style={{ color: "var(--hero-fg)" }}>Thursday, Aug 20</span>
               <span className="hero-faint"> · IGNITE Center · $197</span>
             </p>
-            <div className="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center sm:gap-4">
-              <button
-                type="button"
-                onClick={learnMore}
-                className="inline-flex items-center justify-center gap-1.5 text-sm underline underline-offset-4 hero-faint"
-              >
-                Learn more
-                <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
-              </button>
-              <Link
-                to={registerTo}
-                onClick={close}
-                className="hero-cta w-full justify-center sm:w-auto"
-              >
-                Reserve my seat
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            </div>
+            <ActionRow
+              compact
+              registerTo={registerTo}
+              onLearnMore={learnMore}
+              onClose={close}
+            />
           </div>
         </div>
+
       </DialogContent>
     </Dialog>
   );
 }
+
+/**
+ * The one action set for this modal, ranked: learn more (primary),
+ * reserve (secondary), ask (tertiary). Same order everywhere it appears.
+ */
+function ActionRow({
+  registerTo,
+  onLearnMore,
+  onClose,
+  compact = false,
+}: {
+  registerTo: string;
+  onLearnMore: () => void;
+  onClose: () => void;
+  compact?: boolean;
+}) {
+  const size = compact ? "px-4 py-2 text-sm" : "";
+  return (
+    <div
+      className={`flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center ${
+        compact ? "sm:gap-2" : "sm:gap-3"
+      }`}
+    >
+      <button
+        type="button"
+        onClick={onLearnMore}
+        className={`hero-btn hero-btn-primary ${size}`}
+      >
+        Learn more about the morning
+        <ArrowDown className="h-4 w-4" aria-hidden="true" />
+      </button>
+      <Link to={registerTo} onClick={onClose} className={`hero-btn hero-btn-secondary ${size}`}>
+        Reserve my seat
+        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+      </Link>
+      <Link to="/contact" onClick={onClose} className={`hero-btn hero-btn-ghost ${size}`}>
+        Ask a question
+      </Link>
+    </div>
+  );
+}
+
 
 function MoneyTile({ caption, value }: { caption: string; value?: string }) {
   return (

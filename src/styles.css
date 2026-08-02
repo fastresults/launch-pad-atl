@@ -844,6 +844,61 @@
   transform: translateY(-1px);
 }
 
+/* Ranked action buttons used inside the hero snapshot modal */
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.7rem 1.35rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: background 200ms ease, border-color 200ms ease, color 200ms ease,
+    transform 180ms ease;
+}
+
+.hero-btn:hover { transform: translateY(-1px); }
+
+.hero-btn-primary {
+  color: #05070f !important;
+  background: var(--hero-accent) !important;
+  border-color: var(--hero-accent) !important;
+}
+
+.hero-btn-primary:hover {
+  background: #6ba0ff !important;
+  border-color: #6ba0ff !important;
+}
+
+.hero-btn-secondary {
+  color: var(--hero-fg) !important;
+  background: rgba(244, 246, 255, 0.1) !important;
+  border-color: rgba(244, 246, 255, 0.22) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.hero-btn-secondary:hover {
+  background: rgba(244, 246, 255, 0.18) !important;
+  border-color: rgba(244, 246, 255, 0.4) !important;
+}
+
+.hero-btn-ghost {
+  color: var(--hero-fg-faint) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.hero-btn-ghost:hover {
+  color: var(--hero-fg) !important;
+  background: rgba(244, 246, 255, 0.07) !important;
+}
+
+
+
 .hero-nowbuilding {
   color: var(--hero-fg-faint) !important;
   letter-spacing: 0.3em;
