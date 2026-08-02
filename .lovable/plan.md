@@ -1,46 +1,28 @@
-## What I found (measured, not guessed)
+## Problem
 
-Two stacked causes — the images are dark *and* the hero darkens them again.
+Both hero micro-labels — `ATLANTA · IGNITE CENTER…` and `NOW BUILDING: …` — use `--hero-fg-faint`, which is white at **44% opacity** with no shadow. Now that the scene photos are brightened and the scrim is lighter, 44% white over a mid-tone photo lands well under WCAG AA (roughly 2:1). The blue accent (`#4C8CFF`) on a dark-blue frame is similarly weak.
 
-**1. Source images are genuinely underexposed.** I measured average brightness (0–255) of all 21 scene files in `src/assets/scenes/`:
+Wide letter-spacing (0.3em) at 11px makes it worse — thin, spaced glyphs need more contrast than body text, not less.
 
-```text
-bakery        7.5   ← nearly black
-branding     10.6
-fitness      13.7
-coffee       22.4
-photography  23.4
-restaurant   29.7
-realestate   32.5
-foodtruck    35.6 ... roofing 36.1, detailing 39.3, matchmaking 41.0
-seniorcare   45.0 ... boutique 46.3, ecommerce 54.6, autoauction 55.6
-medspa       56.5, daycare 57.7, trucking 62.9, homehealth 66.4
-landscaping  90.9, cleaning 96.6  ← the only two that read as "lit"
-```
-A healthy photographic hero sits around 70–110. Nine images are below 35, i.e. mostly black frames.
+## Recommended fix (three layers, all in `src/styles.css`)
 
-**2. The scrim on top removes most of what's left.** `.hero-scrim` in `src/styles.css:760` layers a near-opaque bottom gradient (`#05070F` at 4%, then 0.72 alpha at 38%), a 0.66-alpha top band, plus two colored haze radials. So even a well-exposed image loses ~60–70% of its luminance behind the copy area — and the copy area is exactly where the subject usually is.
+1. **Raise the label opacity**
+   - `--hero-fg-faint`: 0.44 → **0.78** white. Keeps the labels visually secondary to the H1 (which is 100%) but pushes them past AA on the brightened scenes.
 
-## The fix
+2. **Add a text shadow to detach text from photo**
+   - Apply the same treatment already on the H1 to `.hero-kicker` and `.hero-nowbuilding`:
+     `text-shadow: 0 1px 2px rgba(5,7,15,.75), 0 2px 18px rgba(5,7,15,.6)`
+   - This is what makes wide-tracked type legible over unpredictable imagery — a photo-independent dark halo, no matter which of the 21 scenes is showing.
 
-**A. Rebalance the scrim (biggest single win)**
-- Drop the bottom stop from 0.72 → ~0.55, raise the mid-clear window (0.28 → ~0.14), soften the top band 0.66 → ~0.40.
-- Keep enough darkness only directly behind the headline/glass card by narrowing the gradient to a bottom-weighted band instead of covering the full frame.
-- Reduce the two haze radials (0.28 / 0.24 → ~0.16 / 0.14) so they tint rather than muddy.
-- Verify headline and kicker still pass contrast against the brightest scenes (cleaning, landscaping) — if not, add a tighter local scrim behind the text block only rather than re-darkening the whole image.
+3. **Brighten the accent word**
+   - `--hero-accent` stays `#4C8CFF` for buttons, but the inline accent used in "NOW BUILDING: **FOOD TRUCK**" gets a lighter tint (`#8FB6FF`) plus the same shadow, so the highlighted phrase reads brighter than the label rather than dimmer.
 
-**B. Normalize the images at the CSS layer**
-- Add a `filter: brightness(...) contrast(...) saturate(...)` on `.hero-scene` to lift the whole set uniformly.
-- For the worst offenders, add a per-scene brightness multiplier driven by a data attribute or an inline CSS variable set from `src/lib/founder-scenes.ts`, so bakery/branding/fitness get a bigger lift than cleaning/landscaping (which need none, and would blow out with a global boost).
+Optionally, bump the two labels' font-weight from 500 to 600 — a small stroke-weight increase buys real perceived contrast at that size.
 
-**C. Tone-correct the source files**
-- Re-expose the 9 images under ~35 average luma in place (gamma/levels lift preserving highlights) so the fix doesn't depend on CSS filters alone and mobile GPUs don't pay a filter cost. Files stay at the same paths, so no code changes needed for this part.
-- Re-measure after correction; target 65–95 average for every scene so the rotation stops flickering between "black frame" and "bright frame."
+## What I'm not doing
 
-**D. Verify**
-- Screenshot the hero at desktop and mobile widths across several rotation steps (including bakery and cleaning, the two extremes) and confirm: subject visible, headline legible, no scene reading as a black rectangle, no scene blowing out.
+No re-darkening of the scrim or the photos — that would undo the brightness fix from the last pass. The correct place to solve label legibility is on the text itself, not by dimming the imagery again.
 
-## Technical notes
-- Files touched: `src/styles.css` (`.hero-scene`, `.hero-scrim`, hero haze tokens), `src/lib/founder-scenes.ts` (optional per-scene exposure value), and the 9 underexposed JPEGs in `src/assets/scenes/`.
-- No component logic, rotation timing, or Ken Burns behavior changes.
-- Opacity stays at 100% as you last set it.
+## Verification
+
+Screenshot the hero across several rotation cycles (dark food-truck scene and bright trucking/daylight scenes) and confirm both labels stay readable at both extremes.
