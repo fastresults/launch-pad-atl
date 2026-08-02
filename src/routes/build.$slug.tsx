@@ -31,7 +31,7 @@ export default function BuildWorkshopPage() {
 
       {/* Hero */}
       <section className="border-b border-white/5 py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="public-container px-6">
           <Link
             to="/build"
             className="mb-6 inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground md:text-sm"
@@ -82,7 +82,7 @@ export default function BuildWorkshopPage() {
       {/* Upcoming dates */}
       {upcoming.length > 0 && (
         <section className="border-b border-white/5 bg-white/[0.02] py-14 md:py-16">
-          <div className="mx-auto max-w-5xl px-6">
+          <div className="public-container px-6">
             <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-primary md:text-sm">
               <Calendar className="size-4" /> Upcoming dates · {w.title}
             </div>
@@ -116,7 +116,7 @@ export default function BuildWorkshopPage() {
 
       {/* The pain */}
       <section className="py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="public-container px-6">
           <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground md:text-sm">
             <AlertTriangle className="size-4 text-primary" /> {w.sections.painEyebrow}
           </div>
@@ -143,7 +143,7 @@ export default function BuildWorkshopPage() {
 
       {/* What you walk out with */}
       <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="public-container px-6">
           <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-primary md:text-sm">
             <Check className="size-4" /> What you walk out with
           </div>
@@ -167,7 +167,7 @@ export default function BuildWorkshopPage() {
 
       {/* Agenda */}
       <section className="py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="public-container px-6">
           <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground md:text-sm">
             <Clock className="size-4 text-primary" /> The agenda
           </div>
@@ -203,7 +203,7 @@ export default function BuildWorkshopPage() {
 
       {/* Fit */}
       <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="public-container px-6">
           <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
             {w.sections.fitHeadline.lead}{" "}
             <span className="text-gradient-brand">{w.sections.fitHeadline.emphasis}</span>
@@ -264,7 +264,7 @@ export default function BuildWorkshopPage() {
 
       {/* Agency upsell */}
       <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="public-container px-6">
           <div className="rounded-3xl border border-white/10 bg-hero-gradient p-8 text-white md:p-12">
             <p className="mb-3 text-xs uppercase tracking-[0.18em] opacity-80 md:text-sm md:tracking-[0.2em]">
               <Sparkles className="mr-1 inline size-3.5" /> Or have us build it for you
@@ -324,7 +324,7 @@ export default function BuildWorkshopPage() {
 
       {/* Other workshops */}
       <section className="border-t border-white/5 py-16 md:py-24">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="public-container px-6">
           <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
             Keep building
           </p>

@@ -42,7 +42,7 @@ export default function ServicesPage() {
 function Tracks() {
   return (
     <section className="border-b border-white/5 py-16 md:py-24">
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="public-container px-6">
         <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           <Sparkles className="size-3.5" /> After your launch · our team builds what comes next
         </p>
@@ -171,7 +171,7 @@ const PROCESS_STEPS = [
 function Process() {
   return (
     <section className="py-16 md:py-24">
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="public-container px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           How it works
         </p>
@@ -210,7 +210,7 @@ function Process() {
 function Proof() {
   return (
     <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="public-container px-6">
         <div className="grid items-center gap-8 rounded-3xl border border-white/10 bg-card p-6 md:grid-cols-[1fr_1.4fr] md:gap-10 md:p-8 lg:p-12">
           <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-hero-gradient">
             <div className="relative flex h-full flex-col justify-end p-6 text-white">
@@ -262,7 +262,7 @@ function Proof() {
 function WorkshopBand() {
   return (
     <section className="py-16 md:py-24">
-      <div className="mx-auto max-w-5xl px-6">
+      <div className="public-container px-6">
         <div className="rounded-3xl border border-primary/30 bg-card p-8 md:p-12">
           <p className="mb-3 text-xs uppercase tracking-[0.18em] text-primary md:text-sm md:tracking-[0.2em]">
             <Sparkles className="mr-1 inline size-3.5" /> Try before you buy
@@ -358,7 +358,7 @@ function FAQ() {
 function FinalCTA() {
   return (
     <section className="pb-16 md:pb-24">
-      <div className="mx-auto max-w-5xl px-6">
+      <div className="public-container px-6">
         <div className="rounded-3xl border border-white/10 bg-hero-gradient p-8 text-white md:p-12">
           <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
             Idea to open.{" "}

@@ -138,7 +138,7 @@ export default function PrivateTuesdayPage() {
 
         {/* Booking */}
         <section className="py-16">
-          <div className="mx-auto max-w-6xl px-6">
+          <div className="public-container px-6">
             <div className="grid gap-8 md:grid-cols-5">
               {/* Slot picker */}
               <div className="md:col-span-3">

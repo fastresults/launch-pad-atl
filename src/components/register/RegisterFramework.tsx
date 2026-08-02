@@ -147,7 +147,7 @@ export function RegisterFramework() {
       </section>
 
       <section className="py-12 md:py-16">
-        <div className="mx-auto grid max-w-6xl gap-10 px-6 md:grid-cols-[1.2fr_1fr]">
+        <div className="public-container grid gap-10 px-6 md:grid-cols-[1.2fr_1fr]">
           {submitted ? (
             <SuccessCard />
           ) : (

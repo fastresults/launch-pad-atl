@@ -5,7 +5,7 @@ import evolveLogoUrl from "@/assets/evolve-logo.svg";
 export function SiteFooter() {
   return (
     <footer className="border-t border-white/5 py-8 md:py-10">
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 text-center text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:gap-6 md:text-left">
+      <div className="public-container flex flex-col items-center gap-4 px-6 text-center text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:gap-6 md:text-left">
         <div className="flex items-center gap-3">
           <StartupLabsLogo className="h-9 w-auto md:h-10 text-foreground" />
           <span>· Norcross, GA</span>

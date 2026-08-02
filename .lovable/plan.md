@@ -1,60 +1,63 @@
-## Goal
+## What's actually wrong
 
-Stop chasing cascade bugs. Enforce three hard rules at the shell level, in one place (`src/public.css`), so no page or component can drift:
+Yes — I found the global styling, and there are **two competing systems fighting each other** on every public page:
 
-1. Hero = full bleed, edge to edge, full viewport height.
-2. Every other section on every public page = 20% margin left and right.
-3. Everything on public pages (hero included) renders 25% smaller.
+1. **`src/styles.css`, lines ~283-560** — a legacy `.marketing-surface` layer with viewport-relative type (`clamp(1.875rem, 2.9vw, 3.5rem)`), viewport-relative gutters, tier-specific media queries at 60rem/64rem/80rem, and roughly **40 `!important` declarations** that override component classes.
+2. **`src/public.css`, 411 lines** — the newer `.public-surface` layer with `zoom: 0.6`, `--public-gutter: calc(20vw / 0.6)`, and its own separate H1/H2 scale at three breakpoints.
 
-## How
+Both files are imported globally in `src/main.tsx`, and 15 route/component files still reference `.marketing-surface`. Every size on a public page is therefore a product of: a vw-derived clamp, times a zoom factor, times a breakpoint override, times an `!important` rule. That is why the same page looks different on the same monitor at different OS scale factors, and why every targeted fix produced a new symptom. There is no single number to correct — the system itself is the bug.
 
-### 1. One deterministic downscale switch
+## The rebuild
 
-Add a single scale on the public shell rather than editing hundreds of font/spacing values:
+Strip both layers out entirely and replace them with one deliberately boring stylesheet. Nothing viewport-derived, nothing scaled, no `!important`.
 
-```
-.public-surface { zoom: 0.75; }
-```
+### 1. Delete
 
-`zoom` scales fonts, padding, icons, borders, images, and Tailwind utilities uniformly — nothing can escape it, and it cannot drift per-breakpoint the way `text-7xl`/`clamp()` rules did. One number, one place.
+- Remove the entire `.marketing-surface` / `.marketing-dialog` / `.marketing-sheet` block and all of its desktop-tier media queries from `src/styles.css` (keeping design tokens, `@theme`, dark/light roots, app/dashboard/slide styles untouched).
+- Delete `src/public.css` and its import in `src/main.tsx`.
+- Remove `src/components/RenderDiagnostics.tsx` and its wiring in `src/App.tsx` — it was forensic instrumentation for a bug we're now removing at the source.
+- Remove `scripts/hero-geometry.py` and `scripts/public-parity.py`, which assert ratios and zoom factors that will no longer exist.
 
-Two follow-through fixes required because `zoom` changes how viewport units land:
-- Hero height becomes `calc((100svh - header) / 0.75)` via a `--public-zoom: 0.75` variable so the hero still fills exactly one screen.
-- Any `vw`-based width (gutters below) is divided by the same variable.
+Logged-in app, admin, and workshop slides are not touched.
 
-The sticky header sits inside the shell, so it scales with everything else — consistent with "all UI shrunk 25%".
-
-### 2. Hero full bleed
-
-`.sl-hero` gets `padding-inline: 0`, `width: 100%`, and keeps its background media at full width. Only the inner `.sl-hero__stack` keeps a small safety inset so text never touches the edge. Hero is explicitly exempted from the 20% gutter rule.
-
-### 3. 20% side margins on all non-hero content
-
-Set the shell gutter to a percentage of viewport instead of fixed rem:
+### 2. New `src/public.css` — the whole layout law, ~120 lines
 
 ```
---public-gutter: calc(20vw / var(--public-zoom));   /* ≥ 768px */
+.public-page            /* dark canvas, DM Sans, 16px/1.6, color tokens only */
+.public-page .sl-hero   /* width:100%; min-height:100svh - header; no gutter */
+.public-container       /* width:100%; max-width:1200px; margin-inline:auto;
+                           padding-inline:24px  (16px below 640px) */
 ```
 
-Then apply it once, globally, to every non-hero section on the public shell, and neutralize the ad-hoc containers that currently fight it (`mx-auto max-w-6xl/7xl/4xl px-6` scattered through `HomeFramework`, `services`, `build`, `webinar`, `one-on-one`, `schedule`, `contact`, `facilitator`, `private-tuesday`, `privacy`, `terms`, `build.$slug`, plus the landing/register frameworks):
+Type scale — fixed pixel values, one breakpoint at 768px, no `clamp()`, no `vw`, no `zoom`:
 
-- `.public-surface section:not(.sl-hero)` → `padding-inline: var(--public-gutter)`
-- `.public-surface :is(section, footer):not(.sl-hero) [class*="max-w-"]` → `max-width: 100%` so inner containers stop imposing their own narrower column and double-padding.
-- Inner `px-6` wrappers get their horizontal padding zeroed inside the shell.
+| Element | Mobile | Desktop |
+|---|---|---|
+| Body | 16px | 16px |
+| H1 | 32px | 48px |
+| H2 | 24px | 32px |
+| H3 | 20px | 22px |
+| Lead paragraph | 17px | 18px |
+| Eyebrow | 12px | 12px |
+| Buttons | 15px, 44px tall | 15px, 44px tall |
 
-Small screens: 20% each side leaves only 60% of a phone for text, which is unreadable. The gutter tapers below 768px (8% mobile, 12% tablet) and locks to the requested 20% from 768px up. Say the word if you want a literal 20% on phones too.
+On your 1386px viewport that gives a 1200px content column with ~93px of breathing room each side; on a 1920px monitor the column stays at 1200px and centers. Lines never get longer than a readable measure, and text is identical at every window size within a breakpoint — the standard behavior of every normal website.
 
-### 4. Proof, not assertion
+### 3. Rewire the 15 public files
 
-Update `scripts/public-parity.py` to measure, on localhost + preview + `startuplabs.online`, at 1024 / 1280 / 1400 / 1920 CSS px:
-- hero section width == viewport width (full bleed),
-- non-hero section content box left edge == 20% of viewport (±2px) at ≥768px,
-- H1 and body computed font-size == exactly 0.75× current values.
+Each public route currently wraps content in `marketing-surface` / `public-surface` plus ad-hoc `mx-auto max-w-4xl/6xl/7xl px-6` containers that each impose a different width. Every one of those gets replaced with the single `.public-container`, so width is defined in exactly one place:
 
-The build is only reported as done when those assertions pass against the published origin, not just the preview.
+`src/routes/` — `index`, `services`, `build`, `build.$slug`, `webinar`, `one-on-one`, `schedule`, `contact`, `facilitator`, `private-tuesday`, `privacy`, `terms`
+`src/components/` — `home/HomeFramework`, `home/CinematicHero`, `landing/LandingFramework`, `register/RegisterFramework`, `site/Header`, `site/Footer`
+
+The hero is the sole exception: full bleed edge to edge, its inner text stack centered on the same 1200px measure.
+
+### 4. Verify before calling it done
+
+A short Playwright pass over all 13 public routes at 390 / 768 / 1024 / 1386 / 1920 px asserting three things: hero section width equals viewport width; every other section's content box is exactly 1200px (or viewport minus padding when narrower) and centered; computed H1 is exactly 32px or 48px. If Chromium can't launch in this sandbox I'll say so plainly rather than claim a pass I didn't observe.
 
 ## Technical notes
 
-- Files touched: `src/public.css` (all structural rules), `scripts/public-parity.py` (gate). Route files only get edits where a hardcoded container refuses to yield to the shell rule.
-- `zoom` is supported in current Chrome, Safari, Edge, and Firefox 126+. Older Firefox degrades to normal size rather than breaking layout; a `@supports` fallback applies a `transform: scale` variant only if needed.
-- No changes to copy, content, or backend.
+- Copy, content, backend, routing, and all authenticated screens are unchanged. This is presentation only.
+- Colors keep the current midnight-navy palette via existing tokens — the visual identity stays; only geometry and type sizing are rebuilt.
+- No `zoom`, no `transform: scale`, no `vw` sizing, no `clamp()`, and no `!important` anywhere in the new public stylesheet. Those four constructs caused every failure in this thread, so their absence is the acceptance criterion, not a preference.

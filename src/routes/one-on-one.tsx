@@ -107,7 +107,7 @@ export default function OneOnOnePage() {
 
         {/* Best value comparison */}
         <section className="border-b border-white/5 py-16">
-          <div className="mx-auto max-w-5xl px-6">
+          <div className="public-container px-6">
             <p className="mb-2 inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-primary">
               <TrendingUp className="size-3.5" /> Best value on the market
             </p>
@@ -147,7 +147,7 @@ export default function OneOnOnePage() {
 
         {/* What's included */}
         <section className="border-b border-white/5 py-16">
-          <div className="mx-auto max-w-5xl px-6">
+          <div className="public-container px-6">
             <p className="mb-2 text-xs uppercase tracking-[0.18em] text-primary">What we build for you</p>
             <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
               A launch-ready startup. Delivered.
@@ -174,7 +174,7 @@ export default function OneOnOnePage() {
 
         {/* Contrast */}
         <section className="border-b border-white/5 py-16">
-          <div className="mx-auto max-w-5xl px-6">
+          <div className="public-container px-6">
             <p className="mb-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">How the three formats differ</p>
             <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
               Three ways in. One is done for you.

@@ -17,7 +17,7 @@ export default function BuildIndexPage() {
       <SiteHeader />
 
       <section className="border-b border-border">
-        <div className="mx-auto max-w-6xl px-6 py-10 md:py-14">
+        <div className="public-container px-6 py-10 md:py-14">
           <div className="mb-10 flex flex-col gap-2 border-b border-border pb-4 md:flex-row md:items-end md:justify-between">
             <div className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
               Issue No. 02 &mdash; The Workshops
@@ -53,7 +53,7 @@ export default function BuildIndexPage() {
 
 
       <section className="py-16 md:py-24">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="public-container px-6">
           <div className="grid gap-5 md:grid-cols-2">
             {BUILD_WORKSHOPS.map((w) => {
               const Icon = w.icon;
