@@ -746,9 +746,10 @@
 }
 
 .hero-scene[data-active="true"] {
-  opacity: 1;
+  opacity: 0.25;
   animation: hero-drift 7000ms linear forwards;
 }
+
 
 @keyframes hero-drift {
   from { transform: scale(1.06) translate3d(0, 0, 0); }
