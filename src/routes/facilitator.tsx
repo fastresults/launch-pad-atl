@@ -31,9 +31,9 @@ export default function FacilitatorPage() {
     FACILITATOR_JSON_LD,
   );
   return (
-    <div className="marketing-surface min-h-screen flex flex-col">
+    <div className="public-surface min-h-screen flex flex-col">
       <SiteHeader />
-      <main className="flex-1 mx-auto w-full px-6 py-16 md:py-24" style={{ maxWidth: "860px" }}>
+      <main className="mx-auto w-full max-w-[53.75rem] flex-1 px-6 py-16 md:py-24">
         <div className="space-y-12 md:space-y-20">
           <FacilitatorHero />
           <div className="border-t border-border" />

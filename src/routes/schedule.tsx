@@ -39,7 +39,7 @@ export default function SchedulePage() {
   }, []);
 
   return (
-    <div className="marketing-surface min-h-screen">
+    <div className="public-surface min-h-screen">
       <SiteHeader />
 
 
