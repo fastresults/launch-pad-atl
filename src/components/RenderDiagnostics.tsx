@@ -73,7 +73,7 @@ function captureFingerprint(): RenderingFingerprint {
     release: document.documentElement.dataset.appRelease ?? RELEASE_ID,
     assets: {
       css: assetNames('link[rel="stylesheet"]', "href"),
-      js: assetNames('script[src]', "src"),
+      js: assetNames("script[src]", "src"),
     },
     viewport: {
       innerWidth: window.innerWidth,
@@ -88,7 +88,10 @@ function captureFingerprint(): RenderingFingerprint {
       rootFontSize: Number.parseFloat(rootStyle.fontSize),
     },
     responsiveTiers: Object.fromEntries(
-      breakpoints.map((breakpoint) => [String(breakpoint), matchMedia(`(min-width: ${breakpoint}px)`).matches]),
+      breakpoints.map((breakpoint) => [
+        String(breakpoint),
+        matchMedia(`(min-width: ${breakpoint}px)`).matches,
+      ]),
     ),
     fonts: {
       status: document.fonts.status,
@@ -142,18 +145,41 @@ export function RenderDiagnostics() {
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <strong className="text-sm">Rendering fingerprint</strong>
         <div className="flex items-center gap-1">
-          <Button type="button" variant="ghost" size="icon" onClick={() => void refresh()} aria-label="Refresh fingerprint" title="Refresh fingerprint">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => void refresh()}
+            aria-label="Refresh fingerprint"
+            title="Refresh fingerprint"
+          >
             <RefreshCw />
           </Button>
-          <Button type="button" variant="ghost" size="icon" onClick={() => void copy()} aria-label="Copy fingerprint" title="Copy fingerprint">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => void copy()}
+            aria-label="Copy fingerprint"
+            title="Copy fingerprint"
+          >
             <Copy />
           </Button>
-          <Button type="button" variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close diagnostics" title="Close diagnostics">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setOpen(false)}
+            aria-label="Close diagnostics"
+            title="Close diagnostics"
+          >
             <X />
           </Button>
         </div>
       </div>
-      {copied && <p className="m-0 border-b border-border px-3 py-1 text-xs text-primary">Copied</p>}
+      {copied && (
+        <p className="m-0 border-b border-border px-3 py-1 text-xs text-primary">Copied</p>
+      )}
       <pre className="m-0 max-h-[58vh] overflow-auto p-3 text-[11px] leading-5">{serialized}</pre>
     </aside>
   );
