@@ -35,7 +35,7 @@ export function CinematicHero() {
         <div className="hero-grain" aria-hidden="true" />
       </div>
 
-      <div className="mx-auto w-full max-w-6xl px-6 pb-14 pt-28 text-center md:pb-20">
+      <div className="mx-auto w-full max-w-6xl -translate-y-[10%] px-6 pb-14 pt-28 text-center md:pb-20">
         <p className="hero-kicker text-[11px] font-medium">
           Atlanta · IGNITE Center at Greater Atlanta Christian School
         </p>
