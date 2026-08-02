@@ -837,3 +837,19 @@
   .hero-scene[data-active="true"] { animation: none; transform: scale(1.06); }
   .hero-caret { animation: none; }
 }
+
+/* Hero input keeps its own glass treatment — the marketing input rule
+   must not paint a second field inside the glass panel. */
+.marketing-surface .hero-cinematic :is(input, textarea) {
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--hero-fg) !important;
+  -webkit-text-fill-color: var(--hero-fg) !important;
+}
+.marketing-surface .hero-cinematic :is(input, textarea):focus-visible {
+  box-shadow: none !important;
+  border: 0 !important;
+}
+.marketing-surface .hero-cinematic p,
+.marketing-surface .hero-cinematic li { color: inherit; }
