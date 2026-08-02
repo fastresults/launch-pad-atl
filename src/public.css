@@ -365,8 +365,8 @@
   color: var(--public-ink-muted);
 }
 
-@media (min-width: 40rem) {
-  .public-surface { --public-gutter: 1.5rem; }
+@media (min-width: 48rem) {
+  .public-surface { --public-margin: 12; }
   .public-surface h1 { font-size: 2.75rem; }
   .public-surface h2 { font-size: 2.125rem; }
   .public-surface .sl-hero__title { font-size: 2.25rem; }
@@ -374,12 +374,13 @@
   .public-surface .sl-prompt__ghost { font-size: 1.125rem; }
 }
 
-@media (min-width: 60rem) {
+@media (min-width: 64rem) {
   .public-surface {
-    --public-gutter: 2rem;
+    --public-margin: 20;
     --public-section-y: 5rem;
     --public-header-h: 3.25rem;
   }
+
 
   .public-surface :is(.sl-site-header__nav, .sl-site-header__actions) {
     display: flex;
