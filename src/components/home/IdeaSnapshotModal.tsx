@@ -28,6 +28,10 @@ type Props = {
  * start, this modal runs the `atlanta-viability` routine and shows a short,
  * grounded read on that startup in metro Atlanta — then invites them into the
  * next Foundation Workshop. The visitor never leaves the homepage.
+ *
+ * Layout is a fixed three-part frame: a pinned header, a single scroll region
+ * (the ONLY scroller), and a sticky action bar so the workshop CTA is on
+ * screen from first paint — including during loading and error states.
  */
 export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
   const [loading, setLoading] = useState(false);
@@ -66,18 +70,32 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
   }, [open, idea]);
 
   const label = snapshot?.idea_label || idea;
+  const registerTo = `/register?idea=${encodeURIComponent(idea)}`;
+  const close = () => onOpenChange(false);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="hero-modal max-h-[88vh] max-w-2xl overflow-y-auto rounded-3xl border-[rgba(244,246,255,0.14)] p-0 shadow-[0_60px_140px_-40px_rgba(0,0,0,0.9)]">
-        <div className="p-6 sm:p-8">
-          <div className="mb-6 flex items-center gap-2 text-xs uppercase tracking-[0.18em] hero-faint">
+      <DialogContent
+        className="hero-modal flex max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden rounded-3xl border-[rgba(244,246,255,0.14)] p-0 shadow-[0_60px_140px_-40px_rgba(0,0,0,0.9)] sm:max-h-[86vh]"
+      >
+        {/* Pinned header — context never scrolls away */}
+        <div className="shrink-0 border-b border-[rgba(244,246,255,0.10)] px-6 py-4 sm:px-8">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] hero-faint">
             <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
             Metro Atlanta read
           </div>
+          <p
+            className="mt-1 truncate pr-8 text-[15px] font-medium"
+            style={{ color: "var(--hero-fg)" }}
+          >
+            {label}
+          </p>
+        </div>
 
+        {/* The only scroll region */}
+        <div className="hero-modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-6 sm:px-8">
           {loading && (
-            <div className="py-10">
+            <div>
               <DialogTitle className="text-xl font-medium" style={{ color: "var(--hero-fg)" }}>
                 Reading the Atlanta market for “{idea}”…
               </DialogTitle>
@@ -85,11 +103,11 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
                 One moment — pulling together the signals that matter here.
               </DialogDescription>
               <div className="mt-8 space-y-3">
-                {[0, 1, 2, 3].map((i) => (
+                {[0, 1, 2, 3, 4, 5].map((i) => (
                   <div
                     key={i}
                     className="h-4 animate-pulse rounded-full bg-[rgba(244,246,255,0.09)]"
-                    style={{ width: `${92 - i * 12}%` }}
+                    style={{ width: `${92 - (i % 4) * 12}%` }}
                   />
                 ))}
               </div>
@@ -101,30 +119,27 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
           )}
 
           {!loading && error && (
-            <div className="py-8">
+            <div>
               <DialogTitle className="text-xl font-medium" style={{ color: "var(--hero-fg)" }}>
                 That didn't go through.
               </DialogTitle>
-              <DialogDescription className="mt-2 hero-faint">{error}</DialogDescription>
-              <button
-                type="button"
-                onClick={() => onOpenChange(false)}
-                className="hero-cta mt-6"
-              >
-                Close
-              </button>
+              <DialogDescription className="mt-2 hero-sub">{error}</DialogDescription>
+              <p className="mt-4 text-[15px] hero-sub">
+                It doesn't change the invitation below — bring the idea to the room on August 20 and
+                we'll build the first real pieces of it with you.
+              </p>
             </div>
           )}
 
           {!loading && !error && snapshot && snapshot.ok === false && (
-            <div className="py-8">
+            <div>
               <DialogTitle className="text-xl font-medium" style={{ color: "var(--hero-fg)" }}>
                 Tell us a little more.
               </DialogTitle>
-              <DialogDescription className="mt-2 hero-faint">
+              <DialogDescription className="mt-2 hero-sub">
                 {snapshot.message || "Describe the startup you'd like to start and we'll take another look."}
               </DialogDescription>
-              <button type="button" onClick={() => onOpenChange(false)} className="hero-cta mt-6">
+              <button type="button" onClick={close} className="hero-cta mt-6">
                 Try again
               </button>
             </div>
@@ -142,18 +157,9 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
                 An Atlanta market read for {label}
               </DialogDescription>
 
-              {snapshot.why_atlanta?.length ? (
-                <div className="mt-5 space-y-4">
-                  {snapshot.why_atlanta.map((para, i) => (
-                    <p key={i} className="hero-sub text-[15px] leading-relaxed">
-                      {para}
-                    </p>
-                  ))}
-                </div>
-              ) : null}
-
+              {/* Signals first — scannable proof before any prose */}
               {snapshot.signals?.length ? (
-                <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
                   {snapshot.signals.map((signal, i) => (
                     <div
                       key={i}
@@ -166,6 +172,24 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
                       <p className="mt-1 text-sm hero-faint">{signal.note}</p>
                     </div>
                   ))}
+                </div>
+              ) : null}
+
+              {/* Quiet mid-scroll prompt so the offer lands twice */}
+              <p className="mt-5 text-sm hero-faint">
+                This is the part we build with you on August 20.
+              </p>
+
+              {snapshot.why_atlanta?.length ? (
+                <div className="mt-8">
+                  <h3 className="text-sm uppercase tracking-[0.16em] hero-faint">Why Atlanta</h3>
+                  <div className="mt-3 space-y-4">
+                    {snapshot.why_atlanta.map((para, i) => (
+                      <p key={i} className="hero-sub text-[15px] leading-relaxed">
+                        {para}
+                      </p>
+                    ))}
+                  </div>
                 </div>
               ) : null}
 
@@ -197,27 +221,39 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
                 </div>
               ) : null}
 
+              {/* The full invitation, as the natural end of the read */}
               <div className="mt-9 rounded-3xl border border-[rgba(76,140,255,0.32)] bg-[rgba(76,140,255,0.08)] p-6">
                 <p className="text-lg font-medium" style={{ color: "var(--hero-fg)" }}>
-                  Build the first real pieces of {label} with us.
+                  Don't start it alone. Build the first real pieces of {label} with us.
                 </p>
                 <p className="mt-2 text-[15px] hero-sub">
                   One focused morning at the IGNITE Center at Greater Atlanta Christian School —
-                  Thursday, August 20, 2026. You leave with a live page, a priced offer, and your
-                  first outreach sent. $197.
+                  Thursday, August 20, 2026. You don't leave with notes. You leave with a live page
+                  people can visit, a priced offer, and your first outreach already sent.
+                </p>
+                <ul className="mt-4 space-y-2">
+                  {[
+                    "A live page for your startup, written and published with you",
+                    "A priced offer you can say out loud without flinching",
+                    "Your first real outreach sent before you go home",
+                  ].map((item) => (
+                    <li key={item} className="flex gap-3 text-[15px] hero-sub">
+                      <Check className="mt-1 h-4 w-4 shrink-0 hero-accent" aria-hidden="true" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 text-sm hero-faint">
+                  Seats are capped so everyone gets built with, not talked at. $197.
                 </p>
                 <div className="mt-5 flex flex-wrap items-center gap-3">
-                  <Link
-                    to={`/register?idea=${encodeURIComponent(idea)}`}
-                    onClick={() => onOpenChange(false)}
-                    className="hero-cta"
-                  >
+                  <Link to={registerTo} onClick={close} className="hero-cta">
                     Reserve my seat
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
                   <Link
                     to="/contact"
-                    onClick={() => onOpenChange(false)}
+                    onClick={close}
                     className="text-sm underline underline-offset-4 hero-faint"
                   >
                     Ask a question first
@@ -226,6 +262,24 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
               </div>
             </>
           )}
+        </div>
+
+        {/* Sticky action bar — on screen from first paint */}
+        <div className="shrink-0 border-t border-[rgba(244,246,255,0.12)] bg-[rgba(5,7,15,0.92)] px-6 py-4 sm:px-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm hero-sub">
+              <span style={{ color: "var(--hero-fg)" }}>Thursday, Aug 20</span>
+              <span className="hero-faint"> · IGNITE Center · $197</span>
+            </p>
+            <Link
+              to={registerTo}
+              onClick={close}
+              className="hero-cta w-full justify-center sm:w-auto"
+            >
+              Reserve my seat
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
