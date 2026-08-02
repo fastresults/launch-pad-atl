@@ -1,0 +1,1 @@
+import{N as t}from"./index-CluB01BT.js";import{b as a}from"./cohorts-y0MFqCAP.js";async function e(){const{data:r,error:o}=await t.from("cohorts").select("*").order("sort_order",{ascending:!0});return o||!r?[]:r.map(a)}async function u(r){return null}async function c(r){return null}export{c as d,e as l,u};
