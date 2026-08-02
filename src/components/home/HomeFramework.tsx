@@ -48,6 +48,7 @@ export function HomeFramework() {
     <div className="marketing-surface min-h-screen">
       <SiteHeader />
       <Hero />
+      <HeroCopy />
       <VideoTestimonials />
       <Framework />
       {showScroller && <HomeBusinessIdeasScroller />}
@@ -61,7 +62,21 @@ export function HomeFramework() {
   );
 }
 
+/** Intentionally empty hero band — quiet cream space above the copy section. */
 function Hero() {
+  return (
+    <section
+      aria-hidden="true"
+      className="relative isolate h-[240px] overflow-hidden border-b border-[#E4D9C4] md:h-[320px]"
+      style={{
+        backgroundImage:
+          "radial-gradient(ellipse at 88% 22%, rgba(201,185,154,0.20), transparent 60%)",
+      }}
+    />
+  );
+}
+
+function HeroCopy() {
   const EVENT = useEvent();
   const [modesOpen, setModesOpen] = useState(false);
   const reduceMotion = useReducedMotion();
