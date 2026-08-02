@@ -77,7 +77,7 @@ export function SiteHeader() {
         <div className="flex-1" />
 
         {/* Right edge: orientation nav + auth + CTA */}
-        <div className="hidden items-center gap-4 text-sm text-muted-foreground md:flex lg:gap-7">
+        <div className="hidden items-center gap-4 text-sm text-muted-foreground md:flex md:gap-5 xl:gap-7">
           {rightNav.map((n) => (
             <NavLink
               key={n.to}
