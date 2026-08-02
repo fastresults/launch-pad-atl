@@ -1,31 +1,26 @@
-## Goal
+## What's actually wrong (verified, not guessed)
 
-Grow the cinematic hero rotation from 21 to **31 scenes** by pulling 10 more concepts straight from the live business-ideas dataset (`src/lib/business-ideas.ts`), so the typed phrase, the "Now building:" label, and the background photo all stay in sync.
+I reproduced your screenshot exactly. The Lovable desktop preview frame renders the page at roughly **1000 CSS pixels wide**, not 1512. I rendered the homepage at 1512px, 1280px, 1140px, 1024px and 1000px — the 1000px capture is pixel-for-pixel your screenshot (same collapsed nav: no "schedule", no "facilitator", CTA reading "Reserve — $297"; same oversized glass card).
 
-## The 10 concepts (picked from the system data, no overlap with the existing 21)
+Two things stack up at that width:
 
-| id | Typed phrase | Label |
-|---|---|---|
-| `petgrooming` | I want to start a mobile pet grooming van | Mobile pet grooming |
-| `junkhauling` | I want to start a junk hauling business | Junk hauling |
-| `pressurewashing` | I want to start a pressure washing company | Pressure washing |
-| `ghostkitchen` | I want to launch a ghost kitchen brand | Ghost kitchen |
-| `notary` | I want to become a mobile notary and loan signing agent | Mobile notary |
-| `pickleball` | I want to teach pickleball clinics | Pickleball clinics |
-| `holidaylights` | I want to start a Christmas light install business | Holiday light install |
-| `organizing` | I want to start a home organization service | Home organizing |
-| `vending` | I want to run a vending machine route | Vending route |
-| `handyman` | I want to build a two-truck handyman crew | Handyman crew |
+1. **Desktop composition is still gated behind Tailwind's `lg` (1024px)** in the places that matter most. The earlier fix moved a lot of layout from `lg` to `md`, but the header still hides `schedule`/`facilitator` at `hidden lg:inline-flex`, swaps to the short CTA at `lg:hidden`, and `HomeFramework` / `LandingFramework` / `services` / `build` still each carry ~16 `lg:`-only layout switches. At 1000px the page falls one pixel-class short of desktop and serves the tablet arrangement.
 
-These span service, main-street, food, side-hustle and family-run categories, matching the mix already in the rotation.
+2. **The hero doesn't scale — it stretches.** `IdeaPrompt` uses a fixed `min-h-[240px]` card with `max-w-[1100px]`, and the H1 is capped at 48px. At 1000px the card is 952px wide but still 240px tall with the input pinned to the top and the CTA pinned to the bottom, so you get a huge empty glass slab — that's the "mobile UI blown up" feel. The H1 also stops growing, so the type/card proportion is wrong at every width above ~900px.
 
-## Work
+## The fix
 
-1. **Generate 10 new scene photos** into `src/assets/scenes/` at 1536×1024, matched to the existing look: real Atlanta-feeling operators mid-work, cinematic natural light, shallow depth of field, no text or logos, no obviously synthetic faces. Same naming convention (`scene-petgrooming.jpg`, etc.).
-2. **Tone-normalize** each new image to the 65–80 mean-luma target established in the brightness pass, so no new scene reads darker or brighter than the rest of the rotation.
-3. **Register them in `src/lib/founder-scenes.ts`** — add the imports and 10 new `FounderScene` entries with `phrase`, `label`, `alt`. The shuffle (`shuffleScenesForVisit`) and typing cycle pick them up automatically; no component changes needed.
-4. **Verify** with Playwright: cycle the hero through several rotations and confirm the new scenes render, labels are legible against them, and there's no layout shift or flash from the added images.
+**A. Move the desktop threshold down to `md` (768px) for public-site composition**
+- `Header.tsx`: reveal `schedule` and `facilitator` at `md` instead of `lg`; switch the full CTA label at `md`; move the `lg:gap-7` rhythm to `md:gap-6 xl:gap-7`.
+- `HomeFramework.tsx`, `LandingFramework.tsx`, `services.tsx`, `build.tsx`: audit each `lg:` grid/flex/spacing variant and re-key the ones that control *composition* (column counts, side-by-side vs stacked, section padding) to `md`, keeping `lg`/`xl` only for genuine wide-screen refinements. Leave dashboard/admin routes alone — they aren't part of this complaint.
 
-## Note on loading
+**B. Make the hero fluid instead of fixed**
+- `IdeaPrompt.tsx`: replace `min-h-[240px]` with a proportional height (`clamp`-based, roughly 200px → 260px) and center the input vertically inside the card rather than top-pinning it, so the card never reads as empty space.
+- `CinematicHero.tsx` / `styles.css`: give the H1 a `clamp()` size so it grows continuously from ~2rem to ~4rem instead of stepping and stopping at 48px, and tie the card's max width to the same container as the headline so they stay visually locked.
 
-All hero scenes except the first are `loading="lazy"`, so going from 21 to 31 doesn't change the initial page weight — only the first frame is eager.
+**C. Verify across the real range**
+Re-capture the homepage at 1000, 1140, 1280, 1512 and 1920 CSS px with Playwright and confirm all five read as one desktop design, with 1000px specifically matching the intended composition rather than the tablet fallback.
+
+## Technical note
+
+Tailwind's default `lg` is 1024px. Any preview or browser window narrower than that gets the tablet branch — so "desktop" must be defined as `md` (768px) for this site's public pages, with `lg`/`xl` reserved for extra breathing room, not for turning desktop on.
