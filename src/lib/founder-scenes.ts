@@ -13,6 +13,12 @@ import sceneMedspa from "@/assets/scenes/scene-medspa.jpg";
 import sceneDetailing from "@/assets/scenes/scene-detailing.jpg";
 import sceneBoutique from "@/assets/scenes/scene-boutique.jpg";
 import sceneRealEstate from "@/assets/scenes/scene-realestate.jpg";
+import sceneAutoAuction from "@/assets/scenes/scene-autoauction.jpg";
+import sceneDaycare from "@/assets/scenes/scene-daycare.jpg";
+import sceneSeniorCare from "@/assets/scenes/scene-seniorcare.jpg";
+import sceneHomeHealth from "@/assets/scenes/scene-homehealth.jpg";
+import sceneTrucking from "@/assets/scenes/scene-trucking.jpg";
+import sceneFoodTruck from "@/assets/scenes/scene-foodtruck.jpg";
 
 export type FounderScene = {
   id: string;
