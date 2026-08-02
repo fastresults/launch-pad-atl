@@ -1,32 +1,45 @@
-# Atlanta Viability Snapshot — AI routine on the hero
+## Problem
 
-When someone types "I want to open a daycare" and hits **Start For Free**, they stay on the homepage. A modal opens and an AI routine writes a short, confidence-building profile of that startup in Atlanta, then invites them into the next workshop.
+The Atlanta snapshot modal renders as one long scrolling block: the whole dialog (header, body, invite) shares a single `overflow-y-auto` container, so there's no fixed frame, no scroll affordance, and the workshop invitation only exists at the very bottom — most visitors never reach it. The AI also returns a lot of prose up top (3 paragraphs before any structure), which pushes the offer further down.
 
-## What the visitor sees
+## What to change
 
-1. Submits the idea in the hero glass card (no navigation away).
-2. Modal opens instantly with a skeleton state: "Reading the Atlanta market for *pet grooming van*…"
-3. Content streams/loads in, scrollable inside the modal:
-   - **Headline verdict** — one line, e.g. "Mobile pet grooming works in Atlanta — here's why."
-   - **Why it works here** — 2–3 short paragraphs tied to Atlanta specifics (population growth, suburban sprawl, commute patterns, small-business density, relevant metro dynamics).
-   - **Signal cards** — 4 compact stat/fact tiles (market signal, who buys, typical starting price range, realistic first-90-days revenue shape). Each written plainly, no invented precision.
-   - **What it takes to start** — 3–5 concrete first moves (license/permit reality, first offer, first 10 customers).
-   - **Watch-outs** — 2–3 honest risks, so it reads credible instead of hype.
-   - **Invite block** (pinned visually at the end) — next Foundation Workshop, Thursday August 20, 2026, IGNITE Center at Greater Atlanta Christian School, $197 — with **Reserve my seat** (→ `/register?idea=…`) and a secondary "Email me this snapshot" option.
-4. Close returns them to the hero, idea preserved.
+### 1. Modal shell: fixed frame, one scroll region
 
-Tone: the same plainspoken, founder-to-founder voice as the rest of the site. Never promises income. Uses "startup," "assets," and the done-with-you framing per existing copy standards.
+Rebuild `src/components/home/IdeaSnapshotModal.tsx` as three stacked areas inside a height-capped flex column:
 
-## AI behavior and honesty guardrails
+```text
+┌─ header (fixed) ────────────────┐  Metro Atlanta read · idea label · close
+├─ body (the only scroller) ──────┤  verdict → why → signals → first moves → watch-outs
+│                                 │  (top/bottom fade masks signal more content)
+└─ footer (sticky, always shown) ─┘  Aug 20 · $197 · [Reserve my seat →]
+```
 
-- The model is told to ground claims in general, durable Atlanta metro characteristics and to phrase numbers as ranges or directional signals, never fabricated citations or fake percentages with sources.
-- If the entered text isn't a startup idea (gibberish, off-topic), it returns a friendly "tell us a bit more" state instead of inventing a market.
-- Off-limits: legal/tax/financial advice, guaranteed outcomes, invented studies.
+- `DialogContent` becomes `flex max-h-[86vh] flex-col overflow-hidden`; only the middle `<div>` gets `overflow-y-auto overscroll-contain`.
+- Header stays visible while scrolling and carries the idea label so context never scrolls away.
+- Footer is a sticky action bar with the primary CTA — visible from the first paint, including while the snapshot is still loading (disabled/soft state until content lands).
+- Add subtle top/bottom gradient fade on the scroll area so it reads as scrollable.
+- Mobile: full-width sheet, `max-h-[92vh]`, footer CTA full-width and thumb-reachable.
 
-## Technical details
+### 2. A real invitation, not a footnote
 
-- **New edge function** `atlanta-viability` (public, no auth, CORS like `venture-chatbot`), calling the Lovable AI Gateway via the shared `aiFetch` helper with `openai/gpt-5.6-sol` and `reasoning_effort: "none"`. Structured JSON output (verdict, why_atlanta, signals[], first_moves[], watch_outs[]) so the modal can render real cards instead of a wall of markdown. Input validated and length-capped; rate-limit/credit errors (429/402) surfaced as a readable message with a retry.
-- **New component** `src/components/home/IdeaSnapshotModal.tsx` — shadcn `Dialog`, max-height with internal scroll, skeleton → content → error states, mobile-safe.
-- **`src/components/home/IdeaPrompt.tsx`** — submit opens the modal and fires the request instead of `navigate("/register?idea=…")`. The register hand-off moves to the modal's CTA.
-- Optional email capture reuses the existing inquiries path (`submitInquiry`) so leads land where the others do; no new table needed.
-- Requests are not persisted (no PII), matching the existing public chatbot's posture.
+- **Sticky bar (always visible):** "Thursday, Aug 20 · IGNITE Center · $197" + **Reserve my seat →**.
+- **Inline invite card (end of scroll):** keeps the fuller pitch but rewritten so it lands as the natural conclusion of the read — name the three artifacts they walk out with (live page, priced offer, first outreach sent), the seat scarcity, and the secondary "Ask a question first" link.
+- **Mid-scroll soft prompt:** one quiet line after the signals grid — "This is the part we build with you on Aug 20." — so the offer appears before the fold twice, not once.
+- CTA carries the typed idea through to `/register?idea=…` (already wired) so the registration page opens pre-filled.
+
+### 3. Make the read scannable
+
+- Show the verdict, then the 4 signal cards **immediately** (currently 2-3 prose paragraphs sit between them), then the prose under a "Why Atlanta" heading, then first moves and watch-outs.
+- Tighten the AI prompt in `supabase/functions/atlanta-viability/index.ts`: cap `why_atlanta` at 2 paragraphs of 2 sentences, `first_moves` at 4, `watch_outs` at 3. Shorter body = the CTA is reachable in one or two scrolls.
+
+### 4. Loading and error states in the same frame
+
+- Skeleton renders inside the body region with the header and CTA footer already in place, so the modal never "jumps" in height when content arrives.
+- Error and "tell us more" states keep the workshop footer — a failed AI read should still convert.
+
+## Technical notes
+
+- Files touched: `src/components/home/IdeaSnapshotModal.tsx` (restructure), `supabase/functions/atlanta-viability/index.ts` (prompt length caps only), `src/styles.css` (scroll-fade + sticky footer utility under the existing `.hero-modal` block).
+- The workshop date/price stay as they are today ($197, Thursday Aug 20 2026, IGNITE Center) — no data-model change.
+- Verify with Playwright at desktop and mobile widths: CTA visible without scrolling, body scrolls independently, header/footer pinned, loading and error states keep the CTA.
