@@ -909,3 +909,63 @@
   border-radius: 999px;
 }
 .hero-modal-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* Hard height cap on the snapshot modal frame so the sticky action bar can
+ * never be pushed off screen, no matter how long the AI read runs. */
+.hero-modal-frame {
+  height: min(86vh, 760px);
+  max-height: min(86vh, 760px);
+}
+@media (max-width: 640px) {
+  .hero-modal-frame {
+    height: 92vh;
+    max-height: 92vh;
+  }
+}
+
+/* Streaming affordances */
+.hero-skel {
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(244, 246, 255, 0.06) 0%,
+    rgba(244, 246, 255, 0.14) 50%,
+    rgba(244, 246, 255, 0.06) 100%
+  );
+  background-size: 200% 100%;
+  animation: hero-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes hero-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.hero-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--hero-accent);
+  animation: hero-pulse 1.1s ease-in-out infinite;
+}
+@keyframes hero-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+.hero-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 999px;
+  border: 1px solid rgba(76, 140, 255, 0.45);
+  background: rgba(76, 140, 255, 0.12);
+  color: #4C8CFF;
+  font-size: 12px;
+  line-height: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-skel, .hero-dot { animation: none; }
+}
