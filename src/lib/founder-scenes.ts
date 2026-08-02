@@ -134,7 +134,50 @@ export const founderScenes: FounderScene[] = [
     image: sceneRealEstate,
     alt: "Real estate brokerage founder in a modern listing at twilight",
   },
+  {
+    id: "autoauction",
+    phrase: "I want to be an auto auction consultant",
+    label: "Auto auction consulting",
+    image: sceneAutoAuction,
+    alt: "Auto auction consultant walking the lot at dusk with a clipboard",
+  },
+  {
+    id: "daycare",
+    phrase: "I want to open a daycare",
+    label: "Daycare",
+    image: sceneDaycare,
+    alt: "Daycare owner setting up her classroom before the children arrive",
+  },
+  {
+    id: "seniorcare",
+    phrase: "I want to start a senior aging consultancy",
+    label: "Senior care consulting",
+    image: sceneSeniorCare,
+    alt: "Senior care consultant reviewing options with an older client at his kitchen table",
+  },
+  {
+    id: "homehealth",
+    phrase: "I want to start a home health care agency",
+    label: "Home health agency",
+    image: sceneHomeHealth,
+    alt: "Home health agency founder and a caregiver in a client's living room",
+  },
+  {
+    id: "trucking",
+    phrase: "I want to start a trucking company",
+    label: "Trucking company",
+    image: sceneTrucking,
+    alt: "Trucking company founder beside his first rig at the depot at blue hour",
+  },
+  {
+    id: "foodtruck",
+    phrase: "I want to launch a food truck",
+    label: "Food truck",
+    image: sceneFoodTruck,
+    alt: "Food truck owner leaning out the service window on a busy night",
+  },
 ];
+
 
 const LAST_FIRST_SCENE_KEY = "hero-last-first-scene";
 
