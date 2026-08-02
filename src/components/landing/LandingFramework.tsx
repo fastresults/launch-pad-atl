@@ -119,7 +119,7 @@ function Hero() {
               In person in Atlanta · Atlanta&rsquo;s strongest startup foundation
             </p>
 
-            <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[4.3rem]">
+            <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[3.1rem] lg:text-[4.3rem]">
               Pull up a chair.
               <br />
               Let&rsquo;s start your business{" "}
