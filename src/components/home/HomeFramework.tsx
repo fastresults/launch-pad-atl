@@ -83,7 +83,7 @@ function HeroCopy() {
           "radial-gradient(ellipse at 88% 18%, oklch(0.5 0.13 272 / 26%), transparent 62%)",
       }}
     >
-      <div className="mx-auto max-w-6xl px-6 py-10 md:py-12">
+      <div className="mx-auto max-w-7xl px-6 py-10 md:py-12">
         {/* Magazine masthead */}
         <div className="mb-8 flex flex-col gap-2 border-b border-[#C9B99A] pb-4 md:flex-row md:items-end md:justify-between">
           <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
