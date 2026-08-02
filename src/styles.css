@@ -8,7 +8,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Desktop composition must switch on before 1024px — embedded previews and
+     smaller laptop windows render around 960–1000 CSS px and were falling into
+     the tablet branch. */
+  --breakpoint-lg: 60rem; /* 960px */
   --radius-sm: calc(var(--radius) - 4px);
+
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
