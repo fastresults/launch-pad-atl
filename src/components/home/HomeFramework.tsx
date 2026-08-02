@@ -83,7 +83,7 @@ function HeroCopy() {
           "radial-gradient(ellipse at 88% 18%, oklch(0.5 0.13 272 / 26%), transparent 62%)",
       }}
     >
-      <div className="mx-auto max-w-6xl px-6 py-10 md:py-12">
+      <div className="mx-auto max-w-7xl px-6 py-10 md:py-12">
         {/* Magazine masthead */}
         <div className="mb-8 flex flex-col gap-2 border-b border-[#C9B99A] pb-4 md:flex-row md:items-end md:justify-between">
           <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
@@ -95,15 +95,16 @@ function HeroCopy() {
         </div>
 
         {/* Hero — 7/5 editorial grid, shared bottom baseline */}
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-10 lg:gap-14">
           {/* LEFT COLUMN — kicker, headline, deck, pull quote, designed-for */}
-          <div className="flex flex-col lg:col-span-8">
+          <div className="flex flex-col md:col-span-7 lg:col-span-8">
             <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
               <Star className="size-3.5 fill-current" />
               Atlanta&rsquo;s strongest startup foundation · IGNITE Center
             </p>
 
-            <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[4.3rem]">
+            <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[3.1rem] lg:text-[4.3rem]">
+
               Pull up a chair.
               <br />
               Let&rsquo;s start your business{" "}
@@ -146,7 +147,7 @@ function HeroCopy() {
           </div>
 
           {/* RIGHT COLUMN — one composed object: cameo cup + price card */}
-          <div className="flex flex-col lg:col-span-4">
+          <div className="flex flex-col md:col-span-5 lg:col-span-4">
             {/* Cameo — cup grounded in a soft cream vignette */}
             <div
               className="relative mx-auto flex w-full max-w-[380px] items-end justify-center"

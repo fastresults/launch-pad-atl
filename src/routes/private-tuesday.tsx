@@ -139,9 +139,9 @@ export default function PrivateTuesdayPage() {
         {/* Booking */}
         <section className="py-16">
           <div className="mx-auto max-w-6xl px-6">
-            <div className="grid gap-8 lg:grid-cols-5">
+            <div className="grid gap-8 md:grid-cols-5">
               {/* Slot picker */}
-              <div className="lg:col-span-3">
+              <div className="md:col-span-3">
                 <h2 className="font-serif text-2xl text-[#2A1F17] md:text-3xl">Pick your Tuesday.</h2>
                 <p className="mt-2 text-sm text-[#5A4A3A]">
                   Times we still have open in the next {settings?.weeks_ahead ?? 8} weeks. Pick one and fill
@@ -205,7 +205,7 @@ export default function PrivateTuesdayPage() {
               </div>
 
               {/* Form */}
-              <div className="lg:col-span-2">
+              <div className="md:col-span-2">
                 <form
                   onSubmit={handleSubmit}
                   className="sticky top-24 rounded-lg border border-[#E4D9C4] bg-[#F5F0E5] p-6"
