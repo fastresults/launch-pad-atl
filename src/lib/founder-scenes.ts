@@ -19,6 +19,16 @@ import sceneSeniorCare from "@/assets/scenes/scene-seniorcare.jpg";
 import sceneHomeHealth from "@/assets/scenes/scene-homehealth.jpg";
 import sceneTrucking from "@/assets/scenes/scene-trucking.jpg";
 import sceneFoodTruck from "@/assets/scenes/scene-foodtruck.jpg";
+import scenePetGrooming from "@/assets/scenes/scene-petgrooming.jpg";
+import sceneJunkHauling from "@/assets/scenes/scene-junkhauling.jpg";
+import scenePressureWashing from "@/assets/scenes/scene-pressurewashing.jpg";
+import sceneGhostKitchen from "@/assets/scenes/scene-ghostkitchen.jpg";
+import sceneNotary from "@/assets/scenes/scene-notary.jpg";
+import scenePickleball from "@/assets/scenes/scene-pickleball.jpg";
+import sceneHolidayLights from "@/assets/scenes/scene-holidaylights.jpg";
+import sceneOrganizing from "@/assets/scenes/scene-organizing.jpg";
+import sceneVending from "@/assets/scenes/scene-vending.jpg";
+import sceneHandyman from "@/assets/scenes/scene-handyman.jpg";
 
 export type FounderScene = {
   id: string;
@@ -175,6 +185,76 @@ export const founderScenes: FounderScene[] = [
     label: "Food truck",
     image: sceneFoodTruck,
     alt: "Food truck owner leaning out the service window on a busy night",
+  },
+  {
+    id: "petgrooming",
+    phrase: "I want to start a mobile pet grooming van",
+    label: "Mobile pet grooming",
+    image: scenePetGrooming,
+    alt: "Mobile pet groomer working with a dog inside her van in a suburban driveway",
+  },
+  {
+    id: "junkhauling",
+    phrase: "I want to start a junk hauling business",
+    label: "Junk hauling",
+    image: sceneJunkHauling,
+    alt: "Junk hauling crew loading old furniture into a dump trailer",
+  },
+  {
+    id: "pressurewashing",
+    phrase: "I want to start a pressure washing company",
+    label: "Pressure washing",
+    image: scenePressureWashing,
+    alt: "Pressure washing contractor cleaning a commercial walkway in morning light",
+  },
+  {
+    id: "ghostkitchen",
+    phrase: "I want to launch a ghost kitchen brand",
+    label: "Ghost kitchen",
+    image: sceneGhostKitchen,
+    alt: "Founder plating delivery orders in a small shared ghost kitchen",
+  },
+  {
+    id: "notary",
+    phrase: "I want to become a mobile notary and loan signing agent",
+    label: "Mobile notary",
+    image: sceneNotary,
+    alt: "Mobile notary walking a couple through closing paperwork at their kitchen table",
+  },
+  {
+    id: "pickleball",
+    phrase: "I want to teach pickleball clinics",
+    label: "Pickleball clinics",
+    image: scenePickleball,
+    alt: "Pickleball coach running a beginner clinic on an outdoor court",
+  },
+  {
+    id: "holidaylights",
+    phrase: "I want to start a Christmas light install business",
+    label: "Holiday light install",
+    image: sceneHolidayLights,
+    alt: "Installer hanging warm holiday lights along a roofline at dusk",
+  },
+  {
+    id: "organizing",
+    phrase: "I want to start a home organization service",
+    label: "Home organizing",
+    image: sceneOrganizing,
+    alt: "Professional organizer arranging baskets and linens in a bright pantry",
+  },
+  {
+    id: "vending",
+    phrase: "I want to run a vending machine route",
+    label: "Vending route",
+    image: sceneVending,
+    alt: "Vending route operator restocking a machine in an office lobby",
+  },
+  {
+    id: "handyman",
+    phrase: "I want to build a two-truck handyman crew",
+    label: "Handyman crew",
+    image: sceneHandyman,
+    alt: "Two handyman crew members reviewing the day's job list between work trucks",
   },
 ];
 
