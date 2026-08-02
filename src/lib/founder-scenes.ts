@@ -19,6 +19,16 @@ import sceneSeniorCare from "@/assets/scenes/scene-seniorcare.jpg";
 import sceneHomeHealth from "@/assets/scenes/scene-homehealth.jpg";
 import sceneTrucking from "@/assets/scenes/scene-trucking.jpg";
 import sceneFoodTruck from "@/assets/scenes/scene-foodtruck.jpg";
+import scenePetGrooming from "@/assets/scenes/scene-petgrooming.jpg";
+import sceneJunkHauling from "@/assets/scenes/scene-junkhauling.jpg";
+import scenePressureWashing from "@/assets/scenes/scene-pressurewashing.jpg";
+import sceneGhostKitchen from "@/assets/scenes/scene-ghostkitchen.jpg";
+import sceneNotary from "@/assets/scenes/scene-notary.jpg";
+import scenePickleball from "@/assets/scenes/scene-pickleball.jpg";
+import sceneHolidayLights from "@/assets/scenes/scene-holidaylights.jpg";
+import sceneOrganizing from "@/assets/scenes/scene-organizing.jpg";
+import sceneVending from "@/assets/scenes/scene-vending.jpg";
+import sceneHandyman from "@/assets/scenes/scene-handyman.jpg";
 
 export type FounderScene = {
   id: string;
