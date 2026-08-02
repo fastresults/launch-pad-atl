@@ -95,15 +95,16 @@ function HeroCopy() {
         </div>
 
         {/* Hero — 7/5 editorial grid, shared bottom baseline */}
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-10 lg:gap-14">
           {/* LEFT COLUMN — kicker, headline, deck, pull quote, designed-for */}
-          <div className="flex flex-col lg:col-span-8">
+          <div className="flex flex-col md:col-span-7 lg:col-span-8">
             <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355] md:text-sm">
               <Star className="size-3.5 fill-current" />
               Atlanta&rsquo;s strongest startup foundation · IGNITE Center
             </p>
 
-            <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[4.3rem]">
+            <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[3.1rem] lg:text-[4.3rem]">
+
               Pull up a chair.
               <br />
               Let&rsquo;s start your business{" "}
