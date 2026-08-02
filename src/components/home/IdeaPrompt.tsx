@@ -32,8 +32,9 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
   };
 
   return (
-    <form onSubmit={submit} className="mx-auto w-full max-w-[1100px]">
+    <form onSubmit={submit} className="mx-auto w-full max-w-[940px]">
       <div className="hero-glass flex flex-col justify-between rounded-3xl p-6 text-left sm:p-8">
+
         <div className="relative flex min-w-0 flex-1 items-center">
           {value.length === 0 && (
             <div
