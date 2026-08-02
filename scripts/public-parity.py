@@ -51,6 +51,16 @@ async def measure(page, base, route):
           const main = document.querySelector('main');
           const prompt = document.querySelector('.sl-prompt__panel');
           const sectionHeading = document.querySelector('main section:not(.sl-hero) h2');
+          const shell = document.querySelector('.public-surface');
+          const shellZoom = shell ? parseFloat(getComputedStyle(shell).zoom || '1') : 1;
+          const hero = document.querySelector('.sl-hero');
+          const insetSections = [...document.querySelectorAll('.public-surface section:not(.sl-hero)')]
+            .slice(0, 4)
+            .map(node => {
+              const box = node.getBoundingClientRect();
+              const pad = parseFloat(getComputedStyle(node).paddingLeft) * shellZoom;
+              return {left: box.left, width: box.width, padVisual: pad, padShare: pad / innerWidth};
+            });
           return {
             url: location.href,
             release: document.documentElement.dataset.appRelease,
@@ -61,6 +71,10 @@ async def measure(page, base, route):
             root: {fontSize: root.fontSize, zoom: root.zoom, transform: root.transform},
             body: {fontSize: body.fontSize, zoom: body.zoom, transform: body.transform},
             fonts: {status: document.fonts.status, body: body.fontFamily},
+            shellZoom,
+            heroBleed: hero ? {left: hero.getBoundingClientRect().left, width: hero.getBoundingClientRect().width} : null,
+            insetSections,
+            scrollWidth: document.documentElement.scrollWidth,
             assets: {
               css: [...document.querySelectorAll('link[rel="stylesheet"]')].map(node => node.href.split('/').pop()),
               js: [...document.querySelectorAll('script[src]')].map(node => node.src.split('/').pop()),
@@ -69,6 +83,7 @@ async def measure(page, base, route):
             header: inspect(header), h1: inspect(h1), main: inspect(main),
             prompt: inspect(prompt), sectionHeading: inspect(sectionHeading),
             h1FontSize: h1 ? getComputedStyle(h1).fontSize : null,
+            h1EffectiveFontSize: h1 ? parseFloat(getComputedStyle(h1).fontSize) * shellZoom : null,
             h1LineHeight: h1 ? getComputedStyle(h1).lineHeight : null,
             h1ViewportShare: h1 ? h1.getBoundingClientRect().width / innerWidth : null,
             firstViewportDensity: main ? Math.min(main.getBoundingClientRect().height, innerHeight) / innerHeight : null,
@@ -120,14 +135,26 @@ async def main():
                     for surface in ("root", "body"):
                         if values[surface]["zoom"] != "1" or values[surface]["transform"] != "none":
                             failures.append(f"{case}: {label} {surface} is scaled")
-                    h1_size = float(values["h1FontSize"].replace("px", "")) if values["h1FontSize"] else 0
-                    # Compact desktop tier (1024-1279 CSS px) is what a scaled
-                    # 1400-class display actually reports; it gets a hard cap.
-                    cap = 34 if width < 1280 else 56
+                    if abs(values["shellZoom"] - 0.75) > 0.001:
+                        failures.append(f"{case}: {label} public shell zoom is {values['shellZoom']} (expected 0.75)")
+                    h1_size = values["h1EffectiveFontSize"] or 0
+                    # Rendered (post-downscale) size caps.
+                    cap = 28 if width < 768 else (36 if width < 1280 else 42)
                     if h1_size > cap:
-                        failures.append(f"{case}: {label} h1 is {h1_size:g}px (cap {cap}px)")
-                    if values["h1"] and values["h1"]["rect"]["width"] > width * 0.82:
-                        failures.append(f"{case}: {label} h1 occupies too much viewport width")
+                        failures.append(f"{case}: {label} h1 renders at {h1_size:.1f}px (cap {cap}px)")
+                    # Hero must be full bleed, edge to edge.
+                    hero = values["heroBleed"]
+                    if hero and (abs(hero["left"]) > 1 or abs(hero["width"] - width) > 2):
+                        failures.append(f"{case}: {label} hero is not full bleed ({hero})")
+                    # Every other section carries the required side margin.
+                    expected = 0.20 if width >= 1024 else (0.12 if width >= 768 else 0.08)
+                    for index, section in enumerate(values["insetSections"]):
+                        if abs(section["padShare"] - expected) > 0.005:
+                            failures.append(
+                                f"{case}: {label} section {index} margin is {section['padShare']:.3f} (expected {expected})"
+                            )
+                    if values["scrollWidth"] > width + 1:
+                        failures.append(f"{case}: {label} page overflows horizontally")
                     if values["main"] and width >= 1024 and values["main"]["rect"]["width"] > width:
                         failures.append(f"{case}: {label} main overflows the viewport")
 

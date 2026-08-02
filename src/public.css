@@ -15,13 +15,21 @@
   --public-accent: oklch(0.7 0.15 255);
   --public-accent-strong: oklch(0.64 0.18 258);
   --public-line: oklch(0.82 0.03 260 / 14%);
-  --public-gutter: 1rem;
+
+  /* Single deterministic downscale switch for the whole public shell. */
+  --public-zoom: 0.75;
+  /* Side margin for every non-hero section, expressed against the real
+   * viewport and corrected for the zoom factor above. */
+  --public-margin: 8;
+  --public-gutter: calc((var(--public-margin) * 1vw) / var(--public-zoom));
+
   --public-section-y: 4rem;
   --public-content: 70rem;
   --public-reading: 46rem;
   --public-header-h: 3.5rem;
 
-  min-height: 100vh;
+  zoom: var(--public-zoom);
+  min-height: calc(100vh / var(--public-zoom));
   overflow-x: clip;
   background: var(--public-canvas);
   color: var(--public-ink);
@@ -31,6 +39,22 @@
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
+
+/* ---- Layout law: hero is full bleed, everything else is inset 20% ---- */
+
+.public-surface :is(section, footer):not(.sl-hero) {
+  padding-inline: var(--public-gutter);
+}
+
+.public-surface :is(section, footer):not(.sl-hero) [class*="max-w-"][class*="mx-auto"] {
+  max-width: 100%;
+  padding-inline: 0;
+}
+
+.public-surface :is(section, footer):not(.sl-hero) > [class*="px-"] {
+  padding-inline: 0;
+}
+
 
 .public-surface :is(h1, h2, h3, h4) {
   color: var(--public-ink);
@@ -113,7 +137,7 @@
   width: 100%;
   height: 100%;
   gap: 1rem;
-  padding-inline: var(--public-gutter);
+  padding-inline: 1.5rem;
 }
 
 .public-surface .sl-site-header__left {
@@ -140,15 +164,16 @@
   gap: 0.375rem;
 }
 
-/* Cinematic hero: fixed typographic steps and bounded, proportional width. */
+/* Cinematic hero: full bleed left and right, exactly one screen tall. */
 .public-surface .sl-hero {
   position: relative;
   isolation: isolate;
   display: grid;
-  min-height: calc(100svh - var(--public-header-h));
+  width: 100%;
+  min-height: calc((100svh / var(--public-zoom)) - var(--public-header-h));
   overflow: hidden;
   place-items: center;
-  padding: 2rem var(--public-gutter) 3rem;
+  padding: 2rem 1.5rem 3rem;
   background: var(--public-canvas);
   color: var(--public-ink);
 }
@@ -340,8 +365,8 @@
   color: var(--public-ink-muted);
 }
 
-@media (min-width: 40rem) {
-  .public-surface { --public-gutter: 1.5rem; }
+@media (min-width: 48rem) {
+  .public-surface { --public-margin: 12; }
   .public-surface h1 { font-size: 2.75rem; }
   .public-surface h2 { font-size: 2.125rem; }
   .public-surface .sl-hero__title { font-size: 2.25rem; }
@@ -349,12 +374,13 @@
   .public-surface .sl-prompt__ghost { font-size: 1.125rem; }
 }
 
-@media (min-width: 60rem) {
+@media (min-width: 64rem) {
   .public-surface {
-    --public-gutter: 2rem;
+    --public-margin: 20;
     --public-section-y: 5rem;
     --public-header-h: 3.25rem;
   }
+
 
   .public-surface :is(.sl-site-header__nav, .sl-site-header__actions) {
     display: flex;
