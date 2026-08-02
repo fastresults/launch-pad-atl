@@ -1,38 +1,41 @@
-## What I actually measured (not a guess)
+# Published-Site Parity Recovery
 
-I measured the hero on both the local preview and the live site at your screen size. Both serve **identical, on-spec numbers**: 52px header, 42px title, 800×152 prompt, no zoom, no transforms. So the CSS "fix" is deployed and working.
+## Confirmed diagnosis
 
-But that's exactly the bug. Here's the share of screen width the hero takes at different window widths:
+This is not another hero-layout problem.
 
-```text
-window width   title width   prompt width
-1000 px          60%           80%     <-- looks hugely zoomed in
-1100 px          54%           73%
-1280 px          47%           62%
-1576 px          38%           51%     <-- matches your reference mockup
-1920 px          31%           42%
-```
+- The Lovable designer is running app version `2026-08-02T21:06:10.242Z`.
+- `startuplabs.online` is still serving the older app version `2026-08-02T20:52:34.508Z` and the older bundled stylesheet `index-CAuk4Nw-.css`.
+- At the same controlled 1576×1043 viewport, the currently published build still renders the old fixed 800px prompt, while the designer contains the newer proportional implementation.
+- The production page itself reports normal root geometry (`16px` root font, `zoom: 1`, no root transform, `visualViewport.scale: 1`). Therefore another CSS size adjustment would repeat the previous mistake.
 
-Your reference screenshot has the prompt at roughly **half** the screen width. The screenshot you just sent has it at roughly **80%** — which is exactly what a fixed 800px prompt looks like in a **~1000–1030px-wide viewport** (the Lovable preview pane, or a non-maximized browser window). Nothing is magnified. The elements are frozen at one absolute size while the window around them shrinks.
+## Implementation
 
-Every previous attempt "passed" because I verified absolute pixels at wide viewports. That test can never catch this. The composition was never pinned; only the pixel numbers were.
+1. **Freeze the designer state**
+   - Make no further visual or copy changes.
+   - Treat the currently approved Lovable designer rendering as the source of truth.
 
-## The fix
+2. **Strengthen the deployment identity check**
+   - Extend the existing version marker so the deployed HTML exposes both the app version and current CSS bundle identity.
+   - Update the parity gate to fail when preview and production do not serve the same release, before comparing any geometry.
 
-Stop freezing pixels. Freeze **ratios**, so the composition looks like your reference at 1000px, 1280px, 1576px and 1920px alike.
+3. **Test representative public pages**
+   - Compare `/`, `/workshops`, `/services`, and one additional public offer page in preview and production.
+   - At identical desktop and tablet viewports, record root font size, viewport width, header bounds, H1 bounds, primary content width, loaded CSS asset, and app version.
+   - Add screenshot comparison evidence for each route so a site-wide scaling difference cannot be mistaken for a hero-only issue.
 
-1. **Proportional hero geometry** in `src/styles.css` (`sl-` scope only):
-   - Prompt panel: width `min(800px, 52vw)` with a sensible floor, so it holds ~50–52% of the window at every desktop width instead of ballooning to 80%.
-   - Title: fluid `clamp()` keyed to viewport width, tuned so it lands at ~38% of window width across the range (about 30px at 1000px, 42px at 1576px).
-   - Kicker, status line, footer text and submit button scale on the same curve so internal spacing stays proportional.
-   - Header stays 52px tall (a fixed chrome bar is correct); logo and nav type get a mild fluid step so they don't crowd at 1000px.
+4. **Publish the exact verified build**
+   - Run the security/build gates, then publish without making changes after verification.
+   - Confirm the custom domain serves the same app version and CSS bundle as the designer.
 
-2. **Rewrite the regression gate** (`scripts/hero-geometry.py`) to assert **percentage of viewport width**, not absolute pixels — title 36–41%, prompt 49–54%, at 1000/1100/1280/1440/1576/1920 and at DPR 1.8. Absolute-pixel assertions get deleted; they are what let this ship four times.
+5. **Production acceptance gate**
+   - Do not call the issue fixed until `startuplabs.online` passes release-identity and layout-parity checks on all selected public routes.
+   - If the same release measures identically in an isolated browser but the user’s existing browser still appears enlarged, verify the browser’s saved per-domain zoom separately with a 100% reset (`Cmd/Ctrl+0`); do not compensate for browser zoom by distorting the site CSS.
 
-3. **Visual proof before any claim**: capture the hero at 1000px and 1576px and compare side by side against your reference screenshot. I will show you both images in chat and will not say "fixed" until you've seen them.
+## Acceptance criteria
 
-## Technical notes
-
-- No component logic changes — this is `src/styles.css` plus the test script.
-- The stale-cache work from the last turn stays; it was a real (separate) issue but not the cause of what you're seeing now.
-- Root cause in one line: the hero was pinned to absolute pixels while the reference design is proportional, so it only ever looked right at ~1576px and looked "zoomed" everywhere narrower.
+- Designer and custom domain report the same app version and production bundle.
+- Homepage geometry matches the designer at desktop and tablet widths.
+- Public-page headings, navigation, containers, and spacing match their designer equivalents.
+- No production-only `zoom`, root transform, font-size override, or alternate stylesheet is present.
+- Screenshots from the custom domain—not localhost—are the final proof.

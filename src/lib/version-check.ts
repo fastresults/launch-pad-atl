@@ -4,8 +4,10 @@
 // problem without needing a service worker.
 
 declare const __APP_VERSION__: string;
+declare const __RELEASE_ID__: string;
 
 const BOOT_VERSION: string = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
+const BOOT_RELEASE: string = typeof __RELEASE_ID__ !== "undefined" ? __RELEASE_ID__ : "dev";
 
 const CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 min
 const VERSION_META_NAME = "app-version";
@@ -76,4 +78,5 @@ export function replaceStaleBuild(version: string): boolean {
 }
 
 export const APP_VERSION = BOOT_VERSION;
+export const RELEASE_ID = BOOT_RELEASE;
 export { VERSION_META_NAME };
