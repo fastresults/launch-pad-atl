@@ -746,7 +746,7 @@
 }
 
 .hero-scene[data-active="true"] {
-  opacity: 0.25;
+  opacity: 0;
   animation: hero-drift 7000ms linear forwards;
 }
 
