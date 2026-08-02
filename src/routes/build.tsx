@@ -13,34 +13,34 @@ export default function BuildIndexPage() {
     "Come spend one focused morning with us and walk out with one real piece of your startup actually built — brand live, site live, follow-ups running. Sessions from $197."
   );
   return (
-    <div className="marketing-surface min-h-screen">
+    <div className="public-surface min-h-screen">
       <SiteHeader />
 
-      <section className="border-b border-[#E4D9C4]">
+      <section className="border-b border-border">
         <div className="mx-auto max-w-6xl px-6 py-10 md:py-14">
-          <div className="mb-10 flex flex-col gap-2 border-b border-[#C9B99A] pb-4 md:flex-row md:items-end md:justify-between">
-            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
+          <div className="mb-10 flex flex-col gap-2 border-b border-border pb-4 md:flex-row md:items-end md:justify-between">
+            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
               Issue No. 02 &mdash; The Workshops
             </div>
-            <div className="font-serif text-sm italic text-[#8B7355]">
+            <div className="text-sm italic text-muted-foreground">
               Eight focused mornings · from $197
             </div>
           </div>
           <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-8 lg:gap-12">
             <div className="md:col-span-7 lg:col-span-8">
-              <h1 className="font-serif text-5xl leading-[1.05] text-[#3D3025] md:text-6xl lg:text-7xl">
-                Actually built. <span className="italic text-[#8B7355]">Live by lunch.</span>
+              <h1 className="text-4xl leading-[1.05] text-foreground md:text-5xl lg:text-6xl">
+                Actually built. <span className="italic text-primary">Live by lunch.</span>
               </h1>
-              <p className="mt-8 max-w-xl text-lg leading-relaxed text-[#5C4A38] md:text-xl">
+              <p className="mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground md:text-xl">
                 One focused morning. One real piece of your startup &mdash; your brand shipped, your website live, your sales copy in the page, your follow-up emails sending, your tools running &mdash; built with you and live before lunch. Not notes about it. The thing itself. No retainer. No waiting on an agency.
               </p>
             </div>
             <div className="md:col-span-5 lg:col-span-4">
-              <div className="border border-[#C9B99A] bg-[#F0EBE3] p-8">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8B7355]">
+              <div className="border border-border bg-card p-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
                   How it goes
                 </p>
-                <ul className="mt-4 space-y-3 text-sm text-[#3D3025]">
+                <ul className="mt-4 space-y-3 text-sm text-foreground">
                   <li>&bull; Show up with your idea</li>
                   <li>&bull; We build the real thing together</li>
                   <li>&bull; You walk out with it live</li>
