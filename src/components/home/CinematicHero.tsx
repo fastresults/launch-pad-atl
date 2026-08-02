@@ -49,7 +49,7 @@ export function CinematicHero() {
         </div>
 
 
-        <p className="hero-nowbuilding mt-6 text-[11px] font-medium">
+        <p className="hero-nowbuilding mt-8 text-[11px] font-medium">
           Now building:{" "}
           <span className="hero-accent">{scenes[index]?.label}</span>
         </p>
