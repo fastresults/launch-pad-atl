@@ -77,7 +77,7 @@ function HeroCopy() {
       className="relative isolate overflow-hidden border-b border-[#E4D9C4]"
       style={{
         backgroundImage:
-          "radial-gradient(ellipse at 88% 22%, rgba(201,185,154,0.20), transparent 60%)",
+          "radial-gradient(ellipse at 88% 18%, oklch(0.5 0.13 272 / 26%), transparent 62%)",
       }}
     >
       <div className="mx-auto max-w-6xl px-6 py-10 md:py-12">
@@ -150,7 +150,7 @@ function HeroCopy() {
               style={{
                 height: 320,
                 backgroundImage:
-                  "radial-gradient(ellipse at 50% 62%, rgba(201,185,154,0.28), transparent 65%)",
+                  "radial-gradient(ellipse at 50% 62%, oklch(0.55 0.13 285 / 30%), transparent 66%)",
               }}
             >
               {/* Steam wisps — scoped inside the cameo, below header */}

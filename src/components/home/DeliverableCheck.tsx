@@ -28,7 +28,7 @@ export function DeliverableCheck({
     >
       <span
         aria-hidden
-        className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary transition-colors duration-200 group-hover:bg-primary group-hover:text-primary-foreground group-focus-visible:bg-primary group-focus-visible:text-primary-foreground"
+        className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary ring-1 ring-inset ring-primary/40 transition-colors duration-200 group-hover:bg-primary group-hover:text-primary-foreground group-hover:ring-primary group-focus-visible:bg-primary group-focus-visible:text-primary-foreground"
       >
         <Check className="size-3.5" strokeWidth={3} />
       </span>
