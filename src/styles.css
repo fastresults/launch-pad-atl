@@ -744,7 +744,9 @@
     transform 1400ms ease-in-out;
   will-change: opacity, transform;
   backface-visibility: hidden;
+  filter: brightness(1.08) contrast(1.03) saturate(1.04);
 }
+
 
 .hero-scene[data-active="true"] {
   opacity: 1;
