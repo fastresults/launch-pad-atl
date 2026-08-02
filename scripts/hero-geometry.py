@@ -65,8 +65,8 @@ async def main():
             values = await page.evaluate(
                 """(selectors) => {
                   const output = {
-                    htmlVersion: document.querySelector('meta[name="app-version"]')?.content,
-                    runtimeVersion: document.documentElement.dataset.appVersion,
+                    htmlRelease: document.querySelector('meta[name="app-release"]')?.content,
+                    runtimeRelease: document.documentElement.dataset.appRelease,
                     rootFont: getComputedStyle(document.documentElement).fontSize,
                   };
                   for (const [key, selector] of Object.entries(selectors)) {

@@ -5,6 +5,7 @@ import { AskConcierge } from "@/components/site/AskConcierge";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { LandingOnlyGate } from "@/components/site/LandingOnlyGate";
 import { LandingOnlyBanner } from "@/components/admin/LandingOnlyBanner";
+import { RenderDiagnostics } from "@/components/RenderDiagnostics";
 
 // Layout guards
 import AuthenticatedLayout from "@/routes/_authenticated";
@@ -202,6 +203,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <AskConcierge />
+       <RenderDiagnostics />
       </LandingOnlyGate>
       </ConfirmProvider>
     </Suspense>

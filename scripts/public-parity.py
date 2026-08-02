@@ -1,4 +1,4 @@
-"""Compare the Lovable preview and published public-site geometry.
+"""Compare public-site rendering fingerprints across origins.
 
 Usage: python3 scripts/public-parity.py [preview URL] [published URL]
 The gate rejects a release mismatch before evaluating layout.
@@ -13,20 +13,18 @@ from urllib.parse import urljoin
 from playwright.async_api import async_playwright
 
 
-PREVIEW = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"
-PUBLISHED = sys.argv[2] if len(sys.argv) > 2 else "https://startuplabs.online"
-ROUTES = ("/", "/services", "/build", "/build/brand", "/one-on-one")
+ORIGINS = tuple(sys.argv[1:]) or (
+    "http://localhost:8080",
+    "https://launch-pad-atl.lovable.app",
+    "https://startuplabs.online",
+    "https://www.startuplabs.online",
+)
+ROUTES = ("/", "/services", "/build")
 VIEWPORTS = (
+    (390, 844, 1.0),
     (1024, 900, 1.0),
-    (1027, 900, 1.0),
-    (1100, 900, 1.0),
-    (1152, 900, 1.0),
-    (1190, 900, 1.0),
-    (1200, 900, 1.0),
-    (1280, 900, 1.0),
     (1400, 900, 1.0),
     (1576, 1043, 1.8),
-    (1920, 1080, 1.0),
 )
 OUTPUT = Path("/tmp/public-parity")
 
@@ -36,40 +34,54 @@ async def measure(page, base, route):
     await page.locator("h1").first.wait_for(state="visible", timeout=20_000)
     return await page.evaluate(
         """() => {
-          const rect = (element) => {
+          const inspect = (element) => {
             if (!element) return null;
             const box = element.getBoundingClientRect();
-            return {x: box.x, y: box.y, width: box.width, height: box.height};
+            const style = getComputedStyle(element);
+            return {
+              rect: {x: box.x, y: box.y, width: box.width, height: box.height},
+              fontFamily: style.fontFamily, fontSize: style.fontSize,
+              lineHeight: style.lineHeight, zoom: style.zoom, transform: style.transform,
+            };
           };
           const root = getComputedStyle(document.documentElement);
           const body = getComputedStyle(document.body);
           const h1 = document.querySelector('h1');
           const header = document.querySelector('.sl-site-header') || document.querySelector('header');
           const main = document.querySelector('main');
+          const prompt = document.querySelector('.sl-prompt__panel');
+          const sectionHeading = document.querySelector('main section:not(.sl-hero) h2');
           return {
             url: location.href,
             release: document.documentElement.dataset.appRelease,
-            version: document.documentElement.dataset.appVersion,
             cssBundle: document.documentElement.dataset.cssBundle,
-            viewport: {width: innerWidth, height: innerHeight, dpr: devicePixelRatio},
+            viewport: {width: innerWidth, height: innerHeight, clientWidth: document.documentElement.clientWidth, outerWidth, dpr: devicePixelRatio},
             screen: {width: screen.width, height: screen.height},
             visualScale: visualViewport?.scale ?? null,
             root: {fontSize: root.fontSize, zoom: root.zoom, transform: root.transform},
             body: {fontSize: body.fontSize, zoom: body.zoom, transform: body.transform},
-            header: rect(header), h1: rect(h1), main: rect(main),
+            fonts: {status: document.fonts.status, body: body.fontFamily},
+            assets: {
+              css: [...document.querySelectorAll('link[rel="stylesheet"]')].map(node => node.href.split('/').pop()),
+              js: [...document.querySelectorAll('script[src]')].map(node => node.src.split('/').pop()),
+            },
+            tiers: Object.fromEntries([640, 960, 1024, 1280, 1400, 1440].map(value => [value, matchMedia(`(min-width: ${value}px)`).matches])),
+            header: inspect(header), h1: inspect(h1), main: inspect(main),
+            prompt: inspect(prompt), sectionHeading: inspect(sectionHeading),
             h1FontSize: h1 ? getComputedStyle(h1).fontSize : null,
             h1LineHeight: h1 ? getComputedStyle(h1).lineHeight : null,
-            h1ViewportShare: h1 ? rect(h1).width / innerWidth : null,
-            firstViewportDensity: main ? Math.min(rect(main).height, innerHeight) / innerHeight : null,
+            h1ViewportShare: h1 ? h1.getBoundingClientRect().width / innerWidth : null,
+            firstViewportDensity: main ? Math.min(main.getBoundingClientRect().height, innerHeight) / innerHeight : null,
           };
         }"""
     )
 
 
-def close_enough(left, right, tolerance=2.0):
+def close_enough(left, right, tolerance=1.0):
     if left is None or right is None:
         return left == right
-    return all(abs(left[key] - right[key]) <= tolerance for key in ("x", "y", "width", "height"))
+    left_rect, right_rect = left["rect"], right["rect"]
+    return all(abs(left_rect[key] - right_rect[key]) <= tolerance for key in ("x", "y", "width", "height"))
 
 
 async def main():
@@ -81,7 +93,8 @@ async def main():
         for width, height, dpr in VIEWPORTS:
             for route in ROUTES:
                 pair = {}
-                for label, base in (("preview", PREVIEW), ("published", PUBLISHED)):
+                for origin_index, base in enumerate(ORIGINS):
+                    label = f"origin-{origin_index}"
                     context = await browser.new_context(
                         viewport={"width": width, "height": height}, device_scale_factor=dpr
                     )
@@ -92,14 +105,15 @@ async def main():
                     await context.close()
 
                 case = f"{route} at {width}x{height}@{dpr:g}x"
-                if pair["preview"]["release"] != pair["published"]["release"]:
-                    failures.append(
-                        f"{case}: release mismatch "
-                        f"{pair['preview']['release']} != {pair['published']['release']}"
-                    )
-                for surface in ("header", "h1", "main"):
-                    if not close_enough(pair["preview"][surface], pair["published"][surface]):
-                        failures.append(f"{case}: {surface} geometry differs")
+                baseline = pair["origin-0"]
+                for label, values in list(pair.items())[1:]:
+                    if baseline["release"] != values["release"]:
+                        failures.append(f"{case}: {label} release mismatch")
+                    for surface in ("header", "h1", "main", "prompt", "sectionHeading"):
+                        if not close_enough(baseline[surface], values[surface]):
+                            failures.append(f"{case}: {label} {surface} geometry differs")
+                    if baseline["fonts"] != values["fonts"]:
+                        failures.append(f"{case}: {label} font state differs")
                 for label, values in pair.items():
                     if values["visualScale"] != 1:
                         failures.append(f"{case}: {label} visual viewport scale is not 1")
@@ -112,9 +126,9 @@ async def main():
                     cap = 34 if width < 1280 else 56
                     if h1_size > cap:
                         failures.append(f"{case}: {label} h1 is {h1_size:g}px (cap {cap}px)")
-                    if values["h1"] and values["h1"]["width"] > width * 0.82:
+                    if values["h1"] and values["h1"]["rect"]["width"] > width * 0.82:
                         failures.append(f"{case}: {label} h1 occupies too much viewport width")
-                    if values["main"] and width >= 1024 and values["main"]["width"] > width:
+                    if values["main"] and width >= 1024 and values["main"]["rect"]["width"] > width:
                         failures.append(f"{case}: {label} main overflows the viewport")
 
                 report.append({"case": case, **pair})

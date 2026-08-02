@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
-import { APP_VERSION, RELEASE_ID, replaceStaleBuild, startVersionCheck } from "@/lib/version-check";
+import { RELEASE_ID, replaceStaleBuild, startVersionCheck } from "@/lib/version-check";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import App from "./App";
 import "./styles.css";
@@ -17,7 +17,6 @@ const queryClient = new QueryClient({
 
 function Root() {
   useEffect(() => {
-    document.documentElement.dataset.appVersion = APP_VERSION;
     document.documentElement.dataset.appRelease = RELEASE_ID;
 
     const recordCssBundle = () => {

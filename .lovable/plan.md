@@ -1,114 +1,85 @@
-# Clean-Slate Public Website Recovery
+# Forensic Rendering Recovery Plan
 
-## Confirmed diagnosis
+## What is confirmed now
 
-- At identical Playwright CSS viewports, the current local Lovable render, Lovable-published URL, and custom domain produce the **same computed geometry**. At 1027, 1400, and 1576 CSS pixels, the H1, hero panel, viewport scale, root scale, and element positions matched exactly; the published and custom-domain pages also loaded the same release and CSS bundle.
-- There is no production-only `zoom`, root transform, alternate stylesheet, service worker, hostname branch, or missing viewport tag in the current code.
-- Therefore, the current evidence does **not** support another publish-cache patch. The remaining mismatch is between the intended visual proportions and the accumulated public styling architecture, plus the difference between a monitor’s physical resolution and the browser’s actual CSS viewport.
-- The public styling is now structurally fragile: one 1,256-line global stylesheet combines app tokens, workshop slide styles, a legacy color-remapping bridge, broad selectors with `!important`, global public-page typography overrides, and several generations of hero recovery rules. Continuing to patch this file is the wrong strategy.
+- The published Lovable URL and both custom-domain variants currently return the same JavaScript and CSS asset names: `index-k8_BAsbK.js` and `index-Cb3UrhUH.css`.
+- Their HTML is served with revalidation/no-cache semantics, so there is no current evidence that the custom domain alone is serving an older stylesheet.
+- The app has one correct viewport meta tag and no application code that applies global browser `zoom`.
+- The authenticated editor-preview URL cannot be compared anonymously; previous checks that treated localhost as equivalent to the actual editor preview did **not** prove preview/publish parity.
+- A build timestamp currently changes the JavaScript asset graph on every build even when source is unchanged. That is a real deployment-integrity defect, but it does not yet prove the magnification cause.
+- The decisive clue is that identical deployed asset names can still appear at different visual scales. Therefore the next investigation must start after asset delivery: effective CSS viewport, per-origin browser zoom, DPR, loaded fonts, runtime CSS, or host injection.
 
-## Recovery principle
+No further typography or breakpoint tweaking will be done until the first divergent measurement is identified.
 
-Treat the public website as a new presentation layer, not as a new product:
+## Phase 1 — Add a non-invasive rendering fingerprint
 
-- Preserve every approved word, image, video, route, form, modal, and interaction.
-- Preserve the cinematic navy visual direction.
-- Rebuild section framing, typography, spacing, containers, navigation, and responsive behavior from a clean foundation.
-- Do not modify the authenticated app, database, workshop tools, or business logic.
+Create an opt-in diagnostic mode, activated only by a query parameter, that displays and copies a safe rendering fingerprint containing:
 
-## Phase 1 — Freeze and capture the reference
+- hostname, route, release ID, CSS asset filename, and JS asset filename
+- `innerWidth`, `clientWidth`, `outerWidth`, `screen.width`, `devicePixelRatio`, and `visualViewport.scale`
+- matched responsive tiers at 640, 960, 1024, 1280, 1400, and 1440 CSS pixels
+- root font size and loaded font family/status
+- computed font size, line height, width, height, transform, and zoom for the header, H1, prompt panel, and first content-section heading
+- active `.public-surface` presence and stylesheet order
 
-1. Capture the current Lovable canvas at its actual **1576×1043 CSS-pixel viewport** as the primary visual reference.
-2. Record reference screenshots and computed geometry for the homepage and every public route.
-3. Add explicit comparison viewports for 390, 768, 1024, 1280, 1400, 1576, and 1920 CSS pixels.
-4. Record `innerWidth`, `visualViewport.scale`, DPR, loaded release ID, CSS asset name, font sizes, container widths, and section bounds with every capture.
-5. Keep the current implementation available as a temporary reference until the replacement passes parity; do not continue editing it.
+This contains no account data or secrets. It gives us the actual facts from the user’s browser, where the defect occurs.
 
-## Phase 2 — Create an isolated public design system
+## Phase 2 — Prove the first divergence
 
-1. Extract public styling from the shared global stylesheet into a dedicated marketing entry layer.
-2. Keep the global stylesheet limited to Tailwind, app-wide tokens, resets, and authenticated-product styles.
-3. Define a small semantic public token system for:
-   - canvas and surfaces
-   - foreground and muted copy
-   - accent and borders
-   - typography sizes and line heights
-   - page gutters and maximum content widths
-   - section spacing
-   - header height
-   - buttons, glass panels, and media treatments
-4. Use a documented breakpoint model based on **CSS viewport width**, not monitor resolution or DPR.
-5. Remove public reliance on arbitrary legacy color selectors, wildcard class matching, and broad `!important` overrides.
-6. Load fonts through the document head rather than remote CSS imports.
+Capture the fingerprint and screenshots from the same browser window for:
 
-## Phase 3 — Rebuild the public shell first
+1. actual Lovable editor preview
+2. published Lovable URL
+3. `startuplabs.online`
+4. `www.startuplabs.online`
 
-1. Build one clean public layout shell containing:
-   - top-line navigation
-   - page canvas
-   - responsive content container
-   - section primitive
-   - display-heading and body-copy primitives
-   - shared CTA styles
-   - footer
-2. Rebuild the cinematic hero inside this system with one authoritative rule set.
-3. Use bounded containers and stable typography steps instead of compensating media-query patches.
-4. Ensure the hero and first section remain balanced at every target viewport without browser-specific or production-specific branches.
-5. Verify the shell locally and on a temporary published release before migrating page sections.
+Test `/`, `/services`, and `/build` at the same window dimensions. First reset browser zoom to 100% on each origin, because Chromium stores zoom per origin and a custom domain can remain at 125% while the preview origin is at 100%.
 
-## Phase 4 — Migrate public pages section by section
+Classify the first mismatch into exactly one layer:
 
-Migrate in controlled groups rather than rewriting everything at once:
+```text
+artifact -> viewport/zoom -> font -> CSS cascade -> DOM -> hosting injection
+```
 
-1. Homepage hero and homepage sections.
-2. Services and build pages.
-3. Workshop and one-on-one pages.
-4. Remaining public informational and conversion pages.
+- Different release/assets: deployment artifact problem.
+- Same assets but different DPR/viewport scale: per-origin browser zoom or display-scaling problem.
+- Same viewport but different computed font: font loading/fallback problem.
+- Same font but different computed geometry: cascade/media-query problem.
+- Same computed geometry but different screenshot: browser compositing or injected-host behavior.
 
-For each group:
+## Phase 3 — Make builds deterministic
 
-- Move existing content and behavior into the new section primitives.
-- Remove page-local sizing hacks and legacy color classes.
-- Compare against the reference captures at all target widths.
-- Publish and compare the deployed result before proceeding to the next group.
+Remove the wall-clock timestamp from the shared JavaScript bundle and use the content-derived release ID as the stable build identity. Keep one authoritative release marker in HTML and runtime diagnostics.
 
-## Phase 5 — Remove the failed styling generations
+This prevents identical source from generating a completely new chunk graph on every preview and publish build, removes false parity failures, and reduces stale lazy-chunk risk.
 
-After all public routes pass:
+## Phase 4 — Apply only the proven fix
 
-1. Delete the legacy marketing bridge and old public typography/spacing overrides from the global stylesheet.
-2. Delete superseded hero rules, compact-desktop patches, and release-time visual compensation code.
-3. Retain only styles genuinely used by the authenticated product and workshop slide deck.
-4. Confirm no public component depends on removed selectors or raw legacy color classes.
+Implement the correction selected by Phase 2 evidence:
 
-## Phase 6 — Bulletproof preview-to-production verification
+- **Per-origin zoom:** add a clear one-time diagnostic warning when effective scaling differs; do not distort site CSS to compensate for a browser setting.
+- **Viewport mismatch:** make the public shell respond to measured container width and remove the specific breakpoint seam proven by the trace.
+- **Font mismatch:** self-host the two public fonts with explicit metrics/fallbacks so preview and production cannot differ by remote font timing.
+- **Cascade mismatch:** remove only the winning conflicting rules identified by computed-style provenance; no additional global overrides.
+- **Artifact mismatch:** correct publish/version behavior and verify that HTML references only assets present in that deployment.
+- **Host injection:** isolate or remove the injected behavior after confirming its effect in a controlled A/B capture.
 
-Replace the current “same geometry means good” check with two separate gates:
+## Phase 5 — Establish a real parity gate
 
-### Gate A: Visual-quality gate
+Replace the current localhost-versus-production assumption with a reproducible gate that records, for every public route at 390, 1024, 1400, and 1576 CSS pixels:
 
-- Screenshot comparison against approved reference images at each target viewport.
-- Hard limits for headline size, line length, section width, header height, CTA size, and vertical rhythm.
-- Overflow, overlap, and text-clipping detection across all public routes.
+- release and asset fingerprints
+- viewport/DPR/font data
+- computed geometry snapshots
+- screenshots
+- overflow and console errors
 
-### Gate B: Deployment-parity gate
-
-- Compare local and published release IDs and CSS asset hashes.
-- Compare exact computed styles and bounding boxes at identical CSS viewports.
-- Fail if viewport scale is not 1, root/body are transformed, fonts fail to load, or production assets differ from the intended release.
-- Run against both the Lovable URL and `startuplabs.online` after every public-page deployment.
+The gate must fail on any unexplained geometry difference, missing asset, font fallback, or release mismatch.
 
 ## Acceptance criteria
 
-The rebuild is complete only when:
-
-- The approved Lovable reference and published site match at the same CSS viewport.
-- All public routes share one consistent navigation, typography, container, and section system.
-- No public layout depends on the legacy remapping bridge or emergency `!important` sizing rules.
-- The homepage and representative inner pages pass visual review at every target viewport.
-- Lovable URL and custom domain load the same release, assets, fonts, and geometry.
-- Content, imagery, videos, forms, AI modal, links, and conversion flows remain intact.
-
-## Implementation boundary
-
-This is a **public presentation-layer rebuild**. It will not replace the authenticated application, backend, content, conversion logic, or route structure. The first implementation milestone will be the new public shell plus homepage; no legacy CSS will be deleted until that replacement is visibly approved and verified on a published test.
+- The actual editor preview, published Lovable URL, and both custom-domain hosts report the same release and computed geometry at the same CSS viewport and zoom.
+- At 1400 CSS pixels, H1, header, prompt panel, and content-section measurements remain within a 1px geometry tolerance across origins.
+- `/`, `/services`, and `/build` visually match at desktop and tablet widths with no overflow or unexpected breakpoint change.
+- Two consecutive builds from unchanged source produce the same content-derived release identity and stable output graph.
+- The final report records the confirmed root cause, the exact evidence that proved it, and the single corrective change—no more speculative CSS patches.
