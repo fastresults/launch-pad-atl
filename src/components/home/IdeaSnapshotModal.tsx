@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Loader2, MapPin, AlertTriangle, Check } from "lucide-react";
+import { ArrowRight, ArrowDown, Loader2, MapPin, AlertTriangle, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 
 type Signal = { label: string; value: string; note: string };
@@ -294,15 +294,26 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
               <span style={{ color: "var(--hero-fg)" }}>Thursday, Aug 20</span>
               <span className="hero-faint"> · IGNITE Center · $197</span>
             </p>
-            <Link
-              to={registerTo}
-              onClick={close}
-              className="hero-cta w-full justify-center sm:w-auto"
-            >
-              Reserve my seat
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
+            <div className="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center sm:gap-4">
+              <button
+                type="button"
+                onClick={learnMore}
+                className="inline-flex items-center justify-center gap-1.5 text-sm underline underline-offset-4 hero-faint"
+              >
+                Learn more
+                <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+              <Link
+                to={registerTo}
+                onClick={close}
+                className="hero-cta w-full justify-center sm:w-auto"
+              >
+                Reserve my seat
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
           </div>
+
         </div>
       </DialogContent>
     </Dialog>
