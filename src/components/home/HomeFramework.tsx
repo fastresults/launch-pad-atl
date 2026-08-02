@@ -83,7 +83,7 @@ function HeroCopy() {
           "radial-gradient(ellipse at 88% 18%, oklch(0.5 0.13 272 / 26%), transparent 62%)",
       }}
     >
-      <div className="mx-auto max-w-7xl px-6 py-10 md:py-12">
+      <div className="public-container px-6 py-10 md:py-12">
         {/* Magazine masthead */}
         <div className="mb-8 flex flex-col gap-2 border-b border-[#C9B99A] pb-4 md:flex-row md:items-end md:justify-between">
           <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
@@ -333,7 +333,7 @@ function Framework() {
   return (
     <TooltipProvider delayDuration={150}>
     <section className="border-t border-white/5 py-16 md:py-24">
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="public-container px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           Not an accelerator. Not an incubator. Not a course.
         </p>
@@ -414,7 +414,7 @@ function HonestRoadmap() {
 
   return (
     <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="public-container px-6">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           Here's the honest promise
         </p>
@@ -546,7 +546,7 @@ function HonestRoadmap() {
 function Facilitator() {
   return (
     <section className="py-16 md:py-24">
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="public-container px-6">
         <div className="grid items-center gap-8 rounded-3xl border border-white/10 bg-card p-6 md:grid-cols-[1fr_1.4fr] md:gap-10 md:p-8 lg:p-12">
           <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-hero-gradient">
             <div className="relative flex h-full flex-col justify-end p-6 text-white">
@@ -621,7 +621,7 @@ function Venue() {
   const EVENT = useEvent();
   return (
     <section className="py-16 md:py-24">
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="public-container px-6">
         <div className="overflow-hidden rounded-3xl border border-white/10 bg-card p-6 md:p-8 lg:p-12">
           <div className="grid gap-8 md:grid-cols-[1.05fr_1fr] md:gap-10">
             <div>
@@ -670,7 +670,7 @@ function Venue() {
 function BottomCTA() {
   return (
     <section className="pb-16 md:pb-24">
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="public-container px-6">
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-hero-gradient p-8 md:p-12 lg:p-16">
           <div className="relative max-w-3xl text-white">
             <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">

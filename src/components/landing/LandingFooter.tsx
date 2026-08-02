@@ -25,7 +25,7 @@ type FooterEvent = {
 export function LandingFooter({ event }: { event: FooterEvent }) {
   return (
     <footer className="border-t border-border/60 bg-card/40">
-      <div className="mx-auto max-w-6xl px-6 py-14 md:py-16">
+      <div className="public-container px-6 py-14 md:py-16">
         <div className="grid gap-10 md:grid-cols-3 md:gap-8">
           <div>
             <StartupLabsLogo className="h-9 w-auto text-foreground" />
