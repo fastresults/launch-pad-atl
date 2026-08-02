@@ -35,20 +35,21 @@ export function CinematicHero() {
         <div className="hero-grain" aria-hidden="true" />
       </div>
 
-      <div className="mx-auto w-full max-w-6xl -translate-y-[10%] px-6 pb-14 pt-28 text-center md:pb-20">
+      <div className="mx-auto w-full max-w-5xl -translate-y-[10%] px-6 pb-16 pt-32 text-center md:pb-24">
         <p className="hero-kicker text-[11px] font-medium">
           Atlanta · IGNITE Center at Greater Atlanta Christian School
         </p>
-        <h1 className="mx-auto mt-5 max-w-[1100px] leading-[1.06]">
+        <h1 className="mx-auto mt-7 max-w-[940px] leading-[1.06]">
           What would you like to start?
         </h1>
 
 
-        <div className="mt-8">
+        <div className="mt-10">
           <IdeaPrompt ghostText={typed} paused={paused} onTakeOver={takeOver} />
         </div>
 
-        <p className="hero-nowbuilding mt-6 text-[11px] font-medium">
+
+        <p className="hero-nowbuilding mt-8 text-[11px] font-medium">
           Now building:{" "}
           <span className="hero-accent">{scenes[index]?.label}</span>
         </p>

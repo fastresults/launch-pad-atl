@@ -1,26 +1,29 @@
-## What's actually wrong (verified, not guessed)
+## What I verified before planning
 
-I reproduced your screenshot exactly. The Lovable desktop preview frame renders the page at roughly **1000 CSS pixels wide**, not 1512. I rendered the homepage at 1512px, 1280px, 1140px, 1024px and 1000px — the 1000px capture is pixel-for-pixel your screenshot (same collapsed nav: no "schedule", no "facilitator", CTA reading "Reserve — $297"; same oversized glass card).
+- The published CSS at `startuplabs.online` (`/assets/index-CADe4gN9.css`) **already contains this morning's fixes** — the fluid `clamp(2.05rem, 1.15rem + 3.1vw, 4rem)` headline, the `clamp(11rem, 8.2rem + 8vw, 15rem)` glass card, and the `--breakpoint-lg: 60rem` override. So this is **not** a stale deploy: the published build is current, and the oversized rendering is what the current CSS actually produces at your monitor's width.
+- Tailwind v4 is in use, so the `--breakpoint-lg` token in `@theme inline` is valid and live.
+- Comparing the two screenshots at the same image width: the target (3.18.51) has a headline that occupies roughly half the frame width with wide side gutters and a card clearly inset from the edges. The broken published view (3.03.32) has the headline nearly edge-to-edge and the glass card running almost full-bleed. That is the `4rem` upper cap plus the `max-w-[1100px]` card being too wide relative to the surrounding gutters at large viewports — the elements keep growing while the whitespace around them does not.
 
-Two things stack up at that width:
+## Step 1 — Measure the real published page (no guessing)
 
-1. **Desktop composition is still gated behind Tailwind's `lg` (1024px)** in the places that matter most. The earlier fix moved a lot of layout from `lg` to `md`, but the header still hides `schedule`/`facilitator` at `hidden lg:inline-flex`, swaps to the short CTA at `lg:hidden`, and `HomeFramework` / `LandingFramework` / `services` / `build` still each carry ~16 `lg:`-only layout switches. At 1000px the page falls one pixel-class short of desktop and serves the tablet arrangement.
+Drive Playwright against `https://startuplabs.online` at 1280, 1440, 1512, 1728 and 1920 CSS px and record computed values for: H1 font-size, H1 box width, glass card width and height, header nav font-size and total nav width, and the left/right gutter in px. Capture a screenshot at each width. Do the same against the local preview so I can pin the exact delta between "what you see published" and "what the target looks like". No CSS changes until those numbers are in hand.
 
-2. **The hero doesn't scale — it stretches.** `IdeaPrompt` uses a fixed `min-h-[240px]` card with `max-w-[1100px]`, and the H1 is capped at 48px. At 1000px the card is 952px wide but still 240px tall with the input pinned to the top and the CTA pinned to the bottom, so you get a huge empty glass slab — that's the "mobile UI blown up" feel. The H1 also stops growing, so the type/card proportion is wrong at every width above ~900px.
+## Step 2 — Rescale the hero to the target proportions
 
-## The fix
+Based on the measurements, adjust in `src/styles.css` and the hero components only:
 
-**A. Move the desktop threshold down to `md` (768px) for public-site composition**
-- `Header.tsx`: reveal `schedule` and `facilitator` at `md` instead of `lg`; switch the full CTA label at `md`; move the `lg:gap-7` rhythm to `md:gap-6 xl:gap-7`.
-- `HomeFramework.tsx`, `LandingFramework.tsx`, `services.tsx`, `build.tsx`: audit each `lg:` grid/flex/spacing variant and re-key the ones that control *composition* (column counts, side-by-side vs stacked, section padding) to `md`, keeping `lg`/`xl` only for genuine wide-screen refinements. Leave dashboard/admin routes alone — they aren't part of this complaint.
+- **Headline**: lower the clamp ceiling so the H1 stops growing at a size that keeps roughly 2:1 headline-width-to-gutter proportion at 1512–1920px (expected landing around 3.1–3.4rem rather than 4rem), keeping the fluid middle term so nothing snaps.
+- **Glass card**: reduce the max width from `1100px` to a narrower measure so real gutters appear at wide viewports, and lower the `min-height` clamp ceiling so the card stops reading as an empty slab. Card width and headline width stay locked to the same container.
+- **Vertical whitespace**: increase the space above the kicker and between headline → card → "now building" line so the group breathes rather than stacking tight, matching the target's rhythm.
 
-**B. Make the hero fluid instead of fixed**
-- `IdeaPrompt.tsx`: replace `min-h-[240px]` with a proportional height (`clamp`-based, roughly 200px → 260px) and center the input vertically inside the card rather than top-pinning it, so the card never reads as empty space.
-- `CinematicHero.tsx` / `styles.css`: give the H1 a `clamp()` size so it grows continuously from ~2rem to ~4rem instead of stepping and stopping at 48px, and tie the card's max width to the same container as the headline so they stay visually locked.
+## Step 3 — Rescale the header
 
-**C. Verify across the real range**
-Re-capture the homepage at 1000, 1140, 1280, 1512 and 1920 CSS px with Playwright and confirm all five read as one desktop design, with 1000px specifically matching the intended composition rather than the tablet fallback.
+`src/components/site/Header.tsx`: bring nav font-size, item gap and the CTA pill back to the target's compact scale, and cap the header's inner container so the logo and CTA don't ride the extreme viewport edges at 1920px. Nav item visibility stays as it is now — the current set matches the target screenshot.
+
+## Step 4 — Verify against both surfaces
+
+Re-capture local at 1280/1512/1920 and confirm the measured H1 size, card width and gutters match the target proportions. After you publish, re-measure the live domain the same way to confirm the shipped build matches. Scope stays hero + header; no other public page is touched.
 
 ## Technical note
 
-Tailwind's default `lg` is 1024px. Any preview or browser window narrower than that gets the tablet branch — so "desktop" must be defined as `md` (768px) for this site's public pages, with `lg`/`xl` reserved for extra breathing room, not for turning desktop on.
+The root issue is that the hero's fluid sizing has no upper restraint proportional to viewport width — `4rem` type inside an `1100px` card inside a `max-w-6xl` (1152px) container means at 1920px the content block is only ~60% of the screen but every element inside it is at its maximum. Capping the element scale while letting the container gutters grow is what produces the whitespace in your target shot.
