@@ -40,7 +40,9 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [modesOpen, setModesOpen] = useState(false);
   const ctaFull = `Reserve seat — ${WORKSHOP_PRICE_LABEL}`;
+  const ctaMedium = `Reserve — ${WORKSHOP_PRICE_LABEL}`;
   const ctaShort = "Reserve";
+
 
   const close = () => setOpen(false);
 
