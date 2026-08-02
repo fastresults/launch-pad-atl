@@ -164,15 +164,16 @@
   gap: 0.375rem;
 }
 
-/* Cinematic hero: fixed typographic steps and bounded, proportional width. */
+/* Cinematic hero: full bleed left and right, exactly one screen tall. */
 .public-surface .sl-hero {
   position: relative;
   isolation: isolate;
   display: grid;
-  min-height: calc(100svh - var(--public-header-h));
+  width: 100%;
+  min-height: calc((100svh / var(--public-zoom)) - var(--public-header-h));
   overflow: hidden;
   place-items: center;
-  padding: 2rem var(--public-gutter) 3rem;
+  padding: 2rem 1.5rem 3rem;
   background: var(--public-canvas);
   color: var(--public-ink);
 }
