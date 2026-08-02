@@ -104,32 +104,32 @@ export default function PrivateTuesdayPage() {
   }
 
   return (
-    <div className="marketing-surface min-h-screen bg-background">
+    <div className="public-surface min-h-screen bg-background">
       <SiteHeader />
       <main>
         {/* Hero */}
-        <section className="border-b border-[#E4D9C4] bg-[#FAF8F5] py-16 md:py-24">
+        <section className="border-b border-border bg-card py-16 md:py-24">
           <div className="mx-auto max-w-4xl px-6">
-            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#C9B99A] bg-[#F0EBE3] px-3 py-1 text-xs uppercase tracking-[0.18em] text-[#3D3025]">
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs uppercase tracking-[0.18em] text-primary">
               <Sparkles className="size-3.5" /> A Tuesday with Adam · 1-on-1 · {priceLabel}
             </p>
-            <h1 className="font-serif text-4xl leading-[1.05] tracking-tight text-[#2A1F17] md:text-5xl lg:text-6xl">
+            <h1 className="text-4xl leading-[1.05] text-foreground md:text-5xl lg:text-6xl">
               Just you and Adam,{" "}
               <span className="italic">at the table.</span>
             </h1>
-            <p className="mt-5 max-w-2xl text-base text-[#5A4A3A] md:text-lg">
+            <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
               Ninety minutes. One founder. Same four foundations as the workshop — page copy written,
               positioning locked, outreach message ready — except it's just the two of you,
               at IGNITE, on a Tuesday.
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-[#5A4A3A]">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#C9B99A] bg-white px-3 py-1">
+            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1">
                 <MapPin className="size-3.5" /> IGNITE Center · Greater Atlanta Christian School
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#C9B99A] bg-white px-3 py-1">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1">
                 <Calendar className="size-3.5" /> Tuesdays only
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#C9B99A] bg-white px-3 py-1">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1">
                 <Clock className="size-3.5" /> Four 90-min blocks · 9:30, 11:10, 12:50, 2:30
               </span>
             </div>
@@ -142,25 +142,25 @@ export default function PrivateTuesdayPage() {
             <div className="grid gap-8 md:grid-cols-5">
               {/* Slot picker */}
               <div className="md:col-span-3">
-                <h2 className="font-serif text-2xl text-[#2A1F17] md:text-3xl">Pick your Tuesday.</h2>
-                <p className="mt-2 text-sm text-[#5A4A3A]">
+                <h2 className="text-2xl text-foreground md:text-3xl">Pick your Tuesday.</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
                   Times we still have open in the next {settings?.weeks_ahead ?? 8} weeks. Pick one and fill
                   out a few details — we'll hold your seat for {settings?.hold_minutes ?? 15} minutes while you confirm.
                 </p>
 
                 {loading ? (
-                  <div className="mt-8 flex items-center gap-2 text-sm text-[#5A4A3A]">
+                  <div className="mt-8 flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="size-4 animate-spin" /> Loading available times…
                   </div>
                 ) : grouped.length === 0 ? (
-                  <div className="mt-8 rounded-lg border border-[#E4D9C4] bg-[#F5F0E5] p-6 text-sm text-[#5A4A3A]">
+                  <div className="mt-8 rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
                     All Tuesdays are fully reserved. Email us and we'll open the next one for you.
                   </div>
                 ) : (
                   <div className="mt-6 space-y-5">
                     {grouped.map(([date, list]) => (
-                      <div key={date} className="rounded-lg border border-[#E4D9C4] bg-white p-5">
-                        <p className="font-serif text-lg text-[#2A1F17]">{formatSlotDate(date)}</p>
+                      <div key={date} className="rounded-lg border border-border bg-card p-5">
+                        <p className="text-lg text-foreground">{formatSlotDate(date)}</p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           {list.map((s) => {
                             const selected = selectedId === s.id;
@@ -170,7 +170,7 @@ export default function PrivateTuesdayPage() {
                                 <div
                                   key={s.id}
                                   aria-disabled="true"
-                                  className="cursor-not-allowed rounded-md border border-[#E4D9C4] bg-[#EFE7D6] px-3 py-2 text-sm text-[#9A8B75] line-through"
+                                  className="cursor-not-allowed rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground line-through"
                                   title={s.status === "booked" ? "Reserved" : "Unavailable"}
                                 >
                                   {formatSlotTime(s.start_time, s.end_time)}
@@ -187,10 +187,9 @@ export default function PrivateTuesdayPage() {
                                 onClick={() => setSelectedId(s.id)}
                                 className={`rounded-md border px-3 py-2 text-sm transition ${
                                   selected
-                                    ? "border-[#8B7355] bg-[#8B7355] hover:bg-[#6F5A42]"
-                                    : "border-[#C9B99A] bg-[#FAF8F5] text-[#3D3025] hover:border-[#8B7355]"
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-border bg-background text-foreground hover:border-primary"
                                 }`}
-                                style={selected ? { color: "#ffffff" } : undefined}
                               >
                                 {selected && <CheckCircle2 className="mr-1 inline size-3.5" />}
                                 {formatSlotTime(s.start_time, s.end_time)}
@@ -208,10 +207,10 @@ export default function PrivateTuesdayPage() {
               <div className="md:col-span-2">
                 <form
                   onSubmit={handleSubmit}
-                  className="sticky top-24 rounded-lg border border-[#E4D9C4] bg-[#F5F0E5] p-6"
+                  className="sticky top-24 rounded-lg border border-border bg-card p-6"
                 >
-                  <p className="font-serif text-xl text-[#2A1F17]">Reserve your seat</p>
-                  <p className="mt-1 text-xs text-[#5A4A3A]">
+                  <p className="text-xl text-foreground">Reserve your seat</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {priceLabel} · payment link emailed after you reserve
                   </p>
 
@@ -258,7 +257,7 @@ export default function PrivateTuesdayPage() {
                   <Button
                     type="submit"
                     disabled={submitting || !selectedId}
-                    className="mt-6 w-full bg-[#8B7355] text-white hover:bg-[#6F5A42]"
+                    className="mt-6 w-full"
                   >
                     {submitting ? (
                       <>
@@ -271,7 +270,7 @@ export default function PrivateTuesdayPage() {
                     )}
                   </Button>
                   {!selectedId && (
-                    <p className="mt-2 text-center text-xs text-[#8A7862]">
+                    <p className="mt-2 text-center text-xs text-muted-foreground">
                       Pick a time on the left to continue.
                     </p>
                   )}

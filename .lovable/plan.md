@@ -1,50 +1,114 @@
-# Why every previous fix "worked" and you still see this
+# Clean-Slate Public Website Recovery
 
-I reproduced your exact screenshots — same line breaks, same proportions — but **not at 1400px**. I had to set the browser to **1027 CSS pixels** to match them pixel for pixel.
+## Confirmed diagnosis
 
-What I verified this turn:
+- At identical Playwright CSS viewports, the current local Lovable render, Lovable-published URL, and custom domain produce the **same computed geometry**. At 1027, 1400, and 1576 CSS pixels, the H1, hero panel, viewport scale, root scale, and element positions matched exactly; the published and custom-domain pages also loaded the same release and CSS bundle.
+- There is no production-only `zoom`, root transform, alternate stylesheet, service worker, hostname branch, or missing viewport tag in the current code.
+- Therefore, the current evidence does **not** support another publish-cache patch. The remaining mismatch is between the intended visual proportions and the accumulated public styling architecture, plus the difference between a monitor’s physical resolution and the browser’s actual CSS viewport.
+- The public styling is now structurally fragile: one 1,256-line global stylesheet combines app tokens, workshop slide styles, a legacy color-remapping bridge, broad selectors with `!important`, global public-page typography overrides, and several generations of hero recovery rules. Continuing to patch this file is the wrong strategy.
 
-- The published site at `startuplabs.online` is serving the corrected stylesheet (the new scale tokens are in the live CSS bundle).
-- Measured live at 1400 CSS px: header 52px, `/services` H1 47.6px, `/build` H1 47.6px, home hero H1 31.5px. Those match the preview exactly.
-- Measured live at 1027 CSS px: the rendering is identical to your uploaded screenshots.
+## Recovery principle
 
-So your 1400px monitor is **not** giving the page 1400 CSS pixels. Between macOS display scaling and browser zoom, the page is being handed roughly **1024–1030 CSS pixels**. Every gate I built measured 1400 and passed; you were never looking at 1400. That is the miss.
+Treat the public website as a new presentation layer, not as a new product:
 
-At ~1030px the current design still looks magnified because the compact tier was never actually designed — it just inherits the wide-screen composition: content runs edge-to-edge with a ~50px gutter, body copy sits at 18px, CTA buttons are ~72px tall, the eyebrow pill spans 60% of the screen, and card headings hit ~34px.
+- Preserve every approved word, image, video, route, form, modal, and interaction.
+- Preserve the cinematic navy visual direction.
+- Rebuild section framing, typography, spacing, containers, navigation, and responsive behavior from a clean foundation.
+- Do not modify the authenticated app, database, workshop tools, or business logic.
 
-## 1. Reproduce first, then design for the real viewport
+## Phase 1 — Freeze and capture the reference
 
-- Lock the reference case at **1027x600 CSS px** (your actual rendering) and add 1024, 1100, and 1152 alongside it.
-- Also test with browser zoom at 110/125/150% on a 1400 physical window, since that is the mechanism producing your view.
+1. Capture the current Lovable canvas at its actual **1576×1043 CSS-pixel viewport** as the primary visual reference.
+2. Record reference screenshots and computed geometry for the homepage and every public route.
+3. Add explicit comparison viewports for 390, 768, 1024, 1280, 1400, 1576, and 1920 CSS pixels.
+4. Record `innerWidth`, `visualViewport.scale`, DPR, loaded release ID, CSS asset name, font sizes, container widths, and section bounds with every capture.
+5. Keep the current implementation available as a temporary reference until the replacement passes parity; do not continue editing it.
 
-## 2. Build a genuine compact desktop tier (1024–1279 CSS px)
+## Phase 2 — Create an isolated public design system
 
-Separate from the wide tier, with its own token values:
+1. Extract public styling from the shared global stylesheet into a dedicated marketing entry layer.
+2. Keep the global stylesheet limited to Tailwind, app-wide tokens, resets, and authenticated-product styles.
+3. Define a small semantic public token system for:
+   - canvas and surfaces
+   - foreground and muted copy
+   - accent and borders
+   - typography sizes and line heights
+   - page gutters and maximum content widths
+   - section spacing
+   - header height
+   - buttons, glass panels, and media treatments
+4. Use a documented breakpoint model based on **CSS viewport width**, not monitor resolution or DPR.
+5. Remove public reliance on arbitrary legacy color selectors, wildcard class matching, and broad `!important` overrides.
+6. Load fonts through the document head rather than remote CSS imports.
 
-- Centered content column capped around 62–66rem with real gutters (not edge-to-edge with 50px margins).
-- Display headline ~30–32px (currently ~35–48px depending on route).
-- Lead paragraph 16px / 1.6, measure capped near 60ch.
-- Eyebrow/kicker 11px with tighter tracking so it stops spanning the screen.
-- CTA buttons ~46px tall, 15px label.
-- Section vertical rhythm ~3rem, card padding and card headings scaled down to match.
-- Header stays 52px; nav type drops a step so it does not crowd the CTA pill.
+## Phase 3 — Rebuild the public shell first
 
-## 3. Apply it across every public route
+1. Build one clean public layout shell containing:
+   - top-line navigation
+   - page canvas
+   - responsive content container
+   - section primitive
+   - display-heading and body-copy primitives
+   - shared CTA styles
+   - footer
+2. Rebuild the cinematic hero inside this system with one authoritative rule set.
+3. Use bounded containers and stable typography steps instead of compensating media-query patches.
+4. Ensure the hero and first section remain balanced at every target viewport without browser-specific or production-specific branches.
+5. Verify the shell locally and on a temporary published release before migrating page sections.
 
-`/`, `/services`, `/build`, `/build/:slug`, `/schedule`, `/facilitator`, `/contact`, `/one-on-one`, `/webinar`, `/register`, legal pages — all driven by the shared tokens, no per-page overrides. The hero keeps its `sl-*` namespace but consumes the same compact-tier values.
+## Phase 4 — Migrate public pages section by section
 
-## 4. Replace the gate that lied
+Migrate in controlled groups rather than rewriting everything at once:
 
-- Add 1024/1027/1100/1152 to `scripts/hero-geometry.py` and `scripts/public-parity.py`.
-- Assert absolute caps at the compact tier: H1 ≤ 34px, lead ≤ 16px, content column ≤ 70% of viewport width at ≥1024, CTA height ≤ 50px, eyebrow ≤ 12px.
-- Fail on first-viewport density: hero H1 + prompt, or H1 + lead + CTAs, must fit within 600px of height.
+1. Homepage hero and homepage sections.
+2. Services and build pages.
+3. Workshop and one-on-one pages.
+4. Remaining public informational and conversion pages.
 
-## 5. Verify with screenshots at your viewport, then publish
+For each group:
 
-- Capture `/`, `/services`, `/build`, `/schedule` at 1027 and 1152 and compare directly against your three uploads.
-- Publish, then re-measure the live domain at 1027 and confirm both the release ID and the size caps before I report anything as fixed.
+- Move existing content and behavior into the new section primitives.
+- Remove page-local sizing hacks and legacy color classes.
+- Compare against the reference captures at all target widths.
+- Publish and compare the deployed result before proceeding to the next group.
 
-## Technical notes
+## Phase 5 — Remove the failed styling generations
 
-- Root cause is not zoom injected by our code, a stale build, or preview/production divergence — all three were ruled out by measurement this turn. It is that the 1024–1280 CSS-px band has no dedicated composition.
-- The current `clamp()` lower bounds (`2.25rem` display, `1rem` lead) are the floor being hit at 1030px; they are simply too large for that width and need to come down, with the wide-screen top end left as-is.
+After all public routes pass:
+
+1. Delete the legacy marketing bridge and old public typography/spacing overrides from the global stylesheet.
+2. Delete superseded hero rules, compact-desktop patches, and release-time visual compensation code.
+3. Retain only styles genuinely used by the authenticated product and workshop slide deck.
+4. Confirm no public component depends on removed selectors or raw legacy color classes.
+
+## Phase 6 — Bulletproof preview-to-production verification
+
+Replace the current “same geometry means good” check with two separate gates:
+
+### Gate A: Visual-quality gate
+
+- Screenshot comparison against approved reference images at each target viewport.
+- Hard limits for headline size, line length, section width, header height, CTA size, and vertical rhythm.
+- Overflow, overlap, and text-clipping detection across all public routes.
+
+### Gate B: Deployment-parity gate
+
+- Compare local and published release IDs and CSS asset hashes.
+- Compare exact computed styles and bounding boxes at identical CSS viewports.
+- Fail if viewport scale is not 1, root/body are transformed, fonts fail to load, or production assets differ from the intended release.
+- Run against both the Lovable URL and `startuplabs.online` after every public-page deployment.
+
+## Acceptance criteria
+
+The rebuild is complete only when:
+
+- The approved Lovable reference and published site match at the same CSS viewport.
+- All public routes share one consistent navigation, typography, container, and section system.
+- No public layout depends on the legacy remapping bridge or emergency `!important` sizing rules.
+- The homepage and representative inner pages pass visual review at every target viewport.
+- Lovable URL and custom domain load the same release, assets, fonts, and geometry.
+- Content, imagery, videos, forms, AI modal, links, and conversion flows remain intact.
+
+## Implementation boundary
+
+This is a **public presentation-layer rebuild**. It will not replace the authenticated application, backend, content, conversion logic, or route structure. The first implementation milestone will be the new public shell plus homepage; no legacy CSS will be deleted until that replacement is visibly approved and verified on a published test.

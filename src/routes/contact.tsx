@@ -34,22 +34,22 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="marketing-surface flex min-h-screen flex-col">
+    <div className="public-surface flex min-h-screen flex-col">
       <SiteHeader />
       <main className="flex-1">
         <div className="mx-auto max-w-3xl px-6 py-16 md:py-24">
-          <div className="mb-8 flex flex-col gap-2 border-b border-[#C9B99A] pb-4 md:flex-row md:items-end md:justify-between">
-            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B7355]">
+          <div className="mb-8 flex flex-col gap-2 border-b border-border pb-4 md:flex-row md:items-end md:justify-between">
+            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
               Get in touch
             </div>
-            <div className="font-serif text-sm italic text-[#8B7355]">
+            <div className="text-sm italic text-muted-foreground">
               Real person. No bots.
             </div>
           </div>
-          <h1 className="font-serif text-5xl leading-[1.05] text-[#3D3025] md:text-6xl">
-            Let's <span className="italic text-[#8B7355]">talk it through.</span>
+          <h1 className="text-4xl leading-[1.05] text-foreground md:text-5xl">
+            Let's <span className="italic text-primary">talk it through.</span>
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#5C4A38]">
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
             Not sure which option fits, or just want to talk it through first? Send a note &mdash; Adam or someone on our team writes back within one business day.
           </p>
 

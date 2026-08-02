@@ -121,7 +121,7 @@ export function RegisterFramework() {
   });
 
   return (
-    <div className="marketing-surface min-h-screen">
+    <div className="public-surface min-h-screen">
       <SiteHeader />
 
       <section className="border-b border-white/5 py-12 md:py-20">
