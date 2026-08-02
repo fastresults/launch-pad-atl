@@ -17,7 +17,7 @@
   --public-line: oklch(0.82 0.03 260 / 14%);
 
   /* Single deterministic downscale switch for the whole public shell. */
-  --public-zoom: 0.75;
+  --public-zoom: 0.6;
   /* Side margin for every non-hero section, expressed against the real
    * viewport and corrected for the zoom factor above. */
   --public-margin: 8;

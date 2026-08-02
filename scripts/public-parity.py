@@ -135,8 +135,8 @@ async def main():
                     for surface in ("root", "body"):
                         if values[surface]["zoom"] != "1" or values[surface]["transform"] != "none":
                             failures.append(f"{case}: {label} {surface} is scaled")
-                    if abs(values["shellZoom"] - 0.75) > 0.001:
-                        failures.append(f"{case}: {label} public shell zoom is {values['shellZoom']} (expected 0.75)")
+                    if abs(values["shellZoom"] - 0.6) > 0.001:
+                        failures.append(f"{case}: {label} public shell zoom is {values['shellZoom']} (expected 0.6)")
                     h1_size = values["h1EffectiveFontSize"] or 0
                     # Rendered (post-downscale) size caps.
                     cap = 28 if width < 768 else (36 if width < 1280 else 42)
