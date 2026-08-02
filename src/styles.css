@@ -919,7 +919,10 @@
   color: var(--hero-fg-faint) !important;
   letter-spacing: 0.3em;
   text-transform: uppercase;
+  font-weight: 600;
+  text-shadow: var(--hero-label-shadow);
 }
+
 
 
 @media (prefers-reduced-motion: reduce) {
