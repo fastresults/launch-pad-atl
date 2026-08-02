@@ -73,6 +73,20 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
   const registerTo = `/register?idea=${encodeURIComponent(idea)}`;
   const close = () => onOpenChange(false);
 
+  /** Close the modal and land the visitor on the section right below the hero. */
+  const learnMore = () => {
+    onOpenChange(false);
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    window.requestAnimationFrame(() => {
+      window.setTimeout(() => {
+        document.getElementById("learn-more")?.scrollIntoView({
+          behavior: reduce ? "auto" : "smooth",
+          block: "start",
+        });
+      }, 120);
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent

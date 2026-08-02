@@ -76,7 +76,8 @@ function HeroCopy() {
   const reduceMotion = useReducedMotion();
   return (
     <section
-      className="relative isolate overflow-hidden border-b border-[#E4D9C4]"
+      id="learn-more"
+      className="relative isolate scroll-mt-24 overflow-hidden border-b border-[#E4D9C4]"
       style={{
         backgroundImage:
           "radial-gradient(ellipse at 88% 18%, oklch(0.5 0.13 272 / 26%), transparent 62%)",
