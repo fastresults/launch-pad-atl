@@ -26,8 +26,6 @@ function sourceReleaseId(): string {
 }
 
 const RELEASE_ID = sourceReleaseId();
-const APP_VERSION = RELEASE_ID;
-
 export default defineConfig({
   plugins: [
     react(),
@@ -36,14 +34,14 @@ export default defineConfig({
     {
       name: "inject-app-version",
       transformIndexHtml(html) {
-        return html
-          .replace(/__APP_VERSION__/g, APP_VERSION)
-          .replace("</head>", `  <meta name="app-release" content="${RELEASE_ID}" />\n</head>`);
+        return html.replace(
+          "</head>",
+          `  <meta name="app-release" content="${RELEASE_ID}" />\n</head>`,
+        );
       },
     },
   ],
   define: {
-    __APP_VERSION__: JSON.stringify(APP_VERSION),
     __RELEASE_ID__: JSON.stringify(RELEASE_ID),
     "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
       process.env.VITE_SUPABASE_URL ?? "https://hflfxytqrlkobhuugsca.supabase.co",

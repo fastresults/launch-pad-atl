@@ -54,7 +54,6 @@ async def measure(page, base, route):
           return {
             url: location.href,
             release: document.documentElement.dataset.appRelease,
-            version: document.documentElement.dataset.appVersion,
             cssBundle: document.documentElement.dataset.cssBundle,
             viewport: {width: innerWidth, height: innerHeight, clientWidth: document.documentElement.clientWidth, outerWidth, dpr: devicePixelRatio},
             screen: {width: screen.width, height: screen.height},
