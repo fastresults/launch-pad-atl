@@ -46,12 +46,12 @@
   padding-inline: var(--public-gutter);
 }
 
-.public-surface :is(section, footer):not(.sl-hero) [class*="max-w-"] {
+.public-surface :is(section, footer):not(.sl-hero) [class*="max-w-"][class*="mx-auto"] {
   max-width: 100%;
+  padding-inline: 0;
 }
 
-.public-surface :is(section, footer):not(.sl-hero) > [class*="px-"],
-.public-surface :is(section, footer):not(.sl-hero) > * > [class*="px-"][class*="max-w-"] {
+.public-surface :is(section, footer):not(.sl-hero) > [class*="px-"] {
   padding-inline: 0;
 }
 
