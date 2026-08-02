@@ -29,6 +29,16 @@ import sceneHolidayLights from "@/assets/scenes/scene-holidaylights.jpg";
 import sceneOrganizing from "@/assets/scenes/scene-organizing.jpg";
 import sceneVending from "@/assets/scenes/scene-vending.jpg";
 import sceneHandyman from "@/assets/scenes/scene-handyman.jpg";
+import sceneEpoxy from "@/assets/scenes/scene-epoxy.jpg";
+import sceneLawnCare from "@/assets/scenes/scene-lawncare.jpg";
+import sceneAirbnb from "@/assets/scenes/scene-airbnb.jpg";
+import sceneMobileIv from "@/assets/scenes/scene-mobileiv.jpg";
+import sceneSeniorTech from "@/assets/scenes/scene-seniortech.jpg";
+import sceneMealPrep from "@/assets/scenes/scene-mealprep.jpg";
+import sceneBookkeeping from "@/assets/scenes/scene-bookkeeping.jpg";
+import sceneResume from "@/assets/scenes/scene-resume.jpg";
+import sceneMicrogreens from "@/assets/scenes/scene-microgreens.jpg";
+import sceneDogWalking from "@/assets/scenes/scene-dogwalking.jpg";
 
 export type FounderScene = {
   id: string;
@@ -255,6 +265,76 @@ export const founderScenes: FounderScene[] = [
     label: "Handyman crew",
     image: sceneHandyman,
     alt: "Two handyman crew members reviewing the day's job list between work trucks",
+  },
+  {
+    id: "epoxy",
+    phrase: "I want to start an epoxy garage floor business",
+    label: "Epoxy garage floors",
+    image: sceneEpoxy,
+    alt: "Contractor rolling a glossy epoxy coating across a residential garage floor",
+  },
+  {
+    id: "lawncare",
+    phrase: "I want to start a lawn care route",
+    label: "Lawn care route",
+    image: sceneLawnCare,
+    alt: "Lawn care owner mowing a suburban yard with his trailer parked at the curb",
+  },
+  {
+    id: "airbnb",
+    phrase: "I want to manage short-term rentals",
+    label: "Short-term rental management",
+    image: sceneAirbnb,
+    alt: "Couple turning over a short-term rental with fresh linens and bookings on a laptop",
+  },
+  {
+    id: "mobileiv",
+    phrase: "I want to start a mobile IV and wellness service",
+    label: "Mobile IV wellness",
+    image: sceneMobileIv,
+    alt: "Mobile IV nurse setting up a wellness drip for a client at home",
+  },
+  {
+    id: "seniortech",
+    phrase: "I want to start a senior tech help service",
+    label: "Senior tech help",
+    image: sceneSeniorTech,
+    alt: "Tech helper showing an older woman how to use her tablet at her kitchen table",
+  },
+  {
+    id: "mealprep",
+    phrase: "I want to start a weekly meal prep service",
+    label: "Weekly meal prep",
+    image: sceneMealPrep,
+    alt: "Meal prep founder packing containers of cooked meals on a kitchen island",
+  },
+  {
+    id: "bookkeeping",
+    phrase: "I want to start a bookkeeping business",
+    label: "Bookkeeping service",
+    image: sceneBookkeeping,
+    alt: "Bookkeeper reviewing numbers on a laptop with a barbershop owner",
+  },
+  {
+    id: "resume",
+    phrase: "I want to start a resume and LinkedIn service",
+    label: "Resume & LinkedIn rewrites",
+    image: sceneResume,
+    alt: "Resume writer on a client video call at a tidy home desk",
+  },
+  {
+    id: "microgreens",
+    phrase: "I want to grow microgreens for chefs",
+    label: "Microgreens farm",
+    image: sceneMicrogreens,
+    alt: "Grower harvesting trays of microgreens in a small garage grow room",
+  },
+  {
+    id: "dogwalking",
+    phrase: "I want to start a dog walking and pet sitting business",
+    label: "Dog walking & pet sitting",
+    image: sceneDogWalking,
+    alt: "Dog walker leading three dogs down a tree-lined neighborhood sidewalk",
   },
 ];
 
