@@ -44,7 +44,7 @@ export function CinematicHero() {
         </h1>
 
 
-        <div className="mt-10">
+        <div className="hero-prompt-wrap mt-10">
           <IdeaPrompt ghostText={typed} paused={paused} onTakeOver={takeOver} />
         </div>
 
