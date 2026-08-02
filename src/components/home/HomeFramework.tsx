@@ -48,7 +48,7 @@ export function HomeFramework() {
   });
   const showScroller = settings?.show_business_ideas_scroller !== false;
   return (
-    <div className="marketing-surface min-h-screen">
+    <div className="public-surface min-h-screen">
       <SiteHeader />
       <Hero />
       <HeroCopy />
@@ -77,7 +77,7 @@ function HeroCopy() {
   return (
     <section
       id="learn-more"
-      className="relative isolate scroll-mt-24 overflow-hidden border-b border-[#E4D9C4]"
+      className="public-story relative isolate scroll-mt-24 overflow-hidden border-b border-[#E4D9C4]"
       style={{
         backgroundImage:
           "radial-gradient(ellipse at 88% 18%, oklch(0.5 0.13 272 / 26%), transparent 62%)",

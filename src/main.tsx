@@ -9,6 +9,7 @@ import { APP_VERSION, RELEASE_ID, replaceStaleBuild, startVersionCheck } from "@
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import App from "./App";
 import "./styles.css";
+import "./public.css";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },

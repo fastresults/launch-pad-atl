@@ -1,0 +1,367 @@
+/*
+ * Startup Labs public presentation layer.
+ *
+ * This file is intentionally independent from the legacy `.marketing-surface`
+ * bridge in styles.css. New and migrated public pages use `.public-surface` so
+ * their geometry is controlled here, identically in development and builds.
+ */
+
+.public-surface {
+  --public-canvas: oklch(0.145 0.02 268);
+  --public-surface: oklch(0.19 0.022 268);
+  --public-surface-raised: oklch(0.225 0.025 268);
+  --public-ink: oklch(0.975 0.004 250);
+  --public-ink-muted: oklch(0.76 0.018 260);
+  --public-accent: oklch(0.7 0.15 255);
+  --public-accent-strong: oklch(0.64 0.18 258);
+  --public-line: oklch(0.82 0.03 260 / 14%);
+  --public-gutter: 1rem;
+  --public-section-y: 4rem;
+  --public-content: 70rem;
+  --public-reading: 46rem;
+  --public-header-h: 3.5rem;
+
+  min-height: 100vh;
+  overflow-x: clip;
+  background: var(--public-canvas);
+  color: var(--public-ink);
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.public-surface :is(h1, h2, h3, h4) {
+  color: var(--public-ink);
+  font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.public-surface :is(p, li) {
+  color: color-mix(in oklab, var(--public-ink) 82%, transparent);
+}
+
+.public-surface .text-muted-foreground {
+  color: var(--public-ink-muted);
+}
+
+.public-surface .text-foreground {
+  color: var(--public-ink);
+}
+
+.public-surface .text-primary {
+  color: var(--public-accent);
+}
+
+.public-surface .bg-background {
+  background-color: var(--public-canvas);
+}
+
+.public-surface .bg-card {
+  background-color: var(--public-surface);
+}
+
+.public-surface .border-border {
+  border-color: var(--public-line);
+}
+
+.public-surface .text-gradient-brand {
+  background: linear-gradient(100deg, var(--public-accent), oklch(0.72 0.12 288));
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.public-surface .bg-hero-gradient {
+  background: linear-gradient(105deg, var(--public-accent-strong), oklch(0.57 0.15 286));
+}
+
+/* Public header: one stable composition, with no inherited scale rules. */
+.public-surface .sl-site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--public-header-h);
+  border-bottom: 1px solid var(--public-line);
+  background: oklch(0.145 0.02 268 / 84%);
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+}
+
+.public-surface .sl-site-header__inner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  gap: 1rem;
+  padding-inline: var(--public-gutter);
+}
+
+.public-surface .sl-site-header__left {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.public-surface .sl-site-header__logo {
+  width: auto;
+  height: 2rem;
+  color: var(--public-ink);
+}
+
+.public-surface :is(.sl-site-header__nav, .sl-site-header__actions) {
+  display: none;
+}
+
+.public-surface .sl-site-header__mobile {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* Cinematic hero: fixed typographic steps and bounded, proportional width. */
+.public-surface .sl-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: calc(100svh - var(--public-header-h));
+  overflow: hidden;
+  place-items: center;
+  padding: 2rem var(--public-gutter) 3rem;
+  background: var(--public-canvas);
+  color: var(--public-ink);
+}
+
+.public-surface :is(.sl-hero__media, .sl-hero__scene, .sl-hero__scrim, .sl-hero__grain) {
+  position: absolute;
+  inset: 0;
+}
+
+.public-surface .sl-hero__media { z-index: -1; }
+
+.public-surface .sl-hero__scene {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  filter: brightness(1.06) contrast(1.03) saturate(1.03);
+  transform: scale(1.01);
+  transition: opacity 1400ms ease-in-out;
+}
+
+.public-surface .sl-hero__scene[data-active="true"] {
+  opacity: 1;
+  animation: public-scene-drift 8s linear forwards;
+}
+
+@keyframes public-scene-drift {
+  from { transform: scale(1.01); }
+  to { transform: scale(1.05); }
+}
+
+.public-surface .sl-hero__scrim {
+  background:
+    linear-gradient(to top, oklch(0.09 0.02 270 / 94%) 0%, oklch(0.09 0.02 270 / 48%) 34%, oklch(0.09 0.02 270 / 16%) 68%, oklch(0.09 0.02 270 / 48%) 100%),
+    radial-gradient(100% 90% at 18% 90%, oklch(0.62 0.15 255 / 16%), transparent 62%);
+}
+
+.public-surface .sl-hero__grain {
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.public-surface .sl-hero__stack {
+  position: relative;
+  top: -0.75rem;
+  display: flex;
+  width: min(100%, 48rem);
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.public-surface :is(.sl-hero__kicker, .sl-hero__status) {
+  margin: 0;
+  color: oklch(0.975 0.004 250 / 76%);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 16px oklch(0.05 0.02 268 / 75%);
+}
+
+.public-surface .sl-hero__title {
+  margin: 1rem 0 0;
+  max-width: 100%;
+  color: var(--public-ink);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.08;
+  text-shadow: 0 2px 28px oklch(0.05 0.02 268 / 72%);
+}
+
+.public-surface .sl-hero__prompt {
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.public-surface .sl-hero__status { margin-top: 1.25rem; }
+.public-surface .sl-hero__status span { color: var(--public-accent); }
+.public-surface .sl-prompt { width: 100%; }
+
+.public-surface .sl-prompt__panel {
+  display: grid;
+  width: 100%;
+  min-height: 8.25rem;
+  grid-template-rows: 1fr auto;
+  padding: 1.25rem;
+  overflow: hidden;
+  border: 1px solid oklch(0.98 0.006 260 / 18%);
+  border-radius: 1.25rem;
+  background: oklch(0.11 0.025 270 / 52%);
+  box-shadow: 0 32px 90px -32px oklch(0 0 0 / 88%), inset 0 1px 0 oklch(0.98 0.006 260 / 14%);
+  backdrop-filter: blur(24px) saturate(145%);
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
+}
+
+.public-surface .sl-prompt__field {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.public-surface .sl-prompt__input {
+  width: 100%;
+  padding: 0.25rem 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--public-ink);
+  caret-color: var(--public-accent);
+  font: inherit;
+  font-size: 1rem;
+  -webkit-text-fill-color: var(--public-ink);
+}
+
+.public-surface .sl-prompt__ghost {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  overflow: hidden;
+  color: oklch(0.975 0.004 250 / 72%);
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.public-surface .sl-prompt__caret {
+  display: inline-block;
+  flex: none;
+  width: 2px;
+  height: 1.15em;
+  margin-left: 2px;
+  background: var(--public-accent);
+  animation: public-caret 1.05s steps(1, end) infinite;
+}
+
+@keyframes public-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.public-surface .sl-prompt__footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.public-surface .sl-prompt__footer p {
+  margin: 0;
+  color: oklch(0.975 0.004 250 / 76%);
+  font-size: 0.8125rem;
+}
+
+.public-surface .sl-prompt__submit {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid oklch(0.98 0.006 260 / 24%);
+  border-radius: 999px;
+  background: oklch(0.98 0.006 260 / 11%);
+  color: var(--public-ink);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.public-surface .sl-prompt__submit svg { width: 1rem; height: 1rem; }
+
+/* Temporary scoped translation for the preserved editorial homepage section.
+ * Unlike the retired site-wide bridge, this cannot affect other routes. */
+.public-surface .public-story :is([class*="text-[#3D3025]"], [class*="text-[#2B1F14]"]) { color: var(--public-ink); }
+.public-surface .public-story :is([class*="text-[#5C4A38]"], [class*="text-[#7A6650]"]) { color: var(--public-ink-muted); }
+.public-surface .public-story :is([class*="text-[#8B7355]"], [class*="text-[#C9B99A]"]) { color: var(--public-accent); }
+.public-surface .public-story :is([class*="border-[#E4D9C4]"], [class*="border-[#C9B99A]"]) { border-color: var(--public-line); }
+.public-surface .public-story :is([class*="bg-[#FBF7F1]"], [class*="bg-[#F0EBE3]"]) { background-color: var(--public-surface); }
+.public-surface .public-story .font-serif { font-family: "Outfit", ui-sans-serif, system-ui, sans-serif; }
+
+/* Footer is part of the shell, not an independently scaling section. */
+.public-surface footer {
+  border-color: var(--public-line);
+  color: var(--public-ink-muted);
+}
+
+@media (min-width: 40rem) {
+  .public-surface { --public-gutter: 1.5rem; }
+  .public-surface .sl-hero__title { font-size: 2.25rem; }
+  .public-surface .sl-prompt__input,
+  .public-surface .sl-prompt__ghost { font-size: 1.125rem; }
+}
+
+@media (min-width: 60rem) {
+  .public-surface {
+    --public-gutter: 2rem;
+    --public-section-y: 5rem;
+    --public-header-h: 3.25rem;
+  }
+
+  .public-surface :is(.sl-site-header__nav, .sl-site-header__actions) {
+    display: flex;
+    align-items: center;
+    gap: 1.125rem;
+    color: var(--public-ink-muted);
+    font-size: 0.8125rem;
+    line-height: 1;
+  }
+
+  .public-surface .sl-site-header__mobile { display: none; }
+  .public-surface .sl-site-header__cta { min-height: 2rem; padding: 0.25rem 0.875rem; }
+  .public-surface .sl-hero__stack { width: min(44vw, 48rem); min-width: 30rem; top: -1.25rem; }
+  .public-surface .sl-hero__title { font-size: 2.25rem; }
+  .public-surface .sl-prompt__panel { min-height: 7.75rem; padding: 1.25rem 1.5rem; }
+}
+
+@media (min-width: 90rem) {
+  .public-surface .sl-hero__stack { width: 42rem; }
+  .public-surface .sl-hero__title { font-size: 2.375rem; }
+  .public-surface .sl-prompt__panel { min-height: 8.25rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-surface .sl-hero__scene[data-active="true"],
+  .public-surface .sl-prompt__caret { animation: none; }
+}
