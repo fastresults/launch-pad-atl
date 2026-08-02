@@ -69,7 +69,7 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="hero-cinematic max-h-[88vh] max-w-2xl overflow-y-auto rounded-3xl border-[rgba(244,246,255,0.14)] p-0 shadow-[0_60px_140px_-40px_rgba(0,0,0,0.9)]">
+      <DialogContent className="hero-modal max-h-[88vh] max-w-2xl overflow-y-auto rounded-3xl border-[rgba(244,246,255,0.14)] p-0 shadow-[0_60px_140px_-40px_rgba(0,0,0,0.9)]">
         <div className="p-6 sm:p-8">
           <div className="mb-6 flex items-center gap-2 text-xs uppercase tracking-[0.18em] hero-faint">
             <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
