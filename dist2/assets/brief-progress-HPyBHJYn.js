@@ -1,0 +1,1 @@
+import{B as n}from"./workflow-qWUffURG.js";const s=n.length;function i(t){if(!t)return 0;let e=0;for(const r of n){const o=t[r.key];typeof o=="string"&&o.trim().length>0&&(e+=1)}return e}const c=n.map(t=>t.key);export{c as BRIEF_FIELD_KEYS,s as BRIEF_TOTAL,i as countAnsweredBriefFields};
