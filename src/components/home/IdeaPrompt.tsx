@@ -9,8 +9,9 @@ type IdeaPromptProps = {
 };
 
 /**
- * Glass prompt in the lower third. Shows auto-typing ghost text matching the
- * active scene until the visitor types — then it hands the field over to them.
+ * The hero's glass prompt card. Auto-typing ghost text matches the active
+ * scene until the visitor types — then the field is theirs. The card carries
+ * its own caption and CTA along its bottom edge.
  */
 export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
   const [value, setValue] = useState("");
@@ -23,19 +24,19 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
-    const idea = value.trim();
+    const idea = (value.trim() || ghostText.trim()).replace(/\|$/, "");
     if (!idea) return;
     navigate(`/register?idea=${encodeURIComponent(idea)}`);
   };
 
   return (
-    <form onSubmit={submit} className="w-full max-w-2xl">
-      <div className="hero-glass flex items-center gap-3 rounded-2xl px-4 py-3 sm:px-5 sm:py-4">
-        <div className="relative min-w-0 flex-1">
+    <form onSubmit={submit} className="mx-auto w-full max-w-[1100px]">
+      <div className="hero-glass flex min-h-[180px] flex-col justify-between rounded-3xl p-6 text-left sm:p-8 md:min-h-[240px]">
+        <div className="relative min-w-0">
           {value.length === 0 && (
             <div
               aria-hidden="true"
-              className="hero-ghost pointer-events-none absolute inset-0 flex items-center truncate"
+              className="hero-ghost pointer-events-none absolute inset-0 flex items-center"
             >
               <span className="truncate">{ghostText}</span>
               <span className="hero-caret" />
@@ -50,18 +51,15 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
             className="hero-input w-full py-1"
           />
         </div>
-        <button
-          type="submit"
-          disabled={value.trim().length === 0}
-          className="hero-send inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-          aria-label="Start with this idea"
-        >
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </button>
+
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+          <p className="hero-faint text-sm">We build it. You own it.</p>
+          <button type="submit" className="hero-cta">
+            Start For Free
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
       </div>
-      <p className="hero-faint mt-3 text-xs tracking-wide">
-        Type your own, or watch a few. Either way, we start where you are.
-      </p>
     </form>
   );
 }
