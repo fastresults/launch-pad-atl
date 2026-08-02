@@ -130,12 +130,54 @@ export const founderScenes: FounderScene[] = [
   },
 ];
 
-/** Fisher-Yates shuffle — new random order on every call. */
-export function shuffleScenes(scenes: FounderScene[] = founderScenes): FounderScene[] {
+const LAST_FIRST_SCENE_KEY = "hero-last-first-scene";
+
+/**
+ * Fisher-Yates shuffle — new random order on every call. When `avoidFirstId` is
+ * given, the opening scene is guaranteed not to be that one.
+ */
+export function shuffleScenes(
+  scenes: FounderScene[] = founderScenes,
+  avoidFirstId?: string,
+): FounderScene[] {
   const copy = [...scenes];
   for (let i = copy.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
     [copy[i], copy[j]] = [copy[j]!, copy[i]!];
   }
+
+  if (avoidFirstId && copy.length > 1 && copy[0]?.id === avoidFirstId) {
+    const swap = 1 + Math.floor(Math.random() * (copy.length - 1));
+    [copy[0], copy[swap]] = [copy[swap]!, copy[0]!];
+  }
+
   return copy;
 }
+
+/**
+ * Shuffles the scenes and remembers the opening scene so the next visit in this
+ * session never starts on the same image.
+ */
+export function shuffleScenesForVisit(
+  scenes: FounderScene[] = founderScenes,
+): FounderScene[] {
+  let last: string | undefined;
+  try {
+    last = window.sessionStorage.getItem(LAST_FIRST_SCENE_KEY) ?? undefined;
+  } catch {
+    last = undefined;
+  }
+
+  const ordered = shuffleScenes(scenes, last);
+
+  try {
+    if (ordered[0]) {
+      window.sessionStorage.setItem(LAST_FIRST_SCENE_KEY, ordered[0].id);
+    }
+  } catch {
+    /* storage unavailable — ordering is still random */
+  }
+
+  return ordered;
+}
+
