@@ -50,9 +50,37 @@ import sceneVirtualAssistant from "@/assets/scenes/scene-virtualassistant.jpg";
 import sceneOnlineCoaching from "@/assets/scenes/scene-onlinecoaching.jpg";
 import sceneLeadGen from "@/assets/scenes/scene-leadgen.jpg";
 import sceneSubscriptionBox from "@/assets/scenes/scene-subscriptionbox.jpg";
+import sceneAiagent from "@/assets/scenes/scene-aiagent.jpg";
+import sceneVoiceai from "@/assets/scenes/scene-voiceai.jpg";
+import sceneFacelessyt from "@/assets/scenes/scene-facelessyt.jpg";
+import sceneUgc from "@/assets/scenes/scene-ugc.jpg";
+import sceneMicrosaas from "@/assets/scenes/scene-microsaas.jpg";
+import scenePromptmarket from "@/assets/scenes/scene-promptmarket.jpg";
+import sceneAiphoto from "@/assets/scenes/scene-aiphoto.jpg";
+import sceneEtsydigital from "@/assets/scenes/scene-etsydigital.jpg";
+import sceneCreatorbooks from "@/assets/scenes/scene-creatorbooks.jpg";
+import sceneColdemail from "@/assets/scenes/scene-coldemail.jpg";
+import sceneVideoediting from "@/assets/scenes/scene-videoediting.jpg";
+import sceneCoursebox from "@/assets/scenes/scene-coursebox.jpg";
+import sceneCommunity from "@/assets/scenes/scene-community.jpg";
+import sceneStorebuild from "@/assets/scenes/scene-storebuild.jpg";
+import scenePrivatelabel from "@/assets/scenes/scene-privatelabel.jpg";
+import sceneDropship from "@/assets/scenes/scene-dropship.jpg";
+import sceneAffiliate from "@/assets/scenes/scene-affiliate.jpg";
+import sceneTutoring from "@/assets/scenes/scene-tutoring.jpg";
+import sceneRemoteadmin from "@/assets/scenes/scene-remoteadmin.jpg";
+import sceneInterviewcoach from "@/assets/scenes/scene-interviewcoach.jpg";
+import scenePodcast from "@/assets/scenes/scene-podcast.jpg";
+import sceneAdsales from "@/assets/scenes/scene-adsales.jpg";
+import sceneWebdesign from "@/assets/scenes/scene-webdesign.jpg";
+import scenePublishing from "@/assets/scenes/scene-publishing.jpg";
+import sceneFitnessapp from "@/assets/scenes/scene-fitnessapp.jpg";
+
+export type SceneCategory = "main-street" | "online";
 
 export type FounderScene = {
   id: string;
+  category: SceneCategory;
   phrase: string;
   label: string;
   image: string;
@@ -62,6 +90,7 @@ export type FounderScene = {
 export const founderScenes: FounderScene[] = [
   {
     id: "coffee",
+    category: "main-street",
     phrase: "I want to start a coffee shop",
     label: "Coffee shop",
     image: sceneCoffee,
@@ -69,6 +98,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "roofing",
+    category: "main-street",
     phrase: "I want to build a roofing company",
     label: "Roofing company",
     image: sceneRoofing,
@@ -76,6 +106,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "restaurant",
+    category: "main-street",
     phrase: "I want to open a neighborhood restaurant",
     label: "Restaurant",
     image: sceneRestaurant,
@@ -83,6 +114,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "ecommerce",
+    category: "main-street",
     phrase: "I want to launch an online shopping brand",
     label: "Online shopping brand",
     image: sceneEcommerce,
@@ -90,6 +122,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "barbershop",
+    category: "main-street",
     phrase: "I want to open a barbershop",
     label: "Barbershop",
     image: sceneBarbershop,
@@ -97,6 +130,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "fitness",
+    category: "main-street",
     phrase: "I want to open a fitness studio",
     label: "Fitness studio",
     image: sceneFitness,
@@ -104,6 +138,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "landscaping",
+    category: "main-street",
     phrase: "I want to start a landscaping service",
     label: "Landscaping service",
     image: sceneLandscaping,
@@ -111,6 +146,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "bakery",
+    category: "main-street",
     phrase: "I want to open a bakery",
     label: "Bakery",
     image: sceneBakery,
@@ -118,6 +154,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "custard",
+    category: "main-street",
     phrase: "I want to open a homemade custard shop",
     label: "Homemade custard shop",
     image: sceneCustard,
@@ -125,6 +162,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "photography",
+    category: "main-street",
     phrase: "I want to build a photography studio",
     label: "Photography studio",
     image: scenePhotography,
@@ -132,6 +170,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "cleaning",
+    category: "main-street",
     phrase: "I want to start a home cleaning company",
     label: "Home cleaning company",
     image: sceneCleaning,
@@ -139,6 +178,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "branding",
+    category: "main-street",
     phrase: "I want to start a personal branding studio",
     label: "Personal branding studio",
     image: sceneBranding,
@@ -146,6 +186,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "medspa",
+    category: "main-street",
     phrase: "I want to open a med spa",
     label: "Med spa",
     image: sceneMedspa,
@@ -153,6 +194,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "detailing",
+    category: "main-street",
     phrase: "I want to start a mobile detailing company",
     label: "Mobile detailing company",
     image: sceneDetailing,
@@ -160,6 +202,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "boutique",
+    category: "main-street",
     phrase: "I want to open a boutique clothing shop",
     label: "Boutique clothing shop",
     image: sceneBoutique,
@@ -167,6 +210,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "realestate",
+    category: "main-street",
     phrase: "I want to start a real estate brokerage",
     label: "Real estate brokerage",
     image: sceneRealEstate,
@@ -174,6 +218,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "autoauction",
+    category: "main-street",
     phrase: "I want to be an auto auction consultant",
     label: "Auto auction consulting",
     image: sceneAutoAuction,
@@ -181,6 +226,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "daycare",
+    category: "main-street",
     phrase: "I want to open a daycare",
     label: "Daycare",
     image: sceneDaycare,
@@ -188,6 +234,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "seniorcare",
+    category: "main-street",
     phrase: "I want to start a senior aging consultancy",
     label: "Senior care consulting",
     image: sceneSeniorCare,
@@ -195,6 +242,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "homehealth",
+    category: "main-street",
     phrase: "I want to start a home health care agency",
     label: "Home health agency",
     image: sceneHomeHealth,
@@ -202,6 +250,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "trucking",
+    category: "main-street",
     phrase: "I want to start a trucking company",
     label: "Trucking company",
     image: sceneTrucking,
@@ -209,6 +258,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "foodtruck",
+    category: "main-street",
     phrase: "I want to launch a food truck",
     label: "Food truck",
     image: sceneFoodTruck,
@@ -216,6 +266,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "petgrooming",
+    category: "main-street",
     phrase: "I want to start a mobile pet grooming van",
     label: "Mobile pet grooming",
     image: scenePetGrooming,
@@ -223,6 +274,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "junkhauling",
+    category: "main-street",
     phrase: "I want to start a junk hauling business",
     label: "Junk hauling",
     image: sceneJunkHauling,
@@ -230,6 +282,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "pressurewashing",
+    category: "main-street",
     phrase: "I want to start a pressure washing company",
     label: "Pressure washing",
     image: scenePressureWashing,
@@ -237,6 +290,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "ghostkitchen",
+    category: "main-street",
     phrase: "I want to launch a ghost kitchen brand",
     label: "Ghost kitchen",
     image: sceneGhostKitchen,
@@ -244,6 +298,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "notary",
+    category: "main-street",
     phrase: "I want to become a mobile notary and loan signing agent",
     label: "Mobile notary",
     image: sceneNotary,
@@ -251,6 +306,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "pickleball",
+    category: "main-street",
     phrase: "I want to teach pickleball clinics",
     label: "Pickleball clinics",
     image: scenePickleball,
@@ -258,6 +314,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "holidaylights",
+    category: "main-street",
     phrase: "I want to start a Christmas light install business",
     label: "Holiday light install",
     image: sceneHolidayLights,
@@ -265,6 +322,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "organizing",
+    category: "main-street",
     phrase: "I want to start a home organization service",
     label: "Home organizing",
     image: sceneOrganizing,
@@ -272,6 +330,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "vending",
+    category: "main-street",
     phrase: "I want to run a vending machine route",
     label: "Vending route",
     image: sceneVending,
@@ -279,6 +338,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "handyman",
+    category: "main-street",
     phrase: "I want to build a two-truck handyman crew",
     label: "Handyman crew",
     image: sceneHandyman,
@@ -286,6 +346,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "epoxy",
+    category: "main-street",
     phrase: "I want to start an epoxy garage floor business",
     label: "Epoxy garage floors",
     image: sceneEpoxy,
@@ -293,6 +354,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "lawncare",
+    category: "main-street",
     phrase: "I want to start a lawn care route",
     label: "Lawn care route",
     image: sceneLawnCare,
@@ -300,6 +362,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "airbnb",
+    category: "main-street",
     phrase: "I want to manage short-term rentals",
     label: "Short-term rental management",
     image: sceneAirbnb,
@@ -307,6 +370,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "mobileiv",
+    category: "main-street",
     phrase: "I want to start a mobile IV and wellness service",
     label: "Mobile IV wellness",
     image: sceneMobileIv,
@@ -314,6 +378,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "seniortech",
+    category: "main-street",
     phrase: "I want to start a senior tech help service",
     label: "Senior tech help",
     image: sceneSeniorTech,
@@ -321,6 +386,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "mealprep",
+    category: "main-street",
     phrase: "I want to start a weekly meal prep service",
     label: "Weekly meal prep",
     image: sceneMealPrep,
@@ -328,6 +394,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "bookkeeping",
+    category: "main-street",
     phrase: "I want to start a bookkeeping business",
     label: "Bookkeeping service",
     image: sceneBookkeeping,
@@ -335,6 +402,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "resume",
+    category: "main-street",
     phrase: "I want to start a resume and LinkedIn service",
     label: "Resume & LinkedIn rewrites",
     image: sceneResume,
@@ -342,6 +410,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "microgreens",
+    category: "main-street",
     phrase: "I want to grow microgreens for chefs",
     label: "Microgreens farm",
     image: sceneMicrogreens,
@@ -349,6 +418,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "dogwalking",
+    category: "main-street",
     phrase: "I want to start a dog walking and pet sitting business",
     label: "Dog walking & pet sitting",
     image: sceneDogWalking,
@@ -356,6 +426,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "aiautomation",
+    category: "online",
     phrase: "I want to start an AI automation agency",
     label: "AI automation agency",
     image: sceneAiAutomation,
@@ -363,6 +434,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "contentstudio",
+    category: "online",
     phrase: "I want to start an AI content studio",
     label: "AI content studio",
     image: sceneContentStudio,
@@ -370,6 +442,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "newsletter",
+    category: "online",
     phrase: "I want to start a paid newsletter",
     label: "Paid newsletter",
     image: sceneNewsletter,
@@ -377,6 +450,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "digitalproducts",
+    category: "online",
     phrase: "I want to sell digital products and templates",
     label: "Digital products shop",
     image: sceneDigitalProducts,
@@ -384,6 +458,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "merch",
+    category: "online",
     phrase: "I want to launch a print-on-demand merch brand",
     label: "Print-on-demand brand",
     image: sceneMerch,
@@ -391,6 +466,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "onlinereseller",
+    category: "online",
     phrase: "I want to sell on Amazon as an online reseller",
     label: "Online reseller",
     image: sceneOnlineReseller,
@@ -398,6 +474,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "virtualassistant",
+    category: "online",
     phrase: "I want to start a virtual assistant agency",
     label: "Virtual assistant agency",
     image: sceneVirtualAssistant,
@@ -405,6 +482,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "onlinecoaching",
+    category: "online",
     phrase: "I want to run online coaching cohorts",
     label: "Online coaching",
     image: sceneOnlineCoaching,
@@ -412,6 +490,7 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "leadgen",
+    category: "online",
     phrase: "I want to build local lead generation websites",
     label: "Local lead generation",
     image: sceneLeadGen,
@@ -419,10 +498,211 @@ export const founderScenes: FounderScene[] = [
   },
   {
     id: "subscriptionbox",
+    category: "online",
     phrase: "I want to launch a subscription box brand",
     label: "Subscription box brand",
     image: sceneSubscriptionBox,
     alt: "Founder packing curated subscription boxes at a studio work table",
+  },
+  {
+    id: "aiagent",
+    category: "online",
+    phrase: "I want to build AI agents for small teams",
+    label: "AI agent builder",
+    image: sceneAiagent,
+    alt: "Founder building automated AI agent workflows across monitors in a dark home office",
+  },
+  {
+    id: "voiceai",
+    category: "online",
+    phrase: "I want to start an AI voice receptionist service",
+    label: "AI voice receptionist",
+    image: sceneVoiceai,
+    alt: "Founder running an AI phone answering service from a small home office",
+  },
+  {
+    id: "facelessyt",
+    category: "online",
+    phrase: "I want to run a faceless YouTube channel",
+    label: "Faceless YouTube channel",
+    image: sceneFacelessyt,
+    alt: "Creator editing a faceless YouTube video late at night",
+  },
+  {
+    id: "ugc",
+    category: "online",
+    phrase: "I want to become a UGC creator for brands",
+    label: "UGC creator studio",
+    image: sceneUgc,
+    alt: "Creator filming a product video on a phone tripod with a ring light",
+  },
+  {
+    id: "microsaas",
+    category: "online",
+    phrase: "I want to build a micro-SaaS product",
+    label: "Micro-SaaS product",
+    image: sceneMicrosaas,
+    alt: "Solo founder coding a small software product at a dark desk at dusk",
+  },
+  {
+    id: "promptmarket",
+    category: "online",
+    phrase: "I want to sell AI prompt and workflow packs",
+    label: "AI prompt packs",
+    image: scenePromptmarket,
+    alt: "Founder organizing AI prompt and workflow packs on a laptop",
+  },
+  {
+    id: "aiphoto",
+    category: "online",
+    phrase: "I want to open an AI headshot and product photo studio",
+    label: "AI photo studio",
+    image: sceneAiphoto,
+    alt: "Founder reviewing AI generated headshots on a monitor in a lit studio",
+  },
+  {
+    id: "etsydigital",
+    category: "online",
+    phrase: "I want to sell digital downloads on Etsy",
+    label: "Etsy digital downloads",
+    image: sceneEtsydigital,
+    alt: "Maker designing printable digital downloads on a laptop at a craft desk",
+  },
+  {
+    id: "creatorbooks",
+    category: "online",
+    phrase: "I want to do bookkeeping for online creators",
+    label: "Bookkeeping for creators",
+    image: sceneCreatorbooks,
+    alt: "Bookkeeper reviewing creator income charts on a laptop at dusk",
+  },
+  {
+    id: "coldemail",
+    category: "online",
+    phrase: "I want to start a cold email lead generation agency",
+    label: "Cold email lead gen",
+    image: sceneColdemail,
+    alt: "Founder working an outbound email pipeline at a dual monitor desk",
+  },
+  {
+    id: "videoediting",
+    category: "online",
+    phrase: "I want to start a short-form video editing agency",
+    label: "Short-form video editing",
+    image: sceneVideoediting,
+    alt: "Editor cutting a vertical short-form video at a dark studio desk",
+  },
+  {
+    id: "coursebox",
+    category: "online",
+    phrase: "I want to launch an online course",
+    label: "Online course",
+    image: sceneCoursebox,
+    alt: "Course creator recording lessons to a camera in a small home studio",
+  },
+  {
+    id: "community",
+    category: "online",
+    phrase: "I want to run a paid online community",
+    label: "Paid online community",
+    image: sceneCommunity,
+    alt: "Community operator hosting a live members call on a laptop",
+  },
+  {
+    id: "storebuild",
+    category: "online",
+    phrase: "I want to build online stores for brands",
+    label: "Online store buildouts",
+    image: sceneStorebuild,
+    alt: "Freelancer building an online store layout on a large monitor",
+  },
+  {
+    id: "privatelabel",
+    category: "online",
+    phrase: "I want to launch a private label brand on Amazon",
+    label: "Private label brand",
+    image: scenePrivatelabel,
+    alt: "Founder checking branded product cases on shelves in a garage stockroom",
+  },
+  {
+    id: "dropship",
+    category: "online",
+    phrase: "I want to start a niche dropshipping brand",
+    label: "Niche dropshipping brand",
+    image: sceneDropship,
+    alt: "Founder reviewing supplier products on a laptop with a sample in hand",
+  },
+  {
+    id: "affiliate",
+    category: "online",
+    phrase: "I want to build an affiliate review site",
+    label: "Affiliate review site",
+    image: sceneAffiliate,
+    alt: "Founder writing product reviews at a desk surrounded by gadgets",
+  },
+  {
+    id: "tutoring",
+    category: "online",
+    phrase: "I want to start an online tutoring service",
+    label: "Online tutoring",
+    image: sceneTutoring,
+    alt: "Tutor teaching a student over a video call in the evening",
+  },
+  {
+    id: "remoteadmin",
+    category: "online",
+    phrase: "I want to start a remote medical admin service",
+    label: "Remote admin service",
+    image: sceneRemoteadmin,
+    alt: "Remote admin specialist working scheduling screens from a home office",
+  },
+  {
+    id: "interviewcoach",
+    category: "online",
+    phrase: "I want to start a resume and interview coaching service",
+    label: "Interview coaching",
+    image: sceneInterviewcoach,
+    alt: "Coach running a mock interview over a video call from home",
+  },
+  {
+    id: "podcast",
+    category: "online",
+    phrase: "I want to start a podcast production agency",
+    label: "Podcast production",
+    image: scenePodcast,
+    alt: "Producer mixing a podcast episode at a studio microphone setup",
+  },
+  {
+    id: "adsales",
+    category: "online",
+    phrase: "I want to sell newsletter ads for creators",
+    label: "Newsletter ad sales",
+    image: sceneAdsales,
+    alt: "Media entrepreneur closing an ad deal on the phone beside audience metrics",
+  },
+  {
+    id: "webdesign",
+    category: "online",
+    phrase: "I want to sell a web design subscription",
+    label: "Web design subscription",
+    image: sceneWebdesign,
+    alt: "Designer sketching a website wireframe on a tablet beside a monitor",
+  },
+  {
+    id: "publishing",
+    category: "online",
+    phrase: "I want to publish e-books and audiobooks",
+    label: "E-book publishing",
+    image: scenePublishing,
+    alt: "Independent author recording an audiobook at a home desk",
+  },
+  {
+    id: "fitnessapp",
+    category: "online",
+    phrase: "I want to start online fitness coaching",
+    label: "Online fitness coaching",
+    image: sceneFitnessapp,
+    alt: "Online fitness coach filming a workout demo in a home gym",
   },
 ];
 
@@ -452,8 +732,41 @@ export function shuffleScenes(
 }
 
 /**
- * Shuffles the scenes and remembers the opening scene so the next visit in this
- * session never starts on the same image.
+ * Alternates the two category pools — Main Street, online, Main Street, online.
+ * Whichever pool empties first, the remaining scenes from the other pool follow
+ * in their shuffled order. Every scene appears exactly once.
+ */
+export function interleaveByCategory(
+  scenes: FounderScene[],
+  startWith: SceneCategory = "main-street",
+): FounderScene[] {
+  const mainStreet = scenes.filter((scene) => scene.category === "main-street");
+  const online = scenes.filter((scene) => scene.category === "online");
+
+  const ordered: FounderScene[] = [];
+  let takeOnline = startWith === "online";
+  let m = 0;
+  let o = 0;
+
+  while (m < mainStreet.length || o < online.length) {
+    const preferOnline = takeOnline && o < online.length;
+    if (preferOnline || m >= mainStreet.length) {
+      ordered.push(online[o]!);
+      o += 1;
+    } else {
+      ordered.push(mainStreet[m]!);
+      m += 1;
+    }
+    takeOnline = !takeOnline;
+  }
+
+  return ordered;
+}
+
+/**
+ * Shuffles the scenes, alternates Main Street and online businesses, and
+ * remembers the opening scene so the next visit in this session never starts on
+ * the same image.
  */
 export function shuffleScenesForVisit(
   scenes: FounderScene[] = founderScenes,
@@ -465,7 +778,22 @@ export function shuffleScenesForVisit(
     last = undefined;
   }
 
-  const ordered = shuffleScenes(scenes, last);
+  // Each pool is shuffled independently, then woven together so the cadence
+  // alternates. The opening category is random too, so visits do not always
+  // start on the same kind of business.
+  const startWith: SceneCategory = Math.random() < 0.5 ? "main-street" : "online";
+  let ordered = interleaveByCategory(shuffleScenes(scenes), startWith);
+
+  if (last && ordered[0]?.id === last && ordered.length > 2) {
+    // Swap the opener with the next scene of the same category so the
+    // alternating cadence is preserved.
+    const swap = ordered.findIndex(
+      (scene, index) => index > 0 && scene.category === ordered[0]!.category,
+    );
+    if (swap > 0) {
+      [ordered[0], ordered[swap]] = [ordered[swap]!, ordered[0]!];
+    }
+  }
 
   try {
     if (ordered[0]) {
@@ -477,4 +805,5 @@ export function shuffleScenesForVisit(
 
   return ordered;
 }
+
 
