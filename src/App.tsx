@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AskConcierge } from "@/components/site/AskConcierge";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
@@ -72,6 +72,7 @@ const AdminHub = lazy(() => import("@/routes/_authenticated/_admin/admin.hub"));
 const AdminMedia = lazy(() => import("@/routes/_authenticated/_admin/admin.media"));
 const AdminTestimonials = lazy(() => import("@/routes/_authenticated/_admin/admin.testimonials"));
 const AdminVideoWall = lazy(() => import("@/routes/_authenticated/_admin/admin.video-wall"));
+const NotFoundPage = lazy(() => import("@/routes/not-found"));
 const AdminCohorts = lazy(() => import("@/routes/_authenticated/_admin/admin.cohorts"));
 
 const AdminAttendees = lazy(() => import("@/routes/_authenticated/_admin/admin.attendees"));
@@ -201,7 +202,7 @@ export default function App() {
         </Route>
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <AskConcierge />
       </LandingOnlyGate>
