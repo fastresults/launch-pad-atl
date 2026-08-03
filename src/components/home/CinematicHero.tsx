@@ -39,14 +39,9 @@ export function CinematicHero() {
     if (total === 0) return;
     const next = scenes[(index + 1) % total];
     if (!next) return;
-    let cancelled = false;
     const img = new Image();
     img.src = next.image;
     void img.decode?.().catch(() => undefined);
-    return () => {
-      cancelled = true;
-      void cancelled;
-    };
   }, [index, scenes, total]);
 
   useEffect(() => {
