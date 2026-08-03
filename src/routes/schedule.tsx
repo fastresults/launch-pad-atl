@@ -260,7 +260,7 @@ export default function SchedulePage() {
               One focused morning
             </p>
             <h3 className="public-heading">
-              Idea in. Startup out.
+              Idea in. Startup foundation out.
             </h3>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
               Show up at 8:45 with your idea. Leave at 11:30 with your brand named, your offer priced with a first customer named on it, your page copy written, and your outreach message ready to send — every word worked out with a real person, not a bot.
