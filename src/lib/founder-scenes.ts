@@ -75,8 +75,38 @@ import sceneAdsales from "@/assets/scenes/scene-adsales.jpg";
 import sceneWebdesign from "@/assets/scenes/scene-webdesign.jpg";
 import scenePublishing from "@/assets/scenes/scene-publishing.jpg";
 import sceneFitnessapp from "@/assets/scenes/scene-fitnessapp.jpg";
+import sceneFractionalcfo from "@/assets/scenes/scene-fractionalcfo.jpg";
+import sceneFractionalcmo from "@/assets/scenes/scene-fractionalcmo.jpg";
+import sceneBookkeeping from "@/assets/scenes/scene-bookkeeping.jpg";
+import sceneTaxprep from "@/assets/scenes/scene-taxprep.jpg";
+import sceneHrconsult from "@/assets/scenes/scene-hrconsult.jpg";
+import sceneRecruiting from "@/assets/scenes/scene-recruiting.jpg";
+import sceneExeccoach from "@/assets/scenes/scene-execcoach.jpg";
+import sceneResumepro from "@/assets/scenes/scene-resumepro.jpg";
+import scenePmconsult from "@/assets/scenes/scene-pmconsult.jpg";
+import sceneCrmadmin from "@/assets/scenes/scene-crmadmin.jpg";
+import sceneDataconsult from "@/assets/scenes/scene-dataconsult.jpg";
+import sceneItsupport from "@/assets/scenes/scene-itsupport.jpg";
+import sceneCybersec from "@/assets/scenes/scene-cybersec.jpg";
+import sceneCloudconsult from "@/assets/scenes/scene-cloudconsult.jpg";
+import sceneTechwriting from "@/assets/scenes/scene-techwriting.jpg";
+import sceneGrantwriting from "@/assets/scenes/scene-grantwriting.jpg";
+import sceneMedbilling from "@/assets/scenes/scene-medbilling.jpg";
+import sceneClaims from "@/assets/scenes/scene-claims.jpg";
+import sceneLegalresearch from "@/assets/scenes/scene-legalresearch.jpg";
+import sceneParalegal from "@/assets/scenes/scene-paralegal.jpg";
+import sceneCustomersuccess from "@/assets/scenes/scene-customersuccess.jpg";
+import sceneSdr from "@/assets/scenes/scene-sdr.jpg";
+import sceneRevops from "@/assets/scenes/scene-revops.jpg";
+import sceneTranslation from "@/assets/scenes/scene-translation.jpg";
+import sceneTradesbooks from "@/assets/scenes/scene-tradesbooks.jpg";
+import sceneProposals from "@/assets/scenes/scene-proposals.jpg";
+import sceneMarketresearch from "@/assets/scenes/scene-marketresearch.jpg";
+import sceneTelehealth from "@/assets/scenes/scene-telehealth.jpg";
+import sceneNotary from "@/assets/scenes/scene-notary.jpg";
+import sceneOpsconsult from "@/assets/scenes/scene-opsconsult.jpg";
 
-export type SceneCategory = "main-street" | "online";
+export type SceneCategory = "main-street" | "online" | "remote";
 
 export type FounderScene = {
   id: string;
@@ -731,33 +761,61 @@ export function shuffleScenes(
   return copy;
 }
 
+/** The repeating cadence the hero rotation follows. */
+export const SCENE_CATEGORY_CYCLE: SceneCategory[] = [
+  "main-street",
+  "online",
+  "remote",
+];
+
 /**
- * Alternates the two category pools — Main Street, online, Main Street, online.
- * Whichever pool empties first, the remaining scenes from the other pool follow
- * in their shuffled order. Every scene appears exactly once.
+ * Weaves the category pools together in a repeating cycle — Main Street,
+ * online, remote, Main Street, online, remote. When a pool empties, the cycle
+ * continues with whatever pools remain, so every scene appears exactly once.
  */
 export function interleaveByCategory(
   scenes: FounderScene[],
   startWith: SceneCategory = "main-street",
 ): FounderScene[] {
-  const mainStreet = scenes.filter((scene) => scene.category === "main-street");
-  const online = scenes.filter((scene) => scene.category === "online");
+  const startIndex = Math.max(0, SCENE_CATEGORY_CYCLE.indexOf(startWith));
+  const cycle = [
+    ...SCENE_CATEGORY_CYCLE.slice(startIndex),
+    ...SCENE_CATEGORY_CYCLE.slice(0, startIndex),
+  ];
+
+  const pools = new Map<SceneCategory, FounderScene[]>(
+    cycle.map((category) => [
+      category,
+      scenes.filter((scene) => scene.category === category),
+    ]),
+  );
+  const cursors = new Map<SceneCategory, number>(
+    cycle.map((category) => [category, 0]),
+  );
+
+  const remaining = () =>
+    cycle.reduce(
+      (total, category) =>
+        total + (pools.get(category)!.length - cursors.get(category)!),
+      0,
+    );
 
   const ordered: FounderScene[] = [];
-  let takeOnline = startWith === "online";
-  let m = 0;
-  let o = 0;
+  let beat = 0;
 
-  while (m < mainStreet.length || o < online.length) {
-    const preferOnline = takeOnline && o < online.length;
-    if (preferOnline || m >= mainStreet.length) {
-      ordered.push(online[o]!);
-      o += 1;
-    } else {
-      ordered.push(mainStreet[m]!);
-      m += 1;
+  while (remaining() > 0) {
+    // Walk forward from the current beat until a pool still has scenes left.
+    for (let step = 0; step < cycle.length; step += 1) {
+      const category = cycle[(beat + step) % cycle.length]!;
+      const pool = pools.get(category)!;
+      const cursor = cursors.get(category)!;
+      if (cursor < pool.length) {
+        ordered.push(pool[cursor]!);
+        cursors.set(category, cursor + 1);
+        beat = (beat + step + 1) % cycle.length;
+        break;
+      }
     }
-    takeOnline = !takeOnline;
   }
 
   return ordered;
@@ -779,9 +837,10 @@ export function shuffleScenesForVisit(
   }
 
   // Each pool is shuffled independently, then woven together so the cadence
-  // alternates. The opening category is random too, so visits do not always
-  // start on the same kind of business.
-  const startWith: SceneCategory = Math.random() < 0.5 ? "main-street" : "online";
+  // cycles Main Street, online, remote. The opening lane is random too, so
+  // visits do not always start on the same kind of business.
+  const startWith =
+    SCENE_CATEGORY_CYCLE[Math.floor(Math.random() * SCENE_CATEGORY_CYCLE.length)]!;
   let ordered = interleaveByCategory(shuffleScenes(scenes), startWith);
 
   if (last && ordered[0]?.id === last && ordered.length > 2) {
