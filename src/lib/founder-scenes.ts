@@ -89,11 +89,11 @@ export const founderScenes: FounderScene[] = [
     alt: "Ecommerce founder packing orders in a small warehouse",
   },
   {
-    id: "matchmaking",
-    phrase: "I want to build a platform that matches people",
-    label: "Matching platform",
-    image: sceneMatchmaking,
-    alt: "Community platform founder hosting an evening meetup",
+    id: "barbershop",
+    phrase: "I want to open a barbershop",
+    label: "Barbershop",
+    image: sceneBarbershop,
+    alt: "Barbershop owner giving a client a fresh cut in his own shop",
   },
   {
     id: "fitness",
