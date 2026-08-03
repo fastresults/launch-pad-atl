@@ -284,12 +284,51 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
                 An Atlanta market read for {label}
               </DialogDescription>
 
-              {/* The money picture — the first visual, skeletoned from paint one */}
-              <div className="mt-6 rounded-3xl border border-[rgba(76,140,255,0.28)] bg-[rgba(76,140,255,0.07)] p-5">
+              {/* How far this can travel — Atlanta is the start, not the ceiling */}
+              <div className="mt-5 rounded-2xl border border-[rgba(244,246,255,0.12)] bg-[rgba(244,246,255,0.04)] p-4">
+                {tier ? (
+                  <>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(76,140,255,0.35)] bg-[rgba(76,140,255,0.12)] px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] hero-accent">
+                        <HeaderIcon className="h-3 w-3" aria-hidden="true" />
+                        {REACH_LABEL[tier]}
+                      </span>
+                      {reach?.headline ? (
+                        <span className="text-[15px] font-medium" style={{ color: "var(--hero-fg)" }}>
+                          {reach.headline}
+                        </span>
+                      ) : null}
+                    </div>
+                    {reach?.why ? <p className="mt-2.5 text-sm hero-sub">{reach.why}</p> : null}
+                    {reach?.beyond_atlanta ? (
+                      <p className="mt-1.5 text-sm hero-sub">{reach.beyond_atlanta}</p>
+                    ) : null}
+                    {!isLocal && reach?.expansion_move ? (
+                      <p className="mt-2.5 text-sm hero-faint">
+                        <span className="uppercase tracking-[0.14em] text-[10px]">
+                          First move that opens it up ·{" "}
+                        </span>
+                        {reach.expansion_move}
+                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="hero-skel h-5 w-[46%]" />
+                    <div className="hero-skel h-4 w-[82%]" />
+                  </div>
+                )}
+              </div>
+
+              {/* The money picture — skeletoned from paint one */}
+              <div className="mt-5 rounded-3xl border border-[rgba(76,140,255,0.28)] bg-[rgba(76,140,255,0.07)] p-5">
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] hero-faint">
                   <Wallet className="h-3.5 w-3.5" aria-hidden="true" />
-                  What this can earn around Atlanta
+                  {isLocal || !tier
+                    ? "What this can earn around Atlanta"
+                    : "What this can earn as it reaches further"}
                 </div>
+
 
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
                   <MoneyTile caption="Typical ticket" value={econ?.typical_ticket} />
