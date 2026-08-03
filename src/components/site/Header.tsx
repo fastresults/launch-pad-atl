@@ -58,12 +58,12 @@ export function SiteHeader() {
           <Link to="/" className="flex min-w-0 shrink items-center font-semibold tracking-tight" aria-label="Startup Labs — home">
             <StartupLabsLogo className="sl-site-header__logo" />
           </Link>
-          <nav className="sl-site-header__nav">
-            {leftNav.map((n) => (
+          <nav className="sl-site-header__nav" aria-label="Primary navigation">
+            {leftNav.map((n, index) => (
               <NavLink
                 key={n.to}
                 to={n.to}
-                className="transition-colors hover:text-foreground"
+                className={`transition-colors hover:text-foreground ${index === 2 ? "sl-site-header__compact-optional" : ""}`}
               >
                 {n.label}
               </NavLink>
@@ -77,11 +77,11 @@ export function SiteHeader() {
 
         {/* Right edge: orientation nav + auth + CTA */}
         <div className="sl-site-header__actions">
-          {rightNav.map((n) => (
+          {rightNav.map((n, index) => (
             <NavLink
               key={n.to}
               to={n.to}
-                className="transition-colors hover:text-foreground"
+                className={`transition-colors hover:text-foreground ${index === 0 ? "sl-site-header__compact-optional" : ""}`}
             >
               {n.label}
             </NavLink>
@@ -103,10 +103,11 @@ export function SiteHeader() {
               <button onClick={() => signOut()} className="whitespace-nowrap hover:text-foreground">sign out</button>
             </>
           ) : (
-            <Link to="/login" className="whitespace-nowrap hover:text-foreground">sign in</Link>
+              <Link to="/login" className="sl-site-header__compact-optional whitespace-nowrap hover:text-foreground">sign in</Link>
           )}
           <Link to="/register" className="sl-site-header__cta bg-hero-gradient text-white transition-opacity hover:opacity-90">
-            <span>{ctaFull}</span>
+            <span className="sl-site-header__cta-full">{ctaFull}</span>
+            <span className="sl-site-header__cta-short">{ctaShort}</span>
           </Link>
         </div>
 
