@@ -120,7 +120,7 @@ function Hero() {
               In person in Atlanta · Atlanta&rsquo;s strongest startup foundation
             </p>
 
-            <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[3.1rem] lg:text-[4.3rem]">
+            <h1 className="public-display font-serif text-[#3D3025]">
               Pull up a chair.
               <br />
               Let&rsquo;s start your business{" "}
@@ -347,7 +347,7 @@ function Framework() {
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           What we actually write with you
         </p>
-        <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
+        <h2 className="public-heading max-w-3xl">
           A foundation that can take money.{" "}
           <span className="text-gradient-brand">Laid with you in one morning.</span>
         </h2>
@@ -428,7 +428,7 @@ function HonestRoadmap() {
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           Here's the honest promise
         </p>
-        <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
+        <h2 className="public-heading max-w-3xl">
           One morning of writing.{" "}
           <span className="text-gradient-brand">The four foundations your startup runs on.</span>
         </h2>
@@ -638,7 +638,7 @@ function BottomCTA() {
       <div className="public-container px-6">
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-hero-gradient p-8 md:p-12 lg:p-16">
           <div className="relative max-w-3xl text-white">
-            <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
+            <h2 className="public-heading">
               Stop thinking about it. Come start it.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">

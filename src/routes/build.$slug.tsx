@@ -46,7 +46,7 @@ export default function BuildWorkshopPage() {
               <p className="mb-2 text-xs uppercase tracking-[0.18em] text-primary md:text-sm md:tracking-[0.2em]">
                 {w.capability} · Workshop · {w.priceLabel}
               </p>
-              <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
+              <h1 className="public-display">
                 {w.oneLiner}
               </h1>
             </div>
@@ -86,7 +86,7 @@ export default function BuildWorkshopPage() {
             <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-primary md:text-sm">
               <Calendar className="size-4" /> Upcoming dates · {w.title}
             </div>
-            <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+            <h2 className="public-heading max-w-3xl">
               {w.title} —{" "}
               <span className="text-gradient-brand">pick your session.</span>
             </h2>
@@ -120,7 +120,7 @@ export default function BuildWorkshopPage() {
           <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground md:text-sm">
             <AlertTriangle className="size-4 text-primary" /> {w.sections.painEyebrow}
           </div>
-          <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+          <h2 className="public-heading max-w-3xl">
             {w.sections.painHeadline}
           </h2>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -147,7 +147,7 @@ export default function BuildWorkshopPage() {
           <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-primary md:text-sm">
             <Check className="size-4" /> What you walk out with
           </div>
-          <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+          <h2 className="public-heading max-w-3xl">
             {w.sections.walkOutHeadline.lead}{" "}
             <span className="text-gradient-brand">{w.sections.walkOutHeadline.emphasis}</span>
           </h2>
@@ -171,7 +171,7 @@ export default function BuildWorkshopPage() {
           <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground md:text-sm">
             <Clock className="size-4 text-primary" /> The agenda
           </div>
-          <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+          <h2 className="public-heading max-w-3xl">
             {w.sections.agendaHeadline.lead}{" "}
             <span className="text-gradient-brand">{w.sections.agendaHeadline.emphasis}</span>
           </h2>
@@ -204,7 +204,7 @@ export default function BuildWorkshopPage() {
       {/* Fit */}
       <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
         <div className="public-container px-6">
-          <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+          <h2 className="public-heading max-w-3xl">
             {w.sections.fitHeadline.lead}{" "}
             <span className="text-gradient-brand">{w.sections.fitHeadline.emphasis}</span>
           </h2>
@@ -251,7 +251,7 @@ export default function BuildWorkshopPage() {
           <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
             The decision moment
           </p>
-          <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+          <h2 className="public-heading">
             {w.sections.decisionHeadline.lead}{" "}
             <span className="text-gradient-brand">{w.sections.decisionHeadline.emphasis}</span>
           </h2>
@@ -269,7 +269,7 @@ export default function BuildWorkshopPage() {
             <p className="mb-3 text-xs uppercase tracking-[0.18em] opacity-80 md:text-sm md:tracking-[0.2em]">
               <Sparkles className="mr-1 inline size-3.5" /> Or have us build it for you
             </p>
-            <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+            <h2 className="public-heading">
               {offer.name}
             </h2>
             <p className="mt-3 text-base opacity-95 md:text-lg">{offer.tagline}</p>
@@ -300,7 +300,7 @@ export default function BuildWorkshopPage() {
       {/* FAQ */}
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+          <h2 className="public-heading">
             {w.sections.faqHeadline}
           </h2>
           <div className="mt-10 space-y-4">
@@ -328,7 +328,7 @@ export default function BuildWorkshopPage() {
           <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
             Keep building
           </p>
-          <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+          <h2 className="public-heading">
             {w.sections.otherWorkshopsHeadline}
           </h2>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
