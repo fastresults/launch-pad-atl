@@ -262,7 +262,7 @@ export function AskConcierge() {
           type="button"
           aria-label="Ask Startup Labs"
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-md border border-[#4f73b8] bg-[#628acf] px-4 py-3 text-sm font-medium text-[#FAF8F5] shadow-lg shadow-black/20 transition-transform hover:scale-[1.02] hover:bg-[#4f73b8] active:scale-100 md:bottom-8 md:right-6"
+          className="sl-chat-launcher fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-md border border-[#4f73b8] bg-[#628acf] px-4 py-3 text-sm font-medium text-[#FAF8F5] shadow-lg shadow-black/20 transition-transform hover:scale-[1.02] hover:bg-[#4f73b8] active:scale-100 md:bottom-8 md:right-6"
         >
           <MessageCircle className="size-5" />
           <span className="hidden sm:inline">Ask Startup Labs</span>

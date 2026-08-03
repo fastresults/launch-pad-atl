@@ -6,6 +6,7 @@ import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
 import { ZoomNotice } from "@/components/site/ZoomNotice";
+import { MobileCtaBar } from "@/components/site/MobileCtaBar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const leftNav = [
@@ -146,6 +147,8 @@ export function SiteHeader() {
     </header>
       <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
       <ZoomNotice />
+      <MobileCtaBar />
     </>
+
   );
 }
