@@ -382,7 +382,7 @@
 }
 
 .sl-hero__status { margin-top: 20px; }
-.sl-hero__status span { color: var(--brand-accent); }
+.sl-hero__status span { color: #c29b46; }
 
 /* ---------------------------------------------------------------
  * 7. Hero prompt panel
