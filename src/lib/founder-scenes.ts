@@ -117,6 +117,13 @@ export const founderScenes: FounderScene[] = [
     alt: "Bakery founder pulling trays of bread from the oven before dawn",
   },
   {
+    id: "custard",
+    phrase: "I want to open a homemade custard shop",
+    label: "Homemade custard shop",
+    image: sceneCustard,
+    alt: "Custard shop founder mixing homemade frozen custard on a cold stone slab",
+  },
+  {
     id: "photography",
     phrase: "I want to build a photography studio",
     label: "Photography studio",
