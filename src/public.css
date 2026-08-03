@@ -573,7 +573,10 @@
   /* No element may push the page sideways. */
   .public-surface * { min-width: 0; }
   .public-surface :is(p, li, h1, h2, h3, h4, a, span) { overflow-wrap: anywhere; }
-  .public-surface :is(img, svg, video, canvas, iframe, table) { max-width: 100%; height: auto; }
+  .public-surface :is(img, svg, video, canvas, iframe, table):not(.sl-hero__scene):not([class*="absolute"]):not([class*="h-full"]):not([class*="size-"]) {
+    max-width: 100%;
+    height: auto;
+  }
   .public-surface pre { overflow-x: auto; }
 
   /* Type */
