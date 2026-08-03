@@ -101,7 +101,32 @@ export function FounderVideoWall() {
     "leading-tight text-foreground",
   ].join(" ");
   const thumb = THUMB[s.thumb_size] ?? THUMB.xs;
-  const headingOpacity = Math.min(100, Math.max(10, Number(s.heading_opacity) || 50)) / 100;
+  const clamp = (v: unknown, fb: number) =>
+    Math.min(100, Math.max(10, Number(v) || fb)) / 100;
+  const headingOpacity = clamp(s.heading_opacity, 50);
+  const subOpacity = clamp(s.sub_opacity, 55);
+  const nameOpacity = clamp(s.name_opacity, 100);
+  const cityOpacity = clamp(s.city_opacity, 45);
+
+  const nameClass = [
+    NAME_STYLE[s.name_style] ?? NAME_STYLE.serif,
+    NAME_SIZE[s.name_size] ?? NAME_SIZE.xs,
+    HEADING_WEIGHT[s.name_weight] ?? HEADING_WEIGHT.normal,
+    NAME_CASE[s.name_case] ?? "",
+    s.name_wrap ? "whitespace-normal break-words line-clamp-2" : "truncate",
+    "mt-1.5 leading-tight text-foreground",
+  ].join(" ");
+
+  const subClass = [
+    SUB_SIZE[s.sub_size] ?? SUB_SIZE.xs,
+    HEADING_WEIGHT[s.sub_weight] ?? HEADING_WEIGHT.normal,
+    "mx-auto mt-1 max-w-[52ch] leading-relaxed text-foreground",
+  ].join(" ");
+
+  const cityClass = [
+    CITY_SIZE[s.city_size] ?? CITY_SIZE.xs,
+    "truncate uppercase tracking-[0.14em] text-foreground",
+  ].join(" ");
 
   const visible = expanded ? items : items.slice(0, 12);
   const hasMore = items.length > visible.length;
