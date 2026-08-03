@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { RELEASE_ID, replaceStaleBuild, startVersionCheck } from "@/lib/version-check";
 import { startRenderDiagnostics } from "@/lib/render-diagnostics";
+import { startViewportLogging } from "@/lib/viewport-log";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import App from "./App";
 import "./styles.css";
@@ -28,6 +29,8 @@ function Root() {
     };
     recordCssBundle();
     const stopDiagnostics = startRenderDiagnostics();
+    const stopViewportLogging = startViewportLogging();
+
 
     const stopVersionCheck = startVersionCheck((version) => {
       if (replaceStaleBuild(version)) return;
@@ -44,6 +47,7 @@ function Root() {
 
     return () => {
       stopDiagnostics();
+      stopViewportLogging();
       stopVersionCheck();
     };
   }, []);
