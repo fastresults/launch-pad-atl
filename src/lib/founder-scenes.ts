@@ -2,7 +2,7 @@ import sceneCoffee from "@/assets/scenes/scene-coffee.jpg";
 import sceneRoofing from "@/assets/scenes/scene-roofing.jpg";
 import sceneRestaurant from "@/assets/scenes/scene-restaurant.jpg";
 import sceneEcommerce from "@/assets/scenes/scene-ecommerce.jpg";
-import sceneMatchmaking from "@/assets/scenes/scene-matchmaking.jpg";
+import sceneBarbershop from "@/assets/scenes/scene-barbershop.jpg";
 import sceneFitness from "@/assets/scenes/scene-fitness.jpg";
 import sceneLandscaping from "@/assets/scenes/scene-landscaping.jpg";
 import sceneBakery from "@/assets/scenes/scene-bakery.jpg";
@@ -89,11 +89,11 @@ export const founderScenes: FounderScene[] = [
     alt: "Ecommerce founder packing orders in a small warehouse",
   },
   {
-    id: "matchmaking",
-    phrase: "I want to build a platform that matches people",
-    label: "Matching platform",
-    image: sceneMatchmaking,
-    alt: "Community platform founder hosting an evening meetup",
+    id: "barbershop",
+    phrase: "I want to open a barbershop",
+    label: "Barbershop",
+    image: sceneBarbershop,
+    alt: "Barbershop owner giving a client a fresh cut in his own shop",
   },
   {
     id: "fitness",
