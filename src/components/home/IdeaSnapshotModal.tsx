@@ -202,6 +202,15 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
   };
 
   const econ = snapshot?.economics;
+  const reach = snapshot?.reach;
+  const tier: ReachTier | null =
+    reach?.tier && REACH_TIERS.includes(reach.tier) ? reach.tier : null;
+  const isLocal = tier === "local";
+  const HeaderIcon = tier ? REACH_ICON[tier] : MapPin;
+  const headerLabel =
+    tier && !isLocal
+      ? `Atlanta start · ${tier} reach`
+      : "Metro Atlanta read";
   const invalid = snapshot?.ok === false;
   const showRead = !error && !invalid;
 
@@ -211,8 +220,8 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
         {/* Pinned header — context never scrolls away */}
         <div className="shrink-0 border-b border-[rgba(244,246,255,0.10)] px-6 py-4 sm:px-8">
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] hero-faint">
-            <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-            Metro Atlanta read
+            <HeaderIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            {headerLabel}
             {streaming && <span className="hero-dot ml-1" aria-hidden="true" />}
           </div>
           <p
