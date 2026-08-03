@@ -6,6 +6,7 @@ import sceneMatchmaking from "@/assets/scenes/scene-matchmaking.jpg";
 import sceneFitness from "@/assets/scenes/scene-fitness.jpg";
 import sceneLandscaping from "@/assets/scenes/scene-landscaping.jpg";
 import sceneBakery from "@/assets/scenes/scene-bakery.jpg";
+import sceneCustard from "@/assets/scenes/scene-custard.jpg";
 import scenePhotography from "@/assets/scenes/scene-photography.jpg";
 import sceneCleaning from "@/assets/scenes/scene-cleaning.jpg";
 import sceneBranding from "@/assets/scenes/scene-branding.jpg";
@@ -114,6 +115,13 @@ export const founderScenes: FounderScene[] = [
     label: "Bakery",
     image: sceneBakery,
     alt: "Bakery founder pulling trays of bread from the oven before dawn",
+  },
+  {
+    id: "custard",
+    phrase: "I want to open a homemade custard shop",
+    label: "Homemade custard shop",
+    image: sceneCustard,
+    alt: "Custard shop founder mixing homemade frozen custard on a cold stone slab",
   },
   {
     id: "photography",
