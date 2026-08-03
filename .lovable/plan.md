@@ -1,46 +1,50 @@
-# Desktop-Only Deployment Experiment
+## What the two screenshots actually show
 
-## Objective
-Make the public website use the desktop presentation at every reported viewport width. This is a deliberate diagnostic experiment: public pages will no longer switch to a hamburger, compact navigation, reduced typography, stacked mobile grids, or mobile-sized controls.
+Both screenshots are the same macOS screen, same browser, same window size — but:
 
-## What the current code confirms
-- The header still contains a separate mobile navigation tree and activates it below `768px`.
-- Public CSS still has three responsive states: phone below `768px`, compact desktop from `768–1023px`, and full desktop from `1024px`.
-- Individual public pages still contain Tailwind responsive utilities such as `md:grid-cols-*`, `md:text-*`, `md:py-*`, and `sm:flex-row`; those can independently produce a mobile-like page even if the header is forced desktop.
-- Therefore, forcing only the hamburger off would not be a valid test. The entire public surface must receive one desktop contract.
+- **Editor shot:** the app renders inside the Lovable preview pane (~1530 image px wide) and shows the full desktop nav at normal text size.
+- **Published shot:** the app fills the same screen (~1920 image px) but every element is roughly **2x larger** — header bar, logo, nav links, H1, prompt box.
 
-## Implementation
-1. **Add an explicit desktop-only public mode**
-   - Mark public page roots with a dedicated desktop-only class/data attribute.
-   - Scope the experiment to public pages so dashboard, admin, authentication workflows, dialogs, and other product UI are not globally distorted.
+Same machine, same window, same day. If this were a build/CSS difference, the published page would be *differently laid out*, not *uniformly scaled*. Uniform scaling of everything, including the browser-drawn text metrics, is what **per-origin browser zoom** looks like. Chromium-based browsers (Comet included) persist a zoom level **per domain**, so `lovable.dev` can sit at 100% while `startuplabs.online` sits at ~175–200% forever, across reloads and new tabs.
 
-2. **Remove the alternate mobile header path from public rendering**
-   - Stop rendering the hamburger/sheet navigation in the public header.
-   - Always render the full left and right desktop navigation groups.
-   - Use the full reservation label and all navigation links at every width.
-   - Give the header a desktop minimum width rather than silently collapsing it.
+This also explains every earlier dead end: our diagnostics measured the effective CSS viewport at ~1027px on a "1400px monitor", and every CSS fix we shipped was correct in the sandbox and "broken" live.
 
-3. **Collapse public CSS to one desktop contract**
-   - Remove the phone and compact public-layout media-query behavior.
-   - Apply the current full-desktop typography, spacing, hero, prompt, header, and container values unconditionally.
-   - Preserve the hero as full bleed.
-   - Give the body layout a desktop canvas/minimum width so a narrow effective CSS viewport scrolls horizontally instead of reflowing into a phone layout. This makes the experiment unambiguous: it may crop/scroll on a phone, but it cannot become mobile UI.
+**This is a diagnosis, not yet a confirmation.** Step 1 below proves or kills it in one page load, and the plan continues either way.
 
-4. **Neutralize page-level responsive reflow on public routes**
-   - Add desktop-only overrides for public grids, flex directions, section spacing, cards, buttons, and widths that currently depend on `sm:`, `md:`, or `lg:` utilities.
-   - Ensure two/three-column desktop sections stay in their desktop configuration even when the browser reports fewer CSS pixels.
-   - Do not change copy, colors, assets, functionality, or authenticated pages.
+## Step 1 — Confirm with the logging already shipped
 
-5. **Make the deployed result self-identifying**
-   - Extend layout diagnostics to report `desktop-forced`, release ID, CSS bundle, viewport metrics, desktop nav state, and absence of the mobile nav.
-   - Keep this behind the existing `?layout-diagnostics=1` switch so the published page can prove which bundle and layout contract it is running.
+Open `https://startuplabs.online/` and read the `[layout]` console line (or run `window.__slViewportLog`). The decisive fields:
 
-6. **Verify the experiment before publishing**
-   - Test key public routes at effective widths of `390`, `640`, `768`, `900`, `1024`, `1386`, and `1400` CSS pixels.
-   - Assert the desktop nav remains visible, no hamburger exists, desktop typography remains fixed, and representative grids do not collapse.
-   - At narrow widths, assert horizontal overflow exists by design rather than responsive mobile reflow.
-   - Capture screenshots at `390`, `900`, and `1386` to visually confirm the exact same desktop composition is being used.
-   - Publish only after those assertions pass, then validate the published URL with diagnostics enabled and compare its computed navigation/layout state against the local build.
+```text
+cssViewportWidth   ~960–1030   (vs. the real 1400+ monitor)
+screenWidth        1400+
+effectiveZoom      ~1.4–2.0    ← anything above ~1.05 means browser/OS zoom
+devicePixelRatio   2
+```
 
-## Expected trade-off
-This test intentionally refuses mobile presentation. Actual phones and narrow browser windows will see a desktop-width canvas that may require horizontal scrolling. If the published site still resembles the attached broken UI after this change, responsive CSS is no longer a plausible cause; the diagnostics will then isolate stale deployment, browser zoom/scaling, or a different served bundle.
+Then press **Cmd+0** (reset zoom) on that tab and reload. If `cssViewportWidth` jumps to ~1400 and the page instantly looks like the editor, the cause is confirmed and it was never the build.
+
+If `effectiveZoom` comes back ~1.0 and the page is still magnified, the cause is a real publish-time divergence — in that case the plan pivots to Step 2b instead.
+
+## Step 2a — If it is browser zoom (expected)
+
+The site should not depend on the visitor being at 100% zoom. Three changes:
+
+1. **Drop the forced-desktop hack.** Remove `min-width: 1024px` on `.public-surface` / `.sl-site-header` and the block of `sm:`/`md:`/`lg:` utility overrides added last turn. They were built to fight a symptom that isn't a layout bug, and they break genuine phone visitors.
+2. **Restore the responsive header,** including the mobile nav path removed last turn, so real phones get a real phone layout again.
+3. **Make the 960–1240px band look deliberate.** Add one honest desktop-compact tier: H1 ~38px, section padding reduced, container gutters tightened. A zoomed-in visitor at an effective 1000px then sees a correct, well-proportioned page instead of an oversized one.
+4. **Optional, one line of UI:** when `effectiveZoom > 1.25`, show a dismissible bar — "Your browser is zoomed to 175%. Press Cmd+0 for the full layout." Non-blocking, remembers dismissal.
+
+## Step 2b — If zoom is ~1.0 and it is still magnified
+
+Then the published bundle genuinely differs from the sandbox bundle. Sequence: capture the served CSS asset hash from `data-css-bundle` on `<html>` live vs. local build output, diff the two `public.css` payloads, and confirm whether the deployed HTML shell (which hosting rewrites — it injects og:image and the badge) still carries `<meta name="viewport" content="width=device-width, initial-scale=1.0">`. A dropped or altered viewport meta on the served shell would produce exactly this uniform magnification.
+
+## Technical notes
+
+- Files touched in Step 2a: `src/public.css` (remove min-width + utility overrides, add the compact tier), `src/components/site/Header.tsx` (restore mobile nav), optionally a small `ZoomNotice` component.
+- `src/lib/viewport-log.ts` stays as-is — it's the instrument that settles this.
+- No changes to routes, copy, or backend.
+
+## What I need from you
+
+Load the published site, open the console, and paste the `[layout]` line — specifically `cssViewportWidth`, `screenWidth`, and `effectiveZoom`. That single line decides between 2a and 2b and ends the guessing.

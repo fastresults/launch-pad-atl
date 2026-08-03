@@ -21,7 +21,7 @@ export function startRenderDiagnostics(): () => void {
     const metrics = {
       release: RELEASE_ID,
       cssBundle: stylesheetBundle(),
-      mode: "desktop-forced",
+      mode: "responsive",
       innerWidth: window.innerWidth,
       visualViewportWidth: Math.round(viewportWidth * 100) / 100,
       visualViewportScale: window.visualViewport?.scale ?? 1,

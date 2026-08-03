@@ -78,13 +78,8 @@
   font-weight: 400;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  min-width: 1024px;
 }
 
-html:has(.public-surface),
-body:has(.public-surface) {
-  overflow-x: auto;
-}
 
 /* ---------------------------------------------------------------
  * 2. The container — the single source of body width
@@ -236,8 +231,8 @@ body:has(.public-surface) {
   background: oklch(0.155 0.019 268 / 84%);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
-  min-width: 1024px;
 }
+
 
 .sl-site-header__inner {
   box-sizing: border-box;
@@ -497,87 +492,129 @@ body:has(.public-surface) {
 }
 
 /* ---------------------------------------------------------------
- * 8. Desktop-only deployment experiment
+ * 8. Responsive tiers
  * ---------------------------------------------------------------
- * Public pages deliberately keep a 1024px desktop canvas. Responsive
- * utility variants are promoted to their desktop values even when the
- * browser reports a phone-sized CSS viewport.
+ * Three honest tiers. Nothing is forced: a browser reporting a small
+ * CSS viewport (real phone, or a desktop at 175% zoom) gets a layout
+ * that is proportioned for the width it actually reports.
+ *
+ *   >= 1240px  full desktop (values defined above)
+ *   768-1239px desktop compact
+ *   < 768px    phone
  */
 
-.public-surface .sl-site-header__nav,
-.public-surface .sl-site-header__actions { display: flex; gap: 18px; font-size: 14px; }
-.public-surface .sl-site-header__left { gap: 20px; }
-.public-surface .sl-site-header__compact-optional,
-.public-surface .sl-site-header__cta-full { display: inline; }
-.public-surface .sl-site-header__cta { min-height: 34px; padding-inline: 14px; font-size: 14px; }
+/* Mobile nav trigger is desktop-hidden by default. */
+.sl-site-header__mobile {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--foreground);
+  background: transparent;
+}
 
-.public-surface .sm\:flex-row,
-.public-surface .md\:flex-row { flex-direction: row; }
-.public-surface .sm\:flex-wrap { flex-wrap: wrap; }
-.public-surface .sm\:items-center,
-.public-surface .md\:items-center { align-items: center; }
-.public-surface .md\:items-end { align-items: flex-end; }
-.public-surface .md\:items-baseline { align-items: baseline; }
-.public-surface .sm\:justify-between,
-.public-surface .md\:justify-between { justify-content: space-between; }
-.public-surface .md\:justify-self-end { justify-self: end; }
+.sl-site-header__mobile-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+}
 
-.public-surface .sm\:grid-cols-2,
-.public-surface .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.public-surface .sm\:grid-cols-3,
-.public-surface .md\:grid-cols-3,
-.public-surface .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.public-surface .sm\:grid-cols-4,
-.public-surface .md\:grid-cols-4,
-.public-surface .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.public-surface .md\:grid-cols-5,
-.public-surface .lg\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.public-surface .md\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
-.public-surface .md\:grid-cols-\[1\.05fr_1fr\] { grid-template-columns: 1.05fr 1fr; }
-.public-surface .md\:grid-cols-\[1\.2fr_1fr\] { grid-template-columns: 1.2fr 1fr; }
-.public-surface .md\:grid-cols-\[1fr_1\.4fr\] { grid-template-columns: 1fr 1.4fr; }
-.public-surface .lg\:grid-cols-\[1fr_320px\] { grid-template-columns: 1fr 320px; }
-.public-surface .lg\:grid-cols-\[320px_1fr\] { grid-template-columns: 320px 1fr; }
-.public-surface .sm\:grid-cols-\[1fr_1fr_auto\] { grid-template-columns: 1fr 1fr auto; }
+.sl-site-header__mobile-panel a,
+.sl-site-header__mobile-panel button {
+  padding: 10px 2px;
+  text-align: left;
+  color: var(--foreground);
+  font-size: 16px;
+}
 
-.public-surface .md\:col-span-2,
-.public-surface .sm\:col-span-2,
-.public-surface .lg\:col-span-2 { grid-column: span 2 / span 2; }
-.public-surface .md\:col-span-3 { grid-column: span 3 / span 3; }
-.public-surface .lg\:col-span-4 { grid-column: span 4 / span 4; }
-.public-surface .md\:col-span-5 { grid-column: span 5 / span 5; }
-.public-surface .md\:col-span-7 { grid-column: span 7 / span 7; }
-.public-surface .lg\:col-span-8 { grid-column: span 8 / span 8; }
+/* --- Desktop compact: 768px – 1239px ---------------------------- */
+@media (max-width: 1239px) {
+  .public-surface {
+    --public-pad: 20px;
+  }
 
-.public-surface .sm\:w-auto { width: auto; }
-.public-surface .md\:block,
-.public-surface .sm\:block { display: block; }
-.public-surface .sm\:hidden { display: none; }
-.public-surface .sm\:inline { display: inline; }
-.public-surface .md\:text-left { text-align: left; }
-.public-surface .md\:py-24 { padding-block: 6rem; }
-.public-surface .md\:py-20 { padding-block: 5rem; }
-.public-surface .md\:py-16 { padding-block: 4rem; }
-.public-surface .md\:py-14 { padding-block: 3.5rem; }
-.public-surface .md\:py-12 { padding-block: 3rem; }
-.public-surface .md\:py-10 { padding-block: 2.5rem; }
-.public-surface .md\:p-12,
-.public-surface .lg\:p-12 { padding: 3rem; }
-.public-surface .lg\:p-16 { padding: 4rem; }
-.public-surface .md\:p-10 { padding: 2.5rem; }
-.public-surface .md\:p-8 { padding: 2rem; }
-.public-surface .md\:p-7 { padding: 1.75rem; }
-.public-surface .md\:p-6 { padding: 1.5rem; }
-.public-surface .md\:px-8,
-.public-surface .sm\:px-8 { padding-inline: 2rem; }
-.public-surface .md\:px-6,
-.public-surface .sm\:px-6 { padding-inline: 1.5rem; }
+  .public-surface h1,
+  .public-surface .public-display,
+  .public-surface .sl-hero__title { font-size: 38px; }
+  .public-surface h2,
+  .public-surface .public-heading { font-size: 27px; }
+  .public-surface h3,
+  .public-surface .public-subheading { font-size: 20px; }
+  .public-surface .public-lead { font-size: 17px; }
 
-.public-surface .md\:text-xl { font-size: 1.25rem; line-height: 1.75rem; }
-.public-surface .md\:text-lg { font-size: 1.125rem; line-height: 1.75rem; }
-.public-surface .md\:text-base { font-size: 1rem; line-height: 1.5rem; }
-.public-surface .md\:text-sm,
-.public-surface .sm\:text-sm { font-size: .875rem; line-height: 1.25rem; }
+  .sl-site-header__compact-optional { display: none; }
+  .sl-site-header__nav,
+  .sl-site-header__actions { gap: 14px; }
+
+  .sl-hero { padding: 32px 20px 44px; }
+  .sl-hero__stack { max-width: 640px; }
+  .sl-prompt__panel { min-height: 140px; padding: 20px; }
+  .public-surface .sl-prompt__input,
+  .sl-prompt__ghost { font-size: 17px; }
+}
+
+/* --- Phone: below 768px ----------------------------------------- */
+@media (max-width: 767px) {
+  .public-surface {
+    --public-pad: 16px;
+    font-size: 15px;
+  }
+
+  .public-surface h1,
+  .public-surface .public-display,
+  .public-surface .sl-hero__title { font-size: 30px; line-height: 1.16; }
+  .public-surface h2,
+  .public-surface .public-heading { font-size: 23px; }
+  .public-surface h3,
+  .public-surface .public-subheading { font-size: 18px; }
+  .public-surface .public-lead { font-size: 16px; }
+  .public-surface :is(p, li) { font-size: 15px; }
+
+  .sl-site-header__nav,
+  .sl-site-header__actions { display: none; }
+  .sl-site-header__mobile { display: inline-flex; }
+  .sl-site-header__inner { padding-inline: 16px; gap: 12px; }
+  .sl-site-header__logo { height: 26px; }
+
+  .sl-hero { padding: 28px 16px 40px; }
+  .sl-hero__stack { max-width: 100%; }
+  .sl-hero__kicker { font-size: 11px; letter-spacing: 0.14em; }
+  .sl-prompt__panel { min-height: 0; padding: 16px; border-radius: 20px; row-gap: 14px; }
+  .public-surface .sl-prompt__input,
+  .sl-prompt__ghost { font-size: 16px; }
+  .sl-prompt__footer { flex-direction: column; align-items: stretch; gap: 12px; }
+  .sl-prompt__submit { justify-content: center; }
+}
+
+/* --- Zoom notice ------------------------------------------------- */
+.sl-zoom-notice {
+  position: fixed;
+  z-index: 60;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  max-width: 340px;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 20px 50px -20px oklch(0 0 0 / 70%);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.sl-zoom-notice button {
+  flex: none;
+  color: var(--muted-foreground);
+}
+
 
 @media (prefers-reduced-motion: reduce) {
   .public-surface *,
