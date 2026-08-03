@@ -39,6 +39,16 @@ import sceneBookkeeping from "@/assets/scenes/scene-bookkeeping.jpg";
 import sceneResume from "@/assets/scenes/scene-resume.jpg";
 import sceneMicrogreens from "@/assets/scenes/scene-microgreens.jpg";
 import sceneDogWalking from "@/assets/scenes/scene-dogwalking.jpg";
+import sceneAiAutomation from "@/assets/scenes/scene-aiautomation.jpg";
+import sceneContentStudio from "@/assets/scenes/scene-contentstudio.jpg";
+import sceneNewsletter from "@/assets/scenes/scene-newsletter.jpg";
+import sceneDigitalProducts from "@/assets/scenes/scene-digitalproducts.jpg";
+import sceneMerch from "@/assets/scenes/scene-merch.jpg";
+import sceneOnlineReseller from "@/assets/scenes/scene-onlinereseller.jpg";
+import sceneVirtualAssistant from "@/assets/scenes/scene-virtualassistant.jpg";
+import sceneOnlineCoaching from "@/assets/scenes/scene-onlinecoaching.jpg";
+import sceneLeadGen from "@/assets/scenes/scene-leadgen.jpg";
+import sceneSubscriptionBox from "@/assets/scenes/scene-subscriptionbox.jpg";
 
 export type FounderScene = {
   id: string;
@@ -335,6 +345,76 @@ export const founderScenes: FounderScene[] = [
     label: "Dog walking & pet sitting",
     image: sceneDogWalking,
     alt: "Dog walker leading three dogs down a tree-lined neighborhood sidewalk",
+  },
+  {
+    id: "aiautomation",
+    phrase: "I want to start an AI automation agency",
+    label: "AI automation agency",
+    image: sceneAiAutomation,
+    alt: "Founder building automated workflows across monitors in a dark home office",
+  },
+  {
+    id: "contentstudio",
+    phrase: "I want to start an AI content studio",
+    label: "AI content studio",
+    image: sceneContentStudio,
+    alt: "Creator filming a short-form video on a phone rig in a small content studio",
+  },
+  {
+    id: "newsletter",
+    phrase: "I want to start a paid newsletter",
+    label: "Paid newsletter",
+    image: sceneNewsletter,
+    alt: "Writer drafting a newsletter on a laptop at a sunlit cafe table",
+  },
+  {
+    id: "digitalproducts",
+    phrase: "I want to sell digital products and templates",
+    label: "Digital products shop",
+    image: sceneDigitalProducts,
+    alt: "Founder designing digital planner templates at a desk at night",
+  },
+  {
+    id: "merch",
+    phrase: "I want to launch a print-on-demand merch brand",
+    label: "Print-on-demand brand",
+    image: sceneMerch,
+    alt: "Founder packing printed apparel into shipping mailers in a garage studio",
+  },
+  {
+    id: "onlinereseller",
+    phrase: "I want to sell on Amazon as an online reseller",
+    label: "Online reseller",
+    image: sceneOnlineReseller,
+    alt: "Online reseller scanning inventory with a phone beside stocked shelves",
+  },
+  {
+    id: "virtualassistant",
+    phrase: "I want to start a virtual assistant agency",
+    label: "Virtual assistant agency",
+    image: sceneVirtualAssistant,
+    alt: "Virtual assistant working with a headset at a bright home office desk",
+  },
+  {
+    id: "onlinecoaching",
+    phrase: "I want to run online coaching cohorts",
+    label: "Online coaching",
+    image: sceneOnlineCoaching,
+    alt: "Coach leading a live online cohort class from a home studio",
+  },
+  {
+    id: "leadgen",
+    phrase: "I want to build local lead generation websites",
+    label: "Local lead generation",
+    image: sceneLeadGen,
+    alt: "Founder reviewing local search rankings on a laptop at a kitchen table",
+  },
+  {
+    id: "subscriptionbox",
+    phrase: "I want to launch a subscription box brand",
+    label: "Subscription box brand",
+    image: sceneSubscriptionBox,
+    alt: "Founder packing curated subscription boxes at a studio work table",
   },
 ];
 
