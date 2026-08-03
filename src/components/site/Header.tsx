@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { Menu } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
+import { ZoomNotice } from "@/components/site/ZoomNotice";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const leftNav = [
   { to: "/build", label: "workshops" },
@@ -19,10 +22,8 @@ const rightNav = [
 export function SiteHeader() {
   const { isAuthenticated, isAdmin, signOut } = useAuth();
   const [modesOpen, setModesOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const ctaFull = `Reserve seat — ${WORKSHOP_PRICE_LABEL}`;
-
-  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `transition-colors hover:text-foreground ${isActive ? "text-foreground" : ""}`;
 
   return (
     <>
@@ -85,9 +86,66 @@ export function SiteHeader() {
             <span className="sl-site-header__cta-full">{ctaFull}</span>
           </Link>
         </div>
+
+        {/* Phone-only menu */}
+        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+          <SheetTrigger asChild>
+            <button type="button" className="sl-site-header__mobile" aria-label="Open menu">
+              <Menu className="size-5" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="right" className="marketing-sheet w-[86vw] max-w-xs">
+            <SheetHeader>
+              <SheetTitle>Menu</SheetTitle>
+            </SheetHeader>
+            <nav className="sl-site-header__mobile-panel" aria-label="Mobile navigation">
+              {[...leftNav, ...rightNav].map((n) => (
+                <Link key={n.to} to={n.to} onClick={() => setMenuOpen(false)}>
+                  {n.label}
+                </Link>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setModesOpen(true);
+                }}
+              >
+                3 ways to start
+              </button>
+              {isAdmin && (
+                <Link to="/admin" onClick={() => setMenuOpen(false)}>admin</Link>
+              )}
+              {isAuthenticated ? (
+                <>
+                  <Link to="/dashboard" onClick={() => setMenuOpen(false)}>dashboard</Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      void signOut();
+                    }}
+                  >
+                    sign out
+                  </button>
+                </>
+              ) : (
+                <Link to="/login" onClick={() => setMenuOpen(false)}>sign in</Link>
+              )}
+              <Link
+                to="/register"
+                onClick={() => setMenuOpen(false)}
+                className="sl-site-header__cta bg-hero-gradient text-white"
+              >
+                {ctaFull}
+              </Link>
+            </nav>
+          </SheetContent>
+        </Sheet>
       </div>
     </header>
       <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
+      <ZoomNotice />
     </>
   );
 }
