@@ -16,6 +16,34 @@ export function CinematicHero() {
   const takeOver = useCallback(() => setPaused(true), []);
   const [cueHidden, setCueHidden] = useState(false);
 
+  const total = scenes.length;
+  // Only three images are ever mounted: the one fading out, the one on screen,
+  // and the next one (already decoded, waiting at opacity 0). Mounting all 107
+  // decodes hundreds of MB of bitmaps and promotes a compositor layer per image.
+  const window3 = useMemo(() => {
+    if (total === 0) return [] as Array<{ scene: (typeof scenes)[number]; offset: number }>;
+    return [-1, 0, 1]
+      .map((offset) => ({
+        scene: scenes[(index + offset + total) % total]!,
+        offset,
+      }))
+      .filter(
+        (entry, position, list) =>
+          list.findIndex((other) => other.scene.id === entry.scene.id) === position,
+      );
+  }, [index, scenes, total]);
+
+  // Decode the upcoming scene off-screen so the crossfade never begins against
+  // an undecoded bitmap.
+  useEffect(() => {
+    if (total === 0) return;
+    const next = scenes[(index + 1) % total];
+    if (!next) return;
+    const img = new Image();
+    img.src = next.image;
+    void img.decode?.().catch(() => undefined);
+  }, [index, scenes, total]);
+
   useEffect(() => {
     const onScroll = () => setCueHidden(window.scrollY > 80);
     onScroll();
@@ -35,24 +63,26 @@ export function CinematicHero() {
   return (
     <section className="sl-hero">
       <div className="sl-hero__media" aria-hidden="true">
-        {scenes.map((scene, sceneIndex) => (
+        {window3.map(({ scene, offset }) => (
           <img
             key={scene.id}
             src={scene.image}
-            alt={sceneIndex === index ? scene.alt : ""}
-            aria-hidden={sceneIndex === index ? undefined : true}
-            data-active={sceneIndex === index}
+            alt={offset === 0 ? scene.alt : ""}
+            aria-hidden={offset === 0 ? undefined : true}
+            data-active={offset === 0}
+            data-leaving={offset === -1 || undefined}
             width={1536}
             height={1024}
-            loading={sceneIndex === 0 ? "eager" : "lazy"}
+            loading="eager"
             decoding="async"
+            fetchPriority={offset === 0 ? "high" : "low"}
             className="sl-hero__scene"
-            style={{ animationDelay: `-${(sceneIndex * 5) % 24}s` }}
           />
         ))}
         <div className="sl-hero__scrim" />
         <div className="sl-hero__grain" />
       </div>
+
 
       <div className="sl-hero__stack">
         <p className="sl-hero__kicker">

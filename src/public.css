@@ -317,7 +317,6 @@
   filter: brightness(1.06) contrast(1.03) saturate(1.03);
   transform: scale(1.03);
   transition: opacity 1400ms ease-in-out;
-  will-change: opacity, transform;
   /* The Ken Burns drift runs continuously on every scene — never toggled by
      active state — so a scene can never snap back mid-crossfade. */
   animation: sl-hero-drift 24s ease-in-out infinite alternate;
@@ -325,6 +324,12 @@
 
 .sl-hero__scene[data-active="true"] {
   opacity: 1;
+}
+
+/* Only the two images actually animating get a compositor layer. */
+.sl-hero__scene[data-active="true"],
+.sl-hero__scene[data-leaving="true"] {
+  will-change: opacity, transform;
 }
 
 @keyframes sl-hero-drift {
