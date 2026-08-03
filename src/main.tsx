@@ -47,6 +47,7 @@ function Root() {
 
     return () => {
       stopDiagnostics();
+      stopViewportLogging();
       stopVersionCheck();
     };
   }, []);
