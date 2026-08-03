@@ -92,7 +92,7 @@ export function FounderVideoLightbox({ items, index, onClose, onIndexChange }: P
                 </p>
               ) : null}
               {item.quote ? (
-                <p className="text-sm leading-relaxed text-foreground/70">{item.quote}</p>
+                <p className="sl-quote text-sm leading-relaxed">{item.quote}</p>
               ) : null}
             </div>
           </div>

@@ -181,7 +181,7 @@ function TestimonialCard({ item }: { item: TestimonialWithUrls }) {
           {[item.founder_role, item.startup_name].filter(Boolean).join(" · ")}
         </div>
         {item.quote && (
-          <p className="mt-1.5 line-clamp-2 text-[12px] italic text-white/90">
+          <p className="sl-quote mt-1.5 line-clamp-2 text-[12px] italic">
             "{item.quote}"
           </p>
         )}

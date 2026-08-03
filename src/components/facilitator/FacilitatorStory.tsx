@@ -19,7 +19,7 @@ export function FacilitatorStory() {
         <p>
           <span className="font-semibold text-foreground">Nations.</span> In 2014 he relocated to the Federation of St. Kitts & Nevis to co-found the Caribbean entity of OPEN Interactive and lead what became the region's largest public-private technology partnership. Over seven years he engineered the Federation's central eGovernment portal, the Inland Revenue tax portal, and a child-protective-services case-management system; branded the national Citizenship-by-Investment program; advised the St. Kitts–Nevis pavilion at Expo 2020 Dubai; and directed pro-bono COVID-19 crisis communications for the Ministry of Health. In parallel, he co-originated the Caribbean Investment Summit — now a five-jurisdiction franchise spanning Grenada, Antigua & Barbuda, and Saint Lucia.
         </p>
-        <blockquote className="border-l-[3px] border-primary pl-5 italic text-xl tracking-tight leading-tight md:text-3xl text-foreground">
+        <blockquote className="sl-quote border-l-[3px] border-primary pl-5 italic text-xl tracking-tight leading-tight md:text-3xl">
           I didn't learn AI in a classroom. I built five products with it — while running a live agency, producing international events, and advising clients who couldn't afford to get it wrong.
         </blockquote>
         <p>
