@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Play } from "lucide-react";
 import { getPublicVideoWall, type PublicVideoWall } from "@/lib/video-wall.functions";
 import { FounderVideoLightbox } from "@/components/home/FounderVideoLightbox";
