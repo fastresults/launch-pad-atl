@@ -147,6 +147,8 @@ export function SiteHeader() {
     </header>
       <AccessModeDialog open={modesOpen} onOpenChange={setModesOpen} />
       <ZoomNotice />
+      <MobileCtaBar />
     </>
+
   );
 }
