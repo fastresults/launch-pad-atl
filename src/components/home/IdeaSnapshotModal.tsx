@@ -58,6 +58,15 @@ const REACH_LABEL: Record<ReachTier, string> = {
   international: "International reach",
 };
 
+const REACH_ICON: Record<ReachTier, typeof Globe> = {
+  local: MapPin,
+  regional: MapIcon,
+  national: Compass,
+  international: Globe,
+};
+
+const REACH_TIERS: ReachTier[] = ["local", "regional", "national", "international"];
+
 type Props = {
   idea: string;
   open: boolean;
