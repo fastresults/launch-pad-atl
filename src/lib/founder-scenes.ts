@@ -39,6 +39,16 @@ import sceneBookkeeping from "@/assets/scenes/scene-bookkeeping.jpg";
 import sceneResume from "@/assets/scenes/scene-resume.jpg";
 import sceneMicrogreens from "@/assets/scenes/scene-microgreens.jpg";
 import sceneDogWalking from "@/assets/scenes/scene-dogwalking.jpg";
+import sceneAiAutomation from "@/assets/scenes/scene-aiautomation.jpg";
+import sceneContentStudio from "@/assets/scenes/scene-contentstudio.jpg";
+import sceneNewsletter from "@/assets/scenes/scene-newsletter.jpg";
+import sceneDigitalProducts from "@/assets/scenes/scene-digitalproducts.jpg";
+import sceneMerch from "@/assets/scenes/scene-merch.jpg";
+import sceneOnlineReseller from "@/assets/scenes/scene-onlinereseller.jpg";
+import sceneVirtualAssistant from "@/assets/scenes/scene-virtualassistant.jpg";
+import sceneOnlineCoaching from "@/assets/scenes/scene-onlinecoaching.jpg";
+import sceneLeadGen from "@/assets/scenes/scene-leadgen.jpg";
+import sceneSubscriptionBox from "@/assets/scenes/scene-subscriptionbox.jpg";
 
 export type FounderScene = {
   id: string;
