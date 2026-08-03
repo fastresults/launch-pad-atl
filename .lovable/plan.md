@@ -1,26 +1,30 @@
-## Goal
+# Add 10 modern online business scenes to the hero rotation
 
-The founder name under each thumbnail (currently a hard-coded serif, truncated to one line) should be fully stylable from `/admin/video-wall` — no more code edits to change how it looks.
+Extend the homepage hero's random image rotation with ten of the strongest online/digital business concepts for 2026, matched to the existing cinematic photographic style (warm directional light, real founder in a real workspace, shallow depth of field, moody dark grade).
 
-## New admin controls (Appearance section)
+## The ten concepts
 
-Under a new "Founder name" block:
-- **Font style** — Serif / Sans / Small caps label (uppercase + letterspacing) / Mono
-- **Size** — Extra small / Small / Medium / Large (independent of thumbnail size)
-- **Weight** — Normal / Medium / Semibold / Bold
-- **Letter case** — As typed / UPPERCASE / Capitalized
-- **Opacity** — slider, 20–100%
-- **Wrap long names** — toggle. On = name wraps to two lines instead of truncating ("Michael Dr…" becomes "Michael Drummond")
-- **Show city line** — toggle, plus city size/opacity following the same scale
+1. AI automation agency — building workflow bots for local businesses
+2. AI-assisted content studio — short-form video for brands
+3. Newsletter / paid community operator
+4. Digital products & templates shop (Notion, spreadsheets, courses)
+5. Print-on-demand and merch brand
+6. Amazon / Walmart online reseller (retail arbitrage & wholesale)
+7. Virtual assistant / remote ops agency
+8. Online coaching & cohort courses
+9. Local lead-gen websites (rank-and-rent for trades)
+10. Subscription box / DTC niche brand
 
-Also add matching **Subheading** controls (size, weight, opacity, style) so the whole block is adjustable, since the screenshot shows the subheading is still fixed in code.
+Each gets a first-person phrase ("I want to start an AI automation agency"), a short label for the "Now building" line, and alt text — same shape as the existing scenes.
 
-All controls save instantly to the same `site_settings` record as the existing heading settings, defaults reproduce today's look so nothing changes until an admin touches them.
+## What changes
 
-## Technical detail
+- Generate 10 new 1536x1024 photographic scene images into `src/assets/scenes/`, matching the current look (no text, no logos, real person at work, cinematic warm/dark grade).
+- Add 10 entries to `founderScenes` in `src/lib/founder-scenes.ts` with imports, `id`, `phrase`, `label`, `image`, `alt`.
 
-- `src/lib/video-wall.functions.ts` — extend `VideoWallSettings` with `name_style`, `name_size`, `name_weight`, `name_case`, `name_opacity`, `name_wrap`, `show_city`, `city_size`, `city_opacity`, `sub_size`, `sub_weight`, `sub_opacity`; add matching entries in `DEFAULT_VIDEO_WALL_SETTINGS`. No DB migration needed — settings are a JSON blob in `site_settings.value`, and the public edge function already passes it through.
-- `src/components/home/FounderVideoWall.tsx` — replace the hard-coded `font-serif ${thumb.name} … truncate` on the name and the fixed subheading classes with lookup maps (`NAME_STYLE`, `NAME_SIZE`, `NAME_WEIGHT`, `NAME_CASE`, `SUB_SIZE`, …) plus inline opacity, mirroring the existing heading pattern. `name_wrap` swaps `truncate` for `line-clamp-2 whitespace-normal`.
-- `src/routes/_authenticated/_admin/admin.video-wall.tsx` — add the two new grouped blocks of `Select` / `Slider` / `Switch` controls wired to the existing `saveSettings.mutate({...})` handler.
+No changes to rotation logic — `shuffleScenesForVisit`, Ken Burns drift, and crossfade timing already handle any list length, so the new scenes join the random order automatically. Total goes from 41 to 51 scenes.
 
-No changes to upload, storage, RLS, or the lightbox.
+## Notes
+
+- Images are lazy-loaded after the first scene, so the added weight does not affect initial load.
+- If any generated image comes back poor quality, it gets regenerated before shipping.
