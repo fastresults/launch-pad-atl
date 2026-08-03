@@ -191,9 +191,10 @@ export const AGENCY_TRACKS: AgencyTrack[] = [
     slug: "growth",
     name: "Growth Track",
     icon: Megaphone,
-    tagline: "The customer-acquisition engine, running every month.",
+    tagline: "Automate how customers find you — and turn attention into profit.",
     outcome:
-      "Distribution you own. Content that compounds. A follow-up machine that catches the revenue first-touch sales always misses.",
+      "Distribution you own, content that compounds, and an automated follow-up machine that extracts the revenue first-touch sales always leaves behind.",
+
     includedSlugs: ["social-presence", "content-engine", "email-crm-automation"],
     priceLabel: "Bespoke — priced after a 20-min discovery call",
     timelineLabel: "Monthly retainer",
