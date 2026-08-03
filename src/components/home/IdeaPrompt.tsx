@@ -18,15 +18,24 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [snapshotIdea, setSnapshotIdea] = useState("");
   const [snapshotOpen, setSnapshotOpen] = useState(false);
+  const [hint, setHint] = useState(false);
 
   useEffect(() => {
     if (value.length > 0 && !paused) onTakeOver();
   }, [value, paused, onTakeOver]);
 
+  const idea = value.trim();
+  const ready = idea.length >= 3;
+
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
-    const idea = (value.trim() || ghostText.trim()).replace(/\|$/, "");
-    if (!idea) return;
+    if (!ready) {
+      setHint(true);
+      onTakeOver();
+      inputRef.current?.focus();
+      return;
+    }
+    setHint(false);
     setSnapshotIdea(idea);
     setSnapshotOpen(true);
   };
@@ -47,15 +56,28 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
           <input
             ref={inputRef}
             value={value}
-            onChange={(event) => setValue(event.target.value)}
+            onChange={(event) => {
+              setValue(event.target.value);
+              if (hint) setHint(false);
+            }}
             onFocus={onTakeOver}
             aria-label="Tell us what you want to start"
+            aria-invalid={hint || undefined}
             className="sl-prompt__input"
           />
         </div>
         <div className="sl-prompt__footer">
-          <p>We build it. You own it.</p>
-          <button type="submit" className="sl-prompt__submit">
+          <p aria-live="polite">
+            {hint
+              ? "Type the startup you want to start — then hit Start For Free."
+              : "We build it. You own it."}
+          </p>
+          <button
+            type="submit"
+            className="sl-prompt__submit"
+            aria-disabled={!ready}
+            data-inactive={!ready ? "true" : undefined}
+          >
             Start For Free
             <ArrowRight aria-hidden="true" />
           </button>
@@ -65,3 +87,4 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
     </form>
   );
 }
+

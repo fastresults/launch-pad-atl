@@ -489,6 +489,9 @@
 
 .sl-prompt__submit svg { width: 16px; height: 16px; }
 
+.sl-prompt__submit[data-inactive="true"] { opacity: 0.55; }
+
+
 .sl-prompt__submit:hover {
   background: oklch(0.98 0.006 260 / 18%);
   border-color: oklch(0.98 0.006 260 / 40%);
