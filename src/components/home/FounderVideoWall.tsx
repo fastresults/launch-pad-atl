@@ -32,11 +32,45 @@ const HEADING_STYLE: Record<string, string> = {
   serif: "font-serif normal-case tracking-normal",
 };
 
-const THUMB: Record<string, { tile: string; badge: string; icon: string; name: string }> = {
-  xs: { tile: "w-[84px] md:w-[96px]", badge: "h-6 w-6", icon: "h-2.5 w-2.5", name: "text-[11px]" },
-  sm: { tile: "w-[104px] md:w-[120px]", badge: "h-7 w-7", icon: "h-3 w-3", name: "text-[12px]" },
-  md: { tile: "w-[132px] md:w-[152px]", badge: "h-8 w-8", icon: "h-3.5 w-3.5", name: "text-[13px]" },
-  lg: { tile: "w-[160px] md:w-[188px]", badge: "h-10 w-10", icon: "h-4 w-4", name: "text-[14px]" },
+const THUMB: Record<string, { tile: string; badge: string; icon: string }> = {
+  xs: { tile: "w-[84px] md:w-[96px]", badge: "h-6 w-6", icon: "h-2.5 w-2.5" },
+  sm: { tile: "w-[104px] md:w-[120px]", badge: "h-7 w-7", icon: "h-3 w-3" },
+  md: { tile: "w-[132px] md:w-[152px]", badge: "h-8 w-8", icon: "h-3.5 w-3.5" },
+  lg: { tile: "w-[160px] md:w-[188px]", badge: "h-10 w-10", icon: "h-4 w-4" },
+};
+
+const NAME_STYLE: Record<string, string> = {
+  serif: "font-serif normal-case tracking-normal",
+  sans: "font-sans normal-case tracking-normal",
+  label: "font-sans uppercase tracking-[0.14em]",
+  mono: "font-mono normal-case tracking-tight",
+};
+
+const NAME_SIZE: Record<string, string> = {
+  xs: "text-[11px]",
+  sm: "text-[12px]",
+  md: "text-[13px]",
+  lg: "text-[15px]",
+};
+
+const NAME_CASE: Record<string, string> = {
+  none: "",
+  upper: "uppercase",
+  capitalize: "capitalize",
+};
+
+const CITY_SIZE: Record<string, string> = {
+  xs: "text-[9px]",
+  sm: "text-[10px]",
+  md: "text-[11px]",
+  lg: "text-[12px]",
+};
+
+const SUB_SIZE: Record<string, string> = {
+  xs: "text-[11px]",
+  sm: "text-[12px]",
+  md: "text-[14px]",
+  lg: "text-[16px]",
 };
 
 export function FounderVideoWall() {
