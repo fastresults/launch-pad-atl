@@ -777,3 +777,11 @@
 
   .sl-hero__scene[data-active="true"] { animation: none; }
 }
+
+/* Phone: keep the floating chat launcher above the sticky action bar. */
+@media (max-width: 767px) {
+  .sl-chat-launcher {
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    right: 12px;
+  }
+}
