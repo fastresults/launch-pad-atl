@@ -14,6 +14,23 @@ export function CinematicHero() {
   const phrases = useMemo(() => scenes.map((scene) => scene.phrase), [scenes]);
   const { typed, index } = useSceneCycle(phrases, !paused);
   const takeOver = useCallback(() => setPaused(true), []);
+  const [cueHidden, setCueHidden] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setCueHidden(window.scrollY > 80);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollToNext = useCallback(() => {
+    const target = document.getElementById("learn-more");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollBy({ top: window.innerHeight * 0.9, behavior: "smooth" });
+    }
+  }, []);
 
   return (
     <section className="sl-hero">
