@@ -2,7 +2,7 @@ import sceneCoffee from "@/assets/scenes/scene-coffee.jpg";
 import sceneRoofing from "@/assets/scenes/scene-roofing.jpg";
 import sceneRestaurant from "@/assets/scenes/scene-restaurant.jpg";
 import sceneEcommerce from "@/assets/scenes/scene-ecommerce.jpg";
-import sceneMatchmaking from "@/assets/scenes/scene-matchmaking.jpg";
+import sceneBarbershop from "@/assets/scenes/scene-barbershop.jpg";
 import sceneFitness from "@/assets/scenes/scene-fitness.jpg";
 import sceneLandscaping from "@/assets/scenes/scene-landscaping.jpg";
 import sceneBakery from "@/assets/scenes/scene-bakery.jpg";
