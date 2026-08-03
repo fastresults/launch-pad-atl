@@ -1,48 +1,45 @@
 ## Goal
-Stop hard-coding the "Founders in their own words" styling in the homepage component. Move heading size, weight, opacity — and thumbnail size — into the admin screen at `/admin/video-wall`, so you can dial them in yourself without a code change.
 
-No database migration is needed: these settings live in the existing `site_settings` row keyed `founder_video_wall` as JSON.
+Today the snapshot modal only reads the idea as a metro Atlanta play. Many ideas (SaaS, e-commerce, digital products, wholesale, creator businesses) have regional, national, or international reach — the snapshot should say so and factor that upside into the potential.
 
-## 1. Extend the settings type — `src/lib/video-wall.functions.ts`
-Add to `VideoWallSettings` (with defaults matching the current compact look):
+## What changes
 
-- `heading_size`: `"xs" | "sm" | "md" | "lg"` — default `"xs"`
-- `heading_weight`: `"normal" | "medium" | "semibold" | "bold"` — default `"normal"`
-- `heading_opacity`: number 20–100 — default `50`
-- `heading_style`: `"label"` (uppercase tracked sans) or `"serif"` — default `"label"`
-- `thumb_size`: `"xs" | "sm" | "md" | "lg"` — default `"xs"` (≈84/96px, today's size)
-- `show_subheading`: boolean — default `true`
+**1. The AI routine (`supabase/functions/atlanta-viability/index.ts`)**
 
-`getVideoWallSettings` / `updateVideoWallSettings` already merge partials over defaults, so old rows keep working.
+Add a `reach` object to the JSON contract, placed right after `verdict`:
 
-## 2. Admin controls — `src/routes/_authenticated/_admin/admin.video-wall.tsx`
-In the existing settings card, below Heading/Subheading, add an "Appearance" block:
-
-- Heading size — select (Extra small / Small / Medium / Large)
-- Heading weight — select (Normal / Medium / Semibold / Bold)
-- Heading style — select (Small label / Serif headline)
-- Heading opacity — slider 20–100%
-- Thumbnail size — select (Extra small / Small / Medium / Large)
-- Show subheading — switch
-
-Each control saves immediately via the existing `saveSettings.mutate({ ... })` pattern; live preview updates on the homepage after refresh.
-
-## 3. Consume settings — `src/components/home/FounderVideoWall.tsx`
-Replace the hard-coded heading classes with lookup maps:
-
-```
-SIZE   xs 10/11px · sm 12/13px · md 15/17px · lg 20/24px
-WEIGHT font-normal | font-medium | font-semibold | font-bold
-STYLE  label = font-sans uppercase tracking-[0.18em] · serif = font-serif normal-case
-THUMB  xs 84/96 · sm 104/120 · md 132/152 · lg 160/188 px tile width
+```text
+"reach": {
+  "tier": "local" | "regional" | "national" | "international",
+  "headline": string,   // e.g. "Starts in Atlanta, sells nationwide"
+  "why": string,        // 1 sentence on what makes it travel (or stay local)
+  "beyond_atlanta": string,  // what the ceiling looks like past metro Atlanta
+  "expansion_move": string   // the one first step that opens the wider market
+}
 ```
 
-Opacity applied via inline `style={{ opacity: heading_opacity / 100 }}` on the `h2` (keeps the token color, avoids arbitrary Tailwind classes). Subheading hidden when `show_subheading` is false.
+Prompt rules added:
+- Judge reach honestly — a mobile grooming van is local and should stay labeled local; a niche SaaS or Etsy product line is national/international. Do not inflate.
+- Keep Atlanta as the starting point and the credibility anchor: Atlanta is where it gets built and proven first, reach is the ceiling beyond it.
+- Where reach is beyond local, the `economics.steady_state` range and `basis` must reflect the broader market, not just metro demand — and `basis` states which market the range assumes.
+- Add one of the 3 `signals` for non-local ideas covering where demand sits outside metro Atlanta.
+- Keep the same no-invented-stats, ranges-not-promises, "startup" / "assets" language rules.
+- Raise the output budget slightly (~1400 chars) to fit the new block.
 
-Play badge and duration pill scale with the chosen thumb size tier so small tiles stay clean.
+**2. The modal (`src/components/home/IdeaSnapshotModal.tsx`)**
 
-## 4. Edge function
-`supabase/functions/founder-video-wall` returns `settings` verbatim from `site_settings`, so the new keys flow through with no change. I'll verify and only touch it if it whitelists keys.
+- Extend the `Snapshot` type with the `reach` shape.
+- Add a compact **Reach** card between the verdict and the money panel: a tier pill (Local / Regional / National / International) with a matching globe/map icon, the headline in emphasis, then `why` and `beyond_atlanta` as short lines, and `expansion_move` as a single "first move that opens it up" line.
+- Skeleton the card while streaming, same treatment as the money panel, so it doesn't pop in.
+- When the tier is `local`, the card reads as a strength ("This one wins locally — here's why that's fine"), not a limitation, and hides the expansion line.
+- Update the pinned header label from a hard-coded "Metro Atlanta read" to "Metro Atlanta read" for local and "Atlanta start · <Tier> reach" once a non-local tier streams in.
 
-## Result
-Defaults render exactly the compact, normal-weight, 50%-opacity heading you asked for — and every one of those attributes is now a control in the admin, not a code edit.
+**3. Copy guardrails**
+
+Nothing in the new copy calls the offer a plan/blueprint/roadmap; language stays "startup" and "assets" per the project copy standards.
+
+## Technical notes
+
+- The edge function streams SSE straight through, and the modal parses partial JSON — placing `reach` early in the key order means it renders before the money panel finishes, keeping the progressive reveal snappy.
+- No database or schema changes; nothing persisted.
+- The cached snapshot map keys on the idea string, so existing session caches simply refill with the new shape.

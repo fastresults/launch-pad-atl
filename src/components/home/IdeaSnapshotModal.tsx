@@ -11,10 +11,23 @@ import {
   TrendingUp,
   Wallet,
   CalendarClock,
+  Globe,
+  Map as MapIcon,
+  Compass,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 type Signal = { label: string; value: string; note: string };
+
+type ReachTier = "local" | "regional" | "national" | "international";
+
+type Reach = {
+  tier?: ReachTier;
+  headline?: string;
+  why?: string;
+  beyond_atlanta?: string;
+  expansion_move?: string;
+};
 
 type Economics = {
   typical_ticket?: string;
@@ -30,12 +43,29 @@ type Snapshot = {
   message?: string;
   idea_label?: string;
   verdict?: string;
+  reach?: Reach;
   economics?: Economics;
   signals?: Signal[];
   first_moves?: string[];
   watch_outs?: string[];
   why_atlanta?: string;
 };
+
+const REACH_LABEL: Record<ReachTier, string> = {
+  local: "Local reach",
+  regional: "Regional reach",
+  national: "National reach",
+  international: "International reach",
+};
+
+const REACH_ICON: Record<ReachTier, typeof Globe> = {
+  local: MapPin,
+  regional: MapIcon,
+  national: Compass,
+  international: Globe,
+};
+
+const REACH_TIERS: ReachTier[] = ["local", "regional", "national", "international"];
 
 type Props = {
   idea: string;
@@ -172,6 +202,15 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
   };
 
   const econ = snapshot?.economics;
+  const reach = snapshot?.reach;
+  const tier: ReachTier | null =
+    reach?.tier && REACH_TIERS.includes(reach.tier) ? reach.tier : null;
+  const isLocal = tier === "local";
+  const HeaderIcon = tier ? REACH_ICON[tier] : MapPin;
+  const headerLabel =
+    tier && !isLocal
+      ? `Atlanta start · ${tier} reach`
+      : "Metro Atlanta read";
   const invalid = snapshot?.ok === false;
   const showRead = !error && !invalid;
 
@@ -181,8 +220,8 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
         {/* Pinned header — context never scrolls away */}
         <div className="shrink-0 border-b border-[rgba(244,246,255,0.10)] px-6 py-4 sm:px-8">
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] hero-faint">
-            <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-            Metro Atlanta read
+            <HeaderIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            {headerLabel}
             {streaming && <span className="hero-dot ml-1" aria-hidden="true" />}
           </div>
           <p
@@ -245,12 +284,51 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
                 An Atlanta market read for {label}
               </DialogDescription>
 
-              {/* The money picture — the first visual, skeletoned from paint one */}
-              <div className="mt-6 rounded-3xl border border-[rgba(76,140,255,0.28)] bg-[rgba(76,140,255,0.07)] p-5">
+              {/* How far this can travel — Atlanta is the start, not the ceiling */}
+              <div className="mt-5 rounded-2xl border border-[rgba(244,246,255,0.12)] bg-[rgba(244,246,255,0.04)] p-4">
+                {tier ? (
+                  <>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(76,140,255,0.35)] bg-[rgba(76,140,255,0.12)] px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] hero-accent">
+                        <HeaderIcon className="h-3 w-3" aria-hidden="true" />
+                        {REACH_LABEL[tier]}
+                      </span>
+                      {reach?.headline ? (
+                        <span className="text-[15px] font-medium" style={{ color: "var(--hero-fg)" }}>
+                          {reach.headline}
+                        </span>
+                      ) : null}
+                    </div>
+                    {reach?.why ? <p className="mt-2.5 text-sm hero-sub">{reach.why}</p> : null}
+                    {reach?.beyond_atlanta ? (
+                      <p className="mt-1.5 text-sm hero-sub">{reach.beyond_atlanta}</p>
+                    ) : null}
+                    {!isLocal && reach?.expansion_move ? (
+                      <p className="mt-2.5 text-sm hero-faint">
+                        <span className="uppercase tracking-[0.14em] text-[10px]">
+                          First move that opens it up ·{" "}
+                        </span>
+                        {reach.expansion_move}
+                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="hero-skel h-5 w-[46%]" />
+                    <div className="hero-skel h-4 w-[82%]" />
+                  </div>
+                )}
+              </div>
+
+              {/* The money picture — skeletoned from paint one */}
+              <div className="mt-5 rounded-3xl border border-[rgba(76,140,255,0.28)] bg-[rgba(76,140,255,0.07)] p-5">
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] hero-faint">
                   <Wallet className="h-3.5 w-3.5" aria-hidden="true" />
-                  What this can earn around Atlanta
+                  {isLocal || !tier
+                    ? "What this can earn around Atlanta"
+                    : "What this can earn as it reaches further"}
                 </div>
+
 
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
                   <MoneyTile caption="Typical ticket" value={econ?.typical_ticket} />
