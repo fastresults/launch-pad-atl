@@ -55,16 +55,26 @@ async def main() -> None:
             for width in WIDTHS:
                 metrics = await inspect(page, url, width)
                 results[url][width] = metrics
-                if not (metrics["nav"] == "flex" and metrics["mobile"] == "absent"):
-                    failures.append(f"{url} @ {width}: desktop-only navigation contract failed: {metrics}")
-                if metrics["h1Size"] is not None and metrics["h1Size"] != "48px":
-                    failures.append(f"{url} @ {width}: desktop type contract failed: {metrics}")
-                expected_canvas = max(width, 1024)
-                if metrics["heroWidth"] is not None and abs(metrics["heroWidth"] - expected_canvas) > 1:
-                    failures.append(f"{url} @ {width}: hero is not full bleed across desktop canvas: {metrics}")
+                phone = width < 768
+                expected_nav = "none" if phone else "flex"
+                expected_mobile = "inline-flex" if phone else "none"
+                if metrics["nav"] != expected_nav or metrics["mobile"] != expected_mobile:
+                    failures.append(f"{url} @ {width}: navigation tier contract failed: {metrics}")
+                if width >= 1240:
+                    expected_h1 = "48px"
+                elif width >= 768:
+                    expected_h1 = "38px"
+                else:
+                    expected_h1 = "30px"
+                if metrics["h1Size"] is not None and metrics["h1Size"] != expected_h1:
+                    failures.append(f"{url} @ {width}: type tier contract failed (want {expected_h1}): {metrics}")
+                if metrics["heroWidth"] is not None and abs(metrics["heroWidth"] - width) > 1:
+                    failures.append(f"{url} @ {width}: hero is not full bleed: {metrics}")
                 if metrics["containerWidth"] is not None and metrics["containerWidth"] > 1201:
                     failures.append(f"{url} @ {width}: public container exceeds 1200px: {metrics}")
-                print(f"PASS {url} {width}px desktop-forced nav={metrics['nav']} mobile={metrics['mobile']} release={metrics['release']}")
+                if metrics["scrollWidth"] > width + 1:
+                    failures.append(f"{url} @ {width}: horizontal overflow: {metrics}")
+                print(f"PASS {url} {width}px nav={metrics['nav']} mobile={metrics['mobile']} h1={metrics['h1Size']} release={metrics['release']}")
         await browser.close()
 
     if len(URLS) == 2:
