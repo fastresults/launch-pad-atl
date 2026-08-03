@@ -384,6 +384,68 @@
 .sl-hero__status { margin-top: 20px; }
 .sl-hero__status span { color: var(--sl-quote-gold); }
 
+/* Scroll cue — slow, continuous float so visitors see there's more below */
+.sl-hero__scroll-cue {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 0;
+  background: none;
+  color: oklch(0.98 0.006 260 / 82%);
+  cursor: pointer;
+  transform: translateX(-50%);
+  transition: opacity 300ms ease, visibility 300ms ease;
+}
+
+.sl-hero__scroll-cue[data-hidden] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.sl-hero__scroll-cue-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  text-shadow: 0 2px 16px oklch(0.05 0.02 268 / 75%);
+}
+
+.sl-hero__scroll-cue-dot {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid oklch(0.98 0.006 260 / 30%);
+  border-radius: 999px;
+  background: oklch(0.1 0.02 270 / 34%);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 24px oklch(0.05 0.02 268 / 45%);
+  animation: sl-hero-cue-float 2.4s ease-in-out infinite;
+}
+
+@keyframes sl-hero-cue-float {
+  0% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(10px); opacity: 0.65; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-hero__scroll-cue-dot { animation: none; }
+}
+
+@media (max-height: 620px) {
+  .sl-hero__scroll-cue { display: none; }
+}
+
+
 /* ---------------------------------------------------------------
    Quote color — public marketing surfaces
    --------------------------------------------------------------- */
@@ -673,6 +735,10 @@
   .public-surface .sl-hero__title { margin-top: 12px; }
   .sl-hero__prompt { margin-top: 20px; }
   .sl-hero__status { margin-top: 14px; font-size: 11px; }
+  .sl-hero__scroll-cue {
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+  .sl-hero__scroll-cue-dot { width: 30px; height: 30px; }
   /* Slower, lighter Ken Burns — cheaper on mobile GPUs. */
   .sl-hero__scene { animation-duration: 32s; }
   .sl-hero__grain { display: none; }

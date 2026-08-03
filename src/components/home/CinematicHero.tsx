@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { founderScenes, shuffleScenesForVisit } from "@/lib/founder-scenes";
 import { useSceneCycle } from "@/hooks/use-scene-cycle";
 import { IdeaPrompt } from "@/components/home/IdeaPrompt";
@@ -13,6 +14,23 @@ export function CinematicHero() {
   const phrases = useMemo(() => scenes.map((scene) => scene.phrase), [scenes]);
   const { typed, index } = useSceneCycle(phrases, !paused);
   const takeOver = useCallback(() => setPaused(true), []);
+  const [cueHidden, setCueHidden] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setCueHidden(window.scrollY > 80);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollToNext = useCallback(() => {
+    const target = document.getElementById("learn-more");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollBy({ top: window.innerHeight * 0.9, behavior: "smooth" });
+    }
+  }, []);
 
   return (
     <section className="sl-hero">
@@ -49,6 +67,19 @@ export function CinematicHero() {
           <span>{scenes[index]?.label}</span>
         </p>
       </div>
+
+      <button
+        type="button"
+        onClick={scrollToNext}
+        data-hidden={cueHidden || undefined}
+        className="sl-hero__scroll-cue"
+        aria-label="Scroll to content"
+      >
+        <span className="sl-hero__scroll-cue-label">Scroll</span>
+        <span className="sl-hero__scroll-cue-dot">
+          <ChevronDown className="h-4 w-4" strokeWidth={2} />
+        </span>
+      </button>
     </section>
   );
 }
