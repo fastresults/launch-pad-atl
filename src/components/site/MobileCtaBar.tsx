@@ -1,6 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
 
 /**
  * Phone-only sticky action bar.
@@ -17,7 +16,7 @@ export function MobileCtaBar() {
     <div className="sl-mobile-cta" role="complementary" aria-label="Reserve a seat">
       <div className="sl-mobile-cta__copy">
         <span className="sl-mobile-cta__label">Next workshop</span>
-        <span className="sl-mobile-cta__value">Aug 20 · {WORKSHOP_PRICE_LABEL}</span>
+        <span className="sl-mobile-cta__value">Aug 20 · Atlanta</span>
       </div>
       <Link to="/register" className="sl-mobile-cta__button bg-hero-gradient text-white">
         Reserve seat
