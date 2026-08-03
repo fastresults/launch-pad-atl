@@ -128,6 +128,9 @@ export async function uploadVideoWallFile(file: File, kind: "video" | "poster") 
 
 export async function createVideoWallEntry(input: Partial<VideoWallEntry>) {
   const userId = await getActorUserId().catch(() => null);
+  const durationSeconds = Number.isFinite(input.duration_seconds)
+    ? Math.round(input.duration_seconds as number)
+    : null;
   const { data, error } = await supabase
     .from("founder_video_wall")
     .insert({
@@ -140,7 +143,7 @@ export async function createVideoWallEntry(input: Partial<VideoWallEntry>) {
       video_path: input.video_path ?? "",
       poster_bucket: input.poster_bucket ?? null,
       poster_path: input.poster_path ?? null,
-      duration_seconds: input.duration_seconds ?? null,
+      duration_seconds: durationSeconds,
       sort_order: input.sort_order ?? 0,
       is_live: input.is_live ?? false,
       created_by: userId,
@@ -152,7 +155,15 @@ export async function createVideoWallEntry(input: Partial<VideoWallEntry>) {
 }
 
 export async function updateVideoWallEntry(id: string, input: Partial<VideoWallEntry>) {
-  const { error } = await supabase.from("founder_video_wall").update(input).eq("id", id);
+  const normalizedInput = input.duration_seconds === undefined
+    ? input
+    : {
+        ...input,
+        duration_seconds: Number.isFinite(input.duration_seconds)
+          ? Math.round(input.duration_seconds as number)
+          : null,
+      };
+  const { error } = await supabase.from("founder_video_wall").update(normalizedInput).eq("id", id);
   if (error) throw new Error(error.message);
 }
 

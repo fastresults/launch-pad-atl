@@ -46,7 +46,7 @@ export function VideoWallForm({ initial, onSaved, onCancel }: Props) {
     if (!v) return;
     const onMeta = () => {
       if (!Number.isNaN(v.duration) && Number.isFinite(v.duration)) {
-        setDuration(Math.round(v.duration * 10) / 10);
+        setDuration(Math.round(v.duration));
       }
     };
     v.addEventListener("loadedmetadata", onMeta);
