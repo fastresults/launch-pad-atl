@@ -67,6 +67,19 @@ export function CinematicHero() {
           <span>{scenes[index]?.label}</span>
         </p>
       </div>
+
+      <button
+        type="button"
+        onClick={scrollToNext}
+        data-hidden={cueHidden || undefined}
+        className="sl-hero__scroll-cue"
+        aria-label="Scroll to content"
+      >
+        <span className="sl-hero__scroll-cue-label">Scroll</span>
+        <span className="sl-hero__scroll-cue-dot">
+          <ChevronDown className="h-4 w-4" strokeWidth={2} />
+        </span>
+      </button>
     </section>
   );
 }
