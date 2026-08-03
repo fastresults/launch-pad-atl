@@ -11,6 +11,9 @@ import {
   TrendingUp,
   Wallet,
   CalendarClock,
+  Globe,
+  Map as MapIcon,
+  Compass,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
