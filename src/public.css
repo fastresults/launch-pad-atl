@@ -382,7 +382,17 @@
 }
 
 .sl-hero__status { margin-top: 20px; }
-.sl-hero__status span { color: #c29b46; }
+.sl-hero__status span { color: var(--sl-quote-gold); }
+
+/* ---------------------------------------------------------------
+   Quote color — public marketing surfaces
+   --------------------------------------------------------------- */
+:root { --sl-quote-gold: #c29b46; }
+
+.marketing-surface blockquote,
+.sl-quote {
+  color: var(--sl-quote-gold);
+}
 
 /* ---------------------------------------------------------------
  * 7. Hero prompt panel
