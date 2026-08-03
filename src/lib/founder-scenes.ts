@@ -77,7 +77,6 @@ import scenePublishing from "@/assets/scenes/scene-publishing.jpg";
 import sceneFitnessapp from "@/assets/scenes/scene-fitnessapp.jpg";
 import sceneFractionalcfo from "@/assets/scenes/scene-fractionalcfo.jpg";
 import sceneFractionalcmo from "@/assets/scenes/scene-fractionalcmo.jpg";
-import sceneBookkeeping from "@/assets/scenes/scene-bookkeeping.jpg";
 import sceneTaxprep from "@/assets/scenes/scene-taxprep.jpg";
 import sceneHrconsult from "@/assets/scenes/scene-hrconsult.jpg";
 import sceneRecruiting from "@/assets/scenes/scene-recruiting.jpg";
@@ -103,7 +102,6 @@ import sceneTradesbooks from "@/assets/scenes/scene-tradesbooks.jpg";
 import sceneProposals from "@/assets/scenes/scene-proposals.jpg";
 import sceneMarketresearch from "@/assets/scenes/scene-marketresearch.jpg";
 import sceneTelehealth from "@/assets/scenes/scene-telehealth.jpg";
-import sceneNotary from "@/assets/scenes/scene-notary.jpg";
 import sceneOpsconsult from "@/assets/scenes/scene-opsconsult.jpg";
 
 export type SceneCategory = "main-street" | "online" | "remote";
