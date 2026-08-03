@@ -179,11 +179,11 @@ export function FounderVideoWall() {
                       </span>
                     ) : null}
                   </div>
-                  <p className={`mt-1.5 truncate font-serif ${thumb.name} leading-tight text-foreground`}>
+                  <p className={nameClass} style={{ opacity: nameOpacity }}>
                     {item.founder_name}
                   </p>
-                  {item.city ? (
-                    <p className="truncate text-[9px] uppercase tracking-[0.14em] text-foreground/45">
+                  {s.show_city !== false && item.city ? (
+                    <p className={cityClass} style={{ opacity: cityOpacity }}>
                       {item.city}
                     </p>
                   ) : null}
