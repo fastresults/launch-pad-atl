@@ -29,6 +29,7 @@ export function CinematicHero() {
             loading={sceneIndex === 0 ? "eager" : "lazy"}
             decoding="async"
             className="sl-hero__scene"
+            style={{ animationDelay: `-${(sceneIndex * 5) % 24}s` }}
           />
         ))}
         <div className="sl-hero__scrim" />
