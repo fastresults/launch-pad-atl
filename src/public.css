@@ -315,18 +315,21 @@
   object-fit: cover;
   opacity: 0;
   filter: brightness(1.06) contrast(1.03) saturate(1.03);
-  transform: scale(1.01);
+  transform: scale(1.03);
   transition: opacity 1400ms ease-in-out;
+  will-change: opacity, transform;
+  /* The Ken Burns drift runs continuously on every scene — never toggled by
+     active state — so a scene can never snap back mid-crossfade. */
+  animation: sl-hero-drift 24s ease-in-out infinite alternate;
 }
 
 .sl-hero__scene[data-active="true"] {
   opacity: 1;
-  animation: sl-hero-drift 8s linear forwards;
 }
 
 @keyframes sl-hero-drift {
-  from { transform: scale(1.01); }
-  to { transform: scale(1.05); }
+  from { transform: scale(1.02); }
+  to { transform: scale(1.07); }
 }
 
 .sl-hero__scrim {
