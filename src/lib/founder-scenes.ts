@@ -428,7 +428,7 @@ export const founderScenes: FounderScene[] = [
     phrase: "I want to start a bookkeeping business",
     label: "Bookkeeping service",
     image: sceneBookkeeping,
-    alt: "Bookkeeper reviewing numbers on a laptop with a barbershop owner",
+    alt: "Bookkeeper reviewing a client's numbers at a sunlit desk",
   },
   {
     id: "resume",
