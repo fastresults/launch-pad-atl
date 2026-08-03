@@ -732,8 +732,41 @@ export function shuffleScenes(
 }
 
 /**
- * Shuffles the scenes and remembers the opening scene so the next visit in this
- * session never starts on the same image.
+ * Alternates the two category pools — Main Street, online, Main Street, online.
+ * Whichever pool empties first, the remaining scenes from the other pool follow
+ * in their shuffled order. Every scene appears exactly once.
+ */
+export function interleaveByCategory(
+  scenes: FounderScene[],
+  startWith: SceneCategory = "main-street",
+): FounderScene[] {
+  const mainStreet = scenes.filter((scene) => scene.category === "main-street");
+  const online = scenes.filter((scene) => scene.category === "online");
+
+  const ordered: FounderScene[] = [];
+  let takeOnline = startWith === "online";
+  let m = 0;
+  let o = 0;
+
+  while (m < mainStreet.length || o < online.length) {
+    const preferOnline = takeOnline && o < online.length;
+    if (preferOnline || m >= mainStreet.length) {
+      ordered.push(online[o]!);
+      o += 1;
+    } else {
+      ordered.push(mainStreet[m]!);
+      m += 1;
+    }
+    takeOnline = !takeOnline;
+  }
+
+  return ordered;
+}
+
+/**
+ * Shuffles the scenes, alternates Main Street and online businesses, and
+ * remembers the opening scene so the next visit in this session never starts on
+ * the same image.
  */
 export function shuffleScenesForVisit(
   scenes: FounderScene[] = founderScenes,
@@ -745,7 +778,22 @@ export function shuffleScenesForVisit(
     last = undefined;
   }
 
-  const ordered = shuffleScenes(scenes, last);
+  // Each pool is shuffled independently, then woven together so the cadence
+  // alternates. The opening category is random too, so visits do not always
+  // start on the same kind of business.
+  const startWith: SceneCategory = Math.random() < 0.5 ? "main-street" : "online";
+  let ordered = interleaveByCategory(shuffleScenes(scenes), startWith);
+
+  if (last && ordered[0]?.id === last && ordered.length > 2) {
+    // Swap the opener with the next scene of the same category so the
+    // alternating cadence is preserved.
+    const swap = ordered.findIndex(
+      (scene, index) => index > 0 && scene.category === ordered[0]!.category,
+    );
+    if (swap > 0) {
+      [ordered[0], ordered[swap]] = [ordered[swap]!, ordered[0]!];
+    }
+  }
 
   try {
     if (ordered[0]) {
@@ -757,4 +805,5 @@ export function shuffleScenesForVisit(
 
   return ordered;
 }
+
 
