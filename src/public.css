@@ -78,13 +78,8 @@
   font-weight: 400;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  min-width: 1024px;
 }
 
-html:has(.public-surface),
-body:has(.public-surface) {
-  overflow-x: auto;
-}
 
 /* ---------------------------------------------------------------
  * 2. The container — the single source of body width
