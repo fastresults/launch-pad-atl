@@ -75,8 +75,38 @@ import sceneAdsales from "@/assets/scenes/scene-adsales.jpg";
 import sceneWebdesign from "@/assets/scenes/scene-webdesign.jpg";
 import scenePublishing from "@/assets/scenes/scene-publishing.jpg";
 import sceneFitnessapp from "@/assets/scenes/scene-fitnessapp.jpg";
+import sceneFractionalcfo from "@/assets/scenes/scene-fractionalcfo.jpg";
+import sceneFractionalcmo from "@/assets/scenes/scene-fractionalcmo.jpg";
+import sceneTaxprep from "@/assets/scenes/scene-taxprep.jpg";
+import sceneHrconsult from "@/assets/scenes/scene-hrconsult.jpg";
+import sceneRecruiting from "@/assets/scenes/scene-recruiting.jpg";
+import sceneExeccoach from "@/assets/scenes/scene-execcoach.jpg";
+import sceneResumepro from "@/assets/scenes/scene-resumepro.jpg";
+import scenePmconsult from "@/assets/scenes/scene-pmconsult.jpg";
+import sceneCrmadmin from "@/assets/scenes/scene-crmadmin.jpg";
+import sceneDataconsult from "@/assets/scenes/scene-dataconsult.jpg";
+import sceneItsupport from "@/assets/scenes/scene-itsupport.jpg";
+import sceneCybersec from "@/assets/scenes/scene-cybersec.jpg";
+import sceneCloudconsult from "@/assets/scenes/scene-cloudconsult.jpg";
+import sceneTechwriting from "@/assets/scenes/scene-techwriting.jpg";
+import sceneGrantwriting from "@/assets/scenes/scene-grantwriting.jpg";
+import sceneMedbilling from "@/assets/scenes/scene-medbilling.jpg";
+import sceneClaims from "@/assets/scenes/scene-claims.jpg";
+import sceneLegalresearch from "@/assets/scenes/scene-legalresearch.jpg";
+import sceneParalegal from "@/assets/scenes/scene-paralegal.jpg";
+import sceneCustomersuccess from "@/assets/scenes/scene-customersuccess.jpg";
+import sceneSdr from "@/assets/scenes/scene-sdr.jpg";
+import sceneRevops from "@/assets/scenes/scene-revops.jpg";
+import sceneTranslation from "@/assets/scenes/scene-translation.jpg";
+import sceneTradesbooks from "@/assets/scenes/scene-tradesbooks.jpg";
+import sceneProposals from "@/assets/scenes/scene-proposals.jpg";
+import sceneMarketresearch from "@/assets/scenes/scene-marketresearch.jpg";
+import sceneTelehealth from "@/assets/scenes/scene-telehealth.jpg";
+import sceneOpsconsult from "@/assets/scenes/scene-opsconsult.jpg";
+import scenePayroll from "@/assets/scenes/scene-payroll.jpg";
+import sceneUxdesign from "@/assets/scenes/scene-uxdesign.jpg";
 
-export type SceneCategory = "main-street" | "online";
+export type SceneCategory = "main-street" | "online" | "remote";
 
 export type FounderScene = {
   id: string;
@@ -398,7 +428,7 @@ export const founderScenes: FounderScene[] = [
     phrase: "I want to start a bookkeeping business",
     label: "Bookkeeping service",
     image: sceneBookkeeping,
-    alt: "Bookkeeper reviewing numbers on a laptop with a barbershop owner",
+    alt: "Bookkeeper reviewing a client's numbers at a sunlit desk",
   },
   {
     id: "resume",
@@ -704,6 +734,246 @@ export const founderScenes: FounderScene[] = [
     image: sceneFitnessapp,
     alt: "Online fitness coach filming a workout demo in a home gym",
   },
+  {
+    id: "fractionalcfo",
+    category: "remote",
+    phrase: "I want to be a fractional CFO",
+    label: "Fractional CFO",
+    image: sceneFractionalcfo,
+    alt: "Fractional CFO reviewing client financials from a sunlit home office",
+  },
+  {
+    id: "fractionalcmo",
+    category: "remote",
+    phrase: "I want to be a fractional marketing director",
+    label: "Fractional CMO",
+    image: sceneFractionalcmo,
+    alt: "Fractional marketing director on a client video call in a home office",
+  },
+  {
+    id: "taxprep",
+    category: "remote",
+    phrase: "I want to start a tax prep practice",
+    label: "Tax prep practice",
+    image: sceneTaxprep,
+    alt: "Tax preparer working through client returns at a home desk",
+  },
+  {
+    id: "hrconsult",
+    category: "remote",
+    phrase: "I want to start an HR consulting practice",
+    label: "HR consulting",
+    image: sceneHrconsult,
+    alt: "HR consultant reviewing an employee handbook on a client call",
+  },
+  {
+    id: "recruiting",
+    category: "remote",
+    phrase: "I want to start a recruiting agency",
+    label: "Recruiting agency",
+    image: sceneRecruiting,
+    alt: "Recruiter reviewing candidate profiles on a call from a home office",
+  },
+  {
+    id: "execcoach",
+    category: "remote",
+    phrase: "I want to become an executive coach",
+    label: "Executive coaching",
+    image: sceneExeccoach,
+    alt: "Executive coach taking notes during a client session on video",
+  },
+  {
+    id: "resumepro",
+    category: "remote",
+    phrase: "I want to start a resume and LinkedIn service",
+    label: "Resume service",
+    image: sceneResumepro,
+    alt: "Resume writer editing a client resume on a laptop",
+  },
+  {
+    id: "pmconsult",
+    category: "remote",
+    phrase: "I want to consult on project management",
+    label: "PM consulting",
+    image: scenePmconsult,
+    alt: "Project management consultant reviewing a schedule on a wide monitor",
+  },
+  {
+    id: "crmadmin",
+    category: "remote",
+    phrase: "I want to be a CRM admin for growing companies",
+    label: "CRM admin",
+    image: sceneCrmadmin,
+    alt: "CRM administrator configuring a sales pipeline on dual monitors",
+  },
+  {
+    id: "dataconsult",
+    category: "remote",
+    phrase: "I want to start a data analytics consultancy",
+    label: "Data analytics",
+    image: sceneDataconsult,
+    alt: "Data analyst building a business dashboard from a home office",
+  },
+  {
+    id: "itsupport",
+    category: "remote",
+    phrase: "I want to run a remote IT support desk",
+    label: "Remote IT support",
+    image: sceneItsupport,
+    alt: "IT support technician troubleshooting a client system remotely",
+  },
+  {
+    id: "cybersec",
+    category: "remote",
+    phrase: "I want to start a cybersecurity advisory",
+    label: "Cybersecurity advisory",
+    image: sceneCybersec,
+    alt: "Cybersecurity advisor working through a client security audit",
+  },
+  {
+    id: "cloudconsult",
+    category: "remote",
+    phrase: "I want to consult on cloud migrations",
+    label: "Cloud consulting",
+    image: sceneCloudconsult,
+    alt: "Cloud consultant sketching an architecture diagram beside a laptop",
+  },
+  {
+    id: "techwriting",
+    category: "remote",
+    phrase: "I want to start a technical writing business",
+    label: "Technical writing",
+    image: sceneTechwriting,
+    alt: "Technical writer drafting product documentation at a home desk",
+  },
+  {
+    id: "grantwriting",
+    category: "remote",
+    phrase: "I want to become a grant writer",
+    label: "Grant writing",
+    image: sceneGrantwriting,
+    alt: "Grant writer working through a funding application at a home desk",
+  },
+  {
+    id: "medbilling",
+    category: "remote",
+    phrase: "I want to start a medical billing service",
+    label: "Medical billing",
+    image: sceneMedbilling,
+    alt: "Medical billing specialist reviewing claim codes on dual monitors",
+  },
+  {
+    id: "claims",
+    category: "remote",
+    phrase: "I want to help people with insurance claims",
+    label: "Claims support",
+    image: sceneClaims,
+    alt: "Insurance claims consultant reviewing paperwork on a client call",
+  },
+  {
+    id: "legalresearch",
+    category: "remote",
+    phrase: "I want to offer remote legal research support",
+    label: "Legal research",
+    image: sceneLegalresearch,
+    alt: "Legal research professional working through case law at a home study",
+  },
+  {
+    id: "paralegal",
+    category: "remote",
+    phrase: "I want to become a virtual paralegal",
+    label: "Virtual paralegal",
+    image: sceneParalegal,
+    alt: "Virtual paralegal organizing digital case files on a laptop",
+  },
+  {
+    id: "customersuccess",
+    category: "remote",
+    phrase: "I want to offer customer success as a service",
+    label: "Customer success",
+    image: sceneCustomersuccess,
+    alt: "Customer success consultant reviewing account health on a call",
+  },
+  {
+    id: "sdr",
+    category: "remote",
+    phrase: "I want to run outsourced sales development",
+    label: "Sales development",
+    image: sceneSdr,
+    alt: "Remote sales development rep working a call list from a home desk",
+  },
+  {
+    id: "revops",
+    category: "remote",
+    phrase: "I want to start a revenue operations consultancy",
+    label: "RevOps consulting",
+    image: sceneRevops,
+    alt: "Revenue operations consultant mapping a sales funnel on a whiteboard",
+  },
+  {
+    id: "translation",
+    category: "remote",
+    phrase: "I want to start a translation service",
+    label: "Translation service",
+    image: sceneTranslation,
+    alt: "Translator working between documents on a laptop at a home desk",
+  },
+  {
+    id: "tradesbooks",
+    category: "remote",
+    phrase: "I want to do the books for contractors",
+    label: "Books for trades",
+    image: sceneTradesbooks,
+    alt: "Bookkeeper reviewing contractor job costs with a work truck outside",
+  },
+  {
+    id: "proposals",
+    category: "remote",
+    phrase: "I want to write proposals and bids for companies",
+    label: "Proposal writing",
+    image: sceneProposals,
+    alt: "Proposal writer assembling a client bid at a home desk",
+  },
+  {
+    id: "marketresearch",
+    category: "remote",
+    phrase: "I want to start a market research practice",
+    label: "Market research",
+    image: sceneMarketresearch,
+    alt: "Market research consultant reviewing survey findings on a monitor",
+  },
+  {
+    id: "telehealth",
+    category: "remote",
+    phrase: "I want to start a telehealth counseling practice",
+    label: "Telehealth practice",
+    image: sceneTelehealth,
+    alt: "Counselor running a telehealth session from a warm home office",
+  },
+  {
+    id: "opsconsult",
+    category: "remote",
+    phrase: "I want to consult on business operations",
+    label: "Operations consulting",
+    image: sceneOpsconsult,
+    alt: "Operations consultant reviewing a process flow chart on a monitor",
+  },
+  {
+    id: "payroll",
+    category: "remote",
+    phrase: "I want to run payroll for small businesses",
+    label: "Payroll service",
+    image: scenePayroll,
+    alt: "Payroll specialist reviewing pay runs on dual monitors at home",
+  },
+  {
+    id: "uxdesign",
+    category: "remote",
+    phrase: "I want to freelance as a product designer",
+    label: "Product design",
+    image: sceneUxdesign,
+    alt: "Freelance product designer sketching app wireframes on a tablet",
+  },
 ];
 
 
@@ -731,33 +1001,61 @@ export function shuffleScenes(
   return copy;
 }
 
+/** The repeating cadence the hero rotation follows. */
+export const SCENE_CATEGORY_CYCLE: SceneCategory[] = [
+  "main-street",
+  "online",
+  "remote",
+];
+
 /**
- * Alternates the two category pools — Main Street, online, Main Street, online.
- * Whichever pool empties first, the remaining scenes from the other pool follow
- * in their shuffled order. Every scene appears exactly once.
+ * Weaves the category pools together in a repeating cycle — Main Street,
+ * online, remote, Main Street, online, remote. When a pool empties, the cycle
+ * continues with whatever pools remain, so every scene appears exactly once.
  */
 export function interleaveByCategory(
   scenes: FounderScene[],
   startWith: SceneCategory = "main-street",
 ): FounderScene[] {
-  const mainStreet = scenes.filter((scene) => scene.category === "main-street");
-  const online = scenes.filter((scene) => scene.category === "online");
+  const startIndex = Math.max(0, SCENE_CATEGORY_CYCLE.indexOf(startWith));
+  const cycle = [
+    ...SCENE_CATEGORY_CYCLE.slice(startIndex),
+    ...SCENE_CATEGORY_CYCLE.slice(0, startIndex),
+  ];
+
+  const pools = new Map<SceneCategory, FounderScene[]>(
+    cycle.map((category) => [
+      category,
+      scenes.filter((scene) => scene.category === category),
+    ]),
+  );
+  const cursors = new Map<SceneCategory, number>(
+    cycle.map((category) => [category, 0]),
+  );
+
+  const remaining = () =>
+    cycle.reduce(
+      (total, category) =>
+        total + (pools.get(category)!.length - cursors.get(category)!),
+      0,
+    );
 
   const ordered: FounderScene[] = [];
-  let takeOnline = startWith === "online";
-  let m = 0;
-  let o = 0;
+  let beat = 0;
 
-  while (m < mainStreet.length || o < online.length) {
-    const preferOnline = takeOnline && o < online.length;
-    if (preferOnline || m >= mainStreet.length) {
-      ordered.push(online[o]!);
-      o += 1;
-    } else {
-      ordered.push(mainStreet[m]!);
-      m += 1;
+  while (remaining() > 0) {
+    // Walk forward from the current beat until a pool still has scenes left.
+    for (let step = 0; step < cycle.length; step += 1) {
+      const category = cycle[(beat + step) % cycle.length]!;
+      const pool = pools.get(category)!;
+      const cursor = cursors.get(category)!;
+      if (cursor < pool.length) {
+        ordered.push(pool[cursor]!);
+        cursors.set(category, cursor + 1);
+        beat = (beat + step + 1) % cycle.length;
+        break;
+      }
     }
-    takeOnline = !takeOnline;
   }
 
   return ordered;
@@ -779,9 +1077,10 @@ export function shuffleScenesForVisit(
   }
 
   // Each pool is shuffled independently, then woven together so the cadence
-  // alternates. The opening category is random too, so visits do not always
-  // start on the same kind of business.
-  const startWith: SceneCategory = Math.random() < 0.5 ? "main-street" : "online";
+  // cycles Main Street, online, remote. The opening lane is random too, so
+  // visits do not always start on the same kind of business.
+  const startWith =
+    SCENE_CATEGORY_CYCLE[Math.floor(Math.random() * SCENE_CATEGORY_CYCLE.length)]!;
   let ordered = interleaveByCategory(shuffleScenes(scenes), startWith);
 
   if (last && ordered[0]?.id === last && ordered.length > 2) {
