@@ -32,11 +32,45 @@ const HEADING_STYLE: Record<string, string> = {
   serif: "font-serif normal-case tracking-normal",
 };
 
-const THUMB: Record<string, { tile: string; badge: string; icon: string; name: string }> = {
-  xs: { tile: "w-[84px] md:w-[96px]", badge: "h-6 w-6", icon: "h-2.5 w-2.5", name: "text-[11px]" },
-  sm: { tile: "w-[104px] md:w-[120px]", badge: "h-7 w-7", icon: "h-3 w-3", name: "text-[12px]" },
-  md: { tile: "w-[132px] md:w-[152px]", badge: "h-8 w-8", icon: "h-3.5 w-3.5", name: "text-[13px]" },
-  lg: { tile: "w-[160px] md:w-[188px]", badge: "h-10 w-10", icon: "h-4 w-4", name: "text-[14px]" },
+const THUMB: Record<string, { tile: string; badge: string; icon: string }> = {
+  xs: { tile: "w-[84px] md:w-[96px]", badge: "h-6 w-6", icon: "h-2.5 w-2.5" },
+  sm: { tile: "w-[104px] md:w-[120px]", badge: "h-7 w-7", icon: "h-3 w-3" },
+  md: { tile: "w-[132px] md:w-[152px]", badge: "h-8 w-8", icon: "h-3.5 w-3.5" },
+  lg: { tile: "w-[160px] md:w-[188px]", badge: "h-10 w-10", icon: "h-4 w-4" },
+};
+
+const NAME_STYLE: Record<string, string> = {
+  serif: "font-serif normal-case tracking-normal",
+  sans: "font-sans normal-case tracking-normal",
+  label: "font-sans uppercase tracking-[0.14em]",
+  mono: "font-mono normal-case tracking-tight",
+};
+
+const NAME_SIZE: Record<string, string> = {
+  xs: "text-[11px]",
+  sm: "text-[12px]",
+  md: "text-[13px]",
+  lg: "text-[15px]",
+};
+
+const NAME_CASE: Record<string, string> = {
+  none: "",
+  upper: "uppercase",
+  capitalize: "capitalize",
+};
+
+const CITY_SIZE: Record<string, string> = {
+  xs: "text-[9px]",
+  sm: "text-[10px]",
+  md: "text-[11px]",
+  lg: "text-[12px]",
+};
+
+const SUB_SIZE: Record<string, string> = {
+  xs: "text-[11px]",
+  sm: "text-[12px]",
+  md: "text-[14px]",
+  lg: "text-[16px]",
 };
 
 export function FounderVideoWall() {
@@ -67,7 +101,32 @@ export function FounderVideoWall() {
     "leading-tight text-foreground",
   ].join(" ");
   const thumb = THUMB[s.thumb_size] ?? THUMB.xs;
-  const headingOpacity = Math.min(100, Math.max(10, Number(s.heading_opacity) || 50)) / 100;
+  const clamp = (v: unknown, fb: number) =>
+    Math.min(100, Math.max(10, Number(v) || fb)) / 100;
+  const headingOpacity = clamp(s.heading_opacity, 50);
+  const subOpacity = clamp(s.sub_opacity, 55);
+  const nameOpacity = clamp(s.name_opacity, 100);
+  const cityOpacity = clamp(s.city_opacity, 45);
+
+  const nameClass = [
+    NAME_STYLE[s.name_style] ?? NAME_STYLE.serif,
+    NAME_SIZE[s.name_size] ?? NAME_SIZE.xs,
+    HEADING_WEIGHT[s.name_weight] ?? HEADING_WEIGHT.normal,
+    NAME_CASE[s.name_case] ?? "",
+    s.name_wrap ? "whitespace-normal break-words line-clamp-2" : "truncate",
+    "mt-1.5 leading-tight text-foreground",
+  ].join(" ");
+
+  const subClass = [
+    SUB_SIZE[s.sub_size] ?? SUB_SIZE.xs,
+    HEADING_WEIGHT[s.sub_weight] ?? HEADING_WEIGHT.normal,
+    "mx-auto mt-1 max-w-[52ch] leading-relaxed text-foreground",
+  ].join(" ");
+
+  const cityClass = [
+    CITY_SIZE[s.city_size] ?? CITY_SIZE.xs,
+    "truncate uppercase tracking-[0.14em] text-foreground",
+  ].join(" ");
 
   const visible = expanded ? items : items.slice(0, 12);
   const hasMore = items.length > visible.length;
@@ -80,7 +139,7 @@ export function FounderVideoWall() {
             {s.heading}
           </h2>
           {s.show_subheading !== false && s.subheading ? (
-            <p className="mx-auto mt-1 max-w-[52ch] text-[11px] leading-relaxed text-foreground/55">
+            <p className={subClass} style={{ opacity: subOpacity }}>
               {s.subheading}
             </p>
           ) : null}
@@ -120,11 +179,11 @@ export function FounderVideoWall() {
                       </span>
                     ) : null}
                   </div>
-                  <p className={`mt-1.5 truncate font-serif ${thumb.name} leading-tight text-foreground`}>
+                  <p className={nameClass} style={{ opacity: nameOpacity }}>
                     {item.founder_name}
                   </p>
-                  {item.city ? (
-                    <p className="truncate text-[9px] uppercase tracking-[0.14em] text-foreground/45">
+                  {s.show_city !== false && item.city ? (
+                    <p className={cityClass} style={{ opacity: cityOpacity }}>
                       {item.city}
                     </p>
                   ) : null}

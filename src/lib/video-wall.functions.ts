@@ -7,6 +7,8 @@ export const VIDEO_WALL_BUCKET = "founder-videos";
 export type VideoWallSizeTier = "xs" | "sm" | "md" | "lg";
 export type VideoWallWeight = "normal" | "medium" | "semibold" | "bold";
 export type VideoWallHeadingStyle = "label" | "serif";
+export type VideoWallNameStyle = "serif" | "sans" | "label" | "mono";
+export type VideoWallCase = "none" | "upper" | "capitalize";
 
 export type VideoWallSettings = {
   enabled: boolean;
@@ -18,6 +20,21 @@ export type VideoWallSettings = {
   heading_opacity: number;
   thumb_size: VideoWallSizeTier;
   show_subheading: boolean;
+  /* founder name */
+  name_style: VideoWallNameStyle;
+  name_size: VideoWallSizeTier;
+  name_weight: VideoWallWeight;
+  name_case: VideoWallCase;
+  name_opacity: number;
+  name_wrap: boolean;
+  /* city line */
+  show_city: boolean;
+  city_size: VideoWallSizeTier;
+  city_opacity: number;
+  /* subheading */
+  sub_size: VideoWallSizeTier;
+  sub_weight: VideoWallWeight;
+  sub_opacity: number;
 };
 
 export const DEFAULT_VIDEO_WALL_SETTINGS: VideoWallSettings = {
@@ -30,6 +47,18 @@ export const DEFAULT_VIDEO_WALL_SETTINGS: VideoWallSettings = {
   heading_opacity: 50,
   thumb_size: "xs",
   show_subheading: true,
+  name_style: "serif",
+  name_size: "xs",
+  name_weight: "normal",
+  name_case: "none",
+  name_opacity: 100,
+  name_wrap: false,
+  show_city: true,
+  city_size: "xs",
+  city_opacity: 45,
+  sub_size: "xs",
+  sub_weight: "normal",
+  sub_opacity: 55,
 };
 
 export type VideoWallEntry = {
