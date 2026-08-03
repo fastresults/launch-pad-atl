@@ -91,6 +91,12 @@ function Tracks() {
                     Most chosen
                   </div>
                 )}
+                {t.slug === "launch" && (
+                  <div className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full border border-primary/40 bg-background px-3 py-1 text-xs font-medium text-primary">
+                    Done for you — most convenient
+                  </div>
+                )}
+
                 <Icon className="mb-4 size-6 text-primary" />
                 <h3 className="public-heading">{t.name}</h3>
                 <p className="mt-2 text-base text-muted-foreground">{t.tagline}</p>
