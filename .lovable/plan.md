@@ -7,7 +7,7 @@ Add a subtle, centered "scroll" indicator pinned to the bottom of the hero so vi
 A small button (not a decorative div) absolutely positioned at the bottom-center of the hero:
 
 - Chevron-down icon (lucide `ChevronDown`) inside a soft translucent circle, with a tiny uppercase "Scroll" label above it (optional, low opacity).
-- Gentle 2s infinite bounce (translateY 0 → 8px → 0), easing in/out — subtle, not jumpy.
+- Continuous slow up-and-down float: the arrow drifts down about 10px and back over a 2.4s loop, `ease-in-out`, infinite, never stopping while the cue is visible — that motion is the whole point of the cue, so it runs on load with no hover or scroll trigger required. A soft opacity pulse (100% → 65%) rides the same loop so the movement reads clearly against busy hero photos.
 - Clicking it smooth-scrolls to the first section below the hero, so it's functional and not just visual.
 - Fades out once the user scrolls past ~80px, so it never overlaps the content below.
 - Respects `prefers-reduced-motion`: no bounce, still visible and clickable.
