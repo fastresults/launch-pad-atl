@@ -210,6 +210,172 @@ export default function AdminVideoWallPage() {
             </div>
           </div>
         </div>
+
+        <div className="space-y-4 border-t pt-4">
+          <p className="text-sm font-medium">Founder name</p>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-1.5">
+              <Label>Font style</Label>
+              <Select
+                value={settings?.name_style ?? "serif"}
+                onValueChange={(v) => saveSettings.mutate({ name_style: v as any })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="serif">Serif</SelectItem>
+                  <SelectItem value="sans">Sans</SelectItem>
+                  <SelectItem value="label">Small caps label</SelectItem>
+                  <SelectItem value="mono">Mono</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Size</Label>
+              <Select
+                value={settings?.name_size ?? "xs"}
+                onValueChange={(v) => saveSettings.mutate({ name_size: v as any })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="xs">Extra small</SelectItem>
+                  <SelectItem value="sm">Small</SelectItem>
+                  <SelectItem value="md">Medium</SelectItem>
+                  <SelectItem value="lg">Large</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Weight</Label>
+              <Select
+                value={settings?.name_weight ?? "normal"}
+                onValueChange={(v) => saveSettings.mutate({ name_weight: v as any })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="semibold">Semibold</SelectItem>
+                  <SelectItem value="bold">Bold</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Letter case</Label>
+              <Select
+                value={settings?.name_case ?? "none"}
+                onValueChange={(v) => saveSettings.mutate({ name_case: v as any })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">As typed</SelectItem>
+                  <SelectItem value="upper">UPPERCASE</SelectItem>
+                  <SelectItem value="capitalize">Capitalized</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Name opacity — {settings?.name_opacity ?? 100}%</Label>
+              <Slider
+                min={20}
+                max={100}
+                step={5}
+                value={[settings?.name_opacity ?? 100]}
+                onValueCommit={(v) => saveSettings.mutate({ name_opacity: v[0] })}
+              />
+            </div>
+            <div className="flex items-center gap-3 pt-6">
+              <Switch
+                id="wall-name-wrap"
+                checked={settings?.name_wrap ?? false}
+                onCheckedChange={(v) => saveSettings.mutate({ name_wrap: v })}
+              />
+              <Label htmlFor="wall-name-wrap">Wrap long names (2 lines)</Label>
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="flex items-center gap-3 pt-6">
+              <Switch
+                id="wall-show-city"
+                checked={settings?.show_city ?? true}
+                onCheckedChange={(v) => saveSettings.mutate({ show_city: v })}
+              />
+              <Label htmlFor="wall-show-city">Show city line</Label>
+            </div>
+            <div className="space-y-1.5">
+              <Label>City size</Label>
+              <Select
+                value={settings?.city_size ?? "xs"}
+                onValueChange={(v) => saveSettings.mutate({ city_size: v as any })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="xs">Extra small</SelectItem>
+                  <SelectItem value="sm">Small</SelectItem>
+                  <SelectItem value="md">Medium</SelectItem>
+                  <SelectItem value="lg">Large</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>City opacity — {settings?.city_opacity ?? 45}%</Label>
+              <Slider
+                min={20}
+                max={100}
+                step={5}
+                value={[settings?.city_opacity ?? 45]}
+                onValueCommit={(v) => saveSettings.mutate({ city_opacity: v[0] })}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4 border-t pt-4">
+          <p className="text-sm font-medium">Subheading appearance</p>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label>Size</Label>
+              <Select
+                value={settings?.sub_size ?? "xs"}
+                onValueChange={(v) => saveSettings.mutate({ sub_size: v as any })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="xs">Extra small</SelectItem>
+                  <SelectItem value="sm">Small</SelectItem>
+                  <SelectItem value="md">Medium</SelectItem>
+                  <SelectItem value="lg">Large</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Weight</Label>
+              <Select
+                value={settings?.sub_weight ?? "normal"}
+                onValueChange={(v) => saveSettings.mutate({ sub_weight: v as any })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="semibold">Semibold</SelectItem>
+                  <SelectItem value="bold">Bold</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Opacity — {settings?.sub_opacity ?? 55}%</Label>
+              <Slider
+                min={20}
+                max={100}
+                step={5}
+                value={[settings?.sub_opacity ?? 55]}
+                onValueCommit={(v) => saveSettings.mutate({ sub_opacity: v[0] })}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
 
