@@ -1,50 +1,57 @@
-## What the two screenshots actually show
+## Goal
 
-Both screenshots are the same macOS screen, same browser, same window size — but:
+A brand-new, standalone video testimonial wall that appears immediately below the hero on the homepage. Small thumbnails showing name + city; clicking one opens a properly sized video lightbox styled like the homepage. Super admin uploads, orders, and toggles each video on or off, plus a master on/off for the whole section.
 
-- **Editor shot:** the app renders inside the Lovable preview pane (~1530 image px wide) and shows the full desktop nav at normal text size.
-- **Published shot:** the app fills the same screen (~1920 image px) but every element is roughly **2x larger** — header bar, logo, nav links, H1, prompt box.
+The existing testimonial slider (`video_testimonials`, `/admin/testimonials`, the marquee component) is left completely untouched and keeps working as-is.
 
-Same machine, same window, same day. If this were a build/CSS difference, the published page would be *differently laid out*, not *uniformly scaled*. Uniform scaling of everything, including the browser-drawn text metrics, is what **per-origin browser zoom** looks like. Chromium-based browsers (Comet included) persist a zoom level **per domain**, so `lovable.dev` can sit at 100% while `startuplabs.online` sits at ~175–200% forever, across reloads and new tabs.
+## New pieces
 
-This also explains every earlier dead end: our diagnostics measured the effective CSS viewport at ~1027px on a "1400px monitor", and every CSS fix we shipped was correct in the sandbox and "broken" live.
+### 1. Database (new table, no changes to existing ones)
+`public.founder_video_wall`:
+- `founder_name`, `city`, `founder_role` (optional), `startup_name` (optional), `quote` (optional)
+- `video_bucket` / `video_path`, `poster_bucket` / `poster_path`
+- `duration_seconds`, `sort_order`, `is_live` (boolean, per-video on/off)
+- `created_by`, timestamps + updated_at trigger
 
-**This is a diagnosis, not yet a confirmation.** Step 1 below proves or kills it in one page load, and the plan continues either way.
+Access rules:
+- Anyone (including signed-out visitors) can view rows where the video is live.
+- Only super admins can add, edit, or remove rows.
+- Grants for anon / authenticated / service_role as required.
 
-## Step 1 — Confirm with the logging already shipped
+Master section on/off + heading/subheading stored as a new `site_settings` key `founder_video_wall` (separate from the existing `testimonial_slider` key).
 
-Open `https://startuplabs.online/` and read the `[layout]` console line (or run `window.__slViewportLog`). The decisive fields:
+Videos live in the existing private `master-media` bucket under a `video-wall/` prefix, served via signed URLs.
 
-```text
-cssViewportWidth   ~960–1030   (vs. the real 1400+ monitor)
-screenWidth        1400+
-effectiveZoom      ~1.4–2.0    ← anything above ~1.05 means browser/OS zoom
-devicePixelRatio   2
-```
+### 2. Public section — `FounderVideoWall`
+New component `src/components/home/FounderVideoWall.tsx`, mounted in `HomeFramework` between `<Hero />` and `<HeroCopy />` so it sits immediately under the hero.
 
-Then press **Cmd+0** (reset zoom) on that tab and reload. If `cssViewportWidth` jumps to ~1400 and the page instantly looks like the editor, the cause is confirmed and it was never the build.
+Adaptive layout by count:
+- 1–2 videos: centered, larger thumbs
+- 3–5: one centered row
+- 6+: responsive wrapped grid (2 cols phone / 3–4 tablet / 5–6 desktop), capped at two rows with a "See all stories" expander so twenty videos never swamp the page
 
-If `effectiveZoom` comes back ~1.0 and the page is still magnified, the cause is a real publish-time divergence — in that case the plan pivots to Step 2b instead.
+Each thumbnail: 9:16 rounded card with poster image, play badge, subtle hover lift; below it the founder name in the homepage serif and the city in small muted tracking-caps. Nothing autoplays; posters lazy-load; the section renders nothing at all when disabled or empty.
 
-## Step 2a — If it is browser zoom (expected)
+### 3. Lightbox
+New `src/components/home/FounderVideoLightbox.tsx` built on the existing `Dialog` primitive with the homepage dark card tokens (`bg-card`, `border-white/10`) — matching the treatment already used on the other homepage dialogs.
+- Video fitted to viewport (portrait-aware, max ~80vh) so it never overflows on phone or desktop
+- Native controls, plays on open with sound, poster while loading
+- Name · city (+ role/startup if set) and the quote beneath
+- Prev/next arrows and arrow-key nav across the wall; Esc closes
+- Signed URL requested only when a video opens, so a 20-video wall doesn't fire 20 signing calls on page load
 
-The site should not depend on the visitor being at 100% zoom. Three changes:
+### 4. Super admin page
+New route `/admin/video-wall` (`admin.video-wall.tsx`), added to the admin sidebar and gated to `super_admin` only (other admins get redirected).
+- Master switch: show/hide the whole section, plus editable heading and subheading
+- Upload form: video file, optional poster (auto-captures a frame as poster when none is supplied), founder name, city, optional role/startup/quote
+- Table of all entries with poster thumb, name, city, per-row **Live** switch, up/down reorder, edit, and delete (delete also removes the storage objects)
 
-1. **Drop the forced-desktop hack.** Remove `min-width: 1024px` on `.public-surface` / `.sl-site-header` and the block of `sm:`/`md:`/`lg:` utility overrides added last turn. They were built to fight a symptom that isn't a layout bug, and they break genuine phone visitors.
-2. **Restore the responsive header,** including the mobile nav path removed last turn, so real phones get a real phone layout again.
-3. **Make the 960–1240px band look deliberate.** Add one honest desktop-compact tier: H1 ~38px, section padding reduced, container gutters tightened. A zoomed-in visitor at an effective 1000px then sees a correct, well-proportioned page instead of an oversized one.
-4. **Optional, one line of UI:** when `effectiveZoom > 1.25`, show a dismissible bar — "Your browser is zoomed to 175%. Press Cmd+0 for the full layout." Non-blocking, remembers dismissal.
+## Verification
 
-## Step 2b — If zoom is ~1.0 and it is still magnified
-
-Then the published bundle genuinely differs from the sandbox bundle. Sequence: capture the served CSS asset hash from `data-css-bundle` on `<html>` live vs. local build output, diff the two `public.css` payloads, and confirm whether the deployed HTML shell (which hosting rewrites — it injects og:image and the badge) still carries `<meta name="viewport" content="width=device-width, initial-scale=1.0">`. A dropped or altered viewport meta on the served shell would produce exactly this uniform magnification.
+Playwright pass at 390px, 768px, and 1400px with 1, 5, and 20 seeded entries: no horizontal overflow, thumbnails scale sensibly, lightbox video fits the viewport, toggling a row off removes it from the homepage, and the existing testimonial slider still renders unchanged.
 
 ## Technical notes
 
-- Files touched in Step 2a: `src/public.css` (remove min-width + utility overrides, add the compact tier), `src/components/site/Header.tsx` (restore mobile nav), optionally a small `ZoomNotice` component.
-- `src/lib/viewport-log.ts` stays as-is — it's the instrument that settles this.
-- No changes to routes, copy, or backend.
-
-## What I need from you
-
-Load the published site, open the console, and paste the `[layout]` line — specifically `cssViewportWidth`, `screenWidth`, and `effectiveZoom`. That single line decides between 2a and 2b and ends the guessing.
+- New files: migration; `src/lib/video-wall.functions.ts`; `src/components/home/FounderVideoWall.tsx`; `src/components/home/FounderVideoLightbox.tsx`; `src/components/admin/VideoWallForm.tsx`; `src/routes/_authenticated/_admin/admin.video-wall.tsx`.
+- Touched files: `src/components/home/HomeFramework.tsx` (mount the section), `src/App.tsx` (route), `src/components/admin/AdminSidebar.tsx` (nav link).
+- Zero changes to `video_testimonials`, `testimonials.functions.ts`, `VideoTestimonials.tsx`, `LandingVideoTestimonials.tsx`, or `/admin/testimonials`.
