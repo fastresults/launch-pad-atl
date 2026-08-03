@@ -1,27 +1,18 @@
-## Goal
-The "Founders in their own words" strip below the hero currently eats a full screen of vertical space — with only one video, the grid stretches the 9:16 thumbnail to ~400px tall. Shrink both the heading and the thumbnails so the section reads as a compact ribbon.
+## Current state
+`src/components/home/FounderVideoWall.tsx` line 39 already reads:
+`font-serif text-[12px] font-normal leading-tight text-foreground/50 md:text-[13px]`
 
-## Changes (all in `src/components/home/FounderVideoWall.tsx`)
+So the size, weight, and opacity classes are applied. If it still looks large and bold in the preview, the cause is the serif display face itself (heavy default cut) rather than the utility classes.
 
-1. **Fixed small tile size instead of stretch-to-fill grid**
-   - Replace the count-based `gridClass` (which uses `grid-cols-2 max-w-[520px]` for 1–2 items) with a centered flex-wrap row where each tile has a fixed width of about **96px desktop / 84px mobile** (roughly 75% smaller than today's ~260px). Aspect stays 9:16, so height drops from ~460px to ~170px.
-   - Tiles stay centered when there are few, wrap into rows when there are many.
+## Change
+Restyle the heading as a small, quiet label rather than a serif headline:
 
-2. **Scale down tile chrome**
-   - Play badge: 36px → 24px, icon 14px → 10px.
-   - Duration pill: 10px → 9px text, tighter padding.
-   - Corner radius `rounded-xl` → `rounded-lg`.
-   - Founder name 13px → 11px; city label 10px → 9px, keep truncation.
+- Swap `font-serif` for the body sans stack (`font-sans`) so `font-normal` actually renders light.
+- Size down to `text-[10px] md:text-[11px]`.
+- Add `uppercase tracking-[0.18em]` so it reads as a section label at that size.
+- Keep `font-normal` and `text-foreground/50`.
 
-3. **Shrink the heading block**
-   - `font-serif text-[22px]/md:text-[28px]` → `text-[15px]/md:text-[17px]`, or optionally an uppercase tracked eyebrow style to match other small section labels.
-   - Subheading 13px → 11px, margin `mb-6/md:mb-8` → `mb-4`.
+Resulting class list:
+`font-sans text-[10px] font-normal uppercase tracking-[0.18em] leading-tight text-foreground/50 md:text-[11px]`
 
-4. **Tighten section padding**
-   - `py-10 md:py-14` → `py-6 md:py-8`.
-
-5. **Row cap**
-   - Since tiles are small, show more before the "See all stories" button: cap initial visible items at 12 and keep the expand button behavior unchanged.
-
-## Not changing
-Lightbox/modal playback, admin upload page, data fetching, and the DB layer all stay as-is.
+Nothing else in the section changes.
