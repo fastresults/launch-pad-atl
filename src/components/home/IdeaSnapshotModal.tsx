@@ -16,6 +16,16 @@ import { Link } from "react-router-dom";
 
 type Signal = { label: string; value: string; note: string };
 
+type ReachTier = "local" | "regional" | "national" | "international";
+
+type Reach = {
+  tier?: ReachTier;
+  headline?: string;
+  why?: string;
+  beyond_atlanta?: string;
+  expansion_move?: string;
+};
+
 type Economics = {
   typical_ticket?: string;
   volume_per_week?: string;
@@ -30,11 +40,19 @@ type Snapshot = {
   message?: string;
   idea_label?: string;
   verdict?: string;
+  reach?: Reach;
   economics?: Economics;
   signals?: Signal[];
   first_moves?: string[];
   watch_outs?: string[];
   why_atlanta?: string;
+};
+
+const REACH_LABEL: Record<ReachTier, string> = {
+  local: "Local reach",
+  regional: "Regional reach",
+  national: "National reach",
+  international: "International reach",
 };
 
 type Props = {
