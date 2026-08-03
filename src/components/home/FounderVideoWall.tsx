@@ -36,7 +36,7 @@ export function FounderVideoWall() {
     <section className="border-t border-white/5 py-6 md:py-8" aria-label="Founder video stories">
       <div className="public-container">
         <div className="mb-4 text-center">
-          <h2 className="font-serif text-[15px] leading-tight text-foreground md:text-[17px]">
+          <h2 className="font-serif text-[12px] font-normal leading-tight text-foreground/50 md:text-[13px]">
             {data.settings.heading}
           </h2>
           {data.settings.subheading ? (
