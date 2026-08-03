@@ -4,16 +4,32 @@ import { getActorUserId } from "@/lib/effective-user";
 
 export const VIDEO_WALL_BUCKET = "founder-videos";
 
+export type VideoWallSizeTier = "xs" | "sm" | "md" | "lg";
+export type VideoWallWeight = "normal" | "medium" | "semibold" | "bold";
+export type VideoWallHeadingStyle = "label" | "serif";
+
 export type VideoWallSettings = {
   enabled: boolean;
   heading: string;
   subheading: string;
+  heading_size: VideoWallSizeTier;
+  heading_weight: VideoWallWeight;
+  heading_style: VideoWallHeadingStyle;
+  heading_opacity: number;
+  thumb_size: VideoWallSizeTier;
+  show_subheading: boolean;
 };
 
 export const DEFAULT_VIDEO_WALL_SETTINGS: VideoWallSettings = {
   enabled: true,
   heading: "Founders in their own words",
   subheading: "Short stories from people who started right here.",
+  heading_size: "xs",
+  heading_weight: "normal",
+  heading_style: "label",
+  heading_opacity: 50,
+  thumb_size: "xs",
+  show_subheading: true,
 };
 
 export type VideoWallEntry = {

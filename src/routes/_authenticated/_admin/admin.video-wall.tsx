@@ -15,6 +15,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -118,7 +126,92 @@ export default function AdminVideoWallPage() {
             />
           </div>
         </div>
+
+        <div className="space-y-4 border-t pt-4">
+          <p className="text-sm font-medium">Appearance</p>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-1.5">
+              <Label>Heading size</Label>
+              <Select
+                value={settings?.heading_size ?? "xs"}
+                onValueChange={(v) => saveSettings.mutate({ heading_size: v as any })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="xs">Extra small</SelectItem>
+                  <SelectItem value="sm">Small</SelectItem>
+                  <SelectItem value="md">Medium</SelectItem>
+                  <SelectItem value="lg">Large</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Heading weight</Label>
+              <Select
+                value={settings?.heading_weight ?? "normal"}
+                onValueChange={(v) => saveSettings.mutate({ heading_weight: v as any })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="semibold">Semibold</SelectItem>
+                  <SelectItem value="bold">Bold</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Heading style</Label>
+              <Select
+                value={settings?.heading_style ?? "label"}
+                onValueChange={(v) => saveSettings.mutate({ heading_style: v as any })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="label">Small label (uppercase)</SelectItem>
+                  <SelectItem value="serif">Serif headline</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Thumbnail size</Label>
+              <Select
+                value={settings?.thumb_size ?? "xs"}
+                onValueChange={(v) => saveSettings.mutate({ thumb_size: v as any })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="xs">Extra small</SelectItem>
+                  <SelectItem value="sm">Small</SelectItem>
+                  <SelectItem value="md">Medium</SelectItem>
+                  <SelectItem value="lg">Large</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Heading opacity — {settings?.heading_opacity ?? 50}%</Label>
+              <Slider
+                min={20}
+                max={100}
+                step={5}
+                value={[settings?.heading_opacity ?? 50]}
+                onValueCommit={(v) => saveSettings.mutate({ heading_opacity: v[0] })}
+              />
+            </div>
+            <div className="flex items-center gap-3 pt-6">
+              <Switch
+                id="wall-show-sub"
+                checked={settings?.show_subheading ?? true}
+                onCheckedChange={(v) => saveSettings.mutate({ show_subheading: v })}
+              />
+              <Label htmlFor="wall-show-sub">Show subheading</Label>
+            </div>
+          </div>
+        </div>
       </div>
+
 
       {editing !== undefined ? (
         <VideoWallForm

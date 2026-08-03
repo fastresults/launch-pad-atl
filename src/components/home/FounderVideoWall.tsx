@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Play } from "lucide-react";
-import { getPublicVideoWall, type PublicVideoWall } from "@/lib/video-wall.functions";
+import {
+  DEFAULT_VIDEO_WALL_SETTINGS,
+  getPublicVideoWall,
+  type PublicVideoWall,
+} from "@/lib/video-wall.functions";
 import { FounderVideoLightbox } from "@/components/home/FounderVideoLightbox";
 
 function formatDuration(seconds: number | null) {
@@ -8,6 +12,32 @@ function formatDuration(seconds: number | null) {
   const s = Math.round(seconds);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
+
+const HEADING_SIZE: Record<string, string> = {
+  xs: "text-[10px] md:text-[11px]",
+  sm: "text-[12px] md:text-[13px]",
+  md: "text-[15px] md:text-[17px]",
+  lg: "text-[20px] md:text-[24px]",
+};
+
+const HEADING_WEIGHT: Record<string, string> = {
+  normal: "font-normal",
+  medium: "font-medium",
+  semibold: "font-semibold",
+  bold: "font-bold",
+};
+
+const HEADING_STYLE: Record<string, string> = {
+  label: "font-sans uppercase tracking-[0.18em]",
+  serif: "font-serif normal-case tracking-normal",
+};
+
+const THUMB: Record<string, { tile: string; badge: string; icon: string; name: string }> = {
+  xs: { tile: "w-[84px] md:w-[96px]", badge: "h-6 w-6", icon: "h-2.5 w-2.5", name: "text-[11px]" },
+  sm: { tile: "w-[104px] md:w-[120px]", badge: "h-7 w-7", icon: "h-3 w-3", name: "text-[12px]" },
+  md: { tile: "w-[132px] md:w-[152px]", badge: "h-8 w-8", icon: "h-3.5 w-3.5", name: "text-[13px]" },
+  lg: { tile: "w-[160px] md:w-[188px]", badge: "h-10 w-10", icon: "h-4 w-4", name: "text-[14px]" },
+};
 
 export function FounderVideoWall() {
   const [data, setData] = useState<PublicVideoWall | null>(null);
@@ -29,6 +59,16 @@ export function FounderVideoWall() {
 
   if (!data || data.settings.enabled === false || count === 0) return null;
 
+  const s = { ...DEFAULT_VIDEO_WALL_SETTINGS, ...data.settings };
+  const headingClass = [
+    HEADING_STYLE[s.heading_style] ?? HEADING_STYLE.label,
+    HEADING_SIZE[s.heading_size] ?? HEADING_SIZE.xs,
+    HEADING_WEIGHT[s.heading_weight] ?? HEADING_WEIGHT.normal,
+    "leading-tight text-foreground",
+  ].join(" ");
+  const thumb = THUMB[s.thumb_size] ?? THUMB.xs;
+  const headingOpacity = Math.min(100, Math.max(10, Number(s.heading_opacity) || 50)) / 100;
+
   const visible = expanded ? items : items.slice(0, 12);
   const hasMore = items.length > visible.length;
 
@@ -36,12 +76,12 @@ export function FounderVideoWall() {
     <section className="border-t border-white/5 py-6 md:py-8" aria-label="Founder video stories">
       <div className="public-container">
         <div className="mb-4 text-center">
-          <h2 className="font-sans text-[10px] font-normal uppercase leading-tight tracking-[0.18em] text-foreground/50 md:text-[11px]">
-            {data.settings.heading}
+          <h2 className={headingClass} style={{ opacity: headingOpacity }}>
+            {s.heading}
           </h2>
-          {data.settings.subheading ? (
+          {s.show_subheading !== false && s.subheading ? (
             <p className="mx-auto mt-1 max-w-[52ch] text-[11px] leading-relaxed text-foreground/55">
-              {data.settings.subheading}
+              {s.subheading}
             </p>
           ) : null}
         </div>
@@ -50,7 +90,7 @@ export function FounderVideoWall() {
           {visible.map((item, i) => {
             const dur = formatDuration(item.duration_seconds);
             return (
-              <li key={item.id} className="w-[84px] md:w-[96px]">
+              <li key={item.id} className={thumb.tile}>
                 <button
                   type="button"
                   onClick={() => setOpenIndex(i)}
@@ -69,8 +109,10 @@ export function FounderVideoWall() {
                       <div className="h-full w-full bg-gradient-to-b from-white/[0.08] to-transparent" />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-                    <span className="absolute left-1/2 top-1/2 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/40 backdrop-blur transition group-hover:bg-primary/80">
-                      <Play className="h-2.5 w-2.5 translate-x-[1px] fill-current text-white" />
+                    <span
+                      className={`absolute left-1/2 top-1/2 flex ${thumb.badge} -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/40 backdrop-blur transition group-hover:bg-primary/80`}
+                    >
+                      <Play className={`${thumb.icon} translate-x-[1px] fill-current text-white`} />
                     </span>
                     {dur ? (
                       <span className="absolute bottom-1 right-1 rounded bg-black/60 px-1 py-px text-[9px] tabular-nums text-white/85">
@@ -78,7 +120,7 @@ export function FounderVideoWall() {
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-1.5 truncate font-serif text-[11px] leading-tight text-foreground">
+                  <p className={`mt-1.5 truncate font-serif ${thumb.name} leading-tight text-foreground`}>
                     {item.founder_name}
                   </p>
                   {item.city ? (
@@ -91,6 +133,7 @@ export function FounderVideoWall() {
             );
           })}
         </ul>
+
 
         {hasMore ? (
           <div className="mt-4 text-center">
