@@ -661,7 +661,7 @@
   .sl-hero__prompt { margin-top: 20px; }
   .sl-hero__status { margin-top: 14px; font-size: 11px; }
   /* Slower, lighter Ken Burns — cheaper on mobile GPUs. */
-  .sl-hero__scene[data-active="true"] { animation-duration: 12s; }
+  .sl-hero__scene { animation-duration: 32s; }
   .sl-hero__grain { display: none; }
 
   .sl-prompt__panel {
@@ -778,7 +778,7 @@
     transition-duration: 0.01ms;
   }
 
-  .sl-hero__scene[data-active="true"] { animation: none; }
+  .sl-hero__scene { animation: none; transform: scale(1.03); }
 }
 
 /* Phone: keep the floating chat launcher above the sticky action bar. */
