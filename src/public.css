@@ -81,6 +81,11 @@
   min-width: 1024px;
 }
 
+html:has(.public-surface),
+body:has(.public-surface) {
+  overflow-x: auto;
+}
+
 /* ---------------------------------------------------------------
  * 2. The container — the single source of body width
  * --------------------------------------------------------------- */

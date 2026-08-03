@@ -61,8 +61,9 @@ async def main() -> None:
                     failures.append(f"{url} @ {width}: desktop type contract failed: {metrics}")
                 if width < 1024 and metrics["scrollWidth"] < 1024:
                     failures.append(f"{url} @ {width}: desktop canvas was allowed to reflow: {metrics}")
-                if metrics["heroWidth"] is not None and abs(metrics["heroWidth"] - metrics["bodyWidth"]) > 1:
-                    failures.append(f"{url} @ {width}: hero is not full bleed: {metrics}")
+                expected_canvas = max(width, 1024)
+                if metrics["heroWidth"] is not None and abs(metrics["heroWidth"] - expected_canvas) > 1:
+                    failures.append(f"{url} @ {width}: hero is not full bleed across desktop canvas: {metrics}")
                 if metrics["containerWidth"] is not None and metrics["containerWidth"] > 1201:
                     failures.append(f"{url} @ {width}: public container exceeds 1200px: {metrics}")
                 print(f"PASS {url} {width}px desktop-forced nav={metrics['nav']} mobile={metrics['mobile']} release={metrics['release']}")
