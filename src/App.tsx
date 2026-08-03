@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AskConcierge } from "@/components/site/AskConcierge";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
