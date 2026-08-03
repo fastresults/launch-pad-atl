@@ -681,7 +681,9 @@
   /* Zoom notice is a desktop-only concept. */
   .sl-zoom-notice { display: none; }
 
-  .sl-mobile-cta { display: flex; }
+  .public-surface .sl-mobile-cta { display: flex; }
+  /* keep the floating chat launcher clear of the action bar */
+  .public-surface [class*="fixed"][class*="bottom-"] { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* --- Phone sticky action bar ------------------------------------- */
