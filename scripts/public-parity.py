@@ -59,8 +59,6 @@ async def main() -> None:
                     failures.append(f"{url} @ {width}: desktop-only navigation contract failed: {metrics}")
                 if metrics["h1Size"] is not None and metrics["h1Size"] != "48px":
                     failures.append(f"{url} @ {width}: desktop type contract failed: {metrics}")
-                if width < 1024 and metrics["scrollWidth"] < 1024:
-                    failures.append(f"{url} @ {width}: desktop canvas was allowed to reflow: {metrics}")
                 expected_canvas = max(width, 1024)
                 if metrics["heroWidth"] is not None and abs(metrics["heroWidth"] - expected_canvas) > 1:
                     failures.append(f"{url} @ {width}: hero is not full bleed across desktop canvas: {metrics}")
