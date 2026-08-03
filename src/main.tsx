@@ -29,6 +29,8 @@ function Root() {
     };
     recordCssBundle();
     const stopDiagnostics = startRenderDiagnostics();
+    const stopViewportLogging = startViewportLogging();
+
 
     const stopVersionCheck = startVersionCheck((version) => {
       if (replaceStaleBuild(version)) return;
