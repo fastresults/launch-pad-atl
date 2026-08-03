@@ -375,7 +375,7 @@ function Framework() {
                 </div>
                 <StageSketch
                   stage={stage.number}
-                  className="hidden size-20 shrink-0 text-foreground/60 md:block md:size-24"
+                  className="hidden size-20 shrink-0 text-foreground/80 md:block md:size-24"
                 />
               </div>
               <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
