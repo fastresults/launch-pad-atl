@@ -191,9 +191,10 @@ export const AGENCY_TRACKS: AgencyTrack[] = [
     slug: "growth",
     name: "Growth Track",
     icon: Megaphone,
-    tagline: "The customer-acquisition engine, running every month.",
+    tagline: "Automate how customers find you — and turn attention into profit.",
     outcome:
-      "Distribution you own. Content that compounds. A follow-up machine that catches the revenue first-touch sales always misses.",
+      "Distribution you own, content that compounds, and an automated follow-up machine that extracts the revenue first-touch sales always leaves behind.",
+
     includedSlugs: ["social-presence", "content-engine", "email-crm-automation"],
     priceLabel: "Bespoke — priced after a 20-min discovery call",
     timelineLabel: "Monthly retainer",
@@ -204,9 +205,10 @@ export const AGENCY_TRACKS: AgencyTrack[] = [
     slug: "operate",
     name: "Operate Track",
     icon: Settings,
-    tagline: "Two people doing the work of ten. Pipeline you can forecast.",
+    tagline: "Streamline the work, automate the busywork, keep more of every dollar.",
     outcome:
-      "AI built into how you ship. A sales motion that doesn't depend on your mood. The leverage every late-stage startup wishes it had earlier.",
+      "AI built into how you ship, so two people do the work of ten. A sales motion that runs without you — and a leaner cost base that turns the same revenue into more profit.",
+
     includedSlugs: ["ai-operating-system", "sales-systems"],
     priceLabel: "Bespoke — priced after a 20-min discovery call",
     timelineLabel: "30-day sprint",
