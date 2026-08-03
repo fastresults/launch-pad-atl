@@ -40,7 +40,11 @@ async def inspect(page, url: str, width: int) -> dict:
 async def main() -> None:
     failures = []
     async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(headless=True)
+        launch_options = {"headless": True}
+        chromium_path = os.environ.get("CHROMIUM_PATH")
+        if chromium_path:
+            launch_options["executable_path"] = chromium_path
+        browser = await playwright.chromium.launch(**launch_options)
         context = await browser.new_context(viewport={"width": 1280, "height": 900})
         page = await context.new_page()
         results = {}
