@@ -1561,6 +1561,63 @@ export type Database = {
           },
         ]
       }
+      founder_video_wall: {
+        Row: {
+          city: string | null
+          created_at: string
+          created_by: string | null
+          duration_seconds: number | null
+          founder_name: string
+          founder_role: string | null
+          id: string
+          is_live: boolean
+          poster_bucket: string | null
+          poster_path: string | null
+          quote: string | null
+          sort_order: number
+          startup_name: string | null
+          updated_at: string
+          video_bucket: string
+          video_path: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number | null
+          founder_name: string
+          founder_role?: string | null
+          id?: string
+          is_live?: boolean
+          poster_bucket?: string | null
+          poster_path?: string | null
+          quote?: string | null
+          sort_order?: number
+          startup_name?: string | null
+          updated_at?: string
+          video_bucket?: string
+          video_path: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number | null
+          founder_name?: string
+          founder_role?: string | null
+          id?: string
+          is_live?: boolean
+          poster_bucket?: string | null
+          poster_path?: string | null
+          quote?: string | null
+          sort_order?: number
+          startup_name?: string | null
+          updated_at?: string
+          video_bucket?: string
+          video_path?: string
+        }
+        Relationships: []
+      }
       inquiries: {
         Row: {
           assigned_to: string | null

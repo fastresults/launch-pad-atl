@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { VideoTestimonials } from "@/components/home/VideoTestimonials";
 import { CinematicHero } from "@/components/home/CinematicHero";
+import { FounderVideoWall } from "@/components/home/FounderVideoWall";
 import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
 import { StageSketch } from "@/components/home/StageSketch";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
@@ -51,6 +52,7 @@ export function HomeFramework() {
     <div className="public-surface min-h-screen">
       <SiteHeader />
       <Hero />
+      <FounderVideoWall />
       <HeroCopy />
       <VideoTestimonials />
       <Framework />

@@ -183,6 +183,15 @@ export const ADMIN_NAV: AdminNavItem[] = [
     description: "Founder video proof",
     keywords: ["video", "proof", "social proof", "reviews"],
   },
+  {
+    to: "/admin/video-wall",
+    label: "Founder video wall",
+    icon: Video,
+    group: "Workspace",
+    description: "Videos shown below the hero",
+    keywords: ["video", "wall", "hero", "founder", "stories", "testimonial"],
+    super: true,
+  },
 
   // ------------------------------------------------------------- Marketing
   {
