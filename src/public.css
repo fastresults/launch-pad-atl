@@ -735,6 +735,10 @@
   .public-surface .sl-hero__title { margin-top: 12px; }
   .sl-hero__prompt { margin-top: 20px; }
   .sl-hero__status { margin-top: 14px; font-size: 11px; }
+  .sl-hero__scroll-cue {
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+  .sl-hero__scroll-cue-dot { width: 30px; height: 30px; }
   /* Slower, lighter Ken Burns — cheaper on mobile GPUs. */
   .sl-hero__scene { animation-duration: 32s; }
   .sl-hero__grain { display: none; }
