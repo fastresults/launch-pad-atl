@@ -53,7 +53,7 @@ export default function SchedulePage() {
             {EVENT.dateLabel} · {EVENT.timeLabel}
           </p>
           <h1 className="public-display">
-            Idea in. <span className="text-gradient-brand">Startup out.</span>
+            Idea in. <span className="text-gradient-brand">Startup foundation out.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
             Here's what one focused morning with us looks like — every stop on the clock, so you know exactly what you're signing up for. You'll start with your idea in a notebook and leave with your brand named, your offer priced with a first customer named on it, your page copy written, and the exact message ready to send — all four foundations in writing before you go.{" "}
@@ -260,7 +260,7 @@ export default function SchedulePage() {
               One focused morning
             </p>
             <h3 className="public-heading">
-              Idea in. Startup out.
+              Idea in. Startup foundation out.
             </h3>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
               Show up at 8:45 with your idea. Leave at 11:30 with your brand named, your offer priced with a first customer named on it, your page copy written, and your outreach message ready to send — every word worked out with a real person, not a bot.
