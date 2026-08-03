@@ -28,7 +28,7 @@ export default function BuildIndexPage() {
           </div>
           <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-8 lg:gap-12">
             <div className="md:col-span-7 lg:col-span-8">
-              <h1 className="text-4xl leading-[1.05] text-foreground md:text-5xl lg:text-6xl">
+              <h1 className="public-display">
                 Actually built. <span className="italic text-primary">Live by lunch.</span>
               </h1>
               <p className="mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground md:text-xl">
@@ -70,7 +70,7 @@ export default function BuildIndexPage() {
                       Workshop · {w.priceLabel}
                     </span>
                   </div>
-                  <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
+                  <h2 className="public-heading">
                     {w.title}
                   </h2>
                   <p className="mt-2 font-serif text-sm italic text-muted-foreground md:text-base">
@@ -121,7 +121,7 @@ export default function BuildIndexPage() {
             <p className="mb-3 text-xs uppercase tracking-[0.18em] opacity-80 md:text-sm md:tracking-[0.2em]">
               Rather we implement it?
             </p>
-            <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+            <h2 className="public-heading">
               Same team. We'll implement it for you.
             </h2>
             <p className="mt-4 text-base opacity-90 md:text-lg">

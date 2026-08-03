@@ -103,7 +103,7 @@ function HeroCopy() {
               Atlanta&rsquo;s strongest startup foundation · IGNITE Center
             </p>
 
-            <h1 className="font-serif text-[3.45rem] leading-[1.02] text-[#3D3025] md:text-[3.1rem] lg:text-[4.3rem]">
+            <h1 className="public-display font-serif text-[#3D3025]">
 
               Pull up a chair.
               <br />
@@ -337,7 +337,7 @@ function Framework() {
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           Not an accelerator. Not an incubator. Not a course.
         </p>
-        <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
+        <h2 className="public-heading max-w-3xl">
           A foundation that can take money.{" "}
           <span className="text-gradient-brand">Laid with you in one morning.</span>
         </h2>
@@ -360,7 +360,7 @@ function Framework() {
                     {stage.number}
                   </span>
                   <div>
-                    <h3 className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[1.95rem] font-semibold leading-tight tracking-tight md:text-[2.35rem]">
+                    <h3 className="public-subheading flex flex-wrap items-center gap-x-3 gap-y-2">
                       <span>{stage.name}</span>
                       {stage.bonus && (
                         <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 to-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white md:text-xs">
@@ -418,7 +418,7 @@ function HonestRoadmap() {
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           Here's the honest promise
         </p>
-        <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
+        <h2 className="public-heading max-w-3xl">
           One morning of writing.{" "}
           <span className="text-gradient-brand">The four foundations your startup runs on.</span>
         </h2>
@@ -597,7 +597,7 @@ function ServicesTeaser() {
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           Don't want to DIY?
         </p>
-        <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+        <h2 className="public-heading">
           We'll build on the foundation{" "}
           <span className="text-gradient-brand">for you.</span>
         </h2>
@@ -673,7 +673,7 @@ function BottomCTA() {
       <div className="public-container px-6">
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-hero-gradient p-8 md:p-12 lg:p-16">
           <div className="relative max-w-3xl text-white">
-            <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
+            <h2 className="public-heading">
               Stop thinking about it. Come start it.
             </h2>
             <p className="mt-4 text-base text-white/90 md:mt-5 md:text-lg">

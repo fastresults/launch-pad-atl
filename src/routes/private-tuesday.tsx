@@ -113,7 +113,7 @@ export default function PrivateTuesdayPage() {
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs uppercase tracking-[0.18em] text-primary">
               <Sparkles className="size-3.5" /> A Tuesday with Adam · 1-on-1 · {priceLabel}
             </p>
-            <h1 className="text-4xl leading-[1.05] text-foreground md:text-5xl lg:text-6xl">
+            <h1 className="public-display">
               Just you and Adam,{" "}
               <span className="italic">at the table.</span>
             </h1>
@@ -142,7 +142,7 @@ export default function PrivateTuesdayPage() {
             <div className="grid gap-8 md:grid-cols-5">
               {/* Slot picker */}
               <div className="md:col-span-3">
-                <h2 className="text-2xl text-foreground md:text-3xl">Pick your Tuesday.</h2>
+                <h2 className="public-heading">Pick your Tuesday.</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Times we still have open in the next {settings?.weeks_ahead ?? 8} weeks. Pick one and fill
                   out a few details — we'll hold your seat for {settings?.hold_minutes ?? 15} minutes while you confirm.

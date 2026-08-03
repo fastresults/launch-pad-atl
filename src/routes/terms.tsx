@@ -12,7 +12,7 @@ export default function TermsPage() {
         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
           Legal
         </p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
+        <h1 className="mt-3 public-display">
           Terms of Service
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">Last updated: {UPDATED}</p>
@@ -186,7 +186,7 @@ export default function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-3">
-      <h2 className="text-xl font-semibold tracking-tight text-foreground">
+      <h2 className="public-heading">
         {title}
       </h2>
       <div className="space-y-3 text-foreground/85 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-6 [&_a]:text-primary">

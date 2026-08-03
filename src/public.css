@@ -14,7 +14,7 @@
  *   - `.sl-hero` is full bleed: edge to edge, one screen tall.
  *   - every other section centers its content in `.public-container`
  *     (max 1200px, 24px side padding).
- *   - type is a fixed scale with a single breakpoint at 768px.
+ *   - type is fixed; phone is the only reduced layout mode.
  */
 
 .public-surface,
@@ -122,6 +122,27 @@
 .public-surface h4 {
   font-size: 17px;
   line-height: 1.35;
+}
+
+.public-surface .public-display {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+
+.public-surface .public-heading {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.public-surface .public-subheading {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0;
 }
 
 .public-surface :is(p, li) {
@@ -238,15 +259,34 @@
 
 .sl-site-header__nav,
 .sl-site-header__actions {
-  display: none;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1;
 }
 
 .sl-site-header__mobile {
-  display: flex;
+  display: none;
   flex-shrink: 0;
   align-items: center;
   gap: 6px;
 }
+
+.sl-site-header__cta {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sl-site-header__cta-short { display: none; }
 
 /* ---------------------------------------------------------------
  * 6. Hero — the only full-bleed block on the site
@@ -459,8 +499,17 @@
 }
 
 /* ---------------------------------------------------------------
- * 8. Desktop — the single breakpoint
+ * 8. Explicit responsive modes
  * --------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  .sl-site-header__nav,
+  .sl-site-header__actions {
+    display: none;
+  }
+
+  .sl-site-header__mobile { display: flex; }
+}
 
 @media (min-width: 768px) {
   .public-surface {
@@ -471,10 +520,26 @@
   .public-surface h2 { font-size: 32px; }
   .public-surface h3 { font-size: 22px; }
   .public-surface h4 { font-size: 18px; }
+  .public-surface .public-display { font-size: 48px; }
+  .public-surface .public-heading { font-size: 32px; }
+  .public-surface .public-subheading { font-size: 22px; }
   .public-surface .public-lead { font-size: 18px; }
 
   .sl-site-header__inner { padding-inline: 24px; }
   .sl-site-header__logo { height: 30px; }
+
+  .sl-site-header__nav,
+  .sl-site-header__actions {
+    gap: 10px;
+    font-size: 12px;
+  }
+
+  .sl-site-header__left { gap: 14px; }
+
+  .sl-site-header__compact-optional { display: none; }
+  .sl-site-header__cta { min-height: 32px; padding-inline: 12px; font-size: 12px; }
+  .sl-site-header__cta-full { display: none; }
+  .sl-site-header__cta-short { display: inline; }
 
   .sl-hero { padding: 40px 24px 56px; }
   .public-surface .sl-hero__title { font-size: 48px; }
@@ -487,28 +552,12 @@
 
 @media (min-width: 1024px) {
   .sl-site-header__nav,
-  .sl-site-header__actions {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    color: var(--muted-foreground);
-    font-size: 14px;
-    line-height: 1;
-  }
-
-  .sl-site-header__cta {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 34px;
-    padding: 6px 14px;
-    border-radius: 999px;
-    font-size: 14px;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
-  .sl-site-header__mobile { display: none; }
+  .sl-site-header__actions { gap: 18px; font-size: 14px; }
+  .sl-site-header__left { gap: 20px; }
+  .sl-site-header__compact-optional { display: inline; }
+  .sl-site-header__cta { min-height: 34px; padding-inline: 14px; font-size: 14px; }
+  .sl-site-header__cta-full { display: inline; }
+  .sl-site-header__cta-short { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

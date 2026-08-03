@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { RELEASE_ID, replaceStaleBuild, startVersionCheck } from "@/lib/version-check";
+import { startRenderDiagnostics } from "@/lib/render-diagnostics";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import App from "./App";
 import "./styles.css";
@@ -26,8 +27,9 @@ function Root() {
       document.documentElement.dataset.cssBundle = stylesheet?.split("/").pop() ?? "development";
     };
     recordCssBundle();
+    const stopDiagnostics = startRenderDiagnostics();
 
-    return startVersionCheck((version) => {
+    const stopVersionCheck = startVersionCheck((version) => {
       if (replaceStaleBuild(version)) return;
 
       toast("A new version is available", {
@@ -39,6 +41,11 @@ function Root() {
         },
       });
     });
+
+    return () => {
+      stopDiagnostics();
+      stopVersionCheck();
+    };
   }, []);
 
   return (

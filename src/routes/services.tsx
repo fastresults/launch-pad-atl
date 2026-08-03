@@ -46,7 +46,7 @@ function Tracks() {
         <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           <Sparkles className="size-3.5" /> After your launch · our team builds what comes next
         </p>
-        <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
+        <h1 className="public-display max-w-3xl">
           You launched.{" "}
           <span className="text-gradient-brand">We'll scale it.</span>
         </h1>
@@ -92,7 +92,7 @@ function Tracks() {
                   </div>
                 )}
                 <Icon className="mb-4 size-6 text-primary" />
-                <h3 className="text-2xl font-semibold tracking-tight">{t.name}</h3>
+                <h3 className="public-heading">{t.name}</h3>
                 <p className="mt-2 text-base text-muted-foreground">{t.tagline}</p>
 
                 <div className="mt-5 rounded-xl border border-white/10 bg-background/40 p-4">
@@ -175,7 +175,7 @@ function Process() {
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           How it works
         </p>
-        <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+        <h2 className="public-heading max-w-3xl">
           Four steps.{" "}
           <span className="text-gradient-brand">No mystery. No creep.</span>
         </h2>
@@ -240,7 +240,7 @@ function Proof() {
             <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
               No handoffs to a junior team
             </h2>
-            <p className="text-2xl font-semibold tracking-tight md:text-3xl lg:text-4xl">
+            <p className="public-heading">
               The same people who'd cost a fortune at a big agency —{" "}
               <span className="text-gradient-brand">priced honestly for what your business actually needs.</span>
             </p>
@@ -267,7 +267,7 @@ function WorkshopBand() {
           <p className="mb-3 text-xs uppercase tracking-[0.18em] text-primary md:text-sm md:tracking-[0.2em]">
             <Sparkles className="mr-1 inline size-3.5" /> Try before you buy
           </p>
-          <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+          <h2 className="public-heading">
             Come to a morning workshop first.{" "}
             <span className="text-gradient-brand">Hire us only if it fits.</span>
           </h2>
@@ -327,7 +327,7 @@ function FAQ() {
   return (
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="mx-auto max-w-3xl px-6">
-        <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+        <h2 className="public-heading">
           Straight answers.
         </h2>
         <div className="mt-10 space-y-4">
@@ -360,7 +360,7 @@ function FinalCTA() {
     <section className="pb-16 md:pb-24">
       <div className="public-container px-6">
         <div className="rounded-3xl border border-white/10 bg-hero-gradient p-8 text-white md:p-12">
-          <h2 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
+          <h2 className="public-heading">
             Idea to open.{" "}
             <span className="opacity-80">Built, not written up.</span>
           </h2>
