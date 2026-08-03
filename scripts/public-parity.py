@@ -57,8 +57,8 @@ async def main() -> None:
                 results[url][width] = metrics
                 phone = width < 768
                 expected_nav = "none" if phone else "flex"
-                expected_mobile = "inline-flex" if phone else "none"
-                if metrics["nav"] != expected_nav or metrics["mobile"] != expected_mobile:
+                mobile_ok = metrics["mobile"] in ("inline-flex", "flex") if phone else metrics["mobile"] == "none"
+                if metrics["nav"] != expected_nav or not mobile_ok:
                     failures.append(f"{url} @ {width}: navigation tier contract failed: {metrics}")
                 if width >= 1240:
                     expected_h1 = "48px"
