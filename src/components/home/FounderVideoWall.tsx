@@ -27,44 +27,37 @@ export function FounderVideoWall() {
   const items = data?.items ?? [];
   const count = items.length;
 
-  const gridClass = useMemo(() => {
-    if (count <= 2) return "grid-cols-2 max-w-[520px] mx-auto";
-    if (count <= 5) return "grid-cols-3 sm:grid-cols-5 max-w-[880px] mx-auto";
-    return "grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6";
-  }, [count]);
-
   if (!data || data.settings.enabled === false || count === 0) return null;
 
-  const perRow = count <= 2 ? 2 : count <= 5 ? 5 : 6;
-  const visible = expanded ? items : items.slice(0, perRow * 2);
+  const visible = expanded ? items : items.slice(0, 12);
   const hasMore = items.length > visible.length;
 
   return (
-    <section className="border-t border-white/5 py-10 md:py-14" aria-label="Founder video stories">
+    <section className="border-t border-white/5 py-6 md:py-8" aria-label="Founder video stories">
       <div className="public-container">
-        <div className="mb-6 text-center md:mb-8">
-          <h2 className="font-serif text-[22px] leading-tight text-foreground md:text-[28px]">
+        <div className="mb-4 text-center">
+          <h2 className="font-serif text-[15px] leading-tight text-foreground md:text-[17px]">
             {data.settings.heading}
           </h2>
           {data.settings.subheading ? (
-            <p className="mx-auto mt-2 max-w-[52ch] text-[13px] leading-relaxed text-foreground/55">
+            <p className="mx-auto mt-1 max-w-[52ch] text-[11px] leading-relaxed text-foreground/55">
               {data.settings.subheading}
             </p>
           ) : null}
         </div>
 
-        <ul className={`grid gap-3 sm:gap-4 ${gridClass}`}>
+        <ul className="flex flex-wrap items-start justify-center gap-3 sm:gap-4">
           {visible.map((item, i) => {
             const dur = formatDuration(item.duration_seconds);
             return (
-              <li key={item.id}>
+              <li key={item.id} className="w-[84px] md:w-[96px]">
                 <button
                   type="button"
                   onClick={() => setOpenIndex(i)}
                   className="group block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
                   aria-label={`Play ${item.founder_name}'s story`}
                 >
-                  <div className="relative aspect-[9/16] overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] transition duration-300 group-hover:-translate-y-1 group-hover:border-white/25">
+                  <div className="relative aspect-[9/16] overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] transition duration-300 group-hover:-translate-y-1 group-hover:border-white/25">
                     {item.poster_url ? (
                       <img
                         src={item.poster_url}
@@ -76,20 +69,20 @@ export function FounderVideoWall() {
                       <div className="h-full w-full bg-gradient-to-b from-white/[0.08] to-transparent" />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-                    <span className="absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/40 backdrop-blur transition group-hover:bg-primary/80">
-                      <Play className="h-3.5 w-3.5 translate-x-[1px] fill-current text-white" />
+                    <span className="absolute left-1/2 top-1/2 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/40 backdrop-blur transition group-hover:bg-primary/80">
+                      <Play className="h-2.5 w-2.5 translate-x-[1px] fill-current text-white" />
                     </span>
                     {dur ? (
-                      <span className="absolute bottom-1.5 right-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] tabular-nums text-white/85">
+                      <span className="absolute bottom-1 right-1 rounded bg-black/60 px-1 py-px text-[9px] tabular-nums text-white/85">
                         {dur}
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-2 truncate font-serif text-[13px] leading-tight text-foreground">
+                  <p className="mt-1.5 truncate font-serif text-[11px] leading-tight text-foreground">
                     {item.founder_name}
                   </p>
                   {item.city ? (
-                    <p className="truncate text-[10px] uppercase tracking-[0.14em] text-foreground/45">
+                    <p className="truncate text-[9px] uppercase tracking-[0.14em] text-foreground/45">
                       {item.city}
                     </p>
                   ) : null}
@@ -100,7 +93,7 @@ export function FounderVideoWall() {
         </ul>
 
         {hasMore ? (
-          <div className="mt-6 text-center">
+          <div className="mt-4 text-center">
             <button
               type="button"
               onClick={() => setExpanded(true)}
