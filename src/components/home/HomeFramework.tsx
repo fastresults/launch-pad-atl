@@ -356,7 +356,7 @@ function Framework() {
             <div key={stage.number}>
               <div className="flex items-start justify-between gap-6">
                 <div className="flex items-baseline gap-4">
-                  <span className="text-5xl font-semibold leading-none text-gradient-brand opacity-20 md:text-6xl">
+                  <span className="text-5xl font-bold leading-none text-gradient-brand opacity-100 md:text-6xl">
                     {stage.number}
                   </span>
                   <div>
@@ -375,7 +375,7 @@ function Framework() {
                 </div>
                 <StageSketch
                   stage={stage.number}
-                  className="hidden size-20 shrink-0 text-foreground/60 md:block md:size-24"
+                  className="hidden size-20 shrink-0 text-foreground/80 md:block md:size-24"
                 />
               </div>
               <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
