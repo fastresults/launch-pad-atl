@@ -21,6 +21,7 @@ export function startRenderDiagnostics(): () => void {
   const params = new URLSearchParams(window.location.search);
   if (params.get(DIAGNOSTICS_PARAM) !== "1") return () => undefined;
 
+  let retryTimer = 0;
   const update = () => {
     const desktopNav = document.querySelector<HTMLElement>(".sl-site-header__nav");
     const mobileNav = document.querySelector<HTMLElement>(".sl-site-header__mobile");
@@ -41,6 +42,11 @@ export function startRenderDiagnostics(): () => void {
     document.documentElement.dataset.publicLayoutMode = metrics.mode;
     document.documentElement.dataset.layoutDiagnostics = JSON.stringify(metrics);
     console.info("[Startup Labs layout diagnostics]", metrics);
+
+    if (!desktopNav || !mobileNav) {
+      window.clearTimeout(retryTimer);
+      retryTimer = window.setTimeout(update, 250);
+    }
   };
 
   const frame = window.requestAnimationFrame(update);
@@ -49,6 +55,7 @@ export function startRenderDiagnostics(): () => void {
 
   return () => {
     window.cancelAnimationFrame(frame);
+    window.clearTimeout(retryTimer);
     window.removeEventListener("resize", update);
     window.visualViewport?.removeEventListener("resize", update);
     delete document.documentElement.dataset.layoutDiagnostics;
