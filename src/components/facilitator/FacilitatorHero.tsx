@@ -31,7 +31,7 @@ export function FacilitatorHero() {
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           The operator behind The 14-Day Pivot Method
         </p>
-        <h1 className="text-4xl font-semibold leading-tight tracking-tight text-foreground md:text-5xl lg:text-6xl">
+        <h1 className="public-display">
           Adam Anderson
           <br />
           <span className="text-gradient-brand">has been in your seat.</span>

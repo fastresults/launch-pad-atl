@@ -92,7 +92,7 @@ function Tracks() {
                   </div>
                 )}
                 <Icon className="mb-4 size-6 text-primary" />
-                <h3 className="text-2xl font-semibold tracking-tight">{t.name}</h3>
+                <h3 className="public-heading">{t.name}</h3>
                 <p className="mt-2 text-base text-muted-foreground">{t.tagline}</p>
 
                 <div className="mt-5 rounded-xl border border-white/10 bg-background/40 p-4">
@@ -240,7 +240,7 @@ function Proof() {
             <h2 className="mb-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">
               No handoffs to a junior team
             </h2>
-            <p className="text-2xl font-semibold tracking-tight md:text-3xl lg:text-4xl">
+            <p className="public-heading">
               The same people who'd cost a fortune at a big agency —{" "}
               <span className="text-gradient-brand">priced honestly for what your business actually needs.</span>
             </p>

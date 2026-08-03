@@ -46,7 +46,7 @@ export default function ContactPage() {
               Real person. No bots.
             </div>
           </div>
-          <h1 className="text-4xl leading-[1.05] text-foreground md:text-5xl">
+          <h1 className="public-display">
             Let's <span className="italic text-primary">talk it through.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">

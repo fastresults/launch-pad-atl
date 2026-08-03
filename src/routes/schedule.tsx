@@ -52,7 +52,7 @@ export default function SchedulePage() {
           <p className="mb-4 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
             {EVENT.dateLabel} · {EVENT.timeLabel}
           </p>
-          <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
+          <h1 className="public-display">
             Idea in. <span className="text-gradient-brand">Startup out.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:mt-5 md:text-lg">
@@ -172,7 +172,7 @@ export default function SchedulePage() {
                           </span>
                         )}
                       </div>
-                      <h3 className="mt-3 text-xl font-semibold leading-tight tracking-tight md:text-3xl">
+                      <h3 className="mt-3 public-heading">
                         {s.title}
                       </h3>
                       <p className="mt-2 text-sm text-muted-foreground md:text-base">{s.description}</p>
@@ -259,7 +259,7 @@ export default function SchedulePage() {
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-gradient-brand md:tracking-[0.2em]">
               One focused morning
             </p>
-            <h3 className="text-2xl font-semibold tracking-tight md:text-3xl">
+            <h3 className="public-heading">
               Idea in. Startup out.
             </h3>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">

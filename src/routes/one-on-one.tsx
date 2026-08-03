@@ -81,7 +81,7 @@ export default function OneOnOnePage() {
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-primary">
               <Wand2 className="size-3.5" /> The 14-Day Pivot Method · Built for you
             </p>
-            <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
+            <h1 className="public-display">
               Your startup,{" "}
               <span className="text-gradient-brand">actually built for you in 14 days.</span>
             </h1>
@@ -111,7 +111,7 @@ export default function OneOnOnePage() {
             <p className="mb-2 inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-primary">
               <TrendingUp className="size-3.5" /> Best value on the market
             </p>
-            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
+            <h2 className="public-heading">
               A $12,000 agency build.{" "}
               <span className="text-gradient-brand">For $4,799.</span>
             </h2>
@@ -149,7 +149,7 @@ export default function OneOnOnePage() {
         <section className="border-b border-white/5 py-16">
           <div className="public-container px-6">
             <p className="mb-2 text-xs uppercase tracking-[0.18em] text-primary">What we build for you</p>
-            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
+            <h2 className="public-heading">
               A launch-ready startup. Delivered.
             </h2>
             <p className="mt-3 max-w-2xl text-muted-foreground">
@@ -176,7 +176,7 @@ export default function OneOnOnePage() {
         <section className="border-b border-white/5 py-16">
           <div className="public-container px-6">
             <p className="mb-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">How the three formats differ</p>
-            <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
+            <h2 className="public-heading">
               Three ways in. One is done for you.
             </h2>
             <div className="mt-8 grid gap-3 md:grid-cols-3">
@@ -267,7 +267,7 @@ export default function OneOnOnePage() {
         {/* FAQ */}
         <section className="border-t border-white/5 py-16">
           <div className="mx-auto max-w-3xl px-6">
-            <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Common questions</h2>
+            <h2 className="public-heading">Common questions</h2>
             <div className="mt-6 space-y-4">
               <div className="rounded-2xl border border-white/10 bg-card p-5">
                 <h3 className="font-medium">Why is this so much less than an agency?</h3>

@@ -56,7 +56,7 @@ export default function WebinarPage() {
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-primary">
               <Video className="size-3.5" /> The 14-Day Pivot Method · Live on Zoom
             </p>
-            <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
+            <h1 className="public-display">
               The 14-Day Pivot Method, live on Zoom.{" "}
               <span className="text-gradient-brand">First paying customer in two weeks.</span>
             </h1>
