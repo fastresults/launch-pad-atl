@@ -92,12 +92,9 @@ function matchedBreakpoints(): string[] {
 function publicLayoutTier(width: number): string {
   const surface = document.querySelector<HTMLElement>(".public-surface");
   if (!surface) return "non-public-route";
-  const minWidth = Number.parseFloat(getComputedStyle(surface).minWidth) || 0;
-  if (width < minWidth) return `desktop-forced (canvas ${minWidth}px, viewport ${width}px)`;
-  if (width >= 1440) return "desktop-wide";
-  if (width >= 1280) return "desktop";
-  if (width >= 1024) return "desktop-compact";
-  return `sub-desktop (${width}px)`;
+  if (width >= 1240) return "desktop";
+  if (width >= 768) return "desktop-compact";
+  return "phone";
 }
 
 function buildEntry(reason: ViewportLogEntry["reason"]): ViewportLogEntry {
