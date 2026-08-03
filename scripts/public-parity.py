@@ -5,7 +5,7 @@ import asyncio
 import os
 from playwright.async_api import async_playwright
 
-WIDTHS = (390, 640, 767, 768, 900, 1023, 1024, 1280, 1400, 1920)
+WIDTHS = (390, 640, 768, 900, 1024, 1386, 1400)
 URLS = [os.environ.get("LOCAL_URL", "http://localhost:8080/")]
 if os.environ.get("PUBLIC_URL"):
     URLS.append(os.environ["PUBLIC_URL"])
@@ -26,10 +26,12 @@ async def inspect(page, url: str, width: int) -> dict:
         return {
           innerWidth,
           nav: getComputedStyle(nav).display,
-          mobile: getComputedStyle(mobile).display,
+          mobile: mobile ? getComputedStyle(mobile).display : 'absent',
           heroWidth: hero?.getBoundingClientRect().width ?? null,
           containerWidth: container?.getBoundingClientRect().width ?? null,
           bodyWidth: document.body.getBoundingClientRect().width,
+          scrollWidth: document.documentElement.scrollWidth,
+          h1Size: document.querySelector('h1') ? getComputedStyle(document.querySelector('h1')).fontSize : null,
           release,
           css: css.split('/').pop(),
         };
@@ -53,16 +55,16 @@ async def main() -> None:
             for width in WIDTHS:
                 metrics = await inspect(page, url, width)
                 results[url][width] = metrics
-                phone = width < 768
-                if phone and not (metrics["nav"] == "none" and metrics["mobile"] != "none"):
-                    failures.append(f"{url} @ {width}: phone navigation contract failed: {metrics}")
-                if not phone and not (metrics["nav"] != "none" and metrics["mobile"] == "none"):
-                    failures.append(f"{url} @ {width}: full navigation contract failed: {metrics}")
-                if metrics["heroWidth"] is not None and abs(metrics["heroWidth"] - metrics["bodyWidth"]) > 1:
-                    failures.append(f"{url} @ {width}: hero is not full bleed: {metrics}")
+                if not (metrics["nav"] == "flex" and metrics["mobile"] == "absent"):
+                    failures.append(f"{url} @ {width}: desktop-only navigation contract failed: {metrics}")
+                if metrics["h1Size"] is not None and metrics["h1Size"] != "48px":
+                    failures.append(f"{url} @ {width}: desktop type contract failed: {metrics}")
+                expected_canvas = max(width, 1024)
+                if metrics["heroWidth"] is not None and abs(metrics["heroWidth"] - expected_canvas) > 1:
+                    failures.append(f"{url} @ {width}: hero is not full bleed across desktop canvas: {metrics}")
                 if metrics["containerWidth"] is not None and metrics["containerWidth"] > 1201:
                     failures.append(f"{url} @ {width}: public container exceeds 1200px: {metrics}")
-                print(f"PASS {url} {width}px nav={metrics['nav']} mobile={metrics['mobile']} release={metrics['release']}")
+                print(f"PASS {url} {width}px desktop-forced nav={metrics['nav']} mobile={metrics['mobile']} release={metrics['release']}")
         await browser.close()
 
     if len(URLS) == 2:

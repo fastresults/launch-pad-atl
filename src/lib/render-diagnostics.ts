@@ -2,14 +2,6 @@ import { RELEASE_ID } from "@/lib/version-check";
 
 const DIAGNOSTICS_PARAM = "layout-diagnostics";
 
-type LayoutMode = "phone" | "compact" | "desktop";
-
-function getLayoutMode(width: number): LayoutMode {
-  if (width < 768) return "phone";
-  if (width < 1024) return "compact";
-  return "desktop";
-}
-
 function stylesheetBundle(): string {
   const stylesheet = [...document.styleSheets]
     .map((sheet) => sheet.href)
@@ -29,21 +21,21 @@ export function startRenderDiagnostics(): () => void {
     const metrics = {
       release: RELEASE_ID,
       cssBundle: stylesheetBundle(),
-      mode: getLayoutMode(window.innerWidth),
+      mode: "desktop-forced",
       innerWidth: window.innerWidth,
       visualViewportWidth: Math.round(viewportWidth * 100) / 100,
       visualViewportScale: window.visualViewport?.scale ?? 1,
       devicePixelRatio: window.devicePixelRatio,
       screenWidth: window.screen.width,
       desktopNavDisplay: desktopNav ? getComputedStyle(desktopNav).display : "missing",
-      mobileNavDisplay: mobileNav ? getComputedStyle(mobileNav).display : "missing",
+      mobileNavDisplay: mobileNav ? getComputedStyle(mobileNav).display : "absent",
     };
 
     document.documentElement.dataset.publicLayoutMode = metrics.mode;
     document.documentElement.dataset.layoutDiagnostics = JSON.stringify(metrics);
     console.info("[Startup Labs layout diagnostics]", metrics);
 
-    if (!desktopNav || !mobileNav) {
+    if (!desktopNav) {
       window.clearTimeout(retryTimer);
       retryTimer = window.setTimeout(update, 250);
     }
