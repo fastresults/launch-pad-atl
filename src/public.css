@@ -557,38 +557,183 @@
   .sl-prompt__ghost { font-size: 17px; }
 }
 
-/* --- Phone: below 768px ----------------------------------------- */
+/* --- Phone: below 768px ----------------------------------------- *
+ * Aggressive mobile pass. Everything here is scoped inside this media
+ * query, so it cannot leak into any desktop tier.
+ * ---------------------------------------------------------------- */
 @media (max-width: 767px) {
   .public-surface {
     --public-pad: 16px;
     font-size: 15px;
+    /* room for the sticky action bar */
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    overflow-x: hidden;
   }
 
+  /* No element may push the page sideways. */
+  .public-surface * { min-width: 0; }
+  .public-surface :is(p, li, h1, h2, h3, h4, a, span) { overflow-wrap: anywhere; }
+  .public-surface :is(img, svg, video, canvas, iframe, table) { max-width: 100%; height: auto; }
+  .public-surface pre { overflow-x: auto; }
+
+  /* Type */
   .public-surface h1,
   .public-surface .public-display,
   .public-surface .sl-hero__title { font-size: 30px; line-height: 1.16; }
   .public-surface h2,
-  .public-surface .public-heading { font-size: 23px; }
+  .public-surface .public-heading { font-size: 23px; line-height: 1.22; }
   .public-surface h3,
   .public-surface .public-subheading { font-size: 18px; }
-  .public-surface .public-lead { font-size: 16px; }
-  .public-surface :is(p, li) { font-size: 15px; }
+  .public-surface h4 { font-size: 16px; }
+  .public-surface .public-lead { font-size: 16px; line-height: 1.5; }
+  .public-surface :is(p, li) { font-size: 15px; line-height: 1.55; }
+  .public-surface :is(.eyebrow, .public-eyebrow) { font-size: 11px; letter-spacing: 0.12em; }
 
+  /* Vertical rhythm — desktop section padding is far too tall on a phone. */
+  .public-surface section { padding-block: 40px; }
+  .public-surface [class*="py-16"],
+  .public-surface [class*="py-20"],
+  .public-surface [class*="py-24"],
+  .public-surface [class*="py-28"],
+  .public-surface [class*="py-32"] { padding-block: 40px; }
+  .public-surface [class*="pt-24"],
+  .public-surface [class*="pt-28"],
+  .public-surface [class*="pt-32"] { padding-top: 40px; }
+  .public-surface [class*="pb-24"],
+  .public-surface [class*="pb-28"],
+  .public-surface [class*="pb-32"] { padding-bottom: 40px; }
+  .public-surface [class*="gap-10"],
+  .public-surface [class*="gap-12"],
+  .public-surface [class*="gap-14"],
+  .public-surface [class*="gap-16"] { gap: 24px; }
+
+  /* Anything laid out in columns collapses to one column. */
+  .public-surface [class*="grid-cols-2"],
+  .public-surface [class*="grid-cols-3"],
+  .public-surface [class*="grid-cols-4"],
+  .public-surface [class*="grid-cols-5"] { grid-template-columns: minmax(0, 1fr); }
+
+  /* Touch targets: 44px minimum on every real control. */
+  .public-surface :is(button, [role="button"], a[class*="rounded-full"], a[class*="bg-"]):not([class*="size-"]):not(.sl-site-header__mobile) {
+    min-height: 44px;
+  }
+  .public-surface :is(a, button)[class*="rounded-full"]:not([class*="size-"]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Primary CTAs go full width so they are unmissable and easy to hit. */
+  .public-surface :is(a, button)[class*="bg-hero-gradient"]:not(.sl-site-header__cta):not(.sl-mobile-cta__button) {
+    display: flex;
+    width: 100%;
+  }
+
+  /* Header */
   .sl-site-header__nav,
   .sl-site-header__actions { display: none; }
-  .sl-site-header__mobile { display: inline-flex; }
+  .sl-site-header__mobile { display: inline-flex; width: 44px; height: 44px; }
   .sl-site-header__inner { padding-inline: 16px; gap: 12px; }
   .sl-site-header__logo { height: 26px; }
+  .sl-site-header__mobile-panel a,
+  .sl-site-header__mobile-panel button {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    font-size: 17px;
+  }
 
-  .sl-hero { padding: 28px 16px 40px; }
+  /* Hero: shorter, thumb-reachable, dynamic viewport height (no iOS
+     address-bar jump), prompt as the focal control. */
+  .sl-hero {
+    min-height: calc(100dvh - var(--public-header-h, 56px));
+    padding: 24px 16px calc(32px + env(safe-area-inset-bottom, 0px));
+    align-content: center;
+  }
   .sl-hero__stack { max-width: 100%; }
   .sl-hero__kicker { font-size: 11px; letter-spacing: 0.14em; }
-  .sl-prompt__panel { min-height: 0; padding: 16px; border-radius: 20px; row-gap: 14px; }
+  .public-surface .sl-hero__title { margin-top: 12px; }
+  .sl-hero__prompt { margin-top: 20px; }
+  .sl-hero__status { margin-top: 14px; font-size: 11px; }
+  /* Slower, lighter Ken Burns — cheaper on mobile GPUs. */
+  .sl-hero__scene[data-active="true"] { animation-duration: 12s; }
+  .sl-hero__grain { display: none; }
+
+  .sl-prompt__panel {
+    min-height: 0;
+    padding: 14px;
+    border-radius: 18px;
+    row-gap: 12px;
+    /* heavy blur is expensive while scrolling on phones */
+    backdrop-filter: blur(14px) saturate(130%);
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
+  }
+  /* 16px keeps iOS Safari from auto-zooming on focus. */
   .public-surface .sl-prompt__input,
   .sl-prompt__ghost { font-size: 16px; }
-  .sl-prompt__footer { flex-direction: column; align-items: stretch; gap: 12px; }
-  .sl-prompt__submit { justify-content: center; }
+  .public-surface :is(input, textarea, select) { font-size: 16px; }
+  .sl-prompt__footer { flex-direction: column; align-items: stretch; gap: 10px; }
+  .sl-prompt__footer p { font-size: 13px; }
+  .sl-prompt__submit { min-height: 48px; justify-content: center; }
+
+  /* Zoom notice is a desktop-only concept. */
+  .sl-zoom-notice { display: none; }
+
+  .sl-mobile-cta { display: flex; }
 }
+
+/* --- Phone sticky action bar ------------------------------------- */
+.sl-mobile-cta {
+  display: none;
+  position: fixed;
+  z-index: 45;
+  inset-inline: 0;
+  bottom: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--border);
+  background: oklch(0.155 0.019 268 / 92%);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+}
+
+.sl-mobile-cta__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.sl-mobile-cta__label {
+  color: var(--muted-foreground);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sl-mobile-cta__value {
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.public-surface .sl-mobile-cta__button {
+  display: inline-flex;
+  flex: none;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+
 
 /* --- Zoom notice ------------------------------------------------- */
 .sl-zoom-notice {
