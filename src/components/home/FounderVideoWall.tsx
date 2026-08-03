@@ -139,7 +139,7 @@ export function FounderVideoWall() {
             {s.heading}
           </h2>
           {s.show_subheading !== false && s.subheading ? (
-            <p className="mx-auto mt-1 max-w-[52ch] text-[11px] leading-relaxed text-foreground/55">
+            <p className={subClass} style={{ opacity: subOpacity }}>
               {s.subheading}
             </p>
           ) : null}
