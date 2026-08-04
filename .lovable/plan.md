@@ -3,9 +3,11 @@
 Eight workshops (brand, website, sales, email & CRM, social, content, AI ops, legal & money) get the same three-part frame, in copy and in reality. Foundation is untouched.
 
 ```text
-1. AUDIT      Submit your stuff after you register.
-              48 hours before the morning, you get a graded
-              expert audit of that one lane.
+1. AUDIT      Submit the real material for that lane — your
+              site, your brand assets, your quotes, your
+              follow-up sequences, your books. 48 hours
+              before the morning, you get a graded expert
+              audit of that lane.
 2. TEN PAINS  The workshop is organized around the ten
               specific problems that audit keeps finding.
 3. GUARANTEE  One named outcome. If you don't get it,
@@ -14,7 +16,7 @@ Eight workshops (brand, website, sales, email & CRM, social, content, AI ops, le
 
 ## 1. The pre-workshop audit (real, not just copy)
 
-**Intake.** After registering for a build workshop, the attendee gets a short lane-specific intake: their site URL, socials, current price sheet, a few links, and 3-5 short answers about what's failing. Each workshop asks only for what its audit needs (Website asks for the URL and analytics reality; Legal & money asks entity status, contracts, bookkeeping tool).
+**Intake.** After registering for a build workshop, the attendee submits the material that lane is actually about, named in that lane's language: Brand asks for the logo files, color and type in use, and the last five things they published. Website asks for the live URL, the page that's supposed to convert, and current traffic reality. Sales asks for the current price sheet, the pitch they send, and the last three deals lost. Email & CRM asks for the sequences running, list size, and where leads currently sit. Social asks for the handles and the last thirty posts. Content asks for what they've published and the questions buyers repeat. AI ops asks for the weekly tasks eating the most hours and the tools already paid for. Legal & money asks for entity status, the contracts in use, and how the books are kept.
 
 **The audit itself.** AI generates an expert-grade audit scored against the ten pains for that lane. Each pain gets a grade, the specific evidence from their own material, the cost of leaving it, and what the morning will do about it. It ends with the single prescribed outcome the morning is aimed at for this person.
 
