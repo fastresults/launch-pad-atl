@@ -460,7 +460,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a profile and a first post built to be found",
       question: "I post and nobody ever sees it.",
       imagePrompt: scenePrompt(
-        "A founder holding a phone up in a dim room late in the evening, face lit only by the screen, expression flat and unrewarded",
+        "A man in his thirties holding a phone up in a dim room late in the evening, face lit only by the screen, which shows a social feed of square photo tiles with tiny zeroed engagement counters beneath them, expression flat and unrewarded",
+        { screens: true },
       ),
     },
     {
@@ -469,7 +470,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a bank of posts written before you leave",
       question: "I sit down to post and have nothing to say.",
       imagePrompt: scenePrompt(
-        "A phone lying face-up on a dark table with a blank glowing screen, a hand resting motionless beside it",
+        "A phone lying face-up on a dark table showing an empty social compose screen — a blank photo placeholder box and an empty caption field with a cursor — a hand resting motionless beside it",
+        { screens: true },
       ),
     },
     {
@@ -478,7 +480,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a bio and link that turn a visit into a booking",
       question: "My profile doesn't say what I actually sell.",
       imagePrompt: scenePrompt(
-        "A hand holding a phone at a cafe table, thumb hovering above the screen, warm afternoon window light, dark interior behind",
+        "A woman's hand holding a phone at a cafe table, the screen showing a social profile page — round avatar, a nearly empty bio area, a sparse grid of photo tiles below — thumb hovering, warm afternoon window light, dark interior behind",
+        { screens: true },
       ),
     },
     {
@@ -496,7 +499,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a template set that makes every post look intentional",
       question: "Everything I post looks homemade.",
       imagePrompt: scenePrompt(
-        "A phone clamped to a small tripod aimed at an unlit product on a cluttered kitchen counter, no styling",
+        "A phone clamped to a small tripod aimed at an unlit product on a cluttered kitchen counter, the phone screen showing the raw camera view of that same dull product, no styling",
+        { screens: true },
       ),
     },
     {
@@ -505,7 +509,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "one platform chosen on evidence, the rest dropped",
       question: "I don't know which platform my buyer is even on.",
       imagePrompt: scenePrompt(
-        "A thumb hovering undecided above a phone screen full of blank app tiles in a dim room",
+        "A thumb hovering undecided above a phone home screen crowded with rows of colorful rounded generic app tiles, dim room",
+        { screens: true },
       ),
     },
     {
@@ -514,7 +519,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a reply routine that takes ten minutes a day",
       question: "My DMs sit unanswered for days.",
       imagePrompt: scenePrompt(
-        "A phone left face-up on a nightstand in a dark bedroom, screen glowing with an unread badge, nobody reaching for it",
+        "A phone left face-up on a nightstand in a dark bedroom, the screen showing a message list of stacked conversation rows with avatars and a large unread count badge, nobody reaching for it",
+        { screens: true },
       ),
     },
     {
@@ -523,7 +529,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "your first video recorded in the room, with help",
       question: "I freeze the second the camera turns on.",
       imagePrompt: scenePrompt(
-        "A founder in front of a phone on a tripod in a dim room, caught mid-hesitation before speaking, warm key light on one side",
+        "A woman in her forties in front of a phone on a tripod in a dim room, the phone screen showing the live camera view of her with a red record indicator, caught mid-hesitation before speaking, warm key light on one side",
+        { screens: true },
       ),
     },
     {
@@ -544,6 +551,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
         "A phone placed face-down on a table beside a cold half-finished coffee, hands withdrawn, dim grey morning light",
       ),
     },
+
 
   ],
 
