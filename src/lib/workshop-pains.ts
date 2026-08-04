@@ -136,82 +136,93 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "nobody-books",
       pain: "A site nobody books from",
       fix: "a page built around one action, and that action working",
+      question: "My site is up and nobody ever books.",
       imagePrompt: scenePrompt(
-        "A founder alone at a desk at night staring at a laptop, empty inbox glow on their face, coffee gone cold",
+        "A founder alone at a desk late at night, head in one hand, staring at a laptop, cold coffee beside them, empty dark room",
       ),
     },
     {
       id: "traffic-no-leads",
       pain: "Traffic that arrives and leaves",
       fix: "a first screen that answers the only question a visitor has",
+      question: "People show up, look once, and leave.",
       imagePrompt: scenePrompt(
-        "A rain-streaked storefront window at night with people walking past without stopping, warm light inside",
+        "A rain-streaked storefront window at night seen from inside the empty shop, blurred pedestrians walking past without stopping",
       ),
     },
     {
       id: "phone-broken",
       pain: "A site that falls apart on a phone",
       fix: "the mobile version built first, in the room",
+      question: "On a phone my site is a mess.",
       imagePrompt: scenePrompt(
-        "A hand holding a phone at arm's length in a dim car interior, screen glow, frustrated grip",
+        "A hand gripping a phone inside a dim parked car at night, screen glow on the fingers, rain on the glass",
       ),
     },
     {
       id: "slow-load",
       pain: "Pages that load slowly enough to lose the click",
       fix: "a page that opens before they change their mind",
+      question: "My pages load so slow people give up.",
       imagePrompt: scenePrompt(
-        "A thumb hovering over a phone's back gesture, screen mid-load, dim room, impatient posture",
+        "A thumb hovering over a phone screen mid-load in a dim living room, impatient posture, warm lamp behind",
       ),
     },
     {
       id: "no-headline",
       pain: "A headline that says nothing a buyer cares about",
       fix: "one written and tested against a real stranger",
+      question: "I've rewritten my headline twenty times.",
       imagePrompt: scenePrompt(
-        "Sticky notes with crossed-out handwritten phrases covering a dark monitor bezel, one survivor at the center",
+        "Dozens of scratched-out sticky notes stuck around the bezel of a dark monitor, one lone note at the center, warm lamp raking across",
       ),
     },
     {
       id: "agency-quote",
       pain: "A twelve-thousand-dollar quote for a five-page site",
       fix: "the site built with you before lunch",
+      question: "The quote I got for a simple site was insane.",
       imagePrompt: scenePrompt(
-        "A printed proposal on a desk with a large number circled in pen, founder's hand resting on it, low warm light",
+        "A thick printed proposal on a wooden desk with one figure circled hard in blue pen, a hand resting flat on the page, low warm light",
       ),
     },
     {
       id: "half-finished",
       pain: "A half-finished site that's been almost-done for six months",
       fix: "one live page with your name on it, published today",
+      question: "My site has been almost done for six months.",
       imagePrompt: scenePrompt(
-        "A laptop showing an unfinished construction-paper-taped workspace, dust on the keyboard, morning light through blinds",
+        "A closed dusty laptop on an abandoned desk in a half-finished home office, painter's tape and unhung shelves, hard morning light through blinds",
       ),
     },
     {
       id: "no-proof",
       pain: "No proof on the page that anyone has ever paid you",
       fix: "a proof section built from what you already have",
+      question: "Nothing on my page proves anyone has paid me.",
       imagePrompt: scenePrompt(
-        "A founder scrolling a phone through old client text messages, screenshotting one, dim kitchen",
+        "A founder sitting on a dim kitchen floor at night scrolling back through old messages on a phone, face lit by the screen",
       ),
     },
     {
       id: "cant-edit",
       pain: "Needing a developer to change one word",
       fix: "the keys, and the confidence to edit it yourself",
+      question: "I need to pay someone to change one word.",
       imagePrompt: scenePrompt(
-        "A founder at a laptop with hands off the keyboard, cursor blinking on a page they can't change, evening",
+        "A founder leaning back from an open laptop with both hands lifted off the keyboard, stuck, blank glowing screen, evening home office",
       ),
     },
     {
       id: "no-follow-up",
       pain: "Form submissions that go somewhere and die",
       fix: "the form wired to your inbox and a reply that goes out",
+      question: "Someone fills out my form and then nothing happens.",
       imagePrompt: scenePrompt(
-        "A phone on a nightstand lighting up with a single notification in a dark room",
+        "A phone lying face-up on a nightstand in a pitch-dark bedroom, screen just lit with a single notification",
       ),
     },
+
   ],
 
   /* ─────────── SALES SYSTEMS ─────────── */
