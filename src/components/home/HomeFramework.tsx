@@ -9,6 +9,7 @@ import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasSc
 import { StageSketch } from "@/components/home/StageSketch";
 import { WorkshopStack } from "@/components/home/workshop/WorkshopStack";
 import { useSelectedWorkshop } from "@/hooks/use-selected-workshop";
+import { FOUNDATION_SLUG } from "@/lib/workshop-catalog";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import { useEvent } from "@/lib/use-event";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -51,17 +52,21 @@ export function HomeFramework() {
   });
   const showScroller = settings?.show_business_ideas_scroller !== false;
   const { workshop } = useSelectedWorkshop();
+  // The copy block, the four foundations, the honest roadmap and the ideas
+  // scroller are all Foundation's story. On a build workshop the stack above
+  // already tells that workshop's story, so they'd only contradict it.
+  const isFoundation = workshop.slug === FOUNDATION_SLUG;
   return (
     <div className="public-surface min-h-screen">
       <SiteHeader />
       <Hero />
       <FounderVideoWall />
       <WorkshopStack workshop={workshop} />
-      <HeroCopy />
+      {isFoundation && <HeroCopy />}
       <VideoTestimonials />
-      <Framework />
-      {showScroller && <HomeBusinessIdeasScroller />}
-      <HonestRoadmap />
+      {isFoundation && <Framework />}
+      {isFoundation && showScroller && <HomeBusinessIdeasScroller />}
+      {isFoundation && <HonestRoadmap />}
       <Facilitator />
       <ServicesTeaser />
       <Venue />

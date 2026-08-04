@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { founderScenes, shuffleScenesForVisit } from "@/lib/founder-scenes";
+import { getWorkshopScenes, shuffleWorkshopScenes } from "@/lib/workshop-scenes";
 import { useSceneCycle } from "@/hooks/use-scene-cycle";
 import { IdeaPrompt } from "@/components/home/IdeaPrompt";
 import { WorkshopRail } from "@/components/home/WorkshopRail";
@@ -13,16 +14,39 @@ import { FOUNDATION_SLUG } from "@/lib/workshop-catalog";
  * slow drift, atmospheric haze, and a glass prompt in the lower third. The
  * workshop rail under the prompt re-tunes the question the hero asks.
  */
+
+
+/** Everything the hero needs from a scene, whatever library it came from. */
+type HeroScene = { id: string; image: string; label: string; alt: string; phrase: string };
+
 export function CinematicHero() {
-  const scenes = useMemo(() => shuffleScenesForVisit(founderScenes), []);
   const [paused, setPaused] = useState(false);
-  const phrases = useMemo(() => scenes.map((scene) => scene.phrase), [scenes]);
-  const { typed, index } = useSceneCycle(phrases, !paused);
   const takeOver = useCallback(() => setPaused(true), []);
   const [cueHidden, setCueHidden] = useState(false);
   const [gatewayOpen, setGatewayOpen] = useState(false);
   const { workshop, select } = useSelectedWorkshop();
   const isFoundation = workshop.slug === FOUNDATION_SLUG;
+
+  // Foundation rotates the founder business library ("Now building: Bakery").
+  // Every other workshop rotates its own ten pain images ("Now fixing: …"), and
+  // falls back to the founder set until those images exist.
+  const painScenes = isFoundation ? null : getWorkshopScenes(workshop.slug);
+  const isPainRotation = painScenes !== null;
+
+  const scenes = useMemo<HeroScene[]>(() => {
+    if (painScenes) {
+      return shuffleWorkshopScenes(painScenes).map((scene) => ({
+        ...scene,
+        phrase: scene.label,
+      }));
+    }
+    return shuffleScenesForVisit(founderScenes);
+    // The workshop slug is what actually changes the set; painScenes is derived.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFoundation, workshop.slug]);
+
+  const phrases = useMemo(() => scenes.map((scene) => scene.phrase), [scenes]);
+  const { typed, index } = useSceneCycle(phrases, !paused);
 
   // Non-foundation workshops ghost-type their own examples instead of the
   // scene phrases.
@@ -118,9 +142,10 @@ export function CinematicHero() {
           onSelect={select}
           onOpenGateway={() => setGatewayOpen(true)}
         />
-        {isFoundation && (
+        {(isFoundation || isPainRotation) && (
           <p className="sl-hero__status">
-            Now building: <span>{scenes[index]?.label}</span>
+            {isFoundation ? "Now building: " : "Now fixing: "}
+            <span>{scenes[index]?.label}</span>
           </p>
         )}
       </div>

@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { getWorkshopProduct } from "@/lib/workshop-products";
 import type { CatalogWorkshop } from "@/lib/workshop-catalog";
 import { WorkshopCost } from "@/components/home/workshop/WorkshopCost";
+import { WorkshopPains } from "@/components/home/workshop/WorkshopPains";
 import { WorkshopArtifacts, WorkshopMorning } from "@/components/home/workshop/WorkshopBuild";
 import {
   WorkshopDecision,
@@ -26,6 +27,7 @@ export function WorkshopStack({ workshop }: { workshop: CatalogWorkshop }) {
       {/* Keyed so the swap cross-fades instead of snapping; scroll stays put. */}
       <div key={workshop.slug} className="animate-in fade-in duration-500">
         <WorkshopCost product={product} />
+        <WorkshopPains slug={workshop.slug} />
         <WorkshopArtifacts product={product} />
         <WorkshopMorning product={product} />
         <WorkshopFormats product={product} />
