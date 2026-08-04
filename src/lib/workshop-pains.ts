@@ -769,9 +769,10 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a contract suite you can send and sign this week",
       question: "I'm working off a handshake and a text message.",
       imagePrompt: scenePrompt(
-        "Two people shaking hands across a bare table with no paperwork between them, warm dim light",
+        "A woman in her forties and a man in his fifties shaking hands across a bare table with no paperwork between them, warm dim light",
       ),
     },
+
     {
       id: "mixed-money",
       pain: "Business and personal money in the same account",
