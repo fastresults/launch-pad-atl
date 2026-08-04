@@ -48,6 +48,9 @@ export function HeroImageRegenerateDialog({ workshopSlug, entry, onClose, onSave
   const [model, setModel] = useState<string>(HERO_IMAGE_MODELS[0].id);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<HeroImageRow | null>(null);
+  /** When on, the full prompt below is sent verbatim instead of being composed. */
+  const [editPrompt, setEditPrompt] = useState(false);
+  const [fullPrompt, setFullPrompt] = useState("");
 
   useEffect(() => {
     if (!entry) return;
@@ -55,10 +58,21 @@ export function HeroImageRegenerateDialog({ workshopSlug, entry, onClose, onSave
     setSubject(entry.published?.subject ?? subjectFromPrompt(source));
     setScreens(entry.published?.screens ?? screensFromPrompt(source));
     setModel(entry.published?.model ?? HERO_IMAGE_MODELS[0].id);
+    setFullPrompt(source);
+    setEditPrompt(false);
     setPreview(null);
   }, [entry]);
 
   if (!entry) return null;
+
+  const composed = composeHeroPrompt(subject.trim(), screens);
+  const promptToSend = editPrompt ? fullPrompt.trim() : composed;
+
+  /** Turning editing on starts from whatever the subject currently composes to. */
+  function toggleEditPrompt(next: boolean) {
+    if (next) setFullPrompt(composed);
+    setEditPrompt(next);
+  }
 
   async function generate() {
     setBusy(true);
@@ -69,6 +83,7 @@ export function HeroImageRegenerateDialog({ workshopSlug, entry, onClose, onSave
         subject: subject.trim(),
         screens,
         model,
+        ...(editPrompt ? { prompt: fullPrompt.trim() } : {}),
       });
       setPreview(row);
     } catch (e) {
@@ -77,6 +92,7 @@ export function HeroImageRegenerateDialog({ workshopSlug, entry, onClose, onSave
       setBusy(false);
     }
   }
+
 
   async function publish() {
     if (!preview) return;
