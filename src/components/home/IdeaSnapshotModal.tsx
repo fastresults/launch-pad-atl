@@ -50,7 +50,12 @@ type Snapshot = {
   first_moves?: string[];
   watch_outs?: string[];
   why_atlanta?: string;
+  /** Build-workshop diagnostic only. */
+  gap?: { headline?: string; why?: string };
+  costs?: string[];
+  walk_out_with?: string[];
 };
+
 
 const REACH_LABEL: Record<ReachTier, string> = {
   local: "Local reach",
