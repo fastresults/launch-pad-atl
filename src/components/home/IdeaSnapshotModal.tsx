@@ -69,9 +69,11 @@ const REACH_TIERS: ReachTier[] = ["local", "regional", "national", "internationa
 
 type Props = {
   idea: string;
+  workshop: CatalogWorkshop;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
+
 
 /** Session cache so re-opening the same idea is instant. */
 const cache = new Map<string, Snapshot>();
