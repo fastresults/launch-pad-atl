@@ -217,18 +217,23 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
     });
   };
 
+  const isFoundation = workshop.slug === FOUNDATION_SLUG;
   const econ = snapshot?.economics;
   const reach = snapshot?.reach;
   const tier: ReachTier | null =
     reach?.tier && REACH_TIERS.includes(reach.tier) ? reach.tier : null;
   const isLocal = tier === "local";
-  const HeaderIcon = tier ? REACH_ICON[tier] : MapPin;
-  const headerLabel =
-    tier && !isLocal
+  const HeaderIcon = isFoundation ? (tier ? REACH_ICON[tier] : MapPin) : Target;
+  const headerLabel = !isFoundation
+    ? `${workshop.chipLabel} read`
+    : tier && !isLocal
       ? `Atlanta start · ${tier} reach`
       : "Metro Atlanta read";
   const invalid = snapshot?.ok === false;
   const showRead = !error && !invalid;
+  const walkOuts =
+    snapshot?.walk_out_with?.length ? snapshot.walk_out_with : workshop.walkOuts.slice(0, 3);
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
