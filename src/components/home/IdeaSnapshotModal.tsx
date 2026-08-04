@@ -14,9 +14,12 @@ import {
   Globe,
   Map as MapIcon,
   Compass,
+  Target,
+  Hammer,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { CatalogWorkshop } from "@/lib/workshop-catalog";
+import { FOUNDATION_SLUG, type CatalogWorkshop } from "@/lib/workshop-catalog";
+import { WaitlistForm } from "@/components/home/workshop/WaitlistForm";
 
 type Signal = { label: string; value: string; note: string };
 
@@ -50,7 +53,12 @@ type Snapshot = {
   first_moves?: string[];
   watch_outs?: string[];
   why_atlanta?: string;
+  /** Build-workshop diagnostic only. */
+  gap?: { headline?: string; why?: string };
+  costs?: string[];
+  walk_out_with?: string[];
 };
+
 
 const REACH_LABEL: Record<ReachTier, string> = {
   local: "Local reach",
@@ -127,7 +135,12 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
             apikey: anon,
             Authorization: `Bearer ${anon}`,
           },
-          body: JSON.stringify({ idea, workshopSlug: workshop.slug, lens: workshop.lens }),
+          body: JSON.stringify({
+            idea,
+            workshopSlug: workshop.slug,
+            lens: workshop.lens,
+            artifacts: workshop.walkOuts,
+          }),
           signal: controller.signal,
         });
 
@@ -204,18 +217,23 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
     });
   };
 
+  const isFoundation = workshop.slug === FOUNDATION_SLUG;
   const econ = snapshot?.economics;
   const reach = snapshot?.reach;
   const tier: ReachTier | null =
     reach?.tier && REACH_TIERS.includes(reach.tier) ? reach.tier : null;
   const isLocal = tier === "local";
-  const HeaderIcon = tier ? REACH_ICON[tier] : MapPin;
-  const headerLabel =
-    tier && !isLocal
+  const HeaderIcon = isFoundation ? (tier ? REACH_ICON[tier] : MapPin) : Target;
+  const headerLabel = !isFoundation
+    ? `${workshop.chipLabel} read`
+    : tier && !isLocal
       ? `Atlanta start · ${tier} reach`
       : "Metro Atlanta read";
   const invalid = snapshot?.ok === false;
   const showRead = !error && !invalid;
+  const walkOuts =
+    snapshot?.walk_out_with?.length ? snapshot.walk_out_with : workshop.walkOuts.slice(0, 3);
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -287,6 +305,8 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                 An Atlanta market read for {label}
               </DialogDescription>
 
+              {isFoundation ? (
+                <>
               {/* How far this can travel — Atlanta is the start, not the ceiling */}
               <div className="mt-5 rounded-2xl border border-[rgba(244,246,255,0.12)] bg-[rgba(244,246,255,0.04)] p-4">
                 {tier ? (
@@ -351,7 +371,74 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                 </p>
               </div>
 
-              {snapshot?.signals?.length ? (
+                </>
+              ) : (
+                <>
+              {/* Build-track diagnostic — the gap, what it costs, what the morning hands back */}
+              <div className="mt-5 rounded-2xl border border-[rgba(244,246,255,0.12)] bg-[rgba(244,246,255,0.04)] p-4">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] hero-faint">
+                  <Target className="h-3.5 w-3.5" aria-hidden="true" />
+                  The gap
+                </div>
+                {snapshot?.gap?.headline ? (
+                  <>
+                    <p className="mt-2 text-[17px] font-medium leading-snug" style={{ color: "var(--hero-fg)" }}>
+                      {snapshot.gap.headline}
+                    </p>
+                    {snapshot.gap.why ? <p className="mt-2 text-sm hero-sub">{snapshot.gap.why}</p> : null}
+                  </>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    <div className="hero-skel h-5 w-[62%]" />
+                    <div className="hero-skel h-4 w-[86%]" />
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 rounded-3xl border border-[rgba(244,246,255,0.10)] bg-[rgba(244,246,255,0.03)] p-5">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] hero-faint">
+                  <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+                  What it costs to leave it
+                </div>
+                {snapshot?.costs?.length ? (
+                  <ul className="mt-3 space-y-2.5">
+                    {snapshot.costs.slice(0, 3).map((cost, i) => (
+                      <li key={i} className="text-[15px] hero-sub">
+                        {cost}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    <div className="hero-skel h-4 w-[90%]" />
+                    <div className="hero-skel h-4 w-[76%]" />
+                    <div className="hero-skel h-4 w-[82%]" />
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 rounded-3xl border border-[rgba(76,140,255,0.28)] bg-[rgba(76,140,255,0.07)] p-5">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] hero-faint">
+                  <Hammer className="h-3.5 w-3.5" aria-hidden="true" />
+                  What you walk out with
+                </div>
+                <ul className="mt-3 space-y-2.5">
+                  {walkOuts.slice(0, 4).map((item, i) => (
+                    <li key={i} className="flex gap-3 text-[15px] hero-sub">
+                      <Check className="mt-1 h-4 w-4 shrink-0 hero-accent" aria-hidden="true" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 text-xs hero-faint">
+                  Built with you in the room — not slides, not notes.
+                </p>
+              </div>
+
+                </>
+              )}
+
+              {isFoundation && snapshot?.signals?.length ? (
                 <div className="mt-6 grid gap-3 sm:grid-cols-3">
                   {snapshot.signals.slice(0, 3).map((signal, i) => {
                     const Icon = SIGNAL_ICONS[i % SIGNAL_ICONS.length];
@@ -374,7 +461,7 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                 </div>
               ) : null}
 
-              {snapshot?.first_moves?.length ? (
+              {isFoundation && snapshot?.first_moves?.length ? (
                 <div className="mt-8">
                   <h3 className="text-sm uppercase tracking-[0.16em] hero-faint">
                     What it takes to start
@@ -413,34 +500,67 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
               ) : null}
 
               {/* The full invitation, as the natural end of the read */}
-              <div className="mt-8 rounded-3xl border border-[rgba(76,140,255,0.32)] bg-[rgba(76,140,255,0.08)] p-6">
-                <p className="text-lg font-medium" style={{ color: "var(--hero-fg)" }}>
-                  Don't start it alone. Build the first real pieces of {label} with us.
-                </p>
-                <p className="mt-2 text-[15px] hero-sub">
-                  One focused morning at the IGNITE Center at Greater Atlanta Christian School —
-                  Thursday, August 20, 2026. You don't leave with notes. You leave with a live page
-                  people can visit, a priced offer, and your first outreach already sent.
-                </p>
-                <ul className="mt-4 space-y-2">
-                  {[
-                    "A live page for your startup, written and published with you",
-                    "A priced offer you can say out loud without flinching",
-                    "Your first real outreach sent before you go home",
-                  ].map((item) => (
-                    <li key={item} className="flex gap-3 text-[15px] hero-sub">
-                      <Check className="mt-1 h-4 w-4 shrink-0 hero-accent" aria-hidden="true" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-4 text-sm hero-faint">
-                  Seats are capped so everyone gets built with, not talked at. $197.
-                </p>
-                <div className="mt-5">
-                  <ActionRow registerTo={registerTo} onLearnMore={learnMore} onClose={close} />
+              {isFoundation ? (
+                <div className="mt-8 rounded-3xl border border-[rgba(76,140,255,0.32)] bg-[rgba(76,140,255,0.08)] p-6">
+                  <p className="text-lg font-medium" style={{ color: "var(--hero-fg)" }}>
+                    Don't start it alone. Build the first real pieces of {label} with us.
+                  </p>
+                  <p className="mt-2 text-[15px] hero-sub">
+                    One focused morning at the IGNITE Center at Greater Atlanta Christian School —
+                    Thursday, August 20, 2026. You don't leave with notes. You leave with a live page
+                    people can visit, a priced offer, and your first outreach already sent.
+                  </p>
+                  <ul className="mt-4 space-y-2">
+                    {[
+                      "A live page for your startup, written and published with you",
+                      "A priced offer you can say out loud without flinching",
+                      "Your first real outreach sent before you go home",
+                    ].map((item) => (
+                      <li key={item} className="flex gap-3 text-[15px] hero-sub">
+                        <Check className="mt-1 h-4 w-4 shrink-0 hero-accent" aria-hidden="true" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-4 text-sm hero-faint">
+                    Seats are capped so everyone gets built with, not talked at. $197.
+                  </p>
+                  <div className="mt-5">
+                    <ActionRow registerTo={registerTo} onLearnMore={learnMore} onClose={close} />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="mt-8 rounded-3xl border border-[rgba(76,140,255,0.32)] bg-[rgba(76,140,255,0.08)] p-6">
+                  <p className="text-lg font-medium" style={{ color: "var(--hero-fg)" }}>
+                    We build this with you in one morning — {workshop.title} opens{" "}
+                    {workshop.opensLabel}.
+                  </p>
+                  <p className="mt-2 text-[15px] hero-sub">
+                    Put your email down and you get first access when seats open at the IGNITE Center
+                    at Greater Atlanta Christian School. {workshop.priceLabel}, capped room, built
+                    with you — not talked at.
+                  </p>
+                  <div className="mt-4">
+                    <WaitlistForm
+                      slug={workshop.slug}
+                      label="Get first access"
+                      doneMessage={`You're first in line for ${workshop.chipLabel}.`}
+                    />
+                  </div>
+                  <p className="mt-5 text-sm hero-sub">
+                    Don't want to wait? The Foundation Workshop is open now — Thursday, August 20,
+                    2026 — and it's where most founders start.
+                  </p>
+                  <div className="mt-4">
+                    <ActionRow
+                      registerTo={registerTo}
+                      onLearnMore={learnMore}
+                      onClose={close}
+                      reserveLabel="Reserve a Foundation seat"
+                    />
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -449,17 +569,31 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
         <div className="shrink-0 border-t border-[rgba(244,246,255,0.12)] bg-[rgba(5,7,15,0.92)] px-6 py-4 sm:px-8">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm hero-sub">
-              <span style={{ color: "var(--hero-fg)" }}>Thursday, Aug 20</span>
-              <span className="hero-faint"> · IGNITE Center · $197</span>
+              {isFoundation ? (
+                <>
+                  <span style={{ color: "var(--hero-fg)" }}>Thursday, Aug 20</span>
+                  <span className="hero-faint"> · IGNITE Center · $197</span>
+                </>
+              ) : (
+                <>
+                  <span style={{ color: "var(--hero-fg)" }}>{workshop.chipLabel}</span>
+                  <span className="hero-faint">
+                    {" "}
+                    · opens {workshop.opensLabel} · {workshop.priceLabel}
+                  </span>
+                </>
+              )}
             </p>
             <ActionRow
               compact
               registerTo={registerTo}
               onLearnMore={learnMore}
               onClose={close}
+              reserveLabel={isFoundation ? "Reserve my seat" : "Reserve a Foundation seat"}
             />
           </div>
         </div>
+
 
       </DialogContent>
     </Dialog>
@@ -475,11 +609,13 @@ function ActionRow({
   onLearnMore,
   onClose,
   compact = false,
+  reserveLabel = "Reserve my seat",
 }: {
   registerTo: string;
   onLearnMore: () => void;
   onClose: () => void;
   compact?: boolean;
+  reserveLabel?: string;
 }) {
   const size = compact ? "px-4 py-2 text-sm" : "";
   return (
@@ -497,7 +633,7 @@ function ActionRow({
         <ArrowDown className="h-4 w-4" aria-hidden="true" />
       </button>
       <Link to={registerTo} onClick={onClose} className={`hero-btn hero-btn-secondary ${size}`}>
-        Reserve my seat
+        {reserveLabel}
         <ArrowRight className="h-4 w-4" aria-hidden="true" />
       </Link>
       <Link to="/contact" onClick={onClose} className={`hero-btn hero-btn-ghost ${size}`}>

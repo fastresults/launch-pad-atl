@@ -53,6 +53,40 @@ Return ONLY valid JSON, no markdown fences, with the keys in EXACTLY this order:
   "why_atlanta": string        // ONE paragraph, at most 2 sentences, Atlanta-specific
 }`;
 
+// The eight build workshops ask a different question. The visitor already has a
+// startup; what they don't have is the one asset that lane builds. So the read
+// is a diagnostic — name the gap, say what it's costing, show what one morning
+// hands back — not a viability study with revenue ranges.
+const DIAGNOSTIC = `You are a plainspoken build coach for Startup Labs, an Atlanta done-with-you startup workshop. A visitor who already has a startup answers one question about a single area of their startup. You write a short, honest diagnostic: what's actually missing, what it's costing them, and what one focused morning would hand them instead.
+
+RULES
+- They are not starting from zero. Never treat the answer as a new startup idea and never write a market-viability read.
+- NO money math. Never give revenue ranges, ticket prices, startup costs, or income figures. Cost is expressed in what they lose — buyers, time, trust, momentum — not in dollars.
+- Be specific to what they typed. Name their words back to them, sharper than they said it.
+- NEVER invent citations, studies, sources, or statistics. Never promise outcomes or guarantee results.
+- Never give legal, tax, medical, or financial advice. Anything jurisdictional says to confirm with the county.
+- Say "startup", never "business". Say "assets", never "documents". Never call the offer a plan, blueprint, framework, playbook, or roadmap — name the real artifact instead.
+- Tone: founder-to-founder, warm, direct, no hype, no emojis, no jargon.
+- Be brief and scannable. Keep total output under 1200 characters.
+- If the input is gibberish, a joke, off-topic, or hostile, return {"ok": false, "message": "<one friendly sentence asking them to answer the question in their own words>"}.
+
+OUTPUT
+Return ONLY valid JSON, no markdown fences, with the keys in EXACTLY this order:
+{
+  "ok": true,
+  "idea_label": string,      // 2-5 words, title case, naming what they described
+  "verdict": string,         // ONE sentence reading their answer back sharper than they said it
+  "gap": {
+    "headline": string,      // <= 55 chars, the specific thing missing, in their language
+    "why": string            // ONE sentence on why that gap exists for a founder like them
+  },
+  "costs": string[],         // EXACTLY 3 honest costs of leaving it as-is, one short sentence each, no dollar figures
+  "walk_out_with": string[], // EXACTLY 3 real artifacts they'd leave the morning holding, tied to their answer
+  "watch_outs": string[],    // EXACTLY 2 honest risks or things that make this harder, one short sentence each
+  "why_atlanta": string      // ONE sentence, at most 2, on doing this in a room in metro Atlanta rather than alone
+}`;
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -63,15 +97,30 @@ Deno.serve(async (req) => {
     const idea = typeof body?.idea === "string" ? body.idea.trim().slice(0, 300) : "";
     if (idea.length < 3) return json({ error: "Tell us the startup you want to start." }, 400);
 
-    // The hero prompt re-tunes per workshop. `lens` narrows what the read is
-    // about; the JSON shape stays identical so the modal never changes.
+    // The hero prompt re-tunes per workshop. Foundation gets the viability
+    // read; every build workshop gets the diagnostic, narrowed by `lens` and
+    // grounded in the artifacts that workshop actually builds.
     const slug = typeof body?.workshopSlug === "string"
       ? body.workshopSlug.trim().slice(0, 60).replace(/[^a-z0-9-]/gi, "")
       : "foundation";
     const lens = typeof body?.lens === "string" ? body.lens.trim().slice(0, 160) : "";
-    const focus = lens && slug !== "foundation"
-      ? `\n\nFOCUS FOR THIS READ\n- The visitor answered a question about ${lens}. Read their answer entirely through that lens.\n- "verdict", "reach", "economics", "signals", "first_moves", "watch_outs", and "why_atlanta" must all be about ${lens} for this founder in metro Atlanta.\n- "idea_label" names what they described, not a generic startup category.\n- Keep the exact same JSON keys and limits.`
-      : "";
+    const artifacts = Array.isArray(body?.artifacts)
+      ? body.artifacts
+          .filter((a: unknown) => typeof a === "string")
+          .slice(0, 6)
+          .map((a: string) => a.trim().slice(0, 160))
+      : [];
+    const isFoundation = slug === "foundation";
+
+    const focus = isFoundation
+      ? ""
+      : `\n\nFOCUS FOR THIS READ\n- The visitor answered a question about ${lens || "one area of their startup"}. Read their answer entirely through that lens.\n- "verdict", "gap", "costs", "walk_out_with", "watch_outs", and "why_atlanta" must all be about ${lens || "that area"} for this founder in metro Atlanta.\n- "idea_label" names what they described, not a generic category.${
+          artifacts.length
+            ? `\n- "walk_out_with" must be drawn from what this morning actually builds, phrased for their answer: ${artifacts.join("; ")}.`
+            : ""
+        }\n- Keep the exact same JSON keys and limits.`;
+
+    const system = (isFoundation ? SYSTEM : DIAGNOSTIC) + focus;
 
     const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -86,11 +135,12 @@ Deno.serve(async (req) => {
         stream: true,
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: SYSTEM + focus },
+          { role: "system", content: system },
           { role: "user", content: `The visitor typed: "${idea}"` },
         ],
       }),
     }, { timeoutMs: 60_000 });
+
 
     if (!aiRes.ok || !aiRes.body) {
       const txt = await aiRes.text().catch(() => "");
