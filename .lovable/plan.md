@@ -29,9 +29,9 @@ A handful of scenes are *supposed* to be blank — `blank-page`, `never-email`'s
 
 ### 2. Gender balance
 
-Every scene with a visible person gets an explicit subject descriptor, alternating across each workshop's ten so each set lands close to half women, half men, with a couple of two-person and hands-only frames left neutral. Descriptors stay documentary and age-varied (a woman in her forties at a shop counter, a man in his thirties in a parked truck, two partners at a kitchen table) — no stock-photo styling, same midnight-navy grade.
+Every scene with a visible person gets an explicit subject descriptor, assigned so each workshop's ten land at an even split: of the frames that show an identifiable person, half are women and half are men. Hands-only and two-person frames stay neutral and don't count toward either side. Descriptors stay documentary and age-varied (a woman in her forties at a shop counter, a man in his thirties in a parked truck, two partners at a kitchen table) — no stock-photo styling, same midnight-navy grade.
 
-Balance is per workshop, not just across the whole set, so a visitor who only ever sees the Social lane still sees both.
+The split is enforced per workshop, not just across the whole set, so a visitor who only ever sees the Social lane still sees an even mix. Before each lane's images are generated, its ten prompts get counted to confirm the balance holds.
 
 ### 3. Regenerate
 
