@@ -63,6 +63,16 @@ Deno.serve(async (req) => {
     const idea = typeof body?.idea === "string" ? body.idea.trim().slice(0, 300) : "";
     if (idea.length < 3) return json({ error: "Tell us the startup you want to start." }, 400);
 
+    // The hero prompt re-tunes per workshop. `lens` narrows what the read is
+    // about; the JSON shape stays identical so the modal never changes.
+    const slug = typeof body?.workshopSlug === "string"
+      ? body.workshopSlug.trim().slice(0, 60).replace(/[^a-z0-9-]/gi, "")
+      : "foundation";
+    const lens = typeof body?.lens === "string" ? body.lens.trim().slice(0, 160) : "";
+    const focus = lens && slug !== "foundation"
+      ? `\n\nFOCUS FOR THIS READ\n- The visitor answered a question about ${lens}. Read their answer entirely through that lens.\n- "verdict", "reach", "economics", "signals", "first_moves", "watch_outs", and "why_atlanta" must all be about ${lens} for this founder in metro Atlanta.\n- "idea_label" names what they described, not a generic startup category.\n- Keep the exact same JSON keys and limits.`
+      : "";
+
     const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -76,7 +86,7 @@ Deno.serve(async (req) => {
         stream: true,
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: SYSTEM },
+          { role: "system", content: SYSTEM + focus },
           { role: "user", content: `The visitor typed: "${idea}"` },
         ],
       }),
