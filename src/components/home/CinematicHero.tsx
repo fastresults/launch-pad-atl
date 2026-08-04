@@ -142,9 +142,10 @@ export function CinematicHero() {
           onSelect={select}
           onOpenGateway={() => setGatewayOpen(true)}
         />
-        {isFoundation && (
+        {(isFoundation || isPainRotation) && (
           <p className="sl-hero__status">
-            Now building: <span>{scenes[index]?.label}</span>
+            {isFoundation ? "Now building: " : "Now fixing: "}
+            <span>{scenes[index]?.label}</span>
           </p>
         )}
       </div>
