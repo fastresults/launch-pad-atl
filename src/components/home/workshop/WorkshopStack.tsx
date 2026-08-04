@@ -20,6 +20,8 @@ import {
  */
 export function WorkshopStack({ workshop }: { workshop: CatalogWorkshop }) {
   const product = getWorkshopProduct(workshop.slug);
+  // Foundation runs a shorter page: pain straight into the decision.
+  const isFoundation = workshop.slug === FOUNDATION_SLUG;
 
   return (
     <div id="learn-more" className="scroll-mt-16">
@@ -28,11 +30,15 @@ export function WorkshopStack({ workshop }: { workshop: CatalogWorkshop }) {
       <div key={workshop.slug} className="animate-in fade-in duration-500">
         <WorkshopCost product={product} />
         <WorkshopPains slug={workshop.slug} />
-        <WorkshopArtifacts product={product} />
-        <WorkshopMorning product={product} />
-        <WorkshopFormats product={product} />
-        <WorkshopFit product={product} />
-        <WorkshopObjections product={product} />
+        {!isFoundation && (
+          <>
+            <WorkshopArtifacts product={product} />
+            <WorkshopMorning product={product} />
+            <WorkshopFormats product={product} />
+            <WorkshopFit product={product} />
+            <WorkshopObjections product={product} />
+          </>
+        )}
         <WorkshopDecision product={product} />
       </div>
     </div>
