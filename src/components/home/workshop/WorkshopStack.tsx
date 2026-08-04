@@ -5,6 +5,10 @@ import { getWorkshopProduct } from "@/lib/workshop-products";
 import { FOUNDATION_SLUG, type CatalogWorkshop } from "@/lib/workshop-catalog";
 import { WorkshopCost } from "@/components/home/workshop/WorkshopCost";
 import { WorkshopPains } from "@/components/home/workshop/WorkshopPains";
+import {
+  WorkshopAuditSection,
+  WorkshopGuarantee,
+} from "@/components/home/workshop/WorkshopAudit";
 import { WorkshopArtifacts, WorkshopMorning } from "@/components/home/workshop/WorkshopBuild";
 import {
   WorkshopDecision,
