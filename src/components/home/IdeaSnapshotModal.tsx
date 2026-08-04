@@ -552,7 +552,12 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                     2026 — and it's where most founders start.
                   </p>
                   <div className="mt-4">
-                    <ActionRow registerTo={registerTo} onLearnMore={learnMore} onClose={close} />
+                    <ActionRow
+                      registerTo={registerTo}
+                      onLearnMore={learnMore}
+                      onClose={close}
+                      reserveLabel="Reserve a Foundation seat"
+                    />
                   </div>
                 </div>
               )}
@@ -584,6 +589,7 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
               registerTo={registerTo}
               onLearnMore={learnMore}
               onClose={close}
+              reserveLabel={isFoundation ? "Reserve my seat" : "Reserve a Foundation seat"}
             />
           </div>
         </div>
@@ -603,11 +609,13 @@ function ActionRow({
   onLearnMore,
   onClose,
   compact = false,
+  reserveLabel = "Reserve my seat",
 }: {
   registerTo: string;
   onLearnMore: () => void;
   onClose: () => void;
   compact?: boolean;
+  reserveLabel?: string;
 }) {
   const size = compact ? "px-4 py-2 text-sm" : "";
   return (
@@ -625,7 +633,7 @@ function ActionRow({
         <ArrowDown className="h-4 w-4" aria-hidden="true" />
       </button>
       <Link to={registerTo} onClick={onClose} className={`hero-btn hero-btn-secondary ${size}`}>
-        Reserve my seat
+        {reserveLabel}
         <ArrowRight className="h-4 w-4" aria-hidden="true" />
       </Link>
       <Link to="/contact" onClick={onClose} className={`hero-btn hero-btn-ghost ${size}`}>
