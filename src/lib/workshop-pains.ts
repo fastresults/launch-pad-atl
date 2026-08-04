@@ -260,7 +260,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "one call script you run the same way every time",
       question: "I wing every sales call and it shows.",
       imagePrompt: scenePrompt(
-        "A founder pacing a dim office at night on a phone call, free hand mid-gesture, no notes anywhere",
+        "A woman in her thirties pacing a dim office at night on a phone call, free hand mid-gesture, no notes anywhere",
       ),
     },
     {
@@ -269,7 +269,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a price you can say out loud without apologizing",
       question: "I freeze when it's time to say my price.",
       imagePrompt: scenePrompt(
-        "Two people at a small cafe table in low warm light, the founder caught mid-sentence with a hand half-raised, hesitating",
+        "Two people at a small cafe table in low warm light, a man in his forties caught mid-sentence with a hand half-raised, hesitating",
       ),
     },
     {
@@ -278,7 +278,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a follow-up sequence that runs whether you feel like it or not",
       question: "They go quiet the second I send the proposal.",
       imagePrompt: scenePrompt(
-        "A founder's face lit only by a laptop screen late at night in an empty room, waiting, flat with disappointment",
+        "A woman in her forties lit only by a laptop screen late at night in an empty room, the screen showing an email thread of her own sent messages stacked with no replies between them, waiting, flat with disappointment",
+        { screens: true },
       ),
     },
     {
@@ -305,7 +306,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "three qualifying questions asked before the call is booked",
       question: "I waste hours on people who never buy.",
       imagePrompt: scenePrompt(
-        "A founder slumped back in a chair in a dim office during a long video call, wall clock behind, late afternoon light dying",
+        "A man in his thirties slumped back in a chair in a dim office during a long video call, the monitor showing a grid of video-call tiles with faceless silhouettes, wall clock behind, late afternoon light dying",
+        { screens: true },
       ),
     },
     {
@@ -314,7 +316,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "one proposal you fill in and send in ten minutes",
       question: "I'm writing proposals from scratch at midnight.",
       imagePrompt: scenePrompt(
-        "A founder typing at a kitchen table at midnight, the house dark behind them, one lamp, papers scattered",
+        "A woman in her fifties typing at a kitchen table at midnight, the laptop showing a long document of headings and paragraph blocks half-written, the house dark behind her, one lamp, papers scattered",
+        { screens: true },
       ),
     },
     {
@@ -344,6 +347,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
         "A phone just set down face-down on a desk after a call, a hand still resting on it, dim office in the evening",
       ),
     },
+
 
   ],
 
