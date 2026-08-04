@@ -815,7 +815,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "payment terms and a chase sequence that runs itself",
       question: "I'm chasing invoices for months.",
       imagePrompt: scenePrompt(
-        "A hand holding a phone in a dim office showing a long list of outgoing call entries, warm light",
+        "A woman in her fifties holding a phone in a dim office, the screen showing a long call-log list of repeated outgoing call entries with small red missed markers, warm light",
+        { screens: true },
       ),
     },
     {
@@ -824,7 +825,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "the real unit math done on your actual numbers",
       question: "I priced on feel and don't know my margin.",
       imagePrompt: scenePrompt(
-        "Handwritten arithmetic covering a yellow legal pad beside a calculator late at night, a hand holding the pen",
+        "A man in his forties late at night working through handwritten arithmetic covering a yellow legal pad beside a calculator, pen in hand",
       ),
     },
     {
@@ -842,9 +843,11 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "one number you can check on your phone",
       question: "I'm guessing whether this month made money.",
       imagePrompt: scenePrompt(
-        "A phone face-up with a dim blank screen beside a closed hardbound ledger on a dark desk at night",
+        "A phone face-up on a dark desk at night showing a finance app with an empty chart area and a no-data placeholder box, beside a closed hardbound ledger",
+        { screens: true },
       ),
     },
+
 
   ],
 };
