@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { founderScenes, shuffleScenesForVisit } from "@/lib/founder-scenes";
 import { getWorkshopScenes, shuffleWorkshopScenes } from "@/lib/workshop-scenes";
+import { applySceneOverrides, useWorkshopSceneOverrides } from "@/hooks/useWorkshopSceneOverrides";
 import { useSceneCycle } from "@/hooks/use-scene-cycle";
 import { IdeaPrompt } from "@/components/home/IdeaPrompt";
 import { WorkshopRail } from "@/components/home/WorkshopRail";
