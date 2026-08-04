@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -20,7 +19,6 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  composeHeroPrompt,
   generateHeroImage,
   publishHeroImage,
   screensFromPrompt,
@@ -38,41 +36,26 @@ type Props = {
 };
 
 /**
- * Pre-fills the exact prompt behind the current picture so an operator only
- * edits the subject line — the shared cinematic look and the screen rule are
- * appended server-side, identically to how the shipped set was made.
+ * Pre-fills the exact prompt behind the current picture and sends the admin's
+ * edited prompt verbatim when generating a new take.
  */
 export function HeroImageRegenerateDialog({ workshopSlug, entry, onClose, onSaved }: Props) {
-  const [subject, setSubject] = useState("");
-  const [screens, setScreens] = useState(false);
   const [model, setModel] = useState<string>(HERO_IMAGE_MODELS[0].id);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<HeroImageRow | null>(null);
-  /** When on, the full prompt below is sent verbatim instead of being composed. */
-  const [editPrompt, setEditPrompt] = useState(false);
   const [fullPrompt, setFullPrompt] = useState("");
 
   useEffect(() => {
     if (!entry) return;
     const source = entry.published?.prompt ?? entry.prompt;
-    setSubject(entry.published?.subject ?? subjectFromPrompt(source));
-    setScreens(entry.published?.screens ?? screensFromPrompt(source));
     setModel(entry.published?.model ?? HERO_IMAGE_MODELS[0].id);
     setFullPrompt(source);
-    setEditPrompt(false);
     setPreview(null);
   }, [entry]);
 
   if (!entry) return null;
 
-  const composed = composeHeroPrompt(subject.trim(), screens);
-  const promptToSend = editPrompt ? fullPrompt.trim() : composed;
-
-  /** Turning editing on starts from whatever the subject currently composes to. */
-  function toggleEditPrompt(next: boolean) {
-    if (next) setFullPrompt(composed);
-    setEditPrompt(next);
-  }
+  const promptToSend = fullPrompt.trim();
 
   async function generate() {
     setBusy(true);
@@ -80,10 +63,10 @@ export function HeroImageRegenerateDialog({ workshopSlug, entry, onClose, onSave
       const row = await generateHeroImage({
         workshopSlug,
         painId: entry!.painId,
-        subject: subject.trim(),
-        screens,
+        subject: subjectFromPrompt(promptToSend),
+        screens: screensFromPrompt(promptToSend),
         model,
-        ...(editPrompt ? { prompt: fullPrompt.trim() } : {}),
+        prompt: promptToSend,
       });
       setPreview(row);
     } catch (e) {
@@ -121,37 +104,6 @@ export function HeroImageRegenerateDialog({ workshopSlug, entry, onClose, onSave
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="hero-subject">Subject</Label>
-            <Textarea
-              id="hero-subject"
-              rows={5}
-              value={subject}
-              disabled={editPrompt}
-              onChange={(e) => setSubject(e.target.value)}
-            />
-            {editPrompt && (
-              <p className="text-xs text-muted-foreground">
-                Ignored while you're editing the full prompt below.
-              </p>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <div>
-              <Label htmlFor="hero-screens">Screens show content</Label>
-              <p className="text-xs text-muted-foreground">
-                Shapes and blocks with blurred text, instead of blank screens.
-              </p>
-            </div>
-            <Switch
-              id="hero-screens"
-              checked={screens}
-              disabled={editPrompt}
-              onCheckedChange={setScreens}
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label>Model</Label>
             <Select value={model} onValueChange={setModel}>
               <SelectTrigger>
@@ -168,45 +120,17 @@ export function HeroImageRegenerateDialog({ workshopSlug, entry, onClose, onSave
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between rounded-md border p-3">
-              <div>
-                <Label htmlFor="hero-edit-prompt">Edit the full prompt</Label>
-                <p className="text-xs text-muted-foreground">
-                  Send your own wording instead of the shared cinematic recipe.
-                </p>
-              </div>
-              <Switch
-                id="hero-edit-prompt"
-                checked={editPrompt}
-                onCheckedChange={toggleEditPrompt}
-              />
-            </div>
-
-            <Label htmlFor="hero-prompt">Full prompt sent</Label>
-            {editPrompt ? (
-              <>
-                <Textarea
-                  id="hero-prompt"
-                  rows={9}
-                  value={fullPrompt}
-                  className="text-xs leading-relaxed"
-                  onChange={(e) => setFullPrompt(e.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => setFullPrompt(composed)}
-                >
-                  Reset to the composed prompt
-                </Button>
-              </>
-            ) : (
-              <p className="rounded bg-muted p-2 text-xs leading-relaxed text-muted-foreground">
-                {composed}
-              </p>
-            )}
+            <Label htmlFor="hero-prompt">Prompt</Label>
+            <Textarea
+              id="hero-prompt"
+              rows={14}
+              value={fullPrompt}
+              className="text-sm leading-relaxed"
+              onChange={(e) => setFullPrompt(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              This exact prompt will be sent to the image model.
+            </p>
           </div>
 
 
