@@ -14,6 +14,23 @@ Efficus-style pages hold one focused center-stage input and put everything else 
 
 Why this over the alternatives: a dropdown hides the catalog and reads as a form; a tab bar across the top competes with nav; nine visible cards in the hero destroys the cinematic focus. The chip rail + sheet keeps one primary action, signals scarcity/sequence, and gives the catalog a real surface.
 
+## The prompt adapts to the selected workshop
+
+Selecting a chip does not just filter a list — it re-tunes the whole hero to that workshop. One selection drives three things:
+
+1. **The question changes.** Each workshop owns its own hero question and typed ghost examples:
+   - Foundation — "What would you like to start?"
+   - Sales systems — "What kind of clients do you want?"
+   - Brand identity — "What should people feel when they find you?"
+   - Website — "What should your site get someone to do?"
+   - Social / content / email / AI ops / legal-financial each get their own one-line question.
+2. **The answer modal changes.** The existing idea-snapshot modal becomes workshop-aware: same shape (a short AI-written snapshot plus the workshop invite), different lens. For Sales it returns who those clients are in Atlanta, where they already gather, and the first move to reach them. For Brand it returns the positioning read. Each ends with the same invite CTA for that workshop's next date.
+3. **Below the hero changes.** The page under the hero becomes a **sampler pattern**: one repeating section template that re-renders with the selected workshop's content — the pain, what actually gets built that morning, the agenda, the next date, and the price. Same rhythm and layout every time, different substance. Foundation is the default state on load.
+
+Nothing hard-navigates. Selection is local hero state, the sections cross-fade, and the URL carries `?w={slug}` so a selection is shareable and the back button behaves.
+
+
+
 ## Positioning framework (how the 9 read as one ladder)
 
 Frame the catalog as a sequence, not a menu:
