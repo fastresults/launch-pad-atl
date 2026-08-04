@@ -1,19 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { IdeaSnapshotModal } from "@/components/home/IdeaSnapshotModal";
+import type { CatalogWorkshop } from "@/lib/workshop-catalog";
 
 type IdeaPromptProps = {
   ghostText: string;
   paused: boolean;
   onTakeOver: () => void;
+  workshop: CatalogWorkshop;
 };
 
 /**
  * The hero's glass prompt card. Auto-typing ghost text matches the active
- * scene until the visitor types — then the field is theirs. The card carries
- * its own caption and CTA along its bottom edge.
+ * scene until the visitor types — then the field is theirs. The question, the
+ * caption, and the AI read it triggers all follow the selected workshop.
  */
-export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
+export function IdeaPrompt({ ghostText, paused, onTakeOver, workshop }: IdeaPromptProps) {
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const [snapshotIdea, setSnapshotIdea] = useState("");
@@ -61,7 +63,7 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
               if (hint) setHint(false);
             }}
             onFocus={onTakeOver}
-            aria-label="Tell us what you want to start"
+            aria-label={workshop.inputLabel}
             aria-invalid={hint || undefined}
             className="sl-prompt__input"
           />
@@ -69,8 +71,8 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
         <div className="sl-prompt__footer">
           <p aria-live="polite">
             {hint
-              ? "Type the startup you want to start — then hit Start For Free."
-              : "We build it. You own it."}
+              ? `${workshop.inputLabel} — then hit Start For Free.`
+              : workshop.promptCaption}
           </p>
           <button
             type="submit"
@@ -83,8 +85,12 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver }: IdeaPromptProps) {
           </button>
         </div>
       </div>
-      <IdeaSnapshotModal idea={snapshotIdea} open={snapshotOpen} onOpenChange={setSnapshotOpen} />
+      <IdeaSnapshotModal
+        idea={snapshotIdea}
+        workshop={workshop}
+        open={snapshotOpen}
+        onOpenChange={setSnapshotOpen}
+      />
     </form>
   );
 }
-
