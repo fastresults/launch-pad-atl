@@ -97,15 +97,30 @@ Deno.serve(async (req) => {
     const idea = typeof body?.idea === "string" ? body.idea.trim().slice(0, 300) : "";
     if (idea.length < 3) return json({ error: "Tell us the startup you want to start." }, 400);
 
-    // The hero prompt re-tunes per workshop. `lens` narrows what the read is
-    // about; the JSON shape stays identical so the modal never changes.
+    // The hero prompt re-tunes per workshop. Foundation gets the viability
+    // read; every build workshop gets the diagnostic, narrowed by `lens` and
+    // grounded in the artifacts that workshop actually builds.
     const slug = typeof body?.workshopSlug === "string"
       ? body.workshopSlug.trim().slice(0, 60).replace(/[^a-z0-9-]/gi, "")
       : "foundation";
     const lens = typeof body?.lens === "string" ? body.lens.trim().slice(0, 160) : "";
-    const focus = lens && slug !== "foundation"
-      ? `\n\nFOCUS FOR THIS READ\n- The visitor answered a question about ${lens}. Read their answer entirely through that lens.\n- "verdict", "reach", "economics", "signals", "first_moves", "watch_outs", and "why_atlanta" must all be about ${lens} for this founder in metro Atlanta.\n- "idea_label" names what they described, not a generic startup category.\n- Keep the exact same JSON keys and limits.`
-      : "";
+    const artifacts = Array.isArray(body?.artifacts)
+      ? body.artifacts
+          .filter((a: unknown) => typeof a === "string")
+          .slice(0, 6)
+          .map((a: string) => a.trim().slice(0, 160))
+      : [];
+    const isFoundation = slug === "foundation";
+
+    const focus = isFoundation
+      ? ""
+      : `\n\nFOCUS FOR THIS READ\n- The visitor answered a question about ${lens || "one area of their startup"}. Read their answer entirely through that lens.\n- "verdict", "gap", "costs", "walk_out_with", "watch_outs", and "why_atlanta" must all be about ${lens || "that area"} for this founder in metro Atlanta.\n- "idea_label" names what they described, not a generic category.${
+          artifacts.length
+            ? `\n- "walk_out_with" must be drawn from what this morning actually builds, phrased for their answer: ${artifacts.join("; ")}.`
+            : ""
+        }\n- Keep the exact same JSON keys and limits.`;
+
+    const system = (isFoundation ? SYSTEM : DIAGNOSTIC) + focus;
 
     const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -120,11 +135,12 @@ Deno.serve(async (req) => {
         stream: true,
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: SYSTEM + focus },
+          { role: "system", content: system },
           { role: "user", content: `The visitor typed: "${idea}"` },
         ],
       }),
     }, { timeoutMs: 60_000 });
+
 
     if (!aiRes.ok || !aiRes.body) {
       const txt = await aiRes.text().catch(() => "");
