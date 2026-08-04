@@ -9,7 +9,10 @@ export type WorkshopScene = {
   image: string;
   label: string;
   alt: string;
+  /** First-person question typed in the chat box while this image is up. */
+  question?: string;
 };
+
 
 /**
  * Pain images live at src/assets/scenes/workshops/<slug>/<pain-id>.jpg. Globbing
