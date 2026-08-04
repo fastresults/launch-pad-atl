@@ -73,13 +73,17 @@ export async function listPublishedHeroImages(
   return map;
 }
 
-/** Generate a new draft image from a subject line. */
+/**
+ * Generate a new draft image. Pass `prompt` to send an edited full prompt
+ * verbatim; otherwise the subject is wrapped in the shared cinematic recipe.
+ */
 export async function generateHeroImage(input: {
   workshopSlug: string;
   painId: string;
   subject: string;
   screens: boolean;
   model: string;
+  prompt?: string;
 }): Promise<HeroImageRow> {
   const { data, error } = await supabase.functions.invoke("workshop-hero-image-generate", {
     body: input,
