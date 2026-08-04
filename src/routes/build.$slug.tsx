@@ -114,6 +114,51 @@ export default function BuildWorkshopPage() {
         </section>
       )}
 
+      {/* The audit that opens the morning */}
+      {audit && (
+        <section className="py-16 md:py-24">
+          <div className="public-container px-6">
+            <div className="mb-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-primary md:text-sm">
+              <ClipboardCheck className="size-4" /> Included · {audit.name}
+            </div>
+            <h2 className="public-heading max-w-3xl">
+              Your morning starts with an audit of your own work —{" "}
+              <span className="text-gradient-brand">not a lecture.</span>
+            </h2>
+            <p className="mt-5 max-w-3xl text-base text-muted-foreground md:text-lg">
+              {audit.promise} It lands 48 hours before your session, graded, with
+              the cost of every gap named.
+            </p>
+            <ol className="mt-10 grid gap-4 md:grid-cols-3">
+              {AUDIT_STEPS.map((step, i) => (
+                <li
+                  key={step.label}
+                  className="rounded-2xl border border-white/10 bg-card p-6"
+                >
+                  <div className="text-xs uppercase tracking-[0.18em] text-primary">
+                    0{i + 1} · {step.label}
+                  </div>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                    {step.body}
+                  </p>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-6 rounded-2xl border border-primary/30 bg-card p-6 md:p-8">
+              <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                What your audit prescribes
+              </div>
+              <p className="mt-3 max-w-3xl text-lg font-medium leading-snug md:text-xl">
+                {audit.prescribedOutcome}
+              </p>
+              <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
+                The point of the morning: {audit.improvement}.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* The pain */}
       <section className="py-16 md:py-24">
         <div className="public-container px-6">
@@ -123,23 +168,63 @@ export default function BuildWorkshopPage() {
           <h2 className="public-heading max-w-3xl">
             {w.sections.painHeadline}
           </h2>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {w.pains.map((p) => (
-              <div
-                key={p.title}
-                className="rounded-2xl border border-white/10 bg-card p-6"
-              >
-                <h3 className="text-base font-semibold leading-snug tracking-tight md:text-lg">
-                  {p.title}
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  {p.body}
-                </p>
-              </div>
-            ))}
-          </div>
+          {tenPains.length > 0 ? (
+            <ol className="mt-10 grid gap-4 md:grid-cols-2">
+              {tenPains.map((p, i) => (
+                <li
+                  key={p.id}
+                  className="rounded-2xl border border-white/10 bg-card p-6"
+                >
+                  <div className="text-xs uppercase tracking-[0.18em] text-primary">
+                    {String(i + 1).padStart(2, "0")}
+                  </div>
+                  <h3 className="mt-2 text-base font-semibold leading-snug tracking-tight md:text-lg">
+                    {p.pain}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                    You leave with {p.fix}.
+                  </p>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {w.pains.map((p) => (
+                <div
+                  key={p.title}
+                  className="rounded-2xl border border-white/10 bg-card p-6"
+                >
+                  <h3 className="text-base font-semibold leading-snug tracking-tight md:text-lg">
+                    {p.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                    {p.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
+
+      {/* The guarantee */}
+      {audit && (
+        <section className="border-t border-white/5 py-16 md:py-24">
+          <div className="public-container px-6">
+            <div className="rounded-2xl border border-primary/30 bg-card p-6 md:p-8">
+              <div className="mb-4 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-primary md:text-sm">
+                <ShieldCheck className="size-4" /> The guarantee
+              </div>
+              <h2 className="public-heading max-w-3xl">
+                {WORKSHOP_GUARANTEE.headline}
+              </h2>
+              <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
+                {WORKSHOP_GUARANTEE.body}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* What you walk out with */}
       <section className="border-t border-white/5 bg-white/[0.02] py-16 md:py-24">
