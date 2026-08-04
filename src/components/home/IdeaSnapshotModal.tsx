@@ -16,6 +16,7 @@ import {
   Compass,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import type { CatalogWorkshop } from "@/lib/workshop-catalog";
 
 type Signal = { label: string; value: string; note: string };
 
@@ -88,7 +89,7 @@ const SIGNAL_ICONS = [Users, TrendingUp, CalendarClock];
  * inside a fixed three-part frame (pinned header, single scroller, sticky
  * action bar) so the CTA can never scroll off screen.
  */
-export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
+export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [streaming, setStreaming] = useState(false);
@@ -96,7 +97,7 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
 
   useEffect(() => {
     if (!open || !idea) return;
-    const key = idea.trim().toLowerCase();
+    const key = `${workshop.slug}::${idea.trim().toLowerCase()}`;
 
     const cached = cache.get(key);
     if (cached) {
@@ -126,7 +127,7 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
             apikey: anon,
             Authorization: `Bearer ${anon}`,
           },
-          body: JSON.stringify({ idea }),
+          body: JSON.stringify({ idea, workshopSlug: workshop.slug, lens: workshop.lens }),
           signal: controller.signal,
         });
 
@@ -183,7 +184,7 @@ export function IdeaSnapshotModal({ idea, open, onOpenChange }: Props) {
       cancelled = true;
       controller.abort();
     };
-  }, [open, idea]);
+  }, [open, idea, workshop.slug, workshop.lens]);
 
   const label = snapshot?.idea_label || idea;
   const registerTo = `/register?idea=${encodeURIComponent(idea)}`;
