@@ -438,7 +438,7 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                 </>
               )}
 
-              {snapshot?.signals?.length ? (
+              {isFoundation && snapshot?.signals?.length ? (
                 <div className="mt-6 grid gap-3 sm:grid-cols-3">
                   {snapshot.signals.slice(0, 3).map((signal, i) => {
                     const Icon = SIGNAL_ICONS[i % SIGNAL_ICONS.length];
@@ -461,7 +461,7 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                 </div>
               ) : null}
 
-              {snapshot?.first_moves?.length ? (
+              {isFoundation && snapshot?.first_moves?.length ? (
                 <div className="mt-8">
                   <h3 className="text-sm uppercase tracking-[0.16em] hero-faint">
                     What it takes to start
