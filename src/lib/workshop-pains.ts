@@ -706,82 +706,93 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "no-entity",
       pain: "Running real money through your personal name",
       fix: "the entity chosen and filed, with you watching",
+      question: "I'm running real money through my own name.",
       imagePrompt: scenePrompt(
-        "A personal checkbook and a business invoice side by side on a kitchen table, warm evening lamp",
+        "A personal checkbook and a printed business invoice side by side on a kitchen table under a warm evening lamp",
       ),
     },
     {
       id: "no-contract",
       pain: "Working off a text message and a handshake",
       fix: "a contract suite you can send and sign this week",
+      question: "I'm working off a handshake and a text message.",
       imagePrompt: scenePrompt(
-        "Two people shaking hands across a table with no paperwork between them, warm dim light",
+        "Two people shaking hands across a bare table with no paperwork between them, warm dim light",
       ),
     },
     {
       id: "mixed-money",
       pain: "Business and personal money in the same account",
       fix: "a business account open and the split done",
+      question: "My business and personal money are the same account.",
       imagePrompt: scenePrompt(
-        "A single debit card on a dark table beside two receipt piles, warm lamp",
+        "A single plain debit card on a dark table between two separate piles of paper receipts, warm lamp",
       ),
     },
     {
       id: "no-books",
       pain: "A shoebox where the bookkeeping should be",
       fix: "books started, categorized, and current",
+      question: "My bookkeeping is a box full of receipts.",
       imagePrompt: scenePrompt(
-        "A box overflowing with crumpled receipts on a dim desk beside a closed laptop",
+        "A shoebox overflowing with crumpled receipts on a dim desk beside a closed laptop, warm lamp",
       ),
     },
     {
       id: "tax-surprise",
       pain: "Finding out what you owe in April",
       fix: "a set-aside rule and an account that holds it",
+      question: "I find out what I owe in taxes way too late.",
       imagePrompt: scenePrompt(
-        "An unopened official envelope on a kitchen counter in early morning light",
+        "A single unopened official envelope on a kitchen counter in pale early morning light",
       ),
     },
     {
       id: "no-insurance",
       pain: "One bad day away from losing everything personal",
       fix: "the coverage identified and the quotes in hand",
+      question: "One bad day could take everything I own.",
       imagePrompt: scenePrompt(
-        "A house key and a set of work keys on a dark table under warm lamp light",
+        "A house key and a heavy ring of work keys lying together on a dark table under warm lamp light",
       ),
     },
     {
       id: "getting-paid-late",
       pain: "Chasing invoices for sixty days",
       fix: "payment terms and a chase sequence that runs itself",
+      question: "I'm chasing invoices for months.",
       imagePrompt: scenePrompt(
-        "A phone showing a call log of unanswered outgoing calls, dim office, warm light",
+        "A hand holding a phone in a dim office showing a long list of outgoing call entries, warm light",
       ),
     },
     {
       id: "no-pricing-math",
       pain: "Prices set on feel, with no idea of the margin",
       fix: "the real unit math done on your actual numbers",
+      question: "I priced on feel and don't know my margin.",
       imagePrompt: scenePrompt(
-        "Handwritten arithmetic on a legal pad beside a calculator, warm desk lamp, late night",
+        "Handwritten arithmetic covering a yellow legal pad beside a calculator late at night, a hand holding the pen",
       ),
     },
     {
       id: "licenses",
       pain: "Not knowing which license or permit you're missing",
       fix: "your specific list, checked against your county",
+      question: "I don't know which permits I'm missing.",
       imagePrompt: scenePrompt(
-        "A clipboard of unfilled official forms on a dim counter, warm overhead light",
+        "A clipboard of blank unfilled official forms on a dim counter under a warm overhead light, a pen beside it",
       ),
     },
     {
       id: "no-visibility",
       pain: "Guessing whether the month was actually profitable",
       fix: "one number you can check on your phone",
+      question: "I'm guessing whether this month made money.",
       imagePrompt: scenePrompt(
-        "A phone face-up showing a dim screen beside a closed ledger on a dark desk",
+        "A phone face-up with a dim blank screen beside a closed hardbound ledger on a dark desk at night",
       ),
     },
+
   ],
 };
 
