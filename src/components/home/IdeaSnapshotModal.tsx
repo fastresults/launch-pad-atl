@@ -14,9 +14,12 @@ import {
   Globe,
   Map as MapIcon,
   Compass,
+  Target,
+  Hammer,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { CatalogWorkshop } from "@/lib/workshop-catalog";
+import { FOUNDATION_SLUG, type CatalogWorkshop } from "@/lib/workshop-catalog";
+import { WaitlistForm } from "@/components/home/workshop/WaitlistForm";
 
 type Signal = { label: string; value: string; note: string };
 
@@ -132,7 +135,12 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
             apikey: anon,
             Authorization: `Bearer ${anon}`,
           },
-          body: JSON.stringify({ idea, workshopSlug: workshop.slug, lens: workshop.lens }),
+          body: JSON.stringify({
+            idea,
+            workshopSlug: workshop.slug,
+            lens: workshop.lens,
+            artifacts: workshop.walkOuts,
+          }),
           signal: controller.signal,
         });
 
