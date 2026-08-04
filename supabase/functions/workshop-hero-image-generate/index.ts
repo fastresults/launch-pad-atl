@@ -43,13 +43,16 @@ Deno.serve(async (req) => {
     const subject: string = (body.subject ?? "").trim();
     const screens: boolean = Boolean(body.screens);
     const model: string = body.model || DEFAULT_MODEL;
-    if (!workshopSlug || !painId || !subject) {
-      return json({ error: "Missing workshopSlug/painId/subject" }, 400);
+    // An admin can hand over the whole prompt instead of just the subject.
+    const promptOverride: string = (body.prompt ?? "").trim();
+    if (!workshopSlug || !painId || (!subject && !promptOverride)) {
+      return json({ error: "Missing workshopSlug/painId and subject or prompt" }, 400);
     }
 
-    // The prompt is composed server-side from the same recipe the shipped set
-    // used, so an operator only ever edits the subject line.
-    const prompt = scenePrompt(subject, { screens });
+    // Without an override the prompt is composed server-side from the same
+    // recipe the shipped set used, so editing the subject alone stays on-brand.
+    const prompt = promptOverride || scenePrompt(subject, { screens });
+
 
     // ---- generate ----------------------------------------------------------
     const upstreamBody = model.startsWith("google/")
