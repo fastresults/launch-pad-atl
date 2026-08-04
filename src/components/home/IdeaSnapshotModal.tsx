@@ -500,34 +500,62 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
               ) : null}
 
               {/* The full invitation, as the natural end of the read */}
-              <div className="mt-8 rounded-3xl border border-[rgba(76,140,255,0.32)] bg-[rgba(76,140,255,0.08)] p-6">
-                <p className="text-lg font-medium" style={{ color: "var(--hero-fg)" }}>
-                  Don't start it alone. Build the first real pieces of {label} with us.
-                </p>
-                <p className="mt-2 text-[15px] hero-sub">
-                  One focused morning at the IGNITE Center at Greater Atlanta Christian School —
-                  Thursday, August 20, 2026. You don't leave with notes. You leave with a live page
-                  people can visit, a priced offer, and your first outreach already sent.
-                </p>
-                <ul className="mt-4 space-y-2">
-                  {[
-                    "A live page for your startup, written and published with you",
-                    "A priced offer you can say out loud without flinching",
-                    "Your first real outreach sent before you go home",
-                  ].map((item) => (
-                    <li key={item} className="flex gap-3 text-[15px] hero-sub">
-                      <Check className="mt-1 h-4 w-4 shrink-0 hero-accent" aria-hidden="true" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-4 text-sm hero-faint">
-                  Seats are capped so everyone gets built with, not talked at. $197.
-                </p>
-                <div className="mt-5">
-                  <ActionRow registerTo={registerTo} onLearnMore={learnMore} onClose={close} />
+              {isFoundation ? (
+                <div className="mt-8 rounded-3xl border border-[rgba(76,140,255,0.32)] bg-[rgba(76,140,255,0.08)] p-6">
+                  <p className="text-lg font-medium" style={{ color: "var(--hero-fg)" }}>
+                    Don't start it alone. Build the first real pieces of {label} with us.
+                  </p>
+                  <p className="mt-2 text-[15px] hero-sub">
+                    One focused morning at the IGNITE Center at Greater Atlanta Christian School —
+                    Thursday, August 20, 2026. You don't leave with notes. You leave with a live page
+                    people can visit, a priced offer, and your first outreach already sent.
+                  </p>
+                  <ul className="mt-4 space-y-2">
+                    {[
+                      "A live page for your startup, written and published with you",
+                      "A priced offer you can say out loud without flinching",
+                      "Your first real outreach sent before you go home",
+                    ].map((item) => (
+                      <li key={item} className="flex gap-3 text-[15px] hero-sub">
+                        <Check className="mt-1 h-4 w-4 shrink-0 hero-accent" aria-hidden="true" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-4 text-sm hero-faint">
+                    Seats are capped so everyone gets built with, not talked at. $197.
+                  </p>
+                  <div className="mt-5">
+                    <ActionRow registerTo={registerTo} onLearnMore={learnMore} onClose={close} />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="mt-8 rounded-3xl border border-[rgba(76,140,255,0.32)] bg-[rgba(76,140,255,0.08)] p-6">
+                  <p className="text-lg font-medium" style={{ color: "var(--hero-fg)" }}>
+                    We build this with you in one morning — {workshop.title} opens{" "}
+                    {workshop.opensLabel}.
+                  </p>
+                  <p className="mt-2 text-[15px] hero-sub">
+                    Put your email down and you get first access when seats open at the IGNITE Center
+                    at Greater Atlanta Christian School. {workshop.priceLabel}, capped room, built
+                    with you — not talked at.
+                  </p>
+                  <div className="mt-4">
+                    <WaitlistForm
+                      slug={workshop.slug}
+                      label="Get first access"
+                      doneMessage={`You're first in line for ${workshop.chipLabel}.`}
+                    />
+                  </div>
+                  <p className="mt-5 text-sm hero-sub">
+                    Don't want to wait? The Foundation Workshop is open now — Thursday, August 20,
+                    2026 — and it's where most founders start.
+                  </p>
+                  <div className="mt-4">
+                    <ActionRow registerTo={registerTo} onLearnMore={learnMore} onClose={close} />
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -536,8 +564,20 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
         <div className="shrink-0 border-t border-[rgba(244,246,255,0.12)] bg-[rgba(5,7,15,0.92)] px-6 py-4 sm:px-8">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm hero-sub">
-              <span style={{ color: "var(--hero-fg)" }}>Thursday, Aug 20</span>
-              <span className="hero-faint"> · IGNITE Center · $197</span>
+              {isFoundation ? (
+                <>
+                  <span style={{ color: "var(--hero-fg)" }}>Thursday, Aug 20</span>
+                  <span className="hero-faint"> · IGNITE Center · $197</span>
+                </>
+              ) : (
+                <>
+                  <span style={{ color: "var(--hero-fg)" }}>{workshop.chipLabel}</span>
+                  <span className="hero-faint">
+                    {" "}
+                    · opens {workshop.opensLabel} · {workshop.priceLabel}
+                  </span>
+                </>
+              )}
             </p>
             <ActionRow
               compact
@@ -547,6 +587,7 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
             />
           </div>
         </div>
+
 
       </DialogContent>
     </Dialog>
