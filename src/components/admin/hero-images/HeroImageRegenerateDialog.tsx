@@ -47,7 +47,7 @@ export function HeroImageRegenerateDialog({ workshopSlug, entry, onClose, onSave
 
   useEffect(() => {
     if (!entry) return;
-    const source = entry.published?.prompt ?? entry.prompt;
+    const source = entry.promptOverride ?? entry.published?.prompt ?? entry.prompt;
     setModel(entry.published?.model ?? HERO_IMAGE_MODELS[0].id);
     setFullPrompt(source);
     setPreview(null);

@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import type { HeroImageRow } from "@/lib/workshop-hero-images.functions";
 import type { HeroPainEntry } from "@/routes/_authenticated/_admin/admin.hero-images";
 
 type Props = {
   entry: HeroPainEntry;
-  onRegenerate: () => void;
+  onRegenerate: (prompt: string) => void;
   onPublish: (row: HeroImageRow) => void;
   onRevert: (row: HeroImageRow) => void;
   onDelete: (row: HeroImageRow) => void;
@@ -28,7 +29,11 @@ export function HeroImageCard({
 }: Props) {
   const [showPrompt, setShowPrompt] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const sourcePrompt = entry.published?.prompt ?? entry.prompt;
+  const [prompt, setPrompt] = useState(sourcePrompt);
   const live = entry.published?.image_url ?? entry.bundled;
+
+  useEffect(() => setPrompt(sourcePrompt), [sourcePrompt]);
 
   return (
     <Card className="flex flex-col overflow-hidden">
@@ -59,21 +64,27 @@ export function HeroImageCard({
           )}
         </div>
 
-        <button
+        <Button
           type="button"
-          className="self-start text-xs underline text-muted-foreground"
+          variant="link"
+          size="sm"
+          className="h-auto self-start p-0 text-xs text-muted-foreground"
           onClick={() => setShowPrompt((v) => !v)}
         >
           {showPrompt ? "Hide prompt" : "Show prompt"}
-        </button>
+        </Button>
         {showPrompt && (
-          <p className="rounded bg-muted p-2 text-xs leading-relaxed text-muted-foreground">
-            {entry.published?.prompt ?? entry.prompt}
-          </p>
+          <Textarea
+            aria-label={`Prompt for ${entry.pain}`}
+            rows={12}
+            value={prompt}
+            className="text-sm leading-relaxed"
+            onChange={(event) => setPrompt(event.target.value)}
+          />
         )}
 
         <div className="mt-auto flex flex-wrap gap-2">
-          <Button size="sm" onClick={onRegenerate}>
+          <Button size="sm" onClick={() => onRegenerate(prompt)} disabled={!prompt.trim()}>
             Regenerate
           </Button>
           <Button size="sm" variant="outline" onClick={onUpload}>

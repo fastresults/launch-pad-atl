@@ -39,6 +39,7 @@ export type HeroPainEntry = {
   bundled: string | null;
   published: HeroImageRow | null;
   history: HeroImageRow[];
+  promptOverride?: string;
 };
 
 export default function AdminHeroImagesPage() {
@@ -178,7 +179,7 @@ export default function AdminHeroImagesPage() {
             <HeroImageCard
               key={entry.painId}
               entry={entry}
-              onRegenerate={() => setEditing(entry)}
+              onRegenerate={(prompt) => setEditing({ ...entry, promptOverride: prompt })}
               onPublish={(row) => publishM.mutate(row)}
               onRevert={(row) => revertM.mutate(row)}
               onDelete={(row) => deleteM.mutate(row)}
