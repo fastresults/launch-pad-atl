@@ -72,6 +72,7 @@ const AdminHub = lazy(() => import("@/routes/_authenticated/_admin/admin.hub"));
 const AdminMedia = lazy(() => import("@/routes/_authenticated/_admin/admin.media"));
 const AdminTestimonials = lazy(() => import("@/routes/_authenticated/_admin/admin.testimonials"));
 const AdminVideoWall = lazy(() => import("@/routes/_authenticated/_admin/admin.video-wall"));
+const AdminHeroImages = lazy(() => import("@/routes/_authenticated/_admin/admin.hero-images"));
 const NotFoundPage = lazy(() => import("@/routes/not-found"));
 const AdminCohorts = lazy(() => import("@/routes/_authenticated/_admin/admin.cohorts"));
 
