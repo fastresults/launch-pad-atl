@@ -41,6 +41,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "cheap-first-impression",
       pain: "A first impression that reads cheap",
       fix: "a brand that earns the higher number in three seconds",
+      question: "People decide I'm the cheap option before I speak.",
       imagePrompt: scenePrompt(
         "A founder holding two printed business cards side by side under a desk lamp, one visibly cheaper than the other, deciding",
       ),
@@ -49,6 +50,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "cant-raise-prices",
       pain: "Quoting low because the brand can't carry more",
       fix: "the visual authority to quote thirty percent higher without flinching",
+      question: "I lower my price every time I send a quote.",
       imagePrompt: scenePrompt(
         "A founder's hand hovering over a printed quote sheet, pen hesitating above the price line, late evening kitchen table",
       ),
@@ -57,6 +59,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "logo-picked-too-fast",
       pain: "A logo picked in an afternoon you already regret",
       fix: "three logo directions with the buyer reasoning behind each",
+      question: "I picked my logo in an afternoon and I regret it.",
       imagePrompt: scenePrompt(
         "Crumpled logo printouts scattered across a dim studio desk, one survivor pinned to a corkboard",
       ),
@@ -65,6 +68,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "everything-looks-different",
       pain: "Every asset looking like a different company made it",
       fix: "one written system a freelancer or an AI prompt can follow",
+      question: "Everything I make looks like a different company.",
       imagePrompt: scenePrompt(
         "A wall of mismatched printed marketing pieces taped up in a dark studio, a founder standing back looking at the inconsistency",
       ),
@@ -73,6 +77,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "no-words-for-it",
       pain: "Not being able to say what you stand for out loud",
       fix: "one sentence you can say to a stranger and be understood",
+      question: "I can't explain what I do in one sentence.",
       imagePrompt: scenePrompt(
         "A founder mid-sentence at a coffee shop table across from one listener, hands open, searching for the right words",
       ),
@@ -81,6 +86,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "invisible-next-to-competitors",
       pain: "Sitting on the shelf next to competitors and disappearing",
       fix: "a position that makes the comparison stop",
+      question: "Next to my competitors I just disappear.",
       imagePrompt: scenePrompt(
         "A single product standing among identical unbranded competitors on a dim retail shelf, one warm spotlight",
       ),
@@ -89,6 +95,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "ai-slop-assets",
       pain: "AI output that drifts a little further off-brand every week",
       fix: "a voice guide your prompts inherit automatically",
+      question: "Everything AI makes me is almost right, never right.",
       imagePrompt: scenePrompt(
         "A designer at a large monitor at night reviewing a grid of near-identical generated image variations, all subtly wrong",
       ),
@@ -97,6 +104,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "designer-keeps-asking",
       pain: "Answering the same designer question for the fifth time",
       fix: "usage rules tight enough to hand off and walk away",
+      question: "My designer asks me the same question every week.",
       imagePrompt: scenePrompt(
         "A phone face-up on a desk showing an unanswered message thread beside an open laptop, late night, warm lamp",
       ),
@@ -105,6 +113,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "rebrand-bill-coming",
       pain: "The rebrand invoice waiting for you in month thirteen",
       fix: "the system built right the first time",
+      question: "Am I going to have to pay to redo all of this?",
       imagePrompt: scenePrompt(
         "An invoice envelope unopened on a cluttered desk beside a laptop, warm lamp, early morning",
       ),
@@ -113,10 +122,12 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "no-color-typography",
       pain: "Picking colors and type by whatever felt nice that day",
       fix: "a palette and type system with rules behind every choice",
+      question: "I picked my colors because they looked nice that day.",
       imagePrompt: scenePrompt(
         "Printed color swatch strips and type specimens fanned across a dark table, hands sorting them into two piles",
       ),
     },
+
   ],
 
   /* ─────────── WEBSITE THAT CONVERTS ─────────── */
