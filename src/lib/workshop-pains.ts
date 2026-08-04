@@ -59,7 +59,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a brand that earns the higher number in three seconds",
       question: "People decide I'm the cheap option before I speak.",
       imagePrompt: scenePrompt(
-        "A founder holding two printed business cards side by side under a desk lamp, one visibly cheaper than the other, deciding",
+        "A woman in her forties holding two printed business cards side by side under a desk lamp, one visibly cheaper than the other, deciding",
       ),
     },
     {
@@ -68,7 +68,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "the visual authority to quote thirty percent higher without flinching",
       question: "I lower my price every time I send a quote.",
       imagePrompt: scenePrompt(
-        "A founder's hand hovering over a printed quote sheet, pen hesitating above the price line, late evening kitchen table",
+        "A hand hovering over a printed quote sheet, pen hesitating above the price line, late evening kitchen table",
       ),
     },
     {
@@ -77,7 +77,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "three logo directions with the buyer reasoning behind each",
       question: "I picked my logo in an afternoon and I regret it.",
       imagePrompt: scenePrompt(
-        "Crumpled logo printouts scattered across a dim studio desk, one survivor pinned to a corkboard",
+        "Crumpled abstract mark printouts scattered across a dim studio desk, one survivor pinned to a corkboard",
       ),
     },
     {
@@ -86,7 +86,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "one written system a freelancer or an AI prompt can follow",
       question: "Everything I make looks like a different company.",
       imagePrompt: scenePrompt(
-        "A wall of mismatched printed marketing pieces taped up in a dark studio, a founder standing back looking at the inconsistency",
+        "A man in his thirties standing back in a dark studio looking at a wall of mismatched printed marketing pieces taped up in clashing colors",
       ),
     },
     {
@@ -95,7 +95,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "one sentence you can say to a stranger and be understood",
       question: "I can't explain what I do in one sentence.",
       imagePrompt: scenePrompt(
-        "A founder mid-sentence at a coffee shop table across from one listener, hands open, searching for the right words",
+        "A woman in her thirties mid-sentence at a coffee shop table across from one listener, hands open, searching for the right words",
       ),
     },
     {
@@ -104,7 +104,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a position that makes the comparison stop",
       question: "Next to my competitors I just disappear.",
       imagePrompt: scenePrompt(
-        "A single product standing among identical unbranded competitors on a dim retail shelf, one warm spotlight",
+        "A single plain product standing among identical unbranded competitors on a dim retail shelf, one warm spotlight",
       ),
     },
     {
@@ -113,7 +113,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a voice guide your prompts inherit automatically",
       question: "Everything AI makes me is almost right, never right.",
       imagePrompt: scenePrompt(
-        "A designer at a large monitor at night reviewing a grid of near-identical generated image variations, all subtly wrong",
+        "A man in his forties at a large monitor at night, the screen filled with a four-by-four grid of near-identical generated image thumbnails in mismatched colors, each one subtly wrong, a cursor arrow hovering over one tile",
+        { screens: true },
       ),
     },
     {
@@ -122,7 +123,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "usage rules tight enough to hand off and walk away",
       question: "My designer asks me the same question every week.",
       imagePrompt: scenePrompt(
-        "A phone face-up on a desk showing an unanswered message thread beside an open laptop, late night, warm lamp",
+        "A phone face-up on a desk showing a messaging thread of stacked chat bubbles, the last bubble unanswered, beside an open laptop, late night, warm lamp",
+        { screens: true },
       ),
     },
     {
@@ -131,7 +133,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "the system built right the first time",
       question: "Am I going to have to pay to redo all of this?",
       imagePrompt: scenePrompt(
-        "An invoice envelope unopened on a cluttered desk beside a laptop, warm lamp, early morning",
+        "An invoice envelope unopened on a cluttered desk beside a closed laptop, warm lamp, early morning",
       ),
     },
     {
@@ -143,6 +145,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
         "Printed color swatch strips and type specimens fanned across a dark table, hands sorting them into two piles",
       ),
     },
+
 
   ],
 
