@@ -359,7 +359,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "every lead landing in one system automatically",
       question: "My leads sit in my inbox until they go cold.",
       imagePrompt: scenePrompt(
-        "A founder's silhouette leaning back with hands behind their head in a dark room, one laptop glowing on the desk in front of them",
+        "A woman in her forties leaning back with her hands behind her head in a dark room, the laptop in front of her showing an inbox with a long column of unread message rows stacking down the screen",
+        { screens: true },
       ),
     },
     {
@@ -377,7 +378,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "one clean list you actually own",
       question: "My contacts are scattered across three apps.",
       imagePrompt: scenePrompt(
-        "Three phones and an open laptop on a dim desk, each faintly glowing, a founder behind them pinching the bridge of their nose",
+        "Three phones and an open laptop on a dim desk, each screen showing a different contact list of stacked rows with small circular avatars, a man in his thirties behind them pinching the bridge of his nose",
+        { screens: true },
       ),
     },
     {
@@ -395,7 +397,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "your sending domain set up right, verified in the room",
       question: "I think my emails are landing in spam.",
       imagePrompt: scenePrompt(
-        "A hand loosely holding a phone in a dark room, the blank screen glow lighting the fingers, nothing arriving",
+        "A man in his fifties in a dark room holding his phone low, the screen showing an inbox list with nothing new in it and a junk folder row highlighted, screen glow on his face",
+        { screens: true },
       ),
     },
     {
@@ -422,7 +425,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "one dashboard that tells you what worked",
       question: "I have no idea which email actually worked.",
       imagePrompt: scenePrompt(
-        "A founder squinting at a laptop while holding up a printed spreadsheet beside it, neither one helping, warm lamp",
+        "A woman in her thirties squinting at a laptop showing a simple analytics chart with one flat line and no spike, holding a printed spreadsheet up beside it, neither one helping, warm lamp",
+        { screens: true },
       ),
     },
     {
@@ -440,9 +444,11 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "the form wired straight through to a reply and a task",
       question: "Someone fills out my form and nothing happens.",
       imagePrompt: scenePrompt(
-        "A phone face-up on an otherwise empty desk at night, one notification lighting the surface around it",
+        "A phone face-up on an otherwise empty desk at night, the screen showing a single form-submission notification card and an empty list below it",
+        { screens: true },
       ),
     },
+
 
   ],
 
