@@ -25,20 +25,22 @@ export function CinematicHero() {
   // Foundation rotates the founder business library ("Now building: Bakery").
   // Every other workshop rotates its own ten pain images ("Now fixing: …"), and
   // falls back to the founder set until those images exist.
-  const scenes = useMemo(() => {
-    if (isFoundation) return shuffleScenesForVisit(founderScenes);
-    const painScenes = getWorkshopScenes(workshop.slug);
-    return painScenes
-      ? shuffleWorkshopScenes(painScenes)
-      : shuffleScenesForVisit(founderScenes);
+  const painScenes = isFoundation ? null : getWorkshopScenes(workshop.slug);
+  const isPainRotation = painScenes !== null;
+
+  const scenes = useMemo<HeroScene[]>(() => {
+    if (painScenes) {
+      return shuffleWorkshopScenes(painScenes).map((scene) => ({
+        ...scene,
+        phrase: scene.label,
+      }));
+    }
+    return shuffleScenesForVisit(founderScenes);
+    // The workshop slug is what actually changes the set; painScenes is derived.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFoundation, workshop.slug]);
 
-  const isPainRotation = !isFoundation && scenes.length > 0 && !("phrase" in scenes[0]!);
-
-  const phrases = useMemo(
-    () => scenes.map((scene) => ("phrase" in scene ? scene.phrase : scene.label)),
-    [scenes],
-  );
+  const phrases = useMemo(() => scenes.map((scene) => scene.phrase), [scenes]);
   const { typed, index } = useSceneCycle(phrases, !paused);
 
   // Non-foundation workshops ghost-type their own examples instead of the
