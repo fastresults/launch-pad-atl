@@ -13,7 +13,10 @@ import { FOUNDATION_SLUG } from "@/lib/workshop-catalog";
  * Full-viewport cinematic hero: photographic founder scenes cross-fading with a
  * slow drift, atmospheric haze, and a glass prompt in the lower third. The
  * workshop rail under the prompt re-tunes the question the hero asks.
- */
+
+/** Everything the hero needs from a scene, whatever library it came from. */
+type HeroScene = { id: string; image: string; label: string; alt: string; phrase: string };
+
 export function CinematicHero() {
   const [paused, setPaused] = useState(false);
   const takeOver = useCallback(() => setPaused(true), []);
