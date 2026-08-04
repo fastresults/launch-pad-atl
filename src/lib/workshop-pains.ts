@@ -157,7 +157,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a page built around one action, and that action working",
       question: "My site is up and nobody ever books.",
       imagePrompt: scenePrompt(
-        "A founder alone at a desk late at night, head in one hand, staring at a laptop, cold coffee beside them, empty dark room",
+        "A man in his forties alone at a desk late at night, head in one hand, staring at a laptop showing a simple website page with a prominent button and an entirely empty booking calendar grid beneath it, cold coffee beside him, empty dark room",
+        { screens: true },
       ),
     },
     {
@@ -175,7 +176,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "the mobile version built first, in the room",
       question: "On a phone my site is a mess.",
       imagePrompt: scenePrompt(
-        "A hand gripping a phone inside a dim parked car at night, screen glow on the fingers, rain on the glass",
+        "A woman in her thirties in a dim parked car at night holding up her phone, the screen showing a broken website layout with overlapping blocks running off the edge and a squashed image, rain on the glass",
+        { screens: true },
       ),
     },
     {
@@ -184,7 +186,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a page that opens before they change their mind",
       question: "My pages load so slow people give up.",
       imagePrompt: scenePrompt(
-        "A thumb hovering over a phone screen mid-load in a dim living room, impatient posture, warm lamp behind",
+        "A thumb hovering over a phone showing a half-rendered page — grey placeholder rectangles where images should be and a single spinning loader — dim living room, impatient posture, warm lamp behind",
+        { screens: true },
       ),
     },
     {
@@ -193,7 +196,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "one written and tested against a real stranger",
       question: "I've rewritten my headline twenty times.",
       imagePrompt: scenePrompt(
-        "Dozens of scratched-out sticky notes stuck around the bezel of a dark monitor, one lone note at the center, warm lamp raking across",
+        "Dozens of scratched-out sticky notes stuck around the bezel of a monitor showing a plain web page with one empty banner block at the top, one lone note at the center, warm lamp raking across",
+        { screens: true },
       ),
     },
     {
@@ -220,7 +224,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a proof section built from what you already have",
       question: "Nothing on my page proves anyone has paid me.",
       imagePrompt: scenePrompt(
-        "A founder sitting on a dim kitchen floor at night scrolling back through old messages on a phone, face lit by the screen",
+        "A man in his thirties sitting on a dim kitchen floor at night scrolling far back through an old message thread on his phone, stacked chat bubbles filling the screen, face lit by it",
+        { screens: true },
       ),
     },
     {
@@ -229,7 +234,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "the keys, and the confidence to edit it yourself",
       question: "I need to pay someone to change one word.",
       imagePrompt: scenePrompt(
-        "A founder leaning back from an open laptop with both hands lifted off the keyboard, stuck, blank glowing screen, evening home office",
+        "A woman in her forties leaning back from a laptop with both hands lifted off the keyboard, stuck, the screen showing a website editor with a sidebar of controls and one highlighted text block, evening home office",
+        { screens: true },
       ),
     },
     {
@@ -238,9 +244,11 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "the form wired to your inbox and a reply that goes out",
       question: "Someone fills out my form and then nothing happens.",
       imagePrompt: scenePrompt(
-        "A phone lying face-up on a nightstand in a pitch-dark bedroom, screen just lit with a single notification",
+        "A phone lying face-up on a nightstand in a pitch-dark bedroom, screen just lit with a single notification banner at the top and nothing else",
+        { screens: true },
       ),
     },
+
 
   ],
 
