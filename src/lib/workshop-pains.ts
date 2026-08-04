@@ -421,82 +421,93 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "posting-into-void",
       pain: "Posting into a void",
       fix: "a profile and a first post built to be found",
+      question: "I post and nobody ever sees it.",
       imagePrompt: scenePrompt(
-        "A founder holding a phone up in a dim room, face lit by the screen, empty engagement, late evening",
+        "A founder holding a phone up in a dim room late in the evening, face lit only by the screen, expression flat and unrewarded",
       ),
     },
     {
       id: "no-idea-what-to-post",
       pain: "Sitting down to post and having nothing to say",
       fix: "a bank of posts written before you leave",
+      question: "I sit down to post and have nothing to say.",
       imagePrompt: scenePrompt(
-        "A phone lying face up with a blank compose screen glow, hand resting beside it on a dark table",
+        "A phone lying face-up on a dark table with a blank glowing screen, a hand resting motionless beside it",
       ),
     },
     {
       id: "profile-doesnt-sell",
       pain: "A profile that doesn't say what you sell",
       fix: "a bio and link that turn a visit into a booking",
+      question: "My profile doesn't say what I actually sell.",
       imagePrompt: scenePrompt(
-        "A phone held in one hand at a cafe, thumb hovering over a profile screen, warm afternoon window light",
+        "A hand holding a phone at a cafe table, thumb hovering above the screen, warm afternoon window light, dark interior behind",
       ),
     },
     {
       id: "inconsistent",
       pain: "Three posts in a week, then nothing for two months",
       fix: "a rhythm you can hold on your worst week",
+      question: "I post for a week then disappear for two months.",
       imagePrompt: scenePrompt(
-        "A wall calendar with a few marked days and long empty stretches, warm side light",
+        "A wall calendar with a cluster of pen marks in one week and long empty stretches after it, warm raking side light",
       ),
     },
     {
       id: "looks-amateur",
       pain: "Photos and captions that look homemade",
       fix: "a template set that makes every post look intentional",
+      question: "Everything I post looks homemade.",
       imagePrompt: scenePrompt(
-        "A phone on a tripod pointed at an unlit product on a cluttered kitchen counter, no styling",
+        "A phone clamped to a small tripod aimed at an unlit product on a cluttered kitchen counter, no styling",
       ),
     },
     {
       id: "wrong-platform",
       pain: "Working hard on the platform your buyer isn't on",
       fix: "one platform chosen on evidence, the rest dropped",
+      question: "I don't know which platform my buyer is even on.",
       imagePrompt: scenePrompt(
-        "A phone home screen glow with many app icons, thumb hovering undecided, dim room",
+        "A thumb hovering undecided above a phone screen full of blank app tiles in a dim room",
       ),
     },
     {
       id: "no-dms",
       pain: "Comments and DMs that go unanswered for days",
       fix: "a reply routine that takes ten minutes a day",
+      question: "My DMs sit unanswered for days.",
       imagePrompt: scenePrompt(
-        "An unread message badge glowing on a phone left on a nightstand, dark bedroom",
+        "A phone left face-up on a nightstand in a dark bedroom, screen glowing with an unread badge, nobody reaching for it",
       ),
     },
     {
       id: "no-video",
       pain: "Freezing every time the camera turns on",
       fix: "your first video recorded in the room, with help",
+      question: "I freeze the second the camera turns on.",
       imagePrompt: scenePrompt(
-        "A founder facing a phone camera on a tripod in a dim room, mid-hesitation, warm key light",
+        "A founder in front of a phone on a tripod in a dim room, caught mid-hesitation before speaking, warm key light on one side",
       ),
     },
     {
       id: "no-conversion",
       pain: "Followers who never turn into a single customer",
       fix: "a post pattern that ends with an actual ask",
+      question: "I have followers but not one customer.",
       imagePrompt: scenePrompt(
-        "A crowded street at night seen through a shop window, nobody coming in, warm interior glow",
+        "Seen from inside a small shop at night, a busy street of passersby beyond the window and nobody coming in",
       ),
     },
     {
       id: "burnout",
       pain: "Dreading the whole thing enough to quit",
       fix: "a system small enough that you keep doing it",
+      question: "I dread posting enough that I want to quit.",
       imagePrompt: scenePrompt(
-        "A phone placed face-down on a table beside a cold coffee, hands withdrawn, dim morning light",
+        "A phone placed face-down on a table beside a cold half-finished coffee, hands withdrawn, dim grey morning light",
       ),
     },
+
   ],
 
   /* ─────────── CONTENT ENGINE ─────────── */
