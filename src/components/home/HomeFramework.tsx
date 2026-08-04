@@ -55,8 +55,8 @@ export function HomeFramework() {
     <div className="public-surface min-h-screen">
       <SiteHeader />
       <Hero />
-      <WorkshopSampler workshop={workshop} />
       <FounderVideoWall />
+      <WorkshopStack workshop={workshop} />
       <HeroCopy />
       <VideoTestimonials />
       <Framework />
