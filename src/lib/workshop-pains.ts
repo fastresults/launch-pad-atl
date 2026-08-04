@@ -231,82 +231,93 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "wing-the-call",
       pain: "Winging every sales call",
       fix: "one call script you run the same way every time",
+      question: "I wing every sales call and it shows.",
       imagePrompt: scenePrompt(
-        "A founder on a phone call pacing a dim office, free hand gesturing, no notes in sight",
+        "A founder pacing a dim office at night on a phone call, free hand mid-gesture, no notes anywhere",
       ),
     },
     {
       id: "cant-say-price",
       pain: "Flinching when it's time to say the number",
       fix: "a price you can say out loud without apologizing",
+      question: "I freeze when it's time to say my price.",
       imagePrompt: scenePrompt(
-        "A founder mid-conversation across a small table, hand half-raised, caught between words, warm cafe light",
+        "Two people at a small cafe table in low warm light, the founder caught mid-sentence with a hand half-raised, hesitating",
       ),
     },
     {
       id: "ghosted",
       pain: "Getting ghosted after the proposal",
       fix: "a follow-up sequence that runs whether you feel like it or not",
+      question: "They go quiet the second I send the proposal.",
       imagePrompt: scenePrompt(
-        "A laptop screen glow on a face reading an email thread with no reply, late night, empty room",
+        "A founder's face lit only by a laptop screen late at night in an empty room, waiting, flat with disappointment",
       ),
     },
     {
       id: "discounting",
       pain: "Discounting to close and resenting the work",
       fix: "an offer priced so you don't have to",
+      question: "I keep discounting just to get a yes.",
       imagePrompt: scenePrompt(
-        "A pen striking through a number on a printed quote and writing a lower one, desk lamp, night",
+        "Close on a hand striking a pen through a figure on a printed quote and writing a smaller one below, desk lamp at night",
       ),
     },
     {
       id: "no-pipeline",
       pain: "No idea who's actually close to buying",
       fix: "a one-page pipeline you can read in ten seconds",
+      question: "I have no idea who's actually close to buying.",
       imagePrompt: scenePrompt(
-        "Handwritten names on index cards spread across a dark table, hands trying to order them",
+        "Index cards spread in a loose grid across a dark table, two hands mid-sort trying to order them, warm lamp",
       ),
     },
     {
       id: "unqualified",
       pain: "Hour-long calls with people who were never going to buy",
       fix: "three qualifying questions asked before the call is booked",
+      question: "I waste hours on people who never buy.",
       imagePrompt: scenePrompt(
-        "A wall clock and an open laptop on a video call in a dim room, founder slumped, late afternoon",
+        "A founder slumped back in a chair in a dim office during a long video call, wall clock behind, late afternoon light dying",
       ),
     },
     {
       id: "no-proposal",
       pain: "Writing every proposal from scratch at midnight",
       fix: "one proposal you fill in and send in ten minutes",
+      question: "I'm writing proposals from scratch at midnight.",
       imagePrompt: scenePrompt(
-        "A founder typing at a kitchen table at midnight, house dark behind them, single lamp",
+        "A founder typing at a kitchen table at midnight, the house dark behind them, one lamp, papers scattered",
       ),
     },
     {
       id: "objections",
       pain: "Freezing on the same three objections every time",
       fix: "written answers you've already said out loud in the room",
+      question: "The same three objections stop me every time.",
       imagePrompt: scenePrompt(
-        "Two people across a table mid-negotiation, one leaning back with arms crossed, warm low light",
+        "Two people across a table mid-negotiation, one leaning back with arms crossed and skeptical, warm low light",
       ),
     },
     {
       id: "referrals-random",
       pain: "Referrals that only happen by luck",
       fix: "one ask, scripted, that you send after every win",
+      question: "Referrals only happen to me by accident.",
       imagePrompt: scenePrompt(
-        "A handshake at a doorway at dusk, both figures backlit, warm interior light behind",
+        "Two people shaking hands in a doorway at dusk, both backlit by warm interior light, silhouetted",
       ),
     },
     {
       id: "no-close",
       pain: "Ending calls with 'let me send you some info'",
       fix: "a close that asks for the decision",
+      question: "I end every call saying I'll send more info.",
       imagePrompt: scenePrompt(
-        "A phone being set down on a desk after a call, hand still resting on it, dim office, evening",
+        "A phone just set down face-down on a desk after a call, a hand still resting on it, dim office in the evening",
       ),
     },
+
   ],
 
   /* ─────────── EMAIL & CRM AUTOMATION ─────────── */
