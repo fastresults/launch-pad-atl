@@ -43,8 +43,10 @@ function toScene(pain: WorkshopPain, image: string): WorkshopScene {
     image,
     label: pain.pain,
     alt: `${pain.pain} — the workshop fixes it with ${pain.fix}`,
+    question: pain.question,
   };
 }
+
 
 /**
  * The pain-tied hero set for a workshop, or null when its images haven't been
