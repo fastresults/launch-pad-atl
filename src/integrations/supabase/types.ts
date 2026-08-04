@@ -3533,18 +3533,21 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          format: string
           id: string
           workshop_slug: string
         }
         Insert: {
           created_at?: string
           email: string
+          format?: string
           id?: string
           workshop_slug: string
         }
         Update: {
           created_at?: string
           email?: string
+          format?: string
           id?: string
           workshop_slug?: string
         }

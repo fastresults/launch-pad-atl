@@ -7,7 +7,7 @@ import { CinematicHero } from "@/components/home/CinematicHero";
 import { FounderVideoWall } from "@/components/home/FounderVideoWall";
 import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
 import { StageSketch } from "@/components/home/StageSketch";
-import { WorkshopSampler } from "@/components/home/WorkshopSampler";
+import { WorkshopStack } from "@/components/home/workshop/WorkshopStack";
 import { useSelectedWorkshop } from "@/hooks/use-selected-workshop";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import { useEvent } from "@/lib/use-event";
@@ -55,8 +55,8 @@ export function HomeFramework() {
     <div className="public-surface min-h-screen">
       <SiteHeader />
       <Hero />
-      <WorkshopSampler workshop={workshop} />
       <FounderVideoWall />
+      <WorkshopStack workshop={workshop} />
       <HeroCopy />
       <VideoTestimonials />
       <Framework />
