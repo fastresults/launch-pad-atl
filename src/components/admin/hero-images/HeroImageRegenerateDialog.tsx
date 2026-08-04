@@ -226,7 +226,7 @@ export function HeroImageRegenerateDialog({ workshopSlug, entry, onClose, onSave
           <Button variant="ghost" onClick={onClose} disabled={busy}>
             Close
           </Button>
-          <Button variant="outline" onClick={generate} disabled={busy || !subject.trim()}>
+          <Button variant="outline" onClick={generate} disabled={busy || !promptToSend}>
             {busy ? "Working…" : preview ? "Generate again" : "Generate"}
           </Button>
           {preview && (
