@@ -957,6 +957,16 @@
 
 .sl-rail__all:hover { color: oklch(0.99 0.006 260 / 90%); }
 
+@media (min-width: 900px) {
+  .sl-rail__scroller {
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-x: visible;
+    -webkit-mask-image: none;
+            mask-image: none;
+  }
+}
+
 @media (max-width: 640px) {
   .sl-rail { margin-top: 14px; }
   .sl-rail__chip { font-size: 11px; padding: 5px 10px; }
