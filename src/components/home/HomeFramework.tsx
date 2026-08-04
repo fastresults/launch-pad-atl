@@ -9,6 +9,7 @@ import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasSc
 import { StageSketch } from "@/components/home/StageSketch";
 import { WorkshopStack } from "@/components/home/workshop/WorkshopStack";
 import { useSelectedWorkshop } from "@/hooks/use-selected-workshop";
+import { FOUNDATION_SLUG } from "@/lib/workshop-catalog";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import { useEvent } from "@/lib/use-event";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
