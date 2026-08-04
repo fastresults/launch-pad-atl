@@ -3472,6 +3472,54 @@ export type Database = {
         }
         Relationships: []
       }
+      workshop_hero_images: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          image_url: string
+          model: string | null
+          pain_id: string
+          prompt: string
+          screens: boolean
+          source: string
+          status: string
+          storage_path: string
+          subject: string | null
+          workshop_slug: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url: string
+          model?: string | null
+          pain_id: string
+          prompt: string
+          screens?: boolean
+          source?: string
+          status?: string
+          storage_path: string
+          subject?: string | null
+          workshop_slug: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string
+          model?: string | null
+          pain_id?: string
+          prompt?: string
+          screens?: boolean
+          source?: string
+          status?: string
+          storage_path?: string
+          subject?: string | null
+          workshop_slug?: string
+        }
+        Relationships: []
+      }
       workshop_registrations: {
         Row: {
           assigned_tier: string | null
