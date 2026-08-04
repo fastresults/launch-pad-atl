@@ -662,7 +662,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "your three worst repeat tasks running without you",
       question: "I'm still doing all of this by hand.",
       imagePrompt: scenePrompt(
-        "Hands copying figures from a paper form into a laptop late at night, a tall stack of forms waiting beside them, warm lamp",
+        "Hands copying figures from a paper form into a laptop late at night, the laptop screen showing a spreadsheet grid of rows and cells half filled in, a tall stack of forms waiting beside them, warm lamp",
+        { screens: true },
       ),
     },
     {
@@ -671,7 +672,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "prompts wired into the work you actually repeat",
       question: "I use AI like a toy, not like help.",
       imagePrompt: scenePrompt(
-        "An open laptop glowing in a dim room with a hand resting idle on the trackpad, nothing being typed",
+        "An open laptop glowing in a dim room showing a chat assistant interface with one short exchange bubble and an empty input box below, a hand resting idle on the trackpad, nothing being typed",
+        { screens: true },
       ),
     },
     {
@@ -689,7 +691,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "written steps a new hire or an agent can run",
       question: "Every process lives only in my head.",
       imagePrompt: scenePrompt(
-        "A founder alone in a small workshop at night, half-organized shelves around them, one warm work light overhead",
+        "A woman in her forties alone in a small workshop at night, half-organized shelves around her, one warm work light overhead",
       ),
     },
     {
@@ -698,9 +700,10 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "the first task handed off and verified before you leave",
       question: "I'm the only person who can do any of it.",
       imagePrompt: scenePrompt(
-        "One person at a single lit desk in a large dim open-plan office at night, rows of empty desks around them",
+        "A man in his thirties at a single lit desk in a large dim open-plan office at night, rows of empty desks around him",
       ),
     },
+
     {
       id: "bad-output",
       pain: "AI output you have to rewrite anyway",
