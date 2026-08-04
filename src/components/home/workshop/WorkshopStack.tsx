@@ -29,11 +29,13 @@ export function WorkshopStack({ workshop }: { workshop: CatalogWorkshop }) {
       {/* Keyed so the swap cross-fades instead of snapping; scroll stays put. */}
       <div key={workshop.slug} className="animate-in fade-in duration-500">
         <WorkshopCost product={product} />
+        {!isFoundation && <WorkshopAuditSection workshop={workshop} />}
         <WorkshopPains slug={workshop.slug} />
         {!isFoundation && (
           <>
             <WorkshopArtifacts product={product} />
             <WorkshopMorning product={product} />
+            <WorkshopGuarantee workshop={workshop} />
             <WorkshopFormats product={product} />
             <WorkshopFit product={product} />
             <WorkshopObjections product={product} />
