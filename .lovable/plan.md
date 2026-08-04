@@ -48,3 +48,7 @@ Frame the catalog as a sequence, not a menu:
 - Waitlist capture: new `workshop_waitlist` table (email, workshop_slug, created_at) with RLS + grants allowing anonymous insert only; no public read.
 - Styling in `src/public.css` using existing tokens (`--sl-quote-gold` for the live chip). Sheet uses the existing shadcn Sheet/Dialog primitives, restyled to the cinematic surface.
 - Mobile: rail is a scroll-snap row with edge fade; sheet becomes a full-height bottom sheet.
+- Per-workshop hero copy (`heroQuestion`, ghost examples, snapshot lens) lives alongside each entry in `src/lib/build-workshops.ts`, so adding workshop ten is data-only.
+- Selected workshop lives in one `useState` in `CinematicHero.tsx`, synced to `?w={slug}`, and is lifted just high enough in `HomeFramework.tsx` to drive the sampler sections.
+- The `atlanta-viability` edge function takes a new `workshopSlug` parameter and switches its system prompt per lens; response shape is unchanged so `IdeaSnapshotModal.tsx` only needs new headings.
+
