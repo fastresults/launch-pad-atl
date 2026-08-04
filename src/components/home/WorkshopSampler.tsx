@@ -22,7 +22,7 @@ export function WorkshopSampler({ workshop }: Props) {
           className="animate-in fade-in duration-500 grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-8"
         >
           <div className="md:col-span-7">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--sl-quote-gold)]">
               <Icon className="size-4" aria-hidden="true" />
               {workshop.title}
             </div>
@@ -60,13 +60,13 @@ export function WorkshopSampler({ workshop }: Props) {
 
           <div className="md:col-span-5">
             <div className="border border-border bg-card p-7">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--sl-quote-gold)]">
                 What actually gets built
               </p>
               <ul className="mt-4 space-y-3 text-sm text-foreground">
                 {workshop.walkOuts.slice(0, 4).map((d) => (
                   <li key={d} className="flex gap-2.5">
-                    <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+                    <Check className="mt-0.5 size-4 shrink-0 text-[var(--sl-quote-gold)]" aria-hidden="true" />
                     <span>{d}</span>
                   </li>
                 ))}
