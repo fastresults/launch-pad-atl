@@ -611,82 +611,93 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "everything-manual",
       pain: "Doing by hand what should have been automatic a year ago",
       fix: "your three worst repeat tasks running without you",
+      question: "I'm still doing all of this by hand.",
       imagePrompt: scenePrompt(
-        "Hands copying numbers from a paper form into a laptop late at night, warm lamp, stack of forms waiting",
+        "Hands copying figures from a paper form into a laptop late at night, a tall stack of forms waiting beside them, warm lamp",
       ),
     },
     {
       id: "ai-toy",
       pain: "Using AI like a toy instead of a coworker",
       fix: "prompts wired into the work you actually repeat",
+      question: "I use AI like a toy, not like help.",
       imagePrompt: scenePrompt(
-        "A laptop open to a chat interface glow in a dim room, hand idle on the trackpad",
+        "An open laptop glowing in a dim room with a hand resting idle on the trackpad, nothing being typed",
       ),
     },
     {
       id: "too-many-tools",
       pain: "Paying for six tools that don't talk to each other",
       fix: "one stack, connected, with the rest cancelled",
+      question: "I pay for six tools that don't talk to each other.",
       imagePrompt: scenePrompt(
-        "A tangle of charging cables and devices on a dark desk, one hand trying to separate them",
+        "A tangle of charging cables and small devices on a dark desk, one hand pulling a single cable free, warm lamp",
       ),
     },
     {
       id: "no-sop",
       pain: "Every process living only in your head",
       fix: "written steps a new hire or an agent can run",
+      question: "Every process lives only in my head.",
       imagePrompt: scenePrompt(
-        "A founder alone in a workshop at night, everything half-organized around them, warm single light",
+        "A founder alone in a small workshop at night, half-organized shelves around them, one warm work light overhead",
       ),
     },
     {
       id: "cant-delegate",
       pain: "Being the only person who can do any of it",
       fix: "the first task handed off and verified before you leave",
+      question: "I'm the only person who can do any of it.",
       imagePrompt: scenePrompt(
-        "One person working alone in a large dim office space, empty desks around them, warm desk lamp",
+        "One person at a single lit desk in a large dim open-plan office at night, rows of empty desks around them",
       ),
     },
     {
       id: "bad-output",
       pain: "AI output you have to rewrite anyway",
       fix: "prompts with your context loaded so the first draft is usable",
+      question: "I rewrite everything the AI gives me anyway.",
       imagePrompt: scenePrompt(
-        "A printed draft covered in red pen corrections on a dark desk, warm lamp",
+        "A printed draft covered edge to edge in red pen corrections on a dark desk, warm lamp",
       ),
     },
     {
       id: "data-scattered",
       pain: "Your business knowledge scattered across notes and screenshots",
       fix: "one place your AI reads from every time",
+      question: "Everything I know is scattered across notes and screenshots.",
       imagePrompt: scenePrompt(
-        "Papers, sticky notes, and phone screenshots spread across a dim table, hands sorting",
+        "Papers, sticky notes and printed screenshots spread messily across a dim table, two hands mid-sort",
       ),
     },
     {
       id: "no-time-saved",
       pain: "Automating things that didn't cost you time anyway",
       fix: "the tasks ranked by hours before anything gets built",
+      question: "I automate things that never cost me time.",
       imagePrompt: scenePrompt(
-        "A stopwatch and a handwritten list on a dark desk, warm lamp, pen mid-mark",
+        "An analog stopwatch resting on a handwritten list on a dark desk, a pen mid-mark beside it, warm lamp",
       ),
     },
     {
       id: "security-worry",
       pain: "Not knowing what you're safe to put into an AI tool",
       fix: "clear rules on what goes in and what never does",
+      question: "I don't know what's safe to put into an AI tool.",
       imagePrompt: scenePrompt(
-        "A locked filing cabinet drawer half open beside a laptop in a dim office, warm light",
+        "A locked metal filing cabinet drawer half open beside a glowing laptop in a dim office, warm light",
       ),
     },
     {
       id: "no-follow-through",
       pain: "Automations that break and nobody notices",
       fix: "a weekly check that takes five minutes",
+      question: "My automations break and I never notice.",
       imagePrompt: scenePrompt(
-        "A dark server closet with one indicator light out, warm hallway light spilling in",
+        "A dark server closet with rows of indicator lights, one light out in the row, warm hallway light spilling in",
       ),
     },
+
   ],
 
   /* ─────────── LEGAL & FINANCIAL OPS ─────────── */
