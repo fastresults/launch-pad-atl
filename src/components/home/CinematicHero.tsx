@@ -3,10 +3,15 @@ import { ChevronDown } from "lucide-react";
 import { founderScenes, shuffleScenesForVisit } from "@/lib/founder-scenes";
 import { useSceneCycle } from "@/hooks/use-scene-cycle";
 import { IdeaPrompt } from "@/components/home/IdeaPrompt";
+import { WorkshopRail } from "@/components/home/WorkshopRail";
+import { WorkshopGatewaySheet } from "@/components/home/WorkshopGatewaySheet";
+import { useSelectedWorkshop } from "@/hooks/use-selected-workshop";
+import { FOUNDATION_SLUG } from "@/lib/workshop-catalog";
 
 /**
  * Full-viewport cinematic hero: photographic founder scenes cross-fading with a
- * slow drift, atmospheric haze, and a glass prompt in the lower third.
+ * slow drift, atmospheric haze, and a glass prompt in the lower third. The
+ * workshop rail under the prompt re-tunes the question the hero asks.
  */
 export function CinematicHero() {
   const scenes = useMemo(() => shuffleScenesForVisit(founderScenes), []);
@@ -15,6 +20,17 @@ export function CinematicHero() {
   const { typed, index } = useSceneCycle(phrases, !paused);
   const takeOver = useCallback(() => setPaused(true), []);
   const [cueHidden, setCueHidden] = useState(false);
+  const [gatewayOpen, setGatewayOpen] = useState(false);
+  const { workshop, select } = useSelectedWorkshop();
+  const isFoundation = workshop.slug === FOUNDATION_SLUG;
+
+  // Non-foundation workshops ghost-type their own examples instead of the
+  // scene phrases.
+  const { typed: workshopTyped } = useSceneCycle(
+    workshop.promptExamples,
+    !paused && !isFoundation,
+  );
+  const ghostText = isFoundation ? typed : workshopTyped;
 
   const total = scenes.length;
   // Only three images are ever mounted: the one fading out, the one on screen,
@@ -88,15 +104,28 @@ export function CinematicHero() {
         <p className="sl-hero__kicker">
           Atlanta · IGNITE Center at Greater Atlanta Christian School
         </p>
-        <h1 className="sl-hero__title">What would you like to start?</h1>
+        <h1 className="sl-hero__title">{workshop.heroQuestion}</h1>
         <div className="sl-hero__prompt">
-          <IdeaPrompt ghostText={typed} paused={paused} onTakeOver={takeOver} />
+          <IdeaPrompt
+            ghostText={ghostText}
+            paused={paused}
+            onTakeOver={takeOver}
+            workshop={workshop}
+          />
         </div>
-        <p className="sl-hero__status">
-          Now building:{" "}
-          <span>{scenes[index]?.label}</span>
-        </p>
+        <WorkshopRail
+          selected={workshop}
+          onSelect={select}
+          onOpenGateway={() => setGatewayOpen(true)}
+        />
+        {isFoundation && (
+          <p className="sl-hero__status">
+            Now building: <span>{scenes[index]?.label}</span>
+          </p>
+        )}
       </div>
+
+      <WorkshopGatewaySheet open={gatewayOpen} onOpenChange={setGatewayOpen} onSelect={select} />
 
       <button
         type="button"

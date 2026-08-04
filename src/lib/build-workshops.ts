@@ -789,7 +789,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     priceCents: 19700,
     priceLabel: "$197",
     icon: Scale,
-    title: "Scaffold your business",
+    title: "Scaffold your startup",
     capability: "Legal, financial, and operational scaffolding",
     oneLiner: "Entity. Contracts. Books. Done.",
     subhead:

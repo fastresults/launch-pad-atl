@@ -7,6 +7,8 @@ import { CinematicHero } from "@/components/home/CinematicHero";
 import { FounderVideoWall } from "@/components/home/FounderVideoWall";
 import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
 import { StageSketch } from "@/components/home/StageSketch";
+import { WorkshopSampler } from "@/components/home/WorkshopSampler";
+import { useSelectedWorkshop } from "@/hooks/use-selected-workshop";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import { useEvent } from "@/lib/use-event";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -48,10 +50,12 @@ export function HomeFramework() {
     staleTime: 60_000,
   });
   const showScroller = settings?.show_business_ideas_scroller !== false;
+  const { workshop } = useSelectedWorkshop();
   return (
     <div className="public-surface min-h-screen">
       <SiteHeader />
       <Hero />
+      <WorkshopSampler workshop={workshop} />
       <FounderVideoWall />
       <HeroCopy />
       <VideoTestimonials />
@@ -78,7 +82,7 @@ function HeroCopy() {
   const reduceMotion = useReducedMotion();
   return (
     <section
-      id="learn-more"
+      id="the-morning"
       className="public-story relative isolate scroll-mt-24 overflow-hidden border-b border-[#E4D9C4]"
       style={{
         backgroundImage:
