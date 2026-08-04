@@ -3529,6 +3529,27 @@ export type Database = {
         }
         Relationships: []
       }
+      workshop_waitlist: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          workshop_slug: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          workshop_slug: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          workshop_slug?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       deliverable_types_public: {
