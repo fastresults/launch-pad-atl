@@ -563,7 +563,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "a written pipeline you pull from instead of starting cold",
       question: "I stare at a blank page every single time.",
       imagePrompt: scenePrompt(
-        "A founder in a dark room in front of a laptop showing a completely empty document, face lit by the screen, stalled",
+        "A woman in her thirties in a dark room in front of a laptop showing a completely empty white document page with a single blinking cursor and an empty toolbar, face lit by the screen, stalled",
+        { screens: true },
       ),
     },
     {
@@ -590,7 +591,8 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "prompts loaded with your voice, so the output sounds like you",
       question: "My AI drafts sound like everyone else's.",
       imagePrompt: scenePrompt(
-        "A monitor at night showing a wall of identical uniform paragraph blocks, a hand scrolling past without reading",
+        "A man in his forties at a monitor at night showing a wall of identical evenly-sized paragraph blocks stacked down the page, scrolling past without reading",
+        { screens: true },
       ),
     },
     {
@@ -608,9 +610,11 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       fix: "hooks written and tested against real attention",
       question: "My best work is the thing nobody clicks.",
       imagePrompt: scenePrompt(
-        "A thumb flicking rapidly up a phone screen in a dim room, the screen smeared into motion blur",
+        "A thumb flicking rapidly up a phone screen in a dim room, a feed of article cards smeared into motion blur",
+        { screens: true },
       ),
     },
+
     {
       id: "inconsistent-voice",
       pain: "Sounding like a different person in every piece",
