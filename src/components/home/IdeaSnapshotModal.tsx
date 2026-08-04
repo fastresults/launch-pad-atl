@@ -305,6 +305,8 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                 An Atlanta market read for {label}
               </DialogDescription>
 
+              {isFoundation ? (
+                <>
               {/* How far this can travel — Atlanta is the start, not the ceiling */}
               <div className="mt-5 rounded-2xl border border-[rgba(244,246,255,0.12)] bg-[rgba(244,246,255,0.04)] p-4">
                 {tier ? (
@@ -368,6 +370,73 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                   projection, promise, or guarantee.
                 </p>
               </div>
+
+                </>
+              ) : (
+                <>
+              {/* Build-track diagnostic — the gap, what it costs, what the morning hands back */}
+              <div className="mt-5 rounded-2xl border border-[rgba(244,246,255,0.12)] bg-[rgba(244,246,255,0.04)] p-4">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] hero-faint">
+                  <Target className="h-3.5 w-3.5" aria-hidden="true" />
+                  The gap
+                </div>
+                {snapshot?.gap?.headline ? (
+                  <>
+                    <p className="mt-2 text-[17px] font-medium leading-snug" style={{ color: "var(--hero-fg)" }}>
+                      {snapshot.gap.headline}
+                    </p>
+                    {snapshot.gap.why ? <p className="mt-2 text-sm hero-sub">{snapshot.gap.why}</p> : null}
+                  </>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    <div className="hero-skel h-5 w-[62%]" />
+                    <div className="hero-skel h-4 w-[86%]" />
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 rounded-3xl border border-[rgba(244,246,255,0.10)] bg-[rgba(244,246,255,0.03)] p-5">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] hero-faint">
+                  <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+                  What it costs to leave it
+                </div>
+                {snapshot?.costs?.length ? (
+                  <ul className="mt-3 space-y-2.5">
+                    {snapshot.costs.slice(0, 3).map((cost, i) => (
+                      <li key={i} className="text-[15px] hero-sub">
+                        {cost}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    <div className="hero-skel h-4 w-[90%]" />
+                    <div className="hero-skel h-4 w-[76%]" />
+                    <div className="hero-skel h-4 w-[82%]" />
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 rounded-3xl border border-[rgba(76,140,255,0.28)] bg-[rgba(76,140,255,0.07)] p-5">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] hero-faint">
+                  <Hammer className="h-3.5 w-3.5" aria-hidden="true" />
+                  What you walk out with
+                </div>
+                <ul className="mt-3 space-y-2.5">
+                  {walkOuts.slice(0, 4).map((item, i) => (
+                    <li key={i} className="flex gap-3 text-[15px] hero-sub">
+                      <Check className="mt-1 h-4 w-4 shrink-0 hero-accent" aria-hidden="true" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 text-xs hero-faint">
+                  Built with you in the room — not slides, not notes.
+                </p>
+              </div>
+
+                </>
+              )}
 
               {snapshot?.signals?.length ? (
                 <div className="mt-6 grid gap-3 sm:grid-cols-3">
