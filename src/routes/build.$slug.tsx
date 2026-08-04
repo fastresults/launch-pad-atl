@@ -32,6 +32,8 @@ export default function BuildWorkshopPage() {
   const offer = getWorkshopAgencyOffer(w.slug)!;
   const otherWorkshops = BUILD_WORKSHOPS.filter((x) => x.slug !== w.slug).slice(0, 3);
   const upcoming = getUpcomingSessions(w.slug, new Date(), 12);
+  const audit = getWorkshopAudit(w.slug);
+  const tenPains = getWorkshopPains(w.slug);
 
   return (
     <div className="public-surface min-h-screen">
