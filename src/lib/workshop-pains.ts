@@ -326,82 +326,93 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "leads-in-inbox",
       pain: "Leads living in your inbox until they die there",
       fix: "every lead landing in one system automatically",
+      question: "My leads sit in my inbox until they go cold.",
       imagePrompt: scenePrompt(
-        "An overloaded laptop inbox glowing in a dark room, founder's silhouette leaning back, hands behind head",
+        "A founder's silhouette leaning back with hands behind their head in a dark room, one laptop glowing on the desk in front of them",
       ),
     },
     {
       id: "manual-follow-up",
       pain: "Following up by memory, on a good week",
       fix: "a sequence that follows up whether you remember or not",
+      question: "I only follow up when I happen to remember.",
       imagePrompt: scenePrompt(
-        "A sticky note reading nothing legible, curling off a monitor edge, dust and warm lamp light",
+        "A single curling sticky note peeling off the edge of a dark monitor, dust in the warm lamp light",
       ),
     },
     {
       id: "no-list",
       pain: "No list — just contacts scattered across three apps",
       fix: "one clean list you actually own",
+      question: "My contacts are scattered across three apps.",
       imagePrompt: scenePrompt(
-        "Three phones and a laptop open on a desk, each showing a different app, hands pinching the bridge of a nose",
+        "Three phones and an open laptop on a dim desk, each faintly glowing, a founder behind them pinching the bridge of their nose",
       ),
     },
     {
       id: "never-email",
       pain: "Going four months without emailing anyone",
       fix: "a monthly email you can write in twenty minutes",
+      question: "I haven't emailed my list in months.",
       imagePrompt: scenePrompt(
-        "A dusty calendar on a wall with months untouched, warm slant of window light across it",
+        "A dusty wall calendar with untouched blank pages, a warm slant of window light raking across it",
       ),
     },
     {
       id: "spam-folder",
       pain: "Emails landing in spam and never knowing",
       fix: "your sending domain set up right, verified in the room",
+      question: "I think my emails are landing in spam.",
       imagePrompt: scenePrompt(
-        "A phone screen glow in a dark room showing an empty message list, hand holding it loosely",
+        "A hand loosely holding a phone in a dark room, the blank screen glow lighting the fingers, nothing arriving",
       ),
     },
     {
       id: "no-welcome",
       pain: "New signups hearing nothing for a week",
       fix: "a welcome sequence that starts the second they join",
+      question: "People sign up and then hear nothing from me.",
       imagePrompt: scenePrompt(
-        "An empty doorway with the porch light on at dusk, nobody there to greet",
+        "An empty front doorway at dusk with the porch light just switched on, nobody there, quiet street beyond",
       ),
     },
     {
       id: "cold-leads",
       pain: "Old leads going cold because nobody touched them",
       fix: "a re-engagement email that wakes the list up",
+      question: "I have a pile of old leads I never touched.",
       imagePrompt: scenePrompt(
-        "A stack of aging business cards bound with a rubber band on a dim desk, one being pulled free",
+        "A thick stack of aging business cards bound with a rubber band on a dim desk, one being pulled free by a hand",
       ),
     },
     {
       id: "no-tracking",
       pain: "Not knowing which email actually got the reply",
       fix: "one dashboard that tells you what worked",
+      question: "I have no idea which email actually worked.",
       imagePrompt: scenePrompt(
-        "A founder squinting at a laptop with a printed spreadsheet beside it, both unhelpful, warm lamp",
+        "A founder squinting at a laptop while holding up a printed spreadsheet beside it, neither one helping, warm lamp",
       ),
     },
     {
       id: "duplicate-data",
       pain: "The same customer entered three different ways",
       fix: "one record per human, enforced",
+      question: "The same customer is in my system three times.",
       imagePrompt: scenePrompt(
-        "Overlapping printed contact sheets on a dark table with the same name circled three times",
+        "Overlapping printed name-and-address lists fanned across a dark table, the same line circled three times in red pen",
       ),
     },
     {
       id: "no-handoff",
       pain: "Nothing happening after someone fills in the form",
       fix: "the form wired straight through to a reply and a task",
+      question: "Someone fills out my form and nothing happens.",
       imagePrompt: scenePrompt(
-        "A single unread notification lighting a phone face-up on an empty desk, night",
+        "A phone face-up on an otherwise empty desk at night, one notification lighting the surface around it",
       ),
     },
+
   ],
 
   /* ─────────── SOCIAL PRESENCE ─────────── */
