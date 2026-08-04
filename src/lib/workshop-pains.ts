@@ -19,7 +19,7 @@ export type WorkshopPain = {
 };
 
 const SCENE_STYLE =
-  "Cinematic photograph, midnight-navy color grade, deep shadows, single warm practical light source, shallow depth of field, 35mm, film grain, no text, no logos, no readable UI copy, unposed and documentary in feel";
+  "Cinematic editorial photograph, midnight-navy color grade, deep shadows, single warm practical light source, shallow depth of field, 50mm lens, natural film grain, realistic skin texture, no text, no logos, no readable UI copy, unposed and documentary in feel. Generated on the premium image tier at 1920x1080";
 
 /** Wraps a subject in the shared hero look so every set matches. */
 export function scenePrompt(subject: string): string {
