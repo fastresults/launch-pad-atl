@@ -14,9 +14,17 @@ export type WorkshopPain = {
   pain: string;
   /** What they leave with instead. */
   fix: string;
+  /**
+   * The first-person question this pain's photo should put in the visitor's
+   * mouth. Typed in the hero chat box while its image is on screen, so the
+   * picture, the caption and the question are always the same pain. Optional
+   * only while a workshop's premium image pass is still pending.
+   */
+  question?: string;
   /** The cinematic prompt behind this pain's hero image. */
   imagePrompt: string;
 };
+
 
 const SCENE_STYLE =
   "Cinematic editorial photograph, midnight-navy color grade, deep shadows, single warm practical light source, shallow depth of field, 50mm lens, natural film grain, realistic skin texture, no text, no logos, no readable UI copy, unposed and documentary in feel. Generated on the premium image tier at 1920x1080";
