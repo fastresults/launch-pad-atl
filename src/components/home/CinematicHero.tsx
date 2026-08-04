@@ -17,7 +17,15 @@ import { FOUNDATION_SLUG } from "@/lib/workshop-catalog";
 
 
 /** Everything the hero needs from a scene, whatever library it came from. */
-type HeroScene = { id: string; image: string; label: string; alt: string; phrase: string };
+type HeroScene = {
+  id: string;
+  image: string;
+  label: string;
+  alt: string;
+  phrase: string;
+  question?: string;
+};
+
 
 export function CinematicHero() {
   const [paused, setPaused] = useState(false);
