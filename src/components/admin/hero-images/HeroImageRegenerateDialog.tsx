@@ -126,8 +126,14 @@ export function HeroImageRegenerateDialog({ workshopSlug, entry, onClose, onSave
               id="hero-subject"
               rows={5}
               value={subject}
+              disabled={editPrompt}
               onChange={(e) => setSubject(e.target.value)}
             />
+            {editPrompt && (
+              <p className="text-xs text-muted-foreground">
+                Ignored while you're editing the full prompt below.
+              </p>
+            )}
           </div>
 
           <div className="flex items-center justify-between rounded-md border p-3">
@@ -137,7 +143,12 @@ export function HeroImageRegenerateDialog({ workshopSlug, entry, onClose, onSave
                 Shapes and blocks with blurred text, instead of blank screens.
               </p>
             </div>
-            <Switch id="hero-screens" checked={screens} onCheckedChange={setScreens} />
+            <Switch
+              id="hero-screens"
+              checked={screens}
+              disabled={editPrompt}
+              onCheckedChange={setScreens}
+            />
           </div>
 
           <div className="space-y-2">
@@ -157,11 +168,47 @@ export function HeroImageRegenerateDialog({ workshopSlug, entry, onClose, onSave
           </div>
 
           <div className="space-y-2">
-            <Label>Full prompt sent</Label>
-            <p className="rounded bg-muted p-2 text-xs leading-relaxed text-muted-foreground">
-              {composeHeroPrompt(subject.trim(), screens)}
-            </p>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <Label htmlFor="hero-edit-prompt">Edit the full prompt</Label>
+                <p className="text-xs text-muted-foreground">
+                  Send your own wording instead of the shared cinematic recipe.
+                </p>
+              </div>
+              <Switch
+                id="hero-edit-prompt"
+                checked={editPrompt}
+                onCheckedChange={toggleEditPrompt}
+              />
+            </div>
+
+            <Label htmlFor="hero-prompt">Full prompt sent</Label>
+            {editPrompt ? (
+              <>
+                <Textarea
+                  id="hero-prompt"
+                  rows={9}
+                  value={fullPrompt}
+                  className="text-xs leading-relaxed"
+                  onChange={(e) => setFullPrompt(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setFullPrompt(composed)}
+                >
+                  Reset to the composed prompt
+                </Button>
+              </>
+            ) : (
+              <p className="rounded bg-muted p-2 text-xs leading-relaxed text-muted-foreground">
+                {composed}
+              </p>
+            )}
           </div>
+
 
           {preview && (
             <div className="space-y-2">
