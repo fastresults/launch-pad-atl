@@ -3,6 +3,12 @@ import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
 import { getBuildWorkshop, BUILD_WORKSHOPS, getWorkshopAgencyOffer } from "@/lib/build-workshops";
 import { getUpcomingSessions } from "@/lib/build-workshop-schedule";
+import { getWorkshopPains } from "@/lib/workshop-pains";
+import {
+  AUDIT_STEPS,
+  WORKSHOP_GUARANTEE,
+  getWorkshopAudit,
+} from "@/lib/workshop-audit";
 import {
   ArrowRight,
   Check,
@@ -12,6 +18,8 @@ import {
   Clock,
   Users,
   Calendar,
+  ClipboardCheck,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function BuildWorkshopPage() {
