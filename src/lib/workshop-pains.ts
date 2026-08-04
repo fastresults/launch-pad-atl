@@ -516,82 +516,93 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
       id: "blank-page",
       pain: "The blank page, every single time",
       fix: "a written pipeline you pull from instead of starting cold",
+      question: "I stare at a blank page every single time.",
       imagePrompt: scenePrompt(
-        "A cursor blinking on an empty document, face lit by the screen in a dark room",
+        "A founder in a dark room in front of a laptop showing a completely empty document, face lit by the screen, stalled",
       ),
     },
     {
       id: "no-time",
       pain: "Content being the first thing dropped when the week gets hard",
       fix: "a batch that covers a month, made in one morning",
+      question: "Content is the first thing I drop when I get busy.",
       imagePrompt: scenePrompt(
-        "A cluttered desk at the end of a long day, laptop closed halfway, warm lamp, jacket over the chair",
+        "A cluttered desk at the end of a long day, laptop closed halfway, a jacket slung over the empty chair, warm lamp",
       ),
     },
     {
       id: "nobody-reads",
       pain: "Publishing things nobody reads",
       fix: "topics chosen from what your buyer is already searching",
+      question: "I publish things and nobody reads them.",
       imagePrompt: scenePrompt(
-        "A printed article on a desk with untouched margins, dust in a shaft of warm light",
+        "A printed article lying untouched on a dim desk with clean unmarked margins, dust in a shaft of warm light",
       ),
     },
     {
       id: "ai-sludge",
       pain: "AI drafts that sound like everyone else's",
       fix: "prompts loaded with your voice, so the output sounds like you",
+      question: "My AI drafts sound like everyone else's.",
       imagePrompt: scenePrompt(
-        "A monitor showing a wall of uniform paragraphs at night, a hand scrolling past without reading",
+        "A monitor at night showing a wall of identical uniform paragraph blocks, a hand scrolling past without reading",
       ),
     },
     {
       id: "no-repurpose",
       pain: "One piece of work producing exactly one post",
       fix: "one idea cut into a week of assets",
+      question: "All that work turns into one single post.",
       imagePrompt: scenePrompt(
-        "A single sheet of paper being cut into strips with scissors on a dark table, warm lamp",
+        "A single sheet of paper being cut into narrow strips with scissors on a dark table, strips fanned out, warm lamp",
       ),
     },
     {
       id: "no-hook",
       pain: "Good work that nobody clicks",
       fix: "hooks written and tested against real attention",
+      question: "My best work is the thing nobody clicks.",
       imagePrompt: scenePrompt(
-        "A hand scrolling a phone quickly in a dim room, motion blur on the screen",
+        "A thumb flicking rapidly up a phone screen in a dim room, the screen smeared into motion blur",
       ),
     },
     {
       id: "inconsistent-voice",
       pain: "Sounding like a different person in every piece",
       fix: "one voice guide every draft is checked against",
+      question: "I sound like a different person in every piece.",
       imagePrompt: scenePrompt(
-        "Printed pages with different handwriting styles laid side by side under warm light",
+        "Several printed pages laid side by side on a dark table, each in a visibly different handwriting, warm lamp light",
       ),
     },
     {
       id: "no-distribution",
       pain: "Hitting publish and calling that distribution",
       fix: "a checklist that puts each piece in five places",
+      question: "I hit publish and that's my whole distribution.",
       imagePrompt: scenePrompt(
-        "A single envelope on an empty desk beside a laptop, night, warm lamp",
+        "A single sealed envelope on an otherwise empty desk beside a closed laptop at night, warm lamp",
       ),
     },
     {
       id: "no-measurement",
       pain: "No idea which piece actually brought a customer",
       fix: "one number you check monthly, and what to do about it",
+      question: "I can't tell which piece brought me a customer.",
       imagePrompt: scenePrompt(
-        "A printed chart face-down on a desk, laptop closed, warm low light",
+        "A printed chart turned face-down on a desk beside a closed laptop, warm low light, nobody looking at it",
       ),
     },
     {
       id: "starting-over",
       pain: "Restarting the whole content thing every quarter",
       fix: "a system that survives your busy season",
+      question: "I restart this whole thing every few months.",
       imagePrompt: scenePrompt(
-        "A stack of half-filled notebooks on a shelf in warm dim light, one being pulled out",
+        "A stack of half-filled notebooks on a shelf in warm dim light, one being pulled out, the rest abandoned",
       ),
     },
+
   ],
 
   /* ─────────── AI OPERATING SYSTEM ─────────── */
