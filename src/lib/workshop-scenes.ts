@@ -9,7 +9,10 @@ export type WorkshopScene = {
   image: string;
   label: string;
   alt: string;
+  /** First-person question typed in the chat box while this image is up. */
+  question?: string;
 };
+
 
 /**
  * Pain images live at src/assets/scenes/workshops/<slug>/<pain-id>.jpg. Globbing
@@ -40,8 +43,10 @@ function toScene(pain: WorkshopPain, image: string): WorkshopScene {
     image,
     label: pain.pain,
     alt: `${pain.pain} — the workshop fixes it with ${pain.fix}`,
+    question: pain.question,
   };
 }
+
 
 /**
  * The pain-tied hero set for a workshop, or null when its images haven't been

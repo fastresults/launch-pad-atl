@@ -17,7 +17,15 @@ import { FOUNDATION_SLUG } from "@/lib/workshop-catalog";
 
 
 /** Everything the hero needs from a scene, whatever library it came from. */
-type HeroScene = { id: string; image: string; label: string; alt: string; phrase: string };
+type HeroScene = {
+  id: string;
+  image: string;
+  label: string;
+  alt: string;
+  phrase: string;
+  question?: string;
+};
+
 
 export function CinematicHero() {
   const [paused, setPaused] = useState(false);
@@ -45,16 +53,28 @@ export function CinematicHero() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFoundation, workshop.slug]);
 
-  const phrases = useMemo(() => scenes.map((scene) => scene.phrase), [scenes]);
+  // When every scene in a pain rotation carries its own question, that question
+  // IS the cycle phrase — one timer drives the photo, the caption and the typed
+  // line together, so they can never drift apart.
+  const synced = useMemo(
+    () => isPainRotation && scenes.every((scene) => Boolean(scene.question)),
+    [isPainRotation, scenes],
+  );
+
+  const phrases = useMemo(
+    () => scenes.map((scene) => (synced ? scene.question! : scene.phrase)),
+    [scenes, synced],
+  );
   const { typed, index } = useSceneCycle(phrases, !paused);
 
-  // Non-foundation workshops ghost-type their own examples instead of the
-  // scene phrases.
+  // Workshops still waiting on their synced image pass ghost-type the catalog
+  // examples on their own loop.
   const { typed: workshopTyped } = useSceneCycle(
     workshop.promptExamples,
-    !paused && !isFoundation,
+    !paused && !isFoundation && !synced,
   );
-  const ghostText = isFoundation ? typed : workshopTyped;
+  const ghostText = isFoundation || synced ? typed : workshopTyped;
+
 
   const total = scenes.length;
   // Only three images are ever mounted: the one fading out, the one on screen,
