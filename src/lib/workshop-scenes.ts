@@ -61,6 +61,12 @@ export function getWorkshopScenes(slug: string): WorkshopScene[] | null {
   return scenes.length > 0 ? scenes : null;
 }
 
+/** The shipped file for one pain, if a picture has been generated for it. */
+export function getBundledSceneImage(slug: string, painId: string): string | null {
+  return BY_SLUG[slug]?.[painId] ?? null;
+}
+
+
 /** Fisher-Yates, so the ten images open on a different pain every visit. */
 export function shuffleWorkshopScenes(scenes: WorkshopScene[]): WorkshopScene[] {
   const copy = [...scenes];

@@ -192,6 +192,16 @@ export const ADMIN_NAV: AdminNavItem[] = [
     keywords: ["video", "wall", "hero", "founder", "stories", "testimonial"],
     super: true,
   },
+  {
+    to: "/admin/hero-images",
+    label: "Hero images",
+    icon: ImageIcon,
+    group: "Workspace",
+    description: "Review and regenerate workshop hero photos",
+    keywords: ["hero", "images", "workshop", "photos", "generate", "prompt", "scenes"],
+    super: true,
+  },
+
 
   // ------------------------------------------------------------- Marketing
   {

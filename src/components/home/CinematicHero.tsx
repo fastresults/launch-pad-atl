@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { founderScenes, shuffleScenesForVisit } from "@/lib/founder-scenes";
 import { getWorkshopScenes, shuffleWorkshopScenes } from "@/lib/workshop-scenes";
+import { applySceneOverrides, useWorkshopSceneOverrides } from "@/hooks/useWorkshopSceneOverrides";
 import { useSceneCycle } from "@/hooks/use-scene-cycle";
 import { IdeaPrompt } from "@/components/home/IdeaPrompt";
 import { WorkshopRail } from "@/components/home/WorkshopRail";
@@ -40,10 +41,12 @@ export function CinematicHero() {
   // falls back to the founder set until those images exist.
   const painScenes = isFoundation ? null : getWorkshopScenes(workshop.slug);
   const isPainRotation = painScenes !== null;
+  // Images regenerated in Super Admin swap in on top of the bundled set.
+  const overrides = useWorkshopSceneOverrides(isFoundation ? null : workshop.slug);
 
   const scenes = useMemo<HeroScene[]>(() => {
     if (painScenes) {
-      return shuffleWorkshopScenes(painScenes).map((scene) => ({
+      return shuffleWorkshopScenes(applySceneOverrides(painScenes, overrides)).map((scene) => ({
         ...scene,
         phrase: scene.label,
       }));
@@ -51,7 +54,8 @@ export function CinematicHero() {
     return shuffleScenesForVisit(founderScenes);
     // The workshop slug is what actually changes the set; painScenes is derived.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isFoundation, workshop.slug]);
+  }, [isFoundation, workshop.slug, overrides]);
+
 
   // When every scene in a pain rotation carries its own question, that question
   // IS the cycle phrase — one timer drives the photo, the caption and the typed
