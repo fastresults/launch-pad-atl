@@ -18,7 +18,7 @@ export type WorkshopScene = {
  * falls back to the founder scene library.
  */
 const SCENE_URLS = import.meta.glob<string>(
-  "@/assets/scenes/workshops/*/*.jpg",
+  "../assets/scenes/workshops/*/*.jpg",
   { eager: true, query: "?url", import: "default" },
 );
 
