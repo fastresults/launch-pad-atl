@@ -872,3 +872,92 @@
     right: 12px;
   }
 }
+
+/* ---------------------------------------------------------------
+ * Hero workshop rail — discreet gateway to all 9 workshops
+ * --------------------------------------------------------------- */
+
+.sl-rail {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.sl-rail__scroller {
+  display: flex;
+  max-width: 100%;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+          mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+}
+
+.sl-rail__scroller::-webkit-scrollbar { display: none; }
+
+.sl-rail__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  border: 1px solid oklch(0.98 0.006 260 / 16%);
+  border-radius: 999px;
+  background: oklch(0.1 0.02 270 / 38%);
+  backdrop-filter: blur(8px);
+  padding: 6px 12px;
+  color: oklch(0.98 0.006 260 / 66%);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: color 200ms ease, border-color 200ms ease, background 200ms ease;
+}
+
+.sl-rail__chip:hover { color: oklch(0.99 0.006 260 / 92%); }
+
+.sl-rail__chip[data-open] { color: oklch(0.99 0.006 260 / 92%); }
+
+.sl-rail__chip[data-active] {
+  border-color: var(--sl-quote-gold);
+  background: oklch(0.1 0.02 270 / 62%);
+  color: #fff;
+}
+
+.sl-rail__tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.62;
+}
+
+.sl-rail__chip[data-open] .sl-rail__tag {
+  color: var(--sl-quote-gold);
+  opacity: 1;
+}
+
+.sl-rail__all {
+  border: 0;
+  background: none;
+  padding: 2px 4px;
+  color: oklch(0.98 0.006 260 / 58%);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.sl-rail__all:hover { color: oklch(0.99 0.006 260 / 90%); }
+
+@media (max-width: 640px) {
+  .sl-rail { margin-top: 14px; }
+  .sl-rail__chip { font-size: 11px; padding: 5px 10px; }
+}
