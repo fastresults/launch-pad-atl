@@ -468,6 +468,23 @@
 }
 
 /* ---------------------------------------------------------------
+   Brand orange — session date cards
+   --------------------------------------------------------------- */
+:root { --sl-brand-orange: 24 76% 53%; }
+
+.sl-date-eyebrow { color: hsl(var(--sl-brand-orange)); }
+
+.sl-date-reserve {
+  color: hsl(var(--sl-brand-orange));
+  border-color: hsl(var(--sl-brand-orange) / 0.35);
+  background-color: hsl(var(--sl-brand-orange) / 0.1);
+}
+
+.sl-date-reserve:hover {
+  background-color: hsl(var(--sl-brand-orange) / 0.2);
+}
+
+/* ---------------------------------------------------------------
  * 7. Hero prompt panel
  * --------------------------------------------------------------- */
 

@@ -30,7 +30,7 @@ export function WorkshopDates({ workshop }: { workshop: CatalogWorkshop }) {
             className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-card px-5 py-4"
           >
             <div>
-              <div className="mb-1 text-xs uppercase tracking-[0.16em] text-primary">
+              <div className="sl-date-eyebrow mb-1 text-xs uppercase tracking-[0.16em]">
                 {workshop.title}
               </div>
               <div className="text-base font-medium tracking-tight">{s.dateLabel}</div>
@@ -38,7 +38,7 @@ export function WorkshopDates({ workshop }: { workshop: CatalogWorkshop }) {
             </div>
             <Link
               to={`/register?workshop=${workshop.slug}&date=${encodeURIComponent(s.startISO)}`}
-              className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20 md:text-sm"
+              className="sl-date-reserve inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors md:text-sm"
             >
               Reserve <ArrowRight className="size-3.5" aria-hidden="true" />
             </Link>
