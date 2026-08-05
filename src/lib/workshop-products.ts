@@ -231,7 +231,7 @@ const PRODUCT_META: Record<string, ProductMeta> = {
       "Somebody asked you for a price, you sent it, and nothing happened — and that was the end of it. Not because they said no, but because nobody said anything again. Follow-up is the cheapest revenue in your startup and the only one you're currently throwing away.",
     artifactPreview: {
       kind: "Lifecycle map",
-      title: "From quote sent to signed — 16 emails, all written",
+      title: "From quote sent to signed — your welcome sequence, written",
       lines: [
         "Day 0 — Quote + the one question that surfaces the real objection",
         "Day 2 — Proof: the closest job we've done, with the number",
@@ -256,7 +256,7 @@ const PRODUCT_META: Record<string, ProductMeta> = {
     ],
     decisionHeadline: "Leave with the follow-up running without you.",
     decisionBody:
-      "CRM live, pipeline mirrored, 16 emails written and loaded, and the automations that send them while you're on a job.",
+      "CRM live, pipeline mirrored, your welcome sequence written and sending, and the automations that run it while you're on a job.",
   },
 
   /* ─────────── SOCIAL ─────────── */
@@ -379,7 +379,7 @@ const PRODUCT_META: Record<string, ProductMeta> = {
       "It isn't laziness. It's that nobody will tell you plainly which entity, which contract, which account — so it sits, and every month it sits, the cleanup gets more expensive and the personal exposure gets more real. One morning and it's handled, in writing.",
     artifactPreview: {
       kind: "Setup record",
-      title: "Entity, contracts, books — decided and in writing",
+      title: "Entity, contracts, books — settled and in writing",
       lines: [
         "Entity: GA LLC, single-member, S-corp election revisited at $80k profit",
         "Contracts: MSA + SOW + 1099 contractor agreement, all signed-ready",
@@ -404,7 +404,7 @@ const PRODUCT_META: Record<string, ProductMeta> = {
     ],
     decisionHeadline: "Leave with the avoided thing done.",
     decisionBody:
-      "Entity decided and filed, contract suite ready to sign, accounts open, and the books actually started.",
+      "Entity path settled with the filing ready to submit, contract suite ready to sign, accounts open, and the books actually started.",
   },
 };
 
