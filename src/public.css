@@ -194,13 +194,22 @@
   background: var(--gradient-brand);
 }
 
-/* Frosted variant: the brand gradient laid over a blurred view of the page. */
-.public-surface .sl-glass-cta {
-  background: var(--gradient-brand);
-  opacity: 0.88;
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
+/* Frosted variant: a translucent brand tint over a blurred view of the page. */
+.public-surface a.sl-glass-cta,
+.public-surface .sl-glass-cta,
+.public-surface .sl-glass-cta.bg-hero-gradient {
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--primary) 55%, transparent),
+    color-mix(in oklab, var(--accent, var(--primary)) 40%, transparent)
+  ) !important;
+  background-color: color-mix(in oklab, var(--card) 25%, transparent) !important;
+  opacity: 1 !important;
+  backdrop-filter: blur(18px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 18%);
 }
+
 
 /* Frosted sticky bar — must beat the opaque `.bg-card` override above. */
 .public-surface .sl-glass-bar,
