@@ -9,7 +9,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
  * the single source of truth; the intake answers come from the database.
  */
 
-const MODEL = "google/gemini-3-pro-preview";
+const MODEL = "google/gemini-3.6-flash";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -158,8 +158,7 @@ Deno.serve(async (req) => {
 
     const { data: saved, error: saveErr } = await admin
       .from("workshop_audits")
-      .upsert(
-        {
+      .insert({
           user_id: intake.user_id,
           intake_id: intake.id,
           workshop_slug: intake.workshop_slug,
@@ -169,9 +168,7 @@ Deno.serve(async (req) => {
           prescribed_outcome: (report.prescribedOutcome as string) ?? spec.prescribedOutcome,
           model: MODEL,
           generated_at: new Date().toISOString(),
-        },
-        { onConflict: "id" },
-      )
+      })
       .select()
       .single();
 
