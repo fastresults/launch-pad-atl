@@ -118,62 +118,59 @@ export default function CalendarPage() {
       ) : (
         <SectionShell tinted>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {months.flatMap((month) =>
-              month.days.map((day) => ({ month, day })),
-            ).map(({ month, day }) => (
-              <div key={day.key} className="contents">
-                <div className="hidden">{month.label}</div>
-
-                  {month.days.map((day) => (
-                    <div
-                      key={day.key}
-                      className="rounded-2xl border border-white/10 bg-card p-4 md:p-5"
-                    >
-                      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-white/10 pb-2.5">
-                        <h2 className="text-base font-medium tracking-tight md:text-lg">
-                          {day.dateLabel}
-                        </h2>
-                        {day.sessions.length > 1 && (
-                          <p className="text-xs text-muted-foreground">
-                            Two sessions this day — you can do both.
-                          </p>
-                        )}
-                      </div>
-                      <ul className="mt-3 grid gap-2">
-                        {day.sessions.map((s) => (
-                          <li
-                            key={`${s.slug}-${s.startISO}`}
-                            className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5"
-                          >
-                            <div className="min-w-0">
-                              <div className="flex flex-wrap items-baseline gap-x-3">
-                                <span className="text-base font-medium tracking-tight">
-                                  {s.title}
-                                </span>
-                                <span className="text-xs uppercase tracking-[0.16em] text-primary">
-                                  {s.priceLabel}
-                                </span>
-                              </div>
-                              <div className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
-                                <Clock className="size-3.5" aria-hidden="true" />
-                                {s.timeLabel}
-                              </div>
-                            </div>
-                            <Link
-                              to={s.reserveHref}
-                              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20 md:text-sm"
-                            >
-                              Reserve <ArrowRight className="size-3.5" aria-hidden="true" />
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
+            {months
+              .flatMap((month) => month.days.map((day) => ({ month, day })))
+              .map(({ month, day }) => (
+                <div
+                  key={day.key}
+                  className="flex flex-col rounded-2xl border border-white/10 bg-card p-4 md:p-5"
+                >
+                  <div className="border-b border-white/10 pb-2.5">
+                    <p className="text-[0.7rem] uppercase tracking-[0.16em] text-muted-foreground">
+                      {month.label}
+                    </p>
+                    <h2 className="mt-1 text-base font-medium tracking-tight md:text-lg">
+                      {day.dateLabel}
+                    </h2>
+                    {day.sessions.length > 1 && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Two sessions this day — you can do both.
+                      </p>
+                    )}
+                  </div>
+                  <ul className="mt-3 grid gap-2">
+                    {day.sessions.map((s) => (
+                      <li
+                        key={`${s.slug}-${s.startISO}`}
+                        className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-baseline gap-x-3">
+                            <span className="text-base font-medium tracking-tight">
+                              {s.title}
+                            </span>
+                            <span className="text-xs uppercase tracking-[0.16em] text-primary">
+                              {s.priceLabel}
+                            </span>
+                          </div>
+                          <div className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Clock className="size-3.5" aria-hidden="true" />
+                            {s.timeLabel}
+                          </div>
+                        </div>
+                        <Link
+                          to={s.reserveHref}
+                          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20 md:text-sm"
+                        >
+                          Reserve <ArrowRight className="size-3.5" aria-hidden="true" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
+
         </SectionShell>
       )}
 
