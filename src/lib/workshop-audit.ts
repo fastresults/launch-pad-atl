@@ -173,7 +173,7 @@ export const WORKSHOP_AUDITS: Record<string, WorkshopAudit> = {
       { key: "tax_worry", label: "What you're most worried about at tax time", help: "Say it plainly.", kind: "longtext" },
     ],
     prescribedOutcome:
-      "Your entity filed, your client contract signed-ready, and your books opened and reconciled to today before you leave.",
+      "Your entity filing prepared, your client contract signed-ready, and your books opened and reconciled to today before you leave.",
     improvement: "stop carrying personal risk for business work",
   },
 };

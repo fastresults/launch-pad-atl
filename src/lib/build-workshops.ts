@@ -113,9 +113,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     walkOuts: [
       "Signed brand brief — who you stand for, who you stand against, the one sentence you're allowed to mean",
       "Brand archetype + voice guide your team (and any AI prompt) can follow without you in the room",
-      "3 logo directions with the buyer-psychology rationale behind each — pick one, kill two",
+      "One chosen logo direction, with the buyer-psychology reasoning that killed the alternatives",
       "Color palette and typography system with usage rules tight enough to hand to a freelancer",
-      "Mood board and visual reference library a designer can inherit on day one",
+      "Visual reference set chosen in the room — the exact look a designer can build from",
       "90-day rollout map across your 10 most visible surfaces (site, deck, signature, social, packaging)",
     ],
     agenda: [
@@ -213,7 +213,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "Sitemap with a single job written on every page (every page earns its slot)",
       "Wireframes for your homepage and #1 conversion page using the proof-stack pattern",
       "Page-by-page copy outline: hero, proof, offer, objection, CTA — written in your buyer's words",
-      "Conversion event plan wired live to GA4 and your CRM (you'll see the first event fire)",
+      "Your primary conversion event configured in GA4 — you watch the first one fire — with the rest of the event plan written",
       "Stack decision in writing — the right platform for your team, with a 12-month cost projection",
       "Pre-launch QA checklist (30 items) so you ship without an embarrassing leak on day one",
     ],
@@ -276,7 +276,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         emphasis: "and proof in the analytics.",
       },
       decisionBody:
-        "By 11:30 you'll have a sitemap, two wireframed pages, a copy outline in your buyer's words, and a live conversion event firing into GA4. You'll also leave with the stack decision in writing — the right platform for your team (or hand it to ours) — with the 12-month cost math on the table.",
+        "By 11:30 you'll have a sitemap, two wireframed pages, a copy outline in your buyer's words, and your primary conversion event firing into GA4. You'll also leave with the stack decision in writing — the right platform for your team (or hand it to ours) — with the 12-month cost math on the table.",
       otherWorkshopsHeadline: "The other systems your site will drive traffic into.",
       faqHeadline: "Site questions, answered without the agency hedge.",
     },
@@ -311,8 +311,8 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     walkOuts: [
       "Channel-fit scorecard — the two channels you commit to and the four you publicly stop",
       "Profile rewrites for both channels: bio, link, banner, pinned post (drafted live)",
-      "30-day calendar — 20+ posts mapped to pillar, format, and ship date",
-      "Hook bank of 30+ proven openers for your niche, ready to remix",
+      "Your first week of posts written and scheduled, with the rest of the 30 days slotted by pillar, format, and ship date",
+      "Hook bank built on your pillars — 15 openers written for your niche, ready to remix",
       "Weekly cadence and the lightest tool stack to actually hold it (Buffer or Notion + your phone)",
       "Engagement playbook — what to comment, on whose posts, on what schedule, to be visible to buyers",
     ],
@@ -376,7 +376,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         emphasis: "and the discipline to hold it.",
       },
       decisionBody:
-        "By 11:30 you'll have rewritten both profiles, drafted 20+ real posts against pillars and hooks, and locked the 45-minute weekly routine that holds the engine. You'll also know whether to run it yourself, hire a part-time editor, or hand it to our team.",
+        "By 11:30 you'll have rewritten both profiles, written and scheduled your first week of posts, slotted the rest of the month against pillars and hooks, and locked the 45-minute weekly routine that holds the engine. You'll also know whether to run it yourself, hire a part-time editor, or hand it to our team.",
       otherWorkshopsHeadline: "The other surfaces your audience will land on.",
       faqHeadline: "Social questions, answered without the guru spin.",
     },
@@ -410,9 +410,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     ],
     walkOuts: [
       "3–5 content pillars tied to your offer and to buyer-intent keywords",
-      "SEO keyword map — the terms you can realistically rank for in 6 months (with difficulty scores)",
+      "SEO keyword map — the terms we confirm in the room that you can realistically rank for in 6 months",
       "Production system documented: capture → draft → edit → publish, with owners and SLAs",
-      "Repurposing flow — one anchor piece exploded into 10 derivative assets, with frameworks",
+      "One anchor piece repurposed live into its derivative assets, with the flow documented for every piece after",
       "90-day editorial calendar locked: titles, formats, ship dates, owner per asset",
       "Measurement plan — the 3 metrics that prove the engine is working (and the 12 to ignore)",
     ],
@@ -510,8 +510,8 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     ],
     walkOuts: [
       "AI stack audit — what to keep, kill, and add, with monthly cost math",
-      "5 of your real workflows automated live, with working outputs and your data",
-      "Prompt library tuned to your brand voice — 20+ prompts, organized and reusable",
+      "Your highest-value workflow built and running on your real data — the next four specified and prompted",
+      "Prompt library tuned to your brand voice — your core prompts written, organized, and reusable",
       "Governance doc: model choice per task, quality gates, what AI is never allowed to do alone",
       "ROI model — hours and dollars saved per week, per workflow, with the formula",
       "30-day rollout plan to onboard the team without revolt (training, ownership, KPI)",
@@ -533,7 +533,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         time: "10:45 – 11:15",
         title: "Build the prompt library + governance",
         detail:
-          "Input: voice guide, brand rules, risk tolerance. Working session: write and organize 20+ prompts, set quality gates, decide what AI never touches alone. Output: a prompt vault and a one-page governance doc.",
+          "Input: voice guide, brand rules, risk tolerance. Working session: write and organize your core prompt set, set quality gates, decide what AI never touches alone. Output: a prompt vault and a one-page governance doc.",
       },
       {
         time: "11:15 – 11:30",
@@ -576,7 +576,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         emphasis: "measured in hours per week.",
       },
       decisionBody:
-        "By 11:30 you'll have 5 working automations on your real data, a 20+ prompt library tuned to your brand, a one-page governance doc (what AI does, what it never does alone), and an ROI model showing hours and dollars saved per week. You'll also know whether to roll it out internally or have our team wire the next 10 workflows.",
+        "By 11:30 you'll have your highest-value automation running on your real data, the next four specified, a prompt library tuned to your brand, a one-page governance doc (what AI does, what it never does alone), and an ROI model showing hours and dollars saved per week. You'll also know whether to roll it out internally or have our team wire the next 10 workflows.",
       otherWorkshopsHeadline: "The other workflows AI will quietly absorb.",
       faqHeadline: "AI questions, answered without the hype-cycle math.",
     },
@@ -591,7 +591,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     icon: Mail,
     title: "Automate your revenue",
     capability: "Email, CRM, and automation",
-    oneLiner: "16 emails written. Your sales machine is running.",
+    oneLiner: "Your CRM live. Your first sequence sending.",
     subhead:
       "First-touch sales is for amateurs. Pros build the follow-up engine. In one morning we pick your CRM, map the lifecycle, write three sequences live, and fix the deliverability settings most founders don't know are quietly killing their open rates.",
     pains: [
@@ -609,12 +609,12 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       },
     ],
     walkOuts: [
-      "CRM picked and set up: Hubspot, Attio, or Folk — chosen for your stage and team, not by hype",
+      "CRM chosen and stood up with your pipeline built — Hubspot, Attio, or Folk — picked for your stage and team, not by hype",
       "Lifecycle map — every touch from cold lead to repeat buyer, with trigger and owner",
-      "3 sequences written live: welcome (5 emails), nurture (7 emails), win-back (4 emails)",
+      "Your welcome sequence written and loaded live — nurture and win-back mapped and templated to finish this week",
       "Segmentation plan that earns higher open and reply rates without sounding spammy",
       "Automation blueprint — what fires what, in which tool, and how to debug it",
-      "Deliverability checklist: SPF, DKIM, DMARC, warmup plan, sender reputation rules",
+      "Deliverability records prepared — SPF, DKIM, and DMARC values ready to paste into your DNS — with the warmup plan and sender rules",
     ],
     agenda: [
       {
@@ -633,13 +633,13 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         time: "10:30 – 11:15",
         title: "Write 3 sequences — live",
         detail:
-          "Input: subject-line patterns that beat 40% open rates in 2026. Working session: draft welcome, nurture, and win-back together. Output: 16 emails ready to schedule, with the rationale documented for future edits.",
+          "Input: subject-line patterns that beat 40% open rates in 2026. Working session: draft welcome, nurture, and win-back together. Output: your welcome sequence ready to send, the other two templated, and the rationale documented for future edits.",
       },
       {
         time: "11:15 – 11:30",
         title: "Wire automation and lock deliverability",
         detail:
-          "Input: your domain DNS access. Working session: set up SPF/DKIM/DMARC, configure the warmup plan, document the trigger logic. Output: a deliverability scorecard and your sending domain primed for the inbox.",
+          "Input: your domain DNS access. Working session: generate your SPF/DKIM/DMARC records, plan the warmup, document the trigger logic. Output: a deliverability scorecard and the exact records to paste into DNS.",
       },
     ],
     forYou: [
@@ -658,7 +658,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       painEyebrow: "The cost of forgetting your pipeline",
       painHeadline: "80% of your revenue lives in touches 2 through 12 — and you've never sent them.",
       walkOutHeadline: {
-        lead: "CRM picked, lifecycle mapped, 16 emails written.",
+        lead: "CRM live, lifecycle mapped, first sequence sending.",
         emphasis: "Not a Mailchimp tutorial.",
       },
       agendaHeadline: {
@@ -676,7 +676,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         emphasis: "running on autopilot by Friday.",
       },
       decisionBody:
-        "By 11:30 you'll have your CRM picked, a lifecycle map (stranger → repeat buyer), 16 emails drafted across three sequences, the segmentation plan, and SPF/DKIM/DMARC verified live on your sending domain. You'll also know whether to wire it yourself, hire an ops contractor, or hand it to our team.",
+        "By 11:30 you'll have your CRM picked, a lifecycle map (stranger → repeat buyer), your welcome sequence written and loaded, the other two templated, the segmentation plan, and your SPF/DKIM/DMARC records ready to paste. You'll also know whether to wire it yourself, hire an ops contractor, or hand it to our team.",
       otherWorkshopsHeadline: "The other systems your sequences will feed.",
       faqHeadline: "Email questions, answered without the deliverability theater.",
     },
@@ -712,7 +712,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "ICP scorecard — qualify a lead in 90 seconds, disqualify in 30",
       "Sales script for your #1 conversation (discovery or demo) — 25 minutes, with a clear next step",
       "Pipeline stages with exit criteria for each (what has to be true to advance)",
-      "Objection bank — your 8 most common objections, with handlers tested against real deals",
+      "Objection bank — your 8 most common objections, with handlers written and rehearsed out loud in the room",
       "Weekly sales rhythm — pipeline review, forecast call, accountability, in 30 minutes",
       "Tool stack recommendation — CRM, dialer, scheduler — with cost math and switching cost",
     ],
@@ -791,9 +791,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     icon: Scale,
     title: "Scaffold your startup",
     capability: "Legal, financial, and operational scaffolding",
-    oneLiner: "Entity. Contracts. Books. Done.",
+    oneLiner: "Entity. Contracts. Books. Settled.",
     subhead:
-      "Founders skip the scaffolding until a customer, a bank, or an investor asks — and then it's a five-figure scramble and a deal you almost lost. In one morning we make the entity decision, lock the contract suite, set up the books, and hand you the operations calendar that keeps you out of trouble.",
+      "Founders skip the scaffolding until a customer, a bank, or an investor asks — and then it's a five-figure scramble and a deal you almost lost. In one morning we settle the entity question, lock the contract suite, set up the books, and hand you the operations calendar that keeps you out of trouble.",
     pains: [
       {
         title: "Wrong entity is a six-figure tax mistake on a 5-year delay.",
@@ -809,19 +809,19 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       },
     ],
     walkOuts: [
-      "Entity decision in writing: LLC, S-corp, or C-corp, with the rationale and the tax math",
+      "Entity comparison in writing — LLC, S-corp, C-corp against your real numbers — with the questions to confirm with your CPA",
       "Contract suite checklist: MSA, NDA, IP assignment, contractor agreement, terms of service",
       "Bookkeeping setup plan: tool (QuickBooks or Xero), chart of accounts, monthly close rhythm",
       "Payroll + contractor readiness — when to switch from 1099 to W-2 and the trigger criteria",
-      "Insurance + compliance checklist tailored to your industry (GL, E&O, cyber, workers' comp)",
+      "Insurance + compliance shortlist for your industry (GL, E&O, cyber, workers' comp) — what to quote and who to call",
       "12-month operations calendar — every filing, renewal, and tax deadline, with owner",
     ],
     agenda: [
       {
         time: "8:45 – 9:15",
-        title: "Make the entity decision — done in one session",
+        title: "Settle the entity question — comparison done in one session",
         detail:
-          "Input: your real numbers, state, partners, and 3-year revenue plan. Working session: run the LLC/S-corp/C-corp decision tree with your numbers. Output: a written entity recommendation with the tax math behind it.",
+          "Input: your real numbers, state, partners, and 3-year revenue plan. Working session: run the LLC/S-corp/C-corp decision tree with your numbers. Output: a written entity comparison with the math behind it, and the short list to confirm with your CPA.",
       },
       {
         time: "9:15 – 10:15",
@@ -877,7 +877,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         emphasis: "and a 12-month calendar that protects it.",
       },
       decisionBody:
-        "By 11:30 you'll have your entity decision in writing (with the tax math), a contract suite checklist, the bookkeeping stack and monthly close rhythm, an insurance shortlist for your industry, and a 12-month operations calendar with every filing assigned. You'll also know whether to set it up yourself, hire a fractional ops lead, or hand it to our team in 10 business days.",
+        "By 11:30 you'll have your entity comparison in writing (with the math), a contract suite checklist, the bookkeeping stack and monthly close rhythm, an insurance shortlist for your industry, and a 12-month operations calendar with every filing assigned. You'll also know whether to set it up yourself, hire a fractional ops lead, or hand it to our team in 10 business days. We build the operating setup — we're not your attorney or CPA.",
       otherWorkshopsHeadline: "The other systems your scaffolding will support.",
       faqHeadline: "Legal and ops questions, answered without the lawyer hedge.",
     },
