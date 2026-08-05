@@ -106,8 +106,10 @@ function WorkshopStickyBar({ workshop }: { workshop: CatalogWorkshop }) {
             </span>
             <Link
               to={workshop.href}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-hero-gradient px-4 py-1.5 text-sm font-medium text-white"
+              className="sl-glass-cta inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/40 bg-hero-gradient px-4 py-1.5 text-sm font-medium text-white"
             >
+
+
               {isOpen ? "Reserve" : "See the morning"}
               <ArrowRight className="size-3.5" aria-hidden="true" />
             </Link>
