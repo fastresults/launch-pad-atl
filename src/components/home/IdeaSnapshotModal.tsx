@@ -431,8 +431,10 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                   ))}
                 </ul>
                 <p className="mt-4 text-xs hero-faint">
-                  Built with you in the room — not slides, not notes.
+                  Built with you in one morning — decisions made and real first versions in your
+                  hands, not a finished agency deliverable.
                 </p>
+
               </div>
 
                 </>
