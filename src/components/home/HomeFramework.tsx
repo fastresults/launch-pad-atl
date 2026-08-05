@@ -132,7 +132,7 @@ function HeroCopy() {
 
             {/* Editorial pull quote — horizontal callout */}
             <figure className="mt-8 max-w-2xl border-l-4 border-[#C9B99A] pl-5">
-              <blockquote className="sl-quote font-serif text-xl font-semibold leading-snug md:text-2xl">
+              <blockquote className="sl-quote font-serif text-xl font-light leading-snug md:text-2xl">
                 No accelerator, incubator, or startup bootcamp in Atlanta hands you a stronger foundation than you&rsquo;ll walk out with here &mdash; brand, offer, page copy, and operations, all written before lunch.
               </blockquote>
             </figure>
