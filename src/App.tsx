@@ -73,6 +73,8 @@ const AdminMedia = lazy(() => import("@/routes/_authenticated/_admin/admin.media
 const AdminTestimonials = lazy(() => import("@/routes/_authenticated/_admin/admin.testimonials"));
 const AdminVideoWall = lazy(() => import("@/routes/_authenticated/_admin/admin.video-wall"));
 const AdminHeroImages = lazy(() => import("@/routes/_authenticated/_admin/admin.hero-images"));
+const AdminAudits = lazy(() => import("@/routes/_authenticated/_admin/admin.audits"));
+const WorkshopAuditPage = lazy(() => import("@/routes/_authenticated/audit.$slug"));
 const NotFoundPage = lazy(() => import("@/routes/not-found"));
 const AdminCohorts = lazy(() => import("@/routes/_authenticated/_admin/admin.cohorts"));
 
@@ -136,6 +138,7 @@ export default function App() {
           <Route path="/welcome" element={<WelcomePage />} />
           <Route path="/paused" element={<PausedPage />} />
           <Route path="/workshop/:stage" element={<WorkshopStage />} />
+          <Route path="/audit/:slug" element={<WorkshopAuditPage />} />
 
 
 
@@ -179,6 +182,7 @@ export default function App() {
             <Route path="/admin/testimonials" element={<AdminTestimonials />} />
             <Route path="/admin/video-wall" element={<AdminVideoWall />} />
             <Route path="/admin/hero-images" element={<AdminHeroImages />} />
+            <Route path="/admin/audits" element={<AdminAudits />} />
             <Route path="/admin/cohorts" element={<AdminCohorts />} />
             
             <Route path="/admin/attendees" element={<AdminAttendees />} />
