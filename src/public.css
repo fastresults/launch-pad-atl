@@ -544,6 +544,14 @@
   pointer-events: none;
 }
 
+.sl-prompt__ghost-icon {
+  flex-shrink: 0;
+  width: 1.05em;
+  height: 1.05em;
+  margin-right: 0.5em;
+  color: hsl(var(--sl-brand-orange));
+}
+
 .sl-prompt__caret {
   display: inline-block;
   flex: none;
