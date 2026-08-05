@@ -61,7 +61,7 @@ export default function CalendarPage() {
 
       <SectionShell>
         <SectionEyebrow icon={CalendarDays}>
-          Upcoming sessions · next {SCHEDULE_HORIZON_DAYS} days
+          Upcoming sessions · next {SESSIONS_PER_WORKSHOP} dates per workshop
         </SectionEyebrow>
         <SectionHeading lead="Every date we're open —" emphasis="pick your morning." />
         <p className="mt-4 max-w-2xl text-base text-muted-foreground md:text-lg">
