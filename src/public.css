@@ -202,6 +202,15 @@
   -webkit-backdrop-filter: blur(18px) saturate(150%);
 }
 
+/* Frosted sticky bar — must beat the opaque `.bg-card` override above. */
+.public-surface .sl-glass-bar,
+.public-surface .sl-glass-bar.bg-card {
+  background-color: color-mix(in oklab, var(--card) 42%, transparent);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+
 
 .public-surface :is(input, textarea, select):not([type="checkbox"]):not([type="radio"]) {
   background-color: oklch(0.98 0.006 260 / 6%);
