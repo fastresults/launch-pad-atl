@@ -104,7 +104,7 @@ export default function CalendarPage() {
       {months.length === 0 ? (
         <SectionShell tinted>
           <p className="text-base text-muted-foreground">
-            Nothing on the books for that workshop in the next {SCHEDULE_HORIZON_DAYS} days.{" "}
+            Nothing on the books for that workshop right now.{" "}
             <Link to="/build" className="text-primary hover:underline">
               See every workshop
             </Link>{" "}
