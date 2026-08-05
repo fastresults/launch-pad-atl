@@ -13,7 +13,7 @@ import {
   groupSessions,
   getFilterWorkshops,
 } from "@/lib/workshop-calendar";
-import { SCHEDULE_HORIZON_DAYS } from "@/lib/build-workshop-schedule";
+import { SESSIONS_PER_WORKSHOP } from "@/lib/workshop-calendar";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { cn } from "@/lib/utils";
 
