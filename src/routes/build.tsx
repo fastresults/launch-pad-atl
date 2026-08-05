@@ -34,6 +34,12 @@ export default function BuildIndexPage() {
               <p className="mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground md:text-xl">
                 One focused morning. One real piece of your startup &mdash; your brand shipped, your website live, your sales copy in the page, your follow-up emails sending, your tools running &mdash; built with you and live before lunch. Not notes about it. The thing itself. No retainer. No waiting on an agency.
               </p>
+              <Link
+                to="/calendar"
+                className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline md:text-base"
+              >
+                <CalendarDays className="size-4" aria-hidden="true" /> See all dates across every workshop
+              </Link>
             </div>
             <div className="md:col-span-5 lg:col-span-4">
               <div className="border border-border bg-card p-8">

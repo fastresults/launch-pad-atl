@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 
 const leftNav = [
   { to: "/build", label: "workshops" },
+  { to: "/calendar", label: "calendar" },
   { to: "/services", label: "services" },
   { to: "/schedule", label: "schedule" },
 ] as const;
@@ -41,7 +42,7 @@ export function SiteHeader() {
               <NavLink
                 key={n.to}
                 to={n.to}
-                className={`transition-colors hover:text-foreground ${index === 2 ? "sl-site-header__compact-optional" : ""}`}
+                className={`transition-colors hover:text-foreground ${index >= 2 ? "sl-site-header__compact-optional" : ""}`}
               >
                 {n.label}
               </NavLink>

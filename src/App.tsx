@@ -13,6 +13,7 @@ import AdminLayout from "@/routes/_authenticated/_admin";
 // Public pages
 const HomePage = lazy(() => import("@/routes/index"));
 const SchedulePage = lazy(() => import("@/routes/schedule"));
+const CalendarPage = lazy(() => import("@/routes/calendar"));
 const RegisterPage = lazy(() => import("@/routes/register"));
 const ServicesPage = lazy(() => import("@/routes/services"));
 const BuildIndexPage = lazy(() => import("@/routes/build"));
@@ -117,6 +118,7 @@ export default function App() {
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/schedule" element={<SchedulePage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/build" element={<BuildIndexPage />} />
