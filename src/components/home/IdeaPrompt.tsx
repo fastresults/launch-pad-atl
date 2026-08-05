@@ -47,12 +47,12 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver, workshop }: IdeaProm
     <form onSubmit={submit} className="sl-prompt">
       <div className="sl-prompt__panel">
         <div className="sl-prompt__field">
+          <WorkshopIcon className="sl-prompt__ghost-icon" strokeWidth={1.75} aria-hidden="true" />
           {value.length === 0 && (
             <div
               aria-hidden="true"
               className="sl-prompt__ghost"
             >
-              <WorkshopIcon className="sl-prompt__ghost-icon" strokeWidth={1.75} />
               <span className="truncate">{ghostText}</span>
               <span className="sl-prompt__caret" />
             </div>
