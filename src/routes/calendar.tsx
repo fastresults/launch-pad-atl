@@ -13,7 +13,7 @@ import {
   groupSessions,
   getFilterWorkshops,
 } from "@/lib/workshop-calendar";
-import { SCHEDULE_HORIZON_DAYS } from "@/lib/build-workshop-schedule";
+import { SESSIONS_PER_WORKSHOP } from "@/lib/workshop-calendar";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +31,7 @@ export default function CalendarPage() {
 
   useDocumentTitle(
     "Workshop calendar — every upcoming Startup Labs session",
-    `All upcoming Startup Labs workshop dates in the next ${SCHEDULE_HORIZON_DAYS} days, in one place. Pick a morning, reserve your seat, walk out with the real thing built.`,
+    `The next ${SESSIONS_PER_WORKSHOP} dates for every Startup Labs workshop, in one place. Pick a morning, reserve your seat, walk out with the real thing built.`,
     all.slice(0, 20).map((s) => ({
       "@context": "https://schema.org",
       "@type": "Event",
@@ -61,7 +61,7 @@ export default function CalendarPage() {
 
       <SectionShell>
         <SectionEyebrow icon={CalendarDays}>
-          Upcoming sessions · next {SCHEDULE_HORIZON_DAYS} days
+          Upcoming sessions · next {SESSIONS_PER_WORKSHOP} dates per workshop
         </SectionEyebrow>
         <SectionHeading lead="Every date we're open —" emphasis="pick your morning." />
         <p className="mt-4 max-w-2xl text-base text-muted-foreground md:text-lg">
@@ -104,7 +104,7 @@ export default function CalendarPage() {
       {months.length === 0 ? (
         <SectionShell tinted>
           <p className="text-base text-muted-foreground">
-            Nothing on the books for that workshop in the next {SCHEDULE_HORIZON_DAYS} days.{" "}
+            Nothing on the books for that workshop right now.{" "}
             <Link to="/build" className="text-primary hover:underline">
               See every workshop
             </Link>{" "}

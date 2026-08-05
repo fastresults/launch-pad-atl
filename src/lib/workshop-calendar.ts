@@ -9,7 +9,6 @@ import {
   getUpcomingSessions,
   WORKSHOP_SCHEDULES,
   BOOKING_CUTOFF_HOURS,
-  SCHEDULE_HORIZON_DAYS,
 } from "@/lib/build-workshop-schedule";
 import { WORKSHOP_CATALOG, FOUNDATION_SLUG, getCatalogWorkshop } from "@/lib/workshop-catalog";
 
@@ -33,19 +32,24 @@ const FOUNDATION_SESSION = {
   timeLabel: "9:30 am–12:15 pm ET",
 };
 
+/** How many upcoming dates the calendar shows per workshop. */
+export const SESSIONS_PER_WORKSHOP = 3;
+
 /**
- * Every bookable session across all workshops inside the rolling window,
- * sorted by start time.
+ * The next few bookable sessions for every workshop, sorted by start time.
  */
 export function getAllUpcomingSessions(
   now: Date = new Date(),
-  days: number = SCHEDULE_HORIZON_DAYS,
+  perWorkshop: number = SESSIONS_PER_WORKSHOP,
 ): CalendarSession[] {
   const out: CalendarSession[] = [];
+  // Look far enough ahead that every workshop can fill its quota, even the
+  // ones that only run every other month.
+  const lookaheadDays = 420;
 
   for (const slug of Object.keys(WORKSHOP_SCHEDULES)) {
     const w = getCatalogWorkshop(slug);
-    for (const s of getUpcomingSessions(slug, now, 50)) {
+    for (const s of getUpcomingSessions(slug, now, perWorkshop, lookaheadDays)) {
       out.push({
         slug,
         title: w.title,
@@ -61,9 +65,8 @@ export function getAllUpcomingSessions(
 
   // Foundation: include it while it is still outside the booking cutoff.
   const cutoffMs = now.getTime() + BOOKING_CUTOFF_HOURS * 60 * 60 * 1000;
-  const horizonMs = now.getTime() + days * 24 * 60 * 60 * 1000;
   const foundationMs = new Date(FOUNDATION_SESSION.startISO).getTime();
-  if (foundationMs > cutoffMs && foundationMs <= horizonMs) {
+  if (foundationMs > cutoffMs) {
     const f = getCatalogWorkshop(FOUNDATION_SLUG);
     out.push({
       slug: FOUNDATION_SLUG,
@@ -74,9 +77,9 @@ export function getAllUpcomingSessions(
     });
   }
 
-  return out
-    .filter((s) => new Date(s.startISO).getTime() <= horizonMs)
-    .sort((a, b) => new Date(a.startISO).getTime() - new Date(b.startISO).getTime());
+  return out.sort(
+    (a, b) => new Date(a.startISO).getTime() - new Date(b.startISO).getTime(),
+  );
 }
 
 export type CalendarDay = {
