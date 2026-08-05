@@ -194,7 +194,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     capability: "A website that converts",
     oneLiner: "Build the site your customers actually buy from.",
     subhead:
-      "Most founder sites convert at under 1% and the owner can't tell you which page is broken. In one morning we wire your site for revenue: one clear job per page, the proof stack that closes, payment and analytics events live, and the copy that does the selling.",
+      "Most founder sites convert at under 1% and the owner can't tell you which page is broken. In one morning we redesign your site for revenue: one clear job per page, the proof stack that closes, your payment and analytics decisions made, and the copy that does the selling — written with you in the room.",
     pains: [
       {
         title: "A pretty site at 0.4% conversion is a $30K liability.",
@@ -215,7 +215,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "Page-by-page copy outline: hero, proof, offer, objection, CTA — written in your buyer's words",
       "Your primary conversion event configured in GA4 — you watch the first one fire — with the rest of the event plan written",
       "Stack decision in writing — the right platform for your team, with a 12-month cost projection",
-      "Pre-launch QA checklist (30 items) so you ship without an embarrassing leak on day one",
+      "Pre-publish QA checklist so you go live without an embarrassing leak on day one",
     ],
     agenda: [
       {
@@ -240,7 +240,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         time: "11:15 – 11:30",
         title: "Wire events and ship the QA list",
         detail:
-          "Input: your GA4 / CRM logins. Working session: fire your first real conversion event in the room. Output: tagging plan, pre-launch QA checklist, and the stack decision in writing.",
+          "Input: your GA4 / CRM logins. Working session: configure your first conversion event together, where account access allows. Output: a tagging plan, the pre-publish QA checklist, and your stack decision in writing.",
       },
     ],
     forYou: [
@@ -262,7 +262,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         emphasis: "Not Figma porn.",
       },
       agendaHeadline: {
-        lead: "One morning. Two pages wired for revenue.",
+        lead: "One morning. Two pages rebuilt around one job.",
         emphasis: "First event fires before lunch.",
       },
       fitHeadline: {
@@ -291,9 +291,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     icon: Share2,
     title: "Own your social presence",
     capability: "Social presence",
-    oneLiner: "30 days of content before you leave the room.",
+    oneLiner: "Two channels chosen. Your first week written.",
     subhead:
-      "Posting to six platforms is the fastest way to dominate zero of them. In one morning we score every channel against your buyer, commit to two, rebuild your profiles to convert, and ship a 30-day calendar — real posts drafted, not 'ideas.'",
+      "Posting to six platforms is the fastest way to dominate zero of them. In one morning we score every channel against your buyer, commit to two, rewrite your profiles to convert, and draft your first week of real posts — with the rest of the month outlined by pillar and format.",
     pains: [
       {
         title: "Spread thin, quit in 90 days, blame the algorithm.",
@@ -310,8 +310,8 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     ],
     walkOuts: [
       "Channel-fit scorecard — the two channels you commit to and the four you publicly stop",
-      "Profile rewrites for both channels: bio, link, banner, pinned post (drafted live)",
-      "Your first week of posts written and scheduled, with the rest of the 30 days slotted by pillar, format, and ship date",
+      "Profile rewrites for both channels: bio, link, banner, pinned post — drafted in the room",
+      "Your first week of posts drafted and slotted, with the rest of the month outlined by pillar, format, and publish date",
       "Hook bank built on your pillars — 15 openers written for your niche, ready to remix",
       "Weekly cadence and the lightest tool stack to actually hold it (Buffer or Notion + your phone)",
       "Engagement playbook — what to comment, on whose posts, on what schedule, to be visible to buyers",
@@ -327,7 +327,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         time: "9:15 – 10:00",
         title: "Rewrite the profiles to convert",
         detail:
-          "Input: the bio formula and link strategy. Working session: rewrite bio, banner, link block, and pinned post live, with critique. Output: profiles ready to copy-paste into both platforms.",
+          "Input: the bio formula and link strategy. Working session: rewrite bio, banner, link block, and pinned post together, with critique. Output: profile copy ready to paste into both platforms.",
       },
       {
         time: "10:15 – 11:15",
@@ -353,7 +353,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "You expect followers without shipping",
     ],
     agencyServiceTagline:
-      "Two channels rebuilt to convert, a 30-day calendar shipped, the cadence held — every month.",
+      "Two channels rebuilt to convert, a full calendar written and published for you, the cadence held — every month.",
     sections: {
       painEyebrow: "The cost of being everywhere",
       painHeadline: "Six channels at 200 followers each is invisibility with extra steps.",
@@ -363,14 +363,14 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       },
       agendaHeadline: {
         lead: "One morning. Two channels owned.",
-        emphasis: "30-day calendar shipped, not sketched.",
+        emphasis: "First week drafted, the month outlined.",
       },
       fitHeadline: {
         lead: "Built for founders ready to commit.",
         emphasis: "Not for chasers of every new platform.",
       },
       fitLede:
-        "Concentration beats coverage. If you're not willing to publicly stop four channels by Monday, this workshop isn't for you.",
+        "Concentration beats coverage. If you're not willing to stop posting to four channels, this workshop isn't for you.",
       decisionHeadline: {
         lead: "Leave with a calendar —",
         emphasis: "and the discipline to hold it.",
@@ -391,7 +391,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     icon: PenTool,
     title: "Engineer your content",
     capability: "A content engine",
-    oneLiner: "Rank, publish, repeat. Your content machine is live.",
+    oneLiner: "The questions your buyers type — answered, starting today.",
     subhead:
       "Paid traffic gets more expensive every quarter. Content compounds. In one morning we architect the engine — pillars, SEO map, production flow, and the repurposing system that turns one anchor piece into ten — so it ships without grinding you to dust.",
     pains: [
@@ -412,7 +412,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "3–5 content pillars tied to your offer and to buyer-intent keywords",
       "SEO keyword map — the terms we confirm in the room that you can realistically rank for in 6 months",
       "Production system documented: capture → draft → edit → publish, with owners and SLAs",
-      "One anchor piece repurposed live into its derivative assets, with the flow documented for every piece after",
+      "One anchor piece repurposed in the room into its first derivative assets, with the flow documented for every piece after",
       "90-day editorial calendar locked: titles, formats, ship dates, owner per asset",
       "Measurement plan — the 3 metrics that prove the engine is working (and the 12 to ignore)",
     ],
@@ -473,7 +473,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         "Content rewards patience and punishes dabbling. If you won't commit to publishing through a slow quarter, save your $197.",
       decisionHeadline: {
         lead: "Leave with the engine —",
-        emphasis: "and a 90-day calendar already loaded.",
+        emphasis: "and a publishing plan you can actually hold.",
       },
       decisionBody:
         "By 11:30 you'll have your pillars, a keyword map you can actually win in 6 months, a documented production flow (capture → draft → edit → ship), a 1-to-10 repurposing framework, and a 90-day editorial calendar with owners assigned. You'll also know whether to operate it solo, hire an editor, or hand the whole flywheel to our team.",
@@ -491,9 +491,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     icon: Sparkles,
     title: "Run on AI",
     capability: "AI as your operating system",
-    oneLiner: "Automate 5 real workflows. Today.",
+    oneLiner: "Find the hours. Take the first one back.",
     subhead:
-      "Buying ChatGPT seats isn't AI strategy. In one morning we audit your real workflows, automate five of them live in the room, and hand you the prompt library, model choices, and governance plan so the leverage compounds across your team — not just on your laptop.",
+      "Buying ChatGPT seats isn't AI strategy. In one morning we audit your real workflows, configure your highest-value one on your own account, specify the next four, and hand you the prompt library, model choices, and governance plan so the leverage compounds across your team — not just on your laptop.",
     pains: [
       {
         title: "AI amplifies whatever it's pointed at. Most teams are scaling fuzz.",
@@ -510,7 +510,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     ],
     walkOuts: [
       "AI stack audit — what to keep, kill, and add, with monthly cost math",
-      "Your highest-value workflow built and running on your real data — the next four specified and prompted",
+      "Your highest-value workflow configured on your own account with your real data — the next four specified and prompted",
       "Prompt library tuned to your brand voice — your core prompts written, organized, and reusable",
       "Governance doc: model choice per task, quality gates, what AI is never allowed to do alone",
       "ROI model — hours and dollars saved per week, per workflow, with the formula",
@@ -525,9 +525,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       },
       {
         time: "9:15 – 10:30",
-        title: "Automate 5 workflows — live, with your data",
+        title: "Build your first workflow — with your data",
         detail:
-          "Input: real tools (Claude/GPT, n8n or Zapier, your CRM). Working session: build, test, and iterate each automation in the room. Output: 5 working flows you can deploy to the team this week.",
+          "Input: real tools (Claude/GPT, n8n or Zapier, your CRM). Working session: build and test your highest-value automation in the room, then specify the next four. Output: one configured workflow plus four written specs you can build this week.",
       },
       {
         time: "10:45 – 11:15",
@@ -558,11 +558,11 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       painEyebrow: "The cost of seats without systems",
       painHeadline: "AI without workflows isn't transformation — it's a $400/month subscription.",
       walkOutHeadline: {
-        lead: "Five live automations, a prompt library, governance.",
+        lead: "One working automation, four specified, governance.",
         emphasis: "Not a demo reel.",
       },
       agendaHeadline: {
-        lead: "One morning. Five workflows automated.",
+        lead: "One morning. Your first workflow, configured.",
         emphasis: "With your tools, your data — in the room.",
       },
       fitHeadline: {
@@ -576,7 +576,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         emphasis: "measured in hours per week.",
       },
       decisionBody:
-        "By 11:30 you'll have your highest-value automation running on your real data, the next four specified, a prompt library tuned to your brand, a one-page governance doc (what AI does, what it never does alone), and an ROI model showing hours and dollars saved per week. You'll also know whether to roll it out internally or have our team wire the next 10 workflows.",
+        "By 11:30 you'll have your highest-value automation configured on your own account with your real data, the next four specified and prompted, a prompt library tuned to your brand, a one-page governance doc (what AI does, what it never does alone), and an ROI model showing hours and dollars saved per week. You'll also know whether to build the rest internally or hand the next ten workflows to our team.",
       otherWorkshopsHeadline: "The other workflows AI will quietly absorb.",
       faqHeadline: "AI questions, answered without the hype-cycle math.",
     },
@@ -591,9 +591,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     icon: Mail,
     title: "Automate your revenue",
     capability: "Email, CRM, and automation",
-    oneLiner: "Your CRM live. Your first sequence sending.",
+    oneLiner: "Your CRM chosen. Your first sequence written.",
     subhead:
-      "First-touch sales is for amateurs. Pros build the follow-up engine. In one morning we pick your CRM, map the lifecycle, write three sequences live, and fix the deliverability settings most founders don't know are quietly killing their open rates.",
+      "First-touch sales is for amateurs. Pros build the follow-up engine. In one morning we pick your CRM, map the lifecycle, draft your welcome sequence together, and prepare the deliverability records most founders don't know are quietly killing their open rates.",
     pains: [
       {
         title: "No CRM = no memory = no deal.",
@@ -609,9 +609,9 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       },
     ],
     walkOuts: [
-      "CRM chosen and stood up with your pipeline built — Hubspot, Attio, or Folk — picked for your stage and team, not by hype",
+      "Your CRM chosen — Hubspot, Attio, or Folk — scored against your stage and team, with your pipeline stages defined and the setup steps listed",
       "Lifecycle map — every touch from cold lead to repeat buyer, with trigger and owner",
-      "Your welcome sequence written and loaded live — nurture and win-back mapped and templated to finish this week",
+      "Your welcome sequence drafted with you and staged in your own tool, ready for you to turn on — nurture and win-back mapped and templated to finish this week",
       "Segmentation plan that earns higher open and reply rates without sounding spammy",
       "Automation blueprint — what fires what, in which tool, and how to debug it",
       "Deliverability records prepared — SPF, DKIM, and DMARC values ready to paste into your DNS — with the warmup plan and sender rules",
@@ -631,13 +631,13 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       },
       {
         time: "10:30 – 11:15",
-        title: "Write 3 sequences — live",
+        title: "Draft your welcome sequence — together",
         detail:
-          "Input: subject-line patterns that beat 40% open rates in 2026. Working session: draft welcome, nurture, and win-back together. Output: your welcome sequence ready to send, the other two templated, and the rationale documented for future edits.",
+          "Input: subject-line patterns that beat 40% open rates in 2026. Working session: draft the welcome sequence together and outline nurture and win-back. Output: your welcome sequence staged and ready for you to turn on, the other two templated, and the rationale documented for future edits.",
       },
       {
         time: "11:15 – 11:30",
-        title: "Wire automation and lock deliverability",
+        title: "Map the automation, prepare deliverability",
         detail:
           "Input: your domain DNS access. Working session: generate your SPF/DKIM/DMARC records, plan the warmup, document the trigger logic. Output: a deliverability scorecard and the exact records to paste into DNS.",
       },
@@ -653,17 +653,17 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "You want spam-cannon outreach without a list strategy",
     ],
     agencyServiceTagline:
-      "CRM picked and live, 3 production sequences shipped, deliverability fixed — in 3 weeks.",
+      "CRM set up for you, production sequences written and turned on, deliverability fixed — in 3 weeks.",
     sections: {
       painEyebrow: "The cost of forgetting your pipeline",
       painHeadline: "80% of your revenue lives in touches 2 through 12 — and you've never sent them.",
       walkOutHeadline: {
-        lead: "CRM live, lifecycle mapped, first sequence sending.",
+        lead: "CRM chosen, lifecycle mapped, first sequence written.",
         emphasis: "Not a Mailchimp tutorial.",
       },
       agendaHeadline: {
         lead: "One morning. The follow-up machine, built.",
-        emphasis: "Three sequences drafted, deliverability locked.",
+        emphasis: "Welcome sequence drafted, deliverability prepared.",
       },
       fitHeadline: {
         lead: "Built for founders losing deals in the inbox.",
@@ -673,10 +673,10 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         "If you have a list and zero sequences against it, this is the highest-leverage morning you'll spend this quarter. If you don't have a list yet, build the offer first.",
       decisionHeadline: {
         lead: "Leave with the machine —",
-        emphasis: "running on autopilot by Friday.",
+        emphasis: "ready for you to turn on.",
       },
       decisionBody:
-        "By 11:30 you'll have your CRM picked, a lifecycle map (stranger → repeat buyer), your welcome sequence written and loaded, the other two templated, the segmentation plan, and your SPF/DKIM/DMARC records ready to paste. You'll also know whether to wire it yourself, hire an ops contractor, or hand it to our team.",
+        "By 11:30 you'll have your CRM chosen, a lifecycle map (stranger → repeat buyer), your welcome sequence drafted and staged in your own tool, the other two templated, the segmentation plan, and your SPF/DKIM/DMARC records ready to paste. You'll also know whether to finish it yourself, hire an ops contractor, or hand it to our team.",
       otherWorkshopsHeadline: "The other systems your sequences will feed.",
       faqHeadline: "Email questions, answered without the deliverability theater.",
     },
@@ -793,7 +793,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
     capability: "Legal, financial, and operational scaffolding",
     oneLiner: "Entity. Contracts. Books. Settled.",
     subhead:
-      "Founders skip the scaffolding until a customer, a bank, or an investor asks — and then it's a five-figure scramble and a deal you almost lost. In one morning we settle the entity question, lock the contract suite, set up the books, and hand you the operations calendar that keeps you out of trouble.",
+      "Founders skip the scaffolding until a customer, a bank, or an investor asks — and then it's a five-figure scramble and a deal you almost lost. In one morning we settle the entity question against your real numbers, assemble the contract checklist, choose your bookkeeping stack and close rhythm, and hand you the operations calendar that keeps you out of trouble. We build the operating setup — we're not your attorney or CPA.",
     pains: [
       {
         title: "Wrong entity is a six-figure tax mistake on a 5-year delay.",
@@ -839,7 +839,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         time: "11:15 – 11:30",
         title: "Build the 12-month operations calendar",
         detail:
-          "Input: your state's filing schedule, your fiscal year. Working session: map every recurring deadline (taxes, renewals, filings, insurance). Output: a dated calendar with owners — automated reminders where possible.",
+          "Input: your state's filing schedule, your fiscal year. Working session: map every recurring deadline (taxes, renewals, filings, insurance). Output: a dated calendar with owners, and the reminder setup written down for you to add to your own calendar.",
       },
     ],
     forYou: [
