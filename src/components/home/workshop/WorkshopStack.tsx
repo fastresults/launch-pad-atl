@@ -93,7 +93,7 @@ function WorkshopStickyBar({ workshop }: { workshop: CatalogWorkshop }) {
         className="pointer-events-none fixed inset-x-0 top-[4.25rem] z-40 -translate-y-3 opacity-0 transition-[opacity,transform] duration-300 data-[visible]:pointer-events-auto data-[visible]:translate-y-0 data-[visible]:opacity-100"
       >
         <div className="public-container px-6">
-          <div className="flex items-center justify-between gap-4 rounded-full border border-border bg-card/95 px-4 py-2 shadow-lg backdrop-blur">
+          <div className="flex items-center justify-between gap-4 rounded-full border border-border/60 bg-card/50 px-4 py-2 shadow-lg backdrop-blur-xl backdrop-saturate-150">
             <span className="flex min-w-0 items-center gap-2 text-sm font-medium text-foreground">
               <Icon
                 className="size-4 shrink-0 text-primary"
