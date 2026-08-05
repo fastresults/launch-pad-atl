@@ -422,7 +422,7 @@
 }
 
 .sl-hero__status { margin-top: 20px; }
-.sl-hero__status span { color: var(--sl-quote-gold); }
+.sl-hero__status span { color: hsl(var(--sl-brand-orange)); }
 
 /* Scroll cue — slow, continuous float so visitors see there's more below */
 .sl-hero__scroll-cue {
