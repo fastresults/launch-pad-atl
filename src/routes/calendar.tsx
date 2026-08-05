@@ -31,7 +31,7 @@ export default function CalendarPage() {
 
   useDocumentTitle(
     "Workshop calendar — every upcoming Startup Labs session",
-    `All upcoming Startup Labs workshop dates in the next ${SCHEDULE_HORIZON_DAYS} days, in one place. Pick a morning, reserve your seat, walk out with the real thing built.`,
+    `The next ${SESSIONS_PER_WORKSHOP} dates for every Startup Labs workshop, in one place. Pick a morning, reserve your seat, walk out with the real thing built.`,
     all.slice(0, 20).map((s) => ({
       "@context": "https://schema.org",
       "@type": "Event",
