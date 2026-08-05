@@ -516,11 +516,13 @@
   display: flex;
   min-width: 0;
   align-items: center;
+  --sl-prompt-inset: 0.5em;
+  --sl-prompt-text-start: 2.2em;
 }
 
 .public-surface .sl-prompt__input {
   width: 100%;
-  padding: 4px 0;
+  padding: 4px 0 4px var(--sl-prompt-text-start);
   border: 0;
   outline: 0;
   background: transparent;
@@ -538,6 +540,7 @@
   display: flex;
   min-width: 0;
   align-items: center;
+  padding-left: var(--sl-prompt-text-start);
   overflow: hidden;
   color: oklch(0.98 0.006 260 / 72%);
   font-size: 18px;
@@ -545,15 +548,20 @@
 }
 
 .sl-prompt__ghost-icon {
+  position: absolute;
+  left: var(--sl-prompt-inset);
+  top: 50%;
+  transform: translateY(-50%);
   flex-shrink: 0;
   width: 1.05em;
   height: 1.05em;
-  margin-left: 0.5em;
-  margin-right: 0.55em;
+  font-size: 18px;
   color: #c29b46 !important;
   stroke: #c29b46 !important;
   opacity: 1;
+  pointer-events: none;
 }
+
 
 .sl-prompt__caret {
   display: inline-block;
