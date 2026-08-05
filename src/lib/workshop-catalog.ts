@@ -121,7 +121,7 @@ const BUILD_META: Record<
     lens: "client acquisition — who to sell to and how to reach them",
   },
   "email-crm-automation": {
-    chipLabel: "Email & CRM",
+    chipLabel: "CRM",
     opensLabel: "Dec 2026",
     heroQuestion: "Who stopped replying?",
     promptExamples: [
@@ -177,7 +177,7 @@ const BUILD_META: Record<
     lens: "AI automation of repetitive founder work",
   },
   "legal-financial-ops": {
-    chipLabel: "Legal & money",
+    chipLabel: "Accounting",
     opensLabel: "Apr 2027",
     heroQuestion: "What are you avoiding?",
     promptExamples: [
