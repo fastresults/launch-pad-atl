@@ -1,7 +1,13 @@
-import { Link } from "react-router-dom";
 import { ArrowRight, ClipboardCheck, ShieldCheck } from "lucide-react";
 import { AUDIT_STEPS, WORKSHOP_GUARANTEE, getWorkshopAudit } from "@/lib/workshop-audit";
 import type { CatalogWorkshop } from "@/lib/workshop-catalog";
+import {
+  Panel,
+  PrimaryCta,
+  SectionEyebrow,
+  SectionHeading,
+  SectionShell,
+} from "@/components/home/workshop/SectionChrome";
 
 /**
  * Every build workshop opens with an expert audit of the attendee's real
@@ -12,53 +18,46 @@ export function WorkshopAuditSection({ workshop }: { workshop: CatalogWorkshop }
   if (!audit) return null;
 
   return (
-    <section className="border-t border-border py-14">
-      <div className="public-container px-6">
-        <p className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[color:var(--sl-quote-gold)]">
-          <ClipboardCheck className="size-3.5" aria-hidden="true" />
-          Included · {audit.name}
-        </p>
-        <h2 className="mt-4 max-w-3xl text-2xl font-medium leading-tight text-foreground sm:text-3xl">
-          Your morning starts with an audit of your own work — not a lecture.
-        </h2>
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-          {audit.promise} It lands 48 hours before the session, graded, with the
-          cost of every gap named and the one thing we build together to close it.
-        </p>
+    <SectionShell>
+      <SectionEyebrow icon={ClipboardCheck}>Included · {audit.name}</SectionEyebrow>
+      <SectionHeading
+        lead="Your morning starts with an audit of your own work —"
+        emphasis="not a lecture."
+      />
+      <p className="mt-5 max-w-3xl text-base text-muted-foreground md:text-lg">
+        {audit.promise} It lands 48 hours before the session, graded, with the cost of every gap
+        named and the one thing we build together to close it.
+      </p>
 
-        <ol className="mt-10 grid gap-6 sm:grid-cols-3">
-          {AUDIT_STEPS.map((step, i) => (
-            <li key={step.label} className="border-t border-border pt-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+      <ol className="mt-10 grid gap-4 md:grid-cols-3">
+        {AUDIT_STEPS.map((step, i) => (
+          <li key={step.label}>
+            <Panel className="h-full">
+              <div className="text-xs uppercase tracking-[0.18em] text-primary">
                 0{i + 1} · {step.label}
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {step.body}
-              </p>
-            </li>
-          ))}
-        </ol>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+            </Panel>
+          </li>
+        ))}
+      </ol>
 
-        <div className="mt-10 rounded-2xl border border-border bg-card p-6 sm:p-8">
-          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            What your audit prescribes
-          </p>
-          <p className="mt-3 max-w-3xl text-lg font-medium leading-snug text-foreground">
-            {audit.prescribedOutcome}
-          </p>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            The point of the morning: {audit.improvement}.
-          </p>
-          <Link
-            to={`/register?workshop=${workshop.slug}`}
-            className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-[color:var(--sl-quote-gold)]"
-          >
-            Reserve a seat and start your audit
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
+      <Panel accent className="mt-6 md:p-8">
+        <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+          What your audit prescribes
         </div>
-      </div>
-    </section>
+        <p className="mt-3 max-w-3xl text-lg font-medium leading-snug md:text-xl">
+          {audit.prescribedOutcome}
+        </p>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          The point of the morning: {audit.improvement}.
+        </p>
+        <PrimaryCta to={`/register?workshop=${workshop.slug}`} className="mt-6">
+          Reserve a seat and start your audit
+          <ArrowRight className="size-4" aria-hidden="true" />
+        </PrimaryCta>
+      </Panel>
+    </SectionShell>
   );
 }
 
@@ -68,21 +67,14 @@ export function WorkshopGuarantee({ workshop }: { workshop: CatalogWorkshop }) {
   if (!audit) return null;
 
   return (
-    <section className="border-t border-border py-14">
-      <div className="public-container px-6">
-        <div className="rounded-2xl border border-[color:var(--sl-quote-gold)]/40 bg-card p-6 sm:p-8">
-          <p className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[color:var(--sl-quote-gold)]">
-            <ShieldCheck className="size-3.5" aria-hidden="true" />
-            The guarantee
-          </p>
-          <h2 className="mt-4 max-w-2xl text-2xl font-medium leading-tight text-foreground sm:text-3xl">
-            {WORKSHOP_GUARANTEE.headline}
-          </h2>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            {WORKSHOP_GUARANTEE.body}
-          </p>
-        </div>
-      </div>
-    </section>
+    <SectionShell>
+      <Panel accent className="md:p-8">
+        <SectionEyebrow icon={ShieldCheck}>The guarantee</SectionEyebrow>
+        <SectionHeading lead={WORKSHOP_GUARANTEE.headline} className="max-w-2xl" />
+        <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+          {WORKSHOP_GUARANTEE.body}
+        </p>
+      </Panel>
+    </SectionShell>
   );
 }
