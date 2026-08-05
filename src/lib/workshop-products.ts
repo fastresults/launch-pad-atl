@@ -238,7 +238,7 @@ const PRODUCT_META: Record<string, ProductMeta> = {
         "Day 6 — “Still worth doing?” — a permission-to-close-the-file email",
         "Day 21+ — Quarterly re-engagement, automatic, forever",
       ],
-      stamp: "Loaded into your CRM in the room · sending by Monday",
+      stamp: "Drafted with you in the room · yours to load and send",
     },
     objections: [
       {
@@ -254,9 +254,9 @@ const PRODUCT_META: Record<string, ProductMeta> = {
         a: "You won't. That's the whole problem — follow-up loses to whatever is on fire that day. Writing them once and automating the send is the fix.",
       },
     ],
-    decisionHeadline: "Leave with the follow-up running without you.",
+    decisionHeadline: "Leave knowing exactly what gets sent, when, and by what trigger.",
     decisionBody:
-      "CRM live, pipeline mirrored, your welcome sequence written and sending, and the automations that run it while you're on a job.",
+      "Your CRM chosen and opened, your pipeline stages defined, your welcome sequence drafted, and the automation map written with the build steps beside it.",
   },
 
   /* ─────────── SOCIAL ─────────── */
@@ -275,7 +275,7 @@ const PRODUCT_META: Record<string, ProductMeta> = {
         "Wed — the question customers ask most, answered in 40 seconds",
         "Fri — the one thing we refuse to do, and why",
       ],
-      stamp: "Scheduled before you leave · 30 days of nothing to think about",
+      stamp: "First week drafted and slotted · the rest of the month outlined",
     },
     objections: [
       {
@@ -310,9 +310,9 @@ const PRODUCT_META: Record<string, ProductMeta> = {
         "“kitchen remodel cost marietta” — 320/mo · we can rank in 6 months",
         "“how long does a remodel take” — 190/mo · publish first, easiest win",
         "“permit needed for kitchen remodel ga” — 90/mo · nobody local answers it",
-        "Pillar → 3 supporting posts each, first draft written in the room",
+        "Pillar → supporting posts mapped, first draft written in the room",
       ],
-      stamp: "Mapped to real volume · three drafts done before lunch",
+      stamp: "Mapped to real volume · your first draft written in the room",
     },
     objections: [
       {
@@ -349,12 +349,12 @@ const PRODUCT_META: Record<string, ProductMeta> = {
         "Step 2 — draft the quote from your pricing rules, in your voice",
         "Step 3 — land in your inbox for one look, then send",
       ],
-      stamp: "Built live, running on your account before you leave",
+      stamp: "One workflow configured on your account · the rest specified",
     },
     objections: [
       {
         q: "I'm not technical.",
-        a: "Nothing here is code. It's the tools you already have, wired together in the room, with you clicking the buttons so you can change them later.",
+        a: "Nothing here is code. It's the tools you already have, connected step by step with you at the keyboard, so you can change them later.",
       },
       {
         q: "I don't trust AI with customer-facing work.",
@@ -365,9 +365,9 @@ const PRODUCT_META: Record<string, ProductMeta> = {
         a: "The tools will change; the audit won't. You leave knowing which of your tasks are worth automating and what they actually cost — that survives every model release.",
       },
     ],
-    decisionHeadline: "Leave with five workflows running without you.",
+    decisionHeadline: "Leave with one workflow working and the next four specified.",
     decisionBody:
-      "An honest audit of your stack, five real automations built live on your accounts, and the monthly cost written down.",
+      "An honest audit of your stack, your highest-value workflow configured on your own account, the next four specified and prompted, and the monthly cost written down.",
   },
 
   /* ─────────── LEGAL & MONEY ─────────── */
@@ -384,14 +384,14 @@ const PRODUCT_META: Record<string, ProductMeta> = {
         "Entity: GA LLC, single-member, S-corp election revisited at $80k profit",
         "Contracts: MSA + SOW + 1099 contractor agreement, all signed-ready",
         "Money: business checking + card, owner draw schedule, 25% tax reserve",
-        "Books: chart of accounts live, receipts flowing, first month closed",
+        "Books: chart of accounts drafted, receipt intake chosen, close rhythm scheduled",
       ],
-      stamp: "Filed and opened in the room · nothing left on the list",
+      stamp: "Prepared with you in the room · the filings stay yours to submit",
     },
     objections: [
       {
         q: "Isn't this what a lawyer and a CPA are for?",
-        a: "For the edge cases, yes — and you'll leave knowing which of yours are edge cases. Most founders are stuck on the standard 90%, which is exactly what gets finished that morning.",
+        a: "For the edge cases, yes — and you'll leave knowing which of yours are edge cases. Most founders are stuck on the standard 90%, which is exactly what gets decided and prepared that morning. We build the operating setup — we're not your attorney or CPA.",
       },
       {
         q: "I'm too small to need an entity.",
@@ -399,12 +399,12 @@ const PRODUCT_META: Record<string, ProductMeta> = {
       },
       {
         q: "My books are a mess. Is it too late?",
-        a: "No. Bring the shoebox. Half the room is founders opening a real chart of accounts for the first time and closing a month by lunch.",
+        a: "No. Bring the shoebox. Half the room is founders drafting a real chart of accounts for the first time and setting the rhythm that keeps it current.",
       },
     ],
     decisionHeadline: "Leave with the avoided thing done.",
     decisionBody:
-      "Entity path settled with the filing ready to submit, contract suite ready to sign, accounts open, and the books actually started.",
+      "Your entity path compared against your real numbers, the contract checklist assembled, your accounts and books set to open, and the questions to confirm with your CPA written down.",
   },
 };
 
