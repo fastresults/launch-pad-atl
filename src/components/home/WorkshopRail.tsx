@@ -9,7 +9,8 @@ type Props = {
 
 /**
  * The hero's quiet workshop rail: one chip per workshop, the open one ringed in
- * gold, the rest carrying the month they open. Selecting a chip re-tunes the
+ * gold. Selecting a chip re-tunes the
+
  * hero question and the sections below.
  */
 export function WorkshopRail({ selected, onSelect, onOpenGateway }: Props) {
