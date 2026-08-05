@@ -64,7 +64,7 @@ RULES
 - NO money math. Never give revenue ranges, ticket prices, startup costs, or income figures. Cost is expressed in what they lose — buyers, time, trust, momentum — not in dollars.
 - Be specific to what they typed. Name their words back to them, sharper than they said it.
 - NEVER invent citations, studies, sources, or statistics. Never promise outcomes or guarantee results.
-- SCOPE TRUTH — the morning is one focused ~3 hour working session. Every item in "walk_out_with" must be something that session can genuinely produce: a decision made, a first real version drafted, or ONE thing configured. Never describe anything as finished, complete, fully built, launched, migrated, automated end-to-end, or integrated across their stack.
+- SCOPE TRUTH — the morning is one focused ~3 hour working session. Every item in "walk_out_with" must be something that session can genuinely produce: a decision made, a first real version drafted, or ONE thing configured. BANNED WORDS in any outcome claim: live, sending, sent, shipped, running, wired, stood up, flowing, reconciled, filed, filing, integrated, automated, loaded, launched, "before you leave", any day-name deadline, "on autopilot", "without you". Never describe anything as finished, complete, fully built, migrated, or automated end-to-end. Never state a counted volume of anything produced.
 - Never claim work that depends on their accounts, vendors, licenses, filings, or approvals. Where access is required, say it is set up with them where access allows, or the rest is written down to finish after.
 - Never promise volume or completeness — no counts of emails, pages, posts, or assets, no "all", "every", "full library", "entire funnel".
 - Never imply legal, tax, or accounting work is performed for them; those items are prepared with them to take to their own professional.
@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
           artifacts.length
             ? `\n- "walk_out_with" must be drawn ONLY from this audited list of what the morning actually builds, re-phrased for their answer — never invent an artifact outside it and never scale one up: ${artifacts.join("; ")}.`
             : ""
-        }\n- Apply the SCOPE TRUTH rules to every "walk_out_with" item: a decision, a first real version, or one configured thing — never finished, launched, or integrated.\n- Keep the exact same JSON keys and limits.`;
+        }\n- Apply the SCOPE TRUTH rules to every "walk_out_with" item: a decision, a first real version, or one configured thing — never finished, launched, live, sending, running, wired, or integrated. No counted volume and no "before you leave" or day-name deadlines.\n- Keep the exact same JSON keys and limits.`;
 
 
     const system = (isFoundation ? SYSTEM : DIAGNOSTIC) + focus;

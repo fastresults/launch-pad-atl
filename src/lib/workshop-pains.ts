@@ -241,7 +241,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     {
       id: "no-follow-up",
       pain: "Form submissions that go somewhere and die",
-      fix: "the form wired to your inbox and a reply that goes out",
+      fix: "the form connected to a reply that goes out",
       question: "Someone fills out my form and then nothing happens.",
       imagePrompt: scenePrompt(
         "A phone lying face-up on a nightstand in a pitch-dark bedroom, screen just lit with a single notification banner at the top and nothing else",
@@ -441,7 +441,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     {
       id: "no-handoff",
       pain: "Nothing happens after the form is filled",
-      fix: "the form wired straight through to a reply and a task",
+      fix: "the form connected through to a reply and a task",
       question: "Someone fills out my form and nothing happens.",
       imagePrompt: scenePrompt(
         "A phone face-up on an otherwise empty desk at night, the screen showing a single form-submission notification card and an empty list below it",
@@ -588,7 +588,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     {
       id: "ai-sludge",
       pain: "AI drafts that sound like everyone else's",
-      fix: "prompts loaded with your voice, so the output sounds like you",
+      fix: "prompts written in your voice, so the output sounds like you",
       question: "My AI drafts sound like everyone else's.",
       imagePrompt: scenePrompt(
         "A man in his forties at a monitor at night showing a wall of identical evenly-sized paragraph blocks stacked down the page, scrolling past without reading",
@@ -659,7 +659,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     {
       id: "everything-manual",
       pain: "Doing by hand what should be automatic",
-      fix: "your three worst repeat tasks running without you",
+      fix: "your worst repeat task, configured with you",
       question: "I'm still doing all of this by hand.",
       imagePrompt: scenePrompt(
         "Hands copying figures from a paper form into a laptop late at night, the laptop screen showing a spreadsheet grid of rows and cells half filled in, a tall stack of forms waiting beside them, warm lamp",
@@ -669,7 +669,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     {
       id: "ai-toy",
       pain: "Using AI like a toy instead of a coworker",
-      fix: "prompts wired into the work you actually repeat",
+      fix: "prompts built for the work you actually repeat",
       question: "I use AI like a toy, not like help.",
       imagePrompt: scenePrompt(
         "An open laptop glowing in a dim room showing a chat assistant interface with one short exchange bubble and an empty input box below, a hand resting idle on the trackpad, nothing being typed",
@@ -707,7 +707,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     {
       id: "bad-output",
       pain: "AI output you have to rewrite anyway",
-      fix: "prompts with your context loaded so the first draft is usable",
+      fix: "prompts with your context so the first draft is usable",
       question: "I rewrite everything the AI gives me anyway.",
       imagePrompt: scenePrompt(
         "A printed draft covered edge to edge in red pen corrections on a dark desk, warm lamp",
@@ -757,7 +757,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     {
       id: "no-entity",
       pain: "Running real money through your own name",
-      fix: "the entity chosen and filed, with you watching",
+      fix: "the entity chosen, the filing prepared with you",
       question: "I'm running real money through my own name.",
       imagePrompt: scenePrompt(
         "A personal checkbook and a printed business invoice side by side on a kitchen table under a warm evening lamp",

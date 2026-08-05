@@ -510,7 +510,8 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                   <p className="mt-2 text-[15px] hero-sub">
                     One focused morning at the IGNITE Center at Greater Atlanta Christian School —
                     Thursday, August 20, 2026. You don't leave with notes. You leave with a live page
-                    people can visit, a priced offer, and your first outreach already sent.
+                    people can visit (where account access allows), a priced offer, and your first
+                    outreach already sent.
                   </p>
                   <ul className="mt-4 space-y-2">
                     {[
