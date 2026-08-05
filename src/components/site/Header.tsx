@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 
 const leftNav = [
   { to: "/build", label: "workshops" },
+  { to: "/calendar", label: "calendar" },
   { to: "/services", label: "services" },
   { to: "/schedule", label: "schedule" },
 ] as const;
