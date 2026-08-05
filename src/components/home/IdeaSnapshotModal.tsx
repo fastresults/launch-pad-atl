@@ -540,10 +540,15 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                     {workshop.opensLabel}.
                   </p>
                   <p className="mt-2 text-[15px] hero-sub">
+                    One focused area, worked with you in the room — the decisions made and the first
+                    real versions in your hands, not a finished agency deliverable.
+                  </p>
+                  <p className="mt-2 text-[15px] hero-sub">
                     Put your email down and you get first access when seats open at the IGNITE Center
                     at Greater Atlanta Christian School. {workshop.priceLabel}, capped room, built
                     with you — not talked at.
                   </p>
+
                   <div className="mt-4">
                     <WaitlistForm
                       slug={workshop.slug}
