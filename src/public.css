@@ -548,8 +548,10 @@
   flex-shrink: 0;
   width: 1.05em;
   height: 1.05em;
-  margin-right: 0.5em;
-  color: hsl(var(--sl-brand-orange));
+  margin-right: 0.55em;
+  color: hsl(var(--sl-brand-orange)) !important;
+  stroke: hsl(var(--sl-brand-orange)) !important;
+  opacity: 1;
 }
 
 .sl-prompt__caret {
