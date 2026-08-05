@@ -431,8 +431,10 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                   ))}
                 </ul>
                 <p className="mt-4 text-xs hero-faint">
-                  Built with you in the room — not slides, not notes.
+                  Built with you in one morning — decisions made and real first versions in your
+                  hands, not a finished agency deliverable.
                 </p>
+
               </div>
 
                 </>
@@ -512,7 +514,7 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                   </p>
                   <ul className="mt-4 space-y-2">
                     {[
-                      "A live page for your startup, written and published with you",
+                      "A live page for your startup, written and published with you where account access allows",
                       "A priced offer you can say out loud without flinching",
                       "Your first real outreach sent before you go home",
                     ].map((item) => (
@@ -523,8 +525,10 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                     ))}
                   </ul>
                   <p className="mt-4 text-sm hero-faint">
-                    Seats are capped so everyone gets built with, not talked at. $197.
+                    Seats are capped so everyone gets built with, not talked at. $197. It's one
+                    morning — first real versions, not a finished agency deliverable.
                   </p>
+
                   <div className="mt-5">
                     <ActionRow registerTo={registerTo} onLearnMore={learnMore} onClose={close} />
                   </div>
@@ -536,10 +540,15 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                     {workshop.opensLabel}.
                   </p>
                   <p className="mt-2 text-[15px] hero-sub">
+                    One focused area, worked with you in the room — the decisions made and the first
+                    real versions in your hands, not a finished agency deliverable.
+                  </p>
+                  <p className="mt-2 text-[15px] hero-sub">
                     Put your email down and you get first access when seats open at the IGNITE Center
                     at Greater Atlanta Christian School. {workshop.priceLabel}, capped room, built
                     with you — not talked at.
                   </p>
+
                   <div className="mt-4">
                     <WaitlistForm
                       slug={workshop.slug}

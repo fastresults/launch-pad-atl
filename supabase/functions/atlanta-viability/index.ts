@@ -48,7 +48,7 @@ Return ONLY valid JSON, no markdown fences, with the keys in EXACTLY this order:
       "value": string,         // short, punchy, <= 45 chars
       "note": string }         // one short sentence of plain context
   ],
-  "first_moves": string[],     // EXACTLY 4 concrete first actions, one short sentence each
+  "first_moves": string[],     // EXACTLY 4 concrete first actions, one short sentence each — honest starting steps a founder can take themselves, never finished systems or outcomes we'd deliver for them
   "watch_outs": string[],      // EXACTLY 3 honest risks, one short sentence each
   "why_atlanta": string        // ONE paragraph, at most 2 sentences, Atlanta-specific
 }`;
@@ -64,7 +64,12 @@ RULES
 - NO money math. Never give revenue ranges, ticket prices, startup costs, or income figures. Cost is expressed in what they lose — buyers, time, trust, momentum — not in dollars.
 - Be specific to what they typed. Name their words back to them, sharper than they said it.
 - NEVER invent citations, studies, sources, or statistics. Never promise outcomes or guarantee results.
+- SCOPE TRUTH — the morning is one focused ~3 hour working session. Every item in "walk_out_with" must be something that session can genuinely produce: a decision made, a first real version drafted, or ONE thing configured. Never describe anything as finished, complete, fully built, launched, migrated, automated end-to-end, or integrated across their stack.
+- Never claim work that depends on their accounts, vendors, licenses, filings, or approvals. Where access is required, say it is set up with them where access allows, or the rest is written down to finish after.
+- Never promise volume or completeness — no counts of emails, pages, posts, or assets, no "all", "every", "full library", "entire funnel".
+- Never imply legal, tax, or accounting work is performed for them; those items are prepared with them to take to their own professional.
 - Never give legal, tax, medical, or financial advice. Anything jurisdictional says to confirm with the county.
+
 - Say "startup", never "business". Say "assets", never "documents". Never call the offer a plan, blueprint, framework, playbook, or roadmap — name the real artifact instead.
 - Tone: founder-to-founder, warm, direct, no hype, no emojis, no jargon.
 - Be brief and scannable. Keep total output under 1200 characters.
@@ -82,6 +87,7 @@ Return ONLY valid JSON, no markdown fences, with the keys in EXACTLY this order:
   },
   "costs": string[],         // EXACTLY 3 honest costs of leaving it as-is, one short sentence each, no dollar figures
   "walk_out_with": string[], // EXACTLY 3 real artifacts they'd leave the morning holding, tied to their answer
+
   "watch_outs": string[],    // EXACTLY 2 honest risks or things that make this harder, one short sentence each
   "why_atlanta": string      // ONE sentence, at most 2, on doing this in a room in metro Atlanta rather than alone
 }`;
@@ -116,9 +122,10 @@ Deno.serve(async (req) => {
       ? ""
       : `\n\nFOCUS FOR THIS READ\n- The visitor answered a question about ${lens || "one area of their startup"}. Read their answer entirely through that lens.\n- "verdict", "gap", "costs", "walk_out_with", "watch_outs", and "why_atlanta" must all be about ${lens || "that area"} for this founder in metro Atlanta.\n- "idea_label" names what they described, not a generic category.${
           artifacts.length
-            ? `\n- "walk_out_with" must be drawn from what this morning actually builds, phrased for their answer: ${artifacts.join("; ")}.`
+            ? `\n- "walk_out_with" must be drawn ONLY from this audited list of what the morning actually builds, re-phrased for their answer — never invent an artifact outside it and never scale one up: ${artifacts.join("; ")}.`
             : ""
-        }\n- Keep the exact same JSON keys and limits.`;
+        }\n- Apply the SCOPE TRUTH rules to every "walk_out_with" item: a decision, a first real version, or one configured thing — never finished, launched, or integrated.\n- Keep the exact same JSON keys and limits.`;
+
 
     const system = (isFoundation ? SYSTEM : DIAGNOSTIC) + focus;
 
