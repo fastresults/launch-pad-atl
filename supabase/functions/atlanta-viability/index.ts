@@ -122,9 +122,10 @@ Deno.serve(async (req) => {
       ? ""
       : `\n\nFOCUS FOR THIS READ\n- The visitor answered a question about ${lens || "one area of their startup"}. Read their answer entirely through that lens.\n- "verdict", "gap", "costs", "walk_out_with", "watch_outs", and "why_atlanta" must all be about ${lens || "that area"} for this founder in metro Atlanta.\n- "idea_label" names what they described, not a generic category.${
           artifacts.length
-            ? `\n- "walk_out_with" must be drawn from what this morning actually builds, phrased for their answer: ${artifacts.join("; ")}.`
+            ? `\n- "walk_out_with" must be drawn ONLY from this audited list of what the morning actually builds, re-phrased for their answer — never invent an artifact outside it and never scale one up: ${artifacts.join("; ")}.`
             : ""
-        }\n- Keep the exact same JSON keys and limits.`;
+        }\n- Apply the SCOPE TRUTH rules to every "walk_out_with" item: a decision, a first real version, or one configured thing — never finished, launched, or integrated.\n- Keep the exact same JSON keys and limits.`;
+
 
     const system = (isFoundation ? SYSTEM : DIAGNOSTIC) + focus;
 
