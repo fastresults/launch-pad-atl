@@ -121,7 +121,7 @@ const BUILD_META: Record<
     lens: "client acquisition — who to sell to and how to reach them",
   },
   "email-crm-automation": {
-    chipLabel: "Email & CRM",
+    chipLabel: "CRM",
     opensLabel: "Dec 2026",
     heroQuestion: "Who stopped replying?",
     promptExamples: [
