@@ -133,6 +133,19 @@ export const SCHEDULE_HORIZON_DAYS = 90;
  * today, dropping any session inside the booking cutoff. Empty array = nothing
  * to show.
  */
+/**
+ * Foundation runs monthly on the 3rd Thursday, morning slot (ET).
+ * It is kept out of WORKSHOP_SCHEDULES because that map defines the eight
+ * build workshops.
+ */
+export const FOUNDATION_SCHEDULE: ScheduleRule = {
+  weekday: 4, // Thu
+  nth: 3,
+  startTime: "09:30",
+  endTime: "12:15",
+  timeLabel: "9:30 am–12:15 pm ET",
+};
+
 export function getUpcomingSessions(
   slug: string,
   now: Date = new Date(),
@@ -141,6 +154,17 @@ export function getUpcomingSessions(
 ): ScheduledSession[] {
   const rule = WORKSHOP_SCHEDULES[slug];
   if (!rule) return [];
+  return getUpcomingSessionsForRule(rule, now, limit, horizonDays);
+}
+
+/** Same generation logic, for a rule that isn't in WORKSHOP_SCHEDULES. */
+export function getUpcomingSessionsForRule(
+  rule: ScheduleRule,
+  now: Date = new Date(),
+  limit = 12,
+  horizonDays: number = SCHEDULE_HORIZON_DAYS,
+): ScheduledSession[] {
+
 
   const cutoffMs = now.getTime() + BOOKING_CUTOFF_HOURS * 60 * 60 * 1000;
   const horizonMs = now.getTime() + horizonDays * 24 * 60 * 60 * 1000;
