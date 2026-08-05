@@ -122,9 +122,15 @@ function formatDateLabel(year: number, month: number, day: number, weekday: numb
   return `${WEEKDAY_LABEL[weekday]}, ${MONTH_LABEL[month - 1]} ${day}, ${year}`;
 }
 
+/** Sessions stop being bookable this many hours before they start. */
+export const BOOKING_CUTOFF_HOURS = 48;
+
+/** How far ahead the rolling schedule is generated. */
+export const SCHEDULE_HORIZON_MONTHS = 14;
+
 /**
- * Returns upcoming sessions for a workshop, through Dec 2026, filtered so past
- * sessions (end time already elapsed) are dropped. Empty array = nothing to show.
+ * Returns upcoming sessions for a workshop across a rolling window from today,
+ * dropping any session inside the booking cutoff. Empty array = nothing to show.
  */
 export function getUpcomingSessions(
   slug: string,
@@ -134,18 +140,25 @@ export function getUpcomingSessions(
   const rule = WORKSHOP_SCHEDULES[slug];
   if (!rule) return [];
 
+  const cutoffMs = now.getTime() + BOOKING_CUTOFF_HOURS * 60 * 60 * 1000;
   const sessions: ScheduledSession[] = [];
-  // Generate from current month of current year through Dec 2026.
+  // Rolling window: current month through SCHEDULE_HORIZON_MONTHS ahead.
   const startYear = now.getUTCFullYear();
-  for (let year = startYear; year <= 2026; year++) {
-    for (let month = 1; month <= 12; month++) {
+  const startMonth = now.getUTCMonth() + 1; // 1-indexed
+  const totalMonths = SCHEDULE_HORIZON_MONTHS + 1;
+  for (let i = 0; i < totalMonths; i++) {
+    const absolute = startMonth - 1 + i;
+    const year = startYear + Math.floor(absolute / 12);
+    const month = (absolute % 12) + 1;
+    {
       if (rule.months && !rule.months.includes(month)) continue;
       const d = nthWeekdayOfMonth(year, month, rule.weekday, rule.nth);
       const day = d.getUTCDate();
       const startISO = toEtIso(year, month, day, rule.startTime);
       const endISO = toEtIso(year, month, day, rule.endTime);
-      // Drop sessions the moment they start.
-      if (new Date(startISO).getTime() <= now.getTime()) continue;
+      // Drop sessions that start within the booking cutoff window.
+      if (new Date(startISO).getTime() <= cutoffMs) continue;
+
       sessions.push({
         startISO,
         endISO,
