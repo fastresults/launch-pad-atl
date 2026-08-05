@@ -959,13 +959,25 @@
 
 @media (min-width: 900px) {
   .sl-rail__scroller {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
     overflow-x: visible;
+    gap: clamp(3px, 0.5vw, 6px);
     -webkit-mask-image: none;
             mask-image: none;
   }
+  /* Scale the chips down so all nine fit on one line at any desktop width. */
+  .sl-rail__scroller .sl-rail__chip {
+    min-width: 0;
+    padding: 6px clamp(7px, 0.85vw, 12px);
+    font-size: clamp(10px, 0.85vw, 12px);
+    gap: clamp(3px, 0.4vw, 6px);
+  }
+  .sl-rail__scroller .sl-rail__chip > span:first-child {
+    white-space: nowrap;
+  }
 }
+
 
 @media (max-width: 640px) {
   .sl-rail { margin-top: 14px; }
