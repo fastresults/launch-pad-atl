@@ -514,7 +514,7 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                   </p>
                   <ul className="mt-4 space-y-2">
                     {[
-                      "A live page for your startup, written and published with you",
+                      "A live page for your startup, written and published with you where account access allows",
                       "A priced offer you can say out loud without flinching",
                       "Your first real outreach sent before you go home",
                     ].map((item) => (
@@ -525,8 +525,10 @@ export function IdeaSnapshotModal({ idea, workshop, open, onOpenChange }: Props)
                     ))}
                   </ul>
                   <p className="mt-4 text-sm hero-faint">
-                    Seats are capped so everyone gets built with, not talked at. $197.
+                    Seats are capped so everyone gets built with, not talked at. $197. It's one
+                    morning — first real versions, not a finished agency deliverable.
                   </p>
+
                   <div className="mt-5">
                     <ActionRow registerTo={registerTo} onLearnMore={learnMore} onClose={close} />
                   </div>
