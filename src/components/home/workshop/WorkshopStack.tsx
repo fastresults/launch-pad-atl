@@ -90,7 +90,7 @@ function WorkshopStickyBar({ workshop }: { workshop: CatalogWorkshop }) {
       <div ref={sentinel} aria-hidden="true" />
       <div
         data-visible={stuck || undefined}
-        className="pointer-events-none fixed inset-x-0 top-14 z-40 -translate-y-3 opacity-0 transition-[opacity,transform] duration-300 data-[visible]:pointer-events-auto data-[visible]:translate-y-0 data-[visible]:opacity-100"
+        className="pointer-events-none fixed inset-x-0 top-[4.25rem] z-40 -translate-y-3 opacity-0 transition-[opacity,transform] duration-300 data-[visible]:pointer-events-auto data-[visible]:translate-y-0 data-[visible]:opacity-100"
       >
         <div className="public-container px-6">
           <div className="flex items-center justify-between gap-4 rounded-full border border-border bg-card/95 px-4 py-2 shadow-lg backdrop-blur">
