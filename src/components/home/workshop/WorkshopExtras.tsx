@@ -4,7 +4,6 @@ import { getBuildWorkshop, getWorkshopAgencyOffer } from "@/lib/build-workshops"
 import { getUpcomingSessions } from "@/lib/build-workshop-schedule";
 import type { CatalogWorkshop } from "@/lib/workshop-catalog";
 import {
-  Panel,
   SectionEyebrow,
   SectionHeading,
   SectionShell,
@@ -111,43 +110,6 @@ export function WorkshopFaq({ workshop }: { workshop: CatalogWorkshop }) {
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">{f.a}</p>
           </details>
         ))}
-      </div>
-    </SectionShell>
-  );
-}
-
-/** Right fit / skip it, in the workshop page's two-panel treatment. */
-export function WorkshopFitPanels({ workshop }: { workshop: CatalogWorkshop }) {
-  const w = getBuildWorkshop(workshop.slug);
-  if (!w) return null;
-
-  return (
-    <SectionShell>
-      <SectionHeading lead={w.sections.fitHeadline.lead} emphasis={w.sections.fitHeadline.emphasis} />
-      <p className="mt-3 max-w-3xl text-base text-muted-foreground md:text-lg">{w.sections.fitLede}</p>
-      <div className="mt-10 grid gap-5 md:grid-cols-2">
-        <Panel accent className="md:p-8">
-          <div className="mb-4 text-sm uppercase tracking-[0.18em] text-primary">Right fit</div>
-          <ul className="space-y-3">
-            {w.forYou.map((p) => (
-              <li key={p} className="text-sm md:text-base">
-                {p}
-              </li>
-            ))}
-          </ul>
-        </Panel>
-        <Panel className="md:p-8">
-          <div className="mb-4 text-sm uppercase tracking-[0.18em] text-muted-foreground">
-            Skip it if
-          </div>
-          <ul className="space-y-3">
-            {w.notForYou.map((p) => (
-              <li key={p} className="text-sm text-muted-foreground md:text-base">
-                {p}
-              </li>
-            ))}
-          </ul>
-        </Panel>
       </div>
     </SectionShell>
   );
