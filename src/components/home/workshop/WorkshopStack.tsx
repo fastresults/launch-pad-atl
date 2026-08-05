@@ -108,8 +108,6 @@ function WorkshopStickyBar({ workshop }: { workshop: CatalogWorkshop }) {
               {isOpen ? "Reserve" : "See the morning"}
               <ArrowRight className="size-3" aria-hidden="true" />
             </Link>
-
-            </Link>
           </div>
         </div>
       </div>
