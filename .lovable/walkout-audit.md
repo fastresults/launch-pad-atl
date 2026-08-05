@@ -116,3 +116,13 @@ Added a standing line to the decision copy: *we build the operating setup — we
 - 6 REFRAME, 12 TIGHTEN, 34 KEEP.
 - Total promise volume down; specificity up. Every changed line now names either something finished in the room or something decided in writing — nothing sits in the ambiguous middle where an attendee expects "done" and gets "planned."
 - Files touched: `src/lib/build-workshops.ts`, `src/lib/workshop-products.ts`, `src/lib/workshop-audit.ts`. Copy only.
+
+---
+
+## Modal pass — hero chat read (2026-08-05)
+
+The hero chat modal was not covered by the original 52-item audit. Three sources of drift, all tightened:
+
+1. **AI diagnostic (`atlanta-viability`)** — added SCOPE TRUTH rules: every `walk_out_with` item must be a decision, a first real version, or one configured thing; nothing finished/launched/integrated; no volume or completeness claims; nothing dependent on their accounts, vendors, licenses, or filings; legal/tax/accounting items are prepared with them for their own professional. `walk_out_with` is now restricted to the audited artifact list for that workshop, re-phrased — not invented. Foundation `first_moves` bounded to steps the founder takes themselves.
+2. **Invitation cards** — build lane now states it's one focused area with first real versions, not a finished agency deliverable. Foundation live-page bullet qualified with "where account access allows"; same one-morning bound added under the price line.
+3. **Walk-out footer note** — replaced "not slides, not notes" with the scope-bounded version.
