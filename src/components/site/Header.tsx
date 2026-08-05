@@ -42,7 +42,7 @@ export function SiteHeader() {
               <NavLink
                 key={n.to}
                 to={n.to}
-                className={`transition-colors hover:text-foreground ${index === 2 ? "sl-site-header__compact-optional" : ""}`}
+                className={`transition-colors hover:text-foreground ${index >= 2 ? "sl-site-header__compact-optional" : ""}`}
               >
                 {n.label}
               </NavLink>
