@@ -48,7 +48,7 @@ Return ONLY valid JSON, no markdown fences, with the keys in EXACTLY this order:
       "value": string,         // short, punchy, <= 45 chars
       "note": string }         // one short sentence of plain context
   ],
-  "first_moves": string[],     // EXACTLY 4 concrete first actions, one short sentence each
+  "first_moves": string[],     // EXACTLY 4 concrete first actions, one short sentence each — honest starting steps a founder can take themselves, never finished systems or outcomes we'd deliver for them
   "watch_outs": string[],      // EXACTLY 3 honest risks, one short sentence each
   "why_atlanta": string        // ONE paragraph, at most 2 sentences, Atlanta-specific
 }`;
