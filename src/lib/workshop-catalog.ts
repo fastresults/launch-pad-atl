@@ -177,7 +177,7 @@ const BUILD_META: Record<
     lens: "AI automation of repetitive founder work",
   },
   "legal-financial-ops": {
-    chipLabel: "Legal & money",
+    chipLabel: "Accounting",
     opensLabel: "Apr 2027",
     heroQuestion: "What are you avoiding?",
     promptExamples: [
