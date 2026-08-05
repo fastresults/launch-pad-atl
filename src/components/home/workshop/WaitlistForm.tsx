@@ -44,7 +44,7 @@ export function WaitlistForm({
   if (state === "done") {
     return (
       <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-        <Check className="size-4 text-[color:var(--sl-quote-gold)]" aria-hidden="true" />
+        <Check className="size-4 text-primary" aria-hidden="true" />
         {doneMessage}
       </p>
     );

@@ -16,6 +16,11 @@ import {
   WorkshopFormats,
   WorkshopObjections,
 } from "@/components/home/workshop/WorkshopOffer";
+import {
+  WorkshopAgencyOffer,
+  WorkshopDates,
+  WorkshopFaq,
+} from "@/components/home/workshop/WorkshopExtras";
 
 /**
  * The whole page below the hero, rendered for one workshop. Change the chip in
@@ -33,19 +38,30 @@ export function WorkshopStack({ workshop }: { workshop: CatalogWorkshop }) {
       {/* Keyed so the swap cross-fades instead of snapping; scroll stays put. */}
       <div key={workshop.slug} className="animate-in fade-in duration-500">
         <WorkshopCost product={product} />
-        {!isFoundation && <WorkshopAuditSection workshop={workshop} />}
+        {!isFoundation && (
+          <>
+            <WorkshopDates workshop={workshop} />
+            <WorkshopAuditSection workshop={workshop} />
+          </>
+        )}
         <WorkshopPains slug={workshop.slug} />
         {!isFoundation && (
           <>
+            <WorkshopGuarantee workshop={workshop} />
             <WorkshopArtifacts product={product} />
             <WorkshopMorning product={product} />
-            <WorkshopGuarantee workshop={workshop} />
             <WorkshopFormats product={product} />
             <WorkshopFit product={product} />
             <WorkshopObjections product={product} />
           </>
         )}
         <WorkshopDecision product={product} />
+        {!isFoundation && (
+          <>
+            <WorkshopAgencyOffer workshop={workshop} />
+            <WorkshopFaq workshop={workshop} />
+          </>
+        )}
       </div>
     </div>
   );
@@ -80,7 +96,7 @@ function WorkshopStickyBar({ workshop }: { workshop: CatalogWorkshop }) {
           <div className="flex items-center justify-between gap-4 rounded-full border border-border bg-card/95 px-4 py-2 shadow-lg backdrop-blur">
             <span className="flex min-w-0 items-center gap-2 text-sm font-medium text-foreground">
               <Icon
-                className="size-4 shrink-0 text-[color:var(--sl-quote-gold)]"
+                className="size-4 shrink-0 text-primary"
                 aria-hidden="true"
               />
               <span className="truncate">{workshop.title}</span>
@@ -90,7 +106,7 @@ function WorkshopStickyBar({ workshop }: { workshop: CatalogWorkshop }) {
             </span>
             <Link
               to={workshop.href}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[color:var(--sl-quote-gold)] px-4 py-1.5 text-sm font-medium text-black"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-hero-gradient px-4 py-1.5 text-sm font-medium text-white"
             >
               {isOpen ? "Reserve" : "See the morning"}
               <ArrowRight className="size-3.5" aria-hidden="true" />

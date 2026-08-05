@@ -1,5 +1,11 @@
-import { Check } from "lucide-react";
+import { Check, Clock } from "lucide-react";
 import type { WorkshopProduct } from "@/lib/workshop-products";
+import {
+  Panel,
+  SectionEyebrow,
+  SectionHeading,
+  SectionShell,
+} from "@/components/home/workshop/SectionChrome";
 
 /**
  * Sections 2 and 3 — the artifacts named like real files, and one of them
@@ -10,102 +16,89 @@ export function WorkshopArtifacts({ product }: { product: WorkshopProduct }) {
   const preview = product.artifactPreview;
 
   return (
-    <section className="border-b border-border py-14 md:py-20">
-      <div className="public-container px-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--sl-quote-gold)]">
-          What you walk out with
-        </p>
-        <h2 className="public-heading mt-4 max-w-2xl">
-          Finished before lunch. Yours to keep.
-        </h2>
+    <SectionShell tinted>
+      <SectionEyebrow icon={Check}>What you walk out with</SectionEyebrow>
+      <SectionHeading lead="Finished before lunch." emphasis="Yours to keep." />
 
-        <div className="mt-10 grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-10">
-          <ul className="space-y-4 md:col-span-6">
-            {product.artifacts.map((a) => (
-              <li key={a} className="flex gap-3 border-b border-border pb-4 last:border-0">
-                <Check
-                  className="mt-0.5 size-4 shrink-0 text-[color:var(--sl-quote-gold)]"
-                  aria-hidden="true"
-                />
-                <span className="text-sm leading-relaxed text-foreground md:text-base">{a}</span>
-              </li>
-            ))}
-          </ul>
+      <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-12 md:gap-8">
+        <ul className="space-y-3 md:col-span-6">
+          {product.artifacts.map((a) => (
+            <li
+              key={a}
+              className="flex items-start gap-3 rounded-2xl border border-white/10 bg-card px-5 py-4"
+            >
+              <Check className="mt-1 size-5 shrink-0 text-primary" aria-hidden="true" />
+              <span className="text-base font-medium tracking-tight">{a}</span>
+            </li>
+          ))}
+        </ul>
 
-          <div className="md:col-span-6">
-            <figure className="overflow-hidden rounded-lg border border-border bg-card shadow-lg">
-              <figcaption className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--sl-quote-gold)]">
-                  {preview.kind}
-                </span>
-                <span className="flex gap-1.5" aria-hidden="true">
-                  <i className="size-2 rounded-full bg-muted-foreground/30" />
-                  <i className="size-2 rounded-full bg-muted-foreground/30" />
-                  <i className="size-2 rounded-full bg-muted-foreground/30" />
-                </span>
-              </figcaption>
-              <div className="px-5 py-6">
-                <p className="text-base font-semibold text-foreground md:text-lg">
-                  {preview.title}
-                </p>
-                <ul className="mt-4 space-y-3">
-                  {preview.lines.map((line) => (
-                    <li
-                      key={line}
-                      className="border-l-2 border-border pl-3 text-sm leading-relaxed text-muted-foreground"
-                    >
-                      {line}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <p className="border-t border-border px-5 py-3 text-xs text-muted-foreground">
-                {preview.stamp}
-              </p>
-            </figure>
-          </div>
+        <div className="md:col-span-6">
+          <figure className="overflow-hidden rounded-2xl border border-white/10 bg-card shadow-lg">
+            <figcaption className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-3">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+                {preview.kind}
+              </span>
+              <span className="flex gap-1.5" aria-hidden="true">
+                <i className="size-2 rounded-full bg-muted-foreground/30" />
+                <i className="size-2 rounded-full bg-muted-foreground/30" />
+                <i className="size-2 rounded-full bg-muted-foreground/30" />
+              </span>
+            </figcaption>
+            <div className="px-5 py-6">
+              <p className="text-base font-semibold md:text-lg">{preview.title}</p>
+              <ul className="mt-4 space-y-3">
+                {preview.lines.map((line) => (
+                  <li
+                    key={line}
+                    className="border-l-2 border-primary/40 pl-3 text-sm leading-relaxed text-muted-foreground"
+                  >
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <p className="border-t border-white/10 px-5 py-3 text-xs text-muted-foreground">
+              {preview.stamp}
+            </p>
+          </figure>
         </div>
       </div>
-    </section>
+    </SectionShell>
   );
 }
 
 /** Section 4 — the morning, hour by hour. Input, working session, output. */
 export function WorkshopMorning({ product }: { product: WorkshopProduct }) {
   return (
-    <section className="border-b border-border py-14 md:py-20">
-      <div className="public-container px-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--sl-quote-gold)]">
-          The morning, hour by hour
-        </p>
-        <h2 className="public-heading mt-4 max-w-2xl">
-          8:45 to 11:30. Four working blocks, no lecture.
-        </h2>
+    <SectionShell>
+      <SectionEyebrow icon={Clock} muted>
+        The agenda
+      </SectionEyebrow>
+      <SectionHeading lead="8:45 to 11:30." emphasis="Four working blocks, no lecture." />
 
-        <ol className="mt-10 space-y-0">
-          {product.morning.map((block, i) => (
-            <li
-              key={block.time}
-              className="grid grid-cols-1 gap-2 border-t border-border py-6 md:grid-cols-12 md:gap-8"
-            >
-              <div className="md:col-span-3">
-                <p className="text-sm font-semibold tabular-nums text-[color:var(--sl-quote-gold)]">
+      <ol className="mt-10 space-y-4">
+        {product.morning.map((block, i) => (
+          <li key={block.time}>
+            <Panel className="md:p-7">
+              <div className="flex flex-col gap-1 md:flex-row md:items-baseline md:gap-6">
+                <div className="text-xs uppercase tracking-[0.18em] text-primary md:w-40 md:text-sm">
                   {block.time}
-                </p>
-                <p className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                  Block {i + 1}
-                </p>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold tracking-tight md:text-xl">
+                    <span className="mr-2 text-muted-foreground">0{i + 1}.</span>
+                    {block.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground md:text-base">
+                    {block.detail}
+                  </p>
+                </div>
               </div>
-              <div className="md:col-span-9">
-                <p className="text-base font-semibold text-foreground md:text-lg">{block.title}</p>
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                  {block.detail}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
+            </Panel>
+          </li>
+        ))}
+      </ol>
+    </SectionShell>
   );
 }
