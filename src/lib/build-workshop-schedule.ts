@@ -125,12 +125,13 @@ function formatDateLabel(year: number, month: number, day: number, weekday: numb
 /** Sessions stop being bookable this many hours before they start. */
 export const BOOKING_CUTOFF_HOURS = 48;
 
-/** How far ahead the rolling schedule is generated. */
-export const SCHEDULE_HORIZON_MONTHS = 14;
+/** How far ahead the rolling schedule is published. */
+export const SCHEDULE_HORIZON_DAYS = 90;
 
 /**
- * Returns upcoming sessions for a workshop across a rolling window from today,
- * dropping any session inside the booking cutoff. Empty array = nothing to show.
+ * Returns upcoming sessions for a workshop inside a rolling 90-day window from
+ * today, dropping any session inside the booking cutoff. Empty array = nothing
+ * to show.
  */
 export function getUpcomingSessions(
   slug: string,
@@ -141,12 +142,12 @@ export function getUpcomingSessions(
   if (!rule) return [];
 
   const cutoffMs = now.getTime() + BOOKING_CUTOFF_HOURS * 60 * 60 * 1000;
+  const horizonMs = now.getTime() + SCHEDULE_HORIZON_DAYS * 24 * 60 * 60 * 1000;
   const sessions: ScheduledSession[] = [];
-  // Rolling window: current month through SCHEDULE_HORIZON_MONTHS ahead.
+  // Scan a few months of candidates, then clamp to the 90-day horizon.
   const startYear = now.getUTCFullYear();
   const startMonth = now.getUTCMonth() + 1; // 1-indexed
-  const totalMonths = SCHEDULE_HORIZON_MONTHS + 1;
-  for (let i = 0; i < totalMonths; i++) {
+  for (let i = 0; i < 5; i++) {
     const absolute = startMonth - 1 + i;
     const year = startYear + Math.floor(absolute / 12);
     const month = (absolute % 12) + 1;
@@ -156,8 +157,10 @@ export function getUpcomingSessions(
       const day = d.getUTCDate();
       const startISO = toEtIso(year, month, day, rule.startTime);
       const endISO = toEtIso(year, month, day, rule.endTime);
-      // Drop sessions that start within the booking cutoff window.
-      if (new Date(startISO).getTime() <= cutoffMs) continue;
+      const startMs = new Date(startISO).getTime();
+      // Drop sessions inside the booking cutoff or beyond the rolling horizon.
+      if (startMs <= cutoffMs || startMs > horizonMs) continue;
+
 
       sessions.push({
         startISO,
