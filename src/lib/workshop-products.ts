@@ -339,7 +339,7 @@ const PRODUCT_META: Record<string, ProductMeta> = {
     costStat: "9 hours",
     costStatCaption: "a typical founder week spent on work software should be doing",
     costBody:
-      "Quotes typed from scratch. The same five questions answered again. Invoices chased on a Sunday night. None of it grows anything — it just refuses to stop. Five workflows automated is a week that finally has room for the work only you can do.",
+      "Quotes typed from scratch. The same five questions answered again. Invoices chased on a Sunday night. None of it grows anything — it just refuses to stop. Taking the biggest one off your plate is a week that finally has room for the work only you can do.",
     artifactPreview: {
       kind: "Automation",
       title: "Quote request → priced draft in 4 minutes",
