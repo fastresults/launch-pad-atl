@@ -585,8 +585,8 @@
   width: 1.05em;
   height: 1.05em;
   font-size: 18px;
-  color: #c29b46 !important;
-  stroke: #c29b46 !important;
+  color: hsl(var(--sl-brand-orange)) !important;
+  stroke: hsl(var(--sl-brand-orange)) !important;
   opacity: 1;
   pointer-events: none;
 }
