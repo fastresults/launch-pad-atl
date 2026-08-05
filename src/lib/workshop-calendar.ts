@@ -9,7 +9,6 @@ import {
   getUpcomingSessions,
   WORKSHOP_SCHEDULES,
   BOOKING_CUTOFF_HOURS,
-  SCHEDULE_HORIZON_DAYS,
 } from "@/lib/build-workshop-schedule";
 import { WORKSHOP_CATALOG, FOUNDATION_SLUG, getCatalogWorkshop } from "@/lib/workshop-catalog";
 
