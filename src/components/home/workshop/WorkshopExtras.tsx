@@ -18,6 +18,11 @@ export function WorkshopDates({ workshop }: { workshop: CatalogWorkshop }) {
     <SectionShell tinted>
       <SectionEyebrow icon={Calendar}>Upcoming dates · {workshop.title}</SectionEyebrow>
       <SectionHeading lead={`${workshop.title} —`} emphasis="pick your session." />
+      <p className="mt-3 text-sm text-muted-foreground md:text-base">
+        <Link to="/calendar" className="text-primary hover:underline">
+          See all dates across every workshop
+        </Link>
+      </p>
       <ul className="mt-8 grid gap-3 sm:grid-cols-2">
         {upcoming.map((s) => (
           <li
