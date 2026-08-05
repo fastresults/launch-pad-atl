@@ -362,14 +362,20 @@
 .sl-hero__kicker,
 .sl-hero__status {
   margin: 0;
+  max-width: 100%;
   color: oklch(0.98 0.006 260 / 78%);
-  font-size: 12px;
+  font-size: clamp(7px, 0.92vw, 12px);
   font-weight: 600;
   line-height: 1.4;
-  letter-spacing: 0.18em;
+  letter-spacing: clamp(0.05em, 0.35vw, 0.18em);
   text-transform: uppercase;
   text-shadow: 0 2px 16px oklch(0.05 0.02 268 / 75%);
+  /* Never wrap to a second row — scale down instead */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
 
 .public-surface .sl-hero__title {
   margin: 16px 0 0;
