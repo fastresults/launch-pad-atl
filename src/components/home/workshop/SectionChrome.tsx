@@ -109,14 +109,15 @@ export function PrimaryCta({
   className?: string;
 }) {
   return (
-    <a
-      href={to}
+    <Link
+      to={to}
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-full bg-hero-gradient px-6 py-3 text-base font-medium text-white transition-opacity hover:opacity-90",
         className,
       )}
     >
       {children}
-    </a>
+    </Link>
   );
 }
+
