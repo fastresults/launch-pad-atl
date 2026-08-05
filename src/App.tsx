@@ -118,6 +118,7 @@ export default function App() {
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/schedule" element={<SchedulePage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/build" element={<BuildIndexPage />} />
