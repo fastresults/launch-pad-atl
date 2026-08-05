@@ -194,6 +194,15 @@
   background: var(--gradient-brand);
 }
 
+/* Frosted variant: the brand gradient laid over a blurred view of the page. */
+.public-surface .sl-glass-cta {
+  background: var(--gradient-brand);
+  opacity: 0.88;
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+
 .public-surface :is(input, textarea, select):not([type="checkbox"]):not([type="radio"]) {
   background-color: oklch(0.98 0.006 260 / 6%);
   border-color: var(--input);
