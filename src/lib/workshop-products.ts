@@ -9,11 +9,7 @@
 // from BUILD_WORKSHOPS so the /build/:slug page and the homepage can never drift.
 
 import { BUILD_WORKSHOPS, type AgendaBlock } from "@/lib/build-workshops";
-import {
-  getCatalogWorkshop,
-  FOUNDATION_SLUG,
-  type CatalogWorkshop,
-} from "@/lib/workshop-catalog";
+import { getCatalogWorkshop, FOUNDATION_SLUG, type CatalogWorkshop } from "@/lib/workshop-catalog";
 
 /** A mock of the real thing the founder leaves with. */
 export type ArtifactPreview = {
@@ -175,7 +171,7 @@ const PRODUCT_META: Record<string, ProductMeta> = {
         q: "I need a developer, not a workshop.",
         a: "You need the decisions before the developer — the job of the page, the words, the order. Handing a developer a finished wireframe and real copy is the difference between a two-week build and a three-month one.",
       },
-        {
+      {
         q: "My site is fine, it just gets no traffic.",
         a: "Then the traffic you do get is being wasted, and every channel you add later multiplies against a page that doesn't convert. Fix the page first; it's the cheaper half.",
       },

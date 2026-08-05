@@ -1,5 +1,13 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, CalendarDays, Check, MapPin, Minus, Layers, MessageCircleQuestion } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  Check,
+  MapPin,
+  Minus,
+  Layers,
+  MessageCircleQuestion,
+} from "lucide-react";
 import { getWorkshopFormats, type WorkshopProduct } from "@/lib/workshop-products";
 import { nextDateLabel } from "@/lib/workshop-catalog";
 import { WaitlistForm } from "@/components/home/workshop/WaitlistForm";
