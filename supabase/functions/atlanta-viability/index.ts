@@ -82,6 +82,7 @@ Return ONLY valid JSON, no markdown fences, with the keys in EXACTLY this order:
   },
   "costs": string[],         // EXACTLY 3 honest costs of leaving it as-is, one short sentence each, no dollar figures
   "walk_out_with": string[], // EXACTLY 3 real artifacts they'd leave the morning holding, tied to their answer
+
   "watch_outs": string[],    // EXACTLY 2 honest risks or things that make this harder, one short sentence each
   "why_atlanta": string      // ONE sentence, at most 2, on doing this in a room in metro Atlanta rather than alone
 }`;
