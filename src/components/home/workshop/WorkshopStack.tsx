@@ -93,12 +93,9 @@ function WorkshopStickyBar({ workshop }: { workshop: CatalogWorkshop }) {
         className="pointer-events-none fixed inset-x-0 top-[4.25rem] z-40 -translate-y-3 opacity-0 transition-[opacity,transform] duration-300 data-[visible]:pointer-events-auto data-[visible]:translate-y-0 data-[visible]:opacity-100"
       >
         <div className="public-container px-6">
-          <div className="flex items-center justify-between gap-4 rounded-full border border-border/60 bg-card/50 px-4 py-2 shadow-lg backdrop-blur-xl backdrop-saturate-150">
-            <span className="flex min-w-0 items-center gap-2 text-sm font-medium text-foreground">
-              <Icon
-                className="size-4 shrink-0 text-primary"
-                aria-hidden="true"
-              />
+          <div className="sl-glass-bar flex items-center justify-between gap-4 rounded-full border border-border/50 px-3.5 py-1.5 shadow-lg">
+            <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-foreground">
+              <Icon className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
               <span className="truncate">{workshop.title}</span>
               <span className="hidden shrink-0 text-muted-foreground sm:inline">
                 · {workshop.priceLabel}
@@ -106,12 +103,10 @@ function WorkshopStickyBar({ workshop }: { workshop: CatalogWorkshop }) {
             </span>
             <Link
               to={workshop.href}
-              className="sl-glass-cta inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/40 bg-hero-gradient px-4 py-1.5 text-sm font-medium text-white"
+              className="sl-glass-cta inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/40 bg-hero-gradient px-3.5 py-1 text-xs font-medium text-white"
             >
-
-
               {isOpen ? "Reserve" : "See the morning"}
-              <ArrowRight className="size-3.5" aria-hidden="true" />
+              <ArrowRight className="size-3" aria-hidden="true" />
             </Link>
           </div>
         </div>
