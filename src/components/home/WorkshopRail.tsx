@@ -28,9 +28,8 @@ export function WorkshopRail({ selected, onSelect, onOpenGateway }: Props) {
             className="sl-rail__chip"
           >
             <span>{w.chipLabel}</span>
-            <span className="sl-rail__tag">
-              {w.status === "open" ? "Open" : w.opensLabel.replace(/ \d{4}$/, "")}
-            </span>
+            {w.status === "open" ? <span className="sl-rail__tag">Open</span> : null}
+
           </button>
         ))}
       </div>
