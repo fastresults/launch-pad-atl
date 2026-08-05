@@ -116,54 +116,63 @@ export default function CalendarPage() {
           </p>
         </SectionShell>
       ) : (
-        months.map((month) => (
-          <SectionShell key={month.key} tinted>
-            <SectionEyebrow muted>{month.label}</SectionEyebrow>
-            <div className="mt-6 space-y-5">
-              {month.days.map((day) => (
-                <div key={day.key} className="rounded-2xl border border-white/10 bg-card p-5 md:p-6">
-                  <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-white/10 pb-3">
-                    <h2 className="text-lg font-medium tracking-tight md:text-xl">
-                      {day.dateLabel}
-                    </h2>
-                    {day.sessions.length > 1 && (
-                      <p className="text-xs text-muted-foreground md:text-sm">
-                        Two sessions this day — you can do both.
-                      </p>
-                    )}
-                  </div>
-                  <ul className="mt-4 grid gap-3 md:grid-cols-2">
-                    {day.sessions.map((s) => (
-                      <li
-                        key={`${s.slug}-${s.startISO}`}
-                        className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3"
-                      >
-                        <div className="min-w-0">
-                          <div className="mb-1 text-xs uppercase tracking-[0.16em] text-primary">
-                            {s.priceLabel}
-                          </div>
-                          <div className="truncate text-base font-medium tracking-tight">
-                            {s.title}
-                          </div>
-                          <div className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <Clock className="size-3.5" aria-hidden="true" />
-                            {s.timeLabel}
-                          </div>
-                        </div>
-                        <Link
-                          to={s.reserveHref}
-                          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20 md:text-sm"
-                        >
-                          Reserve <ArrowRight className="size-3.5" aria-hidden="true" />
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
+        <SectionShell tinted>
+          <div className="space-y-8">
+            {months.map((month) => (
+              <div key={month.key}>
+                <SectionEyebrow muted>{month.label}</SectionEyebrow>
+                <div className="mt-3 space-y-3">
+                  {month.days.map((day) => (
+                    <div
+                      key={day.key}
+                      className="rounded-2xl border border-white/10 bg-card p-4 md:p-5"
+                    >
+                      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-white/10 pb-2.5">
+                        <h2 className="text-base font-medium tracking-tight md:text-lg">
+                          {day.dateLabel}
+                        </h2>
+                        {day.sessions.length > 1 && (
+                          <p className="text-xs text-muted-foreground">
+                            Two sessions this day — you can do both.
+                          </p>
+                        )}
+                      </div>
+                      <ul className="mt-3 grid gap-2">
+                        {day.sessions.map((s) => (
+                          <li
+                            key={`${s.slug}-${s.startISO}`}
+                            className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5"
+                          >
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-baseline gap-x-3">
+                                <span className="text-base font-medium tracking-tight">
+                                  {s.title}
+                                </span>
+                                <span className="text-xs uppercase tracking-[0.16em] text-primary">
+                                  {s.priceLabel}
+                                </span>
+                              </div>
+                              <div className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <Clock className="size-3.5" aria-hidden="true" />
+                                {s.timeLabel}
+                              </div>
+                            </div>
+                            <Link
+                              to={s.reserveHref}
+                              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20 md:text-sm"
+                            >
+                              Reserve <ArrowRight className="size-3.5" aria-hidden="true" />
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </SectionShell>
-        ))
+              </div>
+            ))}
+          </div>
+        </SectionShell>
       )}
 
       <SiteFooter />
