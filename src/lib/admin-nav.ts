@@ -193,6 +193,15 @@ export const ADMIN_NAV: AdminNavItem[] = [
     super: true,
   },
   {
+    to: "/admin/audits",
+    label: "Workshop audits",
+    icon: ClipboardList,
+    group: "Workspace",
+    description: "Review and release pre-workshop attendee audits",
+    keywords: ["audit", "workshop", "intake", "grade", "prework", "review"],
+    super: true,
+  },
+  {
     to: "/admin/hero-images",
     label: "Hero images",
     icon: ImageIcon,

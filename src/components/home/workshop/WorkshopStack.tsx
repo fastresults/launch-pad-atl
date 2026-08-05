@@ -5,6 +5,10 @@ import { getWorkshopProduct } from "@/lib/workshop-products";
 import { FOUNDATION_SLUG, type CatalogWorkshop } from "@/lib/workshop-catalog";
 import { WorkshopCost } from "@/components/home/workshop/WorkshopCost";
 import { WorkshopPains } from "@/components/home/workshop/WorkshopPains";
+import {
+  WorkshopAuditSection,
+  WorkshopGuarantee,
+} from "@/components/home/workshop/WorkshopAudit";
 import { WorkshopArtifacts, WorkshopMorning } from "@/components/home/workshop/WorkshopBuild";
 import {
   WorkshopDecision,
@@ -29,11 +33,13 @@ export function WorkshopStack({ workshop }: { workshop: CatalogWorkshop }) {
       {/* Keyed so the swap cross-fades instead of snapping; scroll stays put. */}
       <div key={workshop.slug} className="animate-in fade-in duration-500">
         <WorkshopCost product={product} />
+        {!isFoundation && <WorkshopAuditSection workshop={workshop} />}
         <WorkshopPains slug={workshop.slug} />
         {!isFoundation && (
           <>
             <WorkshopArtifacts product={product} />
             <WorkshopMorning product={product} />
+            <WorkshopGuarantee workshop={workshop} />
             <WorkshopFormats product={product} />
             <WorkshopFit product={product} />
             <WorkshopObjections product={product} />

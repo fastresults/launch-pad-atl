@@ -3472,6 +3472,104 @@ export type Database = {
         }
         Relationships: []
       }
+      workshop_audit_intakes: {
+        Row: {
+          answers: Json
+          created_at: string
+          file_urls: string[]
+          id: string
+          session_start: string | null
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          workshop_slug: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          file_urls?: string[]
+          id?: string
+          session_start?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          workshop_slug: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          file_urls?: string[]
+          id?: string
+          session_start?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          workshop_slug?: string
+        }
+        Relationships: []
+      }
+      workshop_audits: {
+        Row: {
+          admin_notes: string | null
+          approved_at: string | null
+          created_at: string
+          generated_at: string | null
+          id: string
+          intake_id: string | null
+          model: string | null
+          overall_grade: string | null
+          prescribed_outcome: string | null
+          report: Json | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          workshop_slug: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          created_at?: string
+          generated_at?: string | null
+          id?: string
+          intake_id?: string | null
+          model?: string | null
+          overall_grade?: string | null
+          prescribed_outcome?: string | null
+          report?: Json | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          workshop_slug: string
+        }
+        Update: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          created_at?: string
+          generated_at?: string | null
+          id?: string
+          intake_id?: string | null
+          model?: string | null
+          overall_grade?: string | null
+          prescribed_outcome?: string | null
+          report?: Json | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          workshop_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workshop_audits_intake_id_fkey"
+            columns: ["intake_id"]
+            isOneToOne: false
+            referencedRelation: "workshop_audit_intakes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workshop_hero_images: {
         Row: {
           created_at: string
