@@ -51,6 +51,7 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver, workshop }: IdeaProm
               aria-hidden="true"
               className="sl-prompt__ghost"
             >
+              <WorkshopIcon className="sl-prompt__ghost-icon" strokeWidth={1.75} />
               <span className="truncate">{ghostText}</span>
               <span className="sl-prompt__caret" />
             </div>
