@@ -51,7 +51,7 @@ export const AUDIT_STEPS = [
   {
     label: "The outcome",
     body:
-      "You leave with the one named artifact your audit prescribed — live, in your hands, yours to keep.",
+      "You leave with the one named artifact your audit prescribed — made with you in the room, in your hands, yours to keep.",
   },
 ];
 
@@ -68,7 +68,7 @@ export const WORKSHOP_AUDITS: Record<string, WorkshopAudit> = {
       { key: "competitors", label: "Three competitors buyers compare you to", help: "Names or links.", kind: "text" },
     ],
     prescribedOutcome:
-      "A brand system — voice, palette, type, and usage rules — chosen in the room and applied to your three most visible surfaces before you leave.",
+      "A brand system — voice, palette, type, and usage rules — decided in the room and applied to your one most visible surface, with the other two specified for you to apply.",
     improvement: "quote higher without flinching, because the brand carries the number",
   },
   "website-that-converts": {
@@ -83,7 +83,7 @@ export const WORKSHOP_AUDITS: Record<string, WorkshopAudit> = {
       { key: "known_problems", label: "What you already know is wrong with it", help: "Slow, ugly, no price, can't edit it, whatever it is.", kind: "longtext" },
     ],
     prescribedOutcome:
-      "A page whose single job is the booking — headline, proof, price, and button rewritten and live before you leave.",
+      "A page whose single job is the booking — headline, proof, price, and button rewritten with you in the room, ready for you to publish.",
     improvement: "turn the traffic you already have into calls on your calendar",
   },
   "sales-systems": {
@@ -113,7 +113,7 @@ export const WORKSHOP_AUDITS: Record<string, WorkshopAudit> = {
       { key: "deliverability", label: "Anything landing in spam", help: "If you know, tell us. If you don't, say so.", kind: "text" },
     ],
     prescribedOutcome:
-      "A follow-up sequence written, loaded, and sending from your own tool before you leave.",
+      "A follow-up sequence written with you and staged in your own tool, ready for you to turn on.",
     improvement: "stop losing leads that were already interested",
   },
   "social-presence": {
@@ -128,7 +128,7 @@ export const WORKSHOP_AUDITS: Record<string, WorkshopAudit> = {
       { key: "what_worked", label: "Anything that ever got traction", help: "One post, one reel, one comment thread.", kind: "text" },
     ],
     prescribedOutcome:
-      "One chosen channel, a posting rhythm you can hold, and the first two weeks of posts written and scheduled before you leave.",
+      "One chosen channel, a posting rhythm you can hold, and your first week of posts drafted and slotted into your calendar.",
     improvement: "post consistently and have it reach the people who buy",
   },
   "content-engine": {
@@ -143,7 +143,7 @@ export const WORKSHOP_AUDITS: Record<string, WorkshopAudit> = {
       { key: "capacity", label: "How much you can publish per month", help: "The realistic number.", kind: "text" },
     ],
     prescribedOutcome:
-      "The buyer-question list that drives your publishing, and the first piece written and published before you leave.",
+      "The buyer-question list that drives your publishing, and your first piece drafted in the room, ready for you to publish.",
     improvement: "get found by people already searching for what you sell",
   },
   "ai-operating-system": {
@@ -158,7 +158,7 @@ export const WORKSHOP_AUDITS: Record<string, WorkshopAudit> = {
       { key: "hours_week", label: "Hours you work in a typical week", help: "Including the Sunday ones.", kind: "text" },
     ],
     prescribedOutcome:
-      "Your three biggest time sinks automated and running live in your own accounts before you leave.",
+      "Your highest-value time sink configured on your own account, with the next two specified and prompted so you can build them.",
     improvement: "get back the hours you're currently spending on work a machine can do",
   },
   "legal-financial-ops": {
@@ -173,7 +173,7 @@ export const WORKSHOP_AUDITS: Record<string, WorkshopAudit> = {
       { key: "tax_worry", label: "What you're most worried about at tax time", help: "Say it plainly.", kind: "longtext" },
     ],
     prescribedOutcome:
-      "Your entity filing prepared, your client contract signed-ready, and your books opened and reconciled to today before you leave.",
+      "Your entity path compared against your real numbers, your client contract checklist assembled, your books set to open, and the questions to confirm with your CPA written down.",
     improvement: "stop carrying personal risk for business work",
   },
 };
