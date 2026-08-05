@@ -64,7 +64,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "cant-raise-prices",
-      pain: "Quoting low because the brand can't carry more",
+      pain: "Quoting low because the brand can't carry it",
       fix: "the visual authority to quote thirty percent higher without flinching",
       question: "I lower my price every time I send a quote.",
       imagePrompt: scenePrompt(
@@ -73,7 +73,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "logo-picked-too-fast",
-      pain: "A logo picked in an afternoon you already regret",
+      pain: "A logo picked in an afternoon you regret",
       fix: "three logo directions with the buyer reasoning behind each",
       question: "I picked my logo in an afternoon and I regret it.",
       imagePrompt: scenePrompt(
@@ -82,7 +82,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "everything-looks-different",
-      pain: "Every asset looking like a different company made it",
+      pain: "Every asset looking like a different company",
       fix: "one written system a freelancer or an AI prompt can follow",
       question: "Everything I make looks like a different company.",
       imagePrompt: scenePrompt(
@@ -91,7 +91,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-words-for-it",
-      pain: "Not being able to say what you stand for out loud",
+      pain: "Not able to say what you stand for",
       fix: "one sentence you can say to a stranger and be understood",
       question: "I can't explain what I do in one sentence.",
       imagePrompt: scenePrompt(
@@ -100,7 +100,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "invisible-next-to-competitors",
-      pain: "Sitting on the shelf next to competitors and disappearing",
+      pain: "Sitting on the shelf next to competitors",
       fix: "a position that makes the comparison stop",
       question: "Next to my competitors I just disappear.",
       imagePrompt: scenePrompt(
@@ -109,7 +109,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "ai-slop-assets",
-      pain: "AI output that drifts a little further off-brand every week",
+      pain: "AI output drifting further off-brand",
       fix: "a voice guide your prompts inherit automatically",
       question: "Everything AI makes me is almost right, never right.",
       imagePrompt: scenePrompt(
@@ -119,7 +119,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "designer-keeps-asking",
-      pain: "Answering the same designer question for the fifth time",
+      pain: "Answering the same designer question again",
       fix: "usage rules tight enough to hand off and walk away",
       question: "My designer asks me the same question every week.",
       imagePrompt: scenePrompt(
@@ -129,7 +129,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "rebrand-bill-coming",
-      pain: "The rebrand invoice waiting for you in month thirteen",
+      pain: "A rebrand invoice waiting in month thirteen",
       fix: "the system built right the first time",
       question: "Am I going to have to pay to redo all of this?",
       imagePrompt: scenePrompt(
@@ -138,7 +138,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-color-typography",
-      pain: "Picking colors and type by whatever felt nice that day",
+      pain: "Colors and type picked by whatever felt nice",
       fix: "a palette and type system with rules behind every choice",
       question: "I picked my colors because they looked nice that day.",
       imagePrompt: scenePrompt(
@@ -182,7 +182,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "slow-load",
-      pain: "Pages that load slowly enough to lose the click",
+      pain: "Pages slow enough to lose the click",
       fix: "a page that opens before they change their mind",
       question: "My pages load so slow people give up.",
       imagePrompt: scenePrompt(
@@ -192,7 +192,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-headline",
-      pain: "A headline that says nothing a buyer cares about",
+      pain: "A headline no buyer cares about",
       fix: "one written and tested against a real stranger",
       question: "I've rewritten my headline twenty times.",
       imagePrompt: scenePrompt(
@@ -202,7 +202,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "agency-quote",
-      pain: "A twelve-thousand-dollar quote for a five-page site",
+      pain: "A twelve-thousand-dollar five-page quote",
       fix: "the site built with you before lunch",
       question: "The quote I got for a simple site was insane.",
       imagePrompt: scenePrompt(
@@ -211,7 +211,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "half-finished",
-      pain: "A half-finished site that's been almost-done for six months",
+      pain: "A site that's been almost-done for months",
       fix: "one live page with your name on it, published today",
       question: "My site has been almost done for six months.",
       imagePrompt: scenePrompt(
@@ -220,7 +220,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-proof",
-      pain: "No proof on the page that anyone has ever paid you",
+      pain: "No proof that anyone has ever paid you",
       fix: "a proof section built from what you already have",
       question: "Nothing on my page proves anyone has paid me.",
       imagePrompt: scenePrompt(
@@ -302,7 +302,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "unqualified",
-      pain: "Hour-long calls with people who were never going to buy",
+      pain: "Hour-long calls with people who won't buy",
       fix: "three qualifying questions asked before the call is booked",
       question: "I waste hours on people who never buy.",
       imagePrompt: scenePrompt(
@@ -312,7 +312,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-proposal",
-      pain: "Writing every proposal from scratch at midnight",
+      pain: "Writing every proposal from scratch",
       fix: "one proposal you fill in and send in ten minutes",
       question: "I'm writing proposals from scratch at midnight.",
       imagePrompt: scenePrompt(
@@ -322,7 +322,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "objections",
-      pain: "Freezing on the same three objections every time",
+      pain: "Freezing on the same three objections",
       fix: "written answers you've already said out loud in the room",
       question: "The same three objections stop me every time.",
       imagePrompt: scenePrompt(
@@ -340,7 +340,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-close",
-      pain: "Ending calls with 'let me send you some info'",
+      pain: "Ending calls with 'let me send you info'",
       fix: "a close that asks for the decision",
       question: "I end every call saying I'll send more info.",
       imagePrompt: scenePrompt(
@@ -355,7 +355,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
   "email-crm-automation": [
     {
       id: "leads-in-inbox",
-      pain: "Leads living in your inbox until they die there",
+      pain: "Leads living in your inbox until they die",
       fix: "every lead landing in one system automatically",
       question: "My leads sit in my inbox until they go cold.",
       imagePrompt: scenePrompt(
@@ -374,7 +374,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-list",
-      pain: "No list — just contacts scattered across three apps",
+      pain: "No list — just contacts across three apps",
       fix: "one clean list you actually own",
       question: "My contacts are scattered across three apps.",
       imagePrompt: scenePrompt(
@@ -412,7 +412,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "cold-leads",
-      pain: "Old leads going cold because nobody touched them",
+      pain: "Old leads going cold, untouched",
       fix: "a re-engagement email that wakes the list up",
       question: "I have a pile of old leads I never touched.",
       imagePrompt: scenePrompt(
@@ -421,7 +421,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-tracking",
-      pain: "Not knowing which email actually got the reply",
+      pain: "Not knowing which email got the reply",
       fix: "one dashboard that tells you what worked",
       question: "I have no idea which email actually worked.",
       imagePrompt: scenePrompt(
@@ -431,7 +431,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "duplicate-data",
-      pain: "The same customer entered three different ways",
+      pain: "The same customer entered three ways",
       fix: "one record per human, enforced",
       question: "The same customer is in my system three times.",
       imagePrompt: scenePrompt(
@@ -440,7 +440,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-handoff",
-      pain: "Nothing happening after someone fills in the form",
+      pain: "Nothing happens after the form is filled",
       fix: "the form wired straight through to a reply and a task",
       question: "Someone fills out my form and nothing happens.",
       imagePrompt: scenePrompt(
@@ -466,7 +466,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-idea-what-to-post",
-      pain: "Sitting down to post and having nothing to say",
+      pain: "Sitting down to post with nothing to say",
       fix: "a bank of posts written before you leave",
       question: "I sit down to post and have nothing to say.",
       imagePrompt: scenePrompt(
@@ -486,7 +486,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "inconsistent",
-      pain: "Three posts in a week, then nothing for two months",
+      pain: "Three posts, then nothing for two months",
       fix: "a rhythm you can hold on your worst week",
       question: "I post for a week then disappear for two months.",
       imagePrompt: scenePrompt(
@@ -505,7 +505,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "wrong-platform",
-      pain: "Working hard on the platform your buyer isn't on",
+      pain: "Working the platform your buyer isn't on",
       fix: "one platform chosen on evidence, the rest dropped",
       question: "I don't know which platform my buyer is even on.",
       imagePrompt: scenePrompt(
@@ -515,7 +515,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-dms",
-      pain: "Comments and DMs that go unanswered for days",
+      pain: "Comments and DMs unanswered for days",
       fix: "a reply routine that takes ten minutes a day",
       question: "My DMs sit unanswered for days.",
       imagePrompt: scenePrompt(
@@ -535,7 +535,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-conversion",
-      pain: "Followers who never turn into a single customer",
+      pain: "Followers who never turn into customers",
       fix: "a post pattern that ends with an actual ask",
       question: "I have followers but not one customer.",
       imagePrompt: scenePrompt(
@@ -569,7 +569,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-time",
-      pain: "Content being the first thing dropped when the week gets hard",
+      pain: "Content is first thing dropped each week",
       fix: "a batch that covers a month, made in one morning",
       question: "Content is the first thing I drop when I get busy.",
       imagePrompt: scenePrompt(
@@ -597,7 +597,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-repurpose",
-      pain: "One piece of work producing exactly one post",
+      pain: "One piece of work producing one post",
       fix: "one idea cut into a week of assets",
       question: "All that work turns into one single post.",
       imagePrompt: scenePrompt(
@@ -617,7 +617,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
 
     {
       id: "inconsistent-voice",
-      pain: "Sounding like a different person in every piece",
+      pain: "Sounding like a different person each time",
       fix: "one voice guide every draft is checked against",
       question: "I sound like a different person in every piece.",
       imagePrompt: scenePrompt(
@@ -626,7 +626,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-distribution",
-      pain: "Hitting publish and calling that distribution",
+      pain: "Hitting publish and calling it distribution",
       fix: "a checklist that puts each piece in five places",
       question: "I hit publish and that's my whole distribution.",
       imagePrompt: scenePrompt(
@@ -635,7 +635,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-measurement",
-      pain: "No idea which piece actually brought a customer",
+      pain: "No idea which piece brought a customer",
       fix: "one number you check monthly, and what to do about it",
       question: "I can't tell which piece brought me a customer.",
       imagePrompt: scenePrompt(
@@ -644,7 +644,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "starting-over",
-      pain: "Restarting the whole content thing every quarter",
+      pain: "Restarting the content thing every quarter",
       fix: "a system that survives your busy season",
       question: "I restart this whole thing every few months.",
       imagePrompt: scenePrompt(
@@ -658,7 +658,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
   "ai-operating-system": [
     {
       id: "everything-manual",
-      pain: "Doing by hand what should have been automatic a year ago",
+      pain: "Doing by hand what should be automatic",
       fix: "your three worst repeat tasks running without you",
       question: "I'm still doing all of this by hand.",
       imagePrompt: scenePrompt(
@@ -678,7 +678,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "too-many-tools",
-      pain: "Paying for six tools that don't talk to each other",
+      pain: "Six tools that don't talk to each other",
       fix: "one stack, connected, with the rest cancelled",
       question: "I pay for six tools that don't talk to each other.",
       imagePrompt: scenePrompt(
@@ -715,7 +715,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "data-scattered",
-      pain: "Your business knowledge scattered across notes and screenshots",
+      pain: "Knowledge scattered across ten places",
       fix: "one place your AI reads from every time",
       question: "Everything I know is scattered across notes and screenshots.",
       imagePrompt: scenePrompt(
@@ -724,7 +724,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-time-saved",
-      pain: "Automating things that didn't cost you time anyway",
+      pain: "Automating what didn't cost you time",
       fix: "the tasks ranked by hours before anything gets built",
       question: "I automate things that never cost me time.",
       imagePrompt: scenePrompt(
@@ -733,7 +733,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "security-worry",
-      pain: "Not knowing what you're safe to put into an AI tool",
+      pain: "Not knowing what's safe to put into AI",
       fix: "clear rules on what goes in and what never does",
       question: "I don't know what's safe to put into an AI tool.",
       imagePrompt: scenePrompt(
@@ -756,7 +756,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
   "legal-financial-ops": [
     {
       id: "no-entity",
-      pain: "Running real money through your personal name",
+      pain: "Running real money through your own name",
       fix: "the entity chosen and filed, with you watching",
       question: "I'm running real money through my own name.",
       imagePrompt: scenePrompt(
@@ -775,7 +775,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
 
     {
       id: "mixed-money",
-      pain: "Business and personal money in the same account",
+      pain: "Business and personal money in one account",
       fix: "a business account open and the split done",
       question: "My business and personal money are the same account.",
       imagePrompt: scenePrompt(
@@ -802,7 +802,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-insurance",
-      pain: "One bad day away from losing everything personal",
+      pain: "One bad day from losing everything personal",
       fix: "the coverage identified and the quotes in hand",
       question: "One bad day could take everything I own.",
       imagePrompt: scenePrompt(
@@ -821,7 +821,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-pricing-math",
-      pain: "Prices set on feel, with no idea of the margin",
+      pain: "Prices set on feel, margin unknown",
       fix: "the real unit math done on your actual numbers",
       question: "I priced on feel and don't know my margin.",
       imagePrompt: scenePrompt(
@@ -830,7 +830,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "licenses",
-      pain: "Not knowing which license or permit you're missing",
+      pain: "Not knowing which permit you're missing",
       fix: "your specific list, checked against your county",
       question: "I don't know which permits I'm missing.",
       imagePrompt: scenePrompt(
@@ -839,7 +839,7 @@ export const WORKSHOP_PAINS: Record<string, WorkshopPain[]> = {
     },
     {
       id: "no-visibility",
-      pain: "Guessing whether the month was actually profitable",
+      pain: "Guessing whether the month was profitable",
       fix: "one number you can check on your phone",
       question: "I'm guessing whether this month made money.",
       imagePrompt: scenePrompt(
