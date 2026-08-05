@@ -7,8 +7,9 @@
 
 import {
   getUpcomingSessions,
+  getUpcomingSessionsForRule,
+  FOUNDATION_SCHEDULE,
   WORKSHOP_SCHEDULES,
-  BOOKING_CUTOFF_HOURS,
 } from "@/lib/build-workshop-schedule";
 import { WORKSHOP_CATALOG, FOUNDATION_SLUG, getCatalogWorkshop } from "@/lib/workshop-catalog";
 
@@ -22,14 +23,6 @@ export type CalendarSession = {
   timeLabel: string;
   /** Where the reserve button sends the visitor. */
   reserveHref: string;
-};
-
-/** Foundation's fixed session (Thu, Aug 20, 2026, morning, ET). */
-const FOUNDATION_SESSION = {
-  startISO: "2026-08-20T09:30:00-04:00",
-  endISO: "2026-08-20T12:15:00-04:00",
-  dateLabel: "Thu, Aug 20, 2026",
-  timeLabel: "9:30 am–12:15 pm ET",
 };
 
 /** How many upcoming dates the calendar shows per workshop. */
@@ -63,17 +56,23 @@ export function getAllUpcomingSessions(
     }
   }
 
-  // Foundation: include it while it is still outside the booking cutoff.
-  const cutoffMs = now.getTime() + BOOKING_CUTOFF_HOURS * 60 * 60 * 1000;
-  const foundationMs = new Date(FOUNDATION_SESSION.startISO).getTime();
-  if (foundationMs > cutoffMs) {
-    const f = getCatalogWorkshop(FOUNDATION_SLUG);
+  // Foundation: monthly, 3rd Thursday morning — same cutoff rules.
+  const f = getCatalogWorkshop(FOUNDATION_SLUG);
+  for (const s of getUpcomingSessionsForRule(
+    FOUNDATION_SCHEDULE,
+    now,
+    perWorkshop,
+    lookaheadDays,
+  )) {
     out.push({
       slug: FOUNDATION_SLUG,
       title: f.title,
       priceLabel: f.priceLabel,
-      ...FOUNDATION_SESSION,
-      reserveHref: "/register",
+      startISO: s.startISO,
+      endISO: s.endISO,
+      dateLabel: s.dateLabel,
+      timeLabel: s.timeLabel,
+      reserveHref: `/register?workshop=${FOUNDATION_SLUG}&date=${encodeURIComponent(s.startISO)}`,
     });
   }
 
