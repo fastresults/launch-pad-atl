@@ -117,11 +117,13 @@ export default function CalendarPage() {
         </SectionShell>
       ) : (
         <SectionShell tinted>
-          <div className="space-y-8">
-            {months.map((month) => (
-              <div key={month.key}>
-                <SectionEyebrow muted>{month.label}</SectionEyebrow>
-                <div className="mt-3 space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {months.flatMap((month) =>
+              month.days.map((day) => ({ month, day })),
+            ).map(({ month, day }) => (
+              <div key={day.key} className="contents">
+                <div className="hidden">{month.label}</div>
+
                   {month.days.map((day) => (
                     <div
                       key={day.key}
