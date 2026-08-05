@@ -9,11 +9,7 @@
 // from BUILD_WORKSHOPS so the /build/:slug page and the homepage can never drift.
 
 import { BUILD_WORKSHOPS, type AgendaBlock } from "@/lib/build-workshops";
-import {
-  getCatalogWorkshop,
-  FOUNDATION_SLUG,
-  type CatalogWorkshop,
-} from "@/lib/workshop-catalog";
+import { getCatalogWorkshop, FOUNDATION_SLUG, type CatalogWorkshop } from "@/lib/workshop-catalog";
 
 /** A mock of the real thing the founder leaves with. */
 export type ArtifactPreview = {
@@ -28,6 +24,14 @@ export type ArtifactPreview = {
 };
 
 export type Objection = { q: string; a: string };
+
+export type WorkshopIncluded = {
+  label: string;
+  heading: string;
+  summary: string;
+  items: { title: string; detail: string }[];
+  footnote: string;
+};
 
 export type WorkshopFormat = {
   name: string;
@@ -167,7 +171,7 @@ const PRODUCT_META: Record<string, ProductMeta> = {
         q: "I need a developer, not a workshop.",
         a: "You need the decisions before the developer — the job of the page, the words, the order. Handing a developer a finished wireframe and real copy is the difference between a two-week build and a three-month one.",
       },
-        {
+      {
         q: "My site is fine, it just gets no traffic.",
         a: "Then the traffic you do get is being wasted, and every channel you add later multiplies against a page that doesn't convert. Fix the page first; it's the cheaper half.",
       },
@@ -404,37 +408,43 @@ const PRODUCT_META: Record<string, ProductMeta> = {
   },
 };
 
-/** Course pricing sits one tier under the room, everywhere. */
-export const COURSE_PRICE_LABEL = "$97";
-
-function formatsFor(w: CatalogWorkshop): { live: WorkshopFormat; course: WorkshopFormat } {
+function formatsFor(w: CatalogWorkshop): { live: WorkshopFormat; included: WorkshopIncluded } {
   return {
     live: {
       name: "The live morning",
       priceLabel: w.priceLabel,
       summary: "In the room at the IGNITE Center. You leave with it finished.",
       points: [
-        "8:45–11:30, one Thursday morning in Atlanta",
-        "Built with you at the table — not demonstrated at you",
+        "8:45\u201311:30, one Thursday morning in Atlanta",
+        "Built with you at the table \u2014 not demonstrated at you",
         "Small room, so your work is the work on screen",
         "The artifact is done before you leave. No homework.",
       ],
       ctaLabel: w.status === "open" ? "Reserve your seat" : "Get the date first",
     },
-    course: {
-      name: "The self-paced course",
-      priceLabel: COURSE_PRICE_LABEL,
-      summary: "Same build, your own clock, nobody across the table.",
-      points: [
-        "The same four blocks, as modules you can stop and restart",
-        "Every worksheet and artifact template the room uses",
-        "Yours forever, including updates",
-        "Finish rate is lower. We'd rather you know that now.",
-      ],
-      ctaLabel: "Tell me when it opens",
-    },
+    included: WORKSHOP_INCLUDED,
   };
 }
+
+/** Every seat carries the same two things home. Authored once. */
+export const WORKSHOP_INCLUDED: WorkshopIncluded = {
+  label: "Included with your seat",
+  heading: "You do not leave with a folder. You leave with a login.",
+  summary: "Everything built that morning keeps living somewhere you can get to it.",
+  items: [
+    {
+      title: "Your dashboard",
+      detail:
+        "Every asset, decision, and prompt from your morning, saved under your login. Come back in six months, it is still there.",
+    },
+    {
+      title: "The recap course",
+      detail:
+        "The same build walked back through on video, block by block, so you can redo any step alone.",
+    },
+  ],
+  footnote: "No extra cost. It comes with the seat.",
+};
 
 /** The full product record for the homepage stack. */
 export function getWorkshopProduct(slug: string | null | undefined): WorkshopProduct {

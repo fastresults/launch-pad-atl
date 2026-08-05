@@ -1,5 +1,13 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, CalendarDays, Check, MapPin, Minus, Layers, MessageCircleQuestion } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  Check,
+  MapPin,
+  Minus,
+  Layers,
+  MessageCircleQuestion,
+} from "lucide-react";
 import { getWorkshopFormats, type WorkshopProduct } from "@/lib/workshop-products";
 import { nextDateLabel } from "@/lib/workshop-catalog";
 import { WaitlistForm } from "@/components/home/workshop/WaitlistForm";
@@ -13,14 +21,14 @@ import {
 
 /** Section 5 — two ways to get it. The room is dominant; the course is honest. */
 export function WorkshopFormats({ product }: { product: WorkshopProduct }) {
-  const { live, course } = getWorkshopFormats(product);
+  const { live, included } = getWorkshopFormats(product);
   const isOpen = product.status === "open";
   const date = nextDateLabel(product.slug);
 
   return (
     <SectionShell tinted>
-      <SectionEyebrow icon={Layers}>Two ways to get it</SectionEyebrow>
-      <SectionHeading lead="In the room," emphasis="or on your own clock." />
+      <SectionEyebrow icon={Layers}>What the seat includes</SectionEyebrow>
+      <SectionHeading lead="The morning," emphasis="and everything that outlives it." />
 
       <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-12">
         {/* The room */}
@@ -67,33 +75,29 @@ export function WorkshopFormats({ product }: { product: WorkshopProduct }) {
           </Panel>
         </div>
 
-        {/* The course */}
+        {/* What comes home with the seat */}
         <div className="md:col-span-5">
-          <Panel className="h-full bg-card/50 md:p-8">
-            <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h3 className="text-lg font-semibold">{course.name}</h3>
-              <span className="text-xl font-semibold text-muted-foreground">
-                {course.priceLabel}
-              </span>
-            </div>
-            <p className="mt-2 text-sm text-muted-foreground">{course.summary}</p>
-            <ul className="mt-5 space-y-2.5">
-              {course.points.map((p) => (
-                <li key={p} className="flex gap-2.5 text-sm text-muted-foreground">
-                  <Minus className="mt-0.5 size-4 shrink-0 opacity-50" aria-hidden="true" />
-                  <span>{p}</span>
+          <Panel className="h-full md:p-8">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[0.7rem] font-medium uppercase tracking-[0.14em] text-primary">
+              <Check className="size-3.5" aria-hidden="true" />
+              {included.label}
+            </span>
+            <h3 className="mt-4 text-lg font-semibold">{included.heading}</h3>
+            <p className="mt-2 text-sm text-muted-foreground">{included.summary}</p>
+            <ul className="mt-6 space-y-5">
+              {included.items.map((item) => (
+                <li key={item.title} className="flex gap-3">
+                  <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-semibold">{item.title}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{item.detail}</p>
+                  </div>
                 </li>
               ))}
             </ul>
-            <div className="mt-6">
-              <WaitlistForm
-                slug={product.slug}
-                format="course"
-                tone="card"
-                label={course.ctaLabel}
-                doneMessage="We'll email you when the course opens."
-              />
-            </div>
+            <p className="mt-6 border-t border-border/60 pt-4 text-sm text-foreground/80">
+              {included.footnote}
+            </p>
           </Panel>
         </div>
       </div>
