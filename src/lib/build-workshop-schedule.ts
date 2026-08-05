@@ -137,17 +137,19 @@ export function getUpcomingSessions(
   slug: string,
   now: Date = new Date(),
   limit = 12,
+  horizonDays: number = SCHEDULE_HORIZON_DAYS,
 ): ScheduledSession[] {
   const rule = WORKSHOP_SCHEDULES[slug];
   if (!rule) return [];
 
   const cutoffMs = now.getTime() + BOOKING_CUTOFF_HOURS * 60 * 60 * 1000;
-  const horizonMs = now.getTime() + SCHEDULE_HORIZON_DAYS * 24 * 60 * 60 * 1000;
+  const horizonMs = now.getTime() + horizonDays * 24 * 60 * 60 * 1000;
   const sessions: ScheduledSession[] = [];
-  // Scan a few months of candidates, then clamp to the 90-day horizon.
+  // Scan enough months of candidates to cover the requested horizon.
   const startYear = now.getUTCFullYear();
   const startMonth = now.getUTCMonth() + 1; // 1-indexed
-  for (let i = 0; i < 5; i++) {
+  const monthsToScan = Math.min(30, Math.max(5, Math.ceil(horizonDays / 28) + 2));
+  for (let i = 0; i < monthsToScan; i++) {
     const absolute = startMonth - 1 + i;
     const year = startYear + Math.floor(absolute / 12);
     const month = (absolute % 12) + 1;
