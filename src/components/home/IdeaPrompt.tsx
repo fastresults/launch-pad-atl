@@ -16,6 +16,7 @@ type IdeaPromptProps = {
  * caption, and the AI read it triggers all follow the selected workshop.
  */
 export function IdeaPrompt({ ghostText, paused, onTakeOver, workshop }: IdeaPromptProps) {
+  const WorkshopIcon = workshop.icon;
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const [snapshotIdea, setSnapshotIdea] = useState("");
@@ -51,6 +52,7 @@ export function IdeaPrompt({ ghostText, paused, onTakeOver, workshop }: IdeaProm
               aria-hidden="true"
               className="sl-prompt__ghost"
             >
+              <WorkshopIcon className="sl-prompt__ghost-icon" strokeWidth={1.75} />
               <span className="truncate">{ghostText}</span>
               <span className="sl-prompt__caret" />
             </div>
