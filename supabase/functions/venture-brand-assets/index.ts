@@ -301,7 +301,29 @@ async function loadBrandDocs(supabase: any, snapshotId: string): Promise<string>
   return picked.join("\n\n");
 }
 
+/**
+ * Fresh signed URLs for the venture's live moodboard tiles. Stored signed URLs
+ * expire after a week, so re-sign from the storage path before handing them to
+ * a vision model.
+ */
+async function moodboardImageUrls(supabase: any, kit: any): Promise<string[]> {
+  const tiles = Array.isArray(kit?.moodboard) ? kit.moodboard : [];
+  const urls: string[] = [];
+  for (const tile of tiles.slice(0, 4)) {
+    const path = typeof tile?.path === "string" ? tile.path : "";
+    if (path) {
+      try {
+        const { data } = await supabase.storage.from("user-media").createSignedUrl(path, 60 * 30);
+        if (data?.signedUrl) { urls.push(data.signedUrl); continue; }
+      } catch { /* fall back to the stored URL */ }
+    }
+    if (typeof tile?.url === "string" && tile.url.startsWith("http")) urls.push(tile.url);
+  }
+  return urls;
+}
+
 function ventureBlockOf(ctx: any): string {
+
   const snap = ctx.snap ?? {};
   const brain = ctx.brain ?? {};
   return [
