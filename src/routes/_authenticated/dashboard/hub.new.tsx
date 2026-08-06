@@ -785,7 +785,7 @@ function Inner() {
             <p className="mt-0.5 text-sm text-muted-foreground">
               {memoryEmpty
                 ? intakeStatus
-                : "Here's everything we're already using as your single source of truth. We'll carry all of it into this startup snapshot."}
+                : "This is your founder-level memory — bio, brief captures and anything not yet tied to a venture. We'll carry it into this startup snapshot. Other ventures keep their own brain."}
             </p>
           </div>
           <div className="flex items-center gap-2">
