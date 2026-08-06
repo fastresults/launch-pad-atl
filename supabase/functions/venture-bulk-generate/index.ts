@@ -467,6 +467,7 @@ async function runLayer(
   layer: any[],
   state: { done: number; total: number; fails: number; canceled: boolean },
   mode: GenMode = "full",
+  dayContext = "",
 ) {
 
   const snapshotId = ctx.snapshotId;
