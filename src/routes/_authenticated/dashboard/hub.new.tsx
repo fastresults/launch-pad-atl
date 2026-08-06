@@ -634,8 +634,10 @@ function Inner() {
   const canonicalDefault = (key: string): string => {
     const ctx = canonicalCtx;
     switch (key) {
-      case "companyName": return prefill?.company_name ?? ctx?.concept?.company_name ?? "";
-      case "diff": return prefill?.differentiation_statement ?? ctx?.concept?.differentiation ?? "";
+      // Venture content resets to empty (or the explicit hand-off value) —
+      // never back to the previous venture's canonical record.
+      case "companyName": return prefill?.company_name ?? "";
+      case "diff": return prefill?.differentiation_statement ?? "";
       case "founderName": return prefill?.founder_name ?? ctx?.identity?.full_name ?? "";
       case "founderEmail": return prefill?.founder_email ?? ctx?.identity?.email ?? "";
       case "founderPhone": return prefill?.founder_phone ?? ctx?.identity?.phone ?? "";
@@ -644,8 +646,8 @@ function Inner() {
       case "country": return prefill?.country ?? "United States";
       case "websiteUrl": return "";
       case "subIndustry": return prefill?.sub_industry ?? "";
-      case "businessConcept": return prefill?.business_concept ?? ctx?.concept?.business_concept_blob ?? "";
-      case "industry": return prefill?.industry ?? ctx?.market?.industry ?? "";
+      case "businessConcept": return prefill?.business_concept ?? "";
+      case "industry": return prefill?.industry ?? "";
       default: return "";
     }
   };
