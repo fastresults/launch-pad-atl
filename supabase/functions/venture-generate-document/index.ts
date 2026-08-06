@@ -10,6 +10,7 @@
 //   5. writeBackIntake()     — intake answers flow into canonical store for future docs
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { deriveIntakeAnswers, derivedIntakeBlock, type DerivedIntake } from "../_shared/intake-derive.ts";
 import {
   BRAND_KIT_REQUIRED_TYPES,
   brandKitBlock,
@@ -274,6 +275,20 @@ export async function generateOne(
     if (prior?.intake_answers && Object.keys(prior.intake_answers).length) {
       effectiveIntake = prior.intake_answers;
     }
+  }
+
+  // Intake gate: infer the inputs from the venture's finished assets rather
+  // than writing the asset on air. Same behaviour as the bulk generator.
+  let derivedIntake: DerivedIntake | null = null;
+  if (!effectiveIntake && type?.intake_schema) {
+    try {
+      derivedIntake = await deriveIntakeAnswers(
+        supabase, snapshotId, snap, documentType, type.name, type.intake_schema,
+      );
+    } catch (e) {
+      console.warn("intake derive threw", e);
+    }
+    if (derivedIntake) effectiveIntake = derivedIntake.answers;
   }
 
   // Write fresh intake answers back into canonical store (S4). Best-effort —
