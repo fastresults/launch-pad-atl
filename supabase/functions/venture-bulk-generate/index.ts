@@ -324,6 +324,38 @@ async function generateOne(
     raw = raw.replace(/QUALITY_SCORE:\s*\d{1,3}\s*$/i, "").trim();
   }
   raw = stripCitations(raw);
+
+  // Truncated output: ask the model to continue exactly where it stopped and
+  // stitch the halves together instead of shipping a TRUNCATED marker.
+  if (truncated) {
+    try {
+      const contRes = await callGateway([
+        ...baseMessages,
+        { role: "assistant", content: raw },
+        {
+          role: "user",
+          content:
+            "Your previous message was cut off mid-way. Continue writing from exactly where you stopped. " +
+            "Do not repeat anything you already wrote, do not restate the title, and do not add a preamble. " +
+            "Finish the document completely.",
+        },
+      ]);
+      if (contRes.ok) {
+        const contJson = await contRes.json();
+        const more = contJson.choices?.[0]?.message?.content ?? "";
+        const contFinish = String(
+          contJson.choices?.[0]?.finish_reason ?? contJson.choices?.[0]?.finishReason ?? "",
+        ).toLowerCase();
+        if (more.trim()) {
+          raw = `${raw.trimEnd()}\n\n${stripCitations(more).trimStart()}`;
+          truncated = contFinish === "length";
+        }
+      }
+    } catch (e) {
+      console.warn("continuation pass failed", e);
+    }
+  }
+
   if (isPrd) {
     raw = await expandWebsitePrdMasterPrompt(raw);
     raw = enforceWebsitePrdDepth(raw);
@@ -331,11 +363,12 @@ async function generateOne(
     if (stats.complete && stats.words >= 1800) truncated = false;
   }
   if (truncated) {
-    quality = Math.min(quality, 60);
-    if (!raw.includes("<!-- TRUNCATED -->")) {
-      raw = `${raw}\n\n<!-- TRUNCATED -->\n`;
-    }
+    // Still short after a continuation pass — fail it so the retry sweep
+    // picks it up rather than saving a half-written asset.
+    await recordFailure("Response was cut off before the document finished.");
+    throw new Error("Truncated response");
   }
+
   const wordCount = raw.split(/\s+/).filter(Boolean).length;
 
   const { data: existing } = await supabase
