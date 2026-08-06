@@ -980,6 +980,13 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     refetchInterval: 10000,
   });
 
+  const blockedQ = useQuery({
+    queryKey: ["hub", "blocked", snapshot.id],
+    queryFn: () => listBlockedDocs({ data: { snapshotId: snapshot.id } }),
+    refetchInterval: 15000,
+  });
+
+
   // Sourcing assets are always surfaced; when the venture isn't classified as physical,
   // the UI badges them "Physical products only" and excludes them from required counters.
   const SOURCING_ONLY_TYPES = useMemo(
