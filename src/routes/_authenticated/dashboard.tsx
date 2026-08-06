@@ -127,10 +127,19 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       key: "hub",
       to: "/dashboard/hub",
       label: "Ventures",
-      tooltip: "Every startup concept you've explored, with its own 60+ asset workspace. Drop in a URL or describe an idea, then star favorites, archive what's noise, and reopen anything to keep refining.",
+      tooltip: "Every startup concept you've explored, with its own 60+ asset workspace. Use “New venture” below to add one — drop in a URL or describe an idea — then star favorites, archive what's noise, and reopen anything to keep refining.",
       icon: Sparkles,
       hide: !hubVisible,
     },
+    {
+      key: "hub",
+      to: "/dashboard/hub/new",
+      label: "New venture",
+      tooltip: "Start a brand-new venture workspace. Paste a website URL or describe the idea in a sentence, and we'll spin up its own asset library.",
+      icon: Plus,
+      hide: !hubVisible,
+    },
+
     {
       key: "files",
       to: "/dashboard/files",
