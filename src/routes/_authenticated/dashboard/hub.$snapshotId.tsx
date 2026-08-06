@@ -1518,11 +1518,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                       <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="truncate text-sm font-medium">{t.name}</h4>
                         <TrackChip track={trackFor(t.type)} />
-                        {needsBrandKit && (
-                          <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
-                            Requires Brand Kit
+                        {needsBrandKit && brandKitInferred && (
+                          <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">
+                            Brand inferred — review in Wizard
                           </Badge>
                         )}
+                        {needsBrandKit && !brandKitInferred && (
+                          <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
+                            Uses your Brand Kit
+                          </Badge>
+                        )}
+
                         {stale && (
                           <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">
                             {staleLabel}
