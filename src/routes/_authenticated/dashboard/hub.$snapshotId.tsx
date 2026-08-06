@@ -1499,7 +1499,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               else if (generating && hasReadableContent) statusLine = "Updating… previous version available";
               else if (generating) statusLine = "Writing now…";
               else if (status === "failed") statusLine = "Needs another try";
-              else if (brandGated) statusLine = "Complete the Brand Wizard to unlock";
+              else if (brandGated) statusLine = "We'll infer your brand from finished assets";
               else if (!depsMet) {
                 const missing = deps.find((dep) => !completedKeys.has(dep));
                 const missingLabel = missing ? ((typeByKey.get(missing) as any)?.name ?? missing) : "earlier assets";
