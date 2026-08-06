@@ -838,7 +838,7 @@ function Inner() {
 
       <div>
         <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
-          <Sparkles className="h-3.5 w-3.5" /> Create a venture · 3 quick steps
+          <Sparkles className="h-3.5 w-3.5" /> Create a venture
         </div>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">
           {fromBrief ? "Your Startup Snapshot — ready to confirm" : "Tell us about the venture"}
@@ -848,22 +848,41 @@ function Inner() {
             ? "We pre-filled this from your founder brief. Skim, fix anything off, then create."
             : "Give us anything — a deck, a link, a voice note. We'll fill the form, you confirm, we generate."}
         </p>
+        <div className="mt-4">
+          <StepStrip
+            activeStep={activeStep}
+            onSelect={goToStep}
+            steps={[
+              { n: 1, label: "Source", state: stepState(1) },
+              { n: 2, label: "Confirm", state: stepState(2) },
+              { n: 3, label: "Track", state: stepState(3) },
+            ]}
+          />
+        </div>
       </div>
 
       {/* ───────────────────────── STEP 1 — AI INTAKE ───────────────────────── */}
-      <section className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-primary">Step 1</div>
-            <h2 className="mt-0.5 text-lg font-semibold">
-              {memoryEmpty ? "Give us something to work with" : "Your source memory"}
-            </h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {memoryEmpty
-                ? intakeStatus
-                : "This is your founder-level memory — bio, brief captures and anything not yet tied to a venture. We'll carry it into this startup snapshot. Other ventures keep their own brain."}
-            </p>
-          </div>
+      <StepShell
+        n={1}
+        state={stepState(1)}
+        innerRef={(el) => {
+          stepRefs.current[1] = el;
+        }}
+        onOpen={() => goToStep(1)}
+        title={memoryEmpty ? "Give us something to work with" : "Your source memory"}
+        description={
+          memoryEmpty
+            ? intakeStatus
+            : "This is your founder-level memory — bio, brief captures and anything not yet tied to a venture. We'll carry it into this startup snapshot. Other ventures keep their own brain."
+        }
+        summary={
+          readySourceCount > 0
+            ? `${readySourceCount} source${readySourceCount === 1 ? "" : "s"} read${
+                Object.keys(aiFilled).length ? ` · ${Object.keys(aiFilled).length} fields filled` : ""
+              }`
+            : "Concept described by hand"
+        }
+        headerRight={
           <div className="flex items-center gap-2">
             {drafting && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
             <Button
@@ -878,8 +897,18 @@ function Inner() {
               Reset step 1
             </Button>
           </div>
+        }
+        footer={
+          <StepNav
+            canGoNext={step1Valid}
+            blockedReason={step1Blocker}
+            onNext={goNext}
+            nextLabel="Continue to details"
+          />
+        }
+      >
+        <>
 
-        </div>
 
         {/* Memory chips — what we already have in collective memory */}
         {!memoryEmpty && (
