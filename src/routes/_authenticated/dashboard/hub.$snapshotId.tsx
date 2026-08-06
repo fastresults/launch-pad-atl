@@ -1232,9 +1232,10 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                   <AlertCircle className="h-3 w-3" />
                   Needs you — {blocked.length} asset{blocked.length === 1 ? "" : "s"} waiting
                 </span>
-                <Button size="sm" variant="outline" onClick={() => navigate("/dashboard/brand")}>
+                <Button size="sm" variant="outline" onClick={openBrandWizard}>
                   Open Brand Wizard
                 </Button>
+
               </div>
               <p className="mt-1 opacity-90">{blocked[0].blocked_reason}</p>
             </div>
