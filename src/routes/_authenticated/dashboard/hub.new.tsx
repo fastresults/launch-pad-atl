@@ -180,6 +180,8 @@ function Inner() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const fieldRefs = useRef<Record<string, HTMLElement | null>>({});
+  const stepRefs = useRef<Record<number, HTMLElement | null>>({});
+
 
   // Prefill from canonical context.
   const { data: canonicalCtx } = useCanonicalContext();
