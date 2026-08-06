@@ -525,10 +525,11 @@ export async function generateDeepAssessment(input: any): Promise<void> {
 }
 
 export async function bulkGenerate(input: any): Promise<{ ok?: boolean; jobId?: string; category?: string | null }> {
-  const { snapshotId, category } = unwrap<{ snapshotId: string; category?: string | null }>(input);
+  const { snapshotId, category, retryOnly } = unwrap<{ snapshotId: string; category?: string | null; retryOnly?: boolean }>(input);
   const { data, error } = await invokeEdge("venture-bulk-generate", {
-    body: { snapshotId, category: category ?? null },
+    body: { snapshotId, category: category ?? null, retryOnly: retryOnly === true },
   });
+
   if (error) {
     // Edge function may return a structured error like "unlock_required".
     const ctx = (error as any)?.context;
