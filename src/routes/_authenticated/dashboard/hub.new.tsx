@@ -1813,18 +1813,21 @@ function Inner() {
             </div>
           </div>
         )}
-      </section>
+      </StepShell>
 
       {/* ───────────────────── STEP 3 — TRACK + CREATE ────────────────────── */}
-      <section className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-primary">Step 3</div>
-            <h2 className="mt-0.5 text-lg font-semibold">Pick your track</h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              We tune the voice of every document to match. You can change this later.
-            </p>
-          </div>
+      <StepShell
+        n={3}
+        state={stepState(3)}
+        innerRef={(el) => {
+          stepRefs.current[3] = el;
+        }}
+        onOpen={() => goToStep(3)}
+        title="Pick your track"
+        description="We tune the voice of every document to match. You can change this later."
+        lockedHint="Confirm your founder + market details in step 2 to unlock."
+        summary={track ? TRACK_BY_KEY[track]?.label ?? "Track selected" : "No track picked yet"}
+        headerRight={
           <button
             type="button"
             onClick={() => setShowTrackHelp((v) => !v)}
@@ -1832,7 +1835,29 @@ function Inner() {
           >
             {showTrackHelp ? "Hide" : "What's this?"}
           </button>
-        </div>
+        }
+        footer={
+          <StepNav
+            canGoNext={canSubmit}
+            blockedReason={!track ? "Pick a track to continue" : undefined}
+            onBack={goBack}
+            nextSlot={
+              <Button size="sm" disabled={!canSubmit} onClick={() => create.mutate()}>
+                {create.isPending ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Creating…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-1.5 h-4 w-4" /> Create &amp; start enrichment
+                  </>
+                )}
+              </Button>
+            }
+          />
+        }
+      >
+
         {showTrackHelp && (
           <p className="rounded-md bg-white/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
             Built primarily for <strong>Main Street founders</strong> — first-time owners opening a café, salon, trade, local service, indie product, or small e-commerce brand. Pick a different track only if you're building something materially different (venture-track SaaS, marketplace, deep tech).
