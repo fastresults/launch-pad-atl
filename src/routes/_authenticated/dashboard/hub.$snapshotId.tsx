@@ -1016,9 +1016,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const typeByKey = useMemo(() => new Map(types.map((t: any) => [t.type, t])), [types]);
   // For non-physical ventures, sourcing assets are optional — exclude them from headline totals
   // so counters like "48/48 assets ready" reflect what the founder actually needs to ship.
-  const requiredTypes = isPhysical
+  // Assets the server has recorded as not applicable to this venture never
+  // count toward the total — otherwise the counter parks below 100% forever.
+  const notApplicableKeys = useMemo(
+    () => new Set(docs.filter((d: any) => d.status === "not_applicable").map((d: any) => d.document_type)),
+    [docs],
+  );
+  const requiredTypes = (isPhysical
     ? types
-    : types.filter((t: any) => !SOURCING_ONLY_TYPES.has(t.type));
+    : types.filter((t: any) => !SOURCING_ONLY_TYPES.has(t.type))
+  ).filter((t: any) => !notApplicableKeys.has(t.type));
+
   const completedKeys = new Set(docs.filter((d) => d.status === "complete").map((d) => d.document_type));
   const completeCount = new Set(
     docs
