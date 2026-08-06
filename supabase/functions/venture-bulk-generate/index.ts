@@ -195,13 +195,41 @@ async function generateOne(
   // Pick up any intake answers the founder previously saved for this doc.
   const { data: priorRow } = await supabase
     .from("venture_documents")
-    .select("intake_answers")
+    .select("intake_answers, intake_source")
     .eq("snapshot_id", snapshotId)
     .eq("document_type", documentType)
     .maybeSingle();
-  const effectiveIntake = priorRow?.intake_answers && Object.keys(priorRow.intake_answers).length
+  let effectiveIntake = priorRow?.intake_answers && Object.keys(priorRow.intake_answers).length
     ? priorRow.intake_answers
     : null;
+  let derivedIntake: DerivedIntake | null = null;
+
+  // Intake gate: this asset asks the founder for numbers. Rather than skipping
+  // it forever, infer those numbers from the assets already on file and label
+  // them as assumptions. Only a failed derivation blocks the asset.
+  if (!effectiveIntake && type.intake_schema) {
+    try {
+      derivedIntake = await deriveIntakeAnswers(
+        supabase, snapshotId, snap, documentType, type.name, type.intake_schema,
+      );
+    } catch (e) {
+      console.warn("intake derive threw", e);
+    }
+    if (derivedIntake) {
+      effectiveIntake = derivedIntake.answers;
+    } else {
+      await supabase.from("venture_documents").upsert({
+        snapshot_id: snapshotId,
+        document_type: documentType,
+        status: "pending",
+        blocked_reason: "Couldn't infer the inputs this asset needs — open it and fill in the short form.",
+      }, { onConflict: "snapshot_id,document_type" });
+      await supabase.from("venture_generation_failures")
+        .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
+      return;
+    }
+  }
+
 
   // System prompt: specialized first, fallback to base; layer track tone on top.
   const baseSystemPrompt = specializedPrompt(documentType) ?? BASE_SYSTEM_PROMPT;
