@@ -93,20 +93,9 @@ export async function outlineWordmark(
       }
       if (!parts.length) continue;
       const d = parts.join(" ");
-      const ascender = (font.ascender / font.unitsPerEm) * size;
+      // Baseline sits at y = size, so the outline occupies 0..size+descender.
       const descender = (Math.abs(font.descender) / font.unitsPerEm) * size;
-      // Shift so the outline sits inside a 0..height box.
-      const top = size - ascender;
-      const height = ascender + descender;
-      const shifted = height > 0 ? `${d}` : d;
-      return {
-        d: shifted,
-        width: Math.max(1, x - tracking),
-        height: Math.max(1, size + descender),
-        family,
-        // The glyph baseline is at y = size; box height accounts for descenders.
-        ...(top ? {} : {}),
-      };
+      return { d, width: Math.max(1, x - tracking), height: Math.max(1, size + descender), family };
     } catch (e) {
       console.warn("font parse failed", family, e instanceof Error ? e.message : e);
     }
