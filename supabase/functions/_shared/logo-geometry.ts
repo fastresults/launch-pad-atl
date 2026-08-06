@@ -126,13 +126,44 @@ function merge(a: Box, b: Box): Box {
   return { minX: Math.min(a.minX, b.minX), minY: Math.min(a.minY, b.minY), maxX: Math.max(a.maxX, b.maxX), maxY: Math.max(a.maxY, b.maxY) };
 }
 
+// How many numbers each path command consumes, and which of those are x/y pairs
+// forming the segment end point (arcs carry radii and flags that are not points).
+const PATH_ARGS: Record<string, number> = { m: 2, l: 2, h: 1, v: 1, c: 6, s: 4, q: 4, t: 2, a: 7, z: 0 };
+
 function pathBox(d: string): Box {
-  // Approximate: every numeric pair in the path is treated as a point. Good
-  // enough for centring and coverage checks, and never throws.
-  const nums = (d.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+  // Walk the path command by command so arc radii/flags are never mistaken for
+  // coordinates. Curve control points are included — they bound the curve.
+  const tokens = d.match(/[a-zA-Z]|-?\d*\.?\d+(?:e-?\d+)?/g) ?? [];
   let box = { ...EMPTY };
-  for (let i = 0; i + 1 < nums.length; i += 2) {
-    box = merge(box, { minX: nums[i], minY: nums[i + 1], maxX: nums[i], maxY: nums[i + 1] });
+  let cx = 0, cy = 0, startX = 0, startY = 0;
+  let cmd = "";
+  let i = 0;
+  const point = (x: number, y: number) => { box = merge(box, { minX: x, minY: y, maxX: x, maxY: y }); };
+  while (i < tokens.length) {
+    if (/[a-zA-Z]/.test(tokens[i])) { cmd = tokens[i]; i++; if (cmd.toLowerCase() === "z") { cx = startX; cy = startY; continue; } }
+    const key = cmd.toLowerCase();
+    const arity = PATH_ARGS[key];
+    if (!arity) { i++; continue; }
+    const args = tokens.slice(i, i + arity).map(Number);
+    if (args.length < arity || args.some((n) => !Number.isFinite(n))) break;
+    i += arity;
+    const rel = cmd === key;
+    if (key === "h") { cx = rel ? cx + args[0] : args[0]; }
+    else if (key === "v") { cy = rel ? cy + args[0] : args[0]; }
+    else {
+      // Include intermediate control points for curves, then the end point.
+      const pairs: number[][] = [];
+      for (let k = 0; k + 1 < (key === "a" ? 2 : arity); k += 2) pairs.push([args[k], args[k + 1]]);
+      if (key === "a") pairs.length = 0;
+      pairs.push(key === "a" ? [args[5], args[6]] : [args[arity - 2], args[arity - 1]]);
+      for (const [px, py] of pairs) point(rel ? cx + px : px, rel ? cy + py : py);
+      const ex = key === "a" ? args[5] : args[arity - 2];
+      const ey = key === "a" ? args[6] : args[arity - 1];
+      cx = rel ? cx + ex : ex;
+      cy = rel ? cy + ey : ey;
+      if (key === "m") { startX = cx; startY = cy; }
+    }
+    point(cx, cy);
   }
   return box;
 }
