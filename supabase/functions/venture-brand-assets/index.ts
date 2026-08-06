@@ -595,7 +595,7 @@ Deno.serve(async (req) => {
 
     const getRun = async (id?: string) => {
       let query = supabase.from("brand_logo_runs").select("*").eq("snapshot_id", snapshotId);
-      query = id ? query.eq("id", id) : query.not("status", "in", '("completed","completed_with_review","failed","canceled")').order("created_at", { ascending: false }).limit(1);
+      query = id ? query.eq("id", id) : query.order("created_at", { ascending: false }).limit(1);
       const { data: rows, error } = await query;
       if (error) throw error;
       const run = Array.isArray(rows) ? rows[0] : rows;
