@@ -109,6 +109,20 @@ export async function listSnapshots(): Promise<VentureSnapshot[]> {
   return snaps.map((s) => ({ ...(s as any), doc_count: counts.get(s.id) ?? 0 })) as VentureSnapshot[];
 }
 
+/**
+ * How many ventures this founder already has. Used by the new-venture intake
+ * to decide whether prior memory should auto-attach (first venture) or be
+ * offered opt-in (venture #2 and beyond, so nothing bleeds across builds).
+ */
+export async function countSnapshots(): Promise<number> {
+  const { count, error } = await supabase
+    .from("venture_snapshots")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", await uid());
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
 export async function setFavorite(input: any): Promise<void> {
   const { id, is_favorite } = unwrap<{ id: string; is_favorite: boolean }>(input);
   const { error } = await supabase
