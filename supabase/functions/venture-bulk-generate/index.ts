@@ -259,7 +259,6 @@ async function generateOne(
   const maxTokens = isPrd ? 16000 : 16000;
 
   // Count the attempt before we make the call, so a hard crash still shows it.
-  await supabase.rpc; // (no-op guard for older clients)
   {
     const { data: attemptRow } = await supabase
       .from("venture_documents")
@@ -272,40 +271,47 @@ async function generateOne(
       .eq("snapshot_id", snapshotId).eq("document_type", documentType);
   }
 
+  // Record a failure once, replacing any earlier row for this doc so the UI
+  // count reflects reality across retry rounds.
+  const recordFailure = async (error: string) => {
+    await supabase.from("venture_documents")
+      .update({ status: "failed", last_error: error.slice(0, 600) })
+      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
+    await supabase.from("venture_generation_failures")
+      .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
+    await supabase.from("venture_generation_failures").insert({
+      snapshot_id: snapshotId, document_type: documentType, error: error.slice(0, 300),
+    });
+  };
+
+  const timeoutMs = mode === "minimal" ? 240_000 : isPrd ? 180_000 : 90_000;
+
+  const callGateway = (messages: any[]) => aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: modelId, max_tokens: maxTokens, messages }),
+  }, { timeoutMs, retries: isPrd && mode === "full" ? 0 : 2 });
+
+  const baseMessages = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userPrompt },
+  ];
 
   let aiRes: Response;
   try {
-    aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: modelId,
-        max_tokens: maxTokens,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-    }, { timeoutMs: isPrd ? 180_000 : 90_000, retries: isPrd ? 0 : 2 });
+    aiRes = await callGateway(baseMessages);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    await supabase.from("venture_documents").update({ status: "failed" })
-      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
-    await supabase.from("venture_generation_failures").insert({
-      snapshot_id: snapshotId, document_type: documentType, error: `Gateway request failed: ${msg.slice(0, 300)}`,
-    });
+    await recordFailure(`Gateway request failed: ${msg}`);
     throw e;
   }
 
   if (!aiRes.ok) {
     const txt = await aiRes.text();
-    await supabase.from("venture_documents").update({ status: "failed" })
-      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
-    await supabase.from("venture_generation_failures").insert({
-      snapshot_id: snapshotId, document_type: documentType, error: `Gateway ${aiRes.status}: ${txt.slice(0, 300)}`,
-    });
+    await recordFailure(`Gateway ${aiRes.status}: ${txt}`);
     throw new Error(`Gateway ${aiRes.status}`);
   }
+
 
   const aiJson = await aiRes.json();
   let raw = aiJson.choices?.[0]?.message?.content ?? "";
