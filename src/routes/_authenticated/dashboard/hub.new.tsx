@@ -185,7 +185,11 @@ function Inner() {
   const stepRefs = useRef<Record<number, HTMLElement | null>>({});
 
 
-  // Prefill from canonical context.
+  // Prefill from canonical context — IDENTITY ONLY.
+  // Venture-specific content (company name, concept, differentiation,
+  // industry, market scope) is deliberately NOT inherited: a new venture is a
+  // blank canvas, not a copy of the last one. The only way venture content
+  // lands here is an explicit hand-off through router state (`prefill`).
   const { data: canonicalCtx } = useCanonicalContext();
   useEffect(() => {
     if (resetStepOneRef.current) return;
@@ -194,14 +198,6 @@ function Inner() {
     setFounderName((cur) => cur || ctx.identity.full_name);
     setFounderEmail((cur) => cur || ctx.identity.email);
     setFounderPhone((cur) => cur || ctx.identity.phone);
-    setCompanyName((cur) => cur || ctx.concept.company_name);
-    setBusinessConcept((cur) => cur || ctx.concept.business_concept_blob);
-    setDiff((cur) => cur || ctx.concept.differentiation);
-    setIndustry((cur) => cur || ctx.market.industry);
-    setMarketScope((cur) => (cur ? cur : (ctx.market.market_scope || "local")));
-    if (ctx.market.industry || ctx.concept.business_concept_blob) {
-      setFromBrief((cur) => cur || true);
-    }
   }, [canonicalCtx]);
 
   // Reusable library — founder-level memory ONLY (sources not yet tied to a
@@ -216,14 +212,29 @@ function Inner() {
   >([]);
   const [otherVenturesOpen, setOtherVenturesOpen] = useState(false);
   const resetStepOneRef = useRef(false);
+
+  // Returning founders (already have a venture) opt in to prior memory.
+  // First-timers keep the auto-attach so their first run isn't an empty page.
+  // Default to opt-in while the count loads so nothing flashes pre-selected.
+  const [isReturningFounder, setIsReturningFounder] = useState(true);
+  const [ventureCountLoaded, setVentureCountLoaded] = useState(false);
   useEffect(() => {
+    countSnapshots()
+      .then((n) => setIsReturningFounder(n > 0))
+      .catch(() => setIsReturningFounder(true))
+      .finally(() => setVentureCountLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    if (!ventureCountLoaded) return;
     listVentureSources({ orphansOnly: true })
       .then((rows) => {
         setReusable(rows);
         if (resetStepOneRef.current) return;
-        // Auto-attach everything readable from the founder's own unassigned
-        // memory (brief sources, scraped URLs, founder bio). Never another
-        // venture's material.
+        // First venture only: auto-attach everything readable from the
+        // founder's own unassigned memory (brief sources, scraped URLs,
+        // founder bio). Returning founders pick what applies.
+        if (isReturningFounder) return;
         setReuseSelected((prev) => {
           const next = { ...prev };
           for (const r of rows) {
@@ -236,7 +247,7 @@ function Inner() {
     listSourcesByOtherVentures()
       .then(setOtherVentures)
       .catch(() => {});
-  }, []);
+  }, [ventureCountLoaded, isReturningFounder]);
 
   // Memory chips = every readable source already on file for this founder.
   const memoryChips = useMemo(() => {
