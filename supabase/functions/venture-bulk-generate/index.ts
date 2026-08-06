@@ -15,12 +15,15 @@ import {
   brandKitBlock,
   compactPreamble,
   distillDeps,
+  isBrandKitUsable,
   loadBrandKit,
   loadVentureContext,
   pickBrainSlice,
   type VentureContext,
 } from "../_shared/venture-context.ts";
+import { deriveBrandKitFromAssets } from "../_shared/brand-derive.ts";
 import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
+
 import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
 import { trackTone } from "../_shared/track-tones.ts";
 import {
