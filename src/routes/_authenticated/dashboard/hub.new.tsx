@@ -170,6 +170,14 @@ function Inner() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewTouched, setReviewTouched] = useState(false);
 
+  // ── Progressive wizard ────────────────────────────────────────────────
+  // activeStep = the one expanded step. maxStepReached = furthest step the
+  // founder has unlocked; steps at or below it stay clickable so they can
+  // move backward and forward freely without losing any state.
+  const [activeStep, setActiveStep] = useState(1);
+  const [maxStepReached, setMaxStepReached] = useState(1);
+
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const fieldRefs = useRef<Record<string, HTMLElement | null>>({});
 
