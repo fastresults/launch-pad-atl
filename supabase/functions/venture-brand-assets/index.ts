@@ -59,6 +59,7 @@ type LogoDirection = {
   direction_name: string;
   logo_type: string; // wordmark | lettermark | monogram | pictorial mark | abstract mark | emblem | combination mark
   one_line_idea?: string;   // the single shape idea, one sentence
+  geometric_operation?: string; // the one construction move that creates the mark
   why_memorable?: string;   // the rationale a founder can judge
   symbol_concept: string;
   construction_notes: string;
