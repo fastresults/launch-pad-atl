@@ -81,6 +81,27 @@ Deno.serve(async (req) => {
       paused++;
     }
 
+    // Logo stages are durable and browser-resumable. Release abandoned leases
+    // so the next studio poll can continue the exact stage instead of starting
+    // another paid generation or duplicating a completed direction.
+    const now = new Date().toISOString();
+    const { data: staleLogoDirections } = await supabase
+      .from("brand_logo_directions")
+      .select("id")
+      .in("status", ["developing_vector", "drawing", "reviewing"])
+      .lt("lease_expires_at", now);
+    if (staleLogoDirections?.length) {
+      await supabase.from("brand_logo_directions").update({
+        status: "retry_wait",
+        retry_at: now,
+        lease_token: null,
+        lease_expires_at: null,
+        error_class: "worker_stalled",
+        last_error: "Logo worker stopped before this stage completed. The saved run can resume safely.",
+      }).in("id", staleLogoDirections.map((row) => row.id));
+      unstuck += staleLogoDirections.length;
+    }
+
     return new Response(JSON.stringify({ ok: true, paused, unstuck, resumed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
