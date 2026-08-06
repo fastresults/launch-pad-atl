@@ -288,9 +288,12 @@ async function generateOne(
       ? `\n## Research brief (background evidence — synthesize as analyst judgment, NO footnotes or citations)\n${JSON.stringify(snap.research_brief, null, 2).slice(0, 8000)}`
       : "",
     trimmedDeps ? `\n## Upstream documents you should build on (distilled)\n${trimmedDeps}` : "",
-    effectiveIntake
-      ? `\n## Intake answers (TOP PRIORITY — founder-supplied ground truth. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
-      : "",
+    derivedIntake
+      ? derivedIntakeBlock(derivedIntake, type.intake_schema?.fields ?? [])
+      : effectiveIntake
+        ? `\n## Intake answers (TOP PRIORITY — founder-supplied ground truth. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
+        : "",
+
   ].filter(Boolean).join("\n\n").slice(0, promptCap);
 
   // S5 — Honor type.model_tier ('pro' | 'flash' | 'lite'), except website_prd.
