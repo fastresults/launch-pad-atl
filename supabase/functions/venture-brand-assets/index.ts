@@ -59,8 +59,10 @@ async function callChatAI(messages: any[], opts: { json?: boolean; model?: strin
     body: JSON.stringify({
       model: opts.model ?? "google/gemini-2.5-pro",
       messages,
+      max_tokens: 8000,
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
+
   });
   if (!res.ok) {
     const txt = await res.text();
