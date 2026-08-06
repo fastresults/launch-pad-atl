@@ -40,9 +40,17 @@ const MOODBOARD_ANGLES = [
 
 /* ----------------------- LOGO CREATIVE DIRECTOR ----------------------- */
 
+// An agency process, not a single prompt:
+//   1. Strategy    — read the venture's real assets, write a one-page brief.
+//   2. Concepts    — generate 10 candidates, self-score, return the best 4.
+//   3. Execution   — render each as a flat vector MARK (not a picture).
+//   4. Critique    — look at what actually came back; retry the failures once.
+
 type LogoDirection = {
   direction_name: string;
   logo_type: string; // wordmark | lettermark | monogram | pictorial mark | abstract mark | emblem | combination mark
+  one_line_idea?: string;   // the single shape idea, one sentence
+  why_memorable?: string;   // the rationale a founder can judge
   symbol_concept: string;
   construction_notes: string;
   typography_treatment: string;
@@ -50,14 +58,39 @@ type LogoDirection = {
   color_application: string;
   reference_learning: string;
   avoid_list: string;
+  scores?: Record<string, number>;
 };
+
+type BrandStrategy = {
+  core_idea: string;
+  attributes: string[];
+  metaphor_territory: string;
+  not_list: string[];
+};
+
+// Chat models used for the thinking passes, in fallback order. 2.5-pro's
+// thinking budget occasionally eats the whole response and returns empty
+// content, so a flash model always backs it up.
+const THINK_MODELS = ["google/gemini-3.6-flash", "google/gemini-2.5-flash"];
+
+// Documents that actually carry brand signal, in priority order.
+const STRATEGY_DOC_TYPES = [
+  "positioning_statement",
+  "brand_voice_guide",
+  "naming_and_domain",
+  "value_proposition",
+  "icp_profile",
+  "messaging_matrix",
+  "elevator_pitch",
+  "offer_and_pricing",
+];
 
 async function callChatAI(messages: any[], opts: { json?: boolean; model?: string } = {}) {
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: opts.model ?? "google/gemini-2.5-pro",
+      model: opts.model ?? THINK_MODELS[0],
       messages,
       max_tokens: 8000,
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
@@ -72,26 +105,70 @@ async function callChatAI(messages: any[], opts: { json?: boolean; model?: strin
   return json.choices?.[0]?.message?.content ?? "";
 }
 
-async function generateLogoBrief(ctx: any, tokens: any, count: number, referenceImages?: string[]): Promise<LogoDirection[]> {
-  const snap = ctx.snap;
+// Tolerant parse: models return fenced JSON, a bare array, or a body truncated
+// mid-object. Salvage whatever is complete rather than failing the whole run.
+function parseJsonLoose(raw: string): any {
+  const text = String(raw ?? "").replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  if (!text) return null;
+  const tryJson = (s: string) => { try { return JSON.parse(s); } catch { return null; } };
+  return tryJson(text)
+    ?? tryJson(text.match(/\{[\s\S]*\}/)?.[0] ?? "")
+    ?? tryJson(text.match(/\[[\s\S]*\]/)?.[0] ?? "")
+    ?? null;
+}
+
+async function callChatJson(messages: any[]): Promise<any> {
+  for (const model of THINK_MODELS) {
+    try {
+      const parsed = parseJsonLoose(await callChatAI(messages, { json: true, model }));
+      if (parsed) return parsed;
+      console.warn(`no usable JSON from ${model}`);
+    } catch (e) {
+      console.warn("chat json call failed", model, e);
+    }
+  }
+  return null;
+}
+
+/** Pull the venture's finished brand documents so strategy is grounded in real work. */
+async function loadBrandDocs(supabase: any, snapshotId: string): Promise<string> {
+  const { data: docs } = await supabase
+    .from("venture_documents")
+    .select("document_type, content")
+    .eq("snapshot_id", snapshotId)
+    .eq("status", "complete");
+  const byType = new Map<string, string>();
+  for (const d of docs ?? []) {
+    if (typeof d?.content === "string" && d.content.trim()) byType.set(d.document_type, d.content);
+  }
+  const picked: string[] = [];
+  for (const t of STRATEGY_DOC_TYPES) {
+    const c = byType.get(t);
+    if (c) picked.push(`### ${t}\n${c.slice(0, 2500)}`);
+  }
+  return picked.join("\n\n");
+}
+
+function ventureBlockOf(ctx: any): string {
+  const snap = ctx.snap ?? {};
   const brain = ctx.brain ?? {};
+  return [
+    snap.company_name ? `Brand name: ${snap.company_name}` : "",
+    snap.industry ? `Industry: ${snap.industry}${snap.sub_industry ? ` / ${snap.sub_industry}` : ""}` : "",
+    [snap.city, snap.region].filter(Boolean).length ? `Location: ${[snap.city, snap.region].filter(Boolean).join(", ")}` : "",
+    snap.concept_summary ? `Concept: ${String(snap.concept_summary).slice(0, 900)}` : "",
+    snap.value_proposition ? `Value prop: ${String(snap.value_proposition).slice(0, 500)}` : "",
+    snap.target_audience ? `Customer: ${String(snap.target_audience).slice(0, 400)}` : "",
+    snap.differentiation_statement ? `Differentiation: ${String(snap.differentiation_statement).slice(0, 400)}` : "",
+    brain.problem ? `Problem solved: ${String(brain.problem).slice(0, 400)}` : "",
+  ].filter(Boolean).join("\n");
+}
+
+function tokensBlockOf(tokens: any): string {
   const colors = tokens?.colors ?? {};
   const fonts = tokens?.fonts ?? {};
   const mood = Array.isArray(tokens?.mood) ? tokens.mood.join(", ") : "";
-
-  const system = `You are a senior brand identity designer with 20 years at award-winning agencies (Pentagram, COLLINS, Mucca). You think in design systems before pixels. Your job: produce ${count} DISTINCT logo design directions for the venture below. Each must use a different logo TYPE and a different symbol idea — no near-duplicates. Ground every direction in the venture's actual differentiation and customer, not generic startup tropes.`;
-
-  const ventureBlock = [
-    snap.company_name ? `Brand: ${snap.company_name}` : "",
-    snap.industry ? `Industry: ${snap.industry}` : "",
-    snap.concept_summary ? `Concept: ${String(snap.concept_summary).slice(0, 600)}` : "",
-    snap.value_proposition ? `Value prop: ${String(snap.value_proposition).slice(0, 400)}` : "",
-    snap.target_audience ? `Customer: ${String(snap.target_audience).slice(0, 300)}` : "",
-    snap.differentiation_statement ? `Differentiation: ${String(snap.differentiation_statement).slice(0, 300)}` : "",
-    brain.problem ? `Problem: ${String(brain.problem).slice(0, 300)}` : "",
-  ].filter(Boolean).join("\n");
-
-  const tokensBlock = [
+  return [
     colors.primary ? `Primary color: ${colors.primary}` : "",
     colors.secondary ? `Secondary: ${colors.secondary}` : "",
     colors.accent ? `Accent: ${colors.accent}` : "",
@@ -99,95 +176,165 @@ async function generateLogoBrief(ctx: any, tokens: any, count: number, reference
     fonts.body ? `Body font: ${fonts.body}` : "",
     mood ? `Mood/personality: ${mood}` : "",
   ].filter(Boolean).join("\n");
+}
+
+/** Stage 1 — the one-page strategic brief every concept must serve. */
+export async function buildBrandStrategy(ctx: any, tokens: any, docsBlock: string): Promise<BrandStrategy | null> {
+  const system = `You are the strategy director at a brand identity studio. You write the one-page brief the design team works from. You are ruthless about specificity: a brief that could describe any company in this category is a failed brief.`;
+  const user = `Read the venture below and write its identity brief.
+
+VENTURE
+${ventureBlockOf(ctx)}
+
+BRAND TOKENS
+${tokensBlockOf(tokens)}
+
+${docsBlock ? `FINISHED BRAND ASSETS (the founder's own words — treat as authoritative)\n${docsBlock}` : ""}
+
+Return STRICT JSON:
+{"core_idea":"one sentence — the single idea the mark must carry","attributes":["three adjectives, no synonyms of each other"],"metaphor_territory":"the ONE visual territory worth mining (an object, action, structure or gesture from this venture's real world) and why","not_list":["4-6 things this brand must never look like — name the category clichés specifically"]}`;
+
+  const parsed = await callChatJson([
+    { role: "system", content: system },
+    { role: "user", content: user },
+  ]);
+  if (!parsed?.core_idea) return null;
+  return {
+    core_idea: String(parsed.core_idea),
+    attributes: Array.isArray(parsed.attributes) ? parsed.attributes.map(String) : [],
+    metaphor_territory: String(parsed.metaphor_territory ?? ""),
+    not_list: Array.isArray(parsed.not_list) ? parsed.not_list.map(String) : [],
+  };
+}
+
+/** Stage 2 — generate wide, then cut. Only the strongest concepts survive. */
+async function generateLogoConcepts(
+  ctx: any,
+  tokens: any,
+  count: number,
+  strategy: BrandStrategy | null,
+  docsBlock: string,
+  referenceImages?: string[],
+): Promise<LogoDirection[]> {
+  const system = `You are a senior brand identity designer with 20 years at Pentagram, COLLINS and Chermayeff & Geismar. You design MARKS, not illustrations. Your discipline: one idea per mark, drawn with the fewest possible elements, recognisable as a black silhouette at 16 pixels. You generate widely, then kill most of your own work.`;
+
+  const strategyBlock = strategy
+    ? `STRATEGY BRIEF (every concept must serve this)
+Core idea: ${strategy.core_idea}
+Attributes: ${strategy.attributes.join(", ")}
+Metaphor territory: ${strategy.metaphor_territory}
+Must never look like: ${strategy.not_list.join("; ")}`
+    : "";
 
   const refsLine = referenceImages?.length
-    ? `\nThe user attached ${referenceImages.length} reference logo(s) they admire. STUDY them for: composition, proportion, stroke weight, abstraction level, wordmark style, counterforms. NEVER copy. In each direction's reference_learning, write one sentence describing what principle (not look) to borrow.`
-    : `\nNo reference logos provided. Drive directions purely from the venture's positioning.`;
+    ? `\nThe founder attached ${referenceImages.length} reference logo(s) they admire. Study them ONLY for structural principles — proportion, stroke weight, level of abstraction, counterform, wordmark tracking. Never restyle or echo their subject matter. State the borrowed principle in reference_learning.`
+    : `\nNo references provided. Drive every concept from the strategy brief.`;
 
-  const instruction = `Return STRICT JSON:
-{"directions":[{"direction_name":"…","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","symbol_concept":"max 2 sentences — the metaphor/idea grounded in differentiation","construction_notes":"geometry base (grid/circle), stroke weight, corner treatment, counterforms, optical balance — 1-2 sentences","typography_treatment":"if wordmark/combination: case, tracking, weight, custom ligatures, pairing with heading font; else 'n/a'","negative_space_play":"explicit hidden-shape opportunity or 'none'","color_application":"which palette token leads, mono/duotone strategy","reference_learning":"${referenceImages?.length ? "one principle to borrow from refs (not a copy instruction)" : "n/a"}","avoid_list":"direction-specific anti-patterns (e.g. no globe, no swoosh, no leaf)"}]}
+  const instruction = `PROCESS — follow it exactly:
+1. Silently generate 10 candidate concepts across different logo types.
+2. Score each 1-5 on: distinctiveness (would it be mistaken for a competitor?), simplicity (can it be described in one sentence and drawn with under 5 elements?), relevance (does it serve the core idea?), scalability (does it survive at 16px as a solid shape?), memorability (could someone redraw it from memory?).
+3. Discard any concept scoring below 4 on simplicity or distinctiveness, and any concept that would work equally well for a different company in this category.
+4. Return ONLY the ${count} strongest survivors, each a DIFFERENT logo_type.
+
+Return STRICT JSON:
+{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","one_line_idea":"the shape, in ONE sentence a designer could draw from","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the strategy","construction_notes":"grid base, stroke-to-height ratio, corner treatment, counterforms, terminals, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"distinctiveness":5,"simplicity":5,"relevance":5,"scalability":5,"memorability":5}}]}
 
 Hard rules:
-- Exactly ${count} directions.
-- Each must use a DIFFERENT logo_type.
-- Concepts must be specific to THIS venture — reject anything that would work for a generic startup.
-- Forbidden across all: gradients-as-crutch, globe, swoosh, generic leaf/checkmark, lens flare, 3D shading, "tech" hex/circuit clichés (unless venture is explicitly hardware).`;
+- Exactly ${count} directions, each a different logo_type.
+- Every mark must be constructible as flat vector art in 1-2 colours. No scenes, no illustrations, no mascots with rendered detail, no depth.
+- Forbidden everywhere: globes, swooshes, generic leaves/checkmarks, handshake, lightbulb, puzzle piece, upward arrow, gradient-as-idea, lens flare, 3D bevels, circuit/hex "tech" clichés (unless the venture is literally hardware).`;
 
-  const userContent: any[] = [{ type: "text", text: `VENTURE\n${ventureBlock}\n\nBRAND TOKENS\n${tokensBlock}${refsLine}\n\n${instruction}` }];
+  const userContent: any[] = [{
+    type: "text",
+    text: `VENTURE\n${ventureBlockOf(ctx)}\n\nBRAND TOKENS\n${tokensBlockOf(tokens)}\n\n${strategyBlock}\n\n${docsBlock ? `FOUNDER'S OWN BRAND ASSETS\n${docsBlock.slice(0, 6000)}\n\n` : ""}${refsLine}\n\n${instruction}`,
+  }];
   if (referenceImages?.length) {
     for (const url of referenceImages.slice(0, 3)) {
       userContent.push({ type: "image_url", image_url: { url } });
     }
   }
 
-  // Tolerant parse: the model sometimes returns fenced JSON, a bare array, or a
-  // response truncated mid-object. Salvage whatever complete directions exist.
-  const parseDirections = (raw: string): LogoDirection[] => {
-    const text = String(raw ?? "").replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
-    if (!text) return [];
-    const tryJson = (s: string) => { try { return JSON.parse(s); } catch { return null; } };
-    let parsed: any = tryJson(text);
-    if (!parsed) {
-      const obj = text.match(/\{[\s\S]*\}/);
-      parsed = obj ? tryJson(obj[0]) : null;
-    }
-    if (!parsed) {
-      const arr = text.match(/\[[\s\S]*\]/);
-      parsed = arr ? tryJson(arr[0]) : null;
-    }
-    let list: any[] = Array.isArray(parsed) ? parsed : (parsed?.directions ?? []);
-    if (!Array.isArray(list) || !list.length) {
-      // Last resort: pull individual complete `{...}` blocks out of a truncated body.
-      list = [...text.matchAll(/\{[^{}]*"direction_name"[^{}]*\}/g)]
-        .map((m) => tryJson(m[0]))
-        .filter(Boolean) as any[];
-    }
-    return (Array.isArray(list) ? list : []).filter((d: any) => d && d.direction_name);
-  };
-
-  const messages = [{ role: "system", content: system }, { role: "user", content: userContent }];
-  let directions: LogoDirection[] = [];
-  // Retry across models: 2.5-pro's thinking budget occasionally eats the whole
-  // response and returns empty content. Flash is a reliable JSON fallback.
-  for (const model of ["google/gemini-2.5-pro", "google/gemini-2.5-flash"]) {
-    try {
-      directions = parseDirections(await callChatAI(messages, { json: true, model }));
-    } catch (e) {
-      console.warn("creative director call failed", model, e);
-    }
-    if (directions.length) break;
-    console.warn(`creative director returned no usable directions from ${model}`);
-  }
+  const parsed = await callChatJson([
+    { role: "system", content: system },
+    { role: "user", content: userContent },
+  ]);
+  const list: any[] = Array.isArray(parsed) ? parsed : (parsed?.directions ?? []);
+  const directions = (Array.isArray(list) ? list : []).filter((d: any) => d && d.direction_name);
   if (!directions.length) throw new Error("Creative Director returned no directions");
-  return directions.slice(0, count);
+  return directions.slice(0, count) as LogoDirection[];
 }
 
-
-function buildLogoImagePrompt(d: LogoDirection, ctx: any, tokens: any): string {
+/** Stage 3 — describe a MARK, not a picture. */
+function buildLogoImagePrompt(
+  d: LogoDirection,
+  ctx: any,
+  tokens: any,
+  strategy?: BrandStrategy | null,
+  critique?: string,
+): string {
   const snap = ctx.snap ?? {};
   const colors = tokens?.colors ?? {};
   const fonts = tokens?.fonts ?? {};
+  const wantsType = /wordmark|lettermark|monogram|combination|emblem/i.test(d.logo_type ?? "");
+  const paletteLine = [colors.primary, colors.secondary, colors.accent].filter(Boolean).join(", ");
+
   return [
-    `LOGO DESIGN BRIEF — ${d.direction_name} (${d.logo_type}).`,
-    snap.company_name ? `Brand: ${snap.company_name}.` : "",
+    `Flat vector LOGO MARK design — "${d.direction_name}" (${d.logo_type}).`,
+    snap.company_name ? `Brand name: ${snap.company_name}.` : "",
     snap.industry ? `Category: ${snap.industry}.` : "",
-    snap.target_audience ? `Audience: ${String(snap.target_audience).slice(0, 160)}.` : "",
-    `Idea: ${d.symbol_concept}`,
-    `Construction: ${d.construction_notes} Built on a clean geometric grid, optically balanced, vector-precise edges.`,
-    d.typography_treatment && d.typography_treatment.toLowerCase() !== "n/a"
-      ? `Typography: ${d.typography_treatment} Pair sympathetically with ${fonts.heading ?? "the heading typeface"}.`
-      : "",
+    strategy?.core_idea ? `The mark must communicate: ${strategy.core_idea}` : "",
+    d.one_line_idea ? `THE SHAPE: ${d.one_line_idea}` : `THE SHAPE: ${d.symbol_concept}`,
+    d.symbol_concept && d.one_line_idea ? `Concept: ${d.symbol_concept}` : "",
+    `Construction: ${d.construction_notes} Drawn on a geometric grid with a single consistent stroke weight, mathematically clean curves, optically balanced, vector-precise edges.`,
+    wantsType
+      ? `Typography: ${d.typography_treatment && d.typography_treatment.toLowerCase() !== "n/a" ? d.typography_treatment : "clean geometric sans"}. Set the words "${snap.company_name ?? ""}" correctly spelled, tight even tracking, in a typeface in the spirit of ${fonts.heading ?? "a refined geometric sans"}. No tagline, no extra words, no lorem text.`
+      : `Symbol only — absolutely NO letters, NO words, NO text of any kind anywhere in the image.`,
     d.negative_space_play && d.negative_space_play.toLowerCase() !== "none"
       ? `Negative space: ${d.negative_space_play}.`
       : "",
-    `Color: ${d.color_application} from palette ${[colors.primary, colors.secondary, colors.accent].filter(Boolean).join(", ")}.`,
+    `Colour: strictly flat. Maximum two solid colours${paletteLine ? ` drawn from ${paletteLine}` : ""} plus white. ${d.color_application ?? ""} No gradient, no tint ramp, no opacity fade.`,
     d.reference_learning && d.reference_learning.toLowerCase() !== "n/a"
-      ? `Reference principle (do NOT copy): ${d.reference_learning}`
+      ? `Borrowed structural principle (never copy the reference): ${d.reference_learning}`
       : "",
-    "Output: single centered logo on pure white #FFFFFF background, no mockup, no shadow, no 3D, no photo texture, no watermark, no UI chrome, no tagline. Print-ready, scalable, monochrome-safe silhouette. High-resolution, crisp anti-aliased edges.",
-    `Avoid: ${d.avoid_list}. Plus: stock clichés, gradient-as-crutch, swooshes, generic AI flourishes, lens flares, drop shadows, faux 3D, bevels.`,
+    "SILHOUETTE TEST: the mark must still read as one clear idea when reduced to a solid black shape at 16 pixels. Fewer than five distinct elements. One idea only.",
+    "Output: a single centred logo, generous even margin, on a pure white #FFFFFF background. Nothing else in the frame — no mockup, no business card, no presentation board, no grid guides, no multiple variations, no colour swatches, no annotations, no signature, no watermark, no drop shadow, no 3D, no bevel, no texture, no photographic element, no background scene.",
+    `Avoid: ${d.avoid_list ?? "category clichés"}.${strategy?.not_list?.length ? ` Also never: ${strategy.not_list.join("; ")}.` : ""} Plus: stock clichés, generic AI flourishes, sparkles, glow, lens flare.`,
+    critique ? `PREVIOUS ATTEMPT FAILED REVIEW — fix exactly this: ${critique}` : "",
   ].filter(Boolean).join(" ");
 }
+
+/** Stage 4 — look at what actually rendered and judge it against the brief. */
+async function critiqueLogo(
+  b64: string,
+  d: LogoDirection,
+  strategy: BrandStrategy | null,
+): Promise<{ pass: boolean; note: string }> {
+  const system = `You are a design director reviewing a rendered logo before it reaches the client. You are strict but fair. You reject anything that is not a clean, flat, single-idea mark.`;
+  const text = `Review this rendered logo against its brief.
+
+Brief: ${d.one_line_idea ?? d.symbol_concept}
+Logo type: ${d.logo_type}
+${strategy?.core_idea ? `Must communicate: ${strategy.core_idea}` : ""}
+
+Fail it if ANY of these are true: it is a scene or illustration rather than a mark; it has gradients, shadows, 3D, texture or photographic elements; there is misspelled, garbled or unintended text; it shows multiple variations, a mockup or annotations on one canvas; it is too detailed to survive at 16px; it carries more than one competing idea; the background is not clean white.
+
+Return STRICT JSON: {"pass":true|false,"note":"if failing, one imperative sentence telling the renderer exactly what to change"}`;
+
+  const parsed = await callChatJson([
+    { role: "system", content: system },
+    {
+      role: "user",
+      content: [
+        { type: "text", text },
+        { type: "image_url", image_url: { url: `data:image/png;base64,${b64}` } },
+      ],
+    },
+  ]);
+  // A failed/unavailable critique must never block delivery.
+  if (!parsed || typeof parsed.pass !== "boolean") return { pass: true, note: "" };
+  return { pass: parsed.pass, note: String(parsed.note ?? "") };
+}
+
 
 /* ----------------------- IMAGE GENERATION ----------------------- */
 
