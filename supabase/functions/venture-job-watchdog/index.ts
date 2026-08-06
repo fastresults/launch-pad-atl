@@ -1,5 +1,7 @@
-// Periodic watchdog: marks jobs whose heartbeat is older than 3 minutes as paused,
-// and flips any orphan "generating" documents to "failed" so the UI unsticks.
+// Periodic watchdog: unsticks jobs whose heartbeat is older than 3 minutes,
+// flips any orphan "generating" documents to "failed" so the UI unsticks, and
+// auto-resumes the run (retry-only) up to twice per job before giving up.
+
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
