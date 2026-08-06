@@ -872,12 +872,19 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                         )}
                       </div>
                     </div>
+                    {a.human_link && (
+                      <p className="line-clamp-2 text-[11px] italic leading-relaxed text-muted-foreground">{a.human_link}</p>
+                    )}
                     {(a.one_line_idea || a.symbol_concept) && (
                       <p className="line-clamp-3 text-[11px] leading-relaxed text-foreground/80">{a.one_line_idea || a.symbol_concept}</p>
+                    )}
+                    {a.craft_move && (
+                      <p className="line-clamp-1 text-[11px] leading-relaxed text-muted-foreground">Craft: {a.craft_move}</p>
                     )}
                     {a.why_memorable && (
                       <p className="line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">Why it sticks: {a.why_memorable}</p>
                     )}
+
                     <div className="flex gap-1.5">
                       {a.direction && (
                         <Button
