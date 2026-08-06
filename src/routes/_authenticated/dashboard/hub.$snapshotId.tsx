@@ -1214,26 +1214,63 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 <span>{pct}%</span>
               </div>
               <Progress value={pct} />
+              {retryRound > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Retrying {retryRemaining} asset{retryRemaining === 1 ? "" : "s"} (round {retryRound} of 3)…
+                </p>
+              )}
             </div>
           )}
-          {failures.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowFailures((v) => !v)}
-              className="mt-3 inline-flex items-center gap-1 text-xs text-status-warning hover:text-status-warning/80"
-            >
-              <AlertCircle className="h-3 w-3" />
-              {failures.length} asset{failures.length === 1 ? "" : "s"} need another try
-            </button>
+
+          {/* Waiting on the founder — never retried automatically. */}
+          {blocked.length > 0 && (
+            <div className="mt-3 rounded-lg border border-status-warning/20 bg-status-warning/5 p-3 text-xs text-status-warning">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1 font-medium">
+                  <AlertCircle className="h-3 w-3" />
+                  Needs you — {blocked.length} asset{blocked.length === 1 ? "" : "s"} waiting
+                </span>
+                <Button size="sm" variant="outline" onClick={() => navigate("/dashboard/brand")}>
+                  Open Brand Wizard
+                </Button>
+              </div>
+              <p className="mt-1 opacity-90">{blocked[0].blocked_reason}</p>
+            </div>
           )}
-          {showFailures && failures.length > 0 && (
-            <ul className="mt-2 space-y-1 rounded-lg border border-status-warning/20 bg-status-warning/5 p-2 text-xs text-status-warning">
-              {failures.slice(0, 6).map((f: any) => {
-                const t = typeByKey.get(f.document_type) as any;
-                return <li key={f.id}><span className="font-medium">{t?.name ?? f.document_type}</span> — {f.error}</li>;
-              })}
-            </ul>
+
+          {/* Real errors — only shown once every retry round has been used. */}
+          {failures.length > 0 && !jobRunning && (
+            <div className="mt-3 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowFailures((v) => !v)}
+                  className="inline-flex items-center gap-1 text-xs text-status-warning hover:text-status-warning/80"
+                >
+                  <AlertCircle className="h-3 w-3" />
+                  {failures.length} asset{failures.length === 1 ? "" : "s"} couldn't be written yet
+                </button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={bulk.isPending}
+                  onClick={() => bulk.mutate({ retryOnly: true })}
+                >
+                  {bulk.isPending ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> : null}
+                  Try these again
+                </Button>
+              </div>
+              {showFailures && (
+                <ul className="space-y-1 rounded-lg border border-status-warning/20 bg-status-warning/5 p-2 text-xs text-status-warning">
+                  {failures.slice(0, 6).map((f: any) => {
+                    const t = typeByKey.get(f.document_type) as any;
+                    return <li key={f.id}><span className="font-medium">{t?.name ?? f.document_type}</span> — {f.error}</li>;
+                  })}
+                </ul>
+              )}
+            </div>
           )}
+
         </div>
       )}
 
