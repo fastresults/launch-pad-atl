@@ -848,6 +848,24 @@ function Inner() {
   const step2Valid = missingStep2.length === 0;
   const step3Valid = !!track;
   const stepValid = [step1Valid, step2Valid, step3Valid];
+  const missingKeys = new Set(missingStep2.map((m) => m.key));
+  const invalidCls = (key: string) =>
+    missingKeys.has(key) && conceptTouched ? "border-status-danger/60 ring-1 ring-status-danger/30" : "";
+
+  // Auto-extract details once a substantial concept has been pasted/typed and
+  // required fields are still empty. Debounced; never runs twice on same text.
+  useEffect(() => {
+    const text = businessConcept.trim();
+    if (text.length < 200) return;
+    if (text === lastExtractedRef.current) return;
+    if (drafting || conceptExtracting) return;
+    if (missingStep2.filter((m) => m.key !== "businessConcept").length === 0) return;
+    const t = setTimeout(() => conceptExtract({ auto: true }), 1200);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [businessConcept, drafting, conceptExtracting, missingStep2.length]);
+
+
 
   // Locked until reached; complete when passed and not currently open.
   const stepState = (n: number): StepState => {
