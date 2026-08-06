@@ -141,6 +141,20 @@ function parseJsonLoose(raw: string): any {
     ?? null;
 }
 
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object") {
+    const value = error as Record<string, unknown>;
+    const parts = [value.message, value.details, value.hint, value.code]
+      .filter((item) => typeof item === "string" && item.trim())
+      .map(String);
+    if (parts.length) return parts.join(" — ");
+    try { return JSON.stringify(error); } catch { /* fall through */ }
+  }
+  return "Unknown logo generation error";
+}
+
 async function callChatJson(messages: any[]): Promise<any> {
   for (const model of THINK_MODELS) {
     try {
@@ -179,13 +193,77 @@ async function uploadVectorAsset(supabase: any, snapshotId: string, userId: stri
 }
 
 function classifyError(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error);
+  const message = errorMessage(error);
   if (/429|rate/i.test(message)) return "rate_limit";
   if (/402|credit/i.test(message)) return "credits";
   if (/abort|timeout/i.test(message)) return "provider_timeout";
   if (/structured|json|vector/i.test(message)) return "invalid_output";
   if (/upload|storage/i.test(message)) return "storage";
   return "provider_error";
+}
+
+function normalizeVectorNode(value: any): any | null {
+  if (!value || typeof value !== "object") return null;
+  const rawKind = String(value.kind ?? value.type ?? value.shape ?? "").toLowerCase();
+  const aliases: Record<string, string> = {
+    rectangle: "rect", rounded_rectangle: "rect", roundedrect: "rect",
+    circular: "circle", oval: "ellipse", polygon: "path", bezier: "path",
+    g: "group",
+  };
+  const kind = aliases[rawKind] ?? rawKind;
+  if (!["rect", "circle", "ellipse", "line", "path", "group"].includes(kind)) return null;
+  const node = { ...value, kind };
+  if (kind === "ellipse") {
+    node.rxr = node.rxr ?? node.rx;
+    node.ryr = node.ryr ?? node.ry;
+  }
+  if (kind === "path") node.d = node.d ?? node.path ?? node.pathData;
+  if (kind === "group") {
+    const children = node.children ?? node.elements ?? node.primitives ?? node.nodes ?? [];
+    node.children = Array.isArray(children) ? children.map(normalizeVectorNode).filter(Boolean) : [];
+    if (!node.children.length) return null;
+  }
+  return node;
+}
+
+/** Accept common structured-output wrappers/aliases without weakening SVG safety. */
+function normalizeVectorResponse(parsed: any): { root: any; primitives: any[] } | null {
+  const candidates = [
+    parsed,
+    parsed?.vector_spec,
+    parsed?.vectorSpec,
+    parsed?.spec,
+    parsed?.logo,
+    parsed?.result,
+    parsed?.output,
+    parsed?.data,
+  ];
+  for (const root of candidates) {
+    if (!root || typeof root !== "object") continue;
+    const raw = root.primitives ?? root.elements ?? root.shapes ?? root.nodes ?? root.paths;
+    if (!Array.isArray(raw)) continue;
+    const primitives = raw.map(normalizeVectorNode).filter(Boolean);
+    if (primitives.length) return { root, primitives };
+  }
+  return null;
+}
+
+async function requestVectorResponse(messages: any[]): Promise<{ root: any; primitives: any[] }> {
+  const failures: string[] = [];
+  for (const model of THINK_MODELS) {
+    try {
+      const raw = await callChatAI(messages, { json: true, model });
+      const parsed = parseJsonLoose(raw);
+      const normalized = normalizeVectorResponse(parsed);
+      if (normalized) return normalized;
+      failures.push(`${model}: structured response contained no supported vector elements`);
+      console.warn("invalid vector response", model, String(raw).slice(0, 240));
+    } catch (error) {
+      failures.push(`${model}: ${errorMessage(error)}`);
+      console.warn("vector call failed", model, errorMessage(error));
+    }
+  }
+  throw new Error(`Logo designer returned no drawable vector after provider fallbacks. ${failures.join(" | ").slice(0, 700)}`);
 }
 
 /** Pull the venture's finished brand documents so strategy is grounded in real work. */
@@ -402,12 +480,12 @@ async function developVectorSpec(
   let best: { spec: VectorSpec; lint: ReturnType<typeof lintVectorSpec> } | null = null;
 
   for (let pass = 0; pass < 2; pass++) {
-    const parsed = await callChatJsonOnce([
+    const normalized = await requestVectorResponse([
       { role: "system", content: DRAW_SYSTEM },
       { role: "user", content: drawInstruction(d, dossier, companyName, wantsType, fixNotes) },
     ]);
-    const primitives = Array.isArray(parsed?.primitives) ? parsed.primitives : [];
-    if (!primitives.length) throw new Error("Vector specification is missing drawable elements");
+    const parsed = normalized.root;
+    const primitives = normalized.primitives;
 
     const construction: Construction = {
       module: Number(parsed?.construction?.module) || 25,
@@ -776,8 +854,9 @@ Deno.serve(async (req) => {
       } catch (error) {
         const attempts = Number(row.attempt_count ?? 0) + 1;
         const terminal = attempts >= 3;
-        await supabase.from("brand_logo_directions").update({ status: terminal ? "failed" : "retry_wait", last_error: error instanceof Error ? error.message : String(error), error_class: classifyError(error), retry_at: terminal ? null : new Date(Date.now() + Math.min(60_000, 5_000 * 2 ** attempts)).toISOString(), lease_token: null, lease_expires_at: null }).eq("id", directionId).eq("lease_token", leaseToken);
-        await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: error instanceof Error ? error.message : String(error) }).eq("id", runId);
+        const message = errorMessage(error);
+        await supabase.from("brand_logo_directions").update({ status: terminal ? "failed" : "retry_wait", last_error: message, error_class: classifyError(error), retry_at: terminal ? null : new Date(Date.now() + Math.min(60_000, 5_000 * 2 ** attempts)).toISOString(), lease_token: null, lease_expires_at: null }).eq("id", directionId).eq("lease_token", leaseToken);
+        await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: message }).eq("id", runId);
         throw error;
       }
     }
@@ -822,7 +901,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
+    const message = errorMessage(e);
     return new Response(JSON.stringify({ error: message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
