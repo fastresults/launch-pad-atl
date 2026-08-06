@@ -3817,6 +3817,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      append_brand_logo: {
+        Args: { p_logo: Json; p_max?: number; p_snapshot_id: string }
+        Returns: Json
+      }
       confirm_private_session_booking: {
         Args: { _booking_id: string; _payment_ref: string }
         Returns: undefined
