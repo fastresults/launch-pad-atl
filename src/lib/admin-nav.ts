@@ -146,7 +146,16 @@ export const ADMIN_NAV: AdminNavItem[] = [
     icon: Sparkles,
     group: "Workspace",
     description: "Venture snapshots and assets",
-    keywords: ["ventures", "snapshots", "ideas", "assets"],
+    keywords: ["ventures", "snapshots", "ideas", "assets", "new venture"],
+  },
+  {
+    to: "/admin/hub/new",
+    label: "New venture",
+    icon: Plus,
+    group: "Workspace",
+    description: "Create an admin-only venture",
+    keywords: ["new", "create", "venture", "snapshot", "internal", "add"],
+    super: true,
   },
   {
     to: "/admin/review",
