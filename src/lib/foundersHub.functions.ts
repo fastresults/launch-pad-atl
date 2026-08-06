@@ -525,7 +525,8 @@ export async function generateDeepAssessment(input: any): Promise<void> {
 }
 
 export async function bulkGenerate(input: any): Promise<{ ok?: boolean; jobId?: string; category?: string | null }> {
-  const { snapshotId, category, retryOnly } = unwrap<{ snapshotId: string; category?: string | null; retryOnly?: boolean }>(input);
+  const { snapshotId, category, retryOnly, days, sprintOnly } = unwrap<{ snapshotId: string; category?: string | null; retryOnly?: boolean; days?: number[]; sprintOnly?: boolean }>(input);
+
   const { data, error } = await invokeEdge("venture-bulk-generate", {
     body: { snapshotId, category: category ?? null, retryOnly: retryOnly === true },
   });
