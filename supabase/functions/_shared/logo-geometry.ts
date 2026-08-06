@@ -1,10 +1,13 @@
 // Logo geometry system — the discipline layer between the model and the SVG.
 //
-// The model PROPOSES a construction (module grid, one stroke weight, a radius
-// family, primitives, optional groups with transforms). This module ENFORCES it:
-// coordinates snap to the grid, stroke weights collapse to the declared value,
-// the mark is optically centred and scaled into the canvas, and a deterministic
-// lint reports what is still wrong so the next pass can fix exactly that.
+// The model PROPOSES a construction (one stroke weight, a radius family,
+// primitives, optional groups with transforms). This module ENFORCES only the
+// things that protect craft: a single stroke weight, corner radii drawn from
+// the declared family, optical centring and scaling into the canvas, plus a
+// deterministic lint that reports what is still wrong for the next pass.
+// Coordinates are deliberately NOT quantised — grid snapping is what used to
+// turn curved marks into chunky rounded rectangles.
+
 
 export type PaletteKey = "primary" | "secondary" | "accent" | "none" | "white";
 
