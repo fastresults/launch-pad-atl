@@ -701,15 +701,72 @@ Deno.serve(async (req) => {
       if (!claimed) return new Response(JSON.stringify({ ok: true, skipped: true, reason: "Direction is already being processed" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
       try {
-        const spec = await developVectorSpec(row.concept as LogoDirection, run.strategy as BrandStrategy, ctx, tokens, reviewNote ?? row.review_note ?? undefined);
-        const svg = renderVectorSvg(spec, tokens, snap.company_name ?? "Venture");
-        const uploaded = await uploadVectorAsset(supabase, snapshotId, userId, directionId, svg);
-        const scores = spec.quality_scores ?? {};
-        const scoreValues = Object.values(scores).map(Number).filter(Number.isFinite);
+        const started = Date.now();
+        const companyName = snap.company_name ?? "Venture";
+        const docsBlock = await loadBrandDocs(supabase, snapshotId);
+        const strategy = (run.strategy ?? null) as BrandStrategy | null;
+        const dossier = buildDossier(ctx, tokens, strategy, docsBlock);
+
+        const { spec, lint } = await developVectorSpec(row.concept as LogoDirection, strategy, ctx, tokens, dossier, reviewNote ?? row.review_note ?? undefined);
+        const variants = await buildLogoVariants(spec, tokens, companyName);
+
+        const uploaded = await uploadVectorAsset(supabase, snapshotId, userId, directionId, variants.mark, "mark");
+        const uploadVariant = async (svg: string | null, name: string) => {
+          if (!svg) return null;
+          try { return await uploadVectorAsset(supabase, snapshotId, userId, directionId, svg, name); } catch { return null; }
+        };
+        const [horizontal, stacked, mono, knockout] = await Promise.all([
+          uploadVariant(variants.horizontal, "horizontal"),
+          uploadVariant(variants.stacked, "stacked"),
+          uploadVariant(variants.mono, "mono"),
+          uploadVariant(variants.knockout, "knockout"),
+        ]);
+
+        // Vision gate — only when there is time left in the request window.
+        let visionPass = true;
+        let visionNote = "";
+        if (Date.now() - started < 60_000) {
+          const png = await rasterizeSvg(variants.mark, 512);
+          if (png) {
+            const verdict = await critiqueMark(png, row.concept as LogoDirection, strategy);
+            visionPass = verdict.pass;
+            visionNote = verdict.note;
+          }
+        }
+
+        const modelScores = spec.quality_scores ?? {};
+        const scoreValues = Object.values(modelScores).map(Number).filter(Number.isFinite);
         const average = scoreValues.length ? scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length : 4;
-        const passed = average >= 3.8;
-        const note = passed ? "" : "Simplify the geometry and strengthen the silhouette before selecting this direction.";
-        const asset = { ok: true, url: uploaded.url, path: uploaded.path, svg_url: uploaded.url, svg_path: uploaded.path, direction_name: row.direction_name, logo_type: row.logo_type, one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept, why_memorable: row.concept?.why_memorable ?? "", symbol_concept: row.concept?.symbol_concept, direction: row.concept, vector_spec: spec, review_passed: passed, review_note: note, review_score: scores, created_at: new Date().toISOString() };
+        const passed = lint.pass && visionPass && average >= 3.5;
+        const note = [
+          visionPass ? "" : visionNote,
+          ...(lint.pass ? [] : lint.findings),
+        ].filter(Boolean).join(" ");
+        const scores = { ...modelScores, geometry: Number(lint.score.toFixed(2)), ...lint.metrics };
+
+        const asset = {
+          ok: true,
+          url: uploaded.url, path: uploaded.path, svg_url: uploaded.url, svg_path: uploaded.path,
+          variants: {
+            mark: { url: uploaded.url, path: uploaded.path },
+            horizontal: horizontal ? { url: horizontal.url, path: horizontal.path } : null,
+            stacked: stacked ? { url: stacked.url, path: stacked.path } : null,
+            mono: mono ? { url: mono.url, path: mono.path } : null,
+            knockout: knockout ? { url: knockout.url, path: knockout.path } : null,
+          },
+          usage: {
+            clear_space: "Keep clear space equal to the height of the mark's core module on all sides.",
+            min_size: "Do not reproduce the mark below 24px / 8mm.",
+            wordmark_font: variants.wordmark_family,
+          },
+          direction_name: row.direction_name, logo_type: row.logo_type,
+          one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept,
+          why_memorable: row.concept?.why_memorable ?? "",
+          symbol_concept: row.concept?.symbol_concept,
+          direction: row.concept, vector_spec: spec,
+          review_passed: passed, review_note: note, review_score: scores,
+          created_at: new Date().toISOString(),
+        };
         const { error: publishError } = await supabase.rpc("publish_brand_logo_direction", { p_direction_id: directionId, p_run_id: runId, p_run_version: run.version, p_asset: asset, p_svg_path: uploaded.path, p_preview_path: uploaded.path, p_review_passed: passed, p_review_score: scores, p_review_note: note });
         if (publishError) throw publishError;
         return new Response(JSON.stringify({ ok: true, asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
