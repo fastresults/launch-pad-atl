@@ -113,12 +113,20 @@ async function expandWebsitePrdMasterPrompt(raw: string) {
   }
 }
 
+// How hard the generator tries. Each retry round escalates the mode so we stop
+// repeating the exact call that just failed:
+//   full    — everything (default, first pass)
+//   trimmed — drop the Second Brain corpus + sourcing block, cap deps
+//   minimal — preamble + brain slice only, faster tier, longer timeout
+type GenMode = "full" | "trimmed" | "minimal";
+
 // Slim per-doc generator. Accepts a pre-loaded ctx so the same context is
 // reused across the whole bulk job (we only refresh dep docs per call).
 async function generateOne(
   supabase: any,
   ctx: VentureContext,
   documentType: string,
+  mode: GenMode = "full",
 ) {
   const snapshotId = ctx.snapshotId;
   const snap = ctx.snap;
@@ -130,8 +138,8 @@ async function generateOne(
   if (!type) throw new Error(`Unknown document type: ${documentType}`);
 
   // Brand-kit gate: skip deliverables in BRAND_KIT_REQUIRED_TYPES until the
-  // founder has locked their Brand Wizard. Mark the doc 'pending' (not
-  // 'failed') so the UI keeps showing the friendly gate.
+  // founder has locked their Brand Wizard. Mark the doc 'pending' with a
+  // blocked_reason — blocked docs are never retried, they need the founder.
   let brandKit: Awaited<ReturnType<typeof loadBrandKit>> = null;
   if (BRAND_KIT_REQUIRED_TYPES.has(documentType)) {
     brandKit = await loadBrandKit(supabase, snapshotId);
@@ -140,12 +148,11 @@ async function generateOne(
         snapshot_id: snapshotId,
         document_type: documentType,
         status: "pending",
+        blocked_reason: "Lock your Brand Wizard to unlock this asset.",
       }, { onConflict: "snapshot_id,document_type" });
-      await supabase.from("venture_generation_failures").insert({
-        snapshot_id: snapshotId,
-        document_type: documentType,
-        error: "Skipped: Brand Wizard not locked.",
-      });
+      // Blocked isn't a failure — clear any stale error row for this doc.
+      await supabase.from("venture_generation_failures")
+        .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
       return; // skip this doc, continue the job
     }
   }
@@ -154,7 +161,9 @@ async function generateOne(
     snapshot_id: snapshotId,
     document_type: documentType,
     status: "generating",
+    blocked_reason: null,
   }, { onConflict: "snapshot_id,document_type" });
+
 
   // Load + distill upstream dependency docs (no more full-markdown dumping).
   const deps: string[] = type.dependencies ?? [];
