@@ -264,6 +264,32 @@ function Inner() {
     setReuseSelected((prev) => ({ ...prev, [row.id]: true }));
   }, []);
 
+  // Copy (never move) a file that belongs to another venture into this
+  // intake's memory. The source venture keeps its own copy.
+  const [copyingId, setCopyingId] = useState<string | null>(null);
+  const copyFromVenture = useCallback(
+    async (row: VentureSource) => {
+      setCopyingId(row.id);
+      try {
+        const copy = await copySourceToSnapshot({ documentId: row.id, snapshotId: null });
+        appendToMemory(copy);
+        setOtherVentures((prev) =>
+          prev
+            .map((g) => ({ ...g, sources: g.sources.filter((s) => s.id !== row.id) }))
+            .filter((g) => g.sources.length > 0),
+        );
+        toast.success("Copied into this venture's memory");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Could not copy that source");
+      } finally {
+        setCopyingId(null);
+      }
+    },
+    [appendToMemory],
+  );
+
+
+
 
   const addFiles = useCallback(
     async (incoming: File[]) => {
