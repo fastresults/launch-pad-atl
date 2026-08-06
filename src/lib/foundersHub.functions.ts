@@ -659,6 +659,21 @@ export async function listFailures(input: any) {
   return data ?? [];
 }
 
+// Assets that are waiting on the founder (e.g. Brand Wizard not locked).
+// These are never retried automatically — they need an action first.
+export async function listBlockedDocs(input: any) {
+  const { snapshotId } = unwrap<{ snapshotId: string }>(input);
+  const { data, error } = await supabase
+    .from("venture_documents")
+    .select("document_type, blocked_reason")
+    .eq("snapshot_id", snapshotId)
+    .not("blocked_reason", "is", null)
+    .neq("status", "complete");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as { document_type: string; blocked_reason: string }[];
+}
+
+
 // Admin
 export async function adminListSnapshots() {
   const { data, error } = await supabase
