@@ -58,9 +58,13 @@ const MOODBOARD_ANGLES = [
 type LogoDirection = {
   direction_name: string;
   logo_type: string; // wordmark | lettermark | monogram | pictorial mark | abstract mark | emblem | combination mark
+  human_link?: string;      // how this mark traces back to the human moment
   one_line_idea?: string;   // the single shape idea, one sentence
   geometric_operation?: string; // the one construction move that creates the mark
+  craft_move?: string;      // counterform | continuous stroke | tangent | ligature | negative space
+  moodboard_link?: string;  // which moodboard tile's form language it inherits
   why_memorable?: string;   // the rationale a founder can judge
+
   symbol_concept: string;
   construction_notes: string;
   typography_treatment: string;
