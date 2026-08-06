@@ -1568,43 +1568,46 @@ function Inner() {
             </Button>
           </div>
         )}
-      </section>
+        </>
+      </StepShell>
 
-      {/* ─────────────────── STEP 2 — CONFIRM (collapsible) ─────────────────── */}
-      <section className="space-y-3 rounded-2xl border border-white/10 bg-card p-6">
-        <button
-          type="button"
-          onClick={() => {
-            setReviewOpen((v) => !v);
-            setReviewTouched(true);
-          }}
-          className="flex w-full items-start justify-between gap-3 text-left"
-        >
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-primary">Step 2</div>
-            <h2 className="mt-0.5 flex items-center gap-2 text-lg font-semibold">
-              Confirm what we found
-              {missing.length === 0 ? (
-                <CheckCircle2 className="h-4 w-4 text-status-success" />
-              ) : (
-                <span className="rounded-full bg-status-danger/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-status-danger">
-                  {missing.length} to fix
-                </span>
-              )}
-            </h2>
-            {!reviewOpen && summaryLine && (
-              <p className="mt-1 text-sm text-muted-foreground">{summaryLine}</p>
-            )}
-            {!reviewOpen && !summaryLine && (
-              <p className="mt-1 text-sm text-muted-foreground">Tap to fill in founder + market details.</p>
-            )}
-          </div>
-          <span className="shrink-0 text-muted-foreground">
-            {reviewOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-          </span>
-        </button>
+      {/* ─────────────────── STEP 2 — CONFIRM ─────────────────── */}
+      <StepShell
+        n={2}
+        state={stepState(2)}
+        innerRef={(el) => {
+          stepRefs.current[2] = el;
+        }}
+        onOpen={() => goToStep(2)}
+        title="Confirm what we found"
+        description="Skim what the AI pulled from your sources and fix anything that's off."
+        lockedHint="Add a source or describe the startup in step 1 to unlock."
+        summary={summaryLine || "Founder + market details"}
+        headerRight={
+          missingStep2.length === 0 ? (
+            <CheckCircle2 className="h-4 w-4 text-status-success" />
+          ) : (
+            <span className="rounded-full bg-status-danger/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-status-danger">
+              {missingStep2.length} to fix
+            </span>
+          )
+        }
+        footer={
+          <StepNav
+            canGoNext={step2Valid}
+            blockedReason={
+              missingStep2.length
+                ? `Still needed: ${missingStep2.map((m) => m.label).join(", ")}`
+                : undefined
+            }
+            onBack={goBack}
+            onNext={goNext}
+            nextLabel="Continue to track"
+          />
+        }
+      >
+        {true && (
 
-        {reviewOpen && (
           <div className="space-y-5 pt-2">
             {/* Founder + market */}
             <div className="space-y-3">
