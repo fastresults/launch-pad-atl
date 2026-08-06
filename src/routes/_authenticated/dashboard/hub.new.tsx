@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { TRACKS, TRACK_BY_KEY, pickSeedForTrack, TRACK_SEEDS, type TrackKey, type SeedEntry } from "@/lib/tracks";
 import { SIC_CODES, findSicByCode, parseSicCode, sicValue } from "@/lib/sic-codes";
-import { createSnapshot } from "@/lib/foundersHub.functions";
+import { createSnapshot, countSnapshots } from "@/lib/foundersHub.functions";
 import {
   uploadVentureSource,
   attachSourcesToSnapshot,
@@ -185,7 +185,11 @@ function Inner() {
   const stepRefs = useRef<Record<number, HTMLElement | null>>({});
 
 
-  // Prefill from canonical context.
+  // Prefill from canonical context — IDENTITY ONLY.
+  // Venture-specific content (company name, concept, differentiation,
+  // industry, market scope) is deliberately NOT inherited: a new venture is a
+  // blank canvas, not a copy of the last one. The only way venture content
+  // lands here is an explicit hand-off through router state (`prefill`).
   const { data: canonicalCtx } = useCanonicalContext();
   useEffect(() => {
     if (resetStepOneRef.current) return;
@@ -194,14 +198,6 @@ function Inner() {
     setFounderName((cur) => cur || ctx.identity.full_name);
     setFounderEmail((cur) => cur || ctx.identity.email);
     setFounderPhone((cur) => cur || ctx.identity.phone);
-    setCompanyName((cur) => cur || ctx.concept.company_name);
-    setBusinessConcept((cur) => cur || ctx.concept.business_concept_blob);
-    setDiff((cur) => cur || ctx.concept.differentiation);
-    setIndustry((cur) => cur || ctx.market.industry);
-    setMarketScope((cur) => (cur ? cur : (ctx.market.market_scope || "local")));
-    if (ctx.market.industry || ctx.concept.business_concept_blob) {
-      setFromBrief((cur) => cur || true);
-    }
   }, [canonicalCtx]);
 
   // Reusable library — founder-level memory ONLY (sources not yet tied to a
@@ -216,14 +212,29 @@ function Inner() {
   >([]);
   const [otherVenturesOpen, setOtherVenturesOpen] = useState(false);
   const resetStepOneRef = useRef(false);
+
+  // Returning founders (already have a venture) opt in to prior memory.
+  // First-timers keep the auto-attach so their first run isn't an empty page.
+  // Default to opt-in while the count loads so nothing flashes pre-selected.
+  const [isReturningFounder, setIsReturningFounder] = useState(true);
+  const [ventureCountLoaded, setVentureCountLoaded] = useState(false);
   useEffect(() => {
+    countSnapshots()
+      .then((n) => setIsReturningFounder(n > 0))
+      .catch(() => setIsReturningFounder(true))
+      .finally(() => setVentureCountLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    if (!ventureCountLoaded) return;
     listVentureSources({ orphansOnly: true })
       .then((rows) => {
         setReusable(rows);
         if (resetStepOneRef.current) return;
-        // Auto-attach everything readable from the founder's own unassigned
-        // memory (brief sources, scraped URLs, founder bio). Never another
-        // venture's material.
+        // First venture only: auto-attach everything readable from the
+        // founder's own unassigned memory (brief sources, scraped URLs,
+        // founder bio). Returning founders pick what applies.
+        if (isReturningFounder) return;
         setReuseSelected((prev) => {
           const next = { ...prev };
           for (const r of rows) {
@@ -236,7 +247,7 @@ function Inner() {
     listSourcesByOtherVentures()
       .then(setOtherVentures)
       .catch(() => {});
-  }, []);
+  }, [ventureCountLoaded, isReturningFounder]);
 
   // Memory chips = every readable source already on file for this founder.
   const memoryChips = useMemo(() => {
@@ -623,8 +634,10 @@ function Inner() {
   const canonicalDefault = (key: string): string => {
     const ctx = canonicalCtx;
     switch (key) {
-      case "companyName": return prefill?.company_name ?? ctx?.concept?.company_name ?? "";
-      case "diff": return prefill?.differentiation_statement ?? ctx?.concept?.differentiation ?? "";
+      // Venture content resets to empty (or the explicit hand-off value) —
+      // never back to the previous venture's canonical record.
+      case "companyName": return prefill?.company_name ?? "";
+      case "diff": return prefill?.differentiation_statement ?? "";
       case "founderName": return prefill?.founder_name ?? ctx?.identity?.full_name ?? "";
       case "founderEmail": return prefill?.founder_email ?? ctx?.identity?.email ?? "";
       case "founderPhone": return prefill?.founder_phone ?? ctx?.identity?.phone ?? "";
@@ -633,8 +646,8 @@ function Inner() {
       case "country": return prefill?.country ?? "United States";
       case "websiteUrl": return "";
       case "subIndustry": return prefill?.sub_industry ?? "";
-      case "businessConcept": return prefill?.business_concept ?? ctx?.concept?.business_concept_blob ?? "";
-      case "industry": return prefill?.industry ?? ctx?.market?.industry ?? "";
+      case "businessConcept": return prefill?.business_concept ?? "";
+      case "industry": return prefill?.industry ?? "";
       default: return "";
     }
   };
@@ -1086,8 +1099,16 @@ function Inner() {
         {memoryEmpty && inactiveMemoryChips.length > 0 && !addMoreOpen && (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-background/40 p-3">
             <div className="text-sm">
-              <span className="font-medium">Want to reuse something saved?</span>{" "}
-              <span className="text-muted-foreground">Your library is still saved, but nothing is active for this startup.</span>
+              <span className="font-medium">
+                {isReturningFounder
+                  ? `You have ${inactiveMemoryChips.length} saved source${inactiveMemoryChips.length === 1 ? "" : "s"}.`
+                  : "Want to reuse something saved?"}
+              </span>{" "}
+              <span className="text-muted-foreground">
+                {isReturningFounder
+                  ? "Pick any that apply to this startup — nothing is used until you select it."
+                  : "Your library is still saved, but nothing is active for this startup."}
+              </span>
             </div>
             <Button
               type="button"
@@ -1098,7 +1119,7 @@ function Inner() {
                 setAddMoreOpen(true);
               }}
             >
-              Yes, add more
+              {isReturningFounder ? "Choose sources" : "Yes, add more"}
             </Button>
           </div>
         )}
@@ -1107,13 +1128,31 @@ function Inner() {
           <div className="space-y-2 rounded-xl border border-white/10 bg-background/40 p-3">
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-medium">Saved library sources</div>
-              <button
-                type="button"
-                onClick={() => setAddMoreOpen(false)}
-                className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
-              >
-                Done
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetStepOneRef.current = false;
+                    setReuseSelected((prev) => {
+                      const next = { ...prev };
+                      for (const { row } of inactiveMemoryChips) {
+                        if ((row.extracted_text ?? "").trim()) next[row.id] = true;
+                      }
+                      return next;
+                    });
+                  }}
+                  className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+                >
+                  Select all
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAddMoreOpen(false)}
+                  className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+                >
+                  Done
+                </button>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               {inactiveMemoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin, intent }) => {
