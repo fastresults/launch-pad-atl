@@ -114,16 +114,19 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms: number) {
 }
 
 async function callChatAI(messages: any[], opts: { json?: boolean; model?: string } = {}) {
+  const model = opts.model ?? THINK_MODELS[0];
+  const isOpenAI = model.startsWith("openai/");
   const res = await fetchWithTimeout("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: opts.model ?? THINK_MODELS[0],
+      model,
       messages,
-      max_tokens: 8000,
+      // GPT-5 family rejects max_tokens and any non-default temperature.
+      ...(isOpenAI ? { max_completion_tokens: 8000 } : { max_tokens: 8000 }),
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
-  }, 45_000);
+  }, 60_000);
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`AI chat ${res.status}: ${txt.slice(0, 300)}`);
