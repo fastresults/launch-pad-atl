@@ -397,7 +397,7 @@ export function lintVectorSpec(spec: VectorSpec): LintResult {
   const metrics = {
     elements: leaves.length,
     stroke_weights: weights.size,
-    off_grid_ratio: Number(offGridRatio.toFixed(3)),
+    curved_elements: curved,
     aspect: Number(aspect.toFixed(2)),
   };
 
