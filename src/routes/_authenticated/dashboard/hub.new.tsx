@@ -1900,11 +1900,17 @@ function Inner() {
                 <Input
                   id="company"
                   ref={registerRef("companyName") as any}
-                    className={invalidCls("companyName")}
+                  className={invalidCls("companyName")}
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="e.g. Northbound Roasters"
                 />
+                {!companyName.trim() && lastExtractedRef.current ? (
+                  <p className="text-[11px] text-status-danger">
+                    We couldn't find a name in your text — what's it called?
+                  </p>
+                ) : null}
+
               </div>
 
               {websiteUrl && (
