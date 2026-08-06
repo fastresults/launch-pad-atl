@@ -727,28 +727,60 @@ function Inner() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not create venture"),
   });
 
-  // Missing-field map (key -> human label)
-  const missing: { key: string; label: string }[] = [];
-  if (businessConcept.trim().length < 20) missing.push({ key: "businessConcept", label: "Business concept" });
-  if (!companyName.trim()) missing.push({ key: "companyName", label: "Company name" });
-  if (!founderName.trim()) missing.push({ key: "founderName", label: "Founder name" });
-  if (!founderEmail.trim()) missing.push({ key: "founderEmail", label: "Founder email" });
-  if (!city.trim()) missing.push({ key: "city", label: "City" });
-  if (!region.trim()) missing.push({ key: "region", label: "State / region" });
-  if (!country.trim()) missing.push({ key: "country", label: "Country" });
-  if (!industry.trim()) missing.push({ key: "industry", label: "Industry" });
-  if (!track) missing.push({ key: "track", label: "Track" });
-  const canSubmit = missing.length === 0 && !create.isPending;
+  // ── Per-step validation ───────────────────────────────────────────────
+  // Step 2 owns the founder/market/concept fields; step 3 owns the track.
+  const missingStep2: { key: string; label: string }[] = [];
+  if (businessConcept.trim().length < 20) missingStep2.push({ key: "businessConcept", label: "Business concept" });
+  if (!companyName.trim()) missingStep2.push({ key: "companyName", label: "Company name" });
+  if (!founderName.trim()) missingStep2.push({ key: "founderName", label: "Founder name" });
+  if (!founderEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(founderEmail.trim()))
+    missingStep2.push({ key: "founderEmail", label: "Founder email" });
+  if (!city.trim()) missingStep2.push({ key: "city", label: "City" });
+  if (!region.trim()) missingStep2.push({ key: "region", label: "State / region" });
+  if (!country.trim()) missingStep2.push({ key: "country", label: "Country" });
+  if (!industry.trim()) missingStep2.push({ key: "industry", label: "Industry" });
 
-  // Auto-expand review when there are missing fields (after first sync).
-  useEffect(() => {
-    if (reviewTouched) return;
-    if (missing.length > 0) setReviewOpen(true);
-    else setReviewOpen(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [missing.length]);
+  // Step 1 passes on real AI signal: a readable source or a typed concept —
+  // and never while synthesis is still running (AI-first, not form-first).
+  const readySourceCount = combinedDocs.length + readyUrls.length;
+  const step1Valid = !drafting && (readySourceCount > 0 || businessConcept.trim().length >= 20);
+  const step2Valid = missingStep2.length === 0;
+  const step3Valid = !!track;
+  const stepValid = [step1Valid, step2Valid, step3Valid];
+
+  const missing = [...missingStep2, ...(track ? [] : [{ key: "track", label: "Track" }])];
+  const canSubmit = step1Valid && step2Valid && step3Valid && !create.isPending;
+  // First step that still blocks creation (1-indexed), or null when all pass.
+  const blockingStep = !step1Valid ? 1 : !step2Valid ? 2 : !step3Valid ? 3 : null;
+
+  const step1Blocker = drafting
+    ? "Reading your sources…"
+    : "Add a source or describe the startup (20+ characters)";
+
+  // Move to a step, unlocking it as the furthest reached, and scroll it in.
+  const goToStep = useCallback((n: number) => {
+    setActiveStep(n);
+    setMaxStepReached((prev) => Math.max(prev, n));
+    setTimeout(() => {
+      stepRefs.current[n]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }, []);
+
+  const goNext = useCallback(() => {
+    if (activeStep >= 3) return;
+    if (!stepValid[activeStep - 1]) return;
+    goToStep(activeStep + 1);
+  }, [activeStep, goToStep, stepValid[0], stepValid[1], stepValid[2]]);
+
+  const goBack = useCallback(() => {
+    if (activeStep <= 1) return;
+    goToStep(activeStep - 1);
+  }, [activeStep, goToStep]);
 
   const jumpTo = (key: string) => {
+    const step = key === "track" ? 3 : 2;
+    setActiveStep(step);
+    setMaxStepReached((prev) => Math.max(prev, step));
     setReviewOpen(true);
     setReviewTouched(true);
     setTimeout(() => {
@@ -756,9 +788,13 @@ function Inner() {
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         (el as HTMLInputElement).focus?.();
+      } else {
+        stepRefs.current[step]?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
-    }, 50);
+    }, 80);
   };
+
+
 
   const registerRef = (key: string) => (el: HTMLElement | null) => {
     fieldRefs.current[key] = el;
