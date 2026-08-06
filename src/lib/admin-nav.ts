@@ -24,6 +24,7 @@ import {
   Wand2,
   Megaphone,
   type LucideIcon,
+  Plus,
 } from "lucide-react";
 
 export type AdminGroup =
@@ -346,5 +347,7 @@ export const ADMIN_COLLAPSED_GROUPS: AdminGroup[] = ["Marketing"];
 
 export function isNavItemActive(pathname: string, to: string) {
   if (to === "/admin") return pathname === "/admin";
+  // Keep parent/child siblings from both lighting up (e.g. /admin/hub vs /admin/hub/new).
+  if (to === "/admin/hub") return pathname === "/admin/hub";
   return pathname === to || pathname.startsWith(to + "/");
 }
