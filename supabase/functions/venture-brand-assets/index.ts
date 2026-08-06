@@ -118,21 +118,48 @@ Hard rules:
     }
   }
 
-  const raw = await callChatAI(
-    [{ role: "system", content: system }, { role: "user", content: userContent }],
-    { json: true, model: "google/gemini-2.5-pro" },
-  );
+  // Tolerant parse: the model sometimes returns fenced JSON, a bare array, or a
+  // response truncated mid-object. Salvage whatever complete directions exist.
+  const parseDirections = (raw: string): LogoDirection[] => {
+    const text = String(raw ?? "").replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    if (!text) return [];
+    const tryJson = (s: string) => { try { return JSON.parse(s); } catch { return null; } };
+    let parsed: any = tryJson(text);
+    if (!parsed) {
+      const obj = text.match(/\{[\s\S]*\}/);
+      parsed = obj ? tryJson(obj[0]) : null;
+    }
+    if (!parsed) {
+      const arr = text.match(/\[[\s\S]*\]/);
+      parsed = arr ? tryJson(arr[0]) : null;
+    }
+    let list: any[] = Array.isArray(parsed) ? parsed : (parsed?.directions ?? []);
+    if (!Array.isArray(list) || !list.length) {
+      // Last resort: pull individual complete `{...}` blocks out of a truncated body.
+      list = [...text.matchAll(/\{[^{}]*"direction_name"[^{}]*\}/g)]
+        .map((m) => tryJson(m[0]))
+        .filter(Boolean) as any[];
+    }
+    return (Array.isArray(list) ? list : []).filter((d: any) => d && d.direction_name);
+  };
 
-  let parsed: any;
-  try { parsed = JSON.parse(raw); }
-  catch {
-    const m = raw.match(/\{[\s\S]*\}/);
-    parsed = m ? JSON.parse(m[0]) : null;
+  const messages = [{ role: "system", content: system }, { role: "user", content: userContent }];
+  let directions: LogoDirection[] = [];
+  // Retry across models: 2.5-pro's thinking budget occasionally eats the whole
+  // response and returns empty content. Flash is a reliable JSON fallback.
+  for (const model of ["google/gemini-2.5-pro", "google/gemini-2.5-flash"]) {
+    try {
+      directions = parseDirections(await callChatAI(messages, { json: true, model }));
+    } catch (e) {
+      console.warn("creative director call failed", model, e);
+    }
+    if (directions.length) break;
+    console.warn(`creative director returned no usable directions from ${model}`);
   }
-  const directions: LogoDirection[] = parsed?.directions ?? [];
   if (!directions.length) throw new Error("Creative Director returned no directions");
   return directions.slice(0, count);
 }
+
 
 function buildLogoImagePrompt(d: LogoDirection, ctx: any, tokens: any): string {
   const snap = ctx.snap ?? {};
