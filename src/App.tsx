@@ -69,6 +69,7 @@ const AdminPrivateSessions = lazy(() => import("@/routes/_authenticated/_admin/a
 const AdminMembers = lazy(() => import("@/routes/_authenticated/_admin/admin.members"));
 const AdminMembersUserView = lazy(() => import("@/routes/_authenticated/_admin/admin.members.$userId.view"));
 const AdminHub = lazy(() => import("@/routes/_authenticated/_admin/admin.hub"));
+const AdminHubNew = lazy(() => import("@/routes/_authenticated/_admin/admin.hub.new"));
 
 const AdminMedia = lazy(() => import("@/routes/_authenticated/_admin/admin.media"));
 const AdminTestimonials = lazy(() => import("@/routes/_authenticated/_admin/admin.testimonials"));
@@ -179,6 +180,7 @@ export default function App() {
             <Route path="/admin/members" element={<AdminMembers />} />
             <Route path="/admin/members/:userId/view" element={<AdminMembersUserView />} />
             <Route path="/admin/hub" element={<AdminHub />} />
+            <Route path="/admin/hub/new" element={<AdminHubNew />} />
 
             <Route path="/admin/media" element={<AdminMedia />} />
             <Route path="/admin/testimonials" element={<AdminTestimonials />} />

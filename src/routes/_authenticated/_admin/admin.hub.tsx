@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/badge";
+import { Plus } from "lucide-react";
 import { adminListSnapshots } from "@/lib/foundersHub.functions";
 
 export default function AdminHubPage() {
@@ -17,6 +18,13 @@ export default function AdminHubPage() {
         title="Founders Hub"
         description="All ventures across approved registrants. Grant Founders Hub access from the Members page."
       />
+
+      <Link
+        to="/admin/hub/new"
+        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-card px-4 py-2 text-xs font-medium hover:bg-white/5"
+      >
+        <Plus className="h-3.5 w-3.5" /> New venture (admin only)
+      </Link>
 
       <div className="overflow-hidden rounded-2xl border border-white/10">
         {isLoading ? (
