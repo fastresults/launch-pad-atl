@@ -555,10 +555,11 @@ Deno.serve(async (req) => {
   try {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
     const body = await req.json();
-    const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote } = body ?? {};
+    const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
     // logo_brief / logo_render are steps of the logo pipeline; they share its preset.
-    const preset = KIND_PRESETS[kind] ?? (kind === "logo_brief" || kind === "logo_render" ? KIND_PRESETS.logo : undefined);
+    const logoKinds = ["logo_create_run", "logo_develop_brief", "logo_develop_directions", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run"];
+    const preset = KIND_PRESETS[kind] ?? (kind === "logo_brief" || kind === "logo_render" || logoKinds.includes(kind) ? KIND_PRESETS.logo : undefined);
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
 
 
@@ -591,6 +592,94 @@ Deno.serve(async (req) => {
 
     const n = Math.max(1, Math.min(4, count ?? preset.defaultCount));
     const results: any[] = [];
+
+    const getRun = async (id?: string) => {
+      let query = supabase.from("brand_logo_runs").select("*").eq("snapshot_id", snapshotId);
+      query = id ? query.eq("id", id) : query.not("status", "in", '("completed","completed_with_review","failed","canceled")').order("created_at", { ascending: false }).limit(1);
+      const { data: rows, error } = await query;
+      if (error) throw error;
+      const run = Array.isArray(rows) ? rows[0] : rows;
+      if (!run) return { run: null, directions: [] };
+      const { data: directions, error: directionError } = await supabase.from("brand_logo_directions").select("*").eq("run_id", run.id).order("slot");
+      if (directionError) throw directionError;
+      return { run, directions: directions ?? [] };
+    };
+
+    if (kind === "logo_get_run") {
+      return new Response(JSON.stringify({ ok: true, ...(await getRun(runId)) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (kind === "logo_cancel_run") {
+      if (!runId) throw new Error("runId required");
+      const now = new Date().toISOString();
+      const { error } = await supabase.from("brand_logo_runs").update({ status: "canceled", canceled_at: now, heartbeat_at: now }).eq("id", runId).eq("snapshot_id", snapshotId);
+      if (error) throw error;
+      await supabase.from("brand_logo_directions").update({ status: "canceled" }).eq("run_id", runId).not("status", "in", '("ready","needs_review")');
+      return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (kind === "logo_create_run") {
+      await supabase.from("brand_logo_runs").update({ status: "canceled", canceled_at: new Date().toISOString() }).eq("snapshot_id", snapshotId).not("status", "in", '("completed","completed_with_review","failed","canceled")');
+      const { data: previous } = await supabase.from("brand_logo_runs").select("version").eq("snapshot_id", snapshotId).order("version", { ascending: false }).limit(1);
+      const version = Number(previous?.[0]?.version ?? 0) + 1;
+      const { data: run, error } = await supabase.from("brand_logo_runs").insert({ snapshot_id: snapshotId, user_id: userId, version, status: "developing_brief", requested_count: n, reference_images: referenceImages ?? [], heartbeat_at: new Date().toISOString() }).select().single();
+      if (error) throw error;
+      return new Response(JSON.stringify({ ok: true, run }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (kind === "logo_develop_brief") {
+      if (!runId) throw new Error("runId required");
+      const docsBlock = await loadBrandDocs(supabase, snapshotId);
+      const strategy = await buildBrandStrategy(ctx, tokens, docsBlock);
+      if (!strategy) throw new Error("Creative Director returned no strategy");
+      const { error } = await supabase.from("brand_logo_runs").update({ strategy, status: "developing_directions", heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId).eq("snapshot_id", snapshotId);
+      if (error) throw error;
+      return new Response(JSON.stringify({ ok: true, strategy }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (kind === "logo_develop_directions") {
+      if (!runId) throw new Error("runId required");
+      const current = await getRun(runId);
+      if (!current.run) throw new Error("Logo run not found");
+      const docsBlock = await loadBrandDocs(supabase, snapshotId);
+      const directions = await generateLogoConcepts(ctx, tokens, current.run.requested_count, current.run.strategy as BrandStrategy, docsBlock, current.run.reference_images);
+      const rows = directions.map((d, slot) => ({ run_id: runId, snapshot_id: snapshotId, slot, idempotency_key: `${runId}:${slot}`, direction_name: d.direction_name, logo_type: d.logo_type, concept: d, status: "queued", current_stage: "develop_vector" }));
+      const { error } = await supabase.from("brand_logo_directions").upsert(rows, { onConflict: "run_id,slot" });
+      if (error) throw error;
+      await supabase.from("brand_logo_runs").update({ status: "rendering", heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
+      return new Response(JSON.stringify({ ok: true, directions }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (kind === "logo_draw_vector" || kind === "logo_retry_direction") {
+      if (!runId || !directionId) throw new Error("runId and directionId required");
+      const current = await getRun(runId);
+      const run = current.run;
+      const row = current.directions.find((item: any) => item.id === directionId);
+      if (!run || !row) throw new Error("Logo direction not found");
+      if (["ready", "needs_review"].includes(row.status) && kind !== "logo_retry_direction") {
+        return new Response(JSON.stringify({ ok: true, asset: row.asset, direction: row }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      await supabase.from("brand_logo_directions").update({ status: "developing_vector", current_stage: row.review_note ? "revise_vector" : "develop_vector", attempt_count: Number(row.attempt_count ?? 0) + 1, last_error: null, error_class: null }).eq("id", directionId);
+      try {
+        const spec = await developVectorSpec(row.concept as LogoDirection, run.strategy as BrandStrategy, ctx, tokens, reviewNote ?? row.review_note ?? undefined);
+        const svg = renderVectorSvg(spec, tokens, snap.company_name ?? "Venture");
+        const uploaded = await uploadVectorAsset(supabase, snapshotId, userId, directionId, svg);
+        const scores = spec.quality_scores ?? {};
+        const scoreValues = Object.values(scores).map(Number).filter(Number.isFinite);
+        const average = scoreValues.length ? scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length : 4;
+        const passed = average >= 3.8;
+        const note = passed ? "" : "Simplify the geometry and strengthen the silhouette before selecting this direction.";
+        const asset = { ok: true, url: uploaded.url, path: uploaded.path, svg_url: uploaded.url, svg_path: uploaded.path, direction_name: row.direction_name, logo_type: row.logo_type, one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept, why_memorable: row.concept?.why_memorable ?? "", symbol_concept: row.concept?.symbol_concept, direction: row.concept, vector_spec: spec, review_passed: passed, review_note: note, review_score: scores, created_at: new Date().toISOString() };
+        const { error: publishError } = await supabase.rpc("publish_brand_logo_direction", { p_direction_id: directionId, p_run_id: runId, p_run_version: run.version, p_asset: asset, p_svg_path: uploaded.path, p_preview_path: uploaded.path, p_review_passed: passed, p_review_score: scores, p_review_note: note });
+        if (publishError) throw publishError;
+        return new Response(JSON.stringify({ ok: true, asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      } catch (error) {
+        const attempts = Number(row.attempt_count ?? 0) + 1;
+        const terminal = attempts >= 3;
+        await supabase.from("brand_logo_directions").update({ status: terminal ? "failed" : "retry_wait", last_error: error instanceof Error ? error.message : String(error), error_class: classifyError(error), retry_at: terminal ? null : new Date(Date.now() + Math.min(60_000, 5_000 * 2 ** attempts)).toISOString(), lease_token: null, lease_expires_at: null }).eq("id", directionId);
+        throw error;
+      }
+    }
 
     /* ---- STEP 1: the brief. Strategy + scored directions. No image calls. ---- */
     if (kind === "logo_brief") {
