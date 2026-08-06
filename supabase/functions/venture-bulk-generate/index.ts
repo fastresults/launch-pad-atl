@@ -450,7 +450,9 @@ async function runLayer(
   jobId: string,
   layer: any[],
   state: { done: number; total: number; fails: number; canceled: boolean },
+  mode: GenMode = "full",
 ) {
+
   const snapshotId = ctx.snapshotId;
   const { data: existingDocs } = await supabase
     .from("venture_documents")
