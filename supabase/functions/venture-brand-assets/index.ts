@@ -68,6 +68,23 @@ type BrandStrategy = {
   not_list: string[];
 };
 
+type VectorPrimitive = {
+  kind: "rect" | "circle" | "path" | "line";
+  x?: number; y?: number; width?: number; height?: number; rx?: number;
+  cx?: number; cy?: number; r?: number; d?: string;
+  x1?: number; y1?: number; x2?: number; y2?: number;
+  fill?: "primary" | "secondary" | "accent" | "none" | "white";
+  stroke?: "primary" | "secondary" | "accent" | "none" | "white";
+  strokeWidth?: number;
+};
+
+type VectorSpec = {
+  primitives: VectorPrimitive[];
+  wordmark?: { text: string; case?: "upper" | "title" | "lower"; weight?: number; tracking?: number };
+  rationale?: string;
+  quality_scores?: Record<string, number>;
+};
+
 // Chat models used for the thinking passes, in fallback order. 2.5-pro's
 // thinking budget occasionally eats the whole response and returns empty
 // content, so a flash model always backs it up.
@@ -139,6 +156,77 @@ async function callChatJson(messages: any[]): Promise<any> {
     }
   }
   return null;
+}
+
+async function callChatJsonOnce(messages: any[]): Promise<any> {
+  const parsed = parseJsonLoose(await callChatAI(messages, { json: true, model: THINK_MODELS[0] }));
+  if (!parsed) throw new Error("AI returned malformed structured output");
+  return parsed;
+}
+
+function escapeXml(value: unknown): string {
+  return String(value ?? "").replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&apos;", '"': "&quot;" }[c] ?? c));
+}
+
+function safeColor(value: unknown, fallback: string): string {
+  const text = String(value ?? "").trim();
+  return /^#[0-9a-f]{6}$/i.test(text) ? text : fallback;
+}
+
+function clampNumber(value: unknown, min: number, max: number, fallback = 0): number {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback;
+}
+
+function sanitizePath(value: unknown): string {
+  const path = String(value ?? "").trim();
+  if (!path || path.length > 1200 || /[^0-9a-zA-Z.,+\-\s]/.test(path)) throw new Error("Vector path contains unsupported data");
+  return path;
+}
+
+function renderVectorSvg(spec: VectorSpec, tokens: any, companyName: string): string {
+  const palette = {
+    primary: safeColor(tokens?.colors?.primary, "#171717"),
+    secondary: safeColor(tokens?.colors?.secondary, "#4B5563"),
+    accent: safeColor(tokens?.colors?.accent, "#C29B46"),
+    white: "#FFFFFF",
+    none: "none",
+  };
+  const primitives = Array.isArray(spec?.primitives) ? spec.primitives.slice(0, 5) : [];
+  if (!primitives.length) throw new Error("Vector specification has no drawable elements");
+  const color = (key: unknown, fallback: string) => palette[String(key ?? "") as keyof typeof palette] ?? fallback;
+  const body = primitives.map((p) => {
+    const fill = color(p.fill, palette.primary);
+    const stroke = color(p.stroke, "none");
+    const common = `fill="${fill}" stroke="${stroke}" stroke-width="${clampNumber(p.strokeWidth, 0, 32, 0)}" stroke-linecap="round" stroke-linejoin="round"`;
+    if (p.kind === "rect") return `<rect x="${clampNumber(p.x, 0, 1000)}" y="${clampNumber(p.y, 0, 1000)}" width="${clampNumber(p.width, 1, 1000, 100)}" height="${clampNumber(p.height, 1, 1000, 100)}" rx="${clampNumber(p.rx, 0, 250)}" ${common}/>`;
+    if (p.kind === "circle") return `<circle cx="${clampNumber(p.cx, 0, 1000, 500)}" cy="${clampNumber(p.cy, 0, 1000, 500)}" r="${clampNumber(p.r, 1, 500, 100)}" ${common}/>`;
+    if (p.kind === "line") return `<line x1="${clampNumber(p.x1, 0, 1000)}" y1="${clampNumber(p.y1, 0, 1000)}" x2="${clampNumber(p.x2, 0, 1000)}" y2="${clampNumber(p.y2, 0, 1000)}" ${common}/>`;
+    if (p.kind === "path") return `<path d="${escapeXml(sanitizePath(p.d))}" ${common}/>`;
+    throw new Error("Unsupported vector primitive");
+  }).join("");
+  const wordmark = spec.wordmark?.text ? String(spec.wordmark.text) : "";
+  const text = wordmark ? `<text x="500" y="900" text-anchor="middle" fill="${palette.primary}" font-family="Arial, Helvetica, sans-serif" font-size="${Math.max(42, Math.min(112, Math.floor(760 / Math.max(wordmark.length, 5))))}" font-weight="${clampNumber(spec.wordmark?.weight, 300, 800, 600)}" letter-spacing="${clampNumber(spec.wordmark?.tracking, 0, 20, 2)}">${escapeXml(wordmark || companyName)}</text>` : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" role="img" aria-label="${escapeXml(companyName)} logo"><rect width="1000" height="1000" fill="#FFFFFF"/><g>${body}</g>${text}</svg>`;
+}
+
+async function uploadVectorAsset(supabase: any, snapshotId: string, userId: string, directionId: string, svg: string) {
+  const path = `${userId}/brand/${snapshotId}/logo-${directionId}.svg`;
+  const bytes = new TextEncoder().encode(svg);
+  const { error } = await supabase.storage.from("user-media").upload(path, bytes, { contentType: "image/svg+xml", upsert: true });
+  if (error) throw new Error(`Vector upload failed: ${error.message}`);
+  const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(path, 60 * 60 * 24 * 7);
+  return { path, url: signed?.signedUrl };
+}
+
+function classifyError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/429|rate/i.test(message)) return "rate_limit";
+  if (/402|credit/i.test(message)) return "credits";
+  if (/abort|timeout/i.test(message)) return "provider_timeout";
+  if (/structured|json|vector/i.test(message)) return "invalid_output";
+  if (/upload|storage/i.test(message)) return "storage";
+  return "provider_error";
 }
 
 /** Pull the venture's finished brand documents so strategy is grounded in real work. */
