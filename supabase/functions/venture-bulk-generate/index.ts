@@ -898,23 +898,29 @@ async function runJob(
     .in("document_type", types.map((t: any) => t.type));
 
   const allDone = remaining.length === 0 && blocked.length === 0 && dayGaps.length === 0;
+  // Never finish a run with an unexplained no-op: if nothing was attempted,
+  // say why in plain language instead of reporting a silent success.
+  const noOp = allDone && state.done === 0 && notApplicable.length > 0;
 
   await supabase.from("venture_generation_jobs").update({
-    status: allDone ? "completed" : "completed_with_blockers",
+    status: allDone && !noOp ? "completed" : "completed_with_blockers",
     completed_at: new Date().toISOString(),
     progress_pct: allDone ? 100 : Math.round(((completeCount ?? 0) / Math.max(total, 1)) * 100),
     current_document_type: null,
     circuit_breaker_open: false,
     retry_round: 0,
     retry_remaining: remaining.length,
-    error: allDone
-      ? null
-      : [
-          blocked.length ? `${blocked.length} asset(s) need you` : "",
-          remaining.length ? `${remaining.length} asset(s) couldn't be written` : "",
-          dayGaps.length ? `${dayGaps.length} sprint day(s) still short` : "",
-        ].filter(Boolean).join(" · "),
+    error: noOp
+      ? `Nothing left to write — ${notApplicable.length} asset(s) don't apply to this venture.`
+      : allDone
+        ? null
+        : [
+            blocked.length ? `${blocked.length} asset(s) need you` : "",
+            remaining.length ? `${remaining.length} asset(s) couldn't be written` : "",
+            dayGaps.length ? `${dayGaps.length} sprint day(s) still short` : "",
+          ].filter(Boolean).join(" · "),
   }).eq("id", jobId);
+
 
   if (!category && allDone) {
     await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);
