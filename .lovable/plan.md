@@ -14,6 +14,17 @@ Today all three steps render at once as stacked cards (source memory, confirm de
 - Advancing is explicit: a "Continue" button at the bottom of the active step, disabled until that step passes validation, with the blocking reason shown next to it.
 - Going back is always allowed by clicking a completed step's header; later steps stay unlocked once reached (no re-locking on edit unless the step becomes invalid, in which case the Create button disables and the offending step is flagged).
 
+## Moving forward and back
+
+Navigation is two-way once a step has been reached:
+
+- Each active step has a footer with **Back** (left) and **Continue** (right). Back is hidden on step 1; on step 3 Continue is replaced by the Create action.
+- Clicking any step number/header in the top stepper strip jumps straight to that step, as long as it has already been reached. Not-yet-reached steps stay locked and unclickable.
+- Clicking a collapsed completed card's header (or its "Edit" affordance) reopens that step in place.
+- Nothing is lost when moving backward — all field, source, and track state persists, so returning forward lands on the same values. Continue re-validates on the way forward, so if an edit broke a required field the user is stopped there with the reason shown.
+- Keyboard: the stepper strip is a real button group with arrow-key movement between reached steps, and Continue/Back are ordinary buttons in tab order.
+
+
 ## Gates per step
 
 **Step 1 — Source memory (AI-first seeding).**
