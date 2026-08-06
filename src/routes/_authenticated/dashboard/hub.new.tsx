@@ -850,7 +850,7 @@ function Inner() {
   const stepValid = [step1Valid, step2Valid, step3Valid];
   const missingKeys = new Set(missingStep2.map((m) => m.key));
   const invalidCls = (key: string) =>
-    missingKeys.has(key) && conceptTouched ? "border-status-danger/60 ring-1 ring-status-danger/30" : "";
+    missingKeys.has(key) ? "border-status-danger/60 ring-1 ring-status-danger/30" : "";
 
   // Auto-extract details once a substantial concept has been pasted/typed and
   // required fields are still empty. Debounced; never runs twice on same text.
