@@ -544,75 +544,67 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     onError: (e: any) => toast.error(e.message),
   });
 
-  // Two-phase logo run: one short "brief" request, then one request per mark.
-  // Nothing long-running lives in a single connection, so nothing can time out.
-  const [logoPhase, setLogoPhase] = useState<"idle" | "brief" | "rendering">("idle");
-  const [pending, setPending] = useState<any[]>([]); // {direction, status:'pending'|'error', error?}
-
-  const renderDirection = async (d: any, slot: number, current: any[]) => {
-    try {
-      const out = await generateBrandAsset({
-        data: { snapshotId: snapshot.id, kind: "logo_render", referenceImages: refs, direction: d },
-      });
-      const asset = out?.asset;
-      if (!asset?.url) throw new Error("No image came back");
-      setPending((p) => p.map((x, j) => (j === slot ? null : x)).filter(Boolean) as any[]);
-      setLogos((prev) => {
-        const next = [asset, ...prev].slice(0, 8);
-        onSave({ logos: next });
-        return next;
-      });
-      return true;
-    } catch (e: any) {
-      setPending((p) => p.map((x, j) => (j === slot ? { ...x, status: "error", error: e?.message ?? "Render failed" } : x)));
-      return false;
-    }
-  };
-
-  const runLogoSet = async () => {
-    setLogoPhase("brief");
-    try {
-      const brief = await generateBrandAsset({
-        data: { snapshotId: snapshot.id, kind: "logo_brief", count: 4, referenceImages: refs },
-      });
-      const directions: any[] = brief?.directions ?? [];
-      if (!directions.length) throw new Error("No directions came back");
-      setLogos([]);
-      onSave({ logos: [] });
-      setPending(directions.map((d) => ({ direction: d, status: "pending" })));
-      setLogoPhase("rendering");
-      const outcomes = await Promise.all(directions.map((d, i) => renderDirection(d, i, [])));
-      const okCount = outcomes.filter(Boolean).length;
-      if (okCount) toast.success(`${okCount} logo direction${okCount === 1 ? "" : "s"} rendered`);
-      if (okCount < directions.length) toast.error(`${directions.length - okCount} need another try`);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Could not write the brief");
-    } finally {
-      setLogoPhase("idle");
-    }
-  };
-
-  const retryPending = async (slot: number) => {
-    const item = pending[slot];
-    if (!item) return;
-    setPending((p) => p.map((x, j) => (j === slot ? { ...x, status: "pending", error: undefined } : x)));
-    await renderDirection(item.direction, slot, logos);
-  };
-
-  const genLogos = { isPending: logoPhase !== "idle", mutate: runLogoSet };
-
-  const regenOne = useMutation({
-    mutationFn: (vars: { idx: number; direction: any }) =>
-      generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render", referenceImages: refs, direction: vars.direction } }),
-    onSuccess: (out, vars) => {
-      const fresh = out?.asset;
-      if (!fresh?.url) { toast.error("Regeneration failed"); return; }
-      const next = logos.slice();
-      next[vars.idx] = fresh;
-      setLogos(next);
-      onSave({ logos: next });
-      toast.success(`"${fresh.direction_name}" regenerated`);
+  const [logoPhase, setLogoPhase] = useState<"idle" | "brief" | "concepting" | "drawing">("idle");
+  const logoRunQ = useQuery({
+    queryKey: ["brandLogoRun", snapshot.id],
+    queryFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run" } }),
+    refetchInterval: (query) => {
+      const status = (query.state.data as any)?.run?.status;
+      return status && !["completed", "completed_with_review", "failed", "canceled"].includes(status) ? 2500 : false;
     },
+  });
+  const activeRun = logoRunQ.data?.run;
+  const runDirections: any[] = logoRunQ.data?.directions ?? [];
+  const runBusy = !!activeRun && !["completed", "completed_with_review", "failed", "canceled"].includes(activeRun.status);
+
+  useEffect(() => {
+    const ready = runDirections.filter((d) => d.status === "ready" || d.status === "needs_review").map((d) => d.asset).filter((a) => a?.url);
+    if (ready.length) setLogos(ready);
+  }, [runDirections]);
+
+  const processLogoRun = async (initialRun: any) => {
+    let run = initialRun;
+    setLogoPhase("brief");
+    if (run.status === "developing_brief" || run.status === "queued") {
+      await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_develop_brief", runId: run.id } });
+      run = { ...run, status: "developing_directions" };
+    }
+    setLogoPhase("concepting");
+    let state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
+    if (!state.directions?.length) {
+      await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_develop_directions", runId: run.id } });
+      state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
+    }
+    setLogoPhase("drawing");
+    const work = (state.directions ?? []).filter((d: any) => !["ready", "needs_review", "canceled"].includes(d.status));
+    for (let i = 0; i < work.length; i += 2) {
+      await Promise.allSettled(work.slice(i, i + 2).map((d: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_draw_vector", runId: run.id, directionId: d.id } })));
+      await logoRunQ.refetch();
+    }
+    await logoRunQ.refetch();
+  };
+
+  const genLogos = useMutation({
+    mutationFn: async () => {
+      const created = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_create_run", count: 4, referenceImages: refs } });
+      setLogos([]);
+      await processLogoRun(created.run);
+      return created;
+    },
+    onSuccess: () => toast.success("Your four vector directions are ready"),
+    onError: (e: any) => toast.error(e?.message ?? "Logo run paused. You can resume it here."),
+    onSettled: () => { setLogoPhase("idle"); logoRunQ.refetch(); },
+  });
+
+  const resumeLogos = useMutation({
+    mutationFn: () => processLogoRun(activeRun),
+    onError: (e: any) => toast.error(e?.message ?? "Logo run paused again"),
+    onSettled: () => { setLogoPhase("idle"); logoRunQ.refetch(); },
+  });
+
+  const retryDirection = useMutation({
+    mutationFn: (item: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_retry_direction", runId: item.run_id, directionId: item.id, reviewNote: item.review_note } }),
+    onSuccess: () => { toast.success("Direction rebuilt"); logoRunQ.refetch(); },
     onError: (e: any) => toast.error(e.message),
   });
 
