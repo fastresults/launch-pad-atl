@@ -82,6 +82,11 @@ type BrandStrategy = {
 // (strategy, concepting, drawing) runs on the frontier tier; flash stays last
 // so a provider hiccup degrades quality instead of losing the run.
 const THINK_MODELS = ["openai/gpt-5.5", "google/gemini-3.1-pro-preview", "google/gemini-3.6-flash"];
+// Vector JSON and vision review need deterministic, bounded latency. Starting
+// these atomic stages with the long-reasoning strategy model consumed the full
+// function budget before fallback could run.
+const VECTOR_MODELS = ["google/gemini-3.1-pro-preview", "google/gemini-3.6-flash"];
+const REVIEW_MODEL = "google/gemini-3.6-flash";
 
 // Documents that actually carry brand signal, in priority order.
 const STRATEGY_DOC_TYPES = [
@@ -250,7 +255,7 @@ function normalizeVectorResponse(parsed: any): { root: any; primitives: any[] } 
 
 async function requestVectorResponse(messages: any[]): Promise<{ root: any; primitives: any[] }> {
   const failures: string[] = [];
-  for (const model of THINK_MODELS) {
+  for (const model of VECTOR_MODELS) {
     try {
       const raw = await callChatAI(messages, { json: true, model });
       const parsed = parseJsonLoose(raw);
@@ -525,16 +530,21 @@ Fail it if ANY of these are true: the shape is illegible, broken or reads as ran
 
 Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact geometric change to make"}`;
 
-  const parsed = await callChatJson([
-    { role: "system", content: system },
-    {
-      role: "user",
-      content: [
-        { type: "text", text },
-        { type: "image_url", image_url: { url: `data:image/png;base64,${b64}` } },
-      ],
-    },
-  ]);
+  let parsed: any = null;
+  try {
+    parsed = parseJsonLoose(await callChatAI([
+      { role: "system", content: system },
+      {
+        role: "user",
+        content: [
+          { type: "text", text },
+          { type: "image_url", image_url: { url: `data:image/png;base64,${b64}` } },
+        ],
+      },
+    ], { json: true, model: REVIEW_MODEL }));
+  } catch (error) {
+    console.warn("vision review unavailable", errorMessage(error));
+  }
   // A failed/unavailable critique must never block delivery.
   if (!parsed || typeof parsed.pass !== "boolean") return { pass: true, note: "" };
   return { pass: parsed.pass, note: String(parsed.note ?? "") };
