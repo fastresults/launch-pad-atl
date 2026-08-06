@@ -131,6 +131,7 @@ async function generateOne(
   ctx: VentureContext,
   documentType: string,
   mode: GenMode = "full",
+  dayContext = "",
 ) {
   const snapshotId = ctx.snapshotId;
   const snap = ctx.snap;
