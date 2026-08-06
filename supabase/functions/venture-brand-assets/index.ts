@@ -560,7 +560,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
-    // logo_brief / logo_render are steps of the logo pipeline; they share its preset.
+    // Durable logo stages share the logo preset.
     const logoKinds = ["logo_create_run", "logo_develop_brief", "logo_develop_directions", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_remove_direction"];
     const preset = KIND_PRESETS[kind] ?? (logoKinds.includes(kind) ? KIND_PRESETS.logo : undefined);
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
@@ -699,7 +699,7 @@ Deno.serve(async (req) => {
 
     if (kind === "logo") {
       // Legacy single-shot path: retired — it could not fit inside one request.
-      throw new Error("Use kind 'logo_brief' then 'logo_render' — the single-shot logo run is retired.");
+      throw new Error("Use the resumable Logo Studio workflow — single-request logo generation is retired.");
     }
 
     // Generic kinds: moodboard / social
