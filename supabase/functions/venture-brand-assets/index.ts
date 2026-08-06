@@ -85,7 +85,7 @@ const THINK_MODELS = ["openai/gpt-5.5", "google/gemini-3.1-pro-preview", "google
 // Vector JSON and vision review need deterministic, bounded latency. Starting
 // these atomic stages with the long-reasoning strategy model consumed the full
 // function budget before fallback could run.
-const VECTOR_MODELS = ["google/gemini-3.1-pro-preview", "google/gemini-3.6-flash"];
+const VECTOR_MODELS = ["google/gemini-3.6-flash", "google/gemini-3.1-pro-preview"];
 const REVIEW_MODEL = "google/gemini-3.6-flash";
 
 // Documents that actually carry brand signal, in priority order.
