@@ -566,24 +566,28 @@ Deno.serve(async (req) => {
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
 
 
+    const internal = req.headers.get("x-internal-key") === SERVICE_KEY;
     const authHeader = req.headers.get("Authorization") ?? "";
     const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: userRes } = await userClient.auth.getUser();
-    let userId = userRes?.user?.id;
-    if (!userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const { data: userRes } = internal ? { data: { user: null } } : await userClient.auth.getUser();
+    let userId = userRes?.user?.id ?? "";
+    if (!internal && !userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     // Impersonation: an admin may act on a member's behalf (validated server-side).
-    const actorId = userId;
-    const _own = await resolveOwner(req, actorId, userClient, corsHeaders);
-    if (_own.error) return _own.error;
-    userId = _own.userId;
+    if (!internal) {
+      const actorId = userId;
+      const _own = await resolveOwner(req, actorId, userClient, corsHeaders);
+      if (_own.error) return _own.error;
+      userId = _own.userId;
+    }
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     const ctx = await loadVentureContext(supabase, snapshotId);
     const snap = ctx.snap;
     if (!snap) return new Response(JSON.stringify({ error: "Snapshot not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (internal) userId = snap.user_id;
     if (snap.user_id !== userId) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const { data: kit } = await supabase.from("venture_brand_kits").select("palette, typography, dna, logos, moodboard").eq("snapshot_id", snapshotId).maybeSingle();

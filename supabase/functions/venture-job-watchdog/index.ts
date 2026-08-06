@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
     const now = new Date().toISOString();
     const { data: staleLogoDirections } = await supabase
       .from("brand_logo_directions")
-      .select("id")
+      .select("id, run_id, snapshot_id")
       .in("status", ["developing_vector", "drawing", "reviewing"])
       .lt("lease_expires_at", now);
     if (staleLogoDirections?.length) {
@@ -100,6 +100,66 @@ Deno.serve(async (req) => {
         last_error: "Logo worker stopped before this stage completed. The saved run can resume safely.",
       }).in("id", staleLogoDirections.map((row) => row.id));
       unstuck += staleLogoDirections.length;
+    }
+
+    const logoCalls: Promise<Response>[] = [];
+    const callLogoStage = (snapshotId: string, kind: string, runId: string, directionId?: string) => {
+      logoCalls.push(fetch(`${SUPABASE_URL}/functions/v1/venture-brand-assets`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-key": SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+        },
+        body: JSON.stringify({ snapshotId, kind, runId, directionId }),
+      }));
+    };
+
+    // Restart one bounded stage per stale run. Each target operation performs
+    // one AI call, while waitUntil lets this watchdog respond immediately.
+    const { data: staleLogoRuns } = await supabase
+      .from("brand_logo_runs")
+      .select("id, snapshot_id, status, created_at")
+      .in("status", ["developing_brief", "developing_directions", "rendering"])
+      .lt("heartbeat_at", cutoff)
+      .order("created_at", { ascending: true })
+      .limit(8);
+
+    for (const run of staleLogoRuns ?? []) {
+      if (Date.now() - new Date(run.created_at).getTime() > 30 * 60 * 1000) {
+        await supabase.from("brand_logo_runs").update({ status: "failed", last_error: "Logo Studio paused after 30 minutes of recovery attempts." }).eq("id", run.id);
+        paused++;
+        continue;
+      }
+      await supabase.from("brand_logo_runs").update({ heartbeat_at: now, last_error: null }).eq("id", run.id);
+      if (run.status === "developing_brief") {
+        callLogoStage(run.snapshot_id, "logo_develop_brief", run.id);
+      } else if (run.status === "developing_directions") {
+        callLogoStage(run.snapshot_id, "logo_develop_directions", run.id);
+      } else {
+        const { data: next } = await supabase.from("brand_logo_directions")
+          .select("id")
+          .eq("run_id", run.id)
+          .in("status", ["queued", "retry_wait"])
+          .lt("attempt_count", 3)
+          .or(`retry_at.is.null,retry_at.lte.${now}`)
+          .order("slot")
+          .limit(1)
+          .maybeSingle();
+        if (next) callLogoStage(run.snapshot_id, "logo_draw_vector", run.id, next.id);
+      }
+    }
+
+    if (logoCalls.length) {
+      const recovery = Promise.allSettled(logoCalls).then((results) => {
+        results.forEach((result) => {
+          if (result.status === "rejected") console.error("logo auto-resume failed", result.reason);
+        });
+      });
+      const edgeRuntime = (globalThis as typeof globalThis & { EdgeRuntime?: { waitUntil(promise: Promise<unknown>): void } }).EdgeRuntime;
+      if (edgeRuntime) edgeRuntime.waitUntil(recovery);
+      else await recovery;
+      resumed += logoCalls.length;
     }
 
     return new Response(JSON.stringify({ ok: true, paused, unstuck, resumed }), {
