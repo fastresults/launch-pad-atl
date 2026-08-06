@@ -720,7 +720,9 @@ async function runJob(
   jobId: string,
   category?: string | null,
   retryOnly = false,
+  days: number[] | null = null,
 ) {
+  const dayOnly = Array.isArray(days) && days.length > 0;
 
   // Build venture context ONCE per job. Compute or reuse the brain ONCE
   // before any docs run — subsequent generateOne() calls inherit both.
