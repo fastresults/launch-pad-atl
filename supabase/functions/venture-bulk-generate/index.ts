@@ -201,18 +201,23 @@ async function generateOne(
   const sourcingBlock = renderSourcingBlock(snap.sourcing_profile, snap.research_brief?.sourcing);
 
   // Founder's Second Brain corpus, retrieved for this deliverable.
+  // Retry rounds drop it — it's the biggest slice of the prompt and the most
+  // common cause of context-length / slow-response failures.
   let corpusBlock = "";
-  try {
-    corpusBlock = await brainCorpusBlock(
-      supabase,
-      ctx.userId,
-      snap.id ?? null,
-      [type.name, type.description ?? "", snap.concept_summary ?? ""].filter(Boolean).join(" \u2014 "),
-      8,
-    );
-  } catch (e) {
-    console.warn("brain corpus retrieval failed", e);
+  if (mode === "full") {
+    try {
+      corpusBlock = await brainCorpusBlock(
+        supabase,
+        ctx.userId,
+        snap.id ?? null,
+        [type.name, type.description ?? "", snap.concept_summary ?? ""].filter(Boolean).join(" \u2014 "),
+        8,
+      );
+    } catch (e) {
+      console.warn("brain corpus retrieval failed", e);
+    }
   }
+
 
   const userPrompt = [
     `# Document to produce: ${type.name}`,
