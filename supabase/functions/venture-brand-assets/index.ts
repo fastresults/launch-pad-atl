@@ -472,13 +472,17 @@ Deno.serve(async (req) => {
       }
 
       // Stage 3/4 — render, critique what actually came back, retry failures once.
-      for (let idx = 0; idx < directions.length; idx++) {
-        const d = directions[idx];
+      // Run all directions in parallel and respect a wall-clock budget so the
+      // request never hits the 150s platform idle timeout.
+      const startedAt = Date.now();
+      const RETRY_DEADLINE_MS = 95_000; // only retry if there's time left
+
+      await Promise.all(directions.map(async (d, idx) => {
         let prompt = buildLogoImagePrompt(d, ctx, tokens, strategy);
         try {
           let b64 = await generateOne(prompt, preset.size, referenceImages, "google/gemini-3-pro-image");
           let review = await critiqueLogo(b64, d, strategy);
-          if (!review.pass) {
+          if (!review.pass && Date.now() - startedAt < RETRY_DEADLINE_MS) {
             console.log(`logo "${d.direction_name}" failed review: ${review.note} — retrying once`);
             const retryPrompt = buildLogoImagePrompt(d, ctx, tokens, strategy, review.note);
             try {
@@ -508,7 +512,8 @@ Deno.serve(async (req) => {
         } catch (e) {
           results[idx] = { ok: false, error: e instanceof Error ? e.message : String(e), direction_name: d.direction_name };
         }
-      }
+      }));
+
     } else {
 
       // Generic kinds: moodboard / social
