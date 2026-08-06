@@ -883,6 +883,62 @@ function Inner() {
               </div>
             )}
 
+            {/* Explicit, opt-in reuse of another venture's material. Copies —
+                never moves — so the other venture keeps its Second Brain. */}
+            {otherVentures.length > 0 && (
+              <div className="rounded-xl border border-white/10 bg-background/40 p-3">
+                <button
+                  type="button"
+                  onClick={() => setOtherVenturesOpen((v) => !v)}
+                  className="flex w-full items-center justify-between gap-3 text-left"
+                >
+                  <span className="text-sm">
+                    <span className="font-medium">Reuse a file from another venture?</span>{" "}
+                    <span className="text-muted-foreground">
+                      Each venture keeps its own brain — picking one copies it here.
+                    </span>
+                  </span>
+                  {otherVenturesOpen ? (
+                    <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  )}
+                </button>
+
+                {otherVenturesOpen && (
+                  <div className="mt-3 space-y-3">
+                    {otherVentures.map((group) => (
+                      <div key={group.snapshotId}>
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          {group.ventureName}
+                        </div>
+                        <div className="mt-1.5 flex flex-wrap gap-2">
+                          {group.sources.map((row) => (
+                            <button
+                              key={row.id}
+                              type="button"
+                              disabled={copyingId === row.id}
+                              onClick={() => copyFromVenture(row)}
+                              className="inline-flex max-w-[280px] items-center gap-2 rounded-full border border-white/15 bg-background/60 px-3 py-1.5 text-xs transition hover:border-primary/40 hover:bg-primary/10 disabled:opacity-60"
+                            >
+                              {copyingId === row.id ? (
+                                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+                              ) : (
+                                <Plus className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              )}
+                              <span className="min-w-0 flex-1 truncate">{row.original_name ?? "source"}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+
+
 
 
             {/* Anything else? */}
