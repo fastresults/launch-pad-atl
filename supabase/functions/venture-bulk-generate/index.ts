@@ -219,6 +219,15 @@ async function generateOne(
   }
 
 
+  // Retry rounds shrink the prompt progressively.
+  const depBudget = mode === "full" ? 100_000 : mode === "trimmed" ? 6_000 : 0;
+  const trimmedDeps = depContext ? depContext.slice(0, depBudget) : "";
+  const promptCap = mode === "full"
+    ? MAX_USER_PROMPT_CHARS
+    : mode === "trimmed"
+      ? Math.floor(MAX_USER_PROMPT_CHARS / 2)
+      : Math.floor(MAX_USER_PROMPT_CHARS / 4);
+
   const userPrompt = [
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
@@ -226,26 +235,43 @@ async function generateOne(
     brandBlock,
     preamble,
     corpusBlock,
-    sourcingBlock,
+    mode === "full" ? sourcingBlock : "",
     brainSlice
       ? `\n## Venture brain (compressed, authoritative — every section must reflect these)\n${JSON.stringify(brainSlice, null, 2)}`
       : `\n## Venture brief (fallback — brain not yet computed)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,
     // Only inject the raw research brief when brain isn't available.
-    !ctx.brain && snap.research_brief
+    mode === "full" && !ctx.brain && snap.research_brief
       ? `\n## Research brief (background evidence — synthesize as analyst judgment, NO footnotes or citations)\n${JSON.stringify(snap.research_brief, null, 2).slice(0, 8000)}`
       : "",
-    depContext ? `\n## Upstream documents you should build on (distilled)\n${depContext}` : "",
+    trimmedDeps ? `\n## Upstream documents you should build on (distilled)\n${trimmedDeps}` : "",
     effectiveIntake
       ? `\n## Intake answers (TOP PRIORITY — founder-supplied ground truth. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
       : "",
-  ].filter(Boolean).join("\n\n").slice(0, MAX_USER_PROMPT_CHARS);
+  ].filter(Boolean).join("\n\n").slice(0, promptCap);
 
   // S5 — Honor type.model_tier ('pro' | 'flash' | 'lite'), except website_prd.
   // Website PRDs need a larger output budget, but must remain fast enough for
   // the edge runtime; Flash with max_tokens is more reliable than slow Pro.
   const isPrd = documentType === "website_prd";
-  const modelId = isPrd ? modelForTier("flash") : modelForTier(type.model_tier);
+  const modelId = mode === "minimal"
+    ? modelForTier("flash")
+    : isPrd ? modelForTier("flash") : modelForTier(type.model_tier);
   const maxTokens = isPrd ? 16000 : 16000;
+
+  // Count the attempt before we make the call, so a hard crash still shows it.
+  await supabase.rpc; // (no-op guard for older clients)
+  {
+    const { data: attemptRow } = await supabase
+      .from("venture_documents")
+      .select("generation_attempts")
+      .eq("snapshot_id", snapshotId)
+      .eq("document_type", documentType)
+      .maybeSingle();
+    await supabase.from("venture_documents")
+      .update({ generation_attempts: (attemptRow?.generation_attempts ?? 0) + 1 })
+      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
+  }
+
 
   let aiRes: Response;
   try {
