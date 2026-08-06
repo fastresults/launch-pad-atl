@@ -38,6 +38,7 @@ interface Props {
   isPhysical?: boolean;
   sourcingOnlyKeys?: Set<string>;
   onOpenDayDeck?: (day: LaunchDay) => void;
+  onFinishDay?: (day: LaunchDay) => void;
   snapshotId?: string;
 }
 
