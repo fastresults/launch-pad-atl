@@ -57,6 +57,8 @@ import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { toast } from "sonner";
 import { useCanonicalContext } from "@/hooks/use-canonical-context";
 import { invokeEdge } from "@/lib/edge-invoke";
+import { StepShell, StepStrip, StepNav, type StepState } from "@/components/hub/VentureWizard";
+
 
 type DroppedFile = {
   id: string;
