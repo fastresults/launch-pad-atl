@@ -33,6 +33,8 @@ import {
   getActiveJob,
   cancelJob,
   listFailures,
+  listBlockedDocs,
+
 } from "@/lib/foundersHub.functions";
 import {
   uploadVentureSource,
@@ -922,11 +924,19 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   });
 
   const bulk = useMutation({
-    mutationFn: (vars: { category?: string | null } | undefined) => bulkGenerate({ data: { snapshotId: snapshot.id, category: vars?.category ?? null } }),
+    mutationFn: (vars: { category?: string | null; retryOnly?: boolean } | undefined) =>
+      bulkGenerate({ data: { snapshotId: snapshot.id, category: vars?.category ?? null, retryOnly: vars?.retryOnly === true } }),
     onSuccess: (_d, vars) => {
-      toast.success(vars?.category ? `Writing the ${vars.category} section…` : "We'll keep writing in the background");
+      toast.success(
+        vars?.retryOnly
+          ? "Trying those again…"
+          : vars?.category
+            ? `Writing the ${vars.category} section…`
+            : "We'll keep writing in the background",
+      );
       qc.invalidateQueries({ queryKey: ["hub"] });
     },
+
     onError: (e) => {
       const msg = e instanceof Error ? e.message : "Couldn't start";
       if (msg === "unlock_required") setShowUnlock(true);
@@ -972,6 +982,13 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     refetchInterval: 10000,
   });
 
+  const blockedQ = useQuery({
+    queryKey: ["hub", "blocked", snapshot.id],
+    queryFn: () => listBlockedDocs({ data: { snapshotId: snapshot.id } }),
+    refetchInterval: 15000,
+  });
+
+
   // Sourcing assets are always surfaced; when the venture isn't classified as physical,
   // the UI badges them "Physical products only" and excludes them from required counters.
   const SOURCING_ONLY_TYPES = useMemo(
@@ -998,7 +1015,14 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const total = requiredTypes.length;
   const job = jobQ.data;
   const jobRunning = job?.status === "running" || job?.status === "queued";
-  const failures = failuresQ.data ?? [];
+  const blocked = (blockedQ.data ?? []) as { document_type: string; blocked_reason: string }[];
+  const blockedKeys = new Set(blocked.map((b) => b.document_type));
+  // Only surface real errors here — anything waiting on the founder shows in
+  // the "Needs you" group instead.
+  const failures = (failuresQ.data ?? []).filter((f: any) => !blockedKeys.has(f.document_type));
+  const retryRound = (job as any)?.retry_round ?? 0;
+  const retryRemaining = (job as any)?.retry_remaining ?? 0;
+
 
   useEffect(() => {
     const readyHeroPaths = docs
@@ -1192,26 +1216,64 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 <span>{pct}%</span>
               </div>
               <Progress value={pct} />
+              {retryRound > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Retrying {retryRemaining} asset{retryRemaining === 1 ? "" : "s"} (round {retryRound} of 3)…
+                </p>
+              )}
             </div>
           )}
-          {failures.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowFailures((v) => !v)}
-              className="mt-3 inline-flex items-center gap-1 text-xs text-status-warning hover:text-status-warning/80"
-            >
-              <AlertCircle className="h-3 w-3" />
-              {failures.length} asset{failures.length === 1 ? "" : "s"} need another try
-            </button>
+
+          {/* Waiting on the founder — never retried automatically. */}
+          {blocked.length > 0 && (
+            <div className="mt-3 rounded-lg border border-status-warning/20 bg-status-warning/5 p-3 text-xs text-status-warning">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1 font-medium">
+                  <AlertCircle className="h-3 w-3" />
+                  Needs you — {blocked.length} asset{blocked.length === 1 ? "" : "s"} waiting
+                </span>
+                <Button size="sm" variant="outline" onClick={openBrandWizard}>
+                  Open Brand Wizard
+                </Button>
+
+              </div>
+              <p className="mt-1 opacity-90">{blocked[0].blocked_reason}</p>
+            </div>
           )}
-          {showFailures && failures.length > 0 && (
-            <ul className="mt-2 space-y-1 rounded-lg border border-status-warning/20 bg-status-warning/5 p-2 text-xs text-status-warning">
-              {failures.slice(0, 6).map((f: any) => {
-                const t = typeByKey.get(f.document_type) as any;
-                return <li key={f.id}><span className="font-medium">{t?.name ?? f.document_type}</span> — {f.error}</li>;
-              })}
-            </ul>
+
+          {/* Real errors — only shown once every retry round has been used. */}
+          {failures.length > 0 && !jobRunning && (
+            <div className="mt-3 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowFailures((v) => !v)}
+                  className="inline-flex items-center gap-1 text-xs text-status-warning hover:text-status-warning/80"
+                >
+                  <AlertCircle className="h-3 w-3" />
+                  {failures.length} asset{failures.length === 1 ? "" : "s"} couldn't be written yet
+                </button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={bulk.isPending}
+                  onClick={() => bulk.mutate({ retryOnly: true })}
+                >
+                  {bulk.isPending ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> : null}
+                  Try these again
+                </Button>
+              </div>
+              {showFailures && (
+                <ul className="space-y-1 rounded-lg border border-status-warning/20 bg-status-warning/5 p-2 text-xs text-status-warning">
+                  {failures.slice(0, 6).map((f: any) => {
+                    const t = typeByKey.get(f.document_type) as any;
+                    return <li key={f.id}><span className="font-medium">{t?.name ?? f.document_type}</span> — {f.error}</li>;
+                  })}
+                </ul>
+              )}
+            </div>
           )}
+
         </div>
       )}
 

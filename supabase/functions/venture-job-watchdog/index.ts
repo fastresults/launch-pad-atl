@@ -1,5 +1,7 @@
-// Periodic watchdog: marks jobs whose heartbeat is older than 3 minutes as paused,
-// and flips any orphan "generating" documents to "failed" so the UI unsticks.
+// Periodic watchdog: unsticks jobs whose heartbeat is older than 3 minutes,
+// flips any orphan "generating" documents to "failed" so the UI unsticks, and
+// auto-resumes the run (retry-only) up to twice per job before giving up.
+
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -22,20 +24,16 @@ Deno.serve(async (req) => {
 
     const { data: stalled } = await supabase
       .from("venture_generation_jobs")
-      .select("id, snapshot_id, current_document_type, heartbeat_at, started_at")
+      .select("id, snapshot_id, current_document_type, heartbeat_at, started_at, resume_count")
       .in("status", ["running", "queued"])
       .or(`heartbeat_at.lt.${cutoff},and(heartbeat_at.is.null,started_at.lt.${cutoff})`);
 
     let paused = 0;
     let unstuck = 0;
+    let resumed = 0;
     for (const j of stalled ?? []) {
-      await supabase.from("venture_generation_jobs").update({
-        status: "paused",
-        error: "Watchdog: no heartbeat for 3+ minutes",
-      }).eq("id", j.id);
-      paused++;
-
-      // Reset any docs stuck mid-generation for this snapshot
+      // Reset any docs stuck mid-generation for this snapshot first, so a
+      // resumed run treats them as retryable instead of in-flight.
       const { data: stuckDocs } = await supabase
         .from("venture_documents")
         .select("id")
@@ -43,14 +41,47 @@ Deno.serve(async (req) => {
         .eq("status", "generating");
       if (stuckDocs?.length) {
         await supabase.from("venture_documents")
-          .update({ status: "failed" })
+          .update({ status: "failed", last_error: "Generation stalled — worker dropped." })
           .eq("snapshot_id", j.snapshot_id)
           .eq("status", "generating");
         unstuck += stuckDocs.length;
       }
+
+      const resumeCount = j.resume_count ?? 0;
+      if (resumeCount < 2) {
+        // Auto-resume: re-invoke the bulk function in retry-only mode so a
+        // dropped edge worker picks the run back up without the founder.
+        await supabase.from("venture_generation_jobs").update({
+          status: "running",
+          resume_count: resumeCount + 1,
+          heartbeat_at: new Date().toISOString(),
+          error: null,
+        }).eq("id", j.id);
+        try {
+          await fetch(`${SUPABASE_URL}/functions/v1/venture-bulk-generate`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-internal-key": SERVICE_KEY,
+              Authorization: `Bearer ${SERVICE_KEY}`,
+            },
+            body: JSON.stringify({ snapshotId: j.snapshot_id, retryOnly: true }),
+          });
+          resumed++;
+          continue;
+        } catch (e) {
+          console.error("auto-resume failed", e);
+        }
+      }
+
+      await supabase.from("venture_generation_jobs").update({
+        status: "paused",
+        error: "Watchdog: no heartbeat for 3+ minutes",
+      }).eq("id", j.id);
+      paused++;
     }
 
-    return new Response(JSON.stringify({ ok: true, paused, unstuck }), {
+    return new Response(JSON.stringify({ ok: true, paused, unstuck, resumed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

@@ -113,12 +113,20 @@ async function expandWebsitePrdMasterPrompt(raw: string) {
   }
 }
 
+// How hard the generator tries. Each retry round escalates the mode so we stop
+// repeating the exact call that just failed:
+//   full    — everything (default, first pass)
+//   trimmed — drop the Second Brain corpus + sourcing block, cap deps
+//   minimal — preamble + brain slice only, faster tier, longer timeout
+type GenMode = "full" | "trimmed" | "minimal";
+
 // Slim per-doc generator. Accepts a pre-loaded ctx so the same context is
 // reused across the whole bulk job (we only refresh dep docs per call).
 async function generateOne(
   supabase: any,
   ctx: VentureContext,
   documentType: string,
+  mode: GenMode = "full",
 ) {
   const snapshotId = ctx.snapshotId;
   const snap = ctx.snap;
@@ -130,8 +138,8 @@ async function generateOne(
   if (!type) throw new Error(`Unknown document type: ${documentType}`);
 
   // Brand-kit gate: skip deliverables in BRAND_KIT_REQUIRED_TYPES until the
-  // founder has locked their Brand Wizard. Mark the doc 'pending' (not
-  // 'failed') so the UI keeps showing the friendly gate.
+  // founder has locked their Brand Wizard. Mark the doc 'pending' with a
+  // blocked_reason — blocked docs are never retried, they need the founder.
   let brandKit: Awaited<ReturnType<typeof loadBrandKit>> = null;
   if (BRAND_KIT_REQUIRED_TYPES.has(documentType)) {
     brandKit = await loadBrandKit(supabase, snapshotId);
@@ -140,12 +148,11 @@ async function generateOne(
         snapshot_id: snapshotId,
         document_type: documentType,
         status: "pending",
+        blocked_reason: "Lock your Brand Wizard to unlock this asset.",
       }, { onConflict: "snapshot_id,document_type" });
-      await supabase.from("venture_generation_failures").insert({
-        snapshot_id: snapshotId,
-        document_type: documentType,
-        error: "Skipped: Brand Wizard not locked.",
-      });
+      // Blocked isn't a failure — clear any stale error row for this doc.
+      await supabase.from("venture_generation_failures")
+        .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
       return; // skip this doc, continue the job
     }
   }
@@ -154,7 +161,9 @@ async function generateOne(
     snapshot_id: snapshotId,
     document_type: documentType,
     status: "generating",
+    blocked_reason: null,
   }, { onConflict: "snapshot_id,document_type" });
+
 
   // Load + distill upstream dependency docs (no more full-markdown dumping).
   const deps: string[] = type.dependencies ?? [];
@@ -192,18 +201,32 @@ async function generateOne(
   const sourcingBlock = renderSourcingBlock(snap.sourcing_profile, snap.research_brief?.sourcing);
 
   // Founder's Second Brain corpus, retrieved for this deliverable.
+  // Retry rounds drop it — it's the biggest slice of the prompt and the most
+  // common cause of context-length / slow-response failures.
   let corpusBlock = "";
-  try {
-    corpusBlock = await brainCorpusBlock(
-      supabase,
-      ctx.userId,
-      snap.id ?? null,
-      [type.name, type.description ?? "", snap.concept_summary ?? ""].filter(Boolean).join(" \u2014 "),
-      8,
-    );
-  } catch (e) {
-    console.warn("brain corpus retrieval failed", e);
+  if (mode === "full") {
+    try {
+      corpusBlock = await brainCorpusBlock(
+        supabase,
+        ctx.userId,
+        snap.id ?? null,
+        [type.name, type.description ?? "", snap.concept_summary ?? ""].filter(Boolean).join(" \u2014 "),
+        8,
+      );
+    } catch (e) {
+      console.warn("brain corpus retrieval failed", e);
+    }
   }
+
+
+  // Retry rounds shrink the prompt progressively.
+  const depBudget = mode === "full" ? 100_000 : mode === "trimmed" ? 6_000 : 0;
+  const trimmedDeps = depContext ? depContext.slice(0, depBudget) : "";
+  const promptCap = mode === "full"
+    ? MAX_USER_PROMPT_CHARS
+    : mode === "trimmed"
+      ? Math.floor(MAX_USER_PROMPT_CHARS / 2)
+      : Math.floor(MAX_USER_PROMPT_CHARS / 4);
 
   const userPrompt = [
     `# Document to produce: ${type.name}`,
@@ -212,60 +235,83 @@ async function generateOne(
     brandBlock,
     preamble,
     corpusBlock,
-    sourcingBlock,
+    mode === "full" ? sourcingBlock : "",
     brainSlice
       ? `\n## Venture brain (compressed, authoritative — every section must reflect these)\n${JSON.stringify(brainSlice, null, 2)}`
       : `\n## Venture brief (fallback — brain not yet computed)\n${JSON.stringify(snap.extracted_data ?? {}, null, 2)}`,
     // Only inject the raw research brief when brain isn't available.
-    !ctx.brain && snap.research_brief
+    mode === "full" && !ctx.brain && snap.research_brief
       ? `\n## Research brief (background evidence — synthesize as analyst judgment, NO footnotes or citations)\n${JSON.stringify(snap.research_brief, null, 2).slice(0, 8000)}`
       : "",
-    depContext ? `\n## Upstream documents you should build on (distilled)\n${depContext}` : "",
+    trimmedDeps ? `\n## Upstream documents you should build on (distilled)\n${trimmedDeps}` : "",
     effectiveIntake
       ? `\n## Intake answers (TOP PRIORITY — founder-supplied ground truth. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
       : "",
-  ].filter(Boolean).join("\n\n").slice(0, MAX_USER_PROMPT_CHARS);
+  ].filter(Boolean).join("\n\n").slice(0, promptCap);
 
   // S5 — Honor type.model_tier ('pro' | 'flash' | 'lite'), except website_prd.
   // Website PRDs need a larger output budget, but must remain fast enough for
   // the edge runtime; Flash with max_tokens is more reliable than slow Pro.
   const isPrd = documentType === "website_prd";
-  const modelId = isPrd ? modelForTier("flash") : modelForTier(type.model_tier);
+  const modelId = mode === "minimal"
+    ? modelForTier("flash")
+    : isPrd ? modelForTier("flash") : modelForTier(type.model_tier);
   const maxTokens = isPrd ? 16000 : 16000;
+
+  // Count the attempt before we make the call, so a hard crash still shows it.
+  {
+    const { data: attemptRow } = await supabase
+      .from("venture_documents")
+      .select("generation_attempts")
+      .eq("snapshot_id", snapshotId)
+      .eq("document_type", documentType)
+      .maybeSingle();
+    await supabase.from("venture_documents")
+      .update({ generation_attempts: (attemptRow?.generation_attempts ?? 0) + 1 })
+      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
+  }
+
+  // Record a failure once, replacing any earlier row for this doc so the UI
+  // count reflects reality across retry rounds.
+  const recordFailure = async (error: string) => {
+    await supabase.from("venture_documents")
+      .update({ status: "failed", last_error: error.slice(0, 600) })
+      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
+    await supabase.from("venture_generation_failures")
+      .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
+    await supabase.from("venture_generation_failures").insert({
+      snapshot_id: snapshotId, document_type: documentType, error: error.slice(0, 300),
+    });
+  };
+
+  const timeoutMs = mode === "minimal" ? 240_000 : isPrd ? 180_000 : 90_000;
+
+  const callGateway = (messages: any[]) => aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: modelId, max_tokens: maxTokens, messages }),
+  }, { timeoutMs, retries: isPrd && mode === "full" ? 0 : 2 });
+
+  const baseMessages = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userPrompt },
+  ];
 
   let aiRes: Response;
   try {
-    aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: modelId,
-        max_tokens: maxTokens,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-    }, { timeoutMs: isPrd ? 180_000 : 90_000, retries: isPrd ? 0 : 2 });
+    aiRes = await callGateway(baseMessages);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    await supabase.from("venture_documents").update({ status: "failed" })
-      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
-    await supabase.from("venture_generation_failures").insert({
-      snapshot_id: snapshotId, document_type: documentType, error: `Gateway request failed: ${msg.slice(0, 300)}`,
-    });
+    await recordFailure(`Gateway request failed: ${msg}`);
     throw e;
   }
 
   if (!aiRes.ok) {
     const txt = await aiRes.text();
-    await supabase.from("venture_documents").update({ status: "failed" })
-      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
-    await supabase.from("venture_generation_failures").insert({
-      snapshot_id: snapshotId, document_type: documentType, error: `Gateway ${aiRes.status}: ${txt.slice(0, 300)}`,
-    });
+    await recordFailure(`Gateway ${aiRes.status}: ${txt}`);
     throw new Error(`Gateway ${aiRes.status}`);
   }
+
 
   const aiJson = await aiRes.json();
   let raw = aiJson.choices?.[0]?.message?.content ?? "";
@@ -278,6 +324,38 @@ async function generateOne(
     raw = raw.replace(/QUALITY_SCORE:\s*\d{1,3}\s*$/i, "").trim();
   }
   raw = stripCitations(raw);
+
+  // Truncated output: ask the model to continue exactly where it stopped and
+  // stitch the halves together instead of shipping a TRUNCATED marker.
+  if (truncated) {
+    try {
+      const contRes = await callGateway([
+        ...baseMessages,
+        { role: "assistant", content: raw },
+        {
+          role: "user",
+          content:
+            "Your previous message was cut off mid-way. Continue writing from exactly where you stopped. " +
+            "Do not repeat anything you already wrote, do not restate the title, and do not add a preamble. " +
+            "Finish the document completely.",
+        },
+      ]);
+      if (contRes.ok) {
+        const contJson = await contRes.json();
+        const more = contJson.choices?.[0]?.message?.content ?? "";
+        const contFinish = String(
+          contJson.choices?.[0]?.finish_reason ?? contJson.choices?.[0]?.finishReason ?? "",
+        ).toLowerCase();
+        if (more.trim()) {
+          raw = `${raw.trimEnd()}\n\n${stripCitations(more).trimStart()}`;
+          truncated = contFinish === "length";
+        }
+      }
+    } catch (e) {
+      console.warn("continuation pass failed", e);
+    }
+  }
+
   if (isPrd) {
     raw = await expandWebsitePrdMasterPrompt(raw);
     raw = enforceWebsitePrdDepth(raw);
@@ -285,11 +363,12 @@ async function generateOne(
     if (stats.complete && stats.words >= 1800) truncated = false;
   }
   if (truncated) {
-    quality = Math.min(quality, 60);
-    if (!raw.includes("<!-- TRUNCATED -->")) {
-      raw = `${raw}\n\n<!-- TRUNCATED -->\n`;
-    }
+    // Still short after a continuation pass — fail it so the retry sweep
+    // picks it up rather than saving a half-written asset.
+    await recordFailure("Response was cut off before the document finished.");
+    throw new Error("Truncated response");
   }
+
   const wordCount = raw.split(/\s+/).filter(Boolean).length;
 
   const { data: existing } = await supabase
@@ -314,7 +393,14 @@ async function generateOne(
     quality_score: quality,
     version: nextVersion,
     content_version_history: history.slice(0, 10),
+    last_error: null,
+    blocked_reason: null,
   }, { onConflict: "snapshot_id,document_type" });
+
+  // It worked — drop any earlier failure row so the founder's count is honest.
+  await supabase.from("venture_generation_failures")
+    .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
+
 
   // Cache brand_tokens for fast read by Brand Studio + website_prd.
   if (documentType === "visual_identity_brief") {
@@ -364,7 +450,9 @@ async function runLayer(
   jobId: string,
   layer: any[],
   state: { done: number; total: number; fails: number; canceled: boolean },
+  mode: GenMode = "full",
 ) {
+
   const snapshotId = ctx.snapshotId;
   const { data: existingDocs } = await supabase
     .from("venture_documents")
@@ -392,21 +480,35 @@ async function runLayer(
         heartbeat_at: new Date().toISOString(),
       }).eq("id", jobId);
       try {
-        await generateOne(supabase, ctx, t.type);
+        await generateOne(supabase, ctx, t.type, mode);
         state.done++;
         state.fails = 0;
       } catch (e) {
         state.fails++;
         // F11: never let a runLayer crash swallow the failure silently.
+        // generateOne already records precise errors — only add a row when it
+        // crashed before writing one, so the UI count stays honest.
         const msg = e instanceof Error ? e.message : String(e);
         try {
-          await supabase.from("venture_generation_failures").insert({
-            snapshot_id: snapshotId,
-            document_type: t.type,
-            error: `runLayer: ${msg.slice(0, 300)}`,
-          });
+          const { data: already } = await supabase
+            .from("venture_generation_failures")
+            .select("id")
+            .eq("snapshot_id", snapshotId)
+            .eq("document_type", t.type)
+            .maybeSingle();
+          if (!already) {
+            await supabase.from("venture_generation_failures").insert({
+              snapshot_id: snapshotId,
+              document_type: t.type,
+              error: `runLayer: ${msg.slice(0, 300)}`,
+            });
+            await supabase.from("venture_documents")
+              .update({ status: "failed", last_error: msg.slice(0, 600) })
+              .eq("snapshot_id", snapshotId).eq("document_type", t.type);
+          }
         } catch { /* logging best-effort */ }
       }
+
       await supabase.from("venture_generation_jobs").update({
         progress_pct: Math.round((state.done / state.total) * 100),
         heartbeat_at: new Date().toISOString(),
@@ -417,7 +519,96 @@ async function runLayer(
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, pending.length || 1) }, () => worker()));
 }
 
-async function runJob(supabase: any, snapshotId: string, jobId: string, category?: string | null) {
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Retry sweep — after the main pass, loop back over anything that isn't
+// complete and re-generate it, escalating tactics each round. Blocked docs
+// (waiting on the founder) are never retried.
+const RETRY_ROUNDS: { mode: GenMode; backoffMs: number }[] = [
+  { mode: "full", backoffMs: 5_000 },
+  { mode: "trimmed", backoffMs: 20_000 },
+  { mode: "minimal", backoffMs: 60_000 },
+];
+
+async function retrySweep(
+  supabase: any,
+  ctx: VentureContext,
+  jobId: string,
+  types: any[],
+  state: { done: number; total: number; fails: number; canceled: boolean },
+): Promise<{ remaining: string[]; blocked: string[] }> {
+  const snapshotId = ctx.snapshotId;
+  const byKey = new Map(types.map((t) => [t.type, t]));
+
+  const outstanding = async () => {
+    const { data: docs } = await supabase
+      .from("venture_documents")
+      .select("document_type, status, blocked_reason")
+      .eq("snapshot_id", snapshotId)
+      .in("document_type", types.map((t) => t.type));
+    const rows = docs ?? [];
+    const byType = new Map(rows.map((d: any) => [d.document_type, d]));
+    const blocked: string[] = [];
+    const retryable: string[] = [];
+    for (const t of types) {
+      const row: any = byType.get(t.type);
+      if (row?.status === "complete") continue;
+      if (row?.blocked_reason) { blocked.push(t.type); continue; }
+      retryable.push(t.type);
+    }
+    return { retryable, blocked };
+  };
+
+  let last = await outstanding();
+
+  for (let i = 0; i < RETRY_ROUNDS.length; i++) {
+    if (state.canceled) break;
+    if (!last.retryable.length) break;
+
+    const round = RETRY_ROUNDS[i];
+    await supabase.from("venture_generation_jobs").update({
+      status: "running",
+      circuit_breaker_open: false,
+      error: null,
+      retry_round: i + 1,
+      retry_remaining: last.retryable.length,
+      heartbeat_at: new Date().toISOString(),
+    }).eq("id", jobId);
+
+    await sleep(round.backoffMs);
+
+    // Respect dependency order within the retry subset.
+    const subset = last.retryable.map((k) => byKey.get(k)!).filter(Boolean);
+    for (const layer of dependencyLayers(subset)) {
+      if (state.canceled) break;
+      state.fails = 0; // the breaker shouldn't end a sweep round
+      await runLayer(supabase, ctx, jobId, layer, state, round.mode);
+    }
+
+    const next = await outstanding();
+    const madeProgress = next.retryable.length < last.retryable.length;
+    last = next;
+    if (!next.retryable.length) break;
+    // No progress on the final round — stop burning credits.
+    if (!madeProgress && i === RETRY_ROUNDS.length - 1) break;
+  }
+
+  await supabase.from("venture_generation_jobs").update({
+    retry_round: 0,
+    retry_remaining: last.retryable.length,
+  }).eq("id", jobId);
+
+  return { remaining: last.retryable, blocked: last.blocked };
+}
+
+async function runJob(
+  supabase: any,
+  snapshotId: string,
+  jobId: string,
+  category?: string | null,
+  retryOnly = false,
+) {
+
   // Build venture context ONCE per job. Compute or reuse the brain ONCE
   // before any docs run — subsequent generateOne() calls inherit both.
   const ctx = await loadVentureContext(supabase, snapshotId);
@@ -472,62 +663,91 @@ async function runJob(supabase: any, snapshotId: string, jobId: string, category
     status: "running",
     started_at: new Date().toISOString(),
     heartbeat_at: new Date().toISOString(),
+    circuit_breaker_open: false,
+    error: null,
   }).eq("id", jobId);
 
-  for (const layer of layers) {
-    await runLayer(supabase, ctx, jobId, layer, state);
-    if (state.canceled) {
-      await supabase.from("venture_generation_jobs").update({
-        status: "canceled",
-        completed_at: new Date().toISOString(),
-        progress_pct: Math.round((state.done / total) * 100),
-        current_document_type: null,
-      }).eq("id", jobId);
-      return;
-    }
-    if (state.fails >= 3) {
-      await supabase.from("venture_generation_jobs").update({
-        status: "paused",
-        circuit_breaker_open: true,
-        error: `Paused after 3 consecutive failures`,
-        progress_pct: Math.round((state.done / total) * 100),
-      }).eq("id", jobId);
-      return;
+  const finishCanceled = async () => {
+    await supabase.from("venture_generation_jobs").update({
+      status: "canceled",
+      completed_at: new Date().toISOString(),
+      progress_pct: Math.round((state.done / total) * 100),
+      current_document_type: null,
+    }).eq("id", jobId);
+  };
+
+  // Main pass. A tripped circuit breaker no longer ends the run — it just
+  // stops the main pass and hands off to the retry sweep.
+  if (!retryOnly) {
+    for (const layer of layers) {
+      await runLayer(supabase, ctx, jobId, layer, state);
+      if (state.canceled) { await finishCanceled(); return; }
+      if (state.fails >= 3) break;
     }
   }
 
+  if (state.canceled) { await finishCanceled(); return; }
+
+  // Retry sweep — keep going until everything is written or truly stuck.
+  const { remaining, blocked } = await retrySweep(supabase, ctx, jobId, types, state);
+
+  if (state.canceled) { await finishCanceled(); return; }
+
+  const { count: completeCount } = await supabase
+    .from("venture_documents")
+    .select("id", { count: "exact", head: true })
+    .eq("snapshot_id", snapshotId)
+    .eq("status", "complete")
+    .in("document_type", types.map((t: any) => t.type));
+
+  const allDone = remaining.length === 0 && blocked.length === 0;
+
   await supabase.from("venture_generation_jobs").update({
-    status: "completed",
+    status: allDone ? "completed" : "completed_with_blockers",
     completed_at: new Date().toISOString(),
-    progress_pct: 100,
+    progress_pct: allDone ? 100 : Math.round(((completeCount ?? 0) / Math.max(total, 1)) * 100),
     current_document_type: null,
+    circuit_breaker_open: false,
+    retry_round: 0,
+    retry_remaining: remaining.length,
+    error: allDone
+      ? null
+      : [
+          blocked.length ? `${blocked.length} asset(s) need you` : "",
+          remaining.length ? `${remaining.length} asset(s) couldn't be written` : "",
+        ].filter(Boolean).join(" · "),
   }).eq("id", jobId);
 
-  if (!category) {
+  if (!category && allDone) {
     await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);
   }
 }
+
 
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { snapshotId, category } = await req.json();
+    const { snapshotId, category, retryOnly } = await req.json();
     if (!snapshotId) return new Response(JSON.stringify({ error: "snapshotId required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // Identify caller from JWT — REQUIRED for every path.
+    // Internal caller (watchdog auto-resume) presents the service key.
+    const internal = req.headers.get("x-internal-key") === SERVICE_KEY;
+
+    // Identify caller from JWT — REQUIRED for every external path.
     let callerId: string | null = null;
     const authHeader = req.headers.get("Authorization") ?? "";
     if (authHeader.startsWith("Bearer ")) {
       const { data: userData } = await supabase.auth.getUser(authHeader.slice(7));
       callerId = userData?.user?.id ?? null;
     }
-    if (!callerId) {
+    if (!callerId && !internal) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
 
     // Gate: concept must be locked before any docs are generated.
     const { data: gateSnap } = await supabase
@@ -539,25 +759,18 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Lock your concept summary before generating documents." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Ownership / admin check applies to EVERY path (full bulk + per-category).
-    let isAdmin = false;
-    if (gateSnap.user_id !== callerId) {
+    // Ownership / admin check applies to EVERY external path.
+    let isAdmin = internal;
+    if (!internal) {
       const { data: roleRow } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", callerId)
         .in("role", ["admin", "super_admin"]);
       isAdmin = (roleRow ?? []).length > 0;
-      if (!isAdmin) {
+      if (gateSnap.user_id !== callerId && !isAdmin) {
         return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-    } else {
-      const { data: roleRow } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", callerId)
-        .in("role", ["admin", "super_admin"]);
-      isAdmin = (roleRow ?? []).length > 0;
     }
 
     // Full-bulk runs additionally require an unlock grant (non-admins).
@@ -575,12 +788,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Reuse a running job if there is one
+
+    const retryArg = retryOnly === true;
+
+    // Reuse a running job if there is one. Retry-only runs also adopt a paused
+    // or blocked job instead of starting a fresh one.
+    const reusableStatuses = retryArg
+      ? ["queued", "running", "paused", "completed_with_blockers"]
+      : ["queued", "running"];
     const { data: existing } = await supabase
       .from("venture_generation_jobs")
       .select("id, status")
       .eq("snapshot_id", snapshotId)
-      .in("status", ["queued", "running"])
+      .in("status", reusableStatuses)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -602,10 +822,11 @@ Deno.serve(async (req) => {
     // @ts-ignore: EdgeRuntime is provided by Supabase Edge Functions runtime.
     if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
       // @ts-ignore
-      EdgeRuntime.waitUntil(runJob(supabase, snapshotId, jobId!, categoryArg));
+      EdgeRuntime.waitUntil(runJob(supabase, snapshotId, jobId!, categoryArg, retryArg));
     } else {
-      runJob(supabase, snapshotId, jobId!, categoryArg).catch((e) => console.error("bulk job failed", e));
+      runJob(supabase, snapshotId, jobId!, categoryArg, retryArg).catch((e) => console.error("bulk job failed", e));
     }
+
 
     return new Response(JSON.stringify({ ok: true, jobId, category: categoryArg }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {

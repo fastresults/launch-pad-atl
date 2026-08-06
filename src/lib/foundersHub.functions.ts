@@ -525,10 +525,11 @@ export async function generateDeepAssessment(input: any): Promise<void> {
 }
 
 export async function bulkGenerate(input: any): Promise<{ ok?: boolean; jobId?: string; category?: string | null }> {
-  const { snapshotId, category } = unwrap<{ snapshotId: string; category?: string | null }>(input);
+  const { snapshotId, category, retryOnly } = unwrap<{ snapshotId: string; category?: string | null; retryOnly?: boolean }>(input);
   const { data, error } = await invokeEdge("venture-bulk-generate", {
-    body: { snapshotId, category: category ?? null },
+    body: { snapshotId, category: category ?? null, retryOnly: retryOnly === true },
   });
+
   if (error) {
     // Edge function may return a structured error like "unlock_required".
     const ctx = (error as any)?.context;
@@ -657,6 +658,21 @@ export async function listFailures(input: any) {
   if (error) throw new Error(error.message);
   return data ?? [];
 }
+
+// Assets that are waiting on the founder (e.g. Brand Wizard not locked).
+// These are never retried automatically — they need an action first.
+export async function listBlockedDocs(input: any) {
+  const { snapshotId } = unwrap<{ snapshotId: string }>(input);
+  const { data, error } = await supabase
+    .from("venture_documents")
+    .select("document_type, blocked_reason")
+    .eq("snapshot_id", snapshotId)
+    .not("blocked_reason", "is", null)
+    .neq("status", "complete");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as { document_type: string; blocked_reason: string }[];
+}
+
 
 // Admin
 export async function adminListSnapshots() {

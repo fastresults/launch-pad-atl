@@ -2856,6 +2856,7 @@ export type Database = {
       }
       venture_documents: {
         Row: {
+          blocked_reason: string | null
           content: string | null
           content_version_history: Json
           created_at: string
@@ -2864,6 +2865,7 @@ export type Database = {
           deep_assessment_quality_score: number | null
           deep_assessment_status: string | null
           document_type: string
+          generation_attempts: number
           hero_image_error: string | null
           hero_image_path: string | null
           hero_image_prompt: string | null
@@ -2871,6 +2873,7 @@ export type Database = {
           hero_image_status: string | null
           id: string
           intake_answers: Json | null
+          last_error: string | null
           metadata: Json
           quality_score: number | null
           snapshot_id: string
@@ -2880,6 +2883,7 @@ export type Database = {
           word_count: number | null
         }
         Insert: {
+          blocked_reason?: string | null
           content?: string | null
           content_version_history?: Json
           created_at?: string
@@ -2888,6 +2892,7 @@ export type Database = {
           deep_assessment_quality_score?: number | null
           deep_assessment_status?: string | null
           document_type: string
+          generation_attempts?: number
           hero_image_error?: string | null
           hero_image_path?: string | null
           hero_image_prompt?: string | null
@@ -2895,6 +2900,7 @@ export type Database = {
           hero_image_status?: string | null
           id?: string
           intake_answers?: Json | null
+          last_error?: string | null
           metadata?: Json
           quality_score?: number | null
           snapshot_id: string
@@ -2904,6 +2910,7 @@ export type Database = {
           word_count?: number | null
         }
         Update: {
+          blocked_reason?: string | null
           content?: string | null
           content_version_history?: Json
           created_at?: string
@@ -2912,6 +2919,7 @@ export type Database = {
           deep_assessment_quality_score?: number | null
           deep_assessment_status?: string | null
           document_type?: string
+          generation_attempts?: number
           hero_image_error?: string | null
           hero_image_path?: string | null
           hero_image_prompt?: string | null
@@ -2919,6 +2927,7 @@ export type Database = {
           hero_image_status?: string | null
           id?: string
           intake_answers?: Json | null
+          last_error?: string | null
           metadata?: Json
           quality_score?: number | null
           snapshot_id?: string
@@ -2984,6 +2993,9 @@ export type Database = {
           heartbeat_at: string | null
           id: string
           progress_pct: number
+          resume_count: number
+          retry_remaining: number
+          retry_round: number
           snapshot_id: string
           started_at: string | null
           status: Database["public"]["Enums"]["venture_job_status"]
@@ -3000,6 +3012,9 @@ export type Database = {
           heartbeat_at?: string | null
           id?: string
           progress_pct?: number
+          resume_count?: number
+          retry_remaining?: number
+          retry_round?: number
           snapshot_id: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["venture_job_status"]
@@ -3016,6 +3031,9 @@ export type Database = {
           heartbeat_at?: string | null
           id?: string
           progress_pct?: number
+          resume_count?: number
+          retry_remaining?: number
+          retry_round?: number
           snapshot_id?: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["venture_job_status"]
@@ -3983,6 +4001,7 @@ export type Database = {
         | "completed"
         | "failed"
         | "canceled"
+        | "completed_with_blockers"
       venture_snapshot_status:
         | "input"
         | "enriching"
@@ -4158,6 +4177,7 @@ export const Constants = {
         "completed",
         "failed",
         "canceled",
+        "completed_with_blockers",
       ],
       venture_snapshot_status: [
         "input",
