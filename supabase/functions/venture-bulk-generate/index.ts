@@ -759,25 +759,18 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Lock your concept summary before generating documents." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Ownership / admin check applies to EVERY path (full bulk + per-category).
-    let isAdmin = false;
-    if (gateSnap.user_id !== callerId) {
+    // Ownership / admin check applies to EVERY external path.
+    let isAdmin = internal;
+    if (!internal) {
       const { data: roleRow } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", callerId)
         .in("role", ["admin", "super_admin"]);
       isAdmin = (roleRow ?? []).length > 0;
-      if (!isAdmin) {
+      if (gateSnap.user_id !== callerId && !isAdmin) {
         return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-    } else {
-      const { data: roleRow } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", callerId)
-        .in("role", ["admin", "super_admin"]);
-      isAdmin = (roleRow ?? []).length > 0;
     }
 
     // Full-bulk runs additionally require an unlock grant (non-admins).
@@ -794,6 +787,7 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "unlock_required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }
+
 
     // Reuse a running job if there is one
     const { data: existing } = await supabase
