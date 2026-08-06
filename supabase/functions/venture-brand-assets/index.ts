@@ -12,6 +12,15 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { resolveOwner } from "../_shared/impersonation.ts";
+import {
+  applyConstruction,
+  lintVectorSpec,
+  renderLogoSvg,
+  type Construction,
+  type VectorSpec,
+} from "../_shared/logo-geometry.ts";
+import { fontStackFor, outlineWordmark } from "../_shared/logo-type.ts";
+import { rasterizeSvg } from "../_shared/logo-raster.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
