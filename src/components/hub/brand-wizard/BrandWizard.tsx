@@ -737,14 +737,18 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           <div>
             <h3 className="text-sm font-semibold">Logo concepts</h3>
             <p className="text-xs text-muted-foreground">
-              Each concept starts with an AI creative-director brief — distinct logo type, symbol idea, construction notes — then renders. {refs.length ? "Inspired (not copied) by your references." : ""}
+              Strategy first: we read your finished brand assets, write an identity brief, sketch ten ideas, keep only the strongest four — then render and review each mark before you see it. {refs.length ? "Inspired (never copied) by your references." : ""}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
             <Button onClick={() => genLogos.mutate()} disabled={genLogos.isPending || !gatePassed} size="sm">
               {genLogos.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-              {logos.length ? "New direction set" : "Generate 4 logo directions"}
+              {genLogos.isPending ? "Art-directing…" : logos.length ? "New direction set" : "Generate 4 logo directions"}
             </Button>
+            {genLogos.isPending && (
+              <span className="text-[10px] text-muted-foreground">Brief → concepts → render → design review. Takes a minute.</span>
+            )}
+
             {!gatePassed && (
               <span className="text-[10px] text-muted-foreground">Upload at least one inspiration above, or choose Skip, to unlock.</span>
             )}
