@@ -734,16 +734,20 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // Identify caller from JWT — REQUIRED for every path.
+    // Internal caller (watchdog auto-resume) presents the service key.
+    const internal = req.headers.get("x-internal-key") === SERVICE_KEY;
+
+    // Identify caller from JWT — REQUIRED for every external path.
     let callerId: string | null = null;
     const authHeader = req.headers.get("Authorization") ?? "";
     if (authHeader.startsWith("Bearer ")) {
       const { data: userData } = await supabase.auth.getUser(authHeader.slice(7));
       callerId = userData?.user?.id ?? null;
     }
-    if (!callerId) {
+    if (!callerId && !internal) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
 
     // Gate: concept must be locked before any docs are generated.
     const { data: gateSnap } = await supabase
