@@ -779,12 +779,12 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <Button onClick={() => genLogos.mutate()} disabled={genLogos.isPending || !gatePassed} size="sm">
-              {genLogos.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-              {logoPhase === "brief" ? "Writing the brief…" : logoPhase === "rendering" ? "Rendering marks…" : logos.length ? "New direction set" : "Generate 4 logo directions"}
+            <Button onClick={() => runBusy ? resumeLogos.mutate() : genLogos.mutate()} disabled={genLogos.isPending || resumeLogos.isPending || !gatePassed} size="sm">
+              {(genLogos.isPending || resumeLogos.isPending) ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+              {logoPhase === "brief" ? "Writing the brief…" : logoPhase === "concepting" ? "Choosing directions…" : logoPhase === "drawing" ? "Drawing vectors…" : runBusy ? "Resume logo studio" : logos.length ? "New direction set" : "Generate 4 logo directions"}
             </Button>
-            {genLogos.isPending && (
-              <span className="text-[10px] text-muted-foreground">Brief → concepts → render → design review. Marks appear as they finish.</span>
+            {(genLogos.isPending || resumeLogos.isPending || runBusy) && (
+              <span className="text-[10px] text-muted-foreground">Progress is saved. You can close this window and resume later.</span>
             )}
 
             {!gatePassed && (
@@ -793,24 +793,24 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           </div>
         </div>
 
-        {pending.length > 0 && (
+        {runDirections.some((d) => !["ready", "needs_review"].includes(d.status)) && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {pending.map((p: any, i: number) => (
-              <div key={`pending-${i}`} className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
+            {runDirections.filter((d) => !["ready", "needs_review"].includes(d.status)).map((p: any) => (
+              <div key={p.id} className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
                 <div className="flex aspect-square w-full items-center justify-center bg-white/5">
-                  {p.status === "error" ? (
-                    <span className="px-3 text-center text-[11px] text-destructive">{p.error}</span>
+                  {p.status === "failed" || p.status === "retry_wait" ? (
+                    <span className="px-3 text-center text-[11px] text-destructive">{p.last_error ?? "This direction needs another pass."}</span>
                   ) : (
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   )}
                 </div>
                 <div className="space-y-2 p-3">
-                  <div className="truncate text-xs font-semibold">{p.direction?.direction_name ?? `Concept ${i + 1}`}</div>
+                  <div className="truncate text-xs font-semibold">{p.direction_name ?? `Concept ${p.slot + 1}`}</div>
                   <p className="line-clamp-2 text-[11px] text-muted-foreground">
-                    {p.status === "error" ? "This mark didn't render." : p.direction?.one_line_idea ?? "Rendering…"}
+                    {p.status === "failed" || p.status === "retry_wait" ? "Saved for a targeted retry." : p.concept?.one_line_idea ?? p.current_stage?.replaceAll("_", " ") ?? "Drawing…"}
                   </p>
-                  {p.status === "error" && (
-                    <Button variant="ghost" size="sm" className="h-7 w-full text-[11px]" onClick={() => retryPending(i)}>
+                  {(p.status === "failed" || p.status === "retry_wait") && (
+                    <Button variant="ghost" size="sm" className="h-7 w-full text-[11px]" disabled={retryDirection.isPending} onClick={() => retryDirection.mutate(p)}>
                       <Sparkles className="mr-1 h-3 w-3" /> Try this one again
                     </Button>
                   )}
@@ -824,7 +824,8 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {logos.map((a, i) => {
-              const busy = regenOne.isPending && regenOne.variables?.idx === i;
+              const directionRow = runDirections.find((d) => d.asset?.path === a.path || d.id === a.direction_id);
+              const busy = retryDirection.isPending && retryDirection.variables?.id === directionRow?.id;
               const removeLogo = async () => {
                 const next = logos.filter((_, j) => j !== i);
                 setLogos(next);
@@ -840,7 +841,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                 <div key={i} className="relative flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
                   <button
                     onClick={removeLogo}
-                    disabled={busy || regenOne.isPending}
+                    disabled={busy || retryDirection.isPending}
                     aria-label="Remove this concept"
                     className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white shadow hover:bg-black disabled:opacity-40"
                   >
@@ -872,8 +873,8 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                           variant="ghost"
                           size="sm"
                           className="h-7 flex-1 text-[11px]"
-                          disabled={busy || regenOne.isPending}
-                          onClick={() => regenOne.mutate({ idx: i, direction: a.direction })}
+                          disabled={busy || retryDirection.isPending || !directionRow}
+                          onClick={() => directionRow && retryDirection.mutate(directionRow)}
                         >
                           {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
                           More like this
