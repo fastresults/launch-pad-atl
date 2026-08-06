@@ -326,10 +326,10 @@ function tokensBlockOf(tokens: any): string {
   ].filter(Boolean).join("\n");
 }
 
-/** Stage 1 — the one-page strategic brief every concept must serve. */
+/** Stage 1 — the human truth first, then the one-page brief every concept serves. */
 export async function buildBrandStrategy(ctx: any, tokens: any, docsBlock: string): Promise<BrandStrategy | null> {
-  const system = `You are the strategy director at a brand identity studio. You write the one-page brief the design team works from. You are ruthless about specificity: a brief that could describe any company in this category is a failed brief.`;
-  const user = `Read the venture below and write its identity brief.
+  const system = `You are the strategy director at a brand identity studio. Before you write a single design word you write down the human being at the centre of the business: who they are, the moment in their life this business exists for, and how they should feel. Only then do you write the brief. You are ruthless about specificity: a brief that could describe any company in this category is a failed brief, and an abstract "empowerment / innovation / trust" brief is a failed brief.`;
+  const user = `Read the venture below. First find the humanity in it, then write its identity brief.
 
 VENTURE
 ${ventureBlockOf(ctx)}
@@ -340,7 +340,7 @@ ${tokensBlockOf(tokens)}
 ${docsBlock ? `FINISHED BRAND ASSETS (the founder's own words — treat as authoritative)\n${docsBlock}` : ""}
 
 Return STRICT JSON:
-{"core_idea":"one sentence — the single idea the mark must carry","attributes":["three adjectives, no synonyms of each other"],"metaphor_territory":"the ONE visual territory worth mining (an object, action, structure or gesture from this venture's real world) and why","not_list":["4-6 things this brand must never look like — name the category clichés specifically"]}`;
+{"human_truth":"one sentence naming the actual person this serves, in concrete human terms — not a demographic","human_moment":"the specific moment in that person's day or life this business exists to fix","first_feeling":"what that person should feel in the first two seconds of seeing this brand — one plain phrase","physical_anchor":"the ONE real object, gesture, tool or space that moment physically lives in — something you could photograph","core_idea":"one sentence — the single idea the mark must carry","attributes":["three adjectives, no synonyms of each other"],"metaphor_territory":"the ONE visual territory worth mining, drawn from the physical anchor, and why","not_list":["4-6 things this brand must never look like — name the category clichés specifically"]}`;
 
   const parsed = await callChatJsonOnce([
     { role: "system", content: system },
@@ -348,12 +348,17 @@ Return STRICT JSON:
   ]);
   if (!parsed?.core_idea) return null;
   return {
+    human_truth: parsed.human_truth ? String(parsed.human_truth) : undefined,
+    human_moment: parsed.human_moment ? String(parsed.human_moment) : undefined,
+    first_feeling: parsed.first_feeling ? String(parsed.first_feeling) : undefined,
+    physical_anchor: parsed.physical_anchor ? String(parsed.physical_anchor) : undefined,
     core_idea: String(parsed.core_idea),
     attributes: Array.isArray(parsed.attributes) ? parsed.attributes.map(String) : [],
     metaphor_territory: String(parsed.metaphor_territory ?? ""),
     not_list: Array.isArray(parsed.not_list) ? parsed.not_list.map(String) : [],
   };
 }
+
 
 /** Stage 2 — generate wide, then cut. Only the strongest concepts survive. */
 async function generateLogoConcepts(
