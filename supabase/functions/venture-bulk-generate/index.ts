@@ -393,7 +393,14 @@ async function generateOne(
     quality_score: quality,
     version: nextVersion,
     content_version_history: history.slice(0, 10),
+    last_error: null,
+    blocked_reason: null,
   }, { onConflict: "snapshot_id,document_type" });
+
+  // It worked — drop any earlier failure row so the founder's count is honest.
+  await supabase.from("venture_generation_failures")
+    .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
+
 
   // Cache brand_tokens for fast read by Brand Studio + website_prd.
   if (documentType === "visual_identity_brief") {
