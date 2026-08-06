@@ -1490,7 +1490,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               const hasReadableContent = Boolean(d?.content && String(d.content).trim().length > 0);
               const generating = status === "generating" || (genOne.isPending && genOne.variables?.documentType === t.type);
               const needsBrandKit = BRAND_KIT_REQUIRED_TYPES.has(t.type);
-              const brandGated = needsBrandKit && !brandKitLocked;
+              const brandGated = needsBrandKit && !brandKitReady;
               const Icon = isComplete ? CheckCircle2 : brandGated ? Lock : depsMet ? Circle : Lock;
               const tone = isComplete ? "text-status-success" : depsMet && !brandGated ? "text-foreground" : "text-muted-foreground";
 
