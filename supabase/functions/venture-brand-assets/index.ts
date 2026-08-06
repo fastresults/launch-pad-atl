@@ -58,9 +58,13 @@ const MOODBOARD_ANGLES = [
 type LogoDirection = {
   direction_name: string;
   logo_type: string; // wordmark | lettermark | monogram | pictorial mark | abstract mark | emblem | combination mark
+  human_link?: string;      // how this mark traces back to the human moment
   one_line_idea?: string;   // the single shape idea, one sentence
   geometric_operation?: string; // the one construction move that creates the mark
+  craft_move?: string;      // counterform | continuous stroke | tangent | ligature | negative space
+  moodboard_link?: string;  // which moodboard tile's form language it inherits
   why_memorable?: string;   // the rationale a founder can judge
+
   symbol_concept: string;
   construction_notes: string;
   typography_treatment: string;
@@ -72,11 +76,18 @@ type LogoDirection = {
 };
 
 type BrandStrategy = {
+  // The human truth comes first: identity work that starts at geometry
+  // produces geometry. Identity work that starts at a person produces a mark.
+  human_truth?: string;      // who this is for, in their own terms
+  human_moment?: string;     // the moment the business exists to fix
+  first_feeling?: string;    // what a customer should feel in two seconds
+  physical_anchor?: string;  // the one object, gesture or space that moment lives in
   core_idea: string;
   attributes: string[];
   metaphor_territory: string;
   not_list: string[];
 };
+
 
 // Chat models used for the thinking passes, in fallback order. Judgment work
 // (strategy, concepting, drawing) runs on the frontier tier; flash stays last
@@ -290,7 +301,29 @@ async function loadBrandDocs(supabase: any, snapshotId: string): Promise<string>
   return picked.join("\n\n");
 }
 
+/**
+ * Fresh signed URLs for the venture's live moodboard tiles. Stored signed URLs
+ * expire after a week, so re-sign from the storage path before handing them to
+ * a vision model.
+ */
+async function moodboardImageUrls(supabase: any, kit: any): Promise<string[]> {
+  const tiles = Array.isArray(kit?.moodboard) ? kit.moodboard : [];
+  const urls: string[] = [];
+  for (const tile of tiles.slice(0, 4)) {
+    const path = typeof tile?.path === "string" ? tile.path : "";
+    if (path) {
+      try {
+        const { data } = await supabase.storage.from("user-media").createSignedUrl(path, 60 * 30);
+        if (data?.signedUrl) { urls.push(data.signedUrl); continue; }
+      } catch { /* fall back to the stored URL */ }
+    }
+    if (typeof tile?.url === "string" && tile.url.startsWith("http")) urls.push(tile.url);
+  }
+  return urls;
+}
+
 function ventureBlockOf(ctx: any): string {
+
   const snap = ctx.snap ?? {};
   const brain = ctx.brain ?? {};
   return [
@@ -319,10 +352,10 @@ function tokensBlockOf(tokens: any): string {
   ].filter(Boolean).join("\n");
 }
 
-/** Stage 1 — the one-page strategic brief every concept must serve. */
+/** Stage 1 — the human truth first, then the one-page brief every concept serves. */
 export async function buildBrandStrategy(ctx: any, tokens: any, docsBlock: string): Promise<BrandStrategy | null> {
-  const system = `You are the strategy director at a brand identity studio. You write the one-page brief the design team works from. You are ruthless about specificity: a brief that could describe any company in this category is a failed brief.`;
-  const user = `Read the venture below and write its identity brief.
+  const system = `You are the strategy director at a brand identity studio. Before you write a single design word you write down the human being at the centre of the business: who they are, the moment in their life this business exists for, and how they should feel. Only then do you write the brief. You are ruthless about specificity: a brief that could describe any company in this category is a failed brief, and an abstract "empowerment / innovation / trust" brief is a failed brief.`;
+  const user = `Read the venture below. First find the humanity in it, then write its identity brief.
 
 VENTURE
 ${ventureBlockOf(ctx)}
@@ -333,7 +366,7 @@ ${tokensBlockOf(tokens)}
 ${docsBlock ? `FINISHED BRAND ASSETS (the founder's own words — treat as authoritative)\n${docsBlock}` : ""}
 
 Return STRICT JSON:
-{"core_idea":"one sentence — the single idea the mark must carry","attributes":["three adjectives, no synonyms of each other"],"metaphor_territory":"the ONE visual territory worth mining (an object, action, structure or gesture from this venture's real world) and why","not_list":["4-6 things this brand must never look like — name the category clichés specifically"]}`;
+{"human_truth":"one sentence naming the actual person this serves, in concrete human terms — not a demographic","human_moment":"the specific moment in that person's day or life this business exists to fix","first_feeling":"what that person should feel in the first two seconds of seeing this brand — one plain phrase","physical_anchor":"the ONE real object, gesture, tool or space that moment physically lives in — something you could photograph","core_idea":"one sentence — the single idea the mark must carry","attributes":["three adjectives, no synonyms of each other"],"metaphor_territory":"the ONE visual territory worth mining, drawn from the physical anchor, and why","not_list":["4-6 things this brand must never look like — name the category clichés specifically"]}`;
 
   const parsed = await callChatJsonOnce([
     { role: "system", content: system },
@@ -341,12 +374,43 @@ Return STRICT JSON:
   ]);
   if (!parsed?.core_idea) return null;
   return {
+    human_truth: parsed.human_truth ? String(parsed.human_truth) : undefined,
+    human_moment: parsed.human_moment ? String(parsed.human_moment) : undefined,
+    first_feeling: parsed.first_feeling ? String(parsed.first_feeling) : undefined,
+    physical_anchor: parsed.physical_anchor ? String(parsed.physical_anchor) : undefined,
     core_idea: String(parsed.core_idea),
     attributes: Array.isArray(parsed.attributes) ? parsed.attributes.map(String) : [],
     metaphor_territory: String(parsed.metaphor_territory ?? ""),
     not_list: Array.isArray(parsed.not_list) ? parsed.not_list.map(String) : [],
   };
 }
+
+
+function strategyBlockOf(strategy: BrandStrategy | null): string {
+  if (!strategy) return "";
+  return [
+    "HUMAN TRUTH (start here — the mark exists to make this person feel something)",
+    strategy.human_truth ? `Who: ${strategy.human_truth}` : "",
+    strategy.human_moment ? `The moment: ${strategy.human_moment}` : "",
+    strategy.first_feeling ? `First feeling: ${strategy.first_feeling}` : "",
+    strategy.physical_anchor ? `Physical anchor: ${strategy.physical_anchor}` : "",
+    "",
+    "STRATEGY BRIEF (every concept must serve this)",
+    `Core idea: ${strategy.core_idea}`,
+    `Attributes: ${strategy.attributes.join(", ")}`,
+    `Metaphor territory: ${strategy.metaphor_territory}`,
+    `Must never look like: ${strategy.not_list.join("; ")}`,
+  ].filter(Boolean).join("\n");
+}
+
+/** The universal amateur tells. Named explicitly because models default to them. */
+const BANNED_FORMS = `- A cluster of rounded squares, a plus/cross of blocks, or any "app-icon grid" arrangement.
+- A letter sitting inside a box, circle or shield with nothing else happening.
+- Dots joined by lines (node/network/constellation clip-art).
+- Globes, swooshes, generic leaves, checkmarks, handshakes, lightbulbs, puzzle pieces, upward arrows, speech bubbles, location pins.
+- Gradient-as-idea, bevels, drop shadows, lens flare, faux 3D.
+- Circuit boards, hexagons or "AI orbs" unless the venture is literally hardware.
+- Anything that would still work, unchanged, for a different company in this category.`;
 
 /** Stage 2 — generate wide, then cut. Only the strongest concepts survive. */
 async function generateLogoConcepts(
@@ -356,41 +420,46 @@ async function generateLogoConcepts(
   strategy: BrandStrategy | null,
   docsBlock: string,
   referenceImages?: string[],
+  moodboardImages?: string[],
 ): Promise<LogoDirection[]> {
-  const system = `You are a senior brand identity designer with 20 years at Pentagram, COLLINS and Chermayeff & Geismar. You design MARKS, not illustrations. Your discipline: one idea per mark, drawn with the fewest possible elements, recognisable as a black silhouette at 16 pixels. You generate widely, then kill most of your own work.`;
+  const system = `You are a brand identity designer whose work gets posted to Dribbble's award feed and wins there. Pentagram, COLLINS, Chermayeff & Geismar lineage. You design MARKS with a point of view: one idea, drawn with real craft — a continuous contour, a true counterform, a ligature, a shared tangent — never a pile of primitive shapes. You start from the human being in the brief, not from geometry. You generate widely, then kill almost all of your own work.`;
 
-  const strategyBlock = strategy
-    ? `STRATEGY BRIEF (every concept must serve this)
-Core idea: ${strategy.core_idea}
-Attributes: ${strategy.attributes.join(", ")}
-Metaphor territory: ${strategy.metaphor_territory}
-Must never look like: ${strategy.not_list.join("; ")}`
-    : "";
+  const strategyBlock = strategyBlockOf(strategy);
 
   const refsLine = referenceImages?.length
     ? `\nThe founder attached ${referenceImages.length} reference logo(s) they admire. Study them ONLY for structural principles — proportion, stroke weight, level of abstraction, counterform, wordmark tracking. Never restyle or echo their subject matter. State the borrowed principle in reference_learning.`
-    : `\nNo references provided. Drive every concept from the strategy brief.`;
+    : `\nNo logo references provided. Drive every concept from the human truth and the brief.`;
+
+  const moodLine = moodboardImages?.length
+    ? `\nThe brand's LIVE MOODBOARD is attached as ${moodboardImages.length} image(s). This is the visual world the brand already lives in. Read its form language — is it soft or hard, organic or engineered, warm or cool, dense or airy — and build marks that belong in it. Name the tile each direction inherits from in moodboard_link.`
+    : `\nNo moodboard available; infer the visual world from the palette and personality tokens.`;
 
   const instruction = `PROCESS — follow it exactly:
-1. Silently generate 10 candidate concepts across different logo types.
-2. Score each 1-5 on: distinctiveness (would it be mistaken for a competitor?), simplicity (can it be described in one sentence and drawn with under 5 elements?), relevance (does it serve the core idea?), scalability (does it survive at 16px as a solid shape?), memorability (could someone redraw it from memory?).
-3. Discard any concept scoring below 4 on simplicity or distinctiveness, and any concept that would work equally well for a different company in this category.
-4. Return ONLY the ${count} strongest survivors, each a DIFFERENT logo_type.
+1. Silently write the human moment in your own words, and picture the physical anchor.
+2. Silently generate 12 candidate marks across different logo types, each one a different way of drawing that moment.
+3. Score each 1-5 on: distinctiveness, craft (is there a real drawing move, or is it assembled from primitives?), relevance to the human truth, scalability at 16px, memorability.
+4. Kill every candidate that is merely tidy. The bar is: would a working identity designer publish this and be proud of it?
+5. Return ONLY the ${count} strongest survivors, each a DIFFERENT logo_type and a genuinely different form family.
 
 Return STRICT JSON:
-{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","one_line_idea":"the shape, in ONE sentence a designer could draw from","geometric_operation":"the SINGLE construction move that creates the mark, e.g. 'a circle cut by two mirrored arcs' or 'an M built from three rotated modules'","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the strategy","construction_notes":"grid base, stroke-to-height ratio, corner treatment, counterforms, terminals, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"distinctiveness":5,"simplicity":5,"relevance":5,"scalability":5,"memorability":5}}]}
+{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","human_link":"one sentence tracing this mark back to the human moment","one_line_idea":"the shape, in ONE sentence a designer could draw from","geometric_operation":"the SINGLE drawing move that creates the mark, e.g. 'one continuous stroke folded back on itself' or 'a circle cut by two mirrored arcs'","craft_move":"the deliberate craft decision: counterform | continuous stroke | shared tangent | ligature | negative-space read","moodboard_link":"which moodboard tile's form language this inherits, or 'n/a'","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the human truth","construction_notes":"proportion system, stroke-to-height ratio, curve quality, terminals, counterforms, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"distinctiveness":5,"craft":5,"relevance":5,"scalability":5,"memorability":5}}]}
 
 Hard rules:
-- Exactly ${count} directions, each a different logo_type.
-- Every mark must be constructible as flat vector art in 1-2 colours. No scenes, no illustrations, no mascots with rendered detail, no depth.
-- Every direction must be buildable from at most 12 geometric elements on a single module grid with ONE stroke weight. If you cannot state the geometric_operation in one clause, the idea is too complicated — kill it.
-- Reject anything on the venture's own "must never look like" list above; that list outranks your instincts.
-- Forbidden everywhere: globes, swooshes, generic leaves/checkmarks, handshake, lightbulb, puzzle piece, upward arrow, gradient-as-idea, lens flare, 3D bevels, circuit/hex "tech" clichés (unless the venture is literally hardware).`;
+- Exactly ${count} directions, each a different logo_type and a different form family. Four variations of one shape is a failed submission.
+- Every mark must be drawable as flat vector art in 1-2 flat colours. No scenes, no illustrations, no rendered detail, no depth.
+- Every mark must have ONE named craft move. "Three shapes arranged neatly" is not a craft move.
+- Curves, arcs and continuous contours are the default vocabulary. Rectilinear construction is allowed only when the human truth genuinely demands it, and never for more than one of the ${count} directions.
+- Reject anything on the venture's own "must never look like" list; it outranks your instincts.
+- Never propose any of these:
+${BANNED_FORMS}`;
 
   const userContent: any[] = [{
     type: "text",
-    text: `VENTURE\n${ventureBlockOf(ctx)}\n\nBRAND TOKENS\n${tokensBlockOf(tokens)}\n\n${strategyBlock}\n\n${docsBlock ? `FOUNDER'S OWN BRAND ASSETS\n${docsBlock.slice(0, 6000)}\n\n` : ""}${refsLine}\n\n${instruction}`,
+    text: `VENTURE\n${ventureBlockOf(ctx)}\n\nBRAND TOKENS (the live palette and type this mark will live in)\n${tokensBlockOf(tokens)}\n\n${strategyBlock}\n\n${docsBlock ? `FOUNDER'S OWN BRAND ASSETS\n${docsBlock.slice(0, 6000)}\n\n` : ""}${moodLine}\n${refsLine}\n\n${instruction}`,
   }];
+  for (const url of (moodboardImages ?? []).slice(0, 4)) {
+    userContent.push({ type: "image_url", image_url: { url } });
+  }
   if (referenceImages?.length) {
     for (const url of referenceImages.slice(0, 3)) {
       userContent.push({ type: "image_url", image_url: { url } });
@@ -408,20 +477,20 @@ Hard rules:
 }
 
 /**
- * The dossier is the single source of context every pass reads. Strategy work
- * used to be discarded before the mark was drawn; now the drawing pass sees
- * the venture, the brief, the finished brand assets and the anti-cliché list.
+ * The dossier is the single source of context every pass reads: the human
+ * truth, the brief, the venture, the live tokens and the founder's own assets.
  */
 function buildDossier(ctx: any, tokens: any, strategy: BrandStrategy | null, docsBlock: string): string {
   return [
     "VENTURE", ventureBlockOf(ctx),
     "", "BRAND TOKENS", tokensBlockOf(tokens),
-    strategy ? `\nSTRATEGY BRIEF\nCore idea: ${strategy.core_idea}\nAttributes: ${strategy.attributes.join(", ")}\nMetaphor territory: ${strategy.metaphor_territory}\nMust never look like: ${strategy.not_list.join("; ")}` : "",
+    strategy ? `\n${strategyBlockOf(strategy)}` : "",
     docsBlock ? `\nFOUNDER'S OWN BRAND ASSETS (authoritative)\n${docsBlock.slice(0, 6000)}` : "",
   ].filter(Boolean).join("\n");
 }
 
-const DRAW_SYSTEM = `You are a mark-maker in the tradition of Chermayeff & Geismar, Paul Rand and Michael Bierut. You do not describe logos — you ENGINEER them: a module grid, one stroke weight, a single radius family, exact coordinates. Every mark you build is one idea, drawn with the fewest possible elements, and holds up as a solid black silhouette at 16 pixels. Return valid JSON only. Never use gradients, filters, masks, images, scripts or external URLs.`;
+
+const DRAW_SYSTEM = `You are a mark-maker in the tradition of Chermayeff & Geismar, Paul Rand and Michael Bierut, and you draw in raw SVG path data the way other designers draw with a pen. You do not assemble logos out of primitive blocks — you draw one considered contour with clean curve continuity, one stroke weight, intentional terminals and a counterform worth looking at. Every mark is a single idea that holds as a solid black silhouette at 16 pixels, and is good enough to be published in a design annual. Return valid JSON only. Never use gradients, filters, masks, images, scripts or external URLs.`;
 
 function drawInstruction(
   d: LogoDirection,
@@ -430,41 +499,47 @@ function drawInstruction(
   wantsType: boolean,
   fixNotes: string[],
 ): string {
-  return `Engineer the approved direction below as an exact 1000×1000 vector construction.
+  return `Draw the approved direction below as a finished 1000×1000 vector mark. You are drawing, not assembling — the result has to look like a designer's hand made it.
 
 ${dossier}
 
 APPROVED DIRECTION
 ${JSON.stringify(d)}
 
-CONSTRUCTION CONTRACT — declare it, then obey it
-- module: the grid unit every coordinate is a multiple of (pick 20, 25 or 50)
-- stroke_weight: ONE weight used by every stroked element (typically 3–5 modules)
-- radii: the small set of corner radii allowed (multiples of the module)
-- symmetry: the axis or rotation the construction is built on ("vertical mirror", "90° rotation", "none")
+HOW TO DRAW IT
+- Lead with path geometry. A single well-drawn contour beats six stacked primitives. Target 1–5 elements; 12 is a hard ceiling.
+- Path commands available: M L H V C S Q T A Z. Build curves with C/S/Q and true circles with A. Curves are the default vocabulary.
+- Use fillRule "evenodd" on a path to cut a counterform out of a solid shape — that is how negative-space ideas are made.
+- Use group + transform (translate / rotate / scale) for mirrored or rotationally repeated construction instead of hand-placing duplicates.
+- Circle, ellipse, rect and line exist for the rare case where the pure form IS the idea. If your mark is mostly rects, you have failed this brief.
+- Coordinates are free — they are NOT snapped to a grid. Place points where the drawing needs them, including off-round values for optical correction.
+- Every stroked element uses the identical stroke_weight. Never mix thick and thin.
+- Build the symbol anywhere in 0..1000; it is optically re-centred and scaled afterwards, so proportion matters, absolute position does not.
+- Colour: fill/stroke from primary | secondary | accent | white | none. Two inks maximum plus white. Flat only, no gradients.
 
-GEOMETRY
-- Up to 12 elements total. Fewer is better: 3–7 is the target.
-- Elements: rect (x,y,width,height,rx) · circle (cx,cy,r) · ellipse (cx,cy,rxr,ryr) · line (x1,y1,x2,y2) · path (d, commands M L H V C S Q T A Z) · group (children[], transform{translate,rotate,scale})
-- Use group + transform to build modular, mirrored or rotationally repeated marks. That is how real geometric identities are constructed — do not hand-place duplicates.
-- Use fillRule "evenodd" on a path to cut a counterform out of a solid shape. That is how negative-space ideas are made.
-- Arcs (A) and smooth curves (S) exist — use true circular geometry, not polygon approximations.
-- Every coordinate must be a multiple of the module. Every stroked element must use the identical stroke_weight. Never mix thick and thin strokes.
-- Build the symbol anywhere in 0..1000; it is optically re-centred and scaled after you return it, so proportion matters, absolute position does not.
-- Colour: fill/stroke from primary | secondary | accent | white | none. Two inks maximum plus white. Flat only.
+CRAFT CONTRACT — declare it, then obey it
+- stroke_weight: the ONE weight for every stroked element
+- radii: the small family of corner radii allowed (keep it to one or two values)
+- symmetry: the axis or rotation the construction is built on ("vertical mirror", "90° rotation", "none")
+- The direction's craft move (${d.craft_move ?? d.geometric_operation ?? "the single drawing move"}) must be visibly present in the geometry.
 
 OPTICAL DISCIPLINE
 - Curves and points overshoot flat edges slightly; circles read smaller than squares of the same measure — compensate.
+- Curve continuity matters: tangents must meet cleanly, terminals must be intentional.
 - Counterforms (the holes) must be as considered as the positive shapes.
 - The silhouette must read as ONE idea at 16px. If two ideas compete, cut one.
+
+NEVER DRAW
+${BANNED_FORMS}
 
 ${wantsType ? `WORDMARK: include wordmark with text exactly "${companyName}", a case, weight 300–800, and tracking in 1/1000 em (−40 to 120). It is set in the brand's real typeface and outlined at render time, so specify treatment, not a font name.` : "WORDMARK: omit it entirely — this is a symbol-only direction."}
 
 ${fixNotes.length ? `THE PREVIOUS ATTEMPT WAS REJECTED. Fix exactly these, changing nothing else that already worked:\n- ${fixNotes.join("\n- ")}` : ""}
 
-Return STRICT JSON:
-{"construction":{"module":25,"stroke_weight":100,"radii":[0,50],"symmetry":"vertical mirror"},"primitives":[{"kind":"path","d":"M 200 200 L 800 200 ...","fill":"primary","stroke":"none","strokeWidth":0,"fillRule":"evenodd"}]${wantsType ? `,"wordmark":{"text":"${companyName}","case":"upper","weight":600,"tracking":40}` : ""},"rationale":"one sentence naming the single geometric operation that creates the mark","quality_scores":{"relevance":5,"distinctiveness":5,"simplicity":5,"scalability":5,"balance":5}}
+Return STRICT JSON (the path below is only a shape hint — draw your own):
+{"construction":{"module":10,"stroke_weight":88,"radii":[0],"symmetry":"vertical mirror"},"primitives":[{"kind":"path","d":"M 500 140 C 700 140 860 300 860 500 C 860 700 700 860 500 860 C 380 860 300 780 300 660 C 300 540 400 470 520 470","fill":"none","stroke":"primary","strokeWidth":88}]${wantsType ? `,"wordmark":{"text":"${companyName}","case":"upper","weight":600,"tracking":40}` : ""},"rationale":"one sentence naming the single drawing move that creates the mark","quality_scores":{"relevance":5,"distinctiveness":5,"craft":5,"scalability":5,"balance":5}}
 Scores are 1-5 and must be honest.`;
+
 }
 
 /**
@@ -513,22 +588,33 @@ async function developVectorSpec(
   return best!;
 }
 
-/** Stage 4 — look at the mark that actually rendered and judge it. */
+/** Stage 4 — the jury. Look at the mark that actually rendered and judge it honestly. */
 async function critiqueMark(
   b64: string,
   d: LogoDirection,
   strategy: BrandStrategy | null,
 ): Promise<{ pass: boolean; note: string }> {
-  const system = `You are a design director reviewing a finished mark before it reaches the client. You are strict. You reject anything that is not a clean, flat, single-idea mark a serious company could adopt.`;
-  const text = `Review this rendered mark against its brief.
+  const system = `You are judging a logo submission for an award feed of professional identity work. You have seen ten thousand generated marks and you can spot one instantly. You are not being kind. Most submissions fail. You only pass work a practising identity designer would put their name on in public.`;
+  const text = `Judge this rendered mark.
 
-Brief: ${d.one_line_idea ?? d.symbol_concept}
+Idea it claims: ${d.one_line_idea ?? d.symbol_concept}
+Craft move it claims: ${d.craft_move ?? d.geometric_operation ?? "unstated"}
 Logo type: ${d.logo_type}
+${strategy?.human_truth ? `Human truth it serves: ${strategy.human_truth}` : ""}
 ${strategy?.core_idea ? `Must communicate: ${strategy.core_idea}` : ""}
 
-Fail it if ANY of these are true: the shape is illegible, broken or reads as random geometry; it looks accidental rather than constructed; the elements are visually unbalanced or float apart; the counterforms are uneven; it carries more than one competing idea; it would disappear or turn to mush at 16px; it does not connect to the brief at all.
+Fail it if ANY of these are true:
+- It reads as auto-generated: primitive shapes arranged neatly, with no drawing in it.
+- It is a cluster of rounded squares, a block plus/cross, dots-and-lines, or a letter parked in a box.
+- The claimed craft move is not actually visible in the artwork.
+- The shape is illegible, broken, accidental, unbalanced, or floats apart.
+- Curves are lumpy, tangents don't meet, or terminals look arbitrary.
+- It carries more than one competing idea, or turns to mush at 16px.
+- It has nothing to do with the human truth or the idea it claims.
+- It would work unchanged for any other company.
 
-Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact geometric change to make"}`;
+Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact drawing change to make"}`;
+
 
   let parsed: any = null;
   try {
@@ -768,7 +854,9 @@ Deno.serve(async (req) => {
       const current = await getRun(runId);
       if (!current.run) throw new Error("Logo run not found");
       const docsBlock = await loadBrandDocs(supabase, snapshotId);
-      const directions = await generateLogoConcepts(ctx, tokens, current.run.requested_count, current.run.strategy as BrandStrategy, docsBlock, current.run.reference_images);
+      const moodboardImages = await moodboardImageUrls(supabase, kit);
+      const directions = await generateLogoConcepts(ctx, tokens, current.run.requested_count, current.run.strategy as BrandStrategy, docsBlock, current.run.reference_images, moodboardImages);
+
       const rows = directions.map((d, slot) => ({ run_id: runId, snapshot_id: snapshotId, slot, idempotency_key: `${runId}:${slot}`, direction_name: d.direction_name, logo_type: d.logo_type, concept: d, status: "queued", current_stage: "develop_vector" }));
       const { error } = await supabase.from("brand_logo_directions").upsert(rows, { onConflict: "run_id,slot" });
       if (error) throw error;
@@ -851,9 +939,12 @@ Deno.serve(async (req) => {
             wordmark_font: variants.wordmark_family,
           },
           direction_name: row.direction_name, logo_type: row.logo_type,
+          human_link: row.concept?.human_link ?? "",
+          craft_move: row.concept?.craft_move ?? row.concept?.geometric_operation ?? "",
           one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept,
           why_memorable: row.concept?.why_memorable ?? "",
           symbol_concept: row.concept?.symbol_concept,
+
           direction: row.concept, vector_spec: spec,
           review_passed: passed, review_note: note, review_score: scores,
           created_at: new Date().toISOString(),

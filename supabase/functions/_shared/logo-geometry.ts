@@ -1,10 +1,13 @@
 // Logo geometry system — the discipline layer between the model and the SVG.
 //
-// The model PROPOSES a construction (module grid, one stroke weight, a radius
-// family, primitives, optional groups with transforms). This module ENFORCES it:
-// coordinates snap to the grid, stroke weights collapse to the declared value,
-// the mark is optically centred and scaled into the canvas, and a deterministic
-// lint reports what is still wrong so the next pass can fix exactly that.
+// The model PROPOSES a construction (one stroke weight, a radius family,
+// primitives, optional groups with transforms). This module ENFORCES only the
+// things that protect craft: a single stroke weight, corner radii drawn from
+// the declared family, optical centring and scaling into the canvas, plus a
+// deterministic lint that reports what is still wrong for the next pass.
+// Coordinates are deliberately NOT quantised — grid snapping is what used to
+// turn curved marks into chunky rounded rectangles.
+
 
 export type PaletteKey = "primary" | "secondary" | "accent" | "none" | "white";
 
@@ -88,33 +91,30 @@ function leafCount(nodes: VectorNode[]): number {
   return nodes.reduce((sum, n) => sum + (n.kind === "group" ? leafCount(n.children ?? []) : 1), 0);
 }
 
-function snap(value: number, module: number): number {
-  if (!Number.isFinite(value) || module < 2) return value;
-  return Math.round(value / module) * module;
-}
-
 /**
- * Snap every coordinate to the module grid and collapse stroke weights to the
- * single declared weight. Path data is snapped number-by-number, which keeps
- * curves intact while pulling their control points onto the grid.
+ * Discipline, not quantisation. Coordinates are left exactly where the designer
+ * put them — snapping them to a module grid is what turned curved marks into
+ * chunky rounded rectangles. What we still enforce is what actually protects
+ * craft: a single stroke weight everywhere, and corner radii drawn from the
+ * declared radius family.
  */
 export function applyConstruction(nodes: VectorNode[], c: Construction): VectorNode[] {
-  const module = clampNumber(c.module, 5, 125, 25);
   const weight = clampNumber(c.stroke_weight, 4, 120, 40);
+  const radii = Array.isArray(c.radii) ? c.radii.map(Number).filter((n) => Number.isFinite(n) && n >= 0) : [];
+  const nearestRadius = (value: number) => {
+    if (!radii.length) return value;
+    return radii.reduce((best, r) => (Math.abs(r - value) < Math.abs(best - value) ? r : best), radii[0]);
+  };
   const walk = (list: VectorNode[]): VectorNode[] => list.map((n) => {
     if (n.kind === "group") return { ...n, children: walk(n.children ?? []) };
     const out: VectorNode = { ...n };
-    for (const key of ["x", "y", "width", "height", "cx", "cy", "r", "rxr", "ryr", "x1", "y1", "x2", "y2"] as const) {
-      if (typeof out[key] === "number") (out as any)[key] = snap(out[key] as number, module);
-    }
-    if (typeof out.d === "string") {
-      out.d = out.d.replace(/-?\d+(\.\d+)?/g, (m) => String(snap(Number(m), module)));
-    }
+    if (out.kind === "rect" && typeof out.rx === "number") out.rx = nearestRadius(out.rx);
     if (out.stroke && out.stroke !== "none") out.strokeWidth = weight;
     return out;
   });
   return walk(nodes);
 }
+
 
 /* --------------------------- bounding box --------------------------- */
 
@@ -380,17 +380,14 @@ export function lintVectorSpec(spec: VectorSpec): LintResult {
   const weights = new Set(leaves.filter((n) => n.stroke && n.stroke !== "none").map((n) => Math.round(clampNumber(n.strokeWidth, 0, 140, 0))));
   if (weights.size > 1) findings.push("Use one single stroke weight across the whole mark.");
 
-  // grid discipline
-  const coords: number[] = [];
-  for (const n of leaves) {
-    for (const key of ["x", "y", "width", "height", "cx", "cy", "r", "x1", "y1", "x2", "y2"] as const) {
-      if (typeof n[key] === "number") coords.push(n[key] as number);
-    }
-    if (typeof n.d === "string") coords.push(...(n.d.match(/-?\d+(\.\d+)?/g) ?? []).map(Number).slice(0, 60));
+  // craft signal: a mark built only from axis-aligned rectangles reads as a
+  // generated block cluster, which is exactly the failure mode we are killing.
+  const curved = leaves.filter((n) => n.kind === "circle" || n.kind === "ellipse" || (n.kind === "path" && /[CSQTA]/i.test(String(n.d ?? "")))).length;
+  const boxy = leaves.filter((n) => n.kind === "rect").length;
+  if (leaves.length >= 3 && curved === 0 && boxy >= leaves.length - 1) {
+    findings.push("The mark is a cluster of rectangles — rebuild it with real drawn geometry (arcs, curves or a continuous contour) instead of stacked boxes.");
   }
-  const offGrid = coords.filter((v) => Math.abs(v / module - Math.round(v / module)) > 0.001).length;
-  const offGridRatio = coords.length ? offGrid / coords.length : 0;
-  if (offGridRatio > 0.15) findings.push("Align every coordinate to the declared module grid.");
+
 
   // proportion & coverage
   const box = boundingBox(nodes);
@@ -403,7 +400,7 @@ export function lintVectorSpec(spec: VectorSpec): LintResult {
   const metrics = {
     elements: leaves.length,
     stroke_weights: weights.size,
-    off_grid_ratio: Number(offGridRatio.toFixed(3)),
+    curved_elements: curved,
     aspect: Number(aspect.toFixed(2)),
   };
 
