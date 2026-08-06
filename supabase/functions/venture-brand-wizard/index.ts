@@ -9,6 +9,8 @@ import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { sanitizePaletteOption } from "../_shared/palette-rules.ts";
 import { resolveOwner } from "../_shared/impersonation.ts";
+import { deriveBrandKitFromAssets } from "../_shared/brand-derive.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
