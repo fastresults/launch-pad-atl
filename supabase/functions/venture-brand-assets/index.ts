@@ -832,7 +832,9 @@ Deno.serve(async (req) => {
       const current = await getRun(runId);
       if (!current.run) throw new Error("Logo run not found");
       const docsBlock = await loadBrandDocs(supabase, snapshotId);
-      const directions = await generateLogoConcepts(ctx, tokens, current.run.requested_count, current.run.strategy as BrandStrategy, docsBlock, current.run.reference_images);
+      const moodboardImages = await moodboardImageUrls(supabase, kit);
+      const directions = await generateLogoConcepts(ctx, tokens, current.run.requested_count, current.run.strategy as BrandStrategy, docsBlock, current.run.reference_images, moodboardImages);
+
       const rows = directions.map((d, slot) => ({ run_id: runId, snapshot_id: snapshotId, slot, idempotency_key: `${runId}:${slot}`, direction_name: d.direction_name, logo_type: d.logo_type, concept: d, status: "queued", current_stage: "develop_vector" }));
       const { error } = await supabase.from("brand_logo_directions").upsert(rows, { onConflict: "run_id,slot" });
       if (error) throw error;
