@@ -763,10 +763,11 @@ export async function refineConcept(input: any): Promise<any> {
 }
 
 export async function generateBrandAsset(input: any): Promise<any> {
-  const { snapshotId, kind, count, extra, referenceImages, regenerateDirection } = unwrap<{ snapshotId: string; kind: string; count?: number; extra?: string; referenceImages?: string[]; regenerateDirection?: any }>(input);
+  const { snapshotId, kind, count, extra, referenceImages, regenerateDirection, direction, reviewNote } = unwrap<{ snapshotId: string; kind: string; count?: number; extra?: string; referenceImages?: string[]; regenerateDirection?: any; direction?: any; reviewNote?: string }>(input);
   const { data, error } = await invokeEdge("venture-brand-assets", {
-    body: { snapshotId, kind, count, extra, referenceImages, regenerateDirection },
+    body: { snapshotId, kind, count, extra, referenceImages, regenerateDirection, direction, reviewNote },
   });
+
   if (error) {
     const msg = (data as any)?.error || error.message;
     throw new Error(msg);

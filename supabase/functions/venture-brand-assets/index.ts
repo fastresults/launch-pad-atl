@@ -85,8 +85,19 @@ const STRATEGY_DOC_TYPES = [
   "offer_and_pricing",
 ];
 
+/** fetch with a hard deadline — a hung upstream must never eat the request window. */
+async function fetchWithTimeout(url: string, init: RequestInit, ms: number) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 async function callChatAI(messages: any[], opts: { json?: boolean; model?: string } = {}) {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await fetchWithTimeout("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -95,8 +106,7 @@ async function callChatAI(messages: any[], opts: { json?: boolean; model?: strin
       max_tokens: 8000,
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
-
-  });
+  }, 45_000);
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`AI chat ${res.status}: ${txt.slice(0, 300)}`);
@@ -104,6 +114,7 @@ async function callChatAI(messages: any[], opts: { json?: boolean; model?: strin
   const json = await res.json();
   return json.choices?.[0]?.message?.content ?? "";
 }
+
 
 // Tolerant parse: models return fenced JSON, a bare array, or a body truncated
 // mid-object. Salvage whatever is complete rather than failing the whole run.
@@ -345,7 +356,7 @@ async function generateOne(prompt: string, size: string, referenceImages?: strin
       content.push({ type: "image_url", image_url: { url } });
     }
   }
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+  const res = await fetchWithTimeout("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -354,7 +365,7 @@ async function generateOne(prompt: string, size: string, referenceImages?: strin
       modalities: ["image", "text"],
       size,
     }),
-  });
+  }, 70_000);
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`Image gateway ${res.status}: ${txt.slice(0, 200)}`);
@@ -364,6 +375,17 @@ async function generateOne(prompt: string, size: string, referenceImages?: strin
   if (!b64) throw new Error("No image data returned");
   return b64;
 }
+
+/** Pro model first; a provider hiccup degrades quality instead of losing the logo. */
+async function renderMark(prompt: string, size: string, referenceImages?: string[]): Promise<string> {
+  try {
+    return await generateOne(prompt, size, referenceImages, "google/gemini-3-pro-image");
+  } catch (e) {
+    console.warn("pro image model failed, falling back to flash-image", e);
+    return await generateOne(prompt, size, referenceImages, "google/gemini-3.1-flash-image");
+  }
+}
+
 
 function buildPromptGeneric(kind: string, ctx: any, tokens: any, extra?: string, angle?: string) {
   const snap = ctx.snap;
@@ -416,10 +438,12 @@ Deno.serve(async (req) => {
   try {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
     const body = await req.json();
-    const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection } = body ?? {};
+    const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
-    const preset = KIND_PRESETS[kind];
+    // logo_brief / logo_render are steps of the logo pipeline; they share its preset.
+    const preset = KIND_PRESETS[kind] ?? (kind === "logo_brief" || kind === "logo_render" ? KIND_PRESETS.logo : undefined);
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
+
 
     const authHeader = req.headers.get("Authorization") ?? "";
     const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
@@ -451,72 +475,87 @@ Deno.serve(async (req) => {
     const n = Math.max(1, Math.min(4, count ?? preset.defaultCount));
     const results: any[] = [];
 
-    if (kind === "logo") {
-      const cachedStrategy = ((kit as any)?.dna?.logo_strategy ?? null) as BrandStrategy | null;
-      let strategy: BrandStrategy | null = cachedStrategy;
-      let directions: LogoDirection[];
+    /* ---- STEP 1: the brief. Strategy + scored directions. No image calls. ---- */
+    if (kind === "logo_brief") {
+      const docsBlock = await loadBrandDocs(supabase, snapshotId);
+      const strategy = await buildBrandStrategy(ctx, tokens, docsBlock);
+      const directions = await generateLogoConcepts(ctx, tokens, n, strategy, docsBlock, referenceImages);
+      if (!directions?.length) throw new Error("Creative Director returned no directions");
+      try {
+        const dna = { ...((kit as any)?.dna ?? {}), logo_strategy: strategy, logo_directions: directions };
+        await supabase.from("venture_brand_kits").update({ dna }).eq("snapshot_id", snapshotId);
+      } catch { /* non-fatal */ }
+      return new Response(JSON.stringify({ ok: true, kind, strategy, directions }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-      if (regenerateDirection) {
-        // "More like this" — keep the concept, vary the execution only.
-        directions = [regenerateDirection as LogoDirection];
-      } else {
-        const docsBlock = await loadBrandDocs(supabase, snapshotId);
-        // Stage 1 — strategic brief off the founder's real assets.
-        strategy = await buildBrandStrategy(ctx, tokens, docsBlock);
-        if (strategy && kit) {
-          const dna = { ...((kit as any)?.dna ?? {}), logo_strategy: strategy };
-          await supabase.from("venture_brand_kits").update({ dna }).eq("snapshot_id", snapshotId);
+    /* ---- STEP 2: render exactly one mark, critique it, retry up to twice. ---- */
+    if (kind === "logo_render") {
+      const d = (direction ?? regenerateDirection) as LogoDirection | undefined;
+      if (!d) throw new Error("direction required for logo_render");
+      const strategy = ((kit as any)?.dna?.logo_strategy ?? null) as BrandStrategy | null;
+
+      let prompt = buildLogoImagePrompt(d, ctx, tokens, strategy, reviewNote || undefined);
+      let b64 = await renderMark(prompt, preset.size, referenceImages);
+      let review = await critiqueLogo(b64, d, strategy);
+
+      for (let attempt = 0; attempt < 2 && !review.pass; attempt++) {
+        console.log(`logo "${d.direction_name}" failed review: ${review.note} — corrective retry ${attempt + 1}`);
+        const retryPrompt = buildLogoImagePrompt(d, ctx, tokens, strategy, review.note);
+        try {
+          const retryB64 = await renderMark(retryPrompt, preset.size, referenceImages);
+          b64 = retryB64;
+          prompt = retryPrompt;
+          review = await critiqueLogo(retryB64, d, strategy);
+        } catch (e) {
+          console.warn("logo retry failed", e);
+          break;
         }
-        // Stage 2 — 10 candidates, self-scored, best n returned.
-        directions = await generateLogoConcepts(ctx, tokens, n, strategy, docsBlock, referenceImages);
       }
 
-      // Stage 3/4 — render, critique what actually came back, retry failures once.
-      // Run all directions in parallel and respect a wall-clock budget so the
-      // request never hits the 150s platform idle timeout.
-      const startedAt = Date.now();
-      const RETRY_DEADLINE_MS = 95_000; // only retry if there's time left
+      const up = await uploadAsset(supabase, snapshotId, userId, "logo", b64, prompt);
+      const asset = {
+        ok: true,
+        prompt,
+        ...up,
+        direction_name: d.direction_name,
+        logo_type: d.logo_type,
+        one_line_idea: d.one_line_idea ?? d.symbol_concept,
+        why_memorable: d.why_memorable ?? "",
+        symbol_concept: d.symbol_concept,
+        review_passed: review.pass,
+        review_note: review.note,
+        direction: d,
+        created_at: new Date().toISOString(),
+      };
 
-      await Promise.all(directions.map(async (d, idx) => {
-        let prompt = buildLogoImagePrompt(d, ctx, tokens, strategy);
-        try {
-          let b64 = await generateOne(prompt, preset.size, referenceImages, "google/gemini-3-pro-image");
-          let review = await critiqueLogo(b64, d, strategy);
-          if (!review.pass && Date.now() - startedAt < RETRY_DEADLINE_MS) {
-            console.log(`logo "${d.direction_name}" failed review: ${review.note} — retrying once`);
-            const retryPrompt = buildLogoImagePrompt(d, ctx, tokens, strategy, review.note);
-            try {
-              const retryB64 = await generateOne(retryPrompt, preset.size, referenceImages, "google/gemini-3-pro-image");
-              b64 = retryB64;
-              prompt = retryPrompt;
-              review = await critiqueLogo(retryB64, d, strategy);
-            } catch (e) {
-              console.warn("logo retry failed", e);
-            }
-          }
-          const up = await uploadAsset(supabase, snapshotId, userId, "logo", b64, prompt);
-          results[idx] = {
-            ok: true,
-            prompt,
-            ...up,
-            direction_name: d.direction_name,
-            logo_type: d.logo_type,
-            one_line_idea: d.one_line_idea ?? d.symbol_concept,
-            why_memorable: d.why_memorable ?? "",
-            symbol_concept: d.symbol_concept,
-            review_passed: review.pass,
-            review_note: review.note,
-            direction: d,
-            created_at: new Date().toISOString(),
-          };
-        } catch (e) {
-          results[idx] = { ok: false, error: e instanceof Error ? e.message : String(e), direction_name: d.direction_name };
-        }
-      }));
+      // Atomic append — four parallel renders must not clobber each other.
+      try {
+        await supabase.rpc("append_brand_logo", {
+          p_snapshot_id: snapshotId,
+          p_logo: {
+            url: asset.url, path: asset.path,
+            direction_name: asset.direction_name, logo_type: asset.logo_type,
+            one_line_idea: asset.one_line_idea, why_memorable: asset.why_memorable,
+            symbol_concept: asset.symbol_concept, prompt: asset.prompt,
+            direction: asset.direction, created_at: asset.created_at,
+          },
+        });
+      } catch (e) { console.warn("append_brand_logo failed", e); }
 
-    } else {
+      return new Response(JSON.stringify({ ok: true, kind, asset }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-      // Generic kinds: moodboard / social
+    if (kind === "logo") {
+      // Legacy single-shot path: retired — it could not fit inside one request.
+      throw new Error("Use kind 'logo_brief' then 'logo_render' — the single-shot logo run is retired.");
+    }
+
+    // Generic kinds: moodboard / social
+    {
       let i = 0;
       async function worker() {
         while (i < n) {
@@ -537,29 +576,14 @@ Deno.serve(async (req) => {
 
     // Persist into the brand kit so the live preview & guide pick them up.
     try {
-      const fresh = results.filter((r) => r?.ok).map((r) => {
-        if (kind === "logo") {
-          return {
-            url: r.url, path: r.path,
-            direction_name: r.direction_name, logo_type: r.logo_type,
-            one_line_idea: r.one_line_idea, why_memorable: r.why_memorable,
-            symbol_concept: r.symbol_concept, prompt: r.prompt,
-            direction: r.direction,
-            created_at: r.created_at,
-          };
-
-        }
-        return { url: r.url, path: r.path };
-      });
-      if (fresh.length) {
-        const column = kind === "moodboard" ? "moodboard" : kind === "logo" ? "logos" : null;
-        if (column && kit) {
-          const existing = Array.isArray((kit as any)[column]) ? (kit as any)[column] : [];
-          const next = [...fresh, ...existing].slice(0, 8);
-          await supabase.from("venture_brand_kits").update({ [column]: next }).eq("snapshot_id", snapshotId);
-        }
+      const fresh = results.filter((r) => r?.ok).map((r) => ({ url: r.url, path: r.path }));
+      if (fresh.length && kind === "moodboard" && kit) {
+        const existing = Array.isArray((kit as any).moodboard) ? (kit as any).moodboard : [];
+        const next = [...fresh, ...existing].slice(0, 8);
+        await supabase.from("venture_brand_kits").update({ moodboard: next }).eq("snapshot_id", snapshotId);
       }
     } catch { /* non-fatal */ }
+
 
     return new Response(JSON.stringify({ ok: true, kind, assets: results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

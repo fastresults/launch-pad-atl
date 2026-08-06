@@ -544,24 +544,69 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const genLogos = useMutation({
-    mutationFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo", count: 4, referenceImages: refs } }),
-    onSuccess: (out) => {
-      const fresh = (out.assets ?? []).filter((a: any) => a.ok);
-      // Replace prior set so the 4 directions shown match the new brief.
-      setLogos(fresh);
-      onSave({ logos: fresh });
-      toast.success(`${fresh.length} logo direction${fresh.length === 1 ? "" : "s"} rendered`);
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
+  // Two-phase logo run: one short "brief" request, then one request per mark.
+  // Nothing long-running lives in a single connection, so nothing can time out.
+  const [logoPhase, setLogoPhase] = useState<"idle" | "brief" | "rendering">("idle");
+  const [pending, setPending] = useState<any[]>([]); // {direction, status:'pending'|'error', error?}
+
+  const renderDirection = async (d: any, slot: number, current: any[]) => {
+    try {
+      const out = await generateBrandAsset({
+        data: { snapshotId: snapshot.id, kind: "logo_render", referenceImages: refs, direction: d },
+      });
+      const asset = out?.asset;
+      if (!asset?.url) throw new Error("No image came back");
+      setPending((p) => p.map((x, j) => (j === slot ? null : x)).filter(Boolean) as any[]);
+      setLogos((prev) => {
+        const next = [asset, ...prev].slice(0, 8);
+        onSave({ logos: next });
+        return next;
+      });
+      return true;
+    } catch (e: any) {
+      setPending((p) => p.map((x, j) => (j === slot ? { ...x, status: "error", error: e?.message ?? "Render failed" } : x)));
+      return false;
+    }
+  };
+
+  const runLogoSet = async () => {
+    setLogoPhase("brief");
+    try {
+      const brief = await generateBrandAsset({
+        data: { snapshotId: snapshot.id, kind: "logo_brief", count: 4, referenceImages: refs },
+      });
+      const directions: any[] = brief?.directions ?? [];
+      if (!directions.length) throw new Error("No directions came back");
+      setLogos([]);
+      onSave({ logos: [] });
+      setPending(directions.map((d) => ({ direction: d, status: "pending" })));
+      setLogoPhase("rendering");
+      const outcomes = await Promise.all(directions.map((d, i) => renderDirection(d, i, [])));
+      const okCount = outcomes.filter(Boolean).length;
+      if (okCount) toast.success(`${okCount} logo direction${okCount === 1 ? "" : "s"} rendered`);
+      if (okCount < directions.length) toast.error(`${directions.length - okCount} need another try`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not write the brief");
+    } finally {
+      setLogoPhase("idle");
+    }
+  };
+
+  const retryPending = async (slot: number) => {
+    const item = pending[slot];
+    if (!item) return;
+    setPending((p) => p.map((x, j) => (j === slot ? { ...x, status: "pending", error: undefined } : x)));
+    await renderDirection(item.direction, slot, logos);
+  };
+
+  const genLogos = { isPending: logoPhase !== "idle", mutate: runLogoSet };
 
   const regenOne = useMutation({
     mutationFn: (vars: { idx: number; direction: any }) =>
-      generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo", referenceImages: refs, regenerateDirection: vars.direction } }),
+      generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render", referenceImages: refs, direction: vars.direction } }),
     onSuccess: (out, vars) => {
-      const fresh = (out.assets ?? []).find((a: any) => a.ok);
-      if (!fresh) { toast.error("Regeneration failed"); return; }
+      const fresh = out?.asset;
+      if (!fresh?.url) { toast.error("Regeneration failed"); return; }
       const next = logos.slice();
       next[vars.idx] = fresh;
       setLogos(next);
@@ -570,6 +615,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     },
     onError: (e: any) => toast.error(e.message),
   });
+
 
 
   const [dragOver, setDragOver] = useState(false);
@@ -743,10 +789,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           <div className="flex flex-col items-end gap-1">
             <Button onClick={() => genLogos.mutate()} disabled={genLogos.isPending || !gatePassed} size="sm">
               {genLogos.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-              {genLogos.isPending ? "Art-directing…" : logos.length ? "New direction set" : "Generate 4 logo directions"}
+              {logoPhase === "brief" ? "Writing the brief…" : logoPhase === "rendering" ? "Rendering marks…" : logos.length ? "New direction set" : "Generate 4 logo directions"}
             </Button>
             {genLogos.isPending && (
-              <span className="text-[10px] text-muted-foreground">Brief → concepts → render → design review. Takes a minute.</span>
+              <span className="text-[10px] text-muted-foreground">Brief → concepts → render → design review. Marks appear as they finish.</span>
             )}
 
             {!gatePassed && (
@@ -754,7 +800,36 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
             )}
           </div>
         </div>
+
+        {pending.length > 0 && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {pending.map((p: any, i: number) => (
+              <div key={`pending-${i}`} className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
+                <div className="flex aspect-square w-full items-center justify-center bg-white/5">
+                  {p.status === "error" ? (
+                    <span className="px-3 text-center text-[11px] text-destructive">{p.error}</span>
+                  ) : (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  )}
+                </div>
+                <div className="space-y-2 p-3">
+                  <div className="truncate text-xs font-semibold">{p.direction?.direction_name ?? `Concept ${i + 1}`}</div>
+                  <p className="line-clamp-2 text-[11px] text-muted-foreground">
+                    {p.status === "error" ? "This mark didn't render." : p.direction?.one_line_idea ?? "Rendering…"}
+                  </p>
+                  {p.status === "error" && (
+                    <Button variant="ghost" size="sm" className="h-7 w-full text-[11px]" onClick={() => retryPending(i)}>
+                      <Sparkles className="mr-1 h-3 w-3" /> Try this one again
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {logos.length > 0 && (
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {logos.map((a, i) => {
               const busy = regenOne.isPending && regenOne.variables?.idx === i;
