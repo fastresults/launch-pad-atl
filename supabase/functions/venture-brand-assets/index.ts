@@ -85,8 +85,19 @@ const STRATEGY_DOC_TYPES = [
   "offer_and_pricing",
 ];
 
+/** fetch with a hard deadline — a hung upstream must never eat the request window. */
+async function fetchWithTimeout(url: string, init: RequestInit, ms: number) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 async function callChatAI(messages: any[], opts: { json?: boolean; model?: string } = {}) {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await fetchWithTimeout("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -95,8 +106,7 @@ async function callChatAI(messages: any[], opts: { json?: boolean; model?: strin
       max_tokens: 8000,
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
-
-  });
+  }, 45_000);
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`AI chat ${res.status}: ${txt.slice(0, 300)}`);
@@ -104,6 +114,7 @@ async function callChatAI(messages: any[], opts: { json?: boolean; model?: strin
   const json = await res.json();
   return json.choices?.[0]?.message?.content ?? "";
 }
+
 
 // Tolerant parse: models return fenced JSON, a bare array, or a body truncated
 // mid-object. Salvage whatever is complete rather than failing the whole run.
