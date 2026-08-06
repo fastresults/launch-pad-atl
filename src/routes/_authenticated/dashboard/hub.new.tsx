@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { TRACKS, TRACK_BY_KEY, pickSeedForTrack, TRACK_SEEDS, type TrackKey, type SeedEntry } from "@/lib/tracks";
-import { INDUSTRIES } from "@/lib/industries";
+import { SIC_CODES, findSicByCode, parseSicCode, sicValue } from "@/lib/sic-codes";
 import { createSnapshot } from "@/lib/foundersHub.functions";
 import {
   uploadVentureSource,
@@ -526,7 +526,7 @@ function Inner() {
             urls: readyOwnUrls.map((u) => ({ url: u.url, title: u.title ?? null, text: u.text })),
             patternUrls: patternRefs.map((p) => ({ url: p.url, title: p.title ?? null, text: p.text })),
             conceptDraft: hasDraft ? businessConcept.trim() : "",
-            industryValues: INDUSTRIES.map((i) => i.value),
+            industryValues: SIC_CODES.map((c) => sicValue(c)),
           },
         });
         if (error) throw error;
@@ -575,8 +575,10 @@ function Inner() {
           markFilled("marketScope");
           filled.push("market scope");
         }
-        if (typeof data?.industry === "string" && data.industry && INDUSTRIES.some((i) => i.value === data.industry)) {
-          setIndustry(data.industry);
+        if (typeof data?.industry === "string" && data.industry.trim()) {
+          const code = parseSicCode(data.industry);
+          const entry = code ? findSicByCode(code) : undefined;
+          setIndustry(entry ? sicValue(entry) : data.industry.trim());
           markFilled("industry");
           filled.push("industry");
         }
@@ -829,7 +831,7 @@ function Inner() {
     const loc = [city.trim(), region.trim()].filter(Boolean).join(", ");
     if (loc) parts.push(loc);
     if (companyName.trim()) parts.push(companyName.trim());
-    if (industry) parts.push(INDUSTRIES.find((i) => i.value === industry)?.label || industry);
+    if (industry) parts.push(findSicByCode(parseSicCode(industry) ?? "")?.title || industry);
     if (marketScope) parts.push(marketScope[0].toUpperCase() + marketScope.slice(1));
     return parts.join(" · ");
   }, [founderName, city, region, companyName, industry, marketScope]);
@@ -1733,7 +1735,7 @@ function Inner() {
                     <AiPill keyName="industry" />
                   </Label>
                   <div ref={registerRef("industry") as any}>
-                    <IndustryCombobox value={industry} onChange={setIndustry} />
+                    <IndustryCombobox value={industry} onChange={setIndustry} context={[companyName, businessConcept].filter(Boolean).join(" — ").slice(0, 600)} />
                   </div>
                   <Input
                     className="mt-1"
