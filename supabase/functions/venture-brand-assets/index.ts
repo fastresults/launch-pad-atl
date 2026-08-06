@@ -181,6 +181,8 @@ function clampNumber(value: unknown, min: number, max: number, fallback = 0): nu
 function sanitizePath(value: unknown): string {
   const path = String(value ?? "").trim();
   if (!path || path.length > 1200 || /[^0-9a-zA-Z.,+\-\s]/.test(path)) throw new Error("Vector path contains unsupported data");
+  const commands = path.match(/[A-Za-z]/g) ?? [];
+  if (commands.some((command) => !/[MLHVCQZ]/i.test(command))) throw new Error("Vector path uses an unsupported command");
   return path;
 }
 
@@ -389,7 +391,8 @@ Scores are 1-5. Do not include wordmark when instructed to omit it.` },
   ]);
   const primitives = Array.isArray(parsed?.primitives) ? parsed.primitives : [];
   if (!primitives.length || primitives.length > 5) throw new Error("Vector specification is missing or too complex");
-  return { primitives, wordmark: wantsType ? parsed.wordmark : undefined, rationale: String(parsed.rationale ?? ""), quality_scores: parsed.quality_scores ?? {} };
+  const wordmark = wantsType ? { ...(parsed.wordmark ?? {}), text: companyName } : undefined;
+  return { primitives, wordmark, rationale: String(parsed.rationale ?? ""), quality_scores: parsed.quality_scores ?? {} };
 }
 
 /** Stage 3 — describe a MARK, not a picture. */
@@ -558,7 +561,7 @@ Deno.serve(async (req) => {
     const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
     // logo_brief / logo_render are steps of the logo pipeline; they share its preset.
-    const logoKinds = ["logo_create_run", "logo_develop_brief", "logo_develop_directions", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run"];
+    const logoKinds = ["logo_create_run", "logo_develop_brief", "logo_develop_directions", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_remove_direction"];
     const preset = KIND_PRESETS[kind] ?? (kind === "logo_brief" || kind === "logo_render" || logoKinds.includes(kind) ? KIND_PRESETS.logo : undefined);
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
 
@@ -616,6 +619,19 @@ Deno.serve(async (req) => {
       if (error) throw error;
       await supabase.from("brand_logo_directions").update({ status: "canceled" }).eq("run_id", runId).not("status", "in", '("ready","needs_review")');
       return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (kind === "logo_remove_direction") {
+      if (!runId || !directionId) throw new Error("runId and directionId required");
+      const current = await getRun(runId);
+      if (!current.run) throw new Error("Logo run not found");
+      const { error } = await supabase.from("brand_logo_directions").update({ status: "canceled", current_stage: "complete", asset: {}, completed_at: new Date().toISOString() }).eq("id", directionId).eq("run_id", runId);
+      if (error) throw error;
+      const refreshed = await getRun(runId);
+      const logos = refreshed.directions.filter((item: any) => ["ready", "needs_review"].includes(item.status)).map((item: any) => item.asset);
+      const { error: kitError } = await supabase.from("venture_brand_kits").update({ logos }).eq("snapshot_id", snapshotId);
+      if (kitError) throw kitError;
+      return new Response(JSON.stringify({ ok: true, logos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (kind === "logo_create_run") {
