@@ -618,6 +618,102 @@ async function retrySweep(
   return { remaining: last.retryable, blocked: last.blocked };
 }
 
+// --- 14-day sprint completion ------------------------------------------------
+// The founder-facing sprint panel groups the same assets by day. A run isn't
+// really finished until every day has all of its required assets, so after the
+// retry sweep we walk the plan day by day and write whatever is still missing,
+// deriving it from the day's intent plus the assets already on file.
+
+// Blocks written before this run started are stale — re-evaluate the gate
+// (brand auto-derivation may now succeed) instead of respecting them forever.
+async function clearStaleBlocks(supabase: any, snapshotId: string, since: string | null) {
+  let q = supabase
+    .from("venture_documents")
+    .update({ blocked_reason: null })
+    .eq("snapshot_id", snapshotId)
+    .not("blocked_reason", "is", null);
+  if (since) q = q.lt("updated_at", since);
+  await q;
+}
+
+function dayContextFor(day: any, siblingTitles: string[]): string {
+  return [
+    `\n## 14-day sprint placement`,
+    `This asset is Day ${day.day} of the founder's 14-day sprint — "${day.theme}".`,
+    `Day objective: ${day.objective}`,
+    `Done when: ${day.doneWhen}`,
+    siblingTitles.length
+      ? `Already written for this day (stay consistent with them, don't repeat them): ${siblingTitles.join(", ")}`
+      : "",
+    `Write this so the founder can finish Day ${day.day} today with what's already on file. Make every decision concrete — no placeholders, no "TBD".`,
+  ].filter(Boolean).join("\n");
+}
+
+async function sprintSweep(
+  supabase: any,
+  ctx: VentureContext,
+  jobId: string,
+  types: any[],
+  state: { done: number; total: number; fails: number; canceled: boolean },
+  onlyDays?: number[] | null,
+): Promise<{ dayGaps: { day: number; theme: string; missing: string[] }[] }> {
+  const snapshotId = ctx.snapshotId;
+  const byKey = new Map(types.map((t) => [t.type, t]));
+  const plan = LAUNCH_14DAY_PLAN.filter(
+    (d) => !onlyDays?.length || onlyDays.includes(d.day),
+  );
+
+  const loadDocs = async () => {
+    const { data } = await supabase
+      .from("venture_documents")
+      .select("document_type, status, blocked_reason")
+      .eq("snapshot_id", snapshotId);
+    return new Map((data ?? []).map((d: any) => [d.document_type, d]));
+  };
+
+  for (const day of plan) {
+    if (state.canceled) break;
+    const docs = await loadDocs();
+    const dayTypes = day.assetKeys.map((k) => byKey.get(k)).filter(Boolean) as any[];
+    if (!dayTypes.length) continue;
+
+    const missing = dayTypes.filter((t) => (docs.get(t.type) as any)?.status !== "complete");
+    if (!missing.length) continue;
+
+    const siblings = dayTypes
+      .filter((t) => (docs.get(t.type) as any)?.status === "complete")
+      .map((t) => t.name ?? t.type);
+    const dayCtx = dayContextFor(day, siblings);
+
+    await supabase.from("venture_generation_jobs").update({
+      status: "running",
+      circuit_breaker_open: false,
+      current_document_type: missing[0].type,
+      heartbeat_at: new Date().toISOString(),
+    }).eq("id", jobId);
+
+    for (const layer of dependencyLayers(missing)) {
+      if (state.canceled) break;
+      state.fails = 0; // day gaps shouldn't trip the breaker
+      await runLayer(supabase, ctx, jobId, layer, state, "full", dayCtx);
+    }
+  }
+
+  // Report what's still short after the pass.
+  const finalDocs = await loadDocs();
+  const dayGaps: { day: number; theme: string; missing: string[] }[] = [];
+  for (const day of LAUNCH_14DAY_PLAN) {
+    const dayTypes = day.assetKeys.map((k) => byKey.get(k)).filter(Boolean) as any[];
+    const missing = dayTypes
+      .filter((t) => (finalDocs.get(t.type) as any)?.status !== "complete")
+      .map((t) => t.type);
+    if (missing.length) dayGaps.push({ day: day.day, theme: day.theme, missing });
+  }
+  return { dayGaps };
+}
+
+
+
 async function runJob(
   supabase: any,
   snapshotId: string,
