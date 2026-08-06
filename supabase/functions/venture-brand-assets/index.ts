@@ -468,7 +468,7 @@ function buildDossier(ctx: any, tokens: any, strategy: BrandStrategy | null, doc
 }
 
 
-const DRAW_SYSTEM = `You are a mark-maker in the tradition of Chermayeff & Geismar, Paul Rand and Michael Bierut. You do not describe logos — you ENGINEER them: a module grid, one stroke weight, a single radius family, exact coordinates. Every mark you build is one idea, drawn with the fewest possible elements, and holds up as a solid black silhouette at 16 pixels. Return valid JSON only. Never use gradients, filters, masks, images, scripts or external URLs.`;
+const DRAW_SYSTEM = `You are a mark-maker in the tradition of Chermayeff & Geismar, Paul Rand and Michael Bierut, and you draw in raw SVG path data the way other designers draw with a pen. You do not assemble logos out of primitive blocks — you draw one considered contour with clean curve continuity, one stroke weight, intentional terminals and a counterform worth looking at. Every mark is a single idea that holds as a solid black silhouette at 16 pixels, and is good enough to be published in a design annual. Return valid JSON only. Never use gradients, filters, masks, images, scripts or external URLs.`;
 
 function drawInstruction(
   d: LogoDirection,
