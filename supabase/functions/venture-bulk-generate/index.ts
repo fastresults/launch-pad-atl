@@ -791,9 +791,13 @@ async function runJob(
     }).eq("id", jobId);
   };
 
+  // Stale blocks from an earlier run get re-evaluated (brand auto-derivation
+  // may now succeed), so a gated asset never sits at zero attempts forever.
+  await clearStaleBlocks(supabase, snapshotId, startedAt);
+
   // Main pass. A tripped circuit breaker no longer ends the run — it just
   // stops the main pass and hands off to the retry sweep.
-  if (!retryOnly) {
+  if (!retryOnly && !dayOnly) {
     for (const layer of layers) {
       await runLayer(supabase, ctx, jobId, layer, state);
       if (state.canceled) { await finishCanceled(); return; }
@@ -804,9 +808,39 @@ async function runJob(
   if (state.canceled) { await finishCanceled(); return; }
 
   // Retry sweep — keep going until everything is written or truly stuck.
-  const { remaining, blocked } = await retrySweep(supabase, ctx, jobId, types, state);
+  let remaining: string[] = [];
+  let blocked: string[] = [];
+  if (!dayOnly) {
+    const swept = await retrySweep(supabase, ctx, jobId, types, state);
+    remaining = swept.remaining;
+    blocked = swept.blocked;
+  }
 
   if (state.canceled) { await finishCanceled(); return; }
+
+  // Sprint pass — fill any day in the 14-day plan that is still short.
+  const { dayGaps } = await sprintSweep(supabase, ctx, jobId, types, state, days);
+
+  if (state.canceled) { await finishCanceled(); return; }
+
+  // Recompute what's outstanding after the sprint pass so the final status
+  // reflects assets the day sweep just wrote.
+  {
+    const { data: after } = await supabase
+      .from("venture_documents")
+      .select("document_type, status, blocked_reason")
+      .eq("snapshot_id", snapshotId)
+      .in("document_type", types.map((t: any) => t.type));
+    const byType = new Map((after ?? []).map((d: any) => [d.document_type, d]));
+    remaining = [];
+    blocked = [];
+    for (const t of types) {
+      const row: any = byType.get(t.type);
+      if (row?.status === "complete") continue;
+      if (row?.blocked_reason) blocked.push(t.type);
+      else remaining.push(t.type);
+    }
+  }
 
   const { count: completeCount } = await supabase
     .from("venture_documents")
@@ -815,7 +849,7 @@ async function runJob(
     .eq("status", "complete")
     .in("document_type", types.map((t: any) => t.type));
 
-  const allDone = remaining.length === 0 && blocked.length === 0;
+  const allDone = remaining.length === 0 && blocked.length === 0 && dayGaps.length === 0;
 
   await supabase.from("venture_generation_jobs").update({
     status: allDone ? "completed" : "completed_with_blockers",
@@ -830,11 +864,13 @@ async function runJob(
       : [
           blocked.length ? `${blocked.length} asset(s) need you` : "",
           remaining.length ? `${remaining.length} asset(s) couldn't be written` : "",
+          dayGaps.length ? `${dayGaps.length} sprint day(s) still short` : "",
         ].filter(Boolean).join(" · "),
   }).eq("id", jobId);
 
   if (!category && allDone) {
     await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);
+
   }
 }
 
