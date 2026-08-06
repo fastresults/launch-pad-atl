@@ -528,7 +528,13 @@ export async function bulkGenerate(input: any): Promise<{ ok?: boolean; jobId?: 
   const { snapshotId, category, retryOnly, days, sprintOnly } = unwrap<{ snapshotId: string; category?: string | null; retryOnly?: boolean; days?: number[]; sprintOnly?: boolean }>(input);
 
   const { data, error } = await invokeEdge("venture-bulk-generate", {
-    body: { snapshotId, category: category ?? null, retryOnly: retryOnly === true },
+    body: {
+      snapshotId,
+      category: category ?? null,
+      retryOnly: retryOnly === true,
+      days: Array.isArray(days) && days.length ? days : undefined,
+      sprintOnly: sprintOnly === true ? true : undefined,
+    },
   });
 
   if (error) {
