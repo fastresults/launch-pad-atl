@@ -776,13 +776,14 @@ async function runJob(
   // the assets already on file rather than skipping them silently.
   const { data: savedIntakes } = await supabase
     .from("venture_documents")
-    .select("document_type, intake_answers")
+    .select("document_type, intake_answers, status")
     .eq("snapshot_id", snapshotId);
   const haveAnswers = new Set(
     (savedIntakes ?? [])
       .filter((d: any) => d.intake_answers && Object.keys(d.intake_answers).length)
       .map((d: any) => d.document_type),
   );
+  const statusByType = new Map((savedIntakes ?? []).map((d: any) => [d.document_type, d.status]));
   let types = allTypes ?? [];
 
   // Sourcing-only asset types don't apply to a non-physical venture. Record
@@ -793,7 +794,10 @@ async function runJob(
   let notApplicable: string[] = [];
   if (!isPhysical) {
     notApplicable = types
-      .filter((t: any) => SOURCING_ONLY_TYPES.has(t.type) && !haveAnswers.has(t.type))
+      .filter((t: any) =>
+        SOURCING_ONLY_TYPES.has(t.type) &&
+        !haveAnswers.has(t.type) &&
+        statusByType.get(t.type) !== "complete")
       .map((t: any) => t.type);
     types = types.filter((t: any) => !notApplicable.includes(t.type));
     for (const t of notApplicable) {
@@ -805,6 +809,7 @@ async function runJob(
       }, { onConflict: "snapshot_id,document_type" });
     }
   }
+
 
 
   if (category && category.trim().length > 0) {
