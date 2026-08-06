@@ -833,11 +833,16 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
               const directionRow = runDirections.find((d) => d.asset?.path === a.path || d.id === a.direction_id);
               const busy = retryDirection.isPending && retryDirection.variables?.id === directionRow?.id;
               const removeLogo = async () => {
-                const next = logos.filter((_, j) => j !== i);
-                setLogos(next);
                 try {
-                  await upsertBrandKit(snapshot.id, { logos: next });
-                  onSave({ logos: next });
+                  if (directionRow && activeRun) {
+                    const out = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_remove_direction", runId: activeRun.id, directionId: directionRow.id } });
+                    setLogos(out.logos ?? []);
+                    await logoRunQ.refetch();
+                  } else {
+                    const next = logos.filter((_, j) => j !== i);
+                    setLogos(next);
+                    await upsertBrandKit(snapshot.id, { logos: next });
+                  }
                   toast.success("Concept removed");
                 } catch (e: any) {
                   toast.error(e?.message || "Could not remove");
