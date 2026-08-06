@@ -19,11 +19,31 @@ export function impersonationHeaders(): Record<string, string> {
   return target ? { [IMPERSONATION_HEADER]: target.userId } : {};
 }
 
-export function invokeEdge<T = any>(name: string, options?: InvokeOptions) {
+export async function invokeEdge<T = any>(name: string, options?: InvokeOptions) {
   const extra = impersonationHeaders();
   const headers = { ...(options?.headers ?? {}), ...extra } as Record<string, string>;
-  return supabase.functions.invoke<T>(name, {
+  const result = await supabase.functions.invoke<T>(name, {
     ...(options ?? {}),
     ...(Object.keys(headers).length ? { headers } : {}),
   });
+  if (!result.error) return result;
+
+  // functions-js keeps a failed response body on `context` instead of parsing
+  // it into `data`. Preserve the backend's specific message for every caller.
+  const context = (result.error as unknown as { context?: Response }).context;
+  if (context) {
+    try {
+      const payload = await context.clone().json() as { error?: unknown; message?: unknown };
+      const detail = payload?.error ?? payload?.message;
+      const message = typeof detail === "string"
+        ? detail
+        : detail && typeof detail === "object"
+          ? JSON.stringify(detail)
+          : null;
+      if (message) return { ...result, error: new Error(message) };
+    } catch {
+      // Keep the library error when a function returned a non-JSON body.
+    }
+  }
+  return result;
 }
