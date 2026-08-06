@@ -452,17 +452,44 @@ Deno.serve(async (req) => {
     const results: any[] = [];
 
     if (kind === "logo") {
-      // Stage 1 — Creative Director brief (skip if regenerating a single direction)
-      const directions: LogoDirection[] = regenerateDirection
-        ? [regenerateDirection as LogoDirection]
-        : await generateLogoBrief(ctx, tokens, n, referenceImages);
+      const cachedStrategy = ((kit as any)?.dna?.logo_strategy ?? null) as BrandStrategy | null;
+      let strategy: BrandStrategy | null = cachedStrategy;
+      let directions: LogoDirection[];
 
-      // Stage 2 — render one image per direction
+      if (regenerateDirection) {
+        // "More like this" — keep the concept, vary the execution only.
+        directions = [regenerateDirection as LogoDirection];
+      } else {
+        const docsBlock = await loadBrandDocs(supabase, snapshotId);
+        // Stage 1 — strategic brief off the founder's real assets.
+        strategy = await buildBrandStrategy(ctx, tokens, docsBlock);
+        if (strategy && kit) {
+          const dna = { ...((kit as any)?.dna ?? {}), logo_strategy: strategy };
+          await supabase.from("venture_brand_kits").update({ dna }).eq("snapshot_id", snapshotId);
+        }
+        // Stage 2 — 10 candidates, self-scored, best n returned.
+        directions = await generateLogoConcepts(ctx, tokens, n, strategy, docsBlock, referenceImages);
+      }
+
+      // Stage 3/4 — render, critique what actually came back, retry failures once.
       for (let idx = 0; idx < directions.length; idx++) {
         const d = directions[idx];
-        const prompt = buildLogoImagePrompt(d, ctx, tokens);
+        let prompt = buildLogoImagePrompt(d, ctx, tokens, strategy);
         try {
-          const b64 = await generateOne(prompt, preset.size, referenceImages, "google/gemini-3-pro-image");
+          let b64 = await generateOne(prompt, preset.size, referenceImages, "google/gemini-3-pro-image");
+          let review = await critiqueLogo(b64, d, strategy);
+          if (!review.pass) {
+            console.log(`logo "${d.direction_name}" failed review: ${review.note} — retrying once`);
+            const retryPrompt = buildLogoImagePrompt(d, ctx, tokens, strategy, review.note);
+            try {
+              const retryB64 = await generateOne(retryPrompt, preset.size, referenceImages, "google/gemini-3-pro-image");
+              b64 = retryB64;
+              prompt = retryPrompt;
+              review = await critiqueLogo(retryB64, d, strategy);
+            } catch (e) {
+              console.warn("logo retry failed", e);
+            }
+          }
           const up = await uploadAsset(supabase, snapshotId, userId, "logo", b64, prompt);
           results[idx] = {
             ok: true,
@@ -470,7 +497,11 @@ Deno.serve(async (req) => {
             ...up,
             direction_name: d.direction_name,
             logo_type: d.logo_type,
+            one_line_idea: d.one_line_idea ?? d.symbol_concept,
+            why_memorable: d.why_memorable ?? "",
             symbol_concept: d.symbol_concept,
+            review_passed: review.pass,
+            review_note: review.note,
             direction: d,
             created_at: new Date().toISOString(),
           };
@@ -479,6 +510,7 @@ Deno.serve(async (req) => {
         }
       }
     } else {
+
       // Generic kinds: moodboard / social
       let i = 0;
       async function worker() {
