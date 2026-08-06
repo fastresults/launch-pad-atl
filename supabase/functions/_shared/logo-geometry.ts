@@ -88,33 +88,30 @@ function leafCount(nodes: VectorNode[]): number {
   return nodes.reduce((sum, n) => sum + (n.kind === "group" ? leafCount(n.children ?? []) : 1), 0);
 }
 
-function snap(value: number, module: number): number {
-  if (!Number.isFinite(value) || module < 2) return value;
-  return Math.round(value / module) * module;
-}
-
 /**
- * Snap every coordinate to the module grid and collapse stroke weights to the
- * single declared weight. Path data is snapped number-by-number, which keeps
- * curves intact while pulling their control points onto the grid.
+ * Discipline, not quantisation. Coordinates are left exactly where the designer
+ * put them — snapping them to a module grid is what turned curved marks into
+ * chunky rounded rectangles. What we still enforce is what actually protects
+ * craft: a single stroke weight everywhere, and corner radii drawn from the
+ * declared radius family.
  */
 export function applyConstruction(nodes: VectorNode[], c: Construction): VectorNode[] {
-  const module = clampNumber(c.module, 5, 125, 25);
   const weight = clampNumber(c.stroke_weight, 4, 120, 40);
+  const radii = Array.isArray(c.radii) ? c.radii.map(Number).filter((n) => Number.isFinite(n) && n >= 0) : [];
+  const nearestRadius = (value: number) => {
+    if (!radii.length) return value;
+    return radii.reduce((best, r) => (Math.abs(r - value) < Math.abs(best - value) ? r : best), radii[0]);
+  };
   const walk = (list: VectorNode[]): VectorNode[] => list.map((n) => {
     if (n.kind === "group") return { ...n, children: walk(n.children ?? []) };
     const out: VectorNode = { ...n };
-    for (const key of ["x", "y", "width", "height", "cx", "cy", "r", "rxr", "ryr", "x1", "y1", "x2", "y2"] as const) {
-      if (typeof out[key] === "number") (out as any)[key] = snap(out[key] as number, module);
-    }
-    if (typeof out.d === "string") {
-      out.d = out.d.replace(/-?\d+(\.\d+)?/g, (m) => String(snap(Number(m), module)));
-    }
+    if (out.kind === "rect" && typeof out.rx === "number") out.rx = nearestRadius(out.rx);
     if (out.stroke && out.stroke !== "none") out.strokeWidth = weight;
     return out;
   });
   return walk(nodes);
 }
+
 
 /* --------------------------- bounding box --------------------------- */
 
