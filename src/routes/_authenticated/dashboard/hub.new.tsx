@@ -190,19 +190,26 @@ function Inner() {
     }
   }, [canonicalCtx]);
 
-  // Reusable library
+  // Reusable library — founder-level memory ONLY (sources not yet tied to a
+  // venture: founder bio, Startup Brief captures, files dropped before a
+  // venture existed). Files already attached to another venture are NEVER
+  // listed here; Second Brain memory belongs to one venture.
   const [reusable, setReusable] = useState<VentureSource[]>([]);
   const [reuseSelected, setReuseSelected] = useState<Record<string, boolean>>({});
   const [addMoreOpen, setAddMoreOpen] = useState(false);
+  const [otherVentures, setOtherVentures] = useState<
+    Array<{ snapshotId: string; ventureName: string; sources: VentureSource[] }>
+  >([]);
+  const [otherVenturesOpen, setOtherVenturesOpen] = useState(false);
   const resetStepOneRef = useRef(false);
   useEffect(() => {
-    listVentureSources()
+    listVentureSources({ orphansOnly: true })
       .then((rows) => {
         setReusable(rows);
         if (resetStepOneRef.current) return;
-        // Auto-attach everything readable from the founder's existing memory
-        // (brief sources, scraped URLs, founder bio, prior uploads). The
-        // founder shouldn't have to re-check boxes for what we already have.
+        // Auto-attach everything readable from the founder's own unassigned
+        // memory (brief sources, scraped URLs, founder bio). Never another
+        // venture's material.
         setReuseSelected((prev) => {
           const next = { ...prev };
           for (const r of rows) {
@@ -211,6 +218,9 @@ function Inner() {
           return next;
         });
       })
+      .catch(() => {});
+    listSourcesByOtherVentures()
+      .then(setOtherVentures)
       .catch(() => {});
   }, []);
 
