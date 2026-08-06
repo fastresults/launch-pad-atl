@@ -1328,6 +1328,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         isGeneratingKey={(key) => genOne.isPending && genOne.variables?.documentType === key}
         jobRunning={jobRunning}
         onOpenDayDeck={(d) => setOpenDayDeck(d)}
+        onFinishDay={(d) => bulk.mutate({ days: [d.day] })}
         snapshotId={snapshot.id}
       />
       </div>
