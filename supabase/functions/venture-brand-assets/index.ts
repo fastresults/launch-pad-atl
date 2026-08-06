@@ -566,22 +566,33 @@ async function developVectorSpec(
   return best!;
 }
 
-/** Stage 4 — look at the mark that actually rendered and judge it. */
+/** Stage 4 — the jury. Look at the mark that actually rendered and judge it honestly. */
 async function critiqueMark(
   b64: string,
   d: LogoDirection,
   strategy: BrandStrategy | null,
 ): Promise<{ pass: boolean; note: string }> {
-  const system = `You are a design director reviewing a finished mark before it reaches the client. You are strict. You reject anything that is not a clean, flat, single-idea mark a serious company could adopt.`;
-  const text = `Review this rendered mark against its brief.
+  const system = `You are judging a logo submission for an award feed of professional identity work. You have seen ten thousand generated marks and you can spot one instantly. You are not being kind. Most submissions fail. You only pass work a practising identity designer would put their name on in public.`;
+  const text = `Judge this rendered mark.
 
-Brief: ${d.one_line_idea ?? d.symbol_concept}
+Idea it claims: ${d.one_line_idea ?? d.symbol_concept}
+Craft move it claims: ${d.craft_move ?? d.geometric_operation ?? "unstated"}
 Logo type: ${d.logo_type}
+${strategy?.human_truth ? `Human truth it serves: ${strategy.human_truth}` : ""}
 ${strategy?.core_idea ? `Must communicate: ${strategy.core_idea}` : ""}
 
-Fail it if ANY of these are true: the shape is illegible, broken or reads as random geometry; it looks accidental rather than constructed; the elements are visually unbalanced or float apart; the counterforms are uneven; it carries more than one competing idea; it would disappear or turn to mush at 16px; it does not connect to the brief at all.
+Fail it if ANY of these are true:
+- It reads as auto-generated: primitive shapes arranged neatly, with no drawing in it.
+- It is a cluster of rounded squares, a block plus/cross, dots-and-lines, or a letter parked in a box.
+- The claimed craft move is not actually visible in the artwork.
+- The shape is illegible, broken, accidental, unbalanced, or floats apart.
+- Curves are lumpy, tangents don't meet, or terminals look arbitrary.
+- It carries more than one competing idea, or turns to mush at 16px.
+- It has nothing to do with the human truth or the idea it claims.
+- It would work unchanged for any other company.
 
-Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact geometric change to make"}`;
+Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact drawing change to make"}`;
+
 
   let parsed: any = null;
   try {
