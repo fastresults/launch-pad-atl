@@ -1889,7 +1889,7 @@ function Inner() {
             );
           })}
         </div>
-      </section>
+      </StepShell>
 
       {/* Sticky CTA bar */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
