@@ -204,19 +204,32 @@ export async function loadBrandKit(supabase: any, snapshotId: string): Promise<B
 }
 
 /**
- * Render a locked Brand Kit as an authoritative, "use verbatim" prompt block.
- * Returns "" when the kit is missing or not locked.
+ * A kit is usable for generation when the founder locked it, or when we derived
+ * a provisional one ("auto") from the assets they already have. Anything else
+ * (missing, half-finished draft) still gates the deliverable.
+ */
+export function isBrandKitUsable(kit: BrandKitRow | null): boolean {
+  return kit?.status === "locked" || kit?.status === "auto";
+}
+
+/**
+ * Render a usable Brand Kit as a prompt block. Locked kits are ground truth;
+ * derived ("auto") kits are labelled provisional so the model knows the founder
+ * may still revise them. Returns "" when the kit is missing or unusable.
  */
 export function brandKitBlock(kit: BrandKitRow | null): string {
-  if (!kit || kit.status !== "locked") return "";
+  if (!isBrandKitUsable(kit) || !kit) return "";
   const lines: string[] = [];
   const track = kit.dna?.track;
   const sourceUrl = kit.dna?.source_url;
-  if (track === "existing") {
+  if (kit.status === "auto") {
+    lines.push("## BRAND KIT (PROVISIONAL — inferred from this venture's existing assets; use it consistently throughout, but it may be revised later)");
+  } else if (track === "existing") {
     lines.push(`## BRAND KIT (LOCKED — EXISTING brand, extracted from ${sourceUrl ?? "uploaded assets"}; treat as ground truth, do not modernize or replace)`);
   } else {
     lines.push("## BRAND KIT (LOCKED — authoritative, use VERBATIM, do not invent alternates)");
   }
+
   const logos = Array.isArray(kit.logos) ? kit.logos : [];
   const primaryLogo = logos.find((l: any) => l && l.primary) ?? logos[0];
   if (primaryLogo?.url) {

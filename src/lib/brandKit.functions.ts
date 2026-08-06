@@ -8,7 +8,9 @@ export type BrandKit = {
   id: string;
   snapshot_id: string;
   user_id: string;
-  status: "draft" | "locked";
+  /** "auto" = provisional kit we inferred from finished assets. */
+  status: "draft" | "locked" | "auto";
+
   step: number;
   dna: any;
   palette: any | null;

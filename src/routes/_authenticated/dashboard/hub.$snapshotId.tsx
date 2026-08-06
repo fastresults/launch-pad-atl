@@ -899,7 +899,11 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   });
   const brandKit = brandKitQ.data ?? null;
   const brandKitLocked = brandKit?.status === "locked";
+  // A provisional kit we inferred from finished assets also unblocks generation.
+  const brandKitInferred = brandKit?.status === "auto";
+  const brandKitReady = brandKitLocked || brandKitInferred;
   const brandKitLockedAt = brandKit?.locked_at ?? null;
+
 
   const openBrandWizard = useCallback(() => {
     setBonusOpen(true);
@@ -1451,14 +1455,11 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             catLabel={cat}
             onOpenDeck={(slug) => setOpenDeckSlug(slug)}
             onRegenerate={() => {
-              const needsBrandKit = items.some((t: any) => BRAND_KIT_REQUIRED_TYPES.has(t.type));
-              if (needsBrandKit && !brandKitLocked) {
-                toast.error("Finish the Brand Wizard first — it powers the Website PRD.");
-                openBrandWizard();
-                return;
-              }
+              // No client-side brand gate: if the Brand Wizard isn't locked the
+              // server infers a provisional kit from finished assets.
               bulk.mutate({ category: cat });
             }}
+
           />
         );
         return (
@@ -1489,7 +1490,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               const hasReadableContent = Boolean(d?.content && String(d.content).trim().length > 0);
               const generating = status === "generating" || (genOne.isPending && genOne.variables?.documentType === t.type);
               const needsBrandKit = BRAND_KIT_REQUIRED_TYPES.has(t.type);
-              const brandGated = needsBrandKit && !brandKitLocked;
+              const brandGated = needsBrandKit && !brandKitReady;
               const Icon = isComplete ? CheckCircle2 : brandGated ? Lock : depsMet ? Circle : Lock;
               const tone = isComplete ? "text-status-success" : depsMet && !brandGated ? "text-foreground" : "text-muted-foreground";
 
@@ -1498,7 +1499,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               else if (generating && hasReadableContent) statusLine = "Updating… previous version available";
               else if (generating) statusLine = "Writing now…";
               else if (status === "failed") statusLine = "Needs another try";
-              else if (brandGated) statusLine = "Complete the Brand Wizard to unlock";
+              else if (brandGated) statusLine = "We'll infer your brand from finished assets";
               else if (!depsMet) {
                 const missing = deps.find((dep) => !completedKeys.has(dep));
                 const missingLabel = missing ? ((typeByKey.get(missing) as any)?.name ?? missing) : "earlier assets";
@@ -1517,11 +1518,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                       <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="truncate text-sm font-medium">{t.name}</h4>
                         <TrackChip track={trackFor(t.type)} />
-                        {needsBrandKit && (
-                          <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
-                            Requires Brand Kit
+                        {needsBrandKit && brandKitInferred && (
+                          <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">
+                            Brand inferred — review in Wizard
                           </Badge>
                         )}
+                        {needsBrandKit && !brandKitInferred && (
+                          <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
+                            Uses your Brand Kit
+                          </Badge>
+                        )}
+
                         {stale && (
                           <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">
                             {staleLabel}

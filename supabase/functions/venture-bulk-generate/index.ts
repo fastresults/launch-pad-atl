@@ -15,12 +15,15 @@ import {
   brandKitBlock,
   compactPreamble,
   distillDeps,
+  isBrandKitUsable,
   loadBrandKit,
   loadVentureContext,
   pickBrainSlice,
   type VentureContext,
 } from "../_shared/venture-context.ts";
+import { deriveBrandKitFromAssets } from "../_shared/brand-derive.ts";
 import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
+
 import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
 import { trackTone } from "../_shared/track-tones.ts";
 import {
@@ -137,18 +140,27 @@ async function generateOne(
     .maybeSingle();
   if (!type) throw new Error(`Unknown document type: ${documentType}`);
 
-  // Brand-kit gate: skip deliverables in BRAND_KIT_REQUIRED_TYPES until the
-  // founder has locked their Brand Wizard. Mark the doc 'pending' with a
-  // blocked_reason — blocked docs are never retried, they need the founder.
+  // Brand-kit gate: deliverables in BRAND_KIT_REQUIRED_TYPES need palette /
+  // typography / voice. If the founder hasn't locked a kit, infer a provisional
+  // one from the assets they already have so the run can finish unattended.
+  // Only a failed derivation blocks the asset.
   let brandKit: Awaited<ReturnType<typeof loadBrandKit>> = null;
   if (BRAND_KIT_REQUIRED_TYPES.has(documentType)) {
     brandKit = await loadBrandKit(supabase, snapshotId);
-    if (!brandKit || brandKit.status !== "locked") {
+    if (!isBrandKitUsable(brandKit)) {
+      try {
+        brandKit = await deriveBrandKitFromAssets(supabase, snapshotId, ctx.userId ?? snap.user_id, snap);
+      } catch (e) {
+        console.warn("brand derive threw", e);
+        brandKit = null;
+      }
+    }
+    if (!isBrandKitUsable(brandKit)) {
       await supabase.from("venture_documents").upsert({
         snapshot_id: snapshotId,
         document_type: documentType,
         status: "pending",
-        blocked_reason: "Lock your Brand Wizard to unlock this asset.",
+        blocked_reason: "Couldn't infer your brand from existing assets — open the Brand Wizard.",
       }, { onConflict: "snapshot_id,document_type" });
       // Blocked isn't a failure — clear any stale error row for this doc.
       await supabase.from("venture_generation_failures")
@@ -156,6 +168,7 @@ async function generateOne(
       return; // skip this doc, continue the job
     }
   }
+
 
   await supabase.from("venture_documents").upsert({
     snapshot_id: snapshotId,
