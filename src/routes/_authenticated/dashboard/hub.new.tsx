@@ -1099,8 +1099,16 @@ function Inner() {
         {memoryEmpty && inactiveMemoryChips.length > 0 && !addMoreOpen && (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-background/40 p-3">
             <div className="text-sm">
-              <span className="font-medium">Want to reuse something saved?</span>{" "}
-              <span className="text-muted-foreground">Your library is still saved, but nothing is active for this startup.</span>
+              <span className="font-medium">
+                {isReturningFounder
+                  ? `You have ${inactiveMemoryChips.length} saved source${inactiveMemoryChips.length === 1 ? "" : "s"}.`
+                  : "Want to reuse something saved?"}
+              </span>{" "}
+              <span className="text-muted-foreground">
+                {isReturningFounder
+                  ? "Pick any that apply to this startup — nothing is used until you select it."
+                  : "Your library is still saved, but nothing is active for this startup."}
+              </span>
             </div>
             <Button
               type="button"
@@ -1111,7 +1119,7 @@ function Inner() {
                 setAddMoreOpen(true);
               }}
             >
-              Yes, add more
+              {isReturningFounder ? "Choose sources" : "Yes, add more"}
             </Button>
           </div>
         )}
@@ -1120,13 +1128,31 @@ function Inner() {
           <div className="space-y-2 rounded-xl border border-white/10 bg-background/40 p-3">
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-medium">Saved library sources</div>
-              <button
-                type="button"
-                onClick={() => setAddMoreOpen(false)}
-                className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
-              >
-                Done
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetStepOneRef.current = false;
+                    setReuseSelected((prev) => {
+                      const next = { ...prev };
+                      for (const { row } of inactiveMemoryChips) {
+                        if ((row.extracted_text ?? "").trim()) next[row.id] = true;
+                      }
+                      return next;
+                    });
+                  }}
+                  className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+                >
+                  Select all
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAddMoreOpen(false)}
+                  className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+                >
+                  Done
+                </button>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               {inactiveMemoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin, intent }) => {
