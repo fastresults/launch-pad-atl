@@ -756,6 +756,14 @@ function Inner() {
   const step3Valid = !!track;
   const stepValid = [step1Valid, step2Valid, step3Valid];
 
+  // Locked until reached; complete when passed and not currently open.
+  const stepState = (n: number): StepState => {
+    if (n === activeStep) return "active";
+    if (n > maxStepReached) return "locked";
+    return stepValid[n - 1] ? "complete" : "incomplete";
+  };
+
+
   const missing = [...missingStep2, ...(track ? [] : [{ key: "track", label: "Track" }])];
   const canSubmit = step1Valid && step2Valid && step3Valid && !create.isPending;
   // First step that still blocks creation (1-indexed), or null when all pass.
