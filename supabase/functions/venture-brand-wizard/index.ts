@@ -423,6 +423,13 @@ Deno.serve(async (req) => {
       const out = await extractExistingBrand(ctx, kit, body, supabase, userId, snapshotId);
       return new Response(JSON.stringify(out), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    if (action === "derive_from_assets") {
+      const derived = await deriveBrandKitFromAssets(supabase, snapshotId, userId, ctx.snap);
+      return new Response(JSON.stringify({ ok: !!derived, kit: derived }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (action === "styleguide") {
       const md = await generateGuide(ctx, kit);
       await supabase.from("venture_brand_kits").update({ guide_markdown: md, status: "locked", locked_at: new Date().toISOString() }).eq("snapshot_id", snapshotId);
