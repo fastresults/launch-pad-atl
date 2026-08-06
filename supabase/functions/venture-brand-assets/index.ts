@@ -550,12 +550,12 @@ Deno.serve(async (req) => {
     }
 
     if (kind === "logo") {
-      // Legacy single-shot path kept only for old clients: brief only, no renders.
+      // Legacy single-shot path: retired — it could not fit inside one request.
       throw new Error("Use kind 'logo_brief' then 'logo_render' — the single-shot logo run is retired.");
-    } else {
+    }
 
-
-      // Generic kinds: moodboard / social
+    // Generic kinds: moodboard / social
+    {
       let i = 0;
       async function worker() {
         while (i < n) {
@@ -576,29 +576,14 @@ Deno.serve(async (req) => {
 
     // Persist into the brand kit so the live preview & guide pick them up.
     try {
-      const fresh = results.filter((r) => r?.ok).map((r) => {
-        if (kind === "logo") {
-          return {
-            url: r.url, path: r.path,
-            direction_name: r.direction_name, logo_type: r.logo_type,
-            one_line_idea: r.one_line_idea, why_memorable: r.why_memorable,
-            symbol_concept: r.symbol_concept, prompt: r.prompt,
-            direction: r.direction,
-            created_at: r.created_at,
-          };
-
-        }
-        return { url: r.url, path: r.path };
-      });
-      if (fresh.length) {
-        const column = kind === "moodboard" ? "moodboard" : kind === "logo" ? "logos" : null;
-        if (column && kit) {
-          const existing = Array.isArray((kit as any)[column]) ? (kit as any)[column] : [];
-          const next = [...fresh, ...existing].slice(0, 8);
-          await supabase.from("venture_brand_kits").update({ [column]: next }).eq("snapshot_id", snapshotId);
-        }
+      const fresh = results.filter((r) => r?.ok).map((r) => ({ url: r.url, path: r.path }));
+      if (fresh.length && kind === "moodboard" && kit) {
+        const existing = Array.isArray((kit as any).moodboard) ? (kit as any).moodboard : [];
+        const next = [...fresh, ...existing].slice(0, 8);
+        await supabase.from("venture_brand_kits").update({ moodboard: next }).eq("snapshot_id", snapshotId);
       }
     } catch { /* non-fatal */ }
+
 
     return new Response(JSON.stringify({ ok: true, kind, assets: results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
