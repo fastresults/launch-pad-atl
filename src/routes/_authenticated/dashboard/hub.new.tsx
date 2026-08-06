@@ -1741,17 +1741,19 @@ function Inner() {
         }
         footer={
           <StepNav
-            canGoNext={step2Valid}
-            blockedReason={
-              missingStep2.length
-                ? `Still needed: ${missingStep2.map((m) => m.label).join(", ")}`
-                : undefined
+            canGoNext={step2Valid && !conceptExtracting}
+            blockedReason={conceptExtracting ? "Reading your concept…" : undefined}
+            blockedItems={
+              conceptExtracting
+                ? undefined
+                : missingStep2.map((m) => ({ ...m, onClick: () => jumpTo(m.key) }))
             }
             onBack={goBack}
             onNext={goNext}
             nextLabel="Continue to track"
           />
         }
+
       >
         {true && (
 
