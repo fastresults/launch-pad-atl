@@ -15,6 +15,8 @@ import {
   uploadVentureSource,
   attachSourcesToSnapshot,
   listVentureSources,
+  listSourcesByOtherVentures,
+  copySourceToSnapshot,
   deleteVentureSource,
   updateVentureSourceIntent,
   type VentureSource,
@@ -190,19 +192,26 @@ function Inner() {
     }
   }, [canonicalCtx]);
 
-  // Reusable library
+  // Reusable library — founder-level memory ONLY (sources not yet tied to a
+  // venture: founder bio, Startup Brief captures, files dropped before a
+  // venture existed). Files already attached to another venture are NEVER
+  // listed here; Second Brain memory belongs to one venture.
   const [reusable, setReusable] = useState<VentureSource[]>([]);
   const [reuseSelected, setReuseSelected] = useState<Record<string, boolean>>({});
   const [addMoreOpen, setAddMoreOpen] = useState(false);
+  const [otherVentures, setOtherVentures] = useState<
+    Array<{ snapshotId: string; ventureName: string; sources: VentureSource[] }>
+  >([]);
+  const [otherVenturesOpen, setOtherVenturesOpen] = useState(false);
   const resetStepOneRef = useRef(false);
   useEffect(() => {
-    listVentureSources()
+    listVentureSources({ orphansOnly: true })
       .then((rows) => {
         setReusable(rows);
         if (resetStepOneRef.current) return;
-        // Auto-attach everything readable from the founder's existing memory
-        // (brief sources, scraped URLs, founder bio, prior uploads). The
-        // founder shouldn't have to re-check boxes for what we already have.
+        // Auto-attach everything readable from the founder's own unassigned
+        // memory (brief sources, scraped URLs, founder bio). Never another
+        // venture's material.
         setReuseSelected((prev) => {
           const next = { ...prev };
           for (const r of rows) {
@@ -211,6 +220,9 @@ function Inner() {
           return next;
         });
       })
+      .catch(() => {});
+    listSourcesByOtherVentures()
+      .then(setOtherVentures)
       .catch(() => {});
   }, []);
 
@@ -251,6 +263,32 @@ function Inner() {
     setReusable((prev) => (prev.some((r) => r.id === row.id) ? prev : [row, ...prev]));
     setReuseSelected((prev) => ({ ...prev, [row.id]: true }));
   }, []);
+
+  // Copy (never move) a file that belongs to another venture into this
+  // intake's memory. The source venture keeps its own copy.
+  const [copyingId, setCopyingId] = useState<string | null>(null);
+  const copyFromVenture = useCallback(
+    async (row: VentureSource) => {
+      setCopyingId(row.id);
+      try {
+        const copy = await copySourceToSnapshot({ documentId: row.id, snapshotId: null });
+        appendToMemory(copy);
+        setOtherVentures((prev) =>
+          prev
+            .map((g) => ({ ...g, sources: g.sources.filter((s) => s.id !== row.id) }))
+            .filter((g) => g.sources.length > 0),
+        );
+        toast.success("Copied into this venture's memory");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Could not copy that source");
+      } finally {
+        setCopyingId(null);
+      }
+    },
+    [appendToMemory],
+  );
+
+
 
 
   const addFiles = useCallback(
@@ -773,7 +811,7 @@ function Inner() {
             <p className="mt-0.5 text-sm text-muted-foreground">
               {memoryEmpty
                 ? intakeStatus
-                : "Here's everything we're already using as your single source of truth. We'll carry all of it into this startup snapshot."}
+                : "This is your founder-level memory — bio, brief captures and anything not yet tied to a venture. We'll carry it into this startup snapshot. Other ventures keep their own brain."}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -870,6 +908,62 @@ function Inner() {
                 name, address, or contact info. Fill those in below.
               </div>
             )}
+
+            {/* Explicit, opt-in reuse of another venture's material. Copies —
+                never moves — so the other venture keeps its Second Brain. */}
+            {otherVentures.length > 0 && (
+              <div className="rounded-xl border border-white/10 bg-background/40 p-3">
+                <button
+                  type="button"
+                  onClick={() => setOtherVenturesOpen((v) => !v)}
+                  className="flex w-full items-center justify-between gap-3 text-left"
+                >
+                  <span className="text-sm">
+                    <span className="font-medium">Reuse a file from another venture?</span>{" "}
+                    <span className="text-muted-foreground">
+                      Each venture keeps its own brain — picking one copies it here.
+                    </span>
+                  </span>
+                  {otherVenturesOpen ? (
+                    <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  )}
+                </button>
+
+                {otherVenturesOpen && (
+                  <div className="mt-3 space-y-3">
+                    {otherVentures.map((group) => (
+                      <div key={group.snapshotId}>
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          {group.ventureName}
+                        </div>
+                        <div className="mt-1.5 flex flex-wrap gap-2">
+                          {group.sources.map((row) => (
+                            <button
+                              key={row.id}
+                              type="button"
+                              disabled={copyingId === row.id}
+                              onClick={() => copyFromVenture(row)}
+                              className="inline-flex max-w-[280px] items-center gap-2 rounded-full border border-white/15 bg-background/60 px-3 py-1.5 text-xs transition hover:border-primary/40 hover:bg-primary/10 disabled:opacity-60"
+                            >
+                              {copyingId === row.id ? (
+                                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+                              ) : (
+                                <Plus className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              )}
+                              <span className="min-w-0 flex-1 truncate">{row.original_name ?? "source"}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+
 
 
 
