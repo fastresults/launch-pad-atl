@@ -1013,7 +1013,14 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const total = requiredTypes.length;
   const job = jobQ.data;
   const jobRunning = job?.status === "running" || job?.status === "queued";
-  const failures = failuresQ.data ?? [];
+  const blocked = (blockedQ.data ?? []) as { document_type: string; blocked_reason: string }[];
+  const blockedKeys = new Set(blocked.map((b) => b.document_type));
+  // Only surface real errors here — anything waiting on the founder shows in
+  // the "Needs you" group instead.
+  const failures = (failuresQ.data ?? []).filter((f: any) => !blockedKeys.has(f.document_type));
+  const retryRound = (job as any)?.retry_round ?? 0;
+  const retryRemaining = (job as any)?.retry_remaining ?? 0;
+
 
   useEffect(() => {
     const readyHeroPaths = docs
