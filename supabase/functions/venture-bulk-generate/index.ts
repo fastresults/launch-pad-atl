@@ -497,7 +497,7 @@ async function runLayer(
         heartbeat_at: new Date().toISOString(),
       }).eq("id", jobId);
       try {
-        await generateOne(supabase, ctx, t.type, mode);
+        await generateOne(supabase, ctx, t.type, mode, dayContext);
         state.done++;
         state.fails = 0;
       } catch (e) {
