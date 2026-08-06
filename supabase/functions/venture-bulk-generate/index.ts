@@ -948,9 +948,11 @@ Deno.serve(async (req) => {
         ? Array.from({ length: 14 }, (_, i) => i + 1)
         : null;
 
-    // Reuse a running job if there is one. Retry-only runs also adopt a paused
-    // or blocked job instead of starting a fresh one.
-    const reusableStatuses = retryArg
+    const dayOnlyArg = Array.isArray(daysArg) && daysArg.length > 0;
+
+    // Reuse a running job if there is one. Retry-only and day-only runs also
+    // adopt a paused or blocked job instead of starting a fresh one.
+    const reusableStatuses = retryArg || dayOnlyArg
       ? ["queued", "running", "paused", "completed_with_blockers"]
       : ["queued", "running"];
     const { data: existing } = await supabase
@@ -979,13 +981,14 @@ Deno.serve(async (req) => {
     // @ts-ignore: EdgeRuntime is provided by Supabase Edge Functions runtime.
     if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
       // @ts-ignore
-      EdgeRuntime.waitUntil(runJob(supabase, snapshotId, jobId!, categoryArg, retryArg));
+      EdgeRuntime.waitUntil(runJob(supabase, snapshotId, jobId!, categoryArg, retryArg, daysArg));
     } else {
-      runJob(supabase, snapshotId, jobId!, categoryArg, retryArg).catch((e) => console.error("bulk job failed", e));
+      runJob(supabase, snapshotId, jobId!, categoryArg, retryArg, daysArg).catch((e) => console.error("bulk job failed", e));
     }
 
 
-    return new Response(JSON.stringify({ ok: true, jobId, category: categoryArg }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ ok: true, jobId, category: categoryArg, days: daysArg }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return new Response(JSON.stringify({ error: message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
