@@ -57,6 +57,8 @@ import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { toast } from "sonner";
 import { useCanonicalContext } from "@/hooks/use-canonical-context";
 import { invokeEdge } from "@/lib/edge-invoke";
+import { StepShell, StepStrip, StepNav, type StepState } from "@/components/hub/VentureWizard";
+
 
 type DroppedFile = {
   id: string;
@@ -170,8 +172,18 @@ function Inner() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewTouched, setReviewTouched] = useState(false);
 
+  // ── Progressive wizard ────────────────────────────────────────────────
+  // activeStep = the one expanded step. maxStepReached = furthest step the
+  // founder has unlocked; steps at or below it stay clickable so they can
+  // move backward and forward freely without losing any state.
+  const [activeStep, setActiveStep] = useState(1);
+  const [maxStepReached, setMaxStepReached] = useState(1);
+
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const fieldRefs = useRef<Record<string, HTMLElement | null>>({});
+  const stepRefs = useRef<Record<number, HTMLElement | null>>({});
+
 
   // Prefill from canonical context.
   const { data: canonicalCtx } = useCanonicalContext();
@@ -657,7 +669,11 @@ function Inner() {
     setDrafting(false);
     setFromBrief(false);
     autoSigRef.current = "";
+    // Back to a clean wizard — steps 2 and 3 re-lock.
+    setActiveStep(1);
+    setMaxStepReached(1);
     setResetOpen(false);
+
     toast.success("Step 1 cleared. Your library is still saved — add a source or type your concept to start again.");
   };
   const anySelectedChips = activeMemoryChips.length > 0;
@@ -719,28 +735,68 @@ function Inner() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not create venture"),
   });
 
-  // Missing-field map (key -> human label)
-  const missing: { key: string; label: string }[] = [];
-  if (businessConcept.trim().length < 20) missing.push({ key: "businessConcept", label: "Business concept" });
-  if (!companyName.trim()) missing.push({ key: "companyName", label: "Company name" });
-  if (!founderName.trim()) missing.push({ key: "founderName", label: "Founder name" });
-  if (!founderEmail.trim()) missing.push({ key: "founderEmail", label: "Founder email" });
-  if (!city.trim()) missing.push({ key: "city", label: "City" });
-  if (!region.trim()) missing.push({ key: "region", label: "State / region" });
-  if (!country.trim()) missing.push({ key: "country", label: "Country" });
-  if (!industry.trim()) missing.push({ key: "industry", label: "Industry" });
-  if (!track) missing.push({ key: "track", label: "Track" });
-  const canSubmit = missing.length === 0 && !create.isPending;
+  // ── Per-step validation ───────────────────────────────────────────────
+  // Step 2 owns the founder/market/concept fields; step 3 owns the track.
+  const missingStep2: { key: string; label: string }[] = [];
+  if (businessConcept.trim().length < 20) missingStep2.push({ key: "businessConcept", label: "Business concept" });
+  if (!companyName.trim()) missingStep2.push({ key: "companyName", label: "Company name" });
+  if (!founderName.trim()) missingStep2.push({ key: "founderName", label: "Founder name" });
+  if (!founderEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(founderEmail.trim()))
+    missingStep2.push({ key: "founderEmail", label: "Founder email" });
+  if (!city.trim()) missingStep2.push({ key: "city", label: "City" });
+  if (!region.trim()) missingStep2.push({ key: "region", label: "State / region" });
+  if (!country.trim()) missingStep2.push({ key: "country", label: "Country" });
+  if (!industry.trim()) missingStep2.push({ key: "industry", label: "Industry" });
 
-  // Auto-expand review when there are missing fields (after first sync).
-  useEffect(() => {
-    if (reviewTouched) return;
-    if (missing.length > 0) setReviewOpen(true);
-    else setReviewOpen(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [missing.length]);
+  // Step 1 passes on real AI signal: a readable source or a typed concept —
+  // and never while synthesis is still running (AI-first, not form-first).
+  const readySourceCount = combinedDocs.length + readyUrls.length;
+  const step1Valid = !drafting && (readySourceCount > 0 || businessConcept.trim().length >= 20);
+  const step2Valid = missingStep2.length === 0;
+  const step3Valid = !!track;
+  const stepValid = [step1Valid, step2Valid, step3Valid];
+
+  // Locked until reached; complete when passed and not currently open.
+  const stepState = (n: number): StepState => {
+    if (n === activeStep) return "active";
+    if (n > maxStepReached) return "locked";
+    return stepValid[n - 1] ? "complete" : "incomplete";
+  };
+
+
+  const missing = [...missingStep2, ...(track ? [] : [{ key: "track", label: "Track" }])];
+  const canSubmit = step1Valid && step2Valid && step3Valid && !create.isPending;
+  // First step that still blocks creation (1-indexed), or null when all pass.
+  const blockingStep = !step1Valid ? 1 : !step2Valid ? 2 : !step3Valid ? 3 : null;
+
+  const step1Blocker = drafting
+    ? "Reading your sources…"
+    : "Add a source or describe the startup (20+ characters)";
+
+  // Move to a step, unlocking it as the furthest reached, and scroll it in.
+  const goToStep = useCallback((n: number) => {
+    setActiveStep(n);
+    setMaxStepReached((prev) => Math.max(prev, n));
+    setTimeout(() => {
+      stepRefs.current[n]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }, []);
+
+  const goNext = useCallback(() => {
+    if (activeStep >= 3) return;
+    if (!stepValid[activeStep - 1]) return;
+    goToStep(activeStep + 1);
+  }, [activeStep, goToStep, stepValid[0], stepValid[1], stepValid[2]]);
+
+  const goBack = useCallback(() => {
+    if (activeStep <= 1) return;
+    goToStep(activeStep - 1);
+  }, [activeStep, goToStep]);
 
   const jumpTo = (key: string) => {
+    const step = key === "track" ? 3 : 2;
+    setActiveStep(step);
+    setMaxStepReached((prev) => Math.max(prev, step));
     setReviewOpen(true);
     setReviewTouched(true);
     setTimeout(() => {
@@ -748,9 +804,13 @@ function Inner() {
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         (el as HTMLInputElement).focus?.();
+      } else {
+        stepRefs.current[step]?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
-    }, 50);
+    }, 80);
   };
+
+
 
   const registerRef = (key: string) => (el: HTMLElement | null) => {
     fieldRefs.current[key] = el;
@@ -788,7 +848,7 @@ function Inner() {
 
       <div>
         <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
-          <Sparkles className="h-3.5 w-3.5" /> Create a venture · 3 quick steps
+          <Sparkles className="h-3.5 w-3.5" /> Create a venture
         </div>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">
           {fromBrief ? "Your Startup Snapshot — ready to confirm" : "Tell us about the venture"}
@@ -798,22 +858,41 @@ function Inner() {
             ? "We pre-filled this from your founder brief. Skim, fix anything off, then create."
             : "Give us anything — a deck, a link, a voice note. We'll fill the form, you confirm, we generate."}
         </p>
+        <div className="mt-4">
+          <StepStrip
+            activeStep={activeStep}
+            onSelect={goToStep}
+            steps={[
+              { n: 1, label: "Source", state: stepState(1) },
+              { n: 2, label: "Confirm", state: stepState(2) },
+              { n: 3, label: "Track", state: stepState(3) },
+            ]}
+          />
+        </div>
       </div>
 
       {/* ───────────────────────── STEP 1 — AI INTAKE ───────────────────────── */}
-      <section className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-primary">Step 1</div>
-            <h2 className="mt-0.5 text-lg font-semibold">
-              {memoryEmpty ? "Give us something to work with" : "Your source memory"}
-            </h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {memoryEmpty
-                ? intakeStatus
-                : "This is your founder-level memory — bio, brief captures and anything not yet tied to a venture. We'll carry it into this startup snapshot. Other ventures keep their own brain."}
-            </p>
-          </div>
+      <StepShell
+        n={1}
+        state={stepState(1)}
+        innerRef={(el) => {
+          stepRefs.current[1] = el;
+        }}
+        onOpen={() => goToStep(1)}
+        title={memoryEmpty ? "Give us something to work with" : "Your source memory"}
+        description={
+          memoryEmpty
+            ? intakeStatus
+            : "This is your founder-level memory — bio, brief captures and anything not yet tied to a venture. We'll carry it into this startup snapshot. Other ventures keep their own brain."
+        }
+        summary={
+          readySourceCount > 0
+            ? `${readySourceCount} source${readySourceCount === 1 ? "" : "s"} read${
+                Object.keys(aiFilled).length ? ` · ${Object.keys(aiFilled).length} fields filled` : ""
+              }`
+            : "Concept described by hand"
+        }
+        headerRight={
           <div className="flex items-center gap-2">
             {drafting && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
             <Button
@@ -828,8 +907,18 @@ function Inner() {
               Reset step 1
             </Button>
           </div>
+        }
+        footer={
+          <StepNav
+            canGoNext={step1Valid}
+            blockedReason={step1Blocker}
+            onNext={goNext}
+            nextLabel="Continue to details"
+          />
+        }
+      >
+        <>
 
-        </div>
 
         {/* Memory chips — what we already have in collective memory */}
         {!memoryEmpty && (
@@ -1489,43 +1578,46 @@ function Inner() {
             </Button>
           </div>
         )}
-      </section>
+        </>
+      </StepShell>
 
-      {/* ─────────────────── STEP 2 — CONFIRM (collapsible) ─────────────────── */}
-      <section className="space-y-3 rounded-2xl border border-white/10 bg-card p-6">
-        <button
-          type="button"
-          onClick={() => {
-            setReviewOpen((v) => !v);
-            setReviewTouched(true);
-          }}
-          className="flex w-full items-start justify-between gap-3 text-left"
-        >
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-primary">Step 2</div>
-            <h2 className="mt-0.5 flex items-center gap-2 text-lg font-semibold">
-              Confirm what we found
-              {missing.length === 0 ? (
-                <CheckCircle2 className="h-4 w-4 text-status-success" />
-              ) : (
-                <span className="rounded-full bg-status-danger/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-status-danger">
-                  {missing.length} to fix
-                </span>
-              )}
-            </h2>
-            {!reviewOpen && summaryLine && (
-              <p className="mt-1 text-sm text-muted-foreground">{summaryLine}</p>
-            )}
-            {!reviewOpen && !summaryLine && (
-              <p className="mt-1 text-sm text-muted-foreground">Tap to fill in founder + market details.</p>
-            )}
-          </div>
-          <span className="shrink-0 text-muted-foreground">
-            {reviewOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-          </span>
-        </button>
+      {/* ─────────────────── STEP 2 — CONFIRM ─────────────────── */}
+      <StepShell
+        n={2}
+        state={stepState(2)}
+        innerRef={(el) => {
+          stepRefs.current[2] = el;
+        }}
+        onOpen={() => goToStep(2)}
+        title="Confirm what we found"
+        description="Skim what the AI pulled from your sources and fix anything that's off."
+        lockedHint="Add a source or describe the startup in step 1 to unlock."
+        summary={summaryLine || "Founder + market details"}
+        headerRight={
+          missingStep2.length === 0 ? (
+            <CheckCircle2 className="h-4 w-4 text-status-success" />
+          ) : (
+            <span className="rounded-full bg-status-danger/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-status-danger">
+              {missingStep2.length} to fix
+            </span>
+          )
+        }
+        footer={
+          <StepNav
+            canGoNext={step2Valid}
+            blockedReason={
+              missingStep2.length
+                ? `Still needed: ${missingStep2.map((m) => m.label).join(", ")}`
+                : undefined
+            }
+            onBack={goBack}
+            onNext={goNext}
+            nextLabel="Continue to track"
+          />
+        }
+      >
+        {true && (
 
-        {reviewOpen && (
           <div className="space-y-5 pt-2">
             {/* Founder + market */}
             <div className="space-y-3">
@@ -1731,18 +1823,21 @@ function Inner() {
             </div>
           </div>
         )}
-      </section>
+      </StepShell>
 
       {/* ───────────────────── STEP 3 — TRACK + CREATE ────────────────────── */}
-      <section className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-primary">Step 3</div>
-            <h2 className="mt-0.5 text-lg font-semibold">Pick your track</h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              We tune the voice of every document to match. You can change this later.
-            </p>
-          </div>
+      <StepShell
+        n={3}
+        state={stepState(3)}
+        innerRef={(el) => {
+          stepRefs.current[3] = el;
+        }}
+        onOpen={() => goToStep(3)}
+        title="Pick your track"
+        description="We tune the voice of every document to match. You can change this later."
+        lockedHint="Confirm your founder + market details in step 2 to unlock."
+        summary={track ? TRACK_BY_KEY[track]?.label ?? "Track selected" : "No track picked yet"}
+        headerRight={
           <button
             type="button"
             onClick={() => setShowTrackHelp((v) => !v)}
@@ -1750,7 +1845,29 @@ function Inner() {
           >
             {showTrackHelp ? "Hide" : "What's this?"}
           </button>
-        </div>
+        }
+        footer={
+          <StepNav
+            canGoNext={canSubmit}
+            blockedReason={!track ? "Pick a track to continue" : undefined}
+            onBack={goBack}
+            nextSlot={
+              <Button size="sm" disabled={!canSubmit} onClick={() => create.mutate()}>
+                {create.isPending ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Creating…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-1.5 h-4 w-4" /> Create &amp; start enrichment
+                  </>
+                )}
+              </Button>
+            }
+          />
+        }
+      >
+
         {showTrackHelp && (
           <p className="rounded-md bg-white/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
             Built primarily for <strong>Main Street founders</strong> — first-time owners opening a café, salon, trade, local service, indie product, or small e-commerce brand. Pick a different track only if you're building something materially different (venture-track SaaS, marketplace, deep tech).
@@ -1782,25 +1899,26 @@ function Inner() {
             );
           })}
         </div>
-      </section>
+      </StepShell>
 
       {/* Sticky CTA bar */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          {missing.length > 0 ? (
-            <div className="flex flex-wrap items-center gap-1.5 text-xs">
-              <span className="text-muted-foreground">Still needed:</span>
-              {missing.map((m) => (
-                <button
-                  key={m.key}
-                  type="button"
-                  onClick={() => jumpTo(m.key)}
-                  className="rounded-full border border-status-danger/40 bg-status-danger/10 px-2 py-0.5 font-medium text-status-danger hover:bg-status-danger/20"
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
+          {blockingStep ? (
+            <button
+              type="button"
+              onClick={() => goToStep(blockingStep)}
+              className="flex items-center gap-2 text-left text-xs text-muted-foreground hover:text-foreground"
+            >
+              <span className="rounded-full border border-status-danger/40 bg-status-danger/10 px-2 py-0.5 font-semibold uppercase tracking-wider text-status-danger">
+                Step {blockingStep}
+              </span>
+              {blockingStep === 1
+                ? step1Blocker
+                : blockingStep === 2
+                  ? `Still needed: ${missingStep2.map((m) => m.label).join(", ")}`
+                  : "Pick a track"}
+            </button>
           ) : (
             <div className="flex items-center gap-2 text-sm text-status-success">
               <CheckCircle2 className="h-4 w-4" /> Ready to create
@@ -1819,6 +1937,7 @@ function Inner() {
               </>
             )}
           </Button>
+
         </div>
       </div>
 
