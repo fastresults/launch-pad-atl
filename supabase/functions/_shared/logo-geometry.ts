@@ -377,17 +377,14 @@ export function lintVectorSpec(spec: VectorSpec): LintResult {
   const weights = new Set(leaves.filter((n) => n.stroke && n.stroke !== "none").map((n) => Math.round(clampNumber(n.strokeWidth, 0, 140, 0))));
   if (weights.size > 1) findings.push("Use one single stroke weight across the whole mark.");
 
-  // grid discipline
-  const coords: number[] = [];
-  for (const n of leaves) {
-    for (const key of ["x", "y", "width", "height", "cx", "cy", "r", "x1", "y1", "x2", "y2"] as const) {
-      if (typeof n[key] === "number") coords.push(n[key] as number);
-    }
-    if (typeof n.d === "string") coords.push(...(n.d.match(/-?\d+(\.\d+)?/g) ?? []).map(Number).slice(0, 60));
+  // craft signal: a mark built only from axis-aligned rectangles reads as a
+  // generated block cluster, which is exactly the failure mode we are killing.
+  const curved = leaves.filter((n) => n.kind === "circle" || n.kind === "ellipse" || (n.kind === "path" && /[CSQTA]/i.test(String(n.d ?? "")))).length;
+  const boxy = leaves.filter((n) => n.kind === "rect").length;
+  if (leaves.length >= 3 && curved === 0 && boxy >= leaves.length - 1) {
+    findings.push("The mark is a cluster of rectangles — rebuild it with real drawn geometry (arcs, curves or a continuous contour) instead of stacked boxes.");
   }
-  const offGrid = coords.filter((v) => Math.abs(v / module - Math.round(v / module)) > 0.001).length;
-  const offGridRatio = coords.length ? offGrid / coords.length : 0;
-  if (offGridRatio > 0.15) findings.push("Align every coordinate to the declared module grid.");
+
 
   // proportion & coverage
   const box = boundingBox(nodes);
