@@ -22,6 +22,7 @@ import {
   type VentureContext,
 } from "../_shared/venture-context.ts";
 import { deriveBrandKitFromAssets } from "../_shared/brand-derive.ts";
+import { deriveIntakeAnswers, derivedIntakeBlock, type DerivedIntake } from "../_shared/intake-derive.ts";
 import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
 
 import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
