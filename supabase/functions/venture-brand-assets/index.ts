@@ -477,41 +477,47 @@ function drawInstruction(
   wantsType: boolean,
   fixNotes: string[],
 ): string {
-  return `Engineer the approved direction below as an exact 1000×1000 vector construction.
+  return `Draw the approved direction below as a finished 1000×1000 vector mark. You are drawing, not assembling — the result has to look like a designer's hand made it.
 
 ${dossier}
 
 APPROVED DIRECTION
 ${JSON.stringify(d)}
 
-CONSTRUCTION CONTRACT — declare it, then obey it
-- module: the grid unit every coordinate is a multiple of (pick 20, 25 or 50)
-- stroke_weight: ONE weight used by every stroked element (typically 3–5 modules)
-- radii: the small set of corner radii allowed (multiples of the module)
-- symmetry: the axis or rotation the construction is built on ("vertical mirror", "90° rotation", "none")
+HOW TO DRAW IT
+- Lead with path geometry. A single well-drawn contour beats six stacked primitives. Target 1–5 elements; 12 is a hard ceiling.
+- Path commands available: M L H V C S Q T A Z. Build curves with C/S/Q and true circles with A. Curves are the default vocabulary.
+- Use fillRule "evenodd" on a path to cut a counterform out of a solid shape — that is how negative-space ideas are made.
+- Use group + transform (translate / rotate / scale) for mirrored or rotationally repeated construction instead of hand-placing duplicates.
+- Circle, ellipse, rect and line exist for the rare case where the pure form IS the idea. If your mark is mostly rects, you have failed this brief.
+- Coordinates are free — they are NOT snapped to a grid. Place points where the drawing needs them, including off-round values for optical correction.
+- Every stroked element uses the identical stroke_weight. Never mix thick and thin.
+- Build the symbol anywhere in 0..1000; it is optically re-centred and scaled afterwards, so proportion matters, absolute position does not.
+- Colour: fill/stroke from primary | secondary | accent | white | none. Two inks maximum plus white. Flat only, no gradients.
 
-GEOMETRY
-- Up to 12 elements total. Fewer is better: 3–7 is the target.
-- Elements: rect (x,y,width,height,rx) · circle (cx,cy,r) · ellipse (cx,cy,rxr,ryr) · line (x1,y1,x2,y2) · path (d, commands M L H V C S Q T A Z) · group (children[], transform{translate,rotate,scale})
-- Use group + transform to build modular, mirrored or rotationally repeated marks. That is how real geometric identities are constructed — do not hand-place duplicates.
-- Use fillRule "evenodd" on a path to cut a counterform out of a solid shape. That is how negative-space ideas are made.
-- Arcs (A) and smooth curves (S) exist — use true circular geometry, not polygon approximations.
-- Every coordinate must be a multiple of the module. Every stroked element must use the identical stroke_weight. Never mix thick and thin strokes.
-- Build the symbol anywhere in 0..1000; it is optically re-centred and scaled after you return it, so proportion matters, absolute position does not.
-- Colour: fill/stroke from primary | secondary | accent | white | none. Two inks maximum plus white. Flat only.
+CRAFT CONTRACT — declare it, then obey it
+- stroke_weight: the ONE weight for every stroked element
+- radii: the small family of corner radii allowed (keep it to one or two values)
+- symmetry: the axis or rotation the construction is built on ("vertical mirror", "90° rotation", "none")
+- The direction's craft move (${d.craft_move ?? d.geometric_operation ?? "the single drawing move"}) must be visibly present in the geometry.
 
 OPTICAL DISCIPLINE
 - Curves and points overshoot flat edges slightly; circles read smaller than squares of the same measure — compensate.
+- Curve continuity matters: tangents must meet cleanly, terminals must be intentional.
 - Counterforms (the holes) must be as considered as the positive shapes.
 - The silhouette must read as ONE idea at 16px. If two ideas compete, cut one.
+
+NEVER DRAW
+${BANNED_FORMS}
 
 ${wantsType ? `WORDMARK: include wordmark with text exactly "${companyName}", a case, weight 300–800, and tracking in 1/1000 em (−40 to 120). It is set in the brand's real typeface and outlined at render time, so specify treatment, not a font name.` : "WORDMARK: omit it entirely — this is a symbol-only direction."}
 
 ${fixNotes.length ? `THE PREVIOUS ATTEMPT WAS REJECTED. Fix exactly these, changing nothing else that already worked:\n- ${fixNotes.join("\n- ")}` : ""}
 
-Return STRICT JSON:
-{"construction":{"module":25,"stroke_weight":100,"radii":[0,50],"symmetry":"vertical mirror"},"primitives":[{"kind":"path","d":"M 200 200 L 800 200 ...","fill":"primary","stroke":"none","strokeWidth":0,"fillRule":"evenodd"}]${wantsType ? `,"wordmark":{"text":"${companyName}","case":"upper","weight":600,"tracking":40}` : ""},"rationale":"one sentence naming the single geometric operation that creates the mark","quality_scores":{"relevance":5,"distinctiveness":5,"simplicity":5,"scalability":5,"balance":5}}
+Return STRICT JSON (the path below is only a shape hint — draw your own):
+{"construction":{"module":10,"stroke_weight":88,"radii":[0],"symmetry":"vertical mirror"},"primitives":[{"kind":"path","d":"M 500 140 C 700 140 860 300 860 500 C 860 700 700 860 500 860 C 380 860 300 780 300 660 C 300 540 400 470 520 470","fill":"none","stroke":"primary","strokeWidth":88}]${wantsType ? `,"wordmark":{"text":"${companyName}","case":"upper","weight":600,"tracking":40}` : ""},"rationale":"one sentence naming the single drawing move that creates the mark","quality_scores":{"relevance":5,"distinctiveness":5,"craft":5,"scalability":5,"balance":5}}
 Scores are 1-5 and must be honest.`;
+
 }
 
 /**
