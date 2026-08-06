@@ -1547,6 +1547,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                             Uses your Brand Kit
                           </Badge>
                         )}
+                        {(d as any)?.intake_source === "derived" && (
+                          <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">
+                            Assumptions used — review inputs
+                          </Badge>
+                        )}
+                        {(d as any)?.status === "not_applicable" && (
+                          <Badge variant="outline" className="border-white/20 text-[10px] text-muted-foreground">
+                            Doesn't apply to this venture
+                          </Badge>
+                        )}
+
 
                         {stale && (
                           <Badge variant="outline" className="border-status-warning/40 text-[10px] text-status-warning">
