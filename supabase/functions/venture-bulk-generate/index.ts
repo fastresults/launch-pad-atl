@@ -22,6 +22,7 @@ import {
   type VentureContext,
 } from "../_shared/venture-context.ts";
 import { deriveBrandKitFromAssets } from "../_shared/brand-derive.ts";
+import { deriveIntakeAnswers, derivedIntakeBlock, type DerivedIntake } from "../_shared/intake-derive.ts";
 import { ensureSnapshotBrain } from "../_shared/snapshot-brain.ts";
 
 import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
@@ -195,13 +196,41 @@ async function generateOne(
   // Pick up any intake answers the founder previously saved for this doc.
   const { data: priorRow } = await supabase
     .from("venture_documents")
-    .select("intake_answers")
+    .select("intake_answers, intake_source")
     .eq("snapshot_id", snapshotId)
     .eq("document_type", documentType)
     .maybeSingle();
-  const effectiveIntake = priorRow?.intake_answers && Object.keys(priorRow.intake_answers).length
+  let effectiveIntake = priorRow?.intake_answers && Object.keys(priorRow.intake_answers).length
     ? priorRow.intake_answers
     : null;
+  let derivedIntake: DerivedIntake | null = null;
+
+  // Intake gate: this asset asks the founder for numbers. Rather than skipping
+  // it forever, infer those numbers from the assets already on file and label
+  // them as assumptions. Only a failed derivation blocks the asset.
+  if (!effectiveIntake && type.intake_schema) {
+    try {
+      derivedIntake = await deriveIntakeAnswers(
+        supabase, snapshotId, snap, documentType, type.name, type.intake_schema,
+      );
+    } catch (e) {
+      console.warn("intake derive threw", e);
+    }
+    if (derivedIntake) {
+      effectiveIntake = derivedIntake.answers;
+    } else {
+      await supabase.from("venture_documents").upsert({
+        snapshot_id: snapshotId,
+        document_type: documentType,
+        status: "pending",
+        blocked_reason: "Couldn't infer the inputs this asset needs — open it and fill in the short form.",
+      }, { onConflict: "snapshot_id,document_type" });
+      await supabase.from("venture_generation_failures")
+        .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
+      return;
+    }
+  }
+
 
   // System prompt: specialized first, fallback to base; layer track tone on top.
   const baseSystemPrompt = specializedPrompt(documentType) ?? BASE_SYSTEM_PROMPT;
@@ -260,9 +289,12 @@ async function generateOne(
       ? `\n## Research brief (background evidence — synthesize as analyst judgment, NO footnotes or citations)\n${JSON.stringify(snap.research_brief, null, 2).slice(0, 8000)}`
       : "",
     trimmedDeps ? `\n## Upstream documents you should build on (distilled)\n${trimmedDeps}` : "",
-    effectiveIntake
-      ? `\n## Intake answers (TOP PRIORITY — founder-supplied ground truth. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
-      : "",
+    derivedIntake
+      ? derivedIntakeBlock(derivedIntake, type.intake_schema?.fields ?? [])
+      : effectiveIntake
+        ? `\n## Intake answers (TOP PRIORITY — founder-supplied ground truth. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
+        : "",
+
   ].filter(Boolean).join("\n\n").slice(0, promptCap);
 
   // S5 — Honor type.model_tier ('pro' | 'flash' | 'lite'), except website_prd.
@@ -741,29 +773,45 @@ async function runJob(
     .eq("active", true);
 
 
-  // Documents with an intake_schema require founder input — skip them in
-  // bulk runs unless the founder has already saved intake_answers for them.
+  // Intake-gated assets stay in the run: generateOne derives their inputs from
+  // the assets already on file rather than skipping them silently.
   const { data: savedIntakes } = await supabase
     .from("venture_documents")
-    .select("document_type, intake_answers")
+    .select("document_type, intake_answers, status")
     .eq("snapshot_id", snapshotId);
   const haveAnswers = new Set(
     (savedIntakes ?? [])
       .filter((d: any) => d.intake_answers && Object.keys(d.intake_answers).length)
       .map((d: any) => d.document_type),
   );
-  let types = (allTypes ?? []).filter(
-    (t: any) => !t.intake_schema || haveAnswers.has(t.type),
-  );
+  const statusByType = new Map((savedIntakes ?? []).map((d: any) => [d.document_type, d.status]));
+  let types = allTypes ?? [];
 
-  // Skip sourcing-only asset types for non-physical-product ventures so they
-  // don't sit as pending forever. Keep them for physical products, and always
-  // keep them if the founder has explicitly saved intake for one.
+  // Sourcing-only asset types don't apply to a non-physical venture. Record
+  // them as not_applicable so they stop haunting the "remaining" counter
+  // instead of sitting as pending forever.
   const SOURCING_ONLY_TYPES = new Set(["supplier_shortlist", "bom_and_landed_cost"]);
   const isPhysical = ctx.snap?.sourcing_profile?.is_physical_product === true;
+  let notApplicable: string[] = [];
   if (!isPhysical) {
-    types = types.filter((t: any) => !SOURCING_ONLY_TYPES.has(t.type) || haveAnswers.has(t.type));
+    notApplicable = types
+      .filter((t: any) =>
+        SOURCING_ONLY_TYPES.has(t.type) &&
+        !haveAnswers.has(t.type) &&
+        statusByType.get(t.type) !== "complete")
+      .map((t: any) => t.type);
+    types = types.filter((t: any) => !notApplicable.includes(t.type));
+    for (const t of notApplicable) {
+      await supabase.from("venture_documents").upsert({
+        snapshot_id: snapshotId,
+        document_type: t,
+        status: "not_applicable",
+        blocked_reason: "Physical products only — doesn't apply to this venture.",
+      }, { onConflict: "snapshot_id,document_type" });
+    }
   }
+
+
 
   if (category && category.trim().length > 0) {
     const wanted = category.trim().toLowerCase();
@@ -851,23 +899,29 @@ async function runJob(
     .in("document_type", types.map((t: any) => t.type));
 
   const allDone = remaining.length === 0 && blocked.length === 0 && dayGaps.length === 0;
+  // Never finish a run with an unexplained no-op: if nothing was attempted,
+  // say why in plain language instead of reporting a silent success.
+  const noOp = allDone && state.done === 0 && notApplicable.length > 0;
 
   await supabase.from("venture_generation_jobs").update({
-    status: allDone ? "completed" : "completed_with_blockers",
+    status: allDone && !noOp ? "completed" : "completed_with_blockers",
     completed_at: new Date().toISOString(),
     progress_pct: allDone ? 100 : Math.round(((completeCount ?? 0) / Math.max(total, 1)) * 100),
     current_document_type: null,
     circuit_breaker_open: false,
     retry_round: 0,
     retry_remaining: remaining.length,
-    error: allDone
-      ? null
-      : [
-          blocked.length ? `${blocked.length} asset(s) need you` : "",
-          remaining.length ? `${remaining.length} asset(s) couldn't be written` : "",
-          dayGaps.length ? `${dayGaps.length} sprint day(s) still short` : "",
-        ].filter(Boolean).join(" · "),
+    error: noOp
+      ? `Nothing left to write — ${notApplicable.length} asset(s) don't apply to this venture.`
+      : allDone
+        ? null
+        : [
+            blocked.length ? `${blocked.length} asset(s) need you` : "",
+            remaining.length ? `${remaining.length} asset(s) couldn't be written` : "",
+            dayGaps.length ? `${dayGaps.length} sprint day(s) still short` : "",
+          ].filter(Boolean).join(" · "),
   }).eq("id", jobId);
+
 
   if (!category && allDone) {
     await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);

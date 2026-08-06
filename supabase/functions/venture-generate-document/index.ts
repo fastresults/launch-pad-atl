@@ -10,6 +10,7 @@
 //   5. writeBackIntake()     — intake answers flow into canonical store for future docs
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { deriveIntakeAnswers, derivedIntakeBlock, type DerivedIntake } from "../_shared/intake-derive.ts";
 import {
   BRAND_KIT_REQUIRED_TYPES,
   brandKitBlock,
@@ -276,6 +277,20 @@ export async function generateOne(
     }
   }
 
+  // Intake gate: infer the inputs from the venture's finished assets rather
+  // than writing the asset on air. Same behaviour as the bulk generator.
+  let derivedIntake: DerivedIntake | null = null;
+  if (!effectiveIntake && type?.intake_schema) {
+    try {
+      derivedIntake = await deriveIntakeAnswers(
+        supabase, snapshotId, snap, documentType, type.name, type.intake_schema,
+      );
+    } catch (e) {
+      console.warn("intake derive threw", e);
+    }
+    if (derivedIntake) effectiveIntake = derivedIntake.answers;
+  }
+
   // Write fresh intake answers back into canonical store (S4). Best-effort —
   // never blocks generation. Compounds: next deliverable's intake prefills
   // from these, the Profile page shows them, and re-runs reuse them.
@@ -357,9 +372,12 @@ export async function generateOne(
       : "",
     !ctx.brain && snap.business_concept ? `\n## Founder's raw concept\n${snap.business_concept}` : "",
     depContext ? `\n## Upstream documents you should build on (distilled)\n${depContext}` : "",
-    effectiveIntake
-      ? `\n## Intake answers (TOP PRIORITY — the founder provided these as ground-truth assumptions. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
-      : "",
+    derivedIntake
+      ? derivedIntakeBlock(derivedIntake, type.intake_schema?.fields ?? [])
+      : effectiveIntake
+        ? `\n## Intake answers (TOP PRIORITY — the founder provided these as ground-truth assumptions. Use every value verbatim; do not invent contradictory numbers.)\n${JSON.stringify(effectiveIntake, null, 2)}`
+        : "",
+
     (rewriteFeedback && rewriteFeedback.trim()) || (rewriteTags && rewriteTags.length)
       ? `\n## Rewrite guidance from the founder (TOP PRIORITY — the previous version missed the mark, address every point below in this rewrite)\n${
           rewriteTags && rewriteTags.length ? `Tags: ${rewriteTags.join(", ")}\n\n` : ""

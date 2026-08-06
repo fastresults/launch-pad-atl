@@ -2873,6 +2873,7 @@ export type Database = {
           hero_image_status: string | null
           id: string
           intake_answers: Json | null
+          intake_source: string | null
           last_error: string | null
           metadata: Json
           quality_score: number | null
@@ -2900,6 +2901,7 @@ export type Database = {
           hero_image_status?: string | null
           id?: string
           intake_answers?: Json | null
+          intake_source?: string | null
           last_error?: string | null
           metadata?: Json
           quality_score?: number | null
@@ -2927,6 +2929,7 @@ export type Database = {
           hero_image_status?: string | null
           id?: string
           intake_answers?: Json | null
+          intake_source?: string | null
           last_error?: string | null
           metadata?: Json
           quality_score?: number | null
@@ -3993,7 +3996,12 @@ export type Database = {
         | "completed"
         | "failed"
         | "skipped"
-      venture_document_status: "pending" | "generating" | "complete" | "failed"
+      venture_document_status:
+        | "pending"
+        | "generating"
+        | "complete"
+        | "failed"
+        | "not_applicable"
       venture_job_status:
         | "queued"
         | "running"
@@ -4169,7 +4177,13 @@ export const Constants = {
         "failed",
         "skipped",
       ],
-      venture_document_status: ["pending", "generating", "complete", "failed"],
+      venture_document_status: [
+        "pending",
+        "generating",
+        "complete",
+        "failed",
+        "not_applicable",
+      ],
       venture_job_status: [
         "queued",
         "running",
