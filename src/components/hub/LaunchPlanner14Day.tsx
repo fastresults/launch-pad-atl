@@ -92,6 +92,7 @@ export function LaunchPlanner14Day({
   isPhysical = false,
   sourcingOnlyKeys,
   onOpenDayDeck,
+  onFinishDay,
   snapshotId,
 }: Props) {
 
