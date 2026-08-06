@@ -486,15 +486,29 @@ async function runLayer(
       } catch (e) {
         state.fails++;
         // F11: never let a runLayer crash swallow the failure silently.
+        // generateOne already records precise errors — only add a row when it
+        // crashed before writing one, so the UI count stays honest.
         const msg = e instanceof Error ? e.message : String(e);
         try {
-          await supabase.from("venture_generation_failures").insert({
-            snapshot_id: snapshotId,
-            document_type: t.type,
-            error: `runLayer: ${msg.slice(0, 300)}`,
-          });
+          const { data: already } = await supabase
+            .from("venture_generation_failures")
+            .select("id")
+            .eq("snapshot_id", snapshotId)
+            .eq("document_type", t.type)
+            .maybeSingle();
+          if (!already) {
+            await supabase.from("venture_generation_failures").insert({
+              snapshot_id: snapshotId,
+              document_type: t.type,
+              error: `runLayer: ${msg.slice(0, 300)}`,
+            });
+            await supabase.from("venture_documents")
+              .update({ status: "failed", last_error: msg.slice(0, 600) })
+              .eq("snapshot_id", snapshotId).eq("document_type", t.type);
+          }
         } catch { /* logging best-effort */ }
       }
+
       await supabase.from("venture_generation_jobs").update({
         progress_pct: Math.round((state.done / state.total) * 100),
         heartbeat_at: new Date().toISOString(),
