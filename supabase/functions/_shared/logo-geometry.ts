@@ -157,6 +157,20 @@ function pathBox(d: string): Box {
       if (key === "a") pairs.length = 0;
       pairs.push(key === "a" ? [args[5], args[6]] : [args[arity - 2], args[arity - 1]]);
       for (const [px, py] of pairs) point(rel ? cx + px : px, rel ? cy + py : py);
+      if (key === "a") {
+        // Approximate the arc bulge with the sagitta so circles built from arcs
+        // are bounded correctly rather than collapsing to their chord.
+        const [rx, ry] = [Math.abs(args[0]), Math.abs(args[1])];
+        const ax = rel ? cx + args[5] : args[5];
+        const ay = rel ? cy + args[6] : args[6];
+        const chord = Math.hypot(ax - cx, ay - cy) / 2;
+        const sx = rx > chord ? rx - Math.sqrt(Math.max(0, rx * rx - chord * chord)) : rx;
+        const sy = ry > chord ? ry - Math.sqrt(Math.max(0, ry * ry - chord * chord)) : ry;
+        const mx = (cx + ax) / 2;
+        const my = (cy + ay) / 2;
+        point(mx - sx, my - sy);
+        point(mx + sx, my + sy);
+      }
       const ex = key === "a" ? args[5] : args[arity - 2];
       const ey = key === "a" ? args[6] : args[arity - 1];
       cx = rel ? cx + ex : ex;
