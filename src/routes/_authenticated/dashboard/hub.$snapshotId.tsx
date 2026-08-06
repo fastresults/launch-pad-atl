@@ -1455,14 +1455,11 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
             catLabel={cat}
             onOpenDeck={(slug) => setOpenDeckSlug(slug)}
             onRegenerate={() => {
-              const needsBrandKit = items.some((t: any) => BRAND_KIT_REQUIRED_TYPES.has(t.type));
-              if (needsBrandKit && !brandKitLocked) {
-                toast.error("Finish the Brand Wizard first — it powers the Website PRD.");
-                openBrandWizard();
-                return;
-              }
+              // No client-side brand gate: if the Brand Wizard isn't locked the
+              // server infers a provisional kit from finished assets.
               bulk.mutate({ category: cat });
             }}
+
           />
         );
         return (
