@@ -611,6 +611,84 @@ function Inner() {
     [combinedDocs.map((d) => d.id).join("|"), readyUrls.map((u) => u.id).join("|"), businessConcept, drafting],
   );
 
+  // ── Extract details from a typed / pasted concept ───────────────────────
+  // Pasting text into the concept box used to fill exactly one field, leaving
+  // company name, founder, location and industry empty — which silently kept
+  // "Continue to track" disabled. This runs the same synthesis pass with the
+  // concept as the only source and fills ONLY fields that are still empty.
+  const [conceptExtracting, setConceptExtracting] = useState(false);
+  const lastExtractedRef = useRef<string>("");
+
+  const conceptExtract = useCallback(
+    async (opts?: { auto?: boolean }) => {
+      const text = businessConcept.trim();
+      if (text.length < 40) return;
+      if (conceptExtracting || drafting) return;
+      lastExtractedRef.current = text;
+      setConceptExtracting(true);
+      try {
+        const { data, error } = await invokeEdge("venture-synthesize-concept", {
+          body: {
+            sources: [],
+            urls: [],
+            patternUrls: [],
+            conceptDraft: text,
+            industryValues: SIC_CODES.map((c) => sicValue(c)),
+          },
+        });
+        if (error) throw error;
+
+        const filled: string[] = [];
+        // Fill-empty-only: never overwrite anything already on the form,
+        // including the founder's own concept text.
+        const fillEmpty = (
+          val: unknown,
+          current: string,
+          setter: (v: string) => void,
+          key: string,
+          label: string,
+        ) => {
+          if (current.trim()) return;
+          if (typeof val !== "string" || !val.trim()) return;
+          setter(val.trim());
+          markFilled(key);
+          filled.push(label);
+        };
+
+        fillEmpty(data?.company_name, companyName, setCompanyName, "companyName", "company name");
+        fillEmpty(data?.differentiation_statement, diff, setDiff, "diff", "differentiation");
+        fillEmpty(data?.founder_name, founderName, setFounderName, "founderName", "founder name");
+        fillEmpty(data?.founder_email, founderEmail, setFounderEmail, "founderEmail", "founder email");
+        fillEmpty(data?.founder_phone, founderPhone, setFounderPhone, "founderPhone", "phone");
+        fillEmpty(data?.city, city, setCity, "city", "city");
+        fillEmpty(data?.region, region, setRegion, "region", "state / region");
+        fillEmpty(data?.country, country, setCountry, "country", "country");
+        fillEmpty(data?.sub_industry, subIndustry, setSubIndustry, "subIndustry", "sub-industry");
+        if (!industry.trim() && typeof data?.industry === "string" && data.industry.trim()) {
+          const code = parseSicCode(data.industry);
+          const entry = code ? findSicByCode(code) : undefined;
+          setIndustry(entry ? sicValue(entry) : data.industry.trim());
+          markFilled("industry");
+          filled.push("industry");
+        }
+
+        setProcessed(true);
+        if (filled.length) {
+          toast.success(`Filled ${filled.length} field${filled.length === 1 ? "" : "s"} from your text`);
+        } else if (!opts?.auto) {
+          toast.info("Nothing new to pull from that text — fill the remaining fields below.");
+        }
+      } catch (e) {
+        if (!opts?.auto) toast.error(e instanceof Error ? e.message : "Couldn't read that text");
+      } finally {
+        setConceptExtracting(false);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [businessConcept, companyName, founderName, founderEmail, founderPhone, city, region, country, industry, subIndustry, diff, conceptExtracting, drafting],
+  );
+
+
   // Auto-synthesize whenever a NEW source becomes ready.
   const autoSigRef = useRef<string>("");
   useEffect(() => {
