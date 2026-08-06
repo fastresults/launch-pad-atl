@@ -321,91 +321,128 @@ Hard rules:
   return directions.slice(0, count) as LogoDirection[];
 }
 
-async function developVectorSpec(d: LogoDirection, strategy: BrandStrategy | null, ctx: any, tokens: any, reviewNote?: string): Promise<VectorSpec> {
-  const companyName = String(ctx?.snap?.company_name ?? "").trim();
-  const wantsType = /wordmark|lettermark|monogram|combination|emblem/i.test(d.logo_type ?? "");
-  const parsed = await callChatJsonOnce([
-    { role: "system", content: "You are a master identity designer who constructs simple production logos from geometric vector primitives. Return valid JSON only. Never use gradients, filters, masks, images, scripts, external URLs, or more than five primitives." },
-    { role: "user", content: `Turn this approved direction into a precise 1000×1000 vector specification.
-Brand: ${companyName}
-Core idea: ${strategy?.core_idea ?? ""}
-Direction: ${JSON.stringify(d)}
-Palette tokens: ${tokensBlockOf(tokens)}
-${reviewNote ? `Revision instruction: ${reviewNote}` : ""}
+/**
+ * The dossier is the single source of context every pass reads. Strategy work
+ * used to be discarded before the mark was drawn; now the drawing pass sees
+ * the venture, the brief, the finished brand assets and the anti-cliché list.
+ */
+function buildDossier(ctx: any, tokens: any, strategy: BrandStrategy | null, docsBlock: string): string {
+  return [
+    "VENTURE", ventureBlockOf(ctx),
+    "", "BRAND TOKENS", tokensBlockOf(tokens),
+    strategy ? `\nSTRATEGY BRIEF\nCore idea: ${strategy.core_idea}\nAttributes: ${strategy.attributes.join(", ")}\nMetaphor territory: ${strategy.metaphor_territory}\nMust never look like: ${strategy.not_list.join("; ")}` : "",
+    docsBlock ? `\nFOUNDER'S OWN BRAND ASSETS (authoritative)\n${docsBlock.slice(0, 6000)}` : "",
+  ].filter(Boolean).join("\n");
+}
 
-Allowed primitives only:
-- rect: x,y,width,height,rx
-- circle: cx,cy,r
-- line: x1,y1,x2,y2,stroke,strokeWidth
-- path: SVG path d using only M/L/H/V/C/Q/Z commands
-Every primitive may use fill/stroke from primary|secondary|accent|white|none. Keep all coordinates in 0..1000. Maximum five primitives. Build the symbol inside x=150..850 and y=100..720. Use one clear silhouette and generous negative space.
-${wantsType ? `Include wordmark.text exactly as "${companyName}" with case, weight 300-800, and tracking 0-20.` : "Omit wordmark entirely."}
+const DRAW_SYSTEM = `You are a mark-maker in the tradition of Chermayeff & Geismar, Paul Rand and Michael Bierut. You do not describe logos — you ENGINEER them: a module grid, one stroke weight, a single radius family, exact coordinates. Every mark you build is one idea, drawn with the fewest possible elements, and holds up as a solid black silhouette at 16 pixels. Return valid JSON only. Never use gradients, filters, masks, images, scripts or external URLs.`;
+
+function drawInstruction(
+  d: LogoDirection,
+  dossier: string,
+  companyName: string,
+  wantsType: boolean,
+  fixNotes: string[],
+): string {
+  return `Engineer the approved direction below as an exact 1000×1000 vector construction.
+
+${dossier}
+
+APPROVED DIRECTION
+${JSON.stringify(d)}
+
+CONSTRUCTION CONTRACT — declare it, then obey it
+- module: the grid unit every coordinate is a multiple of (pick 20, 25 or 50)
+- stroke_weight: ONE weight used by every stroked element (typically 3–5 modules)
+- radii: the small set of corner radii allowed (multiples of the module)
+- symmetry: the axis or rotation the construction is built on ("vertical mirror", "90° rotation", "none")
+
+GEOMETRY
+- Up to 12 elements total. Fewer is better: 3–7 is the target.
+- Elements: rect (x,y,width,height,rx) · circle (cx,cy,r) · ellipse (cx,cy,rxr,ryr) · line (x1,y1,x2,y2) · path (d, commands M L H V C S Q T A Z) · group (children[], transform{translate,rotate,scale})
+- Use group + transform to build modular, mirrored or rotationally repeated marks. That is how real geometric identities are constructed — do not hand-place duplicates.
+- Use fillRule "evenodd" on a path to cut a counterform out of a solid shape. That is how negative-space ideas are made.
+- Arcs (A) and smooth curves (S) exist — use true circular geometry, not polygon approximations.
+- Every coordinate must be a multiple of the module. Every stroked element must use the identical stroke_weight. Never mix thick and thin strokes.
+- Build the symbol anywhere in 0..1000; it is optically re-centred and scaled after you return it, so proportion matters, absolute position does not.
+- Colour: fill/stroke from primary | secondary | accent | white | none. Two inks maximum plus white. Flat only.
+
+OPTICAL DISCIPLINE
+- Curves and points overshoot flat edges slightly; circles read smaller than squares of the same measure — compensate.
+- Counterforms (the holes) must be as considered as the positive shapes.
+- The silhouette must read as ONE idea at 16px. If two ideas compete, cut one.
+
+${wantsType ? `WORDMARK: include wordmark with text exactly "${companyName}", a case, weight 300–800, and tracking in 1/1000 em (−40 to 120). It is set in the brand's real typeface and outlined at render time, so specify treatment, not a font name.` : "WORDMARK: omit it entirely — this is a symbol-only direction."}
+
+${fixNotes.length ? `THE PREVIOUS ATTEMPT WAS REJECTED. Fix exactly these, changing nothing else that already worked:\n- ${fixNotes.join("\n- ")}` : ""}
 
 Return STRICT JSON:
-{"primitives":[{"kind":"path","d":"M ... Z","fill":"primary","stroke":"none","strokeWidth":0}],"wordmark":{"text":"${companyName}","case":"title","weight":600,"tracking":2},"rationale":"one sentence","quality_scores":{"relevance":1,"distinctiveness":1,"simplicity":1,"scalability":1,"balance":1}}
-Scores are 1-5. Do not include wordmark when instructed to omit it.` },
-  ]);
-  const primitives = Array.isArray(parsed?.primitives) ? parsed.primitives : [];
-  if (!primitives.length || primitives.length > 5) throw new Error("Vector specification is missing or too complex");
-  const wordmark = wantsType ? { ...(parsed.wordmark ?? {}), text: companyName } : undefined;
-  return { primitives, wordmark, rationale: String(parsed.rationale ?? ""), quality_scores: parsed.quality_scores ?? {} };
+{"construction":{"module":25,"stroke_weight":100,"radii":[0,50],"symmetry":"vertical mirror"},"primitives":[{"kind":"path","d":"M 200 200 L 800 200 ...","fill":"primary","stroke":"none","strokeWidth":0,"fillRule":"evenodd"}]${wantsType ? `,"wordmark":{"text":"${companyName}","case":"upper","weight":600,"tracking":40}` : ""},"rationale":"one sentence naming the single geometric operation that creates the mark","quality_scores":{"relevance":5,"distinctiveness":5,"simplicity":5,"scalability":5,"balance":5}}
+Scores are 1-5 and must be honest.`;
 }
 
-/** Stage 3 — describe a MARK, not a picture. */
-function buildLogoImagePrompt(
+/**
+ * Stage 3 — draw the mark, then discipline it. The model gets one corrective
+ * pass driven by the deterministic lint, so geometry errors never ship.
+ */
+async function developVectorSpec(
   d: LogoDirection,
+  strategy: BrandStrategy | null,
   ctx: any,
   tokens: any,
-  strategy?: BrandStrategy | null,
-  critique?: string,
-): string {
-  const snap = ctx.snap ?? {};
-  const colors = tokens?.colors ?? {};
-  const fonts = tokens?.fonts ?? {};
+  dossier: string,
+  reviewNote?: string,
+): Promise<{ spec: VectorSpec; lint: ReturnType<typeof lintVectorSpec> }> {
+  const companyName = String(ctx?.snap?.company_name ?? "").trim();
   const wantsType = /wordmark|lettermark|monogram|combination|emblem/i.test(d.logo_type ?? "");
-  const paletteLine = [colors.primary, colors.secondary, colors.accent].filter(Boolean).join(", ");
+  const fixNotes = reviewNote ? [reviewNote] : [];
+  let best: { spec: VectorSpec; lint: ReturnType<typeof lintVectorSpec> } | null = null;
 
-  return [
-    `Flat vector LOGO MARK design — "${d.direction_name}" (${d.logo_type}).`,
-    snap.company_name ? `Brand name: ${snap.company_name}.` : "",
-    snap.industry ? `Category: ${snap.industry}.` : "",
-    strategy?.core_idea ? `The mark must communicate: ${strategy.core_idea}` : "",
-    d.one_line_idea ? `THE SHAPE: ${d.one_line_idea}` : `THE SHAPE: ${d.symbol_concept}`,
-    d.symbol_concept && d.one_line_idea ? `Concept: ${d.symbol_concept}` : "",
-    `Construction: ${d.construction_notes} Drawn on a geometric grid with a single consistent stroke weight, mathematically clean curves, optically balanced, vector-precise edges.`,
-    wantsType
-      ? `Typography: ${d.typography_treatment && d.typography_treatment.toLowerCase() !== "n/a" ? d.typography_treatment : "clean geometric sans"}. Set the words "${snap.company_name ?? ""}" correctly spelled, tight even tracking, in a typeface in the spirit of ${fonts.heading ?? "a refined geometric sans"}. No tagline, no extra words, no lorem text.`
-      : `Symbol only — absolutely NO letters, NO words, NO text of any kind anywhere in the image.`,
-    d.negative_space_play && d.negative_space_play.toLowerCase() !== "none"
-      ? `Negative space: ${d.negative_space_play}.`
-      : "",
-    `Colour: strictly flat. Maximum two solid colours${paletteLine ? ` drawn from ${paletteLine}` : ""} plus white. ${d.color_application ?? ""} No gradient, no tint ramp, no opacity fade.`,
-    d.reference_learning && d.reference_learning.toLowerCase() !== "n/a"
-      ? `Borrowed structural principle (never copy the reference): ${d.reference_learning}`
-      : "",
-    "SILHOUETTE TEST: the mark must still read as one clear idea when reduced to a solid black shape at 16 pixels. Fewer than five distinct elements. One idea only.",
-    "Output: a single centred logo, generous even margin, on a pure white #FFFFFF background. Nothing else in the frame — no mockup, no business card, no presentation board, no grid guides, no multiple variations, no colour swatches, no annotations, no signature, no watermark, no drop shadow, no 3D, no bevel, no texture, no photographic element, no background scene.",
-    `Avoid: ${d.avoid_list ?? "category clichés"}.${strategy?.not_list?.length ? ` Also never: ${strategy.not_list.join("; ")}.` : ""} Plus: stock clichés, generic AI flourishes, sparkles, glow, lens flare.`,
-    critique ? `PREVIOUS ATTEMPT FAILED REVIEW — fix exactly this: ${critique}` : "",
-  ].filter(Boolean).join(" ");
+  for (let pass = 0; pass < 2; pass++) {
+    const parsed = await callChatJsonOnce([
+      { role: "system", content: DRAW_SYSTEM },
+      { role: "user", content: drawInstruction(d, dossier, companyName, wantsType, fixNotes) },
+    ]);
+    const primitives = Array.isArray(parsed?.primitives) ? parsed.primitives : [];
+    if (!primitives.length) throw new Error("Vector specification is missing drawable elements");
+
+    const construction: Construction = {
+      module: Number(parsed?.construction?.module) || 25,
+      stroke_weight: Number(parsed?.construction?.stroke_weight) || 80,
+      radii: Array.isArray(parsed?.construction?.radii) ? parsed.construction.radii.map(Number) : undefined,
+      symmetry: String(parsed?.construction?.symmetry ?? ""),
+    };
+    const spec: VectorSpec = {
+      construction,
+      primitives: applyConstruction(primitives, construction),
+      wordmark: wantsType ? { ...(parsed.wordmark ?? {}), text: companyName } : undefined,
+      rationale: String(parsed.rationale ?? ""),
+      quality_scores: parsed.quality_scores ?? {},
+    };
+    const lint = lintVectorSpec(spec);
+    if (!best || lint.score > best.lint.score) best = { spec, lint };
+    if (lint.pass) return best;
+    fixNotes.splice(0, fixNotes.length, ...lint.findings);
+  }
+  return best!;
 }
 
-/** Stage 4 — look at what actually rendered and judge it against the brief. */
-async function critiqueLogo(
+/** Stage 4 — look at the mark that actually rendered and judge it. */
+async function critiqueMark(
   b64: string,
   d: LogoDirection,
   strategy: BrandStrategy | null,
 ): Promise<{ pass: boolean; note: string }> {
-  const system = `You are a design director reviewing a rendered logo before it reaches the client. You are strict but fair. You reject anything that is not a clean, flat, single-idea mark.`;
-  const text = `Review this rendered logo against its brief.
+  const system = `You are a design director reviewing a finished mark before it reaches the client. You are strict. You reject anything that is not a clean, flat, single-idea mark a serious company could adopt.`;
+  const text = `Review this rendered mark against its brief.
 
 Brief: ${d.one_line_idea ?? d.symbol_concept}
 Logo type: ${d.logo_type}
 ${strategy?.core_idea ? `Must communicate: ${strategy.core_idea}` : ""}
 
-Fail it if ANY of these are true: it is a scene or illustration rather than a mark; it has gradients, shadows, 3D, texture or photographic elements; there is misspelled, garbled or unintended text; it shows multiple variations, a mockup or annotations on one canvas; it is too detailed to survive at 16px; it carries more than one competing idea; the background is not clean white.
+Fail it if ANY of these are true: the shape is illegible, broken or reads as random geometry; it looks accidental rather than constructed; the elements are visually unbalanced or float apart; the counterforms are uneven; it carries more than one competing idea; it would disappear or turn to mush at 16px; it does not connect to the brief at all.
 
-Return STRICT JSON: {"pass":true|false,"note":"if failing, one imperative sentence telling the renderer exactly what to change"}`;
+Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact geometric change to make"}`;
 
   const parsed = await callChatJson([
     { role: "system", content: system },
@@ -420,6 +457,28 @@ Return STRICT JSON: {"pass":true|false,"note":"if failing, one imperative senten
   // A failed/unavailable critique must never block delivery.
   if (!parsed || typeof parsed.pass !== "boolean") return { pass: true, note: "" };
   return { pass: parsed.pass, note: String(parsed.note ?? "") };
+}
+
+/** Build the full lockup family from one approved construction. */
+async function buildLogoVariants(spec: VectorSpec, tokens: any, companyName: string) {
+  const heading = tokens?.fonts?.heading;
+  const outlined = spec.wordmark?.text
+    ? await outlineWordmark(spec.wordmark.text, {
+        family: heading,
+        weight: spec.wordmark.weight,
+        tracking: spec.wordmark.tracking,
+        case: spec.wordmark.case,
+      })
+    : null;
+  const base = { wordmarkPath: outlined, fontStack: fontStackFor(heading) };
+  return {
+    mark: renderLogoSvg(spec, tokens, companyName, { ...base, layout: "mark" }),
+    horizontal: spec.wordmark?.text ? renderLogoSvg(spec, tokens, companyName, { ...base, layout: "horizontal" }) : null,
+    stacked: spec.wordmark?.text ? renderLogoSvg(spec, tokens, companyName, { ...base, layout: "stacked" }) : null,
+    mono: renderLogoSvg(spec, tokens, companyName, { ...base, layout: "mark", mono: "#111111" }),
+    knockout: renderLogoSvg(spec, tokens, companyName, { ...base, layout: "mark", knockout: true }),
+    wordmark_family: outlined?.family ?? null,
+  };
 }
 
 
