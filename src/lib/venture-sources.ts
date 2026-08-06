@@ -130,15 +130,131 @@ export async function listVentureSources(opts: {
   return (data ?? []) as VentureSource[];
 }
 
-/** Re-tag a set of (orphan) documents onto a venture. */
+/**
+ * Sources that already belong to another venture, grouped by that venture.
+ * Used by hub.new's explicit "reuse from another venture" picker — these are
+ * never auto-selected, and reusing one COPIES it (see `copySourceToSnapshot`).
+ */
+export async function listSourcesByOtherVentures(): Promise<
+  Array<{ snapshotId: string; ventureName: string; sources: VentureSource[] }>
+> {
+  const userId = await uid();
+  const { data, error } = await supabase
+    .from("attendee_documents")
+    .select("*")
+    .eq("user_id", userId)
+    .not("snapshot_id", "is", null)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  const rows = (data ?? []) as VentureSource[];
+  if (!rows.length) return [];
+
+  const snapshotIds = Array.from(new Set(rows.map((r) => r.snapshot_id).filter(Boolean))) as string[];
+  const { data: snaps } = await supabase
+    .from("venture_snapshots")
+    .select("id, company_name")
+    .in("id", snapshotIds);
+  const nameById = new Map((snaps ?? []).map((s: any) => [s.id, s.company_name || "Untitled venture"]));
+
+  const grouped = new Map<string, VentureSource[]>();
+  for (const r of rows) {
+    if (!r.snapshot_id) continue;
+    // Only readable sources are worth reusing.
+    if (!(r.extracted_text ?? "").trim()) continue;
+    const list = grouped.get(r.snapshot_id) ?? [];
+    list.push(r);
+    grouped.set(r.snapshot_id, list);
+  }
+  return Array.from(grouped.entries()).map(([snapshotId, sources]) => ({
+    snapshotId,
+    ventureName: nameById.get(snapshotId) ?? "Untitled venture",
+    sources,
+  }));
+}
+
+/**
+ * Copy an existing source into another scope WITHOUT moving it. Creates a new
+ * `attendee_documents` row that points at the same storage object and carries
+ * the cached extracted text, so the original venture keeps its memory intact.
+ */
+export async function copySourceToSnapshot(opts: {
+  documentId: string;
+  snapshotId?: string | null;
+}): Promise<VentureSource> {
+  const userId = await uid();
+  const { data: src, error: readErr } = await supabase
+    .from("attendee_documents")
+    .select("*")
+    .eq("id", opts.documentId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (readErr) throw new Error(readErr.message);
+  if (!src) throw new Error("Source not found");
+
+  const { data: row, error: insErr } = await supabase
+    .from("attendee_documents")
+    .insert({
+      user_id: userId,
+      storage_path: src.storage_path,
+      original_name: src.original_name,
+      mime_type: src.mime_type,
+      size_bytes: src.size_bytes,
+      kind: src.kind,
+      snapshot_id: opts.snapshotId ?? null,
+      used_in_brief: false,
+      extracted_text: src.extracted_text,
+      extracted_at: src.extracted_at,
+    })
+    .select("*")
+    .single();
+  if (insErr) throw new Error(insErr.message);
+  notifySourcesChanged();
+  return row as VentureSource;
+}
+
+/**
+ * Attach documents to a venture.
+ *
+ * Rules that protect Second Brain scoping:
+ * - Rows already attached to another venture are COPIED, never moved.
+ * - Founder-level rows (founder bio, Startup Brief captures) are COPIED so a
+ *   second venture doesn't strip them from the first / from the brief.
+ * - Plain unassigned uploads are re-tagged in place.
+ */
 export async function attachSourcesToSnapshot(opts: { documentIds: string[]; snapshotId: string }): Promise<void> {
   if (!opts.documentIds.length) return;
-  const { error } = await supabase
+  const userId = await uid();
+  const { data, error: readErr } = await supabase
     .from("attendee_documents")
-    .update({ snapshot_id: opts.snapshotId })
+    .select("*")
     .in("id", opts.documentIds)
-    .eq("user_id", await uid());
-  if (error) throw new Error(error.message);
+    .eq("user_id", userId);
+  if (readErr) throw new Error(readErr.message);
+  const rows = (data ?? []) as VentureSource[];
+
+  const retagIds: string[] = [];
+  const copyIds: string[] = [];
+  for (const r of rows) {
+    if (r.snapshot_id) {
+      if (r.snapshot_id !== opts.snapshotId) copyIds.push(r.id);
+      continue;
+    }
+    if (r.kind === "founder_bio" || r.kind === "brief_source" || r.used_in_brief) copyIds.push(r.id);
+    else retagIds.push(r.id);
+  }
+
+  if (retagIds.length) {
+    const { error } = await supabase
+      .from("attendee_documents")
+      .update({ snapshot_id: opts.snapshotId })
+      .in("id", retagIds)
+      .is("snapshot_id", null)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+  }
+  for (const id of copyIds) {
+    await copySourceToSnapshot({ documentId: id, snapshotId: opts.snapshotId });
+  }
   notifySourcesChanged();
 }
 
@@ -147,7 +263,16 @@ export async function deleteVentureSource(id: string): Promise<void> {
   const { data: row } = await supabase
     .from("attendee_documents").select("storage_path").eq("id", id).eq("user_id", userId).maybeSingle();
   if (row?.storage_path) {
-    await supabase.storage.from("attendee-docs").remove([row.storage_path]).catch(() => {});
+    // A storage object can be shared by copies across ventures — only remove
+    // the file when this is the last row referencing it.
+    const { count } = await supabase
+      .from("attendee_documents")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("storage_path", row.storage_path);
+    if ((count ?? 1) <= 1) {
+      await supabase.storage.from("attendee-docs").remove([row.storage_path]).catch(() => {});
+    }
   }
   const { error } = await supabase.from("attendee_documents").delete().eq("id", id).eq("user_id", userId);
   if (error) throw new Error(error.message);
