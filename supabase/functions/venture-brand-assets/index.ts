@@ -72,11 +72,18 @@ type LogoDirection = {
 };
 
 type BrandStrategy = {
+  // The human truth comes first: identity work that starts at geometry
+  // produces geometry. Identity work that starts at a person produces a mark.
+  human_truth?: string;      // who this is for, in their own terms
+  human_moment?: string;     // the moment the business exists to fix
+  first_feeling?: string;    // what a customer should feel in two seconds
+  physical_anchor?: string;  // the one object, gesture or space that moment lives in
   core_idea: string;
   attributes: string[];
   metaphor_territory: string;
   not_list: string[];
 };
+
 
 // Chat models used for the thinking passes, in fallback order. Judgment work
 // (strategy, concepting, drawing) runs on the frontier tier; flash stays last
