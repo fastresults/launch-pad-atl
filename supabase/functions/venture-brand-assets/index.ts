@@ -12,6 +12,15 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { resolveOwner } from "../_shared/impersonation.ts";
+import {
+  applyConstruction,
+  lintVectorSpec,
+  renderLogoSvg,
+  type Construction,
+  type VectorSpec,
+} from "../_shared/logo-geometry.ts";
+import { fontStackFor, outlineWordmark } from "../_shared/logo-type.ts";
+import { rasterizeSvg } from "../_shared/logo-raster.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,6 +59,7 @@ type LogoDirection = {
   direction_name: string;
   logo_type: string; // wordmark | lettermark | monogram | pictorial mark | abstract mark | emblem | combination mark
   one_line_idea?: string;   // the single shape idea, one sentence
+  geometric_operation?: string; // the one construction move that creates the mark
   why_memorable?: string;   // the rationale a founder can judge
   symbol_concept: string;
   construction_notes: string;
@@ -68,27 +78,10 @@ type BrandStrategy = {
   not_list: string[];
 };
 
-type VectorPrimitive = {
-  kind: "rect" | "circle" | "path" | "line";
-  x?: number; y?: number; width?: number; height?: number; rx?: number;
-  cx?: number; cy?: number; r?: number; d?: string;
-  x1?: number; y1?: number; x2?: number; y2?: number;
-  fill?: "primary" | "secondary" | "accent" | "none" | "white";
-  stroke?: "primary" | "secondary" | "accent" | "none" | "white";
-  strokeWidth?: number;
-};
-
-type VectorSpec = {
-  primitives: VectorPrimitive[];
-  wordmark?: { text: string; case?: "upper" | "title" | "lower"; weight?: number; tracking?: number };
-  rationale?: string;
-  quality_scores?: Record<string, number>;
-};
-
-// Chat models used for the thinking passes, in fallback order. 2.5-pro's
-// thinking budget occasionally eats the whole response and returns empty
-// content, so a flash model always backs it up.
-const THINK_MODELS = ["google/gemini-3.6-flash", "google/gemini-2.5-flash"];
+// Chat models used for the thinking passes, in fallback order. Judgment work
+// (strategy, concepting, drawing) runs on the frontier tier; flash stays last
+// so a provider hiccup degrades quality instead of losing the run.
+const THINK_MODELS = ["openai/gpt-5.5", "google/gemini-3.1-pro-preview", "google/gemini-3.6-flash"];
 
 // Documents that actually carry brand signal, in priority order.
 const STRATEGY_DOC_TYPES = [
@@ -114,16 +107,19 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms: number) {
 }
 
 async function callChatAI(messages: any[], opts: { json?: boolean; model?: string } = {}) {
+  const model = opts.model ?? THINK_MODELS[0];
+  const isOpenAI = model.startsWith("openai/");
   const res = await fetchWithTimeout("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: opts.model ?? THINK_MODELS[0],
+      model,
       messages,
-      max_tokens: 8000,
+      // GPT-5 family rejects max_tokens and any non-default temperature.
+      ...(isOpenAI ? { max_completion_tokens: 8000 } : { max_tokens: 8000 }),
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
-  }, 45_000);
+  }, 60_000);
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`AI chat ${res.status}: ${txt.slice(0, 300)}`);
@@ -159,61 +155,22 @@ async function callChatJson(messages: any[]): Promise<any> {
 }
 
 async function callChatJsonOnce(messages: any[]): Promise<any> {
-  const parsed = parseJsonLoose(await callChatAI(messages, { json: true, model: THINK_MODELS[0] }));
-  if (!parsed) throw new Error("AI returned malformed structured output");
-  return parsed;
+  let lastError: unknown = null;
+  for (const model of THINK_MODELS) {
+    try {
+      const parsed = parseJsonLoose(await callChatAI(messages, { json: true, model }));
+      if (parsed) return parsed;
+      lastError = new Error(`AI returned malformed structured output (${model})`);
+    } catch (e) {
+      lastError = e;
+      console.warn("structured call failed", model, e instanceof Error ? e.message : e);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("AI returned malformed structured output");
 }
 
-function escapeXml(value: unknown): string {
-  return String(value ?? "").replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&apos;", '"': "&quot;" }[c] ?? c));
-}
-
-function safeColor(value: unknown, fallback: string): string {
-  const text = String(value ?? "").trim();
-  return /^#[0-9a-f]{6}$/i.test(text) ? text : fallback;
-}
-
-function clampNumber(value: unknown, min: number, max: number, fallback = 0): number {
-  const number = Number(value);
-  return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback;
-}
-
-function sanitizePath(value: unknown): string {
-  const path = String(value ?? "").trim();
-  if (!path || path.length > 1200 || /[^0-9a-zA-Z.,+\-\s]/.test(path)) throw new Error("Vector path contains unsupported data");
-  const commands = path.match(/[A-Za-z]/g) ?? [];
-  if (commands.some((command) => !/[MLHVCQZ]/i.test(command))) throw new Error("Vector path uses an unsupported command");
-  return path;
-}
-
-function renderVectorSvg(spec: VectorSpec, tokens: any, companyName: string): string {
-  const palette = {
-    primary: safeColor(tokens?.colors?.primary, "#171717"),
-    secondary: safeColor(tokens?.colors?.secondary, "#4B5563"),
-    accent: safeColor(tokens?.colors?.accent, "#C29B46"),
-    white: "#FFFFFF",
-    none: "none",
-  };
-  const primitives = Array.isArray(spec?.primitives) ? spec.primitives.slice(0, 5) : [];
-  if (!primitives.length) throw new Error("Vector specification has no drawable elements");
-  const color = (key: unknown, fallback: string) => palette[String(key ?? "") as keyof typeof palette] ?? fallback;
-  const body = primitives.map((p) => {
-    const fill = color(p.fill, palette.primary);
-    const stroke = color(p.stroke, "none");
-    const common = `fill="${fill}" stroke="${stroke}" stroke-width="${clampNumber(p.strokeWidth, 0, 32, 0)}" stroke-linecap="round" stroke-linejoin="round"`;
-    if (p.kind === "rect") return `<rect x="${clampNumber(p.x, 0, 1000)}" y="${clampNumber(p.y, 0, 1000)}" width="${clampNumber(p.width, 1, 1000, 100)}" height="${clampNumber(p.height, 1, 1000, 100)}" rx="${clampNumber(p.rx, 0, 250)}" ${common}/>`;
-    if (p.kind === "circle") return `<circle cx="${clampNumber(p.cx, 0, 1000, 500)}" cy="${clampNumber(p.cy, 0, 1000, 500)}" r="${clampNumber(p.r, 1, 500, 100)}" ${common}/>`;
-    if (p.kind === "line") return `<line x1="${clampNumber(p.x1, 0, 1000)}" y1="${clampNumber(p.y1, 0, 1000)}" x2="${clampNumber(p.x2, 0, 1000)}" y2="${clampNumber(p.y2, 0, 1000)}" ${common}/>`;
-    if (p.kind === "path") return `<path d="${escapeXml(sanitizePath(p.d))}" ${common}/>`;
-    throw new Error("Unsupported vector primitive");
-  }).join("");
-  const wordmark = spec.wordmark?.text ? String(spec.wordmark.text) : "";
-  const text = wordmark ? `<text x="500" y="900" text-anchor="middle" fill="${palette.primary}" font-family="Arial, Helvetica, sans-serif" font-size="${Math.max(42, Math.min(112, Math.floor(760 / Math.max(wordmark.length, 5))))}" font-weight="${clampNumber(spec.wordmark?.weight, 300, 800, 600)}" letter-spacing="${clampNumber(spec.wordmark?.tracking, 0, 20, 2)}">${escapeXml(wordmark || companyName)}</text>` : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" role="img" aria-label="${escapeXml(companyName)} logo"><rect width="1000" height="1000" fill="#FFFFFF"/><g>${body}</g>${text}</svg>`;
-}
-
-async function uploadVectorAsset(supabase: any, snapshotId: string, userId: string, directionId: string, svg: string) {
-  const path = `${userId}/brand/${snapshotId}/logo-${directionId}.svg`;
+async function uploadVectorAsset(supabase: any, snapshotId: string, userId: string, directionId: string, svg: string, variant = "mark") {
+  const path = `${userId}/brand/${snapshotId}/logo-${directionId}-${variant}.svg`;
   const bytes = new TextEncoder().encode(svg);
   const { error } = await supabase.storage.from("user-media").upload(path, bytes, { contentType: "image/svg+xml", upsert: true });
   if (error) throw new Error(`Vector upload failed: ${error.message}`);
@@ -338,11 +295,13 @@ Must never look like: ${strategy.not_list.join("; ")}`
 4. Return ONLY the ${count} strongest survivors, each a DIFFERENT logo_type.
 
 Return STRICT JSON:
-{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","one_line_idea":"the shape, in ONE sentence a designer could draw from","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the strategy","construction_notes":"grid base, stroke-to-height ratio, corner treatment, counterforms, terminals, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"distinctiveness":5,"simplicity":5,"relevance":5,"scalability":5,"memorability":5}}]}
+{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","one_line_idea":"the shape, in ONE sentence a designer could draw from","geometric_operation":"the SINGLE construction move that creates the mark, e.g. 'a circle cut by two mirrored arcs' or 'an M built from three rotated modules'","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the strategy","construction_notes":"grid base, stroke-to-height ratio, corner treatment, counterforms, terminals, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"distinctiveness":5,"simplicity":5,"relevance":5,"scalability":5,"memorability":5}}]}
 
 Hard rules:
 - Exactly ${count} directions, each a different logo_type.
 - Every mark must be constructible as flat vector art in 1-2 colours. No scenes, no illustrations, no mascots with rendered detail, no depth.
+- Every direction must be buildable from at most 12 geometric elements on a single module grid with ONE stroke weight. If you cannot state the geometric_operation in one clause, the idea is too complicated — kill it.
+- Reject anything on the venture's own "must never look like" list above; that list outranks your instincts.
 - Forbidden everywhere: globes, swooshes, generic leaves/checkmarks, handshake, lightbulb, puzzle piece, upward arrow, gradient-as-idea, lens flare, 3D bevels, circuit/hex "tech" clichés (unless the venture is literally hardware).`;
 
   const userContent: any[] = [{
@@ -365,91 +324,128 @@ Hard rules:
   return directions.slice(0, count) as LogoDirection[];
 }
 
-async function developVectorSpec(d: LogoDirection, strategy: BrandStrategy | null, ctx: any, tokens: any, reviewNote?: string): Promise<VectorSpec> {
-  const companyName = String(ctx?.snap?.company_name ?? "").trim();
-  const wantsType = /wordmark|lettermark|monogram|combination|emblem/i.test(d.logo_type ?? "");
-  const parsed = await callChatJsonOnce([
-    { role: "system", content: "You are a master identity designer who constructs simple production logos from geometric vector primitives. Return valid JSON only. Never use gradients, filters, masks, images, scripts, external URLs, or more than five primitives." },
-    { role: "user", content: `Turn this approved direction into a precise 1000×1000 vector specification.
-Brand: ${companyName}
-Core idea: ${strategy?.core_idea ?? ""}
-Direction: ${JSON.stringify(d)}
-Palette tokens: ${tokensBlockOf(tokens)}
-${reviewNote ? `Revision instruction: ${reviewNote}` : ""}
+/**
+ * The dossier is the single source of context every pass reads. Strategy work
+ * used to be discarded before the mark was drawn; now the drawing pass sees
+ * the venture, the brief, the finished brand assets and the anti-cliché list.
+ */
+function buildDossier(ctx: any, tokens: any, strategy: BrandStrategy | null, docsBlock: string): string {
+  return [
+    "VENTURE", ventureBlockOf(ctx),
+    "", "BRAND TOKENS", tokensBlockOf(tokens),
+    strategy ? `\nSTRATEGY BRIEF\nCore idea: ${strategy.core_idea}\nAttributes: ${strategy.attributes.join(", ")}\nMetaphor territory: ${strategy.metaphor_territory}\nMust never look like: ${strategy.not_list.join("; ")}` : "",
+    docsBlock ? `\nFOUNDER'S OWN BRAND ASSETS (authoritative)\n${docsBlock.slice(0, 6000)}` : "",
+  ].filter(Boolean).join("\n");
+}
 
-Allowed primitives only:
-- rect: x,y,width,height,rx
-- circle: cx,cy,r
-- line: x1,y1,x2,y2,stroke,strokeWidth
-- path: SVG path d using only M/L/H/V/C/Q/Z commands
-Every primitive may use fill/stroke from primary|secondary|accent|white|none. Keep all coordinates in 0..1000. Maximum five primitives. Build the symbol inside x=150..850 and y=100..720. Use one clear silhouette and generous negative space.
-${wantsType ? `Include wordmark.text exactly as "${companyName}" with case, weight 300-800, and tracking 0-20.` : "Omit wordmark entirely."}
+const DRAW_SYSTEM = `You are a mark-maker in the tradition of Chermayeff & Geismar, Paul Rand and Michael Bierut. You do not describe logos — you ENGINEER them: a module grid, one stroke weight, a single radius family, exact coordinates. Every mark you build is one idea, drawn with the fewest possible elements, and holds up as a solid black silhouette at 16 pixels. Return valid JSON only. Never use gradients, filters, masks, images, scripts or external URLs.`;
+
+function drawInstruction(
+  d: LogoDirection,
+  dossier: string,
+  companyName: string,
+  wantsType: boolean,
+  fixNotes: string[],
+): string {
+  return `Engineer the approved direction below as an exact 1000×1000 vector construction.
+
+${dossier}
+
+APPROVED DIRECTION
+${JSON.stringify(d)}
+
+CONSTRUCTION CONTRACT — declare it, then obey it
+- module: the grid unit every coordinate is a multiple of (pick 20, 25 or 50)
+- stroke_weight: ONE weight used by every stroked element (typically 3–5 modules)
+- radii: the small set of corner radii allowed (multiples of the module)
+- symmetry: the axis or rotation the construction is built on ("vertical mirror", "90° rotation", "none")
+
+GEOMETRY
+- Up to 12 elements total. Fewer is better: 3–7 is the target.
+- Elements: rect (x,y,width,height,rx) · circle (cx,cy,r) · ellipse (cx,cy,rxr,ryr) · line (x1,y1,x2,y2) · path (d, commands M L H V C S Q T A Z) · group (children[], transform{translate,rotate,scale})
+- Use group + transform to build modular, mirrored or rotationally repeated marks. That is how real geometric identities are constructed — do not hand-place duplicates.
+- Use fillRule "evenodd" on a path to cut a counterform out of a solid shape. That is how negative-space ideas are made.
+- Arcs (A) and smooth curves (S) exist — use true circular geometry, not polygon approximations.
+- Every coordinate must be a multiple of the module. Every stroked element must use the identical stroke_weight. Never mix thick and thin strokes.
+- Build the symbol anywhere in 0..1000; it is optically re-centred and scaled after you return it, so proportion matters, absolute position does not.
+- Colour: fill/stroke from primary | secondary | accent | white | none. Two inks maximum plus white. Flat only.
+
+OPTICAL DISCIPLINE
+- Curves and points overshoot flat edges slightly; circles read smaller than squares of the same measure — compensate.
+- Counterforms (the holes) must be as considered as the positive shapes.
+- The silhouette must read as ONE idea at 16px. If two ideas compete, cut one.
+
+${wantsType ? `WORDMARK: include wordmark with text exactly "${companyName}", a case, weight 300–800, and tracking in 1/1000 em (−40 to 120). It is set in the brand's real typeface and outlined at render time, so specify treatment, not a font name.` : "WORDMARK: omit it entirely — this is a symbol-only direction."}
+
+${fixNotes.length ? `THE PREVIOUS ATTEMPT WAS REJECTED. Fix exactly these, changing nothing else that already worked:\n- ${fixNotes.join("\n- ")}` : ""}
 
 Return STRICT JSON:
-{"primitives":[{"kind":"path","d":"M ... Z","fill":"primary","stroke":"none","strokeWidth":0}],"wordmark":{"text":"${companyName}","case":"title","weight":600,"tracking":2},"rationale":"one sentence","quality_scores":{"relevance":1,"distinctiveness":1,"simplicity":1,"scalability":1,"balance":1}}
-Scores are 1-5. Do not include wordmark when instructed to omit it.` },
-  ]);
-  const primitives = Array.isArray(parsed?.primitives) ? parsed.primitives : [];
-  if (!primitives.length || primitives.length > 5) throw new Error("Vector specification is missing or too complex");
-  const wordmark = wantsType ? { ...(parsed.wordmark ?? {}), text: companyName } : undefined;
-  return { primitives, wordmark, rationale: String(parsed.rationale ?? ""), quality_scores: parsed.quality_scores ?? {} };
+{"construction":{"module":25,"stroke_weight":100,"radii":[0,50],"symmetry":"vertical mirror"},"primitives":[{"kind":"path","d":"M 200 200 L 800 200 ...","fill":"primary","stroke":"none","strokeWidth":0,"fillRule":"evenodd"}]${wantsType ? `,"wordmark":{"text":"${companyName}","case":"upper","weight":600,"tracking":40}` : ""},"rationale":"one sentence naming the single geometric operation that creates the mark","quality_scores":{"relevance":5,"distinctiveness":5,"simplicity":5,"scalability":5,"balance":5}}
+Scores are 1-5 and must be honest.`;
 }
 
-/** Stage 3 — describe a MARK, not a picture. */
-function buildLogoImagePrompt(
+/**
+ * Stage 3 — draw the mark, then discipline it. The model gets one corrective
+ * pass driven by the deterministic lint, so geometry errors never ship.
+ */
+async function developVectorSpec(
   d: LogoDirection,
+  strategy: BrandStrategy | null,
   ctx: any,
   tokens: any,
-  strategy?: BrandStrategy | null,
-  critique?: string,
-): string {
-  const snap = ctx.snap ?? {};
-  const colors = tokens?.colors ?? {};
-  const fonts = tokens?.fonts ?? {};
+  dossier: string,
+  reviewNote?: string,
+): Promise<{ spec: VectorSpec; lint: ReturnType<typeof lintVectorSpec> }> {
+  const companyName = String(ctx?.snap?.company_name ?? "").trim();
   const wantsType = /wordmark|lettermark|monogram|combination|emblem/i.test(d.logo_type ?? "");
-  const paletteLine = [colors.primary, colors.secondary, colors.accent].filter(Boolean).join(", ");
+  const fixNotes = reviewNote ? [reviewNote] : [];
+  let best: { spec: VectorSpec; lint: ReturnType<typeof lintVectorSpec> } | null = null;
 
-  return [
-    `Flat vector LOGO MARK design — "${d.direction_name}" (${d.logo_type}).`,
-    snap.company_name ? `Brand name: ${snap.company_name}.` : "",
-    snap.industry ? `Category: ${snap.industry}.` : "",
-    strategy?.core_idea ? `The mark must communicate: ${strategy.core_idea}` : "",
-    d.one_line_idea ? `THE SHAPE: ${d.one_line_idea}` : `THE SHAPE: ${d.symbol_concept}`,
-    d.symbol_concept && d.one_line_idea ? `Concept: ${d.symbol_concept}` : "",
-    `Construction: ${d.construction_notes} Drawn on a geometric grid with a single consistent stroke weight, mathematically clean curves, optically balanced, vector-precise edges.`,
-    wantsType
-      ? `Typography: ${d.typography_treatment && d.typography_treatment.toLowerCase() !== "n/a" ? d.typography_treatment : "clean geometric sans"}. Set the words "${snap.company_name ?? ""}" correctly spelled, tight even tracking, in a typeface in the spirit of ${fonts.heading ?? "a refined geometric sans"}. No tagline, no extra words, no lorem text.`
-      : `Symbol only — absolutely NO letters, NO words, NO text of any kind anywhere in the image.`,
-    d.negative_space_play && d.negative_space_play.toLowerCase() !== "none"
-      ? `Negative space: ${d.negative_space_play}.`
-      : "",
-    `Colour: strictly flat. Maximum two solid colours${paletteLine ? ` drawn from ${paletteLine}` : ""} plus white. ${d.color_application ?? ""} No gradient, no tint ramp, no opacity fade.`,
-    d.reference_learning && d.reference_learning.toLowerCase() !== "n/a"
-      ? `Borrowed structural principle (never copy the reference): ${d.reference_learning}`
-      : "",
-    "SILHOUETTE TEST: the mark must still read as one clear idea when reduced to a solid black shape at 16 pixels. Fewer than five distinct elements. One idea only.",
-    "Output: a single centred logo, generous even margin, on a pure white #FFFFFF background. Nothing else in the frame — no mockup, no business card, no presentation board, no grid guides, no multiple variations, no colour swatches, no annotations, no signature, no watermark, no drop shadow, no 3D, no bevel, no texture, no photographic element, no background scene.",
-    `Avoid: ${d.avoid_list ?? "category clichés"}.${strategy?.not_list?.length ? ` Also never: ${strategy.not_list.join("; ")}.` : ""} Plus: stock clichés, generic AI flourishes, sparkles, glow, lens flare.`,
-    critique ? `PREVIOUS ATTEMPT FAILED REVIEW — fix exactly this: ${critique}` : "",
-  ].filter(Boolean).join(" ");
+  for (let pass = 0; pass < 2; pass++) {
+    const parsed = await callChatJsonOnce([
+      { role: "system", content: DRAW_SYSTEM },
+      { role: "user", content: drawInstruction(d, dossier, companyName, wantsType, fixNotes) },
+    ]);
+    const primitives = Array.isArray(parsed?.primitives) ? parsed.primitives : [];
+    if (!primitives.length) throw new Error("Vector specification is missing drawable elements");
+
+    const construction: Construction = {
+      module: Number(parsed?.construction?.module) || 25,
+      stroke_weight: Number(parsed?.construction?.stroke_weight) || 80,
+      radii: Array.isArray(parsed?.construction?.radii) ? parsed.construction.radii.map(Number) : undefined,
+      symmetry: String(parsed?.construction?.symmetry ?? ""),
+    };
+    const spec: VectorSpec = {
+      construction,
+      primitives: applyConstruction(primitives, construction),
+      wordmark: wantsType ? { ...(parsed.wordmark ?? {}), text: companyName } : undefined,
+      rationale: String(parsed.rationale ?? ""),
+      quality_scores: parsed.quality_scores ?? {},
+    };
+    const lint = lintVectorSpec(spec);
+    if (!best || lint.score > best.lint.score) best = { spec, lint };
+    if (lint.pass) return best;
+    fixNotes.splice(0, fixNotes.length, ...lint.findings);
+  }
+  return best!;
 }
 
-/** Stage 4 — look at what actually rendered and judge it against the brief. */
-async function critiqueLogo(
+/** Stage 4 — look at the mark that actually rendered and judge it. */
+async function critiqueMark(
   b64: string,
   d: LogoDirection,
   strategy: BrandStrategy | null,
 ): Promise<{ pass: boolean; note: string }> {
-  const system = `You are a design director reviewing a rendered logo before it reaches the client. You are strict but fair. You reject anything that is not a clean, flat, single-idea mark.`;
-  const text = `Review this rendered logo against its brief.
+  const system = `You are a design director reviewing a finished mark before it reaches the client. You are strict. You reject anything that is not a clean, flat, single-idea mark a serious company could adopt.`;
+  const text = `Review this rendered mark against its brief.
 
 Brief: ${d.one_line_idea ?? d.symbol_concept}
 Logo type: ${d.logo_type}
 ${strategy?.core_idea ? `Must communicate: ${strategy.core_idea}` : ""}
 
-Fail it if ANY of these are true: it is a scene or illustration rather than a mark; it has gradients, shadows, 3D, texture or photographic elements; there is misspelled, garbled or unintended text; it shows multiple variations, a mockup or annotations on one canvas; it is too detailed to survive at 16px; it carries more than one competing idea; the background is not clean white.
+Fail it if ANY of these are true: the shape is illegible, broken or reads as random geometry; it looks accidental rather than constructed; the elements are visually unbalanced or float apart; the counterforms are uneven; it carries more than one competing idea; it would disappear or turn to mush at 16px; it does not connect to the brief at all.
 
-Return STRICT JSON: {"pass":true|false,"note":"if failing, one imperative sentence telling the renderer exactly what to change"}`;
+Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact geometric change to make"}`;
 
   const parsed = await callChatJson([
     { role: "system", content: system },
@@ -464,6 +460,28 @@ Return STRICT JSON: {"pass":true|false,"note":"if failing, one imperative senten
   // A failed/unavailable critique must never block delivery.
   if (!parsed || typeof parsed.pass !== "boolean") return { pass: true, note: "" };
   return { pass: parsed.pass, note: String(parsed.note ?? "") };
+}
+
+/** Build the full lockup family from one approved construction. */
+async function buildLogoVariants(spec: VectorSpec, tokens: any, companyName: string) {
+  const heading = tokens?.fonts?.heading;
+  const outlined = spec.wordmark?.text
+    ? await outlineWordmark(spec.wordmark.text, {
+        family: heading,
+        weight: spec.wordmark.weight,
+        tracking: spec.wordmark.tracking,
+        case: spec.wordmark.case,
+      })
+    : null;
+  const base = { wordmarkPath: outlined, fontStack: fontStackFor(heading) };
+  return {
+    mark: renderLogoSvg(spec, tokens, companyName, { ...base, layout: "mark" }),
+    horizontal: spec.wordmark?.text ? renderLogoSvg(spec, tokens, companyName, { ...base, layout: "horizontal" }) : null,
+    stacked: spec.wordmark?.text ? renderLogoSvg(spec, tokens, companyName, { ...base, layout: "stacked" }) : null,
+    mono: renderLogoSvg(spec, tokens, companyName, { ...base, layout: "mark", mono: "#111111" }),
+    knockout: renderLogoSvg(spec, tokens, companyName, { ...base, layout: "mark", knockout: true }),
+    wordmark_family: outlined?.family ?? null,
+  };
 }
 
 
@@ -686,15 +704,72 @@ Deno.serve(async (req) => {
       if (!claimed) return new Response(JSON.stringify({ ok: true, skipped: true, reason: "Direction is already being processed" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
       try {
-        const spec = await developVectorSpec(row.concept as LogoDirection, run.strategy as BrandStrategy, ctx, tokens, reviewNote ?? row.review_note ?? undefined);
-        const svg = renderVectorSvg(spec, tokens, snap.company_name ?? "Venture");
-        const uploaded = await uploadVectorAsset(supabase, snapshotId, userId, directionId, svg);
-        const scores = spec.quality_scores ?? {};
-        const scoreValues = Object.values(scores).map(Number).filter(Number.isFinite);
+        const started = Date.now();
+        const companyName = snap.company_name ?? "Venture";
+        const docsBlock = await loadBrandDocs(supabase, snapshotId);
+        const strategy = (run.strategy ?? null) as BrandStrategy | null;
+        const dossier = buildDossier(ctx, tokens, strategy, docsBlock);
+
+        const { spec, lint } = await developVectorSpec(row.concept as LogoDirection, strategy, ctx, tokens, dossier, reviewNote ?? row.review_note ?? undefined);
+        const variants = await buildLogoVariants(spec, tokens, companyName);
+
+        const uploaded = await uploadVectorAsset(supabase, snapshotId, userId, directionId, variants.mark, "mark");
+        const uploadVariant = async (svg: string | null, name: string) => {
+          if (!svg) return null;
+          try { return await uploadVectorAsset(supabase, snapshotId, userId, directionId, svg, name); } catch { return null; }
+        };
+        const [horizontal, stacked, mono, knockout] = await Promise.all([
+          uploadVariant(variants.horizontal, "horizontal"),
+          uploadVariant(variants.stacked, "stacked"),
+          uploadVariant(variants.mono, "mono"),
+          uploadVariant(variants.knockout, "knockout"),
+        ]);
+
+        // Vision gate — only when there is time left in the request window.
+        let visionPass = true;
+        let visionNote = "";
+        if (Date.now() - started < 60_000) {
+          const png = await rasterizeSvg(variants.mark, 512);
+          if (png) {
+            const verdict = await critiqueMark(png, row.concept as LogoDirection, strategy);
+            visionPass = verdict.pass;
+            visionNote = verdict.note;
+          }
+        }
+
+        const modelScores = spec.quality_scores ?? {};
+        const scoreValues = Object.values(modelScores).map(Number).filter(Number.isFinite);
         const average = scoreValues.length ? scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length : 4;
-        const passed = average >= 3.8;
-        const note = passed ? "" : "Simplify the geometry and strengthen the silhouette before selecting this direction.";
-        const asset = { ok: true, url: uploaded.url, path: uploaded.path, svg_url: uploaded.url, svg_path: uploaded.path, direction_name: row.direction_name, logo_type: row.logo_type, one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept, why_memorable: row.concept?.why_memorable ?? "", symbol_concept: row.concept?.symbol_concept, direction: row.concept, vector_spec: spec, review_passed: passed, review_note: note, review_score: scores, created_at: new Date().toISOString() };
+        const passed = lint.pass && visionPass && average >= 3.5;
+        const note = [
+          visionPass ? "" : visionNote,
+          ...(lint.pass ? [] : lint.findings),
+        ].filter(Boolean).join(" ");
+        const scores = { ...modelScores, geometry: Number(lint.score.toFixed(2)), ...lint.metrics };
+
+        const asset = {
+          ok: true,
+          url: uploaded.url, path: uploaded.path, svg_url: uploaded.url, svg_path: uploaded.path,
+          variants: {
+            mark: { url: uploaded.url, path: uploaded.path },
+            horizontal: horizontal ? { url: horizontal.url, path: horizontal.path } : null,
+            stacked: stacked ? { url: stacked.url, path: stacked.path } : null,
+            mono: mono ? { url: mono.url, path: mono.path } : null,
+            knockout: knockout ? { url: knockout.url, path: knockout.path } : null,
+          },
+          usage: {
+            clear_space: "Keep clear space equal to the height of the mark's core module on all sides.",
+            min_size: "Do not reproduce the mark below 24px / 8mm.",
+            wordmark_font: variants.wordmark_family,
+          },
+          direction_name: row.direction_name, logo_type: row.logo_type,
+          one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept,
+          why_memorable: row.concept?.why_memorable ?? "",
+          symbol_concept: row.concept?.symbol_concept,
+          direction: row.concept, vector_spec: spec,
+          review_passed: passed, review_note: note, review_score: scores,
+          created_at: new Date().toISOString(),
+        };
         const { error: publishError } = await supabase.rpc("publish_brand_logo_direction", { p_direction_id: directionId, p_run_id: runId, p_run_version: run.version, p_asset: asset, p_svg_path: uploaded.path, p_preview_path: uploaded.path, p_review_passed: passed, p_review_score: scores, p_review_note: note });
         if (publishError) throw publishError;
         return new Response(JSON.stringify({ ok: true, asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
