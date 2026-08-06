@@ -679,7 +679,12 @@ Deno.serve(async (req) => {
       if (["ready", "needs_review"].includes(row.status) && kind !== "logo_retry_direction") {
         return new Response(JSON.stringify({ ok: true, asset: row.asset, direction: row }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      await supabase.from("brand_logo_directions").update({ status: "developing_vector", current_stage: row.review_note ? "revise_vector" : "develop_vector", attempt_count: Number(row.attempt_count ?? 0) + 1, last_error: null, error_class: null }).eq("id", directionId);
+      const leaseToken = crypto.randomUUID();
+      const leaseExpiresAt = new Date(Date.now() + 2 * 60 * 1000).toISOString();
+      const { data: claimed, error: claimError } = await supabase.from("brand_logo_directions").update({ status: "developing_vector", current_stage: row.review_note ? "revise_vector" : "develop_vector", attempt_count: Number(row.attempt_count ?? 0) + 1, last_error: null, error_class: null, lease_token: leaseToken, lease_expires_at: leaseExpiresAt }).eq("id", directionId).in("status", kind === "logo_retry_direction" ? ["ready", "needs_review", "failed", "retry_wait"] : ["queued", "retry_wait", "failed"]).select("id").maybeSingle();
+      if (claimError) throw claimError;
+      if (!claimed) return new Response(JSON.stringify({ ok: true, skipped: true, reason: "Direction is already being processed" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
       try {
         const spec = await developVectorSpec(row.concept as LogoDirection, run.strategy as BrandStrategy, ctx, tokens, reviewNote ?? row.review_note ?? undefined);
         const svg = renderVectorSvg(spec, tokens, snap.company_name ?? "Venture");
@@ -696,7 +701,8 @@ Deno.serve(async (req) => {
       } catch (error) {
         const attempts = Number(row.attempt_count ?? 0) + 1;
         const terminal = attempts >= 3;
-        await supabase.from("brand_logo_directions").update({ status: terminal ? "failed" : "retry_wait", last_error: error instanceof Error ? error.message : String(error), error_class: classifyError(error), retry_at: terminal ? null : new Date(Date.now() + Math.min(60_000, 5_000 * 2 ** attempts)).toISOString(), lease_token: null, lease_expires_at: null }).eq("id", directionId);
+        await supabase.from("brand_logo_directions").update({ status: terminal ? "failed" : "retry_wait", last_error: error instanceof Error ? error.message : String(error), error_class: classifyError(error), retry_at: terminal ? null : new Date(Date.now() + Math.min(60_000, 5_000 * 2 ** attempts)).toISOString(), lease_token: null, lease_expires_at: null }).eq("id", directionId).eq("lease_token", leaseToken);
+        await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: error instanceof Error ? error.message : String(error) }).eq("id", runId);
         throw error;
       }
     }
