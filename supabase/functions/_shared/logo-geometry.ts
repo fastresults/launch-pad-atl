@@ -137,6 +137,35 @@ function pathBox(d: string): Box {
   return box;
 }
 
+/** Apply a node transform to a box, matching the render order: translate → rotate → scale. */
+function transformBox(box: Box, t?: VectorNode["transform"]): Box {
+  if (!t || !Number.isFinite(box.minX)) return box;
+  const sx = typeof t.scale === "number" ? t.scale : (Array.isArray(t.scale) ? t.scale[0] : 1);
+  const sy = typeof t.scale === "number" ? t.scale : (Array.isArray(t.scale) ? t.scale[1] : 1);
+  const angle = typeof t.rotate === "number" ? t.rotate : (Array.isArray(t.rotate) ? t.rotate[0] : 0);
+  const rcx = Array.isArray(t.rotate) ? t.rotate[1] : 500;
+  const rcy = Array.isArray(t.rotate) ? t.rotate[2] : 500;
+  const rad = (angle * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const tx = t.translate?.[0] ?? 0;
+  const ty = t.translate?.[1] ?? 0;
+  let out = { ...EMPTY };
+  for (const [px, py] of [[box.minX, box.minY], [box.maxX, box.minY], [box.minX, box.maxY], [box.maxX, box.maxY]]) {
+    let x = px * (sx || 1);
+    let y = py * (sy || 1);
+    if (angle) {
+      const dx = x - rcx;
+      const dy = y - rcy;
+      x = rcx + dx * cos - dy * sin;
+      y = rcy + dx * sin + dy * cos;
+    }
+    x += tx; y += ty;
+    out = merge(out, { minX: x, minY: y, maxX: x, maxY: y });
+  }
+  return out;
+}
+
 export function boundingBox(nodes: VectorNode[]): Box {
   let box = { ...EMPTY };
   for (const n of nodes) {
@@ -155,6 +184,7 @@ export function boundingBox(nodes: VectorNode[]): Box {
     } else if (n.kind === "path" && n.d) {
       local = pathBox(n.d);
     }
+    if (n.kind !== "group") local = transformBox(local, n.transform);
     if (!Number.isFinite(local.minX)) continue;
     box = merge(box, { minX: local.minX - pad, minY: local.minY - pad, maxX: local.maxX + pad, maxY: local.maxY + pad });
   }
