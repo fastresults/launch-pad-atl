@@ -663,41 +663,66 @@ async function runJob(
     status: "running",
     started_at: new Date().toISOString(),
     heartbeat_at: new Date().toISOString(),
+    circuit_breaker_open: false,
+    error: null,
   }).eq("id", jobId);
 
-  for (const layer of layers) {
-    await runLayer(supabase, ctx, jobId, layer, state);
-    if (state.canceled) {
-      await supabase.from("venture_generation_jobs").update({
-        status: "canceled",
-        completed_at: new Date().toISOString(),
-        progress_pct: Math.round((state.done / total) * 100),
-        current_document_type: null,
-      }).eq("id", jobId);
-      return;
-    }
-    if (state.fails >= 3) {
-      await supabase.from("venture_generation_jobs").update({
-        status: "paused",
-        circuit_breaker_open: true,
-        error: `Paused after 3 consecutive failures`,
-        progress_pct: Math.round((state.done / total) * 100),
-      }).eq("id", jobId);
-      return;
+  const finishCanceled = async () => {
+    await supabase.from("venture_generation_jobs").update({
+      status: "canceled",
+      completed_at: new Date().toISOString(),
+      progress_pct: Math.round((state.done / total) * 100),
+      current_document_type: null,
+    }).eq("id", jobId);
+  };
+
+  // Main pass. A tripped circuit breaker no longer ends the run — it just
+  // stops the main pass and hands off to the retry sweep.
+  if (!retryOnly) {
+    for (const layer of layers) {
+      await runLayer(supabase, ctx, jobId, layer, state);
+      if (state.canceled) { await finishCanceled(); return; }
+      if (state.fails >= 3) break;
     }
   }
 
+  if (state.canceled) { await finishCanceled(); return; }
+
+  // Retry sweep — keep going until everything is written or truly stuck.
+  const { remaining, blocked } = await retrySweep(supabase, ctx, jobId, types, state);
+
+  if (state.canceled) { await finishCanceled(); return; }
+
+  const { count: completeCount } = await supabase
+    .from("venture_documents")
+    .select("id", { count: "exact", head: true })
+    .eq("snapshot_id", snapshotId)
+    .eq("status", "complete")
+    .in("document_type", types.map((t: any) => t.type));
+
+  const allDone = remaining.length === 0 && blocked.length === 0;
+
   await supabase.from("venture_generation_jobs").update({
-    status: "completed",
+    status: allDone ? "completed" : "completed_with_blockers",
     completed_at: new Date().toISOString(),
-    progress_pct: 100,
+    progress_pct: allDone ? 100 : Math.round(((completeCount ?? 0) / Math.max(total, 1)) * 100),
     current_document_type: null,
+    circuit_breaker_open: false,
+    retry_round: 0,
+    retry_remaining: remaining.length,
+    error: allDone
+      ? null
+      : [
+          blocked.length ? `${blocked.length} asset(s) need you` : "",
+          remaining.length ? `${remaining.length} asset(s) couldn't be written` : "",
+        ].filter(Boolean).join(" · "),
   }).eq("id", jobId);
 
-  if (!category) {
+  if (!category && allDone) {
     await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);
   }
 }
+
 
 
 Deno.serve(async (req) => {
